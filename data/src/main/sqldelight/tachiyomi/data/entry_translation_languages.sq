@@ -1,0 +1,68 @@
+CREATE TABLE entry_translation_languages(
+    entry_id INTEGER NOT NULL PRIMARY KEY,
+    content_language TEXT CHECK(length(content_language) BETWEEN 1 AND 64),
+    target_language TEXT CHECK(length(target_language) BETWEEN 1 AND 64),
+    updated_at INTEGER NOT NULL,
+    FOREIGN KEY(entry_id) REFERENCES entries(_id) ON DELETE CASCADE,
+    CHECK(content_language IS NOT NULL OR target_language IS NOT NULL)
+);
+
+getByEntryId:
+SELECT *
+FROM entry_translation_languages
+WHERE entry_id = :entryId;
+
+getByProfile:
+SELECT ETL.*
+FROM entry_translation_languages ETL
+JOIN entries ENT ON ENT._id = ETL.entry_id
+WHERE ENT.profile_id = :profileId
+ORDER BY ENT.title COLLATE NOCASE, ETL.entry_id;
+
+upsert:
+INSERT INTO entry_translation_languages(entry_id, content_language, target_language, updated_at)
+VALUES (:entryId, :contentLanguage, :targetLanguage, :updatedAt)
+ON CONFLICT(entry_id) DO UPDATE SET
+    content_language = excluded.content_language,
+    target_language = excluded.target_language,
+    updated_at = excluded.updated_at;
+
+upsertContentLanguage:
+INSERT INTO entry_translation_languages(entry_id, content_language, updated_at)
+VALUES (:entryId, :language, :updatedAt)
+ON CONFLICT(entry_id) DO UPDATE SET
+    content_language = excluded.content_language,
+    updated_at = excluded.updated_at;
+
+upsertTargetLanguage:
+INSERT INTO entry_translation_languages(entry_id, target_language, updated_at)
+VALUES (:entryId, :language, :updatedAt)
+ON CONFLICT(entry_id) DO UPDATE SET
+    target_language = excluded.target_language,
+    updated_at = excluded.updated_at;
+
+clearContentLanguage:
+UPDATE entry_translation_languages
+SET content_language = NULL, updated_at = :updatedAt
+WHERE entry_id = :entryId AND target_language IS NOT NULL;
+
+clearTargetLanguage:
+UPDATE entry_translation_languages
+SET target_language = NULL, updated_at = :updatedAt
+WHERE entry_id = :entryId AND content_language IS NOT NULL;
+
+deleteIfOnlyContentLanguage:
+DELETE FROM entry_translation_languages
+WHERE entry_id = :entryId AND target_language IS NULL;
+
+deleteIfOnlyTargetLanguage:
+DELETE FROM entry_translation_languages
+WHERE entry_id = :entryId AND content_language IS NULL;
+
+delete:
+DELETE FROM entry_translation_languages
+WHERE entry_id = :entryId;
+
+deleteByProfile:
+DELETE FROM entry_translation_languages
+WHERE entry_id IN (SELECT _id FROM entries WHERE profile_id = :profileId);

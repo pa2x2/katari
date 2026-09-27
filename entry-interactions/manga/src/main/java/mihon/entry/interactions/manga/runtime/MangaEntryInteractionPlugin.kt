@@ -25,6 +25,7 @@ import mihon.entry.interactions.manga.presentation.MangaEntryTypePresentationPro
 import mihon.entry.interactions.manga.reader.MangaChildWebViewHostAdapter
 import mihon.entry.interactions.manga.state.MangaConsumptionProcessor
 import mihon.entry.interactions.manga.state.MangaProgressProcessor
+import mihon.entry.interactions.manga.state.MangaTranslationLanguagesProvider
 import mihon.entry.interactions.manga.statistics.MangaEntryStatisticsProvider
 import mihon.entry.interactions.media.EntryMediaCacheCapability
 import mihon.entry.interactions.media.EntryMediaSessionCapability
@@ -50,6 +51,7 @@ import mihon.entry.interactions.state.EntryBookmarkCapability
 import mihon.entry.interactions.state.EntryConsumptionCapability
 import mihon.entry.interactions.state.EntryMigrationCapability
 import mihon.entry.interactions.state.EntryProgressCapability
+import mihon.entry.interactions.state.EntryTranslationLanguagesCapability
 import mihon.feature.graph.ContributionOwner
 import tachiyomi.domain.download.service.DownloadPreferences
 import tachiyomi.domain.entry.interactor.GetEntryWithChapters
@@ -128,6 +130,7 @@ internal fun mangaEntryInteractionPlugin(
                     EntryDownloadParallelItemTransfersCapability.bind(downloadProcessor),
                     EntryBulkDownloadCandidateCapability.bind(downloadProcessor),
                     EntryMigrationCapability.bind(migrationProvider),
+                    EntryTranslationLanguagesCapability.bind(MangaTranslationLanguagesProvider),
                     EntryChildListCapability.bind(childListProcessor),
                     EntryChildProgressCapability.bind(childListProcessor),
                     EntryMissingChildGapCapability.bind(childListProcessor),
