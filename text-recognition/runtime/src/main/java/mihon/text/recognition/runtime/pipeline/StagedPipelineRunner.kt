@@ -17,7 +17,10 @@ import mihon.text.recognition.spi.component.TextDetector
 import mihon.text.recognition.spi.component.TextRecognizer
 import mihon.text.recognition.spi.model.TextRecognitionModels
 
-/** Runs a detector over tiles of the area, then reads each detected text region with a recognizer. */
+/**
+ * Runs a detector over tiles of the area, then reads the text of each speech bubble, and each text outside bubbles,
+ * with a recognizer.
+ */
 internal class StagedPipelineRunner(
     private val detector: TextDetector,
     private val recognizer: TextRecognizer,
@@ -30,26 +33,48 @@ internal class StagedPipelineRunner(
         language: LanguageTag,
         models: TextRecognitionModels,
     ): List<RecognizedTextRegion> {
+        // Bubble outlines and text are different objects; text labelled as inside and outside a bubble is the same.
         val detections = mergeOverlapping(
             candidates = detect(image, area, models),
             bounds = DetectedTextRegion::bounds,
             withBounds = { detection, bounds -> detection.copy(bounds = bounds) },
-            sameGroup = { first, second -> first.kind == second.kind },
+            sameGroup = { first, second -> first.isBubble == second.isBubble },
             priority = compareByDescending(DetectedTextRegion::confidence),
         )
-        val bubbles = detections.filter { it.kind == DetectedTextRegionKind.Bubble }.map(DetectedTextRegion::bounds)
-        val texts = detections.mapNotNull { detection ->
-            when (detection.kind) {
-                DetectedTextRegionKind.Bubble -> null
-                DetectedTextRegionKind.BubbleText -> detection.bounds to TextRegionKind.SpeechBubble
-                DetectedTextRegionKind.FreeText -> detection.bounds to TextRegionKind.FreeText
-            }
-        }
+        val bubbles = detections.filter(DetectedTextRegion::isBubble).map(DetectedTextRegion::bounds)
+        val texts = detections.filterNot(DetectedTextRegion::isBubble)
+        val readings = readings(texts, bubbles)
         // An outlined area without detected text is still read as a whole: the user pointed at text the detector
         // missed.
-        val regions = texts.ifEmpty { if (outlinedByUser) listOf(area to TextRegionKind.Unclassified) else emptyList() }
-        return regions.mapNotNull { (bounds, kind) ->
-            read(image, bounds, kind, enclosingContainer(bounds, bubbles), language, models)
+        return readings
+            .ifEmpty { if (outlinedByUser) listOf(Reading(area, TextRegionKind.Unclassified, null)) else emptyList() }
+            .mapNotNull { read(image, it, language, models) }
+    }
+
+    /**
+     * One reading per speech bubble, covering all of its text, and one per text outside bubbles. A bubble's text
+     * split into several detections is one utterance: read apart, each piece loses the context of the others.
+     */
+    private fun readings(texts: List<DetectedTextRegion>, bubbles: List<ImageRect>): List<Reading> {
+        val (inBubbles, outside) = texts
+            .map { text -> text to enclosingContainer(text.bounds, bubbles) }
+            .partition { (_, bubble) -> bubble != null }
+        return inBubbles.groupBy({ (_, bubble) -> bubble!! }, { (text, _) -> text }).map { (bubble, pieces) ->
+            Reading(
+                bounds = pieces.map(DetectedTextRegion::bounds).reduce(ImageRect::union),
+                kind = TextRegionKind.SpeechBubble,
+                container = bubble,
+            )
+        } + outside.map { (text, _) ->
+            Reading(
+                bounds = text.bounds,
+                kind = if (text.kind == DetectedTextRegionKind.BubbleText) {
+                    TextRegionKind.SpeechBubble
+                } else {
+                    TextRegionKind.FreeText
+                },
+                container = null,
+            )
         }
     }
 
@@ -73,13 +98,11 @@ internal class StagedPipelineRunner(
 
     private suspend fun read(
         image: TextRecognitionImage,
-        bounds: ImageRect,
-        kind: TextRegionKind,
-        container: ImageRect?,
+        reading: Reading,
         language: LanguageTag,
         models: TextRecognitionModels,
     ): RecognizedTextRegion? {
-        val crop = bounds.padded(CROP_PADDING, image.size.bounds)
+        val crop = reading.bounds.padded(CROP_PADDING, image.size.bounds)
         val bitmap = image.decodeRegion(crop, sampleSizeForMinimumEdge(crop, recognizer.inputEdge))
         val recognized = try {
             recognizer.recognize(bitmap, language, models)
@@ -88,15 +111,24 @@ internal class StagedPipelineRunner(
         }
         val text = recognized?.text?.trim()?.takeIf(String::isNotEmpty) ?: return null
         return RecognizedTextRegion(
-            bounds = bounds,
+            bounds = reading.bounds,
             text = text,
-            kind = kind,
+            kind = reading.kind,
             orientation = recognized.orientation,
-            container = container,
+            container = reading.container,
         )
     }
+
+    private class Reading(
+        val bounds: ImageRect,
+        val kind: TextRegionKind,
+        val container: ImageRect?,
+    )
 
     private companion object {
         const val CROP_PADDING = 0.02
     }
 }
+
+private val DetectedTextRegion.isBubble: Boolean
+    get() = kind == DetectedTextRegionKind.Bubble
