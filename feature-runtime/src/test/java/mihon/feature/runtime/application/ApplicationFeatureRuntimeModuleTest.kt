@@ -179,6 +179,69 @@ class ApplicationFeatureRuntimeModuleTest {
     }
 
     @Test
+    fun `required modules are installed before the modules that require them`() {
+        val installedOrder = mutableListOf<String>()
+
+        installApplicationFeatureRuntimeModules(
+            registrar = registrar,
+            modules = listOf(
+                module("example.consumer", requiredModules = setOf("example.provider")) {
+                    installedOrder += "example.consumer"
+                    ApplicationFeatureRuntimeArtifacts()
+                },
+                module("example.independent") {
+                    installedOrder += "example.independent"
+                    ApplicationFeatureRuntimeArtifacts()
+                },
+                module("example.provider") {
+                    installedOrder += "example.provider"
+                    ApplicationFeatureRuntimeArtifacts()
+                },
+            ),
+            context = context,
+        )
+
+        installedOrder shouldContainExactly listOf("example.provider", "example.consumer", "example.independent")
+    }
+
+    @Test
+    fun `a required module that is not installed fails installation`() {
+        val error = shouldThrow<IllegalStateException> {
+            installApplicationFeatureRuntimeModules(
+                registrar = registrar,
+                modules = listOf(
+                    module("example.consumer", requiredModules = setOf("example.missing")) {
+                        ApplicationFeatureRuntimeArtifacts()
+                    },
+                ),
+                context = context,
+            )
+        }
+
+        error.message shouldContain "requires modules that are not installed: [example.missing]"
+    }
+
+    @Test
+    fun `cyclic module requirements fail installation`() {
+        val error = shouldThrow<IllegalStateException> {
+            installApplicationFeatureRuntimeModules(
+                registrar = registrar,
+                modules = listOf(
+                    module("example.first", requiredModules = setOf("example.second")) {
+                        ApplicationFeatureRuntimeArtifacts()
+                    },
+                    module("example.second", requiredModules = setOf("example.first")) {
+                        ApplicationFeatureRuntimeArtifacts()
+                    },
+                ),
+                context = context,
+            )
+        }
+
+        error.message shouldContain "requirement cycle: example.first -> example.second -> example.first"
+    }
+
+    @Test
     fun `runtime components expose only requested typed participation`() {
         val components = ApplicationFeatureRuntimeComponents(
             listOf(
@@ -220,6 +283,7 @@ class ApplicationFeatureRuntimeModuleTest {
 
     private fun module(
         id: String,
+        requiredModules: Set<String> = emptySet(),
         installRuntime:
         InjektRegistrar.(ApplicationFeatureRuntimeInstallationContext) -> ApplicationFeatureRuntimeArtifacts,
     ): ApplicationFeatureRuntimeModule {
@@ -227,6 +291,7 @@ class ApplicationFeatureRuntimeModuleTest {
         return ApplicationFeatureRuntimeModule(
             id = id,
             contributor = emptyContributor(owner),
+            requiredModules = requiredModules,
             installRuntime = installRuntime,
         )
     }
