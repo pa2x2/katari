@@ -16,5 +16,6 @@ dependencies {
     implementation(libs.onnxruntime.android)
 
     testImplementation(libs.bundles.test)
+    testImplementation(libs.kotlinx.coroutines.test)
     testRuntimeOnly(libs.junit.platform.launcher)
 }
