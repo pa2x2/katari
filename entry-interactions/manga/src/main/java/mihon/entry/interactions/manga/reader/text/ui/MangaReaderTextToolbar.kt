@@ -3,6 +3,7 @@ package mihon.entry.interactions.manga.reader.text.ui
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -68,7 +69,7 @@ internal fun MangaReaderTextToolbar(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             if (progress == MangaReaderTextProgress.Recognizing || progress == MangaReaderTextProgress.Translating) {
-                CircularProgressIndicator(modifier = Modifier.padding(vertical = 12.dp).widthIn(max = 16.dp))
+                CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
             }
             Text(
                 text = progressText(progress, overlay, observeModels),
