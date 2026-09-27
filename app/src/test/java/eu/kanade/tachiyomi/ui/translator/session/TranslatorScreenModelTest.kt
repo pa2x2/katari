@@ -66,6 +66,7 @@ class TranslatorScreenModelTest {
             feature = feature,
             hostActions = FakeHostActions(),
             ttsFeature = FakeTtsFeature,
+            languagePreferences = TranslatorLanguagePreferences(InMemoryPreferenceStore()),
         )
 
         try {
@@ -95,6 +96,7 @@ class TranslatorScreenModelTest {
             feature = FakeTranslationFeature(),
             hostActions = hostActions,
             ttsFeature = FakeTtsFeature,
+            languagePreferences = TranslatorLanguagePreferences(InMemoryPreferenceStore()),
         )
 
         try {
@@ -131,6 +133,7 @@ class TranslatorScreenModelTest {
             feature = FakeTranslationFeature(),
             hostActions = FakeHostActions(),
             ttsFeature = FakeTtsFeature,
+            languagePreferences = TranslatorLanguagePreferences(InMemoryPreferenceStore()),
         )
 
         try {
@@ -161,6 +164,7 @@ class TranslatorScreenModelTest {
             feature = FakeTranslationFeature(),
             hostActions = FakeHostActions(),
             ttsFeature = FakeTtsFeature,
+            languagePreferences = TranslatorLanguagePreferences(InMemoryPreferenceStore()),
         )
 
         try {
@@ -189,6 +193,7 @@ class TranslatorScreenModelTest {
             feature = FakeTranslationFeature(),
             hostActions = hostActions,
             ttsFeature = FakeTtsFeature,
+            languagePreferences = TranslatorLanguagePreferences(InMemoryPreferenceStore()),
         )
 
         try {
@@ -220,6 +225,7 @@ class TranslatorScreenModelTest {
             feature = FakeTranslationFeature(),
             hostActions = FakeHostActions(),
             ttsFeature = FakeTtsFeature,
+            languagePreferences = TranslatorLanguagePreferences(InMemoryPreferenceStore()),
         )
 
         try {
@@ -234,6 +240,51 @@ class TranslatorScreenModelTest {
             events shouldBe listOf(TranslatorEvent.SwapUnavailable)
         } finally {
             model.onDispose()
+            Dispatchers.resetMain()
+        }
+    }
+
+    @Test
+    fun `the tab reopens with its last languages without changing the profile default`() = runTest {
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        Dispatchers.setMain(dispatcher)
+        val hostActions = FakeHostActions()
+        val languagePreferences = TranslatorLanguagePreferences(InMemoryPreferenceStore())
+        fun open() = TranslatorScreenModel(
+            feature = FakeTranslationFeature(),
+            hostActions = hostActions,
+            ttsFeature = FakeTtsFeature,
+            languagePreferences = languagePreferences,
+        )
+
+        try {
+            val first = open()
+            advanceUntilIdle()
+            first.selectSource(FRENCH)
+            first.selectTarget(ENGLISH)
+            advanceUntilIdle()
+            first.onDispose()
+
+            val reopened = open()
+            advanceUntilIdle()
+            with(reopened.state.value) {
+                sourceLanguage shouldBe TranslationSourceLanguageSelection.Explicit(FRENCH)
+                targetLanguage shouldBe TranslationTargetLanguageSelection.Explicit(ENGLISH)
+            }
+            hostActions.defaultTargetLanguage.get() shouldBe TranslationTargetLanguageSelection.Explicit(FRENCH)
+
+            reopened.selectAutomaticSource()
+            reopened.selectDefaultTarget()
+            advanceUntilIdle()
+            reopened.onDispose()
+
+            val followingDefaults = open()
+            with(followingDefaults.state.value) {
+                sourceLanguage shouldBe TranslationSourceLanguageSelection.Automatic
+                targetLanguage shouldBe TranslationTargetLanguageSelection.Default
+            }
+            followingDefaults.onDispose()
+        } finally {
             Dispatchers.resetMain()
         }
     }
