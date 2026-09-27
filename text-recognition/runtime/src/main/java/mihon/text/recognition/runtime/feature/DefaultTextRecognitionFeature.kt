@@ -189,6 +189,6 @@ internal class DefaultTextRecognitionFeature(
 
     private companion object {
         /** Bump when the runtime's own processing changes in a way that invalidates cached results. */
-        const val CACHE_FORMAT = "text-recognition-2"
+        const val CACHE_FORMAT = "text-recognition-3"
     }
 }

@@ -44,6 +44,10 @@ internal fun overlapOfSmaller(first: ImageRect, second: ImageRect): Double {
     return intersection.area.toDouble() / minOf(first.area, second.area)
 }
 
+/** Fraction of [region] that lies inside [area]. */
+internal fun coverage(region: ImageRect, area: ImageRect): Double =
+    (region.intersect(area)?.area ?: 0L).toDouble() / region.area
+
 /**
  * The container that encloses most of [region], if any encloses at least [threshold] of it. Among equally enclosing
  * containers the tightest one wins.
@@ -54,7 +58,7 @@ internal fun enclosingContainer(
     threshold: Double = DEFAULT_CONTAINMENT_THRESHOLD,
 ): ImageRect? {
     return containers
-        .map { container -> container to ((region.intersect(container)?.area ?: 0L).toDouble() / region.area) }
+        .map { container -> container to coverage(region, container) }
         .filter { (_, coverage) -> coverage >= threshold }
         .maxWithOrNull(compareBy<Pair<ImageRect, Double>>({ it.second }, { -it.first.area }))
         ?.first

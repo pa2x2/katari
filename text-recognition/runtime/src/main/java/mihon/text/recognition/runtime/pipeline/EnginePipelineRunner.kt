@@ -24,7 +24,7 @@ internal class EnginePipelineRunner(
         language: LanguageTag,
         models: TextRecognitionModels,
     ): List<RecognizedTextRegion> {
-        val regions = planTiles(area).flatMap { tile ->
+        val regions = planTiles(area, minimumLength = engine.maximumInputEdge).flatMap { tile ->
             val sampleSize = sampleSizeForMaximumEdge(tile, engine.maximumInputEdge)
             val bitmap = image.decodeRegion(tile, sampleSize)
             try {

@@ -7,9 +7,13 @@ import mihon.text.recognition.api.image.ImageRect
  *
  * Detectors resize their whole input to a fixed square, so a tall webtoon strip read in one piece would shrink its
  * text below legibility. Overlap guarantees that every region smaller than the overlap lies whole in some tile.
+ *
+ * Tiles are never shorter than [minimumLength], the edge a component reads at full resolution: splitting a narrow
+ * area below it would only stretch each tile further and cut text that fits into one tile apart.
  */
 internal fun planTiles(
     area: ImageRect,
+    minimumLength: Int = 1,
     maximumAspect: Double = DEFAULT_MAXIMUM_TILE_ASPECT,
     overlap: Double = DEFAULT_TILE_OVERLAP,
 ): List<ImageRect> {
@@ -18,7 +22,7 @@ internal fun planTiles(
     val vertical = area.height >= area.width
     val shortSide = if (vertical) area.width else area.height
     val longSide = if (vertical) area.height else area.width
-    val tileLength = (shortSide * maximumAspect).toInt().coerceAtLeast(1)
+    val tileLength = maxOf((shortSide * maximumAspect).toInt(), minimumLength, 1)
     if (longSide <= tileLength) return listOf(area)
 
     val step = (tileLength * (1 - overlap)).toInt().coerceAtLeast(1)

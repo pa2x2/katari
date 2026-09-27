@@ -5,6 +5,7 @@ import mihon.text.recognition.api.image.ImageRect
 import mihon.text.recognition.api.image.TextRecognitionImage
 import mihon.text.recognition.api.result.RecognizedTextRegion
 import mihon.text.recognition.api.result.TextRegionKind
+import mihon.text.recognition.runtime.geometry.coverage
 import mihon.text.recognition.runtime.geometry.enclosingContainer
 import mihon.text.recognition.runtime.geometry.mergeOverlapping
 import mihon.text.recognition.runtime.geometry.padded
@@ -18,8 +19,11 @@ import mihon.text.recognition.spi.component.TextRecognizer
 import mihon.text.recognition.spi.model.TextRecognitionModels
 
 /**
- * Runs a detector over tiles of the area, then reads the text of each speech bubble, and each text outside bubbles,
- * with a recognizer.
+ * Runs a detector over the page, then reads the text of each speech bubble, and each text outside bubbles, with a
+ * recognizer.
+ *
+ * The detector always sees the whole page, even for an outlined area: it was trained on pages, and an outline
+ * stretched to its input is text at a scale it has not seen. Detections the outline covers are kept.
  */
 internal class StagedPipelineRunner(
     private val detector: TextDetector,
@@ -35,14 +39,16 @@ internal class StagedPipelineRunner(
     ): List<RecognizedTextRegion> {
         // Bubble outlines and text are different objects; text labelled as inside and outside a bubble is the same.
         val detections = mergeOverlapping(
-            candidates = detect(image, area, models),
+            candidates = detect(image, models),
             bounds = DetectedTextRegion::bounds,
             withBounds = { detection, bounds -> detection.copy(bounds = bounds) },
             sameGroup = { first, second -> first.isBubble == second.isBubble },
             priority = compareByDescending(DetectedTextRegion::confidence),
         )
         val bubbles = detections.filter(DetectedTextRegion::isBubble).map(DetectedTextRegion::bounds)
-        val texts = detections.filterNot(DetectedTextRegion::isBubble)
+        val texts = detections
+            .filterNot(DetectedTextRegion::isBubble)
+            .filter { !outlinedByUser || coverage(it.bounds, area) >= OUTLINED_COVERAGE }
         val readings = readings(texts, bubbles)
         // An outlined area without detected text is still read as a whole: the user pointed at text the detector
         // missed.
@@ -78,12 +84,8 @@ internal class StagedPipelineRunner(
         }
     }
 
-    private suspend fun detect(
-        image: TextRecognitionImage,
-        area: ImageRect,
-        models: TextRecognitionModels,
-    ): List<DetectedTextRegion> {
-        return planTiles(area).flatMap { tile ->
+    private suspend fun detect(image: TextRecognitionImage, models: TextRecognitionModels): List<DetectedTextRegion> {
+        return planTiles(image.size.bounds, minimumLength = detector.inputEdge).flatMap { tile ->
             val sampleSize = sampleSizeForMinimumEdge(tile, detector.inputEdge)
             val bitmap = image.decodeRegion(tile, sampleSize)
             try {
@@ -127,6 +129,9 @@ internal class StagedPipelineRunner(
 
     private companion object {
         const val CROP_PADDING = 0.02
+
+        /** Share of a detected text that must lie inside an outline for the outline to select it. */
+        const val OUTLINED_COVERAGE = 0.5
     }
 }
 

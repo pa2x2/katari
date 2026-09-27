@@ -1,9 +1,11 @@
 package mihon.text.recognition.runtime.pipeline
 
 import io.kotest.matchers.collections.shouldContainExactly
+import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.test.runTest
 import mihon.text.recognition.api.image.ImageRect
 import mihon.text.recognition.api.image.ImageSize
+import mihon.text.recognition.api.result.TextRegionKind
 import mihon.text.recognition.runtime.FakeDetector
 import mihon.text.recognition.runtime.FakePageImage
 import mihon.text.recognition.runtime.FakeRecognizer
@@ -24,10 +26,11 @@ class StagedPipelineRunnerTest {
     private suspend fun run(
         objects: List<Pair<ImageRect, DetectedTextRegionKind>>,
         texts: Map<ImageRect, String>,
+        outline: ImageRect? = null,
     ) = StagedPipelineRunner(FakeDetector(page, objects), FakeRecognizer(page, texts)).run(
         image = page,
-        area = page.size.bounds,
-        outlinedByUser = false,
+        area = outline ?: page.size.bounds,
+        outlinedByUser = outline != null,
         language = JAPANESE,
         models = TextRecognitionModels(emptyList()),
     )
@@ -58,5 +61,25 @@ class StagedPipelineRunnerTest {
         )
 
         regions.map { it.text to it.bounds } shouldContainExactly listOf("語り" to narration)
+    }
+
+    @Test
+    fun `an outline reads the text it mostly covers, as the detector found it on the whole page`() = runTest {
+        // The outline cuts off the top of the bubble's text and misses the narration.
+        val outline = ImageRect(120, 250, 480, 580)
+
+        val regions = run(
+            objects = listOf(
+                bubble to DetectedTextRegionKind.Bubble,
+                wholeBubbleText to DetectedTextRegionKind.BubbleText,
+                narration to DetectedTextRegionKind.FreeText,
+            ),
+            texts = mapOf(wholeBubbleText to "吹き出し", narration to "語り"),
+            outline = outline,
+        )
+
+        regions.map { Triple(it.text, it.bounds, it.kind) } shouldContainExactly
+            listOf(Triple("吹き出し", wholeBubbleText, TextRegionKind.SpeechBubble))
+        page.decoded.first().region shouldBe page.size.bounds
     }
 }

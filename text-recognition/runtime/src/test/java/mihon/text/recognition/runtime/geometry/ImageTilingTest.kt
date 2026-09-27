@@ -35,6 +35,13 @@ class ImageTilingTest {
     }
 
     @Test
+    fun `a narrow area is not cut into tiles shorter than a component reads at full resolution`() {
+        val line = ImageRect(0, 0, 600, 100)
+
+        planTiles(line, minimumLength = 640) shouldContainExactly listOf(line)
+    }
+
+    @Test
     fun `subsampling keeps the detector input edge but never upsamples small images`() {
         sampleSizeForMinimumEdge(ImageRect(0, 0, 2600, 3900), 640) shouldBe 4
         sampleSizeForMinimumEdge(ImageRect(0, 0, 1200, 1800), 640) shouldBe 1
