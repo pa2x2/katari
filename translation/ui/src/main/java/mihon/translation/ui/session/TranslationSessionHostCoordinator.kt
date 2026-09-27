@@ -59,6 +59,9 @@ class TranslationSessionHostCoordinator(
     val languagePair: StateFlow<TranslationSessionLanguagePair> = mutableLanguagePair.asStateFlow()
     private var editingLanguagePair = false
 
+    /** Recently chosen languages, most recent first, shared with every other translation surface. */
+    val recentLanguages: StateFlow<List<LanguageTag>> = hostActions.recentLanguages.stateIn(scope)
+
     fun handleExternalAction(
         action: TranslationSessionExternalAction,
         openDocumentation: (String) -> Unit,
@@ -108,6 +111,7 @@ class TranslationSessionHostCoordinator(
                 }
                 mutableLanguagePair.value = currentPair.copy(source = language)
                 if (!editingLanguagePair) {
+                    hostActions.recordRecentLanguage(language)
                     controller.selectSourceLanguage(language)
                 }
             }
@@ -123,6 +127,7 @@ class TranslationSessionHostCoordinator(
                 }
                 mutableLanguagePair.value = currentPair.copy(target = language)
                 if (!editingLanguagePair) {
+                    hostActions.recordRecentLanguage(language)
                     controller.selectTargetLanguage(language)
                 }
             }
@@ -135,6 +140,48 @@ class TranslationSessionHostCoordinator(
             TranslationSessionPicker.LanguagePair
         } else {
             null
+        }
+    }
+
+    /** Makes the open picker's role follow its default again instead of a pinned language. */
+    fun selectLanguageDefault() {
+        if (editingLanguagePair) return
+        when (mutablePicker.value) {
+            TranslationSessionPicker.SourceLanguage -> controller.selectAutomaticSourceLanguage()
+            TranslationSessionPicker.TargetLanguage -> controller.selectDefaultTargetLanguage()
+            TranslationSessionPicker.LanguagePair,
+            TranslationSessionPicker.Engine,
+            null,
+            -> return
+        }
+        mutablePicker.value = null
+    }
+
+    /**
+     * The default the [picker] offers as its first row. A staged language pair has no default rows, because
+     * applying it pins both languages.
+     */
+    fun languageDefault(picker: TranslationSessionPicker): TranslationSessionLanguageDefault? {
+        if (editingLanguagePair) return null
+        val request = (controller.state.value as? TranslationSessionState.Active)?.input?.request ?: return null
+        return when (picker) {
+            TranslationSessionPicker.SourceLanguage -> {
+                val automatic = request.sourceLanguage == TranslationSourceLanguageSelection.Automatic
+                TranslationSessionLanguageDefault.AutomaticSource(
+                    detected = mutableLanguagePair.value.source.takeIf { automatic },
+                    declared = request.languageContext.declaredLanguages.firstOrNull(),
+                    selected = automatic,
+                )
+            }
+            TranslationSessionPicker.TargetLanguage -> hostActions.defaultTarget()?.let { target ->
+                TranslationSessionLanguageDefault.Target(
+                    target = target,
+                    selected = request.targetLanguage == TranslationTargetLanguageSelection.Default,
+                )
+            }
+            TranslationSessionPicker.LanguagePair,
+            TranslationSessionPicker.Engine,
+            -> null
         }
     }
 
@@ -180,6 +227,8 @@ class TranslationSessionHostCoordinator(
         if (!canApplyLanguagePair()) return
         val source = checkNotNull(mutableLanguagePair.value.source)
         val target = checkNotNull(mutableLanguagePair.value.target)
+        hostActions.recordRecentLanguage(source)
+        hostActions.recordRecentLanguage(target)
         controller.selectLanguages(source, target)
         editingLanguagePair = false
         mutablePicker.value = null
@@ -200,7 +249,15 @@ class TranslationSessionHostCoordinator(
         }
     }
 
+    /** The pinned language the [picker] marks as chosen; none while its role follows the default row. */
     fun selectedLanguage(picker: TranslationSessionPicker): LanguageTag? =
+        if (languageDefault(picker)?.selected == true) {
+            null
+        } else {
+            stagedLanguage(picker)
+        }
+
+    private fun stagedLanguage(picker: TranslationSessionPicker): LanguageTag? =
         when (picker) {
             TranslationSessionPicker.SourceLanguage -> mutableLanguagePair.value.source
             TranslationSessionPicker.TargetLanguage -> mutableLanguagePair.value.target

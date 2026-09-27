@@ -17,10 +17,16 @@ import mihon.language.api.tag.LanguageTag
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
+/** The [options] among [recentLanguages], most recent first, so recents never offer a language the list lacks. */
+fun translationRecentLanguageOptions(
+    recentLanguages: List<LanguageTag>,
+    options: List<TranslationLanguageOption>,
+): List<TranslationLanguageOption> = recentLanguages.mapNotNull { recent -> options.firstOrNull { it.tag == recent } }
+
 /**
  * One-tap candidates for the most recently used languages, rendered above the full picker list.
  *
- * The row is pre-filtered by the caller to languages the active engine currently supports.
+ * The row is pre-filtered by the caller with [translationRecentLanguageOptions].
  */
 @Composable
 fun TranslationLanguageRecentsRow(

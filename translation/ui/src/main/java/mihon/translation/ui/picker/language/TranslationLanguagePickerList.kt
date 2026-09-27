@@ -8,6 +8,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
@@ -28,26 +29,42 @@ import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import java.text.Normalizer
 
+/**
+ * A row listed before the languages that follows a default instead of pinning a language, such as the profile's
+ * target language or detecting the source.
+ */
+data class TranslationLanguageDefaultOption(
+    val label: String,
+    val supporting: String,
+    val selected: Boolean,
+)
+
+/**
+ * Languages listed after the selectable ones, disabled, because [engineName] cannot translate into them from
+ * [source].
+ */
+data class TranslationUnpairableLanguages(
+    val source: LanguageTag,
+    val engineName: String,
+    val options: List<TranslationLanguageOption>,
+)
+
 @Composable
 fun TranslationLanguagePickerList(
     options: List<TranslationLanguageOption>,
     selected: LanguageTag?,
     onSelect: (LanguageTag) -> Unit,
     modifier: Modifier = Modifier,
-    defaultOptionLabel: String? = null,
-    defaultOptionSupporting: String? = null,
-    defaultSelected: Boolean = false,
-    onSelectDefault: (() -> Unit)? = null,
+    defaultOption: TranslationLanguageDefaultOption? = null,
+    onSelectDefault: () -> Unit = {},
     recents: List<TranslationLanguageOption> = emptyList(),
+    unpairable: TranslationUnpairableLanguages? = null,
 ) {
     var query by remember { mutableStateOf("") }
     val normalizedQuery = remember(query) { query.trim().normalizedForSearch() }
-    val filtered = remember(options, normalizedQuery) {
-        if (normalizedQuery.isEmpty()) {
-            options
-        } else {
-            options.filter { option -> option.matches(normalizedQuery) }
-        }
+    val filtered = remember(options, normalizedQuery) { options.matching(normalizedQuery) }
+    val filteredUnpairable = remember(unpairable, normalizedQuery) {
+        unpairable?.options.orEmpty().matching(normalizedQuery)
     }
     Column(modifier = modifier) {
         if (recents.isNotEmpty()) {
@@ -67,17 +84,16 @@ fun TranslationLanguagePickerList(
             singleLine = true,
         )
         LazyColumn {
-            if (defaultOptionLabel != null && defaultOptionSupporting != null && onSelectDefault != null &&
-                normalizedQuery.isEmpty()
-            ) {
+            if (defaultOption != null && normalizedQuery.isEmpty()) {
                 item(key = "default") {
                     TranslationPickerRow(
-                        label = defaultOptionLabel,
-                        supporting = defaultOptionSupporting,
-                        selected = defaultSelected,
+                        label = defaultOption.label,
+                        supporting = defaultOption.supporting,
+                        selected = defaultOption.selected,
                         enabled = true,
                         onClick = onSelectDefault,
                     )
+                    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
                 }
             }
             items(filtered, key = { it.tag.value }) { option ->
@@ -89,7 +105,34 @@ fun TranslationLanguagePickerList(
                     onClick = { onSelect(option.tag) },
                 )
             }
-            if (filtered.isEmpty()) {
+            if (unpairable != null && filteredUnpairable.isNotEmpty()) {
+                item(key = "unpairable") {
+                    Text(
+                        text = stringResource(
+                            MR.strings.translation_languages_unpairable,
+                            unpairable.source.displayName(),
+                        ),
+                        modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 4.dp),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.labelMedium,
+                    )
+                }
+                items(filteredUnpairable, key = { "unpairable:${it.tag.value}" }) { option ->
+                    TranslationPickerRow(
+                        label = option.displayName,
+                        supporting = stringResource(
+                            MR.strings.translation_language_unpairable_reason,
+                            unpairable.engineName,
+                            unpairable.source.displayName(),
+                            option.displayName,
+                        ),
+                        selected = false,
+                        enabled = false,
+                        onClick = {},
+                    )
+                }
+            }
+            if (filtered.isEmpty() && filteredUnpairable.isEmpty()) {
                 item(key = "empty") {
                     Text(
                         text = stringResource(MR.strings.no_results_found),
@@ -105,6 +148,9 @@ fun TranslationLanguagePickerList(
         }
     }
 }
+
+private fun List<TranslationLanguageOption>.matching(normalizedQuery: String): List<TranslationLanguageOption> =
+    if (normalizedQuery.isEmpty()) this else filter { option -> option.matches(normalizedQuery) }
 
 /**
  * Search matches the localized name, the language's own native name, and the raw tag, so a query
@@ -141,6 +187,7 @@ private fun TranslationPickerRow(
     onClick: () -> Unit,
 ) {
     ListItem(
+        enabled = enabled,
         supportingContent = { Text(supporting) },
         trailingContent = if (selected) {
             {

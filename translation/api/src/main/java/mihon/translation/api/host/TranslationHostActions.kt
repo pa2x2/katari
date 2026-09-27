@@ -31,9 +31,13 @@ interface TranslationHostActions {
     /**
      * Recently used translation languages, most recently used first.
      *
-     * Hosts record explicit user selections so pickers can surface them as one-tap candidates.
+     * Hosts record explicit user selections with [recordRecentLanguage] so pickers can surface them as one-tap
+     * candidates.
      */
     val recentLanguages: Preference<List<LanguageTag>>
+
+    /** Moves [language] to the front of [recentLanguages] after the user explicitly chose it. */
+    fun recordRecentLanguage(language: LanguageTag)
 
     /**
      * The target language requests use when they do not choose one, resolved the same way translation does.

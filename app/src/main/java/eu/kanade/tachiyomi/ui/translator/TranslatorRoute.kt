@@ -48,6 +48,7 @@ internal fun TranslatorRoute(
         onSelectAutomaticSource = screenModel::selectAutomaticSource,
         onSelectSource = screenModel::selectSource,
         onSelectTarget = screenModel::selectTarget,
+        onSelectDefaultTarget = screenModel::selectDefaultTarget,
         onSelectEngine = screenModel::selectEngine,
         onSwap = screenModel::swapLanguages,
         onRetry = screenModel::retry,

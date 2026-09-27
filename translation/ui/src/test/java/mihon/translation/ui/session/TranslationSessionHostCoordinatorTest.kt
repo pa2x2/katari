@@ -1,8 +1,10 @@
 package mihon.translation.ui.session
 
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import mihon.language.api.identification.TextLanguageResolutionContext
 import mihon.language.api.tag.LanguageTag
 import mihon.translation.api.TranslationFeature
 import mihon.translation.api.availability.TranslationDeviceAvailability
@@ -38,6 +40,7 @@ import org.junit.jupiter.api.Test
 import tachiyomi.core.common.preference.InMemoryPreferenceStore.InMemoryPreference
 import tachiyomi.core.common.preference.Preference
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class TranslationSessionHostCoordinatorTest {
     @Test
     fun `ready selection changes only the staged session engine`() = runTest {
@@ -118,6 +121,109 @@ class TranslationSessionHostCoordinatorTest {
         runCurrent()
         feature.requests.last().targetLanguage shouldBe
             TranslationTargetLanguageSelection.Explicit(FRENCH)
+        coordinator.picker.value shouldBe null
+    }
+
+    @Test
+    fun `a picked language becomes the most recent language`() = runTest {
+        val host = FakeHostActions().apply { recentLanguages.set(listOf(FRENCH, GERMAN)) }
+        val coordinator = TranslationSessionHostCoordinator(
+            feature = RecordingFeature(),
+            hostActions = host,
+            scope = backgroundScope,
+            selectionSettleDelayMillis = 0,
+        )
+        runCurrent()
+        coordinator.controller.submit(input())
+        runCurrent()
+        coordinator.handleExternalAction(TranslationSessionExternalAction.ChooseTargetLanguage) {}
+        runCurrent()
+
+        coordinator.selectLanguage(GERMAN)
+        runCurrent()
+
+        coordinator.recentLanguages.value shouldBe listOf(GERMAN, FRENCH)
+    }
+
+    @Test
+    fun `target picker follows the profile default until a language is pinned and can return to it`() = runTest {
+        val feature = RecordingFeature()
+        val coordinator = TranslationSessionHostCoordinator(
+            feature = feature,
+            hostActions = FakeHostActions(),
+            scope = backgroundScope,
+            selectionSettleDelayMillis = 0,
+        )
+        runCurrent()
+        coordinator.controller.submit(
+            input().copy(request = input().request.copy(targetLanguage = TranslationTargetLanguageSelection.Default)),
+        )
+        runCurrent()
+        val picker = TranslationSessionPicker.TargetLanguage
+        val profileDefault = TranslationDefaultTarget(TARGET, followsAppLanguage = false)
+
+        coordinator.handleExternalAction(TranslationSessionExternalAction.ChooseTargetLanguage) {}
+        runCurrent()
+        coordinator.languageDefault(picker) shouldBe TranslationSessionLanguageDefault.Target(profileDefault, true)
+        coordinator.selectedLanguage(picker) shouldBe null
+
+        coordinator.selectLanguage(FRENCH)
+        runCurrent()
+        coordinator.handleExternalAction(TranslationSessionExternalAction.ChooseTargetLanguage) {}
+        runCurrent()
+        coordinator.languageDefault(picker) shouldBe TranslationSessionLanguageDefault.Target(profileDefault, false)
+        coordinator.selectedLanguage(picker) shouldBe FRENCH
+
+        coordinator.selectLanguageDefault()
+        runCurrent()
+        feature.requests.last().targetLanguage shouldBe TranslationTargetLanguageSelection.Default
+        coordinator.picker.value shouldBe null
+    }
+
+    @Test
+    fun `automatic source row shows the detected and declared languages and undoes a pinned source`() = runTest {
+        val feature = RecordingFeature()
+        val coordinator = TranslationSessionHostCoordinator(
+            feature = feature,
+            hostActions = FakeHostActions(),
+            scope = backgroundScope,
+            selectionSettleDelayMillis = 0,
+        )
+        runCurrent()
+        coordinator.controller.submit(
+            input().copy(
+                request = input().request.copy(
+                    sourceLanguage = TranslationSourceLanguageSelection.Automatic,
+                    languageContext = TextLanguageResolutionContext(declaredLanguages = listOf(FRENCH)),
+                ),
+            ),
+        )
+        runCurrent()
+        val picker = TranslationSessionPicker.SourceLanguage
+
+        coordinator.handleExternalAction(TranslationSessionExternalAction.ChooseSourceLanguage) {}
+        runCurrent()
+        coordinator.languageDefault(picker) shouldBe TranslationSessionLanguageDefault.AutomaticSource(
+            detected = SOURCE,
+            declared = FRENCH,
+            selected = true,
+        )
+        coordinator.selectedLanguage(picker) shouldBe null
+
+        coordinator.selectLanguage(GERMAN)
+        runCurrent()
+        coordinator.handleExternalAction(TranslationSessionExternalAction.ChooseSourceLanguage) {}
+        runCurrent()
+        coordinator.languageDefault(picker) shouldBe TranslationSessionLanguageDefault.AutomaticSource(
+            detected = null,
+            declared = FRENCH,
+            selected = false,
+        )
+        coordinator.selectedLanguage(picker) shouldBe GERMAN
+
+        coordinator.selectLanguageDefault()
+        runCurrent()
+        feature.requests.last().sourceLanguage shouldBe TranslationSourceLanguageSelection.Automatic
         coordinator.picker.value shouldBe null
     }
 
@@ -296,7 +402,8 @@ class TranslationSessionHostCoordinatorTest {
         override suspend fun prepare(request: TranslationRequest): TranslationPreparation {
             requests += request
             return TranslationPreparation.TargetLanguageRequired(
-                sourceLanguage = SOURCE,
+                sourceLanguage = (request.sourceLanguage as? TranslationSourceLanguageSelection.Explicit)?.language
+                    ?: SOURCE,
                 reason = TranslationTargetChoiceReason.NoDefaultTarget,
             )
         }
@@ -324,6 +431,10 @@ class TranslationSessionHostCoordinatorTest {
         override fun defaultTarget(): TranslationDefaultTarget? =
             (defaultTargetLanguage.get() as? TranslationTargetLanguageSelection.Explicit)
                 ?.let { TranslationDefaultTarget(it.language, followsAppLanguage = false) }
+
+        override fun recordRecentLanguage(language: LanguageTag) {
+            recentLanguages.set(listOf(language) + recentLanguages.get().filterNot { it == language })
+        }
 
         override suspend fun deviceAvailability() = TranslationDeviceAvailability.Available
 

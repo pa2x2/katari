@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -139,8 +140,11 @@ internal fun MangaReaderTextLayer(
     }
     val languageBlocker = state.blocker as? MangaReaderTextBlocker.LanguageRequired
     if (choosingLanguage && languageBlocker != null) {
+        val recentLanguages by translationCoordinator.recentLanguages.collectAsState()
         MangaReaderTextLanguageSheet(
             languages = languageBlocker.languages,
+            selected = state.language,
+            recentLanguages = recentLanguages,
             onChoose = { language ->
                 choosingLanguage = false
                 onChooseLanguage(language)

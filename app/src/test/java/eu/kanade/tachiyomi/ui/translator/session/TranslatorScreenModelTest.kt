@@ -316,6 +316,10 @@ class TranslatorScreenModelTest {
             (defaultTargetLanguage.get() as? TranslationTargetLanguageSelection.Explicit)
                 ?.let { TranslationDefaultTarget(it.language, followsAppLanguage = false) }
 
+        override fun recordRecentLanguage(language: LanguageTag) {
+            recentLanguages.set(listOf(language) + recentLanguages.get().filterNot { it == language })
+        }
+
         override suspend fun deviceAvailability() = TranslationDeviceAvailability.Available
 
         override suspend fun inspectEngines() = TranslationEngineInspection(engineStates, ENGINE_ID)

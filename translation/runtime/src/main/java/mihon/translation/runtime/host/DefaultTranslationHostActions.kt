@@ -32,6 +32,7 @@ import mihon.translation.api.provider.TranslationProviderDisclosure
 import mihon.translation.api.request.TranslationTargetLanguageSelection
 import mihon.translation.runtime.feature.TranslationDefaultTargetLanguageResolver
 import mihon.translation.runtime.preference.ProfileTranslationPreferences
+import mihon.translation.runtime.preference.withRecentUse
 import mihon.translation.runtime.selection.ProfileTranslationEngineResolver
 import mihon.translation.spi.engine.KnownTranslationEngineCatalog
 import mihon.translation.spi.engine.TranslationEngine
@@ -64,6 +65,10 @@ internal class DefaultTranslationHostActions(
     }
 
     override fun defaultTarget(): TranslationDefaultTarget? = defaultTargetResolver.resolve()
+
+    override fun recordRecentLanguage(language: LanguageTag) {
+        recentLanguages.set(recentLanguages.get().withRecentUse(language))
+    }
 
     override suspend fun deviceAvailability(): TranslationDeviceAvailability {
         if (!profileEngineResolver.isExplicitlySelected()) {

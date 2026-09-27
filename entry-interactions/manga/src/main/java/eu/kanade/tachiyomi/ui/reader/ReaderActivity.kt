@@ -684,7 +684,7 @@ class ReaderActivity : EntryInteractionActivity() {
             onAreaSelected = textInteraction::onAreaSelected,
             onApproveModels = viewModel.textSession::approveModels,
             onApprovePlatformModels = viewModel.textSession::approvePlatformModels,
-            onChooseLanguage = viewModel.textSession::chooseLanguage,
+            onChooseLanguage = viewModel::chooseTextLanguage,
             onOpenSettings = ::openTextRecognitionSettings,
             onDismissTranslation = textInteraction::dismissTranslation,
             onToggleOverlay = viewModel::toggleTextTranslationOverlay,

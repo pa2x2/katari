@@ -291,6 +291,13 @@
     <string name="translation_selected_engine_unavailable">The selected translation engine is unavailable.</string>
     <string name="translation_choose_engine">Choose translation engine</string>
     <string name="translation_recent_languages">Recent</string>
+    <string name="translation_source_automatic">Automatic</string>
+    <string name="translation_source_automatic_summary">Detects the language of the text</string>
+    <string name="translation_source_automatic_detected">Detected %1$s</string>
+    <string name="translation_source_automatic_declared">Marked as %1$s</string>
+    <string name="translation_source_automatic_detected_declared">Detected %1$s · marked as %2$s</string>
+    <string name="translation_languages_unpairable">Not available from %1$s</string>
+    <string name="translation_language_unpairable_reason">%1$s has no %2$s → %3$s</string>
     <string name="translation_models_required">Language data is required before translation can continue.</string>
     <string name="translation_system_setup_required">Complete translation/language setup in Android settings.</string>
     <string name="translation_service_disabled">Enable the Android translation service to continue.</string>

@@ -87,6 +87,14 @@ class TranslationSessionController(
         }
     }
 
+    fun selectAutomaticSourceLanguage() {
+        updateRequest { copy(sourceLanguage = TranslationSourceLanguageSelection.Automatic) }
+    }
+
+    fun selectDefaultTargetLanguage() {
+        updateRequest { copy(targetLanguage = TranslationTargetLanguageSelection.Default) }
+    }
+
     fun selectLanguages(
         source: LanguageTag,
         target: LanguageTag,

@@ -22,6 +22,7 @@ import eu.kanade.presentation.reader.components.AdaptiveSheet
 import mihon.language.api.tag.LanguageTag
 import mihon.translation.ui.picker.language.TranslationLanguagePickerList
 import mihon.translation.ui.picker.language.translationLanguageOptionsOf
+import mihon.translation.ui.picker.language.translationRecentLanguageOptions
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -32,10 +33,13 @@ import tachiyomi.presentation.core.i18n.stringResource
 @Composable
 internal fun MangaReaderTextLanguageSheet(
     languages: List<LanguageTag>,
+    selected: LanguageTag?,
+    recentLanguages: List<LanguageTag>,
     onChoose: (LanguageTag) -> Unit,
     onDismiss: () -> Unit,
 ) {
     val options = remember(languages) { translationLanguageOptionsOf(languages) }
+    val recents = remember(recentLanguages, options) { translationRecentLanguageOptions(recentLanguages, options) }
     BoxWithConstraints {
         AdaptiveSheet(
             onDismissRequest = onDismiss,
@@ -62,11 +66,12 @@ internal fun MangaReaderTextLanguageSheet(
                 HorizontalDivider()
                 TranslationLanguagePickerList(
                     options = options,
-                    selected = null,
+                    selected = selected,
                     onSelect = onChoose,
                     modifier = Modifier
                         .weight(1f, fill = false)
                         .padding(top = 8.dp),
+                    recents = recents,
                 )
             }
         }

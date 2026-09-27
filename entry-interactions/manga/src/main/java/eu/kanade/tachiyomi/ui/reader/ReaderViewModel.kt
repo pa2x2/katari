@@ -84,7 +84,9 @@ import mihon.entry.viewer.settings.ViewerSettingBinder
 import mihon.entry.viewer.settings.ViewerSettingBinding
 import mihon.entry.viewer.settings.ViewerSettingSource
 import mihon.entry.viewer.settings.updateEntry
+import mihon.language.api.tag.LanguageTag
 import mihon.text.recognition.api.host.TextRecognitionHostActions
+import mihon.translation.api.host.TranslationHostActions
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.core.common.util.lang.withIOContext
@@ -164,12 +166,20 @@ internal class ReaderViewModel @JvmOverloads constructor(
         },
     )
 
+    private val translationHostActions: TranslationHostActions = Injekt.get()
+
     /** Translates text recognized on pages. */
     val textTranslation = MangaTextTranslationController(
         feature = Injekt.get(),
-        hostActions = Injekt.get(),
+        hostActions = translationHostActions,
         scope = viewModelScope,
     )
+
+    /** Recognizes pages in [language], which also becomes a recent language in every translation picker. */
+    fun chooseTextLanguage(language: LanguageTag) {
+        translationHostActions.recordRecentLanguage(language)
+        textSession.chooseLanguage(language)
+    }
 
     init {
         settingsBindings

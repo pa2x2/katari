@@ -263,6 +263,10 @@ class BookSelectionTranslationControllerTest {
             (defaultTargetLanguage.get() as? TranslationTargetLanguageSelection.Explicit)
                 ?.let { TranslationDefaultTarget(it.language, followsAppLanguage = false) }
 
+        override fun recordRecentLanguage(language: LanguageTag) {
+            recentLanguages.set(listOf(language) + recentLanguages.get().filterNot { it == language })
+        }
+
         override suspend fun deviceAvailability() = availability
 
         override suspend fun inspectEngines() = TranslationEngineInspection(

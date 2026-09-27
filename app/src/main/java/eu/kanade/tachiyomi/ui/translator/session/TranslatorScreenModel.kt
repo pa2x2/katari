@@ -17,7 +17,6 @@ import mihon.translation.api.host.TranslationHostActions
 import mihon.translation.api.request.TranslationRequest
 import mihon.translation.api.request.TranslationSourceLanguageSelection
 import mihon.translation.api.request.TranslationTargetLanguageSelection
-import mihon.translation.runtime.preference.withRecentUse
 import mihon.translation.ui.picker.language.supportsPair
 import mihon.translation.ui.presentation.TranslationResultSpeechPhase
 import mihon.translation.ui.presentation.TranslationResultSpeechSide
@@ -54,8 +53,8 @@ internal class TranslatorScreenModel(
     private val mutableState = MutableStateFlow(
         TranslatorState(
             text = initialText,
-            profileTargetLanguage = hostActions.defaultTarget()?.language,
-            recentLanguages = hostActions.recentLanguages.get(),
+            defaultTarget = hostActions.defaultTarget(),
+            recentLanguages = coordinator.recentLanguages.value,
             engines = coordinator.engineStates.value,
         ),
     )
@@ -112,7 +111,7 @@ internal class TranslatorScreenModel(
         submit()
     }
 
-    fun selectSource(language: mihon.language.api.tag.LanguageTag) {
+    fun selectSource(language: LanguageTag) {
         speechController.stopPlayback()
         mutableState.update {
             it.copy(
@@ -120,11 +119,22 @@ internal class TranslatorScreenModel(
                 picker = null,
             )
         }
-        recordRecentLanguage(language)
+        hostActions.recordRecentLanguage(language)
         submit()
     }
 
-    fun selectTarget(language: mihon.language.api.tag.LanguageTag) {
+    fun selectDefaultTarget() {
+        speechController.stopPlayback()
+        mutableState.update {
+            it.copy(
+                targetLanguage = TranslationTargetLanguageSelection.Default,
+                picker = null,
+            )
+        }
+        submit()
+    }
+
+    fun selectTarget(language: LanguageTag) {
         speechController.stopPlayback()
         mutableState.update {
             it.copy(
@@ -132,7 +142,7 @@ internal class TranslatorScreenModel(
                 picker = null,
             )
         }
-        recordRecentLanguage(language)
+        hostActions.recordRecentLanguage(language)
         submit()
     }
 
@@ -168,8 +178,8 @@ internal class TranslatorScreenModel(
                         picker = null,
                     )
                 }
-                recordRecentLanguage(result.sourceLanguage)
-                recordRecentLanguage(result.targetLanguage)
+                hostActions.recordRecentLanguage(result.sourceLanguage)
+                hostActions.recordRecentLanguage(result.targetLanguage)
                 submit()
                 return
             }
@@ -185,8 +195,8 @@ internal class TranslatorScreenModel(
                     picker = null,
                 )
             }
-            recordRecentLanguage(source)
-            recordRecentLanguage(target)
+            hostActions.recordRecentLanguage(source)
+            hostActions.recordRecentLanguage(target)
             submit()
             return
         }
@@ -256,6 +266,11 @@ internal class TranslatorScreenModel(
                 mutableState.update { it.copy(languageSupport = support) }
             }
         }
+        screenModelScope.launch {
+            coordinator.recentLanguages.collect { recents ->
+                mutableState.update { it.copy(recentLanguages = recents) }
+            }
+        }
     }
 
     private fun observeSession() {
@@ -291,12 +306,6 @@ internal class TranslatorScreenModel(
     private fun loadActiveEngineAndSubmit() {
         coordinator.loadLanguageSupport(mutableState.value.activeEngine)
         submit()
-    }
-
-    private fun recordRecentLanguage(language: mihon.language.api.tag.LanguageTag) {
-        val updated = hostActions.recentLanguages.get().withRecentUse(language)
-        hostActions.recentLanguages.set(updated)
-        mutableState.update { it.copy(recentLanguages = updated) }
     }
 
     private fun submit() {
