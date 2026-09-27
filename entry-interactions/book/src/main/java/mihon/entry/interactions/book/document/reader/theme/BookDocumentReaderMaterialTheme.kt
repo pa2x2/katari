@@ -8,6 +8,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.ui.graphics.luminance
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderThemeMode
 
 /** Applies the active BOOK palette to every Material surface in the reading session. */
@@ -49,7 +50,9 @@ private fun ColorScheme.withBookDocumentReaderPalette(
         onPrimary = palette.background,
         primaryContainer = palette.accent.compositeOver(palette.background, alpha = 0.16f),
         onPrimaryContainer = palette.foreground,
-        inversePrimary = palette.accent,
+        // Actions on inverse surfaces, such as snackbar actions, sit on the foreground colour.
+        inversePrimary = palette.accent.takeIf { it.contrastWith(palette.foreground) >= MINIMUM_ACTION_CONTRAST }
+            ?: palette.background,
         secondary = palette.accent,
         onSecondary = palette.background,
         secondaryContainer = surfaceContainer,
@@ -85,3 +88,12 @@ private fun ColorScheme.withBookDocumentReaderPalette(
 
 private fun Color.compositeOver(background: Color, alpha: Float): Color =
     copy(alpha = alpha).compositeOver(background)
+
+private fun Color.contrastWith(other: Color): Float {
+    val lighter = maxOf(luminance(), other.luminance())
+    val darker = minOf(luminance(), other.luminance())
+    return (lighter + 0.05f) / (darker + 0.05f)
+}
+
+/** WCAG's minimum contrast for normal-size text. */
+private const val MINIMUM_ACTION_CONTRAST = 4.5f
