@@ -34,6 +34,7 @@ class MangaReaderTextSessionTest {
     private val store = FakeModelStore()
     private val translation = FakeTranslation()
     private val pageLanguage = MutableStateFlow<LanguageTag?>(null)
+    private val declaredLanguage = MutableStateFlow<LanguageTag?>(JAPANESE)
     private lateinit var languages: TranslationLanguageContext
     private val text = ImageRect(420, 140, 480, 330)
     private val container = ImageRect(380, 100, 520, 360)
@@ -115,7 +116,8 @@ class MangaReaderTextSessionTest {
                 FakeTextRecognition().preparation(request)
             }
         }
-        val session = session(declaredLanguage = null)
+        declaredLanguage.value = null
+        val session = session()
         session.onVisibleSurfaces(listOf(FakeSurface(0)))
         session.setActive(true)
         runCurrent()
@@ -155,6 +157,36 @@ class MangaReaderTextSessionTest {
         recognition.recognized shouldContainExactly listOf(ImageContentKey("page-0"), ImageContentKey("page-0"))
         recognition.recognizedLanguages shouldContainExactly listOf(JAPANESE, KOREAN)
         session.state.value.progress shouldBe MangaReaderTextProgress.Ready
+    }
+
+    @Test
+    fun `the source's language counts once the series is loaded after the session started`() = runTest {
+        declaredLanguage.value = null
+        val session = session()
+        runCurrent()
+
+        declaredLanguage.value = JAPANESE
+        runCurrent()
+
+        session.state.value.declaredLanguage shouldBe JAPANESE
+        session.state.value.language shouldBe JAPANESE
+        session.state.value.languageKept shouldBe false
+    }
+
+    @Test
+    fun `learning the source's language does not read pages again in the kept language`() = runTest {
+        declaredLanguage.value = null
+        pageLanguage.value = KOREAN
+        val session = session()
+        session.onVisibleSurfaces(listOf(FakeSurface(0)))
+        session.setActive(true)
+        runCurrent()
+
+        declaredLanguage.value = JAPANESE
+        runCurrent()
+
+        session.state.value.declaredLanguage shouldBe JAPANESE
+        recognition.recognized shouldContainExactly listOf(ImageContentKey("page-0"))
     }
 
     @Test
@@ -241,7 +273,7 @@ class MangaReaderTextSessionTest {
         recognition.recognized shouldContainExactly listOf(ImageContentKey("page-0"), ImageContentKey("page-1"))
     }
 
-    private fun TestScope.session(declaredLanguage: LanguageTag? = JAPANESE): MangaReaderTextSession {
+    private fun TestScope.session(): MangaReaderTextSession {
         languages = TranslationLanguageContext(defaultTarget = { null }, store = null, scope = backgroundScope)
         return MangaReaderTextSession(
             recognition = recognition,
@@ -249,7 +281,7 @@ class MangaReaderTextSessionTest {
             translator = MangaPageTranslator(translation, languages, engineName = { null }),
             installPlatformModels = { _, _ -> TextRecognitionPlatformModelsResult.Installed },
             scope = backgroundScope,
-            declaredLanguage = { declaredLanguage },
+            declaredLanguage = declaredLanguage,
             pageLanguage = pageLanguage,
             sampleBackground = { _, _ -> Color.WHITE },
         )

@@ -36,6 +36,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -161,15 +162,15 @@ internal class ReaderViewModel @JvmOverloads constructor(
     private val translationHostActions: TranslationHostActions = Injekt.get()
     private val textRecognitionHostActions: TextRecognitionHostActions = Injekt.get()
 
+    /** The opened series, once it is loaded. */
+    private val series: StateFlow<Entry?> = state.map { it.manga }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
     /** Translates text recognized on pages. */
     val textTranslation = MangaTextTranslationController(
         feature = Injekt.get(),
         hostActions = translationHostActions,
         scope = viewModelScope,
-        languageStore = MangaTranslationLanguageStore(
-            feature = Injekt.get(),
-            series = state.map { it.manga }.stateIn(viewModelScope, SharingStarted.Eagerly, null),
-        ),
+        languageStore = MangaTranslationLanguageStore(feature = Injekt.get(), series = series),
     )
 
     /** Recognizes page text while the reader's translate mode is on. */
@@ -183,10 +184,13 @@ internal class ReaderViewModel @JvmOverloads constructor(
         ),
         installPlatformModels = textRecognitionHostActions::installPlatformModels,
         scope = viewModelScope,
-        declaredLanguage = {
-            val source = manga?.let { sourceManager.get(it.source) } as? EntryCatalogueSource
-            declaredContentLanguage(source?.lang)
-        },
+        declaredLanguage = series
+            .map { it?.source }
+            .distinctUntilChanged()
+            .map { sourceId ->
+                val source = sourceId?.let(sourceManager::get) as? EntryCatalogueSource
+                declaredContentLanguage(source?.lang)
+            },
         pageLanguage = textTranslation.pageLanguage,
     )
 
