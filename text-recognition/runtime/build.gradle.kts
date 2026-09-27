@@ -15,6 +15,7 @@ dependencies {
     implementation(projects.featureGraph)
     implementation(projects.featureRuntime)
     implementation(projects.textRecognition.spi)
+    implementation(libs.diskLruCache)
     implementation(libs.injekt)
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.serialization.json)

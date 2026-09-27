@@ -1,68 +1,58 @@
 package mihon.text.recognition.runtime.cache
 
+import com.jakewharton.disklrucache.DiskLruCache
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import mihon.text.recognition.api.result.RecognizedTextRegion
 import java.io.File
+import java.io.IOException
 import java.security.MessageDigest
 
 /**
- * Persistent, size-limited store of recognized regions keyed by image content, scope, and pipeline.
- *
- * Entries are small files; reading an entry marks it recently used, and writing evicts the least recently used
- * entries once the directory exceeds [maximumBytes]. Corrupt entries are treated as absent.
+ * Persistent, size-limited store of recognized regions keyed by image content, scope, and pipeline, evicting the
+ * least recently used results first. Unreadable entries are treated as absent.
  */
 internal class TextRecognitionResultCache(
     directory: () -> File,
     private val maximumBytes: Long,
-    private val clock: () -> Long = System::currentTimeMillis,
 ) {
-    private val directory by lazy(directory)
+    private val cache by lazy { DiskLruCache.open(directory(), CACHE_VERSION, VALUE_COUNT, maximumBytes) }
     private val json = Json { ignoreUnknownKeys = true }
 
     @Synchronized
     fun read(key: TextRecognitionCacheKey): List<RecognizedTextRegion>? {
-        val file = file(key)
-        if (!file.isFile) return null
-        val regions = runCatching {
-            json.decodeFromString(CachedTextRecognitionResult.serializer(), file.readText()).toRegions()
-        }.getOrNull()
-        if (regions == null) {
-            file.delete()
-            return null
+        val stored = try {
+            cache.get(key.digest)?.use { it.getString(0) }
+        } catch (_: IOException) {
+            null
+        } ?: return null
+        return try {
+            json.decodeFromString(CachedTextRecognitionResult.serializer(), stored).toRegions()
+        } catch (_: SerializationException) {
+            cache.remove(key.digest)
+            null
+        } catch (_: IllegalArgumentException) {
+            cache.remove(key.digest)
+            null
         }
-        file.setLastModified(clock())
-        return regions
     }
 
     @Synchronized
     fun write(key: TextRecognitionCacheKey, regions: List<RecognizedTextRegion>) {
-        directory.mkdirs()
-        val target = file(key)
-        val temporary = File(directory, "${target.name}.tmp")
-        temporary.writeText(json.encodeToString(CachedTextRecognitionResult.serializer(), regions.toCached()))
-        if (!temporary.renameTo(target)) {
-            temporary.delete()
-            return
-        }
-        target.setLastModified(clock())
-        evict()
-    }
-
-    private fun evict() {
-        val entries = directory.listFiles { file -> file.isFile && file.name.endsWith(ENTRY_SUFFIX) }.orEmpty()
-        var total = entries.sumOf(File::length)
-        if (total <= maximumBytes) return
-        entries.sortedBy(File::lastModified).forEach { entry ->
-            if (total <= maximumBytes) return
-            val length = entry.length()
-            if (entry.delete()) total -= length
+        var editor: DiskLruCache.Editor? = null
+        try {
+            editor = cache.edit(key.digest) ?: return
+            editor.set(0, json.encodeToString(CachedTextRecognitionResult.serializer(), regions.toCached()))
+            editor.commit()
+        } catch (_: IOException) {
+            editor?.abortUnlessCommitted()
         }
     }
-
-    private fun file(key: TextRecognitionCacheKey): File = File(directory, key.digest + ENTRY_SUFFIX)
 
     private companion object {
-        const val ENTRY_SUFFIX = ".json"
+        /** Bump when the stored representation changes incompatibly. */
+        const val CACHE_VERSION = 1
+        const val VALUE_COUNT = 1
     }
 }
 
