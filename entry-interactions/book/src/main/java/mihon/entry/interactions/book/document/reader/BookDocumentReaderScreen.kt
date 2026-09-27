@@ -61,6 +61,8 @@ import mihon.entry.interactions.book.reader.BookReaderScaffold
 import mihon.entry.interactions.book.reader.selection.BookSelectionActionCoordinator
 import mihon.entry.interactions.book.reader.speech.BookShortFormSpeechOwner
 import mihon.entry.interactions.book.reader.speech.BookShortFormSpeechPhase
+import mihon.entry.interactions.book.reader.translation.BookAutomaticTranslationSettingsProvider
+import mihon.entry.interactions.book.reader.translation.bookTranslationLanguageDetails
 import mihon.entry.interactions.reader.navigation.EntryReaderNavigationSheet
 import mihon.entry.interactions.reader.settings.BookDocumentReadingMode
 import mihon.entry.interactions.reader.settings.ChapterTransitionMode
@@ -367,6 +369,12 @@ internal fun BookDocumentReaderScreen(
                     sharedTabTitle = stringResource(MR.strings.reader_shared_settings),
                     onDismissRequest = { onSettingsVisibilityChange(false) },
                     onOpenDefaultSettings = onOpenDefaultSettings,
+                    sharedSettingDetails = selectionCoordinator?.translationController?.let { controller ->
+                        mapOf(
+                            BookAutomaticTranslationSettingsProvider.AUTOMATIC_SELECTION_SETTING_ID to
+                                bookTranslationLanguageDetails(controller.hostCoordinator, controller.declaredLanguage),
+                        )
+                    }.orEmpty(),
                     onResetProcessorSettings = {
                         settingBindings.readingMode.clearEntryOverride()
                         settingBindings.tapZones.clearEntryOverride()

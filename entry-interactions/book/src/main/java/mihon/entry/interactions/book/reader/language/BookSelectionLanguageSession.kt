@@ -9,6 +9,9 @@ internal class BookSelectionLanguageSession(
     private val declaredLanguages = declaredLanguageTags.toLanguageTags()
     private var learnedLanguage: LanguageTag? = null
 
+    /** The language the publication says it is written in. */
+    val declaredLanguage: LanguageTag? = declaredLanguages.firstOrNull()
+
     /**
      * Languages the selected text declares for itself come before the publication's, so a quotation marked as
      * another language is not resolved as the book's language.

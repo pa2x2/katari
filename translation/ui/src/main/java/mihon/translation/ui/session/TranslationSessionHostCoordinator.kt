@@ -44,6 +44,8 @@ class TranslationSessionHostCoordinator(
     executionMode: TranslationSessionExecutionMode = TranslationSessionExecutionMode.FollowProviderPolicy,
     selectionSettleDelayMillis: Long = 250L,
     languageStore: TranslationLanguageStore? = null,
+    /** What the content says it is written in, shown by the source picker while no translation is on screen. */
+    private val declaredLanguage: LanguageTag? = null,
 ) {
     /** Runs the coordinator's own observation, which [close] stops. */
     private val observationScope = CoroutineScope(scope.coroutineContext + SupervisorJob(scope.coroutineContext[Job]))
@@ -241,7 +243,11 @@ class TranslationSessionHostCoordinator(
                     ?: (choices.source == null)
                 TranslationSessionLanguageDefault.AutomaticSource(
                     detected = pickerLanguages.source.takeIf { automatic && request != null },
-                    declared = request?.languageContext?.declaredLanguages?.firstOrNull(),
+                    declared = if (request != null) {
+                        request.languageContext.declaredLanguages.firstOrNull()
+                    } else {
+                        declaredLanguage
+                    },
                     selected = automatic,
                 )
             }

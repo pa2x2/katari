@@ -12,6 +12,7 @@ import mihon.entry.interactions.book.reader.language.BookSelectionLanguageSessio
 import mihon.entry.viewer.settings.ResolvedViewerSetting
 import mihon.entry.viewer.settings.shared.ReaderCapabilityId
 import mihon.entry.viewer.settings.shared.StandardReaderCapabilities
+import mihon.language.api.tag.LanguageTag
 import mihon.translation.api.TranslationFeature
 import mihon.translation.api.availability.TranslationDeviceAvailability
 import mihon.translation.api.host.TranslationHostActions
@@ -52,7 +53,11 @@ internal class BookSelectionTranslationController(
         scope = scope,
         selectionSettleDelayMillis = 0,
         languageStore = languageStore,
+        declaredLanguage = languageSession.declaredLanguage,
     )
+
+    /** The language the book says it is written in, which automatic source detection starts from. */
+    val declaredLanguage: LanguageTag? = languageSession.declaredLanguage
 
     private val mutableEffectiveEnabled = MutableStateFlow(false)
     val effectiveEnabled: StateFlow<Boolean> = mutableEffectiveEnabled.asStateFlow()

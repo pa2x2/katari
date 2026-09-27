@@ -317,6 +317,23 @@ class TranslationSessionHostCoordinatorTest {
     }
 
     @Test
+    fun `the source picker names what the content is marked as when no translation is on screen`() = runTest {
+        val coordinator = TranslationSessionHostCoordinator(
+            feature = RecordingFeature(),
+            hostActions = FakeHostActions(),
+            scope = backgroundScope,
+            declaredLanguage = FRENCH,
+        )
+        runCurrent()
+
+        coordinator.handleExternalAction(TranslationSessionExternalAction.ChooseSourceLanguage) {}
+        runCurrent()
+
+        coordinator.languageDefault(TranslationSessionPicker.SourceLanguage) shouldBe
+            TranslationSessionLanguageDefault.AutomaticSource(detected = null, declared = FRENCH, selected = true)
+    }
+
+    @Test
     fun `setup refreshes state without selecting the engine`() = runTest {
         val host = FakeHostActions()
         val coordinator = TranslationSessionHostCoordinator(

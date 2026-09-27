@@ -21,8 +21,9 @@ import uy.kohesive.injekt.api.get
  * Common in-reader settings host.
  *
  * Applicable shared settings are projected from [ReaderSharedSettingsRegistry] so a reader cannot omit them,
- * while processor-owned pages are contributed by the caller in [content]. Reset clears processor and shared entry
- * overrides so an in-reader reset only drops this entry's overrides.
+ * while processor-owned pages are contributed by the caller in [content]. [sharedSettingDetails] adds what the open
+ * entry shows with a shared setting. Reset clears processor and shared entry overrides so an in-reader reset only drops
+ * this entry's overrides.
  */
 @Composable
 fun ReaderSettingsDialogHost(
@@ -35,6 +36,7 @@ fun ReaderSettingsDialogHost(
     onOpenDefaultSettings: () -> Unit,
     onResetProcessorSettings: suspend () -> Unit,
     onProcessorPageChanged: ((Int) -> Unit)? = null,
+    sharedSettingDetails: Map<ReaderSharedSettingId, ReaderSharedSettingDetails> = emptyMap(),
     content: @Composable ColumnScope.(processorPage: Int) -> Unit,
 ) {
     val registry = remember { Injekt.get<ReaderSharedSettingsRegistry>() }
@@ -73,7 +75,9 @@ fun ReaderSettingsDialogHost(
     ) { page ->
         if (page < processorTabOffset) {
             sharedSettings.forEach { setting ->
-                SharedReaderToggleRow(setting, sharedSettingBindings.getValue(setting.id))
+                val details = sharedSettingDetails[setting.id]
+                SharedReaderToggleRow(setting, sharedSettingBindings.getValue(setting.id), details?.summary)
+                details?.content?.invoke(this)
             }
         } else {
             content(page - processorTabOffset)
