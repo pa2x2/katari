@@ -4,7 +4,7 @@ import android.graphics.Bitmap
 import java.nio.FloatBuffer
 
 /**
- * Scales [bitmap] to [width]×[height] and writes it as a planar (channel, row, column) float tensor. [channel]
+ * Resizes [bitmap] to [width]×[height] and writes it as a planar (channel, row, column) float tensor. [channel]
  * converts one ARGB pixel to the three channel values.
  */
 internal inline fun planarTensor(
@@ -13,13 +13,7 @@ internal inline fun planarTensor(
     height: Int,
     channel: (pixel: Int, index: Int) -> Float,
 ): FloatBuffer {
-    val source = if (bitmap.config == Bitmap.Config.HARDWARE) bitmap.copy(Bitmap.Config.ARGB_8888, false) else bitmap
-    val scaled = Bitmap.createScaledBitmap(source, width, height, true)
-    val pixels = IntArray(width * height)
-    scaled.getPixels(pixels, 0, width, 0, 0, width, height)
-    if (scaled !== source) scaled.recycle()
-    if (source !== bitmap) source.recycle()
-
+    val pixels = resamplePixels(bitmap.pixels(), bitmap.width, bitmap.height, width, height)
     val plane = width * height
     val buffer = FloatBuffer.allocate(3 * plane)
     for (index in pixels.indices) {
@@ -29,6 +23,15 @@ internal inline fun planarTensor(
         buffer.put(2 * plane + index, channel(pixel, 2))
     }
     return buffer
+}
+
+/** The ARGB pixels of [this], read from a software copy when the bitmap lives in graphics memory. */
+internal fun Bitmap.pixels(): IntArray {
+    val source = if (config == Bitmap.Config.HARDWARE) copy(Bitmap.Config.ARGB_8888, false) else this
+    val pixels = IntArray(width * height)
+    source.getPixels(pixels, 0, width, 0, 0, width, height)
+    if (source !== this) source.recycle()
+    return pixels
 }
 
 internal fun Int.red(): Int = (this shr 16) and 0xFF

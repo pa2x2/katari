@@ -35,6 +35,8 @@ internal class PaddleOcrRecognizer(
     /** Regions are split into lines at up to the line detector's resolution, so crops arrive unreduced. */
     override val inputEdge: Int = LINE_DETECTOR_MAXIMUM_EDGE
 
+    override val processingRevision: Int = 2
+
     private val dictionaries = mutableMapOf<File, List<String>>()
 
     override fun models(language: LanguageTag): List<ModelArtifactDescriptor> = listOfNotNull(

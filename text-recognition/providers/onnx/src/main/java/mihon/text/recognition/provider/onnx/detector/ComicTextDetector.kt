@@ -28,6 +28,7 @@ internal class ComicTextDetector(
     override fun models(language: LanguageTag): List<ModelArtifactDescriptor> =
         listOf(OnnxModelArtifacts.comicTextDetector)
     override val inputEdge: Int = INPUT_EDGE
+    override val processingRevision: Int = 2
 
     override suspend fun inspectDevice(language: LanguageTag) = TextRecognitionComponentAvailability.Available
 

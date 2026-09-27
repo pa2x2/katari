@@ -29,6 +29,7 @@ internal class MangaOcrRecognizer(
     override val catalogEntry = OnnxTextRecognitionCatalog.mangaOcr
     override fun models(language: LanguageTag): List<ModelArtifactDescriptor> = listOf(OnnxModelArtifacts.mangaOcr)
     override val inputEdge: Int = INPUT_EDGE
+    override val processingRevision: Int = 2
 
     private var vocabulary: Pair<File, MangaOcrVocabulary>? = null
 
@@ -44,7 +45,7 @@ internal class MangaOcrRecognizer(
         val decoder = sessions.session(DECODER_SLOT, installed.file(OnnxModelArtifacts.MANGA_OCR_DECODER_FILE))
         val vocabulary = vocabulary(installed.file(OnnxModelArtifacts.MANGA_OCR_VOCABULARY_FILE))
 
-        // The model was trained on grayscale crops, normalized to [-1, 1].
+        // The model was trained on grayscale crops stretched to a square and normalized to [-1, 1].
         val pixels = planarTensor(crop, INPUT_EDGE, INPUT_EDGE) { pixel, _ ->
             val luminance = (pixel.red() * 299 + pixel.green() * 587 + pixel.blue() * 114) / 1000f
             luminance / 127.5f - 1f
