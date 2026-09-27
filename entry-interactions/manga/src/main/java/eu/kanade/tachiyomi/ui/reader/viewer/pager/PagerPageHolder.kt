@@ -23,6 +23,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
 import logcat.LogPriority
 import mihon.entry.interactions.manga.databinding.ReaderErrorBinding
+import mihon.entry.interactions.manga.reader.text.surface.MangaPageTextSurface
+import mihon.entry.interactions.manga.reader.text.surface.ReaderPageTextSurface
 import okio.Buffer
 import okio.BufferedSource
 import tachiyomi.core.common.i18n.stringResource
@@ -66,9 +68,16 @@ internal class PagerPageHolder(
      */
     private var loadJob: Job? = null
 
+    private var textDecorationJob: Job? = null
+
     init {
         loadJob = scope.launch { loadPageAndProcessStatus() }
+        textDecorationJob = scope.launch {
+            viewer.activity.viewModel.textSession.decoration(page).collect(::setTextDecoration)
+        }
     }
+
+    val textSurface: MangaPageTextSurface = ReaderPageTextSurface(page, this)
 
     /**
      * Called when this view is detached from the window. Unsubscribes any active subscription.
@@ -78,6 +87,8 @@ internal class PagerPageHolder(
         super.onDetachedFromWindow()
         loadJob?.cancel()
         loadJob = null
+        textDecorationJob?.cancel()
+        textDecorationJob = null
     }
 
     private fun initProgressIndicator() {
@@ -292,6 +303,7 @@ internal class PagerPageHolder(
         super.onImageLoaded()
         page.releaseProgressivePreviewAfterFinalImageReady()
         progressIndicator?.hide()
+        viewer.activity.onPageTextSurfacesChanged()
     }
 
     /**

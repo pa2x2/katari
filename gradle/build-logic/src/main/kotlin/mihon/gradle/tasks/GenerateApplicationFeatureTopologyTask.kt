@@ -50,10 +50,15 @@ internal data class ApplicationFeatureModuleDescriptor(
     val source: String,
 )
 
+/**
+ * @property variants build variants the component is registered in, or `null` for every variant. Components whose
+ * code must stay out of some builds (for example proprietary libraries in FOSS builds) list the variants they ship in.
+ */
 internal data class ApplicationFeatureRuntimeComponentDescriptor(
     val id: String,
     val componentSymbol: String,
     val source: String,
+    val variants: Set<String>? = null,
 )
 
 internal fun generateApplicationFeatureProductionTopology(
@@ -62,7 +67,8 @@ internal fun generateApplicationFeatureProductionTopology(
     components: List<ApplicationFeatureRuntimeComponentDescriptor> = emptyList(),
 ): String {
     validateApplicationFeatureDescriptors(modules)
-    validateApplicationFeatureRuntimeComponentDescriptors(components)
+    val activeComponents = components.filter { it.variants == null || variantName in it.variants }
+    validateApplicationFeatureRuntimeComponentDescriptors(activeComponents)
     return buildString {
         appendLine("package mihon.feature.runtime")
         appendLine()
@@ -99,7 +105,7 @@ internal fun generateApplicationFeatureProductionTopology(
                 "ApplicationFeatureRuntimeComponents = ApplicationFeatureRuntimeComponents(",
         )
         appendLine("    registrations = listOf(")
-        components.sortedBy(ApplicationFeatureRuntimeComponentDescriptor::id).forEach { descriptor ->
+        activeComponents.sortedBy(ApplicationFeatureRuntimeComponentDescriptor::id).forEach { descriptor ->
             appendLine("        RegisteredApplicationFeatureRuntimeComponent(")
             appendLine("            id = \"${descriptor.id}\",")
             appendLine("            component = ${descriptor.componentSymbol},")
@@ -203,6 +209,11 @@ private fun applicationFeatureRuntimeComponentDescriptor(
         id = properties.requiredApplicationFeatureValue("id", file),
         componentSymbol = properties.requiredApplicationFeatureValue("component", file),
         source = file.invariantSeparatorsPath,
+        variants = properties.getProperty("variants")?.let { value ->
+            value.split(',').map(String::trim).filter(String::isNotEmpty).toSet().ifEmpty {
+                throw GradleException("Empty 'variants' in ${file.invariantSeparatorsPath}")
+            }
+        },
     )
 }
 
@@ -215,7 +226,7 @@ private fun Properties.requiredApplicationFeatureValue(
 }
 
 private val APPLICATION_FEATURE_DESCRIPTOR_KEYS = setOf("id", "module")
-private val APPLICATION_FEATURE_RUNTIME_COMPONENT_DESCRIPTOR_KEYS = setOf("id", "component")
+private val APPLICATION_FEATURE_RUNTIME_COMPONENT_DESCRIPTOR_KEYS = setOf("id", "component", "variants")
 private val APPLICATION_FEATURE_MODULE_ID = Regex("""[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*""")
 private val APPLICATION_FEATURE_MODULE_SYMBOL =
     Regex("""[A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)+""")

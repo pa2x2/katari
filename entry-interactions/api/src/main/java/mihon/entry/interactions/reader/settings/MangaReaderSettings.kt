@@ -25,6 +25,7 @@ interface MangaReaderSettings : ViewerSettingsProvider {
     val webtoon: MangaReaderWebtoonDefinitions
     val navigation: MangaReaderNavigationDefinitions
     val colorFilter: MangaReaderColorFilterDefinitions
+    val pageText: MangaReaderPageTextDefinitions
 
     override val settings: List<ViewerSettingDefinition<*>>
         get() = reading.all +
@@ -33,7 +34,8 @@ interface MangaReaderSettings : ViewerSettingsProvider {
             pager.all +
             webtoon.all +
             navigation.all +
-            colorFilter.all
+            colorFilter.all +
+            pageText.all
 
     override val sharedSettingDefinitions: Map<ReaderSharedSettingId, ViewerSettingDefinition<Boolean>>
         get() = mapOf(StandardReaderSharedSettingIds.NextChapterPreparation to reading.prepareNextChapter)

@@ -21,17 +21,29 @@ import kotlin.reflect.KClass
  *
  * The module keeps its Feature declaration and runtime implementation together. The application subject itself is
  * aggregated once from every installed module.
+ *
+ * [requiredModules] names the application Features whose runtime registrations this module resolves while it is
+ * being installed. Required modules are installed first; a missing or cyclic requirement fails installation.
  */
 class ApplicationFeatureRuntimeModule(
     val id: String,
     val contributor: FeatureGraphContributor,
     val additionalContributors: List<FeatureGraphContributor> = emptyList(),
+    val requiredModules: Set<String> = emptySet(),
     val installRuntime:
     InjektRegistrar.(ApplicationFeatureRuntimeInstallationContext) -> ApplicationFeatureRuntimeArtifacts,
 ) {
     init {
         require(APPLICATION_FEATURE_MODULE_ID.matches(id)) {
             "Application Feature runtime module id '$id' is invalid"
+        }
+        requiredModules.forEach { required ->
+            require(APPLICATION_FEATURE_MODULE_ID.matches(required)) {
+                "Application Feature runtime module '$id' requires invalid module id '$required'"
+            }
+        }
+        require(id !in requiredModules) {
+            "Application Feature runtime module '$id' cannot require itself"
         }
     }
 
@@ -133,7 +145,7 @@ fun installApplicationFeatureRuntimeModules(
     context: ApplicationFeatureRuntimeInstallationContext,
 ): ApplicationFeatureRuntimeInstallation {
     validateApplicationFeatureRuntimeModules(modules)
-    val installed = modules.map { module ->
+    val installed = modules.inRequirementOrder().map { module ->
         InstalledApplicationFeatureRuntimeModule(
             module = module,
             artifacts = module.installRuntime(registrar, context),
@@ -204,6 +216,35 @@ private fun validateApplicationFeatureRuntimeModules(
         "Application Feature graph contributors installed by multiple runtime modules: " +
             duplicateContributors.values.map(List<String>::sorted)
     }
+}
+
+/**
+ * Orders modules so that every module follows the modules it requires, otherwise preserving the given order.
+ */
+private fun List<ApplicationFeatureRuntimeModule>.inRequirementOrder(): List<ApplicationFeatureRuntimeModule> {
+    val byId = associateBy(ApplicationFeatureRuntimeModule::id)
+    forEach { module ->
+        val missing = module.requiredModules.filterNot(byId::containsKey)
+        check(missing.isEmpty()) {
+            "Application Feature runtime module ${module.id} requires modules that are not installed: ${missing.sorted()}"
+        }
+    }
+    val ordered = LinkedHashMap<String, ApplicationFeatureRuntimeModule>()
+    val visiting = mutableListOf<String>()
+    fun visit(module: ApplicationFeatureRuntimeModule) {
+        if (module.id in ordered) return
+        check(module.id !in visiting) {
+            "Application Feature runtime modules have a requirement cycle: ${(visiting + module.id).joinToString(
+                " -> ",
+            )}"
+        }
+        visiting += module.id
+        module.requiredModules.sorted().forEach { required -> visit(byId.getValue(required)) }
+        visiting -= module.id
+        ordered[module.id] = module
+    }
+    forEach(::visit)
+    return ordered.values.toList()
 }
 
 private fun validateApplicationFeatureRuntimeBoundaries(

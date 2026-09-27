@@ -90,6 +90,9 @@ import logcat.LogPriority
 import mihon.entry.interactions.manga.R
 import mihon.entry.interactions.manga.databinding.ReaderActivityBinding
 import mihon.entry.interactions.manga.reader.settings.MangaReaderSettingsBindings
+import mihon.entry.interactions.manga.reader.text.interaction.MangaReaderTextInteraction
+import mihon.entry.interactions.manga.reader.text.session.MangaTextProcessAheadPolicy
+import mihon.entry.interactions.manga.reader.text.ui.MangaReaderTextLayer
 import mihon.entry.interactions.reader.settings.MangaReaderSettings
 import mihon.entry.interactions.reader.settings.ReaderBasePreferences
 import mihon.entry.interactions.reader.settings.ReaderOrientation
@@ -99,6 +102,8 @@ import mihon.entry.interactions.source.EntryChildWebViewAction
 import mihon.entry.interactions.source.EntryChildWebViewResolution
 import mihon.entry.interactions.source.launchEntryChildWebViewAction
 import mihon.entry.viewer.settings.navigation.openViewerSettings
+import mihon.text.recognition.api.host.openTextRecognitionSettings
+import mihon.translation.api.host.openTranslationSettings
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.launchNonCancellable
@@ -149,6 +154,30 @@ class ReaderActivity : EntryInteractionActivity() {
     private var config: ReaderConfig? = null
 
     private var menuToggleToast: Toast? = null
+
+    private val textProcessAheadPolicy by lazy { MangaTextProcessAheadPolicy(this) }
+
+    private val textInteraction by lazy {
+        MangaReaderTextInteraction(
+            session = viewModel.textSession,
+            translation = viewModel.textTranslation,
+            visibleSurfaces = { viewModel.state.value.viewer?.visibleTextSurfaces().orEmpty() },
+            preloadedSurfaces = { viewModel.state.value.viewer?.preloadedTextSurfaces().orEmpty() },
+            processAheadAllowed = {
+                val settings = viewModel.settingsBindings.value
+                settings != null && textProcessAheadPolicy.allows(
+                    onlyOnUnmeteredNetwork =
+                    settings.pageTextProcessAheadOnlyOnUnmeteredNetwork.state.value.effectiveValue,
+                    onlyWhileCharging = settings.pageTextProcessAheadOnlyWhileCharging.state.value.effectiveValue,
+                )
+            },
+            overlayOrigin = {
+                val origin = IntArray(2).also(binding.composeOverlay::getLocationInWindow)
+                origin[0].toFloat() to origin[1].toFloat()
+            },
+            scope = lifecycleScope,
+        )
+    }
     private var readingModeToast: Toast? = null
     private var displayRefreshHost: DisplayRefreshHost? = null
 
@@ -339,6 +368,8 @@ class ReaderActivity : EntryInteractionActivity() {
             ContentOverlay(state = state)
 
             AppBars(state = state)
+
+            TextLayer(menuVisible = state.menuVisible)
         }
 
         val onDismissRequest = viewModel::closeDialog
@@ -439,6 +470,8 @@ class ReaderActivity : EntryInteractionActivity() {
      */
     override fun onResume() {
         super.onResume()
+        viewModel.textSession.resume()
+        viewModel.textTranslation.onResume()
         viewModel.restartReadTimer()
         activityCheckpointJob?.cancel()
         activityCheckpointJob = lifecycleScope.launchIO {
@@ -551,6 +584,7 @@ class ReaderActivity : EntryInteractionActivity() {
         val cropEnabled = if (isPagerType) cropBorderPaged.effectiveValue else cropBorderWebtoon.effectiveValue
         val showAutoScrollToggle = autoScrollFeatureEnabled.effectiveValue && state.viewer?.supportsAutoScroll() == true
 
+        val textState by viewModel.textSession.state.collectAsState()
         val verticalNavigatorModes by settings.verticalNavigator.state.collectAsState()
         val verticalNavigator = verticalNavigatorModes.effectiveValue.contains(
             ReadingMode.fromPreference(viewModel.getMangaReadingMode()),
@@ -630,7 +664,33 @@ class ReaderActivity : EntryInteractionActivity() {
             autoScrollActive = isAutoScrollRunning,
             onClickAutoScroll = ::toggleAutoScroll,
             onClickChapterNavigation = viewModel::openChapterNavigationDialog,
+            textTranslationActive = textState.active,
+            onClickTextTranslation = { textInteraction.setActive(!textState.active) },
             onClickSettings = viewModel::openSettingsDialog,
+        )
+    }
+
+    @Composable
+    private fun TextLayer(menuVisible: Boolean) {
+        val textState by viewModel.textSession.state.collectAsState()
+        val areaResult by textInteraction.areaResult.collectAsState()
+        MangaReaderTextLayer(
+            state = textState,
+            menuVisible = menuVisible,
+            translationCoordinator = viewModel.textTranslation.hostCoordinator,
+            areaResult = areaResult,
+            observeModels = viewModel.textSession::observeModels,
+            onConsumeAreaResult = textInteraction::consumeAreaResult,
+            onAreaSelected = textInteraction::onAreaSelected,
+            onApproveModels = viewModel.textSession::approveModels,
+            onApprovePlatformModels = viewModel.textSession::approvePlatformModels,
+            onChooseLanguage = viewModel.textSession::chooseLanguage,
+            onOpenSettings = ::openTextRecognitionSettings,
+            onDismissTranslation = textInteraction::dismissTranslation,
+            onToggleOverlay = viewModel::toggleTextTranslationOverlay,
+            onToggleOriginal = viewModel.textSession::toggleOriginal,
+            onOpenTranslationSettings = ::openTranslationSettings,
+            onClose = { textInteraction.setActive(false) },
         )
     }
 
@@ -809,6 +869,20 @@ class ReaderActivity : EntryInteractionActivity() {
      */
     internal fun onPageSelected(page: ReaderPage) {
         viewModel.onPageSelected(page)
+        textInteraction.refreshSurfaces()
+    }
+
+    /** Called from viewers when a page view starts or stops showing an image. */
+    internal fun onPageTextSurfacesChanged() {
+        textInteraction.refreshSurfaces()
+    }
+
+    /**
+     * Called from viewers before a tap is used for navigation. Returns whether translate mode consumed the tap.
+     */
+    internal fun onTextTap(event: MotionEvent): Boolean {
+        val windowOrigin = IntArray(2).also(window.decorView::getLocationOnScreen)
+        return textInteraction.onTap(event.rawX - windowOrigin[0], event.rawY - windowOrigin[1])
     }
 
     /**

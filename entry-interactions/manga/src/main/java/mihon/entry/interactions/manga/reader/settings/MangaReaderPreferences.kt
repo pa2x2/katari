@@ -120,6 +120,15 @@ internal class MangaReaderPreferences(
 
     val autoScrollEnabled: Preference<Boolean> = preferenceStore.getBoolean("reader_auto_scroll", false)
 
+    val pageTextTranslationOverlay: Preference<Boolean> =
+        preferenceStore.getBoolean("reader_page_text_translation_overlay", false)
+
+    val pageTextProcessAheadOnlyOnUnmeteredNetwork: Preference<Boolean> =
+        preferenceStore.getBoolean("reader_page_text_process_ahead_unmetered_only", true)
+
+    val pageTextProcessAheadOnlyWhileCharging: Preference<Boolean> =
+        preferenceStore.getBoolean("reader_page_text_process_ahead_charging_only", false)
+
     val autoScrollSpeed: Preference<Int> = preferenceStore.getInt(
         "reader_auto_scroll_speed",
         MangaReaderSettings.AUTO_SCROLL_LEVEL_DEFAULT,

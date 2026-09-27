@@ -30,6 +30,7 @@ import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.source.service.SourceManager
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.time.Duration.Companion.seconds
 
 class EntryImmersiveScreenModelTest {
@@ -88,7 +89,8 @@ class EntryImmersiveScreenModelTest {
         val repository = mockk<EntryChapterRepository> {
             coEvery { getChaptersByEntryIdAwait(any(), any()) } returns listOf(chapter)
         }
-        val handles = mutableMapOf<EntryImmersiveItemKey, EntryImmersiveHandle>()
+        // The model loads entries concurrently on IO threads, so the fake records handles in a concurrent map.
+        val handles = ConcurrentHashMap<EntryImmersiveItemKey, EntryImmersiveHandle>()
         val feature = mockk<EntryImmersiveFeature>(relaxed = true) {
             every { availability(any()) } returns EntryImmersiveAvailability.Available(
                 preloadRadius = 1,

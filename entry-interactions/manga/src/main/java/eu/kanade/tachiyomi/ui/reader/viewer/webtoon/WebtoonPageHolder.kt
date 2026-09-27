@@ -28,6 +28,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
 import logcat.LogPriority
 import mihon.entry.interactions.manga.databinding.ReaderErrorBinding
+import mihon.entry.interactions.manga.reader.text.surface.MangaPageTextSurface
+import mihon.entry.interactions.manga.reader.text.surface.ReaderPageTextSurface
 import okio.Buffer
 import okio.BufferedSource
 import tachiyomi.core.common.i18n.stringResource
@@ -84,12 +86,15 @@ internal class WebtoonPageHolder(
      */
     private var loadJob: Job? = null
 
+    private var textDecorationJob: Job? = null
+
     init {
         refreshLayoutParams()
 
         frame.onImageLoaded = {
             page?.releaseProgressivePreviewAfterFinalImageReady()
             onImageDecoded()
+            viewer.activity.onPageTextSurfacesChanged()
         }
         frame.onImageLoadError = { error -> setError(error) }
         frame.onScaleChanged = { viewer.activity.hideMenu() }
@@ -102,8 +107,15 @@ internal class WebtoonPageHolder(
         this.page = page
         loadJob?.cancel()
         loadJob = scope.launch { loadPageAndProcessStatus() }
+        textDecorationJob?.cancel()
+        textDecorationJob = scope.launch {
+            viewer.activity.viewModel.textSession.decoration(page).collect(frame::setTextDecoration)
+        }
         refreshLayoutParams()
     }
+
+    /** The bound page as a text surface, or `null` while no page is bound. */
+    fun textSurface(): MangaPageTextSurface? = page?.let { ReaderPageTextSurface(it, frame) }
 
     private fun refreshLayoutParams() {
         frame.layoutParams = FrameLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply {
@@ -123,6 +135,8 @@ internal class WebtoonPageHolder(
     override fun recycle() {
         loadJob?.cancel()
         loadJob = null
+        textDecorationJob?.cancel()
+        textDecorationJob = null
 
         removeErrorLayout()
         frame.recycle()

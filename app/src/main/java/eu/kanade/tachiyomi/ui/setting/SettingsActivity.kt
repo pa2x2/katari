@@ -8,6 +8,7 @@ import eu.kanade.tachiyomi.ui.base.activity.BaseActivity
 import eu.kanade.tachiyomi.util.view.setComposeContent
 import mihon.core.migration.Migrator
 import mihon.entry.viewer.settings.navigation.ViewerSettingsNavigation
+import mihon.text.recognition.api.host.TextRecognitionSettingsNavigation
 import mihon.translation.api.host.TranslationSettingsNavigation
 
 class SettingsActivity : BaseActivity() {
@@ -25,6 +26,8 @@ class SettingsActivity : BaseActivity() {
         val screen = when (intent.action) {
             TranslationSettingsNavigation.ACTION_OPEN_SETTINGS ->
                 SettingsScreen(SettingsScreen.Destination.Translation)
+            TextRecognitionSettingsNavigation.ACTION_OPEN_SETTINGS ->
+                SettingsScreen(SettingsScreen.Destination.TextRecognition)
             ViewerSettingsNavigation.ACTION_OPEN_SETTINGS ->
                 SettingsScreen(
                     destination = SettingsScreen.Destination.Readers,

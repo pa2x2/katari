@@ -20,6 +20,7 @@ dependencies {
     implementation(projects.core.common)
     implementation(projects.translation.spi)
     implementation(libs.androidx.appCompat)
+    implementation(libs.diskLruCache)
     implementation(libs.injekt)
 
     testImplementation(projects.featureValidation)

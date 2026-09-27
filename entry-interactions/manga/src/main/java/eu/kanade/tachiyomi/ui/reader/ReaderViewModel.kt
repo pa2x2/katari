@@ -8,6 +8,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import eu.kanade.tachiyomi.data.database.models.toDomainChapter
+import eu.kanade.tachiyomi.source.entry.EntryCatalogueSource
 import eu.kanade.tachiyomi.source.model.Page
 import eu.kanade.tachiyomi.ui.reader.loader.ChapterLoader
 import eu.kanade.tachiyomi.ui.reader.loader.ReaderLoadException
@@ -61,6 +62,10 @@ import mihon.entry.interactions.manga.download.DownloadProvider
 import mihon.entry.interactions.manga.download.model.MangaDownload
 import mihon.entry.interactions.manga.media.session.MangaMediaSessionProcessor
 import mihon.entry.interactions.manga.reader.settings.MangaReaderSettingsBindings
+import mihon.entry.interactions.manga.reader.text.session.MangaReaderTextSession
+import mihon.entry.interactions.manga.reader.text.session.declaredContentLanguage
+import mihon.entry.interactions.manga.reader.text.translation.MangaPageTranslator
+import mihon.entry.interactions.manga.reader.text.translation.MangaTextTranslationController
 import mihon.entry.interactions.manga.state.mangaProgressState
 import mihon.entry.interactions.manga.state.pageIndex
 import mihon.entry.interactions.media.session.EntryMediaSessionActivitySession
@@ -79,6 +84,7 @@ import mihon.entry.viewer.settings.ViewerSettingBinder
 import mihon.entry.viewer.settings.ViewerSettingBinding
 import mihon.entry.viewer.settings.ViewerSettingSource
 import mihon.entry.viewer.settings.updateEntry
+import mihon.text.recognition.api.host.TextRecognitionHostActions
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.core.common.util.lang.withIOContext
@@ -144,6 +150,35 @@ internal class ReaderViewModel @JvmOverloads constructor(
         }
 
     val jumpHistory = MangaReaderJumpHistory()
+
+    /** Recognizes page text while the reader's translate mode is on. */
+    val textSession = MangaReaderTextSession(
+        recognition = Injekt.get(),
+        modelStore = Injekt.get(),
+        translator = MangaPageTranslator(Injekt.get()),
+        installPlatformModels = Injekt.get<TextRecognitionHostActions>()::installPlatformModels,
+        scope = viewModelScope,
+        declaredLanguage = {
+            val source = manga?.let { sourceManager.get(it.source) } as? EntryCatalogueSource
+            declaredContentLanguage(source?.lang)
+        },
+    )
+
+    /** Translates text recognized on pages. */
+    val textTranslation = MangaTextTranslationController(
+        feature = Injekt.get(),
+        hostActions = Injekt.get(),
+        scope = viewModelScope,
+    )
+
+    init {
+        settingsBindings
+            .filterNotNull()
+            .flatMapLatest { settings -> settings.pageTextTranslationOverlay.state.map { it.effectiveValue } }
+            .distinctUntilChanged()
+            .onEach(textSession::setOverlay)
+            .launchIn(viewModelScope)
+    }
 
     private val initialState = InitialState.from(savedState)
 
@@ -327,6 +362,7 @@ internal class ReaderViewModel @JvmOverloads constructor(
     }
 
     override fun onCleared() {
+        textTranslation.close()
         val currentChapters = state.value.viewerChapters
         if (currentChapters != null) {
             currentChapters.unref()
@@ -914,6 +950,13 @@ internal class ReaderViewModel @JvmOverloads constructor(
 
     private fun ResolvedViewerSetting<Int>.overrideOrDefault(default: Int): Int {
         return if (source == ViewerSettingSource.ENTRY) entryOverride ?: default else default
+    }
+
+    /** Switches between drawing translations over pages and translating tapped text, for this manga. */
+    fun toggleTextTranslationOverlay() {
+        val binding = readerSettings.pageTextTranslationOverlay
+        val enabled = !binding.effectiveValue
+        viewModelScope.launchIO { binding.updateEntry(enabled) }
     }
 
     fun toggleCropBorders(): Boolean {

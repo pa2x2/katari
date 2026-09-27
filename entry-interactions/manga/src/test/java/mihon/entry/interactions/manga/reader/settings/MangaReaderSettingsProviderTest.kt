@@ -80,6 +80,8 @@ class MangaReaderSettingsProviderTest {
             "read_with_volume_keys_inverted",
             "auto_scroll_enabled",
             "auto_scroll_speed",
+            "page_text_process_ahead_unmetered_only",
+            "page_text_process_ahead_charging_only",
         )
 
         val OVERRIDABLE_IN_READER_SETTING_KEYS = setOf(
@@ -130,6 +132,7 @@ class MangaReaderSettingsProviderTest {
             "color_filter_mode",
             "grayscale",
             "inverted_colors",
+            "page_text_translation_overlay",
         )
     }
 }
