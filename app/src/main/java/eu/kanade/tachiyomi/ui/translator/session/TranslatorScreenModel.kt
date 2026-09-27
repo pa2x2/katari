@@ -216,15 +216,6 @@ internal class TranslatorScreenModel(
         when (action) {
             TranslationSessionExternalAction.ChooseSourceLanguage -> showPicker(TranslatorPicker.SourceLanguage)
             TranslationSessionExternalAction.ChooseTargetLanguage -> showPicker(TranslatorPicker.TargetLanguage)
-            is TranslationSessionExternalAction.ChangeLanguages -> {
-                mutableState.update {
-                    it.copy(
-                        sourceLanguage = TranslationSourceLanguageSelection.Explicit(action.source),
-                        targetLanguage = TranslationTargetLanguageSelection.Explicit(action.target),
-                        picker = TranslatorPicker.SourceLanguage,
-                    )
-                }
-            }
             TranslationSessionExternalAction.ChooseEngine -> showPicker(TranslatorPicker.Engine)
             is TranslationSessionExternalAction.ConfirmProviderDisclosure,
             is TranslationSessionExternalAction.DownloadModels,

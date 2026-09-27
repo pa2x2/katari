@@ -48,6 +48,7 @@ import mihon.language.api.tag.LanguageTag
 import mihon.translation.api.engine.TranslationEngineSelection
 import mihon.translation.ui.session.TranslationSessionController
 import mihon.translation.ui.session.TranslationSessionState
+import mihon.translation.ui.session.language.TranslationLanguageSuggestions
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.AdaptiveSheet
 import tachiyomi.presentation.core.i18n.stringResource
@@ -70,7 +71,9 @@ fun TranslationSessionHost(
     speechState: TranslationResultSpeechState = TranslationResultSpeechState(),
     onSpeechToggle: ((TranslationResultSpeechTarget) -> Unit)? = null,
     onSelectSource: (LanguageTag) -> Unit = controller::selectSourceLanguage,
+    onSelectTarget: (LanguageTag) -> Unit = controller::selectTargetLanguage,
     onSelectEngine: (TranslationEngineSelection) -> Unit = controller::selectEngine,
+    languageSuggestions: TranslationLanguageSuggestions? = null,
 ) {
     val state by controller.state.collectAsState()
     val active = state as? TranslationSessionState.Active
@@ -99,8 +102,10 @@ fun TranslationSessionHost(
         },
         onExpand = { expanded = true },
         onSelectSource = onSelectSource,
+        onSelectTarget = onSelectTarget,
         onSelectEngine = onSelectEngine,
         onExternalAction = onExternalAction,
+        languageSuggestions = languageSuggestions,
         speechState = speechState,
         onSpeechToggle = onSpeechToggle,
         onPopupBoundsChanged = onPopupBoundsChanged,
@@ -121,6 +126,8 @@ internal fun TranslationSessionOverlay(
     onSelectSource: (LanguageTag) -> Unit,
     onSelectEngine: (TranslationEngineSelection) -> Unit,
     onExternalAction: (TranslationSessionExternalAction) -> Unit,
+    onSelectTarget: (LanguageTag) -> Unit = {},
+    languageSuggestions: TranslationLanguageSuggestions? = null,
     speechState: TranslationResultSpeechState = TranslationResultSpeechState(),
     onSpeechToggle: ((TranslationResultSpeechTarget) -> Unit)? = null,
     onPopupBoundsChanged: (Rect?) -> Unit = {},
@@ -150,8 +157,10 @@ internal fun TranslationSessionOverlay(
             onCopy = onCopy,
             onExpand = onExpand,
             onSelectSource = onSelectSource,
+            onSelectTarget = onSelectTarget,
             onSelectEngine = onSelectEngine,
             onExternalAction = onExternalAction,
+            languageSuggestions = languageSuggestions,
             speechState = speechState,
             onSpeechToggle = onSpeechToggle,
         )
@@ -257,8 +266,10 @@ internal fun TranslationSessionOverlay(
                 onCopy = onCopy,
                 onExpand = onExpand,
                 onSelectSource = onSelectSource,
+                onSelectTarget = onSelectTarget,
                 onSelectEngine = onSelectEngine,
                 onExternalAction = onExternalAction,
+                languageSuggestions = languageSuggestions,
                 speechState = speechState,
                 onSpeechToggle = onSpeechToggle,
             )
@@ -276,8 +287,10 @@ private fun TranslationSessionSheetDialog(
     onCopy: (String) -> Unit,
     onExpand: () -> Unit,
     onSelectSource: (LanguageTag) -> Unit,
+    onSelectTarget: (LanguageTag) -> Unit,
     onSelectEngine: (TranslationEngineSelection) -> Unit,
     onExternalAction: (TranslationSessionExternalAction) -> Unit,
+    languageSuggestions: TranslationLanguageSuggestions?,
     speechState: TranslationResultSpeechState,
     onSpeechToggle: ((TranslationResultSpeechTarget) -> Unit)?,
 ) {
@@ -311,6 +324,8 @@ private fun TranslationSessionSheetDialog(
                     onExternalAction = onExternalAction,
                     speechState = speechState,
                     onSpeechToggle = onSpeechToggle,
+                    languageSuggestions = languageSuggestions,
+                    onSelectTarget = onSelectTarget,
                     modifier = Modifier
                         .fillMaxWidth()
                         .verticalScroll(rememberScrollState()),
@@ -331,8 +346,10 @@ private fun TranslationSessionPopup(
     onCopy: (String) -> Unit,
     onExpand: () -> Unit,
     onSelectSource: (LanguageTag) -> Unit,
+    onSelectTarget: (LanguageTag) -> Unit,
     onSelectEngine: (TranslationEngineSelection) -> Unit,
     onExternalAction: (TranslationSessionExternalAction) -> Unit,
+    languageSuggestions: TranslationLanguageSuggestions?,
     speechState: TranslationResultSpeechState,
     onSpeechToggle: ((TranslationResultSpeechTarget) -> Unit)?,
 ) {
@@ -369,6 +386,8 @@ private fun TranslationSessionPopup(
                 onExternalAction = onExternalAction,
                 speechState = speechState,
                 onSpeechToggle = onSpeechToggle,
+                languageSuggestions = languageSuggestions,
+                onSelectTarget = onSelectTarget,
                 compact = true,
             )
         }

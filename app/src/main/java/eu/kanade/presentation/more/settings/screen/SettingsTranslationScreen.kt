@@ -141,9 +141,7 @@ object SettingsTranslationScreen : SearchableSettings {
                             TranslationLanguagePickerTarget.PlaygroundSource,
                         ),
                     )
-                TranslationSessionExternalAction.ChooseTargetLanguage,
-                is TranslationSessionExternalAction.ChangeLanguages,
-                -> navigator.push(
+                TranslationSessionExternalAction.ChooseTargetLanguage -> navigator.push(
                     TranslationLanguagePickerScreen(
                         TranslationLanguagePickerTarget.PlaygroundTarget,
                     ),

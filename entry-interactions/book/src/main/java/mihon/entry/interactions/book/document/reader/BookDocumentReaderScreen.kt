@@ -220,6 +220,7 @@ internal fun BookDocumentReaderScreen(
                 translationSpeechState = translationSpeechState,
                 onTranslationSpeechToggle = selectionCoordinator?.let { it::toggleTranslationSpeech },
                 onTranslationPopupBoundsChanged = onTranslationPopupBoundsChanged,
+                translationSnackbarHostState = snackbarHostState,
                 onRootPositionInWindow = { rootPosition = it },
                 modifier = Modifier
                     .fillMaxSize()

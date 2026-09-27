@@ -19,6 +19,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import mihon.translation.ui.presentation.language.TranslationSourceLanguageChip
+import mihon.translation.ui.presentation.language.TranslationTargetLanguageChip
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -30,6 +32,7 @@ internal fun TranslationSpeechSection(
     target: TranslationResultSpeechTarget,
     speechState: TranslationResultSpeechState,
     onSpeechToggle: (TranslationResultSpeechTarget) -> Unit,
+    onChooseLanguage: (() -> Unit)? = null,
 ) {
     TranslationSpeechSectionHeader(
         title = title,
@@ -37,6 +40,7 @@ internal fun TranslationSpeechSection(
         target = target,
         speechState = speechState,
         onSpeechToggle = onSpeechToggle,
+        onChooseLanguage = onChooseLanguage,
     )
     SelectionContainer {
         Text(
@@ -53,6 +57,7 @@ internal fun TranslationSpeechSectionHeader(
     target: TranslationResultSpeechTarget,
     speechState: TranslationResultSpeechState,
     onSpeechToggle: (TranslationResultSpeechTarget) -> Unit,
+    onChooseLanguage: (() -> Unit)? = null,
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -60,11 +65,16 @@ internal fun TranslationSpeechSectionHeader(
     ) {
         Column(modifier = Modifier.weight(1f)) {
             Text(text = title, style = MaterialTheme.typography.titleSmall)
-            Text(
-                text = language,
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            when {
+                onChooseLanguage == null -> Text(
+                    text = language,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                target.side == TranslationResultSpeechSide.Source ->
+                    TranslationSourceLanguageChip(language, onChooseLanguage)
+                else -> TranslationTargetLanguageChip(language, onChooseLanguage)
+            }
         }
         TranslationSpeechActionButton(
             target = target,

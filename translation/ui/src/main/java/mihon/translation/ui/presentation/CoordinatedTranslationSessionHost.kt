@@ -2,6 +2,7 @@ package mihon.translation.ui.presentation
 
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -15,6 +16,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.window.DialogProperties
 import mihon.translation.api.host.TranslationHostActionResult
 import mihon.translation.api.host.TranslationSetupDestination
+import mihon.translation.ui.presentation.language.TranslationKeptTargetSnackbar
 import mihon.translation.ui.session.TranslationSessionHostCoordinator
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -28,9 +30,11 @@ fun CoordinatedTranslationSessionHost(
     onPopupBoundsChanged: (Rect?) -> Unit = {},
     speechState: TranslationResultSpeechState = TranslationResultSpeechState(),
     onSpeechToggle: ((TranslationResultSpeechTarget) -> Unit)? = null,
+    snackbarHostState: SnackbarHostState? = null,
 ) {
     val context = LocalContext.current
     val picker by coordinator.picker.collectAsState()
+    val languageSuggestions by coordinator.languageSuggestions.collectAsState()
     var latestResult by remember(coordinator) { mutableStateOf<TranslationHostActionResult?>(null) }
 
     TranslationSessionHost(
@@ -49,8 +53,11 @@ fun CoordinatedTranslationSessionHost(
         speechState = speechState,
         onSpeechToggle = onSpeechToggle,
         onSelectSource = coordinator::selectSuggestedSource,
+        onSelectTarget = coordinator::selectSuggestedTarget,
         onSelectEngine = coordinator::selectOfferedEngine,
+        languageSuggestions = languageSuggestions,
     )
+    snackbarHostState?.let { TranslationKeptTargetSnackbar(coordinator, it) }
     LaunchedEffect(coordinator) {
         coordinator.results.collect { result ->
             latestResult = result

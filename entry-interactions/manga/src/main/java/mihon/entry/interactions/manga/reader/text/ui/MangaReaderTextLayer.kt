@@ -3,7 +3,12 @@ package mihon.entry.interactions.manga.reader.text.ui
 import android.graphics.RectF
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -13,6 +18,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -60,6 +66,7 @@ internal fun MangaReaderTextLayer(
     var approving by remember { mutableStateOf<List<ModelArtifactDescriptor>?>(null) }
     var approvingPlatform by remember { mutableStateOf<MangaReaderTextBlocker.PlatformModelsRequired?>(null) }
     var choosingLanguage by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
     var controlsPlacement by rememberSaveable(stateSaver = MangaReaderTextControlsPlacementSaver) {
         mutableStateOf(MangaReaderTextControlsPlacement())
     }
@@ -113,8 +120,15 @@ internal fun MangaReaderTextLayer(
                 isTabletUi = maxWidth >= 720.dp,
                 modifier = Modifier.fillMaxSize(),
                 onDismiss = onDismissTranslation,
+                snackbarHostState = snackbarHostState,
             )
         }
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .windowInsetsPadding(WindowInsets.safeDrawing),
+        )
     }
 
     approving?.let { models ->
