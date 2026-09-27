@@ -14,6 +14,7 @@ import mihon.translation.api.engine.TranslationEngineId
 import mihon.translation.api.engine.TranslationEngineInspection
 import mihon.translation.api.host.TranslationHostActionResult
 import mihon.translation.api.host.TranslationHostActions
+import mihon.translation.api.language.TranslationDefaultTarget
 import mihon.translation.api.language.TranslationLanguageSupport
 import mihon.translation.api.language.TranslationLanguageSupportInspection
 import mihon.translation.api.model.TranslationModelDescriptor
@@ -89,6 +90,10 @@ class TranslationLanguageSupportControllerTest {
             InMemoryPreference("target", null, TranslationTargetLanguageSelection.Default)
         override val recentLanguages: Preference<List<LanguageTag>> =
             InMemoryPreference("recent", null, emptyList())
+
+        override fun defaultTarget(): TranslationDefaultTarget? =
+            (defaultTargetLanguage.get() as? TranslationTargetLanguageSelection.Explicit)
+                ?.let { TranslationDefaultTarget(it.language, followsAppLanguage = false) }
 
         override suspend fun deviceAvailability() = TranslationDeviceAvailability.Available
 

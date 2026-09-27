@@ -21,6 +21,7 @@ import mihon.translation.api.engine.TranslationEngineSelection
 import mihon.translation.api.engine.TranslationEngineState
 import mihon.translation.api.host.TranslationHostActionResult
 import mihon.translation.api.host.TranslationHostActions
+import mihon.translation.api.language.TranslationDefaultTarget
 import mihon.translation.api.language.TranslationLanguageSupport
 import mihon.translation.api.language.TranslationLanguageSupportInspection
 import mihon.translation.api.model.TranslationModelDescriptor
@@ -257,6 +258,10 @@ class BookSelectionTranslationControllerTest {
             { raw -> raw.split(",").mapNotNull(LanguageTag::parse) },
         )
         var availability: TranslationDeviceAvailability = TranslationDeviceAvailability.Available
+
+        override fun defaultTarget(): TranslationDefaultTarget? =
+            (defaultTargetLanguage.get() as? TranslationTargetLanguageSelection.Explicit)
+                ?.let { TranslationDefaultTarget(it.language, followsAppLanguage = false) }
 
         override suspend fun deviceAvailability() = availability
 

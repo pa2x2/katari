@@ -1,7 +1,5 @@
 package eu.kanade.tachiyomi.ui.translator.session
 
-import androidx.appcompat.app.AppCompatDelegate
-import androidx.core.os.LocaleListCompat
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.channels.Channel
@@ -39,7 +37,6 @@ import mihon.tts.ui.playback.ShortFormSpeechPhase
 import mihon.tts.ui.playback.ShortFormSpeechRequest
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
-import java.util.Locale
 
 internal class TranslatorScreenModel(
     initialText: String = "",
@@ -57,7 +54,7 @@ internal class TranslatorScreenModel(
     private val mutableState = MutableStateFlow(
         TranslatorState(
             text = initialText,
-            profileTargetLanguage = resolveProfileTargetLanguage(hostActions),
+            profileTargetLanguage = hostActions.defaultTarget()?.language,
             recentLanguages = hostActions.recentLanguages.get(),
             engines = coordinator.engineStates.value,
         ),
@@ -337,17 +334,5 @@ internal class TranslatorScreenModel(
 
     private companion object {
         const val TRANSLATION_DEBOUNCE_MILLIS = 200L
-    }
-}
-
-private fun resolveProfileTargetLanguage(hostActions: TranslationHostActions): mihon.language.api.tag.LanguageTag? {
-    return when (val target = hostActions.defaultTargetLanguage.get()) {
-        TranslationTargetLanguageSelection.Default -> {
-            val locale = AppCompatDelegate.getApplicationLocales().get(0)
-                ?: LocaleListCompat.getAdjustedDefault().get(0)
-                ?: Locale.getDefault()
-            mihon.language.api.tag.LanguageTag.parse(locale.toLanguageTag())
-        }
-        is TranslationTargetLanguageSelection.Explicit -> target.language
     }
 }

@@ -20,6 +20,7 @@ import mihon.translation.api.engine.TranslationProviderId
 import mihon.translation.api.host.TranslationHostActionResult
 import mihon.translation.api.host.TranslationHostActions
 import mihon.translation.api.host.TranslationSetupDestination
+import mihon.translation.api.language.TranslationDefaultTarget
 import mihon.translation.api.language.TranslationLanguagePair
 import mihon.translation.api.language.TranslationLanguageSupport
 import mihon.translation.api.language.TranslationLanguageSupportInspection
@@ -319,6 +320,10 @@ class TranslationSessionHostCoordinatorTest {
         var setupResult: TranslationHostActionResult = TranslationHostActionResult.Completed
         var languageSupport: TranslationLanguageSupportInspection =
             TranslationLanguageSupportInspection.Available(TranslationLanguageSupport.AnyLanguage)
+
+        override fun defaultTarget(): TranslationDefaultTarget? =
+            (defaultTargetLanguage.get() as? TranslationTargetLanguageSelection.Explicit)
+                ?.let { TranslationDefaultTarget(it.language, followsAppLanguage = false) }
 
         override suspend fun deviceAvailability() = TranslationDeviceAvailability.Available
 

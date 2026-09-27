@@ -7,6 +7,7 @@ import mihon.translation.api.availability.TranslationDeviceAvailability
 import mihon.translation.api.engine.KnownTranslationEngine
 import mihon.translation.api.engine.TranslationEngineId
 import mihon.translation.api.engine.TranslationEngineInspection
+import mihon.translation.api.language.TranslationDefaultTarget
 import mihon.translation.api.language.TranslationLanguageSupportInspection
 import mihon.translation.api.model.TranslationModelDescriptor
 import mihon.translation.api.provider.TranslationProviderDisclosure
@@ -33,6 +34,13 @@ interface TranslationHostActions {
      * Hosts record explicit user selections so pickers can surface them as one-tap candidates.
      */
     val recentLanguages: Preference<List<LanguageTag>>
+
+    /**
+     * The target language requests use when they do not choose one, resolved the same way translation does.
+     *
+     * Returns null when the profile has no target and the app language has no usable language tag.
+     */
+    fun defaultTarget(): TranslationDefaultTarget?
 
     suspend fun deviceAvailability(): TranslationDeviceAvailability
 

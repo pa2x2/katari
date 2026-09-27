@@ -10,6 +10,7 @@ import mihon.language.runtime.identification.AutomaticTextLanguageResolver
 import mihon.translation.api.TranslationFeature
 import mihon.translation.api.engine.TranslationEngineId
 import mihon.translation.api.engine.TranslationEngineSelection
+import mihon.translation.api.language.TranslationDefaultTarget
 import mihon.translation.api.preparation.ReadyTranslation
 import mihon.translation.api.preparation.TranslationEngineChoiceReason
 import mihon.translation.api.preparation.TranslationPreparation
@@ -33,7 +34,7 @@ import mihon.translation.spi.engine.TranslationEnginePreparation
 import mihon.translation.spi.engine.TranslationEngineRegistry
 
 fun interface TranslationDefaultTargetLanguageResolver {
-    fun resolve(): LanguageTag?
+    fun resolve(): TranslationDefaultTarget?
 }
 
 class DefaultTranslationFeature(
@@ -64,7 +65,7 @@ class DefaultTranslationFeature(
             }
         }
         val targetLanguage = when (val selection = request.targetLanguage) {
-            TranslationTargetLanguageSelection.Default -> defaultTargetLanguageResolver.resolve()
+            TranslationTargetLanguageSelection.Default -> defaultTargetLanguageResolver.resolve()?.language
                 ?: return TranslationPreparation.TargetLanguageRequired(
                     sourceLanguage = sourceLanguage,
                     reason = TranslationTargetChoiceReason.NoDefaultTarget,
