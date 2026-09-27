@@ -90,6 +90,7 @@ object SettingsTextRecognitionScreen : SearchableSettings {
                 pickImage.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
             },
             onApprovePlaygroundModels = model.controller::approvePlaygroundModels,
+            onApprovePlaygroundPlatformModels = model.controller::approvePlaygroundPlatformModels,
             observeModels = model.controller::observeModels,
             onSave = model.controller::save,
         )

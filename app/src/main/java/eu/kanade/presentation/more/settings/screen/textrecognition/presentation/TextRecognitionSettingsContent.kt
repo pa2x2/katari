@@ -17,6 +17,7 @@ import mihon.model.artifacts.api.descriptor.ModelArtifactDescriptor
 import mihon.model.artifacts.api.download.ModelArtifactDownloadApproval
 import mihon.model.artifacts.api.state.ModelArtifactState
 import mihon.text.recognition.api.host.TextRecognitionHostActions
+import mihon.text.recognition.ui.settings.TextRecognitionPlaygroundState
 import mihon.text.recognition.ui.settings.TextRecognitionSettingsState
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.ScrollbarLazyColumn
@@ -39,6 +40,7 @@ internal fun TextRecognitionSettingsContent(
     onChoosePlaygroundLanguage: (LanguageTag) -> Unit,
     onChooseImage: () -> Unit,
     onApprovePlaygroundModels: (List<ModelArtifactDownloadApproval>) -> Unit,
+    onApprovePlaygroundPlatformModels: (TextRecognitionPlaygroundState.PlatformModelsRequired) -> Unit,
     observeModels: (List<ModelArtifactDescriptor>) -> Flow<Map<ModelArtifactDescriptor, ModelArtifactState>>,
     onSave: () -> Unit,
 ) {
@@ -91,6 +93,7 @@ internal fun TextRecognitionSettingsContent(
                     onChooseLanguage = onChoosePlaygroundLanguage,
                     onChooseImage = onChooseImage,
                     onApproveModels = onApprovePlaygroundModels,
+                    onApprovePlatformModels = onApprovePlaygroundPlatformModels,
                     observeModels = observeModels,
                     onSave = onSave,
                 )

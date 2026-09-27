@@ -32,7 +32,7 @@ internal class MangaOcrRecognizer(
 
     private var vocabulary: Pair<File, MangaOcrVocabulary>? = null
 
-    override suspend fun inspectDevice() = TextRecognitionComponentAvailability.Available
+    override suspend fun inspectDevice(language: LanguageTag) = TextRecognitionComponentAvailability.Available
 
     override suspend fun recognize(
         crop: Bitmap,

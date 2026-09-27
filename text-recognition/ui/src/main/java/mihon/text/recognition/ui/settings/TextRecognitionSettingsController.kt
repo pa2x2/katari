@@ -25,6 +25,7 @@ import mihon.text.recognition.api.TextRecognitionFeature
 import mihon.text.recognition.api.configuration.TextRecognitionConfiguration
 import mihon.text.recognition.api.configuration.TextRecognitionPipelineResolution
 import mihon.text.recognition.api.host.TextRecognitionHostActions
+import mihon.text.recognition.api.host.TextRecognitionPlatformModelsResult
 import mihon.text.recognition.api.image.TextRecognitionImage
 import mihon.text.recognition.api.pipeline.TextRecognitionPipeline
 import mihon.text.recognition.api.pipeline.TextRecognitionPipelineSelection
@@ -169,6 +170,14 @@ class TextRecognitionSettingsController(
                     }
                     is TextRecognitionPreparation.ModelsRequired ->
                         TextRecognitionPlaygroundState.ModelsRequired(bitmap, preparation.models)
+                    is TextRecognitionPreparation.PlatformModelsRequired ->
+                        TextRecognitionPlaygroundState.PlatformModelsRequired(
+                            image = bitmap,
+                            component = preparation.component,
+                            language = preparation.language,
+                            description = preparation.description,
+                            approximateSizeBytes = preparation.approximateSizeBytes,
+                        )
                     else -> TextRecognitionPlaygroundState.Unsupported(bitmap, language)
                 }
                 setPlayground(state)
@@ -189,6 +198,20 @@ class TextRecognitionSettingsController(
             observeModels(approvals.map { it.artifact })
                 .first { states -> states.values.all { it is ModelArtifactState.Installed } }
             runPlayground(bitmap, image)
+        }
+    }
+
+    /** Has the platform download the data the user approved, then tries the image again. */
+    fun approvePlaygroundPlatformModels(required: TextRecognitionPlaygroundState.PlatformModelsRequired) {
+        val (bitmap, image) = playgroundImage ?: return
+        playgroundJob?.cancel()
+        setPlayground(required.copy(installing = true))
+        playgroundJob = scope.launch {
+            when (val result = hostActions.installPlatformModels(required.component, required.language)) {
+                TextRecognitionPlatformModelsResult.Installed -> runPlayground(bitmap, image)
+                is TextRecognitionPlatformModelsResult.Failed ->
+                    setPlayground(TextRecognitionPlaygroundState.Failed(bitmap, result.reason))
+            }
         }
     }
 

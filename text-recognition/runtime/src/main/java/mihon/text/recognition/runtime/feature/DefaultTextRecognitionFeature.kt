@@ -76,14 +76,22 @@ internal class DefaultTextRecognitionFeature(
             )
         }
         components.forEach { component ->
-            val availability = component.inspectDevice()
-            if (availability is TextRecognitionComponentAvailability.Unavailable) {
-                return TextRecognitionPreparation.Unavailable(
+            when (val availability = component.inspectDevice(language)) {
+                TextRecognitionComponentAvailability.Available -> Unit
+                is TextRecognitionComponentAvailability.Unavailable -> return TextRecognitionPreparation.Unavailable(
                     TextRecognitionUnavailableReason.ComponentUnavailable(
                         component.catalogEntry.id,
                         availability.reason,
                     ),
                 )
+                is TextRecognitionComponentAvailability.PlatformModelsRequired ->
+                    return TextRecognitionPreparation.PlatformModelsRequired(
+                        language = language,
+                        pipeline = pipeline,
+                        component = component.catalogEntry.id,
+                        description = availability.description,
+                        approximateSizeBytes = availability.approximateSizeBytes,
+                    )
             }
         }
         val missingModels = components.flatMap { it.models(language) }.distinct()

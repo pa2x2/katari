@@ -42,7 +42,7 @@ internal class PaddleOcrRecognizer(
         PaddleOcrScript.forLanguage(language)?.let(OnnxModelArtifacts::paddleOcrRecognizer),
     )
 
-    override suspend fun inspectDevice() = TextRecognitionComponentAvailability.Available
+    override suspend fun inspectDevice(language: LanguageTag) = TextRecognitionComponentAvailability.Available
 
     override suspend fun recognize(
         crop: Bitmap,

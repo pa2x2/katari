@@ -26,6 +26,7 @@ import mihon.model.artifacts.api.descriptor.ModelArtifactDescriptor
 import mihon.model.artifacts.api.download.ModelArtifactDownloadApproval
 import mihon.model.artifacts.api.state.ModelArtifactState
 import mihon.model.artifacts.ui.approval.ModelArtifactDownloadApprovalDialog
+import mihon.text.recognition.ui.approval.TextRecognitionPlatformModelsDialog
 import mihon.translation.ui.presentation.CoordinatedTranslationSessionHost
 import mihon.translation.ui.session.TranslationSessionHostCoordinator
 import tachiyomi.i18n.*
@@ -41,6 +42,7 @@ internal fun MangaReaderTextLayer(
     onConsumeAreaResult: () -> Unit,
     onAreaSelected: (RectF) -> Unit,
     onApproveModels: (List<ModelArtifactDownloadApproval>) -> Unit,
+    onApprovePlatformModels: (MangaReaderTextBlocker.PlatformModelsRequired) -> Unit,
     onChooseLanguage: (LanguageTag) -> Unit,
     onOpenSettings: () -> Unit,
     onDismissTranslation: () -> Unit,
@@ -52,6 +54,7 @@ internal fun MangaReaderTextLayer(
     val context = LocalContext.current
     var selectingArea by remember { mutableStateOf(false) }
     var approving by remember { mutableStateOf<List<ModelArtifactDescriptor>?>(null) }
+    var approvingPlatform by remember { mutableStateOf<MangaReaderTextBlocker.PlatformModelsRequired?>(null) }
     var choosingLanguage by remember { mutableStateOf(false) }
 
     LaunchedEffect(areaResult) {
@@ -78,6 +81,7 @@ internal fun MangaReaderTextLayer(
                 showOriginal = state.showOriginal,
                 observeModels = observeModels,
                 onDownloadModels = { approving = it },
+                onDownloadPlatformModels = { approvingPlatform = it },
                 onChooseLanguage = { choosingLanguage = true },
                 onOpenSettings = onOpenSettings,
                 onOpenTranslationSettings = onOpenTranslationSettings,
@@ -111,6 +115,17 @@ internal fun MangaReaderTextLayer(
                 onApproveModels(approvals)
             },
             onDismiss = { approving = null },
+        )
+    }
+    approvingPlatform?.let { blocker ->
+        TextRecognitionPlatformModelsDialog(
+            description = blocker.description,
+            approximateSizeBytes = blocker.approximateSizeBytes,
+            onApprove = {
+                approvingPlatform = null
+                onApprovePlatformModels(blocker)
+            },
+            onDismiss = { approvingPlatform = null },
         )
     }
     val languageBlocker = state.blocker as? MangaReaderTextBlocker.LanguageRequired

@@ -29,7 +29,7 @@ internal class ComicTextDetector(
         listOf(OnnxModelArtifacts.comicTextDetector)
     override val inputEdge: Int = INPUT_EDGE
 
-    override suspend fun inspectDevice() = TextRecognitionComponentAvailability.Available
+    override suspend fun inspectDevice(language: LanguageTag) = TextRecognitionComponentAvailability.Available
 
     override suspend fun detect(tile: Bitmap, models: TextRecognitionModels): List<DetectedTextRegion> {
         val session = sessions.session(

@@ -13,6 +13,7 @@ import mihon.entry.interactions.manga.reader.text.surface.MangaPageTextDecoratio
 import mihon.entry.interactions.manga.reader.text.translation.MangaPageTranslator
 import mihon.language.api.tag.LanguageTag
 import mihon.model.artifacts.api.download.ModelArtifactDownloadApproval
+import mihon.text.recognition.api.host.TextRecognitionPlatformModelsResult
 import mihon.text.recognition.api.image.ImageContentKey
 import mihon.text.recognition.api.image.ImageRect
 import mihon.text.recognition.api.preparation.TextRecognitionPreparation
@@ -188,6 +189,7 @@ class MangaReaderTextSessionTest {
             recognition = recognition,
             modelStore = store,
             translator = MangaPageTranslator(translation),
+            installPlatformModels = { _, _ -> TextRecognitionPlatformModelsResult.Installed },
             scope = backgroundScope,
             declaredLanguage = { declaredLanguage },
             sampleBackground = { _, _ -> Color.WHITE },

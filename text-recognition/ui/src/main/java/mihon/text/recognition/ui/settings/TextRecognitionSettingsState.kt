@@ -5,6 +5,7 @@ import mihon.language.api.tag.LanguageTag
 import mihon.model.artifacts.api.descriptor.ModelArtifactDescriptor
 import mihon.model.artifacts.api.state.ModelArtifactState
 import mihon.text.recognition.api.component.KnownTextRecognitionComponent
+import mihon.text.recognition.api.component.TextRecognitionComponentId
 import mihon.text.recognition.api.configuration.TextRecognitionConfiguration
 import mihon.text.recognition.api.pipeline.TextRecognitionPipeline
 import mihon.text.recognition.api.pipeline.TextRecognitionPipelineSelection
@@ -40,6 +41,16 @@ sealed interface TextRecognitionPlaygroundState {
     data class ModelsRequired(
         val image: Bitmap,
         val models: List<ModelArtifactDescriptor>,
+    ) : TextRecognitionPlaygroundState
+
+    /** The draft's engine needs data the platform downloads; [installing] is set while it downloads. */
+    data class PlatformModelsRequired(
+        val image: Bitmap,
+        val component: TextRecognitionComponentId,
+        val language: LanguageTag,
+        val description: String,
+        val approximateSizeBytes: Long?,
+        val installing: Boolean = false,
     ) : TextRecognitionPlaygroundState
 
     data class Recognized(

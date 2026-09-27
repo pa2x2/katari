@@ -21,8 +21,15 @@ sealed interface TextRecognitionComponent {
      */
     fun models(language: LanguageTag): List<ModelArtifactDescriptor>
 
-    /** Request-independent device inspection. */
-    suspend fun inspectDevice(): TextRecognitionComponentAvailability
+    /** Whether this device can run the component for [language] now. */
+    suspend fun inspectDevice(language: LanguageTag): TextRecognitionComponentAvailability
+
+    /**
+     * Installs models the platform manages for [language], after the user approved the download reported by
+     * [TextRecognitionComponentAvailability.PlatformModelsRequired]. Components without such models never report it.
+     */
+    suspend fun installPlatformModels(language: LanguageTag): TextRecognitionPlatformModelsInstallation =
+        TextRecognitionPlatformModelsInstallation.Failed("This component has no platform-managed models")
 }
 
 sealed interface TextRecognitionComponentAvailability {
@@ -31,6 +38,31 @@ sealed interface TextRecognitionComponentAvailability {
     data class Unavailable(
         val reason: String,
     ) : TextRecognitionComponentAvailability {
+        init {
+            require(reason.isNotBlank())
+        }
+    }
+
+    /**
+     * The platform (for example Google Play services) must download models before the component can read the
+     * language; it downloads them only after the user approved it.
+     */
+    data class PlatformModelsRequired(
+        val description: String,
+        val approximateSizeBytes: Long? = null,
+    ) : TextRecognitionComponentAvailability {
+        init {
+            require(description.isNotBlank())
+        }
+    }
+}
+
+sealed interface TextRecognitionPlatformModelsInstallation {
+    data object Installed : TextRecognitionPlatformModelsInstallation
+
+    data class Failed(
+        val reason: String,
+    ) : TextRecognitionPlatformModelsInstallation {
         init {
             require(reason.isNotBlank())
         }

@@ -232,6 +232,13 @@ dependencies {
     implementation(dependencies.project(mapOf("path" to projects.modelArtifacts.ui.path)))
     implementation(dependencies.project(mapOf("path" to projects.textRecognition.runtime.path)))
     implementation(dependencies.project(mapOf("path" to projects.textRecognition.providers.onnx.path)))
+    // ML Kit needs Google Play services, so FOSS builds only list it; see its runtime component descriptors.
+    "fossImplementation"(dependencies.project(mapOf("path" to projects.textRecognition.providers.mlkit.catalog.path)))
+    listOf("debug", "release", "preview", "benchmark").forEach { buildType ->
+        "${buildType}Implementation"(
+            dependencies.project(mapOf("path" to projects.textRecognition.providers.mlkit.path)),
+        )
+    }
     implementation(dependencies.project(mapOf("path" to projects.textRecognition.providers.tesseract.path)))
     implementation(dependencies.project(mapOf("path" to projects.textRecognition.ui.path)))
     implementation(dependencies.project(mapOf("path" to projects.translation.runtime.path)))

@@ -42,6 +42,7 @@ import mihon.model.artifacts.ui.approval.ModelArtifactDownloadApprovalDialog
 import mihon.model.artifacts.ui.state.formatModelArtifactSize
 import mihon.model.artifacts.ui.state.modelArtifactStateLabel
 import mihon.text.recognition.api.host.TextRecognitionHostActions
+import mihon.text.recognition.ui.approval.TextRecognitionPlatformModelsDialog
 import mihon.text.recognition.ui.language.displayName
 import mihon.text.recognition.ui.language.displayNames
 import mihon.text.recognition.ui.playground.TextRecognitionPlaygroundResult
@@ -64,6 +65,7 @@ internal fun TextRecognitionPlayground(
     onChooseLanguage: (LanguageTag) -> Unit,
     onChooseImage: () -> Unit,
     onApproveModels: (List<ModelArtifactDownloadApproval>) -> Unit,
+    onApprovePlatformModels: (TextRecognitionPlaygroundState.PlatformModelsRequired) -> Unit,
     observeModels: (List<ModelArtifactDescriptor>) -> Flow<Map<ModelArtifactDescriptor, ModelArtifactState>>,
     onSave: () -> Unit,
 ) {
@@ -117,7 +119,7 @@ internal fun TextRecognitionPlayground(
                     modifier = Modifier.padding(start = MaterialTheme.padding.small),
                 )
             }
-            PlaygroundOutcome(state.playground, observeModels, onApproveModels)
+            PlaygroundOutcome(state.playground, observeModels, onApproveModels, onApprovePlatformModels)
             Button(
                 onClick = onSave,
                 enabled = state.hasUnsavedProfileChanges,
@@ -167,8 +169,10 @@ private fun PlaygroundOutcome(
     playground: TextRecognitionPlaygroundState,
     observeModels: (List<ModelArtifactDescriptor>) -> Flow<Map<ModelArtifactDescriptor, ModelArtifactState>>,
     onApproveModels: (List<ModelArtifactDownloadApproval>) -> Unit,
+    onApprovePlatformModels: (TextRecognitionPlaygroundState.PlatformModelsRequired) -> Unit,
 ) {
     var approving by remember { mutableStateOf<List<ModelArtifactDescriptor>?>(null) }
+    var approvingPlatform by remember { mutableStateOf<TextRecognitionPlaygroundState.PlatformModelsRequired?>(null) }
     when (playground) {
         TextRecognitionPlaygroundState.Idle -> Unit
         is TextRecognitionPlaygroundState.Running -> {
@@ -197,6 +201,23 @@ private fun PlaygroundOutcome(
                 }
             }
         }
+        is TextRecognitionPlaygroundState.PlatformModelsRequired -> {
+            Text(
+                text = if (playground.installing) {
+                    stringResource(MR.strings.reader_text_platform_models_installing)
+                } else {
+                    playground.description
+                },
+                style = MaterialTheme.typography.bodyMedium,
+            )
+            if (playground.installing) {
+                LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+            } else {
+                FilledTonalButton(onClick = { approvingPlatform = playground }) {
+                    Text(stringResource(MR.strings.action_download))
+                }
+            }
+        }
         is TextRecognitionPlaygroundState.Recognized -> {
             if (playground.result.regions.isEmpty()) {
                 Text(stringResource(MR.strings.text_recognition_settings_no_text))
@@ -210,6 +231,17 @@ private fun PlaygroundOutcome(
         is TextRecognitionPlaygroundState.Failed -> Text(
             text = stringResource(MR.strings.text_recognition_settings_failed, playground.message.orEmpty()),
             color = MaterialTheme.colorScheme.error,
+        )
+    }
+    approvingPlatform?.let { required ->
+        TextRecognitionPlatformModelsDialog(
+            description = required.description,
+            approximateSizeBytes = required.approximateSizeBytes,
+            onApprove = {
+                approvingPlatform = null
+                onApprovePlatformModels(required)
+            },
+            onDismiss = { approvingPlatform = null },
         )
     }
     approving?.let { models ->

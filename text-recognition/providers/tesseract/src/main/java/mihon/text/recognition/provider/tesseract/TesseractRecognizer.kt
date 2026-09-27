@@ -24,7 +24,7 @@ internal class TesseractRecognizer : TextRecognizer {
     override fun models(language: LanguageTag): List<ModelArtifactDescriptor> =
         listOfNotNull(TesseractLanguage.forLanguage(language)?.let(TesseractModelArtifacts::artifact))
 
-    override suspend fun inspectDevice() = TextRecognitionComponentAvailability.Available
+    override suspend fun inspectDevice(language: LanguageTag) = TextRecognitionComponentAvailability.Available
 
     override suspend fun recognize(
         crop: Bitmap,

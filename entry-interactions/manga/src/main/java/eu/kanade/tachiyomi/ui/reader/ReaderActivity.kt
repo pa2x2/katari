@@ -683,6 +683,7 @@ class ReaderActivity : EntryInteractionActivity() {
             onConsumeAreaResult = textInteraction::consumeAreaResult,
             onAreaSelected = textInteraction::onAreaSelected,
             onApproveModels = viewModel.textSession::approveModels,
+            onApprovePlatformModels = viewModel.textSession::approvePlatformModels,
             onChooseLanguage = viewModel.textSession::chooseLanguage,
             onOpenSettings = ::openTextRecognitionSettings,
             onDismissTranslation = textInteraction::dismissTranslation,

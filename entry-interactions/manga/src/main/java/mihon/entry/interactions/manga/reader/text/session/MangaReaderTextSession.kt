@@ -26,6 +26,8 @@ import mihon.model.artifacts.api.descriptor.ModelArtifactDescriptor
 import mihon.model.artifacts.api.download.ModelArtifactDownloadApproval
 import mihon.model.artifacts.api.state.ModelArtifactState
 import mihon.text.recognition.api.TextRecognitionFeature
+import mihon.text.recognition.api.component.TextRecognitionComponentId
+import mihon.text.recognition.api.host.TextRecognitionPlatformModelsResult
 import mihon.text.recognition.api.image.ImageRect
 import mihon.text.recognition.api.image.TextRecognitionImage
 import mihon.text.recognition.api.preparation.TextRecognitionPreparation
@@ -46,6 +48,10 @@ internal class MangaReaderTextSession(
     private val recognition: TextRecognitionFeature,
     private val modelStore: ModelArtifactStore,
     private val translator: MangaPageTranslator,
+    private val installPlatformModels: suspend (
+        TextRecognitionComponentId,
+        LanguageTag,
+    ) -> TextRecognitionPlatformModelsResult,
     private val scope: CoroutineScope,
     private val declaredLanguage: suspend () -> LanguageTag?,
     private val sampleBackground: suspend (TextRecognitionImage, ImageRect) -> Int = ::sampleTextBackground,
@@ -126,6 +132,19 @@ internal class MangaReaderTextSession(
             combine(models.map(modelStore::observe)) { states -> states.all { it is ModelArtifactState.Installed } }
                 .first { it }
             resume()
+        }
+    }
+
+    /** Has the platform install models the user approved, and resumes recognition once they are installed. */
+    fun approvePlatformModels(blocker: MangaReaderTextBlocker.PlatformModelsRequired) {
+        mutableState.update { it.copy(blocker = blocker.copy(installing = true)) }
+        modelWait?.cancel()
+        modelWait = scope.launch {
+            when (val result = installPlatformModels(blocker.component, blocker.language)) {
+                TextRecognitionPlatformModelsResult.Installed -> resume()
+                is TextRecognitionPlatformModelsResult.Failed ->
+                    mutableState.update { it.copy(blocker = MangaReaderTextBlocker.Unavailable(result.reason)) }
+            }
         }
     }
 
@@ -318,6 +337,12 @@ internal class MangaReaderTextSession(
             is TextRecognitionPreparation.LanguageRequired ->
                 MangaReaderTextBlocker.LanguageRequired(preparation.supportedLanguages)
             is TextRecognitionPreparation.ModelsRequired -> MangaReaderTextBlocker.ModelsRequired(preparation.models)
+            is TextRecognitionPreparation.PlatformModelsRequired -> MangaReaderTextBlocker.PlatformModelsRequired(
+                component = preparation.component,
+                language = preparation.language,
+                description = preparation.description,
+                approximateSizeBytes = preparation.approximateSizeBytes,
+            )
             is TextRecognitionPreparation.PipelineChoiceRequired ->
                 MangaReaderTextBlocker.PipelineChoiceRequired(preparation.language)
             is TextRecognitionPreparation.Unavailable -> when (val reason = preparation.reason) {

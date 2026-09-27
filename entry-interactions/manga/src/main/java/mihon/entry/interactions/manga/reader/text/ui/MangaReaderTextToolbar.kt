@@ -46,6 +46,7 @@ internal fun MangaReaderTextToolbar(
     showOriginal: Boolean,
     observeModels: (List<ModelArtifactDescriptor>) -> Flow<List<ModelArtifactState>>,
     onDownloadModels: (List<ModelArtifactDescriptor>) -> Unit,
+    onDownloadPlatformModels: (MangaReaderTextBlocker.PlatformModelsRequired) -> Unit,
     onChooseLanguage: () -> Unit,
     onOpenSettings: () -> Unit,
     onOpenTranslationSettings: () -> Unit,
@@ -77,6 +78,11 @@ internal fun MangaReaderTextToolbar(
             when (val blocker = (progress as? MangaReaderTextProgress.Blocked)?.blocker) {
                 is MangaReaderTextBlocker.ModelsRequired -> TextButton(onClick = { onDownloadModels(blocker.models) }) {
                     Text(stringResource(MR.strings.action_download))
+                }
+                is MangaReaderTextBlocker.PlatformModelsRequired -> if (!blocker.installing) {
+                    TextButton(onClick = { onDownloadPlatformModels(blocker) }) {
+                        Text(stringResource(MR.strings.action_download))
+                    }
                 }
                 is MangaReaderTextBlocker.PipelineChoiceRequired -> TextButton(onClick = onOpenSettings) {
                     Text(stringResource(MR.strings.action_settings))
@@ -145,6 +151,11 @@ private fun progressText(
     is MangaReaderTextProgress.Failed -> stringResource(MR.strings.reader_text_failed, progress.message.orEmpty())
     is MangaReaderTextProgress.Blocked -> when (val blocker = progress.blocker) {
         is MangaReaderTextBlocker.ModelsRequired -> modelsText(blocker.models, observeModels)
+        is MangaReaderTextBlocker.PlatformModelsRequired -> if (blocker.installing) {
+            stringResource(MR.strings.reader_text_platform_models_installing)
+        } else {
+            blocker.description
+        }
         is MangaReaderTextBlocker.PipelineChoiceRequired ->
             stringResource(MR.strings.reader_text_pipeline_required, blocker.language.displayName())
         is MangaReaderTextBlocker.LanguageRequired -> stringResource(MR.strings.reader_text_language_required)

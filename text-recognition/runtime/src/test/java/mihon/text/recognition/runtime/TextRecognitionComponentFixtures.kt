@@ -138,7 +138,7 @@ internal class FakeDetector(
     override val inputEdge: Int = 640
     var runs = 0
 
-    override suspend fun inspectDevice() = TextRecognitionComponentAvailability.Available
+    override suspend fun inspectDevice(language: LanguageTag) = TextRecognitionComponentAvailability.Available
 
     override suspend fun detect(tile: Bitmap, models: TextRecognitionModels): List<DetectedTextRegion> {
         runs++
@@ -172,7 +172,7 @@ internal class FakeRecognizer(
     override val inputEdge: Int = 224
     var runs = 0
 
-    override suspend fun inspectDevice() = TextRecognitionComponentAvailability.Available
+    override suspend fun inspectDevice(language: LanguageTag) = TextRecognitionComponentAvailability.Available
 
     override suspend fun recognize(
         crop: Bitmap,

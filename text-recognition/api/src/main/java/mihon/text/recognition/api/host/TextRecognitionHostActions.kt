@@ -4,6 +4,7 @@ import kotlinx.coroutines.flow.Flow
 import mihon.language.api.tag.LanguageTag
 import mihon.model.artifacts.api.descriptor.ModelArtifactDescriptor
 import mihon.text.recognition.api.component.KnownTextRecognitionComponent
+import mihon.text.recognition.api.component.TextRecognitionComponentId
 import mihon.text.recognition.api.configuration.TextRecognitionConfiguration
 import mihon.text.recognition.api.configuration.TextRecognitionPipelineResolution
 import mihon.text.recognition.api.pipeline.TextRecognitionPipeline
@@ -41,4 +42,22 @@ interface TextRecognitionHostActions {
 
     /** Every model [pipeline] needs to read [language], installed or not. */
     fun models(pipeline: TextRecognitionPipeline, language: LanguageTag): List<ModelArtifactDescriptor>
+
+    /** Installs platform-managed models the user approved for [component] reading [language]. */
+    suspend fun installPlatformModels(
+        component: TextRecognitionComponentId,
+        language: LanguageTag,
+    ): TextRecognitionPlatformModelsResult
+}
+
+sealed interface TextRecognitionPlatformModelsResult {
+    data object Installed : TextRecognitionPlatformModelsResult
+
+    data class Failed(
+        val reason: String,
+    ) : TextRecognitionPlatformModelsResult {
+        init {
+            require(reason.isNotBlank())
+        }
+    }
 }

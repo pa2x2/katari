@@ -41,6 +41,7 @@ dependencies {
     implementation(projects.language.api)
     implementation(projects.modelArtifacts.ui)
     implementation(projects.textRecognition.api)
+    implementation(projects.textRecognition.ui)
     implementation(projects.translation.api)
     implementation(projects.translation.ui)
     implementation(projects.presentationCore)

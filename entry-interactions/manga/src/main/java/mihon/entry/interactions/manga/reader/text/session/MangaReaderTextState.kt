@@ -3,6 +3,7 @@ package mihon.entry.interactions.manga.reader.text.session
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
 import mihon.language.api.tag.LanguageTag
 import mihon.model.artifacts.api.descriptor.ModelArtifactDescriptor
+import mihon.text.recognition.api.component.TextRecognitionComponentId
 import mihon.text.recognition.api.image.ImageRect
 import mihon.text.recognition.api.result.TextRecognitionResult
 
@@ -73,6 +74,18 @@ internal sealed interface MangaReaderTextBlocker {
 
     /** Recognition needs [models]; nothing downloads until the user approves them. */
     data class ModelsRequired(val models: List<ModelArtifactDescriptor>) : MangaReaderTextBlocker
+
+    /**
+     * The platform (for example Google Play services) must download recognition data; it does so only after the user
+     * approves [description]. [installing] is set while it downloads.
+     */
+    data class PlatformModelsRequired(
+        val component: TextRecognitionComponentId,
+        val language: LanguageTag,
+        val description: String,
+        val approximateSizeBytes: Long?,
+        val installing: Boolean = false,
+    ) : MangaReaderTextBlocker
 
     /** The profile has no usable pipeline for [language]; it is chosen in settings. */
     data class PipelineChoiceRequired(val language: LanguageTag) : MangaReaderTextBlocker

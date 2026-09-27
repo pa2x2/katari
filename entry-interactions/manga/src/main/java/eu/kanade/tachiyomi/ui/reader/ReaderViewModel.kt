@@ -84,6 +84,7 @@ import mihon.entry.viewer.settings.ViewerSettingBinder
 import mihon.entry.viewer.settings.ViewerSettingBinding
 import mihon.entry.viewer.settings.ViewerSettingSource
 import mihon.entry.viewer.settings.updateEntry
+import mihon.text.recognition.api.host.TextRecognitionHostActions
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.core.common.util.lang.withIOContext
@@ -155,6 +156,7 @@ internal class ReaderViewModel @JvmOverloads constructor(
         recognition = Injekt.get(),
         modelStore = Injekt.get(),
         translator = MangaPageTranslator(Injekt.get()),
+        installPlatformModels = Injekt.get<TextRecognitionHostActions>()::installPlatformModels,
         scope = viewModelScope,
         declaredLanguage = {
             val source = manga?.let { sourceManager.get(it.source) } as? EntryCatalogueSource

@@ -39,6 +39,22 @@ sealed interface TextRecognitionPreparation {
         }
     }
 
+    /**
+     * The pipeline needs models the platform downloads (for example through Google Play services). Hosts ask the user
+     * and then call [mihon.text.recognition.api.host.TextRecognitionHostActions.installPlatformModels].
+     */
+    data class PlatformModelsRequired(
+        val language: LanguageTag,
+        val pipeline: TextRecognitionPipeline,
+        val component: TextRecognitionComponentId,
+        val description: String,
+        val approximateSizeBytes: Long? = null,
+    ) : TextRecognitionPreparation {
+        init {
+            require(description.isNotBlank())
+        }
+    }
+
     data class Unavailable(
         val reason: TextRecognitionUnavailableReason,
     ) : TextRecognitionPreparation
