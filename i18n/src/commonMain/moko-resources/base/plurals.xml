@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <plurals name="translation_series_languages_count">
+        <item quantity="one">%d series uses its own languages</item>
+        <item quantity="other">%d series use their own languages</item>
+    </plurals>
     <plurals name="statistics_title_count">
         <item quantity="one">%d title</item>
         <item quantity="other">%d titles</item>

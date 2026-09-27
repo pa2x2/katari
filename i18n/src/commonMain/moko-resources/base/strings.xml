@@ -332,7 +332,15 @@
     <string name="translation_provider_surface_opened">Translation opened in %s.</string>
     <string name="translation_timed_out">The translation service did not respond.</string>
     <string name="translation_invalid_session">This translation session expired. Try again.</string>
-    <string name="translation_settings_summary">Translation playground, engine, and target language</string>
+    <string name="translation_series_languages">Series languages</string>
+    <string name="translation_series_languages_none">No series use their own languages</string>
+    <string name="translation_series_languages_target_only">Translated to %1$s</string>
+    <string name="translation_series_languages_content_only">%1$s text</string>
+    <string name="translation_series_languages_clear">Use default languages</string>
+    <string name="translation_series_languages_clear_all">Clear all</string>
+    <string name="translation_series_languages_clear_all_title">Clear all series languages?</string>
+    <string name="translation_series_languages_clear_all_message">Every series will use the default languages again.</string>
+    <string name="translation_settings_summary">Translation playground, engine, target language, and series languages</string>
     <string name="translation_settings_engine">Translation engine</string>
     <string name="translation_settings_engine_unknown">Unavailable engine (%s)</string>
     <string name="translation_settings_engine_device_default">%s when available</string>
