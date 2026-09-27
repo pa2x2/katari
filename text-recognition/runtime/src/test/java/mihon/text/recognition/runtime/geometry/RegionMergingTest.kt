@@ -33,6 +33,18 @@ class RegionMergingTest {
     }
 
     @Test
+    fun `a region that grows to cover another accepted region absorbs it`() {
+        // Two lines of a list are accepted apart; a less confident detection of the whole list then joins the first
+        // line, and the grown line now covers the second.
+        val upperLine = Detection(ImageRect(320, 1158, 576, 1234), confidence = 0.56)
+        val lowerLine = Detection(ImageRect(310, 1261, 617, 1452), confidence = 0.50)
+        val wholeList = Detection(ImageRect(310, 1088, 612, 1458), confidence = 0.46)
+
+        merge(upperLine, lowerLine, wholeList) shouldContainExactly
+            listOf(upperLine.copy(bounds = ImageRect(310, 1088, 617, 1458)))
+    }
+
+    @Test
     fun `adjacent bubbles that barely touch stay separate`() {
         val left = Detection(ImageRect(0, 0, 200, 200), confidence = 0.9)
         val right = Detection(ImageRect(190, 0, 400, 200), confidence = 0.9)

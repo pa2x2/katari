@@ -3,11 +3,12 @@ package mihon.text.recognition.runtime.geometry
 import mihon.text.recognition.api.image.ImageRect
 
 /**
- * Collapses detections of the same object that overlapping tiles reported more than once.
+ * Collapses detections of the same object that overlapping tiles, or the detector itself, reported more than once.
  *
  * Two rectangles describe the same object when their intersection covers most of the smaller one. The merged
- * rectangle is their union, which restores objects that one tile saw truncated at its edge. Candidates are visited in
- * [priority] order, so the most confident detection determines the surviving value.
+ * rectangle is their union, which restores objects that one tile saw truncated at its edge. A union can come to cover
+ * another accepted rectangle it did not overlap before, so merging repeats until no two groups overlap. Candidates
+ * are visited in [priority] order, so the most confident detection determines the surviving value.
  */
 internal fun <T> mergeOverlapping(
     candidates: List<T>,
@@ -19,14 +20,19 @@ internal fun <T> mergeOverlapping(
 ): List<T> {
     val merged = mutableListOf<T>()
     candidates.sortedWith(priority).forEach { candidate ->
-        val index = merged.indexOfFirst { accepted ->
-            sameGroup(accepted, candidate) && overlapOfSmaller(bounds(accepted), bounds(candidate)) >= threshold
-        }
-        if (index < 0) {
-            merged += candidate
-        } else {
-            val accepted = merged[index]
-            merged[index] = withBounds(accepted, bounds(accepted).union(bounds(candidate)))
+        merged += candidate
+        var grown = merged.lastIndex
+        while (true) {
+            val other = merged.indices.firstOrNull { index ->
+                index != grown &&
+                    sameGroup(merged[index], merged[grown]) &&
+                    overlapOfSmaller(bounds(merged[index]), bounds(merged[grown])) >= threshold
+            } ?: break
+            // The earlier entry has the higher priority and keeps its value.
+            val (kept, absorbed) = if (other < grown) other to grown else grown to other
+            merged[kept] = withBounds(merged[kept], bounds(merged[kept]).union(bounds(merged[absorbed])))
+            merged.removeAt(absorbed)
+            grown = kept
         }
     }
     return merged
