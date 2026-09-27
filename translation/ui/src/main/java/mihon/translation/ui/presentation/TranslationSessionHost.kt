@@ -69,6 +69,8 @@ fun TranslationSessionHost(
     onPopupBoundsChanged: (Rect?) -> Unit = {},
     speechState: TranslationResultSpeechState = TranslationResultSpeechState(),
     onSpeechToggle: ((TranslationResultSpeechTarget) -> Unit)? = null,
+    onSelectSource: (LanguageTag) -> Unit = controller::selectSourceLanguage,
+    onSelectEngine: (TranslationEngineSelection) -> Unit = controller::selectEngine,
 ) {
     val state by controller.state.collectAsState()
     val active = state as? TranslationSessionState.Active
@@ -96,8 +98,8 @@ fun TranslationSessionHost(
             }
         },
         onExpand = { expanded = true },
-        onSelectSource = controller::selectSourceLanguage,
-        onSelectEngine = controller::selectEngine,
+        onSelectSource = onSelectSource,
+        onSelectEngine = onSelectEngine,
         onExternalAction = onExternalAction,
         speechState = speechState,
         onSpeechToggle = onSpeechToggle,

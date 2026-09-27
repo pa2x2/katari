@@ -35,6 +35,7 @@ import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -50,6 +51,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -66,6 +68,7 @@ import mihon.entry.interactions.manga.reader.text.session.MangaReaderTextSession
 import mihon.entry.interactions.manga.reader.text.session.declaredContentLanguage
 import mihon.entry.interactions.manga.reader.text.translation.MangaPageTranslator
 import mihon.entry.interactions.manga.reader.text.translation.MangaTextTranslationController
+import mihon.entry.interactions.manga.reader.text.translation.MangaTranslationLanguageStore
 import mihon.entry.interactions.manga.state.mangaProgressState
 import mihon.entry.interactions.manga.state.pageIndex
 import mihon.entry.interactions.media.session.EntryMediaSessionActivitySession
@@ -173,6 +176,10 @@ internal class ReaderViewModel @JvmOverloads constructor(
         feature = Injekt.get(),
         hostActions = translationHostActions,
         scope = viewModelScope,
+        languageStore = MangaTranslationLanguageStore(
+            feature = Injekt.get(),
+            series = state.map { it.manga }.stateIn(viewModelScope, SharingStarted.Eagerly, null),
+        ),
     )
 
     /** Recognizes pages in [language], which also becomes a recent language in every translation picker. */

@@ -75,36 +75,37 @@ class TranslationSessionController(
         mutableState.value = mutableState.value.withInput(updated)
     }
 
-    fun selectSourceLanguage(language: LanguageTag) {
-        updateRequest {
-            copy(sourceLanguage = TranslationSourceLanguageSelection.Explicit(language))
-        }
+    fun selectSourceLanguage(language: LanguageTag) = selectSource(
+        TranslationSourceLanguageSelection.Explicit(language),
+    )
+
+    fun selectTargetLanguage(language: LanguageTag) = selectTarget(
+        TranslationTargetLanguageSelection.Explicit(language),
+    )
+
+    fun selectSource(selection: TranslationSourceLanguageSelection) {
+        updateRequest { copy(sourceLanguage = selection) }
     }
 
-    fun selectTargetLanguage(language: LanguageTag) {
-        updateRequest {
-            copy(targetLanguage = TranslationTargetLanguageSelection.Explicit(language))
-        }
-    }
-
-    fun selectAutomaticSourceLanguage() {
-        updateRequest { copy(sourceLanguage = TranslationSourceLanguageSelection.Automatic) }
-    }
-
-    fun selectDefaultTargetLanguage() {
-        updateRequest { copy(targetLanguage = TranslationTargetLanguageSelection.Default) }
+    fun selectTarget(selection: TranslationTargetLanguageSelection) {
+        updateRequest { copy(targetLanguage = selection) }
     }
 
     fun selectLanguages(
         source: LanguageTag,
         target: LanguageTag,
     ) {
-        updateRequest {
-            copy(
-                sourceLanguage = TranslationSourceLanguageSelection.Explicit(source),
-                targetLanguage = TranslationTargetLanguageSelection.Explicit(target),
-            )
-        }
+        selectLanguages(
+            TranslationSourceLanguageSelection.Explicit(source),
+            TranslationTargetLanguageSelection.Explicit(target),
+        )
+    }
+
+    fun selectLanguages(
+        source: TranslationSourceLanguageSelection,
+        target: TranslationTargetLanguageSelection,
+    ) {
+        updateRequest { copy(sourceLanguage = source, targetLanguage = target) }
     }
 
     fun selectEngine(selection: TranslationEngineSelection) {

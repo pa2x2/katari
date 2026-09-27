@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import mihon.language.api.identification.TextLanguageResolutionContext
 import mihon.language.api.tag.LanguageTag
 import mihon.translation.api.TranslationFeature
 import mihon.translation.api.engine.TranslationEngineId
@@ -25,6 +26,8 @@ import mihon.translation.ui.picker.language.TranslationLanguageRole
 import mihon.translation.ui.picker.language.supportsPair
 import mihon.translation.ui.picker.language.supportsSelection
 import mihon.translation.ui.presentation.TranslationSessionExternalAction
+import mihon.translation.ui.session.language.TranslationLanguageContext
+import mihon.translation.ui.session.language.TranslationLanguageStore
 
 class TranslationSessionHostCoordinator(
     feature: TranslationFeature,
@@ -32,6 +35,7 @@ class TranslationSessionHostCoordinator(
     private val scope: CoroutineScope,
     executionMode: TranslationSessionExecutionMode = TranslationSessionExecutionMode.FollowProviderPolicy,
     selectionSettleDelayMillis: Long = 250L,
+    languageStore: TranslationLanguageStore? = null,
 ) {
     private val environment = TranslationSessionEnvironmentController(hostActions, scope)
     val engineInspection = environment.inspection
@@ -47,6 +51,9 @@ class TranslationSessionHostCoordinator(
     )
     val languageSupport: StateFlow<TranslationLanguageSupportState> = environment.languageSupport
 
+    /** Languages every request of this session uses; picks made here update it. */
+    val languages = TranslationLanguageContext(hostActions::defaultTarget, languageStore, scope)
+
     private val mutablePicker = MutableStateFlow<TranslationSessionPicker?>(null)
     val picker: StateFlow<TranslationSessionPicker?> = mutablePicker.asStateFlow()
 
@@ -61,6 +68,28 @@ class TranslationSessionHostCoordinator(
 
     /** Recently chosen languages, most recent first, shared with every other translation surface. */
     val recentLanguages: StateFlow<List<LanguageTag>> = hostActions.recentLanguages.stateIn(scope)
+
+    /** Translates [text] with the session's languages. */
+    fun submit(
+        text: String,
+        languageContext: TextLanguageResolutionContext,
+        anchor: TranslationSelectionAnchor?,
+        knownSource: LanguageTag? = null,
+    ) {
+        controller.submit(TranslationSessionInput(languages.request(text, languageContext, knownSource), anchor))
+    }
+
+    /** Applies a source language suggested for text whose language could not be determined. */
+    fun selectSuggestedSource(language: LanguageTag) {
+        hostActions.recordRecentLanguage(language)
+        controller.selectSource(languages.selectSource(language))
+    }
+
+    /** Applies an engine the popup offered because the chosen one cannot translate. */
+    fun selectOfferedEngine(selection: TranslationEngineSelection) {
+        languages.selectEngine((selection as? TranslationEngineSelection.Explicit)?.engine)
+        controller.selectEngine(selection)
+    }
 
     fun handleExternalAction(
         action: TranslationSessionExternalAction,
@@ -112,7 +141,7 @@ class TranslationSessionHostCoordinator(
                 mutableLanguagePair.value = currentPair.copy(source = language)
                 if (!editingLanguagePair) {
                     hostActions.recordRecentLanguage(language)
-                    controller.selectSourceLanguage(language)
+                    controller.selectSource(languages.selectSource(language))
                 }
             }
             TranslationSessionPicker.TargetLanguage -> {
@@ -128,7 +157,7 @@ class TranslationSessionHostCoordinator(
                 mutableLanguagePair.value = currentPair.copy(target = language)
                 if (!editingLanguagePair) {
                     hostActions.recordRecentLanguage(language)
-                    controller.selectTargetLanguage(language)
+                    controller.selectTarget(languages.selectTarget(language))
                 }
             }
             TranslationSessionPicker.LanguagePair,
@@ -147,8 +176,8 @@ class TranslationSessionHostCoordinator(
     fun selectLanguageDefault() {
         if (editingLanguagePair) return
         when (mutablePicker.value) {
-            TranslationSessionPicker.SourceLanguage -> controller.selectAutomaticSourceLanguage()
-            TranslationSessionPicker.TargetLanguage -> controller.selectDefaultTargetLanguage()
+            TranslationSessionPicker.SourceLanguage -> controller.selectSource(languages.selectSource(null))
+            TranslationSessionPicker.TargetLanguage -> controller.selectTarget(languages.selectTarget(null))
             TranslationSessionPicker.LanguagePair,
             TranslationSessionPicker.Engine,
             null,
@@ -229,7 +258,7 @@ class TranslationSessionHostCoordinator(
         val target = checkNotNull(mutableLanguagePair.value.target)
         hostActions.recordRecentLanguage(source)
         hostActions.recordRecentLanguage(target)
-        controller.selectLanguages(source, target)
+        controller.selectLanguages(languages.selectSource(source), languages.selectTarget(target))
         editingLanguagePair = false
         mutablePicker.value = null
     }
@@ -238,6 +267,7 @@ class TranslationSessionHostCoordinator(
         if (engineStates.value.none { it.engine.id == engine && it.status == TranslationEngineStatus.Ready }) {
             return
         }
+        languages.selectEngine(engine)
         controller.selectEngine(TranslationEngineSelection.Explicit(engine))
         environment.loadLanguageSupport(engine)
         mutablePicker.value = null

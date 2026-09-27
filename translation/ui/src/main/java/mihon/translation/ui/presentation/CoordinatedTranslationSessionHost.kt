@@ -48,6 +48,8 @@ fun CoordinatedTranslationSessionHost(
         onPopupBoundsChanged = onPopupBoundsChanged,
         speechState = speechState,
         onSpeechToggle = onSpeechToggle,
+        onSelectSource = coordinator::selectSuggestedSource,
+        onSelectEngine = coordinator::selectOfferedEngine,
     )
     LaunchedEffect(coordinator) {
         coordinator.results.collect { result ->

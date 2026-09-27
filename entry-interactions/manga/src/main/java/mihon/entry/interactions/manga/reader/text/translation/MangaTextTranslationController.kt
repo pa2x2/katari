@@ -5,12 +5,10 @@ import mihon.language.api.identification.TextLanguageResolutionContext
 import mihon.language.api.tag.LanguageTag
 import mihon.translation.api.TranslationFeature
 import mihon.translation.api.host.TranslationHostActions
-import mihon.translation.api.request.TranslationRequest
-import mihon.translation.api.request.TranslationSourceLanguageSelection
 import mihon.translation.ui.session.TranslationSelectionAnchor
 import mihon.translation.ui.session.TranslationSessionHostCoordinator
-import mihon.translation.ui.session.TranslationSessionInput
 import mihon.translation.ui.session.TranslationSessionState
+import mihon.translation.ui.session.language.TranslationLanguageStore
 
 /**
  * Translates recognized page text through the shared translation session.
@@ -22,12 +20,14 @@ internal class MangaTextTranslationController(
     feature: TranslationFeature,
     hostActions: TranslationHostActions,
     scope: CoroutineScope,
+    languageStore: TranslationLanguageStore,
 ) : AutoCloseable {
     val hostCoordinator = TranslationSessionHostCoordinator(
         feature = feature,
         hostActions = hostActions,
         scope = scope,
         selectionSettleDelayMillis = 0,
+        languageStore = languageStore,
     )
 
     fun translate(
@@ -36,18 +36,14 @@ internal class MangaTextTranslationController(
         pageText: String,
         anchor: TranslationSelectionAnchor?,
     ) {
-        hostCoordinator.controller.submit(
-            TranslationSessionInput(
-                request = TranslationRequest(
-                    text = text,
-                    sourceLanguage = TranslationSourceLanguageSelection.Explicit(language),
-                    languageContext = TextLanguageResolutionContext(
-                        surroundingText = pageText.takeIf(String::isNotBlank),
-                        declaredLanguages = listOf(language),
-                    ),
-                ),
-                anchor = anchor,
+        hostCoordinator.submit(
+            text = text,
+            languageContext = TextLanguageResolutionContext(
+                surroundingText = pageText.takeIf(String::isNotBlank),
+                declaredLanguages = listOf(language),
             ),
+            anchor = anchor,
+            knownSource = language,
         )
     }
 

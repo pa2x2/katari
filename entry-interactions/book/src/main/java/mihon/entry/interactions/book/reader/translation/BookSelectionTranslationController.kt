@@ -14,15 +14,11 @@ import mihon.entry.viewer.settings.shared.ReaderCapabilityId
 import mihon.entry.viewer.settings.shared.StandardReaderCapabilities
 import mihon.translation.api.TranslationFeature
 import mihon.translation.api.availability.TranslationDeviceAvailability
-import mihon.translation.api.engine.TranslationEngineSelection
 import mihon.translation.api.host.TranslationHostActions
-import mihon.translation.api.request.TranslationRequest
-import mihon.translation.api.request.TranslationSourceLanguageSelection
-import mihon.translation.api.request.TranslationTargetLanguageSelection
 import mihon.translation.ui.session.TranslationSelectionAnchor
 import mihon.translation.ui.session.TranslationSessionHostCoordinator
-import mihon.translation.ui.session.TranslationSessionInput
 import mihon.translation.ui.session.TranslationSessionState
+import mihon.translation.ui.session.language.TranslationLanguageStore
 import mihon.entry.interactions.book.reader.selection.BookReaderTextSelection as NeutralBookReaderTextSelection
 
 internal data class BookReaderTextSelection(
@@ -48,12 +44,14 @@ internal class BookSelectionTranslationController(
     private val languageSession: BookSelectionLanguageSession,
     private val scope: CoroutineScope,
     initialCapabilities: Set<ReaderCapabilityId>,
+    languageStore: TranslationLanguageStore? = null,
 ) : AutoCloseable {
     val hostCoordinator = TranslationSessionHostCoordinator(
         feature = feature,
         hostActions = hostActions,
         scope = scope,
         selectionSettleDelayMillis = 0,
+        languageStore = languageStore,
     )
 
     private val mutableEffectiveEnabled = MutableStateFlow(false)
@@ -147,17 +145,10 @@ internal class BookSelectionTranslationController(
             return
         }
         dismissedSelectionIdentity = null
-        hostCoordinator.controller.submit(
-            TranslationSessionInput(
-                request = TranslationRequest(
-                    text = selection.text,
-                    sourceLanguage = TranslationSourceLanguageSelection.Automatic,
-                    targetLanguage = TranslationTargetLanguageSelection.Default,
-                    engine = TranslationEngineSelection.ProfileDefault,
-                    languageContext = languageSession.context(selection.languageContextText, selection.languageTags),
-                ),
-                anchor = selection.anchor,
-            ),
+        hostCoordinator.submit(
+            text = selection.text,
+            languageContext = languageSession.context(selection.languageContextText, selection.languageTags),
+            anchor = selection.anchor,
         )
     }
 

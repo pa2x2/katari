@@ -146,6 +146,30 @@ class TranslationSessionHostCoordinatorTest {
     }
 
     @Test
+    fun `a target picked for one selection is used by the next`() = runTest {
+        val feature = RecordingFeature()
+        val coordinator = TranslationSessionHostCoordinator(
+            feature = feature,
+            hostActions = FakeHostActions(),
+            scope = backgroundScope,
+            selectionSettleDelayMillis = 0,
+        )
+        runCurrent()
+        coordinator.submit("First", TextLanguageResolutionContext(), anchor = null)
+        runCurrent()
+        coordinator.handleExternalAction(TranslationSessionExternalAction.ChooseTargetLanguage) {}
+        runCurrent()
+        coordinator.selectLanguage(FRENCH)
+        runCurrent()
+
+        coordinator.submit("Second", TextLanguageResolutionContext(), anchor = null)
+        runCurrent()
+
+        feature.requests.last().text shouldBe "Second"
+        feature.requests.last().targetLanguage shouldBe TranslationTargetLanguageSelection.Explicit(FRENCH)
+    }
+
+    @Test
     fun `target picker follows the profile default until a language is pinned and can return to it`() = runTest {
         val feature = RecordingFeature()
         val coordinator = TranslationSessionHostCoordinator(
@@ -274,8 +298,8 @@ class TranslationSessionHostCoordinatorTest {
         feature.requests.size shouldBe requestCount + 1
         feature.requests.last().sourceLanguage shouldBe
             TranslationSourceLanguageSelection.Explicit(SOURCE)
-        feature.requests.last().targetLanguage shouldBe
-            TranslationTargetLanguageSelection.Explicit(TARGET)
+        // TARGET is the profile's target, which the session follows rather than pinning.
+        feature.requests.last().targetLanguage shouldBe TranslationTargetLanguageSelection.Default
         coordinator.picker.value shouldBe null
     }
 

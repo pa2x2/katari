@@ -51,6 +51,7 @@ import mihon.entry.interactions.book.reader.selection.BookSelectionActionCoordin
 import mihon.entry.interactions.book.reader.speech.BookShortFormSpeechController
 import mihon.entry.interactions.book.reader.speech.BookShortFormSpeechFailure
 import mihon.entry.interactions.book.reader.translation.BookSelectionTranslationController
+import mihon.entry.interactions.book.reader.translation.BookTranslationLanguageStore
 import mihon.entry.interactions.child.EntryChildListFeature
 import mihon.entry.interactions.reader.navigation.EntryReaderNavigationPresenter
 import mihon.entry.interactions.runtime.EntryInteractionActivity
@@ -60,6 +61,7 @@ import mihon.entry.interactions.source.EntryChildWebViewAction
 import mihon.entry.interactions.source.EntryChildWebViewResolution
 import mihon.entry.interactions.source.EntryWebViewFeature
 import mihon.entry.interactions.source.launchEntryChildWebViewAction
+import mihon.entry.interactions.translation.EntryTranslationLanguagesFeature
 import mihon.entry.viewer.settings.ViewerSettingBinder
 import mihon.entry.viewer.settings.navigation.openViewerSettings
 import mihon.translation.api.TranslationFeature
@@ -477,6 +479,7 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
             languageSession = languageSession,
             scope = lifecycleScope,
             initialCapabilities = session.readerCapabilities,
+            languageStore = BookTranslationLanguageStore(Injekt.get<EntryTranslationLanguagesFeature>(), session.entry),
         )
         selectionCoordinator = BookSelectionActionCoordinator(
             translationController = translationController,
