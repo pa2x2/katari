@@ -27,7 +27,7 @@ internal class MangaOcrRecognizer(
     private val sessions: OnnxSessions,
 ) : TextRecognizer {
     override val catalogEntry = OnnxTextRecognitionCatalog.mangaOcr
-    override val models: List<ModelArtifactDescriptor> = listOf(OnnxModelArtifacts.mangaOcr)
+    override fun models(language: LanguageTag): List<ModelArtifactDescriptor> = listOf(OnnxModelArtifacts.mangaOcr)
     override val inputEdge: Int = INPUT_EDGE
 
     private var vocabulary: Pair<File, MangaOcrVocabulary>? = null

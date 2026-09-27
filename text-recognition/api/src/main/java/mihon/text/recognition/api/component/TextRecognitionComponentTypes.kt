@@ -1,6 +1,7 @@
 package mihon.text.recognition.api.component
 
 import mihon.language.api.tag.LanguageTag
+import mihon.text.recognition.api.provider.TextRecognitionProviderId
 
 @JvmInline
 value class TextRecognitionComponentId(
@@ -28,39 +29,25 @@ enum class TextRecognitionComponentRole {
 }
 
 /**
- * Catalog description of a component, present even when the component is excluded from the current build.
+ * Catalog description of a component of [provider].
  *
  * @property languages languages the component can read; empty for language-independent detectors.
  */
 data class KnownTextRecognitionComponent(
     val id: TextRecognitionComponentId,
+    val provider: TextRecognitionProviderId,
     val role: TextRecognitionComponentRole,
-    val providerName: String,
     val displayName: String,
     val description: String,
     val languages: Set<LanguageTag>,
-    val buildAvailability: TextRecognitionBuildAvailability,
     val documentationUrl: String? = null,
 ) {
     init {
-        require(providerName.isNotBlank())
         require(displayName.isNotBlank())
         require(description.isNotBlank())
         require(role == TextRecognitionComponentRole.Detector || languages.isNotEmpty()) {
             "Text recognition component ${id.value} reads text but declares no language"
         }
         require(documentationUrl == null || documentationUrl.isNotBlank())
-    }
-}
-
-sealed interface TextRecognitionBuildAvailability {
-    data object Included : TextRecognitionBuildAvailability
-
-    data class NotIncluded(
-        val reason: String,
-    ) : TextRecognitionBuildAvailability {
-        init {
-            require(reason.isNotBlank())
-        }
     }
 }

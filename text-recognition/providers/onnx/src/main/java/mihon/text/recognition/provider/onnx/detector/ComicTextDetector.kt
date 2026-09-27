@@ -2,6 +2,7 @@ package mihon.text.recognition.provider.onnx.detector
 
 import ai.onnxruntime.OnnxTensor
 import android.graphics.Bitmap
+import mihon.language.api.tag.LanguageTag
 import mihon.model.artifacts.api.descriptor.ModelArtifactDescriptor
 import mihon.text.recognition.provider.onnx.catalog.OnnxModelArtifacts
 import mihon.text.recognition.provider.onnx.catalog.OnnxTextRecognitionCatalog
@@ -24,7 +25,8 @@ internal class ComicTextDetector(
     private val sessions: OnnxSessions,
 ) : TextDetector {
     override val catalogEntry = OnnxTextRecognitionCatalog.comicTextDetector
-    override val models: List<ModelArtifactDescriptor> = listOf(OnnxModelArtifacts.comicTextDetector)
+    override fun models(language: LanguageTag): List<ModelArtifactDescriptor> =
+        listOf(OnnxModelArtifacts.comicTextDetector)
     override val inputEdge: Int = INPUT_EDGE
 
     override suspend fun inspectDevice() = TextRecognitionComponentAvailability.Available

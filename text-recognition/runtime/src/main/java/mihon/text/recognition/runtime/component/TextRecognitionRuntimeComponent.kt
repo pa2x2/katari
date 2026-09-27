@@ -4,8 +4,7 @@ import android.app.Application
 import mihon.feature.runtime.application.ApplicationFeatureRuntimeComponent
 import mihon.feature.runtime.application.ApplicationFeatureRuntimeComponents
 import mihon.feature.runtime.application.instances
-import mihon.text.recognition.spi.contribution.TextRecognitionComponentContribution
-import mihon.text.recognition.spi.contribution.TextRecognitionPresetContribution
+import mihon.text.recognition.spi.contribution.TextRecognitionProviderContribution
 
 /**
  * Variant-specific participation in the text recognition runtime. Hosts depend only on
@@ -16,8 +15,7 @@ interface TextRecognitionRuntimeComponent : ApplicationFeatureRuntimeComponent {
 }
 
 data class TextRecognitionRuntimeContribution(
-    val components: List<TextRecognitionComponentContribution> = emptyList(),
-    val presets: List<TextRecognitionPresetContribution> = emptyList(),
+    val providers: List<TextRecognitionProviderContribution> = emptyList(),
 )
 
 internal fun createTextRecognitionRuntimeContributions(

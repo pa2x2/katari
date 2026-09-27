@@ -5,6 +5,7 @@ import mihon.model.artifacts.api.descriptor.ModelArtifactFile
 import mihon.model.artifacts.api.descriptor.ModelArtifactHosting
 import mihon.model.artifacts.api.descriptor.ModelArtifactId
 import mihon.model.artifacts.api.descriptor.ModelArtifactLicense
+import mihon.text.recognition.provider.onnx.paddle.PaddleOcrScript
 
 /**
  * Upstream model publications pinned to exact commits. Sizes and digests come from the Hugging Face LFS metadata of
@@ -18,7 +19,13 @@ internal object OnnxModelArtifacts {
     private const val MANGA_OCR_REPOSITORY = "https://huggingface.co/kha-white/manga-ocr-base"
     private const val MANGA_OCR_COMMIT = "aa6573bd10b0d446cbf622e29c3e084914df9741"
 
+    private const val PADDLE_OCR_REPOSITORY = "https://huggingface.co/monkt/paddleocr-onnx"
+    private const val PADDLE_OCR_COMMIT = "7b02d0a30a07ba2b92ad1ff5a8941ae2c633de65"
+
     const val DETECTOR_FILE = "detector-v4-s_int8.onnx"
+    const val PADDLE_OCR_LINE_DETECTOR_FILE = "det.onnx"
+    const val PADDLE_OCR_RECOGNIZER_FILE = "rec.onnx"
+    const val PADDLE_OCR_DICTIONARY_FILE = "dict.txt"
     const val MANGA_OCR_ENCODER_FILE = "encoder_model_int8.onnx"
     const val MANGA_OCR_DECODER_FILE = "decoder_model_int8.onnx"
     const val MANGA_OCR_VOCABULARY_FILE = "vocab.txt"
@@ -66,4 +73,49 @@ internal object OnnxModelArtifacts {
         license = ModelArtifactLicense("Apache-2.0", MANGA_OCR_REPOSITORY),
         hosting = ModelArtifactHosting.Upstream(MANGA_OCR_ONNX_REPOSITORY),
     )
+
+    /** PP-OCRv3 mobile text detector, used to split a text region into lines. */
+    val paddleOcrLineDetector = ModelArtifactDescriptor(
+        id = ModelArtifactId("onnx.paddleocr-line-detector"),
+        revision = PADDLE_OCR_COMMIT,
+        displayName = "PaddleOCR line detector",
+        files = listOf(
+            ModelArtifactFile(
+                name = PADDLE_OCR_LINE_DETECTOR_FILE,
+                url = "$PADDLE_OCR_REPOSITORY/resolve/$PADDLE_OCR_COMMIT/detection/v3/$PADDLE_OCR_LINE_DETECTOR_FILE",
+                sizeBytes = 2_429_873,
+                sha256 = "ee40e80071ba3a320d4efda75f3e22047a7d049e9bf7bcaaf9daea23fc21b935",
+            ),
+        ),
+        license = ModelArtifactLicense("Apache-2.0", PADDLE_OCR_REPOSITORY),
+        hosting = ModelArtifactHosting.Upstream(PADDLE_OCR_REPOSITORY),
+    )
+
+    private val paddleOcrRecognizers: Map<PaddleOcrScript, ModelArtifactDescriptor> =
+        PaddleOcrScript.entries.associateWith { script ->
+            val folder = "$PADDLE_OCR_REPOSITORY/resolve/$PADDLE_OCR_COMMIT/languages/${script.folder}"
+            ModelArtifactDescriptor(
+                id = ModelArtifactId("onnx.paddleocr-${script.folder}"),
+                revision = PADDLE_OCR_COMMIT,
+                displayName = "PaddleOCR ${script.displayName}",
+                files = listOf(
+                    ModelArtifactFile(
+                        name = PADDLE_OCR_RECOGNIZER_FILE,
+                        url = "$folder/$PADDLE_OCR_RECOGNIZER_FILE",
+                        sizeBytes = script.recognizerSize,
+                        sha256 = script.recognizerSha256,
+                    ),
+                    ModelArtifactFile(
+                        name = PADDLE_OCR_DICTIONARY_FILE,
+                        url = "$folder/$PADDLE_OCR_DICTIONARY_FILE",
+                        sizeBytes = script.dictionarySize,
+                        sha256 = script.dictionarySha256,
+                    ),
+                ),
+                license = ModelArtifactLicense("Apache-2.0", PADDLE_OCR_REPOSITORY),
+                hosting = ModelArtifactHosting.Upstream(PADDLE_OCR_REPOSITORY),
+            )
+        }
+
+    fun paddleOcrRecognizer(script: PaddleOcrScript): ModelArtifactDescriptor = paddleOcrRecognizers.getValue(script)
 }

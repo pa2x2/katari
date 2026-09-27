@@ -39,7 +39,7 @@ internal fun decodeDetections(
     }
 }
 
-private const val DEFAULT_THRESHOLD = 0.5f
+private const val DEFAULT_THRESHOLD = 0.4f
 private const val LABEL_BUBBLE = 0L
 private const val LABEL_BUBBLE_TEXT = 1L
 private const val LABEL_FREE_TEXT = 2L

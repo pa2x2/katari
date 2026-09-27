@@ -9,37 +9,86 @@ import mihon.model.artifacts.api.descriptor.ModelArtifactHosting
 import mihon.model.artifacts.api.descriptor.ModelArtifactId
 import mihon.model.artifacts.api.descriptor.ModelArtifactLicense
 import mihon.text.recognition.api.component.KnownTextRecognitionComponent
-import mihon.text.recognition.api.component.TextRecognitionBuildAvailability
 import mihon.text.recognition.api.component.TextRecognitionComponentId
 import mihon.text.recognition.api.component.TextRecognitionComponentRole
 import mihon.text.recognition.api.image.ImageContentKey
 import mihon.text.recognition.api.image.ImageRect
 import mihon.text.recognition.api.image.ImageSize
 import mihon.text.recognition.api.image.TextRecognitionImage
+import mihon.text.recognition.api.pipeline.TextRecognitionPipeline
+import mihon.text.recognition.api.pipeline.TextRecognitionPreset
+import mihon.text.recognition.api.pipeline.TextRecognitionPresetId
+import mihon.text.recognition.api.provider.KnownTextRecognitionProvider
+import mihon.text.recognition.api.provider.TextRecognitionBuildAvailability
+import mihon.text.recognition.api.provider.TextRecognitionProviderId
 import mihon.text.recognition.spi.component.DetectedTextRegion
 import mihon.text.recognition.spi.component.DetectedTextRegionKind
 import mihon.text.recognition.spi.component.RecognizedCropText
 import mihon.text.recognition.spi.component.TextDetector
+import mihon.text.recognition.spi.component.TextRecognitionComponent
 import mihon.text.recognition.spi.component.TextRecognitionComponentAvailability
 import mihon.text.recognition.spi.component.TextRecognizer
+import mihon.text.recognition.spi.contribution.TextRecognitionProviderContribution
 import mihon.text.recognition.spi.model.TextRecognitionModels
 
 internal val JAPANESE = LanguageTag.require("ja")
 internal val ENGLISH = LanguageTag.require("en")
 
+internal val EXAMPLE_PROVIDER = provider("example")
+internal val EXCLUDED_PROVIDER = provider("excluded", TextRecognitionBuildAvailability.NotIncluded("Not in this build"))
+
+internal fun provider(
+    id: String,
+    buildAvailability: TextRecognitionBuildAvailability = TextRecognitionBuildAvailability.Included,
+) = KnownTextRecognitionProvider(
+    id = TextRecognitionProviderId(id),
+    name = id,
+    description = "Example engine",
+    processingLocation = "On this device",
+    buildAvailability = buildAvailability,
+)
+
 internal fun knownComponent(
     id: String,
     role: TextRecognitionComponentRole,
     languages: Set<LanguageTag> = if (role == TextRecognitionComponentRole.Detector) emptySet() else setOf(JAPANESE),
-    buildAvailability: TextRecognitionBuildAvailability = TextRecognitionBuildAvailability.Included,
+    provider: KnownTextRecognitionProvider = EXAMPLE_PROVIDER,
 ) = KnownTextRecognitionComponent(
     id = TextRecognitionComponentId(id),
+    provider = provider.id,
     role = role,
-    providerName = "Example",
     displayName = id,
     description = "Example component",
     languages = languages,
-    buildAvailability = buildAvailability,
+)
+
+internal fun preset(
+    id: String,
+    pipeline: TextRecognitionPipeline,
+    languages: Set<LanguageTag> = setOf(JAPANESE),
+    provider: KnownTextRecognitionProvider = EXAMPLE_PROVIDER,
+) = TextRecognitionPreset(
+    id = TextRecognitionPresetId(id),
+    provider = provider.id,
+    displayName = id,
+    description = "Example preset",
+    languages = languages,
+    pipeline = pipeline,
+)
+
+/** A provider contribution that implements [implementations] and lists [catalogOnly] without implementing them. */
+internal fun contribution(
+    provider: KnownTextRecognitionProvider,
+    implementations: List<TextRecognitionComponent> = emptyList(),
+    catalogOnly: List<KnownTextRecognitionComponent> = emptyList(),
+    presets: List<TextRecognitionPreset> = emptyList(),
+    order: Int = 0,
+) = TextRecognitionProviderContribution(
+    provider = provider,
+    components = implementations.map { it.catalogEntry } + catalogOnly,
+    implementations = implementations,
+    presets = presets,
+    order = order,
 )
 
 internal fun model(id: String) = ModelArtifactDescriptor(
@@ -80,10 +129,12 @@ internal data class DecodedRegion(
 internal class FakeDetector(
     private val page: FakePageImage,
     private val objects: List<Pair<ImageRect, DetectedTextRegionKind>>,
-    override val models: List<ModelArtifactDescriptor> = emptyList(),
+    val declaredModels: List<ModelArtifactDescriptor> = emptyList(),
     override val catalogEntry: KnownTextRecognitionComponent =
         knownComponent("example.detector", TextRecognitionComponentRole.Detector),
 ) : TextDetector {
+    override fun models(language: LanguageTag) = declaredModels
+
     override val inputEdge: Int = 640
     var runs = 0
 
@@ -112,10 +163,12 @@ internal class FakeDetector(
 internal class FakeRecognizer(
     private val page: FakePageImage,
     private val texts: Map<ImageRect, String>,
-    override val models: List<ModelArtifactDescriptor> = emptyList(),
+    val declaredModels: List<ModelArtifactDescriptor> = emptyList(),
     override val catalogEntry: KnownTextRecognitionComponent =
         knownComponent("example.recognizer", TextRecognitionComponentRole.Recognizer),
 ) : TextRecognizer {
+    override fun models(language: LanguageTag) = declaredModels
+
     override val inputEdge: Int = 224
     var runs = 0
 

@@ -5,6 +5,7 @@ import mihon.language.api.tag.LanguageTag
 import mihon.model.artifacts.api.ModelArtifactStore
 import mihon.model.artifacts.api.state.InstalledModelArtifact
 import mihon.text.recognition.api.TextRecognitionFeature
+import mihon.text.recognition.api.configuration.TextRecognitionPipelineResolution
 import mihon.text.recognition.api.image.ImageRect
 import mihon.text.recognition.api.pipeline.TextRecognitionPipeline
 import mihon.text.recognition.api.preparation.ReadyTextRecognition
@@ -25,7 +26,7 @@ import mihon.text.recognition.runtime.pipeline.EnginePipelineRunner
 import mihon.text.recognition.runtime.pipeline.StagedPipelineRunner
 import mihon.text.recognition.runtime.pipeline.TextRecognitionPipelineRunner
 import mihon.text.recognition.runtime.registry.TextRecognitionComponentRegistry
-import mihon.text.recognition.runtime.selection.TextRecognitionPipelineResolution
+import mihon.text.recognition.runtime.selection.ProfileTextRecognitionPreferences
 import mihon.text.recognition.runtime.selection.TextRecognitionPipelineResolver
 import mihon.text.recognition.spi.component.TextDetector
 import mihon.text.recognition.spi.component.TextRecognitionComponent
@@ -37,6 +38,7 @@ import mihon.text.recognition.spi.model.TextRecognitionModels
 internal class DefaultTextRecognitionFeature(
     private val registry: TextRecognitionComponentRegistry,
     private val resolver: TextRecognitionPipelineResolver,
+    private val preferences: ProfileTextRecognitionPreferences,
     private val modelStore: ModelArtifactStore,
     private val executor: CachedRecognitionExecutor,
 ) : TextRecognitionFeature {
@@ -44,24 +46,33 @@ internal class DefaultTextRecognitionFeature(
     override suspend fun prepare(request: TextRecognitionRequest): TextRecognitionPreparation {
         val language = request.language
             ?: return TextRecognitionPreparation.LanguageRequired(registry.supportedLanguages)
-        val pipeline = when (val resolution = resolver.resolve(language)) {
-            is TextRecognitionPipelineResolution.Resolved -> resolution.pipeline
-            TextRecognitionPipelineResolution.InvalidSelection,
-            TextRecognitionPipelineResolution.NothingSelected,
-            -> return TextRecognitionPreparation.PipelineChoiceRequired(
-                language = language,
-                reason = TextRecognitionPipelineChoiceReason.NothingSelected,
-                presets = registry.presets(language),
-            )
-            TextRecognitionPipelineResolution.UnsupportedLanguage -> return TextRecognitionPreparation.Unavailable(
-                TextRecognitionUnavailableReason.UnsupportedLanguage(language),
-            )
-        }
+        val pipeline = request.pipeline
+            ?.also { explicit ->
+                if (!registry.isWellFormed(explicit) || !registry.reads(explicit, language)) {
+                    return choiceRequired(language, TextRecognitionPipelineChoiceReason.NothingSelected)
+                }
+            }
+            ?: when (val resolution = resolver.resolve(preferences.configuration(), language)) {
+                is TextRecognitionPipelineResolution.Resolved -> resolution.pipeline
+                is TextRecognitionPipelineResolution.OverrideUnavailable -> {
+                    val missing = resolver.pipeline(resolution.selection)?.components
+                        ?.firstOrNull { registry.component(it) == null }
+                    return choiceRequired(
+                        language,
+                        missing?.let(TextRecognitionPipelineChoiceReason::SelectedComponentUnavailable)
+                            ?: TextRecognitionPipelineChoiceReason.NothingSelected,
+                    )
+                }
+                TextRecognitionPipelineResolution.ChoiceRequired ->
+                    return choiceRequired(language, TextRecognitionPipelineChoiceReason.NothingSelected)
+                TextRecognitionPipelineResolution.UnsupportedLanguage -> return TextRecognitionPreparation.Unavailable(
+                    TextRecognitionUnavailableReason.UnsupportedLanguage(language),
+                )
+            }
         val components = pipeline.components.map { id ->
-            registry.component(id) ?: return TextRecognitionPreparation.PipelineChoiceRequired(
-                language = language,
-                reason = TextRecognitionPipelineChoiceReason.SelectedComponentUnavailable(id),
-                presets = registry.presets(language),
+            registry.component(id) ?: return choiceRequired(
+                language,
+                TextRecognitionPipelineChoiceReason.SelectedComponentUnavailable(id),
             )
         }
         components.forEach { component ->
@@ -75,7 +86,7 @@ internal class DefaultTextRecognitionFeature(
                 )
             }
         }
-        val missingModels = components.flatMap(TextRecognitionComponent::models).distinct()
+        val missingModels = components.flatMap { it.models(language) }.distinct()
             .filter { modelStore.installed(it) == null }
         if (missingModels.isNotEmpty()) {
             return TextRecognitionPreparation.ModelsRequired(language, pipeline, missingModels)
@@ -87,11 +98,14 @@ internal class DefaultTextRecognitionFeature(
         )
     }
 
+    private fun choiceRequired(language: LanguageTag, reason: TextRecognitionPipelineChoiceReason) =
+        TextRecognitionPreparation.PipelineChoiceRequired(language, reason, registry.presets(language))
+
     override suspend fun recognize(ready: ReadyTextRecognition): TextRecognitionExecution {
         val prepared = ready as? PreparedRecognition
             ?: return TextRecognitionExecution.Failed("Recognition was not prepared by this feature")
         val installed = mutableListOf<InstalledModelArtifact>()
-        prepared.components.flatMap(TextRecognitionComponent::models).distinct().forEach { model ->
+        prepared.components.flatMap { it.models(prepared.language) }.distinct().forEach { model ->
             installed += modelStore.installed(model)
                 ?: return TextRecognitionExecution.PreparationChanged(prepare(prepared.request))
         }

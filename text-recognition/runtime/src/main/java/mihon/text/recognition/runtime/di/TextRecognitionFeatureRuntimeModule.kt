@@ -32,18 +32,18 @@ val textRecognitionFeatureRuntimeModule = ApplicationFeatureRuntimeModule(
 ) { context ->
     val contributions = createTextRecognitionRuntimeContributions(context.application, context.components)
     val registry = TextRecognitionComponentRegistry(
-        contributions = contributions.flatMap(TextRecognitionRuntimeContribution::components),
-        presetContributions = contributions.flatMap(TextRecognitionRuntimeContribution::presets),
+        contributions.flatMap(TextRecognitionRuntimeContribution::providers),
     )
     val preferences = context.dependencies.profilePreferenceOwners.register(
         id = ProfilePreferenceOwnerId("text-recognition"),
         keyPatterns = setOf(ProfileTextRecognitionPreferences.SELECTION_KEY_FAMILY),
         factory = ::ProfileTextRecognitionPreferences,
     ).create()
-    val resolver = TextRecognitionPipelineResolver(registry, preferences)
+    val resolver = TextRecognitionPipelineResolver(registry)
     val feature = DefaultTextRecognitionFeature(
         registry = registry,
         resolver = resolver,
+        preferences = preferences,
         modelStore = get<ModelArtifactStore>(),
         executor = CachedRecognitionExecutor(
             cache = TextRecognitionResultCache(

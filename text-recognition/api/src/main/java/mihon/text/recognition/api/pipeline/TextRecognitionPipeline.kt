@@ -2,6 +2,7 @@ package mihon.text.recognition.api.pipeline
 
 import mihon.language.api.tag.LanguageTag
 import mihon.text.recognition.api.component.TextRecognitionComponentId
+import mihon.text.recognition.api.provider.TextRecognitionProviderId
 
 /** How text is located and read. */
 sealed interface TextRecognitionPipeline {
@@ -38,9 +39,10 @@ value class TextRecognitionPresetId(
     }
 }
 
-/** A named, recommended pipeline for the listed languages. */
+/** A named pipeline [provider] recommends for the listed languages. */
 data class TextRecognitionPreset(
     val id: TextRecognitionPresetId,
+    val provider: TextRecognitionProviderId,
     val displayName: String,
     val description: String,
     val languages: Set<LanguageTag>,

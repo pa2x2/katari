@@ -14,34 +14,34 @@ import mihon.model.artifacts.api.download.ModelArtifactDownloadApproval
 import mihon.model.artifacts.api.state.InstalledModelArtifact
 import mihon.model.artifacts.api.state.ModelArtifactState
 import mihon.model.artifacts.api.state.StoredModelArtifact
-import mihon.text.recognition.api.component.TextRecognitionBuildAvailability
 import mihon.text.recognition.api.component.TextRecognitionComponentRole
+import mihon.text.recognition.api.configuration.TextRecognitionConfiguration
 import mihon.text.recognition.api.image.ImageRect
 import mihon.text.recognition.api.image.ImageSize
 import mihon.text.recognition.api.pipeline.TextRecognitionPipeline
 import mihon.text.recognition.api.pipeline.TextRecognitionPipelineSelection
-import mihon.text.recognition.api.pipeline.TextRecognitionPreset
-import mihon.text.recognition.api.pipeline.TextRecognitionPresetId
 import mihon.text.recognition.api.preparation.TextRecognitionPipelineChoiceReason
 import mihon.text.recognition.api.preparation.TextRecognitionPreparation
 import mihon.text.recognition.api.request.TextRecognitionRequest
 import mihon.text.recognition.api.request.TextRecognitionScope
 import mihon.text.recognition.api.result.TextRecognitionExecution
 import mihon.text.recognition.api.result.TextRegionKind
+import mihon.text.recognition.runtime.EXAMPLE_PROVIDER
+import mihon.text.recognition.runtime.EXCLUDED_PROVIDER
 import mihon.text.recognition.runtime.FakeDetector
 import mihon.text.recognition.runtime.FakePageImage
 import mihon.text.recognition.runtime.FakeRecognizer
 import mihon.text.recognition.runtime.JAPANESE
 import mihon.text.recognition.runtime.cache.TextRecognitionResultCache
+import mihon.text.recognition.runtime.contribution
 import mihon.text.recognition.runtime.execution.CachedRecognitionExecutor
 import mihon.text.recognition.runtime.knownComponent
 import mihon.text.recognition.runtime.model
+import mihon.text.recognition.runtime.preset
 import mihon.text.recognition.runtime.registry.TextRecognitionComponentRegistry
 import mihon.text.recognition.runtime.selection.ProfileTextRecognitionPreferences
 import mihon.text.recognition.runtime.selection.TextRecognitionPipelineResolver
 import mihon.text.recognition.spi.component.DetectedTextRegionKind
-import mihon.text.recognition.spi.contribution.TextRecognitionComponentContribution
-import mihon.text.recognition.spi.contribution.TextRecognitionPresetContribution
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import tachiyomi.core.common.preference.InMemoryPreferenceStore
@@ -68,45 +68,30 @@ class DefaultTextRecognitionFeatureTest {
             middleText to DetectedTextRegionKind.BubbleText,
             narration to DetectedTextRegionKind.FreeText,
         ),
-        models = listOf(model("example.detector-model")),
+        declaredModels = listOf(model("example.detector-model")),
     )
     private val recognizer = FakeRecognizer(
         page = strip,
         texts = mapOf(topText to "上", middleText to "中", narration to "語り"),
-        models = listOf(model("example.recognizer-model")),
+        declaredModels = listOf(model("example.recognizer-model")),
     )
     private val excludedEngine = knownComponent(
         id = "excluded.engine",
         role = TextRecognitionComponentRole.Engine,
-        buildAvailability = TextRecognitionBuildAvailability.NotIncluded("Not in this build"),
+        provider = EXCLUDED_PROVIDER,
     )
-    private val stagedPreset = TextRecognitionPreset(
-        id = TextRecognitionPresetId("staged"),
-        displayName = "Staged",
-        description = "Detector and recognizer",
-        languages = setOf(JAPANESE),
+    private val stagedPreset = preset(
+        id = "staged",
         pipeline = TextRecognitionPipeline.Staged(detector.catalogEntry.id, recognizer.catalogEntry.id),
     )
-    private val excludedPreset = TextRecognitionPreset(
-        id = TextRecognitionPresetId("excluded"),
-        displayName = "Excluded",
-        description = "Engine missing from this build",
-        languages = setOf(JAPANESE),
-        pipeline = TextRecognitionPipeline.Engine(excludedEngine.id),
-    )
     private val registry = TextRecognitionComponentRegistry(
-        contributions = listOf(
-            TextRecognitionComponentContribution(detector),
-            TextRecognitionComponentContribution(recognizer),
-            TextRecognitionComponentContribution(catalogEntry = excludedEngine),
-        ),
-        presetContributions = listOf(
-            TextRecognitionPresetContribution(excludedPreset, order = 0),
-            TextRecognitionPresetContribution(stagedPreset, order = 10),
+        listOf(
+            contribution(EXAMPLE_PROVIDER, listOf(detector, recognizer), presets = listOf(stagedPreset)),
+            contribution(EXCLUDED_PROVIDER, catalogOnly = listOf(excludedEngine)),
         ),
     )
     private val preferences = ProfileTextRecognitionPreferences(InMemoryPreferenceStore())
-    private val modelStore = FakeModelArtifactStore(detector.models + recognizer.models)
+    private val modelStore = FakeModelArtifactStore(detector.declaredModels + recognizer.declaredModels)
 
     @Test
     fun `a request without a language asks for one the build can read`() = runTest {
@@ -115,15 +100,26 @@ class DefaultTextRecognitionFeatureTest {
     }
 
     @Test
-    fun `the default preset skips presets whose components this build excludes`() = runTest {
-        val preparation = feature().prepare(TextRecognitionRequest(strip, JAPANESE))
+    fun `a request's explicit pipeline replaces the profile's choice`() = runTest {
+        val explicit = TextRecognitionPipeline.Engine(excludedEngine.id)
 
-        preparation.shouldBeInstanceOf<TextRecognitionPreparation.Ready>().pipeline shouldBe stagedPreset.pipeline
+        val preparation = feature().prepare(TextRecognitionRequest(strip, JAPANESE, pipeline = explicit))
+
+        preparation.shouldBeInstanceOf<TextRecognitionPreparation.PipelineChoiceRequired>().reason shouldBe
+            TextRecognitionPipelineChoiceReason.SelectedComponentUnavailable(excludedEngine.id)
     }
 
     @Test
-    fun `an explicit choice of an excluded component asks for another pipeline`() = runTest {
-        preferences.selection(JAPANESE).set(TextRecognitionPipelineSelection.Custom(excludedPreset.pipeline))
+    fun `an override naming an excluded component asks for another pipeline`() = runTest {
+        preferences.save(
+            TextRecognitionConfiguration(
+                provider = null,
+                overrides = mapOf(
+                    JAPANESE to
+                        TextRecognitionPipelineSelection.Custom(TextRecognitionPipeline.Engine(excludedEngine.id)),
+                ),
+            ),
+        )
 
         val preparation = feature().prepare(TextRecognitionRequest(strip, JAPANESE))
 
@@ -133,12 +129,12 @@ class DefaultTextRecognitionFeatureTest {
 
     @Test
     fun `only models that are not installed are required`() = runTest {
-        modelStore.installed -= recognizer.models.single()
+        modelStore.installed -= recognizer.declaredModels.single()
 
         feature().prepare(TextRecognitionRequest(strip, JAPANESE)) shouldBe TextRecognitionPreparation.ModelsRequired(
             language = JAPANESE,
             pipeline = stagedPreset.pipeline,
-            models = recognizer.models,
+            models = recognizer.declaredModels,
         )
     }
 
@@ -173,13 +169,9 @@ class DefaultTextRecognitionFeatureTest {
     @Test
     fun `an outlined area without detected text is read as a whole`() = runTest {
         val outline = ImageRect(40, 3480, 860, 3620)
-        val silentDetector = FakeDetector(strip, emptyList(), models = detector.models)
+        val silentDetector = FakeDetector(strip, emptyList(), declaredModels = detector.declaredModels)
         val silentRegistry = TextRecognitionComponentRegistry(
-            contributions = listOf(
-                TextRecognitionComponentContribution(silentDetector),
-                TextRecognitionComponentContribution(recognizer),
-            ),
-            presetContributions = listOf(TextRecognitionPresetContribution(stagedPreset)),
+            listOf(contribution(EXAMPLE_PROVIDER, listOf(silentDetector, recognizer), presets = listOf(stagedPreset))),
         )
 
         val result = feature(silentRegistry).recognizeReady(
@@ -194,16 +186,17 @@ class DefaultTextRecognitionFeatureTest {
         val feature = feature()
         val ready = feature.prepare(TextRecognitionRequest(strip, JAPANESE))
             .shouldBeInstanceOf<TextRecognitionPreparation.Ready>()
-        modelStore.installed -= detector.models.single()
+        modelStore.installed -= detector.declaredModels.single()
 
         feature.recognize(ready.recognition) shouldBe TextRecognitionExecution.PreparationChanged(
-            TextRecognitionPreparation.ModelsRequired(JAPANESE, stagedPreset.pipeline, detector.models),
+            TextRecognitionPreparation.ModelsRequired(JAPANESE, stagedPreset.pipeline, detector.declaredModels),
         )
     }
 
     private fun feature(registry: TextRecognitionComponentRegistry = this.registry) = DefaultTextRecognitionFeature(
         registry = registry,
-        resolver = TextRecognitionPipelineResolver(registry, preferences),
+        resolver = TextRecognitionPipelineResolver(registry),
+        preferences = preferences,
         modelStore = modelStore,
         executor = CachedRecognitionExecutor(
             cache = TextRecognitionResultCache({ cacheDirectory }, maximumBytes = 1_000_000),

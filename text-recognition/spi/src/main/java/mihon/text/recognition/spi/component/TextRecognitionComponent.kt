@@ -15,8 +15,11 @@ import mihon.text.recognition.spi.model.TextRecognitionModels
 sealed interface TextRecognitionComponent {
     val catalogEntry: KnownTextRecognitionComponent
 
-    /** Models this component needs; every one must be installed before it runs. */
-    val models: List<ModelArtifactDescriptor>
+    /**
+     * Models this component needs to read [language]; every one must be installed before it runs. Language-independent
+     * components return the same models for every language.
+     */
+    fun models(language: LanguageTag): List<ModelArtifactDescriptor>
 
     /** Request-independent device inspection. */
     suspend fun inspectDevice(): TextRecognitionComponentAvailability
