@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.10.2] - 2026-09-27
+
+### ✨ Added
+
+- Manga reader now has a table of contents in the bottom bar.
+
+### 🐛 Fixed
+
+- Sheets with text fields stay in place when the keyboard opens while they are still sliding in. They also keep the correct padding above system bars and the keyboard.
+
 ## [1.10.1] - 2026-09-25
 
 ### ✨ Added
@@ -462,7 +472,8 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v1.10.1...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/v1.10.2...HEAD
+[1.10.2]: https://github.com/pa2x2/katari/releases/tag/v1.10.2
 [1.10.1]: https://github.com/pa2x2/katari/releases/tag/v1.10.1
 [1.10.0]: https://github.com/pa2x2/katari/releases/tag/v1.10.0
 [1.9.0]: https://github.com/pa2x2/katari/releases/tag/v1.9.0
