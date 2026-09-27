@@ -114,7 +114,7 @@ internal class BookSelectionActionCoordinator(
                     owner = BookShortFormSpeechOwner.Selection(selection.identity),
                     text = selection.text,
                     language = TtsLanguageSelection.Automatic,
-                    languageContext = languageSession.context(selection.languageContextText),
+                    languageContext = languageSession.context(selection.languageContextText, selection.languageTags),
                 ),
             )
             BookDocumentSelectionAction.Translate -> translationController.translateSelection(selection)
@@ -173,6 +173,7 @@ internal class BookSelectionActionCoordinator(
         identity = identity,
         text = text,
         languageContextText = languageContextText,
+        languageTags = languageTags,
         isSettled = isSettled,
         anchor = boundsInReaderRoot.let { bounds ->
             BookReaderTextSelectionAnchor(bounds.left, bounds.top, bounds.right, bounds.bottom)

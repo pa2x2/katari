@@ -14,6 +14,8 @@ internal data class BookDocumentSelectableLeaf(
     val leadingText: String = "",
     val separatorAfter: String,
     val insertedBidiOffsets: Set<Int> = emptySet(),
+    /** Language the document declares for this text, such as an HTML `lang` attribute. */
+    val languageTag: String? = null,
 ) {
     fun sourceText(start: Int = 0, end: Int = fullText.length): String =
         fullText.substring(start, end).filterIndexed { index, _ -> start + index !in insertedBidiOffsets }
@@ -32,6 +34,8 @@ internal data class BookDocumentSelectionProjection(
     val identity: String,
     val text: String,
     val languageContextText: String,
+    /** Languages the document declares for the selected text, in reading order. */
+    val languageTags: List<String>,
     val boundsInReaderRoot: RectF?,
 )
 
@@ -101,6 +105,7 @@ internal fun projectBookDocumentSelection(
         identity = identity,
         text = text,
         languageContextText = languageContextText,
+        languageTags = fragments.mapNotNull { it.metadata.languageTag }.distinct(),
         boundsInReaderRoot = bounds,
     )
 }

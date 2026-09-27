@@ -469,7 +469,7 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
     private fun ensureSelectionCoordinator(session: OpenedBookReaderSession) {
         if (session.readerSettingsSurfaceId != BookDocumentReaderProcessor.SETTINGS_SURFACE_ID) return
         val automaticTranslation = settingBindings?.automaticTranslation ?: return
-        val languageSession = BookSelectionLanguageSession(emptyList())
+        val languageSession = BookSelectionLanguageSession(session.preparedPublication.publication.languages)
         val translationController = BookSelectionTranslationController(
             feature = Injekt.get<TranslationFeature>(),
             hostActions = Injekt.get<TranslationHostActions>(),

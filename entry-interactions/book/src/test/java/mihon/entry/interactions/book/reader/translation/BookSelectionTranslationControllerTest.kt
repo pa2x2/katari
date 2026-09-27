@@ -208,6 +208,7 @@ class BookSelectionTranslationControllerTest {
         identity = "selection-$generation",
         text = text,
         languageContextText = "surrounding $text prose",
+        languageTags = emptyList(),
         anchor = TranslationSelectionAnchor(10f, 20f, 30f, 40f),
     )
 
@@ -216,6 +217,7 @@ class BookSelectionTranslationControllerTest {
         identity = text,
         text = text,
         languageContextText = "surrounding $text prose",
+        languageTags = emptyList(),
         anchor = null,
         isSettled = isSettled,
     )

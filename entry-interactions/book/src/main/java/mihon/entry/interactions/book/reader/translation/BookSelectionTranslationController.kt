@@ -30,6 +30,7 @@ internal data class BookReaderTextSelection(
     val identity: String,
     val text: String,
     val languageContextText: String,
+    val languageTags: List<String>,
     val anchor: TranslationSelectionAnchor?,
 ) {
     init {
@@ -153,7 +154,7 @@ internal class BookSelectionTranslationController(
                     sourceLanguage = TranslationSourceLanguageSelection.Automatic,
                     targetLanguage = TranslationTargetLanguageSelection.Default,
                     engine = TranslationEngineSelection.ProfileDefault,
-                    languageContext = languageSession.context(selection.languageContextText),
+                    languageContext = languageSession.context(selection.languageContextText, selection.languageTags),
                 ),
                 anchor = selection.anchor,
             ),
@@ -229,6 +230,7 @@ private fun NeutralBookReaderTextSelection.toTranslationSelection() = BookReader
     identity = identity,
     text = text,
     languageContextText = languageContextText,
+    languageTags = languageTags,
     anchor = anchor?.let { anchor ->
         TranslationSelectionAnchor(
             left = anchor.left,
