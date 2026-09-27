@@ -64,6 +64,7 @@ import mihon.entry.interactions.manga.media.session.MangaMediaSessionProcessor
 import mihon.entry.interactions.manga.reader.settings.MangaReaderSettingsBindings
 import mihon.entry.interactions.manga.reader.text.session.MangaReaderTextSession
 import mihon.entry.interactions.manga.reader.text.session.declaredContentLanguage
+import mihon.entry.interactions.manga.reader.text.translation.MangaPageTranslator
 import mihon.entry.interactions.manga.reader.text.translation.MangaTextTranslationController
 import mihon.entry.interactions.manga.state.mangaProgressState
 import mihon.entry.interactions.manga.state.pageIndex
@@ -153,6 +154,7 @@ internal class ReaderViewModel @JvmOverloads constructor(
     val textSession = MangaReaderTextSession(
         recognition = Injekt.get(),
         modelStore = Injekt.get(),
+        translator = MangaPageTranslator(Injekt.get()),
         scope = viewModelScope,
         declaredLanguage = {
             val source = manga?.let { sourceManager.get(it.source) } as? EntryCatalogueSource
@@ -166,6 +168,15 @@ internal class ReaderViewModel @JvmOverloads constructor(
         hostActions = Injekt.get(),
         scope = viewModelScope,
     )
+
+    init {
+        settingsBindings
+            .filterNotNull()
+            .flatMapLatest { settings -> settings.pageTextTranslationOverlay.state.map { it.effectiveValue } }
+            .distinctUntilChanged()
+            .onEach(textSession::setOverlay)
+            .launchIn(viewModelScope)
+    }
 
     private val initialState = InitialState.from(savedState)
 
@@ -937,6 +948,13 @@ internal class ReaderViewModel @JvmOverloads constructor(
 
     private fun ResolvedViewerSetting<Int>.overrideOrDefault(default: Int): Int {
         return if (source == ViewerSettingSource.ENTRY) entryOverride ?: default else default
+    }
+
+    /** Switches between drawing translations over pages and translating tapped text, for this manga. */
+    fun toggleTextTranslationOverlay() {
+        val binding = readerSettings.pageTextTranslationOverlay
+        val enabled = !binding.effectiveValue
+        viewModelScope.launchIO { binding.updateEntry(enabled) }
     }
 
     fun toggleCropBorders(): Boolean {

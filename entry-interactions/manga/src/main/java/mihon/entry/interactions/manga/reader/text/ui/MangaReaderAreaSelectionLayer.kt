@@ -1,9 +1,12 @@
 package mihon.entry.interactions.manga.reader.text.ui
 
 import android.graphics.RectF
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -11,6 +14,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -31,7 +35,7 @@ import tachiyomi.presentation.core.i18n.stringResource
 
 /**
  * Captures one drag and reports the outlined rectangle in window coordinates. While shown it takes every touch, so
- * the page underneath does not scroll during the outline.
+ * the page underneath does not scroll during the outline; a tap, the back gesture, or the cancel action leaves it.
  */
 @Composable
 internal fun MangaReaderAreaSelectionLayer(
@@ -48,6 +52,7 @@ internal fun MangaReaderAreaSelectionLayer(
         modifier = modifier
             .fillMaxSize()
             .onGloballyPositioned { origin = it.positionInWindow() }
+            .pointerInput(Unit) { detectTapGestures(onTap = { onCancel() }) }
             .pointerInput(Unit) {
                 detectDragGestures(
                     onDragStart = { offset ->
@@ -94,12 +99,18 @@ internal fun MangaReaderAreaSelectionLayer(
             shape = RoundedCornerShape(16.dp),
             tonalElevation = 6.dp,
         ) {
-            Text(
-                text = stringResource(MR.strings.reader_text_select_area_hint),
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = stringResource(MR.strings.reader_text_select_area_hint),
+                    modifier = Modifier.padding(start = 16.dp, top = 8.dp, bottom = 8.dp),
+                )
+                TextButton(onClick = onCancel) {
+                    Text(stringResource(MR.strings.action_cancel))
+                }
+            }
         }
     }
+    BackHandler(onBack = onCancel)
 }
 
 private fun outline(start: Offset?, end: Offset?): Rect? {

@@ -36,6 +36,17 @@ import mihon.text.recognition.api.result.TextOrientation
 import mihon.text.recognition.api.result.TextRecognitionExecution
 import mihon.text.recognition.api.result.TextRecognitionResult
 import mihon.text.recognition.api.result.TextRegionKind
+import mihon.translation.api.TranslationFeature
+import mihon.translation.api.engine.TranslationEngineId
+import mihon.translation.api.engine.TranslationProviderId
+import mihon.translation.api.preparation.ReadyTranslation
+import mihon.translation.api.preparation.TranslationPreparation
+import mihon.translation.api.provider.TranslationInvocationPolicy
+import mihon.translation.api.provider.TranslationProviderPresentation
+import mihon.translation.api.request.ResolvedTranslationRequest
+import mihon.translation.api.request.TranslationRequest
+import mihon.translation.api.result.TranslationExecution
+import mihon.translation.api.result.TranslationResult
 import java.io.File
 
 internal val JAPANESE = LanguageTag.require("ja")
@@ -133,5 +144,41 @@ internal class FakeModelStore : ModelArtifactStore {
 
     fun install(model: ModelArtifactDescriptor) {
         state(model).value = ModelArtifactState.Installed(InstalledModelArtifact(model, File("models")))
+    }
+}
+
+/** Translates text by upper-casing it, or answers every request with [preparation] when one is set. */
+internal class FakeTranslation : TranslationFeature {
+    var preparation: TranslationPreparation? = null
+    val translated = mutableListOf<String>()
+
+    override suspend fun prepare(request: TranslationRequest): TranslationPreparation = preparation
+        ?: TranslationPreparation.Ready(
+            translation = Ready(request.text),
+            request = ResolvedTranslationRequest(
+                text = request.text,
+                sourceLanguage = JAPANESE,
+                targetLanguage = ENGLISH,
+                engine = TranslationEngineId("example"),
+            ),
+            presentation = PRESENTATION,
+        )
+
+    override suspend fun translate(ready: ReadyTranslation): TranslationExecution {
+        val text = (ready as Ready).text
+        translated += text
+        return TranslationExecution.Success(TranslationResult(text.uppercase(), JAPANESE, ENGLISH, PRESENTATION))
+    }
+
+    private class Ready(val text: String) : ReadyTranslation
+
+    companion object {
+        val ENGLISH = LanguageTag.require("en")
+        val PRESENTATION = TranslationProviderPresentation(
+            providerId = TranslationProviderId("example"),
+            providerName = "Example",
+            engineName = "Example",
+            invocationPolicy = TranslationInvocationPolicy.Immediate,
+        )
     }
 }

@@ -38,6 +38,11 @@ internal interface Viewer {
     fun visibleTextSurfaces(): List<MangaPageTextSurface>
 
     /**
+     * Pages this viewer has loaded around the visible ones, for text features that work ahead of the reader.
+     */
+    fun preloadedTextSurfaces(): List<MangaPageTextSurface>
+
+    /**
      * Whether this viewer supports automatic scrolling.
      */
     fun supportsAutoScroll(): Boolean = false

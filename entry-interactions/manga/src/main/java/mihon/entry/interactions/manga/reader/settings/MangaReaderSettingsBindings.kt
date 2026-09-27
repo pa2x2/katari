@@ -33,6 +33,13 @@ internal class MangaReaderSettingsBindings private constructor(
     val skipDuplicate: ViewerSettingBinding<Boolean> get() = binding(definitions.reading.skipDuplicate)
     val folderPerManga: ViewerSettingBinding<Boolean> get() = binding(definitions.reading.folderPerManga)
 
+    val pageTextTranslationOverlay: ViewerSettingBinding<Boolean>
+        get() = binding(definitions.pageText.translationOverlay)
+    val pageTextProcessAheadOnlyOnUnmeteredNetwork: ViewerSettingBinding<Boolean>
+        get() = binding(definitions.pageText.processAheadOnlyOnUnmeteredNetwork)
+    val pageTextProcessAheadOnlyWhileCharging: ViewerSettingBinding<Boolean>
+        get() = binding(definitions.pageText.processAheadOnlyWhileCharging)
+
     val readerTheme: ViewerSettingBinding<Int> get() = binding(definitions.display.readerTheme)
     val showPageNumber: ViewerSettingBinding<Boolean> get() = binding(definitions.display.showPageNumber)
     val fullscreen: ViewerSettingBinding<Boolean> get() = binding(definitions.display.fullscreen)

@@ -91,6 +91,7 @@ import mihon.entry.interactions.manga.R
 import mihon.entry.interactions.manga.databinding.ReaderActivityBinding
 import mihon.entry.interactions.manga.reader.settings.MangaReaderSettingsBindings
 import mihon.entry.interactions.manga.reader.text.interaction.MangaReaderTextInteraction
+import mihon.entry.interactions.manga.reader.text.session.MangaTextProcessAheadPolicy
 import mihon.entry.interactions.manga.reader.text.ui.MangaReaderTextLayer
 import mihon.entry.interactions.reader.settings.MangaReaderSettings
 import mihon.entry.interactions.reader.settings.ReaderBasePreferences
@@ -102,6 +103,7 @@ import mihon.entry.interactions.source.EntryChildWebViewResolution
 import mihon.entry.interactions.source.launchEntryChildWebViewAction
 import mihon.entry.viewer.settings.navigation.openViewerSettings
 import mihon.text.recognition.api.host.openTextRecognitionSettings
+import mihon.translation.api.host.openTranslationSettings
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.launchNonCancellable
@@ -153,11 +155,22 @@ class ReaderActivity : EntryInteractionActivity() {
 
     private var menuToggleToast: Toast? = null
 
+    private val textProcessAheadPolicy by lazy { MangaTextProcessAheadPolicy(this) }
+
     private val textInteraction by lazy {
         MangaReaderTextInteraction(
             session = viewModel.textSession,
             translation = viewModel.textTranslation,
             visibleSurfaces = { viewModel.state.value.viewer?.visibleTextSurfaces().orEmpty() },
+            preloadedSurfaces = { viewModel.state.value.viewer?.preloadedTextSurfaces().orEmpty() },
+            processAheadAllowed = {
+                val settings = viewModel.settingsBindings.value
+                settings != null && textProcessAheadPolicy.allows(
+                    onlyOnUnmeteredNetwork =
+                    settings.pageTextProcessAheadOnlyOnUnmeteredNetwork.state.value.effectiveValue,
+                    onlyWhileCharging = settings.pageTextProcessAheadOnlyWhileCharging.state.value.effectiveValue,
+                )
+            },
             overlayOrigin = {
                 val origin = IntArray(2).also(binding.composeOverlay::getLocationInWindow)
                 origin[0].toFloat() to origin[1].toFloat()
@@ -673,6 +686,9 @@ class ReaderActivity : EntryInteractionActivity() {
             onChooseLanguage = viewModel.textSession::chooseLanguage,
             onOpenSettings = ::openTextRecognitionSettings,
             onDismissTranslation = textInteraction::dismissTranslation,
+            onToggleOverlay = viewModel::toggleTextTranslationOverlay,
+            onToggleOriginal = viewModel.textSession::toggleOriginal,
+            onOpenTranslationSettings = ::openTranslationSettings,
             onClose = { textInteraction.setActive(false) },
         )
     }

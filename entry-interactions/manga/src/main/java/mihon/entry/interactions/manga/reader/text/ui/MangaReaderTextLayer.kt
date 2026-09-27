@@ -44,6 +44,9 @@ internal fun MangaReaderTextLayer(
     onChooseLanguage: (LanguageTag) -> Unit,
     onOpenSettings: () -> Unit,
     onDismissTranslation: () -> Unit,
+    onToggleOverlay: () -> Unit,
+    onToggleOriginal: () -> Unit,
+    onOpenTranslationSettings: () -> Unit,
     onClose: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -71,10 +74,15 @@ internal fun MangaReaderTextLayer(
         } else if (state.active) {
             MangaReaderTextToolbar(
                 progress = state.progress,
+                overlay = state.overlay,
+                showOriginal = state.showOriginal,
                 observeModels = observeModels,
                 onDownloadModels = { approving = it },
                 onChooseLanguage = { choosingLanguage = true },
                 onOpenSettings = onOpenSettings,
+                onOpenTranslationSettings = onOpenTranslationSettings,
+                onToggleOverlay = onToggleOverlay,
+                onToggleOriginal = onToggleOriginal,
                 onSelectArea = { selectingArea = true },
                 onClose = onClose,
                 modifier = Modifier

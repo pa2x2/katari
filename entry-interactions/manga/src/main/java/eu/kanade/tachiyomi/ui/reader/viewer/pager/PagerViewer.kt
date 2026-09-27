@@ -171,6 +171,15 @@ internal abstract class PagerViewer(val activity: ReaderActivity) : Viewer {
         return listOfNotNull(getPageHolder(page)?.textSurface)
     }
 
+    override fun preloadedTextSurfaces(): List<MangaPageTextSurface> {
+        val current = (adapter.items.getOrNull(pager.currentItem) as? ReaderViewerItem.Page)?.page
+        return pager.children
+            .filterIsInstance<PagerPageHolder>()
+            .filter { it.item != current }
+            .map { it.textSurface }
+            .toList()
+    }
+
     /**
      * Returns the PagerPageHolder for the provided page
      */

@@ -1,5 +1,6 @@
 package mihon.entry.interactions.manga.reader.text.session
 
+import android.graphics.Color
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
@@ -9,17 +10,24 @@ import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import mihon.entry.interactions.manga.reader.text.surface.MangaPageTextDecoration
+import mihon.entry.interactions.manga.reader.text.translation.MangaPageTranslator
 import mihon.language.api.tag.LanguageTag
 import mihon.model.artifacts.api.download.ModelArtifactDownloadApproval
 import mihon.text.recognition.api.image.ImageContentKey
 import mihon.text.recognition.api.image.ImageRect
 import mihon.text.recognition.api.preparation.TextRecognitionPreparation
+import mihon.text.recognition.api.result.RecognizedTextRegion
+import mihon.text.recognition.api.result.TextOrientation
+import mihon.text.recognition.api.result.TextRegionKind
+import mihon.translation.api.preparation.TranslationPreparation
+import mihon.translation.api.preparation.TranslationTargetChoiceReason
 import org.junit.jupiter.api.Test
 
 class MangaReaderTextSessionTest {
 
     private val recognition = FakeTextRecognition()
     private val store = FakeModelStore()
+    private val translation = FakeTranslation()
     private val text = ImageRect(420, 140, 480, 330)
     private val container = ImageRect(380, 100, 520, 360)
 
@@ -112,11 +120,76 @@ class MangaReaderTextSessionTest {
         session.state.value.progress.shouldBeInstanceOf<MangaReaderTextProgress.NoText>()
     }
 
+    @Test
+    fun `drawn translations replace the outlines of the regions they translate`() = runTest {
+        val narration = RecognizedTextRegion(
+            bounds = ImageRect(100, 1500, 700, 1560),
+            text = "語り",
+            kind = TextRegionKind.FreeText,
+            orientation = TextOrientation.Horizontal,
+        )
+        recognition.regions = listOf(bubble("素直に", text, container), narration)
+        translation.preparation = null
+        val surface = FakeSurface(0)
+        val session = session()
+        session.onVisibleSurfaces(listOf(surface))
+        session.setOverlay(true)
+        session.setActive(true)
+        runCurrent()
+
+        val decoration = session.decoration(surface.page).first()!!
+        decoration.regions shouldBe emptyList()
+        decoration.overlays.map { it.source to it.text } shouldContainExactly
+            listOf(text to "素直に".uppercase(), narration.bounds to "語り")
+
+        session.toggleOriginal()
+
+        session.decoration(surface.page).first()!!.overlays shouldBe emptyList()
+    }
+
+    @Test
+    fun `a translation engine that needs setup stops drawing translations but not tapping`() = runTest {
+        recognition.regions = listOf(bubble("素直に", text, container))
+        translation.preparation = TranslationPreparation.TargetLanguageRequired(
+            sourceLanguage = JAPANESE,
+            reason = TranslationTargetChoiceReason.NoDefaultTarget,
+        )
+        val surface = FakeSurface(0)
+        val session = session()
+        session.onVisibleSurfaces(listOf(surface))
+        session.setOverlay(true)
+        session.setActive(true)
+        runCurrent()
+
+        session.state.value.progress shouldBe
+            MangaReaderTextProgress.TranslationUnavailable(MangaPageTranslationIssue.SetupRequired)
+        session.regionAt(surface.page, x = 390, y = 350)?.text shouldBe "素直に"
+    }
+
+    @Test
+    fun `preloaded pages are processed only while translations are drawn on pages`() = runTest {
+        val visible = FakeSurface(0)
+        val preloaded = FakeSurface(1)
+        val session = session()
+        session.setActive(true)
+
+        session.onVisibleSurfaces(listOf(visible), preloaded = listOf(preloaded))
+        runCurrent()
+        recognition.recognized shouldContainExactly listOf(ImageContentKey("page-0"))
+
+        session.setOverlay(true)
+        session.onVisibleSurfaces(listOf(visible), preloaded = listOf(preloaded))
+        runCurrent()
+        recognition.recognized shouldContainExactly listOf(ImageContentKey("page-0"), ImageContentKey("page-1"))
+    }
+
     private fun TestScope.session(declaredLanguage: LanguageTag? = JAPANESE) =
         MangaReaderTextSession(
             recognition = recognition,
             modelStore = store,
+            translator = MangaPageTranslator(translation),
             scope = backgroundScope,
             declaredLanguage = { declaredLanguage },
+            sampleBackground = { _, _ -> Color.WHITE },
         )
 }

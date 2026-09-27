@@ -3,6 +3,7 @@ package mihon.entry.interactions.manga.reader.text.surface
 import android.graphics.RectF
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
 import mihon.entry.interactions.manga.reader.text.image.DisplayedPageImage
+import mihon.entry.interactions.manga.reader.text.session.MangaPageTextOverlay
 import mihon.text.recognition.api.image.ImageRect
 import mihon.text.recognition.api.image.ImageSize
 
@@ -29,9 +30,10 @@ internal interface MangaPageTextSurface {
     fun setTextDecoration(decoration: MangaPageTextDecoration?)
 }
 
-/** Text regions to outline on a page, in the coordinates of the recognized image. */
+/** Text regions to outline and translations to draw on a page, in the coordinates of the recognized image. */
 internal data class MangaPageTextDecoration(
     val imageSize: ImageSize,
     val regions: List<ImageRect>,
     val highlighted: ImageRect? = null,
+    val overlays: List<MangaPageTextOverlay> = emptyList(),
 )

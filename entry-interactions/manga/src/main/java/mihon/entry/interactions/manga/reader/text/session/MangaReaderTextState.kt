@@ -18,15 +18,24 @@ internal data class MangaReaderTextState(
     val visiblePages: List<ReaderPage> = emptyList(),
     val pages: Map<ReaderPage, MangaPageTextStatus> = emptyMap(),
     val highlighted: MangaPageTextHighlight? = null,
+    /** Whether recognized text is translated and drawn over the page, rather than translated when tapped. */
+    val overlay: Boolean = false,
+    /** Temporarily reveals the original text under the drawn translations. */
+    val showOriginal: Boolean = false,
+    val overlays: Map<ReaderPage, List<MangaPageTextOverlay>> = emptyMap(),
+    val translating: Set<ReaderPage> = emptySet(),
+    val translationIssue: MangaPageTranslationIssue? = null,
 ) {
     /** What the reader should tell the user about the pages on screen. */
     val progress: MangaReaderTextProgress
         get() {
             blocker?.let { return MangaReaderTextProgress.Blocked(it) }
+            if (overlay) translationIssue?.let { return MangaReaderTextProgress.TranslationUnavailable(it) }
             val statuses = visiblePages.map { pages[it] }
             val recognized = statuses.filterIsInstance<MangaPageTextStatus.Recognized>()
             return when {
                 statuses.any { it == MangaPageTextStatus.Recognizing } -> MangaReaderTextProgress.Recognizing
+                overlay && visiblePages.any { it in translating } -> MangaReaderTextProgress.Translating
                 statuses.any { it is MangaPageTextStatus.Failed } -> MangaReaderTextProgress.Failed(
                     statuses.filterIsInstance<MangaPageTextStatus.Failed>().first().message,
                 )
@@ -44,6 +53,11 @@ internal sealed interface MangaReaderTextProgress {
     data object Waiting : MangaReaderTextProgress
 
     data object Recognizing : MangaReaderTextProgress
+
+    data object Translating : MangaReaderTextProgress
+
+    /** Pages are recognized, but translations cannot be drawn on them. */
+    data class TranslationUnavailable(val issue: MangaPageTranslationIssue) : MangaReaderTextProgress
 
     data object Ready : MangaReaderTextProgress
 
@@ -74,6 +88,28 @@ internal sealed interface MangaPageTextStatus {
     data class Recognized(val result: TextRecognitionResult) : MangaPageTextStatus
 
     data class Failed(val message: String?) : MangaPageTextStatus
+}
+
+/**
+ * A translation to draw over recognized text.
+ *
+ * @property source the recognized region the translation replaces.
+ * @property area where the translation is drawn: the text and, inside a speech bubble, room around it.
+ * @property background the color the original text is printed on, used to cover it.
+ */
+internal data class MangaPageTextOverlay(
+    val source: ImageRect,
+    val area: ImageRect,
+    val text: String,
+    val background: Int,
+)
+
+internal enum class MangaPageTranslationIssue {
+    /** The translation engine needs the user (setup, consent, or language data) first. */
+    SetupRequired,
+
+    /** The chosen engine opens its own surface or needs an action per text, so nothing can be drawn. */
+    EngineUnsupported,
 }
 
 internal data class MangaPageTextHighlight(

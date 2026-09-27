@@ -5,6 +5,7 @@ import mihon.entry.interactions.reader.settings.MangaReaderColorFilterDefinition
 import mihon.entry.interactions.reader.settings.MangaReaderDisplayDefinitions
 import mihon.entry.interactions.reader.settings.MangaReaderEInkDefinitions
 import mihon.entry.interactions.reader.settings.MangaReaderNavigationDefinitions
+import mihon.entry.interactions.reader.settings.MangaReaderPageTextDefinitions
 import mihon.entry.interactions.reader.settings.MangaReaderPagerDefinitions
 import mihon.entry.interactions.reader.settings.MangaReaderReadingDefinitions
 import mihon.entry.interactions.reader.settings.MangaReaderSettings
@@ -36,6 +37,7 @@ internal class MangaReaderSettingsProvider(
     override val webtoon: MangaReaderWebtoonDefinitions = mangaReaderWebtoonDefinitions(preferences)
     override val navigation: MangaReaderNavigationDefinitions = mangaReaderNavigationDefinitions(preferences)
     override val colorFilter: MangaReaderColorFilterDefinitions = mangaReaderColorFilterDefinitions(preferences)
+    override val pageText: MangaReaderPageTextDefinitions = mangaReaderPageTextDefinitions(preferences)
 
     override val settings: List<ViewerSettingDefinition<*>> by lazy {
         reading.all +
@@ -44,7 +46,8 @@ internal class MangaReaderSettingsProvider(
             pager.all +
             webtoon.all +
             navigation.all +
-            colorFilter.all
+            colorFilter.all +
+            pageText.all
     }
 
     override val sharedSettingDefinitions: Map<ReaderSharedSettingId, ViewerSettingDefinition<Boolean>> by lazy {

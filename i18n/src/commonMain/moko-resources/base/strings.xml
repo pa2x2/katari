@@ -500,6 +500,19 @@
     <string name="reader_text_unsupported_language">%s text cannot be recognized yet</string>
     <string name="reader_text_unavailable">Text recognition is unavailable: %s</string>
     <string name="reader_text_choose_language">Choose language</string>
+    <string name="reader_text_show_original">Show original text</string>
+    <string name="reader_text_show_translations">Show translations</string>
+    <string name="reader_text_overlay_on">Translations shown on the page</string>
+    <string name="reader_text_translating">Translating…</string>
+    <string name="reader_text_translation_setup">Translation needs setup before it can show on the page</string>
+    <string name="reader_text_translation_surface">This translation engine cannot show translations on the page</string>
+    <string name="pref_page_text_translation">Page translation</string>
+    <string name="pref_page_text_translation_overlay">Show translations on the page</string>
+    <string name="pref_page_text_translation_overlay_summary">Translate every recognized text while translate mode is on, instead of only tapped text</string>
+    <string name="pref_page_text_process_ahead_unmetered">Translate upcoming pages only on unmetered networks</string>
+    <string name="pref_page_text_process_ahead_unmetered_summary">Pages you are looking at are always translated</string>
+    <string name="pref_page_text_process_ahead_charging">Translate upcoming pages only while charging</string>
+    <string name="pref_page_text_process_ahead_charging_summary">Recognizing text uses the processor heavily</string>
     <string name="not_found">Not found</string>
     <string name="internal_error">InternalError: Check crash logs for further information</string>
 

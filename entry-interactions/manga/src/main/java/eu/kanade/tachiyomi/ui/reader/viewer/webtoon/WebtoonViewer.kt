@@ -177,10 +177,15 @@ internal class WebtoonViewer(val activity: ReaderActivity, val isContinuous: Boo
     /**
      * Returns the view this viewer uses.
      */
-    override fun visibleTextSurfaces(): List<MangaPageTextSurface> {
+    override fun visibleTextSurfaces(): List<MangaPageTextSurface> = textSurfaces(visible = true)
+
+    override fun preloadedTextSurfaces(): List<MangaPageTextSurface> = textSurfaces(visible = false)
+
+    /** Page holders the recycler has bound, either those on screen or those laid out beyond it. */
+    private fun textSurfaces(visible: Boolean): List<MangaPageTextSurface> {
         val visibleArea = Rect()
         return recycler.children
-            .filter { child -> child.getGlobalVisibleRect(visibleArea) }
+            .filter { child -> child.getGlobalVisibleRect(visibleArea) == visible }
             .mapNotNull { child -> (recycler.getChildViewHolder(child) as? WebtoonPageHolder)?.textSurface() }
             .toList()
     }

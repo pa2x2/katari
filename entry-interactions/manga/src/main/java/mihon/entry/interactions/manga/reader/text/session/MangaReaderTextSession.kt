@@ -14,8 +14,12 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
+import mihon.entry.interactions.manga.reader.text.overlay.overlayArea
+import mihon.entry.interactions.manga.reader.text.overlay.sampleTextBackground
 import mihon.entry.interactions.manga.reader.text.surface.MangaPageTextDecoration
 import mihon.entry.interactions.manga.reader.text.surface.MangaPageTextSurface
+import mihon.entry.interactions.manga.reader.text.translation.MangaPageTranslation
+import mihon.entry.interactions.manga.reader.text.translation.MangaPageTranslator
 import mihon.language.api.tag.LanguageTag
 import mihon.model.artifacts.api.ModelArtifactStore
 import mihon.model.artifacts.api.descriptor.ModelArtifactDescriptor
@@ -23,6 +27,7 @@ import mihon.model.artifacts.api.download.ModelArtifactDownloadApproval
 import mihon.model.artifacts.api.state.ModelArtifactState
 import mihon.text.recognition.api.TextRecognitionFeature
 import mihon.text.recognition.api.image.ImageRect
+import mihon.text.recognition.api.image.TextRecognitionImage
 import mihon.text.recognition.api.preparation.TextRecognitionPreparation
 import mihon.text.recognition.api.preparation.TextRecognitionUnavailableReason
 import mihon.text.recognition.api.request.TextRecognitionRequest
@@ -40,33 +45,60 @@ import mihon.text.recognition.api.result.TextRecognitionResult
 internal class MangaReaderTextSession(
     private val recognition: TextRecognitionFeature,
     private val modelStore: ModelArtifactStore,
+    private val translator: MangaPageTranslator,
     private val scope: CoroutineScope,
     private val declaredLanguage: suspend () -> LanguageTag?,
+    private val sampleBackground: suspend (TextRecognitionImage, ImageRect) -> Int = ::sampleTextBackground,
 ) {
     private val mutableState = MutableStateFlow(MangaReaderTextState())
     val state: StateFlow<MangaReaderTextState> = mutableState.asStateFlow()
 
     private var chosenLanguage: LanguageTag? = null
     private var visible: List<MangaPageTextSurface> = emptyList()
+    private var ahead: List<MangaPageTextSurface> = emptyList()
     private val jobs = mutableMapOf<ReaderPage, Job>()
+    private val translationJobs = mutableMapOf<ReaderPage, Job>()
     private var modelWait: Job? = null
 
     fun setActive(active: Boolean) {
         if (mutableState.value.active == active) return
         if (!active) {
             cancelRecognition()
-            mutableState.update { MangaReaderTextState(language = it.language) }
+            cancelTranslation()
+            mutableState.update { MangaReaderTextState(language = it.language, overlay = it.overlay) }
             return
         }
         mutableState.update { it.copy(active = true, blocker = null) }
         recognizeVisible()
     }
 
-    /** Recognizes [surfaces] that have not been recognized yet and stops work for pages no longer visible. */
-    fun onVisibleSurfaces(surfaces: List<MangaPageTextSurface>) {
+    /** Draws translations over recognized text, or goes back to translating tapped text only. */
+    fun setOverlay(enabled: Boolean) {
+        if (mutableState.value.overlay == enabled) return
+        mutableState.update { it.copy(overlay = enabled, showOriginal = false, translationIssue = null) }
+        if (enabled) translateRecognized() else cancelTranslation()
+    }
+
+    fun toggleOriginal() {
+        mutableState.update { it.copy(showOriginal = !it.showOriginal) }
+    }
+
+    /**
+     * Recognizes [surfaces] that have not been recognized yet and stops work for pages no longer on screen. With
+     * translations drawn over pages, [preloaded] pages are processed too, after the visible ones.
+     */
+    fun onVisibleSurfaces(
+        surfaces: List<MangaPageTextSurface>,
+        preloaded: List<MangaPageTextSurface> = emptyList(),
+    ) {
         visible = surfaces
+        ahead = preloaded.filter { candidate -> surfaces.none { it.page == candidate.page } }
         mutableState.update { it.copy(visiblePages = surfaces.map(MangaPageTextSurface::page)) }
-        val pages = surfaces.map(MangaPageTextSurface::page).toSet()
+        val pages = (surfaces + ahead).map(MangaPageTextSurface::page).toSet()
+        translationJobs.keys.filterNot(pages::contains).forEach { page ->
+            translationJobs.remove(page)?.cancel()
+            mutableState.update { it.copy(translating = it.translating - page) }
+        }
         jobs.keys.filterNot(pages::contains).forEach { page ->
             jobs.remove(page)?.cancel()
             mutableState.update { state ->
@@ -107,10 +139,12 @@ internal class MangaReaderTextSession(
         mutableState.update { state ->
             state.copy(
                 blocker = null,
+                translationIssue = null,
                 pages = state.pages.filterValues { it is MangaPageTextStatus.Recognized },
             )
         }
         recognizeVisible()
+        translateRecognized()
     }
 
     fun result(page: ReaderPage): TextRecognitionResult? =
@@ -148,10 +182,13 @@ internal class MangaReaderTextSession(
         .map { state ->
             val result = (state.pages[page] as? MangaPageTextStatus.Recognized)?.result
             if (!state.active || result == null) return@map null
+            val overlays = if (state.overlay && !state.showOriginal) state.overlays[page].orEmpty() else emptyList()
+            val translated = overlays.mapTo(HashSet()) { it.source }
             MangaPageTextDecoration(
                 imageSize = result.imageSize,
-                regions = result.regions.map { it.container ?: it.bounds },
+                regions = result.regions.filterNot { it.bounds in translated }.map { it.container ?: it.bounds },
                 highlighted = state.highlighted?.takeIf { it.page == page }?.bounds,
+                overlays = overlays,
             )
         }
         .distinctUntilChanged()
@@ -159,7 +196,7 @@ internal class MangaReaderTextSession(
     private fun recognizeVisible() {
         val state = mutableState.value
         if (!state.active || state.blocker != null) return
-        visible.forEach { surface ->
+        (if (state.overlay) visible + ahead else visible).forEach { surface ->
             val page = surface.page
             if (page in state.pages || jobs[page]?.isActive == true) return@forEach
             jobs[page] = scope.launch {
@@ -194,6 +231,79 @@ internal class MangaReaderTextSession(
             }
             setStatus(page, status)
         }
+        if (mutableState.value.overlay) translateRecognized()
+    }
+
+    /** Translates recognized on-screen and preloaded pages that have no translations yet, on-screen pages first. */
+    private fun translateRecognized() {
+        val state = mutableState.value
+        if (!state.active || !state.overlay || state.translationIssue != null) return
+        (visible + ahead).forEach { surface ->
+            val page = surface.page
+            val result = (state.pages[page] as? MangaPageTextStatus.Recognized)?.result ?: return@forEach
+            if (page in state.overlays || translationJobs[page]?.isActive == true) return@forEach
+            translationJobs[page] = scope.launch {
+                var completed = false
+                try {
+                    completed = translate(surface, result)
+                } finally {
+                    translationJobs.remove(page, coroutineContext.job)
+                    // An interrupted page starts over later instead of keeping a partial set of translations.
+                    mutableState.update { state ->
+                        state.copy(
+                            translating = state.translating - page,
+                            overlays = if (completed) state.overlays else state.overlays - page,
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    /** Translates every region of [result]; returns whether the page is complete. */
+    private suspend fun translate(surface: MangaPageTextSurface, result: TextRecognitionResult): Boolean {
+        val page = surface.page
+        val image = surface.displayedImage() ?: return false
+        mutableState.update { it.copy(translating = it.translating + page) }
+        image.use {
+            val pageText = result.regions.joinToString("\n") { it.text }
+            val overlays = mutableListOf<MangaPageTextOverlay>()
+            for (region in result.regions) {
+                val text = when (val translation = translator.translate(region.text, result.language, pageText)) {
+                    is MangaPageTranslation.Translated -> translation.text
+                    MangaPageTranslation.Skipped -> continue
+                    MangaPageTranslation.SetupRequired -> {
+                        reportTranslationIssue(MangaPageTranslationIssue.SetupRequired)
+                        return false
+                    }
+                    MangaPageTranslation.EngineUnsupported -> {
+                        reportTranslationIssue(MangaPageTranslationIssue.EngineUnsupported)
+                        return false
+                    }
+                }
+                overlays += MangaPageTextOverlay(
+                    source = region.bounds,
+                    area = overlayArea(region),
+                    text = text,
+                    background = sampleBackground(image, region.bounds),
+                )
+                // Translations appear bubble by bubble instead of all at once.
+                mutableState.update { it.copy(overlays = it.overlays + (page to overlays.toList())) }
+            }
+            mutableState.update { it.copy(overlays = it.overlays + (page to overlays.toList())) }
+        }
+        return true
+    }
+
+    private fun reportTranslationIssue(issue: MangaPageTranslationIssue) {
+        cancelTranslation()
+        mutableState.update { it.copy(translationIssue = issue) }
+    }
+
+    private fun cancelTranslation() {
+        translationJobs.values.forEach(Job::cancel)
+        translationJobs.clear()
+        mutableState.update { it.copy(translating = emptySet()) }
     }
 
     private suspend fun language(): LanguageTag? = chosenLanguage ?: declaredLanguage()

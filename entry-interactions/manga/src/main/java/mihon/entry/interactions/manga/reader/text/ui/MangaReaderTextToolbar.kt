@@ -8,9 +8,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.HighlightAlt
+import androidx.compose.material.icons.outlined.Subtitles
+import androidx.compose.material.icons.outlined.Visibility
+import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -23,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.Flow
+import mihon.entry.interactions.manga.reader.text.session.MangaPageTranslationIssue
 import mihon.entry.interactions.manga.reader.text.session.MangaReaderTextBlocker
 import mihon.entry.interactions.manga.reader.text.session.MangaReaderTextProgress
 import mihon.model.artifacts.api.descriptor.ModelArtifactDescriptor
@@ -37,10 +42,15 @@ import tachiyomi.presentation.core.i18n.stringResource
 @Composable
 internal fun MangaReaderTextToolbar(
     progress: MangaReaderTextProgress,
+    overlay: Boolean,
+    showOriginal: Boolean,
     observeModels: (List<ModelArtifactDescriptor>) -> Flow<List<ModelArtifactState>>,
     onDownloadModels: (List<ModelArtifactDescriptor>) -> Unit,
     onChooseLanguage: () -> Unit,
     onOpenSettings: () -> Unit,
+    onOpenTranslationSettings: () -> Unit,
+    onToggleOverlay: () -> Unit,
+    onToggleOriginal: () -> Unit,
     onSelectArea: () -> Unit,
     onClose: () -> Unit,
     modifier: Modifier = Modifier,
@@ -56,11 +66,11 @@ internal fun MangaReaderTextToolbar(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            if (progress == MangaReaderTextProgress.Recognizing) {
+            if (progress == MangaReaderTextProgress.Recognizing || progress == MangaReaderTextProgress.Translating) {
                 CircularProgressIndicator(modifier = Modifier.padding(vertical = 12.dp).widthIn(max = 16.dp))
             }
             Text(
-                text = progressText(progress, observeModels),
+                text = progressText(progress, overlay, observeModels),
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.weight(1f, fill = false).padding(vertical = 12.dp),
             )
@@ -74,10 +84,37 @@ internal fun MangaReaderTextToolbar(
                 is MangaReaderTextBlocker.LanguageRequired -> TextButton(onClick = onChooseLanguage) {
                     Text(stringResource(MR.strings.reader_text_choose_language))
                 }
-                else -> IconButton(onClick = onSelectArea) {
+                else -> if (progress is MangaReaderTextProgress.TranslationUnavailable) {
+                    TextButton(onClick = onOpenTranslationSettings) {
+                        Text(stringResource(MR.strings.action_settings))
+                    }
+                } else {
+                    IconButton(onClick = onSelectArea) {
+                        Icon(
+                            Icons.Outlined.HighlightAlt,
+                            contentDescription = stringResource(MR.strings.reader_text_select_area),
+                        )
+                    }
+                }
+            }
+            IconButton(onClick = onToggleOverlay) {
+                Icon(
+                    imageVector = Icons.Outlined.Subtitles,
+                    contentDescription = stringResource(MR.strings.pref_page_text_translation_overlay),
+                    tint = if (overlay) MaterialTheme.colorScheme.primary else LocalContentColor.current,
+                )
+            }
+            if (overlay) {
+                IconButton(onClick = onToggleOriginal) {
                     Icon(
-                        Icons.Outlined.HighlightAlt,
-                        contentDescription = stringResource(MR.strings.reader_text_select_area),
+                        imageVector = if (showOriginal) Icons.Outlined.Visibility else Icons.Outlined.VisibilityOff,
+                        contentDescription = stringResource(
+                            if (showOriginal) {
+                                MR.strings.reader_text_show_translations
+                            } else {
+                                MR.strings.reader_text_show_original
+                            },
+                        ),
                     )
                 }
             }
@@ -91,11 +128,19 @@ internal fun MangaReaderTextToolbar(
 @Composable
 private fun progressText(
     progress: MangaReaderTextProgress,
+    overlay: Boolean,
     observeModels: (List<ModelArtifactDescriptor>) -> Flow<List<ModelArtifactState>>,
 ): String = when (progress) {
     MangaReaderTextProgress.Waiting -> stringResource(MR.strings.reader_text_waiting)
     MangaReaderTextProgress.Recognizing -> stringResource(MR.strings.reader_text_recognizing)
-    MangaReaderTextProgress.Ready -> stringResource(MR.strings.reader_text_ready)
+    MangaReaderTextProgress.Translating -> stringResource(MR.strings.reader_text_translating)
+    is MangaReaderTextProgress.TranslationUnavailable -> when (progress.issue) {
+        MangaPageTranslationIssue.SetupRequired -> stringResource(MR.strings.reader_text_translation_setup)
+        MangaPageTranslationIssue.EngineUnsupported -> stringResource(MR.strings.reader_text_translation_surface)
+    }
+    MangaReaderTextProgress.Ready -> stringResource(
+        if (overlay) MR.strings.reader_text_overlay_on else MR.strings.reader_text_ready,
+    )
     MangaReaderTextProgress.NoText -> stringResource(MR.strings.reader_text_no_text)
     is MangaReaderTextProgress.Failed -> stringResource(MR.strings.reader_text_failed, progress.message.orEmpty())
     is MangaReaderTextProgress.Blocked -> when (val blocker = progress.blocker) {

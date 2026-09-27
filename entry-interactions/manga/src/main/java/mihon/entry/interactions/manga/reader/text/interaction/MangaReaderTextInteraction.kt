@@ -24,6 +24,8 @@ internal class MangaReaderTextInteraction(
     private val session: MangaReaderTextSession,
     private val translation: MangaTextTranslationController,
     private val visibleSurfaces: () -> List<MangaPageTextSurface>,
+    private val preloadedSurfaces: () -> List<MangaPageTextSurface>,
+    private val processAheadAllowed: () -> Boolean,
     private val overlayOrigin: () -> Pair<Float, Float>,
     private val scope: CoroutineScope,
 ) {
@@ -41,9 +43,15 @@ internal class MangaReaderTextInteraction(
         }
     }
 
-    /** Recognizes the pages currently on screen; called whenever they or their images change. */
+    /**
+     * Processes the pages currently on screen, and while translations are drawn on pages also the preloaded ones
+     * when the user's limits allow; called whenever they or their images change.
+     */
     fun refreshSurfaces() {
-        if (session.state.value.active) session.onVisibleSurfaces(visibleSurfaces())
+        val state = session.state.value
+        if (!state.active) return
+        val preloaded = if (state.overlay && processAheadAllowed()) preloadedSurfaces() else emptyList()
+        session.onVisibleSurfaces(visibleSurfaces(), preloaded)
     }
 
     /**
