@@ -71,6 +71,19 @@ internal class TextRecognitionComponentRegistry(
     fun presets(language: LanguageTag): List<TextRecognitionPreset> =
         presets.filter { it.languages.readsLanguage(language) }
 
+    /** Every well-formed pipeline whose reader supports [language], in catalog order. */
+    fun pipelines(language: LanguageTag): List<TextRecognitionPipeline> {
+        fun readers(role: TextRecognitionComponentRole) =
+            knownComponents.filter { it.role == role && it.languages.readsLanguage(language) }
+        val detectors = knownComponents.filter { it.role == TextRecognitionComponentRole.Detector }
+        val staged = detectors.flatMap { detector ->
+            readers(TextRecognitionComponentRole.Recognizer).map { recognizer ->
+                TextRecognitionPipeline.Staged(detector.id, recognizer.id)
+            }
+        }
+        return staged + readers(TextRecognitionComponentRole.Engine).map { TextRecognitionPipeline.Engine(it.id) }
+    }
+
     /** Whether every component of [pipeline] is in the catalog with the role its position requires. */
     fun isWellFormed(pipeline: TextRecognitionPipeline): Boolean = when (pipeline) {
         is TextRecognitionPipeline.Staged ->

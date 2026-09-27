@@ -12,6 +12,7 @@ import androidx.compose.material.icons.automirrored.outlined.ChromeReaderMode
 import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material.icons.outlined.Code
 import androidx.compose.material.icons.outlined.CollectionsBookmark
+import androidx.compose.material.icons.outlined.DocumentScanner
 import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.Explore
 import androidx.compose.material.icons.outlined.Info
@@ -239,6 +240,12 @@ object SettingsMainScreen : Screen() {
             subtitleRes = MR.strings.tts_settings_summary,
             icon = Icons.Outlined.RecordVoiceOver,
             screen = SettingsTtsScreen,
+        ),
+        Item(
+            titleRes = MR.strings.text_recognition_title,
+            subtitleRes = MR.strings.text_recognition_settings_summary,
+            icon = Icons.Outlined.DocumentScanner,
+            screen = SettingsTextRecognitionScreen,
         ),
         Item(
             titleRes = MR.strings.browse,

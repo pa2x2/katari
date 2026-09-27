@@ -92,4 +92,36 @@ class TextRecognitionComponentRegistryTest {
             )
         }.message shouldContain "cannot read en"
     }
+
+    @Test
+    fun `candidate pipelines for a language include excluded engines but only recognizers that read it`() {
+        val englishRecognizer = FakeRecognizer(
+            page = page,
+            texts = emptyMap(),
+            catalogEntry = knownComponent(
+                "english.recognizer",
+                TextRecognitionComponentRole.Recognizer,
+                setOf(ENGLISH),
+            ),
+        )
+        val excludedEngine = knownComponent(
+            id = "excluded.engine",
+            role = TextRecognitionComponentRole.Engine,
+            buildAvailability = TextRecognitionBuildAvailability.NotIncluded("Not in this build"),
+        )
+        val registry = TextRecognitionComponentRegistry(
+            contributions = listOf(
+                TextRecognitionComponentContribution(detector),
+                TextRecognitionComponentContribution(recognizer),
+                TextRecognitionComponentContribution(englishRecognizer),
+                TextRecognitionComponentContribution(catalogEntry = excludedEngine),
+            ),
+            presetContributions = emptyList(),
+        )
+
+        registry.pipelines(JAPANESE) shouldContainExactly listOf(
+            TextRecognitionPipeline.Staged(detector.catalogEntry.id, recognizer.catalogEntry.id),
+            TextRecognitionPipeline.Engine(excludedEngine.id),
+        )
+    }
 }

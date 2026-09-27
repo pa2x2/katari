@@ -431,6 +431,41 @@
     <string name="tts_settings_engine_required">Choose an available speech engine.</string>
     <string name="tts_settings_audio_focus_unavailable">Another app currently owns audio playback.</string>
     <string name="tts_settings_provider_failed">The speech engine could not play the preview.</string>
+    <!-- Model artifacts -->
+    <string name="model_artifacts_title">Downloaded models</string>
+    <string name="model_artifacts_summary">Storage used by on-device models</string>
+    <string name="model_artifacts_empty">No models are downloaded</string>
+    <string name="model_artifacts_approval_title">Download models?</string>
+    <string name="model_artifacts_approval_message">These models run on this device. Nothing is sent anywhere after they are downloaded.</string>
+    <string name="model_artifacts_approval_total">Total download: %s</string>
+    <string name="model_artifacts_approval_license">License: %s</string>
+    <string name="model_artifacts_approval_source">Source: %s</string>
+    <string name="model_artifacts_approval_project_hosted">Re-published by Katari from %s</string>
+    <string name="model_artifacts_approval_allow_metered">Allow download over mobile data</string>
+    <string name="model_artifacts_state_not_installed">Not downloaded · %s</string>
+    <string name="model_artifacts_state_downloading">Downloading · %1$s of %2$s</string>
+    <string name="model_artifacts_state_installed">Downloaded · %s</string>
+    <string name="model_artifacts_state_partial">Incomplete download · %s</string>
+    <string name="model_artifacts_failure_metered">Waiting for a non-metered network</string>
+    <string name="model_artifacts_failure_storage_space">Not enough storage: %1$s needed, %2$s available</string>
+    <string name="model_artifacts_failure_checksum">A downloaded file was corrupted; download again</string>
+    <string name="model_artifacts_failure_network">Download failed: %s</string>
+    <string name="model_artifacts_failure_storage">Could not save the model: %s</string>
+    <string name="model_artifacts_failure_unknown">unknown error</string>
+    <!-- Text recognition -->
+    <string name="text_recognition_title">Text recognition</string>
+    <string name="text_recognition_settings_summary">Recognize text in manga pages for translation</string>
+    <string name="text_recognition_settings_languages">Text languages</string>
+    <string name="text_recognition_settings_no_languages">No text recognition models are available in this build</string>
+    <string name="text_recognition_settings_default_pipeline">%s (default)</string>
+    <string name="text_recognition_settings_no_pipeline">Not set up</string>
+    <string name="text_recognition_settings_custom_pipeline">Custom: %s</string>
+    <string name="text_recognition_settings_presets">Recommended</string>
+    <string name="text_recognition_settings_custom">Custom pipeline</string>
+    <string name="text_recognition_settings_use_default">Use default</string>
+    <string name="text_recognition_settings_models">Models</string>
+    <string name="text_recognition_settings_models_ready">All models downloaded</string>
+    <string name="text_recognition_settings_models_needed">Needs %s of models</string>
     <string name="not_found">Not found</string>
     <string name="internal_error">InternalError: Check crash logs for further information</string>
 

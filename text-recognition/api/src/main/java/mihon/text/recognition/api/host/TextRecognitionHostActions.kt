@@ -16,6 +16,15 @@ interface TextRecognitionHostActions {
     /** Languages that at least one component of this build can read. */
     val supportedLanguages: List<LanguageTag>
 
+    /** Presets that read [language], including presets whose components this build excludes. */
+    fun presets(language: LanguageTag): List<TextRecognitionPreset>
+
+    /**
+     * Every pipeline the catalog can form for [language]: each detector with each recognizer that reads it, and each
+     * engine that reads it. Pipelines with components this build excludes are included so hosts can explain them.
+     */
+    fun pipelines(language: LanguageTag): List<TextRecognitionPipeline>
+
     /** The profile's explicit choice for [language], or `null` when the default preset applies. */
     fun observeSelection(language: LanguageTag): Flow<TextRecognitionPipelineSelection?>
 

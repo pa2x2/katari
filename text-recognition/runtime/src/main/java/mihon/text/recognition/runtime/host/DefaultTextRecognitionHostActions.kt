@@ -26,6 +26,10 @@ internal class DefaultTextRecognitionHostActions(
     override val supportedLanguages: List<LanguageTag>
         get() = registry.supportedLanguages
 
+    override fun presets(language: LanguageTag): List<TextRecognitionPreset> = registry.presets(language)
+
+    override fun pipelines(language: LanguageTag): List<TextRecognitionPipeline> = registry.pipelines(language)
+
     override fun observeSelection(language: LanguageTag): Flow<TextRecognitionPipelineSelection?> =
         preferences.selection(language).changes()
 
