@@ -2,6 +2,7 @@ package mihon.entry.viewer.settings.ui
 
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -22,8 +23,8 @@ import uy.kohesive.injekt.api.get
  *
  * Applicable shared settings are projected from [ReaderSharedSettingsRegistry] so a reader cannot omit them,
  * while processor-owned pages are contributed by the caller in [content]. [sharedSettingDetails] adds what the open
- * entry shows with a shared setting. Reset clears processor and shared entry overrides so an in-reader reset only drops
- * this entry's overrides.
+ * entry shows with a shared setting, and [snackbarHostState] shows messages about changes made while the dialog covers
+ * the reader. Reset clears processor and shared entry overrides so an in-reader reset only drops this entry's overrides.
  */
 @Composable
 fun ReaderSettingsDialogHost(
@@ -37,6 +38,7 @@ fun ReaderSettingsDialogHost(
     onResetProcessorSettings: suspend () -> Unit,
     onProcessorPageChanged: ((Int) -> Unit)? = null,
     sharedSettingDetails: Map<ReaderSharedSettingId, ReaderSharedSettingDetails> = emptyMap(),
+    snackbarHostState: SnackbarHostState? = null,
     content: @Composable ColumnScope.(processorPage: Int) -> Unit,
 ) {
     val registry = remember { Injekt.get<ReaderSharedSettingsRegistry>() }
@@ -72,6 +74,7 @@ fun ReaderSettingsDialogHost(
         pagerState = pagerState,
         onOpenDefaultSettings = onOpenDefaultSettings,
         openDefaultSettingsLabel = stringResource(MR.strings.action_open_default_reader_settings),
+        snackbarHostState = snackbarHostState,
     ) { page ->
         if (page < processorTabOffset) {
             sharedSettings.forEach { setting ->

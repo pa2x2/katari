@@ -9,10 +9,15 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.union
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
@@ -30,6 +35,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.SheetValue
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberBottomSheetState
@@ -60,7 +67,8 @@ object ViewerSettingsPaddings {
  * Shared settings dialog for viewer engines.
  *
  * Reset is part of this scaffold so a reader cannot add another tabbed settings
- * surface without also defining how that surface returns to its defaults.
+ * surface without also defining how that surface returns to its defaults. The dialog is its own window, so messages
+ * about changes made in it are shown by [snackbarHostState] over the sheet rather than hidden under it.
  */
 @Composable
 @OptIn(ExperimentalFoundationApi::class)
@@ -72,6 +80,7 @@ fun ViewerSettingsTabbedDialog(
     pagerState: PagerState = rememberPagerState { tabTitles.size },
     onOpenDefaultSettings: (() -> Unit)? = null,
     openDefaultSettingsLabel: String? = null,
+    snackbarHostState: SnackbarHostState? = null,
     content: @Composable ColumnScope.(Int) -> Unit,
 ) {
     val scope = rememberCoroutineScope()
@@ -146,6 +155,14 @@ fun ViewerSettingsTabbedDialog(
                         }
                     }
                 }
+            }
+            snackbarHostState?.let {
+                SnackbarHost(
+                    hostState = it,
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .windowInsetsPadding(WindowInsets.systemBars.union(WindowInsets.ime)),
+                )
             }
         }
     }
