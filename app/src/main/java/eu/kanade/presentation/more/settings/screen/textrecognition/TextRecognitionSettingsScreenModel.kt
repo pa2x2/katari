@@ -19,6 +19,8 @@ import mihon.text.recognition.ui.models.TextRecognitionStoredModels
 import mihon.text.recognition.ui.models.observeStoredModels
 import mihon.text.recognition.ui.playground.BitmapTextRecognitionImage
 import mihon.text.recognition.ui.settings.TextRecognitionSettingsController
+import tachiyomi.core.common.preference.Preference
+import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.core.common.util.lang.withIOContext
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
@@ -29,19 +31,29 @@ internal class TextRecognitionSettingsScreenModel(
     val hostActions: TextRecognitionHostActions = Injekt.get(),
     modelStore: ModelArtifactStore = Injekt.get(),
     private val application: Application = Injekt.get(),
+    preferenceStore: PreferenceStore = Injekt.get(),
 ) : ScreenModel {
+    /** The playground language last chosen, so trying another image does not start from the device language. */
+    private val playgroundLanguage = preferenceStore.getString(Preference.appStateKey(PLAYGROUND_LANGUAGE_KEY), "")
+
     val controller = TextRecognitionSettingsController(
         feature = feature,
         hostActions = hostActions,
         modelStore = modelStore,
         scope = screenModelScope,
-        initialPlaygroundLanguage = LanguageTag.parse(Locale.getDefault().toLanguageTag()),
+        initialPlaygroundLanguage = LanguageTag.parse(playgroundLanguage.get())
+            ?: LanguageTag.parse(Locale.getDefault().toLanguageTag()),
     )
     val state = controller.state
 
     /** Downloaded model revisions by what they are for, for the storage summary. */
     val storedModels: StateFlow<TextRecognitionStoredModels?> = hostActions.observeStoredModels(modelStore)
         .stateIn(screenModelScope, SharingStarted.Eagerly, null)
+
+    fun setPlaygroundLanguage(language: LanguageTag) {
+        playgroundLanguage.set(language.value)
+        controller.setPlaygroundLanguage(language)
+    }
 
     /** Recognizes the picked image with the draft configuration. */
     fun tryImage(uri: Uri) {
@@ -66,6 +78,8 @@ internal class TextRecognitionSettingsScreenModel(
         }
 
     private companion object {
+        const val PLAYGROUND_LANGUAGE_KEY = "text_recognition_playground_language"
+
         /** Keeps a tried image legible for recognition without holding a camera-sized bitmap. */
         const val PLAYGROUND_MAXIMUM_EDGE = 2400
     }

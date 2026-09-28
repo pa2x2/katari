@@ -24,7 +24,7 @@ internal class TextRecognitionPlaygroundLanguageScreen : Screen() {
             languages = state.languages,
             selected = state.playgroundLanguage,
             onSelect = { language ->
-                model.controller.setPlaygroundLanguage(language)
+                model.setPlaygroundLanguage(language)
                 navigator.pop()
             },
             onBack = navigator::pop,
