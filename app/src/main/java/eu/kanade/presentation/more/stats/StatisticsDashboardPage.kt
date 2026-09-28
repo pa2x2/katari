@@ -43,9 +43,7 @@ import eu.kanade.tachiyomi.source.entry.EntryType
 import tachiyomi.domain.statistics.model.StatisticsCard
 import tachiyomi.domain.statistics.model.StatisticsCardLayout
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
-import java.text.NumberFormat
 
 @Composable
 internal fun StatisticsDashboardPage(
@@ -70,19 +68,6 @@ internal fun StatisticsDashboardPage(
     val formatter = rememberStatisticsDurationFormatter()
     val visibleActivity = activity?.forType(selectedType)
     val selectedStatsType = state.types.firstOrNull { it.type == selectedType }
-    val secondaryMetricValue = if (selectedStatsType == null) {
-        visibleActivity?.currentStreakDays?.let { pluralStringResource(MR.plurals.day, it, it) } ?: "—"
-    } else {
-        visibleActivity?.completionCount?.let(NumberFormat.getIntegerInstance()::format) ?: "—"
-    }
-    val secondaryMetricLabel = selectedStatsType?.let { stringResource(it.consumedUnitLabel) }
-        ?: stringResource(
-            if (visibleActivity?.window?.isLatest == false) {
-                MR.strings.statistics_ending_streak
-            } else {
-                MR.strings.statistics_current_streak
-            },
-        )
     val layout = state.cardLayouts[statisticsLayoutTab(selectedType)] ?: StatisticsCardLayout()
     val sections = layout.visibleSections(isOverview, state.range)
     val listState = rememberLazyListState()
@@ -142,9 +127,10 @@ internal fun StatisticsDashboardPage(
                 item(key = card.id) {
                     when (card) {
                         StatisticsCard.SUMMARY -> StatisticsActivitySummaryCards(
-                            time = visibleActivity?.let { formatter(it.totalDurationMillis) } ?: "—",
-                            secondaryValue = secondaryMetricValue,
-                            secondaryLabel = secondaryMetricLabel,
+                            activity = visibleActivity,
+                            selectedType = selectedStatsType,
+                            types = visibleTypes,
+                            formatDuration = formatter,
                         )
                         StatisticsCard.ACTIVITY -> StatisticsActivityCard(
                             state = state.activity,

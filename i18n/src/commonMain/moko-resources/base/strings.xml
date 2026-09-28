@@ -1701,7 +1701,6 @@
     <string name="statistics_range_30_days">30D</string>
     <string name="statistics_range_1_year">1Y</string>
     <string name="statistics_time_spent">Time spent</string>
-    <string name="statistics_current_streak">Current streak</string>
     <string name="statistics_ending_streak">Ending streak</string>
     <string name="statistics_library">Current library</string>
     <string name="statistics_progress">Progress</string>
