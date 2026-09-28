@@ -77,17 +77,8 @@ internal class MangaReaderTextInteraction(
     /** Recognizes and translates the text inside [area], a rectangle the user outlined in window coordinates. */
     fun onAreaSelected(area: RectF) {
         scope.launch {
-            val (surface, imageSize) = visibleSurfaces().firstNotNullOfOrNull { surface ->
-                val size = surface.displayedImage()?.use { it.size } ?: return@firstNotNullOfOrNull null
-                val bounds = surface.imageToWindow(size.bounds, size) ?: return@firstNotNullOfOrNull null
-                (surface to size).takeIf { bounds.contains(area.centerX(), area.centerY()) }
-            } ?: return@launch
-            val topLeft = surface.windowToImage(area.left, area.top, imageSize) ?: return@launch
-            val bottomRight = surface.windowToImage(area.right, area.bottom, imageSize) ?: return@launch
-            val imageArea = clampedArea(topLeft, bottomRight, imageSize.width, imageSize.height) ?: return@launch
-            val result = session.recognizeArea(surface, imageArea)
-            // A missing prerequisite is reported by the session itself.
-            if (result == null) return@launch
+            val (surface, imageArea, result) = recognizeOutline(area) ?: return@launch
+            val imageSize = result.imageSize
             if (result.regions.isEmpty()) {
                 mutableAreaResult.value = AreaResult.NoText
                 return@launch
@@ -101,6 +92,27 @@ internal class MangaReaderTextInteraction(
                 anchor = surface.imageToWindow(imageArea, imageSize)?.let(::anchor),
             )
         }
+    }
+
+    /**
+     * Recognizes the outlined [area] on the visible page under its centre. Returns `null` when no page lies under it,
+     * or when the session reported a missing prerequisite itself.
+     */
+    private suspend fun recognizeOutline(area: RectF): OutlineRecognition? {
+        visibleSurfaces().forEach { surface ->
+            val image = surface.displayedImage() ?: return@forEach
+            image.use {
+                val size = image.size
+                val bounds = surface.imageToWindow(size.bounds, size) ?: return@forEach
+                if (!bounds.contains(area.centerX(), area.centerY())) return@forEach
+                val topLeft = surface.windowToImage(area.left, area.top, size) ?: return null
+                val bottomRight = surface.windowToImage(area.right, area.bottom, size) ?: return null
+                val imageArea = clampedArea(topLeft, bottomRight, size.width, size.height) ?: return null
+                val result = session.recognizeArea(image, imageArea) ?: return null
+                return OutlineRecognition(surface, imageArea, result)
+            }
+        }
+        return null
     }
 
     fun consumeAreaResult() {
@@ -138,6 +150,12 @@ internal class MangaReaderTextInteraction(
     }
 
     private fun TextRecognitionResult.pageText(): String = regions.joinToString("\n") { it.text }
+
+    private data class OutlineRecognition(
+        val surface: MangaPageTextSurface,
+        val area: ImageRect,
+        val result: TextRecognitionResult,
+    )
 
     enum class AreaResult {
         Translated,
