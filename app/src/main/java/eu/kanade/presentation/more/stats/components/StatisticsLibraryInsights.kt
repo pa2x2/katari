@@ -24,7 +24,7 @@ internal fun StatisticsLibraryInsightsCard(library: StatsLibraryInsights) {
             verticalArrangement = Arrangement.spacedBy(8.dp),
             maxItemsInEachRow = 2,
         ) {
-            library.topGenre?.let { genre ->
+            library.topGenres.firstOrNull()?.label?.let { genre ->
                 StatisticsInsightTile(
                     value = genre,
                     label = stringResource(MR.strings.statistics_top_genre),

@@ -135,6 +135,85 @@ class StatisticsRepositoryImplTest {
         }
     }
 
+    @Test
+    fun `window ranking carries covers and in-window completions and pages by type`() = runTest {
+        withDatabase { database, repository ->
+            database.recordActivitySession(
+                sessionId = "manga",
+                entryId = 1L,
+                startedAt = 1_000L,
+                durationMillis = 20_000L,
+            )
+            database.recordActivitySession(
+                sessionId = "anime",
+                entryId = 2L,
+                startedAt = 1_000L,
+                durationMillis = 40_000L,
+            )
+            database.activityQueries.insertCompletionEvent(
+                "in-window",
+                1L,
+                11L,
+                "manga",
+                21_000L,
+                "2026-08-23",
+                "UTC",
+                "consumption",
+            )
+            database.activityQueries.insertCompletionEvent(
+                "outside-window",
+                1L,
+                11L,
+                "manga",
+                21_000L,
+                "2026-08-20",
+                "UTC",
+                "consumption",
+            )
+            database.activityQueries.insertCompletionEvent(
+                "manual",
+                1L,
+                11L,
+                null,
+                21_000L,
+                "2026-08-23",
+                "UTC",
+                "manual",
+            )
+
+            val snapshot = repository.subscribeActivity(1L, "2026-08-23", "2026-08-23").first()
+            snapshot.topEntries.associate { it.title to it.completionCount } shouldBe mapOf(
+                "Anime" to 0L,
+                "Manga" to 1L,
+            )
+            snapshot.topEntries.first().cover.entryId shouldBe 2L
+
+            repository.getTopEntriesPage(1L, null, "2026-08-23", "2026-08-23", offset = 1L, limit = 1L)
+                .map { it.title } shouldBe listOf("Manga")
+            repository.getTopEntriesPage(1L, EntryType.ANIME, "2026-08-23", "2026-08-23", offset = 0L, limit = 10L)
+                .map { it.title } shouldBe listOf("Anime")
+        }
+    }
+
+    @Test
+    fun `timed segments keep their recorded time zone for local clock analysis`() = runTest {
+        withDatabase { database, repository ->
+            database.recordActivitySession(
+                sessionId = "manga",
+                entryId = 1L,
+                startedAt = 1_000L,
+                durationMillis = 20_000L,
+            )
+
+            repository.subscribeActivity(1L, "2026-08-23", "2026-08-23").first().segments.single().let { segment ->
+                segment.type shouldBe EntryType.MANGA
+                segment.startedAtEpochMillis shouldBe 1_000L
+                segment.durationMillis shouldBe 20_000L
+                segment.timeZoneId shouldBe "UTC"
+            }
+        }
+    }
+
     private suspend fun withDatabase(block: suspend (Database, StatisticsRepositoryImpl) -> Unit) {
         val driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
         try {

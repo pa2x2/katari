@@ -5,6 +5,7 @@ import eu.kanade.presentation.more.stats.data.StatsActivity
 import eu.kanade.presentation.more.stats.data.StatsActivityWindow
 import eu.kanade.presentation.more.stats.data.StatsLibrary
 import eu.kanade.presentation.more.stats.data.StatsRange
+import eu.kanade.presentation.more.stats.data.StatsReadingCalendar
 import eu.kanade.presentation.more.stats.data.StatsType
 import eu.kanade.tachiyomi.source.entry.EntryType
 import tachiyomi.domain.statistics.model.StatisticsCardLayout
@@ -23,6 +24,7 @@ sealed interface StatsScreenState {
         val activity: ActivityState,
         val incognito: Boolean,
         val cardLayouts: Map<String, StatisticsCardLayout> = emptyMap(),
+        val calendar: StatsReadingCalendar? = null,
     ) : StatsScreenState
 }
 

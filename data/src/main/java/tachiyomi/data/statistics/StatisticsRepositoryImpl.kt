@@ -4,7 +4,9 @@ import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import tachiyomi.data.DatabaseHandler
+import tachiyomi.domain.entry.model.EntryCover
 import tachiyomi.domain.statistics.model.StatisticsActivityBucket
+import tachiyomi.domain.statistics.model.StatisticsActivitySegment
 import tachiyomi.domain.statistics.model.StatisticsActivitySnapshot
 import tachiyomi.domain.statistics.model.StatisticsActivityTimeline
 import tachiyomi.domain.statistics.model.StatisticsCompletionBucket
@@ -36,16 +38,50 @@ class StatisticsRepositoryImpl(
                 profileId = profileId,
                 type = type?.name?.lowercase(),
                 limit = limit,
-            ) { entryId, entryType, title, duration ->
-                StatisticsTopEntry(
+            ) { entryId, entryType, title, duration, thumbnailUrl, source, favorite, coverLastModified ->
+                topEntry(
                     entryId = entryId,
-                    type = EntryType.valueOf(entryType.uppercase()),
+                    type = entryType,
                     title = title,
-                    durationMillis = duration ?: 0L,
+                    duration = duration,
+                    thumbnailUrl = thumbnailUrl,
+                    source = source,
+                    favorite = favorite,
+                    coverLastModified = coverLastModified,
+                    completionCount = 0L,
                 )
             }
         }
-        return StatisticsEarlierActivityDetails(totals = totals, topEntries = topEntries)
+        val trackingStartedAt = handler.awaitOneOrNull { activityQueries.getStatisticsEpoch(profileId) }
+        return StatisticsEarlierActivityDetails(
+            totals = totals,
+            topEntries = topEntries,
+            trackingStartedAtEpochMillis = trackingStartedAt,
+        )
+    }
+
+    override suspend fun getTopEntriesPage(
+        profileId: Long,
+        type: EntryType?,
+        startLocalDate: String?,
+        endLocalDate: String,
+        offset: Long,
+        limit: Long,
+    ): List<StatisticsTopEntry> {
+        require(offset >= 0L) { "Top entries offset cannot be negative" }
+        require(limit > 0L) { "Top entries limit must be positive" }
+        return handler.awaitList {
+            statisticsViewQueries.topActivityEntriesPage(
+                profileId = profileId,
+                type = type?.name?.lowercase(),
+                minimumSessionDurationMillis = StatisticsActivityPolicy.MINIMUM_SESSION_DURATION_MILLIS,
+                startLocalDate = startLocalDate,
+                endLocalDate = endLocalDate,
+                limit = limit,
+                offset = offset,
+                mapper = ::topEntry,
+            )
+        }
     }
 
     override fun subscribeActivity(
@@ -59,11 +95,12 @@ class StatisticsRepositoryImpl(
             combine(
                 subscribeTopEntries(profileId, startLocalDate, endLocalDate),
                 subscribeSessionSummaries(profileId, startLocalDate, endLocalDate),
-                ::Pair,
+                subscribeSegments(profileId, startLocalDate, endLocalDate),
+                ::Triple,
             ),
             handler.subscribeToOneOrNull { activityQueries.getStatisticsEpoch(profileId) },
             subscribeEarlierActivity(profileId),
-        ) { activity, completions, (topEntries, sessions), trackingStartedAt, earlierActivity ->
+        ) { activity, completions, (topEntries, sessions, segments), trackingStartedAt, earlierActivity ->
             StatisticsActivitySnapshot(
                 profileId = profileId,
                 trackingStartedAtEpochMillis = trackingStartedAt,
@@ -72,6 +109,7 @@ class StatisticsRepositoryImpl(
                 topEntries = topEntries,
                 sessions = sessions,
                 earlierActivity = earlierActivity,
+                segments = segments,
             )
         }
     }
@@ -155,21 +193,35 @@ class StatisticsRepositoryImpl(
         startLocalDate: String?,
         endLocalDate: String?,
     ): Flow<List<StatisticsTopEntry>> = handler.subscribeToList {
-        val mapper = { entryId: Long, type: String, title: String, duration: Long? ->
-            StatisticsTopEntry(
-                entryId = entryId,
-                type = EntryType.valueOf(type.uppercase()),
-                title = title,
-                durationMillis = duration ?: 0L,
-            )
-        }
         statisticsViewQueries.topActivityEntriesInWindow(
             profileId = profileId,
             minimumSessionDurationMillis = StatisticsActivityPolicy.MINIMUM_SESSION_DURATION_MILLIS,
             startLocalDate = startLocalDate,
             endLocalDate = endLocalDate,
-            mapper = mapper,
+            mapper = ::topEntry,
         )
+    }
+
+    private fun subscribeSegments(
+        profileId: Long,
+        startLocalDate: String?,
+        endLocalDate: String?,
+    ): Flow<List<StatisticsActivitySegment>> = handler.subscribeToList {
+        statisticsViewQueries.activitySegmentsInWindow(
+            profileId = profileId,
+            minimumSessionDurationMillis = StatisticsActivityPolicy.MINIMUM_SESSION_DURATION_MILLIS,
+            startLocalDate = startLocalDate,
+            endLocalDate = endLocalDate,
+        ) { type, localDate, startedAt, endedAt, duration, timeZoneId ->
+            StatisticsActivitySegment(
+                type = EntryType.valueOf(type.uppercase()),
+                localDate = localDate,
+                startedAtEpochMillis = startedAt,
+                endedAtEpochMillis = endedAt,
+                durationMillis = duration,
+                timeZoneId = timeZoneId,
+            )
+        }
     }
 
     private fun subscribeSessionSummaries(
@@ -199,6 +251,31 @@ class StatisticsRepositoryImpl(
         )
     }
 }
+
+private fun topEntry(
+    entryId: Long,
+    type: String,
+    title: String,
+    duration: Long?,
+    thumbnailUrl: String?,
+    source: Long,
+    favorite: Boolean,
+    coverLastModified: Long,
+    completionCount: Long,
+): StatisticsTopEntry = StatisticsTopEntry(
+    entryId = entryId,
+    type = EntryType.valueOf(type.uppercase()),
+    title = title,
+    durationMillis = duration ?: 0L,
+    cover = EntryCover(
+        entryId = entryId,
+        sourceId = source,
+        isFavorite = favorite,
+        url = thumbnailUrl,
+        lastModified = coverLastModified,
+    ),
+    completionCount = completionCount,
+)
 
 private fun calculateEarlierActivity(
     legacyRows: List<Pair<EntryType, Long>>,
