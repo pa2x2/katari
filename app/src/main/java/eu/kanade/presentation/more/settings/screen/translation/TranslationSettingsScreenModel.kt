@@ -129,6 +129,24 @@ internal class TranslationSettingsScreenModel(
         mutablePlayground.update { it.copy(hasUnsavedProfileChanges = false) }
     }
 
+    /**
+     * Returns the playground's engine and target language to the stored defaults. A source that would equal the
+     * restored target takes the discarded target instead, which undoes a swap.
+     */
+    fun discardPlaygroundDefaults() {
+        val defaults = savedDefaults
+        updatePlayground { current ->
+            current.copy(
+                engine = defaults.engine,
+                targetLanguage = defaults.targetLanguage,
+                sourceLanguage = current.sourceLanguage
+                    .takeUnless { it == defaults.targetLanguage }
+                    ?: current.targetLanguage,
+            )
+        }
+        environment.loadLanguageSupport(defaults.engine)
+    }
+
     private fun submitPlayground() {
         val state = mutablePlayground.value
         controller.submit(

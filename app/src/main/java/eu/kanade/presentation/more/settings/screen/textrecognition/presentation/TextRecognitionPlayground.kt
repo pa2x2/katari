@@ -11,7 +11,6 @@ import androidx.compose.material.icons.outlined.Language
 import androidx.compose.material.icons.outlined.SdStorage
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Translate
-import androidx.compose.material3.Button
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
@@ -63,7 +62,6 @@ internal fun TextRecognitionPlayground(
     onApproveModels: (List<ModelArtifactDownloadApproval>) -> Unit,
     onApprovePlatformModels: (TextRecognitionPlaygroundState.PlatformModelsRequired) -> Unit,
     observeModels: (List<ModelArtifactDescriptor>) -> Flow<Map<ModelArtifactDescriptor, ModelArtifactState>>,
-    onSave: () -> Unit,
 ) {
     ElevatedCard(
         modifier = Modifier
@@ -116,13 +114,6 @@ internal fun TextRecognitionPlayground(
                 )
             }
             PlaygroundOutcome(state.playground, observeModels, onApproveModels, onApprovePlatformModels)
-            Button(
-                onClick = onSave,
-                enabled = state.hasUnsavedProfileChanges,
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Text(stringResource(MR.strings.action_save))
-            }
         }
     }
 }

@@ -1157,6 +1157,10 @@
     <string name="profiles_info_title">Profile-specific data</string>
     <string name="profiles_info_description">Each profile has its own library data and profile-specific settings. This includes categories, library display and update behavior, source preferences, reader settings, appearance settings, security settings, tracking login/state, and the startup screen preference. Global app settings such as downloads, backups, networking, privacy, storage, and extension repository management stay shared across all profiles.</string>
     <string name="profile_specific_chip">Profile</string>
+    <string name="settings_draft_unsaved_changes">Unsaved changes</string>
+    <string name="settings_draft_leave_title">Save changes?</string>
+    <string name="settings_draft_leave_message">Your changes aren\'t saved yet. Unsaved changes are lost when you leave.</string>
+    <string name="settings_draft_keep_editing">Keep editing</string>
     <string name="profiles_switch_summary">Switch profile</string>
     <string name="profiles_switched">Switched to %1$s</string>
     <string name="profiles_add_profile">Add profile</string>

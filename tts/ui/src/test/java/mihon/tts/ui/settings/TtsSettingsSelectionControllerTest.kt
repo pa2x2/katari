@@ -49,6 +49,28 @@ class TtsSettingsSelectionControllerTest {
     }
 
     @Test
+    fun `discarding a draft restores the stored engine and pitch without storing the draft`() = runTest {
+        val host = TestTtsHostActions()
+        val controller = TtsSettingsController(TestTtsFeature(), host, backgroundScope, ENGLISH)
+        runCurrent()
+
+        controller.selectDraftEngine(SECOND_ENGINE)
+        controller.setDraftPitch(1.5f)
+        runCurrent()
+        controller.state.value.hasUnsavedProfileChanges shouldBe true
+
+        controller.discardProfileChanges()
+        runCurrent()
+
+        controller.state.value.selectedEngine shouldBe FIRST_ENGINE
+        controller.state.value.pitch shouldBe 1f
+        controller.state.value.hasUnsavedProfileChanges shouldBe false
+        host.selectedEngine.get() shouldBe FIRST_ENGINE
+        host.pitch.get() shouldBe 1f
+        controller.close()
+    }
+
+    @Test
     fun `provider return re-inspects voices for the unchanged selected engine`() = runTest {
         val host = TestTtsHostActions()
         val controller = TtsSettingsController(TestTtsFeature(), host, backgroundScope, ENGLISH)

@@ -10,6 +10,8 @@ import androidx.compose.ui.Modifier
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppBarTitle
 import eu.kanade.presentation.more.settings.widget.ProfileSpecificChip
+import eu.kanade.presentation.more.settings.widget.draft.SettingsDraftSaveBar
+import eu.kanade.presentation.more.settings.widget.draft.rememberSettingsDraftLeaveGuard
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import mihon.model.artifacts.api.descriptor.ModelArtifactDescriptor
@@ -42,6 +44,7 @@ internal fun TextRecognitionSettingsContent(
     onApprovePlaygroundPlatformModels: (TextRecognitionPlaygroundState.PlatformModelsRequired) -> Unit,
     observeModels: (List<ModelArtifactDescriptor>) -> Flow<Map<ModelArtifactDescriptor, ModelArtifactState>>,
     onSave: () -> Unit,
+    onDiscard: () -> Unit,
 ) {
     val listState = rememberLazyListState()
     val searchTargets = setOf(
@@ -59,6 +62,13 @@ internal fun TextRecognitionSettingsContent(
         }
         onSearchHighlightConsumed(key)
     }
+    val navigateUp = rememberSettingsDraftLeaveGuard(
+        hasUnsavedChanges = state.hasUnsavedProfileChanges,
+        saveEnabled = state.hasUnsavedProfileChanges,
+        onSave = onSave,
+        onDiscard = onDiscard,
+        onLeave = onBack,
+    )
 
     Scaffold(
         topBar = {
@@ -69,8 +79,16 @@ internal fun TextRecognitionSettingsContent(
                         titleSuffix = { ProfileSpecificChip() },
                     )
                 },
-                navigateUp = onBack,
+                navigateUp = onBack?.let { navigateUp },
                 scrollBehavior = it,
+            )
+        },
+        bottomBar = {
+            SettingsDraftSaveBar(
+                visible = state.hasUnsavedProfileChanges,
+                saveEnabled = state.hasUnsavedProfileChanges,
+                onDiscard = onDiscard,
+                onSave = onSave,
             )
         },
     ) { contentPadding ->
@@ -94,7 +112,6 @@ internal fun TextRecognitionSettingsContent(
                     onApproveModels = onApprovePlaygroundModels,
                     onApprovePlatformModels = onApprovePlaygroundPlatformModels,
                     observeModels = observeModels,
-                    onSave = onSave,
                 )
             }
         }

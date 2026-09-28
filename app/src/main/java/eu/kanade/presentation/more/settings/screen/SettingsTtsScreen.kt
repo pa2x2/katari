@@ -89,6 +89,7 @@ object SettingsTtsScreen : SearchableSettings {
             onPitchChange = model::setDraftPitch,
             onTogglePreview = model::toggleConfiguredPreview,
             onSave = model::saveProfileChanges,
+            onDiscard = model::discardProfileChanges,
             configurationReady = model.configurationReady(),
             onAcknowledgeDisclosure = { disclosure ->
                 state.selectedEngine?.let { engine ->

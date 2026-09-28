@@ -207,6 +207,7 @@ object SettingsTranslationScreen : SearchableSettings {
                 model.savePlaygroundDefaults()
                 context.toast(MR.strings.translation_settings_saved)
             },
+            onDiscard = model::discardPlaygroundDefaults,
             onExternalAction = ::handleExternalAction,
             seriesLanguageCount = seriesLanguages?.size,
             onOpenSeriesLanguages = { navigator.push(SeriesTranslationLanguagesScreen()) },

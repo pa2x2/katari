@@ -94,6 +94,7 @@ object SettingsTextRecognitionScreen : SearchableSettings {
             onApprovePlaygroundPlatformModels = model.controller::approvePlaygroundPlatformModels,
             observeModels = model.controller::observeModels,
             onSave = model.controller::save,
+            onDiscard = model.controller::discard,
         )
     }
 }

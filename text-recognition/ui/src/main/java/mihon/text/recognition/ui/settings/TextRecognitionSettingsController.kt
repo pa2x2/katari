@@ -89,6 +89,11 @@ class TextRecognitionSettingsController(
         mutableState.update { it.copy(hasUnsavedProfileChanges = false) }
     }
 
+    /** Drops the draft and returns to the stored configuration. */
+    fun discard() {
+        mutableState.update { it.copy(draft = saved, hasUnsavedProfileChanges = false) }
+    }
+
     /** How the draft reads [language]. */
     fun resolve(language: LanguageTag): TextRecognitionPipelineResolution =
         hostActions.resolve(mutableState.value.draft, language)
