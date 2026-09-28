@@ -3,12 +3,8 @@ package mihon.text.recognition.ui.settings
 import android.graphics.Bitmap
 import mihon.language.api.tag.LanguageTag
 import mihon.model.artifacts.api.descriptor.ModelArtifactDescriptor
-import mihon.model.artifacts.api.state.ModelArtifactState
-import mihon.text.recognition.api.component.KnownTextRecognitionComponent
 import mihon.text.recognition.api.component.TextRecognitionComponentId
 import mihon.text.recognition.api.configuration.TextRecognitionConfiguration
-import mihon.text.recognition.api.pipeline.TextRecognitionPipeline
-import mihon.text.recognition.api.pipeline.TextRecognitionPipelineSelection
 import mihon.text.recognition.api.provider.KnownTextRecognitionProvider
 import mihon.text.recognition.api.provider.TextRecognitionBuildAvailability
 import mihon.text.recognition.api.result.TextRecognitionResult
@@ -62,27 +58,4 @@ sealed interface TextRecognitionPlaygroundState {
     data class Unsupported(val image: Bitmap, val language: LanguageTag) : TextRecognitionPlaygroundState
 
     data class Failed(val image: Bitmap, val message: String?) : TextRecognitionPlaygroundState
-}
-
-/** A pipeline the user can pick for one language, with the models it needs and their current state. */
-data class TextRecognitionPipelineOption(
-    val selection: TextRecognitionPipelineSelection,
-    val pipeline: TextRecognitionPipeline,
-    val title: String?,
-    val description: String?,
-    val components: List<KnownTextRecognitionComponent>,
-    /** An engine this build excludes that the pipeline depends on, if any. */
-    val excludedBy: KnownTextRecognitionProvider?,
-    val models: List<Pair<ModelArtifactDescriptor, ModelArtifactState>>,
-) {
-    val included: Boolean
-        get() = excludedBy == null
-
-    val missingModels: List<ModelArtifactDescriptor>
-        get() = models.filter { (_, state) ->
-            state !is ModelArtifactState.Installed && state !is ModelArtifactState.Downloading
-        }.map { it.first }
-
-    val downloadingModels: List<ModelArtifactDescriptor>
-        get() = models.filter { (_, state) -> state is ModelArtifactState.Downloading }.map { it.first }
 }

@@ -30,7 +30,10 @@ import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.screens.LoadingScreen
 
-/** Chooses the pipeline one language uses; the choice becomes part of the draft once confirmed. */
+/**
+ * Chooses how one language is read: automatically, or with a pipeline of its own. The choice becomes part of the draft
+ * once confirmed; confirming a pipeline whose models are missing asks to download them first.
+ */
 internal class TextRecognitionOverridePipelineScreen(
     private val languageTag: String,
 ) : Screen() {
@@ -40,14 +43,18 @@ internal class TextRecognitionOverridePipelineScreen(
         val navigator = LocalNavigator.currentOrThrow
         val model = rememberTextRecognitionSettingsScreenModel()
         val language = remember(languageTag) { LanguageTag.require(languageTag) }
-        val state by model.state.collectAsState()
-        val options by remember(language) { model.controller.observePipelineOptions(language) }
+        val choices by remember(language) { model.controller.observePipelineChoices(language) }
             .collectAsState(initial = null)
-        val current = state.draft.overrides.entries
-            .firstOrNull { it.key.value.substringBefore('-') == language.value.substringBefore('-') }
-            ?.value
-        var candidate by remember(current) { mutableStateOf<TextRecognitionPipelineSelection?>(current) }
-        var approving by remember { mutableStateOf<List<ModelArtifactDescriptor>?>(null) }
+        var approval by remember { mutableStateOf<PipelineDownloadApproval?>(null) }
+
+        fun confirm(selection: TextRecognitionPipelineSelection?) {
+            if (selection == null) {
+                model.controller.removeDraftOverride(language)
+            } else {
+                model.controller.setDraftOverride(language, selection)
+            }
+            navigator.pop()
+        }
 
         Scaffold(
             topBar = {
@@ -58,43 +65,69 @@ internal class TextRecognitionOverridePipelineScreen(
                 )
             },
         ) { contentPadding ->
-            val loaded = options
+            val loaded = choices
             if (loaded == null) {
                 LoadingScreen(Modifier.padding(contentPadding))
                 return@Scaffold
             }
+            var candidate by remember(loaded.current, loaded.currentUnavailable) {
+                mutableStateOf(loaded.current.takeUnless { loaded.currentUnavailable })
+            }
+            val candidateOption = candidate?.let { selection ->
+                (loaded.presets + loaded.custom).firstOrNull { it.selection == selection }
+            }
+            val missingModels = candidateOption?.missingModels.orEmpty()
             Column(modifier = Modifier.fillMaxSize().padding(contentPadding)) {
                 TextRecognitionPipelinePickerList(
-                    options = loaded,
+                    choices = loaded,
                     selected = candidate,
                     onSelect = { candidate = it },
-                    onDownload = { approving = it },
+                    onDownload = { approval = PipelineDownloadApproval(it, confirmAfterwards = false) },
                     onCancelDownload = model.controller::cancelDownloads,
                     modifier = Modifier.weight(1f),
                 )
                 Button(
                     onClick = {
-                        candidate?.let { model.controller.setDraftOverride(language, it) }
-                        navigator.pop()
+                        if (missingModels.isEmpty()) {
+                            confirm(candidate)
+                        } else {
+                            approval = PipelineDownloadApproval(missingModels, confirmAfterwards = true)
+                        }
                     },
-                    enabled = candidate != null,
+                    enabled = if (candidate == null) loaded.automatic != null else candidateOption?.included == true,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 12.dp),
                 ) {
-                    Text(stringResource(MR.strings.text_recognition_settings_use_pipeline))
+                    Text(
+                        if (missingModels.isEmpty()) {
+                            stringResource(
+                                MR.strings.text_recognition_settings_use_pipeline_for,
+                                language.displayName(),
+                            )
+                        } else {
+                            stringResource(MR.strings.text_recognition_settings_download_and_use)
+                        },
+                    )
                 }
             }
-        }
-        approving?.let { models ->
-            ModelArtifactDownloadApprovalDialog(
-                artifacts = models,
-                onApprove = { approvals ->
-                    approving = null
-                    model.controller.download(approvals)
-                },
-                onDismiss = { approving = null },
-            )
+            approval?.let { pending ->
+                ModelArtifactDownloadApprovalDialog(
+                    artifacts = pending.models,
+                    onApprove = { approvals ->
+                        approval = null
+                        model.controller.download(approvals)
+                        if (pending.confirmAfterwards) confirm(candidate)
+                    },
+                    onDismiss = { approval = null },
+                )
+            }
         }
     }
 }
+
+/** Models waiting for download approval, and whether approving them also confirms the chosen pipeline. */
+private data class PipelineDownloadApproval(
+    val models: List<ModelArtifactDescriptor>,
+    val confirmAfterwards: Boolean,
+)

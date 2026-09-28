@@ -510,7 +510,11 @@
     <string name="text_recognition_settings_choose_engine">Choose recognition engine</string>
     <string name="text_recognition_settings_choose_language">Choose language</string>
     <string name="text_recognition_settings_pipeline_for">%s recognition</string>
-    <string name="text_recognition_settings_use_pipeline">Use for this language</string>
+    <string name="text_recognition_settings_use_pipeline_for">Use for %s</string>
+    <string name="text_recognition_settings_download_and_use">Download and use</string>
+    <string name="text_recognition_settings_automatic">Automatic</string>
+    <string name="text_recognition_settings_automatic_recommended">%1$s, recommended by %2$s</string>
+    <string name="text_recognition_settings_choice_unavailable">The earlier choice for this language isn\'t available in this build. Choose how to read it now.</string>
     <string name="text_recognition_settings_presets">Recommended</string>
     <string name="text_recognition_settings_custom">Custom pipeline</string>
     <string name="text_recognition_settings_models_ready">All models downloaded</string>
