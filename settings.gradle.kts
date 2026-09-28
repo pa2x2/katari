@@ -27,6 +27,11 @@ dependencyResolutionManagement {
                 }
             }
         }
+        exclusiveContent {
+            // Reduced ONNX Runtime build; see its build-aar.sh.
+            forRepository { maven(url = file("text-recognition/providers/onnx/onnxruntime/maven")) }
+            filter { includeGroup("app.katari.onnxruntime") }
+        }
         google()
         mavenCentral()
         maven(url = "https://www.jitpack.io")
@@ -71,7 +76,6 @@ include(":text-recognition:ui")
 include(":text-recognition:providers:mlkit")
 include(":text-recognition:providers:mlkit:catalog")
 include(":text-recognition:providers:onnx")
-include(":text-recognition:providers:tesseract")
 include(":language:api")
 include(":language:runtime")
 include(":model-artifacts:api")
