@@ -4,6 +4,7 @@ package tachiyomi.domain.statistics.model
 enum class StatisticsCard(val id: String) {
     SUMMARY("summary"),
     ACTIVITY("activity"),
+    CALENDAR("calendar"),
     TOP_TITLES("top_titles"),
     PATTERNS("patterns"),
     EARLIER("earlier"),

@@ -16,6 +16,7 @@ internal enum class StatisticsCardGroup(val label: StringResource) {
 internal fun StatisticsCard.label(): StringResource = when (this) {
     StatisticsCard.SUMMARY -> MR.strings.statistics_summary
     StatisticsCard.ACTIVITY -> MR.strings.statistics_activity
+    StatisticsCard.CALENDAR -> MR.strings.statistics_reading_calendar
     StatisticsCard.TOP_TITLES -> MR.strings.statistics_top_titles
     StatisticsCard.PATTERNS -> MR.strings.statistics_activity_patterns
     StatisticsCard.EARLIER -> MR.strings.statistics_lifetime

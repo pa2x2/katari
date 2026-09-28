@@ -28,8 +28,10 @@ import eu.kanade.presentation.more.stats.components.StatisticsLibraryCard
 import eu.kanade.presentation.more.stats.components.StatisticsLibraryInsightsCard
 import eu.kanade.presentation.more.stats.components.StatisticsPeriodRow
 import eu.kanade.presentation.more.stats.components.StatisticsProgressCard
+import eu.kanade.presentation.more.stats.components.StatisticsReadingCalendarCard
 import eu.kanade.presentation.more.stats.components.StatisticsSectionCard
 import eu.kanade.presentation.more.stats.components.StatisticsTopTitlesCard
+import eu.kanade.presentation.more.stats.components.color
 import eu.kanade.presentation.more.stats.components.formatStatisticsWindow
 import eu.kanade.presentation.more.stats.components.rememberStatisticsDurationFormatter
 import eu.kanade.presentation.more.stats.data.StatsRange
@@ -143,6 +145,18 @@ internal fun StatisticsDashboardPage(
                             onRetry = onRetryActivity,
                             onOpenActivity = { onOpenActivity(selectedType, it) },
                         )
+                        StatisticsCard.CALENDAR -> state.calendar?.let { calendar ->
+                            StatisticsReadingCalendarCard(
+                                calendar = calendar,
+                                type = selectedType,
+                                color = selectedStatsType?.accent?.color() ?: MaterialTheme.colorScheme.primary,
+                                trackingStartDate = activity?.trackingStartDate,
+                                formatDuration = formatter,
+                                onOpenDay = { day ->
+                                    onOpenActivity(selectedType, StatsTrendPoint(day, day, emptyMap()))
+                                },
+                            )
+                        }
                         StatisticsCard.TOP_TITLES -> if (visibleActivity?.topTitles?.isNotEmpty() == true) {
                             StatisticsTopTitlesCard(
                                 visibleActivity.topTitles,
