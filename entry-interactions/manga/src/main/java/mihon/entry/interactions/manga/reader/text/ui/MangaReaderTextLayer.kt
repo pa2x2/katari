@@ -58,7 +58,7 @@ internal fun MangaReaderTextLayer(
     onAreaSelected: (RectF) -> Unit,
     onApproveModels: (List<ModelArtifactDownloadApproval>) -> Unit,
     onApprovePlatformModels: (MangaReaderTextBlocker.PlatformModelsRequired) -> Unit,
-    onChooseLanguage: (LanguageTag) -> Unit,
+    onChooseLanguage: (LanguageTag?) -> Unit,
     onOpenSettings: () -> Unit,
     onDismissTranslation: () -> Unit,
     onToggleOverlay: () -> Unit,
@@ -205,11 +205,17 @@ internal fun MangaReaderTextLayer(
         MangaReaderTextLanguageSheet(
             languages = languageBlocker?.languages ?: recognitionLanguages,
             required = languageBlocker != null,
-            selected = state.language,
+            selected = state.language.takeIf { state.languageKept },
             recentLanguages = recentLanguages,
+            sourceLanguage = state.declaredLanguage,
+            followsSource = !state.languageKept,
             onChoose = { language ->
                 choosingLanguage = false
                 onChooseLanguage(language)
+            },
+            onFollowSource = {
+                choosingLanguage = false
+                onChooseLanguage(null)
             },
             onDismiss = { choosingLanguage = false },
         )

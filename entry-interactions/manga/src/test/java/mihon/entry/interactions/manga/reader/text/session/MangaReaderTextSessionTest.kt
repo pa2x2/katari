@@ -160,6 +160,22 @@ class MangaReaderTextSessionTest {
     }
 
     @Test
+    fun `following the source again reads recognized pages in its declared language`() = runTest {
+        pageLanguage.value = KOREAN
+        val session = session()
+        session.onVisibleSurfaces(listOf(FakeSurface(0)))
+        session.setActive(true)
+        runCurrent()
+
+        pageLanguage.value = null
+        runCurrent()
+
+        recognition.recognizedLanguages shouldContainExactly listOf(KOREAN, JAPANESE)
+        session.state.value.language shouldBe JAPANESE
+        session.state.value.languageKept shouldBe false
+    }
+
+    @Test
     fun `the source's language counts once the series is loaded after the session started`() = runTest {
         declaredLanguage.value = null
         val session = session()

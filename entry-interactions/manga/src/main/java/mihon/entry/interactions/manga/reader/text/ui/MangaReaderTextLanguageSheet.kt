@@ -20,7 +20,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.reader.components.AdaptiveSheet
 import mihon.language.api.tag.LanguageTag
+import mihon.translation.ui.picker.language.TranslationLanguageDefaultOption
 import mihon.translation.ui.picker.language.TranslationLanguagePickerList
+import mihon.translation.ui.picker.language.displayName
 import mihon.translation.ui.picker.language.translationLanguageOptionsOf
 import mihon.translation.ui.picker.language.translationRecentLanguageOptions
 import tachiyomi.i18n.*
@@ -28,7 +30,8 @@ import tachiyomi.presentation.core.i18n.stringResource
 
 /**
  * Chooses the language pages are read in, with the searchable language list the reader's translation pickers use.
- * A [required] choice asks which language the text of a multi-language source is in.
+ * A [required] choice asks which language the text of a multi-language source is in. When the source declares a
+ * [sourceLanguage], the first row follows it instead of keeping a language for the series.
  */
 @Composable
 internal fun MangaReaderTextLanguageSheet(
@@ -36,7 +39,10 @@ internal fun MangaReaderTextLanguageSheet(
     required: Boolean,
     selected: LanguageTag?,
     recentLanguages: List<LanguageTag>,
+    sourceLanguage: LanguageTag?,
+    followsSource: Boolean,
     onChoose: (LanguageTag) -> Unit,
+    onFollowSource: () -> Unit,
     onDismiss: () -> Unit,
 ) {
     val options = remember(languages) { translationLanguageOptionsOf(languages) }
@@ -78,6 +84,14 @@ internal fun MangaReaderTextLanguageSheet(
                     modifier = Modifier
                         .weight(1f, fill = false)
                         .padding(top = 8.dp),
+                    defaultOption = sourceLanguage?.let { language ->
+                        TranslationLanguageDefaultOption(
+                            label = stringResource(MR.strings.reader_text_page_language_follow_source),
+                            supporting = language.displayName(),
+                            selected = followsSource,
+                        )
+                    },
+                    onSelectDefault = onFollowSource,
                     recents = recents,
                 )
             }

@@ -200,10 +200,10 @@ internal class ReaderViewModel @JvmOverloads constructor(
 
     /**
      * Reads the series' pages in [language] from now on, which also becomes a recent language in every translation
-     * picker.
+     * picker, or in the language the source declares again when [language] is null.
      */
-    fun chooseTextLanguage(language: LanguageTag) {
-        translationHostActions.recordRecentLanguage(language)
+    fun chooseTextLanguage(language: LanguageTag?) {
+        language?.let(translationHostActions::recordRecentLanguage)
         textTranslation.choosePageLanguage(language)
     }
 
