@@ -16,6 +16,8 @@ value class TextRecognitionProviderId(
 /**
  * A recognition engine the profile can choose: the owner of a set of components and the presets that combine them.
  * A provider stays in the catalog of builds that exclude it, so hosts can explain why it cannot be chosen.
+ *
+ * @property bestFor the pages the engine reads best, to tell engines apart at a glance.
  */
 data class KnownTextRecognitionProvider(
     val id: TextRecognitionProviderId,
@@ -24,12 +26,14 @@ data class KnownTextRecognitionProvider(
     val processingLocation: String,
     val buildAvailability: TextRecognitionBuildAvailability,
     val documentationUrl: String? = null,
+    val bestFor: String? = null,
 ) {
     init {
         require(name.isNotBlank())
         require(description.isNotBlank())
         require(processingLocation.isNotBlank())
         require(documentationUrl == null || documentationUrl.isNotBlank())
+        require(bestFor == null || bestFor.isNotBlank())
     }
 }
 

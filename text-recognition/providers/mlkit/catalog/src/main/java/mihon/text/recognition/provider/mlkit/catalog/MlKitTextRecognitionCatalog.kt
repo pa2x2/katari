@@ -3,6 +3,7 @@ package mihon.text.recognition.provider.mlkit.catalog
 import mihon.text.recognition.api.component.KnownTextRecognitionComponent
 import mihon.text.recognition.api.component.TextRecognitionComponentId
 import mihon.text.recognition.api.component.TextRecognitionComponentRole
+import mihon.text.recognition.api.component.TextRecognitionScript
 import mihon.text.recognition.api.pipeline.TextRecognitionPipeline
 import mihon.text.recognition.api.pipeline.TextRecognitionPreset
 import mihon.text.recognition.api.pipeline.TextRecognitionPresetId
@@ -23,6 +24,7 @@ object MlKitTextRecognitionCatalog {
         processingLocation = "On this device; pages never leave it.",
         buildAvailability = buildAvailability,
         documentationUrl = "https://developers.google.com/ml-kit/vision/text-recognition/v2",
+        bestFor = "Horizontal text in many languages; vertical text is read less reliably",
     )
 
     val recognizer = KnownTextRecognitionComponent(
@@ -33,6 +35,7 @@ object MlKitTextRecognitionCatalog {
         description = "Reads each detected region line by line. Vertical text is read less reliably.",
         languages = MlKitTextRecognitionScript.entries.flatMapTo(linkedSetOf(), MlKitTextRecognitionScript::languages),
         documentationUrl = "https://developers.google.com/ml-kit/vision/text-recognition/v2/languages",
+        scripts = MlKitTextRecognitionScript.entries.map { TextRecognitionScript(it.displayName, it.languages) },
     )
 
     /** Uses the bubble detector of the on-device engine to find the regions ML Kit reads. */

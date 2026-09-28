@@ -526,7 +526,9 @@
     <string name="text_recognition_settings_unsupported">%s text cannot be recognized with these settings</string>
     <string name="text_recognition_settings_failed">Recognition failed: %s</string>
     <string name="text_recognition_settings_via_other_engine">%1$s from %2$s</string>
-    <string name="text_recognition_engine_status_available">Available</string>
+    <string name="text_recognition_engine_best_for">Best for: %s</string>
+    <string name="text_recognition_engine_script_languages">%1$s · %2$d</string>
+    <string name="text_recognition_engine_more_scripts">+%d more</string>
     <string name="text_recognition_engine_status_not_included">Not in this build</string>
     <string name="text_recognition_engine_languages">Reads %s</string>
     <string name="text_recognition_engine_details">Details</string>
