@@ -1740,8 +1740,6 @@
     <string name="statistics_incognito_active">Activity isn’t recorded in incognito mode</string>
     <string name="statistics_activity_patterns">Activity patterns</string>
     <string name="statistics_library_insights">Library insights</string>
-    <string name="statistics_average_visit">Average visit</string>
-    <string name="statistics_longest_visit">Longest visit</string>
     <string name="statistics_active_days">Active days</string>
     <string name="statistics_top_genre">Top genre</string>
     <string name="statistics_no_type_stats">No %s stats yet</string>

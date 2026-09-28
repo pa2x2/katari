@@ -70,6 +70,7 @@ internal fun StatisticsDashboardPage(
     val formatter = rememberStatisticsDurationFormatter()
     val visibleActivity = activity?.forType(selectedType)
     val selectedStatsType = state.types.firstOrNull { it.type == selectedType }
+    val accentColor = selectedStatsType?.accent?.color() ?: MaterialTheme.colorScheme.primary
     val layout = state.cardLayouts[statisticsLayoutTab(selectedType)] ?: StatisticsCardLayout()
     val sections = layout.visibleSections(isOverview, state.range)
     val listState = rememberLazyListState()
@@ -149,7 +150,7 @@ internal fun StatisticsDashboardPage(
                             StatisticsReadingCalendarCard(
                                 calendar = calendar,
                                 type = selectedType,
-                                color = selectedStatsType?.accent?.color() ?: MaterialTheme.colorScheme.primary,
+                                color = accentColor,
                                 trackingStartDate = activity?.trackingStartDate,
                                 formatDuration = formatter,
                                 onOpenDay = { day ->
@@ -168,11 +169,9 @@ internal fun StatisticsDashboardPage(
                             EmptyStatisticsCard(MR.strings.statistics_top_titles)
                         }
                         StatisticsCard.PATTERNS -> StatisticsActivityPatternsCard(
-                            visibleActivity?.sessionCount,
-                            visibleActivity?.averageSessionDurationMillis,
-                            visibleActivity?.longestSessionDurationMillis,
-                            visibleActivity?.activeDays,
-                            formatter,
+                            activity = visibleActivity,
+                            color = accentColor,
+                            formatDuration = formatter,
                         )
                         StatisticsCard.EARLIER -> if (visibleActivity != null &&
                             visibleActivity.earlierDurationMillis > 0L
