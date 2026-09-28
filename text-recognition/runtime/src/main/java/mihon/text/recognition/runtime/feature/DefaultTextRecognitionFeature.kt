@@ -22,6 +22,7 @@ import mihon.text.recognition.runtime.execution.CachedRecognitionExecutor
 import mihon.text.recognition.runtime.geometry.inReadingOrder
 import mihon.text.recognition.runtime.language.readsRightToLeft
 import mihon.text.recognition.runtime.language.recognitionLanguage
+import mihon.text.recognition.runtime.pipeline.PageTextDetection
 import mihon.text.recognition.runtime.pipeline.StagedPipelineRunner
 import mihon.text.recognition.runtime.registry.TextRecognitionComponentRegistry
 import mihon.text.recognition.runtime.selection.ProfileTextRecognitionPreferences
@@ -38,6 +39,7 @@ internal class DefaultTextRecognitionFeature(
     private val preferences: ProfileTextRecognitionPreferences,
     private val modelStore: ModelArtifactStore,
     private val executor: CachedRecognitionExecutor,
+    private val detection: PageTextDetection,
 ) : TextRecognitionFeature {
 
     override suspend fun prepare(request: TextRecognitionRequest): TextRecognitionPreparation {
@@ -172,6 +174,7 @@ internal class DefaultTextRecognitionFeature(
     private fun PreparedRecognition.runner() = StagedPipelineRunner(
         detector = components[0] as TextDetector,
         recognizer = components[1] as TextRecognizer,
+        detection = detection,
     )
 
     private class PreparedRecognition(

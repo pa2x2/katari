@@ -9,9 +9,7 @@ import mihon.text.recognition.runtime.geometry.coverage
 import mihon.text.recognition.runtime.geometry.enclosingContainer
 import mihon.text.recognition.runtime.geometry.mergeOverlapping
 import mihon.text.recognition.runtime.geometry.padded
-import mihon.text.recognition.runtime.geometry.planTiles
 import mihon.text.recognition.runtime.geometry.sampleSizeForMinimumEdge
-import mihon.text.recognition.runtime.geometry.toSource
 import mihon.text.recognition.spi.component.DetectedTextRegion
 import mihon.text.recognition.spi.component.DetectedTextRegionKind
 import mihon.text.recognition.spi.component.TextDetector
@@ -19,15 +17,13 @@ import mihon.text.recognition.spi.component.TextRecognizer
 import mihon.text.recognition.spi.model.TextRecognitionModels
 
 /**
- * Runs a detector over the page, then reads the text of each speech bubble, and each text outside bubbles, with a
- * recognizer.
- *
- * The detector always sees the whole page, even for an outlined area: it was trained on pages, and an outline
- * stretched to its input is text at a scale it has not seen. Detections the outline covers are kept.
+ * Detects text on the whole page, then reads the text of each speech bubble, and each text outside bubbles, with a
+ * recognizer. For an outlined area, the page detections the outline covers are read.
  */
 internal class StagedPipelineRunner(
     private val detector: TextDetector,
     private val recognizer: TextRecognizer,
+    private val detection: PageTextDetection,
 ) {
 
     /**
@@ -45,7 +41,7 @@ internal class StagedPipelineRunner(
     ): List<RecognizedTextRegion> {
         // Bubble outlines and text are different objects; text labelled as inside and outside a bubble is the same.
         val detections = mergeOverlapping(
-            candidates = detect(image, models),
+            candidates = detection.detect(image, detector, language, models),
             bounds = DetectedTextRegion::bounds,
             withBounds = { detection, bounds -> detection.copy(bounds = bounds) },
             sameGroup = { first, second -> first.isBubble == second.isBubble },
@@ -87,20 +83,6 @@ internal class StagedPipelineRunner(
                 },
                 container = null,
             )
-        }
-    }
-
-    private suspend fun detect(image: TextRecognitionImage, models: TextRecognitionModels): List<DetectedTextRegion> {
-        return planTiles(image.size.bounds, minimumLength = detector.inputEdge).flatMap { tile ->
-            val sampleSize = sampleSizeForMinimumEdge(tile, detector.inputEdge)
-            val bitmap = image.decodeRegion(tile, sampleSize)
-            try {
-                detector.detect(bitmap, models).mapNotNull { detection ->
-                    detection.bounds.toSource(tile, sampleSize)?.let { detection.copy(bounds = it) }
-                }
-            } finally {
-                bitmap.recycle()
-            }
         }
     }
 

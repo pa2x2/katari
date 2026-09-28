@@ -8,6 +8,7 @@ import mihon.feature.runtime.application.applicationFeatureRuntimeBoundary
 import mihon.model.artifacts.api.ModelArtifactStore
 import mihon.text.recognition.api.TextRecognitionFeature
 import mihon.text.recognition.api.host.TextRecognitionHostActions
+import mihon.text.recognition.runtime.cache.TextDetectionCache
 import mihon.text.recognition.runtime.cache.TextRecognitionResultCache
 import mihon.text.recognition.runtime.component.TextRecognitionRuntimeContribution
 import mihon.text.recognition.runtime.component.createTextRecognitionRuntimeContributions
@@ -17,6 +18,7 @@ import mihon.text.recognition.runtime.graph.TextRecognitionFeatureCapability
 import mihon.text.recognition.runtime.graph.TextRecognitionFeatureContributor
 import mihon.text.recognition.runtime.graph.TextRecognitionFeatureGraphStateValidator
 import mihon.text.recognition.runtime.host.DefaultTextRecognitionHostActions
+import mihon.text.recognition.runtime.pipeline.PageTextDetection
 import mihon.text.recognition.runtime.registry.TextRecognitionComponentRegistry
 import mihon.text.recognition.runtime.selection.ProfileTextRecognitionPreferences
 import mihon.text.recognition.runtime.selection.TextRecognitionPipelineResolver
@@ -53,6 +55,7 @@ val textRecognitionFeatureRuntimeModule = ApplicationFeatureRuntimeModule(
             ioDispatcher = Dispatchers.IO,
             inferenceDispatcher = Dispatchers.Default,
         ),
+        detection = PageTextDetection(TextDetectionCache(DETECTION_CACHE_PAGES)),
     )
     val hostActions = DefaultTextRecognitionHostActions(registry, preferences, resolver)
 
@@ -77,3 +80,6 @@ private const val CACHE_DIRECTORY = "text-recognition"
 
 /** Recognized regions are a few kilobytes per page, so this keeps thousands of pages. */
 private const val CACHE_MAXIMUM_BYTES = 16L * 1024 * 1024
+
+/** Detections are a few dozen rectangles per page; this covers the pages around the one being read. */
+private const val DETECTION_CACHE_PAGES = 32

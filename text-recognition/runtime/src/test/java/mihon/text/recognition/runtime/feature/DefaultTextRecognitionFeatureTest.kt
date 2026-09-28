@@ -32,11 +32,13 @@ import mihon.text.recognition.runtime.FakeDetector
 import mihon.text.recognition.runtime.FakePageImage
 import mihon.text.recognition.runtime.FakeRecognizer
 import mihon.text.recognition.runtime.JAPANESE
+import mihon.text.recognition.runtime.cache.TextDetectionCache
 import mihon.text.recognition.runtime.cache.TextRecognitionResultCache
 import mihon.text.recognition.runtime.contribution
 import mihon.text.recognition.runtime.execution.CachedRecognitionExecutor
 import mihon.text.recognition.runtime.knownComponent
 import mihon.text.recognition.runtime.model
+import mihon.text.recognition.runtime.pipeline.PageTextDetection
 import mihon.text.recognition.runtime.preset
 import mihon.text.recognition.runtime.registry.TextRecognitionComponentRegistry
 import mihon.text.recognition.runtime.selection.ProfileTextRecognitionPreferences
@@ -180,6 +182,32 @@ class DefaultTextRecognitionFeatureTest {
     }
 
     @Test
+    fun `an outline on a page already read reuses the page's detections`() = runTest {
+        val feature = feature()
+        feature.recognizeReady(TextRecognitionRequest(strip, JAPANESE))
+        val detectorRuns = detector.runs
+
+        val result = feature.recognizeReady(
+            TextRecognitionRequest(strip, JAPANESE, TextRecognitionScope.Region(middleBubble)),
+        )
+
+        result.regions.map { it.text to it.bounds } shouldContainExactly listOf("中" to middleText)
+        detector.runs shouldBe detectorRuns
+    }
+
+    @Test
+    fun `detections of an earlier detector revision are detected again`() = runTest {
+        val feature = feature()
+        feature.recognizeReady(TextRecognitionRequest(strip, JAPANESE))
+        val detectorRuns = detector.runs
+
+        detector.processingRevision = 2
+        feature.recognizeReady(TextRecognitionRequest(strip, JAPANESE))
+
+        detector.runs shouldBe detectorRuns * 2
+    }
+
+    @Test
     fun `an outlined area without detected text is read as a whole`() = runTest {
         val outline = ImageRect(40, 3480, 860, 3620)
         val silentDetector = FakeDetector(strip, emptyList(), declaredModels = detector.declaredModels)
@@ -216,6 +244,7 @@ class DefaultTextRecognitionFeatureTest {
             ioDispatcher = Dispatchers.Unconfined,
             inferenceDispatcher = Dispatchers.Unconfined,
         ),
+        detection = PageTextDetection(TextDetectionCache(maximumPages = 4)),
     )
 
     private suspend fun DefaultTextRecognitionFeature.recognizeReady(request: TextRecognitionRequest) =

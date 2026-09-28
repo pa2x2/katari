@@ -136,6 +136,7 @@ internal class FakeDetector(
     override fun models(language: LanguageTag) = declaredModels
 
     override val inputEdge: Int = 640
+    override var processingRevision = 1
     var runs = 0
 
     override suspend fun inspectDevice(language: LanguageTag) = TextRecognitionComponentAvailability.Available
