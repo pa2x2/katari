@@ -5,19 +5,18 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.ArrowDropDown
 import androidx.compose.material.icons.outlined.Image
 import androidx.compose.material.icons.outlined.Language
-import androidx.compose.material.icons.outlined.SdStorage
-import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material.icons.outlined.Translate
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -25,9 +24,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextOverflow
 import kotlinx.coroutines.flow.Flow
 import mihon.model.artifacts.api.descriptor.ModelArtifactDescriptor
@@ -39,24 +36,18 @@ import mihon.model.artifacts.ui.state.modelArtifactStateLabel
 import mihon.text.recognition.api.host.TextRecognitionHostActions
 import mihon.text.recognition.ui.approval.TextRecognitionPlatformModelsDialog
 import mihon.text.recognition.ui.language.displayName
-import mihon.text.recognition.ui.language.displayNames
 import mihon.text.recognition.ui.playground.TextRecognitionPlaygroundResult
 import mihon.text.recognition.ui.settings.TextRecognitionPlaygroundState
 import mihon.text.recognition.ui.settings.TextRecognitionSettingsState
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.material.padding
-import tachiyomi.presentation.core.components.pulsingHighlightBackground
 import tachiyomi.presentation.core.i18n.stringResource
 
+/** Tries the draft configuration on an image the user picks, in the language they choose. */
 @Composable
 internal fun TextRecognitionPlayground(
     state: TextRecognitionSettingsState,
     hostActions: TextRecognitionHostActions,
-    storedBytes: Long?,
-    highlighted: Boolean,
-    onChooseEngine: () -> Unit,
-    onChooseOverrides: () -> Unit,
-    onOpenModels: () -> Unit,
     onChooseLanguage: () -> Unit,
     onChooseImage: () -> Unit,
     onApproveModels: (List<ModelArtifactDownloadApproval>) -> Unit,
@@ -70,70 +61,68 @@ internal fun TextRecognitionPlayground(
         shape = MaterialTheme.shapes.extraLarge,
     ) {
         Column(
-            modifier = Modifier
-                .pulsingHighlightBackground(Unit.takeIf { highlighted })
-                .padding(MaterialTheme.padding.large),
+            modifier = Modifier.padding(MaterialTheme.padding.large),
             verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.medium),
         ) {
-            PlaygroundSelector(
-                label = stringResource(MR.strings.text_recognition_settings_engine),
-                value =
-                state.effectiveProvider?.name
-                    ?: stringResource(MR.strings.text_recognition_engine_status_not_included),
-                icon = Icons.Outlined.Settings,
-                onClick = onChooseEngine,
+            Text(
+                text = stringResource(MR.strings.text_recognition_settings_try_it_summary),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            PlaygroundSelector(
-                label = stringResource(MR.strings.text_recognition_settings_language_overrides),
-                value = if (state.draft.overrides.isEmpty()) {
-                    stringResource(MR.strings.text_recognition_settings_no_overrides)
-                } else {
-                    state.draft.overrides.keys.displayNames()
-                },
-                icon = Icons.Outlined.Translate,
-                onClick = onChooseOverrides,
-            )
-            PlaygroundSelector(
-                label = stringResource(MR.strings.model_artifacts_title),
-                value =
-                storedBytes?.let { formatModelArtifactSize(it) }
-                    ?: stringResource(MR.strings.model_artifacts_summary),
-                icon = Icons.Outlined.SdStorage,
-                onClick = onOpenModels,
-            )
-            PlaygroundLanguageSelector(
-                state = state,
-                hostActions = hostActions,
-                onChooseLanguage = onChooseLanguage,
-            )
-            OutlinedButton(onClick = onChooseImage, modifier = Modifier.fillMaxWidth()) {
-                Icon(Icons.Outlined.Image, contentDescription = null)
-                Text(
-                    text = stringResource(MR.strings.text_recognition_settings_choose_image),
-                    modifier = Modifier.padding(start = MaterialTheme.padding.small),
-                )
+            Row(horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small)) {
+                FilledTonalButton(
+                    onClick = onChooseLanguage,
+                    contentPadding = ButtonDefaults.ButtonWithIconContentPadding,
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Language,
+                        contentDescription = stringResource(MR.strings.text_recognition_settings_text_language),
+                        modifier = Modifier.size(ButtonDefaults.IconSize),
+                    )
+                    Text(
+                        text = state.playgroundLanguage?.displayName().orEmpty(),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.padding(start = MaterialTheme.padding.small),
+                    )
+                    Icon(
+                        imageVector = Icons.Outlined.ArrowDropDown,
+                        contentDescription = null,
+                        modifier = Modifier.size(ButtonDefaults.IconSize),
+                    )
+                }
+                OutlinedButton(onClick = onChooseImage, modifier = Modifier.weight(1f)) {
+                    Icon(
+                        imageVector = Icons.Outlined.Image,
+                        contentDescription = null,
+                        modifier = Modifier.size(ButtonDefaults.IconSize),
+                    )
+                    Text(
+                        text = stringResource(MR.strings.text_recognition_settings_choose_image),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.padding(start = MaterialTheme.padding.small),
+                    )
+                }
             }
+            PlaygroundPipeline(state = state, hostActions = hostActions)
             PlaygroundOutcome(state.playground, observeModels, onApproveModels, onApprovePlatformModels)
         }
     }
 }
 
+/** Which pipeline the draft reads the playground language with. */
 @Composable
-private fun PlaygroundLanguageSelector(
+private fun PlaygroundPipeline(
     state: TextRecognitionSettingsState,
     hostActions: TextRecognitionHostActions,
-    onChooseLanguage: () -> Unit,
 ) {
-    val language = state.playgroundLanguage
-    val resolution = language?.let { hostActions.resolve(state.draft, it) }
-    PlaygroundSelector(
-        label = stringResource(MR.strings.text_recognition_settings_text_language),
-        value = listOfNotNull(
-            language?.displayName(),
-            resolution?.let { hostActions.resolutionLabel(it) },
-        ).joinToString(" · "),
-        icon = Icons.Outlined.Language,
-        onClick = onChooseLanguage,
+    val language = state.playgroundLanguage ?: return
+    val label = hostActions.resolutionLabel(hostActions.resolve(state.draft, language)) ?: return
+    Text(
+        text = stringResource(MR.strings.text_recognition_settings_read_with, label),
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
 }
 
@@ -226,38 +215,5 @@ private fun PlaygroundOutcome(
             },
             onDismiss = { approving = null },
         )
-    }
-}
-
-@Composable
-private fun PlaygroundSelector(
-    label: String,
-    value: String,
-    icon: ImageVector,
-    onClick: () -> Unit,
-) {
-    OutlinedCard(onClick = onClick) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(MaterialTheme.padding.medium),
-            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.medium),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Icon(imageVector = icon, contentDescription = null)
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = label,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.labelSmall,
-                )
-                Text(
-                    text = value,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    style = MaterialTheme.typography.bodyLarge,
-                )
-            }
-        }
     }
 }

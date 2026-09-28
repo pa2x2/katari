@@ -488,7 +488,11 @@
     <string name="text_recognition_title">Text recognition</string>
     <string name="text_recognition_settings_summary">Recognition engine, languages, and downloaded models</string>
     <string name="text_recognition_settings_playground">Recognition playground</string>
-    <string name="text_recognition_settings_playground_summary">Try this profile\'s recognition settings on an image</string>
+    <string name="text_recognition_settings_group_recognition">Recognition</string>
+    <string name="text_recognition_settings_group_storage">Storage</string>
+    <string name="text_recognition_settings_try_it">Try it</string>
+    <string name="text_recognition_settings_try_it_summary">Recognizes an image with the settings above, including changes you haven\'t saved.</string>
+    <string name="text_recognition_settings_read_with">Read with %s</string>
     <string name="text_recognition_settings_engine">Recognition engine</string>
     <string name="text_recognition_settings_choose_engine">Choose recognition engine</string>
     <string name="text_recognition_settings_language_overrides">Language overrides</string>
