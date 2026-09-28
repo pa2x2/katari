@@ -74,7 +74,11 @@ internal object OnnxModelArtifacts {
         hosting = ModelArtifactHosting.Upstream(MANGA_OCR_ONNX_REPOSITORY),
     )
 
-    /** PP-OCRv3 mobile text detector, used to split a text region into lines. */
+    /**
+     * PP-OCRv3 mobile text detector, used to split a text region into lines. It stays at v3 although most recognizers
+     * are v5: on speech bubbles the v5 mobile detector reads no better and also picks up furigana and artwork, and the
+     * v5 server detector is 36 times larger and 25 times slower.
+     */
     val paddleOcrLineDetector = ModelArtifactDescriptor(
         id = ModelArtifactId("onnx.paddleocr-line-detector"),
         revision = PADDLE_OCR_COMMIT,

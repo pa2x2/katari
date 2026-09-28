@@ -3,8 +3,9 @@ package mihon.text.recognition.provider.onnx.paddle
 import mihon.language.api.tag.LanguageTag
 
 /**
- * PP-OCRv5 recognition models, one per script group, as published in `monkt/paddleocr-onnx`. Sizes and digests are
- * those of the pinned commit.
+ * Recognition models, one per script group, as published in `monkt/paddleocr-onnx`: PP-OCRv5 where PaddleOCR has one
+ * (the Chinese model is the server variant, the others mobile), and PP-OCRv3 mobile for Arabic, Devanagari, Tamil, and
+ * Telugu. Sizes and digests are those of the pinned commit.
  *
  * @property spaced whether words are separated by spaces, so lines of one region are joined with a space.
  * @property vertical whether the script is also printed in vertical columns, which are read turned on their side.
