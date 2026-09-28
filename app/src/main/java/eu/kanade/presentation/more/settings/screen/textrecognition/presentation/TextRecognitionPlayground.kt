@@ -191,7 +191,9 @@ private fun PlaygroundOutcome(
             color = MaterialTheme.colorScheme.error,
         )
         is TextRecognitionPlaygroundState.Failed -> Text(
-            text = stringResource(MR.strings.text_recognition_settings_failed, playground.message.orEmpty()),
+            text = playground.message
+                ?.let { stringResource(MR.strings.text_recognition_settings_failed, it) }
+                ?: stringResource(MR.strings.text_recognition_settings_failed_unknown),
             color = MaterialTheme.colorScheme.error,
         )
     }
