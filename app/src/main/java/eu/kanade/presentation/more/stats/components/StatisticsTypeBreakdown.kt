@@ -48,10 +48,18 @@ internal fun statisticsTypeShares(
     }
 }
 
-/** Keeps one line of height even when empty so the panel doesn't jump as the selection changes. */
+/**
+ * With [reserveLine], keeps one line of height even when empty so the panel doesn't jump as the selection
+ * changes; single-type pages never show shares and pass false.
+ */
 @Composable
 @OptIn(ExperimentalLayoutApi::class)
-internal fun StatisticsTypeBreakdown(shares: List<StatisticsTypeShare>, modifier: Modifier = Modifier) {
+internal fun StatisticsTypeBreakdown(
+    shares: List<StatisticsTypeShare>,
+    reserveLine: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    if (!reserveLine && shares.isEmpty()) return
     val lineHeight = with(LocalDensity.current) { MaterialTheme.typography.bodySmall.lineHeight.toDp() }
     FlowRow(
         modifier = modifier.padding(top = 6.dp).heightIn(min = lineHeight),

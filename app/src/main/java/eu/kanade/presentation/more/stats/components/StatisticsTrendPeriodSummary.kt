@@ -110,6 +110,7 @@ internal fun StatisticsTrendPeriodSummary(
             )
             StatisticsTypeBreakdown(
                 statisticsTypeShares(summary.durationByType, types, typeLabels, typeColors, formatDuration),
+                reserveLine = types.size > 1,
             )
         }
     }

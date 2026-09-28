@@ -96,7 +96,7 @@ internal fun StatisticsTrendSelection(
                     )
                 }
             }
-            StatisticsTypeBreakdown(shares)
+            StatisticsTypeBreakdown(shares, reserveLine = types.size > 1)
         }
     }
 }
