@@ -14,6 +14,7 @@ import androidx.compose.material3.PrimaryScrollableTabRow
 import androidx.compose.material3.Tab
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.snapshotFlow
@@ -24,6 +25,8 @@ import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.more.stats.data.StatsRange
 import eu.kanade.presentation.more.stats.data.StatsTrendPoint
 import eu.kanade.presentation.more.stats.data.StatsType
+import eu.kanade.presentation.more.stats.layout.StatisticsLayoutEditor
+import eu.kanade.presentation.more.stats.layout.statisticsLayoutTab
 import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
@@ -36,6 +39,8 @@ import tachiyomi.presentation.core.i18n.stringResource
 fun StatsScreenContent(
     state: StatsScreenState.Success,
     paddingValues: PaddingValues,
+    customizing: Boolean,
+    onCustomizingChange: (Boolean) -> Unit,
     onRangeSelected: (StatsRange) -> Unit,
     onTypeSelected: (EntryType?) -> Unit,
     onNavigateActivity: (Int) -> Unit,
@@ -61,6 +66,22 @@ fun StatsScreenContent(
         snapshotFlow { pagerState.settledPage }
             .distinctUntilChanged()
             .collect { page -> onTypeSelected(pages[page]) }
+    }
+
+    if (customizing) {
+        val type = pages[pagerState.currentPage]
+        val tab = statisticsLayoutTab(type)
+        key(state.profileId, tab) {
+            StatisticsLayoutEditor(
+                initial = state.cardLayouts[tab] ?: StatisticsCardLayout(),
+                isOverview = type == null,
+                onDismiss = { onCustomizingChange(false) },
+                onSave = { layout ->
+                    onSaveLayout(state.profileId, tab, layout)
+                    onCustomizingChange(false)
+                },
+            )
+        }
     }
 
     Column(
@@ -108,7 +129,6 @@ fun StatsScreenContent(
                 onOpenActivity = onOpenActivity,
                 onOpenEntry = onOpenEntry,
                 onOpenEarlierActivity = onOpenEarlierActivity,
-                onSaveLayout = onSaveLayout,
             )
         }
     }

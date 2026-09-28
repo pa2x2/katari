@@ -1,9 +1,14 @@
 package eu.kanade.tachiyomi.ui.stats
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -11,6 +16,7 @@ import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.components.AppBar
+import eu.kanade.presentation.components.AppBarActions
 import eu.kanade.presentation.more.stats.StatsScreenContent
 import eu.kanade.presentation.more.stats.StatsScreenState
 import eu.kanade.presentation.util.Screen
@@ -40,11 +46,26 @@ class StatsScreen : Screen() {
             onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
         }
 
+        var customizing by rememberSaveable { mutableStateOf(false) }
+
         Scaffold(
             topBar = { scrollBehavior ->
                 AppBar(
                     title = stringResource(MR.strings.label_stats),
                     navigateUp = navigator::pop,
+                    actions = {
+                        if (state is StatsScreenState.Success) {
+                            AppBarActions(
+                                listOf(
+                                    AppBar.Action(
+                                        title = stringResource(MR.strings.statistics_customize),
+                                        icon = Icons.Outlined.Tune,
+                                        onClick = { customizing = true },
+                                    ),
+                                ),
+                            )
+                        }
+                    },
                     scrollBehavior = scrollBehavior,
                 )
             },
@@ -57,6 +78,8 @@ class StatsScreen : Screen() {
             StatsScreenContent(
                 state = state as StatsScreenState.Success,
                 paddingValues = paddingValues,
+                customizing = customizing,
+                onCustomizingChange = { customizing = it },
                 onRangeSelected = screenModel::setRange,
                 onSaveLayout = screenModel::setCardLayout,
                 onTypeSelected = screenModel::setType,

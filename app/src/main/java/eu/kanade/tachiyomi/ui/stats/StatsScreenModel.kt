@@ -11,6 +11,7 @@ import eu.kanade.presentation.more.stats.data.StatsLibrary
 import eu.kanade.presentation.more.stats.data.StatsRange
 import eu.kanade.presentation.more.stats.data.StatsReadingCalendar
 import eu.kanade.presentation.more.stats.data.StatsType
+import eu.kanade.presentation.more.stats.layout.statisticsLayoutTab
 import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -146,7 +147,7 @@ class StatsScreenModel(
                         ::Triple,
                     ),
                     combine(
-                        (listOf("overview") + types.map { it.type.name }).map { tab ->
+                        (listOf(null) + types.map { it.type }).map(::statisticsLayoutTab).map { tab ->
                             StatisticsPreferences(profileStore.profileStore(profileId)).cardLayout(tab).changes()
                                 .map { tab to StatisticsCardLayout.decode(it) }
                         },

@@ -8,6 +8,30 @@
         <item quantity="one">%d title</item>
         <item quantity="other">%d titles</item>
     </plurals>
+    <plurals name="statistics_active_day_count">
+        <item quantity="one">%d active day</item>
+        <item quantity="other">%d active days</item>
+    </plurals>
+    <plurals name="statistics_days_active_of">
+        <item quantity="one">%1$d of %2$d day active</item>
+        <item quantity="other">%1$d of %2$d days active</item>
+    </plurals>
+    <plurals name="statistics_session_count">
+        <item quantity="one">%d session</item>
+        <item quantity="other">%d sessions</item>
+    </plurals>
+    <plurals name="statistics_backlog_title_count">
+        <item quantity="one">in %d title</item>
+        <item quantity="other">in %d titles</item>
+    </plurals>
+    <plurals name="statistics_other_source_count">
+        <item quantity="one">%d other source</item>
+        <item quantity="other">%d other sources</item>
+    </plurals>
+    <plurals name="statistics_added_this_month">
+        <item quantity="one">%d this month</item>
+        <item quantity="other">%d this month</item>
+    </plurals>
     <plurals name="lock_after_mins">
         <item quantity="one">After %1$s minute</item>
         <item quantity="other">After %1$s minutes</item>

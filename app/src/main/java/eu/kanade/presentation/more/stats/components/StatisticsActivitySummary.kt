@@ -22,35 +22,6 @@ import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable
-internal fun StatisticsActivityHeader(
-    showToday: Boolean,
-    onToday: () -> Unit,
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth().height(48.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(
-            text = stringResource(MR.strings.statistics_activity),
-            modifier = Modifier.weight(1f),
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.SemiBold,
-        )
-        TextButton(
-            onClick = onToday,
-            enabled = showToday,
-            modifier = if (showToday) {
-                Modifier
-            } else {
-                Modifier.alpha(0f).clearAndSetSemantics {}
-            },
-        ) {
-            Text(stringResource(MR.strings.statistics_today))
-        }
-    }
-}
-
-@Composable
 internal fun StatisticsActivitySummaryCards(
     time: String,
     secondaryValue: String,

@@ -55,6 +55,7 @@ internal fun StatisticsActivityCard(
     types: List<StatsType>,
     formatter: (Long) -> String,
     onNavigateByBuckets: (Int) -> Unit,
+    onShowToday: () -> Unit,
     onRetry: () -> Unit,
     onOpenActivity: (StatsTrendPoint) -> Unit,
 ) {
@@ -69,6 +70,7 @@ internal fun StatisticsActivityCard(
                 types = types,
                 formatter = formatter,
                 onNavigateByBuckets = onNavigateByBuckets,
+                onShowToday = onShowToday,
                 onRetry = onRetry,
                 onOpenActivity = onOpenActivity,
             )
@@ -112,6 +114,7 @@ private fun SettledActivityCard(
     types: List<StatsType>,
     formatter: (Long) -> String,
     onNavigateByBuckets: (Int) -> Unit,
+    onShowToday: () -> Unit,
     onRetry: () -> Unit,
     onOpenActivity: (StatsTrendPoint) -> Unit,
 ) {
@@ -207,12 +210,13 @@ private fun SettledActivityCard(
                 year = drilledYear,
             )
         } else {
-            ActivityWindowNavigation(
+            StatisticsWindowNavigation(
                 window = window,
                 olderEnabled = canNavigateOlder,
                 newerEnabled = canNavigateNewer,
                 onOlder = { onNavigateByBuckets(1) },
                 onNewer = { onNavigateByBuckets(-1) },
+                onToday = onShowToday,
             )
         }
         Spacer(Modifier.height(16.dp))
@@ -286,37 +290,6 @@ private fun SettledActivityCard(
                         style = MaterialTheme.typography.bodySmall,
                     )
                 }
-            }
-        }
-    }
-}
-
-@Composable
-private fun ActivityWindowNavigation(
-    window: StatsActivityWindow,
-    olderEnabled: Boolean,
-    newerEnabled: Boolean,
-    onOlder: () -> Unit,
-    onNewer: () -> Unit,
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        if (window.range != StatsRange.ALL) {
-            IconButton(enabled = olderEnabled, onClick = onOlder) {
-                Icon(Icons.Outlined.ChevronLeft, stringResource(MR.strings.statistics_older_activity))
-            }
-        }
-        Text(
-            text = formatStatisticsWindow(window),
-            modifier = Modifier.weight(1f),
-            style = MaterialTheme.typography.titleSmall,
-            textAlign = TextAlign.Center,
-        )
-        if (window.range != StatsRange.ALL) {
-            IconButton(enabled = newerEnabled, onClick = onNewer) {
-                Icon(Icons.Outlined.ChevronRight, stringResource(MR.strings.statistics_newer_activity))
             }
         }
     }
