@@ -4,11 +4,9 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -16,12 +14,12 @@ import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.screen.textrecognition.TextRecognitionSettingsScreenModel
 import eu.kanade.presentation.more.settings.screen.textrecognition.engine.TextRecognitionEnginePickerScreen
 import eu.kanade.presentation.more.settings.screen.textrecognition.language.TextRecognitionPlaygroundLanguageScreen
+import eu.kanade.presentation.more.settings.screen.textrecognition.languages.TextRecognitionLanguagesScreen
 import eu.kanade.presentation.more.settings.screen.textrecognition.models.ModelArtifactStorageScreen
-import eu.kanade.presentation.more.settings.screen.textrecognition.overrides.TextRecognitionOverridesScreen
 import eu.kanade.presentation.more.settings.screen.textrecognition.presentation.TextRecognitionSettingsContent
+import eu.kanade.presentation.more.settings.screen.textrecognition.presentation.textRecognitionSettingsPreferences
 import eu.kanade.presentation.util.LocalBackPress
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.i18n.stringResource
 
 object SettingsTextRecognitionScreen : SearchableSettings {
 
@@ -30,28 +28,7 @@ object SettingsTextRecognitionScreen : SearchableSettings {
     override fun getTitleRes() = MR.strings.text_recognition_title
 
     @Composable
-    override fun getPreferences(): List<Preference> = listOf(
-        Preference.PreferenceGroup(
-            title = stringResource(MR.strings.text_recognition_settings_playground),
-            preferenceItems = listOf(
-                Preference.PreferenceItem.TextPreference(
-                    title = stringResource(MR.strings.text_recognition_settings_engine),
-                    isProfileSpecific = true,
-                ),
-                Preference.PreferenceItem.TextPreference(
-                    title = stringResource(MR.strings.text_recognition_settings_language_overrides),
-                    isProfileSpecific = true,
-                ),
-                Preference.PreferenceItem.TextPreference(
-                    title = stringResource(MR.strings.model_artifacts_title),
-                ),
-                Preference.PreferenceItem.TextPreference(
-                    title = stringResource(MR.strings.text_recognition_settings_playground),
-                    subtitle = stringResource(MR.strings.text_recognition_settings_playground_summary),
-                ),
-            ),
-        ),
-    )
+    override fun getPreferences(): List<Preference> = textRecognitionSettingsPreferences()
 
     @Composable
     override fun Content() {
@@ -59,32 +36,18 @@ object SettingsTextRecognitionScreen : SearchableSettings {
         val backPress = LocalBackPress.current
         val model = rememberTextRecognitionSettingsScreenModel()
         val state by model.state.collectAsState()
-        val storedBytes by model.storedBytes.collectAsState()
-        val searchHighlightKey = remember { SearchableSettings.highlightKey }
+        val storedModels by model.storedModels.collectAsState()
         val pickImage = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
             uri?.let(model::tryImage)
         }
 
-        DisposableEffect(searchHighlightKey) {
-            onDispose {
-                if (SearchableSettings.highlightKey == searchHighlightKey) {
-                    SearchableSettings.highlightKey = null
-                }
-            }
-        }
         TextRecognitionSettingsContent(
             state = state,
             hostActions = model.hostActions,
-            storedBytes = storedBytes,
-            searchHighlightKey = searchHighlightKey,
-            onSearchHighlightConsumed = { key ->
-                if (SearchableSettings.highlightKey == key) {
-                    SearchableSettings.highlightKey = null
-                }
-            },
+            storedModels = storedModels,
             onBack = backPress?.let { { it.invoke() } },
             onChooseEngine = { navigator.push(TextRecognitionEnginePickerScreen()) },
-            onChooseOverrides = { navigator.push(TextRecognitionOverridesScreen()) },
+            onChooseLanguages = { navigator.push(TextRecognitionLanguagesScreen()) },
             onOpenModels = { navigator.push(ModelArtifactStorageScreen()) },
             onChoosePlaygroundLanguage = { navigator.push(TextRecognitionPlaygroundLanguageScreen()) },
             onChooseImage = {
@@ -94,6 +57,7 @@ object SettingsTextRecognitionScreen : SearchableSettings {
             onApprovePlaygroundPlatformModels = model.controller::approvePlaygroundPlatformModels,
             observeModels = model.controller::observeModels,
             onSave = model.controller::save,
+            onDiscard = model.controller::discard,
         )
     }
 }

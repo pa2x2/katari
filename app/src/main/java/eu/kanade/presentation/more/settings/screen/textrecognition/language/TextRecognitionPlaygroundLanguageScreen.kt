@@ -18,13 +18,15 @@ internal class TextRecognitionPlaygroundLanguageScreen : Screen() {
         val navigator = LocalNavigator.currentOrThrow
         val model = rememberTextRecognitionSettingsScreenModel()
         val state by model.state.collectAsState()
+        val suggested by model.suggestedLanguages.collectAsState()
 
         TextRecognitionLanguagePickerContent(
             title = stringResource(MR.strings.text_recognition_settings_text_language),
             languages = state.languages,
             selected = state.playgroundLanguage,
+            suggested = suggested,
             onSelect = { language ->
-                model.controller.setPlaygroundLanguage(language)
+                model.setPlaygroundLanguage(language)
                 navigator.pop()
             },
             onBack = navigator::pop,

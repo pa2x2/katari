@@ -61,6 +61,8 @@ internal class TtsSettingsScreenModel(
 
     fun saveProfileChanges() = controller.saveProfileChanges()
 
+    fun discardProfileChanges() = controller.discardProfileChanges()
+
     fun configurationReady(): Boolean = controller.configurationReady()
 
     fun supportsSetup(engine: TtsEngineId): Boolean = controller.supportsSetup(engine)

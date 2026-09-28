@@ -10,6 +10,8 @@ import androidx.compose.ui.Modifier
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppBarTitle
 import eu.kanade.presentation.more.settings.widget.ProfileSpecificChip
+import eu.kanade.presentation.more.settings.widget.draft.SettingsDraftSaveBar
+import eu.kanade.presentation.more.settings.widget.draft.rememberSettingsDraftLeaveGuard
 import kotlinx.coroutines.delay
 import mihon.tts.api.provider.TtsProviderDisclosure
 import mihon.tts.ui.settings.TtsSettingsState
@@ -32,6 +34,7 @@ internal fun TtsSettingsContent(
     onPitchChange: (Float) -> Unit,
     onTogglePreview: () -> Unit,
     onSave: () -> Unit,
+    onDiscard: () -> Unit,
     configurationReady: Boolean,
     onAcknowledgeDisclosure: (TtsProviderDisclosure) -> Unit,
     onOpenSetup: () -> Unit,
@@ -54,6 +57,14 @@ internal fun TtsSettingsContent(
         }
         onSearchHighlightConsumed(key)
     }
+    val saveEnabled = state.hasUnsavedProfileChanges && configurationReady
+    val navigateUp = rememberSettingsDraftLeaveGuard(
+        hasUnsavedChanges = state.hasUnsavedProfileChanges,
+        saveEnabled = saveEnabled,
+        onSave = onSave,
+        onDiscard = onDiscard,
+        onLeave = onBack,
+    )
 
     Scaffold(
         topBar = {
@@ -64,8 +75,16 @@ internal fun TtsSettingsContent(
                         titleSuffix = { ProfileSpecificChip() },
                     )
                 },
-                navigateUp = onBack,
+                navigateUp = onBack?.let { navigateUp },
                 scrollBehavior = it,
+            )
+        },
+        bottomBar = {
+            SettingsDraftSaveBar(
+                visible = state.hasUnsavedProfileChanges,
+                saveEnabled = saveEnabled,
+                onDiscard = onDiscard,
+                onSave = onSave,
             )
         },
     ) { contentPadding ->
@@ -85,7 +104,6 @@ internal fun TtsSettingsContent(
                     onChooseVoiceOverrides = onChooseVoiceOverrides,
                     onPitchChange = onPitchChange,
                     onTogglePreview = onTogglePreview,
-                    onSave = onSave,
                     onAcknowledgeDisclosure = onAcknowledgeDisclosure,
                     onOpenSetup = onOpenSetup,
                 )

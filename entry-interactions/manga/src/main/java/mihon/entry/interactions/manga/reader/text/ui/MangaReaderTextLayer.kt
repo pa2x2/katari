@@ -60,7 +60,7 @@ internal fun MangaReaderTextLayer(
     onApproveModels: (List<ModelArtifactDownloadApproval>) -> Unit,
     onApprovePlatformModels: (MangaReaderTextBlocker.PlatformModelsRequired) -> Unit,
     onChooseLanguage: (LanguageTag?) -> Unit,
-    onOpenSettings: () -> Unit,
+    onChoosePipeline: (LanguageTag) -> Unit,
     onDismissTranslation: () -> Unit,
     onToggleOverlay: () -> Unit,
     onToggleOriginal: () -> Unit,
@@ -123,7 +123,7 @@ internal fun MangaReaderTextLayer(
                     onDownloadPlatformModels = { approvingPlatform = it },
                     onChooseLanguage = { choosingLanguage = true },
                     onOpenLanguages = { showingLanguages = true },
-                    onOpenSettings = onOpenSettings,
+                    onChoosePipeline = onChoosePipeline,
                     onFixTranslationIssue = { issue ->
                         translationCoordinator.fixPageTranslation(
                             issue = issue,

@@ -4,6 +4,7 @@ import mihon.language.api.tag.LanguageTag
 import mihon.text.recognition.api.component.KnownTextRecognitionComponent
 import mihon.text.recognition.api.component.TextRecognitionComponentId
 import mihon.text.recognition.api.component.TextRecognitionComponentRole
+import mihon.text.recognition.api.component.TextRecognitionScript
 import mihon.text.recognition.api.pipeline.TextRecognitionPipeline
 import mihon.text.recognition.api.pipeline.TextRecognitionPreset
 import mihon.text.recognition.api.pipeline.TextRecognitionPresetId
@@ -20,6 +21,7 @@ internal object OnnxTextRecognitionCatalog {
             "models once, after you approve them.",
         processingLocation = "On this device; pages never leave it.",
         buildAvailability = TextRecognitionBuildAvailability.Included,
+        bestFor = "Japanese manga, including vertical text and furigana, and comics in many scripts",
     )
 
     val comicTextDetector = KnownTextRecognitionComponent(
@@ -40,6 +42,7 @@ internal object OnnxTextRecognitionCatalog {
         description = "Reads Japanese manga text, including vertical text and furigana.",
         languages = setOf(LanguageTag.require("ja")),
         documentationUrl = "https://github.com/kha-white/manga-ocr",
+        scripts = listOf(TextRecognitionScript("Japanese", setOf(LanguageTag.require("ja")))),
     )
 
     val paddleOcr = KnownTextRecognitionComponent(
@@ -50,6 +53,7 @@ internal object OnnxTextRecognitionCatalog {
         description = "Reads printed text line by line in many scripts.",
         languages = PaddleOcrScript.entries.flatMapTo(linkedSetOf(), PaddleOcrScript::languages),
         documentationUrl = "https://github.com/PaddlePaddle/PaddleOCR",
+        scripts = PaddleOcrScript.entries.map { TextRecognitionScript(it.displayName, it.languages) },
     )
 
     val components = listOf(comicTextDetector, mangaOcr, paddleOcr)

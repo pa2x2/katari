@@ -9,7 +9,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
@@ -33,6 +35,10 @@ import mihon.text.recognition.api.preparation.TextRecognitionPreparation
 import mihon.text.recognition.api.provider.TextRecognitionProviderId
 import mihon.text.recognition.api.request.TextRecognitionRequest
 import mihon.text.recognition.api.result.TextRecognitionExecution
+import mihon.text.recognition.ui.picker.pipeline.TextRecognitionPipelineChoices
+import mihon.text.recognition.ui.picker.pipeline.pipelineChoiceModels
+import mihon.text.recognition.ui.picker.pipeline.pipelineChoices
+import kotlin.time.TimeSource
 
 /**
  * Edits one profile's recognition configuration as a draft, lets the user try the draft on an image, and stores it
@@ -58,6 +64,8 @@ class TextRecognitionSettingsController(
     )
     val state: StateFlow<TextRecognitionSettingsState> = mutableState.asStateFlow()
 
+    /** Set once the stored configuration arrived; until then [saved] and the draft are placeholders. */
+    private val configurationLoaded = MutableStateFlow(false)
     private var playgroundJob: Job? = null
     private var playgroundImage: Pair<Bitmap, TextRecognitionImage>? = null
 
@@ -68,6 +76,7 @@ class TextRecognitionSettingsController(
                 mutableState.update { current ->
                     if (current.hasUnsavedProfileChanges) current else current.copy(draft = configuration)
                 }
+                configurationLoaded.value = true
             }
             .launchIn(scope)
     }
@@ -89,41 +98,21 @@ class TextRecognitionSettingsController(
         mutableState.update { it.copy(hasUnsavedProfileChanges = false) }
     }
 
+    /** Drops the draft and returns to the stored configuration. */
+    fun discard() = editDraft { saved }
+
     /** How the draft reads [language]. */
     fun resolve(language: LanguageTag): TextRecognitionPipelineResolution =
         hostActions.resolve(mutableState.value.draft, language)
 
-    /** Pipelines the user can choose for [language], with live model states. */
-    fun observePipelineOptions(language: LanguageTag): Flow<List<TextRecognitionPipelineOption>> {
-        val presets = hostActions.presets(language).map { preset ->
-            Triple(TextRecognitionPipelineSelection.Preset(preset.id), preset.pipeline, preset)
-        }
-        val customs = hostActions.pipelines(language).map { pipeline ->
-            Triple(TextRecognitionPipelineSelection.Custom(pipeline), pipeline, null)
-        }
-        val options = presets + customs
-        val models = options.flatMap { (_, pipeline, _) -> hostActions.models(pipeline, language) }.distinct()
-        return observeModels(models).map { states ->
-            options.map { (selection, pipeline, preset) ->
-                val components = pipeline.components.mapNotNull { id ->
-                    hostActions.knownComponents.firstOrNull {
-                        it.id ==
-                            id
-                    }
-                }
-                TextRecognitionPipelineOption(
-                    selection = selection,
-                    pipeline = pipeline,
-                    title = preset?.displayName,
-                    description = preset?.description,
-                    components = components,
-                    excludedBy = components
-                        .mapNotNull { component -> hostActions.providers.firstOrNull { it.id == component.provider } }
-                        .firstOrNull { !it.isIncluded },
-                    models = hostActions.models(pipeline, language).map { it to states.getValue(it) },
-                )
-            }
-        }
+    /** How [language] can be read under the draft, with live model states, once the stored configuration loaded. */
+    fun observePipelineChoices(language: LanguageTag): Flow<TextRecognitionPipelineChoices> = flow {
+        configurationLoaded.first { it }
+        val configuration = mutableState.value.draft
+        emitAll(
+            observeModels(hostActions.pipelineChoiceModels(language))
+                .map { states -> hostActions.pipelineChoices(configuration, language, states) },
+        )
     }
 
     fun observeModels(models: List<ModelArtifactDescriptor>): Flow<Map<ModelArtifactDescriptor, ModelArtifactState>> =
@@ -149,6 +138,7 @@ class TextRecognitionSettingsController(
         val language = mutableState.value.playgroundLanguage ?: return
         playgroundJob = scope.launch {
             setPlayground(TextRecognitionPlaygroundState.Running(bitmap))
+            val started = TimeSource.Monotonic.markNow()
             val pipeline = (resolve(language) as? TextRecognitionPipelineResolution.Resolved)?.pipeline
                 ?: return@launch setPlayground(TextRecognitionPlaygroundState.Unsupported(bitmap, language))
             try {
@@ -160,7 +150,7 @@ class TextRecognitionSettingsController(
                         )
                     ) {
                         is TextRecognitionExecution.Success ->
-                            TextRecognitionPlaygroundState.Recognized(bitmap, execution.result)
+                            TextRecognitionPlaygroundState.Recognized(bitmap, execution.result, started.elapsedNow())
                         is TextRecognitionExecution.PreparationChanged ->
                             TextRecognitionPlaygroundState.Failed(bitmap, null)
                         is TextRecognitionExecution.Failed -> TextRecognitionPlaygroundState.Failed(
@@ -219,11 +209,16 @@ class TextRecognitionSettingsController(
         mutableState.update { it.copy(playground = playground) }
     }
 
+    /** Applies [edit] and tries the playground image again when the edit changes how its language is read. */
     private fun editDraft(edit: (TextRecognitionConfiguration) -> TextRecognitionConfiguration) {
+        val before = mutableState.value
         mutableState.update { current ->
             val draft = edit(current.draft)
             current.copy(draft = draft, hasUnsavedProfileChanges = draft != saved)
         }
+        val language = before.playgroundLanguage ?: return
+        val (bitmap, image) = playgroundImage ?: return
+        if (hostActions.resolve(before.draft, language) != resolve(language)) runPlayground(bitmap, image)
     }
 }
 

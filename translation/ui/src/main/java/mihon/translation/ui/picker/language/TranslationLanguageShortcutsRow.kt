@@ -14,8 +14,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import mihon.language.api.tag.LanguageTag
-import tachiyomi.i18n.*
-import tachiyomi.presentation.core.i18n.stringResource
 
 /** The [options] among [recentLanguages], most recent first, so recents never offer a language the list lacks. */
 fun translationRecentLanguageOptions(
@@ -24,20 +22,21 @@ fun translationRecentLanguageOptions(
 ): List<TranslationLanguageOption> = recentLanguages.mapNotNull { recent -> options.firstOrNull { it.tag == recent } }
 
 /**
- * One-tap candidates for the most recently used languages, rendered above the full picker list.
+ * One-tap candidates under [title], such as the most recently used languages, rendered above the full picker list.
  *
- * The row is pre-filtered by the caller with [translationRecentLanguageOptions].
+ * Recents are pre-filtered by the caller with [translationRecentLanguageOptions].
  */
 @Composable
-fun TranslationLanguageRecentsRow(
-    recents: List<TranslationLanguageOption>,
+fun TranslationLanguageShortcutsRow(
+    title: String,
+    shortcuts: List<TranslationLanguageOption>,
     selected: LanguageTag?,
     onSelect: (LanguageTag) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
         Text(
-            text = stringResource(MR.strings.translation_recent_languages),
+            text = title,
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             style = MaterialTheme.typography.labelMedium,
@@ -46,7 +45,7 @@ fun TranslationLanguageRecentsRow(
             contentPadding = PaddingValues(horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            items(recents, key = { it.tag.value }) { option ->
+            items(shortcuts, key = { it.tag.value }) { option ->
                 FilterChip(
                     selected = option.tag == selected,
                     onClick = { onSelect(option.tag) },

@@ -28,37 +28,69 @@ import mihon.model.artifacts.ui.state.formatModelArtifactSize
 import mihon.model.artifacts.ui.state.modelArtifactStateLabel
 import mihon.text.recognition.api.pipeline.TextRecognitionPipelineSelection
 import mihon.text.recognition.api.provider.TextRecognitionBuildAvailability
-import mihon.text.recognition.ui.settings.TextRecognitionPipelineOption
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.HeadingItem
 import tachiyomi.presentation.core.i18n.stringResource
 
-/** Recommended pipelines followed by every custom combination the catalog allows for one language. */
+/**
+ * The automatic pipeline, then recommended pipelines, then combinations no preset offers, for one language. A `null`
+ * selection is the automatic pipeline.
+ */
 @Composable
 fun TextRecognitionPipelinePickerList(
-    options: List<TextRecognitionPipelineOption>,
+    choices: TextRecognitionPipelineChoices,
     selected: TextRecognitionPipelineSelection?,
-    onSelect: (TextRecognitionPipelineSelection) -> Unit,
+    onSelect: (TextRecognitionPipelineSelection?) -> Unit,
     onDownload: (List<ModelArtifactDescriptor>) -> Unit,
     onCancelDownload: (List<ModelArtifactDescriptor>) -> Unit,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(16.dp),
 ) {
-    val (presets, customs) = options.partition { it.selection is TextRecognitionPipelineSelection.Preset }
     LazyColumn(
         modifier = modifier,
         contentPadding = contentPadding,
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        if (presets.isNotEmpty()) {
+        if (choices.currentUnavailable) {
+            item(key = "unavailable") {
+                Text(
+                    text = stringResource(MR.strings.text_recognition_settings_choice_unavailable),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.error,
+                )
+            }
+        }
+        choices.automatic?.let { automatic ->
+            item(key = "automatic") {
+                val pipelineName = automatic.option.title ?: automatic.option.components.joinToString(" + ") {
+                    it.displayName
+                }
+                PipelineCard(
+                    option = automatic.option,
+                    title = stringResource(MR.strings.text_recognition_settings_automatic),
+                    description = automatic.recommendedBy?.let {
+                        stringResource(
+                            MR.strings.text_recognition_settings_automatic_recommended,
+                            pipelineName,
+                            it.name,
+                        )
+                    } ?: pipelineName,
+                    selected = selected == null,
+                    onSelect = { onSelect(null) },
+                    onDownload = onDownload,
+                    onCancelDownload = onCancelDownload,
+                )
+            }
+        }
+        if (choices.presets.isNotEmpty()) {
             item { HeadingItem(stringResource(MR.strings.text_recognition_settings_presets)) }
-            items(presets, key = { it.selection.toString() }) { option ->
+            items(choices.presets, key = { it.selection.toString() }) { option ->
                 PipelineCard(option, option.selection == selected, onSelect, onDownload, onCancelDownload)
             }
         }
-        if (customs.isNotEmpty()) {
+        if (choices.custom.isNotEmpty()) {
             item { HeadingItem(stringResource(MR.strings.text_recognition_settings_custom)) }
-            items(customs, key = { it.selection.toString() }) { option ->
+            items(choices.custom, key = { it.selection.toString() }) { option ->
                 PipelineCard(option, option.selection == selected, onSelect, onDownload, onCancelDownload)
             }
         }
@@ -69,7 +101,28 @@ fun TextRecognitionPipelinePickerList(
 private fun PipelineCard(
     option: TextRecognitionPipelineOption,
     selected: Boolean,
-    onSelect: (TextRecognitionPipelineSelection) -> Unit,
+    onSelect: (TextRecognitionPipelineSelection?) -> Unit,
+    onDownload: (List<ModelArtifactDescriptor>) -> Unit,
+    onCancelDownload: (List<ModelArtifactDescriptor>) -> Unit,
+) {
+    PipelineCard(
+        option = option,
+        title = option.title ?: option.components.joinToString(" + ") { it.displayName },
+        description = option.description ?: option.components.joinToString(" · ") { it.description },
+        selected = selected,
+        onSelect = { onSelect(option.selection) },
+        onDownload = onDownload,
+        onCancelDownload = onCancelDownload,
+    )
+}
+
+@Composable
+private fun PipelineCard(
+    option: TextRecognitionPipelineOption,
+    title: String,
+    description: String,
+    selected: Boolean,
+    onSelect: () -> Unit,
     onDownload: (List<ModelArtifactDescriptor>) -> Unit,
     onCancelDownload: (List<ModelArtifactDescriptor>) -> Unit,
 ) {
@@ -80,7 +133,7 @@ private fun PipelineCard(
                 selected = selected,
                 enabled = option.included,
                 role = Role.RadioButton,
-                onClick = { onSelect(option.selection) },
+                onClick = onSelect,
             ),
         colors = CardDefaults.outlinedCardColors(
             containerColor = if (selected) {
@@ -98,13 +151,11 @@ private fun PipelineCard(
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.Top) {
                 Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(
-                        text = option.title ?: option.components.joinToString(" + ") { it.displayName },
+                        text = title,
                         style = MaterialTheme.typography.titleMedium,
                     )
-                    val secondary = option.description
-                        ?: option.components.joinToString(" · ") { it.description }
                     Text(
-                        text = secondary,
+                        text = description,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )

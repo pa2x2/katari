@@ -35,6 +35,7 @@ import kotlinx.coroutines.flow.Flow
 import mihon.entry.interactions.manga.reader.text.session.MangaReaderTextBlocker
 import mihon.entry.interactions.manga.reader.text.session.MangaReaderTextProgress
 import mihon.entry.interactions.manga.reader.text.translation.MangaPageTranslationIssue
+import mihon.language.api.tag.LanguageTag
 import mihon.model.artifacts.api.descriptor.ModelArtifactDescriptor
 import mihon.model.artifacts.api.state.ModelArtifactState
 import mihon.model.artifacts.ui.state.formatModelArtifactSize
@@ -61,7 +62,7 @@ internal fun MangaReaderTextToolbar(
     onDownloadPlatformModels: (MangaReaderTextBlocker.PlatformModelsRequired) -> Unit,
     onChooseLanguage: () -> Unit,
     onOpenLanguages: () -> Unit,
-    onOpenSettings: () -> Unit,
+    onChoosePipeline: (LanguageTag) -> Unit,
     onFixTranslationIssue: (MangaPageTranslationIssue) -> Unit,
     onToggleOverlay: () -> Unit,
     onToggleOriginal: () -> Unit,
@@ -114,8 +115,10 @@ internal fun MangaReaderTextToolbar(
                             Text(stringResource(MR.strings.action_download))
                         }
                     }
-                    is MangaReaderTextBlocker.PipelineChoiceRequired -> TextButton(onClick = onOpenSettings) {
-                        Text(stringResource(MR.strings.action_settings))
+                    is MangaReaderTextBlocker.PipelineChoiceRequired -> TextButton(
+                        onClick = { onChoosePipeline(blocker.language) },
+                    ) {
+                        Text(stringResource(MR.strings.reader_text_choose_pipeline))
                     }
                     is MangaReaderTextBlocker.LanguageRequired -> TextButton(onClick = onChooseLanguage) {
                         Text(stringResource(MR.strings.reader_text_choose_language))
