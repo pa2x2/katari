@@ -23,9 +23,9 @@ import eu.kanade.presentation.more.stats.components.StatisticsActivityFeedback
 import eu.kanade.presentation.more.stats.components.StatisticsActivityPatternsCard
 import eu.kanade.presentation.more.stats.components.StatisticsActivitySummaryCards
 import eu.kanade.presentation.more.stats.components.StatisticsCurrentLibraryHeader
-import eu.kanade.presentation.more.stats.components.StatisticsEarlierActivityCard
 import eu.kanade.presentation.more.stats.components.StatisticsLibraryCard
 import eu.kanade.presentation.more.stats.components.StatisticsLibraryInsightsCard
+import eu.kanade.presentation.more.stats.components.StatisticsLifetimeCard
 import eu.kanade.presentation.more.stats.components.StatisticsPeriodRow
 import eu.kanade.presentation.more.stats.components.StatisticsProgressCard
 import eu.kanade.presentation.more.stats.components.StatisticsReadingCalendarCard
@@ -178,15 +178,15 @@ internal fun StatisticsDashboardPage(
                             color = accentColor,
                             formatDuration = formatter,
                         )
-                        StatisticsCard.EARLIER -> if (visibleActivity != null &&
-                            visibleActivity.earlierDurationMillis > 0L
-                        ) {
-                            StatisticsEarlierActivityCard(
-                                duration = formatter(visibleActivity.earlierDurationMillis),
-                                onClick = { onOpenEarlierActivity(selectedType) },
+                        StatisticsCard.EARLIER -> visibleActivity?.let {
+                            StatisticsLifetimeCard(
+                                trackedDurationMillis = it.totalDurationMillis,
+                                earlierDurationMillis = it.earlierDurationMillis,
+                                trackingStartDate = it.trackingStartDate,
+                                color = accentColor,
+                                formatDuration = formatter,
+                                onOpenEarlier = { onOpenEarlierActivity(selectedType) },
                             )
-                        } else {
-                            EmptyStatisticsCard(MR.strings.statistics_earlier_activity)
                         }
                         StatisticsCard.PROGRESS -> StatisticsProgressCard(progress)
                         StatisticsCard.MEDIA -> StatisticsLibraryCard(titleCounts, visibleTypes, onTypeSelected)

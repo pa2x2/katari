@@ -1734,8 +1734,6 @@
     <string name="statistics_see_activity">See activity</string>
     <string name="statistics_chapters_read">Chapters read</string>
     <string name="statistics_episodes_watched">Episodes watched</string>
-    <string name="statistics_earlier_activity">Earlier activity</string>
-    <string name="statistics_activity_without_details">Activity without detailed records</string>
     <string name="statistics_by_media">By media</string>
     <string name="statistics_incognito_active">Activity isn’t recorded in incognito mode</string>
     <string name="statistics_activity_patterns">Activity patterns</string>
