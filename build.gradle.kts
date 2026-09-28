@@ -1,3 +1,4 @@
+import mihon.gradle.configurations.VERIFY_TESTS_TASK_NAME
 import mihon.gradle.tasks.PrepareLegacyFixtureTask
 import org.gradle.api.attributes.Bundling
 import org.gradle.api.attributes.Category
@@ -254,6 +255,12 @@ tasks.register("verifyEntryFeatureArchitecture") {
     group = "verification"
     description = "Compatibility alias for verifyFeatureArchitecture"
     dependsOn(verifyFeatureArchitecture)
+}
+
+tasks.register(VERIFY_TESTS_TASK_NAME) {
+    group = "verification"
+    description = "Runs the build logic tests; running the task by name also verifies every module's tests"
+    dependsOn(buildLogic.task(":test"))
 }
 
 tasks {
