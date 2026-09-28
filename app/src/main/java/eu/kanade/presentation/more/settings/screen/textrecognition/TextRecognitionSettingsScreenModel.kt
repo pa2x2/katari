@@ -6,10 +6,14 @@ import android.graphics.ImageDecoder
 import android.net.Uri
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
+import eu.kanade.presentation.more.settings.screen.textrecognition.language.librarySeriesLanguages
+import eu.kanade.presentation.more.settings.screen.textrecognition.language.textRecognitionSuggestedLanguages
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import mihon.entry.interactions.catalogue.EntryCatalogueFeature
 import mihon.language.api.tag.LanguageTag
 import mihon.model.artifacts.api.ModelArtifactStore
 import mihon.text.recognition.api.TextRecognitionFeature
@@ -22,6 +26,7 @@ import mihon.text.recognition.ui.settings.TextRecognitionSettingsController
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.core.common.util.lang.withIOContext
+import tachiyomi.domain.entry.repository.EntryRepository
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.util.Locale
@@ -32,6 +37,8 @@ internal class TextRecognitionSettingsScreenModel(
     modelStore: ModelArtifactStore = Injekt.get(),
     private val application: Application = Injekt.get(),
     preferenceStore: PreferenceStore = Injekt.get(),
+    entryRepository: EntryRepository = Injekt.get(),
+    catalogue: EntryCatalogueFeature = Injekt.get(),
 ) : ScreenModel {
     /** The playground language last chosen, so trying another image does not start from the device language. */
     private val playgroundLanguage = preferenceStore.getString(Preference.appStateKey(PLAYGROUND_LANGUAGE_KEY), "")
@@ -41,8 +48,7 @@ internal class TextRecognitionSettingsScreenModel(
         hostActions = hostActions,
         modelStore = modelStore,
         scope = screenModelScope,
-        initialPlaygroundLanguage = LanguageTag.parse(playgroundLanguage.get())
-            ?: LanguageTag.parse(Locale.getDefault().toLanguageTag()),
+        initialPlaygroundLanguage = LanguageTag.parse(playgroundLanguage.get()) ?: deviceLanguage(),
     )
     val state = controller.state
 
@@ -55,6 +61,12 @@ internal class TextRecognitionSettingsScreenModel(
         controller.setPlaygroundLanguage(language)
     }
 
+    /** Languages the language pickers offer first; empty until the library was read. */
+    val suggestedLanguages: StateFlow<List<LanguageTag>> = flow {
+        val series = withIOContext { librarySeriesLanguages(entryRepository, catalogue) }
+        emit(textRecognitionSuggestedLanguages(deviceLanguage(), series, hostActions.supportedLanguages))
+    }.stateIn(screenModelScope, SharingStarted.Eagerly, emptyList())
+
     /** Recognizes the picked image with the draft configuration. */
     fun tryImage(uri: Uri) {
         screenModelScope.launch {
@@ -66,6 +78,8 @@ internal class TextRecognitionSettingsScreenModel(
             controller.runPlayground(bitmap, BitmapTextRecognitionImage(bitmap, key))
         }
     }
+
+    private fun deviceLanguage(): LanguageTag? = LanguageTag.parse(Locale.getDefault().toLanguageTag())
 
     private fun decodePlaygroundImage(uri: Uri): Bitmap =
         ImageDecoder.decodeBitmap(ImageDecoder.createSource(application.contentResolver, uri)) { decoder, info, _ ->

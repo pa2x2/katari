@@ -62,7 +62,7 @@ fun TranslationLanguageSupportPicker(
                 modifier = modifier,
                 defaultOption = defaultOption,
                 onSelectDefault = onSelectDefault,
-                recents = recentOptions,
+                shortcuts = recentOptions,
                 unpairable = unpairable,
             )
         }

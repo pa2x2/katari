@@ -23,6 +23,7 @@ internal class TextRecognitionOverrideLanguageScreen(
         val navigator = LocalNavigator.currentOrThrow
         val model = rememberTextRecognitionSettingsScreenModel()
         val state by model.state.collectAsState()
+        val suggested by model.suggestedLanguages.collectAsState()
         val overridden = state.draft.overrides.keys.map { it.value.substringBefore('-') }.toSet()
 
         TextRecognitionLanguagePickerContent(
@@ -31,6 +32,7 @@ internal class TextRecognitionOverrideLanguageScreen(
                 .filter { languageTags == null || it.value in languageTags }
                 .filterNot { it.value.substringBefore('-') in overridden },
             selected = null,
+            suggested = suggested,
             onSelect = { language -> navigator.replace(TextRecognitionOverridePipelineScreen(language.value)) },
             onBack = navigator::pop,
         )

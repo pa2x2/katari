@@ -92,7 +92,7 @@ internal fun MangaReaderTextLanguageSheet(
                         )
                     },
                     onSelectDefault = onFollowSource,
-                    recents = recents,
+                    shortcuts = recents,
                 )
             }
         }

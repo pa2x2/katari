@@ -498,6 +498,7 @@
     <string name="text_recognition_settings_languages">Languages</string>
     <string name="text_recognition_settings_languages_default">The engine\'s recommendation for every language</string>
     <string name="text_recognition_languages_your_choices">Your choices</string>
+    <string name="text_recognition_languages_suggested">Suggested</string>
     <string name="text_recognition_languages_add">Choose for another language</string>
     <string name="text_recognition_languages_read_by">Read by %s</string>
     <string name="text_recognition_languages_choice_required">Needs a choice</string>

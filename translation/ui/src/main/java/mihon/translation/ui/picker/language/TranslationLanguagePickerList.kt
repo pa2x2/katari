@@ -58,7 +58,8 @@ fun TranslationLanguagePickerList(
     modifier: Modifier = Modifier,
     defaultOption: TranslationLanguageDefaultOption? = null,
     onSelectDefault: () -> Unit = {},
-    recents: List<TranslationLanguageOption> = emptyList(),
+    shortcuts: List<TranslationLanguageOption> = emptyList(),
+    shortcutsTitle: String = stringResource(MR.strings.translation_recent_languages),
     unpairable: TranslationUnpairableLanguages? = null,
 ) {
     var query by remember { mutableStateOf("") }
@@ -68,9 +69,10 @@ fun TranslationLanguagePickerList(
         unpairable?.options.orEmpty().matching(normalizedQuery)
     }
     Column(modifier = modifier) {
-        if (recents.isNotEmpty()) {
-            TranslationLanguageRecentsRow(
-                recents = recents,
+        if (shortcuts.isNotEmpty()) {
+            TranslationLanguageShortcutsRow(
+                title = shortcutsTitle,
+                shortcuts = shortcuts,
                 selected = selected,
                 onSelect = onSelect,
             )
