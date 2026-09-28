@@ -1739,7 +1739,6 @@
     <string name="statistics_activity_patterns">Activity patterns</string>
     <string name="statistics_library_insights">Library insights</string>
     <string name="statistics_active_days">Active days</string>
-    <string name="statistics_top_genre">Top genre</string>
     <string name="statistics_no_type_stats">No %s stats yet</string>
     <string name="statistics_empty_type_hint">Add something to your library to see it here.</string>
     <string name="statistics_show_more_activity">Show more</string>
@@ -2076,7 +2075,6 @@
     <string name="statistics_see_all">See all</string>
     <string name="statistics_share_of_time">%d%%</string>
     <string name="statistics_share_below_percent">&lt;%d%%</string>
-    <string name="statistics_unread_backlog">Unread</string>
     <string name="statistics_downloaded">Downloaded</string>
     <string name="statistics_genres">Genres</string>
     <string name="statistics_status">Status</string>

@@ -18,6 +18,7 @@ internal fun StatisticsInsightTile(
     value: String,
     label: String,
     modifier: Modifier = Modifier,
+    detail: String? = null,
 ) {
     Surface(
         modifier = modifier,
@@ -38,6 +39,13 @@ internal fun StatisticsInsightTile(
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+            detail?.let {
+                Text(
+                    text = it,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
         }
     }
 }

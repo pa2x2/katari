@@ -23,9 +23,9 @@ import eu.kanade.presentation.more.stats.components.StatisticsActivityFeedback
 import eu.kanade.presentation.more.stats.components.StatisticsActivityPatternsCard
 import eu.kanade.presentation.more.stats.components.StatisticsActivitySummaryCards
 import eu.kanade.presentation.more.stats.components.StatisticsCurrentLibraryHeader
-import eu.kanade.presentation.more.stats.components.StatisticsLibraryCard
 import eu.kanade.presentation.more.stats.components.StatisticsLibraryInsightsCard
 import eu.kanade.presentation.more.stats.components.StatisticsLifetimeCard
+import eu.kanade.presentation.more.stats.components.StatisticsMediaCard
 import eu.kanade.presentation.more.stats.components.StatisticsPeriodRow
 import eu.kanade.presentation.more.stats.components.StatisticsProgressCard
 import eu.kanade.presentation.more.stats.components.StatisticsReadingCalendarCard
@@ -188,10 +188,17 @@ internal fun StatisticsDashboardPage(
                                 onOpenEarlier = { onOpenEarlierActivity(selectedType) },
                             )
                         }
-                        StatisticsCard.PROGRESS -> StatisticsProgressCard(progress)
-                        StatisticsCard.MEDIA -> StatisticsLibraryCard(titleCounts, visibleTypes, onTypeSelected)
-                        StatisticsCard.INSIGHTS -> state.library.insightsByType[selectedType]?.let {
-                            StatisticsLibraryInsightsCard(it)
+                        StatisticsCard.PROGRESS -> StatisticsProgressCard(progress, accentColor)
+                        StatisticsCard.MEDIA -> StatisticsMediaCard(
+                            titleCounts = titleCounts,
+                            progressByType = state.library.progressByType,
+                            types = visibleTypes,
+                            onTypeClick = onTypeSelected,
+                        )
+                        StatisticsCard.INSIGHTS -> selectedType?.let { type ->
+                            state.library.insightsByType[type]?.let { insights ->
+                                StatisticsLibraryInsightsCard(insights, type, titleCount, accentColor)
+                            }
                         }
                     }
                 }
