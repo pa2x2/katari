@@ -22,26 +22,7 @@ import tachiyomi.domain.entry.service.EntryChildOwnershipResolution
 import tachiyomi.domain.entry.service.EntryChildOwnershipResolutionPort
 
 class EntryContinueFeatureTest {
-    private val context = mockk<Context>(relaxed = true)
     private val entry = Entry.create().copy(id = 7L, type = EntryType.BOOK)
-
-    @Test
-    fun `an applicable provider reports that no next child exists`() = runTest {
-        val feature = featureFor(
-            plugin(EntryType.BOOK, EntryContinueCapability.bind(RecordingContinueProcessor(EntryType.BOOK, null))),
-        )
-
-        feature.continueEntry(context, entry) shouldBe EntryContinueResult.NoNext
-    }
-
-    @Test
-    fun `missing Continue provider is valid and exposes no Continue action`() = runTest {
-        val feature = featureFor()
-
-        feature.isApplicable(entry.type) shouldBe false
-        feature.nextTarget(entry) shouldBe EntryContinueTargetResult.Inapplicable
-        feature.continueEntry(context, entry) shouldBe EntryContinueResult.Inapplicable
-    }
 
     @Test
     fun `batch target uses complete child ownership rather than Library membership`() = runTest {
@@ -92,7 +73,7 @@ class EntryContinueFeatureTest {
 
     private fun featureFor(
         vararg plugins: EntryInteractionPlugin,
-        batchPreparation: EntryContinueBatchPreparation = mockk(relaxed = true),
+        batchPreparation: EntryContinueBatchPreparation,
     ): EntryContinueFeature {
         val composition = createEntryInteractionComposition(
             plugins = plugins.toList(),

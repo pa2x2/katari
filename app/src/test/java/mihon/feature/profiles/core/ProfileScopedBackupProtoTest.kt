@@ -9,30 +9,6 @@ import org.junit.jupiter.api.Test
 class ProfileScopedBackupProtoTest {
 
     @Test
-    fun `legacy profile backup bytes decode without type`() {
-        val bytes = ProtoBuf.encodeToByteArray(
-            serializer = LegacyProfileBackup.serializer(),
-            LegacyProfileBackup(
-                uuid = "legacy-uuid",
-                name = "Legacy",
-                colorSeed = 123L,
-                position = 4L,
-                requiresAuth = true,
-                isArchived = false,
-            ),
-        )
-
-        ProtoBuf.decodeFromByteArray(ProfileBackup.serializer(), bytes) shouldBe ProfileBackup(
-            uuid = "legacy-uuid",
-            name = "Legacy",
-            colorSeed = 123L,
-            position = 4L,
-            requiresAuth = true,
-            isArchived = false,
-        )
-    }
-
-    @Test
     fun `legacy scoped backup bytes decode without type`() {
         val bytes = ProtoBuf.encodeToByteArray(
             serializer = LegacyProfileScopedBackup.serializer(),

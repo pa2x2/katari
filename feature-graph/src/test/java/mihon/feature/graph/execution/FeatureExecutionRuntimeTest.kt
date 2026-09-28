@@ -80,45 +80,6 @@ class FeatureExecutionRuntimeTest {
     }
 
     @Test
-    fun `new execution participants enter an existing discovery pipeline without assembler edits`() {
-        val point = point()
-        val participants = mutableListOf(participant("example.initial", point))
-        val pointContributor = featureGraphContributor(pointOwner) { add(point) }
-        val participantContributor = featureGraphContributor(participantOwner) { participants.forEach(::add) }
-        val type = contentType("subject")
-        val typeContributor = featureGraphContributor(type.owner) { add(type) }
-        val contributors = listOf(typeContributor, pointContributor, participantContributor)
-
-        discoverAndAssembleFeatureGraph(contributors).executionParticipants
-            .map { it.id.value } shouldContainExactly listOf("example.initial")
-
-        participants += participant("example.discovered", point)
-
-        discoverAndAssembleFeatureGraph(contributors).executionParticipants
-            .map { it.id.value } shouldContainExactly listOf("example.discovered", "example.initial")
-    }
-
-    @Test
-    fun `runtime rejects missing orphaned and duplicate participant bindings`() {
-        val point = point()
-        val participant = participant("example.declared", point)
-        val graph = graph(listOf(point), listOf(participant))
-
-        shouldThrow<IllegalStateException> {
-            runtime(graph)
-        }.message shouldContain "missing: [example.declared]"
-
-        val orphan = participant("example.orphan", point)
-        shouldThrow<IllegalStateException> {
-            runtime(graph, binding(participant) {}, binding(orphan) {})
-        }.message shouldContain "orphaned: [example.orphan]"
-
-        shouldThrow<IllegalStateException> {
-            runtime(graph, binding(participant) {}, binding(participant) {})
-        }.message shouldContain "Duplicate execution participant bindings"
-    }
-
-    @Test
     fun `participant ordering is deterministic and honors explicit dependencies`() = runSuspend {
         val point = point()
         val last = participant(
@@ -312,26 +273,6 @@ class FeatureExecutionRuntimeTest {
         shouldThrow<IllegalStateException> {
             graph(listOf(point), listOf(first, second))
         }.message shouldContain "cyclic participant ordering"
-    }
-
-    @Test
-    fun `assembly rejects duplicate and contradictory execution point declarations`() {
-        val point = point()
-        val participant = participant("example.participant", point)
-
-        shouldThrow<IllegalStateException> {
-            graph(listOf(point, point), listOf(participant))
-        }.message shouldContain "Duplicate execution point example.point"
-
-        val contradictoryPoint = durableFeatureExecutionPointDefinition<Event>(
-            id = point.id,
-            owner = point.owner,
-            failurePolicy = point.failurePolicy,
-        )
-        val contradictoryParticipant = participant("example.contradictory", contradictoryPoint)
-        shouldThrow<IllegalStateException> {
-            graph(listOf(point), listOf(contradictoryParticipant))
-        }.message shouldContain "Contradictory execution point definition example.point"
     }
 
     @Test

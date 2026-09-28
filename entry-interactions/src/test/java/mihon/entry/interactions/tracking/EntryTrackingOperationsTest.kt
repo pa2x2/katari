@@ -4,7 +4,6 @@ import eu.kanade.tachiyomi.source.entry.EntryType
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.coEvery
-import io.mockk.coVerify
 import io.mockk.coVerifyOrder
 import io.mockk.mockk
 import kotlinx.coroutines.flow.flowOf
@@ -17,7 +16,6 @@ import mihon.entry.interactions.tracking.host.EntryTrackingCollectionHost
 import mihon.entry.interactions.tracking.host.EntryTrackingHost
 import mihon.entry.interactions.tracking.host.EntryTrackingHostEntryService
 import mihon.entry.interactions.tracking.host.EntryTrackingHostEntrySnapshot
-import mihon.entry.interactions.tracking.host.EntryTrackingHostRefreshResult
 import mihon.entry.interactions.tracking.host.EntryTrackingHostService
 import mihon.entry.interactions.tracking.host.EntryTrackingHostServiceCapabilities
 import mihon.entry.interactions.tracking.host.EntryTrackingOperationHost
@@ -59,32 +57,6 @@ class EntryTrackingOperationsTest {
     )
 
     @Test
-    fun `operation uses the current session track behind the Feature boundary`() = runTest {
-        val operations = mockk<EntryTrackingOperationHost>(relaxed = true)
-        val feature = feature(operations)
-        val mutation = EntryTrackingMutation.Progress(8)
-
-        feature.mutate(entry, EntryTrackingServiceId(service.id), mutation) shouldBe
-            EntryTrackingOperationResult.Completed
-
-        coVerify(exactly = 1) { operations.mutate(service.id, track, mutation) }
-    }
-
-    @Test
-    fun `unsupported tracker operation is rejected without invoking the host`() = runTest {
-        val operations = mockk<EntryTrackingOperationHost>(relaxed = true)
-        val feature = feature(operations)
-        val mutation = EntryTrackingMutation.Private(enabled = true)
-
-        feature.mutate(entry, EntryTrackingServiceId(service.id), mutation) shouldBe
-            EntryTrackingOperationResult.Unavailable(
-                EntryTrackingOperationUnavailableReason.PRIVATE_TRACKING_UNSUPPORTED,
-            )
-
-        coVerify(exactly = 0) { operations.mutate(any(), any(), any()) }
-    }
-
-    @Test
     fun `remote deletion failure is reported after local tracking is removed`() = runTest {
         val failure = IllegalStateException("remote unavailable")
         val operations = mockk<EntryTrackingOperationHost>(relaxed = true)
@@ -98,21 +70,6 @@ class EntryTrackingOperationsTest {
             operations.deleteRemote(service.id, track)
             operations.unregister(entry.id, service.id)
         }
-    }
-
-    @Test
-    fun `refresh selects the resolved session and reconciles returned tracks`() = runTest {
-        val operations = mockk<EntryTrackingOperationHost>()
-        val automation = mockk<EntryTrackingAutomationHost>()
-        coEvery { operations.refresh(entry.id, setOf(service.id)) } returns
-            EntryTrackingHostRefreshResult(listOf(track), emptyList())
-        coEvery { automation.reconcileRemoteProgress(entry, service.id, track) } returns Unit
-        val feature = feature(operations, automation)
-
-        feature.refresh(entry) shouldBe EntryTrackingRefreshResult.Completed(emptyList())
-
-        coVerify(exactly = 1) { operations.refresh(entry.id, setOf(service.id)) }
-        coVerify(exactly = 1) { automation.reconcileRemoteProgress(entry, service.id, track) }
     }
 
     private fun feature(

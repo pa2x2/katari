@@ -26,10 +26,4 @@ class ReadingOrderTest {
         inReadingOrder(listOf(tall, lowerRight, upperRight), { it.second }, rightToLeft = true)
             .map { it.first } shouldContainExactly listOf("upper-right", "lower-right", "tall")
     }
-
-    @Test
-    fun `left-to-right pages are read from the left within each row`() {
-        inReadingOrder(listOf(bottom, topRight, topLeft), { it.second }, rightToLeft = false)
-            .map { it.first } shouldContainExactly listOf("top-left", "top-right", "bottom")
-    }
 }

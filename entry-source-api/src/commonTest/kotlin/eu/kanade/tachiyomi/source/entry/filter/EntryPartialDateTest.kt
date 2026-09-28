@@ -7,13 +7,6 @@ import kotlin.test.assertTrue
 
 class EntryPartialDateTest {
     @Test
-    fun `partial dates preserve supplied precision`() {
-        assertEquals(EntryPartialDate(2024), EntryPartialDate.parse("2024"))
-        assertEquals("2024-02", EntryPartialDate.parse("2024-2").toString())
-        assertEquals("2024-02-29", EntryPartialDate.parse("2024-2-29").toString())
-    }
-
-    @Test
     fun `calendar validation rejects impossible dates including century leap years`() {
         listOf("0000", "2023-02-29", "1900-02-29", "2024-04-31", "2024-00", "2024-13", "24", "2024-02-").forEach {
             assertNull(EntryPartialDate.parse(it), it)

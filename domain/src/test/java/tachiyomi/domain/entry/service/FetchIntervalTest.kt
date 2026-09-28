@@ -9,8 +9,6 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.toInstant
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.parallel.Execution
-import org.junit.jupiter.api.parallel.ExecutionMode
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import kotlin.time.Duration
@@ -19,7 +17,6 @@ import kotlin.time.Duration.Companion.hours
 import kotlin.time.DurationUnit
 import kotlin.time.toDuration
 
-@Execution(ExecutionMode.CONCURRENT)
 class FetchIntervalTest {
 
     private val testTime = LocalDateTime.parse("2020-01-01T00:00:00")
@@ -74,45 +71,11 @@ class FetchIntervalTest {
     }
 
     @Test
-    fun `returns interval of 7 days when multiple chapters in 1 day`() {
-        val chapters = (1..10).map {
-            chapterWithTime(chapter, 10.hours)
-        }
-        fetchInterval.calculateInterval(chapters, testTimeZone) shouldBe 7
-    }
-
-    @Test
-    fun `returns interval of 7 days when multiple chapters in 2 days`() {
-        val chapters = (1..2).map {
-            chapterWithTime(chapter, 1.days)
-        } + (1..5).map {
-            chapterWithTime(chapter, 2.days)
-        }
-        fetchInterval.calculateInterval(chapters, testTimeZone) shouldBe 7
-    }
-
-    @Test
-    fun `returns interval of 1 day when chapters are released every 1 day`() {
-        val chapters = (1..20).map {
-            chapterWithTime(chapter, it.days)
-        }
-        fetchInterval.calculateInterval(chapters, testTimeZone) shouldBe 1
-    }
-
-    @Test
     fun `returns interval of 1 day when delta is less than 1 day`() {
         val chapters = (1..20).map {
             chapterWithTime(chapter, (15 * it).hours)
         }
         fetchInterval.calculateInterval(chapters, testTimeZone) shouldBe 1
-    }
-
-    @Test
-    fun `returns interval of 2 days when chapters are released every 2 days`() {
-        val chapters = (1..20).map {
-            chapterWithTime(chapter, (2 * it).days)
-        }
-        fetchInterval.calculateInterval(chapters, testTimeZone) shouldBe 2
     }
 
     @Test

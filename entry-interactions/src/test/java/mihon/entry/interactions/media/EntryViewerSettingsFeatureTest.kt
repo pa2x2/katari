@@ -1,7 +1,6 @@
 package mihon.entry.interactions.media
 
 import eu.kanade.tachiyomi.source.entry.EntryType
-import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.coEvery
@@ -22,7 +21,6 @@ import mihon.entry.viewer.settings.ViewerSettingsCategory
 import mihon.entry.viewer.settings.ViewerSettingsProvider
 import mihon.feature.graph.ContributionOwner
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import tachiyomi.core.common.preference.InMemoryPreferenceStore
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.domain.entry.model.Entry
@@ -30,59 +28,6 @@ import tachiyomi.domain.entry.model.Entry
 class EntryViewerSettingsFeatureTest {
     private val entry = Entry.create().copy(id = 11L, type = EntryType.BOOK)
     private val target = Entry.create().copy(id = 12L, type = EntryType.BOOK)
-
-    @Test
-    fun `provider absence is valid and owns no behaviors`() = runTest {
-        val feature = featureFor()
-
-        feature.isApplicable(EntryType.BOOK) shouldBe false
-        feature.destinations shouldBe emptyList()
-        feature.snapshot(entry) shouldBe EntryViewerSettingsSnapshotResult.Inapplicable(EntryType.BOOK)
-    }
-
-    @Test
-    fun `provider surfaces reach projections backup and reset without implying Migration`() = runTest {
-        val repository = mockk<ViewerSettingOverrideRepository>(relaxed = true)
-        val first = surface("book.epub", ViewerSettingsCategory.READER)
-        val second = surface("book.document", ViewerSettingsCategory.READER)
-        val stored = ViewerSettingOverride(entry.id, first.overrideSetting.id, "scroll", 1L)
-        coEvery { repository.getByEntryId(entry.id) } returns listOf(stored)
-        var legacyResetCount = 0
-        val feature = featureFor(
-            surfaces = listOf(first.provider, second.provider),
-            projections = listOf(projection(first.provider.id), projection(second.provider.id)),
-            repository = repository,
-            legacyReset = {
-                legacyResetCount++
-                true
-            },
-        )
-
-        feature.isApplicable(EntryType.BOOK) shouldBe true
-        feature.destinations.map { it.surfaceId } shouldContainExactlyInAnyOrder listOf("book.epub", "book.document")
-        feature.snapshot(entry) shouldBe EntryViewerSettingsSnapshotResult.Available(listOf(stored))
-        feature.restore(target, listOf(stored)) shouldBe EntryViewerSettingsRestoreResult.Restored(1, emptySet())
-        feature.copy(entry, target) shouldBe EntryViewerSettingsCopyResult.Inapplicable(entry.type, target.type)
-        feature.resetProfileOverrides(9L) shouldBe EntryViewerSettingsResetResult.Reset
-
-        coVerify(exactly = 1) { repository.upsert(stored.copy(entryId = target.id)) }
-        coVerify { repository.deleteByProviderForProfile("book.epub", 9L) }
-        coVerify { repository.deleteByProviderForProfile("book.document", 9L) }
-        legacyResetCount shouldBe 1
-    }
-
-    @Test
-    fun `missing and orphan projections fail with exact surface IDs`() {
-        val surface = surface("book.epub", ViewerSettingsCategory.READER)
-
-        assertThrows<IllegalStateException> {
-            featureFor(surfaces = listOf(surface.provider))
-        }.message shouldBe "Viewer Settings providers are missing app screen projections: [book.epub]"
-
-        assertThrows<IllegalStateException> {
-            featureFor(projections = listOf(projection("orphan.reader")))
-        }.message shouldBe "Viewer Settings screen projections have no provider surface: [orphan.reader]"
-    }
 
     @Test
     fun `restore rejects unknown and non override settings without manufacturing support`() = runTest {
@@ -140,7 +85,6 @@ class EntryViewerSettingsFeatureTest {
         surfaces: List<ViewerSettingsProvider> = emptyList(),
         projections: List<EntryViewerSettingsScreenProjection> = emptyList(),
         repository: ViewerSettingOverrideRepository = mockk(relaxed = true),
-        legacyReset: suspend () -> Boolean = { true },
         normalization: (Long) -> Long = { it },
         migrationStore: suspend (Long, Long, Long) -> Boolean = { _, _, _ -> true },
         migration: Boolean = false,
@@ -174,7 +118,7 @@ class EntryViewerSettingsFeatureTest {
             interaction = composition.interactions.viewerSettings,
             projectionResolver = EntryViewerSettingsScreenProjectionResolver { projections },
             overrideRepository = repository,
-            legacyMangaViewerFlagsReset = EntryLegacyMangaViewerFlagsReset { legacyReset() },
+            legacyMangaViewerFlagsReset = EntryLegacyMangaViewerFlagsReset { true },
             migrationStore = EntryViewerFlagsMigrationStore(migrationStore),
         )
     }

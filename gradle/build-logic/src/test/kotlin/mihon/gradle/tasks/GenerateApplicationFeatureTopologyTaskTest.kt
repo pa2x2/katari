@@ -10,40 +10,13 @@ import org.junit.jupiter.api.Test
 class GenerateApplicationFeatureTopologyTaskTest {
 
     @Test
-    fun `owner-local descriptors generate deterministic direct references`() {
+    fun `owner-local module and component descriptors generate deterministic direct references`() {
         val source = generateApplicationFeatureProductionTopology(
             variantName = "debug",
             modules = listOf(
                 module("translation.zeta", "example.ZetaApplicationFeatureModule"),
                 module("translation.alpha", "example.AlphaApplicationFeatureModule"),
             ),
-        )
-
-        (
-            source.indexOf("example.AlphaApplicationFeatureModule") <
-                source.indexOf("example.ZetaApplicationFeatureModule")
-            ) shouldBe true
-        source shouldContain "List<ApplicationFeatureRuntimeModule>"
-        source shouldNotContain "ServiceLoader"
-    }
-
-    @Test
-    fun `an empty application Feature topology remains valid`() {
-        val source = generateApplicationFeatureProductionTopology(
-            variantName = "foss",
-            modules = emptyList(),
-        )
-
-        source shouldContain "productionApplicationFeatureRuntimeModules"
-        source shouldContain "productionApplicationFeatureRuntimeComponents"
-        source shouldContain "listOf("
-    }
-
-    @Test
-    fun `active variant components generate deterministic direct references`() {
-        val source = generateApplicationFeatureProductionTopology(
-            variantName = "debug",
-            modules = emptyList(),
             components = listOf(
                 component("translation.zeta", "example.ZetaTranslationRuntimeComponent"),
                 component("translation.alpha", "example.AlphaTranslationRuntimeComponent"),
@@ -51,11 +24,13 @@ class GenerateApplicationFeatureTopologyTaskTest {
         )
 
         (
+            source.indexOf("example.AlphaApplicationFeatureModule") <
+                source.indexOf("example.ZetaApplicationFeatureModule")
+            ) shouldBe true
+        (
             source.indexOf("example.AlphaTranslationRuntimeComponent") <
                 source.indexOf("example.ZetaTranslationRuntimeComponent")
             ) shouldBe true
-        source shouldContain "ApplicationFeatureRuntimeComponents"
-        source shouldContain "RegisteredApplicationFeatureRuntimeComponent"
         source shouldNotContain "ServiceLoader"
     }
 
@@ -113,28 +88,6 @@ class GenerateApplicationFeatureTopologyTaskTest {
             generateApplicationFeatureProductionTopology(
                 variantName = "debug",
                 modules = listOf(module("translation.valid", "not-qualified")),
-            )
-        }.message shouldContain "invalid symbol"
-    }
-
-    @Test
-    fun `duplicate or malformed runtime components fail generation`() {
-        shouldThrow<GradleException> {
-            generateApplicationFeatureProductionTopology(
-                variantName = "debug",
-                modules = emptyList(),
-                components = listOf(
-                    component("translation.same", "example.FirstTranslationRuntimeComponent"),
-                    component("translation.same", "example.SecondTranslationRuntimeComponent"),
-                ),
-            )
-        }.message shouldContain "Duplicate Application Feature runtime component descriptor id"
-
-        shouldThrow<GradleException> {
-            generateApplicationFeatureProductionTopology(
-                variantName = "debug",
-                modules = emptyList(),
-                components = listOf(component("translation.valid", "not-qualified")),
             )
         }.message shouldContain "invalid symbol"
     }

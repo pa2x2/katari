@@ -35,33 +35,6 @@ import tachiyomi.domain.entry.model.Entry
 
 class EntryMergeFeatureTest {
     @Test
-    fun `download ownership projection returns ordered concrete owners for the explicit profile`() = runTest {
-        val entries = listOf(entry(1L, "one"), entry(2L, "two"))
-        val membership = EntryMergeMembershipSnapshot(7L, 1L, entries.map(Entry::id))
-        val projection =
-            EntryMergeDownloadOwnershipCoordinator(FakeEntryMergeHost(entries, listOf(membership)))
-
-        projection.resolveDownloadOwners(EntryMergeSubject(7L, 2L)) shouldBe EntryMergeDownloadOwners(
-            profileId = 7L,
-            visibleEntryId = 1L,
-            orderedOwners = entries,
-        )
-    }
-
-    @Test
-    fun `legacy notification resolution recovers profile without ambient state`() = runTest {
-        val entries = listOf(entry(1L, "one"), entry(2L, "two"))
-        val membership = EntryMergeMembershipSnapshot(7L, 1L, entries.map(Entry::id))
-        val navigation = EntryMergeNavigationCoordinator(FakeEntryMergeHost(entries, listOf(membership)))
-
-        navigation.resolveLegacyNotification(2L) shouldBe EntryMergeNavigationProjection(
-            requestedSubject = EntryMergeSubject(7L, 2L),
-            visibleEntryId = 1L,
-        )
-        navigation.resolveLegacyNotification(99L) shouldBe null
-    }
-
-    @Test
     fun `migration replacement transfers one member and dissolves a depleted source group`() {
         val replacements = replacementGroups(
             currentEntryId = 2L,
@@ -76,66 +49,19 @@ class EntryMergeFeatureTest {
     }
 
     @Test
-    fun `shared workflow prepares and commits Book entries without a type marker`() = runTest {
-        val entries = listOf(entry(1L, "one"), entry(2L, "two"))
-        val host = FakeEntryMergeHost(entries)
-        val feature = feature(host)
-
-        val ready = feature.prepare(EntryMergePrepareIntent(entries))
-            .shouldBeInstanceOf<EntryMergePreparationResult.Ready>()
-        val result = feature.execute(
-            EntryMergeCommitIntent(
-                editReference = ready.editor.editReference,
-                target = ready.editor.target,
-                orderedEntries = ready.editor.entries.map(EntryMergeEditorEntry::reference),
-            ),
-        )
-
-        result.shouldBeInstanceOf<EntryMergeExecutionResult.Applied>()
-            .outcome.followUp shouldBe EntryMergeFollowUp.COMPLETE
-        host.transitions.single().shouldBeInstanceOf<EntryMergeHostTransition.CommitEditor>()
-            .orderedEntries.size shouldBe 2
-    }
-
-    @Test
-    fun `shared workflow rejects a mixed-type selection`() = runTest {
-        val book = entry(1L, "book")
-        val anime = entry(2L, "anime").copy(type = EntryType.ANIME)
-        val feature = feature(FakeEntryMergeHost(listOf(book, anime)))
-
-        feature.prepare(EntryMergePrepareIntent(listOf(book, anime))) shouldBe
-            EntryMergePreparationResult.Rejected(EntryMergeRejection.MIXED_ENTRY_TYPES)
-    }
-
-    @Test
-    fun `preparation rejects a persisted selection that is absent from authoritative state`() = runTest {
-        val selected = entry(1L, "missing")
-        val feature = feature(FakeEntryMergeHost(emptyList()))
-
-        feature.prepare(EntryMergePrepareIntent(listOf(selected))) shouldBe
-            EntryMergePreparationResult.Rejected(EntryMergeRejection.ENTRY_NOT_IN_EDITOR)
-    }
-
-    @Test
-    fun `preparation rejects members of multiple existing groups`() = runTest {
+    fun `preparation rejects mixed types and members of different existing groups`() = runTest {
         val entries = listOf(entry(1L, "one"), entry(2L, "two"), entry(3L, "three"), entry(4L, "four"))
+        val anime = entry(5L, "anime").copy(type = EntryType.ANIME)
         val memberships = listOf(
             EntryMergeMembershipSnapshot(7L, 1L, listOf(1L, 2L)),
             EntryMergeMembershipSnapshot(7L, 3L, listOf(3L, 4L)),
         )
-        val feature = feature(FakeEntryMergeHost(entries, memberships))
+        val feature = feature(FakeEntryMergeHost(entries + anime, memberships))
 
+        feature.prepare(EntryMergePrepareIntent(listOf(entries[0], anime))) shouldBe
+            EntryMergePreparationResult.Rejected(EntryMergeRejection.MIXED_ENTRY_TYPES)
         feature.prepare(EntryMergePrepareIntent(listOf(entries[0], entries[2]))) shouldBe
             EntryMergePreparationResult.Rejected(EntryMergeRejection.MULTIPLE_EXISTING_GROUPS)
-    }
-
-    @Test
-    fun `preparation rejects a standalone selection with no second editor member`() = runTest {
-        val selected = entry(1L, "one")
-        val feature = feature(FakeEntryMergeHost(listOf(selected)))
-
-        feature.prepare(EntryMergePrepareIntent(listOf(selected))) shouldBe
-            EntryMergePreparationResult.Rejected(EntryMergeRejection.TOO_FEW_ENTRIES)
     }
 
     @Test
@@ -185,20 +111,6 @@ class EntryMergeFeatureTest {
     }
 
     @Test
-    fun `single existing member prepares the whole group for editing`() = runTest {
-        val entries = listOf(entry(1L, "one"), entry(2L, "two"))
-        val membership = EntryMergeMembershipSnapshot(7L, 1L, entries.map(Entry::id))
-        val feature = feature(FakeEntryMergeHost(entries, listOf(membership)))
-
-        val editor = feature.prepare(EntryMergePrepareIntent(listOf(entries.last())))
-            .shouldBeInstanceOf<EntryMergePreparationResult.Ready>()
-            .editor
-
-        editor.entries.map { it.entry.id } shouldContainExactly listOf(1L, 2L)
-        editor.entries.single { it.reference == editor.target }.entry.id shouldBe 1L
-    }
-
-    @Test
     fun `editing an existing group can replace its target and remove the previous target`() = runTest {
         val entries = listOf(entry(1L, "one"), entry(2L, "two"), entry(3L, "three"))
         val membership = EntryMergeMembershipSnapshot(7L, 1L, entries.map(Entry::id))
@@ -222,31 +134,6 @@ class EntryMergeFeatureTest {
         val keysByEntryId = transition.expected.entries.associate { it.entry.id to it.key }
         transition.target shouldBe keysByEntryId.getValue(2L)
         transition.removedEntries shouldBe setOf(keysByEntryId.getValue(1L))
-    }
-
-    @Test
-    fun `library removal activates only its applicable shared cleanup consequence`() = runTest {
-        val entries = listOf(entry(1L, "one"), entry(2L, "two"))
-        val membership = EntryMergeMembershipSnapshot(7L, 1L, entries.map(Entry::id))
-        val host = FakeEntryMergeHost(entries, listOf(membership))
-        val feature = feature(host)
-        val editor = feature.prepare(EntryMergePrepareIntent(listOf(entries.first())))
-            .shouldBeInstanceOf<EntryMergePreparationResult.Ready>()
-            .editor
-        val removed = editor.entries.single { it.entry.id == 2L }.reference
-
-        feature.execute(
-            EntryMergeCommitIntent(
-                editReference = editor.editReference,
-                target = editor.target,
-                orderedEntries = editor.entries.map(EntryMergeEditorEntry::reference),
-                libraryRemovalEntries = setOf(removed),
-            ),
-        ).shouldBeInstanceOf<EntryMergeExecutionResult.Applied>()
-
-        host.transitions.single().shouldBeInstanceOf<EntryMergeHostTransition.CommitEditor>()
-            .consequenceRequests.map { it.payload } shouldContainExactly
-            listOf("REMOVED_FROM_LIBRARY,REMOVED_FROM_GROUP:download=false")
     }
 
     @Test

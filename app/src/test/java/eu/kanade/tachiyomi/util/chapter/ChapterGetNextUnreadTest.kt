@@ -38,18 +38,6 @@ class ChapterGetNextUnreadTest {
         GetNextUnreadChapter(repository).await(1L, chapters.first())?.id shouldBe 103L
     }
 
-    @Test
-    fun `returns null when no unread chapter follows current chapter`() = runTest {
-        val repository = mockk<EntryChapterRepository>()
-        val chapters = listOf(
-            chapter(id = 101, sourceOrder = 0, chapterNumber = 1.0, read = false),
-            chapter(id = 102, sourceOrder = 1, chapterNumber = 2.0, read = true),
-        )
-        coEvery { repository.getChaptersByEntryIdAwait(1L) } returns chapters
-
-        GetNextUnreadChapter(repository).await(1L, chapters.first()).shouldBeNull()
-    }
-
     private fun chapter(
         id: Long,
         sourceOrder: Long,

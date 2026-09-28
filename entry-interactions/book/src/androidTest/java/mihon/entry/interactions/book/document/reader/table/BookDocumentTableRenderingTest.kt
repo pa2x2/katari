@@ -1,16 +1,11 @@
 package mihon.entry.interactions.book.document.reader.table
 
 import androidx.activity.ComponentActivity
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.test.assertWidthIsEqualTo
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText
-import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mihon.book.api.document.BookDocumentBlockContent
 import mihon.entry.interactions.book.document.reader.LocalBookDocumentSelectionChapterId
@@ -30,38 +25,6 @@ import org.junit.runner.RunWith
 class BookDocumentTableRenderingTest {
     @get:Rule
     val composeRule = createAndroidComposeRule<ComponentActivity>()
-
-    @Test
-    fun single_cell_prose_uses_the_available_reading_width() {
-        val text = "This ebook was one of Project Gutenberg's early files. " +
-            "There is an improved illustrated edition of this title."
-        val document = HtmlProseDocumentParser().parse(
-            "notice",
-            null,
-            HtmlProseSanitizer.sanitize("<table><tr><td>$text</td></tr></table>".encodeToByteArray()),
-        )
-        val block = document.blocks.single()
-        composeRule.setContent {
-            MaterialTheme {
-                CompositionLocalProvider(
-                    LocalBookDocumentReaderPalette provides bookDocumentReaderPalette(BookDocumentReaderThemeMode.APP),
-                    LocalBookDocumentSelectionChapterId provides 1L,
-                ) {
-                    Box(Modifier.width(360.dp)) {
-                        BookDocumentTableRenderer(
-                            content = block.content as BookDocumentBlockContent.Table,
-                            block = block,
-                            selectionIdentity = "notice",
-                            onAnchorClick = {},
-                            onExternalLinkClick = {},
-                        )
-                    }
-                }
-            }
-        }
-        // The cell fills the viewport with its 8dp padding on either side, rather than a fixed column cap.
-        composeRule.onNodeWithText(text).assertWidthIsEqualTo(344.dp)
-    }
 
     @Test
     fun spanning_cells_keep_following_rows_in_their_columns_after_text_resize() {

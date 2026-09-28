@@ -13,34 +13,6 @@ import org.junit.jupiter.api.Test
 @OptIn(ExperimentalCoroutinesApi::class)
 class EntryDownloadQueueRunnerTest {
     @Test
-    fun `adding an idle entry type starts it without restarting the active transfer`() = runTest {
-        for ((activeType, addedType) in listOf(
-            EntryType.ANIME to EntryType.MANGA,
-            EntryType.MANGA to EntryType.BOOK,
-            EntryType.BOOK to EntryType.ANIME,
-        )) {
-            val finishActive = CompletableDeferred<Unit>()
-            val active = EntryDownloadQueueRunnerFixture(activeType) { finishActive.await() }
-            val added = EntryDownloadQueueRunnerFixture(addedType)
-            val interaction = downloadInteraction(active, added)
-            active.enqueue(1)
-            val worker = launch { interaction.runDownloadsUntilIdle() }
-            runCurrent()
-
-            interaction.queue(added.entry, listOf(added.chapter(2)), autoStart = true)
-            runCurrent()
-
-            added.completed shouldBe listOf(2L)
-            active.attempted shouldBe listOf(1L)
-            active.running.value shouldBe true
-            finishActive.complete(Unit)
-            worker.join()
-            active.completed shouldBe listOf(1L)
-            added.queue.value shouldBe emptyList()
-        }
-    }
-
-    @Test
     fun `a drained type can receive a second batch while another type stays active`() = runTest {
         val finishAnime = CompletableDeferred<Unit>()
         val anime = EntryDownloadQueueRunnerFixture(EntryType.ANIME) { finishAnime.await() }

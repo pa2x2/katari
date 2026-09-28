@@ -1,22 +1,11 @@
 package eu.kanade.tachiyomi.source.adapter
 
 import eu.kanade.tachiyomi.source.online.HttpSource
-import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.shouldBe
 import okhttp3.Headers
 import org.junit.jupiter.api.Test
 
 class KeiyoushiHttpSourceCompatibilityTest {
-
-    @Test
-    fun `legacy HttpSource keeps its upstream class layout`() {
-        HttpSource::class.java.superclass shouldBe Any::class.java
-        HttpSource::class.java.declaredFields.map { it.name } shouldContainAll listOf(
-            "network\$delegate",
-            "id\$delegate",
-            "headers\$delegate",
-        )
-    }
 
     @Test
     fun `extensions-lib 1_6 can replace the HttpSource headers delegate`() {

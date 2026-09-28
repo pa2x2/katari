@@ -38,71 +38,49 @@ import kotlin.test.assertTrue
 
 internal class BookReaderProgressPersistenceTest : BookReaderSessionFixture() {
     @Test
-    fun `completed book progress reopens from the beginning`() = runTest {
-        val locator = BookLocator("chapter-1.xhtml", progression = 0.8)
-        val session = openWithProgress(
+    fun `completed progress and progress of a read child reopen from the beginning`() = runTest {
+        val completed = openWithProgress(
             chapter = chapter(),
-            progress = bookProgress(locator, completed = true),
+            progress = bookProgress(BookLocator("chapter-1.xhtml", progression = 0.8), completed = true),
         )
+        assertNull(completed.initialLocator)
+        completed.close()
 
-        assertNull(session.initialLocator)
-        session.close()
-    }
-
-    @Test
-    fun `read child ignores an inconsistent incomplete locator`() = runTest {
-        val locator = BookLocator("chapter-1.xhtml", progression = 0.4)
-        val session = openWithProgress(
+        val inconsistent = openWithProgress(
             chapter = chapter().copy(read = true),
-            progress = bookProgress(locator, completed = false),
+            progress = bookProgress(BookLocator("chapter-1.xhtml", progression = 0.4), completed = false),
         )
-
-        assertNull(session.initialLocator)
-        session.close()
+        assertNull(inconsistent.initialLocator)
+        inconsistent.close()
     }
 
     @Test
-    fun `current saved locator is reconciled against the prepared model`() = runTest {
+    fun `saved locator is reconciled against the prepared model and discarded when that fails`() = runTest {
         val sourceLocator = BookLocator("old-chapter.xhtml", progression = 0.4, totalProgression = 0.3)
         val targetLocator = BookLocator("new-chapter.xhtml", progression = 0.45, totalProgression = 0.3)
-        val session = openWithProgress(
-            chapter = chapter(),
-            progress = bookProgress(sourceLocator, completed = false),
-            preparedPublication = MigratingPublicationSession(targetLocator),
+        val progress = bookProgress(sourceLocator, completed = false)
+
+        val reconciled = openWithProgress(chapter(), progress, MigratingPublicationSession(targetLocator))
+        assertEquals(targetLocator, reconciled.initialLocator)
+        reconciled.close()
+
+        val failing = openWithProgress(
+            chapter(),
+            progress,
+            LocatorRestorationPublicationSession("chapter.xhtml") { error("reconciliation unavailable") },
         )
+        assertNull(failing.initialLocator)
+        failing.close()
 
-        assertEquals(targetLocator, session.initialLocator)
-        session.close()
-    }
-
-    @Test
-    fun `failed saved locator reconciliation does not prevent content from opening`() = runTest {
-        val sourceLocator = BookLocator("old-chapter.xhtml", progression = 0.4)
-        val session = openWithProgress(
-            chapter = chapter(),
-            progress = bookProgress(sourceLocator, completed = false),
-            preparedPublication = LocatorRestorationPublicationSession("chapter.xhtml") {
-                error("reconciliation unavailable")
-            },
-        )
-
-        assertNull(session.initialLocator)
-        session.close()
-    }
-
-    @Test
-    fun `invalid reconciled saved locator is discarded`() = runTest {
-        val sourceLocator = BookLocator("old-chapter.xhtml", progression = 0.4)
-        val session = openWithProgress(
-            chapter = chapter(),
-            progress = bookProgress(sourceLocator, completed = false),
-            preparedPublication = LocatorRestorationPublicationSession("chapter.xhtml") {
+        val stale = openWithProgress(
+            chapter(),
+            progress,
+            LocatorRestorationPublicationSession("chapter.xhtml") {
                 BookLocator("still-stale.xhtml", progression = 0.4)
             },
         )
-
-        assertNull(session.initialLocator)
-        session.close()
+        assertNull(stale.initialLocator)
+        stale.close()
     }
 
     @Test

@@ -30,12 +30,10 @@ import mihon.entry.interactions.book.processor.BookReaderProcessor
 import mihon.entry.interactions.book.processor.BookReaderProcessorRegistry
 import mihon.entry.interactions.book.processor.BookReaderRequest
 import mihon.entry.interactions.book.state.BookProgressLocatorCodec
-import mihon.entry.viewer.settings.shared.ReaderCapabilityId
 import okhttp3.OkHttpClient
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.EntryProgressState
-import java.io.IOException
 import java.nio.file.Files
 import kotlin.test.assertIs
 
@@ -138,25 +136,18 @@ internal abstract class BookReaderSessionFixture {
         coEvery { cache.getVerified(any()) } returns null
         return cache
     }
-
-    protected fun failingDownloadCache(): BookDownloadCache = mockk {
-        coEvery { getVerified(any()) } throws IOException("storage unavailable")
-    }
 }
 internal class SessionFactoryTestPreparer(
     private val preparedPublication: PreparedBookPublication,
 ) : BookContentPreparer {
     override val id = "test.prose-preparer"
     override val outputModel = preparedPublication.model.descriptor
-    var contentSession: BookContentSession? = null
 
     override fun supports(descriptor: BookContentDescriptor): Boolean =
         descriptor.format == "text/html"
 
-    override suspend fun prepare(content: BookContentSession): BookPreparationResult {
-        contentSession = content
-        return BookPreparationResult.Success(preparedPublication)
-    }
+    override suspend fun prepare(content: BookContentSession): BookPreparationResult =
+        BookPreparationResult.Success(preparedPublication)
 }
 
 internal class SessionFactoryTestReaderProcessor(
@@ -164,7 +155,6 @@ internal class SessionFactoryTestReaderProcessor(
 ) : BookReaderProcessor {
     override val id = "test.prose-reader"
     override val displayName = "Test prose"
-    var receivedModel: BookPublicationModel? = null
 
     override fun supports(model: BookPublicationModelDescriptor): Boolean = model == supportedModel
 
@@ -173,11 +163,6 @@ internal class SessionFactoryTestReaderProcessor(
         request: BookReaderRequest,
         sessionToken: String,
     ): Intent = Intent()
-
-    override fun readerCapabilities(model: BookPublicationModel): Set<ReaderCapabilityId> {
-        receivedModel = model
-        return emptySet()
-    }
 }
 
 internal class TestPublicationSession(
@@ -194,13 +179,9 @@ internal class TestPublicationSession(
         readingOrder = readingOrder,
         navigation = emptyList(),
     )
-    var closeCount = 0
-
     override fun validate(locator: BookLocator): Boolean = true
 
-    override fun close() {
-        closeCount++
-    }
+    override fun close() = Unit
 }
 
 internal class MigratingPublicationSession(

@@ -7,24 +7,15 @@ import tachiyomi.domain.chapter.model.Chapter
 class ChapterRemoveDuplicatesTest {
 
     @Test
-    fun `keeps same-number chapters from different merged members`() {
-        val currentChapter = chapter(id = 101, mangaId = 1, chapterNumber = 1.0, scanlator = "A")
-        val mergedMemberChapter = chapter(id = 201, mangaId = 2, chapterNumber = 1.0, scanlator = "B")
-
-        listOf(currentChapter, mergedMemberChapter)
-            .removeDuplicates(currentChapter)
-            .map(Chapter::id) shouldBe listOf(101L, 201L)
-    }
-
-    @Test
-    fun `removes same-number duplicates within the same manga`() {
+    fun `removes same-number duplicates within a manga but keeps them across merged members`() {
         val currentChapter = chapter(id = 101, mangaId = 1, chapterNumber = 1.0, scanlator = "A")
         val duplicateChapter = chapter(id = 102, mangaId = 1, chapterNumber = 1.0, scanlator = "B")
         val nextChapter = chapter(id = 103, mangaId = 1, chapterNumber = 2.0, scanlator = null)
+        val mergedMemberChapter = chapter(id = 201, mangaId = 2, chapterNumber = 1.0, scanlator = "B")
 
-        listOf(currentChapter, duplicateChapter, nextChapter)
+        listOf(currentChapter, duplicateChapter, nextChapter, mergedMemberChapter)
             .removeDuplicates(currentChapter)
-            .map(Chapter::id) shouldBe listOf(101L, 103L)
+            .map(Chapter::id) shouldBe listOf(101L, 103L, 201L)
     }
 
     private fun chapter(

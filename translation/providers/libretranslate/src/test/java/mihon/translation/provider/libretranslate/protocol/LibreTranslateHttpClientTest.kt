@@ -1,7 +1,6 @@
 package mihon.translation.provider.libretranslate.protocol
 
 import io.kotest.assertions.throwables.shouldThrow
-import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldNotContain
@@ -21,55 +20,6 @@ import org.junit.jupiter.api.Test
 import java.util.concurrent.TimeUnit
 
 class LibreTranslateHttpClientTest {
-
-    @Test
-    fun `language capabilities come from the provider catalog`() = runTest {
-        MockWebServer().use { server ->
-            server.enqueue(
-                MockResponse.Builder()
-                    .body(
-                        """
-                        [
-                          {"code":"en","name":"English","targets":["fr","pl"]},
-                          {"code":"fr","name":"French","targets":["en"]}
-                        ]
-                        """.trimIndent(),
-                    )
-                    .build(),
-            )
-
-            val languages = client(server).languages()
-
-            languages shouldContainExactly listOf(
-                LibreTranslateLanguage("en", "English", setOf("fr", "pl")),
-                LibreTranslateLanguage("fr", "French", setOf("en")),
-            )
-            server.takeRequest().apply {
-                method shouldBe "GET"
-                url.encodedPath shouldBe "/languages"
-            }
-        }
-    }
-
-    @Test
-    fun `translation uses the LibreTranslate JSON contract`() = runTest {
-        MockWebServer().use { server ->
-            server.enqueue(
-                MockResponse.Builder()
-                    .body("""{"translatedText":"Bonjour"}""")
-                    .build(),
-            )
-
-            client(server).translate("Hello", "en", "fr") shouldBe "Bonjour"
-
-            server.takeRequest().apply {
-                method shouldBe "POST"
-                url.encodedPath shouldBe "/translate"
-                body?.utf8() shouldBe
-                    """{"q":"Hello","source":"en","target":"fr"}"""
-            }
-        }
-    }
 
     @Test
     fun `response bodies are consumed away from the caller thread`() = runTest {
@@ -119,7 +69,7 @@ class LibreTranslateHttpClientTest {
     }
 
     @Test
-    fun `optional API key is sent only in the translation body`() = runTest {
+    fun `translation uses the LibreTranslate JSON contract with the API key only in the body`() = runTest {
         MockWebServer().use { server ->
             server.enqueue(
                 MockResponse.Builder()
@@ -136,6 +86,8 @@ class LibreTranslateHttpClientTest {
             client.translate("Hello", "en", "fr") shouldBe "Bonjour"
 
             server.takeRequest().apply {
+                method shouldBe "POST"
+                url.encodedPath shouldBe "/translate"
                 url.query shouldBe null
                 body?.utf8() shouldBe
                     """{"q":"Hello","source":"en","target":"fr","api_key":"private-key"}"""

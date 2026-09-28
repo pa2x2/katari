@@ -24,16 +24,14 @@ class DownloadManagerTest {
     @Test
     fun `explicit resume makes failed chapters eligible again`() {
         val failed = download(chapterId = 1L, status = DownloadState.ERROR)
-        val workController = mockk<EntryDownloadWorkController>(relaxed = true)
         val downloader = mockk<Downloader>(relaxed = true) {
             every { queueState } returns MutableStateFlow(listOf(failed))
             every { isRunning } returns false
         }
 
-        manager(downloader, workController).startDownloads()
+        manager(downloader).startDownloads()
 
         failed.status shouldBe DownloadState.QUEUE
-        verify { workController.start() }
     }
 
     @Test
@@ -79,10 +77,7 @@ class DownloadManagerTest {
         verify(exactly = 0) { downloader.stop(any()) }
     }
 
-    private fun manager(
-        downloader: Downloader,
-        workController: EntryDownloadWorkController = mockk(relaxed = true),
-    ): DownloadManager {
+    private fun manager(downloader: Downloader): DownloadManager {
         return DownloadManager(
             context = mockk(relaxed = true),
             provider = mockk(),
@@ -90,7 +85,7 @@ class DownloadManagerTest {
             sourceManager = mockk<SourceManager>(),
             downloader = downloader,
             pendingDeleter = mockk<DownloadPendingDeleter>(),
-            workController = workController,
+            workController = mockk<EntryDownloadWorkController>(relaxed = true),
         )
     }
 

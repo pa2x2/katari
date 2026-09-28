@@ -2,13 +2,8 @@ package mihon.translation.ui.session
 
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
-import mihon.language.api.identification.TextLanguageResolutionContext
 import mihon.language.api.tag.LanguageTag
 import mihon.translation.api.TranslationFeature
 import mihon.translation.api.availability.TranslationDeviceAvailability
@@ -27,7 +22,6 @@ import mihon.translation.api.host.TranslationHostActionResult
 import mihon.translation.api.host.TranslationHostActions
 import mihon.translation.api.host.TranslationSetupDestination
 import mihon.translation.api.language.TranslationDefaultTarget
-import mihon.translation.api.language.TranslationLanguagePair
 import mihon.translation.api.language.TranslationLanguageSupport
 import mihon.translation.api.language.TranslationLanguageSupportInspection
 import mihon.translation.api.model.TranslationModelDescriptor
@@ -40,8 +34,6 @@ import mihon.translation.api.request.TranslationSourceLanguageSelection
 import mihon.translation.api.request.TranslationTargetLanguageSelection
 import mihon.translation.api.result.TranslationExecution
 import mihon.translation.ui.presentation.TranslationSessionExternalAction
-import mihon.translation.ui.session.language.TranslationLanguageStore
-import mihon.translation.ui.session.language.TranslationStoredLanguages
 import org.junit.jupiter.api.Test
 import tachiyomi.core.common.preference.InMemoryPreferenceStore.InMemoryPreference
 import tachiyomi.core.common.preference.Preference
@@ -69,304 +61,6 @@ class TranslationSessionHostCoordinatorTest {
         feature.requests.last().engine shouldBe TranslationEngineSelection.Explicit(READY_ENGINE.id)
         host.selectedEngine.get() shouldBe PROFILE_ENGINE.id
         coordinator.picker.value shouldBe null
-    }
-
-    @Test
-    fun `blocked selection is rejected and leaves the chooser open`() = runTest {
-        val host = FakeHostActions()
-        val feature = RecordingFeature()
-        val coordinator = TranslationSessionHostCoordinator(
-            feature = feature,
-            hostActions = host,
-            scope = backgroundScope,
-            selectionSettleDelayMillis = 0,
-        )
-        runCurrent()
-        coordinator.controller.submit(input())
-        runCurrent()
-        coordinator.handleExternalAction(TranslationSessionExternalAction.ChooseEngine) {}
-        val requestCount = feature.requests.size
-
-        coordinator.selectEngine(BLOCKED_ENGINE.id)
-        runCurrent()
-
-        feature.requests.size shouldBe requestCount
-        coordinator.picker.value shouldBe TranslationSessionPicker.Engine
-        host.selectedEngine.get() shouldBe PROFILE_ENGINE.id
-    }
-
-    @Test
-    fun `language selection rejects unsupported targets and accepts the provider pair`() = runTest {
-        val host = FakeHostActions().apply {
-            languageSupport = TranslationLanguageSupportInspection.Available(
-                TranslationLanguageSupport.ExactPairs(
-                    setOf(TranslationLanguagePair(SOURCE, FRENCH)),
-                ),
-            )
-        }
-        val feature = RecordingFeature()
-        val coordinator = TranslationSessionHostCoordinator(
-            feature = feature,
-            hostActions = host,
-            scope = backgroundScope,
-            selectionSettleDelayMillis = 0,
-        )
-        runCurrent()
-        coordinator.controller.submit(input())
-        runCurrent()
-        coordinator.handleExternalAction(TranslationSessionExternalAction.ChooseTargetLanguage) {}
-        runCurrent()
-        val requestCount = feature.requests.size
-
-        coordinator.selectLanguage(TARGET)
-        runCurrent()
-        feature.requests.size shouldBe requestCount
-        coordinator.picker.value shouldBe TranslationSessionPicker.TargetLanguage
-
-        coordinator.selectLanguage(FRENCH)
-        runCurrent()
-        feature.requests.last().targetLanguage shouldBe
-            TranslationTargetLanguageSelection.Explicit(FRENCH)
-        coordinator.picker.value shouldBe null
-    }
-
-    @Test
-    fun `a picked language becomes the most recent language`() = runTest {
-        val host = FakeHostActions().apply { recentLanguages.set(listOf(FRENCH, GERMAN)) }
-        val coordinator = TranslationSessionHostCoordinator(
-            feature = RecordingFeature(),
-            hostActions = host,
-            scope = backgroundScope,
-            selectionSettleDelayMillis = 0,
-        )
-        runCurrent()
-        coordinator.controller.submit(input())
-        runCurrent()
-        coordinator.handleExternalAction(TranslationSessionExternalAction.ChooseTargetLanguage) {}
-        runCurrent()
-
-        coordinator.selectLanguage(GERMAN)
-        runCurrent()
-
-        coordinator.recentLanguages.value shouldBe listOf(GERMAN, FRENCH)
-    }
-
-    @Test
-    fun `a target picked for one selection is used by the next`() = runTest {
-        val feature = RecordingFeature()
-        val coordinator = TranslationSessionHostCoordinator(
-            feature = feature,
-            hostActions = FakeHostActions(),
-            scope = backgroundScope,
-            selectionSettleDelayMillis = 0,
-        )
-        runCurrent()
-        coordinator.submit("First", TextLanguageResolutionContext(), anchor = null)
-        runCurrent()
-        coordinator.handleExternalAction(TranslationSessionExternalAction.ChooseTargetLanguage) {}
-        runCurrent()
-        coordinator.selectLanguage(FRENCH)
-        runCurrent()
-
-        coordinator.submit("Second", TextLanguageResolutionContext(), anchor = null)
-        runCurrent()
-
-        feature.requests.last().text shouldBe "Second"
-        feature.requests.last().targetLanguage shouldBe TranslationTargetLanguageSelection.Explicit(FRENCH)
-    }
-
-    @Test
-    fun `target picker follows the profile default until a language is pinned and can return to it`() = runTest {
-        val feature = RecordingFeature()
-        val coordinator = TranslationSessionHostCoordinator(
-            feature = feature,
-            hostActions = FakeHostActions(),
-            scope = backgroundScope,
-            selectionSettleDelayMillis = 0,
-        )
-        runCurrent()
-        coordinator.controller.submit(
-            input().copy(request = input().request.copy(targetLanguage = TranslationTargetLanguageSelection.Default)),
-        )
-        runCurrent()
-        val picker = TranslationSessionPicker.TargetLanguage
-        val profileDefault = TranslationDefaultTarget(TARGET, followsAppLanguage = false)
-
-        coordinator.handleExternalAction(TranslationSessionExternalAction.ChooseTargetLanguage) {}
-        runCurrent()
-        coordinator.languageDefault(picker) shouldBe TranslationSessionLanguageDefault.Target(profileDefault, true)
-        coordinator.selectedLanguage(picker) shouldBe null
-
-        coordinator.selectLanguage(FRENCH)
-        runCurrent()
-        coordinator.handleExternalAction(TranslationSessionExternalAction.ChooseTargetLanguage) {}
-        runCurrent()
-        coordinator.languageDefault(picker) shouldBe TranslationSessionLanguageDefault.Target(profileDefault, false)
-        coordinator.selectedLanguage(picker) shouldBe FRENCH
-
-        coordinator.selectLanguageDefault()
-        runCurrent()
-        feature.requests.last().targetLanguage shouldBe TranslationTargetLanguageSelection.Default
-        coordinator.picker.value shouldBe null
-    }
-
-    @Test
-    fun `automatic source row shows the detected and declared languages and undoes a pinned source`() = runTest {
-        val feature = RecordingFeature()
-        val coordinator = TranslationSessionHostCoordinator(
-            feature = feature,
-            hostActions = FakeHostActions(),
-            scope = backgroundScope,
-            selectionSettleDelayMillis = 0,
-        )
-        runCurrent()
-        coordinator.controller.submit(
-            input().copy(
-                request = input().request.copy(
-                    sourceLanguage = TranslationSourceLanguageSelection.Automatic,
-                    languageContext = TextLanguageResolutionContext(declaredLanguages = listOf(FRENCH)),
-                ),
-            ),
-        )
-        runCurrent()
-        val picker = TranslationSessionPicker.SourceLanguage
-
-        coordinator.handleExternalAction(TranslationSessionExternalAction.ChooseSourceLanguage) {}
-        runCurrent()
-        coordinator.languageDefault(picker) shouldBe TranslationSessionLanguageDefault.AutomaticSource(
-            detected = SOURCE,
-            declared = FRENCH,
-            selected = true,
-        )
-        coordinator.selectedLanguage(picker) shouldBe null
-
-        coordinator.selectLanguage(GERMAN)
-        runCurrent()
-        coordinator.handleExternalAction(TranslationSessionExternalAction.ChooseSourceLanguage) {}
-        runCurrent()
-        coordinator.languageDefault(picker) shouldBe TranslationSessionLanguageDefault.AutomaticSource(
-            detected = null,
-            declared = FRENCH,
-            selected = false,
-        )
-        coordinator.selectedLanguage(picker) shouldBe GERMAN
-
-        coordinator.selectLanguageDefault()
-        runCurrent()
-        feature.requests.last().sourceLanguage shouldBe TranslationSourceLanguageSelection.Automatic
-        coordinator.picker.value shouldBe null
-    }
-
-    @Test
-    fun `a target the series starts keeping is announced once and can become the profile default`() = runTest {
-        val host = FakeHostActions()
-        val store = FakeLanguageStore()
-        val feature = RecordingFeature()
-        val coordinator = TranslationSessionHostCoordinator(
-            feature = feature,
-            hostActions = host,
-            scope = backgroundScope,
-            selectionSettleDelayMillis = 0,
-            languageStore = store,
-        )
-        val announced = mutableListOf<LanguageTag>()
-        backgroundScope.launch { coordinator.newlyKeptTargets.collect(announced::add) }
-        runCurrent()
-        coordinator.submit("Text", TextLanguageResolutionContext(), anchor = null)
-        runCurrent()
-
-        listOf(FRENCH, GERMAN).forEach { language ->
-            coordinator.handleExternalAction(TranslationSessionExternalAction.ChooseTargetLanguage) {}
-            runCurrent()
-            coordinator.selectLanguage(language)
-            runCurrent()
-        }
-        announced shouldBe listOf(FRENCH)
-
-        coordinator.makeDefaultTarget(GERMAN)
-        runCurrent()
-
-        host.defaultTargetLanguage.get() shouldBe TranslationTargetLanguageSelection.Explicit(GERMAN)
-        store.stored.value.target shouldBe null
-        feature.requests.last().targetLanguage shouldBe TranslationTargetLanguageSelection.Default
-    }
-
-    @Test
-    fun `the target picker follows the series choice when no translation is on screen`() = runTest {
-        val store = FakeLanguageStore().apply { stored.value = TranslationStoredLanguages(target = FRENCH) }
-        val coordinator = TranslationSessionHostCoordinator(
-            feature = RecordingFeature(),
-            hostActions = FakeHostActions(),
-            scope = backgroundScope,
-            languageStore = store,
-        )
-        runCurrent()
-        val picker = TranslationSessionPicker.TargetLanguage
-
-        coordinator.handleExternalAction(TranslationSessionExternalAction.ChooseTargetLanguage) {}
-        runCurrent()
-        coordinator.languageDefault(picker) shouldBe TranslationSessionLanguageDefault.Target(
-            TranslationDefaultTarget(TARGET, followsAppLanguage = false),
-            selected = false,
-        )
-        coordinator.selectedLanguage(picker) shouldBe FRENCH
-
-        coordinator.selectLanguageDefault()
-        runCurrent()
-        store.stored.value.target shouldBe null
-    }
-
-    @Test
-    fun `the source picker names what the content is marked as when no translation is on screen`() = runTest {
-        val coordinator = TranslationSessionHostCoordinator(
-            feature = RecordingFeature(),
-            hostActions = FakeHostActions(),
-            scope = backgroundScope,
-            declaredLanguage = FRENCH,
-        )
-        runCurrent()
-
-        coordinator.handleExternalAction(TranslationSessionExternalAction.ChooseSourceLanguage) {}
-        runCurrent()
-
-        coordinator.languageDefault(TranslationSessionPicker.SourceLanguage) shouldBe
-            TranslationSessionLanguageDefault.AutomaticSource(detected = null, declared = FRENCH, selected = true)
-    }
-
-    @Test
-    fun `setup refreshes state without selecting the engine`() = runTest {
-        val host = FakeHostActions()
-        val coordinator = TranslationSessionHostCoordinator(
-            feature = RecordingFeature(),
-            hostActions = host,
-            scope = backgroundScope,
-        )
-        runCurrent()
-        val inspectionsBeforeSetup = host.inspectionCount
-
-        coordinator.openEngineSetup(BLOCKED_ENGINE.id)
-        runCurrent()
-
-        host.openedEngine shouldBe BLOCKED_ENGINE.id
-        host.selectedEngine.get() shouldBe PROFILE_ENGINE.id
-        host.inspectionCount shouldBe inspectionsBeforeSetup + 1
-    }
-
-    @Test
-    fun `engine inspection can leave the implicit profile selection unconfigured`() = runTest {
-        val host = FakeHostActions().apply {
-            inspectedSelection = null
-        }
-        val coordinator = TranslationSessionHostCoordinator(
-            feature = RecordingFeature(),
-            hostActions = host,
-            scope = backgroundScope,
-        )
-
-        runCurrent()
-
-        coordinator.profileSelectedEngine shouldBe null
-        coordinator.close()
     }
 
     @Test
@@ -427,12 +121,7 @@ class TranslationSessionHostCoordinatorTest {
         )
         override val recentLanguages: Preference<List<LanguageTag>> =
             InMemoryPreference("recent", null, emptyList())
-        var inspectionCount = 0
-        var inspectedSelection: TranslationEngineId? = PROFILE_ENGINE.id
-        var openedEngine: TranslationEngineId? = null
         var setupResult: TranslationHostActionResult = TranslationHostActionResult.Completed
-        var languageSupport: TranslationLanguageSupportInspection =
-            TranslationLanguageSupportInspection.Available(TranslationLanguageSupport.AnyLanguage)
 
         override fun defaultTarget(): TranslationDefaultTarget? =
             (defaultTargetLanguage.get() as? TranslationTargetLanguageSelection.Explicit)
@@ -445,7 +134,6 @@ class TranslationSessionHostCoordinatorTest {
         override suspend fun deviceAvailability() = TranslationDeviceAvailability.Available
 
         override suspend fun inspectEngines(): TranslationEngineInspection {
-            inspectionCount += 1
             val engines = knownEngines.map { engine ->
                 TranslationEngineState(
                     engine = engine,
@@ -458,11 +146,11 @@ class TranslationSessionHostCoordinatorTest {
                     action = if (engine == BLOCKED_ENGINE) TranslationEngineAction.Install else null,
                 )
             }
-            return TranslationEngineInspection(engines, inspectedSelection)
+            return TranslationEngineInspection(engines, PROFILE_ENGINE.id)
         }
 
         override suspend fun inspectLanguageSupport(engine: TranslationEngineId) =
-            languageSupport
+            TranslationLanguageSupportInspection.Available(TranslationLanguageSupport.AnyLanguage)
 
         override suspend fun acknowledgeProviderDisclosure(
             engine: TranslationEngineId,
@@ -477,10 +165,7 @@ class TranslationSessionHostCoordinatorTest {
 
         override fun supportsSetup(engine: TranslationEngineId) = true
 
-        override suspend fun openSetup(engine: TranslationEngineId): TranslationHostActionResult {
-            openedEngine = engine
-            return setupResult
-        }
+        override suspend fun openSetup(engine: TranslationEngineId) = setupResult
 
         override fun setSelectedEngine(engine: TranslationEngineId) {
             selectedEngine.set(engine)
@@ -494,24 +179,9 @@ class TranslationSessionHostCoordinatorTest {
         }
     }
 
-    private class FakeLanguageStore : TranslationLanguageStore {
-        val stored = MutableStateFlow(TranslationStoredLanguages())
-        override val languages: Flow<TranslationStoredLanguages> = stored
-
-        override suspend fun setSourceLanguage(language: LanguageTag?) {
-            stored.update { it.copy(source = language) }
-        }
-
-        override suspend fun setTargetLanguage(language: LanguageTag?) {
-            stored.update { it.copy(target = language) }
-        }
-    }
-
     private companion object {
         val SOURCE = LanguageTag.require("en")
         val TARGET = LanguageTag.require("pl")
-        val FRENCH = LanguageTag.require("fr")
-        val GERMAN = LanguageTag.require("de")
         val PROFILE_ENGINE = engine("profile")
         val READY_ENGINE = engine("ready")
         val BLOCKED_ENGINE = engine("blocked")

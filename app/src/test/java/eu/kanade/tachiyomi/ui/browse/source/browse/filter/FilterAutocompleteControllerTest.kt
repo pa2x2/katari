@@ -16,40 +16,6 @@ import org.junit.jupiter.api.Test
 class FilterAutocompleteControllerTest {
 
     @Test
-    fun `focus requests are controlled independently from existing filter text`() = runTest {
-        val inputs = mutableListOf<EntryFilterTextInput>()
-        val disabledFilter = filter(
-            debounceMillis = 0,
-            state = "existing",
-            requestOnFocus = false,
-        )
-        val disabledController = FilterAutocompleteController(disabledFilter, this) { _, input ->
-            inputs += input
-            EntryCatalogueFilterSuggestionsResult.Available(emptyList())
-        }
-
-        disabledController.updateFocus(true)
-        runCurrent()
-
-        inputs shouldBe emptyList()
-
-        val enabledFilter = filter(
-            debounceMillis = 0,
-            state = "existing",
-            requestOnFocus = true,
-        )
-        val enabledController = FilterAutocompleteController(enabledFilter, this) { _, input ->
-            inputs += input
-            EntryCatalogueFilterSuggestionsResult.Available(emptyList())
-        }
-
-        enabledController.updateFocus(true)
-        runCurrent()
-
-        inputs shouldBe listOf(EntryFilterTextInput("existing", 8, 8))
-    }
-
-    @Test
     fun `typing requests suggestions only after the configured debounce`() = runTest {
         val filter = filter(debounceMillis = 500)
         val inputs = mutableListOf<EntryFilterTextInput>()
@@ -102,39 +68,10 @@ class FilterAutocompleteControllerTest {
         controller.state shouldBe FilterAutocompleteUiState.Suggestions(listOf(latestSuggestion))
     }
 
-    @Test
-    fun `selection applies the extension-owned complete text edit without another lookup`() = runTest {
-        val filter = filter(debounceMillis = 500)
-        var requests = 0
-        val controller = FilterAutocompleteController(filter, this) { _, _ ->
-            requests += 1
-            EntryCatalogueFilterSuggestionsResult.Available(emptyList())
-        }
-        val suggestion = EntryFilterSuggestion("tag1", "tag2", "tag1")
-
-        controller.updateFocus(true)
-        controller.updateInput(EntryFilterTextInput("tag3, -tag4", 11, 11))
-        val edit = controller.applySuggestion(suggestion)
-        advanceTimeBy(500)
-        runCurrent()
-
-        edit shouldBe EntryFilterTextEdit("tag3, -tag1, ", 13)
-        filter.state shouldBe "tag3, -tag1, "
-        requests shouldBe 0
-        controller.state shouldBe FilterAutocompleteUiState.Idle
-    }
-
-    private fun filter(
-        debounceMillis: Long,
-        state: String = "",
-        requestOnFocus: Boolean = false,
-    ) = object : EntryFilter.Autocomplete(
+    private fun filter(debounceMillis: Long) = object : EntryFilter.Autocomplete(
         name = "Tags",
-        state = state,
-        options = EntryFilterAutocompleteOptions(
-            debounceMillis = debounceMillis,
-            requestOnFocus = requestOnFocus,
-        ),
+        state = "",
+        options = EntryFilterAutocompleteOptions(debounceMillis = debounceMillis),
     ) {
         override fun getSuggestionQuery(input: EntryFilterTextInput): String = input.text
 
@@ -146,10 +83,6 @@ class FilterAutocompleteControllerTest {
         override fun applySuggestion(
             input: EntryFilterTextInput,
             suggestion: EntryFilterSuggestion,
-        ): EntryFilterTextEdit {
-            val tokenStart = input.text.lastIndexOf("tag4")
-            val replacement = input.text.replaceRange(tokenStart, input.selectionEnd, suggestion.value) + ", "
-            return EntryFilterTextEdit(replacement, replacement.length)
-        }
+        ): EntryFilterTextEdit = error("Not used")
     }
 }

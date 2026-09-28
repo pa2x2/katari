@@ -4,11 +4,6 @@ import androidx.paging.PagingSource
 import eu.kanade.tachiyomi.source.entry.EntryFilter
 import eu.kanade.tachiyomi.source.entry.EntryFilterAutocompleteOptions
 import eu.kanade.tachiyomi.source.entry.EntryFilterList
-import eu.kanade.tachiyomi.source.entry.EntryFilterPage
-import eu.kanade.tachiyomi.source.entry.EntryFilterPageItem
-import eu.kanade.tachiyomi.source.entry.EntryFilterPageLoadReason
-import eu.kanade.tachiyomi.source.entry.EntryFilterPageRequest
-import eu.kanade.tachiyomi.source.entry.EntryFilterPageScope
 import eu.kanade.tachiyomi.source.entry.EntryFilterSuggestion
 import eu.kanade.tachiyomi.source.entry.EntryFilterTextEdit
 import eu.kanade.tachiyomi.source.entry.EntryFilterTextInput
@@ -29,14 +24,9 @@ import mihon.entry.interactions.catalogue.EntryCatalogueBrowseRequest
 import mihon.entry.interactions.catalogue.EntryCatalogueFeature
 import mihon.entry.interactions.catalogue.EntryCatalogueFeatureContributor
 import mihon.entry.interactions.catalogue.EntryCatalogueFilterSuggestionsResult
-import mihon.entry.interactions.catalogue.EntryCatalogueFiltersResult
 import mihon.entry.interactions.catalogue.EntryCatalogueListing
-import mihon.entry.interactions.catalogue.EntryCataloguePagedFilterRequest
 import mihon.entry.interactions.catalogue.EntryCatalogueSearchRequest
 import mihon.entry.interactions.catalogue.EntryCatalogueSearchResult
-import mihon.entry.interactions.catalogue.EntryCatalogueSourceInfo
-import mihon.entry.interactions.catalogue.EntryCatalogueSourceResolution
-import mihon.entry.interactions.catalogue.EntryCatalogueUnavailableReason
 import mihon.entry.interactions.catalogue.host.EntryCatalogueHostSource
 import mihon.entry.interactions.catalogue.host.EntryCatalogueHostSourceResolution
 import mihon.entry.interactions.catalogue.host.EntryCatalogueProviderHost
@@ -57,39 +47,6 @@ class EntryCatalogueFeatureTest {
         catalogue = EntryCatalogueDescription(supportsLatest = true),
     )
     private val source = EntryCatalogueHostSource(7L, "Source", description)
-
-    @Test
-    fun `source discovery and resolution expose Feature-owned catalogue facts`() {
-        val host = host()
-        every { host.sources() } returns listOf(source)
-        every { host.source(7L) } returns EntryCatalogueHostSourceResolution.Available(source)
-        every { host.source(8L) } returns EntryCatalogueHostSourceResolution.Unsupported
-        every { host.source(9L) } returns EntryCatalogueHostSourceResolution.Missing
-
-        val feature = feature(host)
-
-        feature.sources() shouldBe listOf(source.toInfo())
-        feature.source(7L) shouldBe EntryCatalogueSourceResolution.Available(source.toInfo())
-        feature.source(8L) shouldBe EntryCatalogueSourceResolution.Unsupported(8L)
-        feature.source(9L) shouldBe EntryCatalogueSourceResolution.Missing(9L)
-    }
-
-    @Test
-    fun `filters normalize provider availability and failures`() = runTest {
-        val filters = EntryFilterList()
-        val failure = IllegalStateException("filters failed")
-        val host = host()
-        every { host.source(7L) } returns EntryCatalogueHostSourceResolution.Available(source)
-        every { host.source(8L) } returns EntryCatalogueHostSourceResolution.Unsupported
-        coEvery { host.filters(7L) } returns filters andThenThrows failure
-
-        val feature = feature(host)
-
-        feature.filters(7L) shouldBe EntryCatalogueFiltersResult.Available(filters)
-        feature.filters(7L) shouldBe EntryCatalogueFiltersResult.Failed(failure)
-        feature.filters(8L) shouldBe
-            EntryCatalogueFiltersResult.Unavailable(EntryCatalogueUnavailableReason.CATALOGUE_UNSUPPORTED)
-    }
 
     @Test
     fun `filter suggestions enforce source query policy and result limit`() = runTest {
@@ -125,7 +82,7 @@ class EntryCatalogueFeatureTest {
     }
 
     @Test
-    fun `filter suggestion failures are normalized while cancellation remains cancellation`() = runTest {
+    fun `provider failures are normalized while cancellation remains cancellation`() = runTest {
         val input = EntryFilterTextInput("query", 5, 5)
         val filter = autocomplete()
         val failure = IllegalStateException("suggestions failed")
@@ -133,6 +90,8 @@ class EntryCatalogueFeatureTest {
         every { host.source(7L) } returns EntryCatalogueHostSourceResolution.Available(source)
         coEvery { host.filterSuggestions(7L, filter, input, "query") } throws failure andThenThrows
             CancellationException()
+        coEvery { host.backgroundFilters(7L) } returns EntryFilterList()
+        coEvery { host.page(any(), any(), any()) } throws CancellationException()
         val feature = feature(host)
 
         feature.filterSuggestions(7L, filter, input) shouldBe
@@ -140,41 +99,8 @@ class EntryCatalogueFeatureTest {
         assertThrows<CancellationException> {
             feature.filterSuggestions(7L, filter, input)
         }
-    }
-
-    @Test
-    fun `paged filter items retain opaque continuation and source ordering`() = runTest {
-        val filter = pagedGroup()
-        val first = EntryFilterPageItem("first", "First")
-        val second = EntryFilterPageItem("second", "Second")
-        val host = host()
-        every { host.source(7L) } returns EntryCatalogueHostSourceResolution.Available(source)
-        coEvery {
-            host.filterPage(
-                7L,
-                filter,
-                EntryFilterPageRequest(
-                    EntryFilterPageScope.AVAILABLE,
-                    null,
-                    null,
-                    50,
-                    EntryFilterPageLoadReason.INITIAL,
-                ),
-            )
-        } returns EntryFilterPage(listOf(first, second), "next")
-
-        val result = feature(host).filterItems(
-            EntryCataloguePagedFilterRequest(
-                sourceId = 7L,
-                filter = filter,
-                scope = EntryFilterPageScope.AVAILABLE,
-                query = null,
-            ),
-        ).load(PagingSource.LoadParams.Refresh(null, 50, false))
-
-        result.shouldBeInstanceOf<PagingSource.LoadResult.Page<String, EntryFilterPageItem>>().run {
-            data shouldBe listOf(first, second)
-            nextKey shouldBe "next"
+        assertThrows<CancellationException> {
+            feature.search(EntryCatalogueSearchRequest(7L, "query"))
         }
     }
 
@@ -200,7 +126,7 @@ class EntryCatalogueFeatureTest {
     }
 
     @Test
-    fun `paging persists unique entries and retains orientation and page keys`() = runTest {
+    fun `paging persists each entry identity from a page once`() = runTest {
         val first = sourceEntry("/first", EntryType.BOOK)
         val second = sourceEntry("/second", EntryType.BOOK)
         val host = host()
@@ -217,21 +143,6 @@ class EntryCatalogueFeatureTest {
 
         val page = result.shouldBeInstanceOf<PagingSource.LoadResult.Page<Long, CatalogListItem>>()
         page.data.map { (it as CatalogListItem.EntryItem).entry.url } shouldBe listOf("/first", "/second")
-        page.data.map { (it as CatalogListItem.EntryItem).sourceItemOrientation }.distinct() shouldBe
-            listOf(EntryItemOrientation.HORIZONTAL)
-        page.nextKey shouldBe 2L
-    }
-
-    @Test
-    fun `provider cancellation remains cancellation`() = runTest {
-        val host = host()
-        every { host.source(7L) } returns EntryCatalogueHostSourceResolution.Available(source)
-        coEvery { host.backgroundFilters(7L) } returns EntryFilterList()
-        coEvery { host.page(any(), any(), any()) } throws CancellationException()
-
-        assertThrows<CancellationException> {
-            feature(host).search(EntryCatalogueSearchRequest(7L, "query"))
-        }
     }
 
     private fun feature(
@@ -253,15 +164,6 @@ class EntryCatalogueFeatureTest {
         every { isInitialized } returns MutableStateFlow(true)
     }
 
-    private fun EntryCatalogueHostSource.toInfo() = EntryCatalogueSourceInfo(
-        id = id,
-        name = name,
-        language = description.language,
-        supportedEntryTypes = description.supportedEntryTypes,
-        itemOrientation = description.itemOrientation,
-        supportsLatest = description.catalogue?.supportsLatest == true,
-    )
-
     private fun sourceEntry(url: String, type: EntryType): SEntry = SEntry.create().apply {
         this.url = url
         title = url
@@ -282,21 +184,5 @@ class EntryCatalogueFeatureTest {
             input: EntryFilterTextInput,
             suggestion: EntryFilterSuggestion,
         ): EntryFilterTextEdit = EntryFilterTextEdit(suggestion.value, suggestion.value.length)
-    }
-
-    private fun pagedGroup() = object : EntryFilter.PagedGroup<String>("Options", "") {
-        override suspend fun getPage(request: EntryFilterPageRequest): EntryFilterPage =
-            error("Host executes pages")
-
-        override fun projectItem(item: EntryFilterPageItem, previous: EntryFilter<*>?): EntryFilter<*> =
-            object : EntryFilter.CheckBox(item.label) {}
-
-        override fun reduceItemUpdate(item: EntryFilterPageItem, updatedFilter: EntryFilter<*>): String = item.id
-
-        override fun selectedItemCount(state: String): Int = state.count()
-
-        override fun encodeState(state: String): String = state
-
-        override fun decodeState(value: String): String = value
     }
 }

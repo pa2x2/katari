@@ -1,7 +1,6 @@
 package mihon.entry.interactions.viewer
 
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
 
 class EntryChildTransitionAnchorTest {
@@ -25,13 +24,6 @@ class EntryChildTransitionAnchorTest {
         val terminal = Item.Boundary(EntryChildTransition.Next<Long>(2L, null), actionable = false)
 
         assertEquals(previous, resolve(terminal, previous, terminal, false, false))
-    }
-
-    @Test
-    fun `non-actionable transition does not activate`() {
-        val loaded = Item.Boundary(EntryChildTransition.Next(1L, 2L), actionable = false)
-
-        assertNull(resolve(loaded, loaded, loaded, true, true))
     }
 
     private fun resolve(

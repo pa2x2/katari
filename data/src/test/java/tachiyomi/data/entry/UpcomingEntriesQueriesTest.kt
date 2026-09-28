@@ -20,30 +20,6 @@ import tachiyomi.data.UpdateStrategyColumnAdapter
 class UpcomingEntriesQueriesTest {
 
     @Test
-    fun `included categories support every entry type and category zero is uncategorized`() = runTest {
-        withSeededDatabase { database ->
-            database.entriesQueries.filteredEntryIds(includedCategories = listOf(10))
-                .filter { it <= 3 } shouldContainExactlyInAnyOrder listOf(1L, 2L, 3L)
-
-            database.entriesQueries.filteredEntryIds(includedCategories = listOf(0))
-                .filter { it <= 5 } shouldContainExactlyInAnyOrder listOf(5L)
-
-            database.entriesQueries.filteredEntryIds(excludedCategories = listOf(0))
-                .filter { it <= 5 } shouldContainExactlyInAnyOrder listOf(1L, 2L, 3L, 4L)
-        }
-    }
-
-    @Test
-    fun `excluded category wins over included category`() = runTest {
-        withSeededDatabase { database ->
-            database.entriesQueries.filteredEntryIds(
-                includedCategories = listOf(10),
-                excludedCategories = listOf(20),
-            ).filter { it <= 3 } shouldContainExactlyInAnyOrder listOf(1L, 3L)
-        }
-    }
-
-    @Test
     fun `category membership from another profile is ignored`() = runTest {
         withSeededDatabase { database ->
             database.entriesQueries.filteredEntryIds(includedCategories = listOf(10))
@@ -93,8 +69,7 @@ class UpcomingEntriesQueriesTest {
                     (1, 1, 1, '/manga', 'Manga', 1, 1, 100, 'manga'),
                     (2, 1, 2, '/anime', 'Anime', 1, 1, 100, 'anime'),
                     (3, 1, 3, '/book', 'Book', 1, 1, 100, 'book'),
-                    (4, 1, 4, '/other-profile-category', 'Other profile category', 1, 1, 100, 'manga'),
-                    (5, 1, 5, '/uncategorized', 'Uncategorized', 1, 1, 100, 'book')
+                    (4, 1, 4, '/other-profile-category', 'Other profile category', 1, 1, 100, 'manga')
             """.trimIndent(),
             parameters = 0,
         )

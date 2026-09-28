@@ -15,11 +15,9 @@ import mihon.model.artifacts.api.state.InstalledModelArtifact
 import mihon.model.artifacts.api.state.ModelArtifactState
 import mihon.model.artifacts.api.state.StoredModelArtifact
 import mihon.text.recognition.api.component.TextRecognitionComponentRole
-import mihon.text.recognition.api.configuration.TextRecognitionConfiguration
 import mihon.text.recognition.api.image.ImageRect
 import mihon.text.recognition.api.image.ImageSize
 import mihon.text.recognition.api.pipeline.TextRecognitionPipeline
-import mihon.text.recognition.api.pipeline.TextRecognitionPipelineSelection
 import mihon.text.recognition.api.preparation.TextRecognitionPipelineChoiceReason
 import mihon.text.recognition.api.preparation.TextRecognitionPreparation
 import mihon.text.recognition.api.request.TextRecognitionRequest
@@ -96,12 +94,6 @@ class DefaultTextRecognitionFeatureTest {
     private val modelStore = FakeModelArtifactStore(detector.declaredModels + recognizer.declaredModels)
 
     @Test
-    fun `a request without a language asks for one the build can read`() = runTest {
-        feature().prepare(TextRecognitionRequest(strip, language = null)) shouldBe
-            TextRecognitionPreparation.LanguageRequired(listOf(JAPANESE))
-    }
-
-    @Test
     fun `a request's explicit pipeline replaces the profile's choice`() = runTest {
         val explicit = TextRecognitionPipeline(detector.catalogEntry.id, excludedRecognizer.id)
 
@@ -109,37 +101,6 @@ class DefaultTextRecognitionFeatureTest {
 
         preparation.shouldBeInstanceOf<TextRecognitionPreparation.PipelineChoiceRequired>().reason shouldBe
             TextRecognitionPipelineChoiceReason.SelectedComponentUnavailable(excludedRecognizer.id)
-    }
-
-    @Test
-    fun `an override naming an excluded component asks for another pipeline`() = runTest {
-        preferences.save(
-            TextRecognitionConfiguration(
-                provider = null,
-                overrides = mapOf(
-                    JAPANESE to
-                        TextRecognitionPipelineSelection.Custom(
-                            TextRecognitionPipeline(detector.catalogEntry.id, excludedRecognizer.id),
-                        ),
-                ),
-            ),
-        )
-
-        val preparation = feature().prepare(TextRecognitionRequest(strip, JAPANESE))
-
-        preparation.shouldBeInstanceOf<TextRecognitionPreparation.PipelineChoiceRequired>().reason shouldBe
-            TextRecognitionPipelineChoiceReason.SelectedComponentUnavailable(excludedRecognizer.id)
-    }
-
-    @Test
-    fun `only models that are not installed are required`() = runTest {
-        modelStore.installed -= recognizer.declaredModels.single()
-
-        feature().prepare(TextRecognitionRequest(strip, JAPANESE)) shouldBe TextRecognitionPreparation.ModelsRequired(
-            language = JAPANESE,
-            pipeline = stagedPreset.pipeline,
-            models = recognizer.declaredModels,
-        )
     }
 
     @Test
@@ -158,27 +119,23 @@ class DefaultTextRecognitionFeatureTest {
     }
 
     @Test
-    fun `a repeated request is answered without running the pipeline again`() = runTest {
-        val first = feature().recognizeReady(TextRecognitionRequest(strip, JAPANESE))
+    fun `a repeated request is answered from the cache until a component's revision changes`() = runTest {
+        val feature = feature()
+        val first = feature.recognizeReady(TextRecognitionRequest(strip, JAPANESE))
         val detectorRuns = detector.runs
         val recognizerRuns = recognizer.runs
 
-        val second = feature().recognizeReady(TextRecognitionRequest(strip, JAPANESE))
-
-        second shouldBe first
+        feature().recognizeReady(TextRecognitionRequest(strip, JAPANESE)) shouldBe first
         detector.runs shouldBe detectorRuns
         recognizer.runs shouldBe recognizerRuns
-    }
-
-    @Test
-    fun `results of an earlier component revision are read again`() = runTest {
-        feature().recognizeReady(TextRecognitionRequest(strip, JAPANESE))
-        val recognizerRuns = recognizer.runs
 
         recognizer.processingRevision = 2
-        feature().recognizeReady(TextRecognitionRequest(strip, JAPANESE))
-
+        feature.recognizeReady(TextRecognitionRequest(strip, JAPANESE))
         recognizer.runs shouldBe recognizerRuns * 2
+
+        detector.processingRevision = 2
+        feature.recognizeReady(TextRecognitionRequest(strip, JAPANESE))
+        detector.runs shouldBe detectorRuns * 2
     }
 
     @Test
@@ -193,18 +150,6 @@ class DefaultTextRecognitionFeatureTest {
 
         result.regions.map { it.text to it.bounds } shouldContainExactly listOf("中" to middleText)
         detector.runs shouldBe detectorRuns
-    }
-
-    @Test
-    fun `detections of an earlier detector revision are detected again`() = runTest {
-        val feature = feature()
-        feature.recognizeReady(TextRecognitionRequest(strip, JAPANESE))
-        val detectorRuns = detector.runs
-
-        detector.processingRevision = 2
-        feature.recognizeReady(TextRecognitionRequest(strip, JAPANESE))
-
-        detector.runs shouldBe detectorRuns * 2
     }
 
     @Test

@@ -7,63 +7,16 @@ import kotlinx.coroutines.test.runTest
 import mihon.translation.provider.libretranslate.protocol.LibreTranslateLanguage
 import mihon.translation.provider.libretranslate.protocol.LibreTranslateService
 import okhttp3.HttpUrl
+import okhttp3.HttpUrl.Companion.toHttpUrl
 import org.junit.jupiter.api.Test
 
 class LibreTranslateServerSetupCoordinatorTest {
     @Test
-    fun `invalid or insecure endpoints never probe or save`() = runTest {
-        var probes = 0
-        var saves = 0
-        val coordinator = LibreTranslateServerSetupCoordinator(
-            serviceFactory = { _, _ ->
-                probes += 1
-                service(listOf(LANGUAGE))
-            },
-            saveConfiguration = { _, _, _ -> saves += 1 },
-        )
-
-        listOf(
-            "not a URL",
-            "http://translate.example",
-            "https://user:password@translate.example",
-            "https://translate.example/?key=private",
-            "https://translate.example/#private",
-        ).forEach { endpoint ->
-            coordinator.saveAndTest(endpoint, "private-key") shouldBe
-                LibreTranslateServerSetupResult.InvalidEndpoint
-        }
-
-        probes shouldBe 0
-        saves shouldBe 0
-    }
-
-    @Test
-    fun `API key reaches the client separately from the endpoint`() = runTest {
-        var clientEndpoint: HttpUrl? = null
-        var clientApiKey: String? = null
-        val coordinator = LibreTranslateServerSetupCoordinator(
-            serviceFactory = { endpoint, apiKey ->
-                clientEndpoint = endpoint
-                clientApiKey = apiKey
-                service(listOf(LANGUAGE))
-            },
-            saveConfiguration = { _, _, _ -> },
-        )
-
-        coordinator.saveAndTest("https://translate.example/api", " private-key ") shouldBe
-            LibreTranslateServerSetupResult.Ready
-
-        clientEndpoint?.query shouldBe null
-        clientEndpoint?.username shouldBe ""
-        clientEndpoint?.password shouldBe ""
-        clientApiKey shouldBe "private-key"
-    }
-
-    @Test
-    fun `successful test stores verified configuration`() = runTest {
+    fun `the attempted configuration is stored and verified only when the server answers`() = runTest {
         var saved: SavedConfiguration? = null
+        var languages = listOf(LANGUAGE)
         val coordinator = LibreTranslateServerSetupCoordinator(
-            serviceFactory = { _, _ -> service(listOf(LANGUAGE)) },
+            serviceFactory = { _, _ -> service(languages) },
             saveConfiguration = { endpoint, apiKey, verified ->
                 saved = SavedConfiguration(endpoint, apiKey, verified)
             },
@@ -71,28 +24,12 @@ class LibreTranslateServerSetupCoordinatorTest {
 
         coordinator.saveAndTest("https://translate.example", "key") shouldBe
             LibreTranslateServerSetupResult.Ready
+        saved shouldBe SavedConfiguration("https://translate.example/".toHttpUrl(), "key", verified = true)
 
-        saved?.endpoint?.toString() shouldBe "https://translate.example/"
-        saved?.apiKey shouldBe "key"
-        saved?.verified shouldBe true
-    }
-
-    @Test
-    fun `failed retest retains attempted configuration and clears verification`() = runTest {
-        var saved: SavedConfiguration? = null
-        val coordinator = LibreTranslateServerSetupCoordinator(
-            serviceFactory = { _, _ -> service(emptyList()) },
-            saveConfiguration = { endpoint, apiKey, verified ->
-                saved = SavedConfiguration(endpoint, apiKey, verified)
-            },
-        )
-
+        languages = emptyList()
         coordinator.saveAndTest("https://translate.example/new", "new-key") shouldBe
             LibreTranslateServerSetupResult.ConnectionFailed
-
-        saved?.endpoint?.toString() shouldBe "https://translate.example/new/"
-        saved?.apiKey shouldBe "new-key"
-        saved?.verified shouldBe false
+        saved shouldBe SavedConfiguration("https://translate.example/new/".toHttpUrl(), "new-key", verified = false)
     }
 
     @Test

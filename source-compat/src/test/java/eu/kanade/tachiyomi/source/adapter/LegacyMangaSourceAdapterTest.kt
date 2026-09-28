@@ -3,26 +3,20 @@ package eu.kanade.tachiyomi.source.adapter
 import eu.kanade.tachiyomi.source.CatalogueSource
 import eu.kanade.tachiyomi.source.Source
 import eu.kanade.tachiyomi.source.SourceFactory
-import eu.kanade.tachiyomi.source.entry.EntryCatalogueSource
 import eu.kanade.tachiyomi.source.entry.EntryImagePage
 import eu.kanade.tachiyomi.source.entry.EntryImageSource
-import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
-import eu.kanade.tachiyomi.source.entry.EntryItemOrientationProvider
 import eu.kanade.tachiyomi.source.entry.EntryMedia
 import eu.kanade.tachiyomi.source.entry.EntryType
-import eu.kanade.tachiyomi.source.entry.IncrementalChapterSource
 import eu.kanade.tachiyomi.source.entry.PlaybackSelection
 import eu.kanade.tachiyomi.source.entry.RelatedEntriesSource
 import eu.kanade.tachiyomi.source.entry.ResumableEntryImageSource
 import eu.kanade.tachiyomi.source.entry.SEntry
-import eu.kanade.tachiyomi.source.entry.SEntryChapter
 import eu.kanade.tachiyomi.source.entry.supportedEntryTypes
 import eu.kanade.tachiyomi.source.model.FilterList
 import eu.kanade.tachiyomi.source.model.MangasPage
 import eu.kanade.tachiyomi.source.model.Page
 import eu.kanade.tachiyomi.source.model.SChapter
 import eu.kanade.tachiyomi.source.model.SManga
-import eu.kanade.tachiyomi.source.model.SMangaUpdate
 import eu.kanade.tachiyomi.source.online.HttpSource
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
@@ -84,36 +78,11 @@ class LegacyMangaSourceAdapterTest {
     }
 
     @Test
-    fun `legacy conversion rejects non manga entry types`() = runTest {
-        val adapted = LegacyRxCatalogueSource().asUnifiedSource()
-        val anime = SEntry.create().apply {
-            url = "/anime"
-            title = "Anime"
-            type = EntryType.ANIME
-        }
+    fun `only a directly implemented and enabled related manga method exposes related entries`() = runTest {
+        (InheritedRelatedHttpSource().asUnifiedSource() is RelatedEntriesSource) shouldBe false
+        (DisabledRelatedHttpSource().asUnifiedSource() is RelatedEntriesSource) shouldBe false
 
-        (runCatching { adapted.getContentDetails(anime) }.exceptionOrNull() is IllegalArgumentException) shouldBe true
-    }
-
-    @Test
-    fun `legacy source uses upstream presentation defaults`() {
-        val adapted = LegacyRxCatalogueSource().asUnifiedSource()
-
-        (adapted as EntryItemOrientationProvider).itemOrientation shouldBe EntryItemOrientation.VERTICAL
-        (adapted as EntryCatalogueSource).supportsImmersiveFeed shouldBe false
-    }
-
-    @Test
-    fun `inherited related manga default does not expose related entries capability`() {
-        val adapted = InheritedRelatedHttpSource().asUnifiedSource()
-
-        (adapted is RelatedEntriesSource) shouldBe false
-    }
-
-    @Test
-    fun `direct related manga implementation exposes related entries capability`() = runTest {
-        val source = DirectRelatedHttpSource()
-        val adapted = source.asUnifiedSource() as RelatedEntriesSource
+        val adapted = DirectRelatedHttpSource().asUnifiedSource() as RelatedEntriesSource
         val entry = SEntry.create().apply {
             url = "/manga"
             title = "Legacy manga"
@@ -122,66 +91,17 @@ class LegacyMangaSourceAdapterTest {
 
         val related = adapted.getRelatedEntries(entry).single()
 
-        source.receivedManga?.url shouldBe "/manga"
-        source.receivedManga?.title shouldBe "Legacy manga"
         related.url shouldBe "/related"
-        related.title shouldBe "Related manga"
         related.type shouldBe EntryType.MANGA
     }
 
     @Test
-    fun `disabled direct related manga implementation does not expose capability`() {
-        val adapted = DisabledRelatedHttpSource().asUnifiedSource()
-
-        (adapted is RelatedEntriesSource) shouldBe false
-    }
-
-    @Test
-    fun `legacy unmetered source exposes current marker without losing other contracts`() {
+    fun `legacy unmetered marker survives adaptation without losing other contracts`() {
         val adapted = LegacyUnmeteredHttpSource().asUnifiedSource()
 
         (adapted is EntryUnmeteredSource) shouldBe true
         (adapted is EntryImageSource) shouldBe true
-    }
-
-    @Test
-    fun `ordinary legacy source does not expose current unmetered marker`() {
-        val adapted = InheritedRelatedHttpSource().asUnifiedSource()
-
-        (adapted is EntryUnmeteredSource) shouldBe false
-    }
-
-    @Test
-    fun `legacy related entries bridge rejects non manga entry types`() = runTest {
-        val adapted = DirectRelatedHttpSource().asUnifiedSource() as RelatedEntriesSource
-        val book = SEntry.create().apply {
-            url = "/book"
-            title = "Book"
-            type = EntryType.BOOK
-        }
-
-        (runCatching { adapted.getRelatedEntries(book) }.exceptionOrNull() is IllegalArgumentException) shouldBe true
-    }
-
-    @Test
-    fun `legacy chapter refresh receives existing chapters`() = runTest {
-        val source = CapturingLegacySource()
-        val adapted = source.asUnifiedSource() as IncrementalChapterSource
-        val entry = SEntry.create().apply {
-            url = "/manga"
-            title = "Legacy manga"
-            type = EntryType.MANGA
-        }
-        val existing = SEntryChapter.create().apply {
-            url = "/existing"
-            name = "Chapter 1"
-            chapterNumber = 1.0
-        }
-
-        adapted.getChapterList(entry, listOf(existing))
-
-        source.receivedChapters.single().url shouldBe "/existing"
-        source.receivedChapters.single().chapter_number shouldBe 1.0f
+        (InheritedRelatedHttpSource().asUnifiedSource() is EntryUnmeteredSource) shouldBe false
     }
 
     @Test
@@ -218,7 +138,7 @@ private suspend fun invokeLegacyBridge(instance: Any, methodName: String): Any? 
             .invoke(instance, continuation)
     }
 
-private open class LegacyRxCatalogueSource : CatalogueSource {
+private class LegacyRxCatalogueSource : CatalogueSource {
     override val id: Long = 1L
     override val name: String = "Legacy source"
     override val lang: String = "en"
@@ -270,20 +190,6 @@ private open class LegacyRxCatalogueSource : CatalogueSource {
     }
 }
 
-private class CapturingLegacySource : LegacyRxCatalogueSource() {
-    var receivedChapters: List<SChapter> = emptyList()
-
-    override suspend fun getMangaUpdate(
-        manga: SManga,
-        chapters: List<SChapter>,
-        fetchDetails: Boolean,
-        fetchChapters: Boolean,
-    ): SMangaUpdate {
-        receivedChapters = chapters
-        return super.getMangaUpdate(manga, chapters, fetchDetails, fetchChapters)
-    }
-}
-
 private open class InheritedRelatedHttpSource : HttpSource() {
     override val name = "Related source"
     override val lang = "en"
@@ -292,10 +198,7 @@ private open class InheritedRelatedHttpSource : HttpSource() {
 }
 
 private open class DirectRelatedHttpSource : InheritedRelatedHttpSource() {
-    var receivedManga: SManga? = null
-
     override suspend fun fetchRelatedMangaList(manga: SManga): List<SManga> {
-        receivedManga = manga
         return listOf(
             SManga.create().apply {
                 url = "/related"

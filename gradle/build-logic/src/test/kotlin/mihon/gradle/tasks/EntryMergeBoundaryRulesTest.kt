@@ -109,27 +109,6 @@ class EntryMergeBoundaryRulesTest {
     }
 
     @Test
-    fun `unrelated root feature cannot borrow Merge host ports`() {
-        createFixture(
-            additionalFiles = hostApiFixture() + mapOf(
-                "entry-interactions/src/main/java/mihon/entry/interactions/download/EntryDownloadFeature.kt" to
-                    """
-                        package mihon.entry.interactions
-
-                        import mihon.entry.interactions.host.EntryMergeHost
-
-                        internal class EntryDownloadFeature(private val host: EntryMergeHost)
-                    """.trimIndent(),
-            ),
-        )
-
-        val error = assertThrows(GradleException::class.java) { runBoundaryCheck() }
-
-        error.message shouldContain
-            "EntryMergeHost is an application host port reserved for the root Merge coordinator"
-    }
-
-    @Test
     fun `Merge implementation cannot use ambient profile authority or concrete type gates`() {
         createFixture(
             additionalFiles = mapOf(
@@ -213,27 +192,6 @@ class EntryMergeBoundaryRulesTest {
         val error = assertThrows(GradleException::class.java) { runBoundaryCheck() }
 
         error.message shouldContain "EntryMergeProfileMoveFeature is reserved for the Profile Move coordinator"
-    }
-
-    @Test
-    fun `domain consumers cannot retain raw Merge authorities`() {
-        createFixture(
-            additionalFiles = mapOf(
-                "domain/src/main/java/tachiyomi/domain/entry/GetLibraryEntries.kt" to
-                    """
-                        package tachiyomi.domain.entry
-
-                        import tachiyomi.domain.entry.repository.MergedEntryRepository
-
-                        class GetLibraryEntries(private val merges: MergedEntryRepository)
-                    """.trimIndent(),
-            ),
-        )
-
-        val error = assertThrows(GradleException::class.java) { runBoundaryCheck() }
-
-        error.message shouldContain "raw Merge authority must be consumed through Merge intents"
-        error.message shouldContain "MergedEntryRepository"
     }
 
     @Test

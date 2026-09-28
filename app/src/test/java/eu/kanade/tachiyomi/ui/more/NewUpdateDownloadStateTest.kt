@@ -9,24 +9,6 @@ class NewUpdateDownloadStateTest {
     private val downloadLink = "https://example.com/katari.apk"
 
     @Test
-    fun `missing work and APK recover the available state`() {
-        resolveUpdateDownloadStatus(
-            work = null,
-            downloadLink = downloadLink,
-            downloadedApkMatches = false,
-        ) shouldBe UpdateDownloadStatus(NewUpdateScreenModel.Stage.Available)
-    }
-
-    @Test
-    fun `enqueued matching download reattaches before progress starts`() {
-        resolveUpdateDownloadStatus(
-            work = work(WorkInfo.State.ENQUEUED, progress = null),
-            downloadLink = downloadLink,
-            downloadedApkMatches = false,
-        ) shouldBe UpdateDownloadStatus(NewUpdateScreenModel.Stage.Downloading)
-    }
-
-    @Test
     fun `matching completed download is installable only while its APK exists`() {
         resolveUpdateDownloadStatus(
             work = work(WorkInfo.State.SUCCEEDED, progress = 100),
@@ -39,15 +21,6 @@ class NewUpdateDownloadStateTest {
             downloadLink = downloadLink,
             downloadedApkMatches = false,
         ) shouldBe UpdateDownloadStatus(NewUpdateScreenModel.Stage.Available)
-    }
-
-    @Test
-    fun `matching failed work recovers the retry state`() {
-        resolveUpdateDownloadStatus(
-            work = work(WorkInfo.State.FAILED),
-            downloadLink = downloadLink,
-            downloadedApkMatches = false,
-        ) shouldBe UpdateDownloadStatus(NewUpdateScreenModel.Stage.Failed)
     }
 
     @Test

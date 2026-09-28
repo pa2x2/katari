@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test
 class LibreTranslateServerConfigurationTest {
 
     @Test
-    fun `remote endpoints require HTTPS while loopback may use HTTP`() {
+    fun `remote endpoints require HTTPS and no endpoint may carry credentials, a query, or a fragment`() {
         LibreTranslateServerConfiguration.validateEndpoint("https://translate.example/api")
             ?.toString() shouldBe "https://translate.example/api/"
         LibreTranslateServerConfiguration.validateEndpoint("http://127.0.0.1:5000")
@@ -15,29 +15,9 @@ class LibreTranslateServerConfigurationTest {
         LibreTranslateServerConfiguration.validateEndpoint("http://localhost:5000")
             ?.toString() shouldBe "http://localhost:5000/"
         LibreTranslateServerConfiguration.validateEndpoint("http://translate.example") shouldBe null
-    }
-
-    @Test
-    fun `endpoint credentials query and fragment are rejected`() {
         LibreTranslateServerConfiguration.validateEndpoint("https://user:pass@example.com") shouldBe null
         LibreTranslateServerConfiguration.validateEndpoint("https://example.com?key=secret") shouldBe null
         LibreTranslateServerConfiguration.validateEndpoint("https://example.com/#fragment") shouldBe null
-    }
-
-    @Test
-    fun `verified endpoint and API key persist through their separate stores`() {
-        val state = FakeState()
-        val secrets = FakeApiKeyStore()
-        val configuration = LibreTranslateServerConfiguration(state, secrets)
-        val endpoint = "https://translate.example/api/".toHttpUrl()
-
-        configuration.save(endpoint, "private-key", verified = true)
-
-        configuration.endpoint shouldBe endpoint
-        configuration.apiKey shouldBe "private-key"
-        configuration.isInitiallyVerified shouldBe true
-        state.endpoint shouldBe endpoint.toString()
-        state.verifiedEndpoint shouldBe endpoint.toString()
     }
 
     @Test

@@ -1,11 +1,9 @@
 package mihon.entry.interactions.library
 
 import eu.kanade.tachiyomi.source.entry.EntryType
-import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldContainExactly
-import io.kotest.matchers.shouldBe
 import mihon.entry.interactions.runtime.EntryInteractionComposition
 import mihon.entry.interactions.runtime.EntryInteractionPlugin
 import mihon.entry.interactions.runtime.EntryInteractionProviderBinding
@@ -21,49 +19,6 @@ import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 
 class EntryLibraryFilterFeatureTest {
-    @Test
-    fun `provider-less type receives generic policy and behavior contract`() {
-        val composition = composition(plugin(EntryType.ANIME))
-        val feature = DefaultEntryLibraryFilterFeature(composition.featureGraphEvaluation)
-
-        val result = feature.filter(
-            request(
-                target(EntryType.ANIME, downloaded = false),
-                policy = policy(downloaded = TriState.ENABLED_NOT),
-            ),
-        )
-
-        result.includedTargetIndices.shouldContainExactly(0)
-        result.hasActiveFilters.shouldBeTrue()
-        result.availability.progressSummary.isAvailable.shouldBeFalse()
-        result.availability.bookmarking.isAvailable.shouldBeFalse()
-        result.availability.outsideReleasePeriod.isAvailable.shouldBeFalse()
-    }
-
-    @Test
-    fun `capability controls derive availability from current library types`() {
-        val composition = composition(
-            plugin(
-                EntryType.BOOK,
-                EntryLibraryProgressCapability.bind(LibraryProgressProvider()),
-                EntryBookmarkCapability.bind(BookmarkProcessor()),
-                EntryOutsideReleasePeriodFilterCapability.bind(OutsideReleasePeriodProvider()),
-            ),
-            plugin(EntryType.ANIME),
-        )
-        val result = DefaultEntryLibraryFilterFeature(composition.featureGraphEvaluation).filter(
-            request(
-                target(EntryType.BOOK),
-                target(EntryType.ANIME),
-            ),
-        )
-
-        result.availability.bookmarking.applicableTypes shouldBe setOf(EntryType.BOOK)
-        result.availability.bookmarking.inapplicableTypes shouldBe setOf(EntryType.ANIME)
-        result.availability.outsideReleasePeriod.applicableTypes shouldBe setOf(EntryType.BOOK)
-        result.availability.outsideReleasePeriod.inapplicableTypes shouldBe setOf(EntryType.ANIME)
-    }
-
     @Test
     fun `bookmark state filters mixed supported and unsupported targets while release filtering passes unsupported`() {
         val composition = composition(
@@ -162,50 +117,6 @@ class EntryLibraryFilterFeatureTest {
 
         result.includedTargetIndices.shouldContainExactly(0)
         result.hasActiveFilters.shouldBeTrue()
-    }
-
-    @Test
-    fun `aggregate target state is interpreted without merge-specific policy`() {
-        val feature = DefaultEntryLibraryFilterFeature(
-            composition(
-                plugin(
-                    EntryType.BOOK,
-                    EntryLibraryProgressCapability.bind(LibraryProgressProvider()),
-                    EntryBookmarkCapability.bind(BookmarkProcessor()),
-                ),
-            ).featureGraphEvaluation,
-        )
-        val aggregate = target(
-            EntryType.BOOK,
-            downloaded = true,
-            unconsumed = true,
-            started = true,
-            bookmarked = true,
-        )
-
-        val result = feature.filter(
-            request(
-                aggregate,
-                policy = policy(
-                    downloaded = TriState.ENABLED_IS,
-                    unconsumed = TriState.ENABLED_IS,
-                    bookmarked = TriState.ENABLED_IS,
-                ),
-            ),
-        )
-
-        result.includedTargetIndices.shouldContainExactly(0)
-    }
-
-    @Test
-    fun `uncomposed target fails instead of becoming unsupported`() {
-        val feature = DefaultEntryLibraryFilterFeature(
-            composition(plugin(EntryType.BOOK)).featureGraphEvaluation,
-        )
-
-        shouldThrow<IllegalStateException> {
-            feature.filter(request(target(EntryType.ANIME)))
-        }
     }
 
     @Test

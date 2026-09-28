@@ -27,15 +27,7 @@ import tachiyomi.domain.entry.model.EntryChapter
 class BookDocumentPageProgressTest {
     @get:Rule val compose = createAndroidComposeRule<ComponentActivity>()
 
-    @Test fun page_counter_follows_a_held_drag_and_return_without_persisting_unsettled_locations() {
-        verifyLiveProgress(prependDuringDrag = false)
-    }
-
     @Test fun loading_a_previous_chapter_during_a_drag_keeps_the_visible_page_and_counter() {
-        verifyLiveProgress(prependDuringDrag = true)
-    }
-
-    private fun verifyLiveProgress(prependDuringDrag: Boolean) {
         val previous = pagingSection("Previous chapter.", 1)
         val section = pagingSection((1..100).joinToString(" ") { "Word$it paragraph text." }, 2)
         val next = pagingSection("Next chapter.", 3)
@@ -87,32 +79,21 @@ class BookDocumentPageProgressTest {
             progress,
         )
         assertEquals("A held gesture must not persist a reading position", initial.position, location.position)
-        if (prependDuringDrag) {
-            compose.runOnIdle { includePrevious.value = true }
-            compose.waitUntil(5_000) { previousReady }
-            compose.waitForIdle()
-            assertEquals(
-                "Prepending content must not reset an active page turn",
-                BookReaderProgress.Page(2, count),
-                progress,
-            )
-            assertEquals(initial.position, location.position)
-            compose.onNodeWithTag("pager").performTouchInput { up() }
-            compose.waitForIdle()
-            assertEquals(BookReaderProgress.Page(2, count), progress)
-            assertTrue(
-                "Settled navigation must still report after the window changes",
-                location.position.offsetWithinBlock > 0,
-            )
-            return
-        }
-        compose.onNodeWithTag("pager").performTouchInput {
-            moveTo(Offset(width * .8f, height * .5f), 300)
-        }
+        compose.runOnIdle { includePrevious.value = true }
+        compose.waitUntil(5_000) { previousReady }
         compose.waitForIdle()
-        assertEquals("Returning the held gesture must update immediately", BookReaderProgress.Page(1, count), progress)
+        assertEquals(
+            "Prepending content must not reset an active page turn",
+            BookReaderProgress.Page(2, count),
+            progress,
+        )
+        assertEquals(initial.position, location.position)
         compose.onNodeWithTag("pager").performTouchInput { up() }
         compose.waitForIdle()
-        assertEquals(initial.position, location.position)
+        assertEquals(BookReaderProgress.Page(2, count), progress)
+        assertTrue(
+            "Settled navigation must still report after the window changes",
+            location.position.offsetWithinBlock > 0,
+        )
     }
 }

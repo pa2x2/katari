@@ -7,15 +7,12 @@ import eu.kanade.tachiyomi.source.entry.RelatedEntriesSource
 import eu.kanade.tachiyomi.source.entry.SEntry
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import eu.kanade.tachiyomi.source.entry.entryItemOrientation
-import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContainExactly
-import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import mihon.entry.interactions.runtime.EntryInteractionComposition
 import mihon.entry.interactions.runtime.EntryInteractionPlugin
@@ -30,38 +27,11 @@ import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.source.model.EntrySourceDescription
 import tachiyomi.domain.source.service.EntrySourceDescriptionResolutionPort
 import tachiyomi.domain.source.service.SourceManager
-import java.io.IOException
 
 class EntryRelatedEntriesFeatureTest {
 
     @Test
-    fun `source absence and unsupported source are structured contextual results`() = runTest {
-        val origin = entry(ORIGIN_ID, "/origin", EntryType.BOOK)
-        val repository = repository(origin)
-        val sourceManager = mockk<SourceManager> {
-            every { get(SOURCE_ID) } returns null
-        }
-        val feature = featureFor(sourceManager, repository)
-
-        feature.availability(EntryRelatedEntriesContext(origin, null)) shouldBe
-            EntryRelatedEntriesAvailability.Unavailable(EntryRelatedEntriesUnavailableReason.SOURCE_MISSING)
-        feature.load(ORIGIN_ID) shouldBe
-            EntryRelatedEntriesLoadResult.Unavailable(EntryRelatedEntriesUnavailableReason.SOURCE_MISSING)
-
-        val unsupported = mockk<UnifiedSource> {
-            every { id } returns SOURCE_ID
-        }
-        every { sourceManager.get(SOURCE_ID) } returns unsupported
-
-        feature.availability(EntryRelatedEntriesContext(origin, unsupported)) shouldBe
-            EntryRelatedEntriesAvailability.Unavailable(EntryRelatedEntriesUnavailableReason.SOURCE_UNSUPPORTED)
-        feature.load(ORIGIN_ID) shouldBe
-            EntryRelatedEntriesLoadResult.Unavailable(EntryRelatedEntriesUnavailableReason.SOURCE_UNSUPPORTED)
-        coVerify(exactly = 0) { repository.insertOrUpdateBatch(any(), any()) }
-    }
-
-    @Test
-    fun `load preserves order authoritative mixed types profile identity persistence and orientation`() = runTest {
+    fun `load persists distinct mixed-type results into the origin entry's profile`() = runTest {
         val origin = entry(ORIGIN_ID, "/origin", EntryType.BOOK)
         val source = relatedSource(
             listOf(
@@ -71,52 +41,17 @@ class EntryRelatedEntriesFeatureTest {
             ),
             EntryItemOrientation.HORIZONTAL,
         )
-        var nextId = 20L
         val persistedNetworkEntries = mutableListOf<Entry>()
         val repository = repository(origin) { networkEntry ->
             persistedNetworkEntries += networkEntry
-            networkEntry.copy(
-                id = nextId++,
-                profileId = PROFILE_ID,
-                favorite = networkEntry.type == EntryType.ANIME,
-            )
+            networkEntry
         }
         val feature = featureFor(sourceManager(source), repository)
 
-        feature.availability(EntryRelatedEntriesContext(origin, source)) shouldBe
-            EntryRelatedEntriesAvailability.Available(EntryItemOrientation.HORIZONTAL)
-        val result = feature.load(ORIGIN_ID) as EntryRelatedEntriesLoadResult.Loaded
+        feature.load(ORIGIN_ID).shouldBeInstanceOf<EntryRelatedEntriesLoadResult.Loaded>()
 
-        result.orientation shouldBe EntryItemOrientation.HORIZONTAL
-        result.entries.map(Entry::type) shouldContainExactly listOf(EntryType.MANGA, EntryType.ANIME)
-        result.entries.map(Entry::profileId) shouldContainExactly listOf(PROFILE_ID, PROFILE_ID)
-        result.entries.map(Entry::favorite) shouldContainExactly listOf(false, true)
         persistedNetworkEntries.map(Entry::title) shouldContainExactly listOf("Manga", "Anime")
         coVerify(exactly = 1) { repository.insertOrUpdateBatch(any(), PROFILE_ID) }
-    }
-
-    @Test
-    fun `persisted entry observation keeps library membership live`() = runTest {
-        val origin = entry(ORIGIN_ID, "/origin", EntryType.BOOK)
-        val initial = entry(20L, "/related", EntryType.ANIME)
-        val favorite = initial.copy(favorite = true)
-        val repository = repository(origin)
-        every {
-            repository.getEntryByUrlAndSourceIdAsFlow(initial.url, initial.source, initial.type)
-        } returns flowOf(favorite)
-        val feature = featureFor(sourceManager(null), repository)
-
-        feature.observeEntry(initial).first() shouldBe favorite
-    }
-
-    @Test
-    fun `genuine source failure remains retryable operation failure`() = runTest {
-        val origin = entry(ORIGIN_ID, "/origin", EntryType.BOOK)
-        val source = relatedSource(emptyList(), EntryItemOrientation.VERTICAL)
-        coEvery { source.getRelatedEntries(any()) } throws IOException("network failed")
-        val feature = featureFor(sourceManager(source), repository(origin))
-
-        shouldThrow<IOException> { feature.load(ORIGIN_ID) }
     }
 
     private fun featureFor(

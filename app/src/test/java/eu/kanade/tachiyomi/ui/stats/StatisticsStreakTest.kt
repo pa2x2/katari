@@ -14,33 +14,14 @@ import java.util.Locale
 class StatisticsStreakTest {
 
     @Test
-    fun `latest streak remains active while today is incomplete`() {
-        val timeline = timelineWithActivityOn("2026-08-23", "2026-08-24", "2026-08-25")
+    fun `latest streak survives an unfinished today while a historical end date must qualify`() {
+        val throughYesterday = timelineWithActivityOn("2026-08-23", "2026-08-24", "2026-08-25")
+        val throughToday = timelineWithActivityOn("2026-08-24", "2026-08-25", "2026-08-26")
+        val endDate = LocalDate.parse("2026-08-26")
 
-        timeline.streakEndingOn(
-            endDate = LocalDate.parse("2026-08-26"),
-            preserveThroughIncompleteEndDate = true,
-        ) shouldBe 3
-    }
-
-    @Test
-    fun `latest streak includes today after today qualifies`() {
-        val timeline = timelineWithActivityOn("2026-08-24", "2026-08-25", "2026-08-26")
-
-        timeline.streakEndingOn(
-            endDate = LocalDate.parse("2026-08-26"),
-            preserveThroughIncompleteEndDate = true,
-        ) shouldBe 3
-    }
-
-    @Test
-    fun `historical streak requires its completed end date to qualify`() {
-        val timeline = timelineWithActivityOn("2026-08-23", "2026-08-24", "2026-08-25")
-
-        timeline.streakEndingOn(
-            endDate = LocalDate.parse("2026-08-26"),
-            preserveThroughIncompleteEndDate = false,
-        ) shouldBe 0
+        throughYesterday.streakEndingOn(endDate = endDate, preserveThroughIncompleteEndDate = true) shouldBe 3
+        throughToday.streakEndingOn(endDate = endDate, preserveThroughIncompleteEndDate = true) shouldBe 3
+        throughYesterday.streakEndingOn(endDate = endDate, preserveThroughIncompleteEndDate = false) shouldBe 0
     }
 
     @Test

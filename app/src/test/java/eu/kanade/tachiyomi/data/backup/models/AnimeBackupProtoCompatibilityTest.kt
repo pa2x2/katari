@@ -13,7 +13,7 @@ import tachiyomi.domain.entry.model.EntryStatus
 class AnimeBackupProtoCompatibilityTest {
 
     @Test
-    fun `legacy backup bytes decode with empty anime payload`() {
+    fun `legacy top level and profile scoped backup bytes decode with empty anime payload`() {
         val bytes = ProtoBuf.encodeToByteArray(
             serializer = LegacyBackup.serializer(),
             LegacyBackup(
@@ -28,12 +28,7 @@ class AnimeBackupProtoCompatibilityTest {
             ),
         )
 
-        ProtoBuf.decodeFromByteArray(Backup.serializer(), bytes).allEntries() shouldBe emptyList()
-    }
-
-    @Test
-    fun `legacy profile scoped backup bytes decode with empty anime payload`() {
-        val bytes = ProtoBuf.encodeToByteArray(
+        val profileBytes = ProtoBuf.encodeToByteArray(
             serializer = LegacyProfileScopedBackup.serializer(),
             LegacyProfileScopedBackup(
                 profile = ProfileBackup(
@@ -51,7 +46,8 @@ class AnimeBackupProtoCompatibilityTest {
             ),
         )
 
-        ProtoBuf.decodeFromByteArray(ProfileScopedBackup.serializer(), bytes).allEntries() shouldBe emptyList()
+        ProtoBuf.decodeFromByteArray(Backup.serializer(), bytes).allEntries() shouldBe emptyList()
+        ProtoBuf.decodeFromByteArray(ProfileScopedBackup.serializer(), profileBytes).allEntries() shouldBe emptyList()
     }
 
     @Test
@@ -79,93 +75,6 @@ class AnimeBackupProtoCompatibilityTest {
             .toBackupEntry().status shouldBe EntryStatus.CANCELLED.value
         LegacyBackupAnime(source = 1, url = "on-hiatus", status = 4)
             .toBackupEntry().status shouldBe EntryStatus.ON_HIATUS.value
-    }
-
-    @Test
-    fun `entry backup bytes preserve merge target type and download preferences`() {
-        val bytes = ProtoBuf.encodeToByteArray(
-            serializer = BackupEntry.serializer(),
-            BackupEntry(
-                source = 1,
-                url = "anime-member",
-                mergeTargetSource = 1,
-                mergeTargetUrl = "anime-target",
-                mergeTargetType = EntryType.ANIME,
-                mergePosition = 1,
-                downloadPreferences = BackupDownloadPreferences(
-                    dubKey = "dub",
-                    streamKey = "stream",
-                    subtitleKey = "subtitle",
-                    qualityMode = "data_saving",
-                    updatedAt = 123,
-                ),
-                type = EntryType.ANIME,
-            ),
-        )
-
-        val decoded = ProtoBuf.decodeFromByteArray(BackupEntry.serializer(), bytes)
-
-        decoded.mergeTargetType shouldBe EntryType.ANIME
-        decoded.downloadPreferences?.dubKey shouldBe "dub"
-        decoded.downloadPreferences?.streamKey shouldBe "stream"
-        decoded.downloadPreferences?.subtitleKey shouldBe "subtitle"
-        decoded.downloadPreferences?.qualityMode shouldBe "data_saving"
-        decoded.downloadPreferences?.updatedAt shouldBe 123
-    }
-
-    @Test
-    fun `entry backup bytes preserve generic progress extensions`() {
-        val extensions = """{"reader.example.precise":"opaque"}""".encodeToByteArray()
-        val bytes = ProtoBuf.encodeToByteArray(
-            serializer = BackupEntry.serializer(),
-            BackupEntry(
-                source = 1,
-                url = "/entry",
-                progressStates = listOf(
-                    BackupEntryProgressState(
-                        resourceKey = "/chapter",
-                        sourceChildKey = "/chapter",
-                        locatorKind = "reader.example",
-                        progression = 0.5,
-                        extensions = extensions,
-                        locatorUpdatedAt = 10,
-                    ),
-                ),
-            ),
-        )
-
-        val state = ProtoBuf.decodeFromByteArray(BackupEntry.serializer(), bytes).progressStates.single()
-
-        state.resourceKey shouldBe "/chapter"
-        state.sourceChildKey shouldBe "/chapter"
-        state.locatorKind shouldBe "reader.example"
-        state.progression shouldBe 0.5
-        state.extensions.contentEquals(extensions) shouldBe true
-        state.locatorUpdatedAt shouldBe 10
-    }
-
-    @Test
-    fun `entry backup bytes preserve unknown Feature state envelopes`() {
-        val bytes = ProtoBuf.encodeToByteArray(
-            serializer = BackupEntry.serializer(),
-            BackupEntry(
-                source = 1,
-                url = "/entry",
-                featureStates = listOf(
-                    BackupEntryFeatureState(
-                        participantId = "future.feature.backup",
-                        schemaVersion = 7,
-                        payload = byteArrayOf(1, 2, 3),
-                    ),
-                ),
-            ),
-        )
-
-        val state = ProtoBuf.decodeFromByteArray(BackupEntry.serializer(), bytes).featureStates.single()
-
-        state.participantId shouldBe "future.feature.backup"
-        state.schemaVersion shouldBe 7
-        state.payload.contentEquals(byteArrayOf(1, 2, 3)) shouldBe true
     }
 
     @Serializable

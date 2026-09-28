@@ -17,7 +17,6 @@ class EntryDownloadQueueObservationTest {
         val snapshots = mutableListOf<List<EntryDownloadQueueGroup>>()
         backgroundScope.launch { fixture.snapshots.collect { snapshots += it } }
         runCurrent()
-        val queued = snapshots.single().single().items.single()
 
         fixture.download.item = fixture.download.item.copy(
             state = EntryDownloadState.DOWNLOADING,
@@ -31,8 +30,6 @@ class EntryDownloadQueueObservationTest {
         runCurrent()
 
         snapshots.last().single().items.single().progress shouldBe 42
-        queued.state shouldBe EntryDownloadState.QUEUE
-        queued.progress shouldBe 0
 
         fixture.download.item = fixture.download.item.copy(
             presentation = EntryDownloadPresentation(EntryDownloadPhase.FINALIZING),

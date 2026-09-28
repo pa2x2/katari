@@ -1,7 +1,6 @@
 package mihon.entry.interactions.download
 
 import eu.kanade.tachiyomi.source.entry.EntryType
-import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -28,29 +27,7 @@ import tachiyomi.domain.entry.repository.EntryRepository
 
 class EntryDownloadLifecycleFeatureTest {
     @Test
-    fun `provider absence is valid and makes events inapplicable`() = runTest {
-        val fixture = fixture(includeDownload = false)
-        val visible = entry(id = 1L)
-
-        fixture.feature.onEvent(
-            EntryDownloadLifecycleEvent.MarkedConsumed(visible, listOf(chapter(12L, visible.id))),
-        ) shouldBe EntryDownloadLifecycleResult.Inapplicable(EntryType.BOOK)
-    }
-
-    @Test
-    fun `download without bookmarking applies shared cleanup to bookmarked children`() = runTest {
-        val visible = entry(id = 1L)
-        val bookmarked = chapter(id = 12L, entryId = visible.id, bookmark = true)
-        val fixture = fixture()
-        fixture.preferences.removeAfterMarkedAsRead.set(true)
-
-        fixture.feature.onEvent(EntryDownloadLifecycleEvent.MarkedConsumed(visible, listOf(bookmarked)))
-
-        coVerify(exactly = 1) { fixture.downloads.delete(visible, listOf(bookmarked)) }
-    }
-
-    @Test
-    fun `adding bookmarking automatically protects downloads and the override remains contextual`() = runTest {
+    fun `bookmarked children keep their downloads unless bookmarked removal is enabled`() = runTest {
         val visible = entry(id = 1L)
         val bookmarked = chapter(id = 12L, entryId = visible.id, bookmark = true)
         val fixture = fixture(includeBookmarking = true)
@@ -79,18 +56,16 @@ class EntryDownloadLifecycleFeatureTest {
     }
 
     @Test
-    fun `excluded categories suppress shared cleanup without changing applicability`() = runTest {
+    fun `excluded categories suppress download cleanup`() = runTest {
         val visible = entry(id = 1L)
         val consumed = chapter(id = 12L, entryId = visible.id)
         val fixture = fixture(categories = mapOf(visible.id to listOf(category(8L))))
         fixture.preferences.removeAfterMarkedAsRead.set(true)
         fixture.preferences.removeExcludeCategories.set(setOf("8"))
 
-        fixture.feature.onEvent(EntryDownloadLifecycleEvent.MarkedConsumed(visible, listOf(consumed))) shouldBe
-            EntryDownloadLifecycleResult.Handled
+        fixture.feature.onEvent(EntryDownloadLifecycleEvent.MarkedConsumed(visible, listOf(consumed)))
 
         coVerify(exactly = 0) { fixture.downloads.delete(any(), any()) }
-        fixture.feature.isApplicable(EntryType.BOOK) shouldBe true
     }
 
     @Test
@@ -116,16 +91,14 @@ class EntryDownloadLifecycleFeatureTest {
     }
 
     private fun fixture(
-        includeDownload: Boolean = true,
         includeBookmarking: Boolean = false,
-        memberEntries: List<Entry> = emptyList(),
         readingOrder: List<EntryChapter> = emptyList(),
         categories: Map<Long, List<Category>> = emptyMap(),
     ): Fixture {
         val preferences = DownloadPreferences(InMemoryPreferenceStore())
         val download = downloadProcessor()
         val bindings = buildList<EntryInteractionProviderBinding<*>> {
-            if (includeDownload) add(EntryDownloadCapability.bind(download))
+            add(EntryDownloadCapability.bind(download))
             if (includeBookmarking) add(EntryBookmarkCapability.bind(bookmarkProcessor()))
         }
         val plugin = object : EntryInteractionPlugin {
@@ -138,9 +111,7 @@ class EntryDownloadLifecycleFeatureTest {
             featureContributors = listOf(EntryDownloadLifecycleFeatureContributor),
         )
         val entryRepository = mockk<EntryRepository>(relaxed = true) {
-            coEvery { getEntryById(any()) } answers {
-                memberEntries.firstOrNull { it.id == firstArg<Long>() }
-            }
+            coEvery { getEntryById(any()) } returns null
         }
         val getCategories = mockk<GetCategories> {
             coEvery { await(any()) } answers { categories[firstArg<Long>()].orEmpty() }

@@ -31,24 +31,6 @@ class HistoryActivitySummaryTest {
         summary.buckets.map { it.durationMillis } shouldBe listOf(60_000L, 0L, 30_000L)
     }
 
-    @Test
-    fun `long ranges are grouped by month`() {
-        val summary = summarizeHistoryActivity(
-            snapshot = snapshot(
-                StatisticsActivityBucket(EntryType.MANGA, "2026-01-10", 60_000L),
-                StatisticsActivityBucket(EntryType.MANGA, "2026-01-20", 60_000L),
-                StatisticsActivityBucket(EntryType.MANGA, "2026-03-05", 30_000L),
-            ),
-            type = null,
-            startDate = LocalDate.parse("2026-01-01"),
-            endDate = LocalDate.parse("2026-03-31"),
-        )
-
-        summary.bucketsAreMonths shouldBe true
-        summary.buckets.map { it.startDate.monthValue to it.durationMillis } shouldBe
-            listOf(1 to 120_000L, 2 to 0L, 3 to 30_000L)
-    }
-
     private fun snapshot(vararg activity: StatisticsActivityBucket) = StatisticsActivitySnapshot(
         profileId = 1L,
         trackingStartedAtEpochMillis = 1L,

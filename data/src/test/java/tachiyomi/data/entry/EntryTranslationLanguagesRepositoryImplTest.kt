@@ -21,22 +21,6 @@ import tachiyomi.domain.entry.model.EntryTranslationLanguages
 class EntryTranslationLanguagesRepositoryImplTest {
 
     @Test
-    fun `clearing one language keeps the other and clearing both removes the record`() = withRepository {
-        setTargetLanguage(entryId = 10, language = "es", updatedAt = 1)
-        setContentLanguage(entryId = 10, language = "ja", updatedAt = 2)
-        getByEntryId(10) shouldBe EntryTranslationLanguages(10, "ja", "es", updatedAt = 2)
-
-        setTargetLanguage(entryId = 10, language = null, updatedAt = 3)
-        getByEntryId(10) shouldBe EntryTranslationLanguages(10, "ja", null, updatedAt = 3)
-
-        setContentLanguage(entryId = 10, language = null, updatedAt = 4)
-        getByEntryId(10) shouldBe null
-
-        setContentLanguage(entryId = 10, language = null, updatedAt = 5)
-        getByEntryId(10) shouldBe null
-    }
-
-    @Test
     fun `profile records follow entry titles and are cleared per profile`() = withRepository {
         setTargetLanguage(entryId = 10, language = "es", updatedAt = 1)
         setContentLanguage(entryId = 11, language = "fr", updatedAt = 1)

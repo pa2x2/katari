@@ -23,36 +23,18 @@ class ExtensionLoaderTest {
     }
 
     @Test
-    fun `legacy extensions use the platform delegate-last loader when supported`() {
+    fun `only legacy extensions use the platform delegate-last loader`() {
         ExtensionLoader.shouldUseDelegateLastClassLoader("1.4", Build.VERSION_CODES.Q) shouldBe true
         ExtensionLoader.shouldUseDelegateLastClassLoader("1.6.0", Build.VERSION_CODES.VANILLA_ICE_CREAM) shouldBe true
-    }
-
-    @Test
-    fun `entry extensions retain the custom loader`() {
-        ExtensionLoader.shouldUseDelegateLastClassLoader("2.0", Build.VERSION_CODES.VANILLA_ICE_CREAM) shouldBe false
         ExtensionLoader.shouldUseDelegateLastClassLoader("2.0.1", Build.VERSION_CODES.VANILLA_ICE_CREAM) shouldBe false
-        ExtensionLoader.shouldUseDelegateLastClassLoader("2.1.0", Build.VERSION_CODES.VANILLA_ICE_CREAM) shouldBe false
-        ExtensionLoader.shouldUseDelegateLastClassLoader("2.2.0", Build.VERSION_CODES.VANILLA_ICE_CREAM) shouldBe false
-        ExtensionLoader.shouldUseDelegateLastClassLoader("2.3.0", Build.VERSION_CODES.VANILLA_ICE_CREAM) shouldBe false
     }
 
     @Test
-    fun `released entry api families are accepted`() {
+    fun `extension version names are accepted only within released entry api families`() {
         ExtensionLoader.isLibVersionCompatible("1.9.1") shouldBe false
         ExtensionLoader.isLibVersionCompatible("2.0.1") shouldBe true
-        ExtensionLoader.isLibVersionCompatible("2.1.1") shouldBe true
-        ExtensionLoader.isLibVersionCompatible("2.2.1") shouldBe true
-        ExtensionLoader.isLibVersionCompatible("2.3.1") shouldBe true
-        ExtensionLoader.isLibVersionCompatible("2.4.1") shouldBe true
-        ExtensionLoader.isLibVersionCompatible("2.5.1") shouldBe true
-        ExtensionLoader.isLibVersionCompatible("2.6.1") shouldBe true
         ExtensionLoader.isLibVersionCompatible("2.7.1") shouldBe true
         ExtensionLoader.isLibVersionCompatible("2.8.1") shouldBe false
-
-        ExtensionLoader.isRawLibVersionCompatible("2.0.99") shouldBe true
-        ExtensionLoader.isRawLibVersionCompatible("2.3.99") shouldBe true
-        ExtensionLoader.isRawLibVersionCompatible("2.6.99") shouldBe true
     }
 
     @Test

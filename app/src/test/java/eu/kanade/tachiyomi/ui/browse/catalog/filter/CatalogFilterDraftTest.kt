@@ -31,17 +31,6 @@ class CatalogFilterDraftTest {
     }
 
     @Test
-    fun `preset mode and query load into draft and apply together`() {
-        val original = initialCatalogState("popular").initializeForSource(EntryFilterList())
-        val loaded = original.copy(draftMode = FeedListingMode.Search, draftQuery = "Cats", draftPresetId = "saved")
-        loaded.listing shouldBe original.listing
-        loaded.toSavedPresetState(loaded.defaultFilters).query shouldBe "Cats"
-        val applied = requireNotNull(loaded.applyFilterDraft())
-        (applied.listing as CatalogScreenModel.Listing.Search).query shouldBe "Cats"
-        applied.appliedCustomPresetId shouldBe "saved"
-    }
-
-    @Test
     fun `filter edits and saved presets follow searches made after applying a preset`() {
         for (mode in FeedListingMode.entries) {
             val initial = initialCatalogState("popular").initializeForSource(

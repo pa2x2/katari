@@ -71,6 +71,30 @@ class BookProgressProcessorTest {
     }
 
     @Test
+    fun `progress snapshot keeps source child key separate from resource identity`() = runTest {
+        val entry = entry(id = 1L)
+        val chapter = chapter(id = 10L, entryId = entry.id, url = "/source/chapter-1")
+        val state = EntryProgressState(
+            entryId = entry.id,
+            chapterId = chapter.id,
+            contentKey = "volume-1",
+            resourceKey = "resource-1",
+            locator = EntryProgressLocator(kind = BOOK_PROGRESS_LOCATOR_KIND, progression = 0.5),
+        )
+        val progressRepository = mockk<EntryProgressRepository> {
+            coEvery { getByEntryId(entry.id) } returns listOf(state)
+        }
+        val chapterRepository = mockk<EntryChapterRepository> {
+            coEvery { getChapterById(chapter.id) } returns chapter
+        }
+
+        val snapshot = BookProgressProcessor(progressRepository, chapterRepository).snapshot(entry)
+
+        assertEquals("resource-1", snapshot.states.single().resourceKey)
+        assertEquals("/source/chapter-1", snapshot.states.single().sourceChildKey)
+    }
+
+    @Test
     fun `restore resolves a blank chapter url through its durable progress key`() = runTest {
         val target = entry(id = 2L)
         val targetChapter = chapter(id = 21L, entryId = target.id, url = "")

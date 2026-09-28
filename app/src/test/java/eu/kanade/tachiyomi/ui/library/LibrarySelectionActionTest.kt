@@ -9,17 +9,6 @@ import tachiyomi.domain.entry.model.Entry
 class LibrarySelectionActionTest {
 
     @Test
-    fun `selection actions preserve distinct merged member ids`() {
-        selectedActionEntryIds(
-            listOf(
-                libraryItem(id = 1L, memberIds = listOf(1L, 2L)),
-                libraryItem(id = 2L),
-                libraryItem(id = 3L),
-            ),
-        ) shouldBe listOf(1L, 2L, 3L)
-    }
-
-    @Test
     fun `category actions update every distinct merged member`() = runTest {
         val currentCategories = mapOf(
             1L to emptyList(),

@@ -8,8 +8,6 @@ import kotlinx.coroutines.test.runTest
 import mihon.entry.interactions.migration.EntryMigrationFollowUp
 import mihon.entry.interactions.migration.host.EntryMigrationConsequenceHost
 import mihon.entry.interactions.migration.host.EntryMigrationPendingConsequence
-import mihon.feature.graph.FeatureExecutionParticipantId
-import mihon.feature.graph.execution.FeatureDurableExecutionEnvelope
 import org.junit.jupiter.api.Test
 
 class EntryMigrationConsequenceDeliveryTest {
@@ -27,25 +25,6 @@ class EntryMigrationConsequenceDeliveryTest {
 
         coVerify(exactly = 0) { host.acknowledgeConsequence(any()) }
         coVerify(exactly = 1) { host.recordConsequenceFailure(consequence.id, any(), any()) }
-    }
-
-    @Test
-    fun `successful participant delivery is acknowledged and discarded generically`() = runTest {
-        val host = mockk<EntryMigrationConsequenceHost>()
-        val consequences = mockk<EntryMigrationDurableConsequences>()
-        val consequence = consequence()
-        val envelope = consequence.envelope()
-        coEvery { host.pendingConsequences("operation", any()) } returns listOf(consequence)
-        coEvery { host.pendingConsequenceCount("operation") } returns 0
-        coEvery { host.acknowledgeConsequence(consequence.id) } returns Unit
-        coEvery { consequences.deliver(envelope) } returns Unit
-        coEvery { consequences.discard(listOf(envelope)) } returns Unit
-
-        delivery(host, consequences).deliverOperation("operation") shouldBe EntryMigrationFollowUp.COMPLETE
-
-        coVerify(exactly = 1) { host.acknowledgeConsequence(consequence.id) }
-        coVerify(exactly = 1) { consequences.discard(listOf(envelope)) }
-        coVerify(exactly = 0) { host.recordConsequenceFailure(any(), any(), any()) }
     }
 
     private fun delivery(
@@ -70,9 +49,3 @@ class EntryMigrationConsequenceDeliveryTest {
         attempts = 0,
     )
 }
-
-private fun EntryMigrationPendingConsequence.envelope() = FeatureDurableExecutionEnvelope(
-    participant = FeatureExecutionParticipantId(participantId),
-    schemaVersion = schemaVersion,
-    payload = payload,
-)

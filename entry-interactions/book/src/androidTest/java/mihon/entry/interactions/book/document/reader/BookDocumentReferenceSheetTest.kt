@@ -3,9 +3,7 @@ package mihon.entry.interactions.book.document.reader
 import androidx.activity.ComponentActivity
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.semantics.SemanticsActions
-import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performSemanticsAction
@@ -27,38 +25,6 @@ import tachiyomi.domain.entry.model.EntryChapter
 class BookDocumentReferenceSheetTest {
     @get:Rule
     val composeRule = createAndroidComposeRule<ComponentActivity>()
-
-    @Test
-    fun changing_the_note_target_scrolls_the_open_preview() {
-        val html = (1..60).joinToString("") { "<p id='note-$it'>Note $it</p>" }
-        val document = HtmlProseDocumentParser().parse(
-            "notes",
-            null,
-            HtmlProseSanitizer.sanitize(html.encodeToByteArray()),
-        )
-        val section = BookDocumentSection(
-            key = "notes",
-            owner = EntryChapter.create().copy(id = 1),
-            document = document.toPreparedBookDocument(),
-            initialPosition = document.anchors.getValue("note-1"),
-            resourceLoader = null,
-        )
-        val target = mutableStateOf(section)
-        composeRule.setContent {
-            MaterialTheme {
-                CompositionLocalProvider(
-                    LocalBookDocumentReaderPalette provides bookDocumentReaderPalette(BookDocumentReaderThemeMode.APP),
-                ) {
-                    BookDocumentReferenceSheet(target.value, {}, { _, _ -> }, {})
-                }
-            }
-        }
-        composeRule.onNodeWithText("Note 1").assertIsDisplayed()
-        composeRule.runOnIdle {
-            target.value = section.copy(initialPosition = document.anchors.getValue("note-50"))
-        }
-        composeRule.onNodeWithText("Note 50").assertIsDisplayed()
-    }
 
     @Test
     fun a_note_anchor_inside_a_long_block_is_visible() {

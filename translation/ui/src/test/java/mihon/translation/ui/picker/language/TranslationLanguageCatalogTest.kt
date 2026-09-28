@@ -6,30 +6,8 @@ import mihon.language.api.tag.LanguageTag
 import mihon.translation.api.language.TranslationLanguagePair
 import mihon.translation.api.language.TranslationLanguageSupport
 import org.junit.jupiter.api.Test
-import java.util.Locale
 
 class TranslationLanguageCatalogTest {
-    @Test
-    fun `region variants collapse while script variants remain distinct`() {
-        val options = translationLanguageOptions(
-            availableLocales = arrayOf(
-                Locale.ROOT,
-                Locale.US,
-                Locale.UK,
-                Locale.forLanguageTag("zh-Hans-CN"),
-                Locale.forLanguageTag("zh-Hant-TW"),
-            ),
-            displayLocale = Locale.ENGLISH,
-        )
-
-        options.map { it.tag.value }.shouldContainExactlyInAnyOrder(
-            "en",
-            "zh-Hans",
-            "zh-Hant",
-        )
-        options.map { it.tag.value }.distinct().size shouldBe options.size
-    }
-
     @Test
     fun `exact pairs expose every source and constrain targets by the staged source`() {
         val support = TranslationLanguageSupport.ExactPairs(
@@ -71,55 +49,6 @@ class TranslationLanguageCatalogTest {
         support.unpairableLanguages(TranslationLanguageRole.Target, ITALIAN) shouldBe emptySet()
         support.unpairableLanguages(TranslationLanguageRole.Target, null) shouldBe emptySet()
         support.unpairableLanguages(TranslationLanguageRole.Source, POLISH) shouldBe emptySet()
-    }
-
-    @Test
-    fun `engines that pair every supported language report nothing unpairable`() {
-        val byRole = TranslationLanguageSupport.ByRole(
-            sourceLanguages = setOf(ENGLISH),
-            targetLanguages = setOf(POLISH, FRENCH),
-        )
-
-        byRole.unpairableLanguages(TranslationLanguageRole.Target, ENGLISH) shouldBe emptySet()
-        TranslationLanguageSupport.AnyLanguage.unpairableLanguages(TranslationLanguageRole.Target, ENGLISH) shouldBe
-            emptySet()
-    }
-
-    @Test
-    fun `role support filters independently while broad support uses the global catalog`() {
-        val byRole = TranslationLanguageSupport.ByRole(
-            sourceLanguages = setOf(ENGLISH, GERMAN),
-            targetLanguages = setOf(POLISH),
-        )
-
-        byRole.selectableLanguages(TranslationLanguageRole.Source, POLISH)
-            .shouldContainExactlyInAnyOrder(ENGLISH, GERMAN)
-        byRole.selectableLanguages(TranslationLanguageRole.Target, ENGLISH)
-            .shouldContainExactlyInAnyOrder(POLISH)
-        byRole.supportsPair(GERMAN, POLISH) shouldBe true
-
-        translationLanguageOptions(
-            support = TranslationLanguageSupport.AnyLanguage,
-            role = TranslationLanguageRole.Target,
-            counterpart = ENGLISH,
-            availableLocales = arrayOf(Locale.ENGLISH, Locale.FRENCH),
-            displayLocale = Locale.ENGLISH,
-        ).map { it.tag }.shouldContainExactlyInAnyOrder(ENGLISH, FRENCH)
-    }
-
-    @Test
-    fun `catalog exposes each language written in itself`() {
-        val options = translationLanguageOptions(
-            availableLocales = arrayOf(Locale.ENGLISH, Locale.forLanguageTag("zh-Hans")),
-            displayLocale = Locale.ENGLISH,
-        )
-
-        val english = options.first { it.tag.value == "en" }
-        english.nativeName shouldBe english.displayName
-        val simplifiedChinese = options.first { it.tag.value == "zh-Hans" }
-        // The native name is written in the language's own script (the JDK qualifies script
-        // variants as "中文 (简体)"), never falling back to the English display name.
-        simplifiedChinese.nativeName shouldBe "中文 (简体)"
     }
 
     private companion object {

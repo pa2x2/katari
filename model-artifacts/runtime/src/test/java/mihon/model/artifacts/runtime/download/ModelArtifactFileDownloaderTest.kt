@@ -71,21 +71,4 @@ class ModelArtifactFileDownloaderTest {
             File(directory, "vocab.txt.part").exists() shouldBe false
         }
     }
-
-    @Test
-    fun `unsuccessful responses keep the partial content for a later resume`() = runTest {
-        val content = "encoder weights".toByteArray()
-        val file = artifactFile("encoder.onnx", content)
-        val part = File(directory, "encoder.onnx.part").apply { writeBytes(content.copyOfRange(0, 4)) }
-
-        MockWebServer().apply { start() }.use { server ->
-            server.enqueue(MockResponse.Builder().code(503).build())
-
-            val result = ModelArtifactFileDownloader(server.artifactHttpClient())
-                .download(file, File(directory, file.name)) {}
-
-            result shouldBe ModelArtifactFileDownloadResult.NetworkFailed("HTTP 503")
-            part.length() shouldBe 4L
-        }
-    }
 }

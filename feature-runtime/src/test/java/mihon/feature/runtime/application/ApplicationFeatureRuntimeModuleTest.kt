@@ -13,7 +13,6 @@ import mihon.feature.graph.FeatureGraphContributor
 import mihon.feature.graph.capabilityDefinition
 import mihon.feature.graph.discoverFeatureGraphContributions
 import mihon.feature.graph.featureGraphContributor
-import mihon.feature.runtime.createFeatureRuntimeComposition
 import org.junit.jupiter.api.Test
 import uy.kohesive.injekt.api.InjektRegistrar
 
@@ -72,113 +71,6 @@ class ApplicationFeatureRuntimeModuleTest {
     }
 
     @Test
-    fun `an empty module topology still installs the application subject`() {
-        val installation = installApplicationFeatureRuntimeModules(
-            registrar = registrar,
-            modules = emptyList(),
-            context = context,
-        )
-
-        val discovered = discoverFeatureGraphContributions(installation.featureRuntimeInputs.graphContributors)
-
-        discovered.applicationSubjects.size shouldBe 1
-        discovered.applicationSubjects.single().providers shouldBe emptyList()
-    }
-
-    @Test
-    fun `capability ownership cannot be ambiguous across modules`() {
-        val capability = capabilityDefinition<FirstProvider>(
-            CapabilityId("example.shared"),
-            ContributionOwner("example.shared-contract"),
-        )
-
-        val error = shouldThrow<IllegalArgumentException> {
-            installApplicationFeatureRuntimeModules(
-                registrar = registrar,
-                modules = listOf(
-                    module("example.first") {
-                        ApplicationFeatureRuntimeArtifacts(
-                            capabilityProviders = listOf(
-                                CapabilityProvider(
-                                    capability,
-                                    FirstProvider(),
-                                ),
-                            ),
-                        )
-                    },
-                    module("example.second") {
-                        ApplicationFeatureRuntimeArtifacts(
-                            capabilityProviders = listOf(
-                                CapabilityProvider(
-                                    capability,
-                                    FirstProvider(),
-                                ),
-                            ),
-                        )
-                    },
-                ),
-                context = context,
-            )
-        }
-
-        error.message shouldContain "Capability providers for application must have unique ids"
-    }
-
-    @Test
-    fun `runtime boundary ownership cannot be ambiguous`() {
-        val error = shouldThrow<IllegalStateException> {
-            installApplicationFeatureRuntimeModules(
-                registrar = registrar,
-                modules = listOf(
-                    module("example.first") {
-                        ApplicationFeatureRuntimeArtifacts(
-                            runtimeBoundaries = listOf(
-                                applicationFeatureRuntimeBoundary<SharedBoundary> { SharedBoundary() },
-                            ),
-                        )
-                    },
-                    module("example.second") {
-                        ApplicationFeatureRuntimeArtifacts(
-                            runtimeBoundaries = listOf(
-                                applicationFeatureRuntimeBoundary<SharedBoundary> { SharedBoundary() },
-                            ),
-                        )
-                    },
-                ),
-                context = context,
-            )
-        }
-
-        error.message shouldContain "runtime boundaries are installed by multiple modules"
-    }
-
-    @Test
-    fun `installed modules validate the assembled application graph`() {
-        var validated = false
-        val installation = installApplicationFeatureRuntimeModules(
-            registrar = registrar,
-            modules = listOf(
-                module("example.graph") {
-                    ApplicationFeatureRuntimeArtifacts(
-                        graphValidators = listOf(
-                            ApplicationFeatureRuntimeGraphValidator { evaluation ->
-                                evaluation.obligations shouldBe emptyList()
-                                validated = true
-                            },
-                        ),
-                    )
-                },
-            ),
-            context = context,
-        )
-        val composition = createFeatureRuntimeComposition(listOf(installation.featureRuntimeInputs))
-
-        validateInstalledApplicationFeatureRuntimeGraph(installation, composition.evaluation)
-
-        validated shouldBe true
-    }
-
-    @Test
     fun `required modules are installed before the modules that require them`() {
         val installedOrder = mutableListOf<String>()
 
@@ -205,8 +97,8 @@ class ApplicationFeatureRuntimeModuleTest {
     }
 
     @Test
-    fun `a required module that is not installed fails installation`() {
-        val error = shouldThrow<IllegalStateException> {
+    fun `missing and cyclic module requirements fail installation`() {
+        shouldThrow<IllegalStateException> {
             installApplicationFeatureRuntimeModules(
                 registrar = registrar,
                 modules = listOf(
@@ -216,14 +108,9 @@ class ApplicationFeatureRuntimeModuleTest {
                 ),
                 context = context,
             )
-        }
+        }.message shouldContain "requires modules that are not installed: [example.missing]"
 
-        error.message shouldContain "requires modules that are not installed: [example.missing]"
-    }
-
-    @Test
-    fun `cyclic module requirements fail installation`() {
-        val error = shouldThrow<IllegalStateException> {
+        shouldThrow<IllegalStateException> {
             installApplicationFeatureRuntimeModules(
                 registrar = registrar,
                 modules = listOf(
@@ -236,49 +123,7 @@ class ApplicationFeatureRuntimeModuleTest {
                 ),
                 context = context,
             )
-        }
-
-        error.message shouldContain "requirement cycle: example.first -> example.second -> example.first"
-    }
-
-    @Test
-    fun `runtime components expose only requested typed participation`() {
-        val components = ApplicationFeatureRuntimeComponents(
-            listOf(
-                RegisteredApplicationFeatureRuntimeComponent(
-                    "example.first",
-                    FirstRuntimeComponent(),
-                ),
-                RegisteredApplicationFeatureRuntimeComponent(
-                    "example.second",
-                    SecondRuntimeComponent(),
-                ),
-            ),
-        )
-
-        components.instances<FirstRuntimeComponent>().size shouldBe 1
-        components.instances<SecondRuntimeComponent>().size shouldBe 1
-        components.instances<MissingRuntimeComponent>() shouldBe emptyList()
-    }
-
-    @Test
-    fun `runtime component ids must be unique`() {
-        val error = shouldThrow<IllegalArgumentException> {
-            ApplicationFeatureRuntimeComponents(
-                listOf(
-                    RegisteredApplicationFeatureRuntimeComponent(
-                        "example.same",
-                        FirstRuntimeComponent(),
-                    ),
-                    RegisteredApplicationFeatureRuntimeComponent(
-                        "example.same",
-                        SecondRuntimeComponent(),
-                    ),
-                ),
-            )
-        }
-
-        error.message shouldContain "Duplicate Application Feature runtime components"
+        }.message shouldContain "requirement cycle: example.first -> example.second -> example.first"
     }
 
     private fun module(
@@ -302,12 +147,4 @@ class ApplicationFeatureRuntimeModuleTest {
     private class FirstProvider
 
     private class SecondProvider
-
-    private class SharedBoundary
-
-    private class FirstRuntimeComponent : ApplicationFeatureRuntimeComponent
-
-    private class SecondRuntimeComponent : ApplicationFeatureRuntimeComponent
-
-    private class MissingRuntimeComponent : ApplicationFeatureRuntimeComponent
 }

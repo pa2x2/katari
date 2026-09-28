@@ -12,15 +12,6 @@ import tachiyomi.domain.entry.repository.EntryRepository
 
 class GetEntryTest {
     @Test
-    fun `await preserves coroutine cancellation`() = runTest {
-        val repository = mockk<EntryRepository> {
-            coEvery { getEntryById(1L) } throws CancellationException("superseded")
-        }
-
-        shouldThrow<CancellationException> { GetEntry(repository).await(1L) }
-    }
-
-    @Test
     fun `batch await restores requested order and omits missing entries`() = runTest {
         val first = Entry.create().copy(id = 1L)
         val third = Entry.create().copy(id = 3L)
@@ -46,11 +37,13 @@ class GetEntryTest {
     }
 
     @Test
-    fun `batch await preserves coroutine cancellation without fallback`() = runTest {
+    fun `single and batch reads preserve coroutine cancellation without fallback`() = runTest {
         val repository = mockk<EntryRepository> {
+            coEvery { getEntryById(1L) } throws CancellationException("superseded")
             coEvery { getEntriesByIds(listOf(1L, 2L)) } throws CancellationException("superseded")
         }
 
+        shouldThrow<CancellationException> { GetEntry(repository).await(1L) }
         shouldThrow<CancellationException> { GetEntry(repository).await(listOf(1L, 2L)) }
     }
 }

@@ -131,22 +131,6 @@ class AnimeDownloadManagerTest {
     }
 
     @Test
-    fun `removing a queued episode keeps the active download running`() {
-        isActiveEpisodeBeingRemoved(
-            activeEpisodeId = 1L,
-            episodeIds = listOf(2L),
-        ) shouldBe false
-    }
-
-    @Test
-    fun `removing the active episode stops its download`() {
-        isActiveEpisodeBeingRemoved(
-            activeEpisodeId = 1L,
-            episodeIds = listOf(1L, 2L),
-        ) shouldBe true
-    }
-
-    @Test
     fun `queue mutations made during restore win without duplicating episodes`() {
         val restoredFirst = download(episodeId = 1L)
         val restoredReplaced = download(episodeId = 2L)

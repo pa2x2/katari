@@ -1,5 +1,6 @@
 package mihon.entry.interactions.book.document.reader
 
+import mihon.book.api.document.BookDocumentPosition
 import mihon.entry.interactions.viewer.EntryChildWindow
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -11,13 +12,29 @@ import kotlin.test.assertNotNull
 @RunWith(RobolectricTestRunner::class)
 internal class BookDocumentViewerRestorationTest : BookDocumentViewerFixture() {
     @Test
-    fun `restoring an early block position returns it to the viewport reading anchor`() {
-        assertRestorationRoundTrip(offsetWithinBlock = 20)
-    }
+    fun `restoring a block position returns it to the viewport reading anchor`() {
+        val section = section("current", listOf("a".repeat(100)))
+        val item = BookDocumentViewerItem.Block(section, section.document.blocks.single())
+        for (offsetWithinBlock in listOf(20, 70)) {
+            val scrollOffset = bookDocumentScrollOffset(
+                document = section.document,
+                position = BookDocumentPosition(item.content.id, offsetWithinBlock),
+                itemSize = 1_000,
+                viewportStartOffset = 0,
+                viewportEndOffset = 800,
+            )
 
-    @Test
-    fun `restoring a late block position returns it to the viewport reading anchor`() {
-        assertRestorationRoundTrip(offsetWithinBlock = 70)
+            val restored = bookDocumentViewerLocation(
+                items = listOf(item),
+                visibleItems = listOf(
+                    BookDocumentVisibleItemLayout(index = 0, key = item.key, offset = -scrollOffset, size = 1_000),
+                ),
+                viewportStartOffset = 0,
+                viewportEndOffset = 800,
+            )
+
+            assertEquals(offsetWithinBlock, assertNotNull(restored).position.offsetWithinBlock)
+        }
     }
 
     @Test
@@ -98,16 +115,5 @@ internal class BookDocumentViewerRestorationTest : BookDocumentViewerFixture() {
         assertNotNull(anchor)
         assertEquals(afterCrossing.indexOfFirst { it.key == visibleBlock.key }, anchor.index)
         assertEquals(120, anchor.scrollOffset)
-    }
-
-    @Test
-    fun `explicit chapter navigation discards a retained position and targets the beginning`() {
-        val restored = section("selected", listOf("First", "Second", "Third")).let { section ->
-            section.copy(initialPosition = section.document.document.positionAtProgression(0.9f))
-        }
-
-        val selected = restored.fromBeginningForExplicitNavigation()
-
-        assertEquals(0, selected.document.document.logicalOffset(selected.initialPosition))
     }
 }

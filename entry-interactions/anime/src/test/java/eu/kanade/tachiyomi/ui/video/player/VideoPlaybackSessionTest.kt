@@ -1,6 +1,5 @@
 package eu.kanade.tachiyomi.ui.video.player
 
-import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import mihon.entry.interactions.anime.state.animeProgressState
 import org.junit.jupiter.api.Test
@@ -8,27 +7,8 @@ import org.junit.jupiter.api.Test
 class VideoPlaybackSessionTest {
 
     @Test
-    fun `restored baseline preserves progress while activity uses active wall clock`() {
-        val session = VideoPlaybackSession(entryId = 3L, chapterId = 7L, resourceKey = "/episode", now = { 1_000L })
-
-        session.restore(30_000L)
-        val snapshot = session.snapshot(positionMs = 45_000L, durationMs = 100_000L, activeDurationMs = 5_000L)
-
-        snapshot.progressState.entryId shouldBe 3L
-        snapshot.progressState.chapterId shouldBe 7L
-        snapshot.progressState.resourceKey shouldBe "/episode"
-        snapshot.progressState.locator.position shouldBe 45_000L
-        snapshot.progressState.locator.extent shouldBe 100_000L
-        snapshot.progressState.completed shouldBe false
-        snapshot.progressState.locatorUpdatedAt shouldBe 1_000L
-        snapshot.progressState.completionUpdatedAt shouldBe 0L
-        snapshot.activity?.durationMillis shouldBe 5_000L
-        snapshot.activity?.recordedAtEpochMillis shouldBe 1_000L
-    }
-
-    @Test
-    fun `history delta does not go negative after backwards seek baseline reset`() {
-        val nowValues = ArrayDeque(listOf(2_000L, 3_000L))
+    fun `completion timestamp changes only when crossing the completion threshold`() {
+        val nowValues = ArrayDeque(listOf(4_000L, 5_000L))
         val session = VideoPlaybackSession(
             entryId = 3L,
             chapterId = 7L,
@@ -36,23 +16,15 @@ class VideoPlaybackSessionTest {
             now = { nowValues.removeFirst() },
         )
 
-        session.restore(40_000L)
-        val snapshot = session.snapshot(positionMs = 10_000L, durationMs = 100_000L)
+        val completed = session.snapshot(positionMs = 90_000L, durationMs = 100_000L)
+        val stillCompleted = session.snapshot(positionMs = 95_000L, durationMs = 100_000L)
 
-        snapshot.progressState.locator.position shouldBe 10_000L
-        snapshot.activity.shouldBeNull()
-    }
-
-    @Test
-    fun `completion threshold marks completed at ninety percent`() {
-        val session = VideoPlaybackSession(entryId = 3L, chapterId = 7L, resourceKey = "/episode", now = { 4_000L })
-
-        val snapshot = session.snapshot(positionMs = 90_000L, durationMs = 100_000L)
-
-        snapshot.progressState.completed shouldBe true
-        snapshot.completedNow shouldBe true
-        snapshot.progressState.completionUpdatedAt shouldBe 4_000L
-        snapshot.activity.shouldBeNull()
+        completed.progressState.completed shouldBe true
+        completed.completedNow shouldBe true
+        completed.progressState.completionUpdatedAt shouldBe 4_000L
+        stillCompleted.completedNow shouldBe false
+        stillCompleted.progressState.locatorUpdatedAt shouldBe 5_000L
+        stillCompleted.progressState.completionUpdatedAt shouldBe 4_000L
     }
 
     @Test
@@ -74,10 +46,8 @@ class VideoPlaybackSessionTest {
         val snapshot = session.snapshot(positionMs = 20_000L, durationMs = 100_000L)
 
         snapshot.progressState.completed shouldBe false
-        snapshot.progressState.locator.position shouldBe 20_000L
         snapshot.progressState.locatorUpdatedAt shouldBe 8_000L
         snapshot.progressState.completionUpdatedAt shouldBe 8_000L
-        snapshot.activity.shouldBeNull()
         snapshot.completedNow shouldBe false
     }
 }

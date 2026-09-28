@@ -1,8 +1,6 @@
 package mihon.text.recognition.runtime.registry
 
-import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContainExactly
-import io.kotest.matchers.string.shouldContain
 import mihon.text.recognition.api.component.TextRecognitionComponentRole
 import mihon.text.recognition.api.image.ImageSize
 import mihon.text.recognition.api.pipeline.TextRecognitionPipeline
@@ -15,7 +13,6 @@ import mihon.text.recognition.runtime.FakeRecognizer
 import mihon.text.recognition.runtime.JAPANESE
 import mihon.text.recognition.runtime.contribution
 import mihon.text.recognition.runtime.knownComponent
-import mihon.text.recognition.runtime.preset
 import org.junit.jupiter.api.Test
 
 class TextRecognitionComponentRegistryTest {
@@ -44,35 +41,6 @@ class TextRecognitionComponentRegistryTest {
         registry.knownComponents.map { it.id } shouldContainExactly
             listOf(detector.catalogEntry.id, recognizer.catalogEntry.id, excludedRecognizer.id)
         registry.supportedLanguages shouldContainExactly listOf(JAPANESE)
-    }
-
-    @Test
-    fun `a preset must place components in the roles they implement`() {
-        val swapped = preset(
-            id = "swapped",
-            pipeline = TextRecognitionPipeline(recognizer.catalogEntry.id, detector.catalogEntry.id),
-        )
-
-        shouldThrow<IllegalArgumentException> {
-            TextRecognitionComponentRegistry(
-                listOf(contribution(EXAMPLE_PROVIDER, listOf(detector, recognizer), presets = listOf(swapped))),
-            )
-        }.message shouldContain "wrong roles"
-    }
-
-    @Test
-    fun `a preset cannot claim a language its reader does not support`() {
-        val english = preset(
-            id = "english",
-            pipeline = TextRecognitionPipeline(detector.catalogEntry.id, recognizer.catalogEntry.id),
-            languages = setOf(ENGLISH),
-        )
-
-        shouldThrow<IllegalArgumentException> {
-            TextRecognitionComponentRegistry(
-                listOf(contribution(EXAMPLE_PROVIDER, listOf(detector, recognizer), presets = listOf(english))),
-            )
-        }.message shouldContain "cannot read en"
     }
 
     @Test

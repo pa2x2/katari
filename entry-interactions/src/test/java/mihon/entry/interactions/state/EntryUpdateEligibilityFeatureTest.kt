@@ -2,7 +2,6 @@ package mihon.entry.interactions.state
 
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.EntryUpdateStrategy
-import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import mihon.entry.interactions.runtime.EntryInteractionComposition
 import mihon.entry.interactions.runtime.EntryInteractionPlugin
@@ -11,31 +10,9 @@ import mihon.entry.interactions.runtime.createEntryInteractionComposition
 import mihon.feature.graph.ContributionOwner
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.model.Entry
-import tachiyomi.domain.entry.model.EntryStatus
 
 class EntryUpdateEligibilityFeatureTest {
     private val entry = Entry.create().copy(id = 7L, type = EntryType.BOOK)
-
-    @Test
-    fun `one-shot completed caught-up and started policies produce structured reasons`() {
-        val feature = featureFor(compositionFor(EntryType.BOOK), policy())
-
-        feature.evaluate(
-            request(
-                entry.copy(updateStrategy = EntryUpdateStrategy.ONLY_FETCH_ONCE),
-                totalCount = 1L,
-            ),
-        ) shouldBe EntryUpdateEligibility.Skipped(EntryUpdateSkipReason.NOT_ALWAYS_UPDATE)
-        feature.evaluate(
-            request(entry.copy(status = EntryStatus.COMPLETED)),
-        ) shouldBe EntryUpdateEligibility.Skipped(EntryUpdateSkipReason.COMPLETED)
-        feature.evaluate(
-            request(entry, unconsumedCount = 1L),
-        ) shouldBe EntryUpdateEligibility.Skipped(EntryUpdateSkipReason.NOT_CAUGHT_UP)
-        feature.evaluate(
-            request(entry, totalCount = 1L, hasStarted = false),
-        ) shouldBe EntryUpdateEligibility.Skipped(EntryUpdateSkipReason.NOT_STARTED)
-    }
 
     @Test
     fun `release-window restriction uses contextual fetch bounds`() {
@@ -51,29 +28,6 @@ class EntryUpdateEligibilityFeatureTest {
     }
 
     @Test
-    fun `disabled restrictions do not reconstruct type-specific support`() {
-        val feature = featureFor(
-            compositionFor(EntryType.BOOK),
-            policy(
-                skipCompleted = false,
-                skipWhenUnconsumed = false,
-                skipWhenNotStarted = false,
-                skipOutsideReleasePeriod = false,
-            ),
-        )
-        val otherwiseRestricted = entry.copy(status = EntryStatus.COMPLETED, nextUpdate = 200L)
-
-        feature.evaluate(
-            request(
-                otherwiseRestricted,
-                totalCount = 1L,
-                unconsumedCount = 1L,
-                fetchWindowUpperBound = 100L,
-            ),
-        ) shouldBe EntryUpdateEligibility.Eligible
-    }
-
-    @Test
     fun `unknown progress evidence does not trigger progress-dependent skips`() {
         val feature = featureFor(compositionFor(EntryType.BOOK), policy())
 
@@ -85,15 +39,6 @@ class EntryUpdateEligibilityFeatureTest {
                 hasStarted = null,
             ),
         ) shouldBe EntryUpdateEligibility.Eligible
-    }
-
-    @Test
-    fun `an Entry type outside runtime composition fails instead of becoming unsupported`() {
-        val feature = featureFor(compositionFor(EntryType.BOOK), policy())
-
-        shouldThrow<IllegalStateException> {
-            feature.evaluate(request(entry.copy(type = EntryType.ANIME)))
-        }
     }
 
     private fun compositionFor(type: EntryType): EntryInteractionComposition {

@@ -1,7 +1,6 @@
 package eu.kanade.presentation.more.settings.screen.translation
 
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -28,7 +27,6 @@ import mihon.translation.api.engine.TranslationEngineStatus
 import mihon.translation.api.engine.TranslationProviderId
 import mihon.translation.api.host.TranslationHostActionResult
 import mihon.translation.api.host.TranslationHostActions
-import mihon.translation.api.host.TranslationSetupDestination
 import mihon.translation.api.language.TranslationDefaultTarget
 import mihon.translation.api.language.TranslationLanguagePair
 import mihon.translation.api.language.TranslationLanguageSupport
@@ -38,15 +36,12 @@ import mihon.translation.api.preparation.ReadyTranslation
 import mihon.translation.api.preparation.TranslationEngineChoiceReason
 import mihon.translation.api.preparation.TranslationPreparation
 import mihon.translation.api.preparation.TranslationSystemSetupReason
-import mihon.translation.api.preparation.TranslationUnavailableReason
 import mihon.translation.api.provider.TranslationInvocationPolicy
 import mihon.translation.api.provider.TranslationProviderDisclosure
 import mihon.translation.api.provider.TranslationProviderPresentation
 import mihon.translation.api.request.TranslationRequest
-import mihon.translation.api.request.TranslationSourceLanguageSelection
 import mihon.translation.api.request.TranslationTargetLanguageSelection
 import mihon.translation.api.result.TranslationExecution
-import mihon.translation.ui.session.TranslationSessionState
 import org.junit.jupiter.api.Test
 import tachiyomi.core.common.preference.InMemoryPreferenceStore
 
@@ -110,22 +105,11 @@ class TranslationSettingsScreenModelTest {
     }
 
     @Test
-    fun `engine cannot be selected before its readiness requirement is satisfied`() = runTest {
+    fun `playground stages profile settings until save while request-only edits stay transient`() = runTest {
         val dispatcher = StandardTestDispatcher(testScheduler)
         Dispatchers.setMain(dispatcher)
-        val hostActions = FakeHostActions().apply {
-            states = knownEngines.map { engine ->
-                TranslationEngineState(
-                    engine = engine,
-                    presentation = PRESENTATION,
-                    status = if (engine.id == SECOND_ENGINE) {
-                        TranslationEngineStatus.NotInstalled
-                    } else {
-                        TranslationEngineStatus.Ready
-                    },
-                )
-            }
-        }
+        val hostActions = FakeHostActions()
+        hostActions.defaultTargetLanguage.set(TranslationTargetLanguageSelection.Explicit(ENGLISH))
         val model = TranslationSettingsScreenModel(
             feature = SetupRequiredFeature(),
             hostActions = hostActions,
@@ -133,42 +117,7 @@ class TranslationSettingsScreenModelTest {
 
         try {
             advanceUntilIdle()
-            model.setEngine(SECOND_ENGINE)
-
-            model.playground.value.engine shouldBe ANDROID_ENGINE
             model.playground.value.hasUnsavedProfileChanges shouldBe false
-        } finally {
-            model.onDispose()
-            Dispatchers.resetMain()
-        }
-    }
-
-    @Test
-    fun `playground stages profile settings until save while request-only edits stay transient`() = runTest {
-        val dispatcher = StandardTestDispatcher(testScheduler)
-        Dispatchers.setMain(dispatcher)
-        val hostActions = FakeHostActions()
-        hostActions.defaultTargetLanguage.set(TranslationTargetLanguageSelection.Explicit(ENGLISH))
-        val feature = SetupRequiredFeature(hostActions.knownEngines)
-        val model = TranslationSettingsScreenModel(
-            feature = feature,
-            hostActions = hostActions,
-        )
-
-        try {
-            advanceUntilIdle()
-
-            feature.lastRequest shouldBe TranslationRequest(
-                text = "Bonjour tout le monde",
-                sourceLanguage = TranslationSourceLanguageSelection.Explicit(FRENCH),
-                targetLanguage = TranslationTargetLanguageSelection.Explicit(ENGLISH),
-                engine = TranslationEngineSelection.Explicit(ANDROID_ENGINE),
-            )
-            model.controller.state.value
-                .shouldBeInstanceOf<TranslationSessionState.PreparationRequired>()
-            model.playground.value.hasUnsavedProfileChanges shouldBe false
-            model.supportsSetup(ANDROID_ENGINE) shouldBe true
-            model.supportsSetup(SECOND_ENGINE) shouldBe false
 
             model.setSourceLanguage(ENGLISH)
             model.setText("A request-only experiment")
@@ -262,113 +211,6 @@ class TranslationSettingsScreenModelTest {
         }
     }
 
-    @Test
-    fun `unavailable implicit engine leaves the playground unconfigured`() = runTest {
-        val dispatcher = StandardTestDispatcher(testScheduler)
-        Dispatchers.setMain(dispatcher)
-        val hostActions = FakeHostActions().apply {
-            inspectedSelection = null
-            states = states.map { state ->
-                if (state.engine.id == ANDROID_ENGINE) {
-                    state.copy(
-                        status = TranslationEngineStatus.Unavailable(TranslationUnavailableReason.ServiceMissing),
-                    )
-                } else {
-                    state
-                }
-            }
-        }
-        val feature = SetupRequiredFeature(hostActions.knownEngines)
-        val model = TranslationSettingsScreenModel(
-            feature = feature,
-            hostActions = hostActions,
-        )
-
-        try {
-            advanceUntilIdle()
-
-            model.playground.value.engine shouldBe null
-            model.playground.value.engineSelectionResolved shouldBe true
-            feature.lastRequest?.engine shouldBe TranslationEngineSelection.ProfileDefault
-            model.controller.state.value
-                .shouldBeInstanceOf<TranslationSessionState.PreparationRequired>()
-                .preparation shouldBe TranslationPreparation.EngineChoiceRequired(
-                reason = TranslationEngineChoiceReason.NoEngineConfigured,
-                engines = hostActions.knownEngines,
-            )
-        } finally {
-            model.onDispose()
-            Dispatchers.resetMain()
-        }
-    }
-
-    @Test
-    fun `disposing the playground discards unsaved profile changes`() = runTest {
-        val dispatcher = StandardTestDispatcher(testScheduler)
-        Dispatchers.setMain(dispatcher)
-        val hostActions = FakeHostActions()
-        hostActions.defaultTargetLanguage.set(TranslationTargetLanguageSelection.Explicit(ENGLISH))
-        val model = TranslationSettingsScreenModel(
-            feature = SetupRequiredFeature(),
-            hostActions = hostActions,
-        )
-
-        try {
-            advanceUntilIdle()
-            model.setTargetLanguage(FRENCH)
-            model.setEngine(SECOND_ENGINE)
-            model.playground.value.hasUnsavedProfileChanges shouldBe true
-
-            model.onDispose()
-
-            hostActions.selectedEngine.get() shouldBe ANDROID_ENGINE
-            hostActions.defaultTargetLanguage.get() shouldBe
-                TranslationTargetLanguageSelection.Explicit(ENGLISH)
-        } finally {
-            Dispatchers.resetMain()
-        }
-    }
-
-    @Test
-    fun `returning from either setup destination retries the playground once`() = runTest {
-        val dispatcher = StandardTestDispatcher(testScheduler)
-        Dispatchers.setMain(dispatcher)
-
-        try {
-            TranslationSetupDestination.entries.forEach { destination ->
-                val setupResult = TranslationHostActionResult.SetupOpened(destination)
-                val hostActions = FakeHostActions().apply {
-                    this.setupResult = setupResult
-                }
-                val feature = SetupRequiredFeature()
-                val model = TranslationSettingsScreenModel(
-                    feature = feature,
-                    hostActions = hostActions,
-                )
-                advanceUntilIdle()
-                val requestsBeforeSetup = feature.requestCount
-                var completedResult: TranslationHostActionResult? = null
-
-                model.openSetup(ANDROID_ENGINE) { completedResult = it }
-                advanceUntilIdle()
-
-                completedResult shouldBe setupResult
-                feature.requestCount shouldBe requestsBeforeSetup
-
-                model.onResume()
-                advanceUntilIdle()
-                feature.requestCount shouldBe requestsBeforeSetup + 1
-
-                model.onResume()
-                advanceUntilIdle()
-                feature.requestCount shouldBe requestsBeforeSetup + 1
-                model.onDispose()
-            }
-        } finally {
-            Dispatchers.resetMain()
-        }
-    }
-
     private class FakeHostActions : TranslationHostActions {
         private val store = InMemoryPreferenceStore()
         override val knownEngines = listOf(knownEngine(ANDROID_ENGINE), knownEngine(SECOND_ENGINE))
@@ -379,9 +221,7 @@ class TranslationSettingsScreenModelTest {
                 status = TranslationEngineStatus.Ready,
             )
         }
-        var inspectedSelection: TranslationEngineId? = ANDROID_ENGINE
         var inspectionStates: Flow<TranslationEngineInspection>? = null
-        var setupResult: TranslationHostActionResult = TranslationHostActionResult.SetupUnsupported
         var languageSupportByEngine: Map<TranslationEngineId, TranslationLanguageSupportInspection> =
             knownEngines.associate { engine ->
                 engine.id to TranslationLanguageSupportInspection.Available(
@@ -430,7 +270,7 @@ class TranslationSettingsScreenModelTest {
 
         override suspend fun inspectEngines() = TranslationEngineInspection(
             engines = states,
-            selectedEngine = inspectedSelection,
+            selectedEngine = ANDROID_ENGINE,
         )
 
         override fun inspectEngineStates(): Flow<TranslationEngineInspection> =
@@ -452,7 +292,8 @@ class TranslationSettingsScreenModelTest {
 
         override fun supportsSetup(engine: TranslationEngineId) = engine == ANDROID_ENGINE
 
-        override suspend fun openSetup(engine: TranslationEngineId) = setupResult
+        override suspend fun openSetup(engine: TranslationEngineId) =
+            TranslationHostActionResult.SetupUnsupported
 
         override fun setSelectedEngine(engine: TranslationEngineId) {
             selectedEngine.set(engine)
@@ -466,19 +307,12 @@ class TranslationSettingsScreenModelTest {
         }
     }
 
-    private class SetupRequiredFeature(
-        private val engines: List<KnownTranslationEngine> = emptyList(),
-    ) : TranslationFeature {
-        var lastRequest: TranslationRequest? = null
-        var requestCount = 0
-
+    private class SetupRequiredFeature : TranslationFeature {
         override suspend fun prepare(request: TranslationRequest): TranslationPreparation {
-            requestCount += 1
-            lastRequest = request
             val engine = (request.engine as? TranslationEngineSelection.Explicit)?.engine
                 ?: return TranslationPreparation.EngineChoiceRequired(
                     reason = TranslationEngineChoiceReason.NoEngineConfigured,
-                    engines = engines,
+                    engines = emptyList(),
                 )
             return TranslationPreparation.SystemSetupRequired(
                 engine = engine,

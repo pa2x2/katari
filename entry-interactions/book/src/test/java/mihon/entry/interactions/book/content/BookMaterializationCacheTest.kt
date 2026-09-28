@@ -22,7 +22,7 @@ import kotlin.test.assertTrue
 
 class BookMaterializationCacheTest {
     @Test
-    fun `stable revision reuses one atomic materialization`() = runTest {
+    fun `stable revision reuses one atomic materialization and a new revision gets its own entry`() = runTest {
         val cache = cache()
         val writes = AtomicInteger()
 
@@ -34,25 +34,16 @@ class BookMaterializationCacheTest {
         val second = cache.acquire(key(revision = "v1"), metadata()) {
             error("cached materialization should be reused")
         }
+        val revised = cache.acquire(key(revision = "v2"), metadata()) { it.writeText("revised") }
 
         assertEquals(1, writes.get())
         assertEquals(first.file, second.file)
         assertEquals("publication", second.file.readText())
         assertEquals(BookResourceCacheState.CACHED, cache.cacheState(key(revision = "v1")))
+        assertNotEquals(first.file, revised.file)
+        assertEquals("revised", revised.file.readText())
         second.close()
-    }
-
-    @Test
-    fun `revision change creates a different cache entry`() = runTest {
-        val cache = cache()
-        val first = cache.acquire(key("v1"), metadata()) { it.writeText("one") }
-        first.close()
-        val second = cache.acquire(key("v2"), metadata()) { it.writeText("two") }
-
-        assertNotEquals(first.file, second.file)
-        assertEquals("one", first.file.readText())
-        assertEquals("two", second.file.readText())
-        second.close()
+        revised.close()
     }
 
     @Test

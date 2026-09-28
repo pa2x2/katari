@@ -9,24 +9,10 @@ import org.junit.jupiter.api.Test
 class MangaDownloadArtifactTest {
 
     @Test
-    fun `completed page directory is a discoverable artifact`() {
-        val directory = directory(file("001.jpg", size = 42L))
-
-        directory.isValidMangaChapterArtifact() shouldBe true
-    }
-
-    @Test
-    fun `metadata-only directory is not a discoverable artifact`() {
-        val directory = directory(file("ComicInfo.xml", size = 42L))
-
-        directory.isValidMangaChapterArtifact() shouldBe false
-    }
-
-    @Test
-    fun `empty archive is not a discoverable artifact`() {
-        val archive = file("Chapter 1.cbz", size = 0L)
-
-        archive.isValidMangaChapterArtifact() shouldBe false
+    fun `only directories with pages and non-empty archives are discoverable artifacts`() {
+        directory(file("001.jpg", size = 42L)).isValidMangaChapterArtifact() shouldBe true
+        directory(file("ComicInfo.xml", size = 42L)).isValidMangaChapterArtifact() shouldBe false
+        file("Chapter 1.cbz", size = 0L).isValidMangaChapterArtifact() shouldBe false
     }
 
     private fun directory(vararg children: UniFile): UniFile = mockk {

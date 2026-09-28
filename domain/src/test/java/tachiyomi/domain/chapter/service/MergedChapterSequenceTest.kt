@@ -77,7 +77,7 @@ class MergedChapterSequenceTest {
     }
 
     @Test
-    fun `merged display order ignores removed member ids that no longer have chapters`() {
+    fun `merged orders ignore removed member ids that no longer have chapters`() {
         val manga = Entry.create().copy(
             id = 1L,
             chapterFlags = Entry.CHAPTER_SORT_DESC or Entry.CHAPTER_SORTING_NUMBER,
@@ -90,20 +90,6 @@ class MergedChapterSequenceTest {
 
         chapters.sortedForMergedDisplay(manga, mergedEntryIds = listOf(1L, 2L, 3L)).map(EntryChapter::id) shouldBe
             listOf(101L, 301L)
-    }
-
-    @Test
-    fun `merged reading order ignores removed member ids that no longer have chapters`() {
-        val manga = Entry.create().copy(
-            id = 1L,
-            chapterFlags = Entry.CHAPTER_SORT_DESC or Entry.CHAPTER_SORTING_NUMBER,
-        )
-
-        val chapters = listOf(
-            chapter(id = 101, entryId = 1, chapterNumber = 1.0),
-            chapter(id = 301, entryId = 3, chapterNumber = 1.0),
-        )
-
         chapters.sortedForReading(manga, mergedEntryIds = listOf(1L, 2L, 3L)).map(EntryChapter::id) shouldBe
             listOf(301L, 101L)
     }

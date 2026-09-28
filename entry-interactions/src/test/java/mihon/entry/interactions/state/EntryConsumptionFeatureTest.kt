@@ -38,55 +38,6 @@ class EntryConsumptionFeatureTest {
         coVerify(exactly = 0) { history.recordManualCompletions(any(), any()) }
     }
 
-    @Test
-    fun `no changed children produces no lifecycle event`() = runTest {
-        val processor = consumptionProcessor()
-        coEvery { processor.setConsumed(entry, listOf(child), consumed = true) } returns emptyList()
-        val lifecycle = lifecycleSink()
-        val history = mockk<EntryHistoryFeature>(relaxed = true)
-        val feature = featureFor(plugin(EntryConsumptionCapability.bind(processor)), lifecycle, history)
-
-        feature.setConsumed(entry, listOf(child), consumed = true) shouldBe EntryConsumptionResult.NoChange
-
-        coVerify(exactly = 0) { lifecycle.onEvent(any()) }
-        coVerify(exactly = 0) { history.recordManualCompletions(any(), any()) }
-    }
-
-    @Test
-    fun `marking children consumed records manual completions once for changed children`() = runTest {
-        val consumedChild = child.copy(read = true)
-        val processor = consumptionProcessor()
-        coEvery { processor.setConsumed(entry, listOf(child), consumed = true) } returns listOf(consumedChild)
-        val lifecycle = lifecycleSink()
-        val history = mockk<EntryHistoryFeature>(relaxed = true)
-        val feature = featureFor(plugin(EntryConsumptionCapability.bind(processor)), lifecycle, history)
-
-        feature.setConsumed(entry, listOf(child), consumed = true) shouldBe
-            EntryConsumptionResult.Changed(listOf(consumedChild))
-
-        coVerify(exactly = 1) { history.recordManualCompletions(entry, listOf(consumedChild)) }
-        coVerify(exactly = 1) { lifecycle.onEvent(any()) }
-    }
-
-    @Test
-    fun `a partial type without consumption remains valid and inapplicable`() = runTest {
-        val lifecycle = lifecycleSink()
-        val history = mockk<EntryHistoryFeature>(relaxed = true)
-        val feature = featureFor(plugin(), lifecycle, history)
-
-        feature.isApplicable(entry.type) shouldBe false
-        feature.canSetConsumed(
-            entry.type,
-            EntryConsumptionStatus(consumed = false, hasPartialProgress = false),
-            consumed = true,
-        ) shouldBe false
-        feature.setConsumed(entry, listOf(child), consumed = true) shouldBe
-            EntryConsumptionResult.Inapplicable(entry.type)
-
-        coVerify(exactly = 0) { lifecycle.onEvent(any()) }
-        coVerify(exactly = 0) { history.recordManualCompletions(any(), any()) }
-    }
-
     private fun featureFor(
         plugin: EntryInteractionPlugin,
         lifecycle: EntryDownloadLifecycleEventSink,

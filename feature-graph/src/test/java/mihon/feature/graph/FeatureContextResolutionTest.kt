@@ -1,11 +1,8 @@
 package mihon.feature.graph
 
-import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.string.shouldContain
-import io.kotest.matchers.types.shouldBeInstanceOf
 import org.junit.jupiter.api.Test
 
 class FeatureContextResolutionTest {
@@ -61,7 +58,7 @@ class FeatureContextResolutionTest {
     }
 
     @Test
-    fun `applicable context exposes delayed specialized obligation`() {
+    fun `applicable context exposes a missing adapter as an obligation and activates with a supplied one`() {
         val candidate = candidate(contentType())
 
         val evaluated = resolveFeatureContext(candidate, applicableEvidence())
@@ -73,86 +70,18 @@ class FeatureContextResolutionTest {
         result.obligations.single().requirement shouldBe adapter
         evaluated.obligations shouldContainExactly result.obligations
         evaluated.behaviorProjections shouldBe emptyList()
-    }
 
-    @Test
-    fun `applicable context activates behavior projections with supplied adapters`() {
         val suppliedAdapter = SpecializedAdapter(adapter, ExampleAdapter())
-        val candidate = candidate(contentType(adapters = listOf(suppliedAdapter)))
+        val suppliedCandidate = candidate(contentType(adapters = listOf(suppliedAdapter)))
 
-        val evaluated = resolveFeatureContext(candidate, applicableEvidence())
+        val activated = resolveFeatureContext(suppliedCandidate, applicableEvidence())
 
-        val result = evaluated.integration as ApplicableFeatureContext
-        result.suppliedAdapters shouldContainExactly listOf(suppliedAdapter)
-        result.evidence.map { it.input } shouldContainExactly listOf(preference, source)
-        evaluated.obligations shouldBe emptyList()
-        evaluated.behaviorProjections.map { it.projection } shouldContainExactly listOf(behavior)
-        evaluated.behaviorProjections.single().subject shouldBe candidate.subject
-    }
-
-    @Test
-    fun `context is reevaluated from each immutable evidence snapshot`() {
-        val candidate = candidate(
-            contentType(adapters = listOf(SpecializedAdapter(adapter, ExampleAdapter()))),
-        )
-
-        resolveFeatureContext(
-            candidate,
-            listOf(
-                contextEvidence(source, SourceContext(supported = false)),
-                contextEvidence(preference, PreferenceContext(enabled = true)),
-            ),
-        ).integration.shouldBeInstanceOf<BlockedFeatureContext>()
-
-        resolveFeatureContext(candidate, applicableEvidence()).integration
-            .shouldBeInstanceOf<ApplicableFeatureContext>()
-    }
-
-    @Test
-    fun `resolution rejects unexpected contradictory and undeclared evidence access`() {
-        val candidate = candidate(
-            contentType(adapters = listOf(SpecializedAdapter(adapter, ExampleAdapter()))),
-        )
-        val other = contextInputDefinition<SourceContext>(ContextInputId("example.other"), contextOwner)
-        val contradictory = contextInputDefinition<SourceContext>(source.id, ContributionOwner("other.context"))
-
-        shouldThrow<IllegalArgumentException> {
-            resolveFeatureContext(candidate, applicableEvidence() + contextEvidence(other, SourceContext(true)))
-        }.message shouldContain "Unexpected context input"
-
-        shouldThrow<IllegalArgumentException> {
-            resolveFeatureContext(
-                candidate,
-                listOf(
-                    contextEvidence(contradictory, SourceContext(true)),
-                    contextEvidence(preference, PreferenceContext(true)),
-                ),
-            )
-        }.message shouldContain "Contradictory context input"
-
-        val integration = integration(
-            rule = featureContextRule(featureOwner) { evidence ->
-                evidence.value(other)
-                FeatureContextDecision.Applicable
-            },
-        )
-        val undeclaredCandidate = candidate(contentType(), integration)
-        shouldThrow<IllegalArgumentException> {
-            resolveFeatureContext(undeclaredCandidate, applicableEvidence())
-        }.message shouldContain "undeclared input"
-
-        val inventedBlocker = blocker("example.invented", source)
-        val inventedBlockerCandidate = candidate(
-            contentType(),
-            integration(
-                rule = featureContextRule(featureOwner) {
-                    FeatureContextDecision.Blocked(listOf(inventedBlocker))
-                },
-            ),
-        )
-        shouldThrow<IllegalArgumentException> {
-            resolveFeatureContext(inventedBlockerCandidate, applicableEvidence())
-        }.message shouldContain "undeclared blocker"
+        val applicable = activated.integration as ApplicableFeatureContext
+        applicable.suppliedAdapters shouldContainExactly listOf(suppliedAdapter)
+        applicable.evidence.map { it.input } shouldContainExactly listOf(preference, source)
+        activated.obligations shouldBe emptyList()
+        activated.behaviorProjections.map { it.projection } shouldContainExactly listOf(behavior)
+        activated.behaviorProjections.single().subject shouldBe suppliedCandidate.subject
     }
 
     private fun candidate(

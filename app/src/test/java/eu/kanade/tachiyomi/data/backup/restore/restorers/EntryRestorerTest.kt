@@ -9,7 +9,7 @@ import java.util.Date
 class EntryRestorerTest {
 
     @Test
-    fun `history merge keeps newer timestamp and only adds missing duration`() {
+    fun `history merge keeps newer timestamp, only adds missing duration and is idempotent`() {
         val update = BackupHistory(
             url = "chapter",
             lastRead = 1_000,
@@ -27,11 +27,8 @@ class EntryRestorerTest {
         update.chapterId shouldBe 42
         update.readAt shouldBe Date(2_000)
         update.sessionReadDuration shouldBe 50
-    }
 
-    @Test
-    fun `restoring the same history is idempotent`() {
-        val update = BackupHistory(
+        val repeated = BackupHistory(
             url = "chapter",
             lastRead = 2_000,
             readDuration = 100,
@@ -45,7 +42,7 @@ class EntryRestorerTest {
             ),
         )
 
-        update.readAt shouldBe Date(2_000)
-        update.sessionReadDuration shouldBe 0
+        repeated.readAt shouldBe Date(2_000)
+        repeated.sessionReadDuration shouldBe 0
     }
 }

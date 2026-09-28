@@ -7,19 +7,16 @@ import tachiyomi.domain.entry.model.VideoDownloadQualityMode
 class DownloadPreferencesMapperTest {
 
     @Test
-    fun `encodes quality modes with existing stored strings`() {
-        DownloadPreferencesMapper.encodeQualityMode(VideoDownloadQualityMode.BEST) shouldBe "best"
-        DownloadPreferencesMapper.encodeQualityMode(VideoDownloadQualityMode.BALANCED) shouldBe "balanced"
-        DownloadPreferencesMapper.encodeQualityMode(VideoDownloadQualityMode.DATA_SAVING) shouldBe "data_saving"
-    }
+    fun `quality modes keep their existing stored strings`() {
+        val stored = mapOf(
+            VideoDownloadQualityMode.BEST to "best",
+            VideoDownloadQualityMode.BALANCED to "balanced",
+            VideoDownloadQualityMode.DATA_SAVING to "data_saving",
+        )
 
-    @Test
-    fun `decodes existing stored quality mode strings`() {
-        DownloadPreferencesMapper.mapPreferences(0L, 1L, null, null, null, "best", 0L).qualityMode shouldBe
-            VideoDownloadQualityMode.BEST
-        DownloadPreferencesMapper.mapPreferences(0L, 1L, null, null, null, "balanced", 0L).qualityMode shouldBe
-            VideoDownloadQualityMode.BALANCED
-        DownloadPreferencesMapper.mapPreferences(0L, 1L, null, null, null, "data_saving", 0L).qualityMode shouldBe
-            VideoDownloadQualityMode.DATA_SAVING
+        stored.forEach { (mode, value) ->
+            DownloadPreferencesMapper.encodeQualityMode(mode) shouldBe value
+            DownloadPreferencesMapper.mapPreferences(0L, 1L, null, null, null, value, 0L).qualityMode shouldBe mode
+        }
     }
 }

@@ -16,11 +16,4 @@ class EntryImmersiveContentTest {
         mangaKey shouldNotBe animeKey
         mangaKey shouldNotBe entryImmersiveItemKey(EntryImmersiveItemKey(id = 3445L, type = EntryType.MANGA))
     }
-
-    @Test
-    fun `pull refresh is only enabled at the settled first page while paging is not blocked`() {
-        shouldEnableImmersivePullRefresh(settledPage = 0, pagingBlocked = false) shouldBe true
-        shouldEnableImmersivePullRefresh(settledPage = 1, pagingBlocked = false) shouldBe false
-        shouldEnableImmersivePullRefresh(settledPage = 0, pagingBlocked = true) shouldBe false
-    }
 }

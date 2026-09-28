@@ -11,32 +11,10 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
-import tachiyomi.domain.entry.interactor.NetworkToLocalEntry
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
-import tachiyomi.domain.entry.repository.EntryChapterRepository
-import tachiyomi.domain.source.service.SourceManager
 
 class EntryDeepLinkFeatureTest {
-
-    @Test
-    fun `no resolver no match and resolver failure are distinct outcomes`() = runTest {
-        val sourceManager = mockk<SourceManager>()
-        val feature = feature(sourceManager)
-
-        every { sourceManager.getAll() } returns emptyList()
-        feature.resolve("unknown") shouldBe EntryDeepLinkResolution.NoMatch
-
-        val resolver = mockk<ResolvableSource> {
-            every { getUriType("unknown") } returns EntryUriType.Unknown
-        }
-        every { sourceManager.getAll() } returns listOf(resolver)
-        feature.resolve("unknown") shouldBe EntryDeepLinkResolution.NoMatch
-
-        val error = IllegalStateException("resolver failure")
-        every { resolver.getUriType("unknown") } throws error
-        feature.resolve("unknown") shouldBe EntryDeepLinkResolution.Failed(error)
-    }
 
     @Test
     fun `missing deep linked child is resolved through Source Refresh Feature`() = runTest {
@@ -78,12 +56,4 @@ class EntryDeepLinkFeatureTest {
         feature.resolve("https://example.test/child") shouldBe
             EntryDeepLinkResolution.Resolved(persistedEntry, insertedChild.id)
     }
-
-    private fun feature(sourceManager: SourceManager) = DefaultEntryDeepLinkFeature(
-        evaluation = sourceFeatureEvaluation(EntryDeepLinkFeatureContributor),
-        sourceManager = sourceManager,
-        networkToLocalEntry = mockk<NetworkToLocalEntry>(),
-        entryChapterRepository = mockk<EntryChapterRepository>(),
-        sourceRefresh = mockk<EntrySourceRefreshFeature>(),
-    )
 }

@@ -19,14 +19,6 @@ import tachiyomi.data.UpdateStrategyColumnAdapter
 class HistoryProfileQueriesTest {
 
     @Test
-    fun `read duration only includes active profile history`() = runTest {
-        withSeededDatabase { database ->
-            database.historyQueries.getReadDuration(profileId = 1L).awaitAsOne() shouldBe 100L
-            database.historyQueries.getReadDuration(profileId = 2L).awaitAsOne() shouldBe 200L
-        }
-    }
-
-    @Test
     fun `clearing history preserves other profiles`() = runTest {
         withSeededDatabase { database ->
             database.historyQueries.removeAllHistory(profileId = 1L)

@@ -23,9 +23,8 @@ import mihon.entry.interactions.book.document.reader.theme.bookDocumentReaderPal
 @Composable
 internal fun BookDocumentSelectionFixture(
     text: String,
-    showTextSelectionMenu: Boolean = false,
     onSelection: (BookDocumentTextSelection) -> Unit,
-    onSession: (BookDocumentChapterSelection, ScrollState) -> Unit = { _, _ -> },
+    onSession: (BookDocumentChapterSelection, ScrollState) -> Unit,
 ) {
     val block = BookDocumentBlock(
         id = BookDocumentBlockId("paragraph"),
@@ -44,7 +43,6 @@ internal fun BookDocumentSelectionFixture(
             LocalBookDocumentReaderPalette provides bookDocumentReaderPalette(BookDocumentReaderThemeMode.APP),
             LocalBookDocumentTextInteraction provides BookDocumentTextInteraction.Disabled.copy(
                 observeSelections = true,
-                showTextSelectionMenu = showTextSelectionMenu,
                 onSelection = onSelection,
             ),
             LocalBookDocumentSelectionChapterId provides 1L,

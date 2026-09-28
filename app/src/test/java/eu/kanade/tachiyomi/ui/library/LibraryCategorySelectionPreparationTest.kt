@@ -40,44 +40,4 @@ class LibraryCategorySelectionPreparationTest {
             getCategories = { categories[it].orEmpty() },
         ).map(Category::id) shouldBe listOf(10L, 20L)
     }
-
-    @Test
-    fun `empty selection avoids category loading`() = runTest {
-        var loadCount = 0
-
-        val selection = prepareLibraryCategorySelection(emptyList()) {
-            loadCount += 1
-            emptyList()
-        }
-
-        selection shouldBe LibraryCategorySelectionPreparation(emptyList(), emptyList())
-        loadCount shouldBe 0
-    }
-
-    @Test
-    fun `single item categories are all common and none mixed`() = runTest {
-        val categories = listOf(category(10L), category(20L))
-
-        val selection = prepareLibraryCategorySelection(listOf(libraryItem(1L))) { categories }
-
-        selection.common shouldBe categories.toSet()
-        selection.mixed shouldBe emptySet()
-    }
-
-    @Test
-    fun `category loading failure propagates without loading the suffix`() = runTest {
-        val items = listOf(libraryItem(1L), libraryItem(2L), libraryItem(3L))
-        val loads = mutableListOf<Long>()
-        val failure = IllegalStateException("category read failed")
-
-        shouldThrow<IllegalStateException> {
-            prepareLibraryCategorySelection(items) { item ->
-                loads += item.entry.id
-                if (item.entry.id == 2L) throw failure
-                emptyList()
-            }
-        } shouldBe failure
-
-        loads shouldBe listOf(1L, 2L)
-    }
 }

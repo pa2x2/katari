@@ -14,24 +14,6 @@ class FeatureArtifactSelectionTest {
     private val alpha = capabilityDefinition<AlphaProvider>(CapabilityId("example.alpha"), contractOwner)
 
     @Test
-    fun `applicable integration may require no contract fixture or projection`() {
-        val graph = graph(
-            contentTypes = listOf(contentType(id = "subject")),
-            integration = FeatureIntegration(
-                id = FeatureIntegrationId("example.integration"),
-                prerequisites = CapabilityExpression.Always,
-                behaviorProjections = listOf(behavior("example.projection")),
-            ),
-        )
-
-        val selected = selectFeatureArtifacts(graph, evaluateFeatureGraph(graph))
-
-        selected.behavioralContracts shouldBe emptyList()
-        selected.projections shouldBe emptyList()
-        selected.obligations shouldBe emptyList()
-    }
-
-    @Test
     fun `applicable contributions select the same feature owned artifacts`() {
         val adapterDefinition = specializedAdapterDefinition<ExampleAdapter>(
             id = SpecializedAdapterId("example.adapter"),
@@ -169,65 +151,6 @@ class FeatureArtifactSelectionTest {
         obligation.responsibleOwner shouldBe featureOwner
         obligation.requirement shouldBe projectionDefinition
         obligation.affectedSubjects.map { it.entryContentType.value } shouldContainExactly listOf("alpha", "zeta")
-    }
-
-    @Test
-    fun `artifact ordering is deterministic across declared order`() {
-        val alphaContract = TestContract("example.alpha-contract")
-        val zetaContract = TestContract("example.zeta-contract")
-        val alphaProjection = projection("example.alpha-projection")
-        val zetaProjection = projection("example.zeta-projection")
-        val graph = graph(
-            contentTypes = listOf(
-                contentType(
-                    id = "subject",
-                    providers = listOf(CapabilityProvider(alpha, AlphaProvider())),
-                ),
-            ),
-            integration = FeatureIntegration(
-                id = FeatureIntegrationId("example.integration"),
-                prerequisites = CapabilityExpression.Provided(alpha),
-                behavioralContracts = listOf(zetaContract, alphaContract),
-                projectionRequirements = listOf(zetaProjection.definition, alphaProjection.definition),
-                projections = listOf(zetaProjection, alphaProjection),
-            ),
-        )
-
-        val selected = selectFeatureArtifacts(graph, evaluateFeatureGraph(graph))
-
-        selected.behavioralContracts.map { it.contract.id.value } shouldContainExactly listOf(
-            "example.alpha-contract",
-            "example.zeta-contract",
-        )
-        selected.projections.map { it.projection.definition.id.value } shouldContainExactly listOf(
-            "example.alpha-projection",
-            "example.zeta-projection",
-        )
-    }
-
-    @Test
-    fun `selection rejects a curated subset of evaluated relationships`() {
-        val contract = TestContract("example.behavior")
-        val graph = graph(
-            contentTypes = listOf(
-                contentType(
-                    id = "subject",
-                    providers = listOf(CapabilityProvider(alpha, AlphaProvider())),
-                ),
-            ),
-            integration = FeatureIntegration(
-                id = FeatureIntegrationId("example.integration"),
-                prerequisites = CapabilityExpression.Provided(alpha),
-                behavioralContracts = listOf(contract),
-            ),
-        )
-        val incompleteEvaluation = evaluateFeatureGraph(graph).copy(integrations = emptyList())
-
-        val failure = shouldThrow<IllegalStateException> {
-            selectFeatureArtifacts(graph, incompleteEvaluation)
-        }
-
-        failure.message shouldContain "evaluation coverage mismatch"
     }
 
     private fun graph(

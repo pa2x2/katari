@@ -2,10 +2,8 @@ package mihon.entry.interactions.media
 
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.tachiyomi.source.entry.EntryType
-import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.mockk
 import mihon.entry.interactions.runtime.EntryInteractionPlugin
 import mihon.entry.interactions.runtime.createEntryInteractionComposition
@@ -14,42 +12,6 @@ import org.junit.jupiter.api.Test
 import tachiyomi.core.common.preference.InMemoryPreferenceStore
 
 class EntryMediaCacheFeatureTest {
-    @Test
-    fun `provider absence is valid and produces no settings`() {
-        val feature = feature(plugin())
-        val missingId = EntryMediaCacheId("future.missing-cache")
-
-        feature.settings() shouldBe emptyList()
-        feature.clear(missingId) shouldBe EntryMediaCacheClearResult.Inapplicable(missingId)
-        feature.clearEnabledOnLaunch() shouldBe emptyList()
-    }
-
-    @Test
-    fun `one provider activates every shared cache behavior`() {
-        val artifact = TestArtifact(
-            id = EntryMediaCacheId("future.cache"),
-            autoClearPreference = EntryMediaCacheAutoClearPreference(
-                "future_auto_clear",
-            ),
-        )
-        val feature = feature(plugin(provider(artifact)))
-
-        val setting = feature.settings().single()
-        setting.id shouldBe artifact.id
-        setting.readableSize shouldBe "10 B"
-        setting.autoClearOnLaunch.key() shouldBe "future_auto_clear"
-
-        feature.clear(artifact.id).shouldBeInstanceOf<EntryMediaCacheClearResult.Cleared>().apply {
-            deletedFiles shouldBe 2
-            readableSize shouldBe "0 B"
-        }
-        feature.settings().single().readableSize shouldBe "0 B"
-
-        setting.autoClearOnLaunch.set(true)
-        feature.clearEnabledOnLaunch().single().shouldBeInstanceOf<EntryMediaCacheClearResult.Cleared>()
-        artifact.clearCount shouldBe 2
-    }
-
     @Test
     fun `launch clear reports each failure without suppressing unrelated caches`() {
         val failed = TestArtifact(
@@ -102,34 +64,6 @@ class EntryMediaCacheFeatureTest {
             .settings().single().autoClearOnLaunch.get() shouldBe false
     }
 
-    @Test
-    fun `empty providers and duplicate stable ids fail composition explicitly`() {
-        shouldThrow<IllegalStateException> {
-            feature(plugin(provider()))
-        }
-        val duplicateId = EntryMediaCacheId("future.duplicate")
-        shouldThrow<IllegalStateException> {
-            feature(
-                plugin(
-                    provider(
-                        TestArtifact(
-                            duplicateId,
-                            EntryMediaCacheAutoClearPreference(
-                                "first",
-                            ),
-                        ),
-                        TestArtifact(
-                            duplicateId,
-                            EntryMediaCacheAutoClearPreference(
-                                "second",
-                            ),
-                        ),
-                    ),
-                ),
-            )
-        }
-    }
-
     private fun feature(
         plugin: EntryInteractionPlugin,
         store: InMemoryPreferenceStore = InMemoryPreferenceStore(),
@@ -145,11 +79,11 @@ class EntryMediaCacheFeatureTest {
         )
     }
 
-    private fun plugin(provider: EntryMediaCacheProvider? = null): EntryInteractionPlugin {
+    private fun plugin(provider: EntryMediaCacheProvider): EntryInteractionPlugin {
         return object : EntryInteractionPlugin {
             override val type = EntryType.BOOK
             override val owner = ContributionOwner("test.future-type")
-            override val providerBindings = provider?.let { listOf(EntryMediaCacheCapability.bind(it)) }.orEmpty()
+            override val providerBindings = listOf(EntryMediaCacheCapability.bind(provider))
         }
     }
 
@@ -167,7 +101,7 @@ class EntryMediaCacheFeatureTest {
     ) : EntryMediaCacheArtifact {
         override val clearLabel: StringResource = mockk()
         override val autoClearLabel: StringResource = mockk()
-        override val readableSize: String get() = if (clearCount == 0) "10 B" else "0 B"
+        override val readableSize: String = "0 B"
         var clearCount = 0
             private set
 

@@ -33,7 +33,7 @@ class UpdatesViewQueriesTest {
     }
 
     @Test
-    fun `started filter uses progress locators across entry types`() = runTest {
+    fun `started filters use progress locators across entry types`() = runTest {
         withSeededDatabase { database ->
             database.updatesViewQueries.filteredChapterNames(started = true) shouldContainExactlyInAnyOrder listOf(
                 "Manga started",
@@ -45,43 +45,11 @@ class UpdatesViewQueriesTest {
                 "Book partial resource",
                 "Book partial total",
             )
-        }
-    }
-
-    @Test
-    fun `not started filter excludes anime consumption and playback progress`() = runTest {
-        withSeededDatabase { database ->
             database.updatesViewQueries.filteredChapterNames(started = false) shouldContainExactlyInAnyOrder listOf(
                 "Manga untouched",
                 "Anime untouched",
                 "Book untouched",
             )
-        }
-    }
-
-    @Test
-    fun `included categories support every entry type and category zero is uncategorized`() = runTest {
-        withSeededDatabase { database ->
-            database.updatesViewQueries.filteredEntryIds(includedCategories = listOf(10))
-                .filter { it <= 3 } shouldContainExactlyInAnyOrder listOf(1L, 2L, 3L)
-
-            database.updatesViewQueries.filteredEntryIds(includedCategories = listOf(0))
-                .filter { it <= 5 } shouldContainExactlyInAnyOrder listOf(5L)
-
-            database.updatesViewQueries.filteredEntryIds(
-                includedCategories = listOf(0),
-                excludedCategories = listOf(0),
-            ).filter { it <= 5 } shouldContainExactlyInAnyOrder emptyList()
-        }
-    }
-
-    @Test
-    fun `excluded category wins over included category`() = runTest {
-        withSeededDatabase { database ->
-            database.updatesViewQueries.filteredEntryIds(
-                includedCategories = listOf(10),
-                excludedCategories = listOf(20),
-            ).filter { it <= 3 } shouldContainExactlyInAnyOrder listOf(1L, 3L)
         }
     }
 

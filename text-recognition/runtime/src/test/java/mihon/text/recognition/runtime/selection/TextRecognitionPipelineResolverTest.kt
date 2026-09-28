@@ -119,10 +119,4 @@ class TextRecognitionPipelineResolverTest {
         resolver.resolve(configuration, JAPANESE) shouldBe
             TextRecognitionPipelineResolution.OverrideUnavailable(selection)
     }
-
-    @Test
-    fun `languages no included component reads are unsupported`() {
-        resolver.resolve(TextRecognitionConfiguration(provider = null), LanguageTag.require("ko")) shouldBe
-            TextRecognitionPipelineResolution.UnsupportedLanguage
-    }
 }

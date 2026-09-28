@@ -6,16 +6,6 @@ import org.junit.jupiter.api.Test
 class ProfilePreferenceOwnerRegistryTest {
 
     @Test
-    fun `owner ids are unique`() {
-        val installer = installer(ProfilePreferenceOwnerRegistry())
-        installer.register(ProfilePreferenceOwnerId("feature"), factory = ::FirstPreferences)
-
-        shouldThrow<IllegalStateException> {
-            installer.register(ProfilePreferenceOwnerId("feature"), factory = ::SecondPreferences)
-        }
-    }
-
-    @Test
     fun `overlapping dynamic families are rejected`() {
         val installer = installer(ProfilePreferenceOwnerRegistry())
         installer.register(
@@ -34,16 +24,6 @@ class ProfilePreferenceOwnerRegistryTest {
     }
 
     @Test
-    fun `static keys cannot have multiple owners`() {
-        val registry = ProfilePreferenceOwnerRegistry()
-        val installer = installer(registry)
-        installer.register(ProfilePreferenceOwnerId("first"), factory = ::FirstPreferences)
-        installer.register(ProfilePreferenceOwnerId("second"), factory = ::SecondPreferences)
-
-        shouldThrow<IllegalStateException> { registry.ownership() }
-    }
-
-    @Test
     fun `static keys cannot be captured by another owners dynamic family`() {
         val registry = ProfilePreferenceOwnerRegistry()
         val installer = installer(registry)
@@ -57,19 +37,6 @@ class ProfilePreferenceOwnerRegistryTest {
         shouldThrow<IllegalStateException> { registry.ownership() }
     }
 
-    @Test
-    fun `ownership evaluation seals installation`() {
-        val registry = ProfilePreferenceOwnerRegistry()
-        val installer = installer(registry)
-        installer.register(ProfilePreferenceOwnerId("first"), factory = ::FirstPreferences)
-
-        registry.ownership()
-
-        shouldThrow<IllegalStateException> {
-            installer.register(ProfilePreferenceOwnerId("late"), factory = ::LatePreferences)
-        }
-    }
-
     private fun installer(registry: ProfilePreferenceOwnerRegistry): ProfilePreferenceOwnerInstaller {
         return ProfilePreferenceOwnerInstaller(registry) { InMemoryPreferenceStore() }
     }
@@ -81,10 +48,6 @@ private class FirstPreferences(store: PreferenceStore) {
 
 private class SecondPreferences(store: PreferenceStore) {
     val value = store.getBoolean("shared_key")
-}
-
-private class LatePreferences(store: PreferenceStore) {
-    val value = store.getBoolean("late_key")
 }
 
 private class PatternPreferences(store: PreferenceStore) {

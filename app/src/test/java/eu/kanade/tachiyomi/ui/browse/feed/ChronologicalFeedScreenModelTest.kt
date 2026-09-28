@@ -5,6 +5,7 @@ import androidx.paging.PagingState
 import eu.kanade.domain.source.model.FeedItemRef
 import eu.kanade.domain.source.model.SourceFeedAnchor
 import eu.kanade.domain.source.model.SourceFeedTimeline
+import eu.kanade.domain.source.service.BrowseFeedPreferenceStore
 import eu.kanade.domain.source.service.BrowseFeedService
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.tachiyomi.source.entry.EntryFilterList
@@ -39,64 +40,25 @@ import tachiyomi.domain.source.model.CatalogListItem
 class ChronologicalFeedScreenModelTest {
 
     @Test
-    fun `pending refresh indicator remains visible at the top of the feed`() {
-        val pendingRefresh = FeedScreenModel.PendingRefresh(
-            itemRefs = listOf(FeedItemRef(1L, EntryType.MANGA)),
-            nextPageKey = 1L,
+    fun `new items indicator is consumed only by a backward scroll over the refreshed layout`() {
+        fun consumes(isScrollInProgress: Boolean, totalItemsCount: Int) = shouldConsumeNewItemsIndicator(
+            viewport = FeedViewport(
+                canScrollBackward = true,
+                isScrollInProgress = isScrollInProgress,
+                lastScrolledBackward = true,
+                totalItemsCount = totalItemsCount,
+            ),
+            itemCount = 20,
         )
 
-        shouldShowNewItemsChip(
-            state = FeedScreenModel.State(
-                newItemsAvailableCount = 1,
-                pendingRefresh = pendingRefresh,
-            ),
-            canScrollBackward = false,
-        ) shouldBe true
-        shouldShowNewItemsChip(
-            state = FeedScreenModel.State(newItemsAvailableCount = 1),
-            canScrollBackward = false,
-        ) shouldBe false
-    }
-
-    @Test
-    fun `loaded new items indicator is consumed when scrolling toward the top`() {
-        shouldConsumeNewItemsIndicator(
-            viewport = FeedViewport(
-                canScrollBackward = true,
-                isScrollInProgress = true,
-                lastScrolledBackward = true,
-                totalItemsCount = 20,
-            ),
-            itemCount = 20,
-        ) shouldBe true
-
-        shouldConsumeNewItemsIndicator(
-            viewport = FeedViewport(
-                canScrollBackward = true,
-                isScrollInProgress = false,
-                lastScrolledBackward = true,
-                totalItemsCount = 20,
-            ),
-            itemCount = 20,
-        ) shouldBe false
-    }
-
-    @Test
-    fun `new items indicator waits for the refreshed layout`() {
-        shouldConsumeNewItemsIndicator(
-            viewport = FeedViewport(
-                canScrollBackward = true,
-                isScrollInProgress = true,
-                lastScrolledBackward = true,
-                totalItemsCount = 19,
-            ),
-            itemCount = 20,
-        ) shouldBe false
+        consumes(isScrollInProgress = true, totalItemsCount = 20) shouldBe true
+        consumes(isScrollInProgress = false, totalItemsCount = 20) shouldBe false
+        consumes(isScrollInProgress = true, totalItemsCount = 19) shouldBe false
     }
 
     @Test
     fun `init cleans saved favorites while preserving surviving anchor`() = feedTest {
-        val preferences = SourcePreferences(TestPreferenceStore(), testJson)
+        val preferences = SourcePreferences(BrowseFeedPreferenceStore(), testJson)
         preferences.hideInLibraryItems.set(true)
 
         val browseFeedService = BrowseFeedService(preferences)
@@ -149,127 +111,8 @@ class ChronologicalFeedScreenModelTest {
     }
 
     @Test
-    fun `saving anchor updates offset while visible item remains unchanged`() = feedTest {
-        val preferences = SourcePreferences(TestPreferenceStore(), testJson)
-        val browseFeedService = BrowseFeedService(preferences)
-        val itemRef = FeedItemRef(2L, EntryType.ANIME)
-        browseFeedService.saveTimeline(
-            feedId = FEED_ID,
-            timeline = SourceFeedTimeline.fromItems(listOf(itemRef), nextPageKey = null),
-        )
-        browseFeedService.saveAnchor(
-            feedId = FEED_ID,
-            anchor = SourceFeedAnchor.fromItem(itemRef, scrollOffset = 12),
-        )
-
-        val screenModel = FakeFeedScreenModel(
-            feedId = FEED_ID,
-            browseFeedService = browseFeedService,
-            workerDispatcher = Dispatchers.Main,
-            itemsById = mapOf(
-                2L to FakeItem(id = 2L, type = EntryType.ANIME, favorite = false),
-            ),
-        )
-
-        try {
-            advanceUntilIdle()
-
-            screenModel.saveAnchor(itemRef, scrollOffset = 48)
-
-            screenModel.savedAnchorSnapshot() shouldBe SourceFeedAnchor.fromItem(itemRef, scrollOffset = 48)
-            browseFeedService.anchorSnapshot(FEED_ID) shouldBe
-                SourceFeedAnchor.fromItem(itemRef, scrollOffset = 48)
-        } finally {
-            screenModel.onDispose()
-        }
-    }
-
-    @Test
-    fun `initial refresh filters favorites when hide in library items is enabled`() = feedTest {
-        val preferences = SourcePreferences(TestPreferenceStore(), testJson)
-        preferences.hideInLibraryItems.set(true)
-        val browseFeedService = BrowseFeedService(preferences)
-
-        val screenModel = FakeFeedScreenModel(
-            feedId = FEED_ID,
-            browseFeedService = browseFeedService,
-            workerDispatcher = Dispatchers.Main,
-            itemsById = mapOf(
-                3L to FakeItem(id = 3L, type = EntryType.MANGA, favorite = true),
-                4L to FakeItem(id = 4L, type = EntryType.ANIME, favorite = false),
-            ),
-            pagingSourceFactory = {
-                RecordingPagingSource(
-                    pages = mapOf(
-                        null to pageResult(
-                            data = listOf(
-                                FakeItem(id = 3L, type = EntryType.MANGA, favorite = true),
-                                FakeItem(id = 4L, type = EntryType.ANIME, favorite = false),
-                            ),
-                            nextKey = null,
-                        ),
-                    ),
-                )
-            },
-        )
-
-        try {
-            advanceUntilIdle()
-
-            screenModel.state.value.itemRefs shouldBe listOf(FeedItemRef(4L, EntryType.ANIME))
-            browseFeedService.timelineSnapshot(FEED_ID) shouldBe SourceFeedTimeline.fromItems(
-                listOf(FeedItemRef(4L, EntryType.ANIME)),
-                nextPageKey = null,
-            )
-        } finally {
-            screenModel.onDispose()
-        }
-    }
-
-    @Test
-    fun `init with existing timeline skips automatic refresh`() = feedTest {
-        val preferences = SourcePreferences(TestPreferenceStore(), testJson)
-        val browseFeedService = BrowseFeedService(preferences)
-        browseFeedService.saveTimeline(
-            feedId = FEED_ID,
-            timeline = SourceFeedTimeline.fromItems(
-                listOf(
-                    FeedItemRef(7L, EntryType.MANGA),
-                    FeedItemRef(8L, EntryType.ANIME),
-                ),
-                nextPageKey = 9L,
-            ),
-        )
-
-        val screenModel = FakeFeedScreenModel(
-            feedId = FEED_ID,
-            browseFeedService = browseFeedService,
-            workerDispatcher = Dispatchers.Main,
-            itemsById = mapOf(
-                7L to FakeItem(id = 7L, type = EntryType.MANGA, favorite = false),
-                8L to FakeItem(id = 8L, type = EntryType.ANIME, favorite = false),
-            ),
-            pagingSourceFactory = { RecordingPagingSource(emptyMap()) },
-        )
-
-        try {
-            advanceUntilIdle()
-
-            screenModel.state.value.itemRefs shouldBe listOf(
-                FeedItemRef(7L, EntryType.MANGA),
-                FeedItemRef(8L, EntryType.ANIME),
-            )
-            screenModel.state.value.nextPageKey shouldBe 9L
-            screenModel.state.value.hasLoaded shouldBe true
-            screenModel.state.value.isRefreshing shouldBe false
-        } finally {
-            screenModel.onDispose()
-        }
-    }
-
-    @Test
     fun `overlapping refresh prepends new items and preserves the existing tail cursor`() = feedTest {
-        val preferences = SourcePreferences(TestPreferenceStore(), testJson)
+        val preferences = SourcePreferences(BrowseFeedPreferenceStore(), testJson)
         val browseFeedService = BrowseFeedService(preferences)
         browseFeedService.saveTimeline(
             FEED_ID,
@@ -333,7 +176,7 @@ class ChronologicalFeedScreenModelTest {
 
     @Test
     fun `refresh without first-page overlap bridges to the saved timeline in the background`() = feedTest {
-        val preferences = SourcePreferences(TestPreferenceStore(), testJson)
+        val preferences = SourcePreferences(BrowseFeedPreferenceStore(), testJson)
         val browseFeedService = BrowseFeedService(preferences)
         val oldRef = FeedItemRef(100L, EntryType.MANGA)
         browseFeedService.saveTimeline(
@@ -411,7 +254,7 @@ class ChronologicalFeedScreenModelTest {
 
     @Test
     fun `partial bridge pages stay behind the loading boundary until overlap`() = feedTest {
-        val preferences = SourcePreferences(TestPreferenceStore(), testJson)
+        val preferences = SourcePreferences(BrowseFeedPreferenceStore(), testJson)
         val browseFeedService = BrowseFeedService(preferences)
         val oldRef = FeedItemRef(100L, EntryType.MANGA)
         browseFeedService.saveTimeline(
@@ -492,7 +335,7 @@ class ChronologicalFeedScreenModelTest {
 
     @Test
     fun `refresh without any overlap keeps an explicit switch to the newest timeline`() = feedTest {
-        val preferences = SourcePreferences(TestPreferenceStore(), testJson)
+        val preferences = SourcePreferences(BrowseFeedPreferenceStore(), testJson)
         val browseFeedService = BrowseFeedService(preferences)
         val oldRef = FeedItemRef(100L, EntryType.MANGA)
         browseFeedService.saveTimeline(
@@ -658,131 +501,4 @@ private fun <T : Any> pageResult(data: List<T>, nextKey: Long?): PagingSource.Lo
         prevKey = null,
         nextKey = nextKey,
     )
-}
-
-private class TestPreferenceStore : PreferenceStore {
-    private val prefs = mutableMapOf<String, Any?>()
-    private val cache = mutableMapOf<String, Preference<*>>()
-
-    override fun getString(key: String, defaultValue: String): Preference<String> {
-        return preference(key, defaultValue)
-    }
-
-    override fun getLong(key: String, defaultValue: Long): Preference<Long> {
-        return preference(key, defaultValue)
-    }
-
-    override fun getInt(key: String, defaultValue: Int): Preference<Int> {
-        return preference(key, defaultValue)
-    }
-
-    override fun getFloat(key: String, defaultValue: Float): Preference<Float> {
-        return preference(key, defaultValue)
-    }
-
-    override fun getBoolean(key: String, defaultValue: Boolean): Preference<Boolean> {
-        return preference(key, defaultValue)
-    }
-
-    override fun getStringSet(key: String, defaultValue: Set<String>): Preference<Set<String>> {
-        return preference(key, defaultValue)
-    }
-
-    @Suppress("UNCHECKED_CAST")
-    override fun <T> getObjectFromString(
-        key: String,
-        defaultValue: T,
-        serializer: (T) -> String,
-        deserializer: (String) -> T,
-    ): Preference<T> {
-        return cache.getOrPut(key) {
-            val stored = prefs[key]
-            val initial = if (stored is String) deserializer(stored) else defaultValue
-            TestPreference(
-                key = key,
-                defaultValue = defaultValue,
-                initial = initial,
-                prefs = prefs,
-                serializer = serializer as (Any?) -> String,
-                deserializer = deserializer as (String) -> Any?,
-            )
-        } as Preference<T>
-    }
-
-    @Suppress("UNCHECKED_CAST")
-    override fun <T> getObjectFromInt(
-        key: String,
-        defaultValue: T,
-        serializer: (T) -> Int,
-        deserializer: (Int) -> T,
-    ): Preference<T> {
-        return cache.getOrPut(key) {
-            val stored = prefs[key]
-            val initial = if (stored is Int) deserializer(stored) else defaultValue
-            TestPreference(
-                key = key,
-                defaultValue = defaultValue,
-                initial = initial,
-                prefs = prefs,
-                serializer = { serializer(it as T).toString() },
-                deserializer = { deserializer(it.toInt()) },
-            )
-        } as Preference<T>
-    }
-
-    override fun <T> getObjectSetFromStringSet(
-        key: String,
-        defaultValue: Set<T>,
-        serializer: (T) -> String,
-        deserializer: (String) -> T?,
-    ): Preference<Set<T>> {
-        return preference(key, defaultValue)
-    }
-
-    override fun getAll(): Map<String, *> = prefs
-
-    @Suppress("UNCHECKED_CAST")
-    private fun <T> preference(key: String, defaultValue: T): Preference<T> {
-        return cache.getOrPut(key) {
-            TestPreference(key, defaultValue, prefs.getOrPut(key) { defaultValue } as T, prefs)
-        } as Preference<T>
-    }
-}
-
-private class TestPreference<T>(
-    private val key: String,
-    private val defaultValue: T,
-    initial: T,
-    private val prefs: MutableMap<String, Any?>,
-    private val serializer: (Any?) -> String = { it.toString() },
-    private val deserializer: (String) -> Any? = { it },
-) : Preference<T> {
-
-    private val flow = MutableStateFlow(initial)
-
-    init {
-        prefs[key] = initial
-    }
-
-    override fun key(): String = key
-
-    @Suppress("UNCHECKED_CAST")
-    override fun get(): T = flow.value
-
-    override fun set(value: T) {
-        prefs[key] = serializer(value)
-        flow.value = value
-    }
-
-    override fun isSet(): Boolean = prefs.containsKey(key)
-
-    override fun delete() {
-        prefs.remove(key)
-    }
-
-    override fun defaultValue(): T = defaultValue
-
-    override fun changes(): Flow<T> = flow.asStateFlow()
-
-    override fun stateIn(scope: CoroutineScope): StateFlow<T> = flow.stateIn(scope, SharingStarted.Eagerly, get())
 }

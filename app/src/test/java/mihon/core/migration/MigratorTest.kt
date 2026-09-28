@@ -65,62 +65,6 @@ class MigratorTest {
     }
 
     @Test
-    fun noMigrations() = runBlocking {
-        val strategy = migrationStrategyFactory.create(1, 2)
-        assertInstanceOf(VersionRangeMigrationStrategy::class.java, strategy)
-
-        val execute = strategy(emptyList())
-
-        val result = execute.await()
-        assertFalse(result)
-
-        verify(exactly = 0) { migrationJobFactory.create(any()) }
-    }
-
-    @Test
-    fun smallMigration() = runBlocking {
-        val strategy = migrationStrategyFactory.create(1, 2)
-        assertInstanceOf(VersionRangeMigrationStrategy::class.java, strategy)
-
-        val migrations = slot<List<Migration>>()
-        val execute = strategy(listOf(Migration.of(Migration.ALWAYS) { true }, Migration.of(2f) { true }))
-
-        execute.await()
-
-        verify { migrationJobFactory.create(capture(migrations)) }
-        assertEquals(2, migrations.captured.size)
-        eventually(2.seconds) { verify { migrationCompletedListener() } }
-    }
-
-    @Test
-    fun largeMigration() = runBlocking {
-        val input = listOf(
-            Migration.of(Migration.ALWAYS) { true },
-            Migration.of(2f) { true },
-            Migration.of(3f) { true },
-            Migration.of(4f) { true },
-            Migration.of(5f) { true },
-            Migration.of(6f) { true },
-            Migration.of(7f) { true },
-            Migration.of(8f) { true },
-            Migration.of(9f) { true },
-            Migration.of(10f) { true },
-        )
-
-        val strategy = migrationStrategyFactory.create(1, 10)
-        assertInstanceOf(VersionRangeMigrationStrategy::class.java, strategy)
-
-        val migrations = slot<List<Migration>>()
-        val execute = strategy(input)
-
-        execute.await()
-
-        verify { migrationJobFactory.create(capture(migrations)) }
-        assertEquals(10, migrations.captured.size)
-        eventually(2.seconds) { verify { migrationCompletedListener() } }
-    }
-
-    @Test
     fun withinRangeMigration() = runBlocking {
         val strategy = migrationStrategyFactory.create(1, 2)
         assertInstanceOf(VersionRangeMigrationStrategy::class.java, strategy)

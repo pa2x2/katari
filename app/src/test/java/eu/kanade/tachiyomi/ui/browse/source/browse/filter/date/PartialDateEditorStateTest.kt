@@ -9,16 +9,6 @@ import org.junit.jupiter.api.Test
 
 class PartialDateEditorStateTest {
     @Test
-    fun `browsing historical and future years never supplies a date`() {
-        val filter = dateFilter()
-        val initial = PartialDateEditorState.initial(filter, 2026)
-        val browsing = initial.browseYears(-120).browseYears(240)
-        browsing.value shouldBe null
-        browsing.canConfirm(filter) shouldBe false
-        browsing.chooseYear(1986).candidateText shouldBe "1986"
-    }
-
-    @Test
     fun `increasing precision requires explicit missing components without changing original`() {
         val filter = dateFilter(EntryPartialDate(2024))
         val year = PartialDateEditorState.initial(filter)

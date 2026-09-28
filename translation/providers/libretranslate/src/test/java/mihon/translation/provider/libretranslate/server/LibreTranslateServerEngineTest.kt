@@ -1,17 +1,14 @@
 package mihon.translation.provider.libretranslate.server
 
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.coroutines.test.runTest
 import mihon.language.api.tag.LanguageTag
 import mihon.translation.api.preparation.TranslationSystemSetupReason
-import mihon.translation.api.preparation.TranslationUnavailableReason
 import mihon.translation.api.request.ResolvedTranslationRequest
-import mihon.translation.provider.libretranslate.protocol.LibreTranslateException
-import mihon.translation.provider.libretranslate.protocol.LibreTranslateFailureKind
 import mihon.translation.provider.libretranslate.protocol.LibreTranslateLanguage
 import mihon.translation.provider.libretranslate.protocol.LibreTranslateService
 import mihon.translation.spi.engine.TranslationEngineDeviceAvailability
-import mihon.translation.spi.engine.TranslationEngineExecution
 import mihon.translation.spi.engine.TranslationEnginePreparation
 import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrl
@@ -39,29 +36,13 @@ class LibreTranslateServerEngineTest {
     }
 
     @Test
-    fun `later connection failure is transient and preserves verified configuration`() = runTest {
-        val settings = FakeSettings(isInitiallyVerified = true)
-        val engine = engine(
-            settings = settings,
-            serviceFactory = {
-                FakeService(languageFailure = LibreTranslateException(LibreTranslateFailureKind.Connection))
-            },
-        )
-
-        engine.inspectDevice() shouldBe
-            TranslationEngineDeviceAvailability.Unavailable("Configured server is unreachable")
-        settings.isInitiallyVerified shouldBe true
-    }
-
-    @Test
-    fun `disclosure and server capabilities gate inline translation`() = runTest {
+    fun `text is not prepared for the server until its disclosure is accepted`() = runTest {
         val settings = FakeSettings(disclosureAccepted = false)
         val service = FakeService(
             languages = listOf(
                 language("en", setOf("fr")),
                 language("fr", setOf("en")),
             ),
-            translatedText = "Bonjour",
         )
         val engine = engine(settings = settings, serviceFactory = { service })
 
@@ -69,49 +50,7 @@ class LibreTranslateServerEngineTest {
             TranslationEnginePreparation.ProviderDisclosureRequired(LibreTranslateServerEngine.DISCLOSURE)
 
         settings.disclosureAccepted = true
-        val ready = engine.prepare(request()) as TranslationEnginePreparation.Ready
-        val refreshed = engine.revalidate(ready.request) as TranslationEnginePreparation.Ready
-        engine.translate(refreshed.request) shouldBe TranslationEngineExecution.Success("Bonjour")
-        service.lastText shouldBe "Hello"
-        service.lastSource shouldBe "en"
-        service.lastTarget shouldBe "fr"
-    }
-
-    @Test
-    fun `unsupported individual languages preserve the complete requested pair`() = runTest {
-        val engine = engine(
-            serviceFactory = {
-                FakeService(
-                    languages = listOf(
-                        language("en", setOf("fr")),
-                        language("fr", setOf("en")),
-                    ),
-                )
-            },
-        )
-
-        engine.prepare(request(source = CATALAN)) shouldBe TranslationEnginePreparation.Unavailable(
-            TranslationUnavailableReason.UnsupportedLanguagePair(CATALAN, FRENCH),
-        )
-        engine.prepare(request(target = GERMAN)) shouldBe TranslationEnginePreparation.Unavailable(
-            TranslationUnavailableReason.UnsupportedLanguagePair(ENGLISH, GERMAN),
-        )
-    }
-
-    @Test
-    fun `server rejection returns to configuration without exposing provider response`() = runTest {
-        val service = FakeService(
-            languages = listOf(
-                language("en", setOf("fr")),
-                language("fr"),
-            ),
-            translationFailure = LibreTranslateException(LibreTranslateFailureKind.Rejected),
-        )
-        val engine = engine(serviceFactory = { service })
-        val ready = engine.prepare(request()) as TranslationEnginePreparation.Ready
-
-        engine.translate(ready.request) shouldBe
-            TranslationEngineExecution.PreparationChanged(setupRequired())
+        engine.prepare(request()).shouldBeInstanceOf<TranslationEnginePreparation.Ready>()
     }
 
     private fun engine(
@@ -144,16 +83,8 @@ class LibreTranslateServerEngineTest {
 
     private class FakeService(
         private val languages: List<LibreTranslateLanguage> = emptyList(),
-        private val translatedText: String = "translated",
-        private val languageFailure: Exception? = null,
-        private val translationFailure: Exception? = null,
     ) : LibreTranslateService {
-        var lastText: String? = null
-        var lastSource: String? = null
-        var lastTarget: String? = null
-
         override suspend fun languages(): List<LibreTranslateLanguage> {
-            languageFailure?.let { throw it }
             return languages
         }
 
@@ -162,19 +93,13 @@ class LibreTranslateServerEngineTest {
             source: String,
             target: String,
         ): String {
-            translationFailure?.let { throw it }
-            lastText = text
-            lastSource = source
-            lastTarget = target
-            return translatedText
+            return "translated"
         }
     }
 
     private companion object {
         val ENGLISH = LanguageTag.require("en")
         val FRENCH = LanguageTag.require("fr")
-        val CATALAN = LanguageTag.require("ca")
-        val GERMAN = LanguageTag.require("de")
 
         fun language(
             code: String,

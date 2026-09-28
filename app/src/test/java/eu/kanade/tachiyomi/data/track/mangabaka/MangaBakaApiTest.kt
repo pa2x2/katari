@@ -9,13 +9,9 @@ import kotlin.time.Instant
 class MangaBakaApiTest {
 
     @Test
-    fun `response date accepts ISO instant`() {
+    fun `response date accepts ISO instants and local dates`() {
         parseResponseDate("2026-07-11T12:34:56Z") shouldBe
             Instant.parse("2026-07-11T12:34:56Z").toEpochMilliseconds()
-    }
-
-    @Test
-    fun `response date accepts ISO local date`() {
         parseResponseDate("2026-07-11") shouldBe LocalDate.parse("2026-07-11")
             .atStartOfDay(ZoneId.systemDefault())
             .toInstant()

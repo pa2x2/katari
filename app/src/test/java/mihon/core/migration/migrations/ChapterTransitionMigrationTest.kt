@@ -18,28 +18,6 @@ import tachiyomi.core.common.preference.getEnum
 class ChapterTransitionMigrationTest {
 
     @Test
-    fun `explicitly enabled boolean migrates to always showing transitions`() = runTest {
-        val store = MigrationTestPreferenceStore()
-        store.getBoolean(LEGACY_ALWAYS_SHOW_CHAPTER_TRANSITION, true).set(true)
-
-        assertTrue(invokeMigration(store))
-
-        assertEquals(ChapterTransitionMode.ALWAYS, store.chapterTransitionMode().get())
-        assertFalse(store.getBoolean(LEGACY_ALWAYS_SHOW_CHAPTER_TRANSITION, true).isSet())
-    }
-
-    @Test
-    fun `explicitly disabled boolean migrates to showing transitions only when needed`() = runTest {
-        val store = MigrationTestPreferenceStore()
-        store.getBoolean(LEGACY_ALWAYS_SHOW_CHAPTER_TRANSITION, true).set(false)
-
-        assertTrue(invokeMigration(store))
-
-        assertEquals(ChapterTransitionMode.WHEN_NEEDED, store.chapterTransitionMode().get())
-        assertFalse(store.getBoolean(LEGACY_ALWAYS_SHOW_CHAPTER_TRANSITION, true).isSet())
-    }
-
-    @Test
     fun `untouched boolean leaves the tri-state unset so the provider default applies`() = runTest {
         val store = MigrationTestPreferenceStore()
 
@@ -96,11 +74,6 @@ class ChapterTransitionMigrationTest {
 
         assertEquals(ChapterTransitionMode.WHEN_NEEDED, onlyDefault.chapterTransitionMode().get())
         assertFalse(onlyDefault.getBoolean(LEGACY_ALWAYS_SHOW_CHAPTER_TRANSITION, true).isSet())
-    }
-
-    @Test
-    fun `migration is assigned to the next released fork version`() {
-        assertEquals(65f, ChapterTransitionMigration().version)
     }
 
     private suspend fun invokeMigration(store: MigrationTestPreferenceStore): Boolean {

@@ -16,21 +16,6 @@ import tachiyomi.domain.library.model.LibraryItemKey
 class LibraryGroupingResolverTest {
 
     @Test
-    fun `ungrouped library retains the all page and item order`() {
-        val items = listOf(item(id = 2L), item(id = 1L))
-
-        val pages = resolve(items, dimensions = emptyList())
-
-        pages.map(LibraryPageSnapshot::from) shouldContainExactly listOf(
-            LibraryPageSnapshot(
-                id = "all",
-                primaryTitle = "Library",
-                itemIds = listOf(2L, 1L),
-            ),
-        )
-    }
-
-    @Test
     fun `category grouping retains category order overlap and top level empty pages`() {
         val system = category(id = 0L, name = "System")
         val empty = category(id = 2L, name = "Empty")

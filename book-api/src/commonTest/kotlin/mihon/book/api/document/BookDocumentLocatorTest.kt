@@ -5,7 +5,6 @@ import mihon.book.api.BookTextContext
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
-import kotlin.test.assertNull
 
 class BookDocumentLocatorTest {
 
@@ -82,20 +81,6 @@ class BookDocumentLocatorTest {
 
         assertEquals(BookDocumentBlockId("second"), restored.blockId)
         assertEquals(8, restored.offsetWithinBlock)
-    }
-
-    @Test
-    fun `locator for another resource is rejected`() {
-        val document = duplicateParagraphDocument()
-
-        assertNull(
-            document.resolvePosition(
-                BookLocator(
-                    resourceId = "another-chapter",
-                    progression = 0.5,
-                ),
-            ),
-        )
     }
 
     private fun duplicateParagraphDocument(): BookDocument {

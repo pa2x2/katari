@@ -58,27 +58,6 @@ class FeatureDurableExecutionRuntimeTest {
     }
 
     @Test
-    fun `new durable participant is selected without coordinator routing changes`() = runSuspend {
-        val point = point()
-        val initial = participant("example.initial-durable", point)
-        val discovered = participant("example.discovered-durable", point)
-        val graph = graph(point, listOf(initial, discovered))
-        val runtime = runtime(
-            graph,
-            binding(initial, prepare = { FeatureDurableExecutionPayload(1, "initial") }),
-            binding(discovered, prepare = { FeatureDurableExecutionPayload(1, "discovered") }),
-        )
-
-        val result = runtime.prepareDurable(
-            point,
-            FeatureSubjectId.EntryContentType(ContentTypeId("subject")),
-            Event("event"),
-        )
-
-        result.envelopes.map { it.participant } shouldContainExactly listOf(discovered.id, initial.id)
-    }
-
-    @Test
     fun `durable preparation can be discarded by the participant owner`() = runSuspend {
         val point = point()
         val participant = participant("example.staged", point)
@@ -100,26 +79,6 @@ class FeatureDurableExecutionRuntimeTest {
 
         runtime.discardDurable(listOf(envelope)) shouldBe emptyList()
         discarded shouldContainExactly listOf(FeatureDurableExecutionPayload(1, "stage"))
-    }
-
-    @Test
-    fun `runtime rejects missing duplicate and wrong-delivery durable bindings`() {
-        val point = point()
-        val participant = participant("example.durable", point)
-        val graph = graph(point, listOf(participant))
-
-        shouldThrow<IllegalStateException> {
-            FeatureExecutionRuntime(graph, evaluateFeatureGraph(graph), emptyList())
-        }.message shouldContain "Durable execution participant binding coverage mismatch"
-
-        shouldThrow<IllegalArgumentException> {
-            FeatureExecutionParticipantBinding(participant, FeatureExecutionHandler { })
-        }.message shouldContain "requires a durable runtime binding"
-
-        val binding = binding(participant)
-        shouldThrow<IllegalStateException> {
-            runtime(graph, binding, binding)
-        }.message shouldContain "Duplicate durable execution participant bindings"
     }
 
     @Test

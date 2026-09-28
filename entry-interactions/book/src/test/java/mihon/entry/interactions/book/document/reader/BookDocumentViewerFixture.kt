@@ -12,41 +12,7 @@ import mihon.book.api.document.BookDocumentRichText
 import mihon.book.api.document.BookDocumentTextRange
 import mihon.entry.interactions.book.document.render.PreparedBookDocument
 import tachiyomi.domain.entry.model.EntryChapter
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
 internal abstract class BookDocumentViewerFixture {
-    protected fun assertRestorationRoundTrip(offsetWithinBlock: Int) {
-        val section = section("current", listOf("a".repeat(100)))
-        val item = BookDocumentViewerItem.Block(section, section.document.blocks.single())
-        val viewportStartOffset = 0
-        val viewportEndOffset = 800
-        val itemSize = 1_000
-        val scrollOffset = bookDocumentScrollOffset(
-            document = section.document,
-            position = BookDocumentPosition(item.content.id, offsetWithinBlock),
-            itemSize = itemSize,
-            viewportStartOffset = viewportStartOffset,
-            viewportEndOffset = viewportEndOffset,
-        )
-
-        val restored = bookDocumentViewerLocation(
-            items = listOf(item),
-            visibleItems = listOf(
-                BookDocumentVisibleItemLayout(
-                    index = 0,
-                    key = item.key,
-                    offset = -scrollOffset,
-                    size = itemSize,
-                ),
-            ),
-            viewportStartOffset = viewportStartOffset,
-            viewportEndOffset = viewportEndOffset,
-        )
-
-        assertNotNull(restored)
-        assertEquals(offsetWithinBlock, restored.position.offsetWithinBlock)
-    }
-
     protected fun section(owner: String, texts: List<String>): BookDocumentSection<String> =
         textSection(owner, texts)
 

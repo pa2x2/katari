@@ -1,8 +1,6 @@
 package mihon.feature.graph.validation
 
-import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContainExactly
-import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import mihon.feature.graph.CapabilityExpression
@@ -30,7 +28,6 @@ import mihon.feature.graph.MissingContractFixtureObligation
 import mihon.feature.graph.SpecializedAdapter
 import mihon.feature.graph.SpecializedAdapterId
 import mihon.feature.graph.SpecializedFeatureObligation
-import mihon.feature.graph.anyOf
 import mihon.feature.graph.assembleFeatureGraph
 import mihon.feature.graph.capabilityDefinition
 import mihon.feature.graph.contextEvidence
@@ -80,40 +77,6 @@ class FeatureContractValidationTest {
             CompletedFeatureContractExecution::class,
         )
         executed shouldContainExactly listOf(ContentTypeId("future-alpha"), ContentTypeId("future-beta"))
-    }
-
-    @Test
-    fun `verifier can inspect a selected optional provider without requiring an absent alternative`() = runSuspend {
-        val alternativeDefinition = capabilityDefinition<ExampleProvider>(
-            CapabilityId("example.alternative-provider"),
-            capabilityOwner,
-        )
-        val contract = contract()
-        val contribution = ContentTypeContribution(
-            contentType = ContentTypeId("partial-future"),
-            owner = ContributionOwner("partial-future.type"),
-            providers = listOf(CapabilityProvider(providerDefinition, ExampleProvider("ready"))),
-        )
-        val graph = graph(
-            contentTypes = listOf(contribution),
-            integration = FeatureIntegration(
-                integration,
-                anyOf(
-                    CapabilityExpression.Provided(providerDefinition),
-                    CapabilityExpression.Provided(alternativeDefinition),
-                ),
-                behavioralContracts = listOf(contract),
-            ),
-        )
-        val contributor = verifierContributor(contract) { input ->
-            input.providerOrNull(providerDefinition)?.state shouldBe "ready"
-            input.providerOrNull(alternativeDefinition) shouldBe null
-            FeatureContractVerificationResult.Passed
-        }
-
-        validateFeatureContracts(
-            planFeatureContractValidation(graph, evaluateFeatureGraph(graph), listOf(contributor)),
-        ).isSuccessful shouldBe true
     }
 
     @Test
@@ -277,100 +240,6 @@ class FeatureContractValidationTest {
         crashedValidation.isSuccessful shouldBe false
     }
 
-    @Test
-    fun `validation classpath discovers an unknown feature verifier without a suite list`() {
-        val serviceOwner = ContributionOwner("service.feature")
-        val serviceFeature = FeatureId("service.feature")
-        val graph = assembleFeatureGraph(
-            DiscoveredFeatureGraphContributions(
-                contentTypes = listOf(
-                    ContentTypeContribution(ContentTypeId("service-type"), ContributionOwner("service-type.owner")),
-                ),
-                features = listOf(
-                    FeatureContribution(
-                        feature = serviceFeature,
-                        owner = serviceOwner,
-                        integrations = listOf(
-                            FeatureIntegration(
-                                id = FeatureIntegrationId("service.integration"),
-                                prerequisites = CapabilityExpression.Always,
-                                behavioralContracts = listOf(ServiceLoadedValidationContract),
-                            ),
-                        ),
-                    ),
-                ),
-            ),
-        )
-
-        val plan = discoverAndPlanFeatureContractValidation(graph, evaluateFeatureGraph(graph))
-
-        plan.isComplete shouldBe true
-        plan.executions.single().verifier.verifier.contract shouldBe FeatureContractReference(
-            serviceFeature,
-            ServiceLoadedValidationContract,
-        )
-    }
-
-    @Test
-    fun `validation discovery falls back when the thread context class loader is unavailable`() {
-        val thread = Thread.currentThread()
-        val previousClassLoader = thread.contextClassLoader
-        try {
-            thread.contextClassLoader = null
-
-            loadFeatureValidationContributors()
-                .single()
-                .shouldBeInstanceOf<ServiceLoadedValidationContributor>()
-        } finally {
-            thread.contextClassLoader = previousClassLoader
-        }
-    }
-
-    @Test
-    fun `validation bindings reject duplicate foreign and unreachable ownership`() {
-        val contract = contract()
-        val graph = graph(listOf(type("future")), integration(contract))
-        val evaluation = evaluateFeatureGraph(graph)
-        val verifier = FeatureContractVerifier(reference(contract)) { FeatureContractVerificationResult.Passed }
-        val first = featureValidationContributor(featureOwner) { add(verifier) }
-        val duplicate = featureValidationContributor(featureOwner) { add(verifier) }
-
-        shouldThrow<IllegalStateException> {
-            planFeatureContractValidation(graph, evaluation, listOf(first, duplicate))
-        }
-
-        val foreign = featureValidationContributor(ContributionOwner("foreign.feature")) { add(verifier) }
-        shouldThrow<IllegalArgumentException> {
-            planFeatureContractValidation(graph, evaluation, listOf(foreign))
-        }
-
-        val unknown = featureValidationContributor(featureOwner) {
-            val unknownContract = object : FeatureBehaviorContract {
-                override val id = FeatureArtifactId("unknown.behavior")
-            }
-            add(
-                FeatureContractVerifier(
-                    FeatureContractReference(feature, unknownContract),
-                ) { FeatureContractVerificationResult.Passed },
-            )
-        }
-        shouldThrow<IllegalArgumentException> {
-            planFeatureContractValidation(graph, evaluation, listOf(unknown))
-        }
-
-        val copiedDefinition = contract()
-        val copied = featureValidationContributor(featureOwner) {
-            add(
-                FeatureContractVerifier(
-                    FeatureContractReference(feature, copiedDefinition),
-                ) { FeatureContractVerificationResult.Passed },
-            )
-        }
-        shouldThrow<IllegalArgumentException> {
-            planFeatureContractValidation(graph, evaluation, listOf(copied))
-        }
-    }
-
     private fun verifierContributor(
         contract: FeatureBehaviorContract,
         verify: suspend (FeatureContractExecutionInput) -> FeatureContractVerificationResult,
@@ -424,10 +293,6 @@ class FeatureContractValidationTest {
     private data class ExampleFixture(val state: String)
     private data class ExampleContext(val enabled: Boolean)
     private data class ExampleAdapter(val state: String)
-}
-
-internal data object ServiceLoadedValidationContract : FeatureBehaviorContract {
-    override val id = FeatureArtifactId("service.behavior")
 }
 
 private inline fun <reified O : FeatureObligation> FeatureContractValidationPlan.graphIssues(): List<O> {

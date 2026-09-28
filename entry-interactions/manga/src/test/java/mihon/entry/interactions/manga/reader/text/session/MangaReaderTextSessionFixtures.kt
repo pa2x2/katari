@@ -6,18 +6,15 @@ import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
 import io.mockk.mockk
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.flowOf
 import mihon.entry.interactions.manga.reader.text.image.DisplayedPageImage
 import mihon.entry.interactions.manga.reader.text.surface.MangaPageTextDecoration
 import mihon.entry.interactions.manga.reader.text.surface.MangaPageTextSurface
 import mihon.language.api.tag.LanguageTag
 import mihon.model.artifacts.api.ModelArtifactStore
 import mihon.model.artifacts.api.descriptor.ModelArtifactDescriptor
-import mihon.model.artifacts.api.descriptor.ModelArtifactFile
-import mihon.model.artifacts.api.descriptor.ModelArtifactHosting
 import mihon.model.artifacts.api.descriptor.ModelArtifactId
-import mihon.model.artifacts.api.descriptor.ModelArtifactLicense
 import mihon.model.artifacts.api.download.ModelArtifactDownloadApproval
 import mihon.model.artifacts.api.state.InstalledModelArtifact
 import mihon.model.artifacts.api.state.ModelArtifactState
@@ -31,11 +28,8 @@ import mihon.text.recognition.api.pipeline.TextRecognitionPipeline
 import mihon.text.recognition.api.preparation.ReadyTextRecognition
 import mihon.text.recognition.api.preparation.TextRecognitionPreparation
 import mihon.text.recognition.api.request.TextRecognitionRequest
-import mihon.text.recognition.api.result.RecognizedTextRegion
-import mihon.text.recognition.api.result.TextOrientation
 import mihon.text.recognition.api.result.TextRecognitionExecution
 import mihon.text.recognition.api.result.TextRecognitionResult
-import mihon.text.recognition.api.result.TextRegionKind
 import mihon.translation.api.TranslationFeature
 import mihon.translation.api.engine.TranslationEngineId
 import mihon.translation.api.engine.TranslationProviderId
@@ -47,37 +41,18 @@ import mihon.translation.api.request.ResolvedTranslationRequest
 import mihon.translation.api.request.TranslationRequest
 import mihon.translation.api.result.TranslationExecution
 import mihon.translation.api.result.TranslationResult
-import java.io.File
 
 internal val JAPANESE = LanguageTag.require("ja")
 internal val KOREAN = LanguageTag.require("ko")
-internal val FRENCH = LanguageTag.require("fr")
-internal val PAGE_SIZE = ImageSize(1200, 1800)
-internal val PIPELINE = TextRecognitionPipeline(
+private val PAGE_SIZE = ImageSize(1200, 1800)
+private val PIPELINE = TextRecognitionPipeline(
     TextRecognitionComponentId("example.detector"),
     TextRecognitionComponentId("example.recognizer"),
-)
-internal val MODEL = ModelArtifactDescriptor(
-    id = ModelArtifactId("example.model"),
-    revision = "r1",
-    displayName = "Example model",
-    files = listOf(ModelArtifactFile("model.onnx", "https://models.example/model.onnx", 1, "0".repeat(64))),
-    license = ModelArtifactLicense("Apache-2.0", "https://license.example"),
-    hosting = ModelArtifactHosting.Upstream("https://models.example"),
-)
-
-internal fun bubble(text: String, bounds: ImageRect, container: ImageRect) = RecognizedTextRegion(
-    bounds = bounds,
-    text = text,
-    kind = TextRegionKind.SpeechBubble,
-    orientation = TextOrientation.Vertical,
-    container = container,
 )
 
 /** A visible page whose image is always available. */
 internal class FakeSurface(private val index: Int) : MangaPageTextSurface {
     override val page = ReaderPage(index)
-    var decoration: MangaPageTextDecoration? = null
 
     override suspend fun displayedImage(): DisplayedPageImage = object : DisplayedPageImage {
         override val key = ImageContentKey("page-$index")
@@ -90,27 +65,22 @@ internal class FakeSurface(private val index: Int) : MangaPageTextSurface {
 
     override fun windowToImage(x: Float, y: Float, imageSize: ImageSize): Pair<Int, Int>? = null
 
-    override fun setTextDecoration(decoration: MangaPageTextDecoration?) {
-        this.decoration = decoration
-    }
+    override fun setTextDecoration(decoration: MangaPageTextDecoration?) = Unit
 }
 
 /**
- * Prepares with [preparation] and answers every recognition with [regions]; recognition waits for [release] when it
- * is set, so tests can observe work in progress.
+ * Prepares every request as ready and answers every recognition without regions; recognition waits for [release]
+ * when it is set, so tests can observe work in progress.
  */
 internal class FakeTextRecognition : TextRecognitionFeature {
-    var preparation: (TextRecognitionRequest) -> TextRecognitionPreparation = { request ->
-        TextRecognitionPreparation.Ready(Ready(request), request.language ?: JAPANESE, PIPELINE)
-    }
-    var regions: List<RecognizedTextRegion> = emptyList()
     var release: CompletableDeferred<Unit>? = null
     val recognized = mutableListOf<ImageContentKey>()
 
     /** The language of each recognition, in order. */
     val recognizedLanguages = mutableListOf<LanguageTag?>()
 
-    override suspend fun prepare(request: TextRecognitionRequest) = preparation(request)
+    override suspend fun prepare(request: TextRecognitionRequest): TextRecognitionPreparation =
+        TextRecognitionPreparation.Ready(Ready(request), request.language ?: JAPANESE, PIPELINE)
 
     override suspend fun recognize(ready: ReadyTextRecognition): TextRecognitionExecution {
         release?.await()
@@ -118,50 +88,33 @@ internal class FakeTextRecognition : TextRecognitionFeature {
         recognized += request.image.key
         recognizedLanguages += request.language
         return TextRecognitionExecution.Success(
-            TextRecognitionResult(request.image.key, request.image.size, JAPANESE, regions),
+            TextRecognitionResult(request.image.key, request.image.size, JAPANESE, emptyList()),
         )
     }
 
     private class Ready(val request: TextRecognitionRequest) : ReadyTextRecognition
 }
 
+/** A store in which no model is installed. */
 internal class FakeModelStore : ModelArtifactStore {
-    val states = mutableMapOf<ModelArtifactDescriptor, MutableStateFlow<ModelArtifactState>>()
-    val approved = mutableListOf<ModelArtifactDownloadApproval>()
+    override fun observe(descriptor: ModelArtifactDescriptor): Flow<ModelArtifactState> =
+        flowOf(ModelArtifactState.NotInstalled)
 
-    fun state(model: ModelArtifactDescriptor) = states.getOrPut(model) {
-        MutableStateFlow(ModelArtifactState.NotInstalled)
-    }
+    override suspend fun installed(descriptor: ModelArtifactDescriptor): InstalledModelArtifact? = null
 
-    override fun observe(descriptor: ModelArtifactDescriptor): Flow<ModelArtifactState> = state(descriptor)
-
-    override suspend fun installed(descriptor: ModelArtifactDescriptor): InstalledModelArtifact? =
-        (state(descriptor).value as? ModelArtifactState.Installed)?.artifact
-
-    override fun download(approval: ModelArtifactDownloadApproval) {
-        approved += approval
-    }
+    override fun download(approval: ModelArtifactDownloadApproval) = Unit
 
     override fun cancel(artifact: ModelArtifactDescriptor) = Unit
 
     override suspend fun delete(artifact: ModelArtifactId) = Unit
 
     override fun observeStored(): Flow<List<StoredModelArtifact>> = emptyFlow()
-
-    fun install(model: ModelArtifactDescriptor) {
-        state(model).value = ModelArtifactState.Installed(InstalledModelArtifact(model, File("models")))
-    }
 }
 
-/** Translates text by upper-casing it, or answers every request with [preparation] when one is set. */
+/** Translates text by upper-casing it. */
 internal class FakeTranslation : TranslationFeature {
-    var preparation: TranslationPreparation? = null
-    val translated = mutableListOf<String>()
-    val requests = mutableListOf<TranslationRequest>()
-
     override suspend fun prepare(request: TranslationRequest): TranslationPreparation {
-        requests += request
-        return preparation ?: TranslationPreparation.Ready(
+        return TranslationPreparation.Ready(
             translation = Ready(request.text),
             request = ResolvedTranslationRequest(
                 text = request.text,
@@ -175,13 +128,12 @@ internal class FakeTranslation : TranslationFeature {
 
     override suspend fun translate(ready: ReadyTranslation): TranslationExecution {
         val text = (ready as Ready).text
-        translated += text
         return TranslationExecution.Success(TranslationResult(text.uppercase(), JAPANESE, ENGLISH, PRESENTATION))
     }
 
     private class Ready(val text: String) : ReadyTranslation
 
-    companion object {
+    private companion object {
         val ENGLISH = LanguageTag.require("en")
         val PRESENTATION = TranslationProviderPresentation(
             providerId = TranslationProviderId("example"),

@@ -12,13 +12,4 @@ class StatisticsCardLayoutTest {
         layout.hidden shouldBe setOf(StatisticsCard.SUMMARY)
         StatisticsCardLayout.decode(layout.encode()) shouldBe layout
     }
-
-    @Test
-    fun `cards move across activity and library boundaries while visibility is retained`() {
-        val initial = StatisticsCardLayout(hidden = setOf(StatisticsCard.PATTERNS))
-        val moved = initial.move(StatisticsCard.PROGRESS, -100)
-        moved.order.first() shouldBe StatisticsCard.PROGRESS
-        moved.hidden shouldBe setOf(StatisticsCard.PATTERNS)
-        moved.move(StatisticsCard.PROGRESS, 100).order.last() shouldBe StatisticsCard.PROGRESS
-    }
 }

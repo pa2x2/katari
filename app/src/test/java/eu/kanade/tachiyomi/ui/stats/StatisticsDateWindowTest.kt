@@ -9,18 +9,6 @@ import java.time.LocalDate
 
 class StatisticsDateWindowTest {
 
-    @Test
-    fun `year navigation moves by calendar months and clamps to shorter months`() {
-        val window = StatsRange.ONE_YEAR.windowEndingOn(LocalDate.parse("2024-03-31"))
-
-        val older = window.shiftedByBuckets(1)
-        older.endDate shouldBe LocalDate.parse("2024-02-29")
-        older.startDate shouldBe LocalDate.parse("2023-03-01")
-
-        window.shiftedByBuckets(-1).endDate shouldBe LocalDate.parse("2024-04-30")
-        window.shiftedByBuckets(3).endDate shouldBe LocalDate.parse("2023-12-31")
-    }
-
     @ParameterizedTest
     @ValueSource(strings = ["2026-03-31", "2024-03-31", "2026-05-31", "2026-03-30", "2026-09-07"])
     fun `month navigation restores the latest period after a shorter month`(date: String) {

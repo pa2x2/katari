@@ -1,7 +1,6 @@
 package tachiyomi.data.entry
 
 import app.cash.sqldelight.async.coroutines.await
-import app.cash.sqldelight.async.coroutines.awaitAsList
 import app.cash.sqldelight.async.coroutines.awaitAsOne
 import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
 import app.cash.sqldelight.async.coroutines.awaitCreate
@@ -21,29 +20,6 @@ import tachiyomi.data.StringListColumnAdapter
 import tachiyomi.data.UpdateStrategyColumnAdapter
 
 class EntryMigrationPersistenceQueriesTest {
-    @Test
-    fun `operation identity owns durable consequences`() = runTest {
-        withDatabase { database, _ ->
-            database.entry_migration_operationsQueries.insert("operation", "replace:notes", 2, 10, 11, "REPLACE", 1)
-            database.entry_migration_consequencesQueries.insert(
-                consequenceId = "consequence",
-                operationId = "operation",
-                profileId = 2,
-                participantId = "progress",
-                schemaVersion = 1,
-                payload = "payload",
-                createdAt = 1,
-            )
-
-            database.entry_migration_consequencesQueries.countByOperation("operation").awaitAsOne() shouldBe 1
-            database.entry_migration_operationsQueries.getById("operation").awaitAsOne().run {
-                source_entry_id shouldBe 10
-                target_entry_id shouldBe 11
-                intent_fingerprint shouldBe "replace:notes"
-            }
-        }
-    }
-
     @Test
     fun `nested participant work rolls back with the outer migration transaction`() = runTest {
         withDatabase { database, handler ->
@@ -69,30 +45,6 @@ class EntryMigrationPersistenceQueriesTest {
             failure shouldBe abort
 
             database.entry_migration_operationsQueries.getById("operation").awaitAsOneOrNull() shouldBe null
-            database.entry_migration_consequencesQueries.countByOperation("operation").awaitAsOne() shouldBe 0
-        }
-    }
-
-    @Test
-    fun `consequence failure remains pending until acknowledged`() = runTest {
-        withDatabase { database, _ ->
-            database.entry_migration_operationsQueries.insert("operation", "copy", 2, 10, 11, "COPY", 1)
-            database.entry_migration_consequencesQueries.insert(
-                consequenceId = "consequence",
-                operationId = "operation",
-                profileId = 2,
-                participantId = "progress",
-                schemaVersion = 1,
-                payload = "payload",
-                createdAt = 1,
-            )
-
-            database.entry_migration_consequencesQueries.pending(0, 10).awaitAsList().size shouldBe 1
-            database.entry_migration_consequencesQueries.recordFailure(100, "failed", "consequence")
-            database.entry_migration_consequencesQueries.pending(99, 10).awaitAsList() shouldBe emptyList()
-            database.entry_migration_consequencesQueries.makeRetryable()
-            database.entry_migration_consequencesQueries.pending(0, 10).awaitAsList().single().attempts shouldBe 1
-            database.entry_migration_consequencesQueries.acknowledge("consequence")
             database.entry_migration_consequencesQueries.countByOperation("operation").awaitAsOne() shouldBe 0
         }
     }

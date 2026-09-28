@@ -28,30 +28,16 @@ import java.nio.file.Files
 class AnimeDownloadProviderTest {
 
     @Test
-    fun `validates every recorded artifact before exposing a package`() {
+    fun `exposes a package only while every recorded artifact is intact`() {
         val videoBytes = "downloaded video".encodeToByteArray()
         val manifest = manifest(
             artifacts = listOf(
                 DownloadedArtifact("video.mp4", videoBytes.size.toLong()),
             ),
         )
-        val directory = packageDirectory(manifest, videoBytes)
 
-        provider().readValidManifest(directory) shouldBe manifest
-    }
-
-    @Test
-    fun `rejects a package whose recorded artifact was changed`() {
-        val originalBytes = "downloaded video".encodeToByteArray()
-        val manifest = manifest(
-            artifacts = listOf(
-                DownloadedArtifact("video.mp4", originalBytes.size.toLong()),
-            ),
-        )
-        val changedBytes = "truncated".encodeToByteArray()
-        val directory = packageDirectory(manifest, changedBytes)
-
-        provider().readValidManifest(directory).shouldBeNull()
+        provider().readValidManifest(packageDirectory(manifest, videoBytes)) shouldBe manifest
+        provider().readValidManifest(packageDirectory(manifest, "truncated".encodeToByteArray())).shouldBeNull()
     }
 
     @Test

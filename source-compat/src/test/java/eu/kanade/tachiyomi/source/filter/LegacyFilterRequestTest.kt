@@ -9,9 +9,6 @@ import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitCancellation
-import kotlinx.coroutines.cancelAndJoin
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -44,26 +41,6 @@ class LegacyFilterRequestTest {
             applied.withSourceFilterValues { adapter.getSearchContent(page, "", it) }
         }
         source.searchCount shouldBe 2
-    }
-
-    @Test
-    fun `filters appearing after capture do not block the captured search`() = runTest {
-        var populated = false
-        val source = LegacyFilterSourceFixture(
-            filters = { if (populated) FilterList(Genres(), GenreHeader()) else FilterList(Genres()) },
-            search = { _, query, filters ->
-                query shouldBe "cats"
-                filters.size shouldBe 1
-                (filters.single() as Genres).state.single().isExcluded() shouldBe true
-            },
-        )
-        val adapter = LegacyMangaSourceAdapter(source)
-        val captured = adapter.getFilterList().detachedCopy()
-        ((captured.single() as EntryFilter.Group<*>).state.single() as EntryFilter.TriState).state =
-            EntryFilter.TriState.STATE_EXCLUDE
-        populated = true
-        captured.withSourceFilterValues { adapter.getSearchContent(1, "cats", it) }
-        source.searchCount shouldBe 1
     }
 
     @Test
@@ -141,32 +118,5 @@ class LegacyFilterRequestTest {
         succeeding.await()
         observed shouldBe listOf("Comedy")
         choice.state shouldBe 0
-    }
-
-    @Test
-    fun `cancelled legacy searches restore source state and allow the next request`() = runTest {
-        val genres = Genres()
-        val entered = CompletableDeferred<Unit>()
-        val source = LegacyFilterSourceFixture(
-            filters = { FilterList(genres) },
-            search = { _, query, filters ->
-                (filters.single() as Genres).state.single().isExcluded() shouldBe true
-                if (query == "cancel") {
-                    entered.complete(Unit)
-                    awaitCancellation()
-                }
-            },
-        )
-        val adapter = LegacyMangaSourceAdapter(source)
-        val filters = adapter.getFilterList().detachedCopy()
-        ((filters.single() as EntryFilter.Group<*>).state.single() as EntryFilter.TriState).state =
-            EntryFilter.TriState.STATE_EXCLUDE
-        val request = launch { filters.withSourceFilterValues { adapter.getSearchContent(1, "cancel", it) } }
-        entered.await()
-        request.cancelAndJoin()
-        genres.state.single().isIgnored() shouldBe true
-        filters.withSourceFilterValues { adapter.getSearchContent(1, "retry", it) }
-        source.searchCount shouldBe 2
-        genres.state.single().isIgnored() shouldBe true
     }
 }

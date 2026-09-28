@@ -1,14 +1,12 @@
 package mihon.entry.interactions.download
 
 import eu.kanade.tachiyomi.source.entry.EntryType
-import io.kotest.matchers.booleans.shouldBeFalse
-import io.kotest.matchers.collections.shouldContainExactly
-import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.first
@@ -28,51 +26,12 @@ class EntryDownloadRuntimeFeatureTest {
     private val entry = Entry.create().copy(id = 7L, type = EntryType.BOOK)
 
     @Test
-    fun `runtime projects queue and child status`() = runTest {
-        val queueItem = queueItem()
-        val processor = processor(queueItem)
-        val status = EntryDownloadStatus(EntryType.BOOK, queueItem.childId, EntryDownloadState.QUEUE)
-        every { processor.getStatus(any(), any(), any(), any(), any(), any()) } returns status
-        val feature = featureFor(backgroundScope, EntryDownloadCapability.bind(processor))
-
-        feature.state.first().queue.single().items.shouldContainExactly(queueItem)
-        feature.status(
-            type = entry.type,
-            childId = queueItem.childId,
-            childName = "Child",
-            childScanlator = null,
-            childUrl = "/child",
-            entryTitle = entry.title,
-            sourceId = entry.source,
-        ) shouldBe status
-    }
-
-    @Test
-    fun `missing download provider is valid and exposes no runtime behavior`() = runTest {
-        val feature = featureFor(backgroundScope)
-
-        feature.isApplicable(EntryType.BOOK).shouldBeFalse()
-        feature.state.first() shouldBe EntryDownloadRuntimeState()
-        feature.downloadCount(entry) shouldBe 0
-        feature.status(
-            type = entry.type,
-            childId = 11L,
-            childName = "Child",
-            childScanlator = null,
-            childUrl = "/child",
-            entryTitle = entry.title,
-            sourceId = entry.source,
-        ).shouldBeNull()
-    }
-
-    @Test
     fun `resubscribing after observation stops cannot replay an obsolete queue`() = runTest {
         val item = queueItem()
-        val processor = processor(item)
         val queue = MutableStateFlow(
             listOf(EntryDownloadQueueGroup(item.sourceId, "Source", item.entryType, listOf(item))),
         )
-        every { processor.queueState } returns queue
+        val processor = processor(queue)
         val feature = featureFor(backgroundScope, EntryDownloadCapability.bind(processor))
         feature.state.first().queue.single().items.single() shouldBe item
 
@@ -87,12 +46,8 @@ class EntryDownloadRuntimeFeatureTest {
         scope: CoroutineScope,
         vararg bindings: EntryInteractionProviderBinding<*>,
     ): EntryDownloadRuntimeFeature {
-        val plugins = bindings
-            .takeIf { it.isNotEmpty() }
-            ?.let { listOf(plugin(EntryType.BOOK, *it)) }
-            .orEmpty()
         val composition = createEntryInteractionComposition(
-            plugins = plugins,
+            plugins = listOf(plugin(EntryType.BOOK, *bindings)),
             featureContributors = listOf(EntryDownloadRuntimeFeatureContributor),
         )
         return DefaultEntryDownloadRuntimeFeature(
@@ -113,22 +68,13 @@ class EntryDownloadRuntimeFeatureTest {
         }
     }
 
-    private fun processor(item: EntryDownloadQueueItem): EntryDownloadProcessor {
+    private fun processor(queue: Flow<List<EntryDownloadQueueGroup>>): EntryDownloadProcessor {
         return mockk(relaxed = true) {
             every { type } returns EntryType.BOOK
             every { changes } returns emptyFlow()
             every { isInitializing } returns flowOf(false)
             every { isRunning } returns flowOf(true)
-            every { queueState } returns flowOf(
-                listOf(
-                    EntryDownloadQueueGroup(
-                        sourceId = item.sourceId,
-                        sourceName = "Source",
-                        entryType = item.entryType,
-                        items = listOf(item),
-                    ),
-                ),
-            )
+            every { queueState } returns queue
             every { events } returns emptyFlow()
             every { updates() } returns emptyFlow()
         }

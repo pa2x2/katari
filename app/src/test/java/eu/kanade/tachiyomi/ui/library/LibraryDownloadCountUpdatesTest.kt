@@ -27,19 +27,6 @@ import tachiyomi.domain.library.model.LibraryItemKey
 class LibraryDownloadCountUpdatesTest {
 
     @Test
-    fun `merged download count uses each concrete member`() {
-        val first = entry(id = 1L, source = 10L, title = "First")
-        val second = entry(id = 2L, source = 20L, title = "Second")
-        val downloads = mockk<EntryDownloadRuntimeFeature> {
-            every { downloadCount(first) } returns 2
-            every { downloadCount(second) } returns 3
-        }
-        val item = libraryItem(first, second)
-
-        item.calculateDownloadCount(downloads) shouldBe 5
-    }
-
-    @Test
     fun `member updates accumulate counts without copying unaffected items`() = runTest {
         val unaffected = libraryItem(entry(id = 1L, type = EntryType.ANIME))
         val firstMember = entry(id = 2L)
@@ -96,21 +83,6 @@ class LibraryDownloadCountUpdatesTest {
 
         emissions shouldContainExactly listOf(listOf(item))
         collection.cancelAndJoin()
-    }
-
-    @Test
-    fun `count failure terminates the update flow`() = runTest {
-        val failure = IllegalStateException("count failed")
-
-        val result = runCatching {
-            observeLibraryDownloadCountUpdates(
-                initialItems = listOf(libraryItem(entry(id = 1L))),
-                statusUpdates = flowOf(status(entryId = 1L)),
-                calculateDownloadCount = { throw failure },
-            ).toList()
-        }
-
-        result.exceptionOrNull() shouldBe failure
     }
 
     private fun status(

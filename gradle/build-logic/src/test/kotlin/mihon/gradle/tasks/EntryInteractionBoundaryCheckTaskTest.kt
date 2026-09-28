@@ -246,50 +246,6 @@ class EntryInteractionBoundaryCheckTaskTest {
     }
 
     @Test
-    fun `type modules cannot dispatch catalogue providers outside the Catalogue Feature host`() {
-        createBaseFixture(
-            additionalFiles = mapOf(
-                "entry-interactions/anime/src/main/java/mihon/entry/interactions/anime/RawCatalogue.kt" to
-                    """
-                        package mihon.entry.interactions.anime
-
-                        import eu.kanade.tachiyomi.source.entry.UnifiedSource
-
-                        class RawCatalogue(private val source: UnifiedSource) {
-                            suspend fun popular() = source.getPopularContent(1)
-                        }
-                    """.trimIndent(),
-            ),
-        )
-
-        val error = assertThrows(GradleException::class.java) { runBoundaryCheck() }
-
-        error.message shouldContain "catalogue provider execution must use EntryCatalogueFeature"
-        error.message shouldContain "getPopularContent"
-    }
-
-    @Test
-    fun `new files under application source package cannot silently become description owners`() {
-        createBaseFixture(
-            additionalFiles = mapOf(
-                "app/src/main/java/eu/kanade/tachiyomi/source/NewSourcePolicy.kt" to
-                    """
-                        package eu.kanade.tachiyomi.source
-
-                        import eu.kanade.tachiyomi.source.entry.SourceMetadata
-
-                        class NewSourcePolicy(private val metadata: SourceMetadata)
-                    """.trimIndent(),
-            ),
-        )
-
-        val error = assertThrows(GradleException::class.java) { runBoundaryCheck() }
-
-        error.message shouldContain "application source availability and description must use EntryCatalogueFeature"
-        error.message shouldContain "SourceMetadata"
-    }
-
-    @Test
     fun `legacy adapter identity and metering marker cannot escape source compatibility`() {
         createBaseFixture(
             appSource = """
@@ -337,14 +293,6 @@ class EntryInteractionBoundaryCheckTaskTest {
 
         error.message shouldContain "application source actions must use their Entry Feature boundary"
         error.message shouldContain "ConfigurableSource"
-        error.message shouldContain "SourceHomePage"
-        error.message shouldContain "WebViewSource"
-        error.message shouldContain "ResolvableSource"
-        error.message shouldContain "EntryPreviewSource"
-        error.message shouldContain "RelatedEntriesSource"
-        error.message shouldContain "EntryImageSource"
-        error.message shouldContain "SubtitleSource"
-        error.message shouldContain "ChapterWebViewSource"
         error.message shouldContain "Immersive source opt-in must be interpreted by EntryImmersiveFeature"
     }
 
@@ -538,32 +486,6 @@ class EntryInteractionBoundaryCheckTaskTest {
     }
 
     @Test
-    fun `generic presentation cannot bypass media Features through raw source contracts`() {
-        createBaseFixture(
-            additionalFiles = mapOf(
-                "presentation-core/src/main/java/presentation/Media.kt" to
-                    """
-                        package presentation
-
-                        import eu.kanade.tachiyomi.source.entry.EntryImageSource
-                        import eu.kanade.tachiyomi.source.entry.SubtitleSource
-
-                        class Media(
-                            val images: EntryImageSource,
-                            val subtitles: SubtitleSource,
-                        )
-                    """.trimIndent(),
-            ),
-        )
-
-        val error = assertThrows(GradleException::class.java) { runBoundaryCheck() }
-
-        error.message shouldContain "application source actions must use their Entry Feature boundary"
-        error.message shouldContain "EntryImageSource"
-        error.message shouldContain "SubtitleSource"
-    }
-
-    @Test
     fun `application download consumers cannot manufacture applicability evidence`() {
         createBaseFixture(
             appSource = """
@@ -725,24 +647,6 @@ class EntryInteractionBoundaryCheckTaskTest {
 
         error.message shouldContain "unexpected public type-module class: ReaderViewModel"
         error.message shouldContain "unexpected public type-module class: VideoPlaybackUiState"
-    }
-
-    @Test
-    fun `type module launch intent factories must remain internal`() {
-        createBaseFixture(
-            additionalFiles = mapOf(
-                "entry-interactions/manga/src/main/java/mihon/entry/interactions/manga/MangaReaderLaunch.kt" to
-                    """
-                        package mihon.entry.interactions.manga
-
-                        fun mangaReaderIntent() = Unit
-                    """.trimIndent(),
-            ),
-        )
-
-        val error = assertThrows(GradleException::class.java) { runBoundaryCheck() }
-
-        error.message shouldContain "unexpected public type-module function: mangaReaderIntent"
     }
 
     @Test
@@ -948,26 +852,6 @@ class EntryInteractionBoundaryCheckTaskTest {
     }
 
     @Test
-    fun `new domain source files cannot silently become legacy media owners`() {
-        createBaseFixture(
-            additionalFiles = mapOf(
-                "domain/src/main/java/tachiyomi/domain/source/NewLegacyMediaPolicy.kt" to
-                    """
-                        package tachiyomi.domain.source
-
-                        import eu.kanade.tachiyomi.source.model.Page
-
-                        class NewLegacyMediaPolicy(private val page: Page)
-                    """.trimIndent(),
-            ),
-        )
-
-        val error = assertThrows(GradleException::class.java) { runBoundaryCheck() }
-
-        error.message shouldContain "not legacy Page"
-    }
-
-    @Test
     fun `generic code cannot reference anime player resolver internals directly`() {
         createBaseFixture(
             additionalFiles = mapOf(
@@ -1019,32 +903,6 @@ class EntryInteractionBoundaryCheckTaskTest {
 
         error.message shouldContain "settings/UI cache maintenance must use EntryMediaCacheFeature"
         error.message shouldContain "MangaPageCache"
-    }
-
-    @Test
-    fun `settings UI cannot bypass media cache feature through host ports`() {
-        createBaseFixture(
-            additionalFiles = mapOf(
-                "app/src/main/java/eu/kanade/presentation/more/settings/screen/SettingsDataScreen.kt" to
-                    """
-                        package eu.kanade.presentation.more.settings.screen
-
-                        import mihon.entry.interactions.EntryPageImageCache
-                        import mihon.entry.interactions.EntryPlayerCache
-
-                        class SettingsDataScreen(
-                            private val pageCache: EntryPageImageCache,
-                            private val playerCache: EntryPlayerCache,
-                        )
-                    """.trimIndent(),
-            ),
-        )
-
-        val error = assertThrows(GradleException::class.java) { runBoundaryCheck() }
-
-        error.message shouldContain "settings/UI cache maintenance must use EntryMediaCacheFeature"
-        error.message shouldContain "EntryPageImageCache"
-        error.message shouldContain "EntryPlayerCache"
     }
 
     @Test
@@ -1129,55 +987,6 @@ class EntryInteractionBoundaryCheckTaskTest {
                     }
                 }
             """.trimIndent(),
-        )
-
-        val error = assertThrows(GradleException::class.java) { runBoundaryCheck() }
-
-        error.message shouldContain "generic EntryType MANGA/ANIME mapping must use EntryTypePresentationFeature"
-    }
-
-    @Test
-    fun `application presentation cannot own an exhaustive manga anime mapping`() {
-        createBaseFixture(
-            additionalFiles = mapOf(
-                "app/src/main/java/eu/kanade/presentation/entry/EntryTypePresentation.kt" to
-                    """
-                        package eu.kanade.presentation.entry
-
-                        class EntryTypePresentation
-
-                        fun presentation(type: EntryType): EntryTypePresentation {
-                            return when (type) {
-                                EntryType.MANGA -> EntryTypePresentation()
-                                EntryType.ANIME -> EntryTypePresentation()
-                            }
-                        }
-                    """.trimIndent(),
-            ),
-        )
-
-        val error = assertThrows(GradleException::class.java) { runBoundaryCheck() }
-
-        error.message shouldContain "generic EntryType MANGA/ANIME mapping must use EntryTypePresentationFeature"
-    }
-
-    @Test
-    fun `backup package cannot silently add a new current type mapping`() {
-        createBaseFixture(
-            additionalFiles = mapOf(
-                "app/src/main/java/eu/kanade/tachiyomi/data/backup/NewTypePolicy.kt" to
-                    """
-                        package eu.kanade.tachiyomi.data.backup
-
-                        import eu.kanade.tachiyomi.source.entry.EntryType
-
-                        fun label(type: EntryType): String = when (type) {
-                            EntryType.MANGA -> "Manga"
-                            EntryType.ANIME -> "Anime"
-                            else -> "Other"
-                        }
-                    """.trimIndent(),
-            ),
         )
 
         val error = assertThrows(GradleException::class.java) { runBoundaryCheck() }

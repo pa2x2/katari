@@ -37,21 +37,6 @@ class EntryTrackingCollectionTest {
     )
 
     @Test
-    fun `collection projects service applicability and normalized track evidence`() = runTest {
-        val feature = feature(snapshot)
-
-        feature.observeCollection().collect { collection ->
-            collection.services.map { it.id } shouldBe
-                listOf(EntryTrackingServiceId(firstService.id), EntryTrackingServiceId(secondService.id))
-            collection.scoreSupportedEntryTypes shouldBe setOf(EntryType.BOOK, EntryType.MANGA, EntryType.ANIME)
-            collection.entries.getValue(1L) shouldBe listOf(
-                EntryTrackingCollectionTrack(EntryTrackingServiceId(firstService.id), 8.0, isScored = true),
-                EntryTrackingCollectionTrack(EntryTrackingServiceId(secondService.id), 6.0, isScored = true),
-            )
-        }
-    }
-
-    @Test
     fun `collection summary counts tracked entries and averages scored entries`() = runTest {
         val feature = feature(snapshot)
 

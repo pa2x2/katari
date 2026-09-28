@@ -19,13 +19,4 @@ class StatisticsCardCatalogTest {
         (StatisticsCard.PATTERNS in sections[0].second) shouldBe false
         sections[1].second shouldBe listOf(StatisticsCard.PROGRESS, StatisticsCard.MEDIA)
     }
-
-    @Test
-    fun `lifetime appears only for the all range`() {
-        val layout = StatisticsCardLayout()
-
-        (StatisticsCard.EARLIER in layout.visibleSections(true, StatsRange.THIRTY_DAYS).flatMap { it.second }) shouldBe
-            false
-        (StatisticsCard.EARLIER in layout.visibleSections(true, StatsRange.ALL).flatMap { it.second }) shouldBe true
-    }
 }

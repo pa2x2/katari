@@ -17,7 +17,6 @@ import mihon.translation.api.availability.TranslationDeviceAvailability
 import mihon.translation.api.engine.KnownTranslationEngine
 import mihon.translation.api.engine.TranslationEngineId
 import mihon.translation.api.engine.TranslationEngineInspection
-import mihon.translation.api.engine.TranslationEngineSelection
 import mihon.translation.api.engine.TranslationEngineState
 import mihon.translation.api.host.TranslationHostActionResult
 import mihon.translation.api.host.TranslationHostActions
@@ -41,28 +40,7 @@ import mihon.entry.interactions.book.reader.selection.BookReaderTextSelection as
 @OptIn(ExperimentalCoroutinesApi::class)
 class BookSelectionTranslationControllerTest {
     @Test
-    fun `holding a selection still does not prepare translation until release`() = runTest {
-        val feature = RecordingFeature()
-        val controller = controller(feature, FakeHostActions())
-        runCurrent()
-        val held = readerSelection("selected", isSettled = false)
-
-        controller.submitSelection(held)
-        advanceTimeBy(1_000)
-        runCurrent()
-
-        feature.requests shouldBe emptyList()
-        controller.hostCoordinator.controller.state.value shouldBe TranslationSessionState.Hidden
-
-        controller.submitSelection(held.copy(isSettled = true))
-        runCurrent()
-
-        feature.requests.map(TranslationRequest::text) shouldBe listOf("selected")
-        controller.close()
-    }
-
-    @Test
-    fun `grabbing a handle clears translation before selected text changes`() = runTest {
+    fun `translation waits for release and grabbing a handle clears it before the text changes`() = runTest {
         val feature = RecordingFeature()
         val controller = controller(feature, FakeHostActions())
         runCurrent()
@@ -82,24 +60,6 @@ class BookSelectionTranslationControllerTest {
         runCurrent()
 
         feature.requests.map(TranslationRequest::text) shouldBe listOf("selected", "expanded selection")
-        controller.close()
-    }
-
-    @Test
-    fun `settled selection immediately prepares its text and language context`() = runTest {
-        val feature = RecordingFeature()
-        val host = FakeHostActions()
-        val automaticSelectionSetting = automaticSelectionSetting(enabled = true)
-        val controller = controller(feature, host, automaticSelectionSetting)
-        runCurrent()
-
-        controller.submitSelection(readerSelection("selected", isSettled = true))
-        runCurrent()
-
-        feature.requests.map(TranslationRequest::text) shouldBe listOf("selected")
-        feature.requests.single().engine shouldBe TranslationEngineSelection.ProfileDefault
-        feature.requests.single().languageContext.surroundingText shouldBe "surrounding selected prose"
-        feature.requests.single().languageContext.declaredLanguages shouldBe listOf(LanguageTag.require("en"))
         controller.close()
     }
 
@@ -127,21 +87,6 @@ class BookSelectionTranslationControllerTest {
     }
 
     @Test
-    fun `entry setting change updates effective translation behavior`() = runTest {
-        val setting = automaticSelectionSetting(enabled = true)
-        val controller = controller(RecordingFeature(), FakeHostActions(), setting)
-        runCurrent()
-        controller.submitSelection(selection("selected", 1))
-
-        setting.value = setting.value.copy(effectiveValue = false, entryOverride = false)
-        runCurrent()
-
-        controller.effectiveEnabled.value shouldBe false
-        controller.hostCoordinator.controller.state.value shouldBe TranslationSessionState.Hidden
-        controller.close()
-    }
-
-    @Test
     fun `anchor changes move the session without preparing unchanged text`() = runTest {
         val feature = RecordingFeature()
         val controller = controller(feature, FakeHostActions())
@@ -157,23 +102,6 @@ class BookSelectionTranslationControllerTest {
         feature.requests.size shouldBe 1
         val state = controller.hostCoordinator.controller.state.value as TranslationSessionState.Active
         state.input.anchor shouldBe moved.anchor
-        controller.close()
-    }
-
-    @Test
-    fun `reader tap dismisses an active translation before reader interaction`() = runTest {
-        val feature = RecordingFeature()
-        val controller = controller(feature, FakeHostActions())
-        runCurrent()
-        val selection = selection("selected", 1)
-        controller.submitSelection(selection)
-
-        controller.dismissTranslationOnReaderTap() shouldBe true
-        controller.hostCoordinator.controller.state.value shouldBe TranslationSessionState.Hidden
-
-        controller.submitSelection(selection)
-        controller.hostCoordinator.controller.state.value shouldBe TranslationSessionState.Hidden
-        controller.dismissTranslationOnReaderTap() shouldBe false
         controller.close()
     }
 

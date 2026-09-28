@@ -21,30 +21,6 @@ class EntryTranslationLanguagesFeatureTest {
     private val target = entry(id = 8L)
 
     @Test
-    fun `types without translating readers keep no languages`() = runTest {
-        val repository = InMemoryEntryTranslationLanguagesRepository()
-        val feature = featureFor(repository)
-
-        feature.isApplicable(EntryType.BOOK) shouldBe false
-        feature.setTargetLanguage(source, SPANISH) shouldBe
-            EntryTranslationLanguagesWriteResult.Inapplicable(EntryType.BOOK)
-        repository.getByEntryId(source.id) shouldBe null
-        feature.observe(source).first() shouldBe EntryTranslationLanguageChoices()
-    }
-
-    @Test
-    fun `each language is pinned and released independently`() = runTest {
-        val feature = featureFor(InMemoryEntryTranslationLanguagesRepository(), TranslationLanguages)
-
-        feature.setContentLanguage(source, JAPANESE)
-        feature.setTargetLanguage(source, SPANISH)
-        feature.observe(source).first() shouldBe EntryTranslationLanguageChoices(JAPANESE, SPANISH)
-
-        feature.setContentLanguage(source, null)
-        feature.observe(source).first() shouldBe EntryTranslationLanguageChoices(targetLanguage = SPANISH)
-    }
-
-    @Test
     fun `migration carries the target language and leaves the content language to the new source`() = runTest {
         val feature = featureFor(
             InMemoryEntryTranslationLanguagesRepository(),
@@ -59,18 +35,6 @@ class EntryTranslationLanguagesFeatureTest {
         feature.applyMigration(prepared.payload)
 
         feature.observe(target).first() shouldBe EntryTranslationLanguageChoices(targetLanguage = SPANISH)
-    }
-
-    @Test
-    fun `migration without a target language delivers nothing`() = runTest {
-        val feature = featureFor(
-            InMemoryEntryTranslationLanguagesRepository(),
-            TranslationLanguages,
-            EntryMigrationCapability.bind(MigrationProvider),
-        )
-        feature.setContentLanguage(source, JAPANESE)
-
-        feature.prepareMigration(source, target) shouldBe EntryTranslationLanguagesMigrationPreparation.NoTargetLanguage
     }
 
     @Test

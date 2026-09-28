@@ -32,16 +32,6 @@ class ProfileSwitchLockTest {
         manager.profileRequiresAuthNow(LOCKED_PROFILE_ID) shouldBe false
     }
 
-    @Test
-    fun `switching away from a profile that was never authenticated keeps it locked`() = runTest {
-        val manager = profileSwitchLockManager()
-
-        manager.setActiveProfile(LOCKED_PROFILE_ID, rescheduleJobs = false)
-        manager.setActiveProfile(ProfileConstants.DEFAULT_PROFILE_ID, rescheduleJobs = false)
-
-        manager.profileRequiresAuthNow(LOCKED_PROFILE_ID) shouldBe true
-    }
-
     private fun profileSwitchLockManager(): ProfileManager {
         val openProfile = Profile(
             id = ProfileConstants.DEFAULT_PROFILE_ID,

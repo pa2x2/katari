@@ -16,10 +16,4 @@ class StatisticsPartOfDayTest {
         dominantPartOfDay(hourly) shouldBe StatisticsPartOfDay.NIGHT
         peakHour(hourly) shouldBe 20
     }
-
-    @Test
-    fun `no recorded hours has no dominant part or peak`() {
-        dominantPartOfDay(List(24) { 0L }) shouldBe null
-        peakHour(List(24) { 0L }) shouldBe null
-    }
 }

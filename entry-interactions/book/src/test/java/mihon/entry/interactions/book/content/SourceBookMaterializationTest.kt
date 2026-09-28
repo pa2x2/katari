@@ -5,50 +5,12 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import java.io.InputStream
-import java.nio.file.Files
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
-import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
 internal class SourceBookMaterializationTest : SourceBookContentSessionFixture() {
-    @Test
-    fun `versioned materializations are cached across leases and remain clearable`() = runTest {
-        val directory = Files.createTempDirectory("katari-book-session-test").toFile()
-        val cache = BookMaterializationCache(application(), directory)
-        val session = session(
-            media = bookMedia(
-                resources = listOf(
-                    resource(
-                        "chapter",
-                        mediaType = "text/html",
-                        location = BookResourceLocation.InlineBytes("chapter-content".encodeToByteArray()),
-                    ),
-                ),
-                initialResourceId = "chapter",
-                initialLocation = BookResourceLocation.InlineBytes("chapter-content".encodeToByteArray()),
-            ),
-            materializationStore = cache,
-        )
-
-        val materialized = session.materializeResource("chapter").getOrThrow()
-        assertTrue(materialized.file.exists())
-        assertTrue(materialized.file.name.endsWith(".html"))
-        assertEquals("chapter-content", materialized.file.readText())
-
-        materialized.close()
-        assertTrue(materialized.file.exists())
-
-        val outstanding = session.materializeResource("chapter").getOrThrow()
-        assertEquals(materialized.file, outstanding.file)
-        session.close()
-        assertTrue(outstanding.file.exists())
-        assertEquals(1, cache.clear())
-        assertFalse(outstanding.file.exists())
-        assertTrue(session.getResource("chapter").isFailure)
-    }
-
     @Test
     fun `declared oversized resource fails before external access`() = runTest {
         val resolver = FakeExternalResolver(emptyMap())

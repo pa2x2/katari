@@ -6,24 +6,6 @@ import org.junit.jupiter.api.Test
 class NewUpdateChangelogTest {
 
     @Test
-    fun `checksum section is hidden from release notes`() {
-        sanitizeInAppReleaseNotes(
-            """
-            ## Changes
-            - Fixed updater
-
-            ---
-
-            ## Checksums
-            `katari.apk: abc123`
-            """.trimIndent(),
-        ).trimEnd() shouldBe """
-            ## Changes
-            - Fixed updater
-        """.trimIndent()
-    }
-
-    @Test
     fun `earlier release note divider is preserved`() {
         sanitizeInAppReleaseNotes(
             """

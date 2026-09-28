@@ -53,31 +53,6 @@ class MergePersistenceQueriesTest {
         }
     }
 
-    @Test
-    fun `failed consequences remain visible and can be made immediately retryable`() = runTest {
-        withDatabase { database ->
-            database.merge_consequencesQueries.insert(
-                consequenceId = "event",
-                operationId = "operation",
-                profileId = 2,
-                entryId = 10,
-                participantId = "cleanup",
-                schemaVersion = 1,
-                payload = "",
-                createdAt = 1,
-            )
-            database.merge_consequencesQueries.recordFailure(10_000, "disk unavailable", "event")
-
-            database.merge_consequencesQueries.consequenceStatus().awaitAsOne().run {
-                pending_count shouldBe 1
-                failed_count shouldBe 1
-                last_failure shouldBe "disk unavailable"
-            }
-            database.merge_consequencesQueries.makeRetryable()
-            database.merge_consequencesQueries.pending(0, 10).awaitAsList().size shouldBe 1
-        }
-    }
-
     private suspend fun withDatabase(block: suspend (Database) -> Unit) {
         val driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
         try {

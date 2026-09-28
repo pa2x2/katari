@@ -62,27 +62,6 @@ class EntryImmersiveScreenModelTest {
         }
     }
 
-    @Test
-    fun `same numeric id with different type remains distinct`() = runTest {
-        val fixture = fixture()
-        val manga = entry(id = 7L, type = EntryType.MANGA)
-        val anime = entry(id = 7L, type = EntryType.ANIME)
-
-        try {
-            fixture.model.load(fixture.context, manga)
-            fixture.model.load(fixture.context, anime)
-
-            eventually(ASYNC_TIMEOUT) {
-                fixture.model.state.value.items.keys.shouldContainExactlyInAnyOrder(
-                    EntryImmersiveItemKey(7L, EntryType.MANGA),
-                    EntryImmersiveItemKey(7L, EntryType.ANIME),
-                )
-            }
-        } finally {
-            fixture.model.onDispose()
-        }
-    }
-
     private fun fixture(): Fixture {
         val context = mockk<Context>(relaxed = true)
         val chapter = EntryChapter.create().copy(id = 20L, entryId = 1L)

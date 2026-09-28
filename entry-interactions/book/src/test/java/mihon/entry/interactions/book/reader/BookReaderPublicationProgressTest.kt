@@ -17,24 +17,26 @@ import kotlin.test.assertIs
 
 internal class BookReaderPublicationProgressTest : BookReaderSessionFixture() {
     @Test
-    fun `multi document progress reports the publication while retaining the exact resource location`() = runTest {
-        val publication = preparedDocumentPublication("one" to "<p>abcdefghij</p>", "two" to "<p>abcdefghij</p>")
-        val location = BookLocator("two", progression = 0.5, totalProgression = 0.99, fragments = listOf("target"))
-        val event = save(publication, location)
+    fun `progress is measured within the publication, not the source catalogue, and keeps the exact location`() =
+        runTest {
+            val publication = preparedDocumentPublication("one" to "<p>abcdefghij</p>", "two" to "<p>abcdefghij</p>")
+            val location = BookLocator("two", progression = 0.5, totalProgression = 0.99, fragments = listOf("target"))
+            val event = save(publication, location)
 
-        assertEquals(0.75, event.fraction)
-        assertEquals(0.75, event.progress.locator.progression)
-        assertEquals(location.copy(totalProgression = 0.75), BookProgressLocatorCodec.decode(event.progress.locator))
-    }
+            assertEquals(0.75, event.fraction)
+            assertEquals(0.75, event.progress.locator.progression)
+            assertEquals(
+                location.copy(totalProgression = 0.75),
+                BookProgressLocatorCodec.decode(event.progress.locator),
+            )
 
-    @Test
-    fun `chapter progress does not depend on its position in the catalogue`() = runTest {
-        val publication = preparedDocumentPublication("one" to "<p>abcdefghij</p>")
-        val event = save(publication, BookLocator("one", progression = 0.1, totalProgression = 0.99))
-
-        assertEquals(0.1, requireNotNull(event.fraction), 1e-9)
-        assertEquals(0.1, requireNotNull(event.progress.locator.progression), 1e-9)
-    }
+            val single = save(
+                preparedDocumentPublication("one" to "<p>abcdefghij</p>"),
+                BookLocator("one", progression = 0.1, totalProgression = 0.99),
+            )
+            assertEquals(0.1, requireNotNull(single.fraction), 1e-9)
+            assertEquals(0.1, requireNotNull(single.progress.locator.progression), 1e-9)
+        }
 
     private suspend fun save(
         publication: PreparedBookPublication,

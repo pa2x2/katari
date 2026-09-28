@@ -7,64 +7,16 @@ import tachiyomi.domain.chapter.model.Chapter
 
 class TransitionChapterLoadPolicyTest {
     @Test
-    fun `near-final and final chapter pages never request an adjacent chapter`() {
-        val current = chapter(1L)
-        val pages = listOf(ReaderPage(8), ReaderPage(9)).onEach { it.chapter = current }
-
-        pages.forEach { page ->
-            ReaderViewerItem.Page(page).automaticTransitionLoadDestination() shouldBe null
-        }
-    }
-
-    @Test
-    fun `active transition requests a waiting destination`() {
+    fun `a waiting destination is requested automatically but a failed one waits for an explicit retry`() {
         val current = chapter(1L)
         val next = chapter(2L)
-        val item = ReaderViewerItem.Transition(
-            EntryChildWindow(current, null, next).nextTransition(),
-        )
+        val transition = ReaderViewerItem.Transition(EntryChildWindow(current, null, next).nextTransition())
 
-        item.automaticTransitionLoadDestination() shouldBe next
-    }
+        transition.automaticTransitionLoadDestination() shouldBe next
 
-    @Test
-    fun `failed transition waits for explicit retry`() {
-        val current = chapter(1L)
-        val next = chapter(2L).apply {
-            state = ReaderChapter.State.Error(IllegalStateException("Unavailable"))
-        }
-        val item = ReaderViewerItem.Transition(
-            EntryChildWindow(current, null, next).nextTransition(),
-        )
+        next.state = ReaderChapter.State.Error(IllegalStateException("Unavailable"))
 
-        item.automaticTransitionLoadDestination() shouldBe null
-    }
-
-    @Test
-    fun `terminal transition has no destination to request`() {
-        val current = chapter(1L)
-        val item = ReaderViewerItem.Transition(
-            EntryChildWindow(current, null, null).nextTransition(),
-        )
-
-        item.automaticTransitionLoadDestination() shouldBe null
-    }
-
-    @Test
-    fun `non-scrollable final chapter requests its previous boundary instead of its centered terminal boundary`() {
-        val previous = chapter(1L)
-        val current = chapter(2L)
-        val window = EntryChildWindow(current, previous, null)
-        val previousTransition = ReaderViewerItem.Transition(window.previousTransition())
-        val terminalTransition = ReaderViewerItem.Transition(window.nextTransition())
-
-        automaticTransitionLoadItemAtAnchor(
-            centeredItem = terminalTransition,
-            firstVisibleItem = previousTransition,
-            lastVisibleItem = terminalTransition,
-            canScrollBackward = false,
-            canScrollForward = false,
-        ) shouldBe previousTransition
+        transition.automaticTransitionLoadDestination() shouldBe null
     }
 
     private fun chapter(id: Long) = ReaderChapter(

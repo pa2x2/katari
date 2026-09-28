@@ -7,31 +7,20 @@ import org.junit.jupiter.api.Test
 class ReleaseApkSelectionTest {
 
     @Test
-    fun `FOSS builds update to the FOSS APK for the device ABI`() {
+    fun `each flavor updates to its own APK for the device ABI`() {
         abis.forEach { abi ->
             selectReleaseApk(release, isFoss = true, primaryAbi = abi)?.name shouldBe "katari_foss_$abi-v2.0.0.apk"
-        }
-    }
-
-    @Test
-    fun `FOSS builds fall back to the universal FOSS APK when the release has none for the device ABI`() {
-        val withoutFossAbiApks = release.filterNot { it.name.startsWith("katari_foss_") }
-
-        selectReleaseApk(withoutFossAbiApks, isFoss = true, primaryAbi = "arm64-v8a")?.name shouldBe
-            "katari-v2.0.0-foss.apk"
-    }
-
-    @Test
-    fun `standard builds update to the standard APK for the device ABI`() {
-        abis.forEach { abi ->
             selectReleaseApk(release, isFoss = false, primaryAbi = abi)?.name shouldBe "katari-$abi-v2.0.0.apk"
         }
     }
 
     @Test
-    fun `standard builds fall back to the universal standard APK when the release has none for the device ABI`() {
+    fun `each flavor falls back to its universal APK when the release has none for the device ABI`() {
+        val withoutFossAbiApks = release.filterNot { it.name.startsWith("katari_foss_") }
         val withoutArm64Apk = release.filterNot { it.name == "katari-arm64-v8a-v2.0.0.apk" }
 
+        selectReleaseApk(withoutFossAbiApks, isFoss = true, primaryAbi = "arm64-v8a")?.name shouldBe
+            "katari-v2.0.0-foss.apk"
         selectReleaseApk(withoutArm64Apk, isFoss = false, primaryAbi = "arm64-v8a")?.name shouldBe "katari-v2.0.0.apk"
     }
 

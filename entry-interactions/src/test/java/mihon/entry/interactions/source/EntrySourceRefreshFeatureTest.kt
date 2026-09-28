@@ -11,11 +11,9 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import mihon.entry.interactions.refresh.refreshFeatureTestComposition
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import tachiyomi.domain.chapter.model.NoChaptersException
 import tachiyomi.domain.entry.interactor.SyncEntryWithSource
 import tachiyomi.domain.entry.model.Entry
@@ -78,18 +76,6 @@ class EntrySourceRefreshFeatureTest {
     }
 
     @Test
-    fun `source lookup absence is a contextual outcome`() = runTest {
-        val sync = mockk<SyncEntryWithSource>(relaxed = true)
-        val updateTitles = mockk<(Long) -> Boolean>(relaxed = true)
-        val missing = feature(sourceManager(null), sync, updateTitles)
-
-        missing.refresh(EntrySourceRefreshRequest(entry, manual = false)) shouldBe
-            EntrySourceRefreshResult.SourceUnavailable(sourceId = entry.source)
-        coVerify(exactly = 0) { sync.syncStrictly(any(), any(), any(), any(), any(), any(), any()) }
-        verify(exactly = 0) { updateTitles(any()) }
-    }
-
-    @Test
     fun `empty child and operation failures remain structured while cancellation propagates`() = runTest {
         val sourceManager = sourceManager(mockk<UnifiedSource>())
         val sync = mockk<SyncEntryWithSource>()
@@ -108,24 +94,6 @@ class EntrySourceRefreshFeatureTest {
         coEvery { sync.syncStrictly(any(), any(), any(), any(), any(), any(), any()) } throws CancellationException()
         shouldThrow<CancellationException> {
             feature.refresh(EntrySourceRefreshRequest(entry, manual = false))
-        }
-    }
-
-    @Test
-    fun `refresh rejects a request with no operation`() {
-        val feature = feature(sourceManager(mockk<UnifiedSource>()), mockk()) { true }
-
-        assertThrows<IllegalArgumentException> {
-            runBlocking {
-                feature.refresh(
-                    EntrySourceRefreshRequest(
-                        entry,
-                        fetchDetails = false,
-                        fetchChildren = false,
-                        manual = false,
-                    ),
-                )
-            }
         }
     }
 

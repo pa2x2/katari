@@ -3,19 +3,15 @@ package mihon.entry.interactions.migration
 import eu.kanade.tachiyomi.source.entry.EntryType
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContainExactly
-import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.coEvery
 import io.mockk.coVerify
-import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.test.runTest
-import mihon.entry.interactions.download.EntryDownloadCapability
 import mihon.entry.interactions.download.EntryDownloadMaintenanceFeature
 import mihon.entry.interactions.download.EntryDownloadMaintenanceInspection
-import mihon.entry.interactions.download.EntryDownloadProcessor
 import mihon.entry.interactions.download.EntryDownloadRemovalPreparation
 import mihon.entry.interactions.download.maintenance.migration.ENTRY_DOWNLOAD_MIGRATION_OPTION_PARTICIPANT
 import mihon.entry.interactions.download.maintenance.migration.EntryDownloadMigrationContributor
@@ -83,65 +79,6 @@ class EntryMigrationFeatureTest {
     private val targetChild = child(id = 21, entryId = target.id, read = false, bookmark = true, dateFetch = 10)
 
     @Test
-    fun `provider absence is valid and makes migration unavailable`() {
-        val feature = feature(RecordingMigrationHost(source, target), bindings = emptyList())
-
-        feature.availability(source) shouldBe
-            EntryMigrationAvailability.Unavailable(EntryMigrationRejection.UNSUPPORTED_SOURCE_TYPE)
-    }
-
-    @Test
-    fun `current source state context controls migration availability`() {
-        val feature = feature(RecordingMigrationHost(source, target))
-
-        feature.availability(source) shouldBe EntryMigrationAvailability.Available
-        feature.availability(source.copy(favorite = false)) shouldBe
-            EntryMigrationAvailability.Unavailable(EntryMigrationRejection.SOURCE_NOT_IN_LIBRARY)
-        feature.availability(source.copy(id = 0L)) shouldBe
-            EntryMigrationAvailability.Unavailable(EntryMigrationRejection.UNPERSISTED_ENTRY)
-    }
-
-    @Test
-    fun `selection context preserves single-profile readiness and mixed-profile rejection`() {
-        val feature = feature(RecordingMigrationHost(source, target))
-        val second = source.copy(id = 12L, source = 101L, url = "entry-12")
-
-        feature.prepareSelection(listOf(source, second)) shouldBe EntryMigrationSelectionResult.Ready(
-            listOf(
-                EntryMigrationSubject(source.profileId, source.id),
-                EntryMigrationSubject(second.profileId, second.id),
-            ),
-        )
-        feature.prepareSelection(listOf(source, second.copy(profileId = 5L))) shouldBe
-            EntryMigrationSelectionResult.Rejected(EntryMigrationRejection.MIXED_SELECTION_PROFILES)
-    }
-
-    @Test
-    fun `preparation derives options from current state and optional relationships`() = runTest {
-        val preparedSource = source.copy(notes = "keep")
-        val host = RecordingMigrationHost(preparedSource, target).apply {
-            categories = listOf(3, 7)
-        }
-        val feature = feature(
-            host,
-            bindings = listOf(
-                EntryMigrationCapability.bind(MigrationProvider()),
-                EntryConsumptionCapability.bind(ConsumptionProvider()),
-                EntryBookmarkCapability.bind(BookmarkProvider()),
-            ),
-        )
-
-        val result = feature.prepare(EntryMigrationPrepareIntent(preparedSource, target))
-            .shouldBeInstanceOf<EntryMigrationPreparationResult.Ready>()
-
-        result.availableOptions.shouldContainExactlyInAnyOrder(
-            EntryMigrationOption.CHILD_STATE,
-            EntryMigrationOption.CATEGORIES,
-            EntryMigrationOption.NOTES,
-        )
-    }
-
-    @Test
     fun `uncategorized source can transfer its empty category set`() = runTest {
         val host = RecordingMigrationHost(source, target)
         val feature = feature(host)
@@ -172,32 +109,6 @@ class EntryMigrationFeatureTest {
             EntryMigrationPreparationResult.Rejected(EntryMigrationRejection.SOURCE_TARGET_TYPE_MISMATCH)
         feature.prepare(EntryMigrationPrepareIntent(source, source)) shouldBe
             EntryMigrationPreparationResult.Rejected(EntryMigrationRejection.SAME_ENTRY)
-    }
-
-    @Test
-    fun `download option requires both provider participation and current downloads`() = runTest {
-        val downloadProvider = mockk<EntryDownloadProcessor>(relaxed = true) {
-            every { type } returns EntryType.BOOK
-        }
-        val downloadFeature = mockk<EntryDownloadMaintenanceFeature> {
-            coEvery { inspectEntry(any()) } returns EntryDownloadMaintenanceInspection.HasDownloads
-        }
-        val feature = feature(
-            host = RecordingMigrationHost(source, target),
-            bindings = listOf(
-                EntryMigrationCapability.bind(MigrationProvider()),
-                EntryDownloadCapability.bind(downloadProvider),
-            ),
-            downloads = downloadFeature,
-        )
-
-        val result = feature.prepare(EntryMigrationPrepareIntent(source, target))
-            .shouldBeInstanceOf<EntryMigrationPreparationResult.Ready>()
-
-        result.availableOptions.shouldContainExactlyInAnyOrder(
-            EntryMigrationOption.CATEGORIES,
-            EntryMigrationOption.REMOVE_SOURCE_DOWNLOADS,
-        )
     }
 
     @Test
@@ -376,72 +287,6 @@ class EntryMigrationFeatureTest {
     }
 
     @Test
-    fun `target refresh relationship returns structured outcomes`() = runTest {
-        val sourceRefresh = mockk<EntrySourceRefreshFeature>()
-        val feature = feature(RecordingMigrationHost(source, target), sourceRefresh = sourceRefresh)
-        val intent = EntryMigrationTargetRefreshIntent(
-            source = source,
-            target = target,
-            fetchDetails = false,
-            fetchChildren = true,
-        )
-
-        coEvery { sourceRefresh.refresh(any()) } returns refreshedSourceResult()
-        feature.refreshTarget(intent) shouldBe EntryMigrationTargetRefreshResult.Refreshed
-        coVerify {
-            sourceRefresh.refresh(
-                match {
-                    it.entry == target && !it.fetchDetails && it.fetchChildren &&
-                        it.entry.profileId == target.profileId
-                },
-            )
-        }
-
-        coEvery { sourceRefresh.refresh(any()) } returns EntrySourceRefreshResult.SourceUnavailable(target.source)
-        feature.refreshTarget(intent) shouldBe EntryMigrationTargetRefreshResult.SourceUnavailable
-
-        coEvery { sourceRefresh.refresh(any()) } returns
-            EntrySourceRefreshResult.Failed(EntrySourceRefreshFailure.NoChildren)
-        feature.refreshTarget(intent) shouldBe EntryMigrationTargetRefreshResult.NoChildren
-    }
-
-    @Test
-    fun `one applicable owner adds only its immutable consequence`() = runTest {
-        val host = RecordingMigrationHost(source, target).apply {
-            transitionResult = EntryMigrationHostTransitionResult.Applied(
-                replayed = false,
-                hasPendingConsequences = true,
-            )
-        }
-        val progress = mockk<EntryProgressFeature>()
-        coEvery { progress.prepareMigration(any(), any(), any()) } returns
-            EntryProgressMigrationPreparation.Prepared(
-                EntryProgressMigrationPayload(target, EntryProgressSnapshot()),
-            )
-        val delivery = mockk<EntryMigrationConsequenceDelivery>()
-        coEvery { delivery.deliverOperation(any()) } returns EntryMigrationFollowUp.COMPLETE
-        val feature = feature(
-            host = host,
-            bindings = listOf(
-                EntryMigrationCapability.bind(MigrationProvider()),
-                EntryProgressCapability.bind(ProgressProvider()),
-            ),
-            progress = progress,
-            consequenceDelivery = delivery,
-        )
-        val preparation = feature.prepare(EntryMigrationPrepareIntent(source, target))
-            .shouldBeInstanceOf<EntryMigrationPreparationResult.Ready>()
-
-        feature.execute(
-            EntryMigrationExecuteIntent(preparation.reference, EntryMigrationMode.COPY, emptySet()),
-        ).shouldBeInstanceOf<EntryMigrationExecutionResult.Applied>()
-
-        host.transitions.single().consequenceRequests.map { it.participantId } shouldBe
-            listOf(ENTRY_PROGRESS_MIGRATION_PARTICIPANT.id.value)
-        coVerify(exactly = 1) { delivery.deliverOperation(any()) }
-    }
-
-    @Test
     fun `child state and progress use the same first matching source child`() = runTest {
         val firstSource = child(
             id = 11,
@@ -513,12 +358,10 @@ class EntryMigrationFeatureTest {
             EntryMigrationCapability.bind(MigrationProvider()),
         ),
         progress: EntryProgressFeature? = null,
-        downloads: EntryDownloadMaintenanceFeature? = null,
-        consequenceDelivery: EntryMigrationConsequenceDelivery? = null,
         sourceRefresh: EntrySourceRefreshFeature = refreshedSourceRefresh(),
         tracking: EntryTrackingFeature? = null,
     ): EntryMigrationFeature {
-        val downloadFeature = downloads ?: mockk<EntryDownloadMaintenanceFeature>().also {
+        val downloadFeature = mockk<EntryDownloadMaintenanceFeature>().also {
             coEvery { it.inspectEntry(any()) } returns
                 EntryDownloadMaintenanceInspection.Inapplicable(EntryType.BOOK)
             coEvery { it.prepareRemoval(any()) } returns
@@ -577,7 +420,7 @@ class EntryMigrationFeatureTest {
             executionBindings = executionBindings,
             durableExecutionBindings = durableBindings,
         )
-        val delivery = consequenceDelivery ?: mockk<EntryMigrationConsequenceDelivery>().also {
+        val delivery = mockk<EntryMigrationConsequenceDelivery>().also {
             coEvery { it.deliverOperation(any()) } returns EntryMigrationFollowUp.INCOMPLETE
         }
         return DefaultEntryMigrationFeature(

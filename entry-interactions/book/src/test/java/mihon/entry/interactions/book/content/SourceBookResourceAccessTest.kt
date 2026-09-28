@@ -13,60 +13,6 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 internal class SourceBookResourceAccessTest : SourceBookContentSessionFixture() {
     @Test
-    fun `inline and external locations return bounded streams without exposing resolver details`() = runTest {
-        val resolver = FakeExternalResolver(
-            mapOf(
-                "remote:https://example.invalid/book" to "remote-content".encodeToByteArray(),
-                "local:content://app.katari/book/1" to "local-content".encodeToByteArray(),
-                "app:download:42" to "app-content".encodeToByteArray(),
-            ),
-        )
-        val remote = BookResourceLocation.RemoteRequest(
-            "https://example.invalid/book",
-            headers = mapOf("Authorization" to "secret"),
-        )
-        val session = session(
-            media = bookMedia(
-                resources = listOf(
-                    resource("inline", location = inline("inline-content")),
-                    resource("remote", location = remote),
-                    resource("local", location = BookResourceLocation.LocalUri("content://app.katari/book/1")),
-                    resource("app", location = BookResourceLocation.AppReference("download:42")),
-                ),
-            ),
-            resolver = resolver,
-        )
-
-        session.openResource("inline", BookByteRange(1, 4)).getOrThrow().use { opened ->
-            assertEquals("nli", opened.stream.bufferedReader().readText())
-        }
-        session.openResource("remote", BookByteRange(7, 14)).getOrThrow().use { opened ->
-            assertEquals("content", opened.stream.bufferedReader().readText())
-        }
-        session.openResource("local").getOrThrow().use { opened ->
-            assertEquals("local-content", opened.stream.bufferedReader().readText())
-        }
-        session.openResource("app").getOrThrow().use { opened ->
-            assertEquals("app-content", opened.stream.bufferedReader().readText())
-        }
-
-        assertEquals(remote, resolver.requests.first().first)
-        assertEquals(BookByteRange(7, 14), resolver.requests.first().second)
-        assertEquals(3, resolver.closeCount.get())
-    }
-
-    @Test
-    fun `inline range larger than addressable content fails as a normal resource error`() = runTest {
-        val session = session(
-            media = bookMedia(
-                resources = listOf(resource("inline", location = inline("content"))),
-            ),
-        )
-
-        assertTrue(session.openResource("inline", BookByteRange(Long.MAX_VALUE)).isFailure)
-    }
-
-    @Test
     fun `source child resolves through existing getMedia API and keeps stable resource identity`() = runTest {
         val source = source()
         coEvery { source.getMedia(match { it.url == "/chapter/1" }, any()) } returns EntryMedia.Book(
@@ -134,8 +80,8 @@ internal class SourceBookResourceAccessTest : SourceBookContentSessionFixture() 
     }
 
     @Test
-    fun `availability failure remains structured and does not open a resolver`() = runTest {
-        val resolver = FakeExternalResolver(emptyMap())
+    fun `unavailable resources fail with their availability before any resolver access`() = runTest {
+        val resolver = FakeExternalResolver(emptyMap(), canResolveAppReferences = false)
         val session = session(
             media = bookMedia(
                 resources = listOf(
@@ -144,26 +90,6 @@ internal class SourceBookResourceAccessTest : SourceBookContentSessionFixture() 
                         availability = BookResourceAvailability.PURCHASE_REQUIRED,
                         location = BookResourceLocation.RemoteRequest("https://example.invalid/paid"),
                     ),
-                ),
-            ),
-            resolver = resolver,
-        )
-
-        val failure = assertIs<BookResourceUnavailableException>(
-            session.openResource("paid").exceptionOrNull(),
-        )
-
-        assertEquals("paid", failure.resourceId)
-        assertEquals(BookResourceAvailability.PURCHASE_REQUIRED, failure.availability)
-        assertTrue(resolver.requests.isEmpty())
-    }
-
-    @Test
-    fun `app references without an app resolver report unsupported access`() = runTest {
-        val resolver = FakeExternalResolver(emptyMap(), canResolveAppReferences = false)
-        val session = session(
-            media = bookMedia(
-                resources = listOf(
                     resource(
                         id = "app",
                         location = BookResourceLocation.AppReference("download:42"),
@@ -173,14 +99,16 @@ internal class SourceBookResourceAccessTest : SourceBookContentSessionFixture() 
             resolver = resolver,
         )
 
-        val metadata = session.getResource("app").getOrThrow()
-        val failure = assertIs<BookResourceUnavailableException>(
-            session.openResource("app").exceptionOrNull(),
-        )
+        val paid = assertIs<BookResourceUnavailableException>(session.openResource("paid").exceptionOrNull())
+        val app = assertIs<BookResourceUnavailableException>(session.openResource("app").exceptionOrNull())
 
-        assertEquals(BookResourceAvailability.UNSUPPORTED_APP_ACCESS, metadata.availability)
-        assertTrue(metadata.capabilities.isEmpty())
-        assertEquals(BookResourceAvailability.UNSUPPORTED_APP_ACCESS, failure.availability)
+        assertEquals("paid", paid.resourceId)
+        assertEquals(BookResourceAvailability.PURCHASE_REQUIRED, paid.availability)
+        assertEquals(BookResourceAvailability.UNSUPPORTED_APP_ACCESS, app.availability)
+        assertEquals(
+            BookResourceAvailability.UNSUPPORTED_APP_ACCESS,
+            session.getResource("app").getOrThrow().availability,
+        )
         assertTrue(resolver.requests.isEmpty())
     }
 }

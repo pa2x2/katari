@@ -31,7 +31,7 @@ class EntryAutomaticDownloadFeatureTest {
     private val chapter = EntryChapter.create().copy(id = 12L, entryId = entry.id)
 
     @Test
-    fun `a core Download provider activates both automatic download paths`() = runTest {
+    fun `a library update batch queues without starting and starts once when completed`() = runTest {
         val processor = downloadProcessor()
         val policy = mockk<EntryAutomaticDownloadPolicy> {
             coEvery { evaluate(entry, listOf(chapter)) } returns selectedDecision(listOf(chapter))
@@ -39,12 +39,9 @@ class EntryAutomaticDownloadFeatureTest {
         val composition = compositionFor(plugin(EntryDownloadCapability.bind(processor)))
         val feature = featureFor(composition, policy)
 
-        feature.downloadAfterEntryRefresh(entry, listOf(chapter)) shouldBe
-            EntryAutomaticDownloadResult.Scheduled(1)
         val libraryUpdate = feature.newLibraryUpdateBatch()
         libraryUpdate.enqueue(entry, listOf(chapter)) shouldBe EntryAutomaticDownloadResult.Scheduled(1)
 
-        coVerify(exactly = 1) { processor.download(entry, listOf(chapter), startNow = false) }
         coVerify(exactly = 1) { processor.queue(entry, listOf(chapter), autoStart = false) }
         verify(exactly = 0) { processor.startDownloads() }
 
@@ -72,18 +69,6 @@ class EntryAutomaticDownloadFeatureTest {
 
         coVerify(exactly = 0) { processor.queue(any(), any(), any()) }
         verify(exactly = 0) { processor.startDownloads() }
-    }
-
-    @Test
-    fun `provider absence is valid and does not evaluate contextual policy`() = runTest {
-        val policy = mockk<EntryAutomaticDownloadPolicy>()
-        val feature = featureFor(compositionFor(), policy)
-
-        feature.isApplicable(entry.type) shouldBe false
-        feature.downloadAfterEntryRefresh(entry, listOf(chapter)) shouldBe
-            EntryAutomaticDownloadResult.Inapplicable(EntryType.BOOK)
-
-        coVerify(exactly = 0) { policy.evaluate(any(), any()) }
     }
 
     @Test

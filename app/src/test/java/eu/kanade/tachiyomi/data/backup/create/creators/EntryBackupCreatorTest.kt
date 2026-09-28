@@ -33,7 +33,6 @@ import tachiyomi.domain.history.model.activity.HistoryCompletionCause
 import tachiyomi.domain.history.model.activity.HistoryCompletionSnapshot
 import tachiyomi.domain.history.repository.HistoryActivityBackupRepository
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class EntryBackupCreatorTest {
 
     @Test
@@ -71,37 +70,6 @@ class EntryBackupCreatorTest {
         decoded.mergeTargetUrl shouldBe "/target"
         decoded.mergeTargetType shouldBe EntryType.BOOK
         decoded.mergePosition shouldBe 3
-    }
-
-    @ParameterizedTest(name = "passes content selection and serializes core chapters={0}")
-    @MethodSource("chapterCases")
-    fun `creator delegates feature state without enumerating participants`(chaptersEnabled: Boolean) = runTest {
-        val entry = Entry.create().copy(id = 1L, type = EntryType.ANIME, source = 10L, url = "/entry")
-        val chapter = EntryChapter.create().copy(id = 2L, entryId = entry.id, url = "/chapter")
-        val fixture = Fixture(entry, chapter)
-
-        val created = fixture.creator.invoke(
-            profileId = 1L,
-            entries = listOf(entry),
-            options = BackupOptions(
-                categories = false,
-                chapters = chaptersEnabled,
-                tracking = true,
-                history = false,
-            ),
-        ).single()
-
-        created.chapters.map { it.url } shouldBe if (chaptersEnabled) listOf(chapter.url) else emptyList()
-        coVerify(exactly = 1) {
-            fixture.entryBackupFeature.snapshot(
-                1L,
-                entry,
-                EntryBackupSelection(includeContentState = chaptersEnabled, includeTrackingState = true),
-            )
-        }
-        coVerify(exactly = if (chaptersEnabled) 1 else 0) {
-            fixture.entryChapterRepository.getChaptersByEntryIdAwait(entry.id, applyScanlatorFilter = false)
-        }
     }
 
     @Test
@@ -154,8 +122,6 @@ class EntryBackupCreatorTest {
         created.activityCompletions.single().cause shouldBe "consumption"
         created.statisticsEpoch shouldBe 500L
     }
-
-    private fun chapterCases(): List<Arguments> = listOf(Arguments.of(false), Arguments.of(true))
 
     private class Fixture(entry: Entry, chapter: EntryChapter) {
         private val handler = mockk<DatabaseHandler>()

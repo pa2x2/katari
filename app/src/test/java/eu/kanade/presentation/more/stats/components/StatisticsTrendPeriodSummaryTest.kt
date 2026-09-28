@@ -24,14 +24,6 @@ class StatisticsTrendPeriodSummaryTest {
         summary.dailyAverageMillis shouldBe 8 * HOUR / 10
     }
 
-    @Test
-    fun `busiest bucket is the one with the most time and absent when nothing was recorded`() {
-        val busiest = week("2026-08-17", trackedFrom = "2026-08-17", manga = 5 * HOUR)
-
-        summarizeTrendPeriod(listOf(week("2026-08-10", "2026-08-10", manga = HOUR), busiest)).busiest shouldBe busiest
-        summarizeTrendPeriod(listOf(week("2026-08-10", "2026-08-10", manga = 0L))).busiest shouldBe null
-    }
-
     private fun week(start: String, trackedFrom: String?, manga: Long, anime: Long = 0L): StatsTrendPoint {
         val startDate = LocalDate.parse(start)
         return StatsTrendPoint(

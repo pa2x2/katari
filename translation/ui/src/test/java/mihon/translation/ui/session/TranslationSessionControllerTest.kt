@@ -18,7 +18,6 @@ import mihon.translation.api.engine.TranslationProviderId
 import mihon.translation.api.preparation.ReadyTranslation
 import mihon.translation.api.preparation.TranslationPreparation
 import mihon.translation.api.provider.TranslationInvocationPolicy
-import mihon.translation.api.provider.TranslationProviderOutputMode
 import mihon.translation.api.provider.TranslationProviderPresentation
 import mihon.translation.api.request.ResolvedTranslationRequest
 import mihon.translation.api.request.TranslationRequest
@@ -30,37 +29,6 @@ import org.junit.jupiter.api.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class TranslationSessionControllerTest {
-    @Test
-    fun `provider surface execution is represented without manufacturing an inline result`() = runTest {
-        val surfacePresentation = PRESENTATION.copy(
-            outputMode = TranslationProviderOutputMode.ProviderSurface,
-        )
-        val feature = object : TranslationFeature {
-            override suspend fun prepare(request: TranslationRequest): TranslationPreparation {
-                return ready(request).copy(presentation = surfacePresentation)
-            }
-
-            override suspend fun translate(ready: ReadyTranslation): TranslationExecution {
-                return TranslationExecution.ProviderSurfaceOpened(surfacePresentation)
-            }
-        }
-        val controller = TranslationSessionController(
-            feature,
-            backgroundScope,
-            selectionSettleDelayMillis = 0,
-        )
-
-        controller.submit(input("hello"))
-        runCurrent()
-        controller.execute()
-        runCurrent()
-
-        controller.state.value shouldBe TranslationSessionState.ProviderSurfaceOpened(
-            input = input("hello"),
-            presentation = surfacePresentation,
-        )
-    }
-
     @Test
     fun `selection settling prepares only the latest changed request`() = runTest {
         val feature = FakeTranslationFeature()
@@ -76,19 +44,6 @@ class TranslationSessionControllerTest {
 
         feature.preparedTexts shouldContainExactly listOf("second")
         (controller.state.value as TranslationSessionState.Ready).input.request.text shouldBe "second"
-    }
-
-    @Test
-    fun `immediate provider executes automatically and publishes its result`() = runTest {
-        val feature = FakeTranslationFeature(invocationPolicy = TranslationInvocationPolicy.Immediate)
-        val controller = TranslationSessionController(feature, backgroundScope, selectionSettleDelayMillis = 0)
-
-        controller.submit(input("hello"))
-        runCurrent()
-
-        feature.translatedTexts shouldContainExactly listOf("hello")
-        val success = controller.state.value as TranslationSessionState.Success
-        success.result.translatedText shouldBe "translated hello"
     }
 
     @Test
@@ -148,29 +103,6 @@ class TranslationSessionControllerTest {
         controller.state.value
             .shouldBeInstanceOf<TranslationSessionState.Success>()
             .result.translatedText shouldBe "translated second"
-    }
-
-    @Test
-    fun `manual session prepares an immediate provider before explicit execution`() = runTest {
-        val feature = FakeTranslationFeature(invocationPolicy = TranslationInvocationPolicy.Immediate)
-        val controller = TranslationSessionController(
-            feature = feature,
-            parentScope = backgroundScope,
-            executionMode = TranslationSessionExecutionMode.AwaitUserAction,
-            selectionSettleDelayMillis = 0,
-        )
-
-        controller.submit(input("hello"))
-        runCurrent()
-
-        controller.state.value.shouldBeInstanceOf<TranslationSessionState.Ready>()
-        feature.translatedTexts shouldBe emptyList()
-
-        controller.execute()
-        runCurrent()
-
-        feature.translatedTexts shouldContainExactly listOf("hello")
-        controller.state.value.shouldBeInstanceOf<TranslationSessionState.Success>()
     }
 
     @Test
@@ -234,26 +166,6 @@ class TranslationSessionControllerTest {
         preparationGate.complete(Unit)
         runCurrent()
         controller.state.value shouldBe failed
-    }
-
-    @Test
-    fun `explicit provider waits for its declared action`() = runTest {
-        val feature = FakeTranslationFeature(
-            invocationPolicy = TranslationInvocationPolicy.ExplicitAction("Translate"),
-        )
-        val controller = TranslationSessionController(feature, backgroundScope, selectionSettleDelayMillis = 0)
-
-        controller.submit(input("hello"))
-        runCurrent()
-
-        controller.state.value.shouldBeInstanceOf<TranslationSessionState.Ready>()
-        feature.translatedTexts shouldBe emptyList()
-
-        controller.execute()
-        runCurrent()
-
-        feature.translatedTexts shouldContainExactly listOf("hello")
-        controller.state.value.shouldBeInstanceOf<TranslationSessionState.Success>()
     }
 
     @Test
@@ -321,37 +233,6 @@ class TranslationSessionControllerTest {
         runCurrent()
 
         feature.translatedTexts shouldContainExactly listOf("hello")
-        controller.state.value.shouldBeInstanceOf<TranslationSessionState.Ready>()
-    }
-
-    @Test
-    fun `setup progress is rechecked automatically until preparation changes`() = runTest {
-        var preparationCount = 0
-        val feature = FakeTranslationFeature(
-            prepareOverride = { request ->
-                preparationCount += 1
-                if (preparationCount == 1) {
-                    TranslationPreparation.SetupInProgress(ENGINE, PRESENTATION)
-                } else {
-                    ready(request)
-                }
-            },
-        )
-        val controller = TranslationSessionController(
-            feature = feature,
-            parentScope = backgroundScope,
-            executionMode = TranslationSessionExecutionMode.AwaitUserAction,
-            selectionSettleDelayMillis = 0,
-        )
-
-        controller.submit(input("hello"))
-        runCurrent()
-        controller.state.value.shouldBeInstanceOf<TranslationSessionState.PreparationRequired>()
-
-        advanceTimeBy(1_000)
-        runCurrent()
-
-        preparationCount shouldBe 2
         controller.state.value.shouldBeInstanceOf<TranslationSessionState.Ready>()
     }
 

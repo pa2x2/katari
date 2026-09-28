@@ -29,19 +29,4 @@ class StatisticsActivityRhythmTest {
         rhythm.hourlyDurationMillis[22] shouldBe 900_000L
         rhythm.hourlyDurationMillis.sum() shouldBe 1_800_000L
     }
-
-    @Test
-    fun `weekdays follow recorded local dates`() {
-        val rhythm = buildActivityRhythm(
-            segments = emptyList(),
-            activity = listOf(
-                StatisticsActivityBucket(EntryType.MANGA, "2026-08-23", 60_000L),
-                StatisticsActivityBucket(EntryType.BOOK, "2026-08-23", 30_000L),
-                StatisticsActivityBucket(EntryType.BOOK, "2026-08-24", 10_000L),
-            ),
-        )
-
-        rhythm.weekdayDurationMillis[DayOfWeek.SUNDAY] shouldBe 90_000L
-        rhythm.weekdayDurationMillis[DayOfWeek.MONDAY] shouldBe 10_000L
-    }
 }

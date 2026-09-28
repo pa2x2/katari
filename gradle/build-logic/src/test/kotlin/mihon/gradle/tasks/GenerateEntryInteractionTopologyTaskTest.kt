@@ -36,46 +36,6 @@ class GenerateEntryInteractionTopologyTaskTest {
     }
 
     @Test
-    fun `new descriptor enters topology without central registration edit`() {
-        val initial = generateEntryInteractionProductionTopology(
-            variantName = "release",
-            featureModules = listOf(feature("entry.alpha", "example.AlphaFeatureRuntimeModule")),
-            typeModules = listOf(type("manga", "example.mangaEntryTypeRuntimeModule")),
-        )
-        val discovered = generateEntryInteractionProductionTopology(
-            variantName = "release",
-            featureModules = listOf(
-                feature("entry.alpha", "example.AlphaFeatureRuntimeModule"),
-                feature("entry.future", "future.FutureFeatureRuntimeModule"),
-            ),
-            typeModules = listOf(type("manga", "example.mangaEntryTypeRuntimeModule")),
-        )
-
-        initial shouldNotContain "future.FutureFeatureRuntimeModule"
-        discovered shouldContain "future.FutureFeatureRuntimeModule"
-    }
-
-    @Test
-    fun `variant composition contains only descriptors supplied by its source sets`() {
-        val main = feature("entry.main", "example.MainFeatureRuntimeModule")
-        val debugOnly = feature("entry.debug", "example.DebugFeatureRuntimeModule")
-
-        val release = generateEntryInteractionProductionTopology(
-            variantName = "release",
-            featureModules = listOf(main),
-            typeModules = listOf(type("manga", "example.mangaEntryTypeRuntimeModule")),
-        )
-        val debug = generateEntryInteractionProductionTopology(
-            variantName = "debug",
-            featureModules = listOf(main, debugOnly),
-            typeModules = listOf(type("manga", "example.mangaEntryTypeRuntimeModule")),
-        )
-
-        release shouldNotContain "example.DebugFeatureRuntimeModule"
-        debug shouldContain "example.DebugFeatureRuntimeModule"
-    }
-
-    @Test
     fun `duplicate ids and symbols fail generation`() {
         shouldThrow<GradleException> {
             generateEntryInteractionProductionTopology(

@@ -25,15 +25,11 @@ class TextRecognitionResultCacheTest {
     )
 
     @Test
-    fun `stored results survive a new cache instance`() {
+    fun `stored results survive a new cache instance and a corrupt entry reads as absent`() {
         TextRecognitionResultCache({ directory }, maximumBytes = 1_000_000).write(key("page"), regions)
 
         TextRecognitionResultCache({ directory }, maximumBytes = 1_000_000).read(key("page")) shouldBe regions
-    }
 
-    @Test
-    fun `a corrupt entry reads as absent`() {
-        TextRecognitionResultCache({ directory }, maximumBytes = 1_000_000).write(key("page"), regions)
         directory.listFiles { file -> file.name.startsWith(key("page").digest) }!!.single().writeText("{not json")
 
         TextRecognitionResultCache({ directory }, maximumBytes = 1_000_000).read(key("page")) shouldBe null

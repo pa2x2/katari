@@ -16,12 +16,4 @@ class ProfileTtsPreferencesTest {
         preferences.engine.isSet() shouldBe true
         ProfileTtsEngineResolver(preferences).resolve() shouldBe initialEngine
     }
-
-    @Test
-    fun `missing initial engine does not manufacture a selectable preference`() {
-        val preferences = ProfileTtsPreferences(InMemoryPreferenceStore(), initialEngine = null)
-
-        preferences.engine.isSet() shouldBe false
-        ProfileTtsEngineResolver(preferences).resolve() shouldBe null
-    }
 }

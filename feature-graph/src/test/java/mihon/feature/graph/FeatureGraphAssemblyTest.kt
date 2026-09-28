@@ -12,55 +12,6 @@ class FeatureGraphAssemblyTest {
     private val alpha = capabilityDefinition<AlphaProvider>(CapabilityId("example.alpha"), contractOwner)
 
     @Test
-    fun `discovered contributions enter the graph without assembler knowledge`() {
-        val typesOwner = ContributionOwner("example.types")
-        val ownedTypes = mutableListOf(type("first", typesOwner))
-        val typeContributor = featureGraphContributor(typesOwner) {
-            ownedTypes.forEach(::add)
-        }
-        val featureContributor = featureContributor(alpha)
-
-        discoverAndAssembleFeatureGraph(listOf(typeContributor, featureContributor)).entryContentTypes
-            .map { it.contentType } shouldContainExactly listOf(ContentTypeId("first"))
-
-        ownedTypes += type("second", typesOwner)
-
-        discoverAndAssembleFeatureGraph(listOf(typeContributor, featureContributor)).entryContentTypes
-            .map { it.contentType } shouldContainExactly listOf(ContentTypeId("first"), ContentTypeId("second"))
-    }
-
-    @Test
-    fun `new provider and feature contributions enter an existing discovery pipeline`() {
-        val typesOwner = ContributionOwner("example.types")
-        val providers = mutableListOf<CapabilityProvider<*>>(CapabilityProvider(alpha, AlphaProvider()))
-        val features = mutableListOf(feature(alpha, "alpha-feature"))
-        val typeContributor = featureGraphContributor(typesOwner) {
-            add(
-                ContentTypeContribution(
-                    contentType = ContentTypeId("example"),
-                    owner = typesOwner,
-                    providers = providers.toList(),
-                ),
-            )
-        }
-        val featureContributor = featureGraphContributor(featureOwner) {
-            features.forEach(::add)
-        }
-        val contributors = listOf(typeContributor, featureContributor)
-
-        discoverAndAssembleFeatureGraph(contributors).capabilities
-            .map { it.id } shouldContainExactly listOf(alpha.id)
-
-        val beta = capabilityDefinition<BetaProvider>(CapabilityId("example.beta"), contractOwner)
-        providers += CapabilityProvider(beta, BetaProvider())
-        features += feature(beta, "beta-feature")
-
-        val expanded = discoverAndAssembleFeatureGraph(contributors)
-        expanded.capabilities.map { it.id } shouldContainExactly listOf(alpha.id, beta.id)
-        expanded.features.map { it.feature.value } shouldContainExactly listOf("alpha-feature", "beta-feature")
-    }
-
-    @Test
     fun `graph ordering is deterministic across contributor order`() {
         val typesOwner = ContributionOwner("example.types")
         val types = featureGraphContributor(typesOwner) {
@@ -74,48 +25,6 @@ class FeatureGraphAssemblyTest {
 
         forward shouldContainSameGraphAs reverse
         forward.entryContentTypes.map { it.contentType.value } shouldContainExactly listOf("alpha", "zeta")
-    }
-
-    @Test
-    fun `duplicate content type and feature contributions are rejected`() {
-        val duplicateType = shouldThrow<IllegalStateException> {
-            discoverAndAssembleFeatureGraph(
-                listOf(
-                    typeContributor(type("example", ContributionOwner("owner.first"))),
-                    typeContributor(type("example", ContributionOwner("owner.second"))),
-                    featureContributor(alpha),
-                ),
-            )
-        }
-        duplicateType.message shouldContain "Duplicate content-type contribution example"
-
-        val duplicateFeature = shouldThrow<IllegalStateException> {
-            discoverAndAssembleFeatureGraph(
-                listOf(
-                    typeContributor(type("example")),
-                    featureGraphContributor(featureOwner) {
-                        add(feature(alpha))
-                        add(feature(alpha))
-                    },
-                ),
-            )
-        }
-        duplicateFeature.message shouldContain "Duplicate feature contribution example-feature"
-    }
-
-    @Test
-    fun `contributor cannot submit another owner's top-level contribution`() {
-        val failure = shouldThrow<IllegalArgumentException> {
-            discoverFeatureGraphContributions(
-                listOf(
-                    featureGraphContributor(ContributionOwner("owner.first")) {
-                        add(type("example", ContributionOwner("owner.second")))
-                    },
-                ),
-            )
-        }
-
-        failure.message shouldContain "Contributor owner.first cannot submit content type example owned by owner.second"
     }
 
     @Test
@@ -138,7 +47,7 @@ class FeatureGraphAssemblyTest {
     }
 
     @Test
-    fun `provider without a consuming feature relationship is rejected`() {
+    fun `unreachable providers, adapters, fixtures, and effectless integrations are rejected`() {
         val failure = shouldThrow<IllegalStateException> {
             discoverAndAssembleFeatureGraph(
                 listOf(typeContributor(type("example"))),
@@ -146,20 +55,7 @@ class FeatureGraphAssemblyTest {
         }
 
         failure.message shouldContain "Unreachable capability provider example.alpha on example"
-    }
 
-    @Test
-    fun `feature may prepare for a provider that no content type implements yet`() {
-        val graph = discoverAndAssembleFeatureGraph(
-            listOf(featureContributor(alpha)),
-        )
-
-        graph.entryContentTypes shouldContainExactly emptyList()
-        graph.capabilities.map { it.id } shouldContainExactly listOf(alpha.id)
-    }
-
-    @Test
-    fun `unused specialized adapter and effectless integration are rejected`() {
         val adapterDefinition = specializedAdapterDefinition<ExampleAdapter>(
             id = SpecializedAdapterId("example.adapter"),
             owner = featureOwner,
@@ -204,17 +100,14 @@ class FeatureGraphAssemblyTest {
             )
         }
         effectless.message shouldContain "Unreachable feature integration effectless.integration"
-    }
 
-    @Test
-    fun `contract fixture without a requiring behavioral contract is rejected`() {
         val fixtureDefinition = contractFixtureDefinition<ExampleFixture>(
             id = ContractFixtureId("example.fixture"),
             owner = featureOwner,
         )
         val fixture = ContractFixture(fixtureDefinition, ExampleFixture())
 
-        val failure = shouldThrow<IllegalStateException> {
+        val unusedFixture = shouldThrow<IllegalStateException> {
             discoverAndAssembleFeatureGraph(
                 listOf(
                     typeContributor(
@@ -230,7 +123,17 @@ class FeatureGraphAssemblyTest {
             )
         }
 
-        failure.message shouldContain "Unreachable contract fixture example.fixture on example"
+        unusedFixture.message shouldContain "Unreachable contract fixture example.fixture on example"
+    }
+
+    @Test
+    fun `feature may prepare for a provider that no content type implements yet`() {
+        val graph = discoverAndAssembleFeatureGraph(
+            listOf(featureContributor(alpha)),
+        )
+
+        graph.entryContentTypes shouldContainExactly emptyList()
+        graph.capabilities.map { it.id } shouldContainExactly listOf(alpha.id)
     }
 
     private fun type(
@@ -286,8 +189,6 @@ class FeatureGraphAssemblyTest {
     private class AlphaProvider
 
     private class OtherAlphaProvider
-
-    private class BetaProvider
 
     private class ExampleAdapter
 

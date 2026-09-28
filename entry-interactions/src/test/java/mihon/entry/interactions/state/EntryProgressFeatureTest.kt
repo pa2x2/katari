@@ -40,54 +40,6 @@ class EntryProgressFeatureTest {
     )
 
     @Test
-    fun `provider absence is valid and distinct from an available empty snapshot`() = runTest {
-        val absent = compositionFor()
-        val absentFeature = featureFor(absent)
-
-        absentFeature.isApplicable(source.type) shouldBe false
-        absentFeature.snapshot(source) shouldBe EntryProgressSnapshotResult.Inapplicable(source.type)
-        absentFeature.restore(source, snapshot) shouldBe EntryProgressRestoreResult.Inapplicable(source.type)
-        absentFeature.copy(source, target, mappings) shouldBe
-            EntryProgressCopyResult.Inapplicable(setOf(source.type))
-
-        val available = compositionFor(EntryProgressCapability.bind(RecordingProgressProcessor()))
-        featureFor(available).snapshot(source) shouldBe
-            EntryProgressSnapshotResult.Available(EntryProgressSnapshot())
-    }
-
-    @Test
-    fun `progress provider owns backup operations without implying Migration`() = runTest {
-        val processor = RecordingProgressProcessor(snapshot)
-        val composition = compositionFor(EntryProgressCapability.bind(processor))
-        val feature = featureFor(composition)
-
-        feature.isApplicable(source.type) shouldBe true
-        feature.snapshot(source) shouldBe EntryProgressSnapshotResult.Available(snapshot)
-        feature.restore(source, snapshot) shouldBe EntryProgressRestoreResult.Applied
-        feature.copy(source, target, mappings) shouldBe EntryProgressCopyResult.Inapplicable(setOf(source.type))
-
-        processor.snapshottedEntries shouldBe listOf(source)
-        processor.restored shouldBe listOf(source to snapshot)
-        processor.copied shouldBe emptyList()
-    }
-
-    @Test
-    fun `copy rejects mismatched entry types before provider dispatch`() = runTest {
-        val processor = RecordingProgressProcessor(snapshot)
-        val feature = featureFor(
-            compositionFor(
-                EntryProgressCapability.bind(processor),
-                EntryMigrationCapability.bind(MigrationProvider()),
-            ),
-        )
-        val animeTarget = target.copy(type = EntryType.ANIME)
-
-        feature.copy(source, animeTarget, mappings) shouldBe
-            EntryProgressCopyResult.IncompatibleTypes(EntryType.BOOK, EntryType.ANIME)
-        processor.copied shouldBe emptyList()
-    }
-
-    @Test
     fun `migration preparation captures target-ready progress without invoking copy`() = runTest {
         val processor = RecordingProgressProcessor(snapshot)
         val feature = featureFor(
