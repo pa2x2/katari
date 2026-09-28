@@ -51,8 +51,6 @@ android {
         buildConfigField("String", "BUILD_TIME", "\"${getBuildTime(useLatestCommitTime = false)}\"")
         buildConfigField("boolean", "TELEMETRY_INCLUDED", "${Config.includeTelemetry}")
         buildConfigField("boolean", "UPDATER_ENABLED", "${Config.enableUpdater}")
-
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     testBuildType = "foss"
@@ -373,10 +371,6 @@ dependencies {
     testImplementation(testFixtures(projects.entryInteractions))
     testImplementation(testFixtures(projects.translation.runtime))
     testRuntimeOnly(libs.junit.platform.launcher)
-    androidTestImplementation(platform(libs.androidx.compose.bom))
-    androidTestImplementation(libs.androidx.compose.uiTestJunit4)
-    androidTestImplementation(libs.androidx.test.junit)
-    debugImplementation(libs.androidx.compose.uiTestManifest)
 
     // For detecting memory leaks; see https://square.github.io/leakcanary/
     // debugImplementation(libs.leakCanary.android)
