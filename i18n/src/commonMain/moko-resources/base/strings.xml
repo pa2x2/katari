@@ -537,6 +537,7 @@
     <string name="text_recognition_settings_unsupported">%s text cannot be recognized with these settings</string>
     <string name="text_recognition_settings_failed">Recognition failed: %s</string>
     <string name="text_recognition_settings_failed_unknown">Recognition failed. Try again.</string>
+    <string name="text_recognition_settings_duration">%.1f s</string>
     <string name="text_recognition_settings_via_other_engine">%1$s from %2$s</string>
     <string name="text_recognition_engine_best_for">Best for: %s</string>
     <string name="text_recognition_engine_script_languages">%1$s · %2$d</string>

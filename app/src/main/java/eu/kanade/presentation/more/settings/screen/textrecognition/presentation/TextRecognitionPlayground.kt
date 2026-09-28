@@ -41,7 +41,9 @@ import mihon.text.recognition.ui.settings.TextRecognitionPlaygroundState
 import mihon.text.recognition.ui.settings.TextRecognitionSettingsState
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.material.padding
+import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
+import kotlin.time.DurationUnit
 
 /** Tries the draft configuration on an image the user picks, in the language they choose. */
 @Composable
@@ -111,7 +113,10 @@ internal fun TextRecognitionPlayground(
     }
 }
 
-/** Which pipeline the draft reads the playground language with. */
+/**
+ * Which pipeline the draft reads the playground language with and, once the image is read, how many regions it
+ * found and how long that took.
+ */
 @Composable
 private fun PlaygroundPipeline(
     state: TextRecognitionSettingsState,
@@ -119,8 +124,22 @@ private fun PlaygroundPipeline(
 ) {
     val language = state.playgroundLanguage ?: return
     val label = hostActions.resolutionLabel(hostActions.resolve(state.draft, language)) ?: return
+    val pipeline = stringResource(MR.strings.text_recognition_settings_read_with, label)
+    val recognized = state.playground as? TextRecognitionPlaygroundState.Recognized
     Text(
-        text = stringResource(MR.strings.text_recognition_settings_read_with, label),
+        text = if (recognized == null) {
+            pipeline
+        } else {
+            val regions = recognized.result.regions.size
+            listOf(
+                pipeline,
+                pluralStringResource(MR.plurals.text_recognition_settings_regions, regions, regions),
+                stringResource(
+                    MR.strings.text_recognition_settings_duration,
+                    recognized.duration.toDouble(DurationUnit.SECONDS),
+                ),
+            ).joinToString(" · ")
+        },
         style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
     )

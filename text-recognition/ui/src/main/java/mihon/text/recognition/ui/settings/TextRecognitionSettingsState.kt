@@ -8,6 +8,7 @@ import mihon.text.recognition.api.configuration.TextRecognitionConfiguration
 import mihon.text.recognition.api.provider.KnownTextRecognitionProvider
 import mihon.text.recognition.api.provider.TextRecognitionBuildAvailability
 import mihon.text.recognition.api.result.TextRecognitionResult
+import kotlin.time.Duration
 
 /** Settings of one profile while they are edited; [draft] is only stored when saved. */
 data class TextRecognitionSettingsState(
@@ -49,9 +50,11 @@ sealed interface TextRecognitionPlaygroundState {
         val installing: Boolean = false,
     ) : TextRecognitionPlaygroundState
 
+    /** [duration] is how long preparing and recognizing the image took. */
     data class Recognized(
         val image: Bitmap,
         val result: TextRecognitionResult,
+        val duration: Duration,
     ) : TextRecognitionPlaygroundState
 
     /** The draft cannot read the language: no engine reads it, or an override is unusable. */

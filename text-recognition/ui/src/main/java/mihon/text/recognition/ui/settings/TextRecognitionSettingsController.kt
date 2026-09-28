@@ -36,6 +36,7 @@ import mihon.text.recognition.api.result.TextRecognitionExecution
 import mihon.text.recognition.ui.picker.pipeline.TextRecognitionPipelineChoices
 import mihon.text.recognition.ui.picker.pipeline.pipelineChoiceModels
 import mihon.text.recognition.ui.picker.pipeline.pipelineChoices
+import kotlin.time.TimeSource
 
 /**
  * Edits one profile's recognition configuration as a draft, lets the user try the draft on an image, and stores it
@@ -129,6 +130,7 @@ class TextRecognitionSettingsController(
         val language = mutableState.value.playgroundLanguage ?: return
         playgroundJob = scope.launch {
             setPlayground(TextRecognitionPlaygroundState.Running(bitmap))
+            val started = TimeSource.Monotonic.markNow()
             val pipeline = (resolve(language) as? TextRecognitionPipelineResolution.Resolved)?.pipeline
                 ?: return@launch setPlayground(TextRecognitionPlaygroundState.Unsupported(bitmap, language))
             try {
@@ -140,7 +142,7 @@ class TextRecognitionSettingsController(
                         )
                     ) {
                         is TextRecognitionExecution.Success ->
-                            TextRecognitionPlaygroundState.Recognized(bitmap, execution.result)
+                            TextRecognitionPlaygroundState.Recognized(bitmap, execution.result, started.elapsedNow())
                         is TextRecognitionExecution.PreparationChanged ->
                             TextRecognitionPlaygroundState.Failed(bitmap, null)
                         is TextRecognitionExecution.Failed -> TextRecognitionPlaygroundState.Failed(
