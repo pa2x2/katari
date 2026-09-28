@@ -6,8 +6,8 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldNotContain
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.async
-import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import mockwebserver3.MockResponse
 import mockwebserver3.MockWebServer
@@ -172,11 +172,10 @@ class LibreTranslateHttpClientTest {
                     .bodyDelay(30, TimeUnit.SECONDS)
                     .build(),
             )
-            val translation = async {
+            val translation = async(start = CoroutineStart.UNDISPATCHED) {
                 client(server).translate("Hello", "en", "fr")
             }
 
-            runCurrent()
             (server.takeRequest(5, TimeUnit.SECONDS) != null) shouldBe true
             translation.cancel()
 

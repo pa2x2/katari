@@ -1,17 +1,17 @@
 package mihon.translation.provider.libretranslate.protocol
 
-import eu.kanade.tachiyomi.network.await
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import okhttp3.Call
+import okhttp3.Callback
 import okhttp3.HttpUrl
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.Response
 import java.io.IOException
 
 internal interface LibreTranslateService {
@@ -73,24 +73,43 @@ internal class LibreTranslateHttpClient(
             ?: throw LibreTranslateException(LibreTranslateFailureKind.InvalidResponse)
     }
 
-    private suspend fun execute(request: Request): String = withContext(Dispatchers.IO) {
-        val response = try {
-            httpClient.newCall(request).await()
-        } catch (error: CancellationException) {
-            throw error
+    /**
+     * Keeps the call cancellable until its body has been read, so cancelling a translation aborts
+     * a slow response body instead of waiting for the socket read timeout.
+     */
+    private suspend fun execute(request: Request): String {
+        val call = httpClient.newCall(request)
+        return suspendCancellableCoroutine { continuation ->
+            continuation.invokeOnCancellation { call.cancel() }
+            call.enqueue(
+                object : Callback {
+                    override fun onFailure(call: Call, e: IOException) {
+                        continuation.resumeWith(
+                            Result.failure(LibreTranslateException(LibreTranslateFailureKind.Connection)),
+                        )
+                    }
+
+                    override fun onResponse(call: Call, response: Response) {
+                        continuation.resumeWith(runCatching { response.use(::readBody) })
+                    }
+                },
+            )
+        }
+    }
+
+    private fun readBody(response: Response): String {
+        if (!response.isSuccessful) {
+            throw LibreTranslateException(
+                when (response.code) {
+                    in 400..499 -> LibreTranslateFailureKind.Rejected
+                    else -> LibreTranslateFailureKind.Server
+                },
+            )
+        }
+        return try {
+            response.body.string()
         } catch (_: IOException) {
             throw LibreTranslateException(LibreTranslateFailureKind.Connection)
-        }
-        response.use {
-            if (!it.isSuccessful) {
-                throw LibreTranslateException(
-                    when (it.code) {
-                        in 400..499 -> LibreTranslateFailureKind.Rejected
-                        else -> LibreTranslateFailureKind.Server
-                    },
-                )
-            }
-            it.body.string()
         }
     }
 
