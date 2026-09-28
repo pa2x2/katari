@@ -93,9 +93,7 @@ class TextRecognitionSettingsController(
     }
 
     /** Drops the draft and returns to the stored configuration. */
-    fun discard() {
-        mutableState.update { it.copy(draft = saved, hasUnsavedProfileChanges = false) }
-    }
+    fun discard() = editDraft { saved }
 
     /** How the draft reads [language]. */
     fun resolve(language: LanguageTag): TextRecognitionPipelineResolution =
@@ -201,11 +199,16 @@ class TextRecognitionSettingsController(
         mutableState.update { it.copy(playground = playground) }
     }
 
+    /** Applies [edit] and tries the playground image again when the edit changes how its language is read. */
     private fun editDraft(edit: (TextRecognitionConfiguration) -> TextRecognitionConfiguration) {
+        val before = mutableState.value
         mutableState.update { current ->
             val draft = edit(current.draft)
             current.copy(draft = draft, hasUnsavedProfileChanges = draft != saved)
         }
+        val language = before.playgroundLanguage ?: return
+        val (bitmap, image) = playgroundImage ?: return
+        if (hostActions.resolve(before.draft, language) != resolve(language)) runPlayground(bitmap, image)
     }
 }
 
