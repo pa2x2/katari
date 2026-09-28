@@ -32,10 +32,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
+import tachiyomi.domain.statistics.model.StatisticsCard
 import tachiyomi.domain.statistics.model.StatisticsCardLayout
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -50,16 +52,18 @@ internal fun StatisticsLayoutEditor(
 ) {
     var draft by remember { mutableStateOf(initial) }
     val cards = statisticsCards(isOverview)
-    fun moveVisible(card: tachiyomi.domain.statistics.model.StatisticsCard, offset: Int) {
-        val visible = draft.order.filter(cards::contains)
-        val target = visible[(visible.indexOf(card) + offset).coerceIn(visible.indices)]
+    fun sectionCards(group: StatisticsCardGroup) = draft.order.filter { it in cards && it.group == group }
+
+    // Cards only move within their section, so both drag and accessibility moves resolve against it.
+    fun moveWithinSection(card: StatisticsCard, target: StatisticsCard) {
+        if (card.group != target.group) return
         draft = draft.move(card, draft.order.indexOf(target) - draft.order.indexOf(card))
     }
     val listState = rememberLazyListState()
     val reorderState = rememberReorderableLazyListState(listState) { from, to ->
-        val fromIndex = draft.order.indexOfFirst { it.id == from.key }
-        val toIndex = draft.order.indexOfFirst { it.id == to.key }
-        if (fromIndex >= 0 && toIndex >= 0) draft = draft.move(draft.order[fromIndex], toIndex - fromIndex)
+        val card = cards.firstOrNull { it.id == from.key } ?: return@rememberReorderableLazyListState
+        val target = cards.firstOrNull { it.id == to.key } ?: return@rememberReorderableLazyListState
+        moveWithinSection(card, target)
     }
     val moveUp = stringResource(MR.strings.statistics_move_up)
     val moveDown = stringResource(MR.strings.statistics_move_down)
@@ -83,59 +87,66 @@ internal fun StatisticsLayoutEditor(
                 modifier = Modifier.weight(1f),
                 contentPadding = PaddingValues(bottom = 24.dp),
             ) {
-                items(draft.order.filter(cards::contains), key = { it.id }) { card ->
-                    ReorderableItem(reorderState, card.id) {
-                        val label = stringResource(card.label())
-                        val scopeLabel = stringResource(
-                            if (card.isCurrentLibrary) {
-                                MR.strings.statistics_library
-                            } else {
-                                MR.strings.statistics_activity
-                            },
+                StatisticsCardGroup.entries.forEach { group ->
+                    val section = sectionCards(group)
+                    if (section.isEmpty()) return@forEach
+                    item(key = "section-${group.name}") {
+                        Text(
+                            text = stringResource(group.label),
+                            modifier = Modifier.padding(top = 16.dp, bottom = 4.dp).semantics { heading() },
+                            style = MaterialTheme.typography.titleSmall,
+                            color = MaterialTheme.colorScheme.primary,
                         )
-                        Row(
-                            modifier = Modifier.fillMaxWidth().semantics {
-                                customActions = buildList {
-                                    val visible = draft.order.filter(cards::contains)
-                                    val index = visible.indexOf(card)
-                                    if (index > 0) {
-                                        add(
-                                            CustomAccessibilityAction(moveUp) {
-                                                moveVisible(card, -1)
-                                                true
-                                            },
-                                        )
+                    }
+                    items(section, key = { it.id }) { card ->
+                        ReorderableItem(reorderState, card.id) {
+                            val label = stringResource(card.label())
+                            val index = section.indexOf(card)
+                            Row(
+                                modifier = Modifier.fillMaxWidth().semantics {
+                                    customActions = buildList {
+                                        section.getOrNull(index - 1)?.let { previous ->
+                                            add(
+                                                CustomAccessibilityAction(moveUp) {
+                                                    moveWithinSection(card, previous)
+                                                    true
+                                                },
+                                            )
+                                        }
+                                        section.getOrNull(index + 1)?.let { next ->
+                                            add(
+                                                CustomAccessibilityAction(moveDown) {
+                                                    moveWithinSection(card, next)
+                                                    true
+                                                },
+                                            )
+                                        }
                                     }
-                                    if (index < visible.lastIndex) {
-                                        add(
-                                            CustomAccessibilityAction(moveDown) {
-                                                moveVisible(card, 1)
-                                                true
-                                            },
+                                }.padding(vertical = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                IconButton(onClick = {}, modifier = Modifier.draggableHandle()) {
+                                    Icon(Icons.Outlined.DragHandle, stringResource(MR.strings.statistics_reorder))
+                                }
+                                Column(Modifier.weight(1f).padding(horizontal = 8.dp)) {
+                                    Text(label)
+                                    card.availabilityHint()?.let { hint ->
+                                        Text(
+                                            text = stringResource(hint),
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         )
                                     }
                                 }
-                            }.padding(vertical = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            IconButton(onClick = {}, modifier = Modifier.draggableHandle()) {
-                                Icon(Icons.Outlined.DragHandle, stringResource(MR.strings.statistics_reorder))
-                            }
-                            Column(Modifier.weight(1f).padding(horizontal = 8.dp)) {
-                                Text(label)
-                                Text(
-                                    scopeLabel,
-                                    style = MaterialTheme.typography.bodySmall,
+                                Switch(
+                                    modifier = Modifier.semantics { contentDescription = label },
+                                    checked = card !in draft.hidden,
+                                    onCheckedChange = { checked ->
+                                        val hidden = if (checked) draft.hidden - card else draft.hidden + card
+                                        draft = draft.copy(hidden = hidden)
+                                    },
                                 )
                             }
-                            Switch(
-                                modifier = Modifier.semantics { contentDescription = label },
-                                checked = card !in draft.hidden,
-                                onCheckedChange = { checked ->
-                                    val hidden = if (checked) draft.hidden - card else draft.hidden + card
-                                    draft = draft.copy(hidden = hidden)
-                                },
-                            )
                         }
                     }
                 }

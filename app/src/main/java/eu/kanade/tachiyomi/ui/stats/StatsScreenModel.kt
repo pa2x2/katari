@@ -9,7 +9,9 @@ import eu.kanade.presentation.more.stats.StatsScreenState
 import eu.kanade.presentation.more.stats.data.StatsActivityWindow
 import eu.kanade.presentation.more.stats.data.StatsLibrary
 import eu.kanade.presentation.more.stats.data.StatsRange
+import eu.kanade.presentation.more.stats.data.StatsReadingCalendar
 import eu.kanade.presentation.more.stats.data.StatsType
+import eu.kanade.presentation.more.stats.layout.statisticsLayoutTab
 import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -36,6 +38,7 @@ import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.data.ActiveProfileProvider
 import tachiyomi.domain.entry.interactor.GetLibraryEntries
+import tachiyomi.domain.statistics.model.StatisticsActivityTimeline
 import tachiyomi.domain.statistics.model.StatisticsCardLayout
 import tachiyomi.domain.statistics.repository.StatisticsRepository
 import tachiyomi.domain.statistics.service.StatisticsPreferences
@@ -79,7 +82,7 @@ class StatsScreenModel(
                                 .toMap(),
                             insightsByType = distinctEntries
                                 .groupBy { it.entry.type }
-                                .mapValues { (_, items) -> buildLibraryInsights(items) },
+                                .mapValues { (_, items) -> buildLibraryInsights(items, today.value) },
                         )
                     },
                     combine(
@@ -137,15 +140,19 @@ class StatsScreenModel(
                         .filterNotNull()
                         .onEach(::restoreDisplayedActivitySelectionAfterFailure)
                         .map { activity -> activity.displayedRange to activity },
-                    statisticsPreferences.selectedType.changes(),
-                    basePreferences.incognitoMode.changes(),
                     combine(
-                        (listOf("overview") + types.map { it.type.name }).map { tab ->
+                        statisticsPreferences.selectedType.changes(),
+                        basePreferences.incognitoMode.changes(),
+                        subscribeReadingCalendar(profileId),
+                        ::Triple,
+                    ),
+                    combine(
+                        (listOf(null) + types.map { it.type }).map(::statisticsLayoutTab).map { tab ->
                             StatisticsPreferences(profileStore.profileStore(profileId)).cardLayout(tab).changes()
                                 .map { tab to StatisticsCardLayout.decode(it) }
                         },
                     ) { it.toMap() },
-                ) { library, (range, activity), selectedTypeName, incognito, cardLayouts ->
+                ) { library, (range, activity), (selectedTypeName, incognito, calendar), cardLayouts ->
                     StatsScreenState.Success(
                         profileId = profileId,
                         range = range,
@@ -155,6 +162,7 @@ class StatsScreenModel(
                         activity = activity,
                         incognito = incognito,
                         cardLayouts = cardLayouts,
+                        calendar = calendar,
                     )
                 }.distinctUntilChanged().flowOn(Dispatchers.IO)
             }.collect { event ->
@@ -173,6 +181,22 @@ class StatsScreenModel(
             }
         }
     }
+
+    /** The reading calendar always ends today, independent of the selected range or navigated window. */
+    private fun subscribeReadingCalendar(profileId: Long): Flow<StatsReadingCalendar?> =
+        today.flatMapLatest { day ->
+            val start = readingCalendarStart(day, Locale.getDefault())
+            statisticsRepository.subscribeActivityTimeline(
+                profileId = profileId,
+                startLocalDate = start.toString(),
+                endLocalDate = day.toString(),
+            ).map<StatisticsActivityTimeline, StatsReadingCalendar?> { timeline ->
+                buildReadingCalendar(timeline, start, day)
+            }.catch { error ->
+                logcat(LogPriority.ERROR, error)
+                emit(null)
+            }
+        }
 
     fun setCardLayout(profileId: Long, tab: String, layout: StatisticsCardLayout) {
         if ((state.value as? StatsScreenState.Success)?.profileId != profileId) return

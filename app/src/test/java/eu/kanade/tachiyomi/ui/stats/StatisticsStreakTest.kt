@@ -92,6 +92,23 @@ class StatisticsStreakTest {
         ) shouldBe 1
     }
 
+    @Test
+    fun `best streak is the longest run that ended by the window end`() {
+        val timeline = timelineWithActivityOn(
+            "2026-08-01",
+            "2026-08-02",
+            "2026-08-03",
+            "2026-08-10",
+            "2026-08-20",
+            "2026-08-21",
+            "2026-08-22",
+            "2026-08-23",
+        )
+
+        timeline.longestStreakEndingBy(LocalDate.parse("2026-08-21")) shouldBe 3
+        timeline.longestStreakEndingBy(LocalDate.parse("2026-08-23")) shouldBe 4
+    }
+
     private fun timelineWithActivityOn(vararg localDates: String) = StatisticsActivityTimeline(
         activity = localDates.map { localDate ->
             StatisticsActivityBucket(EntryType.MANGA, localDate, 60_000L)

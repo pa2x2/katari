@@ -1,20 +1,17 @@
 package eu.kanade.presentation.more.stats.components
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ChevronRight
+import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -22,15 +19,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.more.stats.data.StatsTrendPoint
 import eu.kanade.presentation.more.stats.data.StatsType
 import eu.kanade.tachiyomi.source.entry.EntryType
+import tachiyomi.i18n.*
+import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable
-@OptIn(ExperimentalLayoutApi::class)
 internal fun StatisticsTrendSelection(
     selected: StatsTrendPoint,
     types: List<StatsType>,
@@ -42,22 +39,11 @@ internal fun StatisticsTrendSelection(
     formatDuration: (Long) -> String,
     actionLabel: String?,
     onOpenActivity: (StatsTrendPoint) -> Unit,
+    onClearSelection: () -> Unit,
 ) {
     val isActionable = isTrendSelectionActionable(selected, hasAlternateAction = actionLabel != null)
-    val breakdownRowHeight = with(LocalDensity.current) {
-        MaterialTheme.typography.bodySmall.lineHeight.toDp()
-    }
-    val breakdown = if (selected.isTracked && types.size > 1) {
-        types.mapNotNull { type ->
-            val duration = selected.durationByType[type.type] ?: 0L
-            duration.takeIf { it > 0L }?.let {
-                SelectionBreakdown(
-                    label = typeLabels.getValue(type.type),
-                    duration = formatDuration(it),
-                    color = typeColors.getValue(type.type),
-                )
-            }
-        }
+    val shares = if (selected.isTracked) {
+        statisticsTypeShares(selected.durationByType, types, typeLabels, typeColors, formatDuration)
     } else {
         emptyList()
     }
@@ -69,13 +55,8 @@ internal fun StatisticsTrendSelection(
         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f),
         shape = MaterialTheme.shapes.medium,
     ) {
-        Column(
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
+        Column(Modifier.padding(start = 14.dp, end = 4.dp, top = 6.dp, bottom = 10.dp)) {
+            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = formattedDate,
                     modifier = Modifier.weight(1f),
@@ -106,32 +87,16 @@ internal fun StatisticsTrendSelection(
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-            }
-            FlowRow(
-                modifier = Modifier
-                    .padding(top = 6.dp)
-                    .heightIn(min = breakdownRowHeight),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-            ) {
-                breakdown.forEach { item ->
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Surface(
-                            modifier = Modifier.size(8.dp),
-                            color = item.color,
-                            shape = CircleShape,
-                            content = {},
-                        )
-                        Spacer(Modifier.width(6.dp))
-                        Text(
-                            text = "${item.label} · ${item.duration}",
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            style = MaterialTheme.typography.bodySmall,
-                            maxLines = 1,
-                        )
-                    }
+                IconButton(onClick = onClearSelection, modifier = Modifier.size(36.dp)) {
+                    Icon(
+                        imageVector = Icons.Outlined.Close,
+                        contentDescription = stringResource(MR.strings.statistics_show_whole_period),
+                        modifier = Modifier.size(18.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                 }
             }
+            StatisticsTypeBreakdown(shares, reserveLine = types.size > 1)
         }
     }
 }
@@ -140,9 +105,3 @@ internal fun isTrendSelectionActionable(
     selected: StatsTrendPoint,
     hasAlternateAction: Boolean,
 ): Boolean = selected.isTracked && (selected.totalDurationMillis > 0L || hasAlternateAction)
-
-private data class SelectionBreakdown(
-    val label: String,
-    val duration: String,
-    val color: Color,
-)

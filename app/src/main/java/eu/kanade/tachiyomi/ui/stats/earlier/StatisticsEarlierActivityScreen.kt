@@ -27,7 +27,7 @@ data class StatisticsEarlierActivityScreen(
         Scaffold(
             topBar = { scrollBehavior ->
                 AppBar(
-                    title = stringResource(MR.strings.statistics_earlier_activity),
+                    title = stringResource(MR.strings.statistics_earlier_from_history),
                     navigateUp = navigator::pop,
                     scrollBehavior = scrollBehavior,
                 )

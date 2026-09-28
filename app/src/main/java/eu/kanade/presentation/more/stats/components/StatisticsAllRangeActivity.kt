@@ -23,28 +23,6 @@ import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable
-internal fun AllRangeSummary(
-    totalDuration: String,
-    year: Int?,
-) {
-    Column {
-        Text(
-            text = totalDuration,
-            style = MaterialTheme.typography.headlineSmall,
-        )
-        Text(
-            text = if (year == null) {
-                stringResource(MR.strings.statistics_total_recorded_time)
-            } else {
-                stringResource(MR.strings.statistics_recorded_in_year, year)
-            },
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            style = MaterialTheme.typography.bodySmall,
-        )
-    }
-}
-
-@Composable
 internal fun AllRangeYearNavigation(
     year: Int,
     previousEnabled: Boolean,

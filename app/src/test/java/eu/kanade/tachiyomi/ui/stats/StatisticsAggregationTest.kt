@@ -13,6 +13,7 @@ import tachiyomi.domain.statistics.model.StatisticsCompletionBucket
 import tachiyomi.domain.statistics.model.StatisticsEarlierActivity
 import tachiyomi.domain.statistics.model.StatisticsSessionSummary
 import java.time.LocalDate
+import java.time.ZoneOffset
 import java.util.Locale
 
 class StatisticsAggregationTest {
@@ -138,6 +139,51 @@ class StatisticsAggregationTest {
             result.trend.sumOf(StatsTrendPoint::totalDurationMillis) shouldBe 60_000L
             result.trend.sumOf(StatsTrendPoint::completionCount) shouldBe 1L
             result.totalDurationByType shouldBe mapOf(EntryType.MANGA to 60_000L)
+        }
+    }
+
+    @Test
+    fun `previous window comparison requires a fully tracked, loaded window`() {
+        val endDate = LocalDate.parse("2026-08-28")
+        val window = StatsRange.SEVEN_DAYS.windowEndingOn(endDate, isLatest = true)
+        val snapshot = StatisticsActivitySnapshot(
+            profileId = 1L,
+            trackingStartedAtEpochMillis = 0L,
+            activity = listOf(StatisticsActivityBucket(EntryType.MANGA, "2026-08-27", 120_000L)),
+            completions = emptyList(),
+            topEntries = emptyList(),
+            earlierActivity = emptyList(),
+        )
+        val navigation = StatisticsActivityTimeline(
+            activity = listOf(
+                StatisticsActivityBucket(EntryType.MANGA, "2026-08-14", 999_000L),
+                StatisticsActivityBucket(EntryType.MANGA, "2026-08-15", 30_000L),
+                StatisticsActivityBucket(EntryType.BOOK, "2026-08-21", 30_000L),
+                StatisticsActivityBucket(EntryType.MANGA, "2026-08-27", 120_000L),
+            ),
+            completions = emptyList(),
+        )
+        fun build(trackingStartedAt: Long) = buildWindowActivity(
+            snapshot = snapshot.copy(trackingStartedAtEpochMillis = trackingStartedAt),
+            window = window,
+            types = listOf(EntryType.MANGA, EntryType.BOOK),
+            locale = Locale.UK,
+            zoneId = ZoneOffset.UTC,
+            navigationTimeline = navigation,
+            navigationStartDate = LocalDate.parse("2026-08-15"),
+        )
+
+        build(trackingStartedAt = 0L).let { result ->
+            result.previousWindow?.startDate shouldBe LocalDate.parse("2026-08-15")
+            result.previousTotalDurationMillis shouldBe 60_000L
+            result.previousTotalDurationByType shouldBe mapOf(EntryType.MANGA to 30_000L, EntryType.BOOK to 30_000L)
+            result.trackedDayCount shouldBe 7
+        }
+        val trackedMidWindow = LocalDate.parse("2026-08-25").atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
+        build(trackingStartedAt = trackedMidWindow).let { result ->
+            result.previousWindow shouldBe null
+            result.previousTotalDurationMillis shouldBe null
+            result.trackedDayCount shouldBe 4
         }
     }
 

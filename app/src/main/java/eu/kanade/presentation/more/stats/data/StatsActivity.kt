@@ -28,4 +28,14 @@ data class StatsActivity(
     val earlierDurationByType: Map<EntryType, Long>,
     val trendGranularity: StatsTrendGranularity = StatsTrendGranularity.DAY,
     val allRangeMonthlyTrend: List<StatsTrendPoint> = emptyList(),
+    /** Same-length window just before this one; null when it isn't fully tracked or the range is All. */
+    val previousWindow: StatsActivityWindow? = null,
+    val previousTotalDurationMillis: Long? = null,
+    val previousTotalDurationByType: Map<EntryType, Long> = emptyMap(),
+    /** Days of the window on or after tracking started, used as the daily-average denominator. */
+    val trackedDayCount: Int = 0,
+    val longestStreakDays: Int = 0,
+    val longestStreakDaysByType: Map<EntryType, Int> = emptyMap(),
+    val rhythm: StatsActivityRhythm = StatsActivityRhythm.EMPTY,
+    val rhythmByType: Map<EntryType, StatsActivityRhythm> = emptyMap(),
 )

@@ -33,12 +33,13 @@ import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.entry.InlineEntryTypeIndicator
 import eu.kanade.presentation.entry.components.EntryCover
 import eu.kanade.presentation.entry.entryTypePresentation
+import eu.kanade.presentation.more.stats.components.StatisticsDurationPrecision
+import eu.kanade.presentation.more.stats.components.rememberStatisticsDurationFormatter
 import tachiyomi.domain.history.model.activity.HistoryActivitySegmentDetail
 import tachiyomi.domain.history.model.activity.HistoryActivitySessionDetail
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
-import java.text.NumberFormat
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -50,7 +51,7 @@ internal fun ActivitySessionCard(
     showType: Boolean,
     onClick: (Long) -> Unit,
 ) {
-    val formatDuration = rememberActivityDurationFormatter()
+    val formatDuration = rememberStatisticsDurationFormatter(StatisticsDurationPrecision.SECONDS)
     val locale = LocalConfiguration.current.locales[0]
     val timeFormatter = remember(locale) {
         DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT).withLocale(locale)
@@ -241,26 +242,3 @@ private fun ActivityChildRow(
 }
 
 private const val MAX_VISIBLE_CHILDREN = 3
-
-@Composable
-private fun rememberActivityDurationFormatter(): (Long) -> String {
-    val locale = LocalConfiguration.current.locales[0]
-    return remember(locale) {
-        val numbers = NumberFormat.getIntegerInstance(locale)
-        val formatter: (Long) -> String = { durationMillis ->
-            val totalSeconds = durationMillis.coerceAtLeast(0L) / 1_000L
-            val totalMinutes = totalSeconds / 60L
-            val hours = totalMinutes / 60L
-            val minutes = totalMinutes % 60L
-            val seconds = totalSeconds % 60L
-            when {
-                hours > 0L && minutes > 0L -> "${numbers.format(hours)}h ${numbers.format(minutes)}m"
-                hours > 0L -> "${numbers.format(hours)}h"
-                minutes > 0L && seconds > 0L -> "${numbers.format(minutes)}m ${numbers.format(seconds)}s"
-                minutes > 0L -> "${numbers.format(minutes)}m"
-                else -> "${numbers.format(seconds)}s"
-            }
-        }
-        formatter
-    }
-}
