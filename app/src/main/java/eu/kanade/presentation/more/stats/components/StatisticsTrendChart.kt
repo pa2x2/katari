@@ -75,6 +75,7 @@ internal fun StatisticsTrendChart(
     navigationPending: Boolean,
     onNavigateByBuckets: (Int) -> Unit,
     onOpenActivity: (StatsTrendPoint) -> Unit,
+    periodSummary: @Composable () -> Unit,
     modifier: Modifier = Modifier,
     selectionActionLabel: @Composable (StatsTrendPoint) -> String? = { null },
 ) {
@@ -95,12 +96,9 @@ internal fun StatisticsTrendChart(
         append(points.lastOrNull()?.endDate)
         types.forEach { append(':').append(it.type.name) }
     }
-    var selectedStartDate by rememberSaveable(selectionKey) {
-        mutableStateOf(points.lastOrNull()?.startDate?.toString())
-    }
+    // Nothing is selected until the user picks a bar; the panel then summarizes the whole period.
+    var selectedStartDate by rememberSaveable(selectionKey) { mutableStateOf<String?>(null) }
     val selectedIndex = points.indexOfFirst { it.startDate.toString() == selectedStartDate }
-        .takeIf { it >= 0 }
-        ?: points.lastIndex.coerceAtLeast(0)
     val scrollStateKey = points.size to types.map(StatsType::type)
     var plotOffsetPx by remember(scrollStateKey) { mutableFloatStateOf(0f) }
     var pointSpacingPx by remember(scrollStateKey) { mutableFloatStateOf(0f) }
@@ -245,18 +243,20 @@ internal fun StatisticsTrendChart(
         if (selectedSummary.isNotEmpty()) append(". ").append(selectedSummary)
     }
     val accessibilityActions = buildList {
-        if (selectedIndex > 0) {
+        val previousIndex = if (selectedIndex < 0) points.lastIndex else selectedIndex - 1
+        val nextIndex = if (selectedIndex < 0) 0 else selectedIndex + 1
+        points.getOrNull(previousIndex)?.let { previous ->
             add(
                 CustomAccessibilityAction(previousPointLabel) {
-                    selectedStartDate = points[selectedIndex - 1].startDate.toString()
+                    selectedStartDate = previous.startDate.toString()
                     true
                 },
             )
         }
-        if (selectedIndex < points.lastIndex) {
+        points.getOrNull(nextIndex)?.let { next ->
             add(
                 CustomAccessibilityAction(nextPointLabel) {
-                    selectedStartDate = points[selectedIndex + 1].startDate.toString()
+                    selectedStartDate = next.startDate.toString()
                     true
                 },
             )
@@ -342,7 +342,8 @@ internal fun StatisticsTrendChart(
                                             CHART_HORIZONTAL_INSET + CHART_EDGE_POINT_INSET
                                             ).toPx(),
                                     )
-                                    selectedStartDate = points[index].startDate.toString()
+                                    val tapped = points[index].startDate.toString()
+                                    selectedStartDate = tapped.takeUnless { it == selectedStartDate }
                                 }
                             }
                         },
@@ -404,6 +405,16 @@ internal fun StatisticsTrendChart(
                     clipRect(horizontalInset, plotTop, size.width - horizontalInset, plotBottom) {
                         translate(left = displayedPlotOffsetPx) {
                             displayedNavigationPoints.forEachIndexed { index, point ->
+                                if (point.isTracked) return@forEachIndexed
+                                drawUntrackedHatch(
+                                    left = navigationX(index) - pointSpacing / 2f,
+                                    right = navigationX(index) + pointSpacing / 2f,
+                                    top = plotTop,
+                                    bottom = plotBottom,
+                                    color = Color(outlineVariant.value).copy(alpha = 0.55f),
+                                )
+                            }
+                            displayedNavigationPoints.forEachIndexed { index, point ->
                                 if (!point.isTracked) return@forEachIndexed
                                 var cumulative = 0L
                                 types.forEach { type ->
@@ -463,19 +474,24 @@ internal fun StatisticsTrendChart(
                     )
                 }
             }
-            val selected = points[selectedIndex.coerceIn(points.indices)]
-            StatisticsTrendSelection(
-                selected = selected,
-                types = types,
-                typeLabels = typeLabels,
-                typeColors = typeColors,
-                formattedDate = formatDate(selected),
-                formattedDuration = formatDuration(selected.totalDurationMillis),
-                notTrackedLabel = notTrackedLabel,
-                formatDuration = formatDuration,
-                actionLabel = selectionActionLabel(selected),
-                onOpenActivity = onOpenActivity,
-            )
+            val selected = points.getOrNull(selectedIndex)
+            if (selected == null) {
+                periodSummary()
+            } else {
+                StatisticsTrendSelection(
+                    selected = selected,
+                    types = types,
+                    typeLabels = typeLabels,
+                    typeColors = typeColors,
+                    formattedDate = formatDate(selected),
+                    formattedDuration = formatDuration(selected.totalDurationMillis),
+                    notTrackedLabel = notTrackedLabel,
+                    formatDuration = formatDuration,
+                    actionLabel = selectionActionLabel(selected),
+                    onOpenActivity = onOpenActivity,
+                    onClearSelection = { selectedStartDate = null },
+                )
+            }
         }
     }
 }

@@ -1713,11 +1713,8 @@
     <string name="statistics_weekly_total">Weekly total</string>
     <string name="statistics_monthly_total">Monthly total</string>
     <string name="statistics_yearly_total">Yearly total</string>
-    <string name="statistics_all_recorded_activity">All recorded activity</string>
     <string name="statistics_year_activity">%s activity</string>
     <string name="statistics_all_activity">All activity</string>
-    <string name="statistics_total_recorded_time">Total recorded time</string>
-    <string name="statistics_recorded_in_year">Recorded in %s</string>
     <string name="statistics_view_year">View %s</string>
     <string name="statistics_previous_year">Previous year</string>
     <string name="statistics_next_year">Next year</string>

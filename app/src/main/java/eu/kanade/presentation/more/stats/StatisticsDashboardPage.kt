@@ -139,6 +139,7 @@ internal fun StatisticsDashboardPage(
                             formatter = formatter,
                             onNavigateByBuckets = onNavigateActivity,
                             onShowToday = onShowToday,
+                            onShowLifetime = { onRangeSelected(StatsRange.ALL) },
                             onRetry = onRetryActivity,
                             onOpenActivity = { onOpenActivity(selectedType, it) },
                         )
