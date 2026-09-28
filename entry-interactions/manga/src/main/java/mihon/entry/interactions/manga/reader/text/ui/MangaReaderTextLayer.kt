@@ -108,8 +108,8 @@ internal fun MangaReaderTextLayer(
                     progress = state.progress,
                     overlay = state.overlay,
                     showOriginal = state.showOriginal,
-                    languages = listOfNotNull(state.language, target?.language).joinToString(" → ") {
-                        it.displayName()
+                    languages = state.language?.let { language ->
+                        listOfNotNull(language, target?.language).joinToString(" → ") { it.displayName() }
                     },
                     observeModels = observeModels,
                     onDownloadModels = { approving = it },
