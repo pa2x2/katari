@@ -9,7 +9,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
@@ -62,6 +64,8 @@ class TextRecognitionSettingsController(
     )
     val state: StateFlow<TextRecognitionSettingsState> = mutableState.asStateFlow()
 
+    /** Set once the stored configuration arrived; until then [saved] and the draft are placeholders. */
+    private val configurationLoaded = MutableStateFlow(false)
     private var playgroundJob: Job? = null
     private var playgroundImage: Pair<Bitmap, TextRecognitionImage>? = null
 
@@ -72,6 +76,7 @@ class TextRecognitionSettingsController(
                 mutableState.update { current ->
                     if (current.hasUnsavedProfileChanges) current else current.copy(draft = configuration)
                 }
+                configurationLoaded.value = true
             }
             .launchIn(scope)
     }
@@ -100,11 +105,14 @@ class TextRecognitionSettingsController(
     fun resolve(language: LanguageTag): TextRecognitionPipelineResolution =
         hostActions.resolve(mutableState.value.draft, language)
 
-    /** How [language] can be read under the draft, with live model states. */
-    fun observePipelineChoices(language: LanguageTag): Flow<TextRecognitionPipelineChoices> {
+    /** How [language] can be read under the draft, with live model states, once the stored configuration loaded. */
+    fun observePipelineChoices(language: LanguageTag): Flow<TextRecognitionPipelineChoices> = flow {
+        configurationLoaded.first { it }
         val configuration = mutableState.value.draft
-        return observeModels(hostActions.pipelineChoiceModels(language))
-            .map { states -> hostActions.pipelineChoices(configuration, language, states) }
+        emitAll(
+            observeModels(hostActions.pipelineChoiceModels(language))
+                .map { states -> hostActions.pipelineChoices(configuration, language, states) },
+        )
     }
 
     fun observeModels(models: List<ModelArtifactDescriptor>): Flow<Map<ModelArtifactDescriptor, ModelArtifactState>> =

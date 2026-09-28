@@ -567,6 +567,7 @@
     <string name="reader_text_unsupported_language">%s text cannot be recognized yet</string>
     <string name="reader_text_unavailable">Text recognition is unavailable: %s</string>
     <string name="reader_text_choose_language">Choose language</string>
+    <string name="reader_text_choose_pipeline">Choose</string>
     <string name="reader_text_platform_models_installing">Downloading recognition data…</string>
     <string name="reader_text_show_original">Show original text</string>
     <string name="reader_text_show_translations">Show translations</string>

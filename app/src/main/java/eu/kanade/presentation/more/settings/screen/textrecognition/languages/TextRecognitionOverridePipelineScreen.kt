@@ -1,5 +1,6 @@
 package eu.kanade.presentation.more.settings.screen.textrecognition.languages
 
+import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -32,15 +33,19 @@ import tachiyomi.presentation.core.screens.LoadingScreen
 
 /**
  * Chooses how one language is read: automatically, or with a pipeline of its own. The choice becomes part of the draft
- * once confirmed; confirming a pipeline whose models are missing asks to download them first.
+ * once confirmed, or is stored at once with [storeOnConfirm] when a reader asked for it; confirming a pipeline whose
+ * models are missing asks to download them first.
  */
 internal class TextRecognitionOverridePipelineScreen(
     private val languageTag: String,
+    private val storeOnConfirm: Boolean = false,
 ) : Screen() {
 
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
+        val activity = LocalActivity.current
+        val close: () -> Unit = { if (!navigator.pop()) activity?.finish() }
         val model = rememberTextRecognitionSettingsScreenModel()
         val language = remember(languageTag) { LanguageTag.require(languageTag) }
         val choices by remember(language) { model.controller.observePipelineChoices(language) }
@@ -53,14 +58,15 @@ internal class TextRecognitionOverridePipelineScreen(
             } else {
                 model.controller.setDraftOverride(language, selection)
             }
-            navigator.pop()
+            if (storeOnConfirm) model.controller.save()
+            close()
         }
 
         Scaffold(
             topBar = {
                 AppBar(
                     title = stringResource(MR.strings.text_recognition_settings_pipeline_for, language.displayName()),
-                    navigateUp = navigator::pop,
+                    navigateUp = close,
                     scrollBehavior = it,
                 )
             },

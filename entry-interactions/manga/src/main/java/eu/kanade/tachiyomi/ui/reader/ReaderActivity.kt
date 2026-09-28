@@ -102,7 +102,7 @@ import mihon.entry.interactions.source.EntryChildWebViewAction
 import mihon.entry.interactions.source.EntryChildWebViewResolution
 import mihon.entry.interactions.source.launchEntryChildWebViewAction
 import mihon.entry.viewer.settings.navigation.openViewerSettings
-import mihon.text.recognition.api.host.openTextRecognitionSettings
+import mihon.text.recognition.api.host.openTextRecognitionPipelineChoice
 import mihon.translation.api.host.openTranslationSettings
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.lang.launchIO
@@ -686,7 +686,7 @@ class ReaderActivity : EntryInteractionActivity() {
             onApproveModels = viewModel.textSession::approveModels,
             onApprovePlatformModels = viewModel.textSession::approvePlatformModels,
             onChooseLanguage = viewModel::chooseTextLanguage,
-            onOpenSettings = ::openTextRecognitionSettings,
+            onChoosePipeline = ::openTextRecognitionPipelineChoice,
             onDismissTranslation = textInteraction::dismissTranslation,
             onToggleOverlay = viewModel::toggleTextTranslationOverlay,
             onToggleOriginal = viewModel.textSession::toggleOriginal,
