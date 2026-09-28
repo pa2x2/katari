@@ -45,7 +45,7 @@ object MlKitTextRecognitionCatalog {
             displayName = "Comics with ML Kit",
             description = "Detects speech bubbles on this device and reads them with ML Kit.",
             languages = recognizer.languages,
-            pipeline = TextRecognitionPipeline.Staged(comicTextDetector, recognizer.id),
+            pipeline = TextRecognitionPipeline(comicTextDetector, recognizer.id),
         ),
     )
 

@@ -28,9 +28,15 @@ import mihon.text.recognition.spi.model.TextRecognitionModels
 internal class StagedPipelineRunner(
     private val detector: TextDetector,
     private val recognizer: TextRecognizer,
-) : TextRecognitionPipelineRunner {
+) {
 
-    override suspend fun run(
+    /**
+     * Returns regions in source-image pixels, not yet in reading order.
+     *
+     * @param outlinedByUser whether [area] is an explicit user outline rather than the whole image, in which case text
+     * the detector misses is still read from the area as a whole.
+     */
+    suspend fun run(
         image: TextRecognitionImage,
         area: ImageRect,
         outlinedByUser: Boolean,

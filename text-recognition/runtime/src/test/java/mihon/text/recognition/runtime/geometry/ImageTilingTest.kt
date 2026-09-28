@@ -47,10 +47,4 @@ class ImageTilingTest {
         sampleSizeForMinimumEdge(ImageRect(0, 0, 1200, 1800), 640) shouldBe 1
         sampleSizeForMinimumEdge(ImageRect(0, 0, 300, 300), 640) shouldBe 1
     }
-
-    @Test
-    fun `engine input is subsampled until its longer side fits`() {
-        sampleSizeForMaximumEdge(ImageRect(0, 0, 900, 1350), 2048) shouldBe 1
-        sampleSizeForMaximumEdge(ImageRect(0, 0, 3000, 4500), 2048) shouldBe 4
-    }
 }

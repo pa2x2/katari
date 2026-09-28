@@ -14,7 +14,6 @@ import mihon.text.recognition.runtime.language.readsLanguage
 import mihon.text.recognition.runtime.language.recognitionLanguage
 import mihon.text.recognition.spi.component.TextDetector
 import mihon.text.recognition.spi.component.TextRecognitionComponent
-import mihon.text.recognition.spi.component.TextRecognitionEngine
 import mihon.text.recognition.spi.component.TextRecognizer
 import mihon.text.recognition.spi.contribution.TextRecognitionProviderContribution
 
@@ -85,34 +84,23 @@ internal class TextRecognitionComponentRegistry(
 
     /** Every well-formed pipeline whose reader supports [language], in catalog order. */
     fun pipelines(language: LanguageTag): List<TextRecognitionPipeline> {
-        fun readers(role: TextRecognitionComponentRole) =
-            knownComponents.filter { it.role == role && it.languages.readsLanguage(language) }
         val detectors = knownComponents.filter { it.role == TextRecognitionComponentRole.Detector }
-        val staged = detectors.flatMap { detector ->
-            readers(TextRecognitionComponentRole.Recognizer).map { recognizer ->
-                TextRecognitionPipeline.Staged(detector.id, recognizer.id)
-            }
+        val recognizers = knownComponents.filter {
+            it.role == TextRecognitionComponentRole.Recognizer && it.languages.readsLanguage(language)
         }
-        return staged + readers(TextRecognitionComponentRole.Engine).map { TextRecognitionPipeline.Engine(it.id) }
+        return detectors.flatMap { detector ->
+            recognizers.map { recognizer -> TextRecognitionPipeline(detector.id, recognizer.id) }
+        }
     }
 
     /** Whether every component of [pipeline] is in the catalog with the role its position requires. */
-    fun isWellFormed(pipeline: TextRecognitionPipeline): Boolean = when (pipeline) {
-        is TextRecognitionPipeline.Staged ->
-            catalogById[pipeline.detector]?.role == TextRecognitionComponentRole.Detector &&
-                catalogById[pipeline.recognizer]?.role == TextRecognitionComponentRole.Recognizer
-        is TextRecognitionPipeline.Engine ->
-            catalogById[pipeline.engine]?.role == TextRecognitionComponentRole.Engine
-    }
+    fun isWellFormed(pipeline: TextRecognitionPipeline): Boolean =
+        catalogById[pipeline.detector]?.role == TextRecognitionComponentRole.Detector &&
+            catalogById[pipeline.recognizer]?.role == TextRecognitionComponentRole.Recognizer
 
-    /** Whether the component of [pipeline] that reads text supports [language]. */
-    fun reads(pipeline: TextRecognitionPipeline, language: LanguageTag): Boolean {
-        val reader = when (pipeline) {
-            is TextRecognitionPipeline.Staged -> pipeline.recognizer
-            is TextRecognitionPipeline.Engine -> pipeline.engine
-        }
-        return catalogById[reader]?.languages?.readsLanguage(language) == true
-    }
+    /** Whether the recognizer of [pipeline] supports [language]. */
+    fun reads(pipeline: TextRecognitionPipeline, language: LanguageTag): Boolean =
+        catalogById[pipeline.recognizer]?.languages?.readsLanguage(language) == true
 
     /** Whether every component of [pipeline] can execute in this build. */
     fun isIncluded(pipeline: TextRecognitionPipeline): Boolean = pipeline.components.all(componentsById::containsKey)
@@ -127,5 +115,4 @@ private val TextRecognitionComponent.implementedRole: TextRecognitionComponentRo
     get() = when (this) {
         is TextDetector -> TextRecognitionComponentRole.Detector
         is TextRecognizer -> TextRecognitionComponentRole.Recognizer
-        is TextRecognitionEngine -> TextRecognitionComponentRole.Engine
     }

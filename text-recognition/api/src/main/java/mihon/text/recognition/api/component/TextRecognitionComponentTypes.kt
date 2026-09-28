@@ -23,9 +23,6 @@ enum class TextRecognitionComponentRole {
 
     /** Reads the text of one cropped region. */
     Recognizer,
-
-    /** Locates and reads text in one step. */
-    Engine,
 }
 
 /**

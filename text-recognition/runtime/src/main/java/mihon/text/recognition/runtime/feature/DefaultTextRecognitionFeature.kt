@@ -22,16 +22,13 @@ import mihon.text.recognition.runtime.execution.CachedRecognitionExecutor
 import mihon.text.recognition.runtime.geometry.inReadingOrder
 import mihon.text.recognition.runtime.language.readsRightToLeft
 import mihon.text.recognition.runtime.language.recognitionLanguage
-import mihon.text.recognition.runtime.pipeline.EnginePipelineRunner
 import mihon.text.recognition.runtime.pipeline.StagedPipelineRunner
-import mihon.text.recognition.runtime.pipeline.TextRecognitionPipelineRunner
 import mihon.text.recognition.runtime.registry.TextRecognitionComponentRegistry
 import mihon.text.recognition.runtime.selection.ProfileTextRecognitionPreferences
 import mihon.text.recognition.runtime.selection.TextRecognitionPipelineResolver
 import mihon.text.recognition.spi.component.TextDetector
 import mihon.text.recognition.spi.component.TextRecognitionComponent
 import mihon.text.recognition.spi.component.TextRecognitionComponentAvailability
-import mihon.text.recognition.spi.component.TextRecognitionEngine
 import mihon.text.recognition.spi.component.TextRecognizer
 import mihon.text.recognition.spi.model.TextRecognitionModels
 
@@ -172,13 +169,10 @@ internal class DefaultTextRecognitionFeature(
         },
     )
 
-    private fun PreparedRecognition.runner(): TextRecognitionPipelineRunner = when (pipeline) {
-        is TextRecognitionPipeline.Staged -> StagedPipelineRunner(
-            detector = components[0] as TextDetector,
-            recognizer = components[1] as TextRecognizer,
-        )
-        is TextRecognitionPipeline.Engine -> EnginePipelineRunner(components.single() as TextRecognitionEngine)
-    }
+    private fun PreparedRecognition.runner() = StagedPipelineRunner(
+        detector = components[0] as TextDetector,
+        recognizer = components[1] as TextRecognizer,
+    )
 
     private class PreparedRecognition(
         val request: TextRecognitionRequest,

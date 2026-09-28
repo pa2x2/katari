@@ -61,7 +61,7 @@ internal object OnnxTextRecognitionCatalog {
             displayName = "Japanese manga",
             description = "Detects speech bubbles and reads them with Manga OCR.",
             languages = setOf(LanguageTag.require("ja")),
-            pipeline = TextRecognitionPipeline.Staged(comicTextDetector.id, mangaOcr.id),
+            pipeline = TextRecognitionPipeline(comicTextDetector.id, mangaOcr.id),
         ),
     ) + PaddleOcrScript.entries.map { script ->
         TextRecognitionPreset(
@@ -70,7 +70,7 @@ internal object OnnxTextRecognitionCatalog {
             displayName = "${script.displayName} comics",
             description = "Detects speech bubbles and reads them with PaddleOCR.",
             languages = script.languages,
-            pipeline = TextRecognitionPipeline.Staged(comicTextDetector.id, paddleOcr.id),
+            pipeline = TextRecognitionPipeline(comicTextDetector.id, paddleOcr.id),
         )
     }
 }

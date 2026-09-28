@@ -48,18 +48,18 @@ class TextRecognitionPipelineResolverTest {
             provider = secondProvider,
         ),
     )
-    private val excludedEngine = knownComponent(
-        id = "excluded.engine",
-        role = TextRecognitionComponentRole.Engine,
+    private val excludedRecognizer = knownComponent(
+        id = "excluded.recognizer",
+        role = TextRecognitionComponentRole.Recognizer,
         provider = EXCLUDED_PROVIDER,
     )
     private val japaneseManga = preset(
         id = "example.japanese",
-        pipeline = TextRecognitionPipeline.Staged(detector.catalogEntry.id, japanese.catalogEntry.id),
+        pipeline = TextRecognitionPipeline(detector.catalogEntry.id, japanese.catalogEntry.id),
     )
     private val englishComics = preset(
         id = "second.english",
-        pipeline = TextRecognitionPipeline.Staged(secondDetector.catalogEntry.id, english.catalogEntry.id),
+        pipeline = TextRecognitionPipeline(secondDetector.catalogEntry.id, english.catalogEntry.id),
         languages = setOf(ENGLISH),
         provider = secondProvider,
     )
@@ -73,7 +73,7 @@ class TextRecognitionPipelineResolverTest {
                     presets = listOf(englishComics),
                     order = 1,
                 ),
-                contribution(EXCLUDED_PROVIDER, catalogOnly = listOf(excludedEngine), order = 2),
+                contribution(EXCLUDED_PROVIDER, catalogOnly = listOf(excludedRecognizer), order = 2),
             ),
         ),
     )
@@ -97,7 +97,7 @@ class TextRecognitionPipelineResolverTest {
 
     @Test
     fun `an override replaces the engine's choice for its language only`() {
-        val custom = TextRecognitionPipeline.Staged(secondDetector.catalogEntry.id, japanese.catalogEntry.id)
+        val custom = TextRecognitionPipeline(secondDetector.catalogEntry.id, japanese.catalogEntry.id)
         val configuration = TextRecognitionConfiguration(
             provider = EXAMPLE_PROVIDER.id,
             overrides = mapOf(JAPANESE to TextRecognitionPipelineSelection.Custom(custom)),
@@ -111,7 +111,9 @@ class TextRecognitionPipelineResolverTest {
 
     @Test
     fun `an override that names an excluded component is reported instead of silently replaced`() {
-        val selection = TextRecognitionPipelineSelection.Custom(TextRecognitionPipeline.Engine(excludedEngine.id))
+        val selection = TextRecognitionPipelineSelection.Custom(
+            TextRecognitionPipeline(detector.catalogEntry.id, excludedRecognizer.id),
+        )
         val configuration = TextRecognitionConfiguration(provider = null, overrides = mapOf(JAPANESE to selection))
 
         resolver.resolve(configuration, JAPANESE) shouldBe

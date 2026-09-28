@@ -46,14 +46,6 @@ internal fun sampleSizeForMinimumEdge(region: ImageRect, minimumEdge: Int): Int 
     return sampleSize
 }
 
-/** Smallest power-of-two subsampling that keeps the longer side of [region] at most [maximumEdge] pixels. */
-internal fun sampleSizeForMaximumEdge(region: ImageRect, maximumEdge: Int): Int {
-    val longSide = maxOf(region.width, region.height)
-    var sampleSize = 1
-    while (longSide / sampleSize > maximumEdge) sampleSize *= 2
-    return sampleSize
-}
-
 /** Maps a rectangle in a bitmap decoded from [source] with [sampleSize] back to source pixels, clipped to [source]. */
 internal fun ImageRect.toSource(source: ImageRect, sampleSize: Int): ImageRect? {
     val mapped = ImageRect(

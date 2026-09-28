@@ -75,19 +75,19 @@ class DefaultTextRecognitionFeatureTest {
         texts = mapOf(topText to "上", middleText to "中", narration to "語り"),
         declaredModels = listOf(model("example.recognizer-model")),
     )
-    private val excludedEngine = knownComponent(
-        id = "excluded.engine",
-        role = TextRecognitionComponentRole.Engine,
+    private val excludedRecognizer = knownComponent(
+        id = "excluded.recognizer",
+        role = TextRecognitionComponentRole.Recognizer,
         provider = EXCLUDED_PROVIDER,
     )
     private val stagedPreset = preset(
         id = "staged",
-        pipeline = TextRecognitionPipeline.Staged(detector.catalogEntry.id, recognizer.catalogEntry.id),
+        pipeline = TextRecognitionPipeline(detector.catalogEntry.id, recognizer.catalogEntry.id),
     )
     private val registry = TextRecognitionComponentRegistry(
         listOf(
             contribution(EXAMPLE_PROVIDER, listOf(detector, recognizer), presets = listOf(stagedPreset)),
-            contribution(EXCLUDED_PROVIDER, catalogOnly = listOf(excludedEngine)),
+            contribution(EXCLUDED_PROVIDER, catalogOnly = listOf(excludedRecognizer)),
         ),
     )
     private val preferences = ProfileTextRecognitionPreferences(InMemoryPreferenceStore())
@@ -101,12 +101,12 @@ class DefaultTextRecognitionFeatureTest {
 
     @Test
     fun `a request's explicit pipeline replaces the profile's choice`() = runTest {
-        val explicit = TextRecognitionPipeline.Engine(excludedEngine.id)
+        val explicit = TextRecognitionPipeline(detector.catalogEntry.id, excludedRecognizer.id)
 
         val preparation = feature().prepare(TextRecognitionRequest(strip, JAPANESE, pipeline = explicit))
 
         preparation.shouldBeInstanceOf<TextRecognitionPreparation.PipelineChoiceRequired>().reason shouldBe
-            TextRecognitionPipelineChoiceReason.SelectedComponentUnavailable(excludedEngine.id)
+            TextRecognitionPipelineChoiceReason.SelectedComponentUnavailable(excludedRecognizer.id)
     }
 
     @Test
@@ -116,7 +116,9 @@ class DefaultTextRecognitionFeatureTest {
                 provider = null,
                 overrides = mapOf(
                     JAPANESE to
-                        TextRecognitionPipelineSelection.Custom(TextRecognitionPipeline.Engine(excludedEngine.id)),
+                        TextRecognitionPipelineSelection.Custom(
+                            TextRecognitionPipeline(detector.catalogEntry.id, excludedRecognizer.id),
+                        ),
                 ),
             ),
         )
@@ -124,7 +126,7 @@ class DefaultTextRecognitionFeatureTest {
         val preparation = feature().prepare(TextRecognitionRequest(strip, JAPANESE))
 
         preparation.shouldBeInstanceOf<TextRecognitionPreparation.PipelineChoiceRequired>().reason shouldBe
-            TextRecognitionPipelineChoiceReason.SelectedComponentUnavailable(excludedEngine.id)
+            TextRecognitionPipelineChoiceReason.SelectedComponentUnavailable(excludedRecognizer.id)
     }
 
     @Test
