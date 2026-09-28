@@ -1,2 +1,0 @@
-id=text-recognition.tesseract
-component=mihon.text.recognition.provider.tesseract.tesseractTextRecognitionRuntimeComponent

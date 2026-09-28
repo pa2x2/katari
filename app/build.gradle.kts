@@ -255,7 +255,6 @@ dependencies {
             dependencies.project(mapOf("path" to projects.textRecognition.providers.mlkit.path)),
         )
     }
-    implementation(dependencies.project(mapOf("path" to projects.textRecognition.providers.tesseract.path)))
     implementation(dependencies.project(mapOf("path" to projects.textRecognition.ui.path)))
     implementation(dependencies.project(mapOf("path" to projects.translation.runtime.path)))
     implementation(dependencies.project(mapOf("path" to projects.translation.ui.path)))
