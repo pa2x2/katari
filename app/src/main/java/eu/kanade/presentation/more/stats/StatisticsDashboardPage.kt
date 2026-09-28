@@ -34,6 +34,7 @@ import eu.kanade.presentation.more.stats.components.StatisticsTopTitlesCard
 import eu.kanade.presentation.more.stats.components.color
 import eu.kanade.presentation.more.stats.components.formatStatisticsWindow
 import eu.kanade.presentation.more.stats.components.rememberStatisticsDurationFormatter
+import eu.kanade.presentation.more.stats.data.StatsActivity
 import eu.kanade.presentation.more.stats.data.StatsRange
 import eu.kanade.presentation.more.stats.data.StatsTrendPoint
 import eu.kanade.presentation.more.stats.data.StatsType
@@ -60,6 +61,7 @@ internal fun StatisticsDashboardPage(
     onOpenActivity: (EntryType?, StatsTrendPoint) -> Unit,
     onOpenEntry: (Long) -> Unit,
     onOpenEarlierActivity: (EntryType?) -> Unit,
+    onOpenTopTitles: (EntryType?, StatsActivity) -> Unit,
 ) {
     val isOverview = selectedType == null
     val visibleTypes = state.types.filter { isOverview || it.type == selectedType }
@@ -160,10 +162,13 @@ internal fun StatisticsDashboardPage(
                         }
                         StatisticsCard.TOP_TITLES -> if (visibleActivity?.topTitles?.isNotEmpty() == true) {
                             StatisticsTopTitlesCard(
-                                visibleActivity.topTitles,
-                                state.types.associateBy(StatsType::type),
-                                formatter,
-                                onOpenEntry,
+                                titles = visibleActivity.topTitles,
+                                totalDurationMillis = visibleActivity.totalDurationMillis,
+                                typesById = state.types.associateBy(StatsType::type),
+                                showType = isOverview,
+                                formatDuration = formatter,
+                                onTitleClick = onOpenEntry,
+                                onSeeAll = { onOpenTopTitles(selectedType, visibleActivity) },
                             )
                         } else {
                             EmptyStatisticsCard(MR.strings.statistics_top_titles)

@@ -19,10 +19,12 @@ import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppBarActions
 import eu.kanade.presentation.more.stats.StatsScreenContent
 import eu.kanade.presentation.more.stats.StatsScreenState
+import eu.kanade.presentation.more.stats.components.formatStatisticsWindow
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
 import eu.kanade.tachiyomi.ui.history.activity.HistoryActivityScreen
 import eu.kanade.tachiyomi.ui.stats.earlier.StatisticsEarlierActivityScreen
+import eu.kanade.tachiyomi.ui.stats.top.StatisticsTopTitlesScreen
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
@@ -47,6 +49,7 @@ class StatsScreen : Screen() {
         }
 
         var customizing by rememberSaveable { mutableStateOf(false) }
+        val allActivity = stringResource(MR.strings.statistics_all_activity)
 
         Scaffold(
             topBar = { scrollBehavior ->
@@ -96,6 +99,23 @@ class StatsScreen : Screen() {
                     )
                 },
                 onOpenEntry = { navigator.push(EntryScreen(it)) },
+                onOpenTopTitles = { type, activity ->
+                    navigator.push(
+                        StatisticsTopTitlesScreen(
+                            typeName = type?.name,
+                            startLocalDate = activity.window.startDate?.toString(),
+                            endLocalDate = activity.window.endDate.toString(),
+                            period = if (activity.window.startDate ==
+                                null
+                            ) {
+                                allActivity
+                            } else {
+                                formatStatisticsWindow(activity.window)
+                            },
+                            totalDurationMillis = activity.totalDurationMillis,
+                        ),
+                    )
+                },
                 onOpenEarlierActivity = { type ->
                     navigator.push(
                         StatisticsEarlierActivityScreen(

@@ -2077,6 +2077,7 @@
     <string name="statistics_busiest_weekday">Busiest day: %s</string>
     <string name="statistics_see_all">See all</string>
     <string name="statistics_share_of_time">%d%%</string>
+    <string name="statistics_share_below_percent">&lt;%d%%</string>
     <string name="statistics_unread_backlog">Unread</string>
     <string name="statistics_downloaded">Downloaded</string>
     <string name="statistics_genres">Genres</string>

@@ -22,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
+import eu.kanade.presentation.more.stats.data.StatsActivity
 import eu.kanade.presentation.more.stats.data.StatsRange
 import eu.kanade.presentation.more.stats.data.StatsTrendPoint
 import eu.kanade.presentation.more.stats.data.StatsType
@@ -49,6 +50,7 @@ fun StatsScreenContent(
     onOpenActivity: (EntryType?, StatsTrendPoint) -> Unit,
     onOpenEntry: (Long) -> Unit,
     onOpenEarlierActivity: (EntryType?) -> Unit,
+    onOpenTopTitles: (EntryType?, StatsActivity) -> Unit,
     onSaveLayout: (Long, String, StatisticsCardLayout) -> Unit,
 ) {
     val pages = remember(state.types) { listOf<EntryType?>(null) + state.types.map(StatsType::type) }
@@ -129,6 +131,7 @@ fun StatsScreenContent(
                 onOpenActivity = onOpenActivity,
                 onOpenEntry = onOpenEntry,
                 onOpenEarlierActivity = onOpenEarlierActivity,
+                onOpenTopTitles = onOpenTopTitles,
             )
         }
     }
