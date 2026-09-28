@@ -29,6 +29,7 @@ import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppBarActions
 import eu.kanade.presentation.entry.components.EntryCover
 import mihon.translation.ui.picker.language.displayName
+import mihon.translation.ui.presentation.language.TranslationDirectionText
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.ScrollbarLazyColumn
 import tachiyomi.presentation.core.components.material.Scaffold
@@ -133,7 +134,7 @@ private fun SeriesTranslationLanguagesRow(
                 overflow = TextOverflow.Ellipsis,
                 style = MaterialTheme.typography.bodyMedium,
             )
-            Text(
+            TranslationDirectionText(
                 text = seriesLanguagesSummary(item),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,

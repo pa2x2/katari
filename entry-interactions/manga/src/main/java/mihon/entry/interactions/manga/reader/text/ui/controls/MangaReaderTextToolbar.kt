@@ -40,6 +40,7 @@ import mihon.model.artifacts.api.state.ModelArtifactState
 import mihon.model.artifacts.ui.state.formatModelArtifactSize
 import mihon.model.artifacts.ui.state.modelArtifactFailureLabel
 import mihon.translation.ui.picker.language.displayName
+import mihon.translation.ui.presentation.language.TranslationDirectionText
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -88,7 +89,7 @@ internal fun MangaReaderTextToolbar(
                 val showsProgress = progress != MangaReaderTextProgress.Ready &&
                     progress !is MangaReaderTextProgress.TranslationUnavailable
                 if (showsProgress) {
-                    Text(
+                    TranslationDirectionText(
                         text = progressText(progress, observeModels),
                         style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier.weight(1f, fill = false).padding(vertical = 12.dp),
@@ -97,7 +98,7 @@ internal fun MangaReaderTextToolbar(
                 if (languages != null) {
                     AssistChip(
                         onClick = onOpenLanguages,
-                        label = { Text(languages, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                        label = { TranslationDirectionText(languages, maxLines = 1, overflow = TextOverflow.Ellipsis) },
                         modifier = Modifier.weight(1f, fill = false),
                         trailingIcon = { Icon(Icons.Filled.ArrowDropDown, contentDescription = null) },
                     )

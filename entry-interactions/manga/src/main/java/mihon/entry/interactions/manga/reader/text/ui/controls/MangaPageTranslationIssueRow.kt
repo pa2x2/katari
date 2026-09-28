@@ -15,6 +15,7 @@ import mihon.entry.interactions.manga.reader.text.translation.MangaPageTranslati
 import mihon.translation.api.preparation.TranslationSystemSetupReason
 import mihon.translation.api.preparation.TranslationUnavailableReason
 import mihon.translation.ui.picker.language.displayName
+import mihon.translation.ui.presentation.language.TranslationDirectionText
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -32,7 +33,7 @@ internal fun MangaPageTranslationIssueRow(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Text(
+        TranslationDirectionText(
             text = mangaPageTranslationIssueMessage(issue),
             style = MaterialTheme.typography.bodyMedium,
             modifier = Modifier

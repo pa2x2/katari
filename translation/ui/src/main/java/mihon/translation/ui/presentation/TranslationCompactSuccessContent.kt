@@ -30,6 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import mihon.translation.api.result.TranslationResult
+import mihon.translation.ui.presentation.language.TranslationDirectionText
 import mihon.translation.ui.presentation.language.TranslationLanguageArrow
 import mihon.translation.ui.presentation.language.TranslationLanguageChipPair
 import mihon.translation.ui.presentation.language.TranslationSourceLanguageChip
@@ -126,8 +127,8 @@ internal fun TranslationCompactSuccessContent(
                 onChooseTarget = onChooseTarget,
             )
         } else {
-            TranslationLanguagePair(
-                languagePair = languagePair,
+            TranslationDirectionText(
+                text = languagePair,
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,

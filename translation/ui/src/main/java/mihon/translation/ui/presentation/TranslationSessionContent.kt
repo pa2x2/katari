@@ -5,17 +5,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.text.InlineTextContent
-import androidx.compose.foundation.text.appendInlineContent
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.ArrowForward
 import androidx.compose.material.icons.automirrored.outlined.OpenInNew
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.ContentCopy
@@ -30,22 +26,15 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.Placeholder
-import androidx.compose.ui.text.PlaceholderVerticalAlign
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import mihon.language.api.tag.LanguageTag
 import mihon.translation.api.engine.KnownTranslationEngine
 import mihon.translation.api.engine.TranslationEngineBuildAvailability
@@ -60,6 +49,7 @@ import mihon.translation.api.provider.TranslationInvocationPolicy
 import mihon.translation.api.result.TranslationFailureReason
 import mihon.translation.api.result.TranslationResult
 import mihon.translation.ui.picker.language.translationLanguageOption
+import mihon.translation.ui.presentation.language.TranslationDirectionText
 import mihon.translation.ui.presentation.language.TranslationLanguageChipPair
 import mihon.translation.ui.presentation.language.TranslationLanguageSuggestionChips
 import mihon.translation.ui.session.TranslationSessionFailure
@@ -364,8 +354,8 @@ private fun SuccessContent(
                 onChooseTarget = chooseTarget,
             )
         } else if (showResultLanguage) {
-            TranslationLanguagePair(
-                languagePair = languagePair,
+            TranslationDirectionText(
+                text = languagePair,
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -448,56 +438,6 @@ private data class TranslationResultSpeechContent(
     val targetTarget: TranslationResultSpeechTarget,
     val onToggle: (TranslationResultSpeechTarget) -> Unit,
 )
-
-@Composable
-internal fun TranslationLanguagePair(
-    languagePair: String,
-    modifier: Modifier = Modifier,
-    style: TextStyle,
-    color: Color,
-    maxLines: Int = Int.MAX_VALUE,
-    overflow: TextOverflow = TextOverflow.Clip,
-) {
-    val text = remember(languagePair) {
-        buildAnnotatedString {
-            val arrowIndex = languagePair.indexOf(LANGUAGE_PAIR_ARROW)
-            if (arrowIndex < 0) {
-                append(languagePair)
-            } else {
-                append(languagePair, 0, arrowIndex)
-                appendInlineContent(LANGUAGE_PAIR_ARROW_ID, LANGUAGE_PAIR_ARROW.toString())
-                append(languagePair, arrowIndex + 1, languagePair.length)
-            }
-        }
-    }
-    Text(
-        text = text,
-        inlineContent = mapOf(
-            LANGUAGE_PAIR_ARROW_ID to InlineTextContent(
-                Placeholder(
-                    width = 16.sp,
-                    height = 16.sp,
-                    placeholderVerticalAlign = PlaceholderVerticalAlign.TextCenter,
-                ),
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Outlined.ArrowForward,
-                    contentDescription = null,
-                    modifier = Modifier.fillMaxSize(),
-                    tint = color,
-                )
-            },
-        ),
-        modifier = modifier,
-        style = style,
-        color = color,
-        maxLines = maxLines,
-        overflow = overflow,
-    )
-}
-
-private const val LANGUAGE_PAIR_ARROW_ID = "language-pair-arrow"
-private const val LANGUAGE_PAIR_ARROW = '→'
 
 @Composable
 internal fun TranslationCompactIconButton(
@@ -865,7 +805,7 @@ private fun SessionMessage(
     text: String,
     compact: Boolean,
 ) {
-    Text(
+    TranslationDirectionText(
         text = text,
         maxLines = if (compact) COMPACT_MESSAGE_MAX_LINES else Int.MAX_VALUE,
         overflow = if (compact) TextOverflow.Ellipsis else TextOverflow.Clip,

@@ -25,6 +25,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import mihon.language.api.tag.LanguageTag
+import mihon.translation.ui.presentation.language.TranslationDirectionText
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import java.text.Normalizer
@@ -188,7 +189,7 @@ private fun TranslationPickerRow(
 ) {
     ListItem(
         enabled = enabled,
-        supportingContent = { Text(supporting) },
+        supportingContent = { TranslationDirectionText(supporting) },
         trailingContent = if (selected) {
             {
                 Icon(

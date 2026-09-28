@@ -44,6 +44,7 @@ import mihon.translation.ui.presentation.TranslationSessionExternalAction
 import mihon.translation.ui.presentation.language.translationEffectiveTargetSummary
 import mihon.translation.ui.session.TranslationSessionHostCoordinator
 import tachiyomi.i18n.*
+import tachiyomi.presentation.core.i18n.stringResource
 
 /** Everything translate mode draws above the reader: its toolbar, area outlining, dialogs, and the translation. */
 @Composable
@@ -109,7 +110,13 @@ internal fun MangaReaderTextLayer(
                     overlay = state.overlay,
                     showOriginal = state.showOriginal,
                     languages = state.language?.let { language ->
-                        listOfNotNull(language, target?.language).joinToString(" → ") { it.displayName() }
+                        target?.let {
+                            stringResource(
+                                MR.strings.translation_language_pair,
+                                language.displayName(),
+                                it.language.displayName(),
+                            )
+                        } ?: language.displayName()
                     },
                     observeModels = observeModels,
                     onDownloadModels = { approving = it },
