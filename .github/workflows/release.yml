@@ -102,13 +102,24 @@ jobs:
         run: |
           set -e
 
+          # Per-ABI FOSS names contain neither "-foss" nor "-<abi>", which earlier app versions match to pick their
+          # update; see ReleaseApkSelection.kt.
           mv app/build/outputs/apk/foss/app-universal-foss.apk katari-${{ needs.get_tag.outputs.tag }}-foss.apk
+          mv app/build/outputs/apk/foss/app-arm64-v8a-foss.apk katari_foss_arm64-v8a-${{ needs.get_tag.outputs.tag }}.apk
+          mv app/build/outputs/apk/foss/app-armeabi-v7a-foss.apk katari_foss_armeabi-v7a-${{ needs.get_tag.outputs.tag }}.apk
+          mv app/build/outputs/apk/foss/app-x86-foss.apk katari_foss_x86-${{ needs.get_tag.outputs.tag }}.apk
+          mv app/build/outputs/apk/foss/app-x86_64-foss.apk katari_foss_x86_64-${{ needs.get_tag.outputs.tag }}.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: katari-foss
-          path: katari-${{ needs.get_tag.outputs.tag }}-foss.apk
+          path: |
+            katari-${{ needs.get_tag.outputs.tag }}-foss.apk
+            katari_foss_arm64-v8a-${{ needs.get_tag.outputs.tag }}.apk
+            katari_foss_armeabi-v7a-${{ needs.get_tag.outputs.tag }}.apk
+            katari_foss_x86-${{ needs.get_tag.outputs.tag }}.apk
+            katari_foss_x86_64-${{ needs.get_tag.outputs.tag }}.apk
 
   release:
     name: Create GitHub Release
@@ -149,5 +160,9 @@ jobs:
             katari-armeabi-v7a-${{ needs.get_tag.outputs.tag }}.apk
             katari-x86-${{ needs.get_tag.outputs.tag }}.apk
             katari-x86_64-${{ needs.get_tag.outputs.tag }}.apk
+            katari_foss_arm64-v8a-${{ needs.get_tag.outputs.tag }}.apk
+            katari_foss_armeabi-v7a-${{ needs.get_tag.outputs.tag }}.apk
+            katari_foss_x86-${{ needs.get_tag.outputs.tag }}.apk
+            katari_foss_x86_64-${{ needs.get_tag.outputs.tag }}.apk
           draft: true
           prerelease: false
