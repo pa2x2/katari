@@ -36,7 +36,7 @@ object SettingsTextRecognitionScreen : SearchableSettings {
         val backPress = LocalBackPress.current
         val model = rememberTextRecognitionSettingsScreenModel()
         val state by model.state.collectAsState()
-        val storedBytes by model.storedBytes.collectAsState()
+        val storedModels by model.storedModels.collectAsState()
         val pickImage = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
             uri?.let(model::tryImage)
         }
@@ -44,7 +44,7 @@ object SettingsTextRecognitionScreen : SearchableSettings {
         TextRecognitionSettingsContent(
             state = state,
             hostActions = model.hostActions,
-            storedBytes = storedBytes,
+            storedModels = storedModels,
             onBack = backPress?.let { { it.invoke() } },
             onChooseEngine = { navigator.push(TextRecognitionEnginePickerScreen()) },
             onChooseLanguages = { navigator.push(TextRecognitionLanguagesScreen()) },

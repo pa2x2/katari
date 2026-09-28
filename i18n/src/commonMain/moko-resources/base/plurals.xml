@@ -4,6 +4,10 @@
         <item quantity="one">%d language uses your choice</item>
         <item quantity="other">%d languages use your choice</item>
     </plurals>
+    <plurals name="model_artifacts_count">
+        <item quantity="one">%d model</item>
+        <item quantity="other">%d models</item>
+    </plurals>
     <plurals name="translation_series_languages_count">
         <item quantity="one">%d series uses its own languages</item>
         <item quantity="other">%d series use their own languages</item>

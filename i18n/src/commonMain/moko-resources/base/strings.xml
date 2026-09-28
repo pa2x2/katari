@@ -477,6 +477,7 @@
     <string name="model_artifacts_state_not_installed">Not downloaded · %s</string>
     <string name="model_artifacts_state_downloading">Downloading · %1$s of %2$s</string>
     <string name="model_artifacts_state_installed">Downloaded · %s</string>
+    <string name="model_artifacts_free">Free %s</string>
     <string name="model_artifacts_state_partial">Incomplete download · %s</string>
     <string name="model_artifacts_failure_metered">Waiting for a non-metered network</string>
     <string name="model_artifacts_failure_storage_space">Not enough storage: %1$s needed, %2$s available</string>
@@ -507,6 +508,16 @@
     <string name="text_recognition_languages_models_needed">Needs %s download</string>
     <string name="text_recognition_languages_models_downloading">Downloading models…</string>
     <string name="text_recognition_languages_removed">Removed your choice for %s</string>
+    <string name="text_recognition_models_in_use">In use</string>
+    <string name="text_recognition_models_unused">Not used by this profile</string>
+    <string name="text_recognition_models_obsolete">No longer used</string>
+    <string name="text_recognition_models_obsolete_reason">Not needed by any engine in this build</string>
+    <string name="text_recognition_models_used_for">Used for %s</string>
+    <string name="text_recognition_models_used_for_every_language">Used for every language</string>
+    <string name="text_recognition_models_delete_title">Delete %s?</string>
+    <string name="text_recognition_models_delete_message">%1$s pages will ask to download it again (%2$s) before their text can be recognized.</string>
+    <string name="text_recognition_models_delete_message_every_language">Every language will ask to download it again (%s) before its text can be recognized.</string>
+    <string name="text_recognition_models_storage_summary">%1$s · %2$s no longer used</string>
     <string name="text_recognition_settings_choose_engine">Choose recognition engine</string>
     <string name="text_recognition_settings_choose_language">Choose language</string>
     <string name="text_recognition_settings_pipeline_for">%s recognition</string>

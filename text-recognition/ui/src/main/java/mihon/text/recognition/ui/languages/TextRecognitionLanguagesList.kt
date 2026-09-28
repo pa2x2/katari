@@ -31,6 +31,7 @@ import mihon.text.recognition.api.pipeline.TextRecognitionPipeline
 import mihon.text.recognition.api.pipeline.TextRecognitionPipelineSelection
 import mihon.text.recognition.api.provider.KnownTextRecognitionProvider
 import mihon.text.recognition.ui.language.displayName
+import mihon.text.recognition.ui.language.shortDisplayNames
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.HeadingItem
 import tachiyomi.presentation.core.components.SettingsItemsPaddings
@@ -136,20 +137,12 @@ private fun LazyListScope.groupRows(
     items(groups, key = { "group-${it.preset.id.value}" }) { group ->
         val single = group.languages.singleOrNull()
         LanguageRow(
-            title = languageNames(group.languages),
+            title = group.languages.shortDisplayNames(),
             pipelineLabel = group.preset.displayName,
             status = { ModelStatus(models(group.preset.pipeline, group.languages.first()), modelStates) },
             onClick = { if (single != null) onChooseLanguage(single) else onChooseInGroup(group.languages) },
         )
     }
-}
-
-/** Up to three language names, then how many more the group has. */
-@Composable
-private fun languageNames(languages: List<LanguageTag>): String {
-    val shown = languages.take(NAMED_LANGUAGES).joinToString { it.displayName() }
-    val more = languages.size - NAMED_LANGUAGES
-    return if (more > 0) stringResource(MR.strings.text_recognition_languages_more, shown, more) else shown
 }
 
 @Composable
@@ -209,5 +202,3 @@ private fun ModelStatus(
         )
     }
 }
-
-private const val NAMED_LANGUAGES = 3

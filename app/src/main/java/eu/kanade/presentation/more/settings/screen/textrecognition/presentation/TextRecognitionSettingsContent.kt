@@ -11,6 +11,7 @@ import mihon.model.artifacts.api.download.ModelArtifactDownloadApproval
 import mihon.model.artifacts.api.state.ModelArtifactState
 import mihon.model.artifacts.ui.state.formatModelArtifactSize
 import mihon.text.recognition.api.host.TextRecognitionHostActions
+import mihon.text.recognition.ui.models.TextRecognitionStoredModels
 import mihon.text.recognition.ui.settings.TextRecognitionPlaygroundState
 import mihon.text.recognition.ui.settings.TextRecognitionSettingsState
 import tachiyomi.i18n.*
@@ -22,7 +23,7 @@ import tachiyomi.presentation.core.i18n.stringResource
 internal fun TextRecognitionSettingsContent(
     state: TextRecognitionSettingsState,
     hostActions: TextRecognitionHostActions,
-    storedBytes: Long?,
+    storedModels: TextRecognitionStoredModels?,
     onBack: (() -> Unit)?,
     onChooseEngine: () -> Unit,
     onChooseLanguages: () -> Unit,
@@ -73,8 +74,9 @@ internal fun TextRecognitionSettingsContent(
                         state.draft.overrides.size,
                     )
                 },
-                storage = storedBytes?.let { formatModelArtifactSize(it) }
-                    ?: stringResource(MR.strings.model_artifacts_summary),
+                storage = storedModels?.let {
+                    storageSummary(it)
+                } ?: stringResource(MR.strings.model_artifacts_summary),
                 onChooseEngine = onChooseEngine,
                 onChooseLanguages = onChooseLanguages,
                 onOpenModels = onOpenModels,
@@ -92,5 +94,20 @@ internal fun TextRecognitionSettingsContent(
             ),
             contentPadding = contentPadding,
         )
+    }
+}
+
+/** Total model storage, and how much of it no engine in this build needs. */
+@Composable
+private fun storageSummary(models: TextRecognitionStoredModels): String {
+    val total = formatModelArtifactSize(models.totalBytes)
+    return if (models.obsoleteBytes > 0) {
+        stringResource(
+            MR.strings.text_recognition_models_storage_summary,
+            total,
+            formatModelArtifactSize(models.obsoleteBytes),
+        )
+    } else {
+        total
     }
 }

@@ -8,7 +8,6 @@ import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import mihon.language.api.tag.LanguageTag
@@ -16,6 +15,8 @@ import mihon.model.artifacts.api.ModelArtifactStore
 import mihon.text.recognition.api.TextRecognitionFeature
 import mihon.text.recognition.api.host.TextRecognitionHostActions
 import mihon.text.recognition.api.image.ImageContentKey
+import mihon.text.recognition.ui.models.TextRecognitionStoredModels
+import mihon.text.recognition.ui.models.observeStoredModels
 import mihon.text.recognition.ui.playground.BitmapTextRecognitionImage
 import mihon.text.recognition.ui.settings.TextRecognitionSettingsController
 import tachiyomi.core.common.util.lang.withIOContext
@@ -38,9 +39,8 @@ internal class TextRecognitionSettingsScreenModel(
     )
     val state = controller.state
 
-    /** Storage all downloaded model revisions occupy. */
-    val storedBytes: StateFlow<Long?> = modelStore.observeStored()
-        .map { stored -> stored.sumOf { it.storedBytes } }
+    /** Downloaded model revisions by what they are for, for the storage summary. */
+    val storedModels: StateFlow<TextRecognitionStoredModels?> = hostActions.observeStoredModels(modelStore)
         .stateIn(screenModelScope, SharingStarted.Eagerly, null)
 
     /** Recognizes the picked image with the draft configuration. */
