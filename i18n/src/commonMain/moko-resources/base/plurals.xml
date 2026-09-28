@@ -16,10 +16,6 @@
         <item quantity="one">%1$d of %2$d day active</item>
         <item quantity="other">%1$d of %2$d days active</item>
     </plurals>
-    <plurals name="statistics_session_count">
-        <item quantity="one">%d session</item>
-        <item quantity="other">%d sessions</item>
-    </plurals>
     <plurals name="statistics_backlog_title_count">
         <item quantity="one">in %d title</item>
         <item quantity="other">in %d titles</item>
