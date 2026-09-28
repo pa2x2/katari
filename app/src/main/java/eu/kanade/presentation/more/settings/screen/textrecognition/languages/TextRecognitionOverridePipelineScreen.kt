@@ -1,4 +1,4 @@
-package eu.kanade.presentation.more.settings.screen.textrecognition.overrides
+package eu.kanade.presentation.more.settings.screen.textrecognition.languages
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize

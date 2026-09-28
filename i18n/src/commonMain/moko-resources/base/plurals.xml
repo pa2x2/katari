@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <plurals name="text_recognition_settings_languages_choices">
+        <item quantity="one">%d language uses your choice</item>
+        <item quantity="other">%d languages use your choice</item>
+    </plurals>
     <plurals name="translation_series_languages_count">
         <item quantity="one">%d series uses its own languages</item>
         <item quantity="other">%d series use their own languages</item>

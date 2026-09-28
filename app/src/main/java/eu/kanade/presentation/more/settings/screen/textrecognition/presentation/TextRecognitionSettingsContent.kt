@@ -11,11 +11,11 @@ import mihon.model.artifacts.api.download.ModelArtifactDownloadApproval
 import mihon.model.artifacts.api.state.ModelArtifactState
 import mihon.model.artifacts.ui.state.formatModelArtifactSize
 import mihon.text.recognition.api.host.TextRecognitionHostActions
-import mihon.text.recognition.ui.language.displayNames
 import mihon.text.recognition.ui.settings.TextRecognitionPlaygroundState
 import mihon.text.recognition.ui.settings.TextRecognitionSettingsState
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.material.Scaffold
+import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable
@@ -25,7 +25,7 @@ internal fun TextRecognitionSettingsContent(
     storedBytes: Long?,
     onBack: (() -> Unit)?,
     onChooseEngine: () -> Unit,
-    onChooseOverrides: () -> Unit,
+    onChooseLanguages: () -> Unit,
     onOpenModels: () -> Unit,
     onChoosePlaygroundLanguage: () -> Unit,
     onChooseImage: () -> Unit,
@@ -65,14 +65,18 @@ internal fun TextRecognitionSettingsContent(
                 engine = state.effectiveProvider?.name
                     ?: stringResource(MR.strings.text_recognition_engine_status_not_included),
                 languages = if (state.draft.overrides.isEmpty()) {
-                    stringResource(MR.strings.text_recognition_settings_no_overrides)
+                    stringResource(MR.strings.text_recognition_settings_languages_default)
                 } else {
-                    state.draft.overrides.keys.displayNames()
+                    pluralStringResource(
+                        MR.plurals.text_recognition_settings_languages_choices,
+                        state.draft.overrides.size,
+                        state.draft.overrides.size,
+                    )
                 },
                 storage = storedBytes?.let { formatModelArtifactSize(it) }
                     ?: stringResource(MR.strings.model_artifacts_summary),
                 onChooseEngine = onChooseEngine,
-                onChooseLanguages = onChooseOverrides,
+                onChooseLanguages = onChooseLanguages,
                 onOpenModels = onOpenModels,
                 playground = {
                     TextRecognitionPlayground(

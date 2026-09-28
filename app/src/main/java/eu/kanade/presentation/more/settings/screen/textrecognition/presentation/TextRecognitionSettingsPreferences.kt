@@ -29,7 +29,7 @@ internal fun textRecognitionSettingsPreferences(
                 onClick = onChooseEngine,
             ),
             Preference.PreferenceItem.TextPreference(
-                title = stringResource(MR.strings.text_recognition_settings_language_overrides),
+                title = stringResource(MR.strings.text_recognition_settings_languages),
                 subtitle = languages,
                 isProfileSpecific = true,
                 onClick = onChooseLanguages,

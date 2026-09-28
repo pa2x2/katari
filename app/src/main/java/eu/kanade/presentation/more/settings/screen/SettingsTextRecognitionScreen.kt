@@ -14,8 +14,8 @@ import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.screen.textrecognition.TextRecognitionSettingsScreenModel
 import eu.kanade.presentation.more.settings.screen.textrecognition.engine.TextRecognitionEnginePickerScreen
 import eu.kanade.presentation.more.settings.screen.textrecognition.language.TextRecognitionPlaygroundLanguageScreen
+import eu.kanade.presentation.more.settings.screen.textrecognition.languages.TextRecognitionLanguagesScreen
 import eu.kanade.presentation.more.settings.screen.textrecognition.models.ModelArtifactStorageScreen
-import eu.kanade.presentation.more.settings.screen.textrecognition.overrides.TextRecognitionOverridesScreen
 import eu.kanade.presentation.more.settings.screen.textrecognition.presentation.TextRecognitionSettingsContent
 import eu.kanade.presentation.more.settings.screen.textrecognition.presentation.textRecognitionSettingsPreferences
 import eu.kanade.presentation.util.LocalBackPress
@@ -47,7 +47,7 @@ object SettingsTextRecognitionScreen : SearchableSettings {
             storedBytes = storedBytes,
             onBack = backPress?.let { { it.invoke() } },
             onChooseEngine = { navigator.push(TextRecognitionEnginePickerScreen()) },
-            onChooseOverrides = { navigator.push(TextRecognitionOverridesScreen()) },
+            onChooseLanguages = { navigator.push(TextRecognitionLanguagesScreen()) },
             onOpenModels = { navigator.push(ModelArtifactStorageScreen()) },
             onChoosePlaygroundLanguage = { navigator.push(TextRecognitionPlaygroundLanguageScreen()) },
             onChooseImage = {
