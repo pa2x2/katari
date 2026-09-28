@@ -43,13 +43,18 @@ import mihon.translation.ui.picker.language.displayName
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
-/** Status and actions of translate mode, shown while it is active. */
+/**
+ * Status and actions of translate mode, shown while it is active.
+ *
+ * [languages] names the page language and the target, and is null while the page language is unknown: the target alone
+ * would read as the answer to the question which language the pages are in.
+ */
 @Composable
 internal fun MangaReaderTextToolbar(
     progress: MangaReaderTextProgress,
     overlay: Boolean,
     showOriginal: Boolean,
-    languages: String,
+    languages: String?,
     observeModels: (List<ModelArtifactDescriptor>) -> Flow<List<ModelArtifactState>>,
     onDownloadModels: (List<ModelArtifactDescriptor>) -> Unit,
     onDownloadPlatformModels: (MangaReaderTextBlocker.PlatformModelsRequired) -> Unit,
@@ -89,12 +94,14 @@ internal fun MangaReaderTextToolbar(
                         modifier = Modifier.weight(1f, fill = false).padding(vertical = 12.dp),
                     )
                 }
-                AssistChip(
-                    onClick = onOpenLanguages,
-                    label = { Text(languages, maxLines = 1, overflow = TextOverflow.Ellipsis) },
-                    modifier = Modifier.weight(1f, fill = false),
-                    trailingIcon = { Icon(Icons.Filled.ArrowDropDown, contentDescription = null) },
-                )
+                if (languages != null) {
+                    AssistChip(
+                        onClick = onOpenLanguages,
+                        label = { Text(languages, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                        modifier = Modifier.weight(1f, fill = false),
+                        trailingIcon = { Icon(Icons.Filled.ArrowDropDown, contentDescription = null) },
+                    )
+                }
                 when (val blocker = (progress as? MangaReaderTextProgress.Blocked)?.blocker) {
                     is MangaReaderTextBlocker.ModelsRequired -> TextButton(
                         onClick = { onDownloadModels(blocker.models) },

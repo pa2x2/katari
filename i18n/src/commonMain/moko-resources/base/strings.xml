@@ -554,6 +554,7 @@
     <string name="reader_text_page_language_unknown">Not chosen yet</string>
     <string name="reader_text_page_language_source_lists">%1$s · the source lists %2$s</string>
     <string name="reader_text_page_language_from_source">%1$s · from the source</string>
+    <string name="reader_text_page_language_follow_source">From the source</string>
     <string name="reader_text_page_language_rereads">Changing the page language reads the pages again.</string>
     <string name="pref_page_text_translation">Page translation</string>
     <string name="pref_page_text_translation_overlay">Show translations on the page</string>

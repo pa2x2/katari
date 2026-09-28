@@ -129,6 +129,10 @@ internal fun BookDocumentReaderScreen(
     val focusManager = LocalFocusManager.current
     var rootPosition by remember { mutableStateOf(Offset.Zero) }
     var pendingNavigation by remember { mutableStateOf<BookDocumentNavigationTarget?>(null) }
+
+    // The settings dialog is a window over the reader, so translation announcements go to it while it is open.
+    val settingsSnackbarHostState = remember { SnackbarHostState() }
+    val translationSnackbarHostState = if (state.settingsVisible) settingsSnackbarHostState else snackbarHostState
     val currentOnChromeToggle by rememberUpdatedState(onChromeToggle)
     val currentOnNavigationSelected by rememberUpdatedState(onNavigationSelected)
     val observeSelections = selectionCoordinator?.observeSelections?.collectAsState()?.value == true
@@ -222,7 +226,7 @@ internal fun BookDocumentReaderScreen(
                 translationSpeechState = translationSpeechState,
                 onTranslationSpeechToggle = selectionCoordinator?.let { it::toggleTranslationSpeech },
                 onTranslationPopupBoundsChanged = onTranslationPopupBoundsChanged,
-                translationSnackbarHostState = snackbarHostState,
+                translationSnackbarHostState = translationSnackbarHostState,
                 onRootPositionInWindow = { rootPosition = it },
                 modifier = Modifier
                     .fillMaxSize()
@@ -375,6 +379,7 @@ internal fun BookDocumentReaderScreen(
                                 bookTranslationLanguageDetails(controller.hostCoordinator, controller.declaredLanguage),
                         )
                     }.orEmpty(),
+                    snackbarHostState = settingsSnackbarHostState,
                     onResetProcessorSettings = {
                         settingBindings.readingMode.clearEntryOverride()
                         settingBindings.tapZones.clearEntryOverride()

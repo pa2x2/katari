@@ -35,8 +35,11 @@ internal class MangaTextTranslationController(
     /** The page language kept for the series; null follows the language the source declares. */
     val pageLanguage: Flow<LanguageTag?> = hostCoordinator.languages.choices.map { it.source }
 
-    /** Keeps [language] as the series' page language. A translation of text read in the old language is closed. */
-    fun choosePageLanguage(language: LanguageTag) {
+    /**
+     * Keeps [language] as the series' page language, or follows the language the source declares again when it is null.
+     * A translation of text read in the old language is closed.
+     */
+    fun choosePageLanguage(language: LanguageTag?) {
         dismiss()
         hostCoordinator.languages.selectSource(language)
     }

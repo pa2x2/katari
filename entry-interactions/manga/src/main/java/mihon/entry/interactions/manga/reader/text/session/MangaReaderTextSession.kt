@@ -44,7 +44,8 @@ import mihon.text.recognition.api.result.TextRecognitionResult
  *
  * The session recognizes only pages it is told are visible, stops at the first prerequisite the user must resolve,
  * and resumes on its own once that prerequisite is met. Pages are read in the [pageLanguage] kept for the series, or
- * else in the source's [declaredLanguage]; a different page language reads them again.
+ * else in the source's [declaredLanguage], which is null until the series is known or when the source spans several
+ * languages; a different page language reads them again.
  */
 internal class MangaReaderTextSession(
     private val recognition: TextRecognitionFeature,
@@ -55,7 +56,7 @@ internal class MangaReaderTextSession(
         LanguageTag,
     ) -> TextRecognitionPlatformModelsResult,
     private val scope: CoroutineScope,
-    private val declaredLanguage: suspend () -> LanguageTag?,
+    declaredLanguage: Flow<LanguageTag?>,
     pageLanguage: Flow<LanguageTag?>,
     private val sampleBackground: suspend (TextRecognitionImage, ImageRect) -> Int = ::sampleTextBackground,
 ) {
@@ -63,6 +64,7 @@ internal class MangaReaderTextSession(
     val state: StateFlow<MangaReaderTextState> = mutableState.asStateFlow()
 
     private var keptLanguage: LanguageTag? = null
+    private var declared: LanguageTag? = null
     private var visible: List<MangaPageTextSurface> = emptyList()
     private var ahead: List<MangaPageTextSurface> = emptyList()
     private val jobs = mutableMapOf<ReaderPage, Job>()
@@ -70,7 +72,18 @@ internal class MangaReaderTextSession(
     private var modelWait: Job? = null
 
     init {
-        scope.launch { pageLanguage.distinctUntilChanged().collect(::usePageLanguage) }
+        scope.launch {
+            pageLanguage.distinctUntilChanged().collect { kept ->
+                keptLanguage = kept
+                usePageLanguage()
+            }
+        }
+        scope.launch {
+            declaredLanguage.distinctUntilChanged().collect { language ->
+                declared = language
+                usePageLanguage()
+            }
+        }
         scope.launch { translator.choicesChanged.collect { translateAgain() } }
     }
 
@@ -338,15 +351,13 @@ internal class MangaReaderTextSession(
         mutableState.update { it.copy(translating = emptySet()) }
     }
 
-    private suspend fun language(): LanguageTag? = keptLanguage ?: declaredLanguage()
+    private fun language(): LanguageTag? = keptLanguage ?: declared
 
-    /** Reads pages in [kept], or in the declared language without one, starting over when that changes the language. */
-    private suspend fun usePageLanguage(kept: LanguageTag?) {
-        keptLanguage = kept
-        val declared = declaredLanguage()
-        val language = kept ?: declared
+    /** Reads pages in the kept language, or else in the declared one, starting over when that changes the language. */
+    private fun usePageLanguage() {
+        val language = language()
         val previous = mutableState.value
-        mutableState.update { it.copy(declaredLanguage = declared, languageKept = kept != null) }
+        mutableState.update { it.copy(declaredLanguage = declared, languageKept = keptLanguage != null) }
         if (language != null && language == previous.language) return
         cancelRecognition()
         cancelTranslation()
