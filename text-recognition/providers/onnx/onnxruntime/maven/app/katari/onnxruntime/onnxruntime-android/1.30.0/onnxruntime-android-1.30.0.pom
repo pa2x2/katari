@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>app.katari.onnxruntime</groupId>
+  <artifactId>onnxruntime-android</artifactId>
+  <version>1.30.0</version>
+  <packaging>aar</packaging>
+  <name>ONNX Runtime</name>
+  <description>ONNX Runtime 1.30.0 for Android, reduced to the CPU execution provider and the operators of Katari's text recognition models, without telemetry.</description>
+  <url>https://onnxruntime.ai/</url>
+  <organization>
+    <name>Microsoft</name>
+    <url>https://www.microsoft.com</url>
+  </organization>
+  <licenses>
+    <license>
+      <name>MIT License</name>
+      <url>https://opensource.org/licenses/MIT</url>
+    </license>
+  </licenses>
+  <scm>
+    <url>https://github.com/microsoft/onnxruntime</url>
+  </scm>
+</project>
