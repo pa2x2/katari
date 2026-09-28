@@ -50,7 +50,7 @@ class AndroidEntryDownloadNotifierTest {
         notifier.showProgress(progress())
 
         val notification = publisher.notifications.getValue(EntryDownloadNotifications.ID_PROGRESS)
-        assertEquals(android.R.drawable.stat_sys_download, notification.icon)
+        assertEquals(android.R.drawable.stat_sys_download, notification.smallIcon.resId)
         assertTrue(notification.flags and Notification.FLAG_ONGOING_EVENT != 0)
         assertEquals(
             listOf("Pause", "Cancel all", "Show entry"),
