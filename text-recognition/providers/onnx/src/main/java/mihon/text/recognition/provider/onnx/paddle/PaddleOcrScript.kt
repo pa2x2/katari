@@ -60,10 +60,15 @@ internal enum class PaddleOcrScript(
         dictionarySize = 47_451,
         dictionarySha256 = "a88071c68c01707489baa79ebe0405b7beb5cca229f4fc94cc3ef992328802d7",
     ),
+
+    /**
+     * The model is also trained on Japanese, but reads manga lettering far worse than Manga OCR: it misses outlined
+     * text on screentone and reads furigana as columns of their own.
+     */
     Chinese(
         folder = "chinese",
-        displayName = "Chinese and Japanese",
-        languageCodes = listOf("zh", "ja"),
+        displayName = "Chinese",
+        languageCodes = listOf("zh"),
         recognizerSize = 84_468_836,
         recognizerSha256 = "26fa4f47060f58e25962b9af6beaee05c8182b90e026c4ecc6db165d9dfdc38a",
         dictionarySize = 74_012,
