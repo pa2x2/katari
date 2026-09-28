@@ -2,7 +2,7 @@ package tachiyomi.data.release
 
 /**
  * Picks the release APK that installs over this build: the one for its distribution and the device's primary ABI,
- * else that distribution's universal APK.
+ * else that distribution's universal APK. Devices whose primary ABI is not built get none, as no APK installs there.
  *
  * Release asset names, as the release workflow publishes them:
  * - `katari-<tag>.apk` and `katari-<abi>-<tag>.apk` for the standard build;
@@ -11,6 +11,7 @@ package tachiyomi.data.release
  *   universal FOSS APK and the standard per-ABI APKs.
  */
 internal fun selectReleaseApk(assets: List<GitHubAsset>, isFoss: Boolean, primaryAbi: String): GitHubAsset? {
+    if (primaryAbi !in ABIS) return null
     val (fossAssets, standardAssets) = assets.partition { it.isFoss() }
     return if (isFoss) {
         fossAssets.find { "$FOSS_ABI_MARKER$primaryAbi-" in it.name }
@@ -25,4 +26,6 @@ private fun GitHubAsset.isFoss() = name.endsWith(FOSS_UNIVERSAL_SUFFIX) || FOSS_
 
 private const val FOSS_UNIVERSAL_SUFFIX = "-foss.apk"
 private const val FOSS_ABI_MARKER = "_foss_"
-private val ABIS = listOf("arm64-v8a", "armeabi-v7a", "x86_64", "x86")
+
+/** The ABIs of the published APKs; see releasedAbis in the app module. */
+private val ABIS = listOf("arm64-v8a", "armeabi-v7a")
