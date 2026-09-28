@@ -13,16 +13,23 @@ class BitmapTextRecognitionImage(
 ) : TextRecognitionImage {
     override val size = ImageSize(bitmap.width, bitmap.height)
 
-    /** Always returns a new bitmap, because callers recycle what they receive. */
+    /**
+     * Always returns a new bitmap, because callers recycle what they receive.
+     *
+     * Subsampling averages every block of source pixels, as page decoders do: the region is halved step by step, and
+     * a filtered scale to exactly half averages each 2×2 block. One filtered scale by more than half would skip
+     * source pixels and lose thin strokes.
+     */
     override suspend fun decodeRegion(region: ImageRect, sampleSize: Int): Bitmap {
-        val width = (region.width / sampleSize).coerceAtLeast(1)
-        val height = (region.height / sampleSize).coerceAtLeast(1)
-        val cropped = Bitmap.createBitmap(bitmap, region.left, region.top, region.width, region.height)
-        val scaled = Bitmap.createScaledBitmap(cropped, width, height, true)
-        return when {
-            scaled === bitmap -> bitmap.copy(Bitmap.Config.ARGB_8888, false)
-            scaled !== cropped -> scaled.also { if (cropped !== bitmap) cropped.recycle() }
-            else -> scaled
+        var result = Bitmap.createBitmap(bitmap, region.left, region.top, region.width, region.height)
+        if (result === bitmap) result = bitmap.copy(Bitmap.Config.ARGB_8888, false)
+        var remaining = sampleSize
+        while (remaining > 1 && result.width > 1 && result.height > 1) {
+            val halved = Bitmap.createScaledBitmap(result, result.width / 2, result.height / 2, true)
+            result.recycle()
+            result = halved
+            remaining /= 2
         }
+        return result
     }
 }

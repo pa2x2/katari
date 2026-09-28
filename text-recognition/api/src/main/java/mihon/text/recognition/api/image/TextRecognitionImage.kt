@@ -16,6 +16,9 @@ interface TextRecognitionImage {
 
     /**
      * Decodes [region] subsampled by [sampleSize] (a power of two). The returned bitmap is owned by the caller.
+     *
+     * Each output pixel must average its block of source pixels, as page decoders do: recognition models lose thin
+     * strokes that point sampling skips.
      */
     suspend fun decodeRegion(region: ImageRect, sampleSize: Int): Bitmap
 }
