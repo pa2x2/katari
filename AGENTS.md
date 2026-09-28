@@ -44,6 +44,7 @@
 ## Guidance
 - When asked to fix the issue - never simply apply the easiest fix without finding the reason of the issue. Band-aid solutions are not welcomed. The goal is to fix the reason issue arised in the first place, not to merely fix the symptom
 - Introduced warnings must not be left un-addressed. Not just suppressed so that thwy no longer show up, but cause of their appearance should be fixed instead
+- Kotlin compilation treats warnings as errors (`allWarningsAsErrors` in build-logic). Do not disable it or suppress a warning to get past it; fix what causes the warning.
 
 ## Commit classification
 

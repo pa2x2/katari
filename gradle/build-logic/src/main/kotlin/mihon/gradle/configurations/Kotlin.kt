@@ -10,14 +10,19 @@ import tapmoc.configureJavaCompatibility
 
 fun Project.configureKotlin() {
     configureJavaCompatibility(mihonx.versions.java.get().toInt())
+
+    kotlin {
+        compilerOptions {
+            // Warnings are fixed at their cause; failing on them keeps new ones from accumulating unnoticed.
+            allWarningsAsErrors.set(true)
+        }
+    }
 }
 
-@Suppress("Unused")
 private fun Project.kotlin(block: KotlinBaseExtension.() -> Unit) {
     extensions.configure(block)
 }
 
-@Suppress("Unused")
 private fun KotlinBaseExtension.compilerOptions(block: KotlinCommonCompilerOptions.() -> Unit) {
     if (this is HasConfigurableKotlinCompilerOptions<*>) compilerOptions(block)
 }
