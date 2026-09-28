@@ -10,6 +10,7 @@ import mihon.text.recognition.runtime.FakeDetector
 import mihon.text.recognition.runtime.FakePageImage
 import mihon.text.recognition.runtime.FakeRecognizer
 import mihon.text.recognition.runtime.JAPANESE
+import mihon.text.recognition.runtime.cache.TextDetectionCache
 import mihon.text.recognition.spi.component.DetectedTextRegionKind
 import mihon.text.recognition.spi.model.TextRecognitionModels
 import org.junit.jupiter.api.Test
@@ -27,7 +28,11 @@ class StagedPipelineRunnerTest {
         objects: List<Pair<ImageRect, DetectedTextRegionKind>>,
         texts: Map<ImageRect, String>,
         outline: ImageRect? = null,
-    ) = StagedPipelineRunner(FakeDetector(page, objects), FakeRecognizer(page, texts)).run(
+    ) = StagedPipelineRunner(
+        detector = FakeDetector(page, objects),
+        recognizer = FakeRecognizer(page, texts),
+        detection = PageTextDetection(TextDetectionCache(maximumPages = 1)),
+    ).run(
         image = page,
         area = outline ?: page.size.bounds,
         outlinedByUser = outline != null,

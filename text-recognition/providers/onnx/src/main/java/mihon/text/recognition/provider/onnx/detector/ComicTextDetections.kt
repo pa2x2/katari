@@ -39,7 +39,11 @@ internal fun decodeDetections(
     }
 }
 
-private const val DEFAULT_THRESHOLD = 0.4f
+/**
+ * The model's author reads it at this threshold. Free text and bubbles holding only "?" or "!!" often score between
+ * 0.3 and 0.4, and hardly any non-text object scores in that band.
+ */
+private const val DEFAULT_THRESHOLD = 0.3f
 private const val LABEL_BUBBLE = 0L
 private const val LABEL_BUBBLE_TEXT = 1L
 private const val LABEL_FREE_TEXT = 2L

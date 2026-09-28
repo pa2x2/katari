@@ -205,17 +205,14 @@ internal class MangaReaderTextSession(
     }
 
     /** Recognizes only the text inside [area] of [surface], for an area the user outlined. */
-    suspend fun recognizeArea(surface: MangaPageTextSurface, area: ImageRect): TextRecognitionResult? {
-        val image = surface.displayedImage() ?: return null
-        return image.use {
-            val request = TextRecognitionRequest(image, language(), TextRecognitionScope.Region(area))
-            when (val preparation = recognition.prepare(request)) {
-                is TextRecognitionPreparation.Ready ->
-                    (recognition.recognize(preparation.recognition) as? TextRecognitionExecution.Success)?.result
-                else -> {
-                    block(preparation)
-                    null
-                }
+    suspend fun recognizeArea(image: TextRecognitionImage, area: ImageRect): TextRecognitionResult? {
+        val request = TextRecognitionRequest(image, language(), TextRecognitionScope.Region(area))
+        return when (val preparation = recognition.prepare(request)) {
+            is TextRecognitionPreparation.Ready ->
+                (recognition.recognize(preparation.recognition) as? TextRecognitionExecution.Success)?.result
+            else -> {
+                block(preparation)
+                null
             }
         }
     }

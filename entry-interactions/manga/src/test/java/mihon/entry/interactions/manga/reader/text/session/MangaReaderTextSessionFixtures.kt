@@ -53,7 +53,7 @@ internal val JAPANESE = LanguageTag.require("ja")
 internal val KOREAN = LanguageTag.require("ko")
 internal val FRENCH = LanguageTag.require("fr")
 internal val PAGE_SIZE = ImageSize(1200, 1800)
-internal val PIPELINE = TextRecognitionPipeline.Staged(
+internal val PIPELINE = TextRecognitionPipeline(
     TextRecognitionComponentId("example.detector"),
     TextRecognitionComponentId("example.recognizer"),
 )

@@ -40,7 +40,7 @@ internal class PaddleOcrRecognizer(
     /** Regions are split into lines at up to the line detector's resolution, so crops arrive unreduced. */
     override val inputEdge: Int = LINE_DETECTOR_MAXIMUM_EDGE
 
-    override val processingRevision: Int = 3
+    override val processingRevision: Int = 4
 
     private val dictionaries = mutableMapOf<File, List<String>>()
 
@@ -73,7 +73,9 @@ internal class PaddleOcrRecognizer(
                 val bitmap =
                     cropLine(source, line.shape, turnCounterClockwise = line.vertical) ?: return@mapNotNull null
                 try {
-                    readLine(bitmap, recognizerFile, dictionary).trim().takeIf(String::isNotEmpty)
+                    readLine(bitmap, recognizerFile, dictionary)
+                        .takeIf { it.confidence >= MINIMUM_LINE_CONFIDENCE }
+                        ?.text?.trim()?.takeIf(String::isNotEmpty)
                 } finally {
                     bitmap.recycle()
                 }
@@ -123,7 +125,7 @@ internal class PaddleOcrRecognizer(
         return (if (script.vertical) stackCharacterColumns(lines) else lines).map { it.scaled(scaleX, scaleY) }
     }
 
-    private fun readLine(line: Bitmap, recognizerFile: File, dictionary: List<String>): String {
+    private fun readLine(line: Bitmap, recognizerFile: File, dictionary: List<String>): PaddleOcrLineReading {
         val session = sessions.session(RECOGNIZER_SLOT, recognizerFile)
         val width = ceil(line.width * RECOGNIZER_HEIGHT.toDouble() / line.height).toInt()
             .coerceIn(1, RECOGNIZER_MAXIMUM_WIDTH)
@@ -172,6 +174,12 @@ internal class PaddleOcrRecognizer(
         const val RECOGNIZER_MINIMUM_WIDTH = 320
         const val RECOGNIZER_MAXIMUM_WIDTH = 3200
         const val VERTICAL_ASPECT = 1.5
+
+        /**
+         * Lines read with less confidence are artwork the line detector mistook for text, as PaddleOCR's own
+         * `drop_score` assumes. Real lettering, even a lone "……", scores well above it.
+         */
+        const val MINIMUM_LINE_CONFIDENCE = 0.5f
 
         /** ImageNet's RGB statistics, which PaddleOCR applies position by position to its BGR channels. */
         val IMAGENET_MEAN = floatArrayOf(0.485f, 0.456f, 0.406f)

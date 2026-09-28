@@ -41,7 +41,7 @@ internal object TesseractTextRecognitionCatalog {
             displayName = "Comics with Tesseract",
             description = "Detects speech bubbles on this device and reads them with Tesseract.",
             languages = recognizer.languages,
-            pipeline = TextRecognitionPipeline.Staged(comicTextDetector, recognizer.id),
+            pipeline = TextRecognitionPipeline(comicTextDetector, recognizer.id),
         ),
     )
 }

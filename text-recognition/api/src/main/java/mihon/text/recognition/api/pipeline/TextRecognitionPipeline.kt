@@ -4,26 +4,13 @@ import mihon.language.api.tag.LanguageTag
 import mihon.text.recognition.api.component.TextRecognitionComponentId
 import mihon.text.recognition.api.provider.TextRecognitionProviderId
 
-/** How text is located and read. */
-sealed interface TextRecognitionPipeline {
+/** How text is located and read: a detector finds regions, and a recognizer reads each of them. */
+data class TextRecognitionPipeline(
+    val detector: TextRecognitionComponentId,
+    val recognizer: TextRecognitionComponentId,
+) {
     val components: List<TextRecognitionComponentId>
-
-    /** A detector finds regions; a recognizer reads each of them. */
-    data class Staged(
-        val detector: TextRecognitionComponentId,
-        val recognizer: TextRecognitionComponentId,
-    ) : TextRecognitionPipeline {
-        override val components: List<TextRecognitionComponentId>
-            get() = listOf(detector, recognizer)
-    }
-
-    /** One engine finds and reads text. */
-    data class Engine(
-        val engine: TextRecognitionComponentId,
-    ) : TextRecognitionPipeline {
-        override val components: List<TextRecognitionComponentId>
-            get() = listOf(engine)
-    }
+        get() = listOf(detector, recognizer)
 }
 
 @JvmInline

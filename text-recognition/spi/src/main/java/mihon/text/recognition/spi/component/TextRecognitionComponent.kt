@@ -114,20 +114,3 @@ data class RecognizedCropText(
     val text: String,
     val orientation: TextOrientation = TextOrientation.Unknown,
 )
-
-interface TextRecognitionEngine : TextRecognitionComponent {
-    /** Largest edge the engine reads reliably; the runtime tiles and subsamples larger images. */
-    val maximumInputEdge: Int
-
-    suspend fun recognize(
-        image: Bitmap,
-        language: LanguageTag,
-        models: TextRecognitionModels,
-    ): List<EngineTextRegion>
-}
-
-data class EngineTextRegion(
-    val bounds: ImageRect,
-    val text: String,
-    val orientation: TextOrientation = TextOrientation.Unknown,
-)

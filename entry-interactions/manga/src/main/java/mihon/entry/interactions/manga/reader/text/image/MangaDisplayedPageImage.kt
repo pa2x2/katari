@@ -26,8 +26,8 @@ internal class MangaDisplayedPageImage private constructor(
     private val cropBorders: Boolean,
     override val key: ImageContentKey,
     override val size: ImageSize,
+    private var decoder: ImageDecoder?,
 ) : DisplayedPageImage {
-    private var decoder: ImageDecoder? = null
 
     override suspend fun decodeRegion(region: ImageRect, sampleSize: Int): Bitmap = withContext(Dispatchers.IO) {
         synchronized(this@MangaDisplayedPageImage) {
@@ -44,7 +44,10 @@ internal class MangaDisplayedPageImage private constructor(
     }
 
     companion object {
-        /** Reads the displayed dimensions; returns `null` for content the decoder cannot read. */
+        /**
+         * Reads the displayed dimensions; returns `null` for content the decoder cannot read. The decoder that read
+         * them decodes regions later, because creating one decodes the whole image when borders are cropped.
+         */
         suspend fun open(encoded: ByteString, cropBorders: Boolean): MangaDisplayedPageImage? =
             withContext(Dispatchers.IO) {
                 val decoder = runCatching { newDecoder(encoded, cropBorders) }.getOrNull() ?: return@withContext null
@@ -54,9 +57,11 @@ internal class MangaDisplayedPageImage private constructor(
                         cropBorders = cropBorders,
                         key = ImageContentKey(encoded.sha256().hex() + if (cropBorders) CROPPED_SUFFIX else ""),
                         size = ImageSize(decoder.width, decoder.height),
+                        decoder = decoder,
                     )
-                } finally {
+                } catch (error: Throwable) {
                     decoder.recycle()
+                    throw error
                 }
             }
 

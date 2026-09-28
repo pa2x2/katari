@@ -10,23 +10,25 @@ import org.junit.jupiter.api.Test
 class TextRecognitionSelectionCodecTest {
 
     @Test
-    fun `every selection form survives persistence`() {
-        val selections = listOf(
-            TextRecognitionPipelineSelection.Preset(TextRecognitionPresetId("japanese-manga")),
-            TextRecognitionPipelineSelection.Custom(
-                TextRecognitionPipeline.Staged(
-                    detector = TextRecognitionComponentId("onnx.detector"),
-                    recognizer = TextRecognitionComponentId("onnx.manga-ocr"),
-                ),
-            ),
-            TextRecognitionPipelineSelection.Custom(
-                TextRecognitionPipeline.Engine(TextRecognitionComponentId("mlkit.japanese")),
+    fun `a preset is stored by its id`() {
+        val selection = TextRecognitionPipelineSelection.Preset(TextRecognitionPresetId("onnx.japanese-manga"))
+
+        TextRecognitionSelectionCodec.encode(selection) shouldBe "preset:onnx.japanese-manga"
+        TextRecognitionSelectionCodec.decode("preset:onnx.japanese-manga") shouldBe selection
+    }
+
+    @Test
+    fun `a custom pipeline is stored as its detector and recognizer`() {
+        val selection = TextRecognitionPipelineSelection.Custom(
+            TextRecognitionPipeline(
+                detector = TextRecognitionComponentId("onnx.comic-text-and-bubble-detector"),
+                recognizer = TextRecognitionComponentId("onnx.manga-ocr"),
             ),
         )
+        val stored = "staged:onnx.comic-text-and-bubble-detector:onnx.manga-ocr"
 
-        selections.forEach { selection ->
-            TextRecognitionSelectionCodec.decode(TextRecognitionSelectionCodec.encode(selection)) shouldBe selection
-        }
+        TextRecognitionSelectionCodec.encode(selection) shouldBe stored
+        TextRecognitionSelectionCodec.decode(stored) shouldBe selection
     }
 
     @Test

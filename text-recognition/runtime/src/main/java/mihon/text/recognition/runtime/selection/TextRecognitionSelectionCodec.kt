@@ -10,10 +10,8 @@ internal object TextRecognitionSelectionCodec {
     fun encode(selection: TextRecognitionPipelineSelection?): String = when (selection) {
         null -> ""
         is TextRecognitionPipelineSelection.Preset -> "$PRESET:${selection.preset.value}"
-        is TextRecognitionPipelineSelection.Custom -> when (val pipeline = selection.pipeline) {
-            is TextRecognitionPipeline.Staged -> "$STAGED:${pipeline.detector.value}:${pipeline.recognizer.value}"
-            is TextRecognitionPipeline.Engine -> "$ENGINE:${pipeline.engine.value}"
-        }
+        is TextRecognitionPipelineSelection.Custom ->
+            "$STAGED:${selection.pipeline.detector.value}:${selection.pipeline.recognizer.value}"
     }
 
     fun decode(value: String): TextRecognitionPipelineSelection? {
@@ -23,13 +21,10 @@ internal object TextRecognitionSelectionCodec {
                 parts.size == 2 && parts[0] == PRESET ->
                     TextRecognitionPipelineSelection.Preset(TextRecognitionPresetId(parts[1]))
                 parts.size == 3 && parts[0] == STAGED -> TextRecognitionPipelineSelection.Custom(
-                    TextRecognitionPipeline.Staged(
+                    TextRecognitionPipeline(
                         detector = TextRecognitionComponentId(parts[1]),
                         recognizer = TextRecognitionComponentId(parts[2]),
                     ),
-                )
-                parts.size == 2 && parts[0] == ENGINE -> TextRecognitionPipelineSelection.Custom(
-                    TextRecognitionPipeline.Engine(TextRecognitionComponentId(parts[1])),
                 )
                 else -> null
             }
@@ -38,5 +33,4 @@ internal object TextRecognitionSelectionCodec {
 
     private const val PRESET = "preset"
     private const val STAGED = "staged"
-    private const val ENGINE = "engine"
 }
