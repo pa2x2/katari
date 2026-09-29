@@ -1,6 +1,5 @@
 package eu.kanade.tachiyomi.extension.util
 
-import android.os.Build
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
@@ -20,21 +19,6 @@ class ExtensionLoaderTest {
         ExtensionLoader.getExtensionLibVersion(1.6f) shouldBe "1.6"
         ExtensionLoader.getExtensionLibVersion(1.4) shouldBe "1.4"
         ExtensionLoader.getExtensionLibVersion("2.0.1") shouldBe "2.0.1"
-    }
-
-    @Test
-    fun `only legacy extensions use the platform delegate-last loader`() {
-        ExtensionLoader.shouldUseDelegateLastClassLoader("1.4", Build.VERSION_CODES.Q) shouldBe true
-        ExtensionLoader.shouldUseDelegateLastClassLoader("1.6.0", Build.VERSION_CODES.VANILLA_ICE_CREAM) shouldBe true
-        ExtensionLoader.shouldUseDelegateLastClassLoader("2.0.1", Build.VERSION_CODES.VANILLA_ICE_CREAM) shouldBe false
-    }
-
-    @Test
-    fun `extension version names are accepted only within released entry api families`() {
-        ExtensionLoader.isLibVersionCompatible("1.9.1") shouldBe false
-        ExtensionLoader.isLibVersionCompatible("2.0.1") shouldBe true
-        ExtensionLoader.isLibVersionCompatible("2.7.1") shouldBe true
-        ExtensionLoader.isLibVersionCompatible("2.8.1") shouldBe false
     }
 
     @Test

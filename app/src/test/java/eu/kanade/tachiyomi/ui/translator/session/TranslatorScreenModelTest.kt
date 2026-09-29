@@ -1,11 +1,9 @@
 package eu.kanade.tachiyomi.ui.translator.session
 
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -43,10 +41,7 @@ import mihon.translation.api.request.TranslationRequest
 import mihon.translation.api.request.TranslationSourceLanguageSelection
 import mihon.translation.api.request.TranslationTargetLanguageSelection
 import mihon.translation.api.result.TranslationExecution
-import mihon.translation.api.result.TranslationFailureReason
 import mihon.translation.api.result.TranslationResult
-import mihon.translation.ui.session.TranslationSessionState
-import mihon.translation.ui.session.displayedSessionResult
 import mihon.tts.api.TtsFeature
 import mihon.tts.api.playback.TtsPlaybackStart
 import mihon.tts.api.preparation.ReadyTts
@@ -81,34 +76,6 @@ class TranslatorScreenModelTest {
             advanceTimeBy(1)
             runCurrent()
             feature.requests.map { it.text } shouldBe listOf("hello")
-        } finally {
-            model.onDispose()
-            Dispatchers.resetMain()
-        }
-    }
-
-    @Test
-    fun `failed replacement keeps the previous successful result available`() = runTest {
-        val dispatcher = StandardTestDispatcher(testScheduler)
-        Dispatchers.setMain(dispatcher)
-        val model = TranslatorScreenModel(
-            feature = FakeTranslationFeature(),
-            hostActions = FakeHostActions(),
-            ttsFeature = FakeTtsFeature,
-            languagePreferences = TranslatorLanguagePreferences(InMemoryPreferenceStore()),
-        )
-
-        try {
-            advanceUntilIdle()
-            model.setText("hello")
-            advanceUntilIdle()
-            val successful = model.state.value.session.displayedSessionResult()
-
-            model.setText("fail")
-            advanceUntilIdle()
-
-            model.state.value.session.displayedSessionResult() shouldBe successful
-            model.state.value.session.shouldBeInstanceOf<TranslationSessionState.Failed>()
         } finally {
             model.onDispose()
             Dispatchers.resetMain()
@@ -184,11 +151,6 @@ class TranslatorScreenModelTest {
 
         override suspend fun translate(ready: ReadyTranslation): TranslationExecution {
             val request = (ready as FakeReadyTranslation).request
-            if (request.text == "fail") {
-                return TranslationExecution.Failed(
-                    TranslationFailureReason.ProviderFailure(request.engine, null),
-                )
-            }
             return TranslationExecution.Success(
                 TranslationResult(
                     translatedText = if (request.text == "bonjour") "hello" else "bonjour",

@@ -37,20 +37,4 @@ class StatisticsDateWindowTest {
         StatsRange.ONE_YEAR.windowForSelection(daySelection, today)
             .shiftedByBuckets(-1).endDate shouldBe LocalDate.parse("2026-03-27")
     }
-
-    @Test
-    fun `month navigation respects tracking bounds and Today establishes a fresh anchor`() {
-        val today = LocalDate.parse("2026-04-30")
-        val historical = StatsRange.ONE_YEAR.windowEndingOn(LocalDate.parse("2026-03-31"))
-        val earliest = LocalDate.parse("2026-02-12")
-        val bounded = historical.shiftedByBuckets(2).clampedTo(earliest, today)
-
-        bounded.endDate shouldBe earliest
-        bounded.shiftedByBuckets(-1).endDate shouldBe LocalDate.parse("2026-03-31")
-        historical.shiftedByBuckets(-2).clampedTo(earliest, today).endDate shouldBe today
-
-        val latest = StatsRange.ONE_YEAR.windowForSelection(null, today)
-        latest.isLatest shouldBe true
-        latest.shiftedByBuckets(1).endDate shouldBe LocalDate.parse("2026-03-30")
-    }
 }

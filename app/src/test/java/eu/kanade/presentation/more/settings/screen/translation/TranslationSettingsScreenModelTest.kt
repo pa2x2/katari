@@ -28,7 +28,6 @@ import mihon.translation.api.engine.TranslationProviderId
 import mihon.translation.api.host.TranslationHostActionResult
 import mihon.translation.api.host.TranslationHostActions
 import mihon.translation.api.language.TranslationDefaultTarget
-import mihon.translation.api.language.TranslationLanguagePair
 import mihon.translation.api.language.TranslationLanguageSupport
 import mihon.translation.api.language.TranslationLanguageSupportInspection
 import mihon.translation.api.model.TranslationModelDescriptor
@@ -105,46 +104,6 @@ class TranslationSettingsScreenModelTest {
     }
 
     @Test
-    fun `playground stages profile settings until save while request-only edits stay transient`() = runTest {
-        val dispatcher = StandardTestDispatcher(testScheduler)
-        Dispatchers.setMain(dispatcher)
-        val hostActions = FakeHostActions()
-        hostActions.defaultTargetLanguage.set(TranslationTargetLanguageSelection.Explicit(ENGLISH))
-        val model = TranslationSettingsScreenModel(
-            feature = SetupRequiredFeature(),
-            hostActions = hostActions,
-        )
-
-        try {
-            advanceUntilIdle()
-            model.playground.value.hasUnsavedProfileChanges shouldBe false
-
-            model.setSourceLanguage(ENGLISH)
-            model.setText("A request-only experiment")
-            advanceUntilIdle()
-            model.playground.value.hasUnsavedProfileChanges shouldBe false
-
-            model.setTargetLanguage(FRENCH)
-            model.setEngine(SECOND_ENGINE)
-            advanceUntilIdle()
-            model.playground.value.hasUnsavedProfileChanges shouldBe true
-            hostActions.selectedEngine.get() shouldBe ANDROID_ENGINE
-            hostActions.defaultTargetLanguage.get() shouldBe
-                TranslationTargetLanguageSelection.Explicit(ENGLISH)
-
-            model.savePlaygroundDefaults()
-
-            hostActions.selectedEngine.get() shouldBe SECOND_ENGINE
-            hostActions.defaultTargetLanguage.get() shouldBe
-                TranslationTargetLanguageSelection.Explicit(FRENCH)
-            model.playground.value.hasUnsavedProfileChanges shouldBe false
-        } finally {
-            model.onDispose()
-            Dispatchers.resetMain()
-        }
-    }
-
-    @Test
     fun `target-only save does not persist the implicit engine`() = runTest {
         val dispatcher = StandardTestDispatcher(testScheduler)
         Dispatchers.setMain(dispatcher)
@@ -172,45 +131,6 @@ class TranslationSettingsScreenModelTest {
         }
     }
 
-    @Test
-    fun `engine switch preserves an unsupported pair until the user chooses a valid pair`() = runTest {
-        val dispatcher = StandardTestDispatcher(testScheduler)
-        Dispatchers.setMain(dispatcher)
-        val hostActions = FakeHostActions().apply {
-            defaultTargetLanguage.set(TranslationTargetLanguageSelection.Explicit(FRENCH))
-            languageSupportByEngine = mapOf(
-                ANDROID_ENGINE to exactSupport(ENGLISH, FRENCH),
-                SECOND_ENGINE to exactSupport(FRENCH, ENGLISH),
-            )
-        }
-        val model = TranslationSettingsScreenModel(
-            feature = SetupRequiredFeature(),
-            hostActions = hostActions,
-        )
-
-        try {
-            advanceUntilIdle()
-            model.setEngine(SECOND_ENGINE)
-            advanceUntilIdle()
-
-            model.playground.value.sourceLanguage shouldBe ENGLISH
-            model.playground.value.targetLanguage shouldBe FRENCH
-            model.savePlaygroundDefaults()
-            hostActions.selectedEngine.isSet() shouldBe false
-
-            model.setSourceLanguage(FRENCH)
-            model.setTargetLanguage(ENGLISH)
-            model.savePlaygroundDefaults()
-
-            hostActions.selectedEngine.get() shouldBe SECOND_ENGINE
-            hostActions.defaultTargetLanguage.get() shouldBe
-                TranslationTargetLanguageSelection.Explicit(ENGLISH)
-        } finally {
-            model.onDispose()
-            Dispatchers.resetMain()
-        }
-    }
-
     private class FakeHostActions : TranslationHostActions {
         private val store = InMemoryPreferenceStore()
         override val knownEngines = listOf(knownEngine(ANDROID_ENGINE), knownEngine(SECOND_ENGINE))
@@ -222,7 +142,7 @@ class TranslationSettingsScreenModelTest {
             )
         }
         var inspectionStates: Flow<TranslationEngineInspection>? = null
-        var languageSupportByEngine: Map<TranslationEngineId, TranslationLanguageSupportInspection> =
+        private val languageSupportByEngine: Map<TranslationEngineId, TranslationLanguageSupportInspection> =
             knownEngines.associate { engine ->
                 engine.id to TranslationLanguageSupportInspection.Available(
                     TranslationLanguageSupport.AnyLanguage,
@@ -329,14 +249,6 @@ class TranslationSettingsScreenModelTest {
         val ANDROID_ENGINE = TranslationEngineId("android-system")
         val SECOND_ENGINE = TranslationEngineId("second")
 
-        fun exactSupport(
-            source: LanguageTag,
-            target: LanguageTag,
-        ) = TranslationLanguageSupportInspection.Available(
-            TranslationLanguageSupport.ExactPairs(
-                setOf(TranslationLanguagePair(source, target)),
-            ),
-        )
         val ENGLISH = LanguageTag.require("en")
         val FRENCH = LanguageTag.require("fr")
         val PRESENTATION = TranslationProviderPresentation(

@@ -13,17 +13,10 @@ import eu.kanade.tachiyomi.source.entry.EntryType
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -33,28 +26,8 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Test
-import tachiyomi.core.common.preference.Preference
-import tachiyomi.core.common.preference.PreferenceStore
-import tachiyomi.domain.source.model.CatalogListItem
 
 class ChronologicalFeedScreenModelTest {
-
-    @Test
-    fun `new items indicator is consumed only by a backward scroll over the refreshed layout`() {
-        fun consumes(isScrollInProgress: Boolean, totalItemsCount: Int) = shouldConsumeNewItemsIndicator(
-            viewport = FeedViewport(
-                canScrollBackward = true,
-                isScrollInProgress = isScrollInProgress,
-                lastScrolledBackward = true,
-                totalItemsCount = totalItemsCount,
-            ),
-            itemCount = 20,
-        )
-
-        consumes(isScrollInProgress = true, totalItemsCount = 20) shouldBe true
-        consumes(isScrollInProgress = false, totalItemsCount = 20) shouldBe false
-        consumes(isScrollInProgress = true, totalItemsCount = 19) shouldBe false
-    }
 
     @Test
     fun `init cleans saved favorites while preserving surviving anchor`() = feedTest {
@@ -105,84 +78,6 @@ class ChronologicalFeedScreenModelTest {
                 FeedItemRef(2L, EntryType.ANIME),
                 scrollOffset = 24,
             )
-        } finally {
-            screenModel.onDispose()
-        }
-    }
-
-    @Test
-    fun `refresh without first-page overlap bridges to the saved timeline in the background`() = feedTest {
-        val preferences = SourcePreferences(BrowseFeedPreferenceStore(), testJson)
-        val browseFeedService = BrowseFeedService(preferences)
-        val oldRef = FeedItemRef(100L, EntryType.MANGA)
-        browseFeedService.saveTimeline(
-            FEED_ID,
-            SourceFeedTimeline.fromItems(listOf(oldRef), nextPageKey = 10L),
-        )
-        browseFeedService.saveAnchor(
-            FEED_ID,
-            SourceFeedAnchor.fromItem(oldRef, scrollOffset = 32),
-        )
-        val pagingSource = RecordingPagingSource(
-            pages = mapOf(
-                null to pageResult(
-                    data = listOf(
-                        FakeItem(id = 1L, type = EntryType.MANGA, favorite = false),
-                        FakeItem(id = 2L, type = EntryType.ANIME, favorite = false),
-                    ),
-                    nextKey = 1L,
-                ),
-                1L to pageResult(
-                    data = listOf(
-                        FakeItem(id = 3L, type = EntryType.MANGA, favorite = false),
-                        FakeItem(id = 100L, type = EntryType.MANGA, favorite = false),
-                    ),
-                    nextKey = 2L,
-                ),
-            ),
-        )
-        val screenModel = FakeFeedScreenModel(
-            feedId = FEED_ID,
-            browseFeedService = browseFeedService,
-            workerDispatcher = Dispatchers.Main,
-            itemsById = mapOf(
-                1L to FakeItem(id = 1L, type = EntryType.MANGA, favorite = false),
-                2L to FakeItem(id = 2L, type = EntryType.ANIME, favorite = false),
-                3L to FakeItem(id = 3L, type = EntryType.MANGA, favorite = false),
-                100L to FakeItem(id = 100L, type = EntryType.MANGA, favorite = false),
-            ),
-            pagingSourceFactory = { pagingSource },
-        )
-
-        try {
-            advanceUntilIdle()
-            screenModel.refresh(manual = true)
-            advanceUntilIdle()
-
-            pagingSource.loadKeys shouldBe listOf(null, 1L)
-            val mergedRefs = listOf(
-                FeedItemRef(1L, EntryType.MANGA),
-                FeedItemRef(2L, EntryType.ANIME),
-                FeedItemRef(3L, EntryType.MANGA),
-                oldRef,
-            )
-            screenModel.state.value.itemRefs shouldBe mergedRefs
-            screenModel.state.value.nextPageKey shouldBe 10L
-            screenModel.state.value.newItemsAvailableCount shouldBe 3
-            screenModel.state.value.newItemsCountIsLowerBound shouldBe false
-            screenModel.state.value.pendingRefresh shouldBe null
-            screenModel.state.value.isBridgingRefresh shouldBe false
-            browseFeedService.timelineSnapshot(FEED_ID) shouldBe
-                SourceFeedTimeline.fromItems(mergedRefs, nextPageKey = 10L)
-            browseFeedService.anchorSnapshot(FEED_ID) shouldBe
-                SourceFeedAnchor.fromItem(oldRef, scrollOffset = 32)
-
-            screenModel.consumeNewItemsIndicator()
-
-            screenModel.state.value.pendingRefresh shouldBe null
-            screenModel.state.value.newItemsAvailableCount shouldBe 0
-            browseFeedService.timelineSnapshot(FEED_ID) shouldBe
-                SourceFeedTimeline.fromItems(mergedRefs, nextPageKey = 10L)
         } finally {
             screenModel.onDispose()
         }

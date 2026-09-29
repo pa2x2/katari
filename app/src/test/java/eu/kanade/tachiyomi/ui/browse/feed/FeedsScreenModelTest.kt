@@ -1,14 +1,9 @@
 package eu.kanade.tachiyomi.ui.browse.feed
 
-import eu.kanade.domain.source.model.BUILTIN_LATEST_PRESET_ID
 import eu.kanade.domain.source.model.BUILTIN_POPULAR_PRESET_ID
-import eu.kanade.domain.source.model.FeedListingMode
 import eu.kanade.domain.source.model.SourceFeed
-import eu.kanade.domain.source.model.SourceFeedContentMode
-import eu.kanade.domain.source.model.SourceFeedPreset
 import eu.kanade.domain.source.service.BrowseFeedService
 import io.kotest.matchers.shouldBe
-import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.toList

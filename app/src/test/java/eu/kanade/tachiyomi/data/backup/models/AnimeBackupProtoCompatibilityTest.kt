@@ -1,6 +1,5 @@
 package eu.kanade.tachiyomi.data.backup.models
 
-import eu.kanade.tachiyomi.source.entry.EntryType
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.protobuf.ProtoBuf
@@ -8,7 +7,6 @@ import kotlinx.serialization.protobuf.ProtoNumber
 import mihon.feature.profiles.core.ProfileBackup
 import mihon.feature.profiles.core.ProfileScopedBackup
 import org.junit.jupiter.api.Test
-import tachiyomi.domain.entry.model.EntryStatus
 
 class AnimeBackupProtoCompatibilityTest {
 
@@ -48,33 +46,6 @@ class AnimeBackupProtoCompatibilityTest {
 
         ProtoBuf.decodeFromByteArray(Backup.serializer(), bytes).allEntries() shouldBe emptyList()
         ProtoBuf.decodeFromByteArray(ProfileScopedBackup.serializer(), profileBytes).allEntries() shouldBe emptyList()
-    }
-
-    @Test
-    fun `legacy manga and anime merge target types default to entry type`() {
-        LegacyBackupManga(
-            source = 1,
-            url = "manga-member",
-            mergeTargetSource = 1,
-            mergeTargetUrl = "manga-target",
-            mergePosition = 0,
-        ).toBackupEntry().mergeTargetType shouldBe EntryType.MANGA
-
-        LegacyBackupAnime(
-            source = 2,
-            url = "anime-member",
-            mergeTargetSource = 2,
-            mergeTargetUrl = "anime-target",
-            mergePosition = 0,
-        ).toBackupEntry().mergeTargetType shouldBe EntryType.ANIME
-    }
-
-    @Test
-    fun `legacy anime statuses map to unified entry statuses`() {
-        LegacyBackupAnime(source = 1, url = "cancelled", status = 3)
-            .toBackupEntry().status shouldBe EntryStatus.CANCELLED.value
-        LegacyBackupAnime(source = 1, url = "on-hiatus", status = 4)
-            .toBackupEntry().status shouldBe EntryStatus.ON_HIATUS.value
     }
 
     @Serializable

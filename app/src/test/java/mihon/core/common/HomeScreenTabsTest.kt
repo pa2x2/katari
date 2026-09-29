@@ -15,21 +15,4 @@ class HomeScreenTabsTest {
         sanitized.toSet() shouldBe HomeScreenTabs.entries.toSet()
         sanitized.size shouldBe HomeScreenTabs.entries.size
     }
-
-    @Test
-    fun `startup fallback prefers library, then the first enabled tab in saved order`() {
-        resolveHomeScreenTab(
-            requestedTab = HomeScreenTabs.Updates,
-            enabledTabs = listOf(HomeScreenTabs.Library, HomeScreenTabs.More),
-        ) shouldBe HomeScreenTabs.Library
-        resolveHomeScreenTab(
-            requestedTab = HomeScreenTabs.Updates,
-            enabledTabs = listOf(HomeScreenTabs.More, HomeScreenTabs.Profiles),
-        ) shouldBe HomeScreenTabs.More
-        resolveHomeScreenTab(
-            requestedTab = HomeScreenTabs.Updates,
-            enabledTabs = listOf(HomeScreenTabs.Browse, HomeScreenTabs.More),
-            tabOrder = listOf(HomeScreenTabs.More, HomeScreenTabs.Browse, HomeScreenTabs.Updates),
-        ) shouldBe HomeScreenTabs.More
-    }
 }

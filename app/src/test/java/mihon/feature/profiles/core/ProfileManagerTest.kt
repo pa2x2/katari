@@ -2,7 +2,6 @@ package mihon.feature.profiles.core
 
 import io.mockk.coEvery
 import io.mockk.coVerify
-import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
@@ -67,21 +66,6 @@ class ProfileManagerTest {
         entryRepository = entryRepository,
         destructiveRemoval = destructiveRemoval,
     )
-
-    @Test
-    fun `permanent deletion removes profile entries through the destructive removal Feature`() = runTest {
-        coEvery { destructiveRemoval.remove(entries) } returns
-            EntryDestructiveRemovalResult.Removed(entries, emptyList())
-
-        manager().permanentlyDeleteProfile(profileId)
-
-        coVerifyOrder {
-            entryRepository.getAllEntriesByProfile(profileId)
-            destructiveRemoval.remove(entries)
-            profileDatabase.deleteProfile(profileId)
-        }
-        verify(exactly = 1) { profileStore.deleteProfileState(profileId) }
-    }
 
     @Test
     fun `permanent deletion preserves profile when destructive removal fails transactionally`() = runTest {

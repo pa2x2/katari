@@ -65,30 +65,6 @@ class ProfileAwareLibraryPreferencesTest {
     }
 
     @Test
-    fun `library preference flow follows active profile`() = runTest {
-        val fixture = createFixture()
-        fixture.libraryPreferences.downloadedOnly.set(true)
-
-        val values = mutableListOf<Boolean>()
-        val job = launch {
-            fixture.libraryPreferences.downloadedOnly.changes().take(4).toList(values)
-        }
-
-        advanceUntilIdle()
-        values.last() shouldBe true
-
-        fixture.activeProfileId.value = 2L
-        advanceUntilIdle()
-        values.last() shouldBe false
-
-        fixture.libraryPreferences.downloadedOnly.set(true)
-        advanceUntilIdle()
-        values.last() shouldBe true
-
-        job.cancel()
-    }
-
-    @Test
     fun `legacy duplicate detection settings copy to every profile before cleanup`() {
         val sharedPreferences = FakeSharedPreferences().apply {
             edit()

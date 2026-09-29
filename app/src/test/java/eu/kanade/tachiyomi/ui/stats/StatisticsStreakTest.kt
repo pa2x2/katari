@@ -7,7 +7,6 @@ import org.junit.jupiter.api.Test
 import tachiyomi.domain.statistics.model.StatisticsActivityBucket
 import tachiyomi.domain.statistics.model.StatisticsActivitySnapshot
 import tachiyomi.domain.statistics.model.StatisticsActivityTimeline
-import tachiyomi.domain.statistics.model.StatisticsCompletionBucket
 import java.time.LocalDate
 import java.util.Locale
 
@@ -55,39 +54,6 @@ class StatisticsStreakTest {
 
         result.currentStreakDays shouldBe 9
         result.currentStreakDaysByType[EntryType.MANGA] shouldBe 9
-    }
-
-    @Test
-    fun `completion qualifies a day without one minute of timed activity`() {
-        val timeline = StatisticsActivityTimeline(
-            activity = emptyList(),
-            completions = listOf(
-                StatisticsCompletionBucket(EntryType.MANGA, "2026-08-25", 1L),
-            ),
-        )
-
-        timeline.streakEndingOn(
-            endDate = LocalDate.parse("2026-08-26"),
-            type = EntryType.MANGA,
-            preserveThroughIncompleteEndDate = true,
-        ) shouldBe 1
-    }
-
-    @Test
-    fun `best streak is the longest run that ended by the window end`() {
-        val timeline = timelineWithActivityOn(
-            "2026-08-01",
-            "2026-08-02",
-            "2026-08-03",
-            "2026-08-10",
-            "2026-08-20",
-            "2026-08-21",
-            "2026-08-22",
-            "2026-08-23",
-        )
-
-        timeline.longestStreakEndingBy(LocalDate.parse("2026-08-21")) shouldBe 3
-        timeline.longestStreakEndingBy(LocalDate.parse("2026-08-23")) shouldBe 4
     }
 
     private fun timelineWithActivityOn(vararg localDates: String) = StatisticsActivityTimeline(

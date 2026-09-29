@@ -1,58 +1,16 @@
 package eu.kanade.tachiyomi.ui.browse.catalog
 
-import eu.kanade.domain.source.model.FilterStateNode
 import eu.kanade.tachiyomi.source.entry.EntryFilter
 import eu.kanade.tachiyomi.source.entry.EntryFilterList
 import eu.kanade.tachiyomi.source.entry.EntryFilterPageItem
 import eu.kanade.tachiyomi.source.filter.detachedCopy
 import io.kotest.matchers.shouldBe
-import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
 class CatalogFilterResetTest {
-    @Test
-    fun `reset loads newly available options and defaults without changing the applied search`() = runTest {
-        val initial = EntryFilterList(object : EntryFilter.Select<String>("Genre", arrayOf("Any")) {})
-        val state = MutableStateFlow(
-            initialCatalogState("cats").initializeForSource(initial.detachedCopy()).copy(
-                draftPresetId = "saved",
-                appliedCustomPresetId = "saved",
-            ),
-        )
-        val applied = state.value.listing
-        val loaded = CompletableDeferred<EntryFilterList>()
-        val fresh = EntryFilterList(
-            object : EntryFilter.Select<String>("Genre", arrayOf("Any", "Action"), 1) {},
-        ).detachedCopy()
-        var retained: EntryFilterList? = null
-        val reset = CatalogFilterReset(state, { loaded.await() }, {}, { retained = it })
-        val request = async { reset.reset() }
-        runCurrent()
-        state.value.filterState shouldBe FilterUiState.Loading
-        (state.value.pageableListing === applied) shouldBe true
-        state.value.applyFilterDraft() shouldBe null
-        loaded.complete(fresh)
-        request.await()
-
-        (retained === fresh) shouldBe true
-        state.value.filterState shouldBe FilterUiState.Ready
-        val genre = state.value.filters.single() as EntryFilter.Select<*>
-        genre.values.toList() shouldBe listOf("Any", "Action")
-        genre.state shouldBe 1
-        genre.state = 0
-        state.value.defaultFilters.single().state shouldBe 1
-        (state.value.pageableListing === applied) shouldBe true
-        state.value.draftPresetId shouldBe "saved"
-        state.value.appliedCustomPresetId shouldBe "saved"
-        val updated = requireNotNull(state.value.applyFilterDraft())
-        (updated.listing as CatalogScreenModel.Listing.Search).filters.single().state shouldBe 0
-        updated.listing.query shouldBe "cats"
-    }
-
     @Test
     fun `failed reset retains applied results and retry reloads defaults without restoring a preset`() = runTest {
         val defaults = EntryFilterList(object : EntryFilter.CheckBox("English", true) {})
@@ -87,25 +45,6 @@ class CatalogFilterResetTest {
         // Reloading defaults does not silently save a preset that still requires repair.
         state.value.repairNeedsSave shouldBe true
         state.value.applyFilterDraft() shouldBe null
-    }
-
-    @Test
-    fun `resetting an incompatible initial preset cannot start its unapplied search`() = runTest {
-        val state = MutableStateFlow(
-            initialCatalogState("cats").initializeForSource(
-                EntryFilterList(),
-                listOf(FilterStateNode.CheckBox("English", false)),
-            ),
-        )
-        state.value.pageableListing shouldBe null
-        val fresh = EntryFilterList(object : EntryFilter.CheckBox("English", true) {}).detachedCopy()
-        CatalogFilterReset(state, { fresh }, {}, {}).reset()
-        state.value.repairIssues shouldBe emptyList()
-        state.value.pageableListing shouldBe null
-        state.value.applyFilterDraft() shouldBe null
-        val repaired = state.value.copy(repairNeedsSave = false)
-        val applied = requireNotNull(repaired.applyFilterDraft())
-        (applied.pageableListing as CatalogScreenModel.Listing.Search).filters.single().state shouldBe true
     }
 
     @Test

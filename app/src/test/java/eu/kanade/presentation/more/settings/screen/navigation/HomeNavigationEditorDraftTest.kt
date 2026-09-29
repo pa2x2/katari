@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test
 class HomeNavigationEditorDraftTest {
 
     @Test
-    fun `staged navigation survives serialization without changing placement`() {
+    fun `staged navigation survives serialization and invalid drafts are ignored`() {
         val draft = HomeNavigationEditorDraft(
             configuration = HomeNavigationConfiguration(
                 primaryTabs = listOf(
@@ -29,10 +29,6 @@ class HomeNavigationEditorDraftTest {
         )
 
         draft.serialize().toNavigationDraftOrNull() shouldBe draft
-    }
-
-    @Test
-    fun `invalid staged navigation is ignored`() {
         "Library;More;;Library;Library".toNavigationDraftOrNull() shouldBe null
         "not a navigation draft".toNavigationDraftOrNull() shouldBe null
     }

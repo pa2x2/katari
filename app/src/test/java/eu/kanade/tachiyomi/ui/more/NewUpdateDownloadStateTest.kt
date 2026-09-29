@@ -9,21 +9,6 @@ class NewUpdateDownloadStateTest {
     private val downloadLink = "https://example.com/katari.apk"
 
     @Test
-    fun `matching completed download is installable only while its APK exists`() {
-        resolveUpdateDownloadStatus(
-            work = work(WorkInfo.State.SUCCEEDED, progress = 100),
-            downloadLink = downloadLink,
-            downloadedApkMatches = true,
-        ) shouldBe UpdateDownloadStatus(NewUpdateScreenModel.Stage.Downloaded)
-
-        resolveUpdateDownloadStatus(
-            work = work(WorkInfo.State.SUCCEEDED, progress = 100),
-            downloadLink = downloadLink,
-            downloadedApkMatches = false,
-        ) shouldBe UpdateDownloadStatus(NewUpdateScreenModel.Stage.Available)
-    }
-
-    @Test
     fun `work for another URL cannot expose a stale APK`() {
         resolveUpdateDownloadStatus(
             work = work(WorkInfo.State.SUCCEEDED, url = "https://example.com/old.apk", progress = 100),

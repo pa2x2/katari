@@ -3,9 +3,7 @@ package eu.kanade.tachiyomi.ui.stats
 import eu.kanade.tachiyomi.source.entry.EntryType
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
-import tachiyomi.domain.statistics.model.StatisticsActivityBucket
 import tachiyomi.domain.statistics.model.StatisticsActivitySegment
-import java.time.DayOfWeek
 import java.time.ZonedDateTime
 
 class StatisticsActivityRhythmTest {

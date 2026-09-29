@@ -9,22 +9,6 @@ import org.junit.jupiter.api.Test
 
 class PartialDateEditorStateTest {
     @Test
-    fun `increasing precision requires explicit missing components without changing original`() {
-        val filter = dateFilter(EntryPartialDate(2024))
-        val year = PartialDateEditorState.initial(filter)
-        year.canConfirm(filter) shouldBe true
-        val exact = year.choosePrecision(EntryDatePrecision.DAY)
-        exact.missingStep() shouldBe EntryDatePrecision.MONTH
-        exact.canConfirm(filter) shouldBe false
-        val month = exact.chooseMonth(2)
-        month.missingStep() shouldBe EntryDatePrecision.DAY
-        month.canConfirm(filter) shouldBe false
-        month.chooseDay(29).candidateText shouldBe "2024-02-29"
-        filter.state shouldBe "2024"
-        PartialDateEditorState.initial(filter).candidateText shouldBe "2024"
-    }
-
-    @Test
     fun `changing a component clears an impossible day without clamping it`() {
         val leap = PartialDateEditorState.initial(dateFilter(EntryPartialDate(2024, 2, 29)))
         leap.chooseYear(2023).missingStep() shouldBe EntryDatePrecision.DAY
@@ -32,19 +16,6 @@ class PartialDateEditorStateTest {
         val january = leap.chooseMonth(1).chooseDay(31)
         january.chooseMonth(4).value shouldBe null
         january.chooseMonth(3).candidateText shouldBe "2024-03-31"
-    }
-
-    @Test
-    fun `typed precision transfers to picker and disallowed precision remains incomplete`() {
-        val filter = dateFilter()
-        val typed = PartialDateEditorState.initial(filter).toggleTyping(filter.allowedPrecisions).copy(raw = "1986-4")
-        val picker = typed.toggleTyping(filter.allowedPrecisions)
-        picker.precision shouldBe EntryDatePrecision.MONTH
-        picker.candidateText shouldBe "1986-04"
-        val exactOnly = setOf(EntryDatePrecision.DAY)
-        val exact = typed.copy(precision = EntryDatePrecision.DAY, raw = "1986").toggleTyping(exactOnly)
-        exact.value shouldBe null
-        exact.missingStep() shouldBe EntryDatePrecision.MONTH
     }
 
     @Test

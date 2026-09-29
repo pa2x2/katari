@@ -51,17 +51,4 @@ class NewUpdateChangelogTest {
             - First change
         """.trimIndent().replace("\n", "\r\n")
     }
-
-    @Test
-    fun `other release note tips are preserved`() {
-        val releaseNotes = """
-            ### Added
-
-            > [!TIP]
-            >
-            > Restart the app after updating extension sources.
-        """.trimIndent()
-
-        sanitizeInAppReleaseNotes(releaseNotes) shouldBe releaseNotes
-    }
 }

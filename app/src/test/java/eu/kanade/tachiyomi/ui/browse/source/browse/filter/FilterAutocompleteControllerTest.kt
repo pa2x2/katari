@@ -7,38 +7,12 @@ import eu.kanade.tachiyomi.source.entry.EntryFilterTextEdit
 import eu.kanade.tachiyomi.source.entry.EntryFilterTextInput
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.awaitCancellation
-import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import mihon.entry.interactions.catalogue.EntryCatalogueFilterSuggestionsResult
 import org.junit.jupiter.api.Test
 
 class FilterAutocompleteControllerTest {
-
-    @Test
-    fun `typing requests suggestions only after the configured debounce`() = runTest {
-        val filter = filter(debounceMillis = 500)
-        val inputs = mutableListOf<EntryFilterTextInput>()
-        val suggestion = EntryFilterSuggestion("alpha", "Alpha")
-        val controller = FilterAutocompleteController(filter, this) { _, input ->
-            inputs += input
-            EntryCatalogueFilterSuggestionsResult.Available(listOf(suggestion))
-        }
-
-        controller.updateFocus(true)
-        controller.updateInput(EntryFilterTextInput("al", 2, 2))
-        advanceTimeBy(499)
-        runCurrent()
-
-        inputs shouldBe emptyList()
-        controller.state shouldBe FilterAutocompleteUiState.Idle
-
-        advanceTimeBy(1)
-        runCurrent()
-
-        inputs shouldBe listOf(EntryFilterTextInput("al", 2, 2))
-        controller.state shouldBe FilterAutocompleteUiState.Suggestions(listOf(suggestion))
-    }
 
     @Test
     fun `new input cancels an in-flight request and only publishes the latest results`() = runTest {

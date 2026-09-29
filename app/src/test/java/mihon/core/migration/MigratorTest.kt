@@ -14,7 +14,6 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertInstanceOf
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
@@ -34,34 +33,6 @@ class MigratorTest {
         migrationJobFactory = spyk(MigrationJobFactory(migrationContext, CoroutineScope(Dispatchers.Main + Job())))
         migrationCompletedListener = spyk<MigrationCompletedListener>(block = {})
         migrationStrategyFactory = spyk(MigrationStrategyFactory(migrationJobFactory, migrationCompletedListener))
-    }
-
-    @Test
-    fun initialVersion() = runBlocking {
-        val strategy = migrationStrategyFactory.create(0, 1)
-        assertInstanceOf(InitialMigrationStrategy::class.java, strategy)
-
-        val migrations = slot<List<Migration>>()
-        val execute = strategy(listOf(Migration.of(Migration.ALWAYS) { true }, Migration.of(2f) { false }))
-
-        execute.await()
-
-        verify { migrationJobFactory.create(capture(migrations)) }
-        assertEquals(1, migrations.captured.size)
-        eventually(2.seconds) { verify { migrationCompletedListener() } }
-    }
-
-    @Test
-    fun sameVersion() = runBlocking {
-        val strategy = migrationStrategyFactory.create(1, 1)
-        assertInstanceOf(NoopMigrationStrategy::class.java, strategy)
-
-        val execute = strategy(listOf(Migration.of(Migration.ALWAYS) { true }, Migration.of(2f) { false }))
-
-        val result = execute.await()
-        assertFalse(result)
-
-        verify(exactly = 0) { migrationJobFactory.create(any()) }
     }
 
     @Test

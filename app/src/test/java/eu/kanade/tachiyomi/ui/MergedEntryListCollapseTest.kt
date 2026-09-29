@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test
 class MergedEntryListCollapseTest {
 
     @Test
-    fun `keeps newest record for each visible entry in source order`() {
+    fun `merged entries collapse to their newest record while unmerged repeats are preserved`() {
         val records = listOf(
             Record(childId = 31, actualEntryId = 12, visibleEntryId = 10),
             Record(childId = 22, actualEntryId = 21, visibleEntryId = 20),
@@ -21,20 +21,17 @@ class MergedEntryListCollapseTest {
         )
 
         collapsed.map(Record::childId) shouldBe listOf(31L, 22L, 40L)
-    }
 
-    @Test
-    fun `preserves repeated records for an unmerged entry`() {
-        val records = listOf(
+        val unmerged = listOf(
             Record(childId = 1, actualEntryId = 10, visibleEntryId = 10),
             Record(childId = 2, actualEntryId = 10, visibleEntryId = 10),
             Record(childId = 3, actualEntryId = 20, visibleEntryId = 20),
         )
 
-        records.collapseByVisibleEntry(
+        unmerged.collapseByVisibleEntry(
             actualEntryId = Record::actualEntryId,
             visibleEntryId = Record::visibleEntryId,
-        ) shouldBe records
+        ) shouldBe unmerged
     }
 
     private data class Record(

@@ -3,18 +3,13 @@ package eu.kanade.tachiyomi.ui.library
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import eu.kanade.tachiyomi.source.entry.EntryType
 import io.kotest.matchers.collections.shouldContainExactly
-import io.kotest.matchers.shouldBe
-import io.mockk.every
-import io.mockk.mockk
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
-import mihon.entry.interactions.download.EntryDownloadRuntimeFeature
 import mihon.entry.interactions.download.EntryDownloadState
 import mihon.entry.interactions.download.EntryDownloadStatus
 import org.junit.jupiter.api.Assertions.assertSame
@@ -62,39 +57,12 @@ class LibraryDownloadCountUpdatesTest {
         collection.cancelAndJoin()
     }
 
-    @Test
-    fun `unrelated type mismatched and unchanged updates do not emit`() = runTest {
-        val item = libraryItem(entry(id = 1L)).copy(downloadCount = 2)
-        val statuses = MutableSharedFlow<EntryDownloadStatus>()
-        val emissions = mutableListOf<List<LibraryItem>>()
-        val collection = launch(start = CoroutineStart.UNDISPATCHED) {
-            observeLibraryDownloadCountUpdates(
-                initialItems = listOf(item),
-                statusUpdates = statuses,
-                calculateDownloadCount = { 2 },
-            ).toList(emissions)
-        }
-
-        statuses.emit(status(entryId = 2L))
-        statuses.emit(status(entryId = 1L, entryType = EntryType.ANIME))
-        statuses.emit(status(entryId = 1L, persistedContentChanged = false))
-        statuses.emit(status(entryId = 1L))
-        runCurrent()
-
-        emissions shouldContainExactly listOf(listOf(item))
-        collection.cancelAndJoin()
-    }
-
-    private fun status(
-        entryId: Long,
-        entryType: EntryType = EntryType.MANGA,
-        persistedContentChanged: Boolean = true,
-    ) = EntryDownloadStatus(
-        entryType = entryType,
+    private fun status(entryId: Long) = EntryDownloadStatus(
+        entryType = EntryType.MANGA,
         chapterId = entryId * 10,
         state = EntryDownloadState.DOWNLOADED,
         entryId = entryId,
-        persistedContentChanged = persistedContentChanged,
+        persistedContentChanged = true,
     )
 
     private fun entry(

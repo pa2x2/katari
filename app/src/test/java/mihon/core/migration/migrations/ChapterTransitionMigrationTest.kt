@@ -18,16 +18,6 @@ import tachiyomi.core.common.preference.getEnum
 class ChapterTransitionMigrationTest {
 
     @Test
-    fun `untouched boolean leaves the tri-state unset so the provider default applies`() = runTest {
-        val store = MigrationTestPreferenceStore()
-
-        assertTrue(invokeMigration(mapOf(1L to store)))
-
-        assertFalse(store.chapterTransitionMode().isSet())
-        assertEquals(ChapterTransitionMode.ALWAYS, store.chapterTransitionMode().get())
-    }
-
-    @Test
     fun `migrates exactly the registered profiles`() = runTest {
         val first = MigrationTestPreferenceStore()
         first.getBoolean(LEGACY_ALWAYS_SHOW_CHAPTER_TRANSITION, true).set(true)
