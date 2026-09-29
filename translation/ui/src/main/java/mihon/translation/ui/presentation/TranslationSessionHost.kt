@@ -29,7 +29,6 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.platform.toClipEntry
 import androidx.compose.ui.semantics.hideFromAccessibility
 import androidx.compose.ui.semantics.semantics
@@ -303,7 +302,6 @@ private fun TranslationSessionSheetDialog(
                 isTabletUi = isTabletUi,
                 enableImplicitDismiss = true,
                 onDismissRequest = onDismiss,
-                modifier = Modifier.testTag(TRANSLATION_SESSION_SHEET_TAG),
             ) {
                 TranslationSessionContent(
                     state = state,
@@ -360,8 +358,7 @@ private fun TranslationSessionPopup(
                 .width(maximumWidth)
                 .then(
                     if (visible) Modifier else Modifier.semantics { hideFromAccessibility() },
-                )
-                .testTag(TRANSLATION_SESSION_POPUP_TAG),
+                ),
             shape = MaterialTheme.shapes.extraLarge,
             color = MaterialTheme.colorScheme.surfaceContainerHigh,
             tonalElevation = 6.dp,
@@ -567,6 +564,3 @@ private val translationPopupProperties = PopupProperties(
     dismissOnClickOutside = false,
     clippingEnabled = false,
 )
-
-internal const val TRANSLATION_SESSION_POPUP_TAG = "translation_session_popup"
-internal const val TRANSLATION_SESSION_SHEET_TAG = "translation_session_sheet"

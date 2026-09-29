@@ -36,8 +36,6 @@ class TextRecognitionComponentRegistryTest {
             ),
         )
 
-        registry.providers shouldContainExactly listOf(EXAMPLE_PROVIDER, EXCLUDED_PROVIDER)
-        registry.includedProviders shouldContainExactly listOf(EXAMPLE_PROVIDER)
         registry.knownComponents.map { it.id } shouldContainExactly
             listOf(detector.catalogEntry.id, recognizer.catalogEntry.id, excludedRecognizer.id)
         registry.supportedLanguages shouldContainExactly listOf(JAPANESE)

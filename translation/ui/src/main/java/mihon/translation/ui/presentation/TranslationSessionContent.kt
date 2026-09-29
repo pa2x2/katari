@@ -29,7 +29,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
@@ -103,15 +102,10 @@ internal fun TranslationSessionContent(
                 } else {
                     Modifier.fillMaxWidth()
                 },
-            )
-            .testTag(TRANSLATION_SESSION_CONTENT_TAG),
+            ),
     ) {
         if (showProgress && inProgress) {
-            LinearProgressIndicator(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag(TRANSLATION_SESSION_PROGRESS_TAG),
-            )
+            LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
         }
         if (showHeader && !compactResult) {
             val documentationUrl = state.contextualDocumentationUrl().takeIf { compact }
@@ -941,6 +935,3 @@ private fun LanguageTag.displayName(): String {
         .getDisplayName(Locale.getDefault())
         .ifBlank { value }
 }
-
-internal const val TRANSLATION_SESSION_PROGRESS_TAG = "translation_session_progress"
-internal const val TRANSLATION_SESSION_CONTENT_TAG = "translation_session_content"

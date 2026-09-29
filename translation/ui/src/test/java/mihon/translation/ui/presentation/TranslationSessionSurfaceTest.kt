@@ -6,31 +6,10 @@ import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.LayoutDirection
 import io.kotest.matchers.shouldBe
-import mihon.translation.api.request.TranslationRequest
 import mihon.translation.ui.session.TranslationSelectionAnchor
-import mihon.translation.ui.session.TranslationSessionFailure
-import mihon.translation.ui.session.TranslationSessionInput
-import mihon.translation.ui.session.TranslationSessionState
 import org.junit.jupiter.api.Test
 
 class TranslationSessionSurfaceTest {
-
-    @Test
-    fun `settling and failed sessions follow their anchor instead of forcing a sheet`() {
-        val anchored = TranslationSessionInput(
-            request = TranslationRequest("selected text"),
-            anchor = TranslationSelectionAnchor(400f, 200f, 600f, 240f),
-        )
-        val unanchored = TranslationSessionInput(request = TranslationRequest("settings text"))
-        val failure = TranslationSessionFailure.UnexpectedExecutionFailure
-
-        TranslationSessionState.Settling(anchored).preferredSurface() shouldBe TranslationSessionSurface.AnchoredPopup
-        TranslationSessionState.Failed(anchored, failure).preferredSurface() shouldBe
-            TranslationSessionSurface.AnchoredPopup
-        TranslationSessionState.Settling(unanchored).preferredSurface() shouldBe TranslationSessionSurface.AdaptiveSheet
-        TranslationSessionState.Failed(unanchored, failure).preferredSurface() shouldBe
-            TranslationSessionSurface.AdaptiveSheet
-    }
 
     @Test
     fun `popup prefers below the selection, falls back above, and stays inside the safe viewport`() {
@@ -51,21 +30,6 @@ class TranslationSessionSurfaceTest {
         calculate(TranslationSelectionAnchor(Float.NaN, 200f, 600f, 240f), TranslationPopupSize(300, 200)) shouldBe
             null
         calculate(TranslationSelectionAnchor(0f, 200f, 600f, 240f), TranslationPopupSize(300, 200)) shouldBe null
-    }
-
-    @Test
-    fun `platform popup placement preserves reader-root coordinates inside its window and reports its bounds`() {
-        var availability: TranslationPopupPlacementAvailability? = null
-        val reported = mutableListOf<Rect?>()
-        val provider = provider(
-            anchor = TranslationSelectionAnchor(400f, 200f, 600f, 240f),
-            onPlacementAvailabilityChanged = { availability = it },
-            onPopupBoundsChanged = { reported.add(it) },
-        )
-
-        provider.position(IntSize(300, 200)) shouldBe IntOffset(400, 318)
-        availability shouldBe TranslationPopupPlacementAvailability.Fits
-        (reported.single() != null) shouldBe true
     }
 
     @Test

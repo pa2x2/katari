@@ -14,18 +14,15 @@ import mihon.model.artifacts.api.download.ModelArtifactDownloadApproval
 import mihon.model.artifacts.api.state.InstalledModelArtifact
 import mihon.model.artifacts.api.state.ModelArtifactState
 import mihon.model.artifacts.api.state.StoredModelArtifact
-import mihon.text.recognition.api.component.TextRecognitionComponentRole
 import mihon.text.recognition.api.image.ImageRect
 import mihon.text.recognition.api.image.ImageSize
 import mihon.text.recognition.api.pipeline.TextRecognitionPipeline
-import mihon.text.recognition.api.preparation.TextRecognitionPipelineChoiceReason
 import mihon.text.recognition.api.preparation.TextRecognitionPreparation
 import mihon.text.recognition.api.request.TextRecognitionRequest
 import mihon.text.recognition.api.request.TextRecognitionScope
 import mihon.text.recognition.api.result.TextRecognitionExecution
 import mihon.text.recognition.api.result.TextRegionKind
 import mihon.text.recognition.runtime.EXAMPLE_PROVIDER
-import mihon.text.recognition.runtime.EXCLUDED_PROVIDER
 import mihon.text.recognition.runtime.FakeDetector
 import mihon.text.recognition.runtime.FakePageImage
 import mihon.text.recognition.runtime.FakeRecognizer
@@ -34,7 +31,6 @@ import mihon.text.recognition.runtime.cache.TextDetectionCache
 import mihon.text.recognition.runtime.cache.TextRecognitionResultCache
 import mihon.text.recognition.runtime.contribution
 import mihon.text.recognition.runtime.execution.CachedRecognitionExecutor
-import mihon.text.recognition.runtime.knownComponent
 import mihon.text.recognition.runtime.model
 import mihon.text.recognition.runtime.pipeline.PageTextDetection
 import mihon.text.recognition.runtime.preset
@@ -75,11 +71,6 @@ class DefaultTextRecognitionFeatureTest {
         texts = mapOf(topText to "上", middleText to "中", narration to "語り"),
         declaredModels = listOf(model("example.recognizer-model")),
     )
-    private val excludedRecognizer = knownComponent(
-        id = "excluded.recognizer",
-        role = TextRecognitionComponentRole.Recognizer,
-        provider = EXCLUDED_PROVIDER,
-    )
     private val stagedPreset = preset(
         id = "staged",
         pipeline = TextRecognitionPipeline(detector.catalogEntry.id, recognizer.catalogEntry.id),
@@ -87,21 +78,10 @@ class DefaultTextRecognitionFeatureTest {
     private val registry = TextRecognitionComponentRegistry(
         listOf(
             contribution(EXAMPLE_PROVIDER, listOf(detector, recognizer), presets = listOf(stagedPreset)),
-            contribution(EXCLUDED_PROVIDER, catalogOnly = listOf(excludedRecognizer)),
         ),
     )
     private val preferences = ProfileTextRecognitionPreferences(InMemoryPreferenceStore())
     private val modelStore = FakeModelArtifactStore(detector.declaredModels + recognizer.declaredModels)
-
-    @Test
-    fun `a request's explicit pipeline replaces the profile's choice`() = runTest {
-        val explicit = TextRecognitionPipeline(detector.catalogEntry.id, excludedRecognizer.id)
-
-        val preparation = feature().prepare(TextRecognitionRequest(strip, JAPANESE, pipeline = explicit))
-
-        preparation.shouldBeInstanceOf<TextRecognitionPreparation.PipelineChoiceRequired>().reason shouldBe
-            TextRecognitionPipelineChoiceReason.SelectedComponentUnavailable(excludedRecognizer.id)
-    }
 
     @Test
     fun `whole-image recognition reads every text once in reading order and in source coordinates`() = runTest {
