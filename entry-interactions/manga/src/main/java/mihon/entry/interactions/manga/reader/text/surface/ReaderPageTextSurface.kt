@@ -14,10 +14,8 @@ internal class ReaderPageTextSurface(
     private val view: ReaderPageImageView,
 ) : MangaPageTextSurface {
 
-    override suspend fun displayedImage(): DisplayedPageImage? {
-        val (encoded, cropBorders) = view.displayedStillImage() ?: return null
-        return MangaDisplayedPageImage.open(encoded, cropBorders)
-    }
+    override suspend fun displayedImage(): DisplayedPageImage? =
+        view.displayedStillImage()?.let { MangaDisplayedPageImage.open(it) }
 
     override fun imageToWindow(rect: ImageRect, imageSize: ImageSize): RectF? = view.imageToWindow(rect, imageSize)
 

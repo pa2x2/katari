@@ -14,12 +14,14 @@ import eu.kanade.tachiyomi.source.model.Page
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
 import eu.kanade.tachiyomi.ui.reader.readerFormattedMessage
 import eu.kanade.tachiyomi.ui.reader.readerWebViewIntent
+import eu.kanade.tachiyomi.ui.reader.viewer.ProcessedPageImage
 import eu.kanade.tachiyomi.ui.reader.viewer.ReaderPageImageView
 import eu.kanade.tachiyomi.ui.reader.viewer.ReaderProgressIndicator
 import eu.kanade.tachiyomi.ui.reader.viewer.progressive.ReaderPageProgressivePreviewConfig
 import eu.kanade.tachiyomi.ui.reader.viewer.progressive.ReaderPageProgressiveScaleMode
 import eu.kanade.tachiyomi.ui.reader.viewer.progressive.ReaderPageProgressiveSide
 import eu.kanade.tachiyomi.ui.reader.viewer.progressive.ReaderPageProgressiveTransformation
+import eu.kanade.tachiyomi.ui.reader.viewer.transformedPageImage
 import eu.kanade.tachiyomi.util.system.dpToPx
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.MainScope
@@ -28,6 +30,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
 import logcat.LogPriority
 import mihon.entry.interactions.manga.databinding.ReaderErrorBinding
+import mihon.entry.interactions.manga.reader.text.geometry.MangaPageTransform
 import mihon.entry.interactions.manga.reader.text.surface.MangaPageTextSurface
 import mihon.entry.interactions.manga.reader.text.surface.ReaderPageTextSurface
 import okio.Buffer
@@ -222,20 +225,22 @@ internal class WebtoonPageHolder(
         val streamFn = page?.stream ?: return
 
         try {
-            val (source, isAnimated) = withIOContext {
-                val source = streamFn().use { process(Buffer().readFrom(it)) }
-                val isAnimated = ImageUtil.isAnimatedAndSupported(source)
-                Pair(source, isAnimated)
+            val (processed, isAnimated) = withIOContext {
+                val processed = streamFn().use { process(Buffer().readFrom(it)) }
+                val isAnimated = ImageUtil.isAnimatedAndSupported(processed.source)
+                Pair(processed, isAnimated)
             }
             withUIContext {
                 frame.setImage(
-                    source,
+                    processed.source,
                     isAnimated,
                     ReaderPageImageView.Config(
                         zoomDuration = viewer.config.doubleTapAnimDuration,
                         minimumScaleType = SubsamplingScaleImageView.SCALE_TYPE_FIT_WIDTH,
                         cropBorders = viewer.config.imageCropBorders,
                     ),
+                    processed.transform,
+                    processed.rawContent,
                 )
                 removeErrorLayout()
             }
@@ -247,7 +252,7 @@ internal class WebtoonPageHolder(
         }
     }
 
-    private fun process(imageSource: BufferedSource): BufferedSource {
+    private fun process(imageSource: BufferedSource): ProcessedPageImage {
         if (viewer.config.dualPageRotateToFit) {
             return rotateDualPage(imageSource)
         }
@@ -256,11 +261,15 @@ internal class WebtoonPageHolder(
             val isDoublePage = ImageUtil.isWideImage(imageSource)
             if (isDoublePage) {
                 val upperSide = if (viewer.config.dualPageInvert) ImageUtil.Side.LEFT else ImageUtil.Side.RIGHT
-                return ImageUtil.splitAndMerge(imageSource, upperSide)
+                return transformedPageImage(
+                    raw = imageSource,
+                    transform = { MangaPageTransform.Stacked(it, upperSide) },
+                    derive = { ImageUtil.splitAndMerge(it, upperSide) },
+                )
             }
         }
 
-        return imageSource
+        return ProcessedPageImage(imageSource)
     }
 
     private fun progressivePreviewConfig(): ReaderPageProgressivePreviewConfig {
@@ -282,13 +291,17 @@ internal class WebtoonPageHolder(
         )
     }
 
-    private fun rotateDualPage(imageSource: BufferedSource): BufferedSource {
+    private fun rotateDualPage(imageSource: BufferedSource): ProcessedPageImage {
         val isDoublePage = ImageUtil.isWideImage(imageSource)
         return if (isDoublePage) {
-            val rotation = if (viewer.config.dualPageRotateToFitInvert) -90f else 90f
-            ImageUtil.rotateImage(imageSource, rotation)
+            val clockwise = !viewer.config.dualPageRotateToFitInvert
+            transformedPageImage(
+                raw = imageSource,
+                transform = { MangaPageTransform.Rotated(it, clockwise) },
+                derive = { ImageUtil.rotateImage(it, if (clockwise) 90f else -90f) },
+            )
         } else {
-            imageSource
+            ProcessedPageImage(imageSource)
         }
     }
 

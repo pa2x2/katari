@@ -9,12 +9,14 @@ import eu.kanade.tachiyomi.ui.reader.model.InsertPage
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
 import eu.kanade.tachiyomi.ui.reader.readerFormattedMessage
 import eu.kanade.tachiyomi.ui.reader.readerWebViewIntent
+import eu.kanade.tachiyomi.ui.reader.viewer.ProcessedPageImage
 import eu.kanade.tachiyomi.ui.reader.viewer.ReaderPageImageView
 import eu.kanade.tachiyomi.ui.reader.viewer.ReaderProgressIndicator
 import eu.kanade.tachiyomi.ui.reader.viewer.progressive.ReaderPageProgressivePreviewConfig
 import eu.kanade.tachiyomi.ui.reader.viewer.progressive.ReaderPageProgressiveSide
 import eu.kanade.tachiyomi.ui.reader.viewer.progressive.ReaderPageProgressiveTransformation
 import eu.kanade.tachiyomi.ui.reader.viewer.progressive.toReaderPageProgressiveScaleMode
+import eu.kanade.tachiyomi.ui.reader.viewer.transformedPageImage
 import eu.kanade.tachiyomi.widget.ViewPagerAdapter
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.MainScope
@@ -23,6 +25,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
 import logcat.LogPriority
 import mihon.entry.interactions.manga.databinding.ReaderErrorBinding
+import mihon.entry.interactions.manga.reader.text.geometry.MangaPageTransform
 import mihon.entry.interactions.manga.reader.text.surface.MangaPageTextSurface
 import mihon.entry.interactions.manga.reader.text.surface.ReaderPageTextSurface
 import okio.Buffer
@@ -176,19 +179,19 @@ internal class PagerPageHolder(
         val streamFn = page.stream ?: return
 
         try {
-            val (source, isAnimated, background) = withIOContext {
-                val source = streamFn().use { process(item, Buffer().readFrom(it)) }
-                val isAnimated = ImageUtil.isAnimatedAndSupported(source)
+            val (processed, isAnimated, background) = withIOContext {
+                val processed = streamFn().use { process(item, Buffer().readFrom(it)) }
+                val isAnimated = ImageUtil.isAnimatedAndSupported(processed.source)
                 val background = if (!isAnimated && viewer.config.automaticBackground) {
-                    ImageUtil.chooseBackground(context, source.peek().inputStream())
+                    ImageUtil.chooseBackground(context, processed.source.peek().inputStream())
                 } else {
                     null
                 }
-                Triple(source, isAnimated, background)
+                Triple(processed, isAnimated, background)
             }
             withUIContext {
                 setImage(
-                    source,
+                    processed.source,
                     isAnimated,
                     Config(
                         zoomDuration = viewer.config.doubleTapAnimDuration,
@@ -197,6 +200,8 @@ internal class PagerPageHolder(
                         zoomStartPosition = viewer.config.imageZoomType,
                         landscapeZoom = viewer.config.landscapeZoom,
                     ),
+                    processed.transform,
+                    processed.rawContent,
                 )
                 if (!isAnimated) {
                     pageBackground = background
@@ -211,13 +216,13 @@ internal class PagerPageHolder(
         }
     }
 
-    private fun process(page: ReaderPage, imageSource: BufferedSource): BufferedSource {
+    private fun process(page: ReaderPage, imageSource: BufferedSource): ProcessedPageImage {
         if (viewer.config.dualPageRotateToFit) {
             return rotateDualPage(imageSource)
         }
 
         if (!viewer.config.dualPageSplit) {
-            return imageSource
+            return ProcessedPageImage(imageSource)
         }
 
         if (page is InsertPage) {
@@ -226,7 +231,7 @@ internal class PagerPageHolder(
 
         val isDoublePage = ImageUtil.isWideImage(imageSource)
         if (!isDoublePage) {
-            return imageSource
+            return ProcessedPageImage(imageSource)
         }
 
         onPageSplit(page)
@@ -257,17 +262,21 @@ internal class PagerPageHolder(
         return if (viewer.config.dualPageInvert) initialSide.opposite() else initialSide
     }
 
-    private fun rotateDualPage(imageSource: BufferedSource): BufferedSource {
+    private fun rotateDualPage(imageSource: BufferedSource): ProcessedPageImage {
         val isDoublePage = ImageUtil.isWideImage(imageSource)
         return if (isDoublePage) {
-            val rotation = if (viewer.config.dualPageRotateToFitInvert) -90f else 90f
-            ImageUtil.rotateImage(imageSource, rotation)
+            val clockwise = !viewer.config.dualPageRotateToFitInvert
+            transformedPageImage(
+                raw = imageSource,
+                transform = { MangaPageTransform.Rotated(it, clockwise) },
+                derive = { ImageUtil.rotateImage(it, if (clockwise) 90f else -90f) },
+            )
         } else {
-            imageSource
+            ProcessedPageImage(imageSource)
         }
     }
 
-    private fun splitInHalf(imageSource: BufferedSource): BufferedSource {
+    private fun splitInHalf(imageSource: BufferedSource): ProcessedPageImage {
         var side = when {
             viewer is L2RPagerViewer && page is InsertPage -> ImageUtil.Side.RIGHT
             viewer !is L2RPagerViewer && page is InsertPage -> ImageUtil.Side.LEFT
@@ -283,7 +292,11 @@ internal class PagerPageHolder(
             }
         }
 
-        return ImageUtil.splitInHalf(imageSource, side)
+        return transformedPageImage(
+            raw = imageSource,
+            transform = { MangaPageTransform.Half(it, side) },
+            derive = { ImageUtil.splitInHalf(it, side) },
+        )
     }
 
     private fun onPageSplit(page: ReaderPage) {

@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import android.graphics.Rect
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import mihon.entry.interactions.manga.reader.text.geometry.MangaDisplayedPageGeometry
 import mihon.text.recognition.api.image.ImageContentKey
 import mihon.text.recognition.api.image.ImageRect
 import mihon.text.recognition.api.image.ImageSize
@@ -12,7 +13,13 @@ import okio.ByteString
 import tachiyomi.decoder.ImageDecoder
 
 /** A displayed page image that holds decoding resources until it is closed. */
-internal interface DisplayedPageImage : TextRecognitionImage, AutoCloseable
+internal interface DisplayedPageImage : TextRecognitionImage, AutoCloseable {
+    /** How this image relates to the raw page, for placing what was recognized on the raw page. */
+    val geometry: MangaDisplayedPageGeometry
+
+    /** Identity of the raw page file this image shows, as stored translations record it. */
+    val rawContent: ImageContentKey
+}
 
 /**
  * The still image a reader page currently displays, decoded exactly as the viewer decodes it.
@@ -26,6 +33,8 @@ internal class MangaDisplayedPageImage private constructor(
     private val cropBorders: Boolean,
     override val key: ImageContentKey,
     override val size: ImageSize,
+    override val geometry: MangaDisplayedPageGeometry,
+    override val rawContent: ImageContentKey,
     private var decoder: ImageDecoder?,
 ) : DisplayedPageImage {
 
@@ -48,22 +57,28 @@ internal class MangaDisplayedPageImage private constructor(
          * Reads the displayed dimensions; returns `null` for content the decoder cannot read. The decoder that read
          * them decodes regions later, because creating one decodes the whole image when borders are cropped.
          */
-        suspend fun open(encoded: ByteString, cropBorders: Boolean): MangaDisplayedPageImage? =
-            withContext(Dispatchers.IO) {
-                val decoder = runCatching { newDecoder(encoded, cropBorders) }.getOrNull() ?: return@withContext null
-                try {
-                    MangaDisplayedPageImage(
-                        encoded = encoded,
-                        cropBorders = cropBorders,
-                        key = ImageContentKey(encoded.sha256().hex() + if (cropBorders) CROPPED_SUFFIX else ""),
-                        size = ImageSize(decoder.width, decoder.height),
-                        decoder = decoder,
-                    )
-                } catch (error: Throwable) {
-                    decoder.recycle()
-                    throw error
-                }
+        suspend fun open(still: DisplayedStillImage): MangaDisplayedPageImage? = withContext(Dispatchers.IO) {
+            val decoder = runCatching { newDecoder(still.encoded, still.cropBorders) }.getOrNull()
+                ?: return@withContext null
+            try {
+                val content = still.encoded.sha256().hex()
+                MangaDisplayedPageImage(
+                    encoded = still.encoded,
+                    cropBorders = still.cropBorders,
+                    key = ImageContentKey(content + if (still.cropBorders) CROPPED_SUFFIX else ""),
+                    size = ImageSize(decoder.width, decoder.height),
+                    geometry = MangaDisplayedPageGeometry(
+                        transform = still.transform,
+                        shown = decoder.bounds.let { ImageRect(it.left, it.top, it.right, it.bottom) },
+                    ),
+                    rawContent = still.rawContent ?: ImageContentKey(content),
+                    decoder = decoder,
+                )
+            } catch (error: Throwable) {
+                decoder.recycle()
+                throw error
             }
+        }
 
         private fun newDecoder(encoded: ByteString, cropBorders: Boolean): ImageDecoder =
             requireNotNull(ImageDecoder.newInstance(encoded.toByteArray().inputStream(), cropBorders)) {

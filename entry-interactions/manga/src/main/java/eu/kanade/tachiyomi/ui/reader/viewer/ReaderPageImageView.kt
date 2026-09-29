@@ -44,11 +44,14 @@ import eu.kanade.tachiyomi.ui.reader.viewer.progressive.ReaderPageProgressivePre
 import eu.kanade.tachiyomi.ui.reader.viewer.webtoon.WebtoonSubsamplingImageView
 import mihon.core.common.image.progressive.ProgressiveImageState
 import mihon.core.common.image.progressive.ProgressiveImageVisual
+import mihon.entry.interactions.manga.reader.text.geometry.MangaPageTransform
+import mihon.entry.interactions.manga.reader.text.image.DisplayedStillImage
 import mihon.entry.interactions.manga.reader.text.overlay.MangaPageTextOverlayPainter
 import mihon.entry.interactions.manga.reader.text.surface.MangaPageTextDecoration
 import mihon.entry.interactions.manga.reader.text.surface.imageToView
 import mihon.entry.interactions.manga.reader.text.surface.viewToImage
 import mihon.entry.interactions.reader.settings.ReaderBasePreferences
+import mihon.text.recognition.api.image.ImageContentKey
 import mihon.text.recognition.api.image.ImageRect
 import mihon.text.recognition.api.image.ImageSize
 import okio.Buffer
@@ -86,7 +89,7 @@ internal open class ReaderPageImageView @JvmOverloads constructor(
     private var config: Config? = null
 
     /** Encoded bytes of the still image currently shown, as displayed (after any split or rotation). */
-    private var displayedStill: DisplayedStill? = null
+    private var displayedStill: DisplayedStillImage? = null
     private var textDecoration: MangaPageTextDecoration? = null
     private val textOverlayPainter by lazy { MangaPageTextOverlayPainter(context) }
 
@@ -190,8 +193,22 @@ internal open class ReaderPageImageView @JvmOverloads constructor(
         setFinalImage()
     }
 
-    fun setImage(source: BufferedSource, isAnimated: Boolean, config: Config) {
-        val still = if (isAnimated) null else DisplayedStill(source.encodedSnapshot(), config.cropBorders)
+    /**
+     * Shows [source], which the caller derived from the raw page by [transform]; [rawContent] identifies that raw page
+     * when [source] is not the raw page itself.
+     */
+    fun setImage(
+        source: BufferedSource,
+        isAnimated: Boolean,
+        config: Config,
+        transform: MangaPageTransform = MangaPageTransform.None,
+        rawContent: ImageContentKey? = null,
+    ) {
+        val still = if (isAnimated) {
+            null
+        } else {
+            DisplayedStillImage(source.encodedSnapshot(), config.cropBorders, transform, rawContent)
+        }
         val setFinalImage = {
             finalImageReady = false
             this.config = config
@@ -285,12 +302,8 @@ internal open class ReaderPageImageView @JvmOverloads constructor(
         setTextDecoration(null)
     }
 
-    /** The still image currently shown and the border cropping it is shown with, or `null` if none is. */
-    fun displayedStillImage(): Pair<ByteString, Boolean>? {
-        if (!finalImageReady) return null
-        val still = displayedStill ?: return null
-        return still.encoded to still.cropBorders
-    }
+    /** The still image currently shown, or `null` if none is. */
+    fun displayedStillImage(): DisplayedStillImage? = displayedStill?.takeIf { finalImageReady }
 
     /** Where [rect] of the displayed image appears in window coordinates, if it is currently laid out. */
     fun imageToWindow(rect: ImageRect, imageSize: ImageSize): RectF? {
@@ -598,11 +611,6 @@ internal open class ReaderPageImageView @JvmOverloads constructor(
     private fun Int.getSystemScaledDuration(): Int {
         return (this * context.animatorDurationScale).toInt().coerceAtLeast(1)
     }
-
-    private class DisplayedStill(
-        val encoded: ByteString,
-        val cropBorders: Boolean,
-    )
 
     /**
      * All of the config except [zoomDuration] will only be used for non-animated image.

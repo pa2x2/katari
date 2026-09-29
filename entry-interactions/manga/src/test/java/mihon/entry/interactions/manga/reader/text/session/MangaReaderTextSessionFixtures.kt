@@ -8,6 +8,8 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
+import mihon.entry.interactions.manga.reader.text.geometry.MangaDisplayedPageGeometry
+import mihon.entry.interactions.manga.reader.text.geometry.MangaPageTransform
 import mihon.entry.interactions.manga.reader.text.image.DisplayedPageImage
 import mihon.entry.interactions.manga.reader.text.surface.MangaPageTextDecoration
 import mihon.entry.interactions.manga.reader.text.surface.MangaPageTextSurface
@@ -61,6 +63,8 @@ internal class FakeSurface(private val index: Int) : MangaPageTextSurface {
     override suspend fun displayedImage(): DisplayedPageImage = object : DisplayedPageImage {
         override val key = ImageContentKey("page-$index")
         override val size = PAGE_SIZE
+        override val geometry = MangaDisplayedPageGeometry(MangaPageTransform.None, PAGE_SIZE.bounds)
+        override val rawContent = ImageContentKey("raw-page-$index")
         override suspend fun decodeRegion(region: ImageRect, sampleSize: Int): Bitmap = mockk(relaxed = true)
         override fun close() = Unit
     }
