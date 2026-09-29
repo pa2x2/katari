@@ -96,11 +96,8 @@ internal class PaddleOcrRecognizer(
         models: TextRecognitionModels,
         script: PaddleOcrScript,
     ): List<RotatedRectangle.Quadrilateral> {
-        val session = sessions.session(
-            slot = LINE_DETECTOR_SLOT,
-            file = models[OnnxModelArtifacts.paddleOcrLineDetector].file(
-                OnnxModelArtifacts.PADDLE_OCR_LINE_DETECTOR_FILE,
-            ),
+        val detectorFile = models[OnnxModelArtifacts.paddleOcrLineDetector].file(
+            OnnxModelArtifacts.PADDLE_OCR_LINE_DETECTOR_FILE,
         )
         val scale = minOf(1f, LINE_DETECTOR_MAXIMUM_EDGE.toFloat() / maxOf(crop.width, crop.height))
         val width = roundToMultiple(crop.width * scale)
@@ -114,9 +111,11 @@ internal class PaddleOcrRecognizer(
         }
         val shape = longArrayOf(1, 3, height.toLong(), width.toLong())
         val probability = OnnxTensor.createTensor(sessions.environment, pixels, shape).use { input ->
-            session.run(mapOf("x" to input)).use { result ->
-                val map = (result.get(0) as OnnxTensor).floatBuffer
-                FloatArray(map.remaining()).also(map::get)
+            sessions.lease(LINE_DETECTOR_SLOT, detectorFile).use { detector ->
+                detector.session.run(mapOf("x" to input)).use { result ->
+                    val map = (result.get(0) as OnnxTensor).floatBuffer
+                    FloatArray(map.remaining()).also(map::get)
+                }
             }
         }
         val lines = detectTextLines(probability, width, height)
@@ -126,7 +125,6 @@ internal class PaddleOcrRecognizer(
     }
 
     private fun readLine(line: Bitmap, recognizerFile: File, dictionary: List<String>): PaddleOcrLineReading {
-        val session = sessions.session(RECOGNIZER_SLOT, recognizerFile)
         val width = ceil(line.width * RECOGNIZER_HEIGHT.toDouble() / line.height).toInt()
             .coerceIn(1, RECOGNIZER_MAXIMUM_WIDTH)
         val tensorWidth = maxOf(width, RECOGNIZER_MINIMUM_WIDTH)
@@ -139,11 +137,13 @@ internal class PaddleOcrRecognizer(
         }
         val shape = longArrayOf(1, 3, RECOGNIZER_HEIGHT.toLong(), tensorWidth.toLong())
         return OnnxTensor.createTensor(sessions.environment, pixels, shape).use { input ->
-            session.run(mapOf("x" to input)).use { result ->
-                val output = result.get(0) as OnnxTensor
-                val (_, steps, classes) = output.info.shape
-                val scores = output.floatBuffer.let { buffer -> FloatArray(buffer.remaining()).also(buffer::get) }
-                decodeCtc(scores, steps.toInt(), classes.toInt(), dictionary)
+            sessions.lease(RECOGNIZER_SLOT, recognizerFile).use { recognizer ->
+                recognizer.session.run(mapOf("x" to input)).use { result ->
+                    val output = result.get(0) as OnnxTensor
+                    val (_, steps, classes) = output.info.shape
+                    val scores = output.floatBuffer.let { buffer -> FloatArray(buffer.remaining()).also(buffer::get) }
+                    decodeCtc(scores, steps.toInt(), classes.toInt(), dictionary)
+                }
             }
         }
     }

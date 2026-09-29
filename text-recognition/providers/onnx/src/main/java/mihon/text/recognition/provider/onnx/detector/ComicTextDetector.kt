@@ -33,10 +33,7 @@ internal class ComicTextDetector(
     override suspend fun inspectDevice(language: LanguageTag) = TextRecognitionComponentAvailability.Available
 
     override suspend fun detect(tile: Bitmap, models: TextRecognitionModels): List<DetectedTextRegion> {
-        val session = sessions.session(
-            slot = SESSION_SLOT,
-            file = models[OnnxModelArtifacts.comicTextDetector].file(OnnxModelArtifacts.DETECTOR_FILE),
-        )
+        val file = models[OnnxModelArtifacts.comicTextDetector].file(OnnxModelArtifacts.DETECTOR_FILE)
         val environment = sessions.environment
         val pixels = planarTensor(tile, INPUT_EDGE, INPUT_EDGE) { pixel, channel ->
             when (channel) {
@@ -52,17 +49,19 @@ internal class ComicTextDetector(
                 LongBuffer.wrap(longArrayOf(tile.width.toLong(), tile.height.toLong())),
                 longArrayOf(1, 2),
             ).use { sizes ->
-                session.run(mapOf("images" to images, "orig_target_sizes" to sizes)).use { result ->
-                    val labels = (result.get("labels").get() as OnnxTensor).longBuffer
-                    val boxes = (result.get("boxes").get() as OnnxTensor).floatBuffer
-                    val scores = (result.get("scores").get() as OnnxTensor).floatBuffer
-                    return decodeDetections(
-                        labels = LongArray(labels.remaining()).also(labels::get),
-                        boxes = FloatArray(boxes.remaining()).also(boxes::get),
-                        scores = FloatArray(scores.remaining()).also(scores::get),
-                        width = tile.width,
-                        height = tile.height,
-                    )
+                sessions.lease(SESSION_SLOT, file).use { detector ->
+                    detector.session.run(mapOf("images" to images, "orig_target_sizes" to sizes)).use { result ->
+                        val labels = (result.get("labels").get() as OnnxTensor).longBuffer
+                        val boxes = (result.get("boxes").get() as OnnxTensor).floatBuffer
+                        val scores = (result.get("scores").get() as OnnxTensor).floatBuffer
+                        return decodeDetections(
+                            labels = LongArray(labels.remaining()).also(labels::get),
+                            boxes = FloatArray(boxes.remaining()).also(boxes::get),
+                            scores = FloatArray(scores.remaining()).also(scores::get),
+                            width = tile.width,
+                            height = tile.height,
+                        )
+                    }
                 }
             }
         }

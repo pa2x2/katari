@@ -6,6 +6,7 @@ import mihon.text.recognition.provider.onnx.catalog.OnnxTextRecognitionCatalog
 import mihon.text.recognition.provider.onnx.detector.ComicTextDetector
 import mihon.text.recognition.provider.onnx.paddle.PaddleOcrRecognizer
 import mihon.text.recognition.provider.onnx.recognizer.MangaOcrRecognizer
+import mihon.text.recognition.provider.onnx.session.OnnxSessionMemoryRelease
 import mihon.text.recognition.provider.onnx.session.OnnxSessions
 import mihon.text.recognition.runtime.component.TextRecognitionRuntimeComponent
 import mihon.text.recognition.runtime.component.TextRecognitionRuntimeContribution
@@ -15,6 +16,7 @@ val onnxTextRecognitionRuntimeComponent: ApplicationFeatureRuntimeComponent =
     object : TextRecognitionRuntimeComponent {
         override fun contribute(application: Application): TextRecognitionRuntimeContribution {
             val sessions = OnnxSessions()
+            application.registerComponentCallbacks(OnnxSessionMemoryRelease(sessions))
             return TextRecognitionRuntimeContribution(
                 providers = listOf(
                     TextRecognitionProviderContribution(

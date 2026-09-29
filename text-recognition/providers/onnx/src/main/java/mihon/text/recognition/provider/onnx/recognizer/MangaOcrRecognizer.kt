@@ -43,8 +43,6 @@ internal class MangaOcrRecognizer(
         models: TextRecognitionModels,
     ): RecognizedCropText? {
         val installed = models[OnnxModelArtifacts.mangaOcr]
-        val encoder = sessions.session(ENCODER_SLOT, installed.file(OnnxModelArtifacts.MANGA_OCR_ENCODER_FILE))
-        val decoder = sessions.session(DECODER_SLOT, installed.file(OnnxModelArtifacts.MANGA_OCR_DECODER_FILE))
         val vocabulary = vocabulary(installed.file(OnnxModelArtifacts.MANGA_OCR_VOCABULARY_FILE))
 
         // The model was trained on grayscale crops stretched to a square and normalized to [-1, 1].
@@ -53,10 +51,16 @@ internal class MangaOcrRecognizer(
             luminance / 127.5f - 1f
         }
         val shape = longArrayOf(1, 3, INPUT_EDGE.toLong(), INPUT_EDGE.toLong())
-        val ids = OnnxTensor.createTensor(sessions.environment, pixels, shape).use { input ->
-            encoder.run(mapOf("pixel_values" to input)).use { encoded ->
-                val hiddenStates = encoded.get(0) as OnnxTensor
-                decode(decoder, hiddenStates.floatBuffer.copy(), hiddenStates.info.shape)
+        val encoderFile = installed.file(OnnxModelArtifacts.MANGA_OCR_ENCODER_FILE)
+        val decoderFile = installed.file(OnnxModelArtifacts.MANGA_OCR_DECODER_FILE)
+        val ids = sessions.lease(ENCODER_SLOT, encoderFile).use { encoder ->
+            sessions.lease(DECODER_SLOT, decoderFile).use { decoder ->
+                OnnxTensor.createTensor(sessions.environment, pixels, shape).use { input ->
+                    encoder.session.run(mapOf("pixel_values" to input)).use { encoded ->
+                        val hiddenStates = encoded.get(0) as OnnxTensor
+                        decode(decoder.session, hiddenStates.floatBuffer.copy(), hiddenStates.info.shape)
+                    }
+                }
             }
         }
         return vocabulary.decode(ids).takeIf(String::isNotEmpty)?.let(::RecognizedCropText)
