@@ -158,7 +158,7 @@ internal fun AutocompleteFilterItem(
                     DropdownMenuItem(
                         text = {
                             Text(
-                                text = stringResource(MR.strings.internal_error),
+                                text = stringResource(MR.strings.filter_suggestions_failed),
                                 color = MaterialTheme.colorScheme.error,
                             )
                         },
