@@ -18,9 +18,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import eu.kanade.presentation.components.TabbedDialog
 import eu.kanade.presentation.components.TabbedDialogPaddings
+import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.presentation.library.components.LibraryPinnedStyleChooser
 import eu.kanade.presentation.library.grouping.LibraryGroupingEditor
 import eu.kanade.presentation.library.grouping.showLibraryGroupingTabsLabel
+import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.ui.library.LibrarySettingsScreenModel
 import eu.kanade.tachiyomi.util.system.isReleaseBuildType
 import mihon.entry.interactions.library.EntryLibraryFilterAvailability
@@ -104,8 +106,15 @@ private fun FilterPage(
     )
     if (filterAvailability.progressSummary.isAvailable) {
         val filterUnread by screenModel.libraryPreferences.filterUnread.collectAsState()
+        // Each type names its own unconsumed state; a mixed library lists every distinct name.
+        val unconsumedLabel = filterAvailability.progressSummary.applicableTypes
+            .sortedBy(EntryType::ordinal)
+            .map { it.entryTypePresentation().filterUnconsumedLabel }
+            .distinct()
+            .map { stringResource(it) }
+            .joinToString(separator = " / ")
         TriStateItem(
-            label = stringResource(MR.strings.action_filter_unconsumed),
+            label = unconsumedLabel,
             state = filterUnread,
             onClick = { screenModel.toggleFilter(LibraryPreferences::filterUnread) },
         )
