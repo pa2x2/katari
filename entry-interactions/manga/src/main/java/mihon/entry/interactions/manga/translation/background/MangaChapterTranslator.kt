@@ -1,0 +1,167 @@
+package mihon.entry.interactions.manga.translation.background
+
+import logcat.LogPriority
+import mihon.entry.interactions.manga.reader.text.geometry.MangaPageTransform
+import mihon.entry.interactions.manga.reader.text.image.DisplayedStillImage
+import mihon.entry.interactions.manga.reader.text.image.MangaDisplayedPageImage
+import mihon.entry.interactions.manga.translation.artifact.MangaChapterTranslation
+import mihon.entry.interactions.manga.translation.artifact.MangaChapterTranslationSetup
+import mihon.entry.interactions.manga.translation.artifact.MangaTranslatedPage
+import mihon.entry.interactions.manga.translation.artifact.MangaTranslatedRegion
+import mihon.entry.interactions.manga.translation.pages.MangaDownloadedPage
+import mihon.text.recognition.api.TextRecognitionFeature
+import mihon.text.recognition.api.preparation.TextRecognitionPreparation
+import mihon.text.recognition.api.preparation.TextRecognitionSetupPreparation
+import mihon.text.recognition.api.request.TextRecognitionPriority
+import mihon.text.recognition.api.request.TextRecognitionRequest
+import mihon.text.recognition.api.request.TextRecognitionSetupRequest
+import mihon.text.recognition.api.result.TextRecognitionExecution
+import mihon.translation.api.TranslationFeature
+import mihon.translation.api.engine.TranslationEngineSelection
+import mihon.translation.api.preparation.TranslationPreparation
+import mihon.translation.api.preparation.TranslationRoutePreparation
+import mihon.translation.api.provider.TranslationInvocationPolicy
+import mihon.translation.api.provider.TranslationProviderOutputMode
+import mihon.translation.api.provider.TranslationProviderPresentation
+import mihon.translation.api.request.TranslationRequest
+import mihon.translation.api.request.TranslationRouteRequest
+import mihon.translation.api.request.TranslationSourceLanguageSelection
+import mihon.translation.api.request.TranslationTargetLanguageSelection
+import mihon.translation.api.result.TranslationExecution
+import okio.ByteString.Companion.toByteString
+import tachiyomi.core.common.util.system.logcat
+
+/**
+ * Recognizes and translates the raw pages of a chapter with exactly the given setup, without asking anyone.
+ *
+ * A page that cannot be decoded or recognized is left out, and a text that cannot be translated is kept without a
+ * translation; the reader fills both in live. Anything that needs the user, such as a deleted model, stops the whole
+ * chapter instead.
+ */
+internal class MangaChapterTranslator(
+    private val recognition: TextRecognitionFeature,
+    private val translation: TranslationFeature,
+) {
+    suspend fun translate(
+        pages: List<MangaDownloadedPage>,
+        setup: MangaChapterTranslationSetup,
+        onPageDone: (done: Int) -> Unit,
+    ): MangaChapterTranslationOutcome {
+        if (!isReady(setup)) return MangaChapterTranslationOutcome.SetupRequired
+        val translated = mutableListOf<MangaTranslatedPage>()
+        var lastSkip: String? = null
+        pages.forEachIndexed { index, page ->
+            when (val outcome = translatePage(page, setup)) {
+                is PageOutcome.Translated -> translated += outcome.page
+                is PageOutcome.Skipped -> {
+                    logcat(LogPriority.WARN) { "Page ${page.fileName} left for the reader: ${outcome.reason}" }
+                    lastSkip = outcome.reason
+                }
+                PageOutcome.SetupRequired -> return MangaChapterTranslationOutcome.SetupRequired
+            }
+            onPageDone(index + 1)
+        }
+        if (translated.isEmpty()) {
+            logcat(LogPriority.WARN) { "No page of ${pages.size} could be recognized" }
+            return MangaChapterTranslationOutcome.NothingRecognized(lastSkip)
+        }
+        return MangaChapterTranslationOutcome.Translated(MangaChapterTranslation(setup, translated))
+    }
+
+    private suspend fun isReady(setup: MangaChapterTranslationSetup): Boolean {
+        val recognitionSetup = recognition.prepare(TextRecognitionSetupRequest(setup.pageLanguage, setup.pipeline))
+        if (recognitionSetup !is TextRecognitionSetupPreparation.Ready) return false
+        val route = translation.prepareRoute(
+            TranslationRouteRequest(
+                sourceLanguage = setup.route.sourceLanguage,
+                targetLanguage = TranslationTargetLanguageSelection.Explicit(setup.route.targetLanguage),
+                engine = TranslationEngineSelection.Explicit(setup.route.engine),
+            ),
+        )
+        return route is TranslationRoutePreparation.Ready && route.presentation.answersInline()
+    }
+
+    private suspend fun translatePage(page: MangaDownloadedPage, setup: MangaChapterTranslationSetup): PageOutcome {
+        val still = DisplayedStillImage(
+            encoded = page.read().toByteString(),
+            cropBorders = false,
+            transform = MangaPageTransform.None,
+            rawContent = null,
+        )
+        val image = MangaDisplayedPageImage.open(still) ?: return PageOutcome.Skipped("unsupported image")
+        val result = image.use {
+            val request = TextRecognitionRequest(
+                image = image,
+                language = setup.pageLanguage,
+                pipeline = setup.pipeline,
+                priority = TextRecognitionPriority.Background,
+            )
+            val ready = recognition.prepare(request) as? TextRecognitionPreparation.Ready
+                ?: return PageOutcome.SetupRequired
+            when (val execution = recognition.recognize(ready.recognition)) {
+                is TextRecognitionExecution.Success -> execution.result
+                is TextRecognitionExecution.PreparationChanged -> return PageOutcome.SetupRequired
+                is TextRecognitionExecution.Failed -> return PageOutcome.Skipped(execution.message)
+            }
+        }
+        val regions = result.regions.map { region ->
+            when (val text = translateText(region.text, setup)) {
+                is TextOutcome.Translated -> MangaTranslatedRegion(region, text.text)
+                TextOutcome.Gap -> MangaTranslatedRegion(region, null)
+                TextOutcome.SetupRequired -> return PageOutcome.SetupRequired
+            }
+        }
+        return PageOutcome.Translated(MangaTranslatedPage(page.fileName, image.rawContent, image.size, regions))
+    }
+
+    private suspend fun translateText(text: String, setup: MangaChapterTranslationSetup): TextOutcome {
+        val request = TranslationRequest(
+            text = text,
+            sourceLanguage = TranslationSourceLanguageSelection.Explicit(setup.route.sourceLanguage),
+            targetLanguage = TranslationTargetLanguageSelection.Explicit(setup.route.targetLanguage),
+            engine = TranslationEngineSelection.Explicit(setup.route.engine),
+        )
+        val ready = when (val preparation = translation.prepare(request)) {
+            is TranslationPreparation.Ready -> preparation
+            is TranslationPreparation.Rejected, is TranslationPreparation.SourceUndetermined -> return TextOutcome.Gap
+            else -> return TextOutcome.SetupRequired
+        }
+        if (!ready.presentation.answersInline()) return TextOutcome.SetupRequired
+        return when (val execution = translation.translate(ready.translation)) {
+            is TranslationExecution.Success -> TextOutcome.Translated(execution.result.translatedText)
+            is TranslationExecution.Failed -> TextOutcome.Gap
+            is TranslationExecution.PreparationChanged, is TranslationExecution.ProviderSurfaceOpened ->
+                TextOutcome.SetupRequired
+        }
+    }
+
+    private fun TranslationProviderPresentation.answersInline() =
+        outputMode == TranslationProviderOutputMode.InlineResult &&
+            invocationPolicy == TranslationInvocationPolicy.Immediate
+
+    private sealed interface PageOutcome {
+        data class Translated(val page: MangaTranslatedPage) : PageOutcome
+
+        data class Skipped(val reason: String?) : PageOutcome
+
+        data object SetupRequired : PageOutcome
+    }
+
+    private sealed interface TextOutcome {
+        data class Translated(val text: String) : TextOutcome
+
+        data object Gap : TextOutcome
+
+        data object SetupRequired : TextOutcome
+    }
+}
+
+internal sealed interface MangaChapterTranslationOutcome {
+    data class Translated(val translation: MangaChapterTranslation) : MangaChapterTranslationOutcome
+
+    /** The setup needs something from the user, such as a model download or a disclosure. */
+    data object SetupRequired : MangaChapterTranslationOutcome
+
+    /** No page could be recognized; [reason] is why the last one could not. */
+    data class NothingRecognized(val reason: String?) : MangaChapterTranslationOutcome
+}

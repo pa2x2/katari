@@ -2,6 +2,9 @@ package mihon.entry.interactions.manga.translation.artifact
 
 import com.hippo.unifile.UniFile
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import mihon.entry.interactions.manga.download.DownloadProvider
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.domain.entry.model.Entry
@@ -12,6 +15,25 @@ import java.io.IOException
 internal class MangaChapterTranslationStore(
     private val provider: DownloadProvider,
 ) {
+    private val mutableChanges = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+
+    /** Emits after a stored translation was written or deleted through this store. */
+    val changes: Flow<Unit> = mutableChanges.asSharedFlow()
+
+    /** Those of [chapters] that have a stored translation, found with one listing of the entry's download folder. */
+    suspend fun translatedChapters(chapters: List<EntryChapter>, entry: Entry, source: UnifiedSource): Set<Long> =
+        withIOContext {
+            val entryDir = provider.findEntryDir(entry.title, source) ?: return@withIOContext emptySet()
+            val names = entryDir.listFiles().orEmpty().mapNotNullTo(HashSet()) { it.name }
+            chapters
+                .filter { chapter ->
+                    provider.getValidChapterDirNames(chapter.name, chapter.scanlator, chapter.url)
+                        .firstOrNull { it in names }
+                        ?.let { provider.getChapterTranslationFileName(it) in names } == true
+                }
+                .mapTo(HashSet()) { it.id }
+        }
+
     /** The chapter's stored translation, or `null` when it has none or it cannot be read. */
     suspend fun read(chapter: EntryChapter, entry: Entry, source: UnifiedSource): MangaChapterTranslation? =
         withIOContext {
@@ -55,6 +77,7 @@ internal class MangaChapterTranslationStore(
             temporary.delete()
             throw error
         }
+        mutableChanges.tryEmit(Unit)
     }
 
     /** Deletes the chapter's stored translation and keeps its download. */
@@ -64,6 +87,7 @@ internal class MangaChapterTranslationStore(
             entryDir.findFile(provider.getChapterTranslationFileName(artifact))?.delete()
             entryDir.findFile(provider.getChapterTranslationTemporaryFileName(artifact))?.delete()
         }
+        mutableChanges.tryEmit(Unit)
     }
 
     /** The entry's download folder and the chapter's folder or archive in it, if the chapter is downloaded. */

@@ -10,6 +10,7 @@ import mihon.entry.interactions.manga.page.MangaPageStore
 import mihon.entry.interactions.manga.page.acquisition.MangaPageAcquisitionCoordinator
 import mihon.entry.interactions.manga.reader.addMangaReaderImageComponents
 import mihon.entry.interactions.manga.reader.settings.MangaReaderSettingsProvider
+import mihon.entry.interactions.manga.translation.artifact.MangaChapterTranslationStore
 import mihon.entry.interactions.media.DefaultEntryViewerSettingsProvider
 import mihon.entry.interactions.media.ENTRY_VIEWER_SETTINGS_LEGACY_PREFERENCE_OWNER_GROUP_ID
 import mihon.entry.interactions.media.session.EntryMediaSessionEventSink
@@ -81,6 +82,7 @@ private fun InjektRegistrar.addMangaEntryInteractionRuntime(app: Application): (
     addSingletonFactory { DownloadProvider(app) }
     addSingletonFactory { DownloadManager(app) }
     addSingletonFactory { DownloadCache(app) }
+    addSingletonFactory { MangaChapterTranslationStore(get()) }
 
     return { get<DownloadManager>() }
 }

@@ -176,7 +176,7 @@ internal class ReaderViewModel @JvmOverloads constructor(
     )
 
     private val storedTranslations = MangaReaderStoredTranslations(
-        store = MangaChapterTranslationStore(downloadProvider),
+        store = Injekt.get<MangaChapterTranslationStore>(),
         downloadManager = downloadManager,
         sourceManager = sourceManager,
         series = { series.value },
