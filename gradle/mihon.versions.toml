@@ -12,6 +12,7 @@ artifact-sanitizer = { id = "mihon.plugins.artifact.sanitizer" }
 android-application = { id = "mihon.plugins.android.application" }
 android-base = { id = "mihon.plugins.android.base" }
 android-library = { id = "mihon.plugins.android.library" }
+android-settings = { id = "mihon.plugins.android.settings" }
 android-test = { id = "mihon.plugins.android.test" }
 compose = { id = "mihon.plugins.compose.android" }
 kotlin-multiplatform = { id = "mihon.plugins.kotlin.multiplatform" }
