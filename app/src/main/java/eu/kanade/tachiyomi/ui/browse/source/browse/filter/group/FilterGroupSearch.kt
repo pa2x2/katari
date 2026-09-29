@@ -1,4 +1,4 @@
-package eu.kanade.tachiyomi.ui.browse.source.browse.filter
+package eu.kanade.tachiyomi.ui.browse.source.browse.filter.group
 
 import com.aallam.similarity.NormalizedLevenshtein
 import eu.kanade.tachiyomi.source.entry.EntryFilter

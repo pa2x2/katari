@@ -2170,7 +2170,11 @@
     <string name="filter_change_descending">%1$s, descending</string>
     <string name="filter_changed_count_description">%1$d filters changed</string>
     <string name="filter_changes_description">%1$d included, %2$d excluded</string>
-    <string name="filter_selected">Selected</string>
+    <string name="filter_selected_only">Selected only</string>
+    <string name="filter_search_group">Search %1$s</string>
+    <string name="filter_not_used">Not used</string>
+    <string name="filter_exclude">Exclude</string>
+    <string name="filter_tristate_chip_hint">Tap to include, tap again to exclude. Long-press to exclude.</string>
     <string name="filter_updating">Updating selections…</string>
     <string name="filter_status_changed">%1$d changed</string>
     <string name="filter_status_defaults">Source defaults</string>

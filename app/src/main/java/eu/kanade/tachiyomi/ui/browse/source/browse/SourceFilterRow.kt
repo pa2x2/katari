@@ -6,6 +6,7 @@ import eu.kanade.tachiyomi.source.entry.EntryFilterList
 import eu.kanade.tachiyomi.source.entry.filter.EntryFilterValidationIssue
 import eu.kanade.tachiyomi.source.entry.filter.validationIssues
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.change.FilterChanges
+import eu.kanade.tachiyomi.ui.browse.source.browse.filter.group.isSearchable
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.isOrdering
 
 /** One row of the root filter sheet list, planned before composition so the sheet can locate filters by index. */
@@ -36,6 +37,20 @@ internal sealed interface SourceFilterRow {
         val leadingDivider: Boolean,
         val changedOnlyChildren: Boolean,
     ) : SourceFilterRow
+
+    /** The search and actions of the open top-level group at [index]; [pinned] while its options scroll. */
+    class GroupTools(
+        val index: Int,
+        val group: EntryFilter.Group<*>,
+        val pinned: Boolean,
+        val changedOnly: Boolean,
+    ) : SourceFilterRow
+
+    /** The options of the open top-level group at [index]. */
+    class GroupBody(val index: Int, val group: EntryFilter.Group<*>, val changedOnly: Boolean) : SourceFilterRow
+
+    /** Ends the pinned tools of the group at [index] so they scroll away with the group's last option. */
+    data class GroupEnd(val index: Int) : SourceFilterRow
 }
 
 internal fun sourceFilterRows(
@@ -48,6 +63,7 @@ internal fun sourceFilterRows(
     hasPendingEdits: Boolean,
     changes: FilterChanges,
     changedOnly: Boolean,
+    isGroupExpanded: (Int) -> Boolean,
 ): List<SourceFilterRow> = buildList {
     when {
         isLoading -> add(SourceFilterRow.Loading)
@@ -80,6 +96,13 @@ internal fun sourceFilterRows(
                     ),
                 )
                 separated = filter is EntryFilter.Separator
+                if (filter is EntryFilter.Group<*> && isGroupExpanded(index)) {
+                    val pinned = filter.isSearchable()
+                    val groupChangedOnly = changedOnly && !filter.isOrdering
+                    add(SourceFilterRow.GroupTools(index, filter, pinned, groupChangedOnly))
+                    add(SourceFilterRow.GroupBody(index, filter, groupChangedOnly))
+                    if (pinned) add(SourceFilterRow.GroupEnd(index))
+                }
             }
             ordering.forEach { (index, filter) -> addFilter(index, filter) }
             if (ordering.isNotEmpty() && constraints.isNotEmpty() &&

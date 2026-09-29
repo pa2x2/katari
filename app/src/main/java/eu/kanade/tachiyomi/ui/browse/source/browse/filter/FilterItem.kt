@@ -21,10 +21,17 @@ import eu.kanade.tachiyomi.ui.browse.source.browse.filter.control.FilterSortRow
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.control.FilterTextField
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.control.FilterTriStateRow
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.date.DateFilterItem
+import eu.kanade.tachiyomi.ui.browse.source.browse.filter.group.FilterGroupUiState
+import eu.kanade.tachiyomi.ui.browse.source.browse.filter.group.GroupFilterHeader
+import eu.kanade.tachiyomi.ui.browse.source.browse.filter.group.GroupFilterItem
 import mihon.entry.interactions.catalogue.EntryCatalogueFilterSuggestionsResult
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
+/**
+ * Draws one source filter. With [groupState], a group draws only its header because the sheet lays its tools and
+ * options out as separate list rows.
+ */
 @Composable
 internal fun FilterItem(
     filter: EntryFilter<*>,
@@ -39,6 +46,7 @@ internal fun FilterItem(
     onReset: (EntryFilter<*>) -> Unit,
     focus: List<Int>? = null,
     leadingDivider: Boolean = true,
+    groupState: FilterGroupUiState? = null,
 ) {
     Column {
         when (filter) {
@@ -48,10 +56,7 @@ internal fun FilterItem(
                 filter.state = !filter.state
                 onUpdate()
             }
-            is EntryFilter.TriState -> FilterTriStateRow(filter.name, filter.state) {
-                filter.state = filter.state.nextTriState()
-                onUpdate()
-            }
+            is EntryFilter.TriState -> FilterTriStateRow(filter, onUpdate)
             is EntryDateFilter -> DateFilterItem(filter, onUpdate)
             is EntryFilter.Autocomplete -> AutocompleteFilterItem(filter, onUpdate, onRequestSuggestions)
             is EntryFilter.Text -> FilterTextField(filter.name, filter.state) {
@@ -67,25 +72,29 @@ internal fun FilterItem(
                 }
             }
             is EntryFilter.Sort -> FilterSortRow(filter, onUpdate)
-            is EntryFilter.Group<*> -> GroupFilterItem(
-                filter = filter,
-                changes = changes,
-                changedOnly = changedOnly,
-                onUpdate = onUpdate,
-                onReset = onReset,
-                focus = focus,
-                leadingDivider = leadingDivider,
-            ) { child, childFocus ->
-                FilterItem(
-                    filter = child,
+            is EntryFilter.Group<*> -> if (groupState != null) {
+                GroupFilterHeader(filter, groupState, changes, changedOnly, leadingDivider)
+            } else {
+                GroupFilterItem(
+                    filter = filter,
                     changes = changes,
-                    onUpdate = onUpdate,
-                    onOpenPagedGroup = onOpenPagedGroup,
-                    onRequestSuggestions = onRequestSuggestions,
                     changedOnly = changedOnly,
+                    onUpdate = onUpdate,
                     onReset = onReset,
-                    focus = childFocus,
-                )
+                    focus = focus,
+                    leadingDivider = leadingDivider,
+                ) { child, childFocus ->
+                    FilterItem(
+                        filter = child,
+                        changes = changes,
+                        onUpdate = onUpdate,
+                        onOpenPagedGroup = onOpenPagedGroup,
+                        onRequestSuggestions = onRequestSuggestions,
+                        changedOnly = changedOnly,
+                        onReset = onReset,
+                        focus = childFocus,
+                    )
+                }
             }
             is EntryFilter.PagedGroup<*> -> PagedGroupSummaryItem(filter) { onOpenPagedGroup(filter) }
         }
@@ -130,10 +139,4 @@ private fun FilterSourceHeader(text: String) {
             bottom = 4.dp,
         ),
     )
-}
-
-private fun Int.nextTriState(): Int = when (this) {
-    EntryFilter.TriState.STATE_IGNORE -> EntryFilter.TriState.STATE_INCLUDE
-    EntryFilter.TriState.STATE_INCLUDE -> EntryFilter.TriState.STATE_EXCLUDE
-    else -> EntryFilter.TriState.STATE_IGNORE
 }

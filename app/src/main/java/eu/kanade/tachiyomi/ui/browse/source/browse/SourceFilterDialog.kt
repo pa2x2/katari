@@ -6,8 +6,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -27,12 +25,12 @@ import eu.kanade.tachiyomi.source.entry.EntryFilterPageLoadReason
 import eu.kanade.tachiyomi.source.entry.EntryFilterPageScope
 import eu.kanade.tachiyomi.source.entry.EntryFilterTextInput
 import eu.kanade.tachiyomi.source.entry.filter.validationIssues
-import eu.kanade.tachiyomi.ui.browse.source.browse.filter.FilterItem
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.PagedFilterBrowseSession
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.PagedGroupFilterContent
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.change.FilterChanges
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.date.DateFilterEditorHost
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.date.DateFilterEditorSession
+import eu.kanade.tachiyomi.ui.browse.source.browse.filter.group.FilterGroupUiStates
 import eu.kanade.tachiyomi.ui.browse.source.browse.preset.SourceFilterPresetActions
 import eu.kanade.tachiyomi.ui.browse.source.browse.preset.SourceFilterPresetChip
 import mihon.entry.interactions.catalogue.EntryCatalogueFilterNavigationResult
@@ -111,22 +109,9 @@ fun SourceFilterDialog(
 
     val canSaveDraft = !isLoading && !isError && pendingFilterEdits == 0 && validation.isEmpty() &&
         repairIssues.isEmpty()
-    val rootFilterItem: @Composable (EntryFilter<*>, Boolean, List<Int>?, Boolean) -> Unit =
-        { filter, changedOnlyChildren, focus, leadingDivider ->
-            FilterItem(
-                filter = filter,
-                changes = changes,
-                onUpdate = updateFilters,
-                onOpenPagedGroup = {
-                    filters.pathTo(it)?.let { path -> route = SourceFilterRoute.PagedGroup(path) }
-                },
-                onRequestSuggestions = onRequestSuggestions,
-                changedOnly = changedOnlyChildren,
-                onReset = onResetGroup,
-                focus = focus,
-                leadingDivider = leadingDivider,
-            )
-        }
+    val groupStates = rememberSaveable(saver = FilterGroupUiStates.Saver) {
+        FilterGroupUiStates(expandedIndex = focusPath?.firstOrNull())
+    }
 
     BackHandler(enabled = route is SourceFilterRoute.PagedGroup, onBack = leavePagedGroup)
 
@@ -159,6 +144,7 @@ fun SourceFilterDialog(
                             hasPendingEdits = pendingFilterEdits > 0,
                             changes = changes,
                             changedOnly = changedOnly,
+                            isGroupExpanded = { groupStates.of(it).expanded },
                         )
                         LaunchedEffect(Unit) {
                             val focusIndex = focus?.firstOrNull() ?: return@LaunchedEffect
@@ -180,27 +166,25 @@ fun SourceFilterDialog(
                                     { SourceFilterPresetChip(actions, canSave = canSaveDraft) }
                                 },
                             )
-                            LazyColumn(state = rootListState, modifier = Modifier.weight(1f)) {
-                                items(rows) { row ->
-                                    SourceFilterRowContent(
-                                        row = row,
-                                        filters = filters,
-                                        onRetry = onRetry,
-                                        onSaveRepair = onSaveRepair,
-                                        onResolveIssue = onResolveIssue,
-                                        onShowAll = { changedOnly = false },
-                                        filterItem = { filterRow ->
-                                            rootFilterItem(
-                                                filterRow.filter,
-                                                filterRow.changedOnlyChildren,
-                                                focus?.takeIf { it.firstOrNull() == filterRow.index }?.drop(1),
-                                                filterRow.leadingDivider,
-                                            )
-                                        },
-                                        repairFilterItem = { rootFilterItem(it, false, null, true) },
-                                    )
-                                }
-                            }
+                            SourceFilterRootList(
+                                rows = rows,
+                                listState = rootListState,
+                                filters = filters,
+                                changes = changes,
+                                groupStates = groupStates,
+                                focus = focus,
+                                onUpdate = updateFilters,
+                                onOpenPagedGroup = {
+                                    filters.pathTo(it)?.let { path -> route = SourceFilterRoute.PagedGroup(path) }
+                                },
+                                onRequestSuggestions = onRequestSuggestions,
+                                onResetGroup = onResetGroup,
+                                onRetry = onRetry,
+                                onSaveRepair = onSaveRepair,
+                                onResolveIssue = onResolveIssue,
+                                onShowAll = { changedOnly = false },
+                                modifier = Modifier.weight(1f),
+                            )
                             SourceFilterSheetFooter(
                                 onReset = onReset,
                                 resetEnabled = !isLoading,

@@ -28,6 +28,8 @@ internal fun SourceFilterRowContent(
     onResolveIssue: (FilterRestoreIssue, Boolean) -> Unit,
     onShowAll: () -> Unit,
     filterItem: @Composable (SourceFilterRow.Filter) -> Unit,
+    groupTools: @Composable (SourceFilterRow.GroupTools) -> Unit,
+    groupBody: @Composable (SourceFilterRow.GroupBody) -> Unit,
     repairFilterItem: @Composable (EntryFilter<*>) -> Unit,
 ) {
     val blockModifier = Modifier.padding(FilterSheetInsets.Horizontal)
@@ -67,5 +69,8 @@ internal fun SourceFilterRowContent(
             Modifier.padding(horizontal = FilterSheetInsets.Horizontal, vertical = 4.dp),
         )
         is SourceFilterRow.Filter -> filterItem(row)
+        is SourceFilterRow.GroupTools -> groupTools(row)
+        is SourceFilterRow.GroupBody -> groupBody(row)
+        is SourceFilterRow.GroupEnd -> Unit
     }
 }
