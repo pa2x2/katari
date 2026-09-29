@@ -14,15 +14,15 @@ import eu.kanade.tachiyomi.source.entry.filter.EntryDateFilter
 import eu.kanade.tachiyomi.source.filter.hasFailedSourceCallback
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.change.FilterChanges
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.control.FilterCheckboxRow
+import eu.kanade.tachiyomi.ui.browse.source.browse.filter.control.FilterOrderingSelectRow
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.control.FilterSelectField
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.control.FilterSheetInsets
+import eu.kanade.tachiyomi.ui.browse.source.browse.filter.control.FilterSortRow
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.control.FilterTextField
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.control.FilterTriStateRow
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.date.DateFilterItem
 import mihon.entry.interactions.catalogue.EntryCatalogueFilterSuggestionsResult
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.CollapsibleBox
-import tachiyomi.presentation.core.components.SortItem
 import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable
@@ -58,30 +58,15 @@ internal fun FilterItem(
                 filter.state = it
                 onUpdate()
             }
-            is EntryFilter.Select<*> -> FilterSelectField(filter.name, filter.values, filter.state) {
-                filter.state = it
-                onUpdate()
-            }
-            is EntryFilter.Sort -> CollapsibleBox(heading = filter.name) {
-                Column {
-                    filter.values.mapIndexed { index, item ->
-                        val sortAscending = filter.state?.ascending?.takeIf { index == filter.state?.index }
-                        SortItem(
-                            label = item,
-                            sortDescending = sortAscending?.not(),
-                            onClick = {
-                                val ascending = if (index == filter.state?.index) {
-                                    !filter.state!!.ascending
-                                } else {
-                                    filter.state?.ascending ?: true
-                                }
-                                filter.state = EntryFilter.Sort.Selection(index, ascending)
-                                onUpdate()
-                            },
-                        )
-                    }
+            is EntryFilter.Select<*> -> if (filter.isOrdering) {
+                FilterOrderingSelectRow(filter, onUpdate)
+            } else {
+                FilterSelectField(filter.name, filter.values, filter.state) {
+                    filter.state = it
+                    onUpdate()
                 }
             }
+            is EntryFilter.Sort -> FilterSortRow(filter, onUpdate)
             is EntryFilter.Group<*> -> GroupFilterItem(
                 filter = filter,
                 changes = changes,

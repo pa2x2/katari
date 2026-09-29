@@ -22,6 +22,9 @@ internal sealed interface SourceFilterRow {
 
     data object NoChanges : SourceFilterRow
 
+    /** Separates the ordering block from the filters that narrow results. */
+    data object OrderingDivider : SourceFilterRow
+
     /**
      * A top-level source filter at [index] in the source's list.
      *
@@ -66,18 +69,26 @@ internal fun sourceFilterRows(
             if (changedOnly && shown.isEmpty()) add(SourceFilterRow.NoChanges)
             // Ordering filters lead the sheet as one block; every other filter keeps the source's order and headers.
             val (ordering, constraints) = shown.partition { it.value.isOrdering }
-            var previous: EntryFilter<*>? = null
-            (ordering + constraints).forEach { (index, filter) ->
+            var separated = true
+            fun addFilter(index: Int, filter: EntryFilter<*>) {
                 add(
                     SourceFilterRow.Filter(
                         index = index,
                         filter = filter,
-                        leadingDivider = previous != null && previous !is EntryFilter.Separator,
+                        leadingDivider = !separated,
                         changedOnlyChildren = changedOnly && !filter.isOrdering,
                     ),
                 )
-                previous = filter
+                separated = filter is EntryFilter.Separator
             }
+            ordering.forEach { (index, filter) -> addFilter(index, filter) }
+            if (ordering.isNotEmpty() && constraints.isNotEmpty() &&
+                constraints.first().value !is EntryFilter.Separator
+            ) {
+                add(SourceFilterRow.OrderingDivider)
+                separated = true
+            }
+            constraints.forEach { (index, filter) -> addFilter(index, filter) }
         }
     }
 }

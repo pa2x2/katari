@@ -2,11 +2,13 @@ package eu.kanade.tachiyomi.ui.browse.source.browse
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import eu.kanade.domain.source.model.FilterRestoreIssue
 import eu.kanade.tachiyomi.source.entry.EntryFilter
 import eu.kanade.tachiyomi.source.entry.EntryFilterList
@@ -61,6 +63,9 @@ internal fun SourceFilterRowContent(
             Text(stringResource(MR.strings.filter_no_changes))
             TextButton(onClick = onShowAll) { Text(stringResource(MR.strings.filter_show_all)) }
         }
+        SourceFilterRow.OrderingDivider -> HorizontalDivider(
+            Modifier.padding(horizontal = FilterSheetInsets.Horizontal, vertical = 4.dp),
+        )
         is SourceFilterRow.Filter -> filterItem(row)
     }
 }

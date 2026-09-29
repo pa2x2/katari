@@ -2161,6 +2161,11 @@
     <string name="filter_change_value">%1$s: %2$s</string>
     <string name="filter_change_included">Includes %1$s</string>
     <string name="filter_change_excluded">Excludes %1$s</string>
+    <string name="filter_sort_unset">Source order</string>
+    <string name="filter_sort_desc">Desc</string>
+    <string name="filter_sort_asc">Asc</string>
+    <string name="filter_sort_descending">Descending</string>
+    <string name="filter_sort_ascending">Ascending</string>
     <string name="filter_change_ascending">%1$s, ascending</string>
     <string name="filter_change_descending">%1$s, descending</string>
     <string name="filter_changed_count_description">%1$d filters changed</string>
