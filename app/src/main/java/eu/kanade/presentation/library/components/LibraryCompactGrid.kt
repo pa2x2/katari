@@ -119,6 +119,7 @@ private fun LibraryCompactGridEntry(
     EntryCompactGridItem(
         modifier = modifier,
         isSelected = libraryItem.key in selection,
+        selectionMode = selection.isNotEmpty(),
         title = libraryItem.title.takeIf { showTitle },
         coverData = libraryItem.entry.asEntryCover(),
         coverType = libraryItem.sourceItemOrientation.toLibraryGridCoverType(),

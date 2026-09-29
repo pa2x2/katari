@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
@@ -52,6 +53,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
@@ -195,6 +197,7 @@ private fun RowScope.Button(
     toConfirm: Boolean,
     onLongClick: () -> Unit,
     onClick: () -> Unit,
+    showLabel: Boolean = false,
     content: (@Composable () -> Unit)? = null,
 ) {
     val animatedWeight by animateFloatAsState(
@@ -203,7 +206,7 @@ private fun RowScope.Button(
     )
     Box(
         modifier = Modifier
-            .size(48.dp)
+            .then(if (showLabel) Modifier.heightIn(min = 48.dp) else Modifier.size(48.dp))
             .weight(animatedWeight)
             .combinedClickable(
                 interactionSource = null,
@@ -221,17 +224,28 @@ private fun RowScope.Button(
                 imageVector = icon,
                 contentDescription = title,
             )
-            AnimatedVisibility(
-                visible = toConfirm,
-                enter = expandVertically(expandFrom = Alignment.Top) + fadeIn(),
-                exit = shrinkVertically(shrinkTowards = Alignment.Top) + fadeOut(),
-            ) {
+            if (showLabel) {
                 Text(
                     text = title,
-                    overflow = TextOverflow.Visible,
-                    maxLines = 1,
+                    modifier = Modifier.padding(top = 4.dp, start = 2.dp, end = 2.dp),
+                    overflow = TextOverflow.Ellipsis,
+                    maxLines = 2,
+                    textAlign = TextAlign.Center,
                     style = MaterialTheme.typography.labelSmall,
                 )
+            } else {
+                AnimatedVisibility(
+                    visible = toConfirm,
+                    enter = expandVertically(expandFrom = Alignment.Top) + fadeIn(),
+                    exit = shrinkVertically(shrinkTowards = Alignment.Top) + fadeOut(),
+                ) {
+                    Text(
+                        text = title,
+                        overflow = TextOverflow.Visible,
+                        maxLines = 1,
+                        style = MaterialTheme.typography.labelSmall,
+                    )
+                }
             }
         }
         content?.invoke()
@@ -262,24 +276,11 @@ fun LibraryBottomActionMenu(
         enter = expandVertically(animationSpec = tween(delayMillis = 300)),
         exit = shrinkVertically(animationSpec = tween()),
     ) {
-        val scope = rememberCoroutineScope()
         Surface(
             modifier = modifier,
             shape = MaterialTheme.shapes.large.copy(bottomEnd = ZeroCornerSize, bottomStart = ZeroCornerSize),
             color = MaterialTheme.colorScheme.surfaceContainerHigh,
         ) {
-            val haptic = LocalHapticFeedback.current
-            val confirm = remember { mutableStateListOf(false, false, false, false, false, false, false, false) }
-            var resetJob by remember { mutableStateOf<Job?>(null) }
-            val onLongClickItem: (Int) -> Unit = { toConfirmIndex ->
-                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                confirm.indices.forEach { i -> confirm[i] = i == toConfirmIndex }
-                resetJob?.cancel()
-                resetJob = scope.launch {
-                    delay(1.seconds)
-                    if (isActive) confirm[toConfirmIndex] = false
-                }
-            }
             val itemOverflow = onDownloadClicked != null || onMoveToProfileClicked != null
             Row(
                 modifier = Modifier
@@ -293,8 +294,9 @@ fun LibraryBottomActionMenu(
                     Button(
                         title = stringResource(MR.strings.action_move_category),
                         icon = Icons.AutoMirrored.Outlined.Label,
-                        toConfirm = confirm[0],
-                        onLongClick = { onLongClickItem(0) },
+                        toConfirm = false,
+                        onLongClick = {},
+                        showLabel = true,
                         onClick = onChangeCategoryClicked,
                     )
                 }
@@ -302,8 +304,9 @@ fun LibraryBottomActionMenu(
                     Button(
                         title = stringResource(if (pinSelection) MR.strings.action_pin else MR.strings.action_unpin),
                         icon = if (pinSelection) Icons.Outlined.PushPin else Icons.Filled.PushPin,
-                        toConfirm = confirm[1],
-                        onLongClick = { onLongClickItem(1) },
+                        toConfirm = false,
+                        onLongClick = {},
+                        showLabel = true,
                         onClick = onPinClicked,
                     )
                 }
@@ -311,8 +314,9 @@ fun LibraryBottomActionMenu(
                     Button(
                         title = stringResource(MR.strings.action_merge),
                         icon = EntryActionIcons.merge,
-                        toConfirm = confirm[2],
-                        onLongClick = { onLongClickItem(2) },
+                        toConfirm = false,
+                        onLongClick = {},
+                        showLabel = true,
                         onClick = onMergeClicked,
                     )
                 }
@@ -320,8 +324,9 @@ fun LibraryBottomActionMenu(
                     Button(
                         title = stringResource(markAsReadLabel),
                         icon = Icons.Outlined.DoneAll,
-                        toConfirm = confirm[3],
-                        onLongClick = { onLongClickItem(3) },
+                        toConfirm = false,
+                        onLongClick = {},
+                        showLabel = true,
                         onClick = onMarkAsReadClicked,
                     )
                 }
@@ -329,8 +334,9 @@ fun LibraryBottomActionMenu(
                     Button(
                         title = stringResource(markAsUnreadLabel),
                         icon = Icons.Outlined.RemoveDone,
-                        toConfirm = confirm[4],
-                        onLongClick = { onLongClickItem(4) },
+                        toConfirm = false,
+                        onLongClick = {},
+                        showLabel = true,
                         onClick = onMarkAsUnreadClicked,
                     )
                 }
@@ -339,8 +345,9 @@ fun LibraryBottomActionMenu(
                     Button(
                         title = stringResource(MR.strings.action_download),
                         icon = Icons.Outlined.Download,
-                        toConfirm = confirm[5],
-                        onLongClick = { onLongClickItem(5) },
+                        toConfirm = false,
+                        onLongClick = {},
+                        showLabel = true,
                         onClick = { downloadExpanded = !downloadExpanded },
                     ) {
                         DownloadDropdownMenu(
@@ -358,8 +365,9 @@ fun LibraryBottomActionMenu(
                         Button(
                             title = stringResource(MR.strings.migrate),
                             icon = EntryActionIcons.migrate,
-                            toConfirm = confirm[6],
-                            onLongClick = { onLongClickItem(6) },
+                            toConfirm = false,
+                            onLongClick = {},
+                            showLabel = true,
                             onClick = onMigrateClicked,
                         )
                     }
@@ -367,8 +375,9 @@ fun LibraryBottomActionMenu(
                         Button(
                             title = stringResource(MR.strings.action_delete),
                             icon = Icons.Outlined.Delete,
-                            toConfirm = confirm[7],
-                            onLongClick = { onLongClickItem(7) },
+                            toConfirm = false,
+                            onLongClick = {},
+                            showLabel = true,
                             onClick = onDeleteClicked,
                         )
                     }
@@ -379,6 +388,7 @@ fun LibraryBottomActionMenu(
                         icon = Icons.Outlined.MoreVert,
                         toConfirm = false,
                         onLongClick = {},
+                        showLabel = true,
                         onClick = { overflowMenuOpen = true },
                     ) {
                         DropdownMenu(

@@ -157,7 +157,7 @@ private fun LibrarySelectionToolbar(
     onClickInvertSelection: () -> Unit,
 ) {
     AppBar(
-        titleContent = { Text(text = "$selectedCount") },
+        titleContent = { Text(text = stringResource(MR.strings.library_selected_count, selectedCount)) },
         actions = {
             AppBarActions(
                 listOf(

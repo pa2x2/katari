@@ -6,6 +6,7 @@
     <string name="on">On</string>
     <string name="off">Off</string>
     <string name="selected">Selected</string>
+    <string name="library_selected_count">%1$d selected</string>
     <string name="action_back">Back</string>
     <string name="not_selected">Not selected</string>
     <string name="action_menu_overflow_description">More options</string>

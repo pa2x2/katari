@@ -115,6 +115,7 @@ private fun LibraryComfortableGridEntry(
     EntryComfortableGridItem(
         modifier = modifier,
         isSelected = libraryItem.key in selection,
+        selectionMode = selection.isNotEmpty(),
         title = libraryItem.title,
         coverData = libraryItem.entry.asEntryCover(),
         coverType = libraryItem.sourceItemOrientation.toLibraryGridCoverType(),
