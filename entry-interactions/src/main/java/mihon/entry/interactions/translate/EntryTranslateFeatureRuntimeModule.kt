@@ -14,9 +14,10 @@ import mihon.entry.interactions.translate.ahead.EntryTranslateAheadContributor
 import mihon.entry.interactions.translate.ahead.entryTranslateAheadMediaSessionBinding
 import mihon.entry.interactions.translate.download.EntryTranslateDownloadChaining
 import mihon.entry.interactions.translate.download.EntryTranslateDownloadRules
+import mihon.entry.interactions.translate.notification.EntryTranslateNotifier
+import mihon.entry.interactions.translate.notification.EntryTranslatePausedNotification
 import mihon.entry.interactions.translate.work.DefaultEntryTranslateWorkController
 import mihon.entry.interactions.translate.work.EntryTranslateConditions
-import mihon.entry.interactions.translate.work.EntryTranslateNotifier
 import mihon.entry.interactions.translate.work.EntryTranslateQueueRunner
 import mihon.entry.interactions.translate.work.EntryTranslateWorkController
 import mihon.feature.runtime.FeatureRuntimeComposition
@@ -92,6 +93,9 @@ internal val EntryTranslateFeatureRuntimeModule = EntryFeatureRuntimeModule(
         )
     }
     addSingletonFactory {
+        EntryTranslatePausedNotification(conditions = get(), runner = get(), notifier = get())
+    }
+    addSingletonFactory {
         EntryTranslateAhead(
             preferences = get(),
             feature = get(),
@@ -107,6 +111,7 @@ internal val EntryTranslateFeatureRuntimeModule = EntryFeatureRuntimeModule(
             val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
             scope.launch { get<EntryTranslateDownloadChaining>().run() }
             scope.launch { get<EntryTranslateDownloadRules>().run() }
+            scope.launch { get<EntryTranslatePausedNotification>().run() }
         },
     )
 }

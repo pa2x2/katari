@@ -1945,6 +1945,7 @@
     <string name="translate_notifier_title">Translating chapters</string>
     <string name="translate_waiting_for_charger">Waiting for charger</string>
     <string name="translate_waiting_for_wifi">Waiting for Wi-Fi</string>
+    <string name="translate_notifier_paused">Translations paused</string>
     <string name="download_notifier_title_error">Error</string>
     <string name="download_notifier_unknown_error">Could not download item due to unexpected error</string>
     <string name="download_notifier_text_only_wifi">No Wi-Fi connection available</string>

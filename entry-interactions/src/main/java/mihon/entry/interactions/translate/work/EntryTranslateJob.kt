@@ -15,6 +15,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.selects.select
 import logcat.LogPriority
 import mihon.entry.interactions.translate.EntryTranslateRuntimeAvailability
+import mihon.entry.interactions.translate.notification.EntryTranslateNotifier
 import tachiyomi.core.common.util.system.logcat
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get

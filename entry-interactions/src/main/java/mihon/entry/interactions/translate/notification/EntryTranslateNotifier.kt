@@ -1,4 +1,4 @@
-package mihon.entry.interactions.translate.work
+package mihon.entry.interactions.translate.notification
 
 import android.app.Notification
 import android.content.Context
@@ -7,10 +7,14 @@ import androidx.core.app.NotificationManagerCompat
 import mihon.entry.interactions.download.EntryDownloadNotificationActions
 import mihon.entry.interactions.translate.EntryTranslateNotifications
 import mihon.entry.interactions.translate.EntryTranslateWaiting
+import mihon.entry.interactions.translate.work.EntryTranslateQueueRunner
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.*
 
-/** The ongoing notification of background translation, showing the chapter being translated or what it waits for. */
+/**
+ * The ongoing notification of background translation, showing the chapter being translated or what it waits for, and
+ * the notice left when the queue is paused.
+ */
 internal class EntryTranslateNotifier(
     private val context: Context,
     private val actions: EntryDownloadNotificationActions,
@@ -25,6 +29,12 @@ internal class EntryTranslateNotifier(
             .setOngoing(true)
             .setOnlyAlertOnce(true)
             .setContentIntent(actions.openDownloadManager(context))
+            .addAction(
+                android.R.drawable.ic_media_pause,
+                context.stringResource(MR.strings.action_pause),
+                EntryTranslateNotificationReceiver.Action.Pause.pendingIntent(context),
+            )
+            .addCancelAllAction()
             .apply {
                 if (waiting != null) {
                     setContentText(context.stringResource(waiting.text))
@@ -41,8 +51,38 @@ internal class EntryTranslateNotifier(
             .build()
 
     fun update(active: EntryTranslateQueueRunner.Active?, waiting: EntryTranslateWaiting?) {
+        notify(notificationId, notification(active, waiting))
+    }
+
+    fun showPaused() {
+        val notification = NotificationCompat.Builder(context, EntryTranslateNotifications.CHANNEL_PROGRESS)
+            .setSmallIcon(android.R.drawable.ic_media_pause)
+            .setContentTitle(context.stringResource(MR.strings.translate_notifier_paused))
+            .setOnlyAlertOnce(true)
+            .setContentIntent(actions.openDownloadManager(context))
+            .addAction(
+                android.R.drawable.ic_media_play,
+                context.stringResource(MR.strings.action_resume),
+                EntryTranslateNotificationReceiver.Action.Resume.pendingIntent(context),
+            )
+            .addCancelAllAction()
+            .build()
+        notify(EntryTranslateNotifications.ID_PAUSED, notification)
+    }
+
+    fun dismissPaused() {
+        NotificationManagerCompat.from(context).cancel(EntryTranslateNotifications.ID_PAUSED)
+    }
+
+    private fun NotificationCompat.Builder.addCancelAllAction() = addAction(
+        android.R.drawable.ic_menu_close_clear_cancel,
+        context.stringResource(MR.strings.action_cancel_all),
+        EntryTranslateNotificationReceiver.Action.CancelAll.pendingIntent(context),
+    )
+
+    private fun notify(id: Int, notification: Notification) {
         try {
-            NotificationManagerCompat.from(context).notify(notificationId, notification(active, waiting))
+            NotificationManagerCompat.from(context).notify(id, notification)
         } catch (_: SecurityException) {
             // Without the notification permission the translation still runs.
         }

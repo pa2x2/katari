@@ -4,4 +4,5 @@ package mihon.entry.interactions.translate
 object EntryTranslateNotifications {
     const val CHANNEL_PROGRESS = "translation_progress_channel"
     const val ID_PROGRESS = -211
+    const val ID_PAUSED = -212
 }
