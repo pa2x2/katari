@@ -131,6 +131,22 @@ internal class DownloadProvider(
     }
 
     /**
+     * Returns the name of the stored translation of the downloaded chapter [chapterArtifact] (its folder or archive).
+     *
+     * The name is derived from the artifact actually found, so chapters stored under a legacy name keep their
+     * translation, and it is a hidden file of fixed length, so long chapter names stay within the filename limit and it
+     * is never taken for a chapter.
+     */
+    fun getChapterTranslationFileName(chapterArtifact: UniFile): String {
+        val artifactName = checkNotNull(chapterArtifact.name) { "Chapter artifact has no name" }
+        return ".translation-" + md5(artifactName.removeSuffix(".cbz")) + ".json"
+    }
+
+    /** Returns the name a stored translation of [chapterArtifact] is written under before it replaces the last one. */
+    fun getChapterTranslationTemporaryFileName(chapterArtifact: UniFile): String =
+        getChapterTranslationFileName(chapterArtifact) + ".tmp"
+
+    /**
      * Returns the download directory name for a source.
      *
      * @param source the source to query.

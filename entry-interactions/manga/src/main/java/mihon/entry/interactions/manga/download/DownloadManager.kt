@@ -244,7 +244,14 @@ internal class DownloadManager(
             removeFromDownloadQueue(chapters)
 
             val (mangaDir, chapterDirs) = provider.findChapterDirs(chapters, entry, source)
-            chapterDirs.forEach { it.delete() }
+            chapterDirs.forEach { chapterDir ->
+                // A translation belongs to its download; left behind, it would also keep the entry folder.
+                listOf(
+                    provider.getChapterTranslationFileName(chapterDir),
+                    provider.getChapterTranslationTemporaryFileName(chapterDir),
+                ).forEach { mangaDir?.findFile(it)?.delete() }
+                chapterDir.delete()
+            }
             cache.removeChapters(chapters, entry)
 
             // Delete manga directory if empty
