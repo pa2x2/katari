@@ -243,13 +243,15 @@ data object LibraryTab : Tab {
                 else -> {
                     LibraryContent(
                         pages = state.displayedPages,
-                        searchQuery = state.searchQuery,
+                        // Pages are built for the applied query, which trails typing; render what they match.
+                        searchQuery = state.displayedPagesSearchQuery,
+                        showSearchTips = state.searchQuery == "",
                         selection = state.selection,
                         contentPadding = contentPadding,
                         currentPage = state.coercedActivePageIndex,
                         hasActiveFilters = state.hasActiveFilters,
-                        showPageTabs = state.showCategoryTabs || !state.searchQuery.isNullOrEmpty(),
-                        showItemCounts = state.showEntryCount || !state.searchQuery.isNullOrEmpty(),
+                        showPageTabs = state.showCategoryTabs,
+                        showItemCounts = state.showEntryCount,
                         onChangeCurrentPage = { index ->
                             state.libraryData.profileId?.let { profileId ->
                                 screenModel.updateActivePageIndex(profileId, index)
@@ -281,6 +283,14 @@ data object LibraryTab : Tab {
                         getItemsForPage = { state.getItemsForPage(it) },
                         displaySettingsForPage = state::displaySettingsForPage,
                         scrollToTopTarget = scrollToTopTarget,
+                        onSearchQueryChange = screenModel::search,
+                        onSeeAllSearchResults = { page ->
+                            // Leave search on the chosen group's page; the model maps it onto the unsearched pages.
+                            val index = state.displayedPages.indexOfFirst { it.id == page.id }
+                            val profileId = state.libraryData.profileId
+                            if (index >= 0 && profileId != null) screenModel.updateActivePageIndex(profileId, index)
+                            screenModel.search(null)
+                        },
                     )
                 }
             }

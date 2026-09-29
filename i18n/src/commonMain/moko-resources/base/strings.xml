@@ -1406,6 +1406,9 @@
     <string name="pinned_sources">Pinned</string>
     <string name="action_global_search_hint">Global search…</string>
     <string name="action_global_search_query">Search for \"%1$s\" globally</string>
+    <string name="library_search_see_all">See all</string>
+    <string name="library_search_tips_title">Search tips</string>
+    <string name="library_search_tips_examples">genre:action unread&gt;0 — unread action series\nauthor:ONE || author:Murata — either author\n-genre:romance — leave a genre out</string>
     <string name="latest">Latest</string>
     <string name="popular">Popular</string>
     <string name="browse">Browse</string>

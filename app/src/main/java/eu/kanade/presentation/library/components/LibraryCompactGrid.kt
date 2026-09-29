@@ -28,8 +28,6 @@ internal fun LibraryCompactGrid(
     onLongClick: (LibraryItem) -> Unit,
     onClickContinueReading: ((LibraryItem) -> Unit)?,
     isContinueReadingAvailable: (LibraryItem) -> Boolean,
-    searchQuery: String?,
-    onGlobalSearchClicked: () -> Unit,
     displaySettings: LibraryDisplaySettings,
     scrollToTopTarget: LibraryScrollToTopTarget?,
 ) {
@@ -49,8 +47,6 @@ internal fun LibraryCompactGrid(
         columns = columns,
         contentPadding = contentPadding,
     ) {
-        globalSearchItem(searchQuery, onGlobalSearchClicked)
-
         libraryPinnedGridItems(
             items = pinnedItems,
             style = displaySettings.pinnedDisplayStyle,
@@ -104,7 +100,7 @@ internal fun LibraryCompactGrid(
 }
 
 @Composable
-private fun LibraryCompactGridEntry(
+internal fun LibraryCompactGridEntry(
     libraryItem: LibraryItem,
     showTitle: Boolean,
     selection: Set<LibraryItemKey>,

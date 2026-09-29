@@ -202,6 +202,7 @@ class LibraryScreenModel(
                     LibraryData(
                         profileId = profileId,
                         isInitialized = true,
+                        searchQuery = searchQuery,
                         showSystemCategory = showSystemCategory,
                         categories = categories,
                         favorites = filteredFavorites,
@@ -298,6 +299,7 @@ class LibraryScreenModel(
                         state.copy(
                             isLoading = false,
                             groupedFavorites = groupedPages.pages,
+                            displayedPagesSearchQuery = groupedPages.searchQuery,
                             pageItemsById = groupedPages.itemsByPageId,
                             grouping = groupedPages.grouping,
                             activePageIndex = activePageIndex,
@@ -1067,6 +1069,8 @@ class LibraryScreenModel(
         val isInitialized: Boolean = false,
         val showSystemCategory: Boolean = false,
         val categories: List<Category> = emptyList(),
+        /** The search query [favorites] were narrowed by; lags the typed query by the search debounce. */
+        val searchQuery: String? = null,
         val favorites: List<LibraryItem> = emptyList(),
         /** Entry types in the whole library, before filters and search narrow it. */
         val entryTypes: Set<EntryType> = emptySet(),
@@ -1098,6 +1102,8 @@ class LibraryScreenModel(
         val grouping: LibraryGrouping = LibraryGrouping.default,
         private val activePageIndex: Int = 0,
         private val groupedFavorites: List<LibraryPage> = emptyList(),
+        /** The search query [displayedPages] were built for; lags the typed query while pages are regrouped. */
+        val displayedPagesSearchQuery: String? = null,
         private val pageItemsById: Map<String, List<LibraryItem>> = emptyMap(),
     ) {
         val displayedPages: List<LibraryPage> = groupedFavorites
@@ -1202,6 +1208,7 @@ internal fun observeGroupedLibraryPages(
             .withTabItemCounts()
         GroupedLibraryPages(
             profileId = checkNotNull(data.profileId),
+            searchQuery = data.searchQuery,
             grouping = grouping,
             pages = pages,
             itemsByPageId = pages.associate { page ->
@@ -1213,6 +1220,7 @@ internal fun observeGroupedLibraryPages(
 
 internal data class GroupedLibraryPages(
     val profileId: Long,
+    val searchQuery: String?,
     val grouping: LibraryGrouping,
     val pages: List<LibraryPage>,
     val itemsByPageId: Map<String, List<LibraryItem>>,

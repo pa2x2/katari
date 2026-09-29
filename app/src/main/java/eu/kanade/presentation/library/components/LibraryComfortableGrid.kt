@@ -27,8 +27,6 @@ internal fun LibraryComfortableGrid(
     onLongClick: (LibraryItem) -> Unit,
     onClickContinueReading: ((LibraryItem) -> Unit)?,
     isContinueReadingAvailable: (LibraryItem) -> Boolean,
-    searchQuery: String?,
-    onGlobalSearchClicked: () -> Unit,
     displaySettings: LibraryDisplaySettings,
     scrollToTopTarget: LibraryScrollToTopTarget?,
 ) {
@@ -48,8 +46,6 @@ internal fun LibraryComfortableGrid(
         columns = columns,
         contentPadding = contentPadding,
     ) {
-        globalSearchItem(searchQuery, onGlobalSearchClicked)
-
         libraryPinnedGridItems(
             items = pinnedItems,
             style = displaySettings.pinnedDisplayStyle,
@@ -101,7 +97,7 @@ internal fun LibraryComfortableGrid(
 }
 
 @Composable
-private fun LibraryComfortableGridEntry(
+internal fun LibraryComfortableGridEntry(
     libraryItem: LibraryItem,
     selection: Set<LibraryItemKey>,
     onClick: (LibraryItem) -> Unit,

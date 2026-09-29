@@ -29,8 +29,6 @@ internal fun LibraryList(
     onLongClick: (LibraryItem) -> Unit,
     onClickContinueReading: ((LibraryItem) -> Unit)?,
     isContinueReadingAvailable: (LibraryItem) -> Boolean,
-    searchQuery: String?,
-    onGlobalSearchClicked: () -> Unit,
     displaySettings: LibraryDisplaySettings,
     scrollToTopTarget: LibraryScrollToTopTarget?,
 ) {
@@ -49,16 +47,6 @@ internal fun LibraryList(
         state = listState,
         contentPadding = contentPadding + PaddingValues(vertical = 8.dp),
     ) {
-        item {
-            if (!searchQuery.isNullOrEmpty()) {
-                GlobalSearchItem(
-                    modifier = Modifier.fillMaxWidth(),
-                    searchQuery = searchQuery,
-                    onClick = onGlobalSearchClicked,
-                )
-            }
-        }
-
         libraryPinnedListItems(
             items = pinnedItems,
             style = displaySettings.pinnedDisplayStyle,
@@ -99,7 +87,7 @@ internal fun LibraryList(
 }
 
 @Composable
-private fun LibraryListEntry(
+internal fun LibraryListEntry(
     libraryItem: LibraryItem,
     selection: Set<LibraryItemKey>,
     onClick: (LibraryItem) -> Unit,

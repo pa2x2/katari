@@ -1,5 +1,6 @@
 package eu.kanade.presentation.library.components
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
@@ -18,6 +19,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
 import eu.kanade.core.preference.PreferenceMutableState
+import eu.kanade.presentation.library.search.LibrarySearchResults
+import eu.kanade.presentation.library.search.LibrarySearchTips
 import eu.kanade.tachiyomi.ui.library.LibraryPage
 import eu.kanade.tachiyomi.ui.library.LibraryPageTab
 import kotlinx.coroutines.delay
@@ -31,7 +34,6 @@ import kotlin.time.Duration.Companion.seconds
 @Composable
 fun SharedLibraryContent(
     pages: List<LibraryPage>,
-    searchQuery: String?,
     selection: Set<LibraryItemKey>,
     contentPadding: PaddingValues,
     currentPage: Int,
@@ -40,7 +42,6 @@ fun SharedLibraryContent(
     showItemCounts: Boolean,
     onChangeCurrentPage: (Int) -> Unit,
     onRefresh: suspend () -> Boolean,
-    onGlobalSearchClicked: () -> Unit,
     scrollToTopTarget: LibraryScrollToTopTarget,
     pageContent: @Composable (pagerState: PagerState, page: Int, libraryPage: LibraryPage?) -> Unit,
 ) {
@@ -125,10 +126,8 @@ fun SharedLibraryContent(
         ) {
             if (pages.isEmpty()) {
                 LibraryPageEmptyScreen(
-                    searchQuery = searchQuery,
                     hasActiveFilters = hasActiveFilters,
                     contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding()),
-                    onGlobalSearchClicked = onGlobalSearchClicked,
                 )
                 return@PullRefresh
             }
@@ -196,6 +195,15 @@ fun SharedLibraryContent(
         LaunchedEffect(pagerState.settledPage) {
             onChangeCurrentPage(pagerState.settledPage)
         }
+        // When the pages are regrouped (grouping, filters, leaving search) the model re-resolves the active page;
+        // follow it instead of keeping a stale index into the new list.
+        LaunchedEffect(currentPage, pages) {
+            if (currentPage in pages.indices && currentPage != pagerState.settledPage &&
+                !pagerState.isScrollInProgress
+            ) {
+                pagerState.scrollToPage(currentPage)
+            }
+        }
     }
 }
 
@@ -222,50 +230,86 @@ fun LibraryContent(
     getItemsForPage: (LibraryPage) -> List<LibraryItem>,
     displaySettingsForPage: (LibraryPage) -> LibraryDisplaySettings,
     scrollToTopTarget: LibraryScrollToTopTarget,
+    showSearchTips: Boolean,
+    onSearchQueryChange: (String?) -> Unit,
+    onSeeAllSearchResults: (LibraryPage) -> Unit,
 ) {
-    SharedLibraryContent(
-        pages = pages,
-        searchQuery = searchQuery,
-        selection = selection,
-        contentPadding = contentPadding,
-        currentPage = currentPage,
-        hasActiveFilters = hasActiveFilters,
-        showPageTabs = showPageTabs,
-        showItemCounts = showItemCounts,
-        onChangeCurrentPage = onChangeCurrentPage,
-        onRefresh = onRefresh,
-        onGlobalSearchClicked = onGlobalSearchClicked,
-        scrollToTopTarget = scrollToTopTarget,
-    ) { pagerState, _, _ ->
-        LibraryPager(
-            state = pagerState,
-            contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding()),
-            hasActiveFilters = hasActiveFilters,
-            selection = selection,
+    val onClickPageItem: (LibraryPage, LibraryItem) -> Unit = { page, item ->
+        if (selection.isNotEmpty()) {
+            onToggleSelection(page, item)
+        } else {
+            onClickItem(item)
+        }
+    }
+    val onLongClickPageItem: (LibraryPage, LibraryItem) -> Unit = { page, item ->
+        if (selection.isEmpty()) {
+            onToggleSelection(page, item)
+        } else {
+            onToggleRangeSelection(page, item)
+        }
+    }
+
+    if (!searchQuery.isNullOrEmpty()) {
+        LibrarySearchResults(
+            pages = pages,
             searchQuery = searchQuery,
-            onGlobalSearchClicked = onGlobalSearchClicked,
-            getPageForIndex = { page -> pages[page] },
+            contentPadding = contentPadding,
+            selection = selection,
+            getItemsForPage = getItemsForPage,
             getDisplayMode = getDisplayMode,
             getColumnsForOrientation = getColumnsForOrientation,
-            getItemsForPage = getItemsForPage,
             displaySettingsForPage = displaySettingsForPage,
-            onClickItem = { page, item ->
-                if (selection.isNotEmpty()) {
-                    onToggleSelection(page, item)
-                } else {
-                    onClickItem(item)
-                }
-            },
-            onLongClickItem = { page, item ->
-                if (selection.isEmpty()) {
-                    onToggleSelection(page, item)
-                } else {
-                    onToggleRangeSelection(page, item)
-                }
-            },
+            onClickItem = onClickPageItem,
+            onLongClickItem = onLongClickPageItem,
             onClickContinueReading = onContinueReadingClicked,
             isContinueReadingAvailable = isContinueReadingAvailable,
+            onSeeAll = onSeeAllSearchResults,
+            onGlobalSearchClicked = onGlobalSearchClicked,
             scrollToTopTarget = scrollToTopTarget,
         )
+        return
+    }
+
+    Box {
+        SharedLibraryContent(
+            pages = pages,
+            selection = selection,
+            contentPadding = contentPadding,
+            currentPage = currentPage,
+            hasActiveFilters = hasActiveFilters,
+            showPageTabs = showPageTabs,
+            showItemCounts = showItemCounts,
+            onChangeCurrentPage = onChangeCurrentPage,
+            onRefresh = onRefresh,
+            scrollToTopTarget = scrollToTopTarget,
+        ) { pagerState, _, _ ->
+            LibraryPager(
+                state = pagerState,
+                contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding()),
+                hasActiveFilters = hasActiveFilters,
+                selection = selection,
+                getPageForIndex = { page -> pages[page] },
+                getDisplayMode = getDisplayMode,
+                getColumnsForOrientation = getColumnsForOrientation,
+                getItemsForPage = getItemsForPage,
+                displaySettingsForPage = displaySettingsForPage,
+                onClickItem = onClickPageItem,
+                onLongClickItem = onLongClickPageItem,
+                onClickContinueReading = onContinueReadingClicked,
+                isContinueReadingAvailable = isContinueReadingAvailable,
+                scrollToTopTarget = scrollToTopTarget,
+            )
+        }
+        // An open but empty search field: show what the query language can do.
+        if (showSearchTips) {
+            LibrarySearchTips(
+                onInsertToken = onSearchQueryChange,
+                modifier = Modifier.padding(
+                    top = contentPadding.calculateTopPadding() + 8.dp,
+                    start = 12.dp,
+                    end = 12.dp,
+                ),
+            )
+        }
     }
 }
