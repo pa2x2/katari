@@ -29,12 +29,12 @@ internal fun LibraryList(
     onLongClick: (LibraryItem) -> Unit,
     onClickContinueReading: ((LibraryItem) -> Unit)?,
     isContinueReadingAvailable: (LibraryItem) -> Boolean,
-    searchQuery: String?,
-    onGlobalSearchClicked: () -> Unit,
     displaySettings: LibraryDisplaySettings,
+    scrollToTopTarget: LibraryScrollToTopTarget?,
 ) {
     val listState = rememberLazyListState()
     val (pinnedItems, regularItems) = items.partition(LibraryItem::isPinned)
+    BindScrollToTop(scrollToTopTarget, listState) { listState.animateScrollToItem(0) }
     FastScrollLazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -47,16 +47,6 @@ internal fun LibraryList(
         state = listState,
         contentPadding = contentPadding + PaddingValues(vertical = 8.dp),
     ) {
-        item {
-            if (!searchQuery.isNullOrEmpty()) {
-                GlobalSearchItem(
-                    modifier = Modifier.fillMaxWidth(),
-                    searchQuery = searchQuery,
-                    onClick = onGlobalSearchClicked,
-                )
-            }
-        }
-
         libraryPinnedListItems(
             items = pinnedItems,
             style = displaySettings.pinnedDisplayStyle,
@@ -97,7 +87,7 @@ internal fun LibraryList(
 }
 
 @Composable
-private fun LibraryListEntry(
+internal fun LibraryListEntry(
     libraryItem: LibraryItem,
     selection: Set<LibraryItemKey>,
     onClick: (LibraryItem) -> Unit,
@@ -111,6 +101,7 @@ private fun LibraryListEntry(
     EntryListItem(
         modifier = modifier,
         isSelected = libraryItem.key in selection,
+        selectionMode = selection.isNotEmpty(),
         title = libraryItem.title,
         coverData = libraryItem.entry.asEntryCover(),
         coverType = libraryItem.sourceItemOrientation.toListCoverType(),
@@ -121,21 +112,8 @@ private fun LibraryListEntry(
             Color.Transparent
         },
         badge = {
-            if (displaySettings.downloadBadge) {
-                DownloadsBadge(count = libraryItem.downloadCount)
-            }
-            if (displaySettings.unreadBadge) {
-                libraryItem.unconsumedCount?.let { UnreadBadge(count = it) }
-            }
-            if (displaySettings.entryTypeBadge) {
-                EntryTypeBadge(entryType = libraryItem.entry.type)
-            }
-            if (displaySettings.localBadge) {
-                LocalBadge(isLocal = libraryItem.isLocal)
-            }
-            if (displaySettings.languageBadge) {
-                LanguageBadge(sourceLanguage = libraryItem.sourceLanguage)
-            }
+            LibraryItemProgressBadges(libraryItem, displaySettings)
+            LibraryItemOriginBadges(libraryItem, displaySettings)
         },
         onLongClick = { onLongClick(libraryItem) },
         onClick = { onClick(libraryItem) },

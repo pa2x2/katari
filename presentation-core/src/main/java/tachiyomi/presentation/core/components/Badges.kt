@@ -44,17 +44,15 @@ fun Badge(
     color: Color = MaterialTheme.colorScheme.secondary,
     textColor: Color = MaterialTheme.colorScheme.onSecondary,
     shape: Shape = RectangleShape,
+    icon: ImageVector? = null,
 ) {
-    Text(
+    BadgeContent(
         text = text,
-        modifier = modifier
-            .clip(shape)
-            .background(color)
-            .padding(horizontal = 3.dp, vertical = 1.dp),
-        color = textColor,
-        fontWeight = FontWeight.Medium,
-        maxLines = 1,
-        style = MaterialTheme.typography.bodySmall,
+        icon = icon,
+        modifier = modifier,
+        color = color,
+        contentColor = textColor,
+        shape = shape,
     )
 }
 
@@ -66,14 +64,36 @@ fun Badge(
     iconColor: Color = MaterialTheme.colorScheme.onSecondary,
     shape: Shape = RectangleShape,
 ) {
+    BadgeContent(
+        text = "",
+        icon = imageVector,
+        modifier = modifier,
+        color = color,
+        contentColor = iconColor,
+        shape = shape,
+    )
+}
+
+/** Badge text, optionally led by an icon sized to the text so both badge forms share one height. */
+@Composable
+private fun BadgeContent(
+    text: String,
+    icon: ImageVector?,
+    modifier: Modifier,
+    color: Color,
+    contentColor: Color,
+    shape: Shape,
+) {
     val iconContentPlaceholder = "[icon]"
-    val text = buildAnnotatedString {
-        appendInlineContent(iconContentPlaceholder)
+    val annotatedText = buildAnnotatedString {
+        if (icon != null) appendInlineContent(iconContentPlaceholder)
+        append(text)
     }
-    val inlineContent = mapOf(
-        Pair(
-            iconContentPlaceholder,
-            InlineTextContent(
+    val inlineContent = if (icon == null) {
+        emptyMap()
+    } else {
+        mapOf(
+            iconContentPlaceholder to InlineTextContent(
                 Placeholder(
                     width = MaterialTheme.typography.bodySmall.fontSize,
                     height = MaterialTheme.typography.bodySmall.fontSize,
@@ -81,22 +101,22 @@ fun Badge(
                 ),
             ) {
                 Icon(
-                    imageVector = imageVector,
-                    tint = iconColor,
+                    imageVector = icon,
+                    tint = contentColor,
                     contentDescription = null,
                 )
             },
-        ),
-    )
+        )
+    }
 
     Text(
-        text = text,
+        text = annotatedText,
         inlineContent = inlineContent,
         modifier = modifier
             .clip(shape)
             .background(color)
             .padding(horizontal = 3.dp, vertical = 1.dp),
-        color = iconColor,
+        color = contentColor,
         fontWeight = FontWeight.Medium,
         maxLines = 1,
         style = MaterialTheme.typography.bodySmall,

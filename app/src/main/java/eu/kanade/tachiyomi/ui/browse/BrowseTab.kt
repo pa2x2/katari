@@ -54,10 +54,13 @@ data object BrowseTab : Tab {
         navigator.push(GlobalSearchScreen())
     }
 
-    private val switchToExtensionTabChannel = Channel<Unit>(1, BufferOverflow.DROP_OLDEST)
+    /** Browse pages that other screens can open directly. */
+    enum class Page { Sources, Extensions }
 
-    fun showExtension() {
-        switchToExtensionTabChannel.trySend(Unit)
+    private val switchToPageChannel = Channel<Page>(1, BufferOverflow.DROP_OLDEST)
+
+    fun showPage(page: Page) {
+        switchToPageChannel.trySend(page)
     }
 
     @Composable
@@ -85,7 +88,8 @@ data object BrowseTab : Tab {
             )
         }
 
-        val extensionsTabIndex = if (feedsEnabled) 2 else 1
+        val sourcesTabIndex = if (feedsEnabled) 1 else 0
+        val extensionsTabIndex = sourcesTabIndex + 1
 
         val state = rememberPagerState { tabs.size }
 
@@ -103,9 +107,15 @@ data object BrowseTab : Tab {
             searchQuery = extensionsState.searchQuery,
             onChangeSearchQuery = extensionsScreenModel::search,
         )
-        LaunchedEffect(state, extensionsTabIndex) {
-            switchToExtensionTabChannel.receiveAsFlow()
-                .collectLatest { state.scrollToPage(extensionsTabIndex) }
+        LaunchedEffect(state, sourcesTabIndex) {
+            switchToPageChannel.receiveAsFlow()
+                .collectLatest { page ->
+                    val index = when (page) {
+                        Page.Sources -> sourcesTabIndex
+                        Page.Extensions -> extensionsTabIndex
+                    }
+                    state.scrollToPage(index)
+                }
         }
 
         LaunchedEffect(Unit) {

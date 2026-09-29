@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
@@ -25,6 +26,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEachIndexed
 import kotlinx.coroutines.launch
@@ -72,9 +75,19 @@ fun TabbedDialog(
                 tabOverflowMenuContent?.let { MoreMenu(it) }
             }
 
+            // The sheet never shrinks while open: composing every page sizes the pager to the tallest tab, and the
+            // height it reaches is kept when a page's content gets shorter, so nothing moves under the finger.
+            val density = LocalDensity.current
+            var tallestPagerHeight by remember { mutableStateOf(0.dp) }
             HorizontalPager(
-                modifier = Modifier.animateContentSize(),
+                modifier = Modifier
+                    .heightIn(min = tallestPagerHeight)
+                    .onSizeChanged { size ->
+                        tallestPagerHeight = maxOf(tallestPagerHeight, with(density) { size.height.toDp() })
+                    }
+                    .animateContentSize(),
                 state = pagerState,
+                beyondViewportPageCount = (tabTitles.size - 1).coerceAtLeast(0),
                 verticalAlignment = Alignment.Top,
                 pageContent = { page -> content(page) },
             )

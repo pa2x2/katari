@@ -1,6 +1,7 @@
 package eu.kanade.presentation.library.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -13,8 +14,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
@@ -79,7 +82,8 @@ private val ContinueReadingButtonGridPadding = 6.dp
 private val ContinueReadingButtonListSpacing = 8.dp
 private val ContinueReadingProgressStrokeWidth = 2.dp
 
-private const val GRID_SELECTED_COVER_ALPHA = 0.76f
+private val SelectionIndicatorSize = 24.dp
+private val SelectionIndicatorBorderWidth = 2.dp
 
 /**
  * Layout of grid list item with title overlaying the cover.
@@ -105,6 +109,7 @@ fun EntryCompactGridItem(
     coverModifier: Modifier = Modifier,
     coverBadgeStart: @Composable (RowScope.() -> Unit)? = null,
     coverBadgeEnd: @Composable (RowScope.() -> Unit)? = null,
+    selectionMode: Boolean = false,
 ) {
     GridItemSelectable(
         isSelected = isSelected,
@@ -122,7 +127,7 @@ fun EntryCompactGridItem(
                     coverType(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .alpha(if (isSelected) GRID_SELECTED_COVER_ALPHA else coverAlpha),
+                            .alpha(coverAlpha),
                         data = coverData,
                         contentScale = coverContentScale,
                         backgroundColor = coverBackgroundColor,
@@ -137,18 +142,25 @@ fun EntryCompactGridItem(
                     CoverTextOverlay(
                         title = title,
                         backgroundColor = coverBackgroundColor,
+                        trailingAction = coverTrailingAction(
+                            selectionMode = selectionMode,
+                            isSelected = isSelected,
+                            onClickContinueReading = onClickContinueReading,
+                            continueReadingProgress = continueReadingProgress,
+                            continueReadingContentDescription = continueReadingContentDescription,
+                            large = false,
+                        ),
+                    )
+                } else {
+                    coverTrailingAction(
+                        selectionMode = selectionMode,
+                        isSelected = isSelected,
                         onClickContinueReading = onClickContinueReading,
                         continueReadingProgress = continueReadingProgress,
                         continueReadingContentDescription = continueReadingContentDescription,
-                    )
-                } else if (onClickContinueReading != null) {
-                    ContinueReadingButton(
-                        size = ContinueReadingButtonSizeLarge,
-                        iconSize = ContinueReadingButtonIconSizeLarge,
-                        onClick = onClickContinueReading,
-                        progress = continueReadingProgress,
-                        contentDescription = continueReadingContentDescription,
-                        modifier = Modifier
+                        large = true,
+                    )?.invoke(
+                        Modifier
                             .padding(ContinueReadingButtonGridPadding)
                             .align(Alignment.BottomEnd),
                     )
@@ -165,9 +177,7 @@ fun EntryCompactGridItem(
 private fun BoxScope.CoverTextOverlay(
     title: String,
     backgroundColor: Color = Color.Transparent,
-    onClickContinueReading: (() -> Unit)? = null,
-    continueReadingProgress: Float? = null,
-    continueReadingContentDescription: StringResource = MR.strings.action_resume,
+    trailingAction: (@Composable (Modifier) -> Unit)? = null,
 ) {
     Box(
         modifier = Modifier
@@ -200,19 +210,12 @@ private fun BoxScope.CoverTextOverlay(
             ),
             minLines = 1,
         )
-        if (onClickContinueReading != null) {
-            ContinueReadingButton(
-                size = ContinueReadingButtonSizeSmall,
-                iconSize = ContinueReadingButtonIconSizeSmall,
-                onClick = onClickContinueReading,
-                progress = continueReadingProgress,
-                contentDescription = continueReadingContentDescription,
-                modifier = Modifier.padding(
-                    end = ContinueReadingButtonGridPadding,
-                    bottom = ContinueReadingButtonGridPadding,
-                ),
-            )
-        }
+        trailingAction?.invoke(
+            Modifier.padding(
+                end = ContinueReadingButtonGridPadding,
+                bottom = ContinueReadingButtonGridPadding,
+            ),
+        )
     }
 }
 
@@ -240,6 +243,7 @@ fun EntryComfortableGridItem(
     onClickContinueReading: (() -> Unit)? = null,
     continueReadingProgress: Float? = null,
     continueReadingContentDescription: StringResource = MR.strings.action_resume,
+    selectionMode: Boolean = false,
 ) {
     GridItemSelectable(
         isSelected = isSelected,
@@ -258,7 +262,7 @@ fun EntryComfortableGridItem(
                         coverType(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .alpha(if (isSelected) GRID_SELECTED_COVER_ALPHA else coverAlpha),
+                                .alpha(coverAlpha),
                             data = coverData,
                             contentScale = coverContentScale,
                             backgroundColor = coverBackgroundColor,
@@ -269,18 +273,18 @@ fun EntryComfortableGridItem(
                 badgesEnd = coverBadgeEnd,
                 content = {
                     coverOverlay?.invoke(this)
-                    if (onClickContinueReading != null) {
-                        ContinueReadingButton(
-                            size = ContinueReadingButtonSizeLarge,
-                            iconSize = ContinueReadingButtonIconSizeLarge,
-                            onClick = onClickContinueReading,
-                            progress = continueReadingProgress,
-                            contentDescription = continueReadingContentDescription,
-                            modifier = Modifier
-                                .padding(ContinueReadingButtonGridPadding)
-                                .align(Alignment.BottomEnd),
-                        )
-                    }
+                    coverTrailingAction(
+                        selectionMode = selectionMode,
+                        isSelected = isSelected,
+                        onClickContinueReading = onClickContinueReading,
+                        continueReadingProgress = continueReadingProgress,
+                        continueReadingContentDescription = continueReadingContentDescription,
+                        large = true,
+                    )?.invoke(
+                        Modifier
+                            .padding(ContinueReadingButtonGridPadding)
+                            .align(Alignment.BottomEnd),
+                    )
                 },
             )
             GridItemTitle(
@@ -371,11 +375,11 @@ private fun GridItemSelectable(
                 onClick = onClick,
                 onLongClick = onLongClick,
             )
-            .selectedOutline(isSelected = isSelected, color = MaterialTheme.colorScheme.secondary)
+            .selectedOutline(isSelected = isSelected, color = MaterialTheme.colorScheme.secondaryContainer)
             .padding(4.dp),
     ) {
         val contentColor = if (isSelected) {
-            MaterialTheme.colorScheme.onSecondary
+            MaterialTheme.colorScheme.onSecondaryContainer
         } else {
             LocalContentColor.current
         }
@@ -415,6 +419,7 @@ fun EntryListItem(
     onClickContinueReading: (() -> Unit)? = null,
     continueReadingProgress: Float? = null,
     continueReadingContentDescription: StringResource = MR.strings.action_resume,
+    selectionMode: Boolean = false,
 ) {
     Row(
         modifier = modifier
@@ -461,14 +466,76 @@ fun EntryListItem(
             style = MaterialTheme.typography.bodyMedium,
         )
         BadgeGroup(content = badge)
-        if (onClickContinueReading != null) {
-            ContinueReadingButton(
-                size = ContinueReadingButtonSizeSmall,
-                iconSize = ContinueReadingButtonIconSizeSmall,
-                onClick = onClickContinueReading,
-                progress = continueReadingProgress,
-                contentDescription = continueReadingContentDescription,
-                modifier = Modifier.padding(start = ContinueReadingButtonListSpacing),
+        coverTrailingAction(
+            selectionMode = selectionMode,
+            isSelected = isSelected,
+            onClickContinueReading = onClickContinueReading,
+            continueReadingProgress = continueReadingProgress,
+            continueReadingContentDescription = continueReadingContentDescription,
+            large = false,
+            onCover = false,
+        )?.invoke(Modifier.padding(start = ContinueReadingButtonListSpacing))
+    }
+}
+
+/**
+ * The action at the cover's trailing corner: while selecting it shows whether the item is selected, replacing the
+ * resume button so a tap meant to select can't open the entry.
+ */
+private fun coverTrailingAction(
+    selectionMode: Boolean,
+    isSelected: Boolean,
+    onClickContinueReading: (() -> Unit)?,
+    continueReadingProgress: Float?,
+    continueReadingContentDescription: StringResource,
+    large: Boolean,
+    onCover: Boolean = true,
+): (@Composable (Modifier) -> Unit)? {
+    if (selectionMode) {
+        return { modifier -> SelectionIndicator(isSelected = isSelected, onCover = onCover, modifier = modifier) }
+    }
+    if (onClickContinueReading == null) return null
+    return { modifier ->
+        ContinueReadingButton(
+            size = if (large) ContinueReadingButtonSizeLarge else ContinueReadingButtonSizeSmall,
+            iconSize = if (large) ContinueReadingButtonIconSizeLarge else ContinueReadingButtonIconSizeSmall,
+            onClick = onClickContinueReading,
+            progress = continueReadingProgress,
+            contentDescription = continueReadingContentDescription,
+            modifier = modifier,
+        )
+    }
+}
+
+@Composable
+private fun SelectionIndicator(
+    isSelected: Boolean,
+    onCover: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    val shape = CircleShape
+    val ringColor = if (onCover) Color.White else MaterialTheme.colorScheme.outline
+    Box(
+        modifier = modifier
+            .size(SelectionIndicatorSize)
+            .clip(shape)
+            .then(
+                if (isSelected) {
+                    Modifier.background(MaterialTheme.colorScheme.primary)
+                } else {
+                    Modifier
+                        .background(if (onCover) Color.Black.copy(alpha = 0.35f) else Color.Transparent)
+                        .border(SelectionIndicatorBorderWidth, ringColor, shape)
+                },
+            ),
+        contentAlignment = Alignment.Center,
+    ) {
+        if (isSelected) {
+            Icon(
+                imageVector = Icons.Filled.Check,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onPrimary,
+                modifier = Modifier.size(18.dp),
             )
         }
     }

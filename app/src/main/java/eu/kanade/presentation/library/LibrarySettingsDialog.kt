@@ -7,9 +7,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Refresh
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -18,9 +16,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import eu.kanade.presentation.components.TabbedDialog
 import eu.kanade.presentation.components.TabbedDialogPaddings
+import eu.kanade.presentation.entry.entryTypePresentation
+import eu.kanade.presentation.library.components.LibraryDisplayModeChooser
 import eu.kanade.presentation.library.components.LibraryPinnedStyleChooser
 import eu.kanade.presentation.library.grouping.LibraryGroupingEditor
 import eu.kanade.presentation.library.grouping.showLibraryGroupingTabsLabel
+import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.ui.library.LibrarySettingsScreenModel
 import eu.kanade.tachiyomi.util.system.isReleaseBuildType
 import mihon.entry.interactions.library.EntryLibraryFilterAvailability
@@ -34,7 +35,6 @@ import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.BaseSortItem
 import tachiyomi.presentation.core.components.CheckboxItem
 import tachiyomi.presentation.core.components.HeadingItem
-import tachiyomi.presentation.core.components.SettingsChipRow
 import tachiyomi.presentation.core.components.SliderItem
 import tachiyomi.presentation.core.components.SortItem
 import tachiyomi.presentation.core.components.TriStateItem
@@ -104,8 +104,15 @@ private fun FilterPage(
     )
     if (filterAvailability.progressSummary.isAvailable) {
         val filterUnread by screenModel.libraryPreferences.filterUnread.collectAsState()
+        // Each type names its own unconsumed state; a mixed library lists every distinct name.
+        val unconsumedLabel = filterAvailability.progressSummary.applicableTypes
+            .sortedBy(EntryType::ordinal)
+            .map { it.entryTypePresentation().filterUnconsumedLabel }
+            .distinct()
+            .map { stringResource(it) }
+            .joinToString(separator = " / ")
         TriStateItem(
-            label = stringResource(MR.strings.action_filter_unconsumed),
+            label = unconsumedLabel,
             state = filterUnread,
             onClick = { screenModel.toggleFilter(LibraryPreferences::filterUnread) },
         )
@@ -246,28 +253,15 @@ private fun SortPage(
     }
 }
 
-private val displayModes = listOf(
-    MR.strings.action_display_grid to LibraryDisplayMode.CompactGrid,
-    MR.strings.action_display_comfortable_grid to LibraryDisplayMode.ComfortableGrid,
-    MR.strings.action_display_comfortable_list to LibraryDisplayMode.ComfortableList,
-    MR.strings.action_display_cover_only_grid to LibraryDisplayMode.CoverOnlyGrid,
-    MR.strings.action_display_list to LibraryDisplayMode.List,
-)
-
 @Composable
 private fun DisplayPage(
     screenModel: LibrarySettingsScreenModel,
 ) {
     val displayMode by screenModel.libraryPreferences.displayMode.collectAsState()
-    SettingsChipRow(MR.strings.action_display_mode) {
-        displayModes.forEach { (titleRes, mode) ->
-            FilterChip(
-                selected = displayMode == mode,
-                onClick = { screenModel.setDisplayMode(mode) },
-                label = { Text(stringResource(titleRes)) },
-            )
-        }
-    }
+    LibraryDisplayModeChooser(
+        selectedMode = displayMode,
+        onModeSelected = screenModel::setDisplayMode,
+    )
 
     val pinnedDisplayStyle by screenModel.libraryPreferences.pinnedDisplayStyle.collectAsState()
     LibraryPinnedStyleChooser(
@@ -276,9 +270,9 @@ private fun DisplayPage(
     )
 
     if (displayMode != LibraryDisplayMode.List && displayMode != LibraryDisplayMode.ComfortableList) {
-        val configuration = LocalConfiguration.current
-        val columnPreference = remember {
-            if (configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+        val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
+        val columnPreference = remember(isLandscape) {
+            if (isLandscape) {
                 screenModel.libraryPreferences.landscapeColumns
             } else {
                 screenModel.libraryPreferences.portraitColumns
@@ -289,7 +283,10 @@ private fun DisplayPage(
         SliderItem(
             value = columns,
             valueRange = 0..10,
-            label = stringResource(MR.strings.pref_library_columns),
+            label = stringResource(
+                MR.strings.pref_library_columns_for_orientation,
+                stringResource(if (isLandscape) MR.strings.landscape else MR.strings.portrait),
+            ),
             valueString = if (columns > 0) {
                 columns.toString()
             } else {
@@ -321,6 +318,8 @@ private fun DisplayPage(
         label = stringResource(MR.strings.action_display_entry_type_badge),
         pref = screenModel.libraryPreferences.entryTypeBadge,
     )
+
+    HeadingItem(MR.strings.library_cover_actions_header)
     CheckboxItem(
         label = stringResource(MR.strings.action_display_show_continue_button),
         pref = screenModel.libraryPreferences.showContinueReadingButton,

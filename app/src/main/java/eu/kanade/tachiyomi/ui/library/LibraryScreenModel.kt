@@ -11,6 +11,8 @@ import eu.kanade.presentation.entry.DownloadAction
 import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.presentation.library.components.LibraryDisplaySettings
 import eu.kanade.presentation.library.components.LibraryToolbarTitle
+import eu.kanade.tachiyomi.data.library.LibraryUpdateJob
+import eu.kanade.tachiyomi.data.library.LibraryUpdateProgress
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.getDisplayNameForEntryInfo
@@ -21,6 +23,9 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.WhileSubscribed
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
@@ -33,6 +38,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.flow.updateAndGet
 import mihon.core.common.utils.mutate
@@ -143,6 +149,14 @@ class LibraryScreenModel(
     private val portraitColumnsState = libraryPreferences.portraitColumns.asState(screenModelScope)
     private val landscapeColumnsState = libraryPreferences.landscapeColumns.asState(screenModelScope)
 
+    /** The running library update, whichever screen or schedule started it. */
+    val updateProgress: StateFlow<LibraryUpdateProgress?> = LibraryUpdateJob.progressFlow(context)
+        .stateIn(screenModelScope, SharingStarted.WhileSubscribed(5.seconds), null)
+
+    fun cancelUpdate() {
+        screenModelScope.launchIO { LibraryUpdateJob.stop(context) }
+    }
+
     init {
         screenModelScope.launchIO {
             for (request in pagePersistenceRequests) {
@@ -202,9 +216,11 @@ class LibraryScreenModel(
                     LibraryData(
                         profileId = profileId,
                         isInitialized = true,
+                        searchQuery = searchQuery,
                         showSystemCategory = showSystemCategory,
                         categories = categories,
                         favorites = filteredFavorites,
+                        entryTypes = favorites.mapTo(mutableSetOf()) { it.entry.type },
                         trackingEntries = tracking.entries,
                         trackingScoreSupportedEntryTypes = tracking.scoreSupportedEntryTypes,
                         hasActiveFilters = filterResult.hasActiveFilters,
@@ -297,6 +313,7 @@ class LibraryScreenModel(
                         state.copy(
                             isLoading = false,
                             groupedFavorites = groupedPages.pages,
+                            displayedPagesSearchQuery = groupedPages.searchQuery,
                             pageItemsById = groupedPages.itemsByPageId,
                             grouping = groupedPages.grouping,
                             activePageIndex = activePageIndex,
@@ -1066,7 +1083,11 @@ class LibraryScreenModel(
         val isInitialized: Boolean = false,
         val showSystemCategory: Boolean = false,
         val categories: List<Category> = emptyList(),
+        /** The search query [favorites] were narrowed by; lags the typed query by the search debounce. */
+        val searchQuery: String? = null,
         val favorites: List<LibraryItem> = emptyList(),
+        /** Entry types in the whole library, before filters and search narrow it. */
+        val entryTypes: Set<EntryType> = emptySet(),
         val trackingEntries: Map<Long, List<EntryTrackingCollectionTrack>> = emptyMap(),
         val trackingScoreSupportedEntryTypes: Set<EntryType> = emptySet(),
         val hasActiveFilters: Boolean = false,
@@ -1095,6 +1116,8 @@ class LibraryScreenModel(
         val grouping: LibraryGrouping = LibraryGrouping.default,
         private val activePageIndex: Int = 0,
         private val groupedFavorites: List<LibraryPage> = emptyList(),
+        /** The search query [displayedPages] were built for; lags the typed query while pages are regrouped. */
+        val displayedPagesSearchQuery: String? = null,
         private val pageItemsById: Map<String, List<LibraryItem>> = emptyMap(),
     ) {
         val displayedPages: List<LibraryPage> = groupedFavorites
@@ -1132,6 +1155,12 @@ class LibraryScreenModel(
                     null -> LibraryPinSelectionAction.Hidden
                 }
             }
+
+        /** A type badge on a page that already holds one type, or in a single-type library, only repeats the tab. */
+        fun displaySettingsForPage(page: LibraryPage): LibraryDisplaySettings {
+            val typeIsImplied = page.entryType != null || libraryData.entryTypes.size <= 1
+            return if (typeIsImplied) displaySettings.copy(entryTypeBadge = false) else displaySettings
+        }
 
         fun getItemsForPageId(pageId: String?): List<LibraryItem> {
             if (pageId == null) return emptyList()
@@ -1193,6 +1222,7 @@ internal fun observeGroupedLibraryPages(
             .withTabItemCounts()
         GroupedLibraryPages(
             profileId = checkNotNull(data.profileId),
+            searchQuery = data.searchQuery,
             grouping = grouping,
             pages = pages,
             itemsByPageId = pages.associate { page ->
@@ -1204,6 +1234,7 @@ internal fun observeGroupedLibraryPages(
 
 internal data class GroupedLibraryPages(
     val profileId: Long,
+    val searchQuery: String?,
     val grouping: LibraryGrouping,
     val pages: List<LibraryPage>,
     val itemsByPageId: Map<String, List<LibraryItem>>,

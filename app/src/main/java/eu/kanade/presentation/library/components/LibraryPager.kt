@@ -30,17 +30,16 @@ fun LibraryPager(
     contentPadding: PaddingValues,
     hasActiveFilters: Boolean,
     selection: Set<LibraryItemKey>,
-    searchQuery: String?,
-    onGlobalSearchClicked: () -> Unit,
     getPageForIndex: (Int) -> LibraryPage,
     getDisplayMode: (Int) -> PreferenceMutableState<LibraryDisplayMode>,
     getColumnsForOrientation: (Boolean) -> PreferenceMutableState<Int>,
     getItemsForPage: (LibraryPage) -> List<LibraryItem>,
-    displaySettings: LibraryDisplaySettings,
+    displaySettingsForPage: (LibraryPage) -> LibraryDisplaySettings,
     onClickItem: (LibraryPage, LibraryItem) -> Unit,
     onLongClickItem: (LibraryPage, LibraryItem) -> Unit,
     onClickContinueReading: ((LibraryItem) -> Unit)?,
     isContinueReadingAvailable: (LibraryItem) -> Boolean,
+    scrollToTopTarget: LibraryScrollToTopTarget,
 ) {
     HorizontalPager(
         modifier = Modifier.fillMaxSize(),
@@ -56,10 +55,8 @@ fun LibraryPager(
 
         if (items.isEmpty()) {
             LibraryPageEmptyScreen(
-                searchQuery = searchQuery,
                 hasActiveFilters = hasActiveFilters,
                 contentPadding = contentPadding,
-                onGlobalSearchClicked = onGlobalSearchClicked,
             )
             return@HorizontalPager
         }
@@ -77,6 +74,8 @@ fun LibraryPager(
             remember { mutableIntStateOf(0) }
         }
 
+        val displaySettings = displaySettingsForPage(libraryPage)
+        val pageScrollToTopTarget = scrollToTopTarget.takeIf { page == state.currentPage }
         val onClick: (LibraryItem) -> Unit = { onClickItem(libraryPage, it) }
         val onLongClick: (LibraryItem) -> Unit = { onLongClickItem(libraryPage, it) }
 
@@ -90,9 +89,8 @@ fun LibraryPager(
                     onLongClick = onLongClick,
                     onClickContinueReading = onClickContinueReading,
                     isContinueReadingAvailable = isContinueReadingAvailable,
-                    searchQuery = searchQuery,
-                    onGlobalSearchClicked = onGlobalSearchClicked,
                     displaySettings = displaySettings,
+                    scrollToTopTarget = pageScrollToTopTarget,
                 )
             }
             LibraryDisplayMode.CompactGrid, LibraryDisplayMode.CoverOnlyGrid -> {
@@ -106,9 +104,8 @@ fun LibraryPager(
                     onLongClick = onLongClick,
                     onClickContinueReading = onClickContinueReading,
                     isContinueReadingAvailable = isContinueReadingAvailable,
-                    searchQuery = searchQuery,
-                    onGlobalSearchClicked = onGlobalSearchClicked,
                     displaySettings = displaySettings,
+                    scrollToTopTarget = pageScrollToTopTarget,
                 )
             }
             LibraryDisplayMode.ComfortableGrid -> {
@@ -121,9 +118,8 @@ fun LibraryPager(
                     onLongClick = onLongClick,
                     onClickContinueReading = onClickContinueReading,
                     isContinueReadingAvailable = isContinueReadingAvailable,
-                    searchQuery = searchQuery,
-                    onGlobalSearchClicked = onGlobalSearchClicked,
                     displaySettings = displaySettings,
+                    scrollToTopTarget = pageScrollToTopTarget,
                 )
             }
             LibraryDisplayMode.ComfortableList -> {
@@ -136,9 +132,8 @@ fun LibraryPager(
                     onLongClick = onLongClick,
                     onClickContinueReading = onClickContinueReading,
                     isContinueReadingAvailable = isContinueReadingAvailable,
-                    searchQuery = searchQuery,
-                    onGlobalSearchClicked = onGlobalSearchClicked,
                     displaySettings = displaySettings,
+                    scrollToTopTarget = pageScrollToTopTarget,
                 )
             }
         }
@@ -147,31 +142,16 @@ fun LibraryPager(
 
 @Composable
 fun LibraryPageEmptyScreen(
-    searchQuery: String?,
     hasActiveFilters: Boolean,
     contentPadding: PaddingValues,
-    onGlobalSearchClicked: () -> Unit,
 ) {
-    val msg = when {
-        !searchQuery.isNullOrEmpty() -> MR.strings.no_results_found
-        hasActiveFilters -> MR.strings.error_no_match
-        else -> MR.strings.information_no_manga_group
-    }
+    val msg = if (hasActiveFilters) MR.strings.error_no_match else MR.strings.information_no_manga_group
 
+    // A lazy column so an empty page still drives pull-to-refresh and the collapsing group header.
     FastScrollLazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = contentPadding + PaddingValues(8.dp),
     ) {
-        item {
-            if (!searchQuery.isNullOrEmpty()) {
-                GlobalSearchItem(
-                    modifier = Modifier.fillMaxWidth(),
-                    searchQuery = searchQuery,
-                    onClick = onGlobalSearchClicked,
-                )
-            }
-        }
-
         item {
             EmptyScreen(
                 stringRes = msg,

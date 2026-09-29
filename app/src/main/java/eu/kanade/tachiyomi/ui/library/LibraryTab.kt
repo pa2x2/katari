@@ -5,8 +5,6 @@ import androidx.compose.animation.graphics.res.animatedVectorResource
 import androidx.compose.animation.graphics.res.rememberAnimatedVectorPainter
 import androidx.compose.animation.graphics.vector.AnimatedImageVector
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -26,7 +24,6 @@ import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
 import cafe.adriel.voyager.navigator.tab.TabOptions
-import dev.icerock.moko.resources.StringResource
 import eu.kanade.presentation.category.components.ChangeCategoryDialog
 import eu.kanade.presentation.components.AppSnackbarHost
 import eu.kanade.presentation.entry.DownloadAction
@@ -35,16 +32,20 @@ import eu.kanade.presentation.entry.components.MergeEditorDialog
 import eu.kanade.presentation.entry.components.MergeEditorEntry
 import eu.kanade.presentation.entry.selectionEntryTypePresentation
 import eu.kanade.presentation.library.DeleteLibraryEntriesDialog
+import eu.kanade.presentation.library.EmptyLibraryScreen
 import eu.kanade.presentation.library.LibrarySettingsDialog
 import eu.kanade.presentation.library.MoveEntriesCategoryDialog
 import eu.kanade.presentation.library.MoveEntriesConflictDialog
 import eu.kanade.presentation.library.MoveEntriesProfileDialog
 import eu.kanade.presentation.library.components.LibraryContent
+import eu.kanade.presentation.library.components.LibraryScrollToTopTarget
 import eu.kanade.presentation.library.components.LibraryToolbar
 import eu.kanade.presentation.more.onboarding.GETTING_STARTED_URL
+import eu.kanade.presentation.more.settings.screen.data.rememberRestoreBackupLauncher
 import eu.kanade.presentation.util.Tab
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.library.LibraryUpdateJob
+import eu.kanade.tachiyomi.ui.browse.BrowseTab
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchScreen
 import eu.kanade.tachiyomi.ui.category.CategoryScreen
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
@@ -67,8 +68,6 @@ import tachiyomi.domain.library.model.LibraryItem
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.screens.EmptyScreen
-import tachiyomi.presentation.core.screens.EmptyScreenAction
 import tachiyomi.presentation.core.screens.LoadingScreen
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
@@ -89,7 +88,7 @@ data object LibraryTab : Tab {
         }
 
     override suspend fun onReselect(navigator: Navigator) {
-        requestOpenSettingsSheet()
+        reselectEvent.send(Unit)
     }
 
     @Composable
@@ -107,47 +106,31 @@ data object LibraryTab : Tab {
         val settingsScreenModel =
             rememberScreenModel(tag = activeProfile?.id?.toString()) { LibrarySettingsScreenModel() }
         val state by screenModel.state.collectAsState()
+        val updateProgress by screenModel.updateProgress.collectAsState()
 
         val snackbarHostState = remember { SnackbarHostState() }
+        val scrollToTopTarget = remember { LibraryScrollToTopTarget() }
 
-        fun showRefreshMessage(started: Boolean, messageRes: StringResource) {
+        // A started update reports itself on the library's progress strip; only a refused start needs a message.
+        fun showAlreadyRunningMessage(started: Boolean) {
+            if (started) return
             scope.launch {
-                val msgRes = when {
-                    !started -> MR.strings.update_already_running
-                    else -> messageRes
-                }
-                snackbarHostState.showSnackbar(context.stringResource(msgRes))
+                snackbarHostState.showSnackbar(context.stringResource(MR.strings.update_already_running))
             }
         }
 
         val onClickRefresh: suspend (LibraryScreenModel.State) -> Boolean = { state ->
             val activePage = state.activePage
-            val started = LibraryUpdateJob.startNow(
+            LibraryUpdateJob.startNow(
                 context = context,
                 category = activePage?.category,
                 sourceId = activePage?.sourceId,
                 entryType = activePage?.entryType,
-            )
-            val activeConstraints = listOf(
-                activePage?.category,
-                activePage?.sourceId,
-                activePage?.entryType,
-            ).count { it != null }
-            val messageRes = when {
-                activeConstraints > 1 -> MR.strings.updating_group
-                activePage?.entryType != null -> MR.strings.updating_type
-                activePage?.sourceId != null -> MR.strings.updating_extension
-                activePage?.category != null -> MR.strings.updating_category
-                else -> MR.strings.updating_library
-            }
-            showRefreshMessage(started, messageRes)
-            started
+            ).also(::showAlreadyRunningMessage)
         }
 
         val onClickGlobalUpdate: suspend () -> Boolean = {
-            val started = LibraryUpdateJob.startNow(context)
-            showRefreshMessage(started, MR.strings.updating_library)
-            started
+            LibraryUpdateJob.startNow(context).also(::showAlreadyRunningMessage)
         }
 
         Scaffold(
@@ -226,28 +209,28 @@ data object LibraryTab : Tab {
                 }
                 state.searchQuery.isNullOrEmpty() && !state.hasActiveFilters && state.isLibraryEmpty -> {
                     val handler = LocalUriHandler.current
-                    EmptyScreen(
-                        stringRes = MR.strings.information_empty_library,
+                    val restoreBackup = rememberRestoreBackupLauncher()
+                    EmptyLibraryScreen(
+                        onBrowseSources = {
+                            scope.launch { HomeScreen.openTab(HomeScreen.Tab.Browse(BrowseTab.Page.Sources)) }
+                        },
+                        onRestoreBackup = restoreBackup,
+                        onOpenGuide = { handler.openUri(GETTING_STARTED_URL) },
                         modifier = Modifier.padding(contentPadding),
-                        actions = listOf(
-                            EmptyScreenAction(
-                                stringRes = MR.strings.getting_started_guide,
-                                icon = Icons.AutoMirrored.Outlined.HelpOutline,
-                                onClick = { handler.openUri(GETTING_STARTED_URL) },
-                            ),
-                        ),
                     )
                 }
                 else -> {
                     LibraryContent(
                         pages = state.displayedPages,
-                        searchQuery = state.searchQuery,
+                        // Pages are built for the applied query, which trails typing; render what they match.
+                        searchQuery = state.displayedPagesSearchQuery,
+                        showSearchTips = state.searchQuery == "",
                         selection = state.selection,
                         contentPadding = contentPadding,
                         currentPage = state.coercedActivePageIndex,
                         hasActiveFilters = state.hasActiveFilters,
-                        showPageTabs = state.showCategoryTabs || !state.searchQuery.isNullOrEmpty(),
-                        showItemCounts = state.showEntryCount || !state.searchQuery.isNullOrEmpty(),
+                        showPageTabs = state.showCategoryTabs,
+                        showItemCounts = state.showEntryCount,
                         onChangeCurrentPage = { index ->
                             state.libraryData.profileId?.let { profileId ->
                                 screenModel.updateActivePageIndex(profileId, index)
@@ -271,13 +254,24 @@ data object LibraryTab : Tab {
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         },
                         onRefresh = { onClickRefresh(state) },
+                        updateProgress = updateProgress,
+                        onCancelUpdate = screenModel::cancelUpdate,
                         onGlobalSearchClicked = {
                             navigator.push(GlobalSearchScreen(screenModel.state.value.searchQuery ?: ""))
                         },
                         getDisplayMode = { screenModel.getDisplayMode() },
                         getColumnsForOrientation = { screenModel.getColumnsForOrientation(it) },
                         getItemsForPage = { state.getItemsForPage(it) },
-                        displaySettings = state.displaySettings,
+                        displaySettingsForPage = state::displaySettingsForPage,
+                        scrollToTopTarget = scrollToTopTarget,
+                        onSearchQueryChange = screenModel::search,
+                        onSeeAllSearchResults = { page ->
+                            // Leave search on the chosen group's page; the model maps it onto the unsearched pages.
+                            val index = state.displayedPages.indexOfFirst { it.id == page.id }
+                            val profileId = state.libraryData.profileId
+                            if (index >= 0 && profileId != null) screenModel.updateActivePageIndex(profileId, index)
+                            screenModel.search(null)
+                        },
                     )
                 }
             }
@@ -398,7 +392,12 @@ data object LibraryTab : Tab {
 
         LaunchedEffect(Unit) {
             launch { queryEvent.receiveAsFlow().collect(screenModel::search) }
-            launch { requestSettingsSheetEvent.receiveAsFlow().collectLatest { screenModel.showSettingsDialog() } }
+            launch {
+                // Reselecting the tab first returns the page to its top; only a page already there opens the sheet.
+                reselectEvent.receiveAsFlow().collectLatest {
+                    if (!scrollToTopTarget.scrollToTop()) screenModel.showSettingsDialog()
+                }
+            }
             launch {
                 screenModel.moveEvents.receiveAsFlow().collect { event ->
                     val message = when (event) {
@@ -421,9 +420,8 @@ data object LibraryTab : Tab {
     private val queryEvent = Channel<String>()
     suspend fun search(query: String) = queryEvent.send(query)
 
-    // For opening settings sheet in LibraryController
-    private val requestSettingsSheetEvent = Channel<Unit>()
-    private suspend fun requestOpenSettingsSheet() = requestSettingsSheetEvent.send(Unit)
+    // Tab reselection, handled by the visible page
+    private val reselectEvent = Channel<Unit>()
 }
 
 @Composable
