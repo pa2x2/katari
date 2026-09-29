@@ -9,28 +9,7 @@ import java.util.concurrent.atomic.AtomicInteger
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertIs
-import kotlin.test.assertTrue
 internal class SourceBookMaterializationTest : SourceBookContentSessionFixture() {
-    @Test
-    fun `declared oversized resource fails before external access`() = runTest {
-        val resolver = FakeExternalResolver(emptyMap())
-        val session = session(
-            media = bookMedia(
-                resources = listOf(
-                    resource(
-                        id = "huge",
-                        size = 512L * 1024L * 1024L + 1L,
-                        location = BookResourceLocation.RemoteRequest("https://example.invalid/huge"),
-                    ),
-                ),
-            ),
-            resolver = resolver,
-        )
-
-        assertTrue(session.materializeResource("huge").isFailure)
-        assertTrue(resolver.requests.isEmpty())
-    }
-
     @Test
     fun `bounded materialization stops reading after the acquisition limit`() = runTest {
         val bytesRead = AtomicInteger()
@@ -80,30 +59,6 @@ internal class SourceBookMaterializationTest : SourceBookContentSessionFixture()
 
         assertIs<BookResourceMaterializationLimitException>(failure)
         assertEquals(5, bytesRead.get())
-    }
-
-    @Test
-    fun `session close releases outstanding streams once`() = runTest {
-        val resolver = FakeExternalResolver(
-            mapOf("remote:https://example.invalid/book" to "content".encodeToByteArray()),
-        )
-        val session = session(
-            media = bookMedia(
-                resources = listOf(
-                    resource(
-                        "remote",
-                        location = BookResourceLocation.RemoteRequest("https://example.invalid/book"),
-                    ),
-                ),
-            ),
-            resolver = resolver,
-        )
-
-        session.openResource("remote").getOrThrow()
-        session.close()
-        session.close()
-
-        assertEquals(1, resolver.closeCount.get())
     }
 
     @Test

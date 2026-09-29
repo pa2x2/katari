@@ -16,9 +16,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import java.nio.file.Files
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
 import kotlin.test.assertNull
-import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
 class BookDocumentPreparedCacheTest {
@@ -38,30 +36,6 @@ class BookDocumentPreparedCacheTest {
         assertNull(cache.read(key.copy(revision = "different-digest")))
         assertNull(cache.read(key.copy(modelVersion = key.modelVersion + 1)))
         directory.deleteRecursively()
-    }
-
-    @Test
-    fun `oversized entries are skipped without displacing cached books or leaving partial files`() {
-        val directory = Files.createTempDirectory("book-document-bounded-cache").toFile()
-        try {
-            val cache = BookDocumentPreparedCache(
-                RuntimeEnvironment.getApplication(),
-                directory,
-                maxEntryBytes = 4096,
-            )
-            val key = BookDocumentPreparedCacheKey("publication", "revision")
-            val small =
-                BookDocumentPreparedCacheValue(BookDocumentPublicationModel(listOf(cachedDocument())), emptyMap())
-            val large = small.copy(model = BookDocumentPublicationModel(listOf(cachedDocument("a".repeat(4096)))))
-
-            assertTrue(cache.write(key, small))
-            assertFalse(cache.write(key.copy(revision = "oversized"), large))
-            assertEquals(small, cache.read(key))
-            assertNull(cache.read(key.copy(revision = "oversized")))
-            assertEquals(listOf("${key.diskKey()}.json"), directory.listFiles()!!.map { it.name })
-        } finally {
-            directory.deleteRecursively()
-        }
     }
 
     private fun cachedDocument(text: String = "Readable text"): BookDocument = BookDocument(

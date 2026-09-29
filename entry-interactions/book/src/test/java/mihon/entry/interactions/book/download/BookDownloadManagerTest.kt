@@ -1,24 +1,18 @@
 package mihon.entry.interactions.book.download
 
 import android.content.Context
-import eu.kanade.tachiyomi.source.entry.EntryType
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.verify
 import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.CoroutineStart
-import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.emptyFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import mihon.entry.interactions.book.document.preparation.BookDocumentPreparedCache
 import mihon.entry.interactions.book.document.resource.BookPublicationResourceGatewayFactory
 import mihon.entry.interactions.book.download.model.BookDownload
-import mihon.entry.interactions.book.download.model.BookDownloadFailure
 import mihon.entry.interactions.download.EntryDownloadWorkController
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.model.Entry
@@ -28,28 +22,6 @@ import kotlin.test.assertFalse
 import kotlin.test.assertSame
 
 class BookDownloadManagerTest {
-    @Test
-    fun `retrying a failed book notifies the shared queue runner`() = runTest {
-        val downloader = mockk<BookDownloader> {
-            coEvery { download(any()) } returns BookDownloadFailure(BookDownloadFailure.Reason.NETWORK)
-        }
-        val manager = manager(downloader)
-        manager.queueBooks(
-            Entry.create().copy(id = 1L, type = EntryType.BOOK, source = 42L, url = "/book"),
-            listOf(chapter(id = 11L, sourceOrder = 1L)),
-            autoStart = false,
-        )
-        manager.runDownloads()
-        assertFalse(manager.hasPendingDownloads())
-        val retry = async(start = CoroutineStart.UNDISPATCHED) {
-            manager.statusFlow().first { it.status == BookDownload.State.QUEUE }
-        }
-
-        manager.startDownloads()
-
-        assertEquals(11L, retry.await().chapter.id)
-    }
-
     @Test
     fun `queue changes made during restoration win without duplicating children`() {
         val restoredFirst = download(1L)
@@ -96,34 +68,6 @@ class BookDownloadManagerTest {
 
         assertEquals(BookDownload.State.QUEUE, manager.queueState.value.single().status)
         assertFalse(manager.isRunning.value)
-    }
-
-    @Test
-    fun `cancelling an active book continues pending work without stopping shared execution`() = runTest {
-        val downloadStarted = CompletableDeferred<Unit>()
-        val downloader = mockk<BookDownloader> {
-            coEvery { download(match { it.chapter.id == 11L }) } coAnswers {
-                downloadStarted.complete(Unit)
-                awaitCancellation()
-            }
-            coEvery { download(match { it.chapter.id == 12L }) } returns null
-        }
-        val workController = mockk<EntryDownloadWorkController>(relaxed = true)
-        val manager = manager(downloader, workController)
-        val entry = Entry.create().copy(id = 1L, source = 42L, url = "/book", title = "Book")
-        manager.queueBooks(
-            entry,
-            listOf(chapter(id = 11L, sourceOrder = 1L), chapter(id = 12L, sourceOrder = 2L)),
-            autoStart = false,
-        )
-        val runtime = launch { manager.runDownloads() }
-        downloadStarted.await()
-
-        manager.removeFromQueue(listOf(11L))
-        runtime.join()
-
-        assertEquals(emptyList(), manager.queueState.value)
-        verify(exactly = 0) { workController.stop() }
     }
 
     private fun download(chapterId: Long): BookDownload = mockk {

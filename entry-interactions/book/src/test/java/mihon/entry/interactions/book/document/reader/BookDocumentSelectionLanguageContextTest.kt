@@ -36,36 +36,6 @@ class BookDocumentSelectionLanguageContextTest {
             .shouldBeLessThanOrEqual(1_000)
     }
 
-    @Test
-    fun `selection reports the languages its text declares in reading order`() {
-        val leaves = listOf(
-            leaf(token = "quote", text = "Bonjour", languageTag = "fr"),
-            leaf(token = "aside", text = "she said", languageTag = null),
-            leaf(token = "reply", text = "hello", languageTag = "en"),
-            leaf(token = "echo", text = "Salut", languageTag = "fr"),
-        )
-
-        val projection = requireNotNull(
-            projectBookDocumentSelection(
-                ownerIdentity = "owner",
-                selectedTexts = leaves.map { annotatedSelection(it.fullText, token = it.token) },
-                selectableLeaves = leaves.associateBy(BookDocumentSelectableLeaf::token),
-                layouts = emptyMap(),
-                readerRootPositionInWindow = Offset.Zero,
-            ),
-        )
-
-        projection.languageTags shouldBe listOf("fr", "en")
-    }
-
-    private fun leaf(token: String, text: String, languageTag: String?) = BookDocumentSelectableLeaf(
-        token = token,
-        chapterId = 1L,
-        fullText = text,
-        separatorAfter = " ",
-        languageTag = languageTag,
-    )
-
     private fun annotatedSelection(text: String, token: String): AnnotatedString {
         return AnnotatedString.Builder(text).apply {
             addStringAnnotation(

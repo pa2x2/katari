@@ -50,19 +50,3 @@ internal fun PagingTheme(content: @Composable () -> Unit) {
         }
     }
 }
-
-internal fun pagingHtmlSection(html: String): BookDocumentSection<EntryChapter> {
-    val body = mihon.entry.interactions.book.format.html.prosechapter.sanitization.HtmlProseSanitizer.sanitize(
-        html.encodeToByteArray(),
-        mihon.entry.interactions.book.format.html.prosechapter.sanitization.HtmlProseSanitizationPolicy(),
-    )
-    val document = mihon.entry.interactions.book.format.html.prosechapter.parsing.HtmlProseDocumentParser()
-        .parse("chapter-1", null, body)
-    return BookDocumentSection(
-        "section-1",
-        EntryChapter.create().copy(id = 1L, name = "Chapter 1"),
-        PreparedBookDocument(document),
-        BookDocumentPosition(document.blocks.first().id, 0),
-        null,
-    )
-}

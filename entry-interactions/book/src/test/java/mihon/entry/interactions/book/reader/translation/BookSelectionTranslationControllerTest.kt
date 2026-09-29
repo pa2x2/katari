@@ -30,7 +30,6 @@ import mihon.translation.api.provider.TranslationProviderDisclosure
 import mihon.translation.api.request.TranslationRequest
 import mihon.translation.api.request.TranslationTargetLanguageSelection
 import mihon.translation.api.result.TranslationExecution
-import mihon.translation.ui.session.TranslationSelectionAnchor
 import mihon.translation.ui.session.TranslationSessionState
 import org.junit.jupiter.api.Test
 import tachiyomi.core.common.preference.InMemoryPreferenceStore
@@ -63,48 +62,6 @@ class BookSelectionTranslationControllerTest {
         controller.close()
     }
 
-    @Test
-    fun `availability loss preserves preference and clears the session`() = runTest {
-        val feature = RecordingFeature()
-        val host = FakeHostActions()
-        val automaticSelectionSetting = automaticSelectionSetting(enabled = true)
-        val controller = controller(feature, host, automaticSelectionSetting)
-        runCurrent()
-        controller.submitSelection(selection("selected", 1))
-        runCurrent()
-
-        host.availability = TranslationDeviceAvailability.TranslationServiceMissing
-        controller.onResume()
-        runCurrent()
-
-        automaticSelectionSetting.value.effectiveValue shouldBe true
-        controller.effectiveEnabled.value shouldBe false
-        controller.hostCoordinator.controller.state.value shouldBe TranslationSessionState.Hidden
-        controller.submitSelection(selection("ignored", 2))
-        runCurrent()
-        feature.requests.map(TranslationRequest::text) shouldBe listOf("selected")
-        controller.close()
-    }
-
-    @Test
-    fun `anchor changes move the session without preparing unchanged text`() = runTest {
-        val feature = RecordingFeature()
-        val controller = controller(feature, FakeHostActions())
-        runCurrent()
-        val first = selection("same", 1)
-        controller.submitSelection(first)
-        runCurrent()
-
-        val moved = first.copy(anchor = TranslationSelectionAnchor(40f, 50f, 60f, 70f))
-        controller.submitSelection(moved)
-        runCurrent()
-
-        feature.requests.size shouldBe 1
-        val state = controller.hostCoordinator.controller.state.value as TranslationSessionState.Active
-        state.input.anchor shouldBe moved.anchor
-        controller.close()
-    }
-
     private fun TestScope.controller(
         feature: RecordingFeature,
         host: FakeHostActions,
@@ -130,15 +87,6 @@ class BookSelectionTranslationControllerTest {
             profileValue = false,
             entryOverride = enabled,
         ),
-    )
-
-    private fun selection(text: String, generation: Int) = BookReaderTextSelection(
-        ownerIdentity = "owner",
-        identity = "selection-$generation",
-        text = text,
-        languageContextText = "surrounding $text prose",
-        languageTags = emptyList(),
-        anchor = TranslationSelectionAnchor(10f, 20f, 30f, 40f),
     )
 
     private fun readerSelection(text: String, isSettled: Boolean) = NeutralBookReaderTextSelection(

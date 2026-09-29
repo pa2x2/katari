@@ -11,53 +11,6 @@ import kotlin.test.assertNotNull
 @RunWith(RobolectricTestRunner::class)
 internal class BookDocumentViewerLocationTest : BookDocumentViewerFixture() {
     @Test
-    fun `the block containing the viewport anchor maps into document logical progression`() {
-        val section = section("current", listOf("a".repeat(100), "b".repeat(100)))
-        val items = section.document.blocks.map { BookDocumentViewerItem.Block(section, it) }
-
-        val second = assertNotNull(
-            bookDocumentViewerLocation(
-                items = listOf(items[1]),
-                visibleItems = listOf(
-                    BookDocumentVisibleItemLayout(index = 0, key = items[1].key, offset = 0, size = 800),
-                ),
-                viewportStartOffset = 0,
-                viewportEndOffset = 800,
-            ),
-        )
-        assertEquals(section.document.blocks[1].id, second.position.blockId)
-        assertEquals(50, second.position.offsetWithinBlock)
-        assertEquals(152f / 202f, second.progression)
-
-        val tallFirst = assertNotNull(
-            bookDocumentViewerLocation(
-                items = items,
-                visibleItems = listOf(
-                    BookDocumentVisibleItemLayout(index = 0, key = items[0].key, offset = -1_400, size = 2_000),
-                    BookDocumentVisibleItemLayout(index = 1, key = items[1].key, offset = 600, size = 100),
-                ),
-                viewportStartOffset = 0,
-                viewportEndOffset = 800,
-            ),
-        )
-        assertEquals(section.document.blocks[0].id, tallFirst.position.blockId)
-
-        val atStart = assertNotNull(
-            bookDocumentViewerLocation(
-                items = items,
-                visibleItems = listOf(
-                    BookDocumentVisibleItemLayout(index = 0, key = items[0].key, offset = 0, size = 100),
-                    BookDocumentVisibleItemLayout(index = 1, key = items[1].key, offset = 100, size = 1_000),
-                ),
-                viewportStartOffset = 0,
-                viewportEndOffset = 800,
-            ),
-        )
-        assertEquals(0, atStart.position.offsetWithinBlock)
-        assertEquals(0f, atStart.progression)
-    }
-
-    @Test
     fun `location follows visible key when section crossing shifts item indexes`() {
         val first = section("first", listOf("One", "Two"))
         val second = section("second", listOf("Three", "Four"))

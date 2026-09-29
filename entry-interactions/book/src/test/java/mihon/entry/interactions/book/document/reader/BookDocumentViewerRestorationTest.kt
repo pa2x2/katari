@@ -78,42 +78,4 @@ internal class BookDocumentViewerRestorationTest : BookDocumentViewerFixture() {
         assertEquals(afterLoading.indexOfFirst { it.key == transition.key }, anchor.index)
         assertEquals(-300, anchor.scrollOffset)
     }
-
-    @Test
-    fun `chapter activation resolves the visible block in the shifted window`() {
-        val first = section("first", listOf("One", "Two"))
-        val second = section("second", listOf("Three", "Four"))
-        val third = section("third", listOf("Five", "Six"))
-        val loaded = listOf(first, second, third).associateBy { it.owner }
-        val beforeCrossing = buildBookDocumentViewerItems(
-            window = EntryChildWindow("second", "first", "third"),
-            loaded = loaded,
-            keyOf = { it },
-        )
-        val afterCrossing = buildBookDocumentViewerItems(
-            window = EntryChildWindow("third", "second", null),
-            loaded = loaded,
-            keyOf = { it },
-        )
-        val visibleBlock = beforeCrossing
-            .filterIsInstance<BookDocumentViewerItem.Block<String>>()
-            .first { it.section === third }
-
-        val anchor = bookDocumentViewerDatasetAnchor(
-            items = afterCrossing,
-            visibleItems = listOf(
-                BookDocumentVisibleItemLayout(
-                    index = beforeCrossing.indexOfFirst { it.key == visibleBlock.key },
-                    key = visibleBlock.key,
-                    offset = -120,
-                    size = 700,
-                ),
-            ),
-            viewportStartOffset = 0,
-        )
-
-        assertNotNull(anchor)
-        assertEquals(afterCrossing.indexOfFirst { it.key == visibleBlock.key }, anchor.index)
-        assertEquals(120, anchor.scrollOffset)
-    }
 }

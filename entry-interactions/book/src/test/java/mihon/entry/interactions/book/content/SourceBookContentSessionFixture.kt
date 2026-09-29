@@ -12,17 +12,13 @@ import io.mockk.every
 import io.mockk.mockk
 import mihon.book.api.BookCatalogCoverage
 import mihon.book.api.BookContentDescriptor
-import mihon.book.api.BookResourceAvailability
 import tachiyomi.domain.entry.model.Entry
-import java.io.ByteArrayInputStream
-import java.io.InputStream
 import java.nio.file.Files
-import java.util.concurrent.atomic.AtomicInteger
 internal abstract class SourceBookContentSessionFixture {
     protected fun session(
         media: EntryMedia.Book,
         source: UnifiedSource = source(),
-        resolver: BookExternalResourceResolver = FakeExternalResolver(emptyMap()),
+        resolver: BookExternalResourceResolver = UnusedExternalResolver,
     ): SourceBookContentSession {
         return SourceBookContentSession(
             source = source,
@@ -63,58 +59,12 @@ internal abstract class SourceBookContentSessionFixture {
         )
     }
 
-    protected fun resource(
-        id: String,
-        order: Long? = null,
-        size: Long? = null,
-        availability: BookResourceAvailability = BookResourceAvailability.AVAILABLE,
-        location: BookResourceLocation,
-    ): BookSourceResource {
-        return BookSourceResource(
-            id = id,
-            order = order,
-            size = size,
-            availability = availability,
-            location = location,
-        )
-    }
-
-    protected fun inline(text: String): BookResourceLocation =
-        BookResourceLocation.InlineText(text, "text/plain")
-}
-internal class FakeExternalResolver(
-    private val content: Map<String, ByteArray>,
-    override val canResolveAppReferences: Boolean = true,
-) : BookExternalResourceResolver {
-    val requests = mutableListOf<Pair<BookResourceLocation, BookByteRange?>>()
-    val closeCount = AtomicInteger()
-
-    override suspend fun open(
-        location: BookResourceLocation,
-        range: BookByteRange?,
-    ): ExternalBookResource {
-        requests += location to range
-        val bytes = content.getValue(location.key())
-        val start = range?.startInclusive?.toInt() ?: 0
-        val end = range?.endExclusive?.coerceAtMost(bytes.size.toLong())?.toInt() ?: bytes.size
-        val stream = ByteArrayInputStream(bytes, start, end - start)
-        return object : ExternalBookResource {
-            override val stream: InputStream = stream
-
-            override fun close() {
-                stream.close()
-                closeCount.incrementAndGet()
-            }
-        }
-    }
+    protected fun resource(id: String, location: BookResourceLocation): BookSourceResource =
+        BookSourceResource(id = id, location = location)
 }
 
-internal fun BookResourceLocation.key(): String = when (this) {
-    is BookResourceLocation.RemoteRequest -> "remote:$url"
-    is BookResourceLocation.LocalUri -> "local:$uri"
-    is BookResourceLocation.AppReference -> "app:$id"
-    is BookResourceLocation.InlineBytes,
-    is BookResourceLocation.InlineText,
-    is BookResourceLocation.SourceChild,
-    -> error("Location is not external: $this")
+/** Resolver for sessions whose resources never leave the source. */
+private object UnusedExternalResolver : BookExternalResourceResolver {
+    override suspend fun open(location: BookResourceLocation, range: BookByteRange?): ExternalBookResource =
+        error("Unexpected external access to $location")
 }

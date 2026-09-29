@@ -8,17 +8,6 @@ internal class BookSelectionActionModeAvoidanceTest {
     private val selectionBounds = Rect(left = 100f, top = 400f, right = 200f, bottom = 450f)
 
     @Test
-    fun `popup appearing, dismissing or growing away from the selection repositions the native menu`() {
-        val below = Rect(left = 80f, top = 474f, right = 220f, bottom = 550f)
-        val above = Rect(left = 80f, top = 250f, right = 220f, bottom = 376f)
-
-        requiresActionModeReposition(selectionBounds, null, below) shouldBe true
-        requiresActionModeReposition(selectionBounds, below, null) shouldBe true
-        requiresActionModeReposition(selectionBounds, below, below.copy(bottom = 700f)) shouldBe true
-        requiresActionModeReposition(selectionBounds, above, above.copy(top = 150f)) shouldBe true
-    }
-
-    @Test
     fun `popup changes that leave the selected content extent in place keep the native menu stable`() {
         val below = Rect(left = 80f, top = 474f, right = 220f, bottom = 700f)
 

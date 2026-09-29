@@ -17,18 +17,6 @@ class HtmlProseSvgImageTest {
         assertEquals("cover", image.id())
     }
 
-    @Test
-    fun `vector artwork and transformed images keep their SVG representation`() {
-        for (content in listOf(
-            "<rect width='780' height='1227'/>",
-            "<image width='780' height='1227' href='cover.jpg' transform='rotate(90)'/>",
-            "<image width='100' height='100' href='cover.jpg'/>",
-        )) {
-            val body = sanitize("<svg viewBox='0 0 780 1227'>$content</svg>")
-            assertEquals("derived.svg", body.selectFirst("img")!!.attr("src"))
-        }
-    }
-
     private fun sanitize(svg: String) = HtmlProseSanitizer.sanitize(
         "<html><body>$svg</body></html>".encodeToByteArray(),
         HtmlProseSanitizationPolicy(

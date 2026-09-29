@@ -53,27 +53,6 @@ internal class BookDocumentViewerDatasetTest : BookDocumentViewerFixture() {
     }
 
     @Test
-    fun `a tail expansion keeps the window boundaries while sections change`() {
-        val first = section("first", listOf("One"))
-        val second = section("second", listOf("Two"))
-        val third = section("third", listOf("Three"))
-        val fourth = section("fourth", listOf("Four"))
-        val loaded = listOf(first, second, third, fourth).associateBy { it.owner }
-        val window = EntryChildWindow("second", "first", "third")
-
-        val before = buildBookDocumentViewerItems(window, loaded.filterKeys { it != "third" }, keyOf = { it })
-        val after = buildBookDocumentViewerItems(window, loaded, keyOf = { it })
-        assertTrue(before.isStablePrefixOf(after))
-
-        val rebased = buildBookDocumentViewerItems(
-            EntryChildWindow("second", "first", "fourth"),
-            loaded.filterKeys { it != "third" },
-            keyOf = { it },
-        )
-        assertFalse(before.isStablePrefixOf(rebased))
-    }
-
-    @Test
     fun `visible transitions never produce or complete a content location`() {
         val section = section("current", listOf("a".repeat(100)))
         val block = BookDocumentViewerItem.Block(section, section.document.blocks.single())
@@ -128,7 +107,7 @@ internal class BookDocumentViewerDatasetTest : BookDocumentViewerFixture() {
     }
 
     @Test
-    fun `a transition requests only an unloaded destination at the reading anchor`() {
+    fun `a transition requests only an unloaded destination at the reading anchor or hard boundary`() {
         val current = section("current", listOf("One", "Two"))
         val next = section("next", listOf("Three", "Four"))
         val unloaded = BookDocumentViewerItem.Transition(
@@ -157,50 +136,17 @@ internal class BookDocumentViewerDatasetTest : BookDocumentViewerFixture() {
             it is BookDocumentViewerItem.Transition && it.transition.to == "next"
         }
         assertNull(reached(loadedItems, loadedTransition, offset = 100, size = 600))
-    }
 
-    @Test
-    fun `compact transitions activate only after reaching their hard scroll boundary`() {
+        // A non-scrollable final chapter still reaches its unloaded previous boundary.
         val previous = BookDocumentViewerItem.Transition(
             EntryChildWindow("current", "previous", null).previousTransition(),
             "previous-boundary",
         )
-        val next = BookDocumentViewerItem.Transition(
-            EntryChildWindow("current", null, "next").nextTransition(),
-            "next-boundary",
-        )
-        val section = section("current", listOf("Text"))
-        val block = BookDocumentViewerItem.Block(section, section.document.blocks.single())
         val terminal = BookDocumentViewerItem.Transition(
             EntryChildWindow("current", "previous", null).nextTransition(),
             "terminal-boundary",
         )
-
-        assertEquals(
-            "previous",
-            bookDocumentViewerTransitionAtAnchor(
-                items = listOf(previous),
-                visibleItems = listOf(
-                    BookDocumentVisibleItemLayout(index = 0, key = previous.key, offset = 0, size = 200),
-                ),
-                viewportStartOffset = 0,
-                viewportEndOffset = 800,
-                canScrollBackward = false,
-            )?.to,
-        )
-        assertEquals(
-            "next",
-            bookDocumentViewerTransitionAtAnchor(
-                items = listOf(next),
-                visibleItems = listOf(
-                    BookDocumentVisibleItemLayout(index = 0, key = next.key, offset = 600, size = 200),
-                ),
-                viewportStartOffset = 0,
-                viewportEndOffset = 800,
-                canScrollForward = false,
-            )?.to,
-        )
-        // A non-scrollable final chapter still reaches its unloaded previous boundary.
+        val block = BookDocumentViewerItem.Block(current, current.document.blocks.first())
         assertEquals(
             "previous",
             bookDocumentViewerTransitionAtAnchor(

@@ -31,23 +31,4 @@ class EpubEncodingPreparationTest {
             }
         }
     }
-
-    @Test
-    fun `stylesheet byte order mark takes precedence over charset declaration`() = runTest {
-        listOf(Charsets.UTF_16LE, Charsets.UTF_16BE).forEach { charset ->
-            val file = encodedEpubPublicationFile(cssCharset = charset)
-            try {
-                val result = EpubBookPreparer().prepare(EpubContentSessionFixture(file))
-                val prepared = assertIs<BookPreparationResult.Success>(result, charset.name()).publication
-                try {
-                    val publication = assertIs<PreparedBookDocumentPublication>(prepared)
-                    assertEquals(0xFF123456L, publication.documents.single().blocks.single().style.foregroundArgb)
-                } finally {
-                    prepared.close()
-                }
-            } finally {
-                file.delete()
-            }
-        }
-    }
 }

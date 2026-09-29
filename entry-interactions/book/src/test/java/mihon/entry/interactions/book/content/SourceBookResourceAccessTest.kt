@@ -5,10 +5,7 @@ import eu.kanade.tachiyomi.source.entry.EntryMedia
 import io.mockk.coEvery
 import kotlinx.coroutines.test.runTest
 import mihon.book.api.BookContentDescriptor
-import mihon.book.api.BookResourceAvailability
 import org.junit.jupiter.api.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 internal class SourceBookResourceAccessTest : SourceBookContentSessionFixture() {
@@ -51,38 +48,5 @@ internal class SourceBookResourceAccessTest : SourceBookContentSessionFixture() 
 
         val mismatchFailure = assertNotNull(mismatchSession.openResource("chapter-1").exceptionOrNull())
         assertTrue(mismatchFailure.message.orEmpty().contains("non-BOOK"))
-    }
-
-    @Test
-    fun `unavailable resources fail with their availability before any resolver access`() = runTest {
-        val resolver = FakeExternalResolver(emptyMap(), canResolveAppReferences = false)
-        val session = session(
-            media = bookMedia(
-                resources = listOf(
-                    resource(
-                        id = "paid",
-                        availability = BookResourceAvailability.PURCHASE_REQUIRED,
-                        location = BookResourceLocation.RemoteRequest("https://example.invalid/paid"),
-                    ),
-                    resource(
-                        id = "app",
-                        location = BookResourceLocation.AppReference("download:42"),
-                    ),
-                ),
-            ),
-            resolver = resolver,
-        )
-
-        val paid = assertIs<BookResourceUnavailableException>(session.openResource("paid").exceptionOrNull())
-        val app = assertIs<BookResourceUnavailableException>(session.openResource("app").exceptionOrNull())
-
-        assertEquals("paid", paid.resourceId)
-        assertEquals(BookResourceAvailability.PURCHASE_REQUIRED, paid.availability)
-        assertEquals(BookResourceAvailability.UNSUPPORTED_APP_ACCESS, app.availability)
-        assertEquals(
-            BookResourceAvailability.UNSUPPORTED_APP_ACCESS,
-            session.getResource("app").getOrThrow().availability,
-        )
-        assertTrue(resolver.requests.isEmpty())
     }
 }

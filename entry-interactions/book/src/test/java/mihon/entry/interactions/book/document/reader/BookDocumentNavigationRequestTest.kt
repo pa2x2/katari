@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test
 
 class BookDocumentNavigationRequestTest {
     @Test
-    fun `pending navigation rejects the old viewport and passage seeks wait for their own restoration`() {
+    fun `pending navigation ignores stale viewports and is consumed only by its own request`() {
         val request = request(id = 1, chapterId = 20)
 
         request.acceptsLocation(chapterId = 10, position = position(0)) shouldBe false
@@ -18,10 +18,7 @@ class BookDocumentNavigationRequestTest {
         seek.acceptsLocation(20, position(0)) shouldBe false
         seek.acceptsLocation(20, position(0), restoredNavigationId = 2) shouldBe false
         seek.acceptsLocation(20, position(0), restoredNavigationId = 3) shouldBe true
-    }
 
-    @Test
-    fun `target viewport consumes only the request that it observed`() {
         val observed = request(id = 1, chapterId = 20)
         val newer = request(id = 2, chapterId = 20)
 

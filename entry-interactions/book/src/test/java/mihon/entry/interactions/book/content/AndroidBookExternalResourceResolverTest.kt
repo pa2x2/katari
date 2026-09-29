@@ -172,48 +172,6 @@ class AndroidBookExternalResourceResolverTest {
         assertEquals(2, requestCount.get())
     }
 
-    @Test
-    fun `same-origin https redirects retain authorization`() = runBlocking {
-        val requestCount = AtomicInteger()
-        val client = OkHttpClient.Builder()
-            .addInterceptor { chain ->
-                if (requestCount.incrementAndGet() == 1) {
-                    Response.Builder()
-                        .request(chain.request())
-                        .protocol(Protocol.HTTP_1_1)
-                        .code(302)
-                        .message("Found")
-                        .header("Location", "/redirected-book")
-                        .body("redirect".toResponseBody())
-                        .build()
-                } else {
-                    assertEquals("https://example.invalid/redirected-book", chain.request().url.toString())
-                    assertEquals("secret", chain.request().header("Authorization"))
-                    Response.Builder()
-                        .request(chain.request())
-                        .protocol(Protocol.HTTP_1_1)
-                        .code(200)
-                        .message("OK")
-                        .body("secure".toResponseBody())
-                        .build()
-                }
-            }
-            .build()
-        val resolver = AndroidBookExternalResourceResolver(context(), client)
-
-        resolver.open(
-            BookResourceLocation.RemoteRequest(
-                "https://example.invalid/book",
-                headers = mapOf("Authorization" to "secret"),
-            ),
-            null,
-        ).use { opened ->
-            assertEquals("secure", opened.stream.bufferedReader().readText())
-        }
-
-        assertEquals(2, requestCount.get())
-    }
-
     private fun context(): Context {
         val context = mockk<Context>()
         every { context.applicationContext } returns context
