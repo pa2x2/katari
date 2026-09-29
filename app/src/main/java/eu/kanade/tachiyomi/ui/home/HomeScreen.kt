@@ -295,8 +295,8 @@ object HomeScreen : Screen() {
                             resolveContentTab(resolveHomeScreenTab(requestedTab, contentTabs, configuredTabOrder))
                         tabNavigator.current = resolvedTab
 
-                        if (it is Tab.Browse && resolvedTab::class == BrowseTab::class && it.toExtensions) {
-                            BrowseTab.showExtension()
+                        if (it is Tab.Browse && resolvedTab::class == BrowseTab::class && it.page != null) {
+                            BrowseTab.showPage(it.page)
                         }
 
                         if (it is Tab.Library && it.entryIdToOpen != null && resolvedTab::class == LibraryTab::class) {
@@ -377,7 +377,7 @@ object HomeScreen : Screen() {
         ) : Tab
         data object Updates : Tab
         data object History : Tab
-        data class Browse(val toExtensions: Boolean = false) : Tab
+        data class Browse(val page: BrowseTab.Page? = null) : Tab
         data class More(val toDownloads: Boolean) : Tab
         data object Translator : Tab
         data object Profiles : Tab

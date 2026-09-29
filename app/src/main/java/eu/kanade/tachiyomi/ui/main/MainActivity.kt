@@ -93,6 +93,7 @@ import eu.kanade.tachiyomi.extension.ExtensionManager
 import eu.kanade.tachiyomi.ui.base.activity.BaseActivity
 import eu.kanade.tachiyomi.ui.base.delegate.SecureActivityDelegate
 import eu.kanade.tachiyomi.ui.base.delegate.requestAppUnlock
+import eu.kanade.tachiyomi.ui.browse.BrowseTab
 import eu.kanade.tachiyomi.ui.browse.catalog.CatalogScreen
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchScreen
 import eu.kanade.tachiyomi.ui.deeplink.DeepLinkScreen
@@ -973,8 +974,8 @@ internal fun resolveShortcutTab(
         }
         Constants.SHORTCUT_UPDATES -> HomeScreen.Tab.Updates
         Constants.SHORTCUT_HISTORY -> HomeScreen.Tab.History
-        Constants.SHORTCUT_SOURCES -> HomeScreen.Tab.Browse(false)
-        Constants.SHORTCUT_EXTENSIONS -> HomeScreen.Tab.Browse(true)
+        Constants.SHORTCUT_SOURCES -> HomeScreen.Tab.Browse(BrowseTab.Page.Sources)
+        Constants.SHORTCUT_EXTENSIONS -> HomeScreen.Tab.Browse(BrowseTab.Page.Extensions)
         Constants.SHORTCUT_DOWNLOADS -> HomeScreen.Tab.More(toDownloads = true)
         else -> null
     }
