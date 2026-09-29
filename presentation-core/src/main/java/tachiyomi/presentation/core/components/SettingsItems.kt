@@ -449,19 +449,6 @@ fun TriStateItem(
 }
 
 @Composable
-fun TextItem(label: String, value: String, onChange: (String) -> Unit) {
-    OutlinedTextField(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = SettingsItemsPaddings.Horizontal, vertical = 4.dp),
-        label = { Text(text = label) },
-        value = value,
-        onValueChange = onChange,
-        singleLine = true,
-    )
-}
-
-@Composable
 fun SettingsChipRow(labelRes: StringResource, content: @Composable FlowRowScope.() -> Unit) {
     Column {
         HeadingItem(labelRes)
