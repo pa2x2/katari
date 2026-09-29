@@ -1,5 +1,49 @@
 # Changelog
 
+## [1.11.0] - 2026-09-29
+
+### ✨ Added
+
+- The manga reader can recognize and translate text on pages. Turn on translate mode from the bottom bar, then tap a speech bubble or drag over an area to translate it. With "Show translations on the page", the reader translates every recognized text and draws the translation over the page. It can also prepare upcoming pages, optionally only on unmetered networks or while charging. The translate toolbar floats over the page and tucks into a screen edge.
+- Text recognition runs on the device. Manga OCR reads Japanese, including vertical text and furigana. PaddleOCR reads English, Latin, Cyrillic, Korean, Chinese, Arabic, Devanagari, Thai, Greek, Tamil, and Telugu scripts. ML Kit is available in builds with Google Play services. Models download only after you approve them, and mobile data use is opt-in.
+- Settings now have a Text recognition screen. It lets you choose the engine, see how each language is read and override it, try the settings on an image before saving, and review downloaded models with what each one is used for. Models that no engine needs anymore can be freed.
+- Translation languages can now be set per series. Languages chosen in reader translation popups apply to that series, and "Use for all series" makes them the new default. Manga series also remember their page language, which starts from the source's language. Book reader settings show and change the book's translation languages. Settings > Translation > Series languages lists every series with its own languages and clears them one by one or all at once. Backups include these choices.
+- Statistics has a twelve-month reading calendar and an activity patterns card with session counts, the usual time of day, and the busiest weekday. Summary tiles compare the period with the previous one and show the daily average and best streak.
+- Statistics top titles show covers, completed chapters, and share of reading time, with a See all screen for the full ranking. The All range adds a Lifetime card, and the Earlier screen explains history that has no dates. Library insights show progress as stacked bars and break down genres, status, sources, downloads, and titles added per year.
+- The source browse screen shows how many filters are applied, with a chip for each applied filter that removes it. Tapping a chip opens the filter sheet at that filter, and a Changed view lists only filters that differ from the source defaults.
+- FOSS releases now include separate APKs for arm64-v8a and armeabi-v7a devices, and the FOSS in-app updater downloads the one that matches the device.
+
+### 🔄 Changed
+
+- Katari now targets Android 17. On Android 17, a connection to your local network, such as a self-hosted LibreTranslate server, asks for the Nearby devices permission. Without that permission the connection fails at once with an explanation instead of timing out.
+
+### 🧩 Improved
+
+- The filter sheet has a status header with the active preset and a count of changed filters. Sort filters show the current option with a separate ascending or descending control. Include/exclude groups appear as chip grids with a pinned search. Short single-choice filters appear as chip rows, and text fields have clear buttons and move to the next field from the keyboard.
+- Filter group headers summarize the group's selection, and a reset action appears only when the group differs from its defaults. Invalid fields are marked where they are, a validation bar with Show stays above every filter page, and Apply states why it is blocked.
+- Paged filter lists have a header like the rest of the sheet and a Done button that returns to it.
+- Translation language pickers show recent languages, the app language, and the profile default first. Languages the current engine cannot translate into from the source are marked with the reason. The Translator tab reopens with the languages it last used.
+- Translation and text-to-speech settings collect unsaved changes in a save bar and ask before you leave without saving.
+- Manga pages that the reader scales down look smoother, and interlaced PNG pages need less memory to load.
+
+### 🗑️ Removed
+
+- Release APKs no longer support x86 and x86_64 devices. Published APKs, including the universal ones, are for ARM devices only.
+
+### 🐛 Fixed
+
+- Switching from a filtered search to Popular or Latest no longer discards the applied filters, and the filter chip returns to the search in one tap. Toolbar searches now use the applied filters instead of unapplied edits in the sheet.
+- A source filter that throws an error no longer crashes the filter sheet. Only that filter reports that its summary and checks are unavailable.
+- A failed filter suggestion lookup now says that suggestions could not be loaded instead of reporting an internal error.
+- Screen readers now announce the role and state of include/exclude filter rows.
+- The book reader now uses the book's declared languages when detecting the language of selected text.
+- Snackbar actions stay readable in book reader themes whose accent color matches the text color.
+- Cancelling a LibreTranslate translation now stops it even while the response is still downloading.
+
+### ⚡️ Performance
+
+- Translations shown in reader popups and on manga pages are cached on the device, so text translated before appears without asking the engine again, even after the app restarts.
+
 ## [1.10.2] - 2026-09-27
 
 ### ✨ Added
@@ -472,7 +516,8 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v1.10.2...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/v1.11.0...HEAD
+[1.11.0]: https://github.com/pa2x2/katari/releases/tag/v1.11.0
 [1.10.2]: https://github.com/pa2x2/katari/releases/tag/v1.10.2
 [1.10.1]: https://github.com/pa2x2/katari/releases/tag/v1.10.1
 [1.10.0]: https://github.com/pa2x2/katari/releases/tag/v1.10.0
