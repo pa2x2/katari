@@ -11,7 +11,7 @@ import mihon.text.recognition.spi.contribution.TextRecognitionProviderContributi
 val mlKitTextRecognitionRuntimeComponent: ApplicationFeatureRuntimeComponent =
     object : TextRecognitionRuntimeComponent {
         override fun contribute(application: Application): TextRecognitionRuntimeContribution {
-            val recognizers = MlKitScriptRecognizers()
+            val recognizers = MlKitScriptRecognizers(application)
             return TextRecognitionRuntimeContribution(
                 providers = listOf(
                     TextRecognitionProviderContribution(
