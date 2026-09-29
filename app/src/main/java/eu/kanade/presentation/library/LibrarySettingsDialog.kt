@@ -7,9 +7,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Refresh
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -19,6 +17,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import eu.kanade.presentation.components.TabbedDialog
 import eu.kanade.presentation.components.TabbedDialogPaddings
 import eu.kanade.presentation.entry.entryTypePresentation
+import eu.kanade.presentation.library.components.LibraryDisplayModeChooser
 import eu.kanade.presentation.library.components.LibraryPinnedStyleChooser
 import eu.kanade.presentation.library.grouping.LibraryGroupingEditor
 import eu.kanade.presentation.library.grouping.showLibraryGroupingTabsLabel
@@ -36,7 +35,6 @@ import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.BaseSortItem
 import tachiyomi.presentation.core.components.CheckboxItem
 import tachiyomi.presentation.core.components.HeadingItem
-import tachiyomi.presentation.core.components.SettingsChipRow
 import tachiyomi.presentation.core.components.SliderItem
 import tachiyomi.presentation.core.components.SortItem
 import tachiyomi.presentation.core.components.TriStateItem
@@ -255,28 +253,15 @@ private fun SortPage(
     }
 }
 
-private val displayModes = listOf(
-    MR.strings.action_display_grid to LibraryDisplayMode.CompactGrid,
-    MR.strings.action_display_comfortable_grid to LibraryDisplayMode.ComfortableGrid,
-    MR.strings.action_display_comfortable_list to LibraryDisplayMode.ComfortableList,
-    MR.strings.action_display_cover_only_grid to LibraryDisplayMode.CoverOnlyGrid,
-    MR.strings.action_display_list to LibraryDisplayMode.List,
-)
-
 @Composable
 private fun DisplayPage(
     screenModel: LibrarySettingsScreenModel,
 ) {
     val displayMode by screenModel.libraryPreferences.displayMode.collectAsState()
-    SettingsChipRow(MR.strings.action_display_mode) {
-        displayModes.forEach { (titleRes, mode) ->
-            FilterChip(
-                selected = displayMode == mode,
-                onClick = { screenModel.setDisplayMode(mode) },
-                label = { Text(stringResource(titleRes)) },
-            )
-        }
-    }
+    LibraryDisplayModeChooser(
+        selectedMode = displayMode,
+        onModeSelected = screenModel::setDisplayMode,
+    )
 
     val pinnedDisplayStyle by screenModel.libraryPreferences.pinnedDisplayStyle.collectAsState()
     LibraryPinnedStyleChooser(
