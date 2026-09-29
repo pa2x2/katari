@@ -8,6 +8,7 @@ import android.os.Build
 import androidx.work.BackoffPolicy
 import androidx.work.Constraints
 import androidx.work.CoroutineWorker
+import androidx.work.Data
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.ExistingWorkPolicy
 import androidx.work.ForegroundInfo
@@ -32,6 +33,9 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.guava.await
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
@@ -89,6 +93,7 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
     private val notifier = LibraryUpdateNotifier(context)
 
     private var entriesToUpdate: List<Entry> = mutableListOf()
+    private var updateScope = LibraryUpdateScope.Library
     private var currentFetchWindow: Pair<Long, Long> = Pair(0L, 0L)
 
     override suspend fun doWork(): Result {
@@ -120,15 +125,23 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
             }
         }
 
-        setForegroundSafely()
-
-        libraryPreferences.lastUpdatedTimestamp.set(Clock.System.now().toEpochMilliseconds())
-
         val categoryId = inputData.getLong(KEY_CATEGORY, -1L)
         val sourceId = inputData.getLong(KEY_SOURCE, -1L)
         val entryType = inputData.getString(KEY_ENTRY_TYPE)
             ?.let { serialized -> EntryType.entries.find { it.name == serialized } }
+        updateScope = LibraryUpdateScope.of(
+            categoryId = categoryId.takeIf { it != -1L },
+            sourceId = sourceId.takeIf { it != -1L },
+            entryType = entryType,
+        )
+        publishProgress(completed = 0)
+
+        setForegroundSafely()
+
+        libraryPreferences.lastUpdatedTimestamp.set(Clock.System.now().toEpochMilliseconds())
+
         addEntryToQueue(categoryId, sourceId, entryType)
+        publishProgress(completed = 0)
 
         return withIOContext {
             try {
@@ -408,11 +421,23 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
         ensureActive()
 
         updatingEntry.remove(entry)
-        completed.incrementAndFetch()
+        val completedCount = completed.incrementAndFetch()
         notifier.showProgressNotification(
             updatingEntry,
-            completed.load(),
+            completedCount,
             entriesToUpdate.size,
+        )
+        publishProgress(completedCount)
+    }
+
+    /** Makes the progress readable outside the notification; see [progressFlow]. */
+    private suspend fun publishProgress(completed: Int) {
+        setProgress(
+            workDataOf(
+                KEY_PROGRESS_SCOPE to updateScope.name,
+                KEY_PROGRESS_COMPLETED to completed,
+                KEY_PROGRESS_TOTAL to entriesToUpdate.size,
+            ),
         )
     }
 
@@ -468,6 +493,35 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
          * Key for entry type to update.
          */
         private const val KEY_ENTRY_TYPE = "entry_type"
+
+        private const val KEY_PROGRESS_SCOPE = "progress_scope"
+        private const val KEY_PROGRESS_COMPLETED = "progress_completed"
+        private const val KEY_PROGRESS_TOTAL = "progress_total"
+
+        /**
+         * Progress of the running library update, or null when none runs. An update shows up once it has decided
+         * to go ahead, so an automatic run that is only going to be retried later never appears.
+         */
+        fun progressFlow(context: Context): Flow<LibraryUpdateProgress?> {
+            return context.workManager.getWorkInfosByTagFlow(TAG)
+                .map { workInfos ->
+                    workInfos
+                        .filter { it.state == WorkInfo.State.RUNNING }
+                        .firstNotNullOfOrNull { it.progress.toLibraryUpdateProgress() }
+                }
+                .distinctUntilChanged()
+        }
+
+        private fun Data.toLibraryUpdateProgress(): LibraryUpdateProgress? {
+            val scope = getString(KEY_PROGRESS_SCOPE)
+                ?.let { name -> LibraryUpdateScope.entries.find { it.name == name } }
+                ?: return null
+            return LibraryUpdateProgress(
+                scope = scope,
+                completed = getInt(KEY_PROGRESS_COMPLETED, 0),
+                total = getInt(KEY_PROGRESS_TOTAL, 0),
+            )
+        }
 
         fun setupTask(
             context: Context,

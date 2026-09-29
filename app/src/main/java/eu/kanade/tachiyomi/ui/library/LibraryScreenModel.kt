@@ -11,6 +11,8 @@ import eu.kanade.presentation.entry.DownloadAction
 import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.presentation.library.components.LibraryDisplaySettings
 import eu.kanade.presentation.library.components.LibraryToolbarTitle
+import eu.kanade.tachiyomi.data.library.LibraryUpdateJob
+import eu.kanade.tachiyomi.data.library.LibraryUpdateProgress
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.getDisplayNameForEntryInfo
@@ -21,6 +23,9 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.WhileSubscribed
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
@@ -33,6 +38,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.flow.updateAndGet
 import mihon.core.common.utils.mutate
@@ -142,6 +148,14 @@ class LibraryScreenModel(
     private val displayModeState = libraryPreferences.displayMode.asState(screenModelScope)
     private val portraitColumnsState = libraryPreferences.portraitColumns.asState(screenModelScope)
     private val landscapeColumnsState = libraryPreferences.landscapeColumns.asState(screenModelScope)
+
+    /** The running library update, whichever screen or schedule started it. */
+    val updateProgress: StateFlow<LibraryUpdateProgress?> = LibraryUpdateJob.progressFlow(context)
+        .stateIn(screenModelScope, SharingStarted.WhileSubscribed(5.seconds), null)
+
+    fun cancelUpdate() {
+        screenModelScope.launchIO { LibraryUpdateJob.stop(context) }
+    }
 
     init {
         screenModelScope.launchIO {

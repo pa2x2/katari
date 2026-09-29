@@ -24,7 +24,6 @@ import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
 import cafe.adriel.voyager.navigator.tab.TabOptions
-import dev.icerock.moko.resources.StringResource
 import eu.kanade.presentation.category.components.ChangeCategoryDialog
 import eu.kanade.presentation.components.AppSnackbarHost
 import eu.kanade.presentation.entry.DownloadAction
@@ -107,48 +106,31 @@ data object LibraryTab : Tab {
         val settingsScreenModel =
             rememberScreenModel(tag = activeProfile?.id?.toString()) { LibrarySettingsScreenModel() }
         val state by screenModel.state.collectAsState()
+        val updateProgress by screenModel.updateProgress.collectAsState()
 
         val snackbarHostState = remember { SnackbarHostState() }
         val scrollToTopTarget = remember { LibraryScrollToTopTarget() }
 
-        fun showRefreshMessage(started: Boolean, messageRes: StringResource) {
+        // A started update reports itself on the library's progress strip; only a refused start needs a message.
+        fun showAlreadyRunningMessage(started: Boolean) {
+            if (started) return
             scope.launch {
-                val msgRes = when {
-                    !started -> MR.strings.update_already_running
-                    else -> messageRes
-                }
-                snackbarHostState.showSnackbar(context.stringResource(msgRes))
+                snackbarHostState.showSnackbar(context.stringResource(MR.strings.update_already_running))
             }
         }
 
         val onClickRefresh: suspend (LibraryScreenModel.State) -> Boolean = { state ->
             val activePage = state.activePage
-            val started = LibraryUpdateJob.startNow(
+            LibraryUpdateJob.startNow(
                 context = context,
                 category = activePage?.category,
                 sourceId = activePage?.sourceId,
                 entryType = activePage?.entryType,
-            )
-            val activeConstraints = listOf(
-                activePage?.category,
-                activePage?.sourceId,
-                activePage?.entryType,
-            ).count { it != null }
-            val messageRes = when {
-                activeConstraints > 1 -> MR.strings.updating_group
-                activePage?.entryType != null -> MR.strings.updating_type
-                activePage?.sourceId != null -> MR.strings.updating_extension
-                activePage?.category != null -> MR.strings.updating_category
-                else -> MR.strings.updating_library
-            }
-            showRefreshMessage(started, messageRes)
-            started
+            ).also(::showAlreadyRunningMessage)
         }
 
         val onClickGlobalUpdate: suspend () -> Boolean = {
-            val started = LibraryUpdateJob.startNow(context)
-            showRefreshMessage(started, MR.strings.updating_library)
-            started
+            LibraryUpdateJob.startNow(context).also(::showAlreadyRunningMessage)
         }
 
         Scaffold(
@@ -272,6 +254,8 @@ data object LibraryTab : Tab {
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         },
                         onRefresh = { onClickRefresh(state) },
+                        updateProgress = updateProgress,
+                        onCancelUpdate = screenModel::cancelUpdate,
                         onGlobalSearchClicked = {
                             navigator.push(GlobalSearchScreen(screenModel.state.value.searchQuery ?: ""))
                         },

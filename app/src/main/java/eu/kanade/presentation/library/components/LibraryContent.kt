@@ -21,15 +21,14 @@ import androidx.compose.ui.unit.dp
 import eu.kanade.core.preference.PreferenceMutableState
 import eu.kanade.presentation.library.search.LibrarySearchResults
 import eu.kanade.presentation.library.search.LibrarySearchTips
+import eu.kanade.tachiyomi.data.library.LibraryUpdateProgress
 import eu.kanade.tachiyomi.ui.library.LibraryPage
 import eu.kanade.tachiyomi.ui.library.LibraryPageTab
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.domain.library.model.LibraryItem
 import tachiyomi.domain.library.model.LibraryItemKey
 import tachiyomi.presentation.core.components.material.PullRefresh
-import kotlin.time.Duration.Companion.seconds
 
 @Composable
 fun SharedLibraryContent(
@@ -42,6 +41,8 @@ fun SharedLibraryContent(
     showItemCounts: Boolean,
     onChangeCurrentPage: (Int) -> Unit,
     onRefresh: suspend () -> Boolean,
+    updateProgress: LibraryUpdateProgress?,
+    onCancelUpdate: () -> Unit,
     scrollToTopTarget: LibraryScrollToTopTarget,
     pageContent: @Composable (pagerState: PagerState, page: Int, libraryPage: LibraryPage?) -> Unit,
 ) {
@@ -55,7 +56,7 @@ fun SharedLibraryContent(
         val pagerState = rememberPagerState(currentPage) { pages.size }
 
         val scope = rememberCoroutineScope()
-        var isRefreshing by remember(pagerState.currentPage) { mutableStateOf(false) }
+        var awaitingUpdate by rememberAwaitingUpdateState(updateProgress)
 
         val primaryTabs = remember(pages) {
             pages.map(LibraryPage::primaryTab).distinctBy(LibraryPageTab::id)
@@ -110,17 +111,14 @@ fun SharedLibraryContent(
             }
         }
 
+        LibraryUpdateStrip(progress = updateProgress, onCancel = onCancelUpdate)
+
         PullRefresh(
-            refreshing = isRefreshing,
+            refreshing = awaitingUpdate,
             enabled = selection.isEmpty(),
             onRefresh = {
                 scope.launch {
-                    val started = onRefresh()
-                    if (!started) return@launch
-                    // Fake refresh status but hide it after a second as it's a long running task
-                    isRefreshing = true
-                    delay(1.seconds)
-                    isRefreshing = false
+                    if (onRefresh()) awaitingUpdate = true
                 }
             },
         ) {
@@ -224,6 +222,8 @@ fun LibraryContent(
     onToggleSelection: (LibraryPage, LibraryItem) -> Unit,
     onToggleRangeSelection: (LibraryPage, LibraryItem) -> Unit,
     onRefresh: suspend () -> Boolean,
+    updateProgress: LibraryUpdateProgress?,
+    onCancelUpdate: () -> Unit,
     onGlobalSearchClicked: () -> Unit,
     getDisplayMode: (Int) -> PreferenceMutableState<LibraryDisplayMode>,
     getColumnsForOrientation: (Boolean) -> PreferenceMutableState<Int>,
@@ -281,6 +281,8 @@ fun LibraryContent(
             showItemCounts = showItemCounts,
             onChangeCurrentPage = onChangeCurrentPage,
             onRefresh = onRefresh,
+            updateProgress = updateProgress,
+            onCancelUpdate = onCancelUpdate,
             scrollToTopTarget = scrollToTopTarget,
         ) { pagerState, _, _ ->
             LibraryPager(

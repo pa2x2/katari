@@ -1699,6 +1699,8 @@
     <!-- Updates -->
     <string name="updating_library">Updating library</string>
     <string name="update_already_running">An update is already running</string>
+    <string name="library_update_progress">%1$s · %2$d / %3$d</string>
+    <string name="library_update_cancel">Cancel update</string>
     <string name="cant_open_last_read_chapter">Unable to open last seen item</string>
     <string name="updates_last_update_info">Library last updated: %s</string>
     <string name="updates_last_update_info_just_now">Just now</string>
