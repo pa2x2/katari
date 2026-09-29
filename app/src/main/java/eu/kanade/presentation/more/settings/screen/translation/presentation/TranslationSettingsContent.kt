@@ -19,7 +19,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.testTag
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppBarTitle
 import eu.kanade.presentation.more.settings.screen.translation.TranslationPlaygroundState
@@ -186,8 +185,7 @@ private fun TranslationPlayground(
     ElevatedCard(
         modifier = Modifier
             .padding(horizontal = MaterialTheme.padding.medium)
-            .fillMaxWidth()
-            .testTag(TRANSLATION_PLAYGROUND_TAG),
+            .fillMaxWidth(),
         shape = MaterialTheme.shapes.extraLarge,
     ) {
         Column(
@@ -203,8 +201,6 @@ private fun TranslationPlayground(
                 onChooseSource = onChooseSource,
                 onChooseTarget = onChooseTarget,
                 onSwap = onSwapLanguages,
-                sourceModifier = Modifier.testTag(TRANSLATION_SOURCE_TAG),
-                targetModifier = Modifier.testTag(TRANSLATION_TARGET_TAG),
                 style = TranslationLanguagePairSelectorStyle.Bar,
             )
             TranslationEngineSelectorRow(
@@ -216,7 +212,6 @@ private fun TranslationPlayground(
                     else -> translationEngineLabel(state.engine, engines.map { it.engine })
                 },
                 onClick = onChooseEngine,
-                modifier = Modifier.testTag(TRANSLATION_ENGINE_TAG),
             )
             TranslationWorkbench(
                 text = state.text,
@@ -231,9 +226,7 @@ private fun TranslationPlayground(
                 onSelectSource = controller::selectSourceLanguage,
                 onSelectEngine = controller::selectEngine,
                 onExternalAction = onExternalAction,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag(TRANSLATION_INPUT_TAG),
+                modifier = Modifier.fillMaxWidth(),
                 inputPlaceholder = stringResource(MR.strings.translation_settings_test_input),
             )
             if (
@@ -249,9 +242,7 @@ private fun TranslationPlayground(
             if (canOpenSetup && selectedProviderName != null) {
                 TextButton(
                     onClick = onOpenSetup,
-                    modifier = Modifier
-                        .align(Alignment.CenterHorizontally)
-                        .testTag(TRANSLATION_SYSTEM_SETUP_TAG),
+                    modifier = Modifier.align(Alignment.CenterHorizontally),
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Outlined.OpenInNew,
@@ -269,13 +260,6 @@ private fun TranslationPlayground(
         }
     }
 }
-
-internal const val TRANSLATION_PLAYGROUND_TAG = "translation_playground"
-internal const val TRANSLATION_SOURCE_TAG = "translation_source"
-internal const val TRANSLATION_TARGET_TAG = "translation_target"
-internal const val TRANSLATION_ENGINE_TAG = "translation_engine"
-internal const val TRANSLATION_SYSTEM_SETUP_TAG = "translation_system_setup"
-internal const val TRANSLATION_INPUT_TAG = "translation_input"
 
 private const val PLAYGROUND_ITEM_INDEX = 0
 private val SEARCH_HIGHLIGHT_SCROLL_DELAY = 500.milliseconds
