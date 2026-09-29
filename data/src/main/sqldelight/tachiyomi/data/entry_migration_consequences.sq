@@ -44,7 +44,7 @@ LIMIT :limit;
 consequenceStatus:
 SELECT
     count(*) AS pending_count,
-    coalesce(sum(CASE WHEN attempts > 0 THEN 1 ELSE 0 END), 0) AS failed_count,
+    count(CASE WHEN attempts > 0 THEN 1 END) AS failed_count,
     (
         SELECT last_error
         FROM entry_migration_consequences
