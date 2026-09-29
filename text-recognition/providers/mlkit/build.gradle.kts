@@ -5,6 +5,10 @@ plugins {
 
 android {
     namespace = "mihon.text.recognition.provider.mlkit"
+
+    defaultConfig {
+        consumerProguardFiles("consumer-proguard.pro")
+    }
 }
 
 dependencies {
