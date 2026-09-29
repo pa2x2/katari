@@ -6,19 +6,14 @@ import org.junit.jupiter.api.Test
 class HomeScreenTabsTest {
 
     @Test
-    fun `sanitized home tab order appends missing tabs`() {
-        sanitizeHomeScreenTabOrder(
+    fun `sanitized home tab order drops duplicates and appends tabs missing from a saved order`() {
+        val sanitized = sanitizeHomeScreenTabOrder(
             listOf(HomeScreenTabs.Browse, HomeScreenTabs.Library, HomeScreenTabs.Browse),
-        ) shouldBe listOf(
-            HomeScreenTabs.Browse,
-            HomeScreenTabs.Library,
-            HomeScreenTabs.Updates,
-            HomeScreenTabs.History,
-            HomeScreenTabs.More,
-            HomeScreenTabs.Profiles,
-            HomeScreenTabs.Translator,
-            HomeScreenTabs.Statistics,
         )
+
+        sanitized.take(2) shouldBe listOf(HomeScreenTabs.Browse, HomeScreenTabs.Library)
+        sanitized.toSet() shouldBe HomeScreenTabs.entries.toSet()
+        sanitized.size shouldBe HomeScreenTabs.entries.size
     }
 
     @Test

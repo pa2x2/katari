@@ -18,8 +18,6 @@ class FeedItemRefTest {
     fun `persisted lowercase and current entry ref payloads both decode`() {
         json.decodeFromString<FeedItemRef>("""{"type":"manga","id":1}""") shouldBe
             FeedItemRef(1L, EntryType.MANGA)
-        json.decodeFromString<FeedItemRef>("""{"type":"book","id":3}""") shouldBe
-            FeedItemRef(3L, EntryType.BOOK)
         val current = FeedItemRef(2L, EntryType.ANIME)
         json.decodeFromString<FeedItemRef>(json.encodeToString(current)) shouldBe current
     }

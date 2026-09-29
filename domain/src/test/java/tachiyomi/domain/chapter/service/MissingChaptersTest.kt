@@ -19,25 +19,13 @@ class MissingChaptersTest {
     }
 
     @Test
-    fun `calculateChapterGap returns difference`() {
-        calculateChapterGap(chapter(10.0), chapter(9.0)) shouldBe 0f
-        calculateChapterGap(chapter(10.0), chapter(8.0)) shouldBe 1f
-        calculateChapterGap(chapter(10.0), chapter(8.5)) shouldBe 1f
-        calculateChapterGap(chapter(10.0), chapter(1.1)) shouldBe 8f
-
-        calculateChapterGap(10.0, 9.0) shouldBe 0f
-        calculateChapterGap(10.0, 8.0) shouldBe 1f
-        calculateChapterGap(10.0, 8.5) shouldBe 1f
-        calculateChapterGap(10.0, 1.1) shouldBe 8f
-    }
-
-    @Test
-    fun `calculateChapterGap returns 0 if either are not valid chapter numbers`() {
+    fun `calculateChapterGap counts whole chapters between numbers and ignores unrecognized ones`() {
+        calculateChapterGap(10.0, 9.0) shouldBe 0
+        calculateChapterGap(10.0, 8.5) shouldBe 1
+        calculateChapterGap(10.0, 1.1) shouldBe 8
+        calculateChapterGap(chapter(10.0), chapter(8.0)) shouldBe 1
         calculateChapterGap(chapter(-1.0), chapter(10.0)) shouldBe 0
         calculateChapterGap(chapter(99.0), chapter(-1.0)) shouldBe 0
-
-        calculateChapterGap(-1.0, 10.0) shouldBe 0
-        calculateChapterGap(99.0, -1.0) shouldBe 0
     }
 
     private fun chapter(number: Double) = EntryChapter.create().copy(

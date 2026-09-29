@@ -10,7 +10,7 @@ import tachiyomi.domain.entry.service.sortedForReading
 class MergedChapterSequenceTest {
 
     @Test
-    fun `merged display order follows member order and visible descending sort`() {
+    fun `merged display follows member order while reading follows descending group traversal`() {
         val manga = Entry.create().copy(
             id = 1L,
             chapterFlags = Entry.CHAPTER_SORT_DESC or Entry.CHAPTER_SORTING_NUMBER,
@@ -24,22 +24,6 @@ class MergedChapterSequenceTest {
         )
 
         chapters.sortedForMergedDisplay(manga).map(EntryChapter::id) shouldBe listOf(101L, 203L, 202L, 201L)
-    }
-
-    @Test
-    fun `merged reading order follows descending group traversal and canonical ascending chapters`() {
-        val manga = Entry.create().copy(
-            id = 1L,
-            chapterFlags = Entry.CHAPTER_SORT_DESC or Entry.CHAPTER_SORTING_NUMBER,
-        )
-
-        val chapters = listOf(
-            chapter(id = 101, entryId = 1, chapterNumber = 1.0),
-            chapter(id = 203, entryId = 2, chapterNumber = 3.0),
-            chapter(id = 202, entryId = 2, chapterNumber = 2.0),
-            chapter(id = 201, entryId = 2, chapterNumber = 1.0),
-        )
-
         chapters.sortedForReading(manga).map(EntryChapter::id) shouldBe listOf(201L, 202L, 203L, 101L)
     }
 

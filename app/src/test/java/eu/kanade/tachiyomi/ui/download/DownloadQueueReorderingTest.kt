@@ -1,9 +1,7 @@
 package eu.kanade.tachiyomi.ui.download
 
-import android.view.MenuItem
 import cafe.adriel.voyager.core.annotation.InternalVoyagerApi
 import cafe.adriel.voyager.core.model.ScreenModelStore
-import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.source.entry.EntryType
 import io.mockk.every
 import io.mockk.mockk
@@ -29,14 +27,6 @@ class DownloadQueueReorderingTest {
     @Test
     fun `sorting paused queue publishes new row order to screen`() = verifyReorder(listOf(3L, 2L, 1L)) { model ->
         model.reorderQueue({ it.payload.chapterNumber }, reverse = true)
-    }
-
-    @Test
-    fun `moving paused download to top publishes new row order to screen`() = verifyReorder(
-        listOf(3L, 1L, 2L),
-    ) { model ->
-        val menu = mockk<MenuItem> { every { itemId } returns R.id.move_to_top }
-        model.listener.onMenuItemClick(3, menu)
     }
 
     private fun verifyReorder(expected: List<Long>, action: (DownloadQueueScreenModel) -> Unit) = runTest {

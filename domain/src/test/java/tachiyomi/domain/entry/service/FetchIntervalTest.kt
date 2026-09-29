@@ -71,32 +71,16 @@ class FetchIntervalTest {
     }
 
     @Test
-    fun `returns interval of 1 day when delta is less than 1 day`() {
-        val chapters = (1..20).map {
-            chapterWithTime(chapter, (15 * it).hours)
-        }
-        fetchInterval.calculateInterval(chapters, testTimeZone) shouldBe 1
-    }
+    fun `interval is floored to whole days and never below one day`() {
+        val subDay = (1..20).map { chapterWithTime(chapter, (15 * it).hours) }
+        fetchInterval.calculateInterval(subDay, testTimeZone) shouldBe 1
 
-    @Test
-    fun `returns interval with floored value when interval is decimal`() {
-        val chaptersWithUploadDate = (1..5).map {
-            chapterWithTime(chapter, (25 * it).hours)
-        }
-        fetchInterval.calculateInterval(chaptersWithUploadDate, testTimeZone) shouldBe 1
+        val decimal = (1..5).map { chapterWithTime(chapter, (25 * it).hours) }
+        fetchInterval.calculateInterval(decimal, testTimeZone) shouldBe 1
+        fetchInterval.calculateInterval(decimal.map { it.copy(dateUpload = 0L) }, testTimeZone) shouldBe 1
 
-        val chaptersWithoutUploadDate = chaptersWithUploadDate.map {
-            it.copy(dateUpload = 0L)
-        }
-        fetchInterval.calculateInterval(chaptersWithoutUploadDate, testTimeZone) shouldBe 1
-    }
-
-    @Test
-    fun `returns interval of 2 days when chapters are released just below every 2 days`() {
-        val chapters = (1..20).map {
-            chapterWithTime(chapter, (43 * it).hours)
-        }
-        fetchInterval.calculateInterval(chapters, testTimeZone) shouldBe 2
+        val justBelowTwoDays = (1..20).map { chapterWithTime(chapter, (43 * it).hours) }
+        fetchInterval.calculateInterval(justBelowTwoDays, testTimeZone) shouldBe 2
     }
 
     @Test

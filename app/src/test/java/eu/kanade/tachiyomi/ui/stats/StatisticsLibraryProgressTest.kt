@@ -14,35 +14,22 @@ import tachiyomi.domain.library.model.LibraryItemKey
 class StatisticsLibraryProgressTest {
 
     @Test
-    fun `partial coverage keeps supported progress and reports unavailable titles`() {
-        val result = buildLibraryProgress(
-            listOf(
-                item(id = 1L, progress = availableProgress(consumed = 0L, hasStarted = true)),
-                item(id = 2L, progress = EntryLibraryProgressResolution.Inapplicable(EntryType.BOOK)),
-            ),
-        )
-
-        checkNotNull(result)
-        result.notStarted shouldBe 0
-        result.inProgress shouldBe 1
-        result.total shouldBe 1
-        result.unavailable shouldBe 1
-        result.libraryTotal shouldBe 2
-        result.isPartial shouldBe true
-    }
-
-    @Test
-    fun `authoritative started state classifies zero-count progress`() {
+    fun `unavailable titles are reported and the authoritative started state classifies zero-count progress`() {
         val result = buildLibraryProgress(
             listOf(
                 item(id = 1L, progress = availableProgress(consumed = 0L, hasStarted = false)),
                 item(id = 2L, progress = availableProgress(consumed = 0L, hasStarted = true)),
+                item(id = 3L, progress = EntryLibraryProgressResolution.Inapplicable(EntryType.BOOK)),
             ),
         )
 
         checkNotNull(result)
         result.notStarted shouldBe 1
         result.inProgress shouldBe 1
+        result.total shouldBe 2
+        result.unavailable shouldBe 1
+        result.libraryTotal shouldBe 3
+        result.isPartial shouldBe true
     }
 
     private fun item(id: Long, progress: EntryLibraryProgressResolution): LibraryItem {

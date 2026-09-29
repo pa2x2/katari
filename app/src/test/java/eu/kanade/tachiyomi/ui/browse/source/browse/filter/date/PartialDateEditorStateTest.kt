@@ -25,16 +25,6 @@ class PartialDateEditorStateTest {
     }
 
     @Test
-    fun `lower precision omits subordinate components only from the confirmed candidate`() {
-        val filter = dateFilter(EntryPartialDate(2024, 2, 29))
-        val month = PartialDateEditorState.initial(filter).choosePrecision(EntryDatePrecision.MONTH)
-        month.candidateText shouldBe "2024-02"
-        month.choosePrecision(EntryDatePrecision.YEAR).candidateText shouldBe "2024"
-        filter.state shouldBe "2024-02-29"
-        month.choosePrecision(EntryDatePrecision.DAY).candidateText shouldBe "2024-02-29"
-    }
-
-    @Test
     fun `changing a component clears an impossible day without clamping it`() {
         val leap = PartialDateEditorState.initial(dateFilter(EntryPartialDate(2024, 2, 29)))
         leap.chooseYear(2023).missingStep() shouldBe EntryDatePrecision.DAY

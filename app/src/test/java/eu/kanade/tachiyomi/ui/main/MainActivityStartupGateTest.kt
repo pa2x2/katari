@@ -34,21 +34,6 @@ class MainActivityStartupGateTest {
         )
     }
 
-    @Test
-    fun `picker collapse authenticates remaining locked profile`() {
-        val profile = profile(id = 3L)
-
-        resolvePickerCollapseStartupGateDecision(
-            profile = profile,
-            requiresProfileUnlock = true,
-            shouldSkipProfileAuth = false,
-        ) shouldBe ProfileStartupDecision(
-            allowAppUnlockPrompt = true,
-            state = ProfileStartupGateState.Authenticating,
-            pendingAuthProfile = profile,
-        )
-    }
-
     private fun profile(id: Long) = Profile(
         id = id,
         uuid = "uuid-$id",

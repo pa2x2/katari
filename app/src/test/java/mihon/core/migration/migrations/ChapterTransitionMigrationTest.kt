@@ -21,7 +21,7 @@ class ChapterTransitionMigrationTest {
     fun `untouched boolean leaves the tri-state unset so the provider default applies`() = runTest {
         val store = MigrationTestPreferenceStore()
 
-        assertTrue(invokeMigration(store))
+        assertTrue(invokeMigration(mapOf(1L to store)))
 
         assertFalse(store.chapterTransitionMode().isSet())
         assertEquals(ChapterTransitionMode.ALWAYS, store.chapterTransitionMode().get())
@@ -35,19 +35,13 @@ class ChapterTransitionMigrationTest {
         second.getBoolean(LEGACY_ALWAYS_SHOW_CHAPTER_TRANSITION, true).set(false)
         val unregistered = MigrationTestPreferenceStore()
         unregistered.getBoolean(LEGACY_ALWAYS_SHOW_CHAPTER_TRANSITION, true).set(false)
-        val profileStore = MigrationTestProfileStore(mapOf(1L to unregistered, 2L to first, 3L to second))
-        val profileDatabase = mockk<ProfileDatabase>()
-        coEvery { profileDatabase.getProfiles(includeArchived = true) } returns listOf(profile(2), profile(3))
-        val context = MigrationContext(
-            dryrun = false,
-            previousVersion = 64,
-            dependencies = mapOf(
-                ProfileStore::class.java to profileStore,
-                ProfileDatabase::class.java to profileDatabase,
+
+        assertTrue(
+            invokeMigration(
+                stores = mapOf(1L to unregistered, 2L to first, 3L to second),
+                registeredProfiles = listOf(profile(2), profile(3)),
             ),
         )
-
-        assertTrue(ChapterTransitionMigration().invoke(context))
 
         assertEquals(ChapterTransitionMode.ALWAYS, first.chapterTransitionMode().get())
         assertEquals(ChapterTransitionMode.WHEN_NEEDED, second.chapterTransitionMode().get())
@@ -58,33 +52,24 @@ class ChapterTransitionMigrationTest {
     fun `falls back to the default profile store when no profiles exist`() = runTest {
         val onlyDefault = MigrationTestPreferenceStore()
         onlyDefault.getBoolean(LEGACY_ALWAYS_SHOW_CHAPTER_TRANSITION, true).set(false)
-        val profileStore = MigrationTestProfileStore(mapOf(1L to onlyDefault))
-        val profileDatabase = mockk<ProfileDatabase>()
-        coEvery { profileDatabase.getProfiles(includeArchived = true) } returns emptyList()
-        val context = MigrationContext(
-            dryrun = false,
-            previousVersion = 64,
-            dependencies = mapOf(
-                ProfileStore::class.java to profileStore,
-                ProfileDatabase::class.java to profileDatabase,
-            ),
-        )
 
-        assertTrue(ChapterTransitionMigration().invoke(context))
+        assertTrue(invokeMigration(mapOf(1L to onlyDefault)))
 
         assertEquals(ChapterTransitionMode.WHEN_NEEDED, onlyDefault.chapterTransitionMode().get())
         assertFalse(onlyDefault.getBoolean(LEGACY_ALWAYS_SHOW_CHAPTER_TRANSITION, true).isSet())
     }
 
-    private suspend fun invokeMigration(store: MigrationTestPreferenceStore): Boolean {
-        val profileStore = MigrationTestProfileStore(mapOf(1L to store))
+    private suspend fun invokeMigration(
+        stores: Map<Long, MigrationTestPreferenceStore>,
+        registeredProfiles: List<Profile> = emptyList(),
+    ): Boolean {
         val profileDatabase = mockk<ProfileDatabase>()
-        coEvery { profileDatabase.getProfiles(includeArchived = true) } returns emptyList()
+        coEvery { profileDatabase.getProfiles(includeArchived = true) } returns registeredProfiles
         val context = MigrationContext(
             dryrun = false,
             previousVersion = 64,
             dependencies = mapOf(
-                ProfileStore::class.java to profileStore,
+                ProfileStore::class.java to MigrationTestProfileStore(stores),
                 ProfileDatabase::class.java to profileDatabase,
             ),
         )

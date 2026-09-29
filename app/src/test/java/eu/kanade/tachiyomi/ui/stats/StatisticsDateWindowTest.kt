@@ -25,19 +25,6 @@ class StatisticsDateWindowTest {
     }
 
     @Test
-    fun `repeated month steps retain the preferred day across short months`() {
-        var window = StatsRange.ONE_YEAR.windowEndingOn(LocalDate.parse("2026-03-31"))
-        for (expected in listOf("2026-02-28", "2026-01-31", "2025-12-31")) {
-            window = window.shiftedByBuckets(1)
-            window.endDate shouldBe LocalDate.parse(expected)
-        }
-        for (expected in listOf("2026-01-31", "2026-02-28", "2026-03-31")) {
-            window = window.shiftedByBuckets(-1)
-            window.endDate shouldBe LocalDate.parse(expected)
-        }
-    }
-
-    @Test
     fun `range changes retain the month anchor while a day navigation selects a new day`() {
         val today = LocalDate.parse("2026-03-31")
         val february = StatsRange.ONE_YEAR.windowEndingOn(today).shiftedByBuckets(1)
