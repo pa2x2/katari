@@ -24,7 +24,6 @@ import mihon.entry.interactions.book.preparation.BookContentPreparer
 import mihon.entry.interactions.book.preparation.BookContentPreparerRegistry
 import mihon.entry.interactions.book.preparation.BookPreparationResult
 import mihon.entry.interactions.book.preparation.BookPublicationResourceDependencies
-import mihon.entry.interactions.book.preparation.BookResourceRequirement
 import mihon.entry.interactions.book.preparation.PreparedBookPublication
 import okhttp3.OkHttpClient
 import org.junit.runner.RunWith
@@ -127,9 +126,8 @@ internal data class BudgetDownloadResult(
 
 internal class ValidatingPreparer(
     private val descriptor: BookContentDescriptor,
-    private val expectedContent: String = "<p>Offline</p>",
-    private val requiredResourceIds: Set<String> = emptySet(),
-    private val resourceRequirements: Map<String, BookResourceRequirement> = emptyMap(),
+    private val expectedContent: String,
+    private val requiredResourceIds: Set<String>,
 ) : BookContentPreparer {
     override val id = "validating"
     override val outputModel = ValidatingPublicationModel.descriptor
@@ -145,7 +143,6 @@ internal class ValidatingPreparer(
                 override val model = ValidatingPublicationModel
                 override val resourceLoader = BookContentSessionResourceLoader(content)
                 override val requiredResourceIds = this@ValidatingPreparer.requiredResourceIds
-                override val resourceRequirements = this@ValidatingPreparer.resourceRequirements
                 override val publication = BookPublication(
                     id = content.publicationId,
                     revision = content.revision,

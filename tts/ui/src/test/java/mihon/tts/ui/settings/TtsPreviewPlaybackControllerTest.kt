@@ -7,15 +7,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
-import mihon.tts.api.TtsFeature
 import mihon.tts.api.playback.TtsPlaybackSession
-import mihon.tts.api.playback.TtsPlaybackStart
 import mihon.tts.api.playback.TtsPlaybackState
 import mihon.tts.api.playback.TtsStopReason
 import mihon.tts.api.playback.TtsStopResult
-import mihon.tts.api.preparation.ReadyTts
-import mihon.tts.api.preparation.TtsPreparation
-import mihon.tts.api.request.TtsRequest
 import org.junit.jupiter.api.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -25,7 +20,7 @@ class TtsPreviewPlaybackControllerTest {
     fun `late stop from replaced preview cannot detach the current session`() = runTest {
         val first = BlockingStopSession()
         val second = BlockingStopSession()
-        val feature = QueuedSessionTtsFeature(listOf(first, second))
+        val feature = TestTtsFeature(listOf(first, second))
         var state: TtsPreviewState = TtsPreviewState.Idle
         val controller = TtsPreviewPlaybackController(
             feature = feature,
@@ -50,19 +45,6 @@ class TtsPreviewPlaybackControllerTest {
         second.releaseStop.complete(Unit)
         runCurrent()
         controller.close()
-    }
-
-    private class QueuedSessionTtsFeature(
-        sessions: List<TtsPlaybackSession>,
-    ) : TtsFeature {
-        private val preparationFeature = TestTtsFeature()
-        private val remainingSessions = ArrayDeque(sessions)
-
-        override suspend fun prepare(request: TtsRequest): TtsPreparation = preparationFeature.prepare(request)
-
-        override suspend fun play(ready: ReadyTts): TtsPlaybackStart {
-            return TtsPlaybackStart.Started(remainingSessions.removeFirst())
-        }
     }
 
     private class BlockingStopSession : TtsPlaybackSession {

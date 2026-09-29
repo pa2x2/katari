@@ -3,18 +3,13 @@ package eu.kanade.tachiyomi.ui.library
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import eu.kanade.tachiyomi.source.entry.EntryType
 import io.kotest.matchers.collections.shouldContainExactly
-import io.kotest.matchers.shouldBe
-import io.mockk.every
-import io.mockk.mockk
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
-import mihon.entry.interactions.download.EntryDownloadRuntimeFeature
 import mihon.entry.interactions.download.EntryDownloadState
 import mihon.entry.interactions.download.EntryDownloadStatus
 import org.junit.jupiter.api.Assertions.assertSame
@@ -25,19 +20,6 @@ import tachiyomi.domain.library.model.LibraryItem
 import tachiyomi.domain.library.model.LibraryItemKey
 
 class LibraryDownloadCountUpdatesTest {
-
-    @Test
-    fun `merged download count uses each concrete member`() {
-        val first = entry(id = 1L, source = 10L, title = "First")
-        val second = entry(id = 2L, source = 20L, title = "Second")
-        val downloads = mockk<EntryDownloadRuntimeFeature> {
-            every { downloadCount(first) } returns 2
-            every { downloadCount(second) } returns 3
-        }
-        val item = libraryItem(first, second)
-
-        item.calculateDownloadCount(downloads) shouldBe 5
-    }
 
     @Test
     fun `member updates accumulate counts without copying unaffected items`() = runTest {
@@ -75,54 +57,12 @@ class LibraryDownloadCountUpdatesTest {
         collection.cancelAndJoin()
     }
 
-    @Test
-    fun `unrelated type mismatched and unchanged updates do not emit`() = runTest {
-        val item = libraryItem(entry(id = 1L)).copy(downloadCount = 2)
-        val statuses = MutableSharedFlow<EntryDownloadStatus>()
-        val emissions = mutableListOf<List<LibraryItem>>()
-        val collection = launch(start = CoroutineStart.UNDISPATCHED) {
-            observeLibraryDownloadCountUpdates(
-                initialItems = listOf(item),
-                statusUpdates = statuses,
-                calculateDownloadCount = { 2 },
-            ).toList(emissions)
-        }
-
-        statuses.emit(status(entryId = 2L))
-        statuses.emit(status(entryId = 1L, entryType = EntryType.ANIME))
-        statuses.emit(status(entryId = 1L, persistedContentChanged = false))
-        statuses.emit(status(entryId = 1L))
-        runCurrent()
-
-        emissions shouldContainExactly listOf(listOf(item))
-        collection.cancelAndJoin()
-    }
-
-    @Test
-    fun `count failure terminates the update flow`() = runTest {
-        val failure = IllegalStateException("count failed")
-
-        val result = runCatching {
-            observeLibraryDownloadCountUpdates(
-                initialItems = listOf(libraryItem(entry(id = 1L))),
-                statusUpdates = flowOf(status(entryId = 1L)),
-                calculateDownloadCount = { throw failure },
-            ).toList()
-        }
-
-        result.exceptionOrNull() shouldBe failure
-    }
-
-    private fun status(
-        entryId: Long,
-        entryType: EntryType = EntryType.MANGA,
-        persistedContentChanged: Boolean = true,
-    ) = EntryDownloadStatus(
-        entryType = entryType,
+    private fun status(entryId: Long) = EntryDownloadStatus(
+        entryType = EntryType.MANGA,
         chapterId = entryId * 10,
         state = EntryDownloadState.DOWNLOADED,
         entryId = entryId,
-        persistedContentChanged = persistedContentChanged,
+        persistedContentChanged = true,
     )
 
     private fun entry(

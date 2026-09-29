@@ -35,13 +35,21 @@ fun translationLanguageOption(
 fun translationLanguageOptions(
     availableLocales: Array<Locale> = Locale.getAvailableLocales(),
     displayLocale: Locale = Locale.getDefault(),
+): List<TranslationLanguageOption> = translationLanguageOptionsOf(
+    tags = availableLocales.mapNotNull { locale ->
+        val candidate = if (locale.script.isBlank()) locale.language else "${locale.language}-${locale.script}"
+        LanguageTag.parse(candidate)
+    },
+    displayLocale = displayLocale,
+)
+
+/** Picker entries for [tags], without duplicates and ordered by their name in [displayLocale]. */
+fun translationLanguageOptionsOf(
+    tags: Collection<LanguageTag>,
+    displayLocale: Locale = Locale.getDefault(),
 ): List<TranslationLanguageOption> {
     val collator = Collator.getInstance(displayLocale)
-    return availableLocales
-        .mapNotNull { locale ->
-            val candidate = if (locale.script.isBlank()) locale.language else "${locale.language}-${locale.script}"
-            LanguageTag.parse(candidate)
-        }
+    return tags
         .distinctBy(LanguageTag::value)
         .map { translationLanguageOption(it, displayLocale) }
         .sortedWith { first, second ->
@@ -102,6 +110,23 @@ fun TranslationLanguageSupport.selectableLanguages(
         }
         TranslationLanguageSupport.AnyLanguage -> emptySet()
     }
+}
+
+/**
+ * Target languages the engine offers only from sources other than [counterpart], so a picker can list them with
+ * the reason instead of leaving them out.
+ *
+ * Sources are never unpairable: they describe the text, so a source the current target cannot be reached from is
+ * still a valid choice. When the engine cannot translate from [counterpart] at all, every target is already
+ * offered and none is reported here.
+ */
+fun TranslationLanguageSupport.unpairableLanguages(
+    role: TranslationLanguageRole,
+    counterpart: LanguageTag?,
+): Set<LanguageTag> {
+    if (this !is TranslationLanguageSupport.ExactPairs || role != TranslationLanguageRole.Target) return emptySet()
+    if (counterpart == null) return emptySet()
+    return pairs.mapTo(mutableSetOf()) { it.target } - selectableLanguages(role, counterpart) - counterpart
 }
 
 fun TranslationLanguageSupport.supportsPair(

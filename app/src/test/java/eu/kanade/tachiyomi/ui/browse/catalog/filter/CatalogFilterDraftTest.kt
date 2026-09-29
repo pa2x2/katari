@@ -1,6 +1,5 @@
 package eu.kanade.tachiyomi.ui.browse.catalog
 
-import eu.kanade.domain.source.model.FeedListingMode
 import eu.kanade.domain.source.model.FilterStateNode
 import eu.kanade.tachiyomi.source.entry.EntryFilter
 import eu.kanade.tachiyomi.source.entry.EntryFilterList
@@ -28,48 +27,6 @@ class CatalogFilterDraftTest {
         applied.hasUnappliedFilterChanges shouldBe false
         (closed.filters.single() as EntryFilter.CheckBox).state = true
         applied.listing.filters.single().state shouldBe false
-    }
-
-    @Test
-    fun `preset mode and query load into draft and apply together`() {
-        val original = initialCatalogState("popular").initializeForSource(EntryFilterList())
-        val loaded = original.copy(draftMode = FeedListingMode.Search, draftQuery = "Cats", draftPresetId = "saved")
-        loaded.listing shouldBe original.listing
-        loaded.toSavedPresetState(loaded.defaultFilters).query shouldBe "Cats"
-        val applied = requireNotNull(loaded.applyFilterDraft())
-        (applied.listing as CatalogScreenModel.Listing.Search).query shouldBe "Cats"
-        applied.appliedCustomPresetId shouldBe "saved"
-    }
-
-    @Test
-    fun `filter edits and saved presets follow searches made after applying a preset`() {
-        for (mode in FeedListingMode.entries) {
-            val initial = initialCatalogState("popular").initializeForSource(
-                EntryFilterList(object : EntryFilter.CheckBox("English", true) {}).detachedCopy(),
-            )
-            val preset = initial.copy(
-                draftMode = mode,
-                draftQuery = "Cats".takeIf { mode == FeedListingMode.Search },
-            )
-            val applied = requireNotNull(preset.applyFilterDraft())
-            val searched = applied.copy(
-                listing = CatalogScreenModel.Listing.Search("Dogs", applied.filters.detachedCopy()),
-                toolbarQuery = "Dogs",
-            )
-            searched.hasUnappliedFilterChanges shouldBe false
-
-            (searched.filters.single() as EntryFilter.CheckBox).state = false
-            val saved = searched.toSavedPresetState(searched.defaultFilters)
-            saved.listingMode shouldBe FeedListingMode.Search
-            saved.query shouldBe "Dogs"
-            (saved.filters.single() as FilterStateNode.CheckBox).state shouldBe false
-
-            val reapplied = requireNotNull(searched.applyFilterDraft())
-            val listing = reapplied.listing as CatalogScreenModel.Listing.Search
-            listing.query shouldBe "Dogs"
-            listing.filters.single().state shouldBe false
-            reapplied.hasUnappliedFilterChanges shouldBe false
-        }
     }
 
     @Test

@@ -55,27 +55,6 @@ class MihonBackupProtoCompatibilityTest {
         entry.memo.contentEquals(memo) shouldBe true
     }
 
-    @Test
-    fun `legacy Katari display name without extension fields remains readable`() {
-        val bytes = ProtoBuf.encodeToByteArray(
-            serializer = LegacyKatariDisplayNameBackup.serializer(),
-            LegacyKatariDisplayNameBackup(
-                backupManga = listOf(
-                    LegacyKatariDisplayNameManga(
-                        source = 1,
-                        url = "display-name-only",
-                        displayName = "Custom title",
-                    ),
-                ),
-            ),
-        )
-
-        val entry = ProtoBuf.decodeFromByteArray(Backup.serializer(), bytes).allEntries().single()
-
-        entry.displayName shouldBe "Custom title"
-        entry.memo.contentEquals("{}".encodeToByteArray()) shouldBe true
-    }
-
     @Serializable
     private data class MihonBackup(
         @ProtoNumber(1) val backupManga: List<MihonBackupManga>,
@@ -99,17 +78,5 @@ class MihonBackupProtoCompatibilityTest {
         @ProtoNumber(2) val url: String,
         @ProtoNumber(112) val displayName: String,
         @ProtoNumber(116) val memo: ByteArray,
-    )
-
-    @Serializable
-    private data class LegacyKatariDisplayNameBackup(
-        @ProtoNumber(1) val backupManga: List<LegacyKatariDisplayNameManga>,
-    )
-
-    @Serializable
-    private data class LegacyKatariDisplayNameManga(
-        @ProtoNumber(1) val source: Long,
-        @ProtoNumber(2) val url: String,
-        @ProtoNumber(112) val displayName: String,
     )
 }

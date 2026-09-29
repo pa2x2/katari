@@ -15,6 +15,7 @@ import tachiyomi.presentation.core.components.CheckboxItem
 internal fun SharedReaderToggleRow(
     setting: ResolvedReaderSharedToggleSetting,
     binding: ViewerSettingBinding<Boolean>,
+    summary: String?,
 ) {
     val context = LocalContext.current
     val resolved by binding.state.collectAsState()
@@ -33,7 +34,7 @@ internal fun SharedReaderToggleRow(
             ).joinToString(separator = "\n")
             null,
             ReaderSharedSettingAvailability.Available,
-            -> setting.summary.resolve(context)
+            -> summary ?: setting.summary.resolve(context)
         },
         checked = checked,
         enabled = enabled,

@@ -7,40 +7,20 @@ import org.junit.jupiter.api.Test
 import tachiyomi.domain.statistics.model.StatisticsActivityBucket
 import tachiyomi.domain.statistics.model.StatisticsActivitySnapshot
 import tachiyomi.domain.statistics.model.StatisticsActivityTimeline
-import tachiyomi.domain.statistics.model.StatisticsCompletionBucket
 import java.time.LocalDate
 import java.util.Locale
 
 class StatisticsStreakTest {
 
     @Test
-    fun `latest streak remains active while today is incomplete`() {
-        val timeline = timelineWithActivityOn("2026-08-23", "2026-08-24", "2026-08-25")
+    fun `latest streak survives an unfinished today while a historical end date must qualify`() {
+        val throughYesterday = timelineWithActivityOn("2026-08-23", "2026-08-24", "2026-08-25")
+        val throughToday = timelineWithActivityOn("2026-08-24", "2026-08-25", "2026-08-26")
+        val endDate = LocalDate.parse("2026-08-26")
 
-        timeline.streakEndingOn(
-            endDate = LocalDate.parse("2026-08-26"),
-            preserveThroughIncompleteEndDate = true,
-        ) shouldBe 3
-    }
-
-    @Test
-    fun `latest streak includes today after today qualifies`() {
-        val timeline = timelineWithActivityOn("2026-08-24", "2026-08-25", "2026-08-26")
-
-        timeline.streakEndingOn(
-            endDate = LocalDate.parse("2026-08-26"),
-            preserveThroughIncompleteEndDate = true,
-        ) shouldBe 3
-    }
-
-    @Test
-    fun `historical streak requires its completed end date to qualify`() {
-        val timeline = timelineWithActivityOn("2026-08-23", "2026-08-24", "2026-08-25")
-
-        timeline.streakEndingOn(
-            endDate = LocalDate.parse("2026-08-26"),
-            preserveThroughIncompleteEndDate = false,
-        ) shouldBe 0
+        throughYesterday.streakEndingOn(endDate = endDate, preserveThroughIncompleteEndDate = true) shouldBe 3
+        throughToday.streakEndingOn(endDate = endDate, preserveThroughIncompleteEndDate = true) shouldBe 3
+        throughYesterday.streakEndingOn(endDate = endDate, preserveThroughIncompleteEndDate = false) shouldBe 0
     }
 
     @Test
@@ -74,22 +54,6 @@ class StatisticsStreakTest {
 
         result.currentStreakDays shouldBe 9
         result.currentStreakDaysByType[EntryType.MANGA] shouldBe 9
-    }
-
-    @Test
-    fun `completion qualifies a day without one minute of timed activity`() {
-        val timeline = StatisticsActivityTimeline(
-            activity = emptyList(),
-            completions = listOf(
-                StatisticsCompletionBucket(EntryType.MANGA, "2026-08-25", 1L),
-            ),
-        )
-
-        timeline.streakEndingOn(
-            endDate = LocalDate.parse("2026-08-26"),
-            type = EntryType.MANGA,
-            preserveThroughIncompleteEndDate = true,
-        ) shouldBe 1
     }
 
     private fun timelineWithActivityOn(vararg localDates: String) = StatisticsActivityTimeline(

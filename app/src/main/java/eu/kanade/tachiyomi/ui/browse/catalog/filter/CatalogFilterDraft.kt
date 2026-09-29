@@ -97,6 +97,7 @@ internal fun CatalogScreenModel.State.applyFilterDraft(): CatalogScreenModel.Sta
     }
     return copy(
         listing = applied,
+        parkedSearch = null,
         toolbarQuery = saved.query,
         draftMode = null,
         draftQuery = null,

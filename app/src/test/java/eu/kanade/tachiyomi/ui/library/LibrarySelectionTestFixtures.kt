@@ -2,7 +2,6 @@ package eu.kanade.tachiyomi.ui.library
 
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import eu.kanade.tachiyomi.source.entry.EntryType
-import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.service.EntryLibraryProgressResolution
 import tachiyomi.domain.library.model.LibraryItem
@@ -42,8 +41,4 @@ internal fun libraryItem(
         latestUpload = 0L,
         downloadCount = 0,
     )
-}
-
-internal fun category(id: Long): Category {
-    return Category(id = id, name = "Category $id", order = id, flags = 0L)
 }

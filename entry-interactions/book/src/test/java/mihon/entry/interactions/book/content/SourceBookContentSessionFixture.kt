@@ -2,7 +2,6 @@ package mihon.entry.interactions.book.content
 
 import android.app.Application
 import eu.kanade.tachiyomi.source.entry.BookResourceCatalog
-import eu.kanade.tachiyomi.source.entry.BookResourceHierarchyNode
 import eu.kanade.tachiyomi.source.entry.BookResourceLocation
 import eu.kanade.tachiyomi.source.entry.BookSourceResource
 import eu.kanade.tachiyomi.source.entry.EntryCatalogueSource
@@ -13,23 +12,13 @@ import io.mockk.every
 import io.mockk.mockk
 import mihon.book.api.BookCatalogCoverage
 import mihon.book.api.BookContentDescriptor
-import mihon.book.api.BookResourceAvailability
 import tachiyomi.domain.entry.model.Entry
-import java.io.ByteArrayInputStream
-import java.io.File
-import java.io.InputStream
 import java.nio.file.Files
-import java.util.concurrent.atomic.AtomicInteger
 internal abstract class SourceBookContentSessionFixture {
     protected fun session(
         media: EntryMedia.Book,
         source: UnifiedSource = source(),
-        resolver: BookExternalResourceResolver = FakeExternalResolver(emptyMap()),
-        directory: File = Files.createTempDirectory("katari-book-materialized").toFile(),
-        materializationStore: BookMaterializationStore = BookMaterializationCache(
-            application(),
-            directory,
-        ),
+        resolver: BookExternalResourceResolver = UnusedExternalResolver,
     ): SourceBookContentSession {
         return SourceBookContentSession(
             source = source,
@@ -41,11 +30,12 @@ internal abstract class SourceBookContentSessionFixture {
             ),
             media = media,
             externalResolver = resolver,
-            materializationStore = materializationStore,
+            materializationStore = BookMaterializationCache(
+                mockk<Application>(relaxed = true),
+                Files.createTempDirectory("katari-book-materialized").toFile(),
+            ),
         )
     }
-
-    protected fun application(): Application = mockk(relaxed = true)
 
     protected fun source(): EntryCatalogueSource = mockk {
         every { id } returns 42L
@@ -55,10 +45,7 @@ internal abstract class SourceBookContentSessionFixture {
 
     protected fun bookMedia(
         resources: List<BookSourceResource> = emptyList(),
-        initialResourceId: String? = null,
-        initialLocation: BookResourceLocation? = null,
         publicationKeyOverride: String? = null,
-        hierarchy: List<BookResourceHierarchyNode> = emptyList(),
     ): EntryMedia.Book {
         return EntryMedia.Book(
             descriptor = BookContentDescriptor("application/vnd.katari.book+json"),
@@ -69,70 +56,15 @@ internal abstract class SourceBookContentSessionFixture {
                 revision = "catalog-v3",
                 coverage = BookCatalogCoverage.COMPLETE,
             ),
-            hierarchy = hierarchy,
-            initialResourceId = initialResourceId,
-            initialResourceLocation = initialLocation,
         )
     }
 
-    protected fun resource(
-        id: String,
-        title: String? = null,
-        order: Long? = null,
-        groupId: String? = null,
-        mediaType: String? = null,
-        size: Long? = null,
-        availability: BookResourceAvailability = BookResourceAvailability.AVAILABLE,
-        location: BookResourceLocation,
-    ): BookSourceResource {
-        return BookSourceResource(
-            id = id,
-            title = title,
-            order = order,
-            groupId = groupId,
-            mediaType = mediaType,
-            size = size,
-            availability = availability,
-            location = location,
-        )
-    }
-
-    protected fun inline(text: String): BookResourceLocation =
-        BookResourceLocation.InlineText(text, "text/plain")
-}
-internal class FakeExternalResolver(
-    private val content: Map<String, ByteArray>,
-    override val canResolveAppReferences: Boolean = true,
-) : BookExternalResourceResolver {
-    val requests = mutableListOf<Pair<BookResourceLocation, BookByteRange?>>()
-    val closeCount = AtomicInteger()
-
-    override suspend fun open(
-        location: BookResourceLocation,
-        range: BookByteRange?,
-    ): ExternalBookResource {
-        requests += location to range
-        val bytes = content.getValue(location.key())
-        val start = range?.startInclusive?.toInt() ?: 0
-        val end = range?.endExclusive?.coerceAtMost(bytes.size.toLong())?.toInt() ?: bytes.size
-        val stream = ByteArrayInputStream(bytes, start, end - start)
-        return object : ExternalBookResource {
-            override val stream: InputStream = stream
-
-            override fun close() {
-                stream.close()
-                closeCount.incrementAndGet()
-            }
-        }
-    }
+    protected fun resource(id: String, location: BookResourceLocation): BookSourceResource =
+        BookSourceResource(id = id, location = location)
 }
 
-internal fun BookResourceLocation.key(): String = when (this) {
-    is BookResourceLocation.RemoteRequest -> "remote:$url"
-    is BookResourceLocation.LocalUri -> "local:$uri"
-    is BookResourceLocation.AppReference -> "app:$id"
-    is BookResourceLocation.InlineBytes,
-    is BookResourceLocation.InlineText,
-    is BookResourceLocation.SourceChild,
-    -> error("Location is not external: $this")
+/** Resolver for sessions whose resources never leave the source. */
+private object UnusedExternalResolver : BookExternalResourceResolver {
+    override suspend fun open(location: BookResourceLocation, range: BookByteRange?): ExternalBookResource =
+        error("Unexpected external access to $location")
 }

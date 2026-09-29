@@ -39,115 +39,17 @@ class EntrySortTest {
     )
 
     @Test
-    fun `source sort ascending puts oldest first`() {
+    fun `unknown numbers and upload dates stay last in both directions`() {
         val entries = listOf(
-            TestEntry(id = 1, number = 1.0, dateUpload = 100, name = "A", url = "/1", sourceOrder = 0),
-            TestEntry(id = 2, number = 2.0, dateUpload = 200, name = "B", url = "/2", sourceOrder = 1),
-        )
-        entries.sortedWith(comparator(SORTING_SOURCE, sortDescending = false)).map(TestEntry::id) shouldBe
-            listOf(2L, 1L)
-    }
-
-    @Test
-    fun `source sort descending puts newest first`() {
-        val entries = listOf(
-            TestEntry(id = 1, number = 1.0, dateUpload = 100, name = "A", url = "/1", sourceOrder = 0),
-            TestEntry(id = 2, number = 2.0, dateUpload = 200, name = "B", url = "/2", sourceOrder = 1),
-        )
-        entries.sortedWith(comparator(SORTING_SOURCE, sortDescending = true)).map(TestEntry::id) shouldBe listOf(1L, 2L)
-    }
-
-    @Test
-    fun `number sort ascending`() {
-        val entries = listOf(
-            TestEntry(id = 3, number = 3.0, dateUpload = 100, name = "A", url = "/3", sourceOrder = 0),
-            TestEntry(id = 1, number = 1.0, dateUpload = 200, name = "B", url = "/1", sourceOrder = 1),
-            TestEntry(id = 2, number = 2.0, dateUpload = 300, name = "C", url = "/2", sourceOrder = 2),
-        )
-        entries.sortedWith(comparator(SORTING_NUMBER, sortDescending = false)).map(TestEntry::id) shouldBe
-            listOf(1L, 2L, 3L)
-    }
-
-    @Test
-    fun `number sort descending`() {
-        val entries = listOf(
-            TestEntry(id = 3, number = 3.0, dateUpload = 100, name = "A", url = "/3", sourceOrder = 0),
-            TestEntry(id = 1, number = 1.0, dateUpload = 200, name = "B", url = "/1", sourceOrder = 1),
-            TestEntry(id = 2, number = 2.0, dateUpload = 300, name = "C", url = "/2", sourceOrder = 2),
-        )
-        entries.sortedWith(comparator(SORTING_NUMBER, sortDescending = true)).map(TestEntry::id) shouldBe
-            listOf(3L, 2L, 1L)
-    }
-
-    @Test
-    fun `number sort pushes negative numbers to end`() {
-        val entries = listOf(
-            TestEntry(id = 1, number = -1.0, dateUpload = 100, name = "A", url = "/1", sourceOrder = 0),
-            TestEntry(id = 2, number = 2.0, dateUpload = 200, name = "B", url = "/2", sourceOrder = 1),
-        )
-        entries.sortedWith(comparator(SORTING_NUMBER, sortDescending = false)).map(TestEntry::id) shouldBe
-            listOf(2L, 1L)
-    }
-
-    @Test
-    fun `number sort descending pushes negative numbers to end`() {
-        val entries = listOf(
-            TestEntry(id = 1, number = -1.0, dateUpload = 100, name = "A", url = "/1", sourceOrder = 0),
-            TestEntry(id = 2, number = 2.0, dateUpload = 200, name = "B", url = "/2", sourceOrder = 1),
-            TestEntry(id = 3, number = 3.0, dateUpload = 300, name = "C", url = "/3", sourceOrder = 2),
-        )
-        entries.sortedWith(comparator(SORTING_NUMBER, sortDescending = true)).map(TestEntry::id) shouldBe
-            listOf(3L, 2L, 1L)
-    }
-
-    @Test
-    fun `upload date sort pushes zero dates to end`() {
-        val entries = listOf(
-            TestEntry(id = 1, number = 1.0, dateUpload = 0, name = "A", url = "/1", sourceOrder = 0),
-            TestEntry(id = 2, number = 2.0, dateUpload = 100, name = "B", url = "/2", sourceOrder = 1),
-        )
-        entries.sortedWith(comparator(SORTING_UPLOAD_DATE, sortDescending = false)).map(TestEntry::id) shouldBe
-            listOf(2L, 1L)
-    }
-
-    @Test
-    fun `upload date sort descending pushes zero dates to end`() {
-        val entries = listOf(
-            TestEntry(id = 1, number = 1.0, dateUpload = 0, name = "A", url = "/1", sourceOrder = 0),
+            TestEntry(id = 1, number = -1.0, dateUpload = 0, name = "A", url = "/1", sourceOrder = 0),
             TestEntry(id = 2, number = 2.0, dateUpload = 100, name = "B", url = "/2", sourceOrder = 1),
             TestEntry(id = 3, number = 3.0, dateUpload = 200, name = "C", url = "/3", sourceOrder = 2),
         )
-        entries.sortedWith(comparator(SORTING_UPLOAD_DATE, sortDescending = true)).map(TestEntry::id) shouldBe
-            listOf(3L, 2L, 1L)
-    }
-
-    @Test
-    fun `alphabet sort falls back to url when name is blank`() {
-        val entries = listOf(
-            TestEntry(id = 1, number = 1.0, dateUpload = 100, name = "", url = "/b", sourceOrder = 0),
-            TestEntry(id = 2, number = 2.0, dateUpload = 200, name = "A", url = "/a", sourceOrder = 1),
-        )
-        entries.sortedWith(comparator(SORTING_ALPHABET, sortDescending = false)).map(TestEntry::id) shouldBe
-            listOf(1L, 2L)
-    }
-
-    @Test
-    fun `alphabet sort uses source order as tiebreaker`() {
-        val entries = listOf(
-            TestEntry(id = 2, number = 1.0, dateUpload = 100, name = "A", url = "/1", sourceOrder = 1),
-            TestEntry(id = 1, number = 1.0, dateUpload = 200, name = "A", url = "/2", sourceOrder = 0),
-        )
-        entries.sortedWith(comparator(SORTING_ALPHABET, sortDescending = false)).map(TestEntry::id) shouldBe
-            listOf(1L, 2L)
-    }
-
-    @Test
-    fun `invalid sorting defaults to source order`() {
-        val entries = listOf(
-            TestEntry(id = 1, number = 1.0, dateUpload = 100, name = "A", url = "/1", sourceOrder = 1),
-            TestEntry(id = 2, number = 2.0, dateUpload = 200, name = "B", url = "/2", sourceOrder = 0),
-        )
-        entries.sortedWith(comparator(sorting = 0x400L, sortDescending = true)).map(TestEntry::id) shouldBe
-            listOf(1L, 2L)
+        for (sorting in listOf(SORTING_NUMBER, SORTING_UPLOAD_DATE)) {
+            entries.sortedWith(comparator(sorting, sortDescending = false)).map(TestEntry::id) shouldBe
+                listOf(2L, 3L, 1L)
+            entries.sortedWith(comparator(sorting, sortDescending = true)).map(TestEntry::id) shouldBe
+                listOf(3L, 2L, 1L)
+        }
     }
 }

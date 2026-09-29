@@ -3,11 +3,14 @@ package eu.kanade.tachiyomi.ui.setting
 import android.os.Bundle
 import androidx.activity.enableEdgeToEdge
 import cafe.adriel.voyager.navigator.Navigator
+import eu.kanade.presentation.more.settings.screen.textrecognition.languages.TextRecognitionOverridePipelineScreen
 import eu.kanade.presentation.util.DefaultNavigatorScreenTransition
 import eu.kanade.tachiyomi.ui.base.activity.BaseActivity
 import eu.kanade.tachiyomi.util.view.setComposeContent
 import mihon.core.migration.Migrator
 import mihon.entry.viewer.settings.navigation.ViewerSettingsNavigation
+import mihon.language.api.tag.LanguageTag
+import mihon.text.recognition.api.host.TextRecognitionSettingsNavigation
 import mihon.translation.api.host.TranslationSettingsNavigation
 
 class SettingsActivity : BaseActivity() {
@@ -25,6 +28,15 @@ class SettingsActivity : BaseActivity() {
         val screen = when (intent.action) {
             TranslationSettingsNavigation.ACTION_OPEN_SETTINGS ->
                 SettingsScreen(SettingsScreen.Destination.Translation)
+            TextRecognitionSettingsNavigation.ACTION_CHOOSE_PIPELINE -> {
+                val language = intent.getStringExtra(TextRecognitionSettingsNavigation.EXTRA_LANGUAGE)
+                    ?.let(LanguageTag::parse)
+                if (language == null) {
+                    finish()
+                    return
+                }
+                TextRecognitionOverridePipelineScreen(language.value, storeOnConfirm = true)
+            }
             ViewerSettingsNavigation.ACTION_OPEN_SETTINGS ->
                 SettingsScreen(
                     destination = SettingsScreen.Destination.Readers,

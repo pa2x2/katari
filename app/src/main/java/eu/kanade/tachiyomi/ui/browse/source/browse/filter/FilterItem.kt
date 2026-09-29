@@ -11,96 +11,149 @@ import androidx.compose.ui.unit.dp
 import eu.kanade.tachiyomi.source.entry.EntryFilter
 import eu.kanade.tachiyomi.source.entry.EntryFilterTextInput
 import eu.kanade.tachiyomi.source.entry.filter.EntryDateFilter
+import eu.kanade.tachiyomi.source.entry.filter.validationIssues
+import eu.kanade.tachiyomi.source.filter.hasFailedSourceCallback
+import eu.kanade.tachiyomi.ui.browse.source.browse.filter.change.FilterChanges
+import eu.kanade.tachiyomi.ui.browse.source.browse.filter.control.FilterCheckboxRow
+import eu.kanade.tachiyomi.ui.browse.source.browse.filter.control.FilterOrderingSelectRow
+import eu.kanade.tachiyomi.ui.browse.source.browse.filter.control.FilterSelectControl
+import eu.kanade.tachiyomi.ui.browse.source.browse.filter.control.FilterSheetInsets
+import eu.kanade.tachiyomi.ui.browse.source.browse.filter.control.FilterSortRow
+import eu.kanade.tachiyomi.ui.browse.source.browse.filter.control.FilterTextField
+import eu.kanade.tachiyomi.ui.browse.source.browse.filter.control.FilterTriStateRow
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.date.DateFilterItem
+import eu.kanade.tachiyomi.ui.browse.source.browse.filter.group.FilterGroupUiState
+import eu.kanade.tachiyomi.ui.browse.source.browse.filter.group.GroupFilterHeader
+import eu.kanade.tachiyomi.ui.browse.source.browse.filter.group.GroupFilterItem
+import eu.kanade.tachiyomi.ui.browse.source.browse.filter.paged.PagedGroupSummaryItem
+import eu.kanade.tachiyomi.ui.browse.source.browse.filter.validation.LocalFilterValidation
+import eu.kanade.tachiyomi.ui.browse.source.browse.filter.validation.displayMessage
 import mihon.entry.interactions.catalogue.EntryCatalogueFilterSuggestionsResult
-import tachiyomi.core.common.preference.TriState
-import tachiyomi.presentation.core.components.CheckboxItem
-import tachiyomi.presentation.core.components.CollapsibleBox
-import tachiyomi.presentation.core.components.HeadingItem
-import tachiyomi.presentation.core.components.SelectItem
-import tachiyomi.presentation.core.components.SortItem
-import tachiyomi.presentation.core.components.TextItem
-import tachiyomi.presentation.core.components.TriStateItem
+import tachiyomi.i18n.*
+import tachiyomi.presentation.core.i18n.stringResource
 
+/**
+ * Draws one source filter. With [groupState], a group draws only its header because the sheet lays its tools and
+ * options out as separate list rows.
+ */
 @Composable
 internal fun FilterItem(
     filter: EntryFilter<*>,
+    changes: FilterChanges,
     onUpdate: () -> Unit,
     onOpenPagedGroup: (EntryFilter.PagedGroup<*>) -> Unit,
     onRequestSuggestions: suspend (
         EntryFilter.Autocomplete,
         EntryFilterTextInput,
     ) -> EntryCatalogueFilterSuggestionsResult,
-    activeOnly: Boolean = false,
-    onReset: (EntryFilter<*>) -> Unit = {},
+    changedOnly: Boolean,
+    onReset: (EntryFilter<*>) -> Unit,
+    focus: List<Int>? = null,
+    leadingDivider: Boolean = true,
+    groupState: FilterGroupUiState? = null,
 ) {
+    val invalid = LocalFilterValidation.current.isInvalid(filter)
     Column {
         when (filter) {
-            is EntryFilter.Header -> HeadingItem(filter.name)
-            is EntryFilter.Separator -> HorizontalDivider()
-            is EntryFilter.CheckBox -> CheckboxItem(label = filter.name, checked = filter.state) {
+            is EntryFilter.Header -> FilterSourceHeader(filter.name)
+            is EntryFilter.Separator -> HorizontalDivider(Modifier.padding(horizontal = FilterSheetInsets.Horizontal))
+            is EntryFilter.CheckBox -> FilterCheckboxRow(label = filter.name, checked = filter.state) {
                 filter.state = !filter.state
                 onUpdate()
             }
-            is EntryFilter.TriState -> TriStateItem(filter.name, filter.state.toTriStateFilter()) {
-                filter.state = filter.state.toTriStateFilter().next().toTriStateInt()
-                onUpdate()
-            }
-            is EntryDateFilter -> DateFilterItem(filter, onUpdate)
-            is EntryFilter.Autocomplete -> AutocompleteFilterItem(filter, onUpdate, onRequestSuggestions)
-            is EntryFilter.Text -> TextItem(filter.name, filter.state) {
+            is EntryFilter.TriState -> FilterTriStateRow(filter, onUpdate)
+            is EntryDateFilter -> DateFilterItem(filter, invalid, onUpdate)
+            is EntryFilter.Autocomplete -> AutocompleteFilterItem(filter, invalid, onUpdate, onRequestSuggestions)
+            is EntryFilter.Text -> FilterTextField(filter.name, filter.state, invalid) {
                 filter.state = it
                 onUpdate()
             }
-            is EntryFilter.Select<*> -> SelectItem(filter.name, filter.values, filter.state) {
-                filter.state = it
-                onUpdate()
-            }
-            is EntryFilter.Sort -> CollapsibleBox(heading = filter.name) {
-                Column {
-                    filter.values.mapIndexed { index, item ->
-                        val sortAscending = filter.state?.ascending?.takeIf { index == filter.state?.index }
-                        SortItem(
-                            label = item,
-                            sortDescending = sortAscending?.not(),
-                            onClick = {
-                                val ascending = if (index == filter.state?.index) {
-                                    !filter.state!!.ascending
-                                } else {
-                                    filter.state?.ascending ?: true
-                                }
-                                filter.state = EntryFilter.Sort.Selection(index, ascending)
-                                onUpdate()
-                            },
-                        )
-                    }
+            is EntryFilter.Select<*> -> if (filter.isOrdering) {
+                FilterOrderingSelectRow(filter, onUpdate)
+            } else {
+                FilterSelectControl(filter.name, filter.values, filter.state, invalid) {
+                    filter.state = it
+                    onUpdate()
                 }
             }
-            is EntryFilter.Group<*> -> GroupFilterItem(filter, activeOnly, onUpdate, onReset) { child, selected ->
-                FilterItem(child, onUpdate, onOpenPagedGroup, onRequestSuggestions, selected, onReset)
+            is EntryFilter.Sort -> FilterSortRow(filter, onUpdate)
+            is EntryFilter.Group<*> -> if (groupState != null) {
+                GroupFilterHeader(filter, groupState, changes, changedOnly, leadingDivider, onReset, onUpdate)
+            } else {
+                GroupFilterItem(
+                    filter = filter,
+                    changes = changes,
+                    changedOnly = changedOnly,
+                    onUpdate = onUpdate,
+                    onReset = onReset,
+                    focus = focus,
+                    leadingDivider = leadingDivider,
+                ) { child, childFocus ->
+                    FilterItem(
+                        filter = child,
+                        changes = changes,
+                        onUpdate = onUpdate,
+                        onOpenPagedGroup = onOpenPagedGroup,
+                        onRequestSuggestions = onRequestSuggestions,
+                        changedOnly = changedOnly,
+                        onReset = onReset,
+                        focus = childFocus,
+                    )
+                }
             }
-            is EntryFilter.PagedGroup<*> -> PagedGroupSummaryItem(filter) { onOpenPagedGroup(filter) }
+            is EntryFilter.PagedGroup<*> -> PagedGroupSummaryItem(filter, changes) { onOpenPagedGroup(filter) }
         }
-        filter.metadata?.description?.takeIf { it.isNotBlank() }?.let {
+        // A group shows its description in its header.
+        filter.metadata?.description?.takeIf { it.isNotBlank() && filter !is EntryFilter.Group<*> }?.let {
             Text(
                 it,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 12.dp),
+                modifier = Modifier.padding(
+                    start = FilterSheetInsets.Horizontal,
+                    end = FilterSheetInsets.Horizontal,
+                    bottom = 12.dp,
+                ),
+            )
+        }
+        // Groups list their issues under their options and date filters under their value.
+        if (filter !is EntryFilter.Group<*> && filter !is EntryDateFilter) {
+            filter.validationIssues().forEach {
+                Text(
+                    it.displayMessage(),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(horizontal = FilterSheetInsets.Horizontal),
+                )
+            }
+        }
+        if (filter.hasFailedSourceCallback()) {
+            Text(
+                stringResource(MR.strings.filter_source_callback_failed),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.padding(
+                    start = FilterSheetInsets.Horizontal,
+                    end = FilterSheetInsets.Horizontal,
+                    bottom = 12.dp,
+                ),
             )
         }
     }
 }
 
-private fun Int.toTriStateFilter(): TriState = when (this) {
-    EntryFilter.TriState.STATE_IGNORE -> TriState.DISABLED
-    EntryFilter.TriState.STATE_INCLUDE -> TriState.ENABLED_IS
-    EntryFilter.TriState.STATE_EXCLUDE -> TriState.ENABLED_NOT
-    else -> throw IllegalStateException("Unknown TriState state: $this")
-}
-
-private fun TriState.toTriStateInt(): Int = when (this) {
-    TriState.DISABLED -> EntryFilter.TriState.STATE_IGNORE
-    TriState.ENABLED_IS -> EntryFilter.TriState.STATE_INCLUDE
-    TriState.ENABLED_NOT -> EntryFilter.TriState.STATE_EXCLUDE
+/** A source header: the source's own label for the filters that follow, kept where the source placed it. */
+@Composable
+private fun FilterSourceHeader(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.labelLarge,
+        color = MaterialTheme.colorScheme.primary,
+        modifier = Modifier.padding(
+            start = FilterSheetInsets.Horizontal,
+            end = FilterSheetInsets.Horizontal,
+            top = 12.dp,
+            bottom = 4.dp,
+        ),
+    )
 }

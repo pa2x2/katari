@@ -2,8 +2,8 @@
 # Used in [/gradle/build-logic/src/main/kotlin/PluginAndroidBase.kt] and
 # [/gradle/build-logic/src/main/kotlin/PluginKotlinMultiplatform.kt]
 android-sdk-min = "29"
-android-sdk-compile = "37.1"
-android-sdk-target = "36"
+android-sdk-compile = "37.2"
+android-sdk-target = "37"
 android-ndk = "29.0.14206865"
 java = "17"
 

@@ -23,6 +23,7 @@ import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
 import mihon.entry.interactions.manga.R
 import mihon.entry.interactions.manga.download.DownloadManager
+import mihon.entry.interactions.manga.reader.text.surface.MangaPageTextSurface
 import mihon.entry.interactions.reader.settings.ChapterTransitionMode
 import mihon.entry.interactions.viewer.EntryChildDirection
 import mihon.entry.interactions.viewer.EntryChildTransition
@@ -103,7 +104,8 @@ internal abstract class PagerViewer(val activity: ReaderActivity) : Viewer {
         pager.id = R.id.reader_pager
         pager.adapter = adapter
         pager.addOnPageChangeListener(pagerListener)
-        pager.tapListener = { event ->
+        pager.tapListener = tap@{ event ->
+            if (activity.onTextTap(event)) return@tap
             val viewPosition = IntArray(2)
             pager.getLocationOnScreen(viewPosition)
             val viewPositionRelativeToWindow = IntArray(2)
@@ -162,6 +164,20 @@ internal abstract class PagerViewer(val activity: ReaderActivity) : Viewer {
      */
     override fun getView(): View {
         return pager
+    }
+
+    override fun visibleTextSurfaces(): List<MangaPageTextSurface> {
+        val page = (adapter.items.getOrNull(pager.currentItem) as? ReaderViewerItem.Page)?.page ?: return emptyList()
+        return listOfNotNull(getPageHolder(page)?.textSurface)
+    }
+
+    override fun preloadedTextSurfaces(): List<MangaPageTextSurface> {
+        val current = (adapter.items.getOrNull(pager.currentItem) as? ReaderViewerItem.Page)?.page
+        return pager.children
+            .filterIsInstance<PagerPageHolder>()
+            .filter { it.item != current }
+            .map { it.textSurface }
+            .toList()
     }
 
     /**

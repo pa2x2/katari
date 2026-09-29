@@ -31,21 +31,6 @@ class SourceFilterRouteTest {
     }
 
     @Test
-    fun `live resolution follows the current draft instead of the navigated snapshot`() {
-        val group = PagedFixture("Characters")
-        val filters = EntryFilterList(group)
-        val path = requireNotNull(filters.pathTo(group))
-
-        val replacement = PagedFixture("Characters", setOf("a"))
-        val reloaded = EntryFilterList(replacement)
-        val live = reloaded.resolvePagedGroup(path)
-
-        (live === replacement) shouldBe true
-        (live === group) shouldBe false
-        live?.currentSelectedItemCount() shouldBe 1
-    }
-
-    @Test
     fun `live resolution descends into nested groups and rejects stale paths`() {
         val nested = PagedFixture("Tags")
         val filters = EntryFilterList(

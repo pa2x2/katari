@@ -1,0 +1,3 @@
+id=text-recognition.mlkit
+component=mihon.text.recognition.provider.mlkit.mlKitTextRecognitionRuntimeComponent
+variants=debug,release,preview,benchmark

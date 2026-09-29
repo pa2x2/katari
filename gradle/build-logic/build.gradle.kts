@@ -41,6 +41,12 @@ dependencies {
     testRuntimeOnly(libs.junit.platform.launcher)
 }
 
+kotlin {
+    compilerOptions {
+        allWarningsAsErrors = true
+    }
+}
+
 tasks.withType<Test>().configureEach {
     useJUnitPlatform()
 }

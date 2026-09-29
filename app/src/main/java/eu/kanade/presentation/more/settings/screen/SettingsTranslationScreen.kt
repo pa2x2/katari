@@ -20,6 +20,8 @@ import eu.kanade.presentation.more.settings.screen.translation.engine.translatio
 import eu.kanade.presentation.more.settings.screen.translation.language.TranslationLanguagePickerScreen
 import eu.kanade.presentation.more.settings.screen.translation.language.TranslationLanguagePickerTarget
 import eu.kanade.presentation.more.settings.screen.translation.presentation.TranslationSettingsContent
+import eu.kanade.presentation.more.settings.screen.translation.series.SeriesTranslationLanguagesScreen
+import eu.kanade.presentation.more.settings.screen.translation.series.rememberSeriesTranslationLanguagesScreenModel
 import eu.kanade.presentation.util.LocalBackPress
 import eu.kanade.tachiyomi.util.system.openInBrowser
 import eu.kanade.tachiyomi.util.system.toast
@@ -79,6 +81,10 @@ object SettingsTranslationScreen : SearchableSettings {
                         title = stringResource(MR.strings.translation_settings_playground),
                         subtitle = stringResource(MR.strings.translation_settings_playground_summary),
                     ),
+                    Preference.PreferenceItem.TextPreference(
+                        title = stringResource(MR.strings.translation_series_languages),
+                        isProfileSpecific = true,
+                    ),
                 ),
             ),
         )
@@ -93,6 +99,7 @@ object SettingsTranslationScreen : SearchableSettings {
         val playground by model.playground.collectAsState()
         val engines by model.engines.collectAsState()
         val languageSupport by model.languageSupport.collectAsState()
+        val seriesLanguages by rememberSeriesTranslationLanguagesScreenModel().series.collectAsState()
         val searchHighlightKey = remember { SearchableSettings.highlightKey }
 
         RefreshTranslationSettingsOnResume(model)
@@ -141,9 +148,7 @@ object SettingsTranslationScreen : SearchableSettings {
                             TranslationLanguagePickerTarget.PlaygroundSource,
                         ),
                     )
-                TranslationSessionExternalAction.ChooseTargetLanguage,
-                is TranslationSessionExternalAction.ChangeLanguages,
-                -> navigator.push(
+                TranslationSessionExternalAction.ChooseTargetLanguage -> navigator.push(
                     TranslationLanguagePickerScreen(
                         TranslationLanguagePickerTarget.PlaygroundTarget,
                     ),
@@ -202,7 +207,10 @@ object SettingsTranslationScreen : SearchableSettings {
                 model.savePlaygroundDefaults()
                 context.toast(MR.strings.translation_settings_saved)
             },
+            onDiscard = model::discardPlaygroundDefaults,
             onExternalAction = ::handleExternalAction,
+            seriesLanguageCount = seriesLanguages?.size,
+            onOpenSeriesLanguages = { navigator.push(SeriesTranslationLanguagesScreen()) },
         )
     }
 }

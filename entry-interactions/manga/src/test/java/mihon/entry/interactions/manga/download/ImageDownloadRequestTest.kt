@@ -7,7 +7,6 @@ import eu.kanade.tachiyomi.source.entry.EntryImageSource
 import eu.kanade.tachiyomi.source.entry.ResumableEntryImageSource
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
-import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
@@ -23,41 +22,20 @@ class ImageDownloadRequestTest {
     }
 
     @Test
-    fun `resumable source receives existing size and appends a partial response`() = runTest {
-        val response = response(code = 206)
-        val source = mockk<ResumableEntryImageSource> {
-            coEvery { getImage(page, progress, 37L) } returns response
+    fun `only a resumable source answered with partial content appends to the existing file`() = runTest {
+        val partial = mockk<ResumableEntryImageSource> {
+            coEvery { getImage(page, progress, 37L) } returns response(code = 206)
         }
-
-        val download = source.getImageForDownload(page, progress, partialFile)
-
-        download.response shouldBe response
-        download.appendToExistingFile shouldBe true
-        coVerify(exactly = 1) { source.getImage(page, progress, 37L) }
-    }
-
-    @Test
-    fun `resumable source overwrites existing data when server returns full response`() = runTest {
-        val source = mockk<ResumableEntryImageSource> {
+        val full = mockk<ResumableEntryImageSource> {
             coEvery { getImage(page, progress, 37L) } returns response(code = 200)
         }
-
-        val download = source.getImageForDownload(page, progress, partialFile)
-
-        download.appendToExistingFile shouldBe false
-    }
-
-    @Test
-    fun `non resumable source cannot append even when it returns partial response`() = runTest {
-        val response = response(code = 206)
-        val source = mockk<EntryImageSource> {
-            coEvery { getImage(page, progress) } returns response
+        val nonResumable = mockk<EntryImageSource> {
+            coEvery { getImage(page, progress) } returns response(code = 206)
         }
 
-        val download = source.getImageForDownload(page, progress, partialFile)
-
-        download.appendToExistingFile shouldBe false
-        coVerify(exactly = 1) { source.getImage(page, progress) }
+        partial.getImageForDownload(page, progress, partialFile).appendToExistingFile shouldBe true
+        full.getImageForDownload(page, progress, partialFile).appendToExistingFile shouldBe false
+        nonResumable.getImageForDownload(page, progress, partialFile).appendToExistingFile shouldBe false
     }
 
     private fun response(code: Int): Response = mockk {

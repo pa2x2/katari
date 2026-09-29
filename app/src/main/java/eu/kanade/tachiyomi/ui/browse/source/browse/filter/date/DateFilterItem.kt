@@ -23,12 +23,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import eu.kanade.tachiyomi.source.entry.filter.EntryDateFilter
 import eu.kanade.tachiyomi.source.entry.filter.EntryPartialDate
-import eu.kanade.tachiyomi.ui.browse.source.browse.filter.displayMessage
+import eu.kanade.tachiyomi.ui.browse.source.browse.filter.validation.displayMessage
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable
-internal fun DateFilterItem(filter: EntryDateFilter, onUpdate: () -> Unit) {
+internal fun DateFilterItem(filter: EntryDateFilter, isError: Boolean, onUpdate: () -> Unit) {
     val editor = LocalDateFilterEditor.current
     val locale = datePickerLocale()
     var editing by rememberSaveable { mutableStateOf(false) }
@@ -47,9 +47,17 @@ internal fun DateFilterItem(filter: EntryDateFilter, onUpdate: () -> Unit) {
         }.padding(start = 16.dp, end = 8.dp, top = 8.dp, bottom = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Icon(Icons.Outlined.CalendarMonth, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+        Icon(
+            Icons.Outlined.CalendarMonth,
+            contentDescription = null,
+            tint = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+        )
         Column(Modifier.weight(1f).padding(horizontal = 16.dp)) {
-            Text(filter.name, style = MaterialTheme.typography.bodyLarge)
+            Text(
+                filter.name,
+                style = MaterialTheme.typography.bodyLarge,
+                color = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
+            )
             Text(
                 EntryPartialDate.parse(filter.state)?.displayDate(locale) ?: filter.state.ifBlank {
                     stringResource(MR.strings.filter_any_date)

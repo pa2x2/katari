@@ -12,7 +12,6 @@ import tachiyomi.core.common.util.lang.toLong
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.data.ActiveProfileProvider
 import tachiyomi.data.DatabaseHandler
-import tachiyomi.data.MemoColumnAdapter
 import tachiyomi.data.query.chunkedForSqlQuery
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.repository.EntryChapterRepository
@@ -137,7 +136,7 @@ class EntryChapterRepositoryImpl(
                             dateUpload = chapter.dateUpload,
                             version = chapter.version,
                             isSyncing = chapter.isSyncing,
-                            memo = MemoColumnAdapter.encode(chapter.memo),
+                            memo = chapter.memo,
                             chapterId = existing.id,
                         )
                         chapter.copy(id = existing.id)
@@ -171,7 +170,7 @@ class EntryChapterRepositoryImpl(
                         dateUpload = chapter.dateUpload,
                         version = chapter.version,
                         isSyncing = chapter.isSyncing,
-                        memo = MemoColumnAdapter.encode(chapter.memo),
+                        memo = chapter.memo,
                         chapterId = chapter.id,
                     )
                 }

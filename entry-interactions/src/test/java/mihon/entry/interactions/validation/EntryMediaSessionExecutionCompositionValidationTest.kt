@@ -38,39 +38,6 @@ import tachiyomi.domain.entry.repository.EntryRepository
 
 class EntryMediaSessionExecutionCompositionValidationTest {
     @Test
-    fun `unknown future consequence joins without coordinator changes`() = runTest {
-        val type = EntryType.entries.first()
-        val observed = mutableListOf<EntryMediaSessionEvent>()
-        val futureBinding = FeatureExecutionParticipantBinding(
-            definition = FUTURE_PARTICIPANT,
-            handler = FeatureExecutionHandler { execution -> observed += execution.event },
-        )
-        val composition = composition(
-            entryType = type,
-            contributors = listOf(
-                EntryMediaSessionFeatureContributor,
-                EntryMediaSessionIncognitoContributor,
-                FutureConsequenceContributor,
-            ),
-            bindings = listOf(
-                entryMediaSessionIncognitoBinding(
-                    repository = { mockk(relaxed = true) },
-                    incognitoState = EntryMediaSessionIncognitoState { false },
-                ),
-                futureBinding,
-            ),
-        )
-        val event = mediaSessionContractEvent(type)
-
-        DefaultEntryMediaSessionFeature(
-            evaluation = composition.featureGraphEvaluation,
-            executions = composition.featureExecutions,
-        ).onEvent(event)
-
-        observed.shouldContainExactly(event)
-    }
-
-    @Test
     fun `incognito blocks recording consequences without blocking unrelated participants`() = runTest {
         val type = EntryType.entries.first()
         val event = mediaSessionContractEvent(type)

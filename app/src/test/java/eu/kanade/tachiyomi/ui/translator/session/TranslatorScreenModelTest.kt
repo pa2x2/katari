@@ -1,11 +1,9 @@
 package eu.kanade.tachiyomi.ui.translator.session
 
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -28,6 +26,7 @@ import mihon.translation.api.engine.TranslationEngineStatus
 import mihon.translation.api.engine.TranslationProviderId
 import mihon.translation.api.host.TranslationHostActionResult
 import mihon.translation.api.host.TranslationHostActions
+import mihon.translation.api.language.TranslationDefaultTarget
 import mihon.translation.api.language.TranslationLanguagePair
 import mihon.translation.api.language.TranslationLanguageSupport
 import mihon.translation.api.language.TranslationLanguageSupportInspection
@@ -42,10 +41,7 @@ import mihon.translation.api.request.TranslationRequest
 import mihon.translation.api.request.TranslationSourceLanguageSelection
 import mihon.translation.api.request.TranslationTargetLanguageSelection
 import mihon.translation.api.result.TranslationExecution
-import mihon.translation.api.result.TranslationFailureReason
 import mihon.translation.api.result.TranslationResult
-import mihon.translation.ui.session.TranslationSessionState
-import mihon.translation.ui.session.displayedSessionResult
 import mihon.tts.api.TtsFeature
 import mihon.tts.api.playback.TtsPlaybackStart
 import mihon.tts.api.preparation.ReadyTts
@@ -65,6 +61,7 @@ class TranslatorScreenModelTest {
             feature = feature,
             hostActions = FakeHostActions(),
             ttsFeature = FakeTtsFeature,
+            languagePreferences = TranslatorLanguagePreferences(InMemoryPreferenceStore()),
         )
 
         try {
@@ -86,153 +83,46 @@ class TranslatorScreenModelTest {
     }
 
     @Test
-    fun `clearing text clears its result and preserves all session controls`() = runTest {
+    fun `the tab reopens with its last languages without changing the profile default`() = runTest {
         val dispatcher = StandardTestDispatcher(testScheduler)
         Dispatchers.setMain(dispatcher)
         val hostActions = FakeHostActions()
-        val model = TranslatorScreenModel(
+        val languagePreferences = TranslatorLanguagePreferences(InMemoryPreferenceStore())
+        fun open() = TranslatorScreenModel(
             feature = FakeTranslationFeature(),
             hostActions = hostActions,
             ttsFeature = FakeTtsFeature,
+            languagePreferences = languagePreferences,
         )
 
         try {
+            val first = open()
             advanceUntilIdle()
-            model.selectSource(FRENCH)
-            model.selectTarget(ENGLISH)
-            model.selectEngine(SECOND_ENGINE_ID)
-            model.setText("bonjour")
+            first.selectSource(FRENCH)
+            first.selectTarget(ENGLISH)
             advanceUntilIdle()
+            first.onDispose()
 
-            model.state.value.session.displayedSessionResult()?.result?.translatedText shouldBe "hello"
-            model.clearText()
-
-            with(model.state.value) {
-                text shouldBe ""
-                session.displayedSessionResult() shouldBe null
+            val reopened = open()
+            advanceUntilIdle()
+            with(reopened.state.value) {
                 sourceLanguage shouldBe TranslationSourceLanguageSelection.Explicit(FRENCH)
                 targetLanguage shouldBe TranslationTargetLanguageSelection.Explicit(ENGLISH)
-                engine shouldBe TranslationEngineSelection.Explicit(SECOND_ENGINE_ID)
             }
-            hostActions.selectedEngine.get() shouldBe ENGINE_ID
             hostActions.defaultTargetLanguage.get() shouldBe TranslationTargetLanguageSelection.Explicit(FRENCH)
-        } finally {
-            model.onDispose()
-            Dispatchers.resetMain()
-        }
-    }
 
-    @Test
-    fun `swap promotes the successful result and translates the resolved pair back`() = runTest {
-        val dispatcher = StandardTestDispatcher(testScheduler)
-        Dispatchers.setMain(dispatcher)
-        val model = TranslatorScreenModel(
-            feature = FakeTranslationFeature(),
-            hostActions = FakeHostActions(),
-            ttsFeature = FakeTtsFeature,
-        )
-
-        try {
+            reopened.selectAutomaticSource()
+            reopened.selectDefaultTarget()
             advanceUntilIdle()
-            model.setText("hello")
-            advanceUntilIdle()
-            model.swapLanguages()
+            reopened.onDispose()
 
-            with(model.state.value) {
-                text shouldBe "bonjour"
-                sourceLanguage shouldBe TranslationSourceLanguageSelection.Explicit(FRENCH)
-                targetLanguage shouldBe TranslationTargetLanguageSelection.Explicit(ENGLISH)
+            val followingDefaults = open()
+            with(followingDefaults.state.value) {
+                sourceLanguage shouldBe TranslationSourceLanguageSelection.Automatic
+                targetLanguage shouldBe TranslationTargetLanguageSelection.Default
             }
-
-            advanceUntilIdle()
-            model.state.value.session.displayedSessionResult()?.result?.translatedText shouldBe "hello"
+            followingDefaults.onDispose()
         } finally {
-            model.onDispose()
-            Dispatchers.resetMain()
-        }
-    }
-
-    @Test
-    fun `failed replacement keeps the previous successful result available`() = runTest {
-        val dispatcher = StandardTestDispatcher(testScheduler)
-        Dispatchers.setMain(dispatcher)
-        val model = TranslatorScreenModel(
-            feature = FakeTranslationFeature(),
-            hostActions = FakeHostActions(),
-            ttsFeature = FakeTtsFeature,
-        )
-
-        try {
-            advanceUntilIdle()
-            model.setText("hello")
-            advanceUntilIdle()
-            val successful = model.state.value.session.displayedSessionResult()
-
-            model.setText("fail")
-            advanceUntilIdle()
-
-            model.state.value.session.displayedSessionResult() shouldBe successful
-            model.state.value.session.shouldBeInstanceOf<TranslationSessionState.Failed>()
-        } finally {
-            model.onDispose()
-            Dispatchers.resetMain()
-        }
-    }
-
-    @Test
-    fun `swap without a result exchanges explicit supported selections and records recents`() = runTest {
-        val dispatcher = StandardTestDispatcher(testScheduler)
-        Dispatchers.setMain(dispatcher)
-        val hostActions = FakeHostActions()
-        val model = TranslatorScreenModel(
-            feature = FakeTranslationFeature(),
-            hostActions = hostActions,
-            ttsFeature = FakeTtsFeature,
-        )
-
-        try {
-            advanceUntilIdle()
-            model.selectSource(ENGLISH)
-            model.selectTarget(FRENCH)
-            model.swapLanguages()
-
-            with(model.state.value) {
-                sourceLanguage shouldBe TranslationSourceLanguageSelection.Explicit(FRENCH)
-                targetLanguage shouldBe TranslationTargetLanguageSelection.Explicit(ENGLISH)
-            }
-            hostActions.recentLanguages.get() shouldBe listOf(FRENCH, ENGLISH)
-
-            model.setText("bonjour")
-            advanceUntilIdle()
-            model.state.value.session.displayedSessionResult()?.result?.translatedText shouldBe "hello"
-        } finally {
-            model.onDispose()
-            Dispatchers.resetMain()
-        }
-    }
-
-    @Test
-    fun `swap with nothing to exchange reports unavailability`() = runTest {
-        val dispatcher = StandardTestDispatcher(testScheduler)
-        Dispatchers.setMain(dispatcher)
-        val model = TranslatorScreenModel(
-            feature = FakeTranslationFeature(),
-            hostActions = FakeHostActions(),
-            ttsFeature = FakeTtsFeature,
-        )
-
-        try {
-            advanceUntilIdle()
-            val events = mutableListOf<TranslatorEvent>()
-            val collector = launch { model.events.collect { events += it } }
-            runCurrent()
-            model.swapLanguages()
-            advanceUntilIdle()
-            collector.cancel()
-
-            events shouldBe listOf(TranslatorEvent.SwapUnavailable)
-        } finally {
-            model.onDispose()
             Dispatchers.resetMain()
         }
     }
@@ -261,11 +151,6 @@ class TranslatorScreenModelTest {
 
         override suspend fun translate(ready: ReadyTranslation): TranslationExecution {
             val request = (ready as FakeReadyTranslation).request
-            if (request.text == "fail") {
-                return TranslationExecution.Failed(
-                    TranslationFailureReason.ProviderFailure(request.engine, null),
-                )
-            }
             return TranslationExecution.Success(
                 TranslationResult(
                     translatedText = if (request.text == "bonjour") "hello" else "bonjour",
@@ -281,7 +166,7 @@ class TranslatorScreenModelTest {
 
     private class FakeHostActions : TranslationHostActions {
         private val store = InMemoryPreferenceStore()
-        override val knownEngines = listOf(knownEngine(ENGINE_ID), knownEngine(SECOND_ENGINE_ID))
+        override val knownEngines = listOf(knownEngine(ENGINE_ID))
         private val engineStates = knownEngines.map {
             TranslationEngineState(
                 engine = it,
@@ -310,6 +195,14 @@ class TranslatorScreenModelTest {
                 { languages -> languages.joinToString(",") { it.value } },
                 { raw -> raw.split(",").mapNotNull(LanguageTag::parse) },
             )
+
+        override fun defaultTarget(): TranslationDefaultTarget? =
+            (defaultTargetLanguage.get() as? TranslationTargetLanguageSelection.Explicit)
+                ?.let { TranslationDefaultTarget(it.language, followsAppLanguage = false) }
+
+        override fun recordRecentLanguage(language: LanguageTag) {
+            recentLanguages.set(listOf(language) + recentLanguages.get().filterNot { it == language })
+        }
 
         override suspend fun deviceAvailability() = TranslationDeviceAvailability.Available
 
@@ -377,7 +270,6 @@ class TranslatorScreenModelTest {
 
     private companion object {
         val ENGINE_ID = TranslationEngineId("test")
-        val SECOND_ENGINE_ID = TranslationEngineId("second")
         val ENGLISH = LanguageTag.require("en")
         val FRENCH = LanguageTag.require("fr")
         val PRESENTATION = TranslationProviderPresentation(

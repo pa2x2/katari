@@ -15,39 +15,29 @@ import kotlin.test.assertEquals
 
 internal class BookLibraryProgressProviderTest {
     @Test
-    fun `continue progress uses current chapter progression instead of whole book progression`() = runTest {
-        val chapter = chapter()
-        val progress = progress(
-            chapter = chapter,
-            locator = EntryProgressLocator(
-                kind = BOOK_PROGRESS_LOCATOR_KIND,
-                progression = 0.75,
-                totalProgression = 0.01,
-            ),
-        )
-        val provider = provider(progress)
+    fun `continue progress uses chapter progression and falls back to total progression for legacy locators`() =
+        runTest {
+            val chapter = chapter()
+            val current = provider(
+                progress(
+                    chapter = chapter,
+                    locator = EntryProgressLocator(
+                        kind = BOOK_PROGRESS_LOCATOR_KIND,
+                        progression = 0.75,
+                        totalProgression = 0.01,
+                    ),
+                ),
+            )
+            val legacy = provider(
+                progress(
+                    chapter = chapter,
+                    locator = EntryProgressLocator(kind = BOOK_PROGRESS_LOCATOR_KIND, totalProgression = 0.4),
+                ),
+            )
 
-        val evidence = provider.evidence(entry(), listOf(chapter))
-
-        assertEquals(0.75f, evidence.inProgressFraction)
-    }
-
-    @Test
-    fun `continue progress retains total progression fallback for legacy book locators`() = runTest {
-        val chapter = chapter()
-        val progress = progress(
-            chapter = chapter,
-            locator = EntryProgressLocator(
-                kind = BOOK_PROGRESS_LOCATOR_KIND,
-                totalProgression = 0.4,
-            ),
-        )
-        val provider = provider(progress)
-
-        val evidence = provider.evidence(entry(), listOf(chapter))
-
-        assertEquals(0.4f, evidence.inProgressFraction)
-    }
+            assertEquals(0.75f, current.evidence(entry(), listOf(chapter)).inProgressFraction)
+            assertEquals(0.4f, legacy.evidence(entry(), listOf(chapter)).inProgressFraction)
+        }
 
     private fun provider(progress: EntryProgressState): BookLibraryProgressProvider {
         val repository = mockk<EntryProgressRepository> {

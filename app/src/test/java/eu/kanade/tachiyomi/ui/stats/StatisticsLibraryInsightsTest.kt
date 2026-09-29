@@ -1,42 +1,34 @@
 package eu.kanade.tachiyomi.ui.stats
 
+import eu.kanade.presentation.more.stats.data.StatsLabelCount
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import eu.kanade.tachiyomi.source.entry.EntryType
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.model.Entry
-import tachiyomi.domain.entry.service.EntryLibraryContinueTarget
 import tachiyomi.domain.entry.service.EntryLibraryProgressResolution
-import tachiyomi.domain.entry.service.EntryLibraryProgressSummary
 import tachiyomi.domain.library.model.LibraryItem
 import tachiyomi.domain.library.model.LibraryItemKey
+import java.time.LocalDate
+import java.time.ZoneOffset
 
 class StatisticsLibraryInsightsTest {
 
+    private val today = LocalDate.parse("2026-09-28")
+
     @Test
-    fun `library insights normalize genres and count distinct categories`() {
-        val first = item(
-            id = 1L,
-            genres = listOf("Science   Fiction", "Drama"),
-            categories = listOf(1L, 2L),
-        )
-        val second = item(
-            id = 2L,
-            genres = listOf(" science fiction "),
-            categories = listOf(2L),
-        )
+    fun `genres are normalized and counted once per title`() {
+        val first =
+            item(id = 1L, genres = listOf("Science   Fiction", "Drama", "science fiction"), categories = listOf(1L, 2L))
+        val second = item(id = 2L, genres = listOf(" science fiction "), categories = listOf(2L))
 
-        val result = buildLibraryInsights(listOf(first, second))
+        val result = buildLibraryInsights(listOf(first, second), today, ZoneOffset.UTC)
 
-        result.topGenre shouldBe "Science Fiction"
+        result.topGenres shouldBe listOf(StatsLabelCount("Science Fiction", 2), StatsLabelCount("Drama", 1))
         result.categoryCount shouldBe 2
     }
 
-    private fun item(
-        id: Long,
-        genres: List<String>,
-        categories: List<Long>,
-    ): LibraryItem {
+    private fun item(id: Long, genres: List<String>, categories: List<Long>): LibraryItem {
         val entry = Entry.create().copy(id = id, type = EntryType.MANGA, title = "Title $id", genre = genres)
         return LibraryItem(
             entry = entry,
@@ -50,18 +42,7 @@ class StatisticsLibraryInsightsTest {
             isMerged = false,
             memberEntryIds = listOf(LibraryItemKey(entry.type, entry.id)),
             memberEntries = listOf(entry),
-            progressSummary = EntryLibraryProgressResolution.Available(
-                EntryLibraryProgressSummary(
-                    totalCount = 1L,
-                    consumedCount = 0L,
-                    hasStarted = false,
-                    bookmarkCount = 0L,
-                    inProgressItemId = null,
-                    inProgressFraction = null,
-                    lastRead = 0L,
-                    continueTarget = EntryLibraryContinueTarget.NoNext,
-                ),
-            ),
+            progressSummary = EntryLibraryProgressResolution.Inapplicable(EntryType.MANGA),
             latestUpload = 0L,
             downloadCount = 0,
         )

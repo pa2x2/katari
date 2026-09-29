@@ -59,9 +59,9 @@ class ProfileTranslationPreferences(
  * Moves [language] to the front of the recently used languages, dropping its previous occurrence
  * and capping the list at [limit] entries, most recently used first.
  */
-fun List<LanguageTag>.withRecentUse(
+internal fun List<LanguageTag>.withRecentUse(
     language: LanguageTag,
     limit: Int = DEFAULT_RECENT_LANGUAGES_LIMIT,
 ): List<LanguageTag> = (listOf(language) + filterNot { it == language }).take(limit)
 
-const val DEFAULT_RECENT_LANGUAGES_LIMIT = 6
+internal const val DEFAULT_RECENT_LANGUAGES_LIMIT = 6

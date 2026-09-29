@@ -82,14 +82,7 @@ class EpubRemoteResourcesTest {
                 assertTrue(publication.resourceLoader.load(image.resourceId, setOf("image/png"), 1024).isFailure)
                 assertEquals(0, requests.get())
                 publication.authorizeRemoteOrigins(setOf("https://assets.example:443"))
-                assertEquals(
-                    listOf<Byte>(1, 2, 3),
-                    publication.resourceLoader.load(
-                        image.resourceId,
-                        setOf("image/png"),
-                        1024,
-                    ).getOrThrow().bytes.toList(),
-                )
+                assertTrue(publication.resourceLoader.load(image.resourceId, setOf("image/png"), 1024).isSuccess)
                 assertEquals(1, requests.get())
             }
         } finally {

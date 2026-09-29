@@ -8,34 +8,20 @@ import org.junit.jupiter.api.Test
 class NetworkExtensionStoreTest {
 
     @Test
-    fun `repository source metadata maps known entry types and ignores unknown values`() {
-        val available = extensionList(
+    fun `repository source metadata tolerates future types and legacy or missing metadata`() {
+        val current = extensionList(
             extensionLib = "2.0.0",
             supportedEntryTypes = listOf("MANGA", "FUTURE_TYPE", "anime", "book"),
         ).toAvailableExtensions(store).single()
+        val legacy = extensionList(extensionLib = "1.6", supportedEntryTypes = emptyList())
+            .toAvailableExtensions(store).single()
+        val undeclared = extensionList(extensionLib = "2.0.0", supportedEntryTypes = emptyList())
+            .toAvailableExtensions(store).single()
 
-        available.sources.single().supportedEntryTypes shouldBe
+        current.sources.single().supportedEntryTypes shouldBe
             setOf(EntryType.MANGA, EntryType.ANIME, EntryType.BOOK)
-    }
-
-    @Test
-    fun `legacy extension families default to manga metadata`() {
-        val available = extensionList(
-            extensionLib = "1.6",
-            supportedEntryTypes = emptyList(),
-        ).toAvailableExtensions(store).single()
-
-        available.sources.single().supportedEntryTypes shouldBe setOf(EntryType.MANGA)
-    }
-
-    @Test
-    fun `entry extension without repository metadata remains unknown`() {
-        val available = extensionList(
-            extensionLib = "2.0.0",
-            supportedEntryTypes = emptyList(),
-        ).toAvailableExtensions(store).single()
-
-        available.sources.single().supportedEntryTypes shouldBe null
+        legacy.sources.single().supportedEntryTypes shouldBe setOf(EntryType.MANGA)
+        undeclared.sources.single().supportedEntryTypes shouldBe null
     }
 
     private fun extensionList(

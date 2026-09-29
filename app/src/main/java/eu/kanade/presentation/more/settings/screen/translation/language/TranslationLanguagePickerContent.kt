@@ -17,6 +17,7 @@ internal fun TranslationLanguagePickerContent(
     title: String,
     support: TranslationLanguageSupportState,
     engine: TranslationEngineId?,
+    engineName: String?,
     role: TranslationLanguageRole,
     counterpart: LanguageTag?,
     selected: LanguageTag?,
@@ -41,6 +42,7 @@ internal fun TranslationLanguagePickerContent(
             selected = selected,
             onSelect = onSelect,
             onRetry = onRetry,
+            engineName = engineName,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(contentPadding),

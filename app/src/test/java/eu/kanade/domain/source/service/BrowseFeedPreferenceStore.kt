@@ -1,15 +1,5 @@
 package eu.kanade.domain.source.service
 
-import eu.kanade.domain.source.model.BUILTIN_POPULAR_PRESET_ID
-import eu.kanade.domain.source.model.FeedItemRef
-import eu.kanade.domain.source.model.FeedListingMode
-import eu.kanade.domain.source.model.SourceFeed
-import eu.kanade.domain.source.model.SourceFeedAnchor
-import eu.kanade.domain.source.model.SourceFeedContentMode
-import eu.kanade.domain.source.model.SourceFeedPreset
-import eu.kanade.domain.source.model.SourceFeedTimeline
-import eu.kanade.tachiyomi.source.entry.EntryType
-import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,8 +7,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.serialization.json.Json
-import org.junit.jupiter.api.Test
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.PreferenceStore
 

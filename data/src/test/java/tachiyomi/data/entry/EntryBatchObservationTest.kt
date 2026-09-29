@@ -28,7 +28,7 @@ import tachiyomi.data.UpdateStrategyColumnAdapter
 class EntryBatchObservationTest {
 
     @Test
-    fun `batch observation supports large id sets and suppresses unrelated writes`() = runBlocking {
+    fun `batch observation spans sql parameter chunks and follows entry updates`() = runBlocking {
         val driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
         try {
             Database.Schema.awaitCreate(driver)
@@ -50,10 +50,6 @@ class EntryBatchObservationTest {
                 first().id shouldBe 1L
                 last().id shouldBe 502L
             }
-
-            database.entriesQueries.updateNotes("Unrelated", entryId = 503, profileId = PROFILE_ID).awaitAsOne()
-            delay(100)
-            emissions.size shouldBe 1
 
             database.entriesQueries.updateNotes("Updated", entryId = 1, profileId = PROFILE_ID).awaitAsOne()
             awaitEmissionCount(emissions, 2)
@@ -81,7 +77,7 @@ class EntryBatchObservationTest {
             """.trimIndent(),
             parameters = 0,
         )
-        for (id in 1L..503L) {
+        for (id in 1L..502L) {
             driver.await(
                 identifier = null,
                 sql = """

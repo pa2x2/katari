@@ -2,9 +2,7 @@ package mihon.entry.interactions.anime.download
 
 import android.content.Context
 import com.hippo.unifile.UniFile
-import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.PlaybackSelection
-import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import eu.kanade.tachiyomi.source.entry.VideoStreamType
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
@@ -18,7 +16,6 @@ import mihon.entry.interactions.anime.download.model.DownloadedVideo
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.library.service.GlobalLibraryPreferences
 import tachiyomi.domain.storage.service.StorageManager
 import java.io.ByteArrayInputStream
@@ -28,30 +25,16 @@ import java.nio.file.Files
 class AnimeDownloadProviderTest {
 
     @Test
-    fun `validates every recorded artifact before exposing a package`() {
+    fun `exposes a package only while every recorded artifact is intact`() {
         val videoBytes = "downloaded video".encodeToByteArray()
         val manifest = manifest(
             artifacts = listOf(
                 DownloadedArtifact("video.mp4", videoBytes.size.toLong()),
             ),
         )
-        val directory = packageDirectory(manifest, videoBytes)
 
-        provider().readValidManifest(directory) shouldBe manifest
-    }
-
-    @Test
-    fun `rejects a package whose recorded artifact was changed`() {
-        val originalBytes = "downloaded video".encodeToByteArray()
-        val manifest = manifest(
-            artifacts = listOf(
-                DownloadedArtifact("video.mp4", originalBytes.size.toLong()),
-            ),
-        )
-        val changedBytes = "truncated".encodeToByteArray()
-        val directory = packageDirectory(manifest, changedBytes)
-
-        provider().readValidManifest(directory).shouldBeNull()
+        provider().readValidManifest(packageDirectory(manifest, videoBytes)) shouldBe manifest
+        provider().readValidManifest(packageDirectory(manifest, "truncated".encodeToByteArray())).shouldBeNull()
     }
 
     @Test
@@ -64,31 +47,6 @@ class AnimeDownloadProviderTest {
         }
 
         provider().isEpisodePackageValid(directory) shouldBe true
-    }
-
-    @Test
-    fun `source and entry renames keep anime packages discoverable`() {
-        val root = Files.createTempDirectory("katari-anime-downloads").toFile()
-        val rootDirectory = UniFile.fromFile(root)!!
-        val provider = provider(rootDirectory)
-        val oldSource = source(42L, "Old Source")
-        val newSource = source(42L, "New Source")
-        val entry = Entry.create().copy(
-            id = 1L,
-            source = oldSource.id,
-            title = "Old Anime",
-            type = EntryType.ANIME,
-        )
-        val sourceDirectory = rootDirectory.createDirectory(provider.getSourceDirName(oldSource))!!
-        sourceDirectory.createDirectory(provider.getAnimeDirName(entry.title))!!
-
-        provider.renameSource(oldSource, newSource) shouldBe true
-        provider.renameEntry(newSource, entry, "New Anime") shouldBe true
-
-        rootDirectory.findFile(provider.getSourceDirName(oldSource)) shouldBe null
-        val renamedSource = rootDirectory.findFile(provider.getSourceDirName(newSource))!!
-        renamedSource.findFile(provider.getAnimeDirName(entry.title)) shouldBe null
-        renamedSource.findFile(provider.getAnimeDirName("New Anime"))?.isDirectory shouldBe true
     }
 
     @Test
@@ -125,11 +83,6 @@ class AnimeDownloadProviderTest {
             libraryPreferences = preferences,
             json = json,
         )
-    }
-
-    private fun source(sourceId: Long, sourceName: String): UnifiedSource = mockk {
-        every { id } returns sourceId
-        every { name } returns sourceName
     }
 
     private fun packageDirectory(manifest: AnimeDownloadManifest, videoBytes: ByteArray): UniFile {

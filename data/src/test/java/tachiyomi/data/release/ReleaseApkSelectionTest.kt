@@ -1,0 +1,41 @@
+package tachiyomi.data.release
+
+import io.kotest.matchers.nulls.shouldBeNull
+import io.kotest.matchers.shouldBe
+import org.junit.jupiter.api.Test
+
+class ReleaseApkSelectionTest {
+
+    @Test
+    fun `each flavor updates to its own APK for the device ABI and unbuilt ABIs get none`() {
+        abis.forEach { abi ->
+            selectReleaseApk(release, isFoss = true, primaryAbi = abi)?.name shouldBe "katari_foss_$abi-v2.0.0.apk"
+            selectReleaseApk(release, isFoss = false, primaryAbi = abi)?.name shouldBe "katari-$abi-v2.0.0.apk"
+        }
+        listOf("x86", "x86_64").forEach { abi ->
+            selectReleaseApk(release, isFoss = false, primaryAbi = abi).shouldBeNull()
+            selectReleaseApk(release, isFoss = true, primaryAbi = abi).shouldBeNull()
+        }
+    }
+
+    @Test
+    fun `each flavor falls back to its universal APK when the release has none for the device ABI`() {
+        val withoutFossAbiApks = release.filterNot { it.name.startsWith("katari_foss_") }
+        val withoutArm64Apk = release.filterNot { it.name == "katari-arm64-v8a-v2.0.0.apk" }
+
+        selectReleaseApk(withoutFossAbiApks, isFoss = true, primaryAbi = "arm64-v8a")?.name shouldBe
+            "katari-v2.0.0-foss.apk"
+        selectReleaseApk(withoutArm64Apk, isFoss = false, primaryAbi = "arm64-v8a")?.name shouldBe "katari-v2.0.0.apk"
+    }
+
+    private val abis = listOf("arm64-v8a", "armeabi-v7a")
+
+    private val release = listOf(
+        "katari-v2.0.0.apk",
+        "katari-arm64-v8a-v2.0.0.apk",
+        "katari-armeabi-v7a-v2.0.0.apk",
+        "katari-v2.0.0-foss.apk",
+        "katari_foss_arm64-v8a-v2.0.0.apk",
+        "katari_foss_armeabi-v7a-v2.0.0.apk",
+    ).map { GitHubAsset(name = it, downloadLink = "https://example.org/$it") }
+}

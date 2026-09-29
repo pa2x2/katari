@@ -50,7 +50,6 @@ internal fun TtsSettingsPlayground(
     onChooseVoiceOverrides: () -> Unit,
     onPitchChange: (Float) -> Unit,
     onTogglePreview: () -> Unit,
-    onSave: () -> Unit,
     onAcknowledgeDisclosure: (TtsProviderDisclosure) -> Unit,
     onOpenSetup: () -> Unit,
 ) {
@@ -130,13 +129,6 @@ internal fun TtsSettingsPlayground(
                 onOpenSetup = onOpenSetup,
                 onRetry = onTogglePreview,
             )
-            Button(
-                onClick = onSave,
-                enabled = state.hasUnsavedProfileChanges && configurationReady,
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Text(stringResource(MR.strings.action_save))
-            }
         }
     }
 }

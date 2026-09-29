@@ -24,49 +24,25 @@ import mihon.feature.graph.ContributionOwner
 import mihon.feature.graph.execution.FeatureExecutionHandler
 import mihon.feature.graph.execution.FeatureExecutionParticipantBinding
 import org.junit.jupiter.api.Test
-import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.entry.model.Entry
 
 class EntryLibraryMembershipCoordinatorTest {
 
     @Test
-    fun `category choice does not trigger persistence or after-commit work`() = runTest {
-        val trace = mutableListOf<String>()
-        val host = RecordingHost(trace, defaultCategoryId = -1, categories = listOf(Category(7L, "Shelf", 0L, 0L)))
-        val feature = feature(
-            host = host,
-            trace = trace,
-        )
+    fun `addition consequence runs only after persistence commits and never after a conflict`() = runTest {
+        val committedTrace = mutableListOf<String>()
+        val committed = feature(RecordingHost(committedTrace), trace = committedTrace)
+            .add(EntryLibraryAddRequest(entry()))
 
-        val result = feature.add(EntryLibraryAddRequest(entry()))
+        check(committed is EntryLibraryAddResult.Added) { "Unexpected addition result: $committed" }
+        committedTrace shouldContainExactly listOf("membership-committed", "addition-consequence")
 
-        (result is EntryLibraryAddResult.CategorySelectionRequired) shouldBe true
-        host.addCalls shouldBe 0
-        trace shouldContainExactly emptyList()
-    }
+        val conflictTrace = mutableListOf<String>()
+        val conflicted = feature(RecordingHost(conflictTrace, additionConflicts = true), trace = conflictTrace)
+            .add(EntryLibraryAddRequest(entry()))
 
-    @Test
-    fun `addition consequence runs only after persistence commits`() = runTest {
-        val trace = mutableListOf<String>()
-        val host = RecordingHost(trace)
-        val feature = feature(host, trace = trace)
-
-        val result = feature.add(EntryLibraryAddRequest(entry()))
-
-        check(result is EntryLibraryAddResult.Added) { "Unexpected addition result: $result" }
-        trace shouldContainExactly listOf("membership-committed", "addition-consequence")
-    }
-
-    @Test
-    fun `addition conflict suppresses volatile consequence`() = runTest {
-        val trace = mutableListOf<String>()
-        val host = RecordingHost(trace, additionConflicts = true)
-        val feature = feature(host, trace = trace)
-
-        val result = feature.add(EntryLibraryAddRequest(entry()))
-
-        (result is EntryLibraryAddResult.Failed) shouldBe true
-        trace shouldContainExactly emptyList()
+        (conflicted is EntryLibraryAddResult.Failed) shouldBe true
+        conflictTrace shouldContainExactly emptyList()
     }
 
     @Test
@@ -144,16 +120,13 @@ class EntryLibraryMembershipCoordinatorTest {
 
 private class RecordingHost(
     private val trace: MutableList<String>,
-    private val defaultCategoryId: Long = 0L,
-    private val categories: List<Category> = emptyList(),
     private val additionConflicts: Boolean = false,
 ) : EntryLibraryMembershipHost {
-    var addCalls = 0
     var removeCommitted = false
 
     override suspend fun prepareAddition(entry: Entry) = EntryLibraryMembershipPreparation(
-        categories = categories,
-        defaultCategoryId = defaultCategoryId,
+        categories = emptyList(),
+        defaultCategoryId = 0L,
         selectedCategoryIds = emptySet(),
         defaultChildFlags = 7L,
     )
@@ -163,7 +136,6 @@ private class RecordingHost(
         categoryIds: List<Long>,
         defaultChildFlags: Long,
     ): EntryLibraryMembershipCommit {
-        addCalls++
         if (additionConflicts) return EntryLibraryMembershipCommit.Conflict
         trace += "membership-committed"
         return EntryLibraryMembershipCommit.Applied(listOf(entry.copy(favorite = true)))

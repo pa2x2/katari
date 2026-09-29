@@ -1,7 +1,5 @@
 package eu.kanade.tachiyomi.ui.translator.session
 
-import androidx.appcompat.app.AppCompatDelegate
-import androidx.core.os.LocaleListCompat
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.channels.Channel
@@ -19,7 +17,6 @@ import mihon.translation.api.host.TranslationHostActions
 import mihon.translation.api.request.TranslationRequest
 import mihon.translation.api.request.TranslationSourceLanguageSelection
 import mihon.translation.api.request.TranslationTargetLanguageSelection
-import mihon.translation.runtime.preference.withRecentUse
 import mihon.translation.ui.picker.language.supportsPair
 import mihon.translation.ui.presentation.TranslationResultSpeechPhase
 import mihon.translation.ui.presentation.TranslationResultSpeechSide
@@ -39,13 +36,13 @@ import mihon.tts.ui.playback.ShortFormSpeechPhase
 import mihon.tts.ui.playback.ShortFormSpeechRequest
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
-import java.util.Locale
 
 internal class TranslatorScreenModel(
     initialText: String = "",
     feature: TranslationFeature = Injekt.get(),
     private val hostActions: TranslationHostActions = Injekt.get(),
     ttsFeature: TtsFeature = Injekt.get(),
+    private val languagePreferences: TranslatorLanguagePreferences = Injekt.get(),
 ) : ScreenModel {
     private val coordinator = TranslationSessionHostCoordinator(
         feature = feature,
@@ -57,8 +54,10 @@ internal class TranslatorScreenModel(
     private val mutableState = MutableStateFlow(
         TranslatorState(
             text = initialText,
-            profileTargetLanguage = resolveProfileTargetLanguage(hostActions),
-            recentLanguages = hostActions.recentLanguages.get(),
+            sourceLanguage = languagePreferences.sourceLanguage.get(),
+            targetLanguage = languagePreferences.targetLanguage.get(),
+            defaultTarget = hostActions.defaultTarget(),
+            recentLanguages = coordinator.recentLanguages.value,
             engines = coordinator.engineStates.value,
         ),
     )
@@ -104,39 +103,18 @@ internal class TranslatorScreenModel(
         mutableState.update { it.copy(picker = null) }
     }
 
-    fun selectAutomaticSource() {
-        speechController.stopPlayback()
-        mutableState.update {
-            it.copy(
-                sourceLanguage = TranslationSourceLanguageSelection.Automatic,
-                picker = null,
-            )
-        }
-        submit()
+    fun selectAutomaticSource() = useLanguages(source = TranslationSourceLanguageSelection.Automatic)
+
+    fun selectSource(language: LanguageTag) {
+        hostActions.recordRecentLanguage(language)
+        useLanguages(source = TranslationSourceLanguageSelection.Explicit(language))
     }
 
-    fun selectSource(language: mihon.language.api.tag.LanguageTag) {
-        speechController.stopPlayback()
-        mutableState.update {
-            it.copy(
-                sourceLanguage = TranslationSourceLanguageSelection.Explicit(language),
-                picker = null,
-            )
-        }
-        recordRecentLanguage(language)
-        submit()
-    }
+    fun selectDefaultTarget() = useLanguages(target = TranslationTargetLanguageSelection.Default)
 
-    fun selectTarget(language: mihon.language.api.tag.LanguageTag) {
-        speechController.stopPlayback()
-        mutableState.update {
-            it.copy(
-                targetLanguage = TranslationTargetLanguageSelection.Explicit(language),
-                picker = null,
-            )
-        }
-        recordRecentLanguage(language)
-        submit()
+    fun selectTarget(language: LanguageTag) {
+        hostActions.recordRecentLanguage(language)
+        useLanguages(target = TranslationTargetLanguageSelection.Explicit(language))
     }
 
     fun selectEngine(engine: TranslationEngineId) {
@@ -162,35 +140,25 @@ internal class TranslatorScreenModel(
         if (successful != null && support != null) {
             val result = successful.result
             if (support.supportsPair(result.targetLanguage, result.sourceLanguage)) {
-                speechController.stopPlayback()
-                mutableState.update {
-                    it.copy(
-                        text = result.translatedText,
-                        sourceLanguage = TranslationSourceLanguageSelection.Explicit(result.targetLanguage),
-                        targetLanguage = TranslationTargetLanguageSelection.Explicit(result.sourceLanguage),
-                        picker = null,
-                    )
-                }
-                recordRecentLanguage(result.sourceLanguage)
-                recordRecentLanguage(result.targetLanguage)
-                submit()
+                hostActions.recordRecentLanguage(result.sourceLanguage)
+                hostActions.recordRecentLanguage(result.targetLanguage)
+                useLanguages(
+                    source = TranslationSourceLanguageSelection.Explicit(result.targetLanguage),
+                    target = TranslationTargetLanguageSelection.Explicit(result.sourceLanguage),
+                    text = result.translatedText,
+                )
                 return
             }
         }
         val source = current.explicitSourceLanguage
         val target = current.explicitTargetLanguage
         if (support != null && source != null && target != null && support.supportsPair(target, source)) {
-            speechController.stopPlayback()
-            mutableState.update {
-                it.copy(
-                    sourceLanguage = TranslationSourceLanguageSelection.Explicit(target),
-                    targetLanguage = TranslationTargetLanguageSelection.Explicit(source),
-                    picker = null,
-                )
-            }
-            recordRecentLanguage(source)
-            recordRecentLanguage(target)
-            submit()
+            hostActions.recordRecentLanguage(source)
+            hostActions.recordRecentLanguage(target)
+            useLanguages(
+                source = TranslationSourceLanguageSelection.Explicit(target),
+                target = TranslationTargetLanguageSelection.Explicit(source),
+            )
             return
         }
         eventChannel.trySend(TranslatorEvent.SwapUnavailable)
@@ -209,15 +177,6 @@ internal class TranslatorScreenModel(
         when (action) {
             TranslationSessionExternalAction.ChooseSourceLanguage -> showPicker(TranslatorPicker.SourceLanguage)
             TranslationSessionExternalAction.ChooseTargetLanguage -> showPicker(TranslatorPicker.TargetLanguage)
-            is TranslationSessionExternalAction.ChangeLanguages -> {
-                mutableState.update {
-                    it.copy(
-                        sourceLanguage = TranslationSourceLanguageSelection.Explicit(action.source),
-                        targetLanguage = TranslationTargetLanguageSelection.Explicit(action.target),
-                        picker = TranslatorPicker.SourceLanguage,
-                    )
-                }
-            }
             TranslationSessionExternalAction.ChooseEngine -> showPicker(TranslatorPicker.Engine)
             is TranslationSessionExternalAction.ConfirmProviderDisclosure,
             is TranslationSessionExternalAction.DownloadModels,
@@ -259,6 +218,11 @@ internal class TranslatorScreenModel(
                 mutableState.update { it.copy(languageSupport = support) }
             }
         }
+        screenModelScope.launch {
+            coordinator.recentLanguages.collect { recents ->
+                mutableState.update { it.copy(recentLanguages = recents) }
+            }
+        }
     }
 
     private fun observeSession() {
@@ -291,15 +255,22 @@ internal class TranslatorScreenModel(
         }
     }
 
-    private fun loadActiveEngineAndSubmit() {
-        coordinator.loadLanguageSupport(mutableState.value.activeEngine)
+    /** Translates with these languages and keeps them for the next time the tab opens. */
+    private fun useLanguages(
+        source: TranslationSourceLanguageSelection = mutableState.value.sourceLanguage,
+        target: TranslationTargetLanguageSelection = mutableState.value.targetLanguage,
+        text: String = mutableState.value.text,
+    ) {
+        speechController.stopPlayback()
+        mutableState.update { it.copy(text = text, sourceLanguage = source, targetLanguage = target, picker = null) }
+        languagePreferences.sourceLanguage.set(source)
+        languagePreferences.targetLanguage.set(target)
         submit()
     }
 
-    private fun recordRecentLanguage(language: mihon.language.api.tag.LanguageTag) {
-        val updated = hostActions.recentLanguages.get().withRecentUse(language)
-        hostActions.recentLanguages.set(updated)
-        mutableState.update { it.copy(recentLanguages = updated) }
+    private fun loadActiveEngineAndSubmit() {
+        coordinator.loadLanguageSupport(mutableState.value.activeEngine)
+        submit()
     }
 
     private fun submit() {
@@ -337,17 +308,5 @@ internal class TranslatorScreenModel(
 
     private companion object {
         const val TRANSLATION_DEBOUNCE_MILLIS = 200L
-    }
-}
-
-private fun resolveProfileTargetLanguage(hostActions: TranslationHostActions): mihon.language.api.tag.LanguageTag? {
-    return when (val target = hostActions.defaultTargetLanguage.get()) {
-        TranslationTargetLanguageSelection.Default -> {
-            val locale = AppCompatDelegate.getApplicationLocales().get(0)
-                ?: LocaleListCompat.getAdjustedDefault().get(0)
-                ?: Locale.getDefault()
-            mihon.language.api.tag.LanguageTag.parse(locale.toLanguageTag())
-        }
-        is TranslationTargetLanguageSelection.Explicit -> target.language
     }
 }

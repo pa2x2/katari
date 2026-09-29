@@ -11,7 +11,4 @@ dependencies {
     api(projects.core.common)
     api(projects.featureGraph)
     api(libs.injekt)
-
-    testImplementation(libs.bundles.test)
-    testRuntimeOnly(libs.junit.platform.launcher)
 }

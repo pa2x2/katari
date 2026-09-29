@@ -7,7 +7,7 @@ import kotlin.test.assertEquals
 class BookDocumentStyleCompatibilityTest {
 
     @Test
-    fun `document flow properties survive copying and serialization`() {
+    fun `text flow and inline text context survive copying and serialization`() {
         val style = BookDocumentStyle().withFlow(
             BookDocumentFlowStyle(
                 spacingBeforeEm = 1f,
@@ -27,23 +27,20 @@ class BookDocumentStyleCompatibilityTest {
         assertEquals(2f, restored.spacingAfterEm)
         assertEquals(BookDocumentTextDirection.RIGHT_TO_LEFT, restored.direction)
         assertEquals("ar", restored.languageTag)
-    }
 
-    @Test
-    fun `inline text context survives serialization without visual styling`() {
-        val style = BookDocumentInlineStyle.withTextContext(
+        val inlineStyle = BookDocumentInlineStyle.withTextContext(
             base = BookDocumentInlineStyle(),
             textContext = BookDocumentTextContext(
                 languageTag = "he",
                 direction = BookDocumentTextDirection.RIGHT_TO_LEFT,
             ),
         )
-        val range = BookDocumentInlineStyleRange(0, 1, style)
+        val range = BookDocumentInlineStyleRange(0, 1, inlineStyle)
 
-        val restored = Json.decodeFromString<BookDocumentInlineStyleRange>(Json.encodeToString(range))
+        val restoredRange = Json.decodeFromString<BookDocumentInlineStyleRange>(Json.encodeToString(range))
 
-        assertEquals(range, restored)
-        assertEquals("he", restored.style.languageTag)
-        assertEquals(BookDocumentTextDirection.RIGHT_TO_LEFT, restored.style.direction)
+        assertEquals(range, restoredRange)
+        assertEquals("he", restoredRange.style.languageTag)
+        assertEquals(BookDocumentTextDirection.RIGHT_TO_LEFT, restoredRange.style.direction)
     }
 }

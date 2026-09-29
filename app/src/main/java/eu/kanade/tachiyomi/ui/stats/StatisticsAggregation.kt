@@ -12,6 +12,7 @@ import tachiyomi.domain.statistics.model.StatisticsActivityTimeline
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
+import java.time.temporal.ChronoUnit
 import java.time.temporal.TemporalAdjusters
 import java.time.temporal.WeekFields
 import java.util.Locale
@@ -119,6 +120,20 @@ internal fun buildWindowActivity(
     } else {
         emptyList()
     }
+    // Compare only against a window that the loaded navigation timeline covers and that was fully tracked.
+    val previousWindow = window.previousWindow()?.takeIf { previous ->
+        val previousStart = previous.startDate ?: return@takeIf false
+        trackingStartDate != null &&
+            !trackingStartDate.isAfter(previousStart) &&
+            navigationStartDate != null &&
+            !navigationStartDate.isAfter(previousStart)
+    }
+    val previousActivity = previousWindow?.let { previous ->
+        val previousDates = requireNotNull(previous.startDate)..previous.endDate
+        navigationTimeline.activity.filter { LocalDate.parse(it.localDate) in previousDates }
+    }
+    val trackedFrom = maxOf(firstDate, trackingStartDate ?: firstDate)
+    val trackedDayCount = (ChronoUnit.DAYS.between(trackedFrom, endDate) + 1L).coerceAtLeast(0L).toInt()
 
     return StatsActivity(
         window = window.copy(startDate = firstDate),
@@ -167,7 +182,14 @@ internal fun buildWindowActivity(
         trend = trend,
         navigationTrend = navigationTrend,
         topTitles = snapshot.topEntries.map { entry ->
-            StatsTopTitle(entry.entryId, entry.type, entry.title, entry.durationMillis)
+            StatsTopTitle(
+                entryId = entry.entryId,
+                type = entry.type,
+                title = entry.title,
+                durationMillis = entry.durationMillis,
+                cover = entry.cover,
+                completionCount = entry.completionCount,
+            )
         },
         trackingStartedAtEpochMillis = snapshot.trackingStartedAtEpochMillis,
         trackingStartDate = trackingStartDate,
@@ -175,6 +197,21 @@ internal fun buildWindowActivity(
         earlierDurationByType = snapshot.earlierActivity.associate { it.type to it.durationMillis },
         trendGranularity = bucketUnit.toTrendGranularity(),
         allRangeMonthlyTrend = allRangeMonthlyTrend,
+        previousWindow = previousWindow,
+        previousTotalDurationMillis = previousActivity?.sumOf { it.durationMillis },
+        previousTotalDurationByType = previousActivity?.let { rows ->
+            types.associateWith { type -> rows.filter { it.type == type }.sumOf { it.durationMillis } }
+        }.orEmpty(),
+        trackedDayCount = trackedDayCount,
+        longestStreakDays = streakTimeline.longestStreakEndingBy(endDate),
+        longestStreakDaysByType = types.associateWith { type -> streakTimeline.longestStreakEndingBy(endDate, type) },
+        rhythm = buildActivityRhythm(snapshot.segments, snapshot.activity),
+        rhythmByType = types.associateWith { type ->
+            buildActivityRhythm(
+                segments = snapshot.segments.filter { it.type == type },
+                activity = snapshot.activity.filter { it.type == type },
+            )
+        },
     )
 }
 

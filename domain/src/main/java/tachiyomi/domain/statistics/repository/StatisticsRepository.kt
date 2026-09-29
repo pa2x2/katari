@@ -5,6 +5,7 @@ import kotlinx.coroutines.flow.Flow
 import tachiyomi.domain.statistics.model.StatisticsActivitySnapshot
 import tachiyomi.domain.statistics.model.StatisticsActivityTimeline
 import tachiyomi.domain.statistics.model.StatisticsEarlierActivityDetails
+import tachiyomi.domain.statistics.model.StatisticsTopEntry
 
 interface StatisticsRepository {
     /**
@@ -25,6 +26,16 @@ interface StatisticsRepository {
         startLocalDate: String?,
         endLocalDate: String,
     ): Flow<StatisticsActivityTimeline>
+
+    /** Ranks every entry with qualifying timed activity in the window, longest first. */
+    suspend fun getTopEntriesPage(
+        profileId: Long,
+        type: EntryType?,
+        startLocalDate: String?,
+        endLocalDate: String,
+        offset: Long,
+        limit: Long,
+    ): List<StatisticsTopEntry>
 
     suspend fun getEarlierActivityDetails(
         profileId: Long,

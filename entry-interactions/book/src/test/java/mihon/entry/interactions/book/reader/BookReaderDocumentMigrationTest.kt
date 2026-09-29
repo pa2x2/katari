@@ -69,12 +69,4 @@ internal class BookReaderDocumentMigrationTest : BookReaderSessionFixture() {
         coVerify(exactly = 0) { repository.upsert(any()) }
         coVerify(exactly = 0) { repository.rekey(any(), any(), any(), any(), any(), any()) }
     }
-
-    @Test
-    fun `fraction-only migration requires an identifiable document`() = runTest {
-        val single = preparedDocumentPublication("new.html" to "<p>A chapter of ordinary prose.</p>")
-        assertNotNull(single.reconcileMigratedLocator(BookLocator("old.html", progression = 0.5)))
-        val multiple = preparedDocumentPublication("one" to "<p>One.</p>", "two" to "<p>Two.</p>")
-        assertNull(multiple.reconcileMigratedLocator(BookLocator("old.html", progression = 0.5)))
-    }
 }

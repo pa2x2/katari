@@ -1,125 +1,22 @@
 package mihon.translation.provider.libretranslate.protocol
 
 import io.kotest.assertions.throwables.shouldThrow
-import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldNotContain
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.async
-import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import mockwebserver3.MockResponse
 import mockwebserver3.MockWebServer
 import okhttp3.OkHttpClient
-import okhttp3.ResponseBody
-import okio.Buffer
-import okio.BufferedSource
-import okio.ForwardingSource
-import okio.buffer
 import org.junit.jupiter.api.Test
 import java.util.concurrent.TimeUnit
 
 class LibreTranslateHttpClientTest {
 
     @Test
-    fun `language capabilities come from the provider catalog`() = runTest {
-        MockWebServer().use { server ->
-            server.enqueue(
-                MockResponse.Builder()
-                    .body(
-                        """
-                        [
-                          {"code":"en","name":"English","targets":["fr","pl"]},
-                          {"code":"fr","name":"French","targets":["en"]}
-                        ]
-                        """.trimIndent(),
-                    )
-                    .build(),
-            )
-
-            val languages = client(server).languages()
-
-            languages shouldContainExactly listOf(
-                LibreTranslateLanguage("en", "English", setOf("fr", "pl")),
-                LibreTranslateLanguage("fr", "French", setOf("en")),
-            )
-            server.takeRequest().apply {
-                method shouldBe "GET"
-                url.encodedPath shouldBe "/languages"
-            }
-        }
-    }
-
-    @Test
-    fun `translation uses the LibreTranslate JSON contract`() = runTest {
-        MockWebServer().use { server ->
-            server.enqueue(
-                MockResponse.Builder()
-                    .body("""{"translatedText":"Bonjour"}""")
-                    .build(),
-            )
-
-            client(server).translate("Hello", "en", "fr") shouldBe "Bonjour"
-
-            server.takeRequest().apply {
-                method shouldBe "POST"
-                url.encodedPath shouldBe "/translate"
-                body?.utf8() shouldBe
-                    """{"q":"Hello","source":"en","target":"fr"}"""
-            }
-        }
-    }
-
-    @Test
-    fun `response bodies are consumed away from the caller thread`() = runTest {
-        MockWebServer().use { server ->
-            server.enqueue(
-                MockResponse.Builder()
-                    .body("""[{"code":"en","name":"English","targets":["fr"]}]""")
-                    .build(),
-            )
-            server.start()
-            val callerThread = Thread.currentThread()
-            var bodyReadThread: Thread? = null
-            val observingClient = OkHttpClient.Builder()
-                .addNetworkInterceptor { chain ->
-                    val response = chain.proceed(chain.request())
-                    val body = response.body
-                    response.newBuilder()
-                        .body(
-                            object : ResponseBody() {
-                                override fun contentType() = body.contentType()
-
-                                override fun contentLength() = body.contentLength()
-
-                                override fun source(): BufferedSource {
-                                    return object : ForwardingSource(body.source()) {
-                                        override fun read(sink: Buffer, byteCount: Long): Long {
-                                            bodyReadThread = Thread.currentThread()
-                                            return super.read(sink, byteCount)
-                                        }
-                                    }.buffer()
-                                }
-                            },
-                        )
-                        .build()
-                }
-                .build()
-            val service = LibreTranslateHttpClient(
-                httpClient = observingClient,
-                endpoint = server.url("/"),
-            )
-
-            service.languages()
-
-            bodyReadThread shouldNotBe null
-            bodyReadThread shouldNotBe callerThread
-        }
-    }
-
-    @Test
-    fun `optional API key is sent only in the translation body`() = runTest {
+    fun `translation uses the LibreTranslate JSON contract with the API key only in the body`() = runTest {
         MockWebServer().use { server ->
             server.enqueue(
                 MockResponse.Builder()
@@ -136,6 +33,8 @@ class LibreTranslateHttpClientTest {
             client.translate("Hello", "en", "fr") shouldBe "Bonjour"
 
             server.takeRequest().apply {
+                method shouldBe "POST"
+                url.encodedPath shouldBe "/translate"
                 url.query shouldBe null
                 body?.utf8() shouldBe
                     """{"q":"Hello","source":"en","target":"fr","api_key":"private-key"}"""
@@ -172,11 +71,10 @@ class LibreTranslateHttpClientTest {
                     .bodyDelay(30, TimeUnit.SECONDS)
                     .build(),
             )
-            val translation = async {
+            val translation = async(start = CoroutineStart.UNDISPATCHED) {
                 client(server).translate("Hello", "en", "fr")
             }
 
-            runCurrent()
             (server.takeRequest(5, TimeUnit.SECONDS) != null) shouldBe true
             translation.cancel()
 

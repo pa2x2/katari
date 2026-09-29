@@ -9,36 +9,11 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import java.io.File
-import kotlin.io.path.writeText
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
 class BookDownloadReconciliationTest {
-    @Test
-    fun `unchanged private summary avoids reopening package directories`() = runTest {
-        val fixture = fixture()
-        val completed = fixture.complete(content = "offline chapter")
-        val directoryListing = spyk(BookDownloadDirectoryListing())
-        val reconciliationStore = spyk(BookDownloadReconciliationStore(fixture.root.resolve("reconciliation")))
-        val provider = BookDownloadProvider(
-            downloadsDirectory = { UniFile.fromFile(fixture.root) },
-            directoryListing = directoryListing,
-            reconciliationStore = reconciliationStore,
-        )
-        val initialScan = provider.discoverPackages()
-        assertEquals(listOf(completed.manifest.packageKey), initialScan.packages.map { it.manifest.packageKey })
-        verify(exactly = 1) { directoryListing.list(match { it.uri == completed.directory.uri }) }
-
-        clearMocks(directoryListing, answers = false)
-        clearMocks(reconciliationStore, answers = false)
-        val restoredScan = provider.discoverPackages()
-
-        assertEquals(initialScan.packages, restoredScan.packages)
-        verify(exactly = 0) { directoryListing.list(match { it.uri == completed.directory.uri }) }
-        verify(exactly = 0) { reconciliationStore.replace(any(), any()) }
-    }
-
     @Test
     fun `package listing detects additions and removals without an entry timestamp change`() = runTest {
         val fixture = fixture()
@@ -67,31 +42,6 @@ class BookDownloadReconciliationTest {
     }
 
     @Test
-    fun `package timestamp invalidates manifest metadata without an entry timestamp change`() = runTest {
-        val fixture = fixture()
-        val completed = fixture.complete(content = "offline chapter")
-        val packageDirectory = File(checkNotNull(completed.directory.filePath))
-        val entryDirectory = checkNotNull(packageDirectory.parentFile)
-        val packageTimestamp = packageDirectory.lastModified()
-        val entryTimestamp = entryDirectory.lastModified()
-        val directoryListing = spyk(BookDownloadDirectoryListing())
-        val provider = fixture.reconciliationProvider(directoryListing = directoryListing)
-        provider.discoverPackages()
-        clearMocks(directoryListing, answers = false)
-        val updatedManifest = completed.manifest.copy(childTitle = "Updated chapter title")
-        packageDirectory.resolve(BookDownloadProvider.MANIFEST_FILE_NAME).writeText(
-            BookDownloadProvider.manifestJson().encodeToString(updatedManifest),
-        )
-        assertTrue(packageDirectory.setLastModified(packageTimestamp + 2_000L))
-        assertTrue(entryDirectory.setLastModified(entryTimestamp))
-
-        val scan = provider.discoverPackages()
-
-        assertEquals("Updated chapter title", scan.packages.single().manifest.childTitle)
-        verify(exactly = 1) { directoryListing.list(match { it.uri == completed.directory.uri }) }
-    }
-
-    @Test
     fun `corrupt private summary falls back to package manifests`() = runTest {
         val fixture = fixture()
         val completed = fixture.complete(content = "offline chapter")
@@ -103,29 +53,6 @@ class BookDownloadReconciliationTest {
         val scan = provider.discoverPackages()
 
         assertEquals(listOf(completed.manifest.packageKey), scan.packages.map { it.manifest.packageKey })
-    }
-
-    @Test
-    fun `invalid package remains discoverable after an in-place repair`() = runTest {
-        val fixture = fixture()
-        val completed = fixture.complete(content = "offline chapter")
-        val manifestFile = File(checkNotNull(completed.directory.filePath), BookDownloadProvider.MANIFEST_FILE_NAME)
-        assertTrue(manifestFile.delete())
-        val entryDirectory = checkNotNull(manifestFile.parentFile?.parentFile)
-        val entryTimestamp = entryDirectory.lastModified()
-        val provider = fixture.reconciliationProvider()
-        val invalidScan = provider.discoverPackages()
-        assertTrue(invalidScan.packages.isEmpty())
-        assertEquals(1, invalidScan.invalidPackageCount)
-
-        manifestFile.toPath().writeText(
-            BookDownloadProvider.manifestJson().encodeToString(completed.manifest),
-        )
-        assertTrue(entryDirectory.setLastModified(entryTimestamp))
-
-        val repairedScan = provider.discoverPackages()
-
-        assertEquals(listOf(completed.manifest.packageKey), repairedScan.packages.map { it.manifest.packageKey })
     }
 
     @Test

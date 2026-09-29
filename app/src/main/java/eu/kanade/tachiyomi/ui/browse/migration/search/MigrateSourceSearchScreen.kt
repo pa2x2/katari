@@ -24,6 +24,7 @@ import eu.kanade.presentation.browse.CatalogContent
 import eu.kanade.presentation.components.AppSnackbarHost
 import eu.kanade.presentation.components.SearchToolbar
 import eu.kanade.presentation.util.Screen
+import eu.kanade.tachiyomi.ui.browse.catalog.CatalogScreenEventsEffect
 import eu.kanade.tachiyomi.ui.browse.catalog.CatalogScreenModel
 import eu.kanade.tachiyomi.ui.browse.catalog.FilterUiState
 import eu.kanade.tachiyomi.ui.browse.source.browse.SourceFilterDialog
@@ -79,6 +80,7 @@ data class MigrateSourceSearchScreen(
         val migrationFailureMessage = stringResource(MR.strings.internal_error)
 
         val catalogList = screenModel.catalogPagerFlowFlow.collectAsLazyPagingItems()
+        CatalogScreenEventsEffect(screenModel, snackbarHostState)
 
         Scaffold(
             topBar = { scrollBehavior ->
@@ -168,20 +170,15 @@ data class MigrateSourceSearchScreen(
                 SourceFilterDialog(
                     onDismissRequest = onDismissRequest,
                     filters = state.filters,
+                    defaultFilters = state.defaultFilters,
                     filterRevision = state.filterRevision,
                     isLoading = state.filterState is FilterUiState.Loading,
                     errorMessage = (state.filterState as? FilterUiState.Error)?.throwable?.message,
-                    presets = emptyList(),
                     onReset = screenModel::resetFilters,
                     onResetGroup = screenModel::resetFilterGroup,
                     pendingFilterEdits = state.pendingFilterEdits,
                     draftQuery = state.draftSearchQuery,
                     onEditPagedItem = screenModel::editPagedFilterItem,
-                    onApplyPreset = {},
-                    onEditPreset = {},
-                    onDeletePreset = {},
-                    canDeletePreset = { false },
-                    onSaveAsNewPreset = null,
                     onFilter = screenModel::applyDraftFilters,
                     onUpdate = screenModel::setFilters,
                     onRequestSuggestions = screenModel::filterSuggestions,

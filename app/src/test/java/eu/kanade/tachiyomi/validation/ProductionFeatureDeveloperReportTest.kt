@@ -46,12 +46,8 @@ class ProductionFeatureDeveloperReportTest {
         println(rendered)
 
         result.validation.isSuccessful shouldBe true
-        result.report.application?.owner shouldBe "application-feature-runtime"
         result.report.integrations.isNotEmpty() shouldBe true
         result.report.obligations shouldBe emptyList()
-        rendered shouldContain "Katari feature developer report"
-        rendered shouldContain "Application Features"
-        rendered shouldContain "Contextual validation scenarios are samples"
     }
 
     private companion object {

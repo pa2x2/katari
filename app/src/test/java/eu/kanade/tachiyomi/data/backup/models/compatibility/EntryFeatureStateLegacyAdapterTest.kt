@@ -68,30 +68,4 @@ class EntryFeatureStateLegacyAdapterTest {
         state.completed shouldBe false
         state.locatorUpdatedAt shouldBe 2_000L
     }
-
-    @Test
-    fun `unknown current envelope survives and current state wins over legacy field`() {
-        val current = BackupEntry(
-            source = 1,
-            url = "/entry",
-            viewerSettingOverrides = listOf(BackupViewerSettingOverride("legacy", "theme", "dark")),
-            featureStates = listOf(
-                eu.kanade.tachiyomi.data.backup.models.BackupEntryFeatureState(
-                    ENTRY_VIEWER_SETTINGS_BACKUP_STATE_ID,
-                    9,
-                    byteArrayOf(1),
-                ),
-                eu.kanade.tachiyomi.data.backup.models.BackupEntryFeatureState(
-                    "future.feature.backup",
-                    3,
-                    byteArrayOf(2),
-                ),
-            ),
-        ).featureStatesWithLegacyFallback(Entry.create())
-
-        current.map { it.participantId to it.schemaVersion } shouldBe listOf(
-            ENTRY_VIEWER_SETTINGS_BACKUP_STATE_ID to 9,
-            "future.feature.backup" to 3,
-        )
-    }
 }

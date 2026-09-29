@@ -4,96 +4,38 @@ import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.release.model.Release
 import tachiyomi.domain.release.service.ReleaseService
 
 class GetApplicationReleaseTest {
 
-    private lateinit var getApplicationRelease: GetApplicationRelease
-    private lateinit var releaseService: ReleaseService
-
-    @BeforeEach
-    fun beforeEach() {
-        releaseService = mockk()
-
-        getApplicationRelease = GetApplicationRelease(releaseService)
-    }
+    private val releaseService = mockk<ReleaseService>()
+    private val getApplicationRelease = GetApplicationRelease(releaseService)
 
     @Test
-    fun `When has update but is preview expect new update`() = runTest {
-        val release = Release(
-            "r2000",
-            "info",
-            "http://example.com/release_link",
-            "http://example.com/release_link.apk",
-        )
+    fun `newer preview and release tags are updates while the current release is not`() = runTest {
+        suspend fun check(tag: String, isPreview: Boolean, commitCount: Int, versionName: String): Any {
+            coEvery { releaseService.latest(any()) } returns Release(
+                tag,
+                "info",
+                "http://example.com/release_link",
+                "http://example.com/release_link.apk",
+            )
+            return getApplicationRelease.await(
+                GetApplicationRelease.Arguments(
+                    isFoss = false,
+                    isPreview = isPreview,
+                    commitCount = commitCount,
+                    versionName = versionName,
+                    repository = "test",
+                ),
+            ).let { (it as? GetApplicationRelease.Result.NewUpdate)?.release?.version ?: it }
+        }
 
-        coEvery { releaseService.latest(any()) } returns release
-
-        val result = getApplicationRelease.await(
-            GetApplicationRelease.Arguments(
-                isFoss = false,
-                isPreview = true,
-                commitCount = 1000,
-                versionName = "",
-                repository = "test",
-            ),
-        )
-
-        (result as GetApplicationRelease.Result.NewUpdate).release shouldBe GetApplicationRelease.Result.NewUpdate(
-            release,
-        ).release
-    }
-
-    @Test
-    fun `When has update expect new update`() = runTest {
-        val release = Release(
-            "v2.0.0",
-            "info",
-            "http://example.com/release_link",
-            "http://example.com/release_link.apk",
-        )
-
-        coEvery { releaseService.latest(any()) } returns release
-
-        val result = getApplicationRelease.await(
-            GetApplicationRelease.Arguments(
-                isFoss = false,
-                isPreview = false,
-                commitCount = 0,
-                versionName = "v1.0.0",
-                repository = "test",
-            ),
-        )
-
-        (result as GetApplicationRelease.Result.NewUpdate).release shouldBe GetApplicationRelease.Result.NewUpdate(
-            release,
-        ).release
-    }
-
-    @Test
-    fun `When has no update expect no new update`() = runTest {
-        val release = Release(
-            "v1.0.0",
-            "info",
-            "http://example.com/release_link",
-            "http://example.com/release_link.apk",
-        )
-
-        coEvery { releaseService.latest(any()) } returns release
-
-        val result = getApplicationRelease.await(
-            GetApplicationRelease.Arguments(
-                isFoss = false,
-                isPreview = false,
-                commitCount = 0,
-                versionName = "v2.0.0",
-                repository = "test",
-            ),
-        )
-
-        result shouldBe GetApplicationRelease.Result.NoNewUpdate
+        check("r2000", isPreview = true, commitCount = 1000, versionName = "") shouldBe "r2000"
+        check("v2.0.0", isPreview = false, commitCount = 0, versionName = "v1.0.0") shouldBe "v2.0.0"
+        check("v1.0.0", isPreview = false, commitCount = 0, versionName = "v2.0.0") shouldBe
+            GetApplicationRelease.Result.NoNewUpdate
     }
 }

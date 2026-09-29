@@ -61,6 +61,8 @@ import mihon.entry.interactions.book.reader.BookReaderScaffold
 import mihon.entry.interactions.book.reader.selection.BookSelectionActionCoordinator
 import mihon.entry.interactions.book.reader.speech.BookShortFormSpeechOwner
 import mihon.entry.interactions.book.reader.speech.BookShortFormSpeechPhase
+import mihon.entry.interactions.book.reader.translation.BookAutomaticTranslationSettingsProvider
+import mihon.entry.interactions.book.reader.translation.bookTranslationLanguageDetails
 import mihon.entry.interactions.reader.navigation.EntryReaderNavigationSheet
 import mihon.entry.interactions.reader.settings.BookDocumentReadingMode
 import mihon.entry.interactions.reader.settings.ChapterTransitionMode
@@ -127,6 +129,10 @@ internal fun BookDocumentReaderScreen(
     val focusManager = LocalFocusManager.current
     var rootPosition by remember { mutableStateOf(Offset.Zero) }
     var pendingNavigation by remember { mutableStateOf<BookDocumentNavigationTarget?>(null) }
+
+    // The settings dialog is a window over the reader, so translation announcements go to it while it is open.
+    val settingsSnackbarHostState = remember { SnackbarHostState() }
+    val translationSnackbarHostState = if (state.settingsVisible) settingsSnackbarHostState else snackbarHostState
     val currentOnChromeToggle by rememberUpdatedState(onChromeToggle)
     val currentOnNavigationSelected by rememberUpdatedState(onNavigationSelected)
     val observeSelections = selectionCoordinator?.observeSelections?.collectAsState()?.value == true
@@ -220,6 +226,7 @@ internal fun BookDocumentReaderScreen(
                 translationSpeechState = translationSpeechState,
                 onTranslationSpeechToggle = selectionCoordinator?.let { it::toggleTranslationSpeech },
                 onTranslationPopupBoundsChanged = onTranslationPopupBoundsChanged,
+                translationSnackbarHostState = translationSnackbarHostState,
                 onRootPositionInWindow = { rootPosition = it },
                 modifier = Modifier
                     .fillMaxSize()
@@ -366,6 +373,13 @@ internal fun BookDocumentReaderScreen(
                     sharedTabTitle = stringResource(MR.strings.reader_shared_settings),
                     onDismissRequest = { onSettingsVisibilityChange(false) },
                     onOpenDefaultSettings = onOpenDefaultSettings,
+                    sharedSettingDetails = selectionCoordinator?.translationController?.let { controller ->
+                        mapOf(
+                            BookAutomaticTranslationSettingsProvider.AUTOMATIC_SELECTION_SETTING_ID to
+                                bookTranslationLanguageDetails(controller.hostCoordinator, controller.declaredLanguage),
+                        )
+                    }.orEmpty(),
+                    snackbarHostState = settingsSnackbarHostState,
                     onResetProcessorSettings = {
                         settingBindings.readingMode.clearEntryOverride()
                         settingBindings.tapZones.clearEntryOverride()

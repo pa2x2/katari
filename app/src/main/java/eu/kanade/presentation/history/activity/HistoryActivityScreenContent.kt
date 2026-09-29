@@ -20,11 +20,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import eu.kanade.presentation.entry.entryTypePresentation
+import eu.kanade.presentation.more.stats.data.StatsType
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.ui.history.activity.HistoryActivityScreenModel
+import eu.kanade.tachiyomi.ui.history.activity.HistoryActivitySummary
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.screens.LoadingScreen
@@ -35,9 +35,9 @@ import java.time.format.FormatStyle
 @Composable
 fun HistoryActivityScreenContent(
     state: HistoryActivityScreenModel.State,
-    startLocalDate: String,
-    endLocalDate: String,
+    summary: HistoryActivitySummary?,
     type: EntryType?,
+    types: List<StatsType>,
     paddingValues: PaddingValues,
     onEntryClick: (Long) -> Unit,
     onRetry: () -> Unit,
@@ -48,9 +48,9 @@ fun HistoryActivityScreenContent(
         HistoryActivityScreenModel.State.Failed -> ActivityLoadFailed(paddingValues, onRetry)
         is HistoryActivityScreenModel.State.Success -> ActivitySessionList(
             state = state,
-            startLocalDate = startLocalDate,
-            endLocalDate = endLocalDate,
+            summary = summary,
             type = type,
+            types = types,
             paddingValues = paddingValues,
             onEntryClick = onEntryClick,
             onLoadMore = onLoadMore,
@@ -71,21 +71,14 @@ private fun ActivityLoadFailed(paddingValues: PaddingValues, onRetry: () -> Unit
 @Composable
 private fun ActivitySessionList(
     state: HistoryActivityScreenModel.State.Success,
-    startLocalDate: String,
-    endLocalDate: String,
+    summary: HistoryActivitySummary?,
     type: EntryType?,
+    types: List<StatsType>,
     paddingValues: PaddingValues,
     onEntryClick: (Long) -> Unit,
     onLoadMore: () -> Unit,
 ) {
     val dateFormatter = remember { DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM) }
-    val startDate = remember(startLocalDate) { LocalDate.parse(startLocalDate) }
-    val endDate = remember(endLocalDate) { LocalDate.parse(endLocalDate) }
-    val rangeLabel = if (startDate == endDate) {
-        startDate.format(dateFormatter)
-    } else {
-        "${startDate.format(dateFormatter)} – ${endDate.format(dateFormatter)}"
-    }
 
     if (state.sessions.isEmpty()) {
         Box(Modifier.fillMaxSize().padding(paddingValues), contentAlignment = Alignment.Center) {
@@ -106,22 +99,8 @@ private fun ActivitySessionList(
         ),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        if (startDate != endDate || type != null) {
-            item("range") {
-                Column {
-                    if (startDate != endDate) {
-                        Text(rangeLabel, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-                    }
-                    if (type != null) {
-                        Text(
-                            text = stringResource(type.entryTypePresentation().displayNameLabel),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                }
-            }
-        }
+        // Always present so the list stays anchored at the top when the summary arrives after the first page.
+        item("summary") { summary?.let { HistoryActivitySummaryCard(it, type, types) } }
         itemsIndexed(
             items = state.sessions,
             key = { _, session -> session.sessionId },

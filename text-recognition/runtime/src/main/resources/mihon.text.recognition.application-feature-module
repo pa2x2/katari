@@ -1,0 +1,2 @@
+id=text-recognition
+module=mihon.text.recognition.runtime.di.textRecognitionFeatureRuntimeModule

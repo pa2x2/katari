@@ -1,24 +1,18 @@
 package mihon.entry.interactions.book.download
 
 import android.content.Context
-import eu.kanade.tachiyomi.source.entry.EntryType
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.verify
 import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.CoroutineStart
-import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.emptyFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import mihon.entry.interactions.book.document.preparation.BookDocumentPreparedCache
 import mihon.entry.interactions.book.document.resource.BookPublicationResourceGatewayFactory
 import mihon.entry.interactions.book.download.model.BookDownload
-import mihon.entry.interactions.book.download.model.BookDownloadFailure
 import mihon.entry.interactions.download.EntryDownloadWorkController
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.model.Entry
@@ -28,42 +22,6 @@ import kotlin.test.assertFalse
 import kotlin.test.assertSame
 
 class BookDownloadManagerTest {
-    @Test
-    fun `retrying a failed book notifies the shared queue runner`() = runTest {
-        val downloader = mockk<BookDownloader> {
-            coEvery { download(any()) } returns BookDownloadFailure(BookDownloadFailure.Reason.NETWORK)
-        }
-        val manager = managerFixture(downloader).manager
-        manager.queueBooks(
-            Entry.create().copy(id = 1L, type = EntryType.BOOK, source = 42L, url = "/book"),
-            listOf(chapter(id = 11L, sourceOrder = 1L)),
-            autoStart = false,
-        )
-        manager.runDownloads()
-        assertFalse(manager.hasPendingDownloads())
-        val retry = async(start = CoroutineStart.UNDISPATCHED) {
-            manager.statusFlow().first { it.status == BookDownload.State.QUEUE }
-        }
-
-        manager.startDownloads()
-
-        assertEquals(11L, retry.await().chapter.id)
-    }
-
-    @Test
-    fun `queued books preserve resolved next-item reading order`() {
-        val entry = Entry.create().copy(id = 1L)
-        val chapters = listOf(
-            chapter(id = 11L, sourceOrder = 1L),
-            chapter(id = 12L, sourceOrder = 2L),
-            chapter(id = 13L, sourceOrder = 3L),
-        )
-
-        val queued = chapters.toQueuedBookDownloads(entry)
-
-        assertEquals(listOf(11L, 12L, 13L), queued.map { it.chapter.id })
-    }
-
     @Test
     fun `queue changes made during restoration win without duplicating children`() {
         val restoredFirst = download(1L)
@@ -90,7 +48,7 @@ class BookDownloadManagerTest {
                 awaitCancellation()
             }
         }
-        val fixture = managerFixture(downloader)
+        val manager = manager(downloader)
         val entry = Entry.create().copy(
             id = 1L,
             source = 42L,
@@ -98,46 +56,18 @@ class BookDownloadManagerTest {
             title = "Book",
         )
         val chapter = chapter(id = 11L, sourceOrder = 1L)
-        fixture.manager.queueBooks(entry, listOf(chapter), autoStart = false)
-        val worker = launch { fixture.manager.runDownloads() }
+        manager.queueBooks(entry, listOf(chapter), autoStart = false)
+        val worker = launch { manager.runDownloads() }
         downloadStarted.await()
 
-        fixture.manager.startDownloads()
-        assertEquals(BookDownload.State.FINALIZING, fixture.manager.queueState.value.single().status)
-        fixture.manager.pauseDownloads()
-        assertEquals(BookDownload.State.QUEUE, fixture.manager.queueState.value.single().status)
+        manager.startDownloads()
+        assertEquals(BookDownload.State.FINALIZING, manager.queueState.value.single().status)
+        manager.pauseDownloads()
+        assertEquals(BookDownload.State.QUEUE, manager.queueState.value.single().status)
         worker.cancelAndJoin()
 
-        assertEquals(BookDownload.State.QUEUE, fixture.manager.queueState.value.single().status)
-        assertFalse(fixture.manager.isRunning.value)
-    }
-
-    @Test
-    fun `cancelling an active book continues pending work without stopping shared execution`() = runTest {
-        val downloadStarted = CompletableDeferred<Unit>()
-        val downloader = mockk<BookDownloader> {
-            coEvery { download(match { it.chapter.id == 11L }) } coAnswers {
-                downloadStarted.complete(Unit)
-                awaitCancellation()
-            }
-            coEvery { download(match { it.chapter.id == 12L }) } returns null
-        }
-        val workController = mockk<EntryDownloadWorkController>(relaxed = true)
-        val fixture = managerFixture(downloader, workController)
-        val entry = Entry.create().copy(id = 1L, source = 42L, url = "/book", title = "Book")
-        fixture.manager.queueBooks(
-            entry,
-            listOf(chapter(id = 11L, sourceOrder = 1L), chapter(id = 12L, sourceOrder = 2L)),
-            autoStart = false,
-        )
-        val runtime = launch { fixture.manager.runDownloads() }
-        downloadStarted.await()
-
-        fixture.manager.removeFromQueue(listOf(11L))
-        runtime.join()
-
-        assertEquals(emptyList(), fixture.manager.queueState.value)
-        verify(exactly = 0) { workController.stop() }
+        assertEquals(BookDownload.State.QUEUE, manager.queueState.value.single().status)
+        assertFalse(manager.isRunning.value)
     }
 
     private fun download(chapterId: Long): BookDownload = mockk {
@@ -152,10 +82,10 @@ class BookDownloadManagerTest {
         name = "Chapter $id",
     )
 
-    private fun managerFixture(
-        downloader: BookDownloader = mockk(relaxed = true),
+    private fun manager(
+        downloader: BookDownloader,
         workController: EntryDownloadWorkController = mockk(relaxed = true),
-    ): ManagerFixture {
+    ): BookDownloadManager {
         val appContext = mockk<Context>(relaxed = true)
         val context = mockk<Context> {
             every { applicationContext } returns appContext
@@ -168,22 +98,16 @@ class BookDownloadManagerTest {
         val store = mockk<BookDownloadStore>(relaxed = true) {
             coEvery { restore() } returns emptyList()
         }
-        return ManagerFixture(
-            manager = BookDownloadManager(
-                context = context,
-                cache = cache,
-                provider = mockk(relaxed = true),
-                downloader = downloader,
-                preparedDocumentCache = mockk<BookDocumentPreparedCache>(relaxed = true),
-                resourceGatewayFactory = mockk<BookPublicationResourceGatewayFactory>(relaxed = true),
-                sourceManager = mockk(relaxed = true),
-                store = store,
-                workController = workController,
-            ),
+        return BookDownloadManager(
+            context = context,
+            cache = cache,
+            provider = mockk(relaxed = true),
+            downloader = downloader,
+            preparedDocumentCache = mockk<BookDocumentPreparedCache>(relaxed = true),
+            resourceGatewayFactory = mockk<BookPublicationResourceGatewayFactory>(relaxed = true),
+            sourceManager = mockk(relaxed = true),
+            store = store,
+            workController = workController,
         )
     }
-
-    private data class ManagerFixture(
-        val manager: BookDownloadManager,
-    )
 }

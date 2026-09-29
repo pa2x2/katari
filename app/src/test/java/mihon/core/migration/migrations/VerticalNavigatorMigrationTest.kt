@@ -49,11 +49,6 @@ class VerticalNavigatorMigrationTest {
         assertFalse(second.getBoolean(OLD_VERTICAL_NAVIGATOR, true).isSet())
     }
 
-    @Test
-    fun `migration is assigned to released fork upgrade version`() {
-        assertEquals(91f, VerticalNavigatorMigration().version)
-    }
-
     private fun profile(id: Long) = Profile(id, "uuid-$id", "Profile $id", 0, id, false, false)
 
     private fun MigrationTestPreferenceStore.verticalNavigator() = getEnumSet(

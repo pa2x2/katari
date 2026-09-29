@@ -10,7 +10,6 @@ android {
 }
 
 dependencies {
-    implementation(projects.core.common)
     implementation(projects.featureRuntime)
     implementation(projects.presentationCore)
     implementation(projects.translation.api)
@@ -24,6 +23,7 @@ dependencies {
     implementation(libs.androidx.compose.uiToolingPreview)
     implementation(libs.androidx.lifecycle.runtime)
     implementation(libs.kotlinx.serialization.json)
+    implementation(libs.okhttp.core)
 
     testImplementation(libs.bundles.test)
     testImplementation(libs.kotlinx.coroutines.test)

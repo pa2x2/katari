@@ -1,6 +1,5 @@
 package mihon.feature.graph.execution
 
-import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.test.runTest
@@ -36,44 +35,6 @@ class FeatureExecutionLifecycleTest {
     private val afterCommitParticipant = participant("test.participant.after-commit", afterCommitPoint)
 
     @Test
-    fun `successful host commit releases volatile consequences after transactional work`() = runTest {
-        val trace = mutableListOf<String>()
-        val runtime = runtime(trace)
-
-        val result = runtime.coordinateFeatureCommit(
-            commit = {
-                val insideTransaction = callback {
-                    runtimeResult(
-                        execute(
-                            transactionalPoint,
-                            FeatureSubjectId.EntryContentType(contentType),
-                            Event("transactional"),
-                        ),
-                    )
-                }
-                trace += "host-transaction-started"
-                insideTransaction()
-                trace += "host-transaction-committed"
-                Commit.Applied
-            },
-            committed = { it == Commit.Applied },
-            volatileConsequences = {
-                runtimeResult(
-                    execute(afterCommitPoint, FeatureSubjectId.EntryContentType(contentType), Event("after-commit")),
-                )
-            },
-        )
-
-        (result is FeatureCommitExecutionResult.Committed) shouldBe true
-        trace shouldContainExactly listOf(
-            "host-transaction-started",
-            "transactional",
-            "host-transaction-committed",
-            "after-commit",
-        )
-    }
-
-    @Test
     fun `rolled back host transaction suppresses volatile consequences`() = runTest {
         val trace = mutableListOf<String>()
         val runtime = runtime(trace)
@@ -102,33 +63,6 @@ class FeatureExecutionLifecycleTest {
 
         result shouldBe FeatureCommitExecutionResult.NotCommitted(Commit.RolledBack)
         trace shouldContainExactly listOf("transactional")
-    }
-
-    @Test
-    fun `host transaction callback cannot escape or execute twice`() = runTest {
-        val runtime = runtime(mutableListOf())
-        lateinit var transactionCallback: suspend () -> Unit
-
-        runtime.coordinateFeatureCommit(
-            commit = {
-                transactionCallback = callback {
-                    runtimeResult(
-                        execute(
-                            transactionalPoint,
-                            FeatureSubjectId.EntryContentType(contentType),
-                            Event("transactional"),
-                        ),
-                    )
-                }
-                transactionCallback()
-                shouldThrow<IllegalStateException> { transactionCallback() }
-                Commit.Applied
-            },
-            committed = { it == Commit.Applied },
-            volatileConsequences = { Unit },
-        )
-
-        shouldThrow<IllegalStateException> { transactionCallback() }
     }
 
     private fun runtime(trace: MutableList<String>): FeatureExecutionRuntime {

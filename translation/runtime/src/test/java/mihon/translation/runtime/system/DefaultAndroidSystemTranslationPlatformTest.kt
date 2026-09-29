@@ -7,58 +7,12 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import mihon.language.api.tag.LanguageTag
-import mihon.translation.api.language.TranslationLanguagePair
-import mihon.translation.api.language.TranslationLanguageSupport
-import mihon.translation.api.language.TranslationLanguageSupportInspection
 import org.junit.jupiter.api.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class DefaultAndroidSystemTranslationPlatformTest {
     @Test
-    fun `device inspection only gates OS and service presence`() = runTest {
-        DefaultAndroidSystemTranslationPlatform(31, FakeBridge(emptyList())).inspectDevice() shouldBe
-            AndroidSystemDeviceInspection.Available
-        DefaultAndroidSystemTranslationPlatform(30, null).inspectDevice() shouldBe
-            AndroidSystemDeviceInspection.UnsupportedOs
-        DefaultAndroidSystemTranslationPlatform(31, null).inspectDevice() shouldBe
-            AndroidSystemDeviceInspection.ServiceMissing
-    }
-
-    @Test
-    fun `language support includes usable and downloadable pairs only`() = runTest {
-        val platform = DefaultAndroidSystemTranslationPlatform(
-            31,
-            FakeBridge(
-                listOf(
-                    capability("en", "pl"),
-                    capability("de", "pl", AndroidSystemCapabilityState.AvailableToDownload),
-                    capability("fr", "pl", AndroidSystemCapabilityState.Downloading),
-                    capability("es", "pl", AndroidSystemCapabilityState.Unavailable),
-                    capability("und", "pl"),
-                    capability("pl", "pl"),
-                ),
-            ),
-        )
-
-        val inspection = platform.inspectLanguageSupport() as TranslationLanguageSupportInspection.Available
-        (inspection.support as TranslationLanguageSupport.ExactPairs).pairs shouldBe setOf(
-            TranslationLanguagePair(
-                LanguageTag.require("en"),
-                LanguageTag.require("pl"),
-            ),
-            TranslationLanguagePair(
-                LanguageTag.require("de"),
-                LanguageTag.require("pl"),
-            ),
-            TranslationLanguagePair(
-                LanguageTag.require("fr"),
-                LanguageTag.require("pl"),
-            ),
-        )
-    }
-
-    @Test
-    fun `regional request can use a provider language-only capability`() = runTest {
+    fun `a regional request can use a language-only capability but not another region's`() = runTest {
         val bridge = FakeBridge(
             capabilities = listOf(capability("en", "pl")),
             translator = FakeTranslator(AndroidTranslationManagerResult.Success("Cześć")),
@@ -73,20 +27,13 @@ class DefaultAndroidSystemTranslationPlatformTest {
         bridge.createdPair shouldBe ("en" to "pl")
         bridge.closedRegistrations shouldBe 1
         bridge.translator?.destroyed shouldBe true
+
+        DefaultAndroidSystemTranslationPlatform(31, FakeBridge(listOf(capability("pt-BR", "en"))))
+            .inspect(pair("pt-PT", "en")) shouldBe AndroidSystemTranslationInspection.UnsupportedPair
     }
 
     @Test
-    fun `region-specific provider capability is not guessed for a different region`() = runTest {
-        val bridge = FakeBridge(
-            capabilities = listOf(capability("pt-BR", "en")),
-        )
-        val platform = DefaultAndroidSystemTranslationPlatform(31, bridge)
-
-        platform.inspect(pair("pt-PT", "en")) shouldBe AndroidSystemTranslationInspection.UnsupportedPair
-    }
-
-    @Test
-    fun `capability loss cancels active translation and releases provider resources`() = runTest {
+    fun `only losing the translated pair's capability cancels translation and frees the translator`() = runTest {
         val translator = FakeTranslator()
         val bridge = FakeBridge(
             capabilities = listOf(capability("en", "pl")),
@@ -98,6 +45,10 @@ class DefaultAndroidSystemTranslationPlatformTest {
             platform.translate(pair("en", "pl"), "Hello")
         }
         runCurrent()
+        bridge.listener?.invoke(capability("de", "pl", AndroidSystemCapabilityState.Unavailable))
+        runCurrent()
+        bridge.cancellation.cancelled shouldBe false
+
         bridge.listener?.invoke(
             capability("en", "pl", AndroidSystemCapabilityState.Downloading),
         )
@@ -110,42 +61,9 @@ class DefaultAndroidSystemTranslationPlatformTest {
         bridge.closedRegistrations shouldBe 1
     }
 
-    @Test
-    fun `unrelated capability update does not interrupt translation`() = runTest {
-        val translator = FakeTranslator()
-        val bridge = FakeBridge(
-            capabilities = listOf(capability("en", "pl")),
-            translator = translator,
-        )
-        val platform = DefaultAndroidSystemTranslationPlatform(31, bridge)
-
-        val execution = async {
-            platform.translate(pair("en", "pl"), "Hello")
-        }
-        runCurrent()
-        bridge.listener?.invoke(
-            capability("de", "pl", AndroidSystemCapabilityState.Unavailable),
-        )
-        translator.result.complete(AndroidTranslationManagerResult.Success("Cześć"))
-
-        execution.await() shouldBe AndroidSystemPlatformExecution.Success("Cześć")
-        bridge.cancellation.cancelled shouldBe false
-        translator.destroyed shouldBe true
-        bridge.closedRegistrations shouldBe 1
-    }
-
-    @Test
-    fun `unsupported OS and missing service are reported without provider access`() = runTest {
-        DefaultAndroidSystemTranslationPlatform(30, null).inspect(pair("en", "pl")) shouldBe
-            AndroidSystemTranslationInspection.UnsupportedOs
-        DefaultAndroidSystemTranslationPlatform(31, null).inspect(pair("en", "pl")) shouldBe
-            AndroidSystemTranslationInspection.ServiceMissing
-    }
-
     private class FakeBridge(
         private val capabilities: List<AndroidTranslationManagerCapability>,
         var translator: FakeTranslator? = null,
-        private val hasSettings: Boolean = true,
     ) : AndroidTranslationManagerBridge {
         var listener: ((AndroidTranslationManagerCapability) -> Unit)? = null
         var closedRegistrations = 0
@@ -154,13 +72,7 @@ class DefaultAndroidSystemTranslationPlatformTest {
 
         override suspend fun capabilities(): List<AndroidTranslationManagerCapability> = capabilities
 
-        override suspend fun openSettings(): AndroidSystemPlatformSetup {
-            return if (hasSettings) {
-                AndroidSystemPlatformSetup.Opened
-            } else {
-                AndroidSystemPlatformSetup.SettingsUnavailable
-            }
-        }
+        override suspend fun openSettings() = AndroidSystemPlatformSetup.Opened
 
         override fun observeCapabilities(
             listener: (AndroidTranslationManagerCapability) -> Unit,

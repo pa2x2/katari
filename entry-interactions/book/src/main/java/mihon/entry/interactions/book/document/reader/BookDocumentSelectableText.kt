@@ -66,7 +66,8 @@ internal fun BookDocumentSelectableText(
             onDispose { selection.clearTextPosition(token) }
         }
     }
-    val leaf = remember(token, chapterId, presentation, leadingSelectionText, separatorAfter) {
+    val languageTag = block.style.languageTag
+    val leaf = remember(token, chapterId, presentation, leadingSelectionText, separatorAfter, languageTag) {
         BookDocumentSelectableLeaf(
             token = token,
             chapterId = chapterId,
@@ -74,6 +75,7 @@ internal fun BookDocumentSelectableText(
             insertedBidiOffsets = presentation.insertedOffsets,
             leadingText = leadingSelectionText,
             separatorAfter = separatorAfter,
+            languageTag = languageTag,
         )
     }
     DisposableEffect(selection, leaf) {

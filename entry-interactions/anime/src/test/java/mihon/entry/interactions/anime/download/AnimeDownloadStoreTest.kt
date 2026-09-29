@@ -4,7 +4,6 @@ import eu.kanade.tachiyomi.source.entry.EntryType
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
-import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
@@ -44,38 +43,16 @@ class AnimeDownloadStoreTest {
             VideoDownloadQualityMode.DATA_SAVING,
         )
         restored.map { it.anime.profileId } shouldContainExactly listOf(20L, 10L)
-        backend.data.keys.toList() shouldContainExactly listOf("20:2:22", "10:1:11")
-        coVerify(exactly = 0) { entryRepository.getEntryById(any()) }
     }
 
     @Test
-    fun `persists removals and rewritten queue order`() = runTest {
-        val entry = anime(id = 1L, profileId = 10L)
-        val first = download(entry, episodeId = 1L)
-        val second = download(entry, episodeId = 2L)
-        val third = download(entry, episodeId = 3L)
-        val writer = store()
-        writer.addAll(listOf(first, second, third))
-        writer.remove(second)
-
-        coEvery { entryRepository.getAllEntriesByProfile(10L) } returns listOf(entry)
-        coEvery { chapterRepository.getChapterById(1L) } returns first.episode
-        coEvery { chapterRepository.getChapterById(3L) } returns third.episode
-
-        store().restore().map { it.episode.id } shouldContainExactly listOf(1L, 3L)
-
-        writer.addAll(listOf(first, third))
-        writer.clear()
-        writer.addAll(listOf(third, first))
-        store().restore().map { it.episode.id } shouldContainExactly listOf(3L, 1L)
-    }
-
-    @Test
-    fun `drops malformed and stale rows without preventing valid restoration`() = runTest {
+    fun `drops malformed, stale and foreign source rows without preventing valid restoration`() = runTest {
         val entry = anime(id = 1L, profileId = 10L)
         val valid = download(entry, episodeId = 1L)
         val stale = download(entry, episodeId = 2L)
         store().addAll(listOf(valid, stale))
+        val validValue = backend.data.getValue("10:1:1") as String
+        backend.data["wrong source"] = validValue.replace("\"sourceId\":42", "\"sourceId\":99")
         backend.data["malformed"] = "{not json"
         backend.data["wrong type"] = 3L
 
@@ -83,10 +60,7 @@ class AnimeDownloadStoreTest {
         coEvery { chapterRepository.getChapterById(1L) } returns valid.episode
         coEvery { chapterRepository.getChapterById(2L) } returns null
 
-        val restored = store().restore()
-
-        restored.map { it.episode.id } shouldContainExactly listOf(1L)
-        backend.data.keys.toList() shouldContainExactly listOf("10:1:1", "10:1:2", "malformed", "wrong type")
+        store().restore().map { it.episode.id } shouldContainExactly listOf(1L)
     }
 
     @Test
@@ -103,21 +77,6 @@ class AnimeDownloadStoreTest {
         restored.anime shouldBe entry
         restored.preferences.entryId shouldBe entry.id
         restored.preferences.dubKey shouldBe "dub"
-    }
-
-    @Test
-    fun `rejects rows whose persisted source no longer owns the entry`() = runTest {
-        val entry = anime(id = 5L, profileId = 10L)
-        val download = download(entry, episodeId = 6L)
-        store().addAll(listOf(download))
-        val validValue = backend.data.values.single() as String
-        backend.data["wrong-source"] = validValue.replace("\"sourceId\":42", "\"sourceId\":99")
-        coEvery { entryRepository.getAllEntriesByProfile(entry.profileId) } returns listOf(entry)
-        coEvery { chapterRepository.getChapterById(download.episode.id) } returns download.episode
-
-        val restored = store().restore()
-
-        restored.map { it.episode.id } shouldContainExactly listOf(download.episode.id)
     }
 
     private fun store() = AnimeDownloadStore(

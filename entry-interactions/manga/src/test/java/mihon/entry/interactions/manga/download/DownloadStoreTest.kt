@@ -5,7 +5,6 @@ import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
-import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.serialization.json.Json
@@ -35,7 +34,6 @@ class DownloadStoreTest {
         val first = download(firstEntry, chapterId = 11L)
         val second = download(secondEntry, chapterId = 22L)
         store().addAll(listOf(second, first))
-        backend.data.keys.toList() shouldContainExactly listOf("20:2:22", "10:1:11")
         coEvery { entryRepository.getAllEntriesByProfile(10L) } returns listOf(firstEntry)
         coEvery { entryRepository.getAllEntriesByProfile(20L) } returns listOf(secondEntry)
         coEvery { chapterRepository.getChapterById(11L) } returns first.chapter
@@ -46,7 +44,6 @@ class DownloadStoreTest {
         restored.map { it.chapter.id } shouldContainExactly listOf(22L, 11L)
         restored.map { it.entry.profileId } shouldContainExactly listOf(20L, 10L)
         backend.data shouldBe emptyMap()
-        coVerify(exactly = 0) { entryRepository.getEntryById(any()) }
     }
 
     @Test

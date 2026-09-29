@@ -15,6 +15,7 @@ import mihon.entry.interactions.book.presentation.BookEntryTypePresentationProvi
 import mihon.entry.interactions.book.reader.BookChildWebViewHostAdapter
 import mihon.entry.interactions.book.state.BookConsumptionProcessor
 import mihon.entry.interactions.book.state.BookProgressProcessor
+import mihon.entry.interactions.book.state.BookTranslationLanguagesProvider
 import mihon.entry.interactions.book.statistics.BookEntryStatisticsProvider
 import mihon.entry.interactions.download.EntryBulkDownloadCandidateCapability
 import mihon.entry.interactions.download.EntryDownloadCapability
@@ -37,6 +38,7 @@ import mihon.entry.interactions.source.EntryChildWebViewHostContribution
 import mihon.entry.interactions.state.EntryConsumptionCapability
 import mihon.entry.interactions.state.EntryMigrationCapability
 import mihon.entry.interactions.state.EntryProgressCapability
+import mihon.entry.interactions.state.EntryTranslationLanguagesCapability
 import mihon.feature.graph.ContributionOwner
 import tachiyomi.domain.entry.interactor.GetEntryWithChapters
 import tachiyomi.domain.entry.repository.EntryChapterRepository
@@ -96,6 +98,7 @@ fun bookEntryInteractionPlugin(
             add(EntryMediaCacheCapability.bind(BookMediaCacheProvider { Injekt.get() }))
             add(EntryMediaSessionCapability.bind(dependencies.mediaSession))
             add(EntryMigrationCapability.bind(migrationProvider))
+            add(EntryTranslationLanguagesCapability.bind(BookTranslationLanguagesProvider))
             if (downloadProcessor != null) {
                 add(EntryDownloadCapability.bind(downloadProcessor))
                 add(EntryBulkDownloadCandidateCapability.bind(downloadProcessor))

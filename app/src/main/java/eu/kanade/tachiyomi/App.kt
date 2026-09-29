@@ -50,6 +50,7 @@ import kotlinx.coroutines.flow.onEach
 import logcat.AndroidLogcatLogger
 import logcat.LogPriority
 import logcat.LogcatLogger
+import mihon.app.localnetwork.LocalNetworkPermissionPrompter
 import mihon.core.migration.Migrator
 import mihon.core.migration.migrations.migrations
 import mihon.entry.interactions.library.EntryLibraryUpdateNotificationFeature
@@ -95,6 +96,8 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
         ProcessLifecycleOwner.get().lifecycle.addObserver(this)
 
         val scope = ProcessLifecycleOwner.get().lifecycleScope
+
+        LocalNetworkPermissionPrompter(this).install(scope)
 
         // Show notification to disable Incognito Mode when it's enabled
         basePreferences.incognitoMode.changes()

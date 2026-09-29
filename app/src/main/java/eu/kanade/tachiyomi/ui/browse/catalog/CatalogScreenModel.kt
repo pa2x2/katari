@@ -45,17 +45,21 @@ import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.filter.validationIssues
 import eu.kanade.tachiyomi.source.filter.detachedCopy
-import eu.kanade.tachiyomi.ui.browse.source.browse.filter.PagedFilterBrowseSession
-import eu.kanade.tachiyomi.ui.browse.source.browse.filter.PagedFilterBrowseSessionStore
+import eu.kanade.tachiyomi.ui.browse.source.browse.filter.paged.PagedFilterBrowseSession
+import eu.kanade.tachiyomi.ui.browse.source.browse.filter.paged.PagedFilterBrowseSessionStore
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.updateAndGet
 import logcat.LogPriority
 import mihon.core.common.CustomPreferences
 import mihon.core.common.browseLongPressActionPriorityForSource
@@ -174,6 +178,9 @@ class CatalogScreenModel(
         retainSessions = pagedFilterBrowseSessions::retain,
     )
     private val mergeTargetSearchController = MergeTargetSearchController<MergeTarget>(screenModelScope)
+
+    private val _events = Channel<Event>(Channel.UNLIMITED)
+    val events: Flow<Event> = _events.receiveAsFlow()
 
     val catalogSource =
         (entryCatalogueFeature.source(sourceId) as? EntryCatalogueSourceResolution.Available)?.source
@@ -327,7 +334,18 @@ class CatalogScreenModel(
     }
 
     fun setListing(listing: Listing) {
-        mutableState.update { it.copy(listing = listing, toolbarQuery = null) }
+        mutableState.update { it.switchListing(listing) }
+    }
+
+    /** Resets one applied filter value to its default and re-runs the search. */
+    fun removeAppliedFilter(path: List<Int>) {
+        mutableState.update { it.withoutAppliedFilter(path) }
+    }
+
+    /** Returns to the parked search when another listing is shown, otherwise edits the filters. */
+    fun onFilterChipClick() {
+        val parked = state.value.restorableSearch
+        if (parked != null) setListing(parked) else openFilterSheet()
     }
 
     fun setFilters(filters: EntryFilterList) {
@@ -385,18 +403,10 @@ class CatalogScreenModel(
         return pagedFilterBrowseSessions.session(filter)
     }
 
-    fun search(query: String? = null, filters: EntryFilterList? = null) {
-        val input = state.value.listing as? Listing.Search
-            ?: Listing.Search(query = null, filters = state.value.filters)
-
-        mutableState.update {
-            it.copy(
-                listing = input.copy(
-                    query = query ?: input.query,
-                    filters = (filters ?: input.filters).detachedCopy(),
-                ),
-                toolbarQuery = query ?: input.query,
-            )
+    fun search(query: String) {
+        val searched = mutableState.updateAndGet { it.searchWithAppliedFilters(query) }
+        if (searched.hasUnappliedFilterChanges) {
+            _events.trySend(Event.SearchKeptUnappliedFilters)
         }
     }
 
@@ -435,12 +445,13 @@ class CatalogScreenModel(
 
             mutableState.update {
                 val listing = if (genreExists) {
-                    Listing.Search(query = null, filters = defaultFilters)
+                    Listing.Search(query = null, filters = defaultFilters.detachedCopy())
                 } else {
-                    Listing.Search(query = genreName, filters = defaultFilters)
+                    Listing.Search(query = genreName, filters = defaultFilters.detachedCopy())
                 }
                 it.withRepublishedDraftFilters(defaultFilters).copy(
                     listing = listing,
+                    parkedSearch = null,
                     toolbarQuery = listing.query,
                     filterState = FilterUiState.Ready,
                     appliedFiltersReady = true,
@@ -1100,6 +1111,11 @@ class CatalogScreenModel(
         }
     }
 
+    sealed interface Event {
+        /** A toolbar search ran with the applied filters while the editor still held other changes. */
+        data object SearchKeptUnappliedFilters : Event
+    }
+
     sealed interface Dialog {
         data object Filter : Dialog
 
@@ -1162,6 +1178,7 @@ class CatalogScreenModel(
     @Immutable
     data class State(
         val listing: Listing,
+        val parkedSearch: Listing.Search? = null,
         val filters: EntryFilterList = EntryFilterList(),
         val filterRevision: Int = 0,
         val filterState: FilterUiState = FilterUiState.Uninitialized,

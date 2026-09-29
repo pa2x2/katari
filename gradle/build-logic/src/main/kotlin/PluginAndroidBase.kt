@@ -2,6 +2,7 @@ import com.android.build.api.dsl.ApplicationDefaultConfig
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.dsl.CompileOptions
 import com.android.build.api.dsl.DefaultConfig
+import mihon.gradle.configurations.configureAndroidTestVerification
 import mihon.gradle.configurations.configureKotlin
 import mihon.gradle.extensions.android
 import mihon.gradle.extensions.compileSdkFromMihonx
@@ -18,6 +19,7 @@ class PluginAndroidBase : Plugin<Project> {
     override fun apply(target: Project): Unit = with(target) {
         configureKotlin()
         configureTest()
+        configureAndroidTestVerification()
 
         android {
             defaultConfig {

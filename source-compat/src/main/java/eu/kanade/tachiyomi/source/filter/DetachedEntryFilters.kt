@@ -24,7 +24,7 @@ internal interface DetachedEntryFilter {
 
 private fun EntryFilter<*>.detachedFilter(owner: EntryFilterBinding): EntryFilter<*> {
     val source = (this as? DetachedEntryFilter)?.sourceFilter ?: this
-    val capabilities = FilterCapabilities(source)
+    val capabilities = FilterCapabilities(source, owner)
     return when (this) {
         is EntryFilter.Header -> object : EntryFilter.Header(name), DetachedEntryFilter {
             override val sourceFilter = source
@@ -120,14 +120,12 @@ private fun EntryFilter<*>.detachedFilter(owner: EntryFilterBinding): EntryFilte
                 override val sourceFilter = source
                 override val binding = owner
                 override fun validateFilter(values: List<EntryFilter<*>>): List<EntryFilterValidationIssue> =
-                    (source as? EntryFilterValidator)?.validateFilter(values).orEmpty()
+                    capabilities.validateFilter(values)
                 override fun selectionSummary(values: List<EntryFilter<*>>): String? =
-                    (source as? EntryFilterGroupSummary)?.selectionSummary(values)
+                    source.guardSourceCallback(owner, null) {
+                        (source as? EntryFilterGroupSummary)?.selectionSummary(values)
+                    }
             }
         is EntryFilter.PagedGroup<*> -> detachedPagedGroup(source, this, owner)
     }
 }
-
-/** Resolve optional semantics through a host projection without requiring old extensions to implement anything. */
-fun EntryFilter<*>.sourceStateSemantics(): EntryFilterStateSemantics? =
-    (((this as? DetachedEntryFilter)?.sourceFilter) ?: this) as? EntryFilterStateSemantics

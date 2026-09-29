@@ -318,6 +318,14 @@ class TtsSettingsController(
         mutableState.update { it.copy(hasUnsavedProfileChanges = false) }
     }
 
+    /** Drops the draft and returns to the stored engine, voices, and pitch. */
+    fun discardProfileChanges() {
+        if (!mutableState.value.hasUnsavedProfileChanges) return
+        stopPreview()
+        mutableState.update { it.copy(hasUnsavedProfileChanges = false) }
+        refresh()
+    }
+
     fun configurationReady(): Boolean = configurationReady(mutableState.value)
 
     fun resolvedVoice(selection: TtsDefaultVoiceSelection): TtsVoice? {

@@ -78,6 +78,7 @@ object SettingsMangaReaderScreen : AppEntryViewerSettingsScreenProjection() {
             getWebtoonGroup(settings, settingBinder),
             getNavigationGroup(settings, settingBinder),
             getAutoScrollGroup(settings, settingBinder),
+            getPageTextGroup(settings, settingBinder),
             getActionsGroup(settings, settingBinder),
         )
     }
@@ -494,6 +495,39 @@ object SettingsMangaReaderScreen : AppEntryViewerSettingsScreenProjection() {
                     valueString = stringResource(MangaReaderSettings.AutoScrollLevelLabels[autoScrollSpeed]),
                     enabled = autoScrollEnabled,
                     onValueChanged = { autoScrollSpeedPref.set(it) },
+                ),
+            ),
+        )
+    }
+
+    @Composable
+    private fun getPageTextGroup(
+        settings: MangaReaderSettings,
+        settingBinder: ViewerSettingBinder,
+    ): Preference.PreferenceGroup {
+        return Preference.PreferenceGroup(
+            title = stringResource(MR.strings.pref_page_text_translation),
+            preferenceItems = listOf(
+                Preference.PreferenceItem.SwitchPreference(
+                    preference = settings.profilePreference(settingBinder, settings.pageText.translationOverlay),
+                    title = stringResource(MR.strings.pref_page_text_translation_overlay),
+                    subtitle = stringResource(MR.strings.pref_page_text_translation_overlay_summary),
+                ),
+                Preference.PreferenceItem.SwitchPreference(
+                    preference = settings.profilePreference(
+                        settingBinder,
+                        settings.pageText.processAheadOnlyOnUnmeteredNetwork,
+                    ),
+                    title = stringResource(MR.strings.pref_page_text_process_ahead_unmetered),
+                    subtitle = stringResource(MR.strings.pref_page_text_process_ahead_unmetered_summary),
+                ),
+                Preference.PreferenceItem.SwitchPreference(
+                    preference = settings.profilePreference(
+                        settingBinder,
+                        settings.pageText.processAheadOnlyWhileCharging,
+                    ),
+                    title = stringResource(MR.strings.pref_page_text_process_ahead_charging),
+                    subtitle = stringResource(MR.strings.pref_page_text_process_ahead_charging_summary),
                 ),
             ),
         )

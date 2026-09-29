@@ -8,6 +8,7 @@ import kotlinx.coroutines.sync.withLock
 /** One gate per source, shared by search and filter callbacks, including cached filter graphs. */
 class EntryFilterBinding {
     internal val mutex = Mutex()
+    internal val callbackFailures = SourceFilterCallbackFailures()
 
     suspend fun captureFilters(factory: () -> EntryFilterList): EntryFilterList =
         mutex.withLock { factory().detachedCopy(this) }

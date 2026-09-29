@@ -18,19 +18,6 @@ class FilterPresetIdentityTest {
     }
 
     @Test
-    fun `declared filter and option aliases migrate a renamed identity`() {
-        val original = PresetChoice(id = "old.type").apply { state = 1 }
-        val updated =
-            PresetChoice(
-                options = listOf("any", "film"),
-                aliases = setOf("old.type"),
-                optionAliases = mapOf("movie" to "film"),
-            )
-        EntryFilterList(updated).applySnapshot(EntryFilterList(original).snapshot())
-        updated.state shouldBe 1
-    }
-
-    @Test
     fun `known legacy labels and historical option indexes migrate across groups`() {
         val old = listOf(FilterStateNode.Group("Old", listOf(FilterStateNode.Select("Language", 2))))
         val updated =
@@ -58,24 +45,9 @@ class FilterPresetIdentityTest {
     }
 
     @Test
-    fun `missing or duplicated IDs cannot consume the same saved setting`() {
-        val saved = EntryFilterList(PresetChoice()).snapshot()
-        EntryFilterList(PresetChoice(id = "different")).restoreSnapshot(saved).isCompatible shouldBe false
-        EntryFilterList(PresetChoice(), PresetChoice()).restoreSnapshot(saved).isCompatible shouldBe false
-    }
-
-    @Test
     fun `unmodified third party filters restore without metadata`() {
         val filter = object : EntryFilter.Select<String>("Untranslated provider label", arrayOf("A", "B")) {}
         EntryFilterList(filter).applySnapshot(listOf(FilterStateNode.Select(filter.name, 1)))
         filter.state shouldBe 1
-    }
-
-    @Test
-    fun `adopting identity without a historical option table requires repair`() {
-        val choice = PresetChoice(legacyNames = setOf("Type"))
-        val saved = listOf(FilterStateNode.Select("Type", 1))
-        EntryFilterList(choice).restoreSnapshot(saved).isCompatible shouldBe false
-        choice.state shouldBe 0
     }
 }

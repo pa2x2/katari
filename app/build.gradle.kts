@@ -1,3 +1,4 @@
+import com.android.build.api.variant.FilterConfiguration
 import mihon.gradle.Config
 import mihon.gradle.getBuildTime
 import mihon.gradle.getLatestCommitCount
@@ -27,22 +28,29 @@ if (Config.includeTelemetry) {
 
 val keystorePropertiesFile = rootProject.file("keystore.properties")
 
+/** ABIs of the published APKs; the in-app updater keeps its own copy in ReleaseApkSelection. */
+val releasedAbis = listOf("armeabi-v7a", "arm64-v8a")
+
+/** Development builds also include x86_64 so they run natively on emulators. */
+val emulatorAbis = listOf("x86_64")
+
+/** Build types whose APKs are published. */
+val releasedBuildTypes = setOf("release", "foss")
+
 android {
     namespace = "eu.kanade.tachiyomi"
 
     defaultConfig {
         applicationId = "app.katari"
 
-        versionCode = 66
-        versionName = "1.10.2"
+        versionCode = 67
+        versionName = "1.11.0"
 
         buildConfigField("String", "COMMIT_COUNT", "\"${getLatestCommitCount()}\"")
         buildConfigField("String", "COMMIT_SHA", "\"${getLatestCommitSha()}\"")
         buildConfigField("String", "BUILD_TIME", "\"${getBuildTime(useLatestCommitTime = false)}\"")
         buildConfigField("boolean", "TELEMETRY_INCLUDED", "${Config.includeTelemetry}")
         buildConfigField("boolean", "UPDATER_ENABLED", "${Config.enableUpdater}")
-
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     testBuildType = "foss"
@@ -121,6 +129,12 @@ android {
 
             matchingFallbacks.addAll(commonMatchingFallbacks)
         }
+
+        configureEach {
+            // Replaces what initWith(release) copied.
+            ndk.abiFilters.clear()
+            ndk.abiFilters += if (name in releasedBuildTypes) releasedAbis else releasedAbis + emulatorAbis
+        }
     }
 
     sourceSets {
@@ -133,7 +147,7 @@ android {
             isEnable = true
             isUniversalApk = true
             reset()
-            include("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
+            include(*(releasedAbis + emulatorAbis).toTypedArray())
         }
     }
 
@@ -228,6 +242,18 @@ dependencies {
     implementation(dependencies.project(mapOf("path" to projects.presentationCore.path)))
     implementation(dependencies.project(mapOf("path" to projects.presentationWidget.path)))
     implementation(dependencies.project(mapOf("path" to projects.telemetry.path)))
+    implementation(dependencies.project(mapOf("path" to projects.modelArtifacts.runtime.path)))
+    implementation(dependencies.project(mapOf("path" to projects.modelArtifacts.ui.path)))
+    implementation(dependencies.project(mapOf("path" to projects.textRecognition.runtime.path)))
+    implementation(dependencies.project(mapOf("path" to projects.textRecognition.providers.onnx.path)))
+    // ML Kit needs Google Play services, so FOSS builds only list it; see its runtime component descriptors.
+    "fossImplementation"(dependencies.project(mapOf("path" to projects.textRecognition.providers.mlkit.catalog.path)))
+    listOf("debug", "release", "preview", "benchmark").forEach { buildType ->
+        "${buildType}Implementation"(
+            dependencies.project(mapOf("path" to projects.textRecognition.providers.mlkit.path)),
+        )
+    }
+    implementation(dependencies.project(mapOf("path" to projects.textRecognition.ui.path)))
     implementation(dependencies.project(mapOf("path" to projects.translation.runtime.path)))
     implementation(dependencies.project(mapOf("path" to projects.translation.ui.path)))
     implementation(dependencies.project(mapOf("path" to projects.translation.providers.libretranslate.path)))
@@ -345,10 +371,6 @@ dependencies {
     testImplementation(testFixtures(projects.entryInteractions))
     testImplementation(testFixtures(projects.translation.runtime))
     testRuntimeOnly(libs.junit.platform.launcher)
-    androidTestImplementation(platform(libs.androidx.compose.bom))
-    androidTestImplementation(libs.androidx.compose.uiTestJunit4)
-    androidTestImplementation(libs.androidx.test.junit)
-    debugImplementation(libs.androidx.compose.uiTestManifest)
 
     // For detecting memory leaks; see https://square.github.io/leakcanary/
     // debugImplementation(libs.leakCanary.android)
@@ -383,6 +405,18 @@ val generateFeatureReport = tasks.register<Test>("generateFeatureReport") {
 }
 
 androidComponents {
+    onVariants { variant ->
+        if (variant.buildType !in releasedBuildTypes) return@onVariants
+        variant.outputs
+            .filter { output ->
+                output.filters.any {
+                    it.filterType == FilterConfiguration.FilterType.ABI &&
+                        it.identifier in emulatorAbis
+                }
+            }
+            .forEach { it.enabled.set(false) }
+    }
+
     onVariants { variant ->
         val javaSources = variant.sources.java
         if (javaSources != null) {

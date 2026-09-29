@@ -5,6 +5,7 @@ internal data class BookReaderTextSelection(
     val identity: String,
     val text: String,
     val languageContextText: String,
+    val languageTags: List<String>,
     val anchor: BookReaderTextSelectionAnchor?,
     val isSettled: Boolean,
 ) {

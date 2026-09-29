@@ -73,6 +73,8 @@ internal fun ReaderAppBars(
     autoScrollActive: Boolean,
     onClickAutoScroll: () -> Unit,
     onClickChapterNavigation: () -> Unit,
+    textTranslationActive: Boolean,
+    onClickTextTranslation: () -> Unit,
     onClickSettings: () -> Unit,
 ) {
     ReaderChrome(
@@ -164,6 +166,8 @@ internal fun ReaderAppBars(
                     autoScrollActive = autoScrollActive,
                     onClickAutoScroll = onClickAutoScroll,
                     onClickChapterNavigation = onClickChapterNavigation,
+                    textTranslationActive = textTranslationActive,
+                    onClickTextTranslation = onClickTextTranslation,
                     onClickSettings = onClickSettings,
                 )
             }

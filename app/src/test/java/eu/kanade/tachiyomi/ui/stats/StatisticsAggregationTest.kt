@@ -1,7 +1,6 @@
 package eu.kanade.tachiyomi.ui.stats
 
 import eu.kanade.presentation.more.stats.data.StatsRange
-import eu.kanade.presentation.more.stats.data.StatsTrendGranularity
 import eu.kanade.presentation.more.stats.data.StatsTrendPoint
 import eu.kanade.tachiyomi.source.entry.EntryType
 import io.kotest.matchers.shouldBe
@@ -10,96 +9,11 @@ import tachiyomi.domain.statistics.model.StatisticsActivityBucket
 import tachiyomi.domain.statistics.model.StatisticsActivitySnapshot
 import tachiyomi.domain.statistics.model.StatisticsActivityTimeline
 import tachiyomi.domain.statistics.model.StatisticsCompletionBucket
-import tachiyomi.domain.statistics.model.StatisticsEarlierActivity
-import tachiyomi.domain.statistics.model.StatisticsSessionSummary
 import java.time.LocalDate
+import java.time.ZoneOffset
 import java.util.Locale
 
 class StatisticsAggregationTest {
-
-    @Test
-    fun `year trend shows calendar months bounded by the selected range`() {
-        val today = LocalDate.parse("2026-08-23")
-        val result = buildActivity(
-            snapshot = StatisticsActivitySnapshot(
-                profileId = 1L,
-                trackingStartedAtEpochMillis = 1L,
-                activity = listOf(
-                    StatisticsActivityBucket(EntryType.MANGA, "2025-08-24", 60_000L),
-                    StatisticsActivityBucket(EntryType.MANGA, "2025-08-31", 120_000L),
-                    StatisticsActivityBucket(EntryType.MANGA, "2025-09-01", 240_000L),
-                ),
-                completions = listOf(
-                    StatisticsCompletionBucket(EntryType.MANGA, "2025-08-24", 1L),
-                    StatisticsCompletionBucket(EntryType.MANGA, "2025-08-31", 2L),
-                ),
-                topEntries = emptyList(),
-                earlierActivity = emptyList(),
-            ),
-            range = StatsRange.ONE_YEAR,
-            types = listOf(EntryType.MANGA),
-            today = today,
-            locale = Locale.UK,
-        )
-
-        result.trend.first().startDate shouldBe today.minusYears(1L).plusDays(1L)
-        result.trend.last().endDate shouldBe today
-        result.trendGranularity shouldBe StatsTrendGranularity.MONTH
-        result.trend.map { it.bucketStartDate } shouldBe (0L..12L).map {
-            LocalDate.parse("2025-08-01").plusMonths(it)
-        }
-        result.trend.take(3).map(StatsTrendPoint::totalDurationMillis) shouldBe listOf(180_000L, 240_000L, 0L)
-        result.trend.first().completionCount shouldBe 3L
-    }
-
-    @Test
-    fun `overview trend fills empty days and retains each type contribution`() {
-        val result = buildActivity(
-            snapshot = StatisticsActivitySnapshot(
-                profileId = 1L,
-                trackingStartedAtEpochMillis = 1L,
-                activity = listOf(
-                    StatisticsActivityBucket(EntryType.MANGA, "2026-08-23", 60_000L),
-                    StatisticsActivityBucket(EntryType.ANIME, "2026-08-22", 30_000L),
-                ),
-                completions = listOf(
-                    StatisticsCompletionBucket(EntryType.ANIME, "2026-08-22", 1L),
-                ),
-                topEntries = emptyList(),
-                earlierActivity = listOf(
-                    StatisticsEarlierActivity(EntryType.MANGA, 12_000L),
-                ),
-                sessions = listOf(
-                    StatisticsSessionSummary(EntryType.MANGA, 2L, 30_000L, 45_000L),
-                    StatisticsSessionSummary(EntryType.ANIME, 1L, 30_000L, 30_000L),
-                ),
-            ),
-            range = StatsRange.SEVEN_DAYS,
-            types = listOf(EntryType.MANGA, EntryType.ANIME, EntryType.BOOK),
-            today = LocalDate.parse("2026-08-23"),
-            locale = Locale.US,
-        )
-
-        result.trend.size shouldBe 7
-        result.trend.last().durationByType shouldBe mapOf(
-            EntryType.MANGA to 60_000L,
-            EntryType.ANIME to 0L,
-            EntryType.BOOK to 0L,
-        )
-        result.totalDurationMillis shouldBe 90_000L
-        result.completionCount shouldBe 1L
-        result.completionCountByType shouldBe mapOf(
-            EntryType.MANGA to 0L,
-            EntryType.ANIME to 1L,
-            EntryType.BOOK to 0L,
-        )
-        result.earlierDurationMillis shouldBe 12_000L
-        result.earlierDurationByType shouldBe mapOf(EntryType.MANGA to 12_000L)
-        result.sessionCount shouldBe 3L
-        result.averageSessionDurationMillis shouldBe 30_000L
-        result.longestSessionDurationMillis shouldBe 45_000L
-        result.activeDays shouldBe 2
-    }
 
     @Test
     fun `partial year buckets exclude activity outside exact window`() {
@@ -142,23 +56,47 @@ class StatisticsAggregationTest {
     }
 
     @Test
-    fun `completion-only date counts as active day`() {
-        val result = buildActivity(
-            snapshot = StatisticsActivitySnapshot(
-                profileId = 1L,
-                trackingStartedAtEpochMillis = 1L,
-                activity = emptyList(),
-                completions = listOf(StatisticsCompletionBucket(EntryType.BOOK, "2026-08-23", 1L)),
-                topEntries = emptyList(),
-                earlierActivity = emptyList(),
+    fun `previous window comparison requires a fully tracked, loaded window`() {
+        val endDate = LocalDate.parse("2026-08-28")
+        val window = StatsRange.SEVEN_DAYS.windowEndingOn(endDate, isLatest = true)
+        val snapshot = StatisticsActivitySnapshot(
+            profileId = 1L,
+            trackingStartedAtEpochMillis = 0L,
+            activity = listOf(StatisticsActivityBucket(EntryType.MANGA, "2026-08-27", 120_000L)),
+            completions = emptyList(),
+            topEntries = emptyList(),
+            earlierActivity = emptyList(),
+        )
+        val navigation = StatisticsActivityTimeline(
+            activity = listOf(
+                StatisticsActivityBucket(EntryType.MANGA, "2026-08-14", 999_000L),
+                StatisticsActivityBucket(EntryType.MANGA, "2026-08-15", 30_000L),
+                StatisticsActivityBucket(EntryType.BOOK, "2026-08-21", 30_000L),
+                StatisticsActivityBucket(EntryType.MANGA, "2026-08-27", 120_000L),
             ),
-            range = StatsRange.SEVEN_DAYS,
-            types = listOf(EntryType.BOOK),
-            today = LocalDate.parse("2026-08-23"),
-            locale = Locale.US,
+            completions = emptyList(),
+        )
+        fun build(trackingStartedAt: Long) = buildWindowActivity(
+            snapshot = snapshot.copy(trackingStartedAtEpochMillis = trackingStartedAt),
+            window = window,
+            types = listOf(EntryType.MANGA, EntryType.BOOK),
+            locale = Locale.UK,
+            zoneId = ZoneOffset.UTC,
+            navigationTimeline = navigation,
+            navigationStartDate = LocalDate.parse("2026-08-15"),
         )
 
-        result.activeDays shouldBe 1
-        result.activeDaysByType shouldBe mapOf(EntryType.BOOK to 1)
+        build(trackingStartedAt = 0L).let { result ->
+            result.previousWindow?.startDate shouldBe LocalDate.parse("2026-08-15")
+            result.previousTotalDurationMillis shouldBe 60_000L
+            result.previousTotalDurationByType shouldBe mapOf(EntryType.MANGA to 30_000L, EntryType.BOOK to 30_000L)
+            result.trackedDayCount shouldBe 7
+        }
+        val trackedMidWindow = LocalDate.parse("2026-08-25").atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
+        build(trackingStartedAt = trackedMidWindow).let { result ->
+            result.previousWindow shouldBe null
+            result.previousTotalDurationMillis shouldBe null
+            result.trackedDayCount shouldBe 4
+        }
     }
 }

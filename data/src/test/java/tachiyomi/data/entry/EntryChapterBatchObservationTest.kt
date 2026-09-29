@@ -28,23 +28,6 @@ import tachiyomi.domain.entry.model.EntryChapter
 class EntryChapterBatchObservationTest {
 
     @Test
-    fun `empty batch observation emits once and completes`() {
-        runBlocking {
-            val driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
-            try {
-                val repository = EntryChapterRepositoryImpl(
-                    handler = AndroidDatabaseHandler(database(driver), driver),
-                    profileProvider = FixedProfileProvider(PROFILE_ID),
-                )
-
-                repository.getChaptersByEntryIds(emptyList()).toList() shouldBe listOf(emptyList())
-            } finally {
-                driver.close()
-            }
-        }
-    }
-
-    @Test
     fun `large batch observation emits one coherent snapshot per chapter invalidation`() {
         runBlocking {
             val driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)

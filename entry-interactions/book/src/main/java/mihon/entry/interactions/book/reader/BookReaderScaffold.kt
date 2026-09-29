@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.SideEffect
@@ -62,6 +63,7 @@ internal fun BookReaderScaffold(
     translationSpeechState: TranslationResultSpeechState = TranslationResultSpeechState(),
     onTranslationSpeechToggle: ((TranslationResultSpeechTarget) -> Unit)? = null,
     onTranslationPopupBoundsChanged: (Rect?) -> Unit = {},
+    translationSnackbarHostState: SnackbarHostState? = null,
     translationTheme: @Composable (@Composable () -> Unit) -> Unit = { content -> content() },
     onRootPositionInWindow: (Offset) -> Unit = {},
     content: @Composable BoxScope.() -> Unit,
@@ -170,6 +172,7 @@ internal fun BookReaderScaffold(
                         onPopupBoundsChanged = onTranslationPopupBoundsChanged,
                         speechState = translationSpeechState,
                         onSpeechToggle = onTranslationSpeechToggle,
+                        snackbarHostState = translationSnackbarHostState,
                     )
                 }
             }

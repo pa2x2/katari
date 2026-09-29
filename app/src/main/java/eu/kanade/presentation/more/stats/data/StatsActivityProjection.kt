@@ -23,6 +23,13 @@ internal fun StatsActivity.forType(type: EntryType?): StatsActivity {
         topTitles = topTitles.filter { it.type == type },
         earlierDurationMillis = earlierDurationByType[type] ?: 0L,
         earlierDurationByType = mapOf(type to (earlierDurationByType[type] ?: 0L)),
+        previousTotalDurationMillis = previousTotalDurationMillis?.let { previousTotalDurationByType[type] ?: 0L },
+        previousTotalDurationByType = mapOf(type to (previousTotalDurationByType[type] ?: 0L)),
+        currentStreakDays = currentStreakDaysByType[type] ?: 0,
+        longestStreakDays = longestStreakDaysByType[type] ?: 0,
+        longestStreakDaysByType = mapOf(type to (longestStreakDaysByType[type] ?: 0)),
+        rhythm = rhythmByType[type] ?: StatsActivityRhythm.EMPTY,
+        rhythmByType = mapOf(type to (rhythmByType[type] ?: StatsActivityRhythm.EMPTY)),
     )
 }
 

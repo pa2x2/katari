@@ -11,6 +11,7 @@ import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.tachiyomi.core.security.PrivacyPreferences
 import eu.kanade.tachiyomi.core.security.SecurityPreferences
 import eu.kanade.tachiyomi.network.NetworkPreferences
+import eu.kanade.tachiyomi.ui.translator.session.TranslatorLanguagePreferences
 import eu.kanade.tachiyomi.util.system.DeviceUtil
 import eu.kanade.tachiyomi.util.system.isDebugBuildType
 import eu.kanade.tachiyomi.util.system.isDynamicColorAvailable
@@ -109,6 +110,10 @@ class PreferenceModule(val app: Application) : InjektModule {
             ProfilePreferenceOwnerId("app.custom"),
             factory = ::CustomPreferences,
         )
+        val translatorLanguagePreferencesOwner = profilePreferenceOwnerInstaller.register(
+            ProfilePreferenceOwnerId("app.translator"),
+            factory = ::TranslatorLanguagePreferences,
+        )
         addSingletonFactory {
             NetworkPreferences(
                 preferenceStore = get<ProfileStore>().basePreferenceStore(),
@@ -147,6 +152,7 @@ class PreferenceModule(val app: Application) : InjektModule {
             BasePreferences(app, get<ProfileStore>().basePreferenceStore())
         }
         addSingletonFactory { customPreferencesOwner.create() }
+        addSingletonFactory { translatorLanguagePreferencesOwner.create() }
         addSingletonFactory { GlobalCustomPreferences(get<ProfileStore>().basePreferenceStore()) }
     }
 }

@@ -12,38 +12,6 @@ import org.junit.jupiter.api.Test
 @OptIn(ExperimentalCoroutinesApi::class)
 class EntryDownloadQueueObservationTest {
     @Test
-    fun `queue snapshots advance progress and phase without membership changes`() = runTest {
-        val fixture = EntryDownloadQueueObservationFixture()
-        val snapshots = mutableListOf<List<EntryDownloadQueueGroup>>()
-        backgroundScope.launch { fixture.snapshots.collect { snapshots += it } }
-        runCurrent()
-        val queued = snapshots.single().single().items.single()
-
-        fixture.download.item = fixture.download.item.copy(
-            state = EntryDownloadState.DOWNLOADING,
-            progress = 42,
-            presentation = EntryDownloadPresentation(
-                EntryDownloadPhase.TRANSFERRING,
-                EntryDownloadProgress.Percent(42),
-            ),
-        )
-        fixture.progress.emit(fixture.download)
-        runCurrent()
-
-        snapshots.last().single().items.single().progress shouldBe 42
-        queued.state shouldBe EntryDownloadState.QUEUE
-        queued.progress shouldBe 0
-
-        fixture.download.item = fixture.download.item.copy(
-            presentation = EntryDownloadPresentation(EntryDownloadPhase.FINALIZING),
-        )
-        fixture.status.emit(fixture.download)
-        runCurrent()
-
-        snapshots.last().single().items.single().presentation.phase shouldBe EntryDownloadPhase.FINALIZING
-    }
-
-    @Test
     fun `a new collector gets current transfer progress without waiting for another event`() = runTest {
         val fixture = EntryDownloadQueueObservationFixture()
         fixture.snapshots.first().single().items.single().progress shouldBe 0

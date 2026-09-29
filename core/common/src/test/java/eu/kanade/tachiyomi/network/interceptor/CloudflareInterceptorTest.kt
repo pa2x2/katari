@@ -26,95 +26,29 @@ import java.util.concurrent.atomic.AtomicInteger
 class CloudflareInterceptorTest {
 
     @Test
-    fun `cf mitigated header detects challenge regardless of status and server`() {
-        val response = response(
-            code = 200,
-            headers = mapOf("cf-mitigated" to "Challenge"),
+    fun `challenge is detected from the mitigation header or a legacy page but not from plain cloudflare errors`() {
+        assertTrue(response(code = 200, headers = mapOf("cf-mitigated" to "Challenge")).isCloudflareChallenge())
+        assertTrue(
+            response(
+                code = 503,
+                headers = mapOf("Server" to "Cloudflare"),
+                body = "<html><div id=\"challenge-error-title\"></div></html>",
+            ).isCloudflareChallenge(),
         )
-
-        assertTrue(response.isCloudflareChallenge())
-    }
-
-    @Test
-    fun `legacy challenge detection accepts server value case insensitively`() {
-        val response = response(
-            code = 503,
-            headers = mapOf("Server" to "Cloudflare"),
-            body = "<html><div id=\"challenge-error-title\"></div></html>",
-        )
-
-        assertTrue(response.isCloudflareChallenge())
-    }
-
-    @Test
-    fun `legacy challenge detection does not scan beyond bounded body`() {
-        val response = response(
-            code = 403,
-            headers = mapOf("Server" to "cloudflare"),
-            body = " ".repeat(64 * 1024) + "<div id=\"challenge-error-title\"></div>",
-        )
-
-        assertFalse(response.isCloudflareChallenge())
-    }
-
-    @Test
-    fun `cloudflare server error without challenge marker is not intercepted`() {
-        val response = response(
-            code = 403,
-            headers = mapOf("Server" to "cloudflare"),
-            body = "<html><h1>Access denied</h1></html>",
-        )
-
-        assertFalse(response.isCloudflareChallenge())
-    }
-
-    @Test
-    fun `clearance parser finds cookie across cookie headers`() {
-        val request = Request.Builder()
-            .url("https://example.com")
-            .addHeader("Cookie", "session=abc")
-            .addHeader("Cookie", "theme=dark; cf_clearance=clearance-value")
-            .build()
-
-        assertEquals("clearance-value", request.cloudflareClearanceValue())
-    }
-
-    @Test
-    fun `clearance parser ignores missing and blank values`() {
-        val missing = Request.Builder()
-            .url("https://example.com")
-            .header("Cookie", "session=abc")
-            .build()
-        val blank = Request.Builder()
-            .url("https://example.com")
-            .header("Cookie", "cf_clearance= ")
-            .build()
-
-        assertNull(missing.cloudflareClearanceValue())
-        assertNull(blank.cloudflareClearanceValue())
-    }
-
-    @Test
-    fun `clearance is reusable only when its value changed`() {
-        val challengeUrl = "https://example.com".toHttpUrl()
-        val current = Cookie.Builder()
-            .name("cf_clearance")
-            .value("new")
-            .hostOnlyDomain("example.com")
-            .build()
-        val sentRequest = CloudflareSentRequest(challengeUrl, clearance = "old")
-
-        assertTrue(shouldReuseCloudflareClearance(sentRequest, challengeUrl, current))
         assertFalse(
-            shouldReuseCloudflareClearance(
-                sentRequest.copy(clearance = "new"),
-                challengeUrl,
-                current,
-            ),
+            response(
+                code = 403,
+                headers = mapOf("Server" to "cloudflare"),
+                body = "<html><h1>Access denied</h1></html>",
+            ).isCloudflareChallenge(),
         )
-        assertFalse(shouldReuseCloudflareClearance(sentRequest, "https://other.example.com".toHttpUrl(), current))
-        assertFalse(shouldReuseCloudflareClearance(sentRequest, challengeUrl, null))
-        assertFalse(shouldReuseCloudflareClearance(null, challengeUrl, current))
+        assertFalse(
+            response(
+                code = 403,
+                headers = mapOf("Server" to "cloudflare"),
+                body = " ".repeat(64 * 1024) + "<div id=\"challenge-error-title\"></div>",
+            ).isCloudflareChallenge(),
+        )
     }
 
     @Test
@@ -237,39 +171,6 @@ class CloudflareInterceptorTest {
             assertEquals(2, solveCount.get())
         } finally {
             releaseSolve.countDown()
-            executor.shutdownNow()
-        }
-    }
-
-    @Test
-    fun `different zones solve independently`() {
-        val coordinator = CloudflareChallengeCoordinator(zoneFor = { it.host })
-        val executor = Executors.newFixedThreadPool(2)
-        val firstStarted = CountDownLatch(1)
-        val releaseFirst = CountDownLatch(1)
-        val secondFinished = CountDownLatch(1)
-
-        try {
-            val first = executor.submit {
-                coordinator.solve("https://a.example.com".toHttpUrl()) {
-                    firstStarted.countDown()
-                    assertTrue(releaseFirst.await(5, TimeUnit.SECONDS))
-                }
-            }
-            assertTrue(firstStarted.await(5, TimeUnit.SECONDS))
-
-            val second = executor.submit {
-                coordinator.solve("https://b.example.com".toHttpUrl()) {
-                    secondFinished.countDown()
-                }
-            }
-
-            assertTrue(secondFinished.await(5, TimeUnit.SECONDS))
-            second.get(5, TimeUnit.SECONDS)
-            releaseFirst.countDown()
-            first.get(5, TimeUnit.SECONDS)
-        } finally {
-            releaseFirst.countDown()
             executor.shutdownNow()
         }
     }

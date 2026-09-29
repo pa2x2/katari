@@ -26,6 +26,9 @@
     <string name="book_document_reader_theme_black">Black</string>
     <string name="book_reader_automatic_translation">Translate selected text automatically</string>
     <string name="book_reader_automatic_translation_summary">Translation starts after text selection settles and uses this profile’s Translation engine and target language.</string>
+    <string name="book_reader_automatic_translation_target">Selections are translated to %1$s once they settle</string>
+    <string name="book_reader_book_language">Book language</string>
+    <string name="book_reader_book_language_declared">Automatic · the book is marked %1$s</string>
     <string name="book_reader_configure_translation">Configure translation</string>
     <string name="book_reader_translation_engine_not_configured">Choose a translation engine before enabling automatic translation.</string>
     <string name="book_reader_translation_engine_missing">The selected translation engine (%1$s) is not installed.</string>

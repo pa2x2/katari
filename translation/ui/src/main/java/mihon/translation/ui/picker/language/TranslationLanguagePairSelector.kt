@@ -32,8 +32,6 @@ fun TranslationLanguagePairSelector(
     onChooseTarget: () -> Unit,
     onSwap: () -> Unit,
     modifier: Modifier = Modifier,
-    sourceModifier: Modifier = Modifier,
-    targetModifier: Modifier = Modifier,
     style: TranslationLanguagePairSelectorStyle = TranslationLanguagePairSelectorStyle.Cards,
 ) {
     if (style == TranslationLanguagePairSelectorStyle.Bar) {
@@ -45,8 +43,6 @@ fun TranslationLanguagePairSelector(
             onChooseTarget = onChooseTarget,
             onSwap = onSwap,
             modifier = modifier,
-            sourceModifier = sourceModifier,
-            targetModifier = targetModifier,
         )
         return
     }
@@ -59,7 +55,7 @@ fun TranslationLanguagePairSelector(
             label = stringResource(MR.strings.translation_settings_from),
             value = source,
             onClick = onChooseSource,
-            modifier = sourceModifier.weight(1f),
+            modifier = Modifier.weight(1f),
         )
         IconButton(
             onClick = onSwap,
@@ -74,7 +70,7 @@ fun TranslationLanguagePairSelector(
             label = stringResource(MR.strings.translation_settings_to),
             value = target,
             onClick = onChooseTarget,
-            modifier = targetModifier.weight(1f),
+            modifier = Modifier.weight(1f),
         )
     }
 }
@@ -93,8 +89,6 @@ private fun TranslationLanguagePairBar(
     onChooseTarget: () -> Unit,
     onSwap: () -> Unit,
     modifier: Modifier,
-    sourceModifier: Modifier,
-    targetModifier: Modifier,
 ) {
     Surface(
         modifier = modifier.fillMaxWidth(),
@@ -108,7 +102,7 @@ private fun TranslationLanguagePairBar(
             TranslationLanguageBarButton(
                 value = source,
                 onClick = onChooseSource,
-                modifier = sourceModifier.weight(1f),
+                modifier = Modifier.weight(1f),
             )
             IconButton(
                 onClick = onSwap,
@@ -122,7 +116,7 @@ private fun TranslationLanguagePairBar(
             TranslationLanguageBarButton(
                 value = target,
                 onClick = onChooseTarget,
-                modifier = targetModifier.weight(1f),
+                modifier = Modifier.weight(1f),
             )
         }
     }

@@ -1,5 +1,6 @@
 import com.android.build.api.dsl.KotlinMultiplatformAndroidLibraryTarget
 import mihon.gradle.configurations.configureKotlin
+import mihon.gradle.configurations.configureMultiplatformTestVerification
 import mihon.gradle.extensions.alias
 import mihon.gradle.extensions.compileSdkFromMihonx
 import mihon.gradle.extensions.configureTest
@@ -25,6 +26,7 @@ class PluginKotlinMultiplatform : Plugin<Project> {
 
         configureKotlin()
         configureTest()
+        configureMultiplatformTestVerification()
 
         kotlin {
             @OptIn(ExperimentalKotlinGradlePluginApi::class)

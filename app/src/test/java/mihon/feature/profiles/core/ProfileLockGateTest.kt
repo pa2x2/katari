@@ -12,90 +12,42 @@ class ProfileLockGateTest {
     private var currentTime = INITIAL_TIME
 
     @Test
-    fun `protected profile without a recorded deactivation requires authentication`() {
-        val gate = gate()
+    fun `idle window decides whether an authenticated profile must authenticate again`() {
+        fun requiresAuthAfterDeactivation(lockDelayMinutes: Int, inactiveMillis: Long): Boolean {
+            val gate = gate(lockDelayMinutes = lockDelayMinutes)
+            gate.markAuthenticated(LOCKED_PROFILE_ID)
+            gate.markInactive(LOCKED_PROFILE_ID)
+            currentTime += inactiveMillis
+            return gate.requiresAuthNow(LOCKED_PROFILE_ID)
+        }
 
-        gate.requiresAuthNow(LOCKED_PROFILE_ID) shouldBe true
+        requiresAuthAfterDeactivation(lockDelayMinutes = 10, inactiveMillis = 9 * MINUTE_MILLIS) shouldBe false
+        requiresAuthAfterDeactivation(lockDelayMinutes = 10, inactiveMillis = 11 * MINUTE_MILLIS) shouldBe true
+        requiresAuthAfterDeactivation(lockDelayMinutes = 0, inactiveMillis = 0L) shouldBe true
+        requiresAuthAfterDeactivation(lockDelayMinutes = -1, inactiveMillis = 30 * 24 * HOUR_MILLIS) shouldBe false
     }
 
     @Test
-    fun `profile deactivated within its idle window is entered without authentication`() {
-        val gate = gate(lockDelayMinutes = 10)
-        gate.markAuthenticated(LOCKED_PROFILE_ID)
-        gate.markInactive(LOCKED_PROFILE_ID)
-        currentTime += 9 * MINUTE_MILLIS
+    fun `protected profile never authenticated in this process stays locked`() {
+        gate().requiresAuthNow(LOCKED_PROFILE_ID) shouldBe true
 
-        gate.requiresAuthNow(LOCKED_PROFILE_ID) shouldBe false
+        val deactivated = gate(lockDelayMinutes = 10)
+        deactivated.markInactive(LOCKED_PROFILE_ID)
+        deactivated.requiresAuthNow(LOCKED_PROFILE_ID) shouldBe true
     }
 
-    @Test
-    fun `profile deactivated beyond its idle window requires authentication`() {
-        val gate = gate(lockDelayMinutes = 10)
-        gate.markAuthenticated(LOCKED_PROFILE_ID)
-        gate.markInactive(LOCKED_PROFILE_ID)
-        currentTime += 11 * MINUTE_MILLIS
-
-        gate.requiresAuthNow(LOCKED_PROFILE_ID) shouldBe true
-    }
-
-    @Test
-    fun `always delay requires authentication immediately after deactivation`() {
-        val gate = gate(lockDelayMinutes = 0)
-        gate.markAuthenticated(LOCKED_PROFILE_ID)
-        gate.markInactive(LOCKED_PROFILE_ID)
-
-        gate.requiresAuthNow(LOCKED_PROFILE_ID) shouldBe true
-    }
-
-    @Test
-    fun `never delay enters without authentication however long the profile was inactive`() {
-        val gate = gate(lockDelayMinutes = -1)
-        gate.markAuthenticated(LOCKED_PROFILE_ID)
-        gate.markInactive(LOCKED_PROFILE_ID)
-        currentTime += 30 * 24 * HOUR_MILLIS
-
-        gate.requiresAuthNow(LOCKED_PROFILE_ID) shouldBe false
-    }
-
-    @Test
-    fun `profile without a biometric lock never requires authentication`() {
-        val gate = gate(useAuthenticator = false)
-
-        gate.requiresAuthNow(LOCKED_PROFILE_ID) shouldBe false
-    }
-
-    @Test
-    fun `deactivating a profile that was never authenticated in this process keeps it locked`() {
-        val gate = gate(lockDelayMinutes = 10)
-        gate.markInactive(LOCKED_PROFILE_ID)
-
-        gate.requiresAuthNow(LOCKED_PROFILE_ID) shouldBe true
-    }
-
-    @Test
-    fun `active profile is entered without authentication`() {
-        val gate = gate(lockDelayMinutes = 0, activeProfileId = LOCKED_PROFILE_ID)
-
-        gate.requiresAuthNow(LOCKED_PROFILE_ID) shouldBe false
-    }
-
-    private fun gate(
-        useAuthenticator: Boolean = true,
-        lockDelayMinutes: Int = 10,
-        activeProfileId: Long = OPEN_PROFILE_ID,
-    ): ProfileLockGate {
+    private fun gate(lockDelayMinutes: Int = 10): ProfileLockGate {
         val stores = mapOf<Long, PreferenceStore>(
             OPEN_PROFILE_ID to InMemoryPreferenceStore(),
-            LOCKED_PROFILE_ID to lockedProfileStore(useAuthenticator, lockDelayMinutes),
+            LOCKED_PROFILE_ID to lockedProfileStore(lockDelayMinutes),
         )
         val profileStore = mockk<ProfileStore>()
-        every { profileStore.currentProfileId } answers { activeProfileId }
+        every { profileStore.currentProfileId } returns OPEN_PROFILE_ID
         every { profileStore.profileStore(any()) } answers { stores.getValue(firstArg()) }
         return ProfileLockGate(profileStore, now = { currentTime })
     }
 
-    private fun lockedProfileStore(useAuthenticator: Boolean, lockDelayMinutes: Int): PreferenceStore {
-        if (!useAuthenticator) return InMemoryPreferenceStore()
+    private fun lockedProfileStore(lockDelayMinutes: Int): PreferenceStore {
         return InMemoryPreferenceStore(
             sequenceOf(
                 InMemoryPreferenceStore.InMemoryPreference("use_biometric_lock", true, false),

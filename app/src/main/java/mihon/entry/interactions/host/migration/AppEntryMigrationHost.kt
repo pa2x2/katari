@@ -22,9 +22,6 @@ import mihon.entry.interactions.migration.host.EntryMigrationPreparationHost
 import mihon.entry.interactions.migration.host.EntryMigrationPreparationProfileHost
 import tachiyomi.data.Database
 import tachiyomi.data.DatabaseHandler
-import tachiyomi.data.MemoColumnAdapter
-import tachiyomi.data.StringListColumnAdapter
-import tachiyomi.data.UpdateStrategyColumnAdapter
 import tachiyomi.data.entry.EntryMapper
 import tachiyomi.data.track.TrackMapper
 import tachiyomi.domain.entry.model.Entry
@@ -408,7 +405,7 @@ private suspend fun Database.updateEntry(profileId: Long, entry: Entry) {
         artist = entry.artist,
         author = entry.author,
         description = entry.description,
-        genre = entry.genre?.let(StringListColumnAdapter::encode),
+        genre = entry.genre,
         status = entry.status.value.toLong(),
         thumbnailUrl = entry.thumbnailUrl,
         favorite = entry.favorite,
@@ -419,12 +416,12 @@ private suspend fun Database.updateEntry(profileId: Long, entry: Entry) {
         chapterFlags = entry.chapterFlags,
         coverLastModified = entry.coverLastModified,
         dateAdded = entry.dateAdded,
-        updateStrategy = UpdateStrategyColumnAdapter.encode(entry.updateStrategy),
+        updateStrategy = entry.updateStrategy,
         calculateInterval = entry.fetchInterval.toLong(),
         version = entry.version,
         isSyncing = entry.isSyncing,
         notes = entry.notes,
-        memo = MemoColumnAdapter.encode(entry.memo),
+        memo = entry.memo,
         type = entry.type.name.lowercase(),
         libraryPinned = entry.favorite && entry.libraryPinned,
         entryId = entry.id,
@@ -446,7 +443,7 @@ private suspend fun Database.updateChild(child: EntryChapter) {
         dateUpload = child.dateUpload,
         version = child.version,
         isSyncing = child.isSyncing,
-        memo = MemoColumnAdapter.encode(child.memo),
+        memo = child.memo,
         chapterId = child.id,
     )
 }

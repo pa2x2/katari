@@ -18,21 +18,28 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.more.stats.components.StatisticsSectionCard
+import eu.kanade.presentation.more.stats.components.StatisticsTopTitleRow
 import eu.kanade.presentation.more.stats.components.color
 import eu.kanade.presentation.more.stats.components.rememberStatisticsDurationFormatter
 import eu.kanade.presentation.more.stats.data.StatsType
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.ui.stats.earlier.StatisticsEarlierActivityScreenModel
-import tachiyomi.domain.statistics.model.StatisticsTopEntry
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.screens.LoadingScreen
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 
 @Composable
 fun StatisticsEarlierActivityScreenContent(
@@ -60,6 +67,15 @@ fun StatisticsEarlierActivityScreenContent(
                 return
             }
             val typesById = types.associateBy(StatsType::type)
+            val locale = LocalConfiguration.current.locales[0]
+            val trackingStartDate = remember(details.trackingStartedAtEpochMillis, locale) {
+                details.trackingStartedAtEpochMillis?.let { millis ->
+                    Instant.ofEpochMilli(millis)
+                        .atZone(ZoneId.systemDefault())
+                        .toLocalDate()
+                        .format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(locale))
+                }
+            }
             LazyColumn(
                 contentPadding = PaddingValues(
                     start = 16.dp,
@@ -77,9 +93,12 @@ fun StatisticsEarlierActivityScreenContent(
                                 style = MaterialTheme.typography.headlineMedium,
                                 fontWeight = FontWeight.SemiBold,
                             )
-                            Spacer(Modifier.height(4.dp))
+                            Spacer(Modifier.height(8.dp))
                             Text(
-                                text = stringResource(MR.strings.statistics_activity_without_details),
+                                text = trackingStartDate?.let {
+                                    stringResource(MR.strings.statistics_earlier_explanation, it)
+                                } ?: stringResource(MR.strings.statistics_earlier_explanation_untracked),
+                                style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
@@ -108,6 +127,9 @@ fun StatisticsEarlierActivityScreenContent(
                                     modifier = Modifier.fillMaxWidth().height(8.dp),
                                     color = type?.accent?.color() ?: MaterialTheme.colorScheme.primary,
                                     trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                                    strokeCap = StrokeCap.Round,
+                                    gapSize = 0.dp,
+                                    drawStopIndicator = {},
                                 )
                                 Spacer(Modifier.height(14.dp))
                             }
@@ -116,42 +138,27 @@ fun StatisticsEarlierActivityScreenContent(
                 }
                 if (details.topEntries.isNotEmpty()) {
                     item {
-                        StatisticsSectionCard(stringResource(MR.strings.statistics_top_titles)) {
-                            val maximum = details.topEntries.maxOf(StatisticsTopEntry::durationMillis).coerceAtLeast(1L)
-                            details.topEntries.forEach { entry ->
+                        StatisticsSectionCard(
+                            title = stringResource(MR.strings.statistics_top_titles),
+                            contentSpacing = 8.dp,
+                        ) {
+                            details.topEntries.forEachIndexed { index, entry ->
                                 val type = typesById[entry.type]
-                                Row(
-                                    modifier = Modifier.fillMaxWidth().clickable { onEntryClick(entry.entryId) },
-                                    verticalAlignment = Alignment.CenterVertically,
-                                ) {
-                                    Column(Modifier.weight(1f)) {
-                                        Text(
-                                            text = entry.title,
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis,
-                                        )
-                                        if (selectedType == null) {
-                                            Text(
-                                                text = type?.let { stringResource(it.displayName) } ?: entry.type.name,
-                                                style = MaterialTheme.typography.bodySmall,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            )
-                                        }
-                                    }
-                                    Spacer(Modifier.width(12.dp))
-                                    Text(
-                                        formatDuration(entry.durationMillis),
-                                        style = MaterialTheme.typography.labelLarge,
-                                    )
-                                }
-                                Spacer(Modifier.height(6.dp))
-                                LinearProgressIndicator(
-                                    progress = { entry.durationMillis.toFloat() / maximum.toFloat() },
-                                    modifier = Modifier.fillMaxWidth().height(8.dp),
+                                StatisticsTopTitleRow(
+                                    rank = index + 1,
+                                    title = entry.title,
+                                    cover = entry.cover,
+                                    type = entry.type,
+                                    typeLabel = type?.takeIf {
+                                        selectedType == null
+                                    }?.let { stringResource(it.displayName) },
+                                    completionCount = 0L,
+                                    durationMillis = entry.durationMillis,
+                                    shareOf = totalDuration,
                                     color = type?.accent?.color() ?: MaterialTheme.colorScheme.primary,
-                                    trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                                    formatDuration = formatDuration,
+                                    onClick = { onEntryClick(entry.entryId) },
                                 )
-                                Spacer(Modifier.height(14.dp))
                             }
                         }
                     }

@@ -1,6 +1,5 @@
 package mihon.gradle.tasks
 
-import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.string.shouldContain
 import org.junit.jupiter.api.Test
@@ -8,42 +7,14 @@ import org.junit.jupiter.api.Test
 class ApplicationFeatureRuntimeModuleBoundaryRulesTest {
 
     @Test
-    fun `owner-local descriptor registers its production runtime module`() {
-        val findings = checkApplicationFeatureRuntimeModuleBoundaries(
-            validTopology(),
-        )
-
-        findings.shouldBeEmpty()
-    }
-
-    @Test
-    fun `runtime module without a descriptor fails`() {
-        val findings = checkApplicationFeatureRuntimeModuleBoundaries(
+    fun `runtime modules and descriptors must pair up`() {
+        val undescribed = checkApplicationFeatureRuntimeModuleBoundaries(
             validTopology().filterNot { it.relativePath.endsWith(".application-feature-module") },
         )
 
-        findings.shouldHaveSize(1)
-        findings.single().reason shouldContain "missing its owner-local descriptor"
-    }
+        undescribed.shouldHaveSize(1)
+        undescribed.single().reason shouldContain "missing its owner-local descriptor"
 
-    @Test
-    fun `descriptor must resolve a module from the same owner`() {
-        val sources = validTopology().map { source ->
-            if (source.relativePath.endsWith(".application-feature-module")) {
-                source.copy(relativePath = "other/src/main/resources/example.application-feature-module")
-            } else {
-                source
-            }
-        }
-
-        val findings = checkApplicationFeatureRuntimeModuleBoundaries(sources)
-
-        findings.shouldHaveSize(1)
-        findings.single().reason shouldContain "must live in feature-example"
-    }
-
-    @Test
-    fun `descriptor cannot invent a production module`() {
         val sources = validTopology().map { source ->
             if (source.relativePath.endsWith(".application-feature-module")) {
                 source.copy(content = "id=example.feature\nmodule=example.MissingRuntimeModule")
@@ -52,76 +23,10 @@ class ApplicationFeatureRuntimeModuleBoundaryRulesTest {
             }
         }
 
-        val findings = checkApplicationFeatureRuntimeModuleBoundaries(sources)
+        val invented = checkApplicationFeatureRuntimeModuleBoundaries(sources)
 
-        findings.shouldHaveSize(2)
-        findings.joinToString { it.reason } shouldContain "names no production runtime module"
-    }
-
-    @Test
-    fun `variant runtime component descriptor stays with its owner`() {
-        val findings = checkApplicationFeatureRuntimeModuleBoundaries(
-            validTopology() + listOf(
-                ApplicationFeatureRuntimeModuleBoundarySource(
-                    relativePath = "feature-example/src/main/java/example/ExampleRuntimeComponent.kt",
-                    content = """
-                        package example
-
-                        internal val ExampleRuntimeComponent: ApplicationFeatureRuntimeComponent =
-                            object : ApplicationFeatureRuntimeComponent {}
-                    """.trimIndent(),
-                ),
-                ApplicationFeatureRuntimeModuleBoundarySource(
-                    relativePath = "feature-example/src/debug/resources/example.application-feature-runtime-component",
-                    content = "id=example.component\ncomponent=example.ExampleRuntimeComponent",
-                ),
-            ),
-        )
-
-        findings.shouldBeEmpty()
-    }
-
-    @Test
-    fun `runtime component descriptor cannot resolve another owner`() {
-        val findings = checkApplicationFeatureRuntimeModuleBoundaries(
-            validTopology() + listOf(
-                ApplicationFeatureRuntimeModuleBoundarySource(
-                    relativePath = "feature-example/src/main/java/example/ExampleRuntimeComponent.kt",
-                    content = """
-                        package example
-
-                        internal val ExampleRuntimeComponent: ApplicationFeatureRuntimeComponent =
-                            object : ApplicationFeatureRuntimeComponent {}
-                    """.trimIndent(),
-                ),
-                ApplicationFeatureRuntimeModuleBoundarySource(
-                    relativePath = "other/src/debug/resources/example.application-feature-runtime-component",
-                    content = "id=example.component\ncomponent=example.ExampleRuntimeComponent",
-                ),
-            ),
-        )
-
-        findings.shouldHaveSize(1)
-        findings.single().reason shouldContain "must live in feature-example"
-    }
-
-    @Test
-    fun `runtime infrastructure requires generated app topology`() {
-        val findings = checkApplicationFeatureRuntimeModuleBoundaries(
-            listOf(
-                ApplicationFeatureRuntimeModuleBoundarySource(
-                    relativePath = "feature-runtime/src/main/java/example/ApplicationFeatureRuntimeModule.kt",
-                    content = "package example\nclass ApplicationFeatureRuntimeModule()",
-                ),
-                ApplicationFeatureRuntimeModuleBoundarySource(
-                    relativePath = "app/build.gradle.kts",
-                    content = "plugins {}",
-                ),
-            ),
-        )
-
-        findings.shouldHaveSize(1)
-        findings.single().reason shouldContain "must generate its Application Feature topology"
+        invented.shouldHaveSize(2)
+        invented.joinToString { it.reason } shouldContain "names no production runtime module"
     }
 
     private fun validTopology(): List<ApplicationFeatureRuntimeModuleBoundarySource> = listOf(

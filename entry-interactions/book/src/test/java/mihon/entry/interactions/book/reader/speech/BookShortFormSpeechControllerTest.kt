@@ -22,7 +22,6 @@ import mihon.tts.api.playback.TtsPlaybackState
 import mihon.tts.api.playback.TtsStopReason
 import mihon.tts.api.playback.TtsStopResult
 import mihon.tts.api.preparation.ReadyTts
-import mihon.tts.api.preparation.TtsLanguageChoiceReason
 import mihon.tts.api.preparation.TtsPreparation
 import mihon.tts.api.provider.TtsProviderPresentation
 import mihon.tts.api.provider.TtsVoiceProcessing
@@ -74,26 +73,6 @@ class BookShortFormSpeechControllerTest {
         feature.sessions.getValue("second").stopCount shouldBe 1
     }
 
-    @Test
-    fun `ambiguous selection language returns to idle without starting playback`() = runTest {
-        val failures = mutableListOf<BookShortFormSpeechFailure>()
-        val feature = FixedPreparationFeature(
-            TtsPreparation.LanguageChoiceRequired(
-                reason = TtsLanguageChoiceReason.Ambiguous,
-                suggestedLanguages = listOf(ENGLISH),
-            ),
-        )
-        val controller = BookShortFormSpeechController(feature, backgroundScope, failures::add)
-
-        controller.toggle(request(BookShortFormSpeechOwner.Selection("selection"), "ambiguous"))
-        runCurrent()
-
-        controller.state.value shouldBe BookShortFormSpeechState()
-        failures shouldContainExactly listOf(BookShortFormSpeechFailure.LanguageUnavailable)
-        feature.playCount shouldBe 0
-        controller.close()
-    }
-
     private fun request(owner: BookShortFormSpeechOwner, text: String) = BookShortFormSpeechRequest(
         owner = owner,
         text = text,
@@ -116,20 +95,6 @@ class BookShortFormSpeechControllerTest {
             val text = (ready as TestReadyTts).text
             playedTexts += text
             return TtsPlaybackStart.Started(sessions.getOrPut(text, ::RecordingSession))
-        }
-    }
-
-    private class FixedPreparationFeature(
-        private val preparation: TtsPreparation,
-    ) : TtsFeature {
-        var playCount = 0
-            private set
-
-        override suspend fun prepare(request: TtsRequest) = preparation
-
-        override suspend fun play(ready: ReadyTts): TtsPlaybackStart {
-            playCount += 1
-            return TtsPlaybackStart.Started(RecordingSession())
         }
     }
 

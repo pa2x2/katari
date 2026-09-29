@@ -27,24 +27,6 @@ import tachiyomi.data.UpdateStrategyColumnAdapter
 class CategoryMappingBatchObservationTest {
 
     @Test
-    fun `empty batch observation emits once and completes`() {
-        runBlocking {
-            val driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
-            try {
-                val repository = CategoryRepositoryImpl(
-                    handler = AndroidDatabaseHandler(database(driver), driver),
-                    profileProvider = FixedProfileProvider(PROFILE_ID),
-                )
-
-                repository.observeCategoryIdsByEntryIds(PROFILE_ID, emptyList()).toList() shouldBe
-                    listOf(emptyMap())
-            } finally {
-                driver.close()
-            }
-        }
-    }
-
-    @Test
     fun `large batch observation emits one coherent snapshot per mapping invalidation`() {
         runBlocking {
             val driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)

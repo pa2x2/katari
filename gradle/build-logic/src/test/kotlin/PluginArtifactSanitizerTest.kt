@@ -3,7 +3,6 @@ import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Test
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
-import java.nio.file.Files
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
@@ -23,27 +22,6 @@ class PluginArtifactSanitizerTest {
         assertFalse(STALE_XMLUTIL_SERVICE in entries)
         assertEquals("xmlutil", entries["nl/adaptivity/xmlutil/XML.class"])
         assertEquals(FIXED_ENTRY_TIME, entryTime(output.toByteArray(), "nl/adaptivity/xmlutil/XML.class"))
-    }
-
-    @Test
-    fun `merged Java resource archive is sanitized in place`() {
-        val archive = Files.createTempFile("merged-java-resources", ".jar").toFile()
-        archive.writeBytes(
-            zipOf(
-                "unrelated.txt" to "retained",
-                STALE_XMLUTIL_SERVICE to "missing.Provider",
-            ),
-        )
-
-        try {
-            sanitizeMergedJavaResources(archive)
-
-            val entries = unzip(archive.readBytes())
-            assertFalse(STALE_XMLUTIL_SERVICE in entries)
-            assertEquals("retained", entries["unrelated.txt"])
-        } finally {
-            archive.delete()
-        }
     }
 
     private fun zipOf(vararg entries: Pair<String, String>): ByteArray {

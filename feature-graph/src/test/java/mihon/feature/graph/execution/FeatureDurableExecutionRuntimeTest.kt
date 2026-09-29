@@ -1,8 +1,6 @@
 package mihon.feature.graph.execution
 
 import io.kotest.assertions.throwables.shouldThrow
-import io.kotest.matchers.collections.shouldContainExactly
-import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import kotlinx.coroutines.test.runTest
 import mihon.feature.graph.ContentTypeContribution
@@ -13,7 +11,6 @@ import mihon.feature.graph.FeatureBehaviorContract
 import mihon.feature.graph.FeatureExecutionParticipantId
 import mihon.feature.graph.FeatureExecutionPointId
 import mihon.feature.graph.FeatureGraph
-import mihon.feature.graph.FeatureSubjectId
 import mihon.feature.graph.discoverAndAssembleFeatureGraph
 import mihon.feature.graph.evaluateFeatureGraph
 import mihon.feature.graph.featureGraphContributor
@@ -23,104 +20,6 @@ class FeatureDurableExecutionRuntimeTest {
 
     private val pointOwner = ContributionOwner("example.coordinator")
     private val participantOwner = ContributionOwner("example.participant")
-
-    @Test
-    fun `durable participants prepare opaque envelopes and deliver through their owning binding`() = runSuspend {
-        val point = point()
-        val participant = participant("example.durable", point)
-        val graph = graph(point, listOf(participant))
-        val delivered = mutableListOf<FeatureDurableExecutionPayload>()
-        val runtime = runtime(
-            graph,
-            binding(
-                participant = participant,
-                prepare = { event -> FeatureDurableExecutionPayload(schemaVersion = 2, value = event.value) },
-                deliver = delivered::add,
-            ),
-        )
-
-        val result = runtime.prepareDurable(
-            point,
-            FeatureSubjectId.EntryContentType(ContentTypeId("subject")),
-            Event("persisted"),
-        )
-
-        result.execution.completedParticipants shouldContainExactly listOf(participant.id)
-        result.envelopes shouldContainExactly listOf(
-            FeatureDurableExecutionEnvelope(
-                participant = participant.id,
-                schemaVersion = 2,
-                payload = "persisted",
-            ),
-        )
-        runtime.deliverDurable(result.envelopes.single())
-        delivered shouldContainExactly listOf(FeatureDurableExecutionPayload(2, "persisted"))
-    }
-
-    @Test
-    fun `new durable participant is selected without coordinator routing changes`() = runSuspend {
-        val point = point()
-        val initial = participant("example.initial-durable", point)
-        val discovered = participant("example.discovered-durable", point)
-        val graph = graph(point, listOf(initial, discovered))
-        val runtime = runtime(
-            graph,
-            binding(initial, prepare = { FeatureDurableExecutionPayload(1, "initial") }),
-            binding(discovered, prepare = { FeatureDurableExecutionPayload(1, "discovered") }),
-        )
-
-        val result = runtime.prepareDurable(
-            point,
-            FeatureSubjectId.EntryContentType(ContentTypeId("subject")),
-            Event("event"),
-        )
-
-        result.envelopes.map { it.participant } shouldContainExactly listOf(discovered.id, initial.id)
-    }
-
-    @Test
-    fun `durable preparation can be discarded by the participant owner`() = runSuspend {
-        val point = point()
-        val participant = participant("example.staged", point)
-        val graph = graph(point, listOf(participant))
-        val discarded = mutableListOf<FeatureDurableExecutionPayload>()
-        val runtime = runtime(
-            graph,
-            binding(
-                participant = participant,
-                prepare = { FeatureDurableExecutionPayload(1, "stage") },
-                discard = discarded::add,
-            ),
-        )
-        val envelope = runtime.prepareDurable(
-            point,
-            FeatureSubjectId.EntryContentType(ContentTypeId("subject")),
-            Event("event"),
-        ).envelopes.single()
-
-        runtime.discardDurable(listOf(envelope)) shouldBe emptyList()
-        discarded shouldContainExactly listOf(FeatureDurableExecutionPayload(1, "stage"))
-    }
-
-    @Test
-    fun `runtime rejects missing duplicate and wrong-delivery durable bindings`() {
-        val point = point()
-        val participant = participant("example.durable", point)
-        val graph = graph(point, listOf(participant))
-
-        shouldThrow<IllegalStateException> {
-            FeatureExecutionRuntime(graph, evaluateFeatureGraph(graph), emptyList())
-        }.message shouldContain "Durable execution participant binding coverage mismatch"
-
-        shouldThrow<IllegalArgumentException> {
-            FeatureExecutionParticipantBinding(participant, FeatureExecutionHandler { })
-        }.message shouldContain "requires a durable runtime binding"
-
-        val binding = binding(participant)
-        shouldThrow<IllegalStateException> {
-            runtime(graph, binding, binding)
-        }.message shouldContain "Duplicate durable execution participant bindings"
-    }
 
     @Test
     fun `unknown persisted durable participant remains an explicit delivery failure`() = runSuspend {

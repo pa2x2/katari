@@ -25,9 +25,6 @@ import tachiyomi.core.common.util.system.logcat
 import tachiyomi.data.ActiveProfileProvider
 import tachiyomi.data.Database
 import tachiyomi.data.DatabaseHandler
-import tachiyomi.data.MemoColumnAdapter
-import tachiyomi.data.StringListColumnAdapter
-import tachiyomi.data.UpdateStrategyColumnAdapter
 import tachiyomi.data.query.chunkedForSqlQuery
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.repository.EntryRepository
@@ -556,7 +553,7 @@ class EntryRepositoryImpl(
                 artist = entry.artist,
                 author = entry.author,
                 description = entry.description,
-                genre = entry.genre?.let(StringListColumnAdapter::encode),
+                genre = entry.genre,
                 status = entry.status.value.toLong(),
                 thumbnailUrl = entry.thumbnailUrl,
                 favorite = entry.favorite,
@@ -567,12 +564,12 @@ class EntryRepositoryImpl(
                 chapterFlags = entry.chapterFlags,
                 coverLastModified = entry.coverLastModified,
                 dateAdded = entry.dateAdded,
-                updateStrategy = UpdateStrategyColumnAdapter.encode(entry.updateStrategy),
+                updateStrategy = entry.updateStrategy,
                 calculateInterval = entry.fetchInterval.toLong(),
                 version = entry.version,
                 isSyncing = entry.isSyncing,
                 notes = entry.notes,
-                memo = MemoColumnAdapter.encode(entry.memo),
+                memo = entry.memo,
                 type = entry.type.name.lowercase(),
                 libraryPinned = entry.favorite && entry.libraryPinned,
                 entryId = entry.id,

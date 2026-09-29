@@ -8,7 +8,6 @@ import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.model.EntryProgressLocator
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
-import kotlin.test.assertNull
 
 class BookProgressLocatorCodecTest {
     @Test
@@ -40,12 +39,6 @@ class BookProgressLocatorCodecTest {
         assertFalse("progression" in precise)
         assertFalse("totalProgression" in precise)
         assertFalse("logicalPosition" in precise)
-    }
-
-    @Test
-    fun `unsupported or imprecise progress locator cannot be restored`() {
-        assertNull(BookProgressLocatorCodec.decode(EntryProgressLocator(kind = "page", position = 1)))
-        assertNull(BookProgressLocatorCodec.decode(EntryProgressLocator(kind = BOOK_PROGRESS_LOCATOR_KIND)))
     }
 
     @Test

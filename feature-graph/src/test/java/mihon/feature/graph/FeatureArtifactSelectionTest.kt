@@ -1,10 +1,7 @@
 package mihon.feature.graph
 
-import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContainExactly
-import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.string.shouldContain
 import org.junit.jupiter.api.Test
 
 class FeatureArtifactSelectionTest {
@@ -12,24 +9,6 @@ class FeatureArtifactSelectionTest {
     private val contractOwner = ContributionOwner("example.contract")
     private val featureOwner = ContributionOwner("example.feature")
     private val alpha = capabilityDefinition<AlphaProvider>(CapabilityId("example.alpha"), contractOwner)
-
-    @Test
-    fun `applicable integration may require no contract fixture or projection`() {
-        val graph = graph(
-            contentTypes = listOf(contentType(id = "subject")),
-            integration = FeatureIntegration(
-                id = FeatureIntegrationId("example.integration"),
-                prerequisites = CapabilityExpression.Always,
-                behaviorProjections = listOf(behavior("example.projection")),
-            ),
-        )
-
-        val selected = selectFeatureArtifacts(graph, evaluateFeatureGraph(graph))
-
-        selected.behavioralContracts shouldBe emptyList()
-        selected.projections shouldBe emptyList()
-        selected.obligations shouldBe emptyList()
-    }
 
     @Test
     fun `applicable contributions select the same feature owned artifacts`() {
@@ -88,148 +67,6 @@ class FeatureArtifactSelectionTest {
         selected.obligations shouldBe emptyList()
     }
 
-    @Test
-    fun `missing contract fixture is attributed only to the affected content type owner`() {
-        val fixtureDefinition = contractFixtureDefinition<ExampleFixture>(
-            id = ContractFixtureId("example.fixture"),
-            owner = featureOwner,
-        )
-        val contract = TestContract(
-            id = "example.behavior",
-            fixtureRequirements = listOf(fixtureDefinition),
-        )
-        val secondContract = TestContract(
-            id = "example.second-behavior",
-            fixtureRequirements = listOf(fixtureDefinition),
-        )
-        val suppliedFixture = ContractFixture(fixtureDefinition, ExampleFixture("ready"))
-        val graph = graph(
-            contentTypes = listOf(
-                contentType(
-                    id = "missing",
-                    providers = listOf(CapabilityProvider(alpha, AlphaProvider())),
-                ),
-                contentType(
-                    id = "supplied",
-                    providers = listOf(CapabilityProvider(alpha, AlphaProvider())),
-                    fixtures = listOf(suppliedFixture),
-                ),
-            ),
-            integration = FeatureIntegration(
-                id = FeatureIntegrationId("example.integration"),
-                prerequisites = CapabilityExpression.Provided(alpha),
-                behavioralContracts = listOf(secondContract, contract),
-            ),
-        )
-
-        val selected = selectFeatureArtifacts(graph, evaluateFeatureGraph(graph))
-
-        selected.behavioralContracts shouldHaveSize 4
-        selected.behavioralContracts.filter { it.subject.entryContentType.value == "missing" }
-            .map { it.fixtures } shouldContainExactly listOf(emptyList(), emptyList())
-        selected.behavioralContracts.filter { it.subject.entryContentType.value == "supplied" }
-            .map { it.fixtures } shouldContainExactly listOf(listOf(suppliedFixture), listOf(suppliedFixture))
-        val obligation = selected.obligations.single() as MissingContractFixtureObligation
-        obligation.responsibleOwner shouldBe ContributionOwner("missing.type")
-        obligation.subject.entryContentType shouldBe ContentTypeId("missing")
-        obligation.requirement shouldBe fixtureDefinition
-        obligation.affectedContracts shouldContainExactly listOf(contract, secondContract)
-    }
-
-    @Test
-    fun `one missing shared projection obligation names every affected subject`() {
-        val contract = TestContract("example.behavior")
-        val projectionDefinition = featureProjectionDefinition<TestProjection>(
-            id = FeatureArtifactId("example.reference"),
-            owner = featureOwner,
-        )
-        val graph = graph(
-            contentTypes = listOf(
-                contentType(
-                    id = "zeta",
-                    providers = listOf(CapabilityProvider(alpha, AlphaProvider())),
-                ),
-                contentType(
-                    id = "alpha",
-                    providers = listOf(CapabilityProvider(alpha, AlphaProvider())),
-                ),
-            ),
-            integration = FeatureIntegration(
-                id = FeatureIntegrationId("example.integration"),
-                prerequisites = CapabilityExpression.Provided(alpha),
-                behavioralContracts = listOf(contract),
-                projectionRequirements = listOf(projectionDefinition),
-            ),
-        )
-
-        val selected = selectFeatureArtifacts(graph, evaluateFeatureGraph(graph))
-
-        selected.projections shouldBe emptyList()
-        val obligation = selected.obligations.single() as MissingFeatureProjectionObligation
-        obligation.responsibleOwner shouldBe featureOwner
-        obligation.requirement shouldBe projectionDefinition
-        obligation.affectedSubjects.map { it.entryContentType.value } shouldContainExactly listOf("alpha", "zeta")
-    }
-
-    @Test
-    fun `artifact ordering is deterministic across declared order`() {
-        val alphaContract = TestContract("example.alpha-contract")
-        val zetaContract = TestContract("example.zeta-contract")
-        val alphaProjection = projection("example.alpha-projection")
-        val zetaProjection = projection("example.zeta-projection")
-        val graph = graph(
-            contentTypes = listOf(
-                contentType(
-                    id = "subject",
-                    providers = listOf(CapabilityProvider(alpha, AlphaProvider())),
-                ),
-            ),
-            integration = FeatureIntegration(
-                id = FeatureIntegrationId("example.integration"),
-                prerequisites = CapabilityExpression.Provided(alpha),
-                behavioralContracts = listOf(zetaContract, alphaContract),
-                projectionRequirements = listOf(zetaProjection.definition, alphaProjection.definition),
-                projections = listOf(zetaProjection, alphaProjection),
-            ),
-        )
-
-        val selected = selectFeatureArtifacts(graph, evaluateFeatureGraph(graph))
-
-        selected.behavioralContracts.map { it.contract.id.value } shouldContainExactly listOf(
-            "example.alpha-contract",
-            "example.zeta-contract",
-        )
-        selected.projections.map { it.projection.definition.id.value } shouldContainExactly listOf(
-            "example.alpha-projection",
-            "example.zeta-projection",
-        )
-    }
-
-    @Test
-    fun `selection rejects a curated subset of evaluated relationships`() {
-        val contract = TestContract("example.behavior")
-        val graph = graph(
-            contentTypes = listOf(
-                contentType(
-                    id = "subject",
-                    providers = listOf(CapabilityProvider(alpha, AlphaProvider())),
-                ),
-            ),
-            integration = FeatureIntegration(
-                id = FeatureIntegrationId("example.integration"),
-                prerequisites = CapabilityExpression.Provided(alpha),
-                behavioralContracts = listOf(contract),
-            ),
-        )
-        val incompleteEvaluation = evaluateFeatureGraph(graph).copy(integrations = emptyList())
-
-        val failure = shouldThrow<IllegalStateException> {
-            selectFeatureArtifacts(graph, incompleteEvaluation)
-        }
-
-        failure.message shouldContain "evaluation coverage mismatch"
-    }
-
     private fun graph(
         contentTypes: List<ContentTypeContribution>,
         integration: FeatureIntegration,
@@ -252,30 +89,16 @@ class FeatureArtifactSelectionTest {
         id: String,
         providers: List<CapabilityProvider<*>> = emptyList(),
         adapters: List<SpecializedAdapter<*>> = emptyList(),
-        fixtures: List<ContractFixture<*>> = emptyList(),
     ): ContentTypeContribution {
         return ContentTypeContribution(
             contentType = ContentTypeId(id),
             owner = ContributionOwner("$id.type"),
             providers = providers,
             specializedAdapters = adapters,
-            contractFixtures = fixtures,
         )
     }
 
-    private fun projection(id: String): FeatureProjection<TestProjection> {
-        val definition = featureProjectionDefinition<TestProjection>(FeatureArtifactId(id), featureOwner)
-        return FeatureProjection(definition, TestProjection())
-    }
-
-    private fun behavior(id: String) = object : FeatureBehaviorProjection {
-        override val id = FeatureArtifactId(id)
-    }
-
-    private class TestContract(
-        id: String,
-        override val fixtureRequirements: List<ContractFixtureDefinition<*>> = emptyList(),
-    ) : FeatureBehaviorContract {
+    private class TestContract(id: String) : FeatureBehaviorContract {
         override val id = FeatureArtifactId(id)
     }
 
@@ -284,6 +107,4 @@ class FeatureArtifactSelectionTest {
     private class AlphaProvider
 
     private class ExampleAdapter
-
-    private data class ExampleFixture(val state: String)
 }

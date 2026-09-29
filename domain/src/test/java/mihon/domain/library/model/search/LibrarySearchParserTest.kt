@@ -6,23 +6,19 @@ import org.junit.jupiter.api.Test
 class LibrarySearchParserTest {
 
     @Test
-    fun `legacy commas delimit constraints while spaces remain part of a constraint`() {
+    fun `legacy syntax keeps commas as delimiters and id and source selectors as raw remainders`() {
         QueryNode.from("full metal, - villain") shouldBe AndNode(
             listOf(
                 GeneralQueryNode("full metal", negated = false),
                 GeneralQueryNode("villain", negated = true),
             ),
         )
-    }
-
-    @Test
-    fun `legacy id and source selectors consume the complete remaining query`() {
         QueryNode.from("id:42,ignored") shouldBe ExactEntryIdQueryNode("42,ignored")
         QueryNode.from("src:123") shouldBe ExactSourceQueryNode("123")
     }
 
     @Test
-    fun `explicit boolean syntax preserves comparison precedence and grouping`() {
+    fun `explicit boolean syntax preserves precedence and grouping and unknown fields stay general text`() {
         QueryNode.from("title:\"Full Metal\" || (author:Arakawa && unread>=2)") shouldBe OrNode(
             listOf(
                 FieldQueryNode(EntryField.TITLE, "Full Metal", negated = false),
@@ -34,10 +30,6 @@ class LibrarySearchParserTest {
                 ),
             ),
         )
-    }
-
-    @Test
-    fun `unknown fields remain searchable as general text`() {
         QueryNode.from("unknown:value || title:known") shouldBe OrNode(
             listOf(
                 GeneralQueryNode("unknown:value", negated = false),

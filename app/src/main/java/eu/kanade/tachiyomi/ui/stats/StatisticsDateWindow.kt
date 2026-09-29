@@ -49,6 +49,13 @@ internal fun StatsActivityWindow.shiftedByBuckets(bucketCount: Int): StatsActivi
     )
 }
 
+/** The same-length window that ends the day before this one starts; All has no previous window. */
+internal fun StatsActivityWindow.previousWindow(): StatsActivityWindow? {
+    val start = startDate ?: return null
+    if (range == StatsRange.ALL) return null
+    return range.windowEndingOn(start.minusDays(1L))
+}
+
 internal fun StatsActivityWindow.clampedTo(
     earliestEndDate: LocalDate?,
     latestEndDate: LocalDate,

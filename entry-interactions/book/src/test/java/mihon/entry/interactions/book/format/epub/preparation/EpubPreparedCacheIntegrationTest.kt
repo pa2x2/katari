@@ -16,21 +16,14 @@ import kotlin.test.assertTrue
 @RunWith(RobolectricTestRunner::class)
 class EpubPreparedCacheIntegrationTest {
     @Test
-    fun `book remains readable when the cache entry exceeds its budget`() = runTest {
+    fun `book remains readable when the cache entry exceeds its budget or storage is unavailable`() = runTest {
         val directory = Files.createTempDirectory("epub-cache-budget").toFile()
-        try {
-            assertReadable(BookDocumentPreparedCache(RuntimeEnvironment.getApplication(), directory, maxEntryBytes = 1))
-        } finally {
-            directory.deleteRecursively()
-        }
-    }
-
-    @Test
-    fun `book remains readable when cache storage cannot be read or written`() = runTest {
         val unavailableDirectory = Files.createTempFile("epub-cache-unavailable", ".file").toFile()
         try {
+            assertReadable(BookDocumentPreparedCache(RuntimeEnvironment.getApplication(), directory, maxEntryBytes = 1))
             assertReadable(BookDocumentPreparedCache(RuntimeEnvironment.getApplication(), unavailableDirectory))
         } finally {
+            directory.deleteRecursively()
             unavailableDirectory.delete()
         }
     }

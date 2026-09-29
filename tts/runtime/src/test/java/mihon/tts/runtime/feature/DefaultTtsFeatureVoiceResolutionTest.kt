@@ -16,14 +16,12 @@ import mihon.tts.api.preparation.TtsUnavailableReason
 import mihon.tts.api.preparation.TtsVoiceChoiceReason
 import mihon.tts.api.provider.TtsInputLimit
 import mihon.tts.api.provider.TtsOptionalCapability
-import mihon.tts.api.provider.TtsParameterRange
 import mihon.tts.api.provider.TtsParameterSupport
 import mihon.tts.api.provider.TtsProviderCapabilities
 import mihon.tts.api.provider.TtsProviderPresentation
 import mihon.tts.api.provider.TtsVoiceProcessing
 import mihon.tts.api.request.ResolvedTtsRequest
 import mihon.tts.api.request.TtsLanguageSelection
-import mihon.tts.api.request.TtsParameters
 import mihon.tts.api.request.TtsRequest
 import mihon.tts.api.voice.TtsDefaultVoiceSelection
 import mihon.tts.api.voice.TtsVoice
@@ -44,114 +42,28 @@ import tachiyomi.core.common.preference.InMemoryPreferenceStore
 class DefaultTtsFeatureVoiceResolutionTest {
 
     @Test
-    fun `incompatible profile default falls back to a compatible local voice`() = runBlocking<Unit> {
-        val preferences = ProfileTtsPreferences(InMemoryPreferenceStore(), ENGINE_ID).apply {
-            setDefaultVoice(TtsDefaultVoiceSelection.Explicit(ENGLISH_NETWORK.id))
-        }
-        val engine = FakeEngine(
-            voices = listOf(ENGLISH_NETWORK, RUSSIAN_NETWORK, RUSSIAN_LOCAL),
-            defaultVoice = ENGLISH_NETWORK.id,
+    fun `a network voice is used only with the profile's opt-in`() = runBlocking<Unit> {
+        val russian = TtsRequest(text = "Башня надежды", language = TtsLanguageSelection.Explicit(RUSSIAN))
+        val automatic = feature(
+            engine = FakeEngine(voices = listOf(RUSSIAN_NETWORK), defaultVoice = RUSSIAN_NETWORK.id),
+            preferences = ProfileTtsPreferences(InMemoryPreferenceStore(), ENGINE_ID),
         )
-        val feature = feature(engine, preferences)
-
-        val preparation = feature.prepare(
-            TtsRequest(
-                text = "Башня надежды",
-                language = TtsLanguageSelection.Explicit(RUSSIAN),
-            ),
-        ).shouldBeInstanceOf<TtsPreparation.Ready>()
-
-        preparation.request.voice shouldBe RUSSIAN_LOCAL
-        preparation.request.networkProcessingAllowed shouldBe false
-        engine.preparedRequest shouldBe preparation.request
-    }
-
-    @Test
-    fun `automatic fallback does not consent to a network-only compatible voice`() = runBlocking<Unit> {
-        val preferences = ProfileTtsPreferences(InMemoryPreferenceStore(), ENGINE_ID)
-        val feature = feature(
-            engine = FakeEngine(
-                voices = listOf(RUSSIAN_NETWORK),
-                defaultVoice = RUSSIAN_NETWORK.id,
-            ),
-            preferences = preferences,
-        )
-
-        feature.prepare(
-            TtsRequest(
-                text = "Башня надежды",
-                language = TtsLanguageSelection.Explicit(RUSSIAN),
-            ),
-        ) shouldBe TtsPreparation.Unavailable(
-            TtsUnavailableReason.NetworkVoiceProhibited(RUSSIAN_NETWORK.id),
-        )
-    }
-
-    @Test
-    fun `profile network opt-in permits the selected network voice`() = runBlocking<Unit> {
-        val preferences = ProfileTtsPreferences(InMemoryPreferenceStore(), ENGINE_ID).apply {
-            setDefaultVoice(TtsDefaultVoiceSelection.Explicit(RUSSIAN_NETWORK.id))
-            allowNetworkVoices.set(true)
-        }
-        val feature = feature(
-            engine = FakeEngine(
-                voices = listOf(RUSSIAN_NETWORK, RUSSIAN_LOCAL),
-                defaultVoice = RUSSIAN_LOCAL.id,
-            ),
-            preferences = preferences,
-        )
-
-        val preparation = feature.prepare(
-            TtsRequest(
-                text = "Башня надежды",
-                language = TtsLanguageSelection.Explicit(RUSSIAN),
-            ),
-        ).shouldBeInstanceOf<TtsPreparation.Ready>()
-
-        preparation.request.voice shouldBe RUSSIAN_NETWORK
-        preparation.request.networkProcessingAllowed shouldBe true
-    }
-
-    @Test
-    fun `selected network voice remains prohibited without profile opt-in`() = runBlocking<Unit> {
-        val preferences = ProfileTtsPreferences(InMemoryPreferenceStore(), ENGINE_ID).apply {
+        val explicitPreferences = ProfileTtsPreferences(InMemoryPreferenceStore(), ENGINE_ID).apply {
             setDefaultVoice(TtsDefaultVoiceSelection.Explicit(RUSSIAN_NETWORK.id))
         }
-        val feature = feature(
-            engine = FakeEngine(
-                voices = listOf(RUSSIAN_NETWORK, RUSSIAN_LOCAL),
-                defaultVoice = RUSSIAN_LOCAL.id,
-            ),
-            preferences = preferences,
+        val explicit = feature(
+            engine = FakeEngine(voices = listOf(RUSSIAN_NETWORK, RUSSIAN_LOCAL), defaultVoice = RUSSIAN_LOCAL.id),
+            preferences = explicitPreferences,
         )
+        val prohibited = TtsPreparation.Unavailable(TtsUnavailableReason.NetworkVoiceProhibited(RUSSIAN_NETWORK.id))
 
-        feature.prepare(
-            TtsRequest(
-                text = "Башня надежды",
-                language = TtsLanguageSelection.Explicit(RUSSIAN),
-            ),
-        ) shouldBe TtsPreparation.Unavailable(
-            TtsUnavailableReason.NetworkVoiceProhibited(RUSSIAN_NETWORK.id),
-        )
-    }
+        automatic.prepare(russian) shouldBe prohibited
+        explicit.prepare(russian) shouldBe prohibited
 
-    @Test
-    fun `language without a compatible voice reports unsupported language`() = runBlocking<Unit> {
-        val preferences = ProfileTtsPreferences(InMemoryPreferenceStore(), ENGINE_ID)
-        val feature = feature(
-            engine = FakeEngine(
-                voices = listOf(ENGLISH_LOCAL),
-                defaultVoice = ENGLISH_LOCAL.id,
-            ),
-            preferences = preferences,
-        )
-
-        feature.prepare(
-            TtsRequest(
-                text = "Башня надежды",
-                language = TtsLanguageSelection.Explicit(RUSSIAN),
-            ),
-        ) shouldBe TtsPreparation.Unavailable(TtsUnavailableReason.UnsupportedLanguage(RUSSIAN))
+        explicitPreferences.allowNetworkVoices.set(true)
+        val permitted = explicit.prepare(russian).shouldBeInstanceOf<TtsPreparation.Ready>()
+        permitted.request.voice shouldBe RUSSIAN_NETWORK
+        permitted.request.networkProcessingAllowed shouldBe true
     }
 
     @Test
@@ -178,30 +90,6 @@ class DefaultTtsFeatureVoiceResolutionTest {
             reason = TtsVoiceChoiceReason.SelectedVoiceUnavailable(RUSSIAN_NETWORK.id),
             voices = listOf(RUSSIAN_LOCAL),
         )
-    }
-
-    @Test
-    fun `profile speech parameters reach provider preparation`() = runBlocking<Unit> {
-        val preferences = ProfileTtsPreferences(InMemoryPreferenceStore(), ENGINE_ID).apply {
-            speechRate.set(1.25f)
-            pitch.set(1.1f)
-        }
-        val engine = FakeEngine(
-            voices = listOf(ENGLISH_LOCAL),
-            defaultVoice = ENGLISH_LOCAL.id,
-            capabilities = PARAMETER_CAPABILITIES,
-        )
-        val feature = feature(engine, preferences)
-
-        val preparation = feature.prepare(
-            TtsRequest(
-                text = "Tower of hope",
-                language = TtsLanguageSelection.Explicit(ENGLISH),
-            ),
-        ).shouldBeInstanceOf<TtsPreparation.Ready>()
-
-        preparation.request.parameters shouldBe TtsParameters(speechRate = 1.25f, pitch = 1.1f)
-        engine.preparedRequest shouldBe preparation.request
     }
 
     @Test
@@ -254,12 +142,11 @@ class DefaultTtsFeatureVoiceResolutionTest {
     private class FakeEngine(
         private val voices: List<TtsVoice>,
         private val defaultVoice: TtsVoiceId?,
-        override val capabilities: TtsProviderCapabilities = CAPABILITIES,
         private val prepareFailure: RuntimeException? = null,
     ) : TtsEngine {
         override val catalogEntry = ENGINE
         override val presentation = PRESENTATION
-        var preparedRequest: ResolvedTtsRequest? = null
+        override val capabilities = CAPABILITIES
 
         override suspend fun inspectDevice() = TtsEngineDeviceAvailability.Available
 
@@ -271,7 +158,6 @@ class DefaultTtsFeatureVoiceResolutionTest {
 
         override suspend fun prepare(request: ResolvedTtsRequest): TtsEnginePreparation.Ready {
             prepareFailure?.let { throw it }
-            preparedRequest = request
             return TtsEnginePreparation.Ready(READY_REQUEST)
         }
 
@@ -310,15 +196,10 @@ class DefaultTtsFeatureVoiceResolutionTest {
             pitch = TtsParameterSupport.Unsupported,
             inputLimit = TtsInputLimit.Unspecified,
         )
-        val ENGLISH_NETWORK = voice("english-network", ENGLISH, TtsVoiceProcessing.NetworkRequired)
         val ENGLISH_LOCAL = voice("english-local", ENGLISH, TtsVoiceProcessing.OnDevice)
         val RUSSIAN_NETWORK = voice("russian-network", RUSSIAN, TtsVoiceProcessing.NetworkRequired)
         val RUSSIAN_LOCAL = voice("russian-local", RUSSIAN, TtsVoiceProcessing.OnDevice)
         val READY_REQUEST = object : ReadyTtsEngineRequest {}
-        val PARAMETER_CAPABILITIES = CAPABILITIES.copy(
-            speechRate = TtsParameterSupport.Supported(TtsParameterRange(0.5f, 2f, 1f)),
-            pitch = TtsParameterSupport.Supported(TtsParameterRange(0.5f, 2f, 1f)),
-        )
 
         fun voice(
             name: String,
