@@ -38,13 +38,8 @@ internal sealed interface SourceFilterRow {
         val changedOnlyChildren: Boolean,
     ) : SourceFilterRow
 
-    /** The search and actions of the open top-level group at [index]; [pinned] while its options scroll. */
-    class GroupTools(
-        val index: Int,
-        val group: EntryFilter.Group<*>,
-        val pinned: Boolean,
-        val changedOnly: Boolean,
-    ) : SourceFilterRow
+    /** The option search of the open, searchable top-level group at [index], pinned while its options scroll. */
+    class GroupTools(val index: Int, val group: EntryFilter.Group<*>, val changedOnly: Boolean) : SourceFilterRow
 
     /** The options of the open top-level group at [index]. */
     class GroupBody(val index: Int, val group: EntryFilter.Group<*>, val changedOnly: Boolean) : SourceFilterRow
@@ -97,11 +92,11 @@ internal fun sourceFilterRows(
                 )
                 separated = filter is EntryFilter.Separator
                 if (filter is EntryFilter.Group<*> && isGroupExpanded(index)) {
-                    val pinned = filter.isSearchable()
+                    val searchable = filter.isSearchable()
                     val groupChangedOnly = changedOnly && !filter.isOrdering
-                    add(SourceFilterRow.GroupTools(index, filter, pinned, groupChangedOnly))
+                    if (searchable) add(SourceFilterRow.GroupTools(index, filter, groupChangedOnly))
                     add(SourceFilterRow.GroupBody(index, filter, groupChangedOnly))
-                    if (pinned) add(SourceFilterRow.GroupEnd(index))
+                    if (searchable) add(SourceFilterRow.GroupEnd(index))
                 }
             }
             ordering.forEach { (index, filter) -> addFilter(index, filter) }

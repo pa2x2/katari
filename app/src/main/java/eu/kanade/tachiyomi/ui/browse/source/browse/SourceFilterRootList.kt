@@ -18,7 +18,7 @@ import mihon.entry.interactions.catalogue.EntryCatalogueFilterSuggestionsResult
 /**
  * The scrolling list of the root filter page.
  *
- * Open top-level groups are split into header, tools, and options rows so a searchable group's tools stay pinned
+ * Open top-level groups are split into header, search, and options rows so a searchable group's search stays pinned
  * while its options scroll. [focus] is the path of the filter the sheet was opened at.
  */
 @Composable
@@ -78,14 +78,7 @@ internal fun SourceFilterRootList(
                 )
             },
             groupTools = { tools ->
-                GroupFilterTools(
-                    filter = tools.group,
-                    state = groupStates.of(tools.index),
-                    changedOnly = tools.changedOnly,
-                    pinned = tools.pinned,
-                    onReset = onResetGroup,
-                    onUpdate = onUpdate,
-                )
+                GroupFilterTools(tools.group, groupStates.of(tools.index), tools.changedOnly)
             },
             groupBody = { body ->
                 GroupFilterBody(
@@ -103,8 +96,7 @@ internal fun SourceFilterRootList(
     LazyColumn(state = listState, modifier = modifier) {
         rows.forEach { row ->
             when {
-                row is SourceFilterRow.GroupTools && row.pinned -> stickyHeader { rowContent(row) }
-                row is SourceFilterRow.GroupEnd -> stickyHeader { rowContent(row) }
+                row is SourceFilterRow.GroupTools || row is SourceFilterRow.GroupEnd -> stickyHeader { rowContent(row) }
                 else -> item { rowContent(row) }
             }
         }

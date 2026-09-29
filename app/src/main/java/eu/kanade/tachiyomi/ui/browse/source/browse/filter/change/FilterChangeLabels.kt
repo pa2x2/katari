@@ -52,7 +52,8 @@ internal fun changeLabels(filters: List<EntryFilter<*>>, defaults: List<EntryFil
     }
 }
 
-private fun EntryFilter<*>.changeLabel(path: List<Int>): FilterChangeLabel? = when (this) {
+/** The label of a leaf's current value, or `null` for filters that carry no value of their own. */
+internal fun EntryFilter<*>.changeLabel(path: List<Int>): FilterChangeLabel? = when (this) {
     is EntryFilter.Header, is EntryFilter.Separator, is EntryFilter.Group<*> -> null
     is EntryFilter.TriState -> FilterChangeLabel(
         path,

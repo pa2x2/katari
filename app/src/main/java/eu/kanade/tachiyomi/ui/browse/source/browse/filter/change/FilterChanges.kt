@@ -3,6 +3,7 @@ package eu.kanade.tachiyomi.ui.browse.source.browse.filter.change
 import eu.kanade.tachiyomi.source.entry.EntryFilter
 import eu.kanade.tachiyomi.source.filter.sourceStateSemantics
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.activeCount
+import java.util.Collections
 import java.util.IdentityHashMap
 
 /**
@@ -30,24 +31,33 @@ internal data class FilterChange(val changed: Int, val excluded: Int = 0) {
  */
 internal class FilterChanges private constructor(
     private val byFilter: Map<EntryFilter<*>, FilterChange>,
+    private val emptyDefaults: Set<EntryFilter<*>>,
     val total: FilterChange,
 ) {
     operator fun get(filter: EntryFilter<*>): FilterChange = byFilter[filter] ?: FilterChange.None
 
+    /**
+     * Whether the source default of [filter] selects nothing, so clearing it and resetting it to defaults are the
+     * same action. Unknown defaults are treated as selecting something.
+     */
+    fun hasEmptyDefault(filter: EntryFilter<*>): Boolean = filter in emptyDefaults
+
     companion object {
-        val Empty = FilterChanges(emptyMap(), FilterChange.None)
+        val Empty = FilterChanges(emptyMap(), emptySet(), FilterChange.None)
 
         fun of(filters: List<EntryFilter<*>>, defaults: List<EntryFilter<*>>): FilterChanges {
             val byFilter = IdentityHashMap<EntryFilter<*>, FilterChange>()
+            val emptyDefaults = Collections.newSetFromMap(IdentityHashMap<EntryFilter<*>, Boolean>())
             fun measure(filter: EntryFilter<*>, default: EntryFilter<*>?): FilterChange {
                 val change = filter.changeFrom(default, ::measure)
                 byFilter[filter] = change
+                if (default?.activeCount() == 0) emptyDefaults += filter
                 return change
             }
             val total = filters.withIndex().fold(FilterChange.None) { sum, (index, filter) ->
                 sum + measure(filter, defaults.getOrNull(index))
             }
-            return FilterChanges(byFilter, total)
+            return FilterChanges(byFilter, emptyDefaults, total)
         }
     }
 }

@@ -73,7 +73,7 @@ internal fun FilterItem(
             }
             is EntryFilter.Sort -> FilterSortRow(filter, onUpdate)
             is EntryFilter.Group<*> -> if (groupState != null) {
-                GroupFilterHeader(filter, groupState, changes, changedOnly, leadingDivider)
+                GroupFilterHeader(filter, groupState, changes, changedOnly, leadingDivider, onReset, onUpdate)
             } else {
                 GroupFilterItem(
                     filter = filter,
@@ -98,7 +98,8 @@ internal fun FilterItem(
             }
             is EntryFilter.PagedGroup<*> -> PagedGroupSummaryItem(filter) { onOpenPagedGroup(filter) }
         }
-        filter.metadata?.description?.takeIf { it.isNotBlank() }?.let {
+        // A group shows its description in its header.
+        filter.metadata?.description?.takeIf { it.isNotBlank() && filter !is EntryFilter.Group<*> }?.let {
             Text(
                 it,
                 style = MaterialTheme.typography.bodySmall,
