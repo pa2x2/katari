@@ -36,7 +36,7 @@ fun LibraryPager(
     getDisplayMode: (Int) -> PreferenceMutableState<LibraryDisplayMode>,
     getColumnsForOrientation: (Boolean) -> PreferenceMutableState<Int>,
     getItemsForPage: (LibraryPage) -> List<LibraryItem>,
-    displaySettings: LibraryDisplaySettings,
+    displaySettingsForPage: (LibraryPage) -> LibraryDisplaySettings,
     onClickItem: (LibraryPage, LibraryItem) -> Unit,
     onLongClickItem: (LibraryPage, LibraryItem) -> Unit,
     onClickContinueReading: ((LibraryItem) -> Unit)?,
@@ -77,6 +77,7 @@ fun LibraryPager(
             remember { mutableIntStateOf(0) }
         }
 
+        val displaySettings = displaySettingsForPage(libraryPage)
         val onClick: (LibraryItem) -> Unit = { onClickItem(libraryPage, it) }
         val onLongClick: (LibraryItem) -> Unit = { onLongClickItem(libraryPage, it) }
 

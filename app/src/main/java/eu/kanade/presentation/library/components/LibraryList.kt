@@ -121,21 +121,8 @@ private fun LibraryListEntry(
             Color.Transparent
         },
         badge = {
-            if (displaySettings.downloadBadge) {
-                DownloadsBadge(count = libraryItem.downloadCount)
-            }
-            if (displaySettings.unreadBadge) {
-                libraryItem.unconsumedCount?.let { UnreadBadge(count = it) }
-            }
-            if (displaySettings.entryTypeBadge) {
-                EntryTypeBadge(entryType = libraryItem.entry.type)
-            }
-            if (displaySettings.localBadge) {
-                LocalBadge(isLocal = libraryItem.isLocal)
-            }
-            if (displaySettings.languageBadge) {
-                LanguageBadge(sourceLanguage = libraryItem.sourceLanguage)
-            }
+            LibraryItemProgressBadges(libraryItem, displaySettings)
+            LibraryItemOriginBadges(libraryItem, displaySettings)
         },
         onLongClick = { onLongClick(libraryItem) },
         onClick = { onClick(libraryItem) },

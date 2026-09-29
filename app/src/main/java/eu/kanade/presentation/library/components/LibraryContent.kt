@@ -196,7 +196,7 @@ fun LibraryContent(
     getDisplayMode: (Int) -> PreferenceMutableState<LibraryDisplayMode>,
     getColumnsForOrientation: (Boolean) -> PreferenceMutableState<Int>,
     getItemsForPage: (LibraryPage) -> List<LibraryItem>,
-    displaySettings: LibraryDisplaySettings,
+    displaySettingsForPage: (LibraryPage) -> LibraryDisplaySettings,
 ) {
     SharedLibraryContent(
         pages = pages,
@@ -222,7 +222,7 @@ fun LibraryContent(
             getDisplayMode = getDisplayMode,
             getColumnsForOrientation = getColumnsForOrientation,
             getItemsForPage = getItemsForPage,
-            displaySettings = displaySettings,
+            displaySettingsForPage = displaySettingsForPage,
             onClickItem = { page, item ->
                 if (selection.isNotEmpty()) {
                     onToggleSelection(page, item)

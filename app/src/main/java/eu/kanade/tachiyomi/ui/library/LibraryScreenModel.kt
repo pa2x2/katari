@@ -205,6 +205,7 @@ class LibraryScreenModel(
                         showSystemCategory = showSystemCategory,
                         categories = categories,
                         favorites = filteredFavorites,
+                        entryTypes = favorites.mapTo(mutableSetOf()) { it.entry.type },
                         trackingEntries = tracking.entries,
                         trackingScoreSupportedEntryTypes = tracking.scoreSupportedEntryTypes,
                         hasActiveFilters = filterResult.hasActiveFilters,
@@ -1067,6 +1068,8 @@ class LibraryScreenModel(
         val showSystemCategory: Boolean = false,
         val categories: List<Category> = emptyList(),
         val favorites: List<LibraryItem> = emptyList(),
+        /** Entry types in the whole library, before filters and search narrow it. */
+        val entryTypes: Set<EntryType> = emptySet(),
         val trackingEntries: Map<Long, List<EntryTrackingCollectionTrack>> = emptyMap(),
         val trackingScoreSupportedEntryTypes: Set<EntryType> = emptySet(),
         val hasActiveFilters: Boolean = false,
@@ -1132,6 +1135,12 @@ class LibraryScreenModel(
                     null -> LibraryPinSelectionAction.Hidden
                 }
             }
+
+        /** A type badge on a page that already holds one type, or in a single-type library, only repeats the tab. */
+        fun displaySettingsForPage(page: LibraryPage): LibraryDisplaySettings {
+            val typeIsImplied = page.entryType != null || libraryData.entryTypes.size <= 1
+            return if (typeIsImplied) displaySettings.copy(entryTypeBadge = false) else displaySettings
+        }
 
         fun getItemsForPageId(pageId: String?): List<LibraryItem> {
             if (pageId == null) return emptyList()

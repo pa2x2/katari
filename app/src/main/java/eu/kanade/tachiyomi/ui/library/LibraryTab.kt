@@ -277,7 +277,7 @@ data object LibraryTab : Tab {
                         getDisplayMode = { screenModel.getDisplayMode() },
                         getColumnsForOrientation = { screenModel.getColumnsForOrientation(it) },
                         getItemsForPage = { state.getItemsForPage(it) },
-                        displaySettings = state.displaySettings,
+                        displaySettingsForPage = state::displaySettingsForPage,
                     )
                 }
             }

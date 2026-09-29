@@ -127,23 +127,10 @@ private fun LibraryCompactGridEntry(
             Color.Transparent
         },
         coverBadgeStart = {
-            if (displaySettings.downloadBadge) {
-                DownloadsBadge(count = libraryItem.downloadCount)
-            }
-            if (displaySettings.unreadBadge) {
-                libraryItem.unconsumedCount?.let { UnreadBadge(count = it) }
-            }
+            LibraryItemProgressBadges(libraryItem, displaySettings)
         },
         coverBadgeEnd = {
-            if (displaySettings.entryTypeBadge) {
-                EntryTypeBadge(entryType = libraryItem.entry.type)
-            }
-            if (displaySettings.localBadge) {
-                LocalBadge(isLocal = libraryItem.isLocal)
-            }
-            if (displaySettings.languageBadge) {
-                LanguageBadge(sourceLanguage = libraryItem.sourceLanguage)
-            }
+            LibraryItemOriginBadges(libraryItem, displaySettings)
         },
         onLongClick = { onLongClick(libraryItem) },
         onClick = { onClick(libraryItem) },
