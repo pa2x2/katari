@@ -1,5 +1,6 @@
 package tachiyomi.data.entry
 
+import app.cash.sqldelight.async.coroutines.awaitAsOne
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
@@ -36,7 +37,7 @@ class EntryTranslationQueueRepositoryImpl(
     ) {
         handler.await(inTransaction = true) {
             val range = entry_translation_queueQueries.getPositionRange(profileProvider.activeProfileId)
-                .executeAsOne()
+                .awaitAsOne()
             val start = if (first) (range.first ?: 0L) - chapterIds.size else (range.last ?: -1L) + 1
             chapterIds.forEachIndexed { index, chapterId ->
                 entry_translation_queueQueries.upsert(
@@ -58,7 +59,7 @@ class EntryTranslationQueueRepositoryImpl(
     override suspend fun moveToFront(chapterIds: List<Long>) {
         handler.await(inTransaction = true) {
             val first = entry_translation_queueQueries.getPositionRange(profileProvider.activeProfileId)
-                .executeAsOne()
+                .awaitAsOne()
                 .first ?: 0L
             chapterIds.forEachIndexed { index, chapterId ->
                 entry_translation_queueQueries.setPosition(first - chapterIds.size + index, chapterId)
