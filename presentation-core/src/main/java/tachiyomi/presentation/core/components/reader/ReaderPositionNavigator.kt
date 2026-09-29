@@ -231,6 +231,7 @@ private fun HorizontalReaderPageNavigator(
                     Text(currentLabel)
                     Slider(
                         state = remember { SliderState(value = 1f) },
+                        onValueChange = {},
                         enabled = false,
                         modifier = Modifier
                             .weight(1f)
