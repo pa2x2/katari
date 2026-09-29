@@ -71,6 +71,7 @@ import eu.kanade.tachiyomi.ui.browse.immersive.EntryImmersiveScreenModel
 import eu.kanade.tachiyomi.ui.browse.source.browse.SourceFilterDialog
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.change.FilterChanges
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.change.changeLabels
+import eu.kanade.tachiyomi.ui.browse.source.browse.preset.SourceFilterPresetActions
 import eu.kanade.tachiyomi.ui.category.CategoryScreen
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
 import eu.kanade.tachiyomi.ui.webview.WebViewScreen
@@ -134,6 +135,7 @@ data class CatalogScreen(
         val catalogList = screenModel.catalogPagerFlowFlow.collectAsLazyPagingItems()
         CatalogScreenEventsEffect(screenModel, snackbarHostState)
         var presetPendingDeletion by rememberSaveable { mutableStateOf<String?>(null) }
+        var filterFocusPath by remember { mutableStateOf<List<Int>?>(null) }
         var immersiveMode by rememberSaveable(sourceId) { mutableStateOf(false) }
         val immersivePositionState = rememberEntryImmersivePositionState(resetKey = state.listing)
         val immersiveAvailable = screenModel.isImmersiveSourceAvailable
@@ -269,7 +271,10 @@ data class CatalogScreen(
                         if (state.listing is CatalogScreenModel.Listing.Search && appliedFilterLabels.isNotEmpty()) {
                             CatalogAppliedFilterChips(
                                 labels = appliedFilterLabels,
-                                onOpenFilters = screenModel::openFilterSheet,
+                                onOpenFilters = {
+                                    filterFocusPath = it.path
+                                    screenModel.openFilterSheet()
+                                },
                                 onRemove = { screenModel.removeAppliedFilter(it.path) },
                             )
                         }
@@ -329,25 +334,36 @@ data class CatalogScreen(
         when (val dialog = state.dialog) {
             is CatalogScreenModel.Dialog.Filter -> {
                 SourceFilterDialog(
-                    onDismissRequest = onDismissRequest,
+                    onDismissRequest = {
+                        filterFocusPath = null
+                        onDismissRequest()
+                    },
                     filters = state.filters,
                     defaultFilters = state.defaultFilters,
                     filterRevision = state.filterRevision,
                     isLoading = state.filterState is FilterUiState.Loading,
                     errorMessage = (state.filterState as? FilterUiState.Error)?.throwable?.message,
-                    presets = if (feedsEnabled) screenModel.feedPresets() else emptyList(),
+                    presetActions = if (feedsEnabled) {
+                        SourceFilterPresetActions(
+                            presets = screenModel.feedPresets(),
+                            currentPresetId = appliedCustomPreset?.id,
+                            currentPresetName = appliedCustomPreset?.name,
+                            onApply = screenModel::applyPreset,
+                            onEdit = screenModel::showEditPresetDialog,
+                            onDelete = { presetPendingDeletion = it },
+                            canDelete = screenModel::canDeletePreset,
+                            onSaveAsNew = screenModel::showSavePresetDialog,
+                            onUpdateCurrent = screenModel::showUpdateCurrentPresetDialog,
+                        )
+                    } else {
+                        null
+                    },
+                    focusPath = filterFocusPath,
                     onReset = screenModel::resetFilters,
                     onResetGroup = screenModel::resetFilterGroup,
                     pendingFilterEdits = state.pendingFilterEdits,
                     draftQuery = state.draftSearchQuery,
                     onEditPagedItem = screenModel::editPagedFilterItem,
-                    onApplyPreset = screenModel::applyPreset,
-                    onEditPreset = screenModel::showEditPresetDialog,
-                    onDeletePreset = { presetPendingDeletion = it },
-                    canDeletePreset = screenModel::canDeletePreset,
-                    onSaveAsNewPreset = if (feedsEnabled) screenModel::showSavePresetDialog else null,
-                    currentPresetName = appliedCustomPreset?.name,
-                    onUpdateCurrentPreset = if (feedsEnabled) screenModel::showUpdateCurrentPresetDialog else null,
                     onFilter = screenModel::applyDraftFilters,
                     repairIssues = state.repairIssues,
                     repairNeedsSave = state.repairNeedsSave,

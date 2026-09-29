@@ -36,12 +36,12 @@ import tachiyomi.presentation.core.i18n.stringResource
 /**
  * The applied filter values of the current search, each removable on its own.
  *
- * Tapping a chip opens the filter sheet; its close icon resets that value and re-runs the search.
+ * Tapping a chip opens the filter sheet at that filter; its close icon resets that value and re-runs the search.
  */
 @Composable
 internal fun CatalogAppliedFilterChips(
     labels: List<FilterChangeLabel>,
-    onOpenFilters: () -> Unit,
+    onOpenFilters: (FilterChangeLabel) -> Unit,
     onRemove: (FilterChangeLabel) -> Unit,
 ) {
     Row(
@@ -57,7 +57,7 @@ internal fun CatalogAppliedFilterChips(
 @Composable
 private fun AppliedFilterChip(
     label: FilterChangeLabel,
-    onOpenFilters: () -> Unit,
+    onOpenFilters: (FilterChangeLabel) -> Unit,
     onRemove: (FilterChangeLabel) -> Unit,
 ) {
     val excluded = label.kind == FilterChangeKind.Excluded
@@ -65,7 +65,7 @@ private fun AppliedFilterChip(
     val removeDescription = stringResource(MR.strings.action_remove)
     InputChip(
         selected = true,
-        onClick = onOpenFilters,
+        onClick = { onOpenFilters(label) },
         modifier = Modifier.semantics { contentDescription = description },
         label = {
             Text(

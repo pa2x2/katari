@@ -2,32 +2,23 @@ package eu.kanade.tachiyomi.ui.browse.source.browse
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import androidx.paging.PagingSource
 import eu.kanade.domain.source.model.FilterRestoreIssue
-import eu.kanade.domain.source.model.SourceFeedPreset
 import eu.kanade.presentation.components.AdaptiveSheet
 import eu.kanade.tachiyomi.source.entry.EntryFilter
 import eu.kanade.tachiyomi.source.entry.EntryFilterList
@@ -37,24 +28,17 @@ import eu.kanade.tachiyomi.source.entry.EntryFilterPageScope
 import eu.kanade.tachiyomi.source.entry.EntryFilterTextInput
 import eu.kanade.tachiyomi.source.entry.filter.validationIssues
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.FilterItem
-import eu.kanade.tachiyomi.ui.browse.source.browse.filter.FilterPresetRepairItem
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.PagedFilterBrowseSession
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.PagedGroupFilterContent
-import eu.kanade.tachiyomi.ui.browse.source.browse.filter.activeCount
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.change.FilterChanges
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.date.DateFilterEditorHost
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.date.DateFilterEditorSession
-import eu.kanade.tachiyomi.ui.browse.source.browse.filter.displayMessage
-import eu.kanade.tachiyomi.ui.browse.source.browse.filter.isOrdering
-import eu.kanade.tachiyomi.ui.browse.source.browse.filter.resetFilterToDefault
+import eu.kanade.tachiyomi.ui.browse.source.browse.preset.SourceFilterPresetActions
+import eu.kanade.tachiyomi.ui.browse.source.browse.preset.SourceFilterPresetChip
 import mihon.entry.interactions.catalogue.EntryCatalogueFilterNavigationResult
 import mihon.entry.interactions.catalogue.EntryCatalogueFilterSuggestionsResult
 import soup.compose.material.motion.animation.materialSharedAxisX
 import soup.compose.material.motion.animation.rememberSlideDistance
-import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.HeadingItem
-import tachiyomi.presentation.core.components.material.Button
-import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable
 fun SourceFilterDialog(
@@ -64,19 +48,13 @@ fun SourceFilterDialog(
     filterRevision: Int = 0,
     isLoading: Boolean = false,
     errorMessage: String? = null,
-    presets: List<SourceFeedPreset>,
+    presetActions: SourceFilterPresetActions? = null,
+    focusPath: List<Int>? = null,
     onReset: () -> Unit,
     onResetGroup: (EntryFilter<*>) -> Unit,
     pendingFilterEdits: Int,
     onEditPagedItem: (EntryFilter.PagedGroup<*>, EntryFilterPageItem, EntryFilter<*>, (Boolean) -> Unit) -> Unit,
-    onApplyPreset: (String) -> Unit,
-    onEditPreset: (String) -> Unit,
-    onDeletePreset: (String) -> Unit,
-    canDeletePreset: (String) -> Boolean,
-    onSaveAsNewPreset: (() -> Unit)? = null,
-    currentPresetName: String? = null,
     draftQuery: String? = null,
-    onUpdateCurrentPreset: (() -> Unit)? = null,
     onFilter: () -> Boolean,
     onUpdate: (EntryFilterList) -> Unit,
     onRequestSuggestions: suspend (
@@ -110,6 +88,9 @@ fun SourceFilterDialog(
         mutableStateOf<SourceFilterRoute>(SourceFilterRoute.Root)
     }
     var changedOnly by rememberSaveable { mutableStateOf(false) }
+    // The sheet reveals the focused filter once when it opens, not every time the root page is shown again.
+    var focusRevealed by rememberSaveable { mutableStateOf(false) }
+    val focus = focusPath?.takeUnless { focusRevealed }
     val validation = filters.validationIssues()
     val changes = FilterChanges.of(filters, defaultFilters)
     val isError = errorMessage != null
@@ -127,6 +108,25 @@ fun SourceFilterDialog(
     val filterAndDismiss = {
         if (onFilter()) onDismissRequest() else changedOnly = false
     }
+
+    val canSaveDraft = !isLoading && !isError && pendingFilterEdits == 0 && validation.isEmpty() &&
+        repairIssues.isEmpty()
+    val rootFilterItem: @Composable (EntryFilter<*>, Boolean, List<Int>?, Boolean) -> Unit =
+        { filter, changedOnlyChildren, focus, leadingDivider ->
+            FilterItem(
+                filter = filter,
+                changes = changes,
+                onUpdate = updateFilters,
+                onOpenPagedGroup = {
+                    filters.pathTo(it)?.let { path -> route = SourceFilterRoute.PagedGroup(path) }
+                },
+                onRequestSuggestions = onRequestSuggestions,
+                changedOnly = changedOnlyChildren,
+                onReset = onResetGroup,
+                focus = focus,
+                leadingDivider = leadingDivider,
+            )
+        }
 
     BackHandler(enabled = route is SourceFilterRoute.PagedGroup, onBack = leavePagedGroup)
 
@@ -149,126 +149,73 @@ fun SourceFilterDialog(
             ) { currentRoute ->
                 when (currentRoute) {
                     SourceFilterRoute.Root -> {
+                        val rows = sourceFilterRows(
+                            filters = filters,
+                            isLoading = isLoading,
+                            errorMessage = errorMessage,
+                            validation = validation,
+                            repairIssues = repairIssues,
+                            repairNeedsSave = repairNeedsSave,
+                            hasPendingEdits = pendingFilterEdits > 0,
+                            changes = changes,
+                            changedOnly = changedOnly,
+                        )
+                        LaunchedEffect(Unit) {
+                            val focusIndex = focus?.firstOrNull() ?: return@LaunchedEffect
+                            val row = rows.indexOfFirst { it is SourceFilterRow.Filter && it.index == focusIndex }
+                            if (row >= 0) rootListState.scrollToItem(row)
+                            focusRevealed = true
+                        }
                         Column(Modifier.fillMaxHeight(0.9f)) {
-                            Text(
-                                stringResource(MR.strings.filter_title),
-                                style = MaterialTheme.typography.headlineSmall,
-                                modifier = Modifier.padding(start = 16.dp, top = 16.dp),
+                            SourceFilterRootHeader(
+                                status = SourceFilterSheetStatus(
+                                    changedCount = changes.total.changed,
+                                    updating = pendingFilterEdits > 0,
+                                    unapplied = hasUnappliedChanges,
+                                    query = draftQuery,
+                                ),
+                                changedOnly = changedOnly,
+                                onChangedOnlyChange = { changedOnly = it },
+                                presetChip = presetActions?.let { actions ->
+                                    { SourceFilterPresetChip(actions, canSave = canSaveDraft) }
+                                },
                             )
-                            currentPresetName?.let {
-                                Text(
-                                    stringResource(MR.strings.filter_preset_name, it),
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.padding(horizontal = 16.dp),
-                                    maxLines = 2,
-                                    overflow = TextOverflow.Ellipsis,
-                                )
-                            }
-                            draftQuery?.takeIf { it.isNotBlank() }?.let {
-                                Text(
-                                    stringResource(MR.strings.filter_query, it),
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    modifier = Modifier.padding(horizontal = 16.dp),
-                                    maxLines = 2,
-                                    overflow = TextOverflow.Ellipsis,
-                                )
-                            }
-                            Row(
-                                Modifier.padding(horizontal = 16.dp),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            ) {
-                                FilterChip(
-                                    selected = !changedOnly,
-                                    onClick = { changedOnly = false },
-                                    label = { Text(stringResource(MR.strings.filter_view_all)) },
-                                )
-                                FilterChip(
-                                    selected = changedOnly,
-                                    onClick = { changedOnly = true },
-                                    label = {
-                                        Text(stringResource(MR.strings.filter_view_changed, changes.total.changed))
-                                    },
-                                )
-                            }
-                            if (pendingFilterEdits > 0) {
-                                Text(
-                                    stringResource(MR.strings.filter_updating),
-                                    modifier = Modifier.padding(horizontal = 16.dp),
-                                    style = MaterialTheme.typography.labelMedium,
-                                )
-                            }
-                            if (hasUnappliedChanges) {
-                                Text(
-                                    stringResource(MR.strings.filter_unapplied),
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.padding(horizontal = 16.dp),
-                                )
-                            }
                             LazyColumn(state = rootListState, modifier = Modifier.weight(1f)) {
-                                sourceFilterFields(
-                                    filters = filters,
-                                    isLoading = isLoading,
-                                    errorMessage = errorMessage,
-                                    onRetry = onRetry,
-                                    validation = validation,
-                                    repairIssues = repairIssues,
-                                    repairNeedsSave = repairNeedsSave,
-                                    onSaveRepair = onSaveRepair,
-                                    hasPendingEdits = pendingFilterEdits > 0,
-                                    onResolveIssue = onResolveIssue,
-                                    changes = changes,
-                                    changedOnly = changedOnly,
-                                    onShowAll = { changedOnly = false },
-                                ) { filter, changedOnlyChildren ->
-                                    FilterItem(
-                                        filter = filter,
-                                        changes = changes,
-                                        onUpdate = updateFilters,
-                                        onOpenPagedGroup = {
-                                            filters.pathTo(it)?.let { path ->
-                                                route = SourceFilterRoute.PagedGroup(path)
-                                            }
+                                items(rows) { row ->
+                                    SourceFilterRowContent(
+                                        row = row,
+                                        filters = filters,
+                                        onRetry = onRetry,
+                                        onSaveRepair = onSaveRepair,
+                                        onResolveIssue = onResolveIssue,
+                                        onShowAll = { changedOnly = false },
+                                        filterItem = { filterRow ->
+                                            rootFilterItem(
+                                                filterRow.filter,
+                                                filterRow.changedOnlyChildren,
+                                                focus?.takeIf { it.firstOrNull() == filterRow.index }?.drop(1),
+                                                filterRow.leadingDivider,
+                                            )
                                         },
-                                        onRequestSuggestions = onRequestSuggestions,
-                                        changedOnly = changedOnlyChildren,
-                                        onReset = onResetGroup,
+                                        repairFilterItem = { rootFilterItem(it, false, null, true) },
                                     )
                                 }
                             }
-                            SourceFilterRootFooter(
-                                presets = presets,
+                            SourceFilterSheetFooter(
                                 onReset = onReset,
-                                onApplyPreset = onApplyPreset,
-                                onEditPreset = onEditPreset,
-                                onDeletePreset = onDeletePreset,
-                                canDeletePreset = canDeletePreset,
-                                onSaveAsNewPreset = onSaveAsNewPreset?.takeIf {
-                                    !isLoading && !isError && pendingFilterEdits == 0 && validation.isEmpty() &&
-                                        repairIssues.isEmpty()
-                                },
-                                currentPresetName = currentPresetName,
-                                onUpdateCurrentPreset = onUpdateCurrentPreset?.takeIf {
-                                    !isLoading && !isError && pendingFilterEdits == 0 && validation.isEmpty() &&
-                                        repairIssues.isEmpty()
-                                },
-                                onFilter = filterAndDismiss,
                                 resetEnabled = !isLoading,
-                                filterEnabled =
-                                !isLoading && !isError && pendingFilterEdits == 0 && validation.isEmpty() &&
-                                    repairIssues.isEmpty() &&
-                                    !repairNeedsSave,
+                                onApply = filterAndDismiss,
+                                applyEnabled = canSaveDraft && !repairNeedsSave,
                             )
                         }
                     }
                     is SourceFilterRoute.PagedGroup -> {
                         val liveFilter = filters.resolvePagedGroup(currentRoute.path)
                         if (liveFilter == null) {
-                            androidx.compose.runtime.LaunchedEffect(currentRoute.path) {
+                            LaunchedEffect(currentRoute.path) {
                                 leavePagedGroup()
                             }
-                            androidx.compose.foundation.layout.Box(
+                            Box(
                                 modifier = Modifier.fillMaxSize(),
                             )
                         } else {
@@ -278,8 +225,7 @@ fun SourceFilterDialog(
                                 onBack = leavePagedGroup,
                                 onFilter = filterAndDismiss,
                                 onReset = { onResetGroup(liveFilter) },
-                                canApply = !isLoading && !isError && pendingFilterEdits == 0 && validation.isEmpty() &&
-                                    repairIssues.isEmpty() && !repairNeedsSave,
+                                canApply = canSaveDraft && !repairNeedsSave,
                                 onEditItem = { item, value, complete ->
                                     onEditPagedItem(liveFilter, item, value, complete)
                                 },

@@ -1433,7 +1433,7 @@
     <string name="browse_video_feed_stream_timeout">Timed out while resolving streams</string>
     <string name="browse_video_feed_offline_no_download">Device is offline and this episode is not downloaded</string>
     <string name="browse_feed_save_preset">Save preset</string>
-    <string name="browse_feed_save_as_new_preset">Save as new preset</string>
+    <string name="browse_feed_save_as_new_preset">Save as new preset…</string>
     <string name="browse_feed_update_preset">Update preset</string>
     <string name="browse_feed_update_current_preset">Update "%1$s"</string>
     <string name="browse_feed_chronological">Chronological feed</string>
@@ -2167,10 +2167,12 @@
     <string name="filter_changes_description">%1$d included, %2$d excluded</string>
     <string name="filter_selected">Selected</string>
     <string name="filter_updating">Updating selections…</string>
-    <string name="filter_unapplied">Unapplied changes</string>
+    <string name="filter_status_changed">%1$d changed</string>
+    <string name="filter_status_defaults">Source defaults</string>
+    <string name="filter_status_not_applied">not applied</string>
+    <string name="filter_no_preset">No preset</string>
     <string name="browse_search_kept_filter_changes">Search used your applied filters. Unapplied filter changes were kept.</string>
     <string name="filter_feed_repair">This preset needs repair before the feed can load new results. Saved items remain available.</string>
-    <string name="filter_preset_name">Preset: %1$s</string>
     <string name="filter_query">Search: %1$s</string>
     <string name="filter_title">Filters</string>
     <string name="filter_repair_title">Repair preset</string>
@@ -2187,7 +2189,6 @@
     <string name="filter_validation_help">Check the highlighted values before applying or saving.</string>
     <string name="filter_no_changes">No filters differ from the source defaults</string>
     <string name="filter_show_all">Show all filters</string>
-    <string name="filter_sorting">Sorting</string>
     <string name="filter_save_required">Save the repaired preset before applying it.</string>
     <string name="filter_replacement">Replacement</string>
     <string name="filter_choose_replacement">Choose a filter</string>

@@ -41,9 +41,12 @@ internal fun GroupFilterItem(
     changedOnly: Boolean,
     onUpdate: () -> Unit,
     onReset: (EntryFilter<*>) -> Unit,
-    item: @Composable (EntryFilter<*>) -> Unit,
+    focus: List<Int>?,
+    leadingDivider: Boolean,
+    item: @Composable (child: EntryFilter<*>, childFocus: List<Int>?) -> Unit,
 ) {
-    var expanded by rememberSaveable(filter) { mutableStateOf(false) }
+    var expanded by rememberSaveable(filter) { mutableStateOf(focus != null) }
+    val focusedChild = focus?.firstOrNull()?.let { filter.state.getOrNull(it) }
     var selectedOnly by rememberSaveable(filter) { mutableStateOf(false) }
     val issues = filter.validationIssues()
     LaunchedEffect(issues.isNotEmpty()) { if (issues.isNotEmpty()) expanded = true }
@@ -53,7 +56,7 @@ internal fun GroupFilterItem(
         filter.state.filterIsInstance<EntryFilter<*>>(),
     )
     Column {
-        HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+        if (leadingDivider) HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
         Row(
             Modifier.fillMaxWidth().clickable { expanded = !expanded }.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -108,7 +111,7 @@ internal fun GroupFilterItem(
                     selectedOnly -> { child -> child.activeCount() != 0 }
                     else -> null
                 },
-                itemContent = item,
+                itemContent = { child -> item(child, focus?.drop(1)?.takeIf { child === focusedChild }) },
             )
             issues.forEach {
                 Text(

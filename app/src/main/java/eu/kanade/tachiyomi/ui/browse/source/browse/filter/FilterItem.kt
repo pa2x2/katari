@@ -13,17 +13,16 @@ import eu.kanade.tachiyomi.source.entry.EntryFilterTextInput
 import eu.kanade.tachiyomi.source.entry.filter.EntryDateFilter
 import eu.kanade.tachiyomi.source.filter.hasFailedSourceCallback
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.change.FilterChanges
+import eu.kanade.tachiyomi.ui.browse.source.browse.filter.control.FilterCheckboxRow
+import eu.kanade.tachiyomi.ui.browse.source.browse.filter.control.FilterSelectField
+import eu.kanade.tachiyomi.ui.browse.source.browse.filter.control.FilterSheetInsets
+import eu.kanade.tachiyomi.ui.browse.source.browse.filter.control.FilterTextField
+import eu.kanade.tachiyomi.ui.browse.source.browse.filter.control.FilterTriStateRow
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.date.DateFilterItem
 import mihon.entry.interactions.catalogue.EntryCatalogueFilterSuggestionsResult
-import tachiyomi.core.common.preference.TriState
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.CheckboxItem
 import tachiyomi.presentation.core.components.CollapsibleBox
-import tachiyomi.presentation.core.components.HeadingItem
-import tachiyomi.presentation.core.components.SelectItem
 import tachiyomi.presentation.core.components.SortItem
-import tachiyomi.presentation.core.components.TextItem
-import tachiyomi.presentation.core.components.TriStateItem
 import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable
@@ -38,26 +37,28 @@ internal fun FilterItem(
     ) -> EntryCatalogueFilterSuggestionsResult,
     changedOnly: Boolean,
     onReset: (EntryFilter<*>) -> Unit,
+    focus: List<Int>? = null,
+    leadingDivider: Boolean = true,
 ) {
     Column {
         when (filter) {
-            is EntryFilter.Header -> HeadingItem(filter.name)
-            is EntryFilter.Separator -> HorizontalDivider()
-            is EntryFilter.CheckBox -> CheckboxItem(label = filter.name, checked = filter.state) {
+            is EntryFilter.Header -> FilterSourceHeader(filter.name)
+            is EntryFilter.Separator -> HorizontalDivider(Modifier.padding(horizontal = FilterSheetInsets.Horizontal))
+            is EntryFilter.CheckBox -> FilterCheckboxRow(label = filter.name, checked = filter.state) {
                 filter.state = !filter.state
                 onUpdate()
             }
-            is EntryFilter.TriState -> TriStateItem(filter.name, filter.state.toTriStateFilter()) {
-                filter.state = filter.state.toTriStateFilter().next().toTriStateInt()
+            is EntryFilter.TriState -> FilterTriStateRow(filter.name, filter.state) {
+                filter.state = filter.state.nextTriState()
                 onUpdate()
             }
             is EntryDateFilter -> DateFilterItem(filter, onUpdate)
             is EntryFilter.Autocomplete -> AutocompleteFilterItem(filter, onUpdate, onRequestSuggestions)
-            is EntryFilter.Text -> TextItem(filter.name, filter.state) {
+            is EntryFilter.Text -> FilterTextField(filter.name, filter.state) {
                 filter.state = it
                 onUpdate()
             }
-            is EntryFilter.Select<*> -> SelectItem(filter.name, filter.values, filter.state) {
+            is EntryFilter.Select<*> -> FilterSelectField(filter.name, filter.values, filter.state) {
                 filter.state = it
                 onUpdate()
             }
@@ -81,8 +82,25 @@ internal fun FilterItem(
                     }
                 }
             }
-            is EntryFilter.Group<*> -> GroupFilterItem(filter, changes, changedOnly, onUpdate, onReset) { child ->
-                FilterItem(child, changes, onUpdate, onOpenPagedGroup, onRequestSuggestions, changedOnly, onReset)
+            is EntryFilter.Group<*> -> GroupFilterItem(
+                filter = filter,
+                changes = changes,
+                changedOnly = changedOnly,
+                onUpdate = onUpdate,
+                onReset = onReset,
+                focus = focus,
+                leadingDivider = leadingDivider,
+            ) { child, childFocus ->
+                FilterItem(
+                    filter = child,
+                    changes = changes,
+                    onUpdate = onUpdate,
+                    onOpenPagedGroup = onOpenPagedGroup,
+                    onRequestSuggestions = onRequestSuggestions,
+                    changedOnly = changedOnly,
+                    onReset = onReset,
+                    focus = childFocus,
+                )
             }
             is EntryFilter.PagedGroup<*> -> PagedGroupSummaryItem(filter) { onOpenPagedGroup(filter) }
         }
@@ -91,7 +109,11 @@ internal fun FilterItem(
                 it,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 12.dp),
+                modifier = Modifier.padding(
+                    start = FilterSheetInsets.Horizontal,
+                    end = FilterSheetInsets.Horizontal,
+                    bottom = 12.dp,
+                ),
             )
         }
         if (filter.hasFailedSourceCallback()) {
@@ -99,21 +121,34 @@ internal fun FilterItem(
                 stringResource(MR.strings.filter_source_callback_failed),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.error,
-                modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 12.dp),
+                modifier = Modifier.padding(
+                    start = FilterSheetInsets.Horizontal,
+                    end = FilterSheetInsets.Horizontal,
+                    bottom = 12.dp,
+                ),
             )
         }
     }
 }
 
-private fun Int.toTriStateFilter(): TriState = when (this) {
-    EntryFilter.TriState.STATE_IGNORE -> TriState.DISABLED
-    EntryFilter.TriState.STATE_INCLUDE -> TriState.ENABLED_IS
-    EntryFilter.TriState.STATE_EXCLUDE -> TriState.ENABLED_NOT
-    else -> throw IllegalStateException("Unknown TriState state: $this")
+/** A source header: the source's own label for the filters that follow, kept where the source placed it. */
+@Composable
+private fun FilterSourceHeader(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.labelLarge,
+        color = MaterialTheme.colorScheme.primary,
+        modifier = Modifier.padding(
+            start = FilterSheetInsets.Horizontal,
+            end = FilterSheetInsets.Horizontal,
+            top = 12.dp,
+            bottom = 4.dp,
+        ),
+    )
 }
 
-private fun TriState.toTriStateInt(): Int = when (this) {
-    TriState.DISABLED -> EntryFilter.TriState.STATE_IGNORE
-    TriState.ENABLED_IS -> EntryFilter.TriState.STATE_INCLUDE
-    TriState.ENABLED_NOT -> EntryFilter.TriState.STATE_EXCLUDE
+private fun Int.nextTriState(): Int = when (this) {
+    EntryFilter.TriState.STATE_IGNORE -> EntryFilter.TriState.STATE_INCLUDE
+    EntryFilter.TriState.STATE_INCLUDE -> EntryFilter.TriState.STATE_EXCLUDE
+    else -> EntryFilter.TriState.STATE_IGNORE
 }
