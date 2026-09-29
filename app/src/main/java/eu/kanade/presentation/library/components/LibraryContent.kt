@@ -16,6 +16,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.dp
 import eu.kanade.core.preference.PreferenceMutableState
 import eu.kanade.tachiyomi.ui.library.LibraryPage
 import eu.kanade.tachiyomi.ui.library.LibraryPageTab
@@ -40,6 +41,7 @@ fun SharedLibraryContent(
     onChangeCurrentPage: (Int) -> Unit,
     onRefresh: suspend () -> Boolean,
     onGlobalSearchClicked: () -> Unit,
+    scrollToTopTarget: LibraryScrollToTopTarget,
     pageContent: @Composable (pagerState: PagerState, page: Int, libraryPage: LibraryPage?) -> Unit,
 ) {
     Column(
@@ -105,42 +107,6 @@ fun SharedLibraryContent(
                     },
                 )
             }
-
-            if (secondaryTabs.isNotEmpty()) {
-                LibraryTabs(
-                    tabs = secondaryTabs,
-                    selectedTabId = activePage?.secondaryTab?.id,
-                    showItemCounts = showItemCounts,
-                    onTabItemClick = { selectedTab ->
-                        val targetPageIndex = pages.indexOfFirst {
-                            it.primaryTab.id == activePage?.primaryTab?.id && it.secondaryTab?.id == selectedTab.id
-                        }
-                        if (targetPageIndex < 0) return@LibraryTabs
-                        scope.launch {
-                            pagerState.animateScrollToPage(targetPageIndex)
-                        }
-                    },
-                )
-            }
-            if (tertiaryTabs.isNotEmpty()) {
-                val selectedPage = checkNotNull(activePage)
-                LibraryTabs(
-                    tabs = tertiaryTabs,
-                    selectedTabId = selectedPage.tertiaryTab?.id,
-                    showItemCounts = showItemCounts,
-                    onTabItemClick = { selectedTab ->
-                        val targetPageIndex = pages.indexOfFirst {
-                            it.primaryTab.id == selectedPage.primaryTab.id &&
-                                it.secondaryTab?.id == selectedPage.secondaryTab?.id &&
-                                it.tertiaryTab?.id == selectedTab.id
-                        }
-                        if (targetPageIndex < 0) return@LibraryTabs
-                        scope.launch {
-                            pagerState.animateScrollToPage(targetPageIndex)
-                        }
-                    },
-                )
-            }
         }
 
         PullRefresh(
@@ -166,7 +132,65 @@ fun SharedLibraryContent(
                 )
                 return@PullRefresh
             }
-            pageContent(pagerState, pagerState.currentPage, pages.getOrNull(pagerState.currentPage))
+            val chipLevels = if (showPageTabs) {
+                buildList {
+                    if (secondaryTabs.isNotEmpty()) {
+                        add(
+                            LibraryGroupChipLevel(
+                                tabs = secondaryTabs,
+                                selectedTabId = activePage?.secondaryTab?.id,
+                                onSelect = { selectedTab ->
+                                    val targetPageIndex = pages.indexOfFirst {
+                                        it.primaryTab.id == activePage?.primaryTab?.id &&
+                                            it.secondaryTab?.id == selectedTab.id
+                                    }
+                                    if (targetPageIndex >= 0) {
+                                        scope.launch { pagerState.animateScrollToPage(targetPageIndex) }
+                                    }
+                                },
+                            ),
+                        )
+                    }
+                    if (tertiaryTabs.isNotEmpty() && activePage != null) {
+                        add(
+                            LibraryGroupChipLevel(
+                                tabs = tertiaryTabs,
+                                selectedTabId = activePage.tertiaryTab?.id,
+                                onSelect = { selectedTab ->
+                                    val targetPageIndex = pages.indexOfFirst {
+                                        it.primaryTab.id == activePage.primaryTab.id &&
+                                            it.secondaryTab?.id == activePage.secondaryTab?.id &&
+                                            it.tertiaryTab?.id == selectedTab.id
+                                    }
+                                    if (targetPageIndex >= 0) {
+                                        scope.launch { pagerState.animateScrollToPage(targetPageIndex) }
+                                    }
+                                },
+                            ),
+                        )
+                    }
+                }
+            } else {
+                emptyList()
+            }
+            // Lower grouping levels scroll away with the grid instead of permanently stacking tab rows.
+            val headerState = rememberLibraryCollapsingHeaderState()
+            BindHeaderToTop(scrollToTopTarget, headerState)
+            LaunchedEffect(pagerState.settledPage) { headerState.expand() }
+            LibraryCollapsingHeader(
+                state = headerState,
+                header = {
+                    if (chipLevels.isNotEmpty()) {
+                        LibraryGroupChipRows(
+                            levels = chipLevels,
+                            showItemCounts = showItemCounts,
+                            modifier = Modifier.padding(vertical = 8.dp),
+                        )
+                    }
+                },
+            ) {
+                pageContent(pagerState, pagerState.currentPage, pages.getOrNull(pagerState.currentPage))
+            }
         }
 
         LaunchedEffect(pagerState.settledPage) {
@@ -211,6 +235,7 @@ fun LibraryContent(
         onChangeCurrentPage = onChangeCurrentPage,
         onRefresh = onRefresh,
         onGlobalSearchClicked = onGlobalSearchClicked,
+        scrollToTopTarget = scrollToTopTarget,
     ) { pagerState, _, _ ->
         LibraryPager(
             state = pagerState,

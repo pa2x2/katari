@@ -9,21 +9,25 @@ import androidx.compose.runtime.rememberUpdatedState
 /**
  * Lets the Library tab bring the visible page back to its top when the tab is reselected.
  *
- * Only the page the user is looking at binds itself; [scrollToTop] reports whether anything moved so the caller can
- * fall back to its secondary reselect action once the page is already at the top.
+ * The visible page and anything heading it bind themselves; [scrollToTop] reports whether anything moved so the
+ * caller can fall back to its secondary reselect action once everything is already at the top.
  */
 @Stable
 class LibraryScrollToTopTarget {
-    private var handler: (suspend () -> Boolean)? = null
+    private val handlers = mutableListOf<suspend () -> Boolean>()
 
-    suspend fun scrollToTop(): Boolean = handler?.invoke() ?: false
+    suspend fun scrollToTop(): Boolean {
+        var moved = false
+        handlers.toList().forEach { handler -> if (handler()) moved = true }
+        return moved
+    }
 
     internal fun bind(handler: suspend () -> Boolean) {
-        this.handler = handler
+        handlers += handler
     }
 
     internal fun unbind(handler: suspend () -> Boolean) {
-        if (this.handler === handler) this.handler = null
+        handlers -= handler
     }
 }
 
