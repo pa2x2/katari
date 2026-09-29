@@ -2158,6 +2158,12 @@
     <string name="filter_type_date">Type a date</string>
     <string name="filter_view_changed">Changed · %1$d</string>
     <string name="filter_view_all">All</string>
+    <string name="filter_change_value">%1$s: %2$s</string>
+    <string name="filter_change_included">Includes %1$s</string>
+    <string name="filter_change_excluded">Excludes %1$s</string>
+    <string name="filter_change_ascending">%1$s, ascending</string>
+    <string name="filter_change_descending">%1$s, descending</string>
+    <string name="filter_changed_count_description">%1$d filters changed</string>
     <string name="filter_changes_description">%1$d included, %2$d excluded</string>
     <string name="filter_selected">Selected</string>
     <string name="filter_updating">Updating selections…</string>

@@ -29,6 +29,8 @@ import androidx.compose.ui.unit.dp
 import eu.kanade.tachiyomi.source.entry.EntryFilter
 import eu.kanade.tachiyomi.source.entry.filter.EntryFilterGroupSummary
 import eu.kanade.tachiyomi.source.entry.filter.validationIssues
+import eu.kanade.tachiyomi.ui.browse.source.browse.filter.change.FilterChangeBadges
+import eu.kanade.tachiyomi.ui.browse.source.browse.filter.change.FilterChanges
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

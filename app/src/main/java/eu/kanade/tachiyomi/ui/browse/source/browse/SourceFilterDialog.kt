@@ -36,12 +36,12 @@ import eu.kanade.tachiyomi.source.entry.EntryFilterPageLoadReason
 import eu.kanade.tachiyomi.source.entry.EntryFilterPageScope
 import eu.kanade.tachiyomi.source.entry.EntryFilterTextInput
 import eu.kanade.tachiyomi.source.entry.filter.validationIssues
-import eu.kanade.tachiyomi.ui.browse.source.browse.filter.FilterChanges
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.FilterItem
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.FilterPresetRepairItem
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.PagedFilterBrowseSession
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.PagedGroupFilterContent
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.activeCount
+import eu.kanade.tachiyomi.ui.browse.source.browse.filter.change.FilterChanges
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.date.DateFilterEditorHost
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.date.DateFilterEditorSession
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.displayMessage

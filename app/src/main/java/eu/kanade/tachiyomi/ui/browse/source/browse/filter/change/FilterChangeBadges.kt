@@ -1,4 +1,4 @@
-package eu.kanade.tachiyomi.ui.browse.source.browse.filter
+package eu.kanade.tachiyomi.ui.browse.source.browse.filter.change
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row

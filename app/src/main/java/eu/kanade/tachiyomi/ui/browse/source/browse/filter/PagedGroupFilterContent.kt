@@ -42,6 +42,7 @@ import eu.kanade.tachiyomi.source.entry.EntryFilterPageScope
 import eu.kanade.tachiyomi.source.entry.EntryFilterTextInput
 import eu.kanade.tachiyomi.source.filter.withProjectedState
 import eu.kanade.tachiyomi.ui.browse.source.browse.SourceFilterPagedGroupHeader
+import eu.kanade.tachiyomi.ui.browse.source.browse.filter.change.FilterChanges
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch

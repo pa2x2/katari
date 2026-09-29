@@ -69,6 +69,8 @@ import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.ui.browse.extension.details.SourcePreferencesScreen
 import eu.kanade.tachiyomi.ui.browse.immersive.EntryImmersiveScreenModel
 import eu.kanade.tachiyomi.ui.browse.source.browse.SourceFilterDialog
+import eu.kanade.tachiyomi.ui.browse.source.browse.filter.change.FilterChanges
+import eu.kanade.tachiyomi.ui.browse.source.browse.filter.change.changeLabels
 import eu.kanade.tachiyomi.ui.category.CategoryScreen
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
 import eu.kanade.tachiyomi.ui.webview.WebViewScreen
@@ -178,6 +180,14 @@ data class CatalogScreen(
             assistUrl = screenModel.homeUrl
         }
 
+        val appliedSearch = state.listing as? CatalogScreenModel.Listing.Search ?: state.restorableSearch
+        val appliedFilterChanges = remember(appliedSearch, state.filterRevision) {
+            appliedSearch?.let { FilterChanges.of(it.filters, state.defaultFilters) } ?: FilterChanges.Empty
+        }
+        val appliedFilterLabels = remember(appliedSearch, state.filterRevision) {
+            appliedSearch?.let { changeLabels(it.filters, state.defaultFilters) }.orEmpty()
+        }
+
         if (immersiveMode) {
             CatalogImmersiveContent(
                 catalogList = catalogList,
@@ -249,19 +259,19 @@ data class CatalogScreen(
                                 )
                             }
                             if (state.filters.isNotEmpty() || screenModel.hasFilterCapability) {
-                                FilterChip(
+                                CatalogFilterChip(
                                     selected = state.listing is CatalogScreenModel.Listing.Search,
+                                    changedCount = appliedFilterChanges.total.changed,
                                     onClick = screenModel::onFilterChipClick,
-                                    leadingIcon = {
-                                        Icon(
-                                            imageVector = Icons.Outlined.FilterList,
-                                            contentDescription = null,
-                                            modifier = Modifier.size(FilterChipDefaults.IconSize),
-                                        )
-                                    },
-                                    label = { Text(text = stringResource(MR.strings.action_filter)) },
                                 )
                             }
+                        }
+                        if (state.listing is CatalogScreenModel.Listing.Search && appliedFilterLabels.isNotEmpty()) {
+                            CatalogAppliedFilterChips(
+                                labels = appliedFilterLabels,
+                                onOpenFilters = screenModel::openFilterSheet,
+                                onRemove = { screenModel.removeAppliedFilter(it.path) },
+                            )
                         }
 
                         HorizontalDivider()

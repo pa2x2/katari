@@ -39,13 +39,17 @@ internal fun List<EntryFilter<*>>.pathTo(target: EntryFilter<*>): List<Int>? {
     return null
 }
 
-/** Resolves the live draft element for a navigated path, or null when the tree no longer contains it. */
-internal fun List<EntryFilter<*>>.resolvePagedGroup(path: List<Int>): EntryFilter.PagedGroup<*>? {
+/** Resolves the filter a path addresses, or null when the tree no longer contains it. */
+internal fun List<EntryFilter<*>>.filterAt(path: List<Int>): EntryFilter<*>? {
     var children: List<EntryFilter<*>> = this
     var target: EntryFilter<*>? = null
     path.forEach { index ->
         target = children.getOrNull(index) ?: return null
         children = (target as? EntryFilter.Group<*>)?.state?.filterIsInstance<EntryFilter<*>>().orEmpty()
     }
-    return target as? EntryFilter.PagedGroup<*>
+    return target
 }
+
+/** Resolves the live draft element for a navigated path, or null when the tree no longer contains it. */
+internal fun List<EntryFilter<*>>.resolvePagedGroup(path: List<Int>): EntryFilter.PagedGroup<*>? =
+    filterAt(path) as? EntryFilter.PagedGroup<*>

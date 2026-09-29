@@ -15,8 +15,8 @@ import eu.kanade.tachiyomi.source.entry.EntryFilter
 import eu.kanade.tachiyomi.source.entry.EntryFilterList
 import eu.kanade.tachiyomi.source.entry.filter.EntryFilterValidationIssue
 import eu.kanade.tachiyomi.source.entry.filter.validationIssues
-import eu.kanade.tachiyomi.ui.browse.source.browse.filter.FilterChanges
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.FilterPresetRepairItem
+import eu.kanade.tachiyomi.ui.browse.source.browse.filter.change.FilterChanges
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.displayMessage
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.isOrdering
 import tachiyomi.i18n.*

@@ -1,7 +1,8 @@
-package eu.kanade.tachiyomi.ui.browse.source.browse.filter
+package eu.kanade.tachiyomi.ui.browse.source.browse.filter.change
 
 import eu.kanade.tachiyomi.source.entry.EntryFilter
 import eu.kanade.tachiyomi.source.filter.sourceStateSemantics
+import eu.kanade.tachiyomi.ui.browse.source.browse.filter.activeCount
 import java.util.IdentityHashMap
 
 /**
@@ -70,15 +71,9 @@ private fun EntryFilter<*>.changeFrom(
             isExcluded() -> FilterChange(1, excluded = 1)
             else -> FilterChange(1)
         }
-        is EntryFilter.PagedGroup<*> -> {
-            val defaultState = (default as EntryFilter.PagedGroup<*>).encodeCurrentState()
-            if (encodeCurrentState() ==
-                defaultState
-            ) {
-                FilterChange.None
-            } else {
-                FilterChange(maxOf(1, currentSelectedItemCount()))
-            }
+        is EntryFilter.PagedGroup<*> -> when (encodeCurrentState()) {
+            (default as EntryFilter.PagedGroup<*>).encodeCurrentState() -> FilterChange.None
+            else -> FilterChange(maxOf(1, currentSelectedItemCount()))
         }
         else -> if (state == default.state) FilterChange.None else FilterChange(1)
     }

@@ -337,6 +337,11 @@ class CatalogScreenModel(
         mutableState.update { it.switchListing(listing) }
     }
 
+    /** Resets one applied filter value to its default and re-runs the search. */
+    fun removeAppliedFilter(path: List<Int>) {
+        mutableState.update { it.withoutAppliedFilter(path) }
+    }
+
     /** Returns to the parked search when another listing is shown, otherwise edits the filters. */
     fun onFilterChipClick() {
         val parked = state.value.restorableSearch
