@@ -1409,6 +1409,9 @@
     <string name="library_search_see_all">See all</string>
     <string name="library_search_tips_title">Search tips</string>
     <string name="library_search_tips_examples">genre:action unread&gt;0 — unread action series\nauthor:ONE || author:Murata — either author\n-genre:romance — leave a genre out</string>
+    <string name="library_search_no_match">Nothing in your library matches “%1$s”</string>
+    <string name="library_search_sources_for">Search sources for “%1$s”</string>
+    <string name="library_search_no_match_tip">Tip: search a single field with author: or genre:</string>
     <string name="latest">Latest</string>
     <string name="popular">Popular</string>
     <string name="browse">Browse</string>
@@ -1865,6 +1868,8 @@
     <string name="information_no_recent">No recent updates</string>
     <string name="information_no_recent_manga">Nothing read recently</string>
     <string name="information_empty_library">Your library is empty</string>
+    <string name="information_empty_library_hint">Add series from a source, or bring your library back from a backup.</string>
+    <string name="action_browse_sources">Browse sources</string>
     <string name="information_no_manga_category">Category is empty</string>
     <string name="information_no_manga_group">Group is empty</string>
     <string name="information_no_entries_found">No entries found in this group</string>

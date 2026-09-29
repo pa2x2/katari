@@ -3,16 +3,21 @@ package eu.kanade.presentation.library.search
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.TravelExplore
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -24,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -47,6 +53,7 @@ import tachiyomi.presentation.core.components.FastScrollLazyVerticalGrid
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.screens.EmptyScreen
 import tachiyomi.presentation.core.util.plus
+import tachiyomi.presentation.core.util.secondaryItemAlpha
 import kotlin.math.floor
 
 /**
@@ -177,6 +184,7 @@ internal fun LibrarySearchResults(
     }
 }
 
+/** Names the query that matched nothing and offers to look for it in sources instead. */
 @Composable
 private fun LibrarySearchNoResults(
     searchQuery: String,
@@ -184,13 +192,35 @@ private fun LibrarySearchNoResults(
     onGlobalSearchClicked: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(modifier = modifier.fillMaxSize().padding(contentPadding)) {
-        GlobalSearchItem(
-            searchQuery = searchQuery,
+    EmptyScreen(
+        message = stringResource(MR.strings.library_search_no_match, searchQuery),
+        modifier = modifier.padding(contentPadding),
+    ) {
+        FilledTonalButton(
             onClick = onGlobalSearchClicked,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.padding(top = 24.dp),
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.TravelExplore,
+                contentDescription = null,
+                modifier = Modifier
+                    .padding(end = ButtonDefaults.IconSpacing)
+                    .size(ButtonDefaults.IconSize),
+            )
+            Text(
+                text = stringResource(MR.strings.library_search_sources_for, searchQuery),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+        Text(
+            text = stringResource(MR.strings.library_search_no_match_tip),
+            modifier = Modifier
+                .padding(top = 16.dp)
+                .secondaryItemAlpha(),
+            style = MaterialTheme.typography.bodySmall,
+            textAlign = TextAlign.Center,
         )
-        EmptyScreen(stringRes = MR.strings.no_results_found)
     }
 }
 

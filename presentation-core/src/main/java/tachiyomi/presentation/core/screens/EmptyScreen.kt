@@ -2,6 +2,7 @@ package tachiyomi.presentation.core.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -39,11 +40,13 @@ fun EmptyScreen(
     stringRes: StringResource,
     modifier: Modifier = Modifier,
     actions: List<EmptyScreenAction>? = null,
+    content: @Composable ColumnScope.() -> Unit = {},
 ) {
     EmptyScreen(
         message = stringResource(stringRes),
         modifier = modifier,
         actions = actions,
+        content = content,
     )
 }
 
@@ -52,6 +55,7 @@ fun EmptyScreen(
     message: String,
     modifier: Modifier = Modifier,
     actions: List<EmptyScreenAction>? = null,
+    content: @Composable ColumnScope.() -> Unit = {},
 ) {
     val face = remember { getRandomErrorFace() }
     Column(
@@ -95,6 +99,8 @@ fun EmptyScreen(
                 }
             }
         }
+
+        content()
     }
 }
 
