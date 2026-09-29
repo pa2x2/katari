@@ -1,5 +1,6 @@
 package mihon.translation.provider.libretranslate.server
 
+import eu.kanade.tachiyomi.network.localnetwork.localNetworkAccessDenial
 import kotlinx.coroutines.CancellationException
 import mihon.translation.api.engine.KnownTranslationEngine
 import mihon.translation.api.engine.TranslationEngineArtwork
@@ -153,7 +154,10 @@ internal class LibreTranslateServerEngine(
             if (error.kind == LibreTranslateFailureKind.Rejected) {
                 TranslationEngineExecution.PreparationChanged(setupRequired())
             } else {
-                TranslationEngineExecution.Failed("LibreTranslate Server did not complete the translation")
+                TranslationEngineExecution.Failed(
+                    error.localNetworkAccessDenial()?.message
+                        ?: "LibreTranslate Server did not complete the translation",
+                )
             }
         } catch (_: Exception) {
             TranslationEngineExecution.Failed("LibreTranslate Server did not complete the translation")

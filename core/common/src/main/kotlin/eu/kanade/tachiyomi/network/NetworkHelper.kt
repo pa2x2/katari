@@ -5,6 +5,7 @@ import eu.kanade.tachiyomi.network.interceptor.CloudflareInterceptor
 import eu.kanade.tachiyomi.network.interceptor.CloudflareRequestSnapshotInterceptor
 import eu.kanade.tachiyomi.network.interceptor.UncaughtExceptionInterceptor
 import eu.kanade.tachiyomi.network.interceptor.UserAgentInterceptor
+import eu.kanade.tachiyomi.network.localnetwork.guardingLocalNetworkAccess
 import okhttp3.Cache
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -64,6 +65,7 @@ class NetworkHelper(
             CloudflareInterceptor(context, cookieJar, ::defaultUserAgentProvider),
         )
         .build()
+        .guardingLocalNetworkAccess(context)
 
     /**
      * @deprecated Since extension-lib 1.5

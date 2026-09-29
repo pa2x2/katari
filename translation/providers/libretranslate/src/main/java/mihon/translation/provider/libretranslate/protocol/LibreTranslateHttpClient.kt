@@ -85,7 +85,7 @@ internal class LibreTranslateHttpClient(
                 object : Callback {
                     override fun onFailure(call: Call, e: IOException) {
                         continuation.resumeWith(
-                            Result.failure(LibreTranslateException(LibreTranslateFailureKind.Connection)),
+                            Result.failure(LibreTranslateException(LibreTranslateFailureKind.Connection, e)),
                         )
                     }
 
@@ -108,8 +108,8 @@ internal class LibreTranslateHttpClient(
         }
         return try {
             response.body.string()
-        } catch (_: IOException) {
-            throw LibreTranslateException(LibreTranslateFailureKind.Connection)
+        } catch (e: IOException) {
+            throw LibreTranslateException(LibreTranslateFailureKind.Connection, e)
         }
     }
 

@@ -1,6 +1,7 @@
 package mihon.translation.provider.libretranslate
 
 import android.app.Application
+import eu.kanade.tachiyomi.network.localnetwork.guardingLocalNetworkAccess
 import mihon.feature.runtime.application.ApplicationFeatureRuntimeComponent
 import mihon.translation.provider.libretranslate.offline.OfflineTranslatorApplication
 import mihon.translation.provider.libretranslate.offline.OfflineTranslatorConfiguration
@@ -32,12 +33,13 @@ val libreTranslateRuntimeComponent: ApplicationFeatureRuntimeComponent =
                 },
             )
             val serverConfiguration = LibreTranslateServerConfiguration(application)
+            val serverHttpClient = LibreTranslateServerNetwork.httpClient.guardingLocalNetworkAccess(application)
             val serverEngine = LibreTranslateServerEngine(
                 settings = serverConfiguration,
                 serviceFactory = {
                     serverConfiguration.endpoint?.let { endpoint ->
                         LibreTranslateHttpClient(
-                            httpClient = LibreTranslateServerNetwork.httpClient,
+                            httpClient = serverHttpClient,
                             endpoint = endpoint,
                             apiKey = serverConfiguration.apiKey,
                         )

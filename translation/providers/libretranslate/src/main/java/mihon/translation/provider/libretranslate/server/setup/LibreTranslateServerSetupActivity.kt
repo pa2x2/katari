@@ -36,6 +36,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import eu.kanade.presentation.theme.TachiyomiPreviewTheme
 import eu.kanade.presentation.theme.TachiyomiTheme
+import eu.kanade.tachiyomi.network.localnetwork.guardingLocalNetworkAccess
 import kotlinx.coroutines.launch
 import mihon.translation.provider.libretranslate.R
 import mihon.translation.provider.libretranslate.protocol.LibreTranslateHttpClient
@@ -53,10 +54,11 @@ internal class LibreTranslateServerSetupActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         val configuration = LibreTranslateServerConfiguration(applicationContext)
+        val httpClient = LibreTranslateServerNetwork.httpClient.guardingLocalNetworkAccess(applicationContext)
         val coordinator = LibreTranslateServerSetupCoordinator(
             serviceFactory = { endpoint, apiKey ->
                 LibreTranslateHttpClient(
-                    httpClient = LibreTranslateServerNetwork.httpClient,
+                    httpClient = httpClient,
                     endpoint = endpoint,
                     apiKey = apiKey,
                 )
@@ -117,7 +119,7 @@ private fun LibreTranslateServerSetupRoute(
             }
             status = ProviderSetupStatus.Testing
             scope.launch {
-                status = when (coordinator.saveAndTest(endpoint, apiKey)) {
+                status = when (val result = coordinator.saveAndTest(endpoint, apiKey)) {
                     LibreTranslateServerSetupResult.InvalidEndpoint -> {
                         endpointInvalid = true
                         null
@@ -126,6 +128,8 @@ private fun LibreTranslateServerSetupRoute(
                         ProviderSetupStatus.Success(readyMessage)
                     LibreTranslateServerSetupResult.ConnectionFailed ->
                         ProviderSetupStatus.Failure(connectionFailureMessage)
+                    is LibreTranslateServerSetupResult.LocalNetworkAccessDenied ->
+                        ProviderSetupStatus.Failure(result.message)
                     LibreTranslateServerSetupResult.SaveFailed ->
                         ProviderSetupStatus.Failure(saveFailureMessage)
                 }

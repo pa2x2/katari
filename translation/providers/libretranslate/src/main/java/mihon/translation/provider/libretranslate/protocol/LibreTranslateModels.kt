@@ -46,6 +46,7 @@ internal enum class LibreTranslateFailureKind {
 
 internal class LibreTranslateException(
     val kind: LibreTranslateFailureKind,
+    cause: Throwable? = null,
 ) : Exception(
     when (kind) {
         LibreTranslateFailureKind.Connection -> "LibreTranslate connection failed"
@@ -53,4 +54,5 @@ internal class LibreTranslateException(
         LibreTranslateFailureKind.Server -> "LibreTranslate server failed"
         LibreTranslateFailureKind.InvalidResponse -> "LibreTranslate returned an invalid response"
     },
+    cause,
 )
