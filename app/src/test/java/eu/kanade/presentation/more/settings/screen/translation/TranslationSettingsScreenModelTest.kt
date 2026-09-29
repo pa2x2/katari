@@ -34,11 +34,13 @@ import mihon.translation.api.model.TranslationModelDescriptor
 import mihon.translation.api.preparation.ReadyTranslation
 import mihon.translation.api.preparation.TranslationEngineChoiceReason
 import mihon.translation.api.preparation.TranslationPreparation
+import mihon.translation.api.preparation.TranslationRoutePreparation
 import mihon.translation.api.preparation.TranslationSystemSetupReason
 import mihon.translation.api.provider.TranslationInvocationPolicy
 import mihon.translation.api.provider.TranslationProviderDisclosure
 import mihon.translation.api.provider.TranslationProviderPresentation
 import mihon.translation.api.request.TranslationRequest
+import mihon.translation.api.request.TranslationRouteRequest
 import mihon.translation.api.request.TranslationTargetLanguageSelection
 import mihon.translation.api.result.TranslationExecution
 import org.junit.jupiter.api.Test
@@ -240,6 +242,9 @@ class TranslationSettingsScreenModelTest {
                 reason = TranslationSystemSetupReason.LanguageModelsRequired,
             )
         }
+
+        override suspend fun prepareRoute(route: TranslationRouteRequest): TranslationRoutePreparation =
+            error("Settings prepare text")
 
         override suspend fun translate(ready: ReadyTranslation): TranslationExecution =
             error("Playground must not execute before the user action")

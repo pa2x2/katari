@@ -15,11 +15,15 @@ import mihon.translation.api.preparation.ReadyTranslation
 import mihon.translation.api.preparation.TranslationEngineChoiceReason
 import mihon.translation.api.preparation.TranslationPreparation
 import mihon.translation.api.preparation.TranslationRejectionReason
+import mihon.translation.api.preparation.TranslationRequirement
+import mihon.translation.api.preparation.TranslationRoutePreparation
 import mihon.translation.api.preparation.TranslationTargetChoiceReason
 import mihon.translation.api.provider.TranslationProviderOutputMode
 import mihon.translation.api.provider.TranslationProviderPresentation
 import mihon.translation.api.request.ResolvedTranslationRequest
+import mihon.translation.api.request.ResolvedTranslationRoute
 import mihon.translation.api.request.TranslationRequest
+import mihon.translation.api.request.TranslationRouteRequest
 import mihon.translation.api.request.TranslationSourceLanguageSelection
 import mihon.translation.api.request.TranslationTargetLanguageSelection
 import mihon.translation.api.result.TranslationExecution
@@ -32,6 +36,7 @@ import mihon.translation.spi.engine.TranslationEngine
 import mihon.translation.spi.engine.TranslationEngineExecution
 import mihon.translation.spi.engine.TranslationEnginePreparation
 import mihon.translation.spi.engine.TranslationEngineRegistry
+import mihon.translation.spi.engine.TranslationEngineRequirement
 
 fun interface TranslationDefaultTargetLanguageResolver {
     fun resolve(): TranslationDefaultTarget?
@@ -64,34 +69,36 @@ class DefaultTranslationFeature(
                 return TranslationPreparation.SourceUndetermined(resolution.suggestedLanguages)
             }
         }
-        val targetLanguage = when (val selection = request.targetLanguage) {
-            TranslationTargetLanguageSelection.Default -> defaultTargetLanguageResolver.resolve()?.language
-                ?: return TranslationPreparation.TargetLanguageRequired(
-                    sourceLanguage = sourceLanguage,
-                    reason = TranslationTargetChoiceReason.NoDefaultTarget,
-                )
-
-            is TranslationTargetLanguageSelection.Explicit -> selection.language
+        val (engine, route) = when (
+            val resolution = resolveRoute(sourceLanguage, request.targetLanguage, request.engine)
+        ) {
+            is RouteResolution.Blocked -> return resolution.requirement
+            is RouteResolution.Resolved -> resolution
         }
-        if (sourceLanguage == targetLanguage) {
-            return TranslationPreparation.TargetLanguageRequired(
-                sourceLanguage = sourceLanguage,
-                reason = TranslationTargetChoiceReason.SourceEqualsTarget,
-            )
+        val maximumCodePoints = engine.effectiveMaximumInputCodePoints()
+        if (codePointCount > maximumCodePoints) {
+            return inputTooLarge(codePointCount, maximumCodePoints)
         }
-
-        val engine = when (val selection = request.engine) {
-            TranslationEngineSelection.ProfileDefault -> selectedEngine()
-                ?: return noEngineConfigured()
-            is TranslationEngineSelection.Explicit -> selection.engine
-        }
-        return prepareExplicitly(
-            request = request,
-            sourceLanguage = sourceLanguage,
-            targetLanguage = targetLanguage,
-            codePointCount = codePointCount,
-            engineId = engine,
+        val resolvedRequest = ResolvedTranslationRequest(
+            text = request.text,
+            sourceLanguage = route.sourceLanguage,
+            targetLanguage = route.targetLanguage,
+            engine = route.engine,
         )
+        return engine.prepare(route).toApi(engine, resolvedRequest)
+    }
+
+    override suspend fun prepareRoute(route: TranslationRouteRequest): TranslationRoutePreparation {
+        val (engine, resolved) = when (
+            val resolution = resolveRoute(route.sourceLanguage, route.targetLanguage, route.engine)
+        ) {
+            is RouteResolution.Blocked -> return resolution.requirement
+            is RouteResolution.Resolved -> resolution
+        }
+        return when (val preparation = engine.prepare(resolved)) {
+            is TranslationEnginePreparation.Ready -> TranslationRoutePreparation.Ready(resolved, engine.presentation)
+            is TranslationEngineRequirement -> preparation.toApi(engine)
+        }
     }
 
     override suspend fun translate(ready: ReadyTranslation): TranslationExecution {
@@ -117,7 +124,7 @@ class DefaultTranslationFeature(
             )
         }
 
-        return when (val execution = prepared.engine.translate(refreshed.request)) {
+        return when (val execution = prepared.engine.translate(refreshed.request, prepared.request.text)) {
             is TranslationEngineExecution.Success ->
                 if (prepared.presentation.outputMode == TranslationProviderOutputMode.InlineResult) {
                     remember(prepared.request, execution.translatedText)
@@ -157,32 +164,43 @@ class DefaultTranslationFeature(
         }
     }
 
-    private suspend fun prepareExplicitly(
-        request: TranslationRequest,
+    /** Settles the target and engine for text in [sourceLanguage]; nothing here depends on the text itself. */
+    private suspend fun resolveRoute(
         sourceLanguage: LanguageTag,
-        targetLanguage: LanguageTag,
-        codePointCount: Int,
-        engineId: TranslationEngineId,
-    ): TranslationPreparation {
-        val engine = engineRegistry.find(engineId) ?: return missingEngine(engineId)
-        val maximumCodePoints = engine.effectiveMaximumInputCodePoints()
-        if (codePointCount > maximumCodePoints) {
-            return inputTooLarge(codePointCount, maximumCodePoints)
-        }
-        val resolvedRequest = request.resolve(sourceLanguage, targetLanguage, engine)
-        return engine.prepare(resolvedRequest).toApi(engine, resolvedRequest)
-    }
+        targetSelection: TranslationTargetLanguageSelection,
+        engineSelection: TranslationEngineSelection,
+    ): RouteResolution {
+        val targetLanguage = when (targetSelection) {
+            TranslationTargetLanguageSelection.Default -> defaultTargetLanguageResolver.resolve()?.language
+                ?: return RouteResolution.Blocked(
+                    TranslationPreparation.TargetLanguageRequired(
+                        sourceLanguage = sourceLanguage,
+                        reason = TranslationTargetChoiceReason.NoDefaultTarget,
+                    ),
+                )
 
-    private fun TranslationRequest.resolve(
-        sourceLanguage: LanguageTag,
-        targetLanguage: LanguageTag,
-        engine: TranslationEngine,
-    ) = ResolvedTranslationRequest(
-        text = text,
-        sourceLanguage = sourceLanguage,
-        targetLanguage = targetLanguage,
-        engine = engine.catalogEntry.id,
-    )
+            is TranslationTargetLanguageSelection.Explicit -> targetSelection.language
+        }
+        if (sourceLanguage == targetLanguage) {
+            return RouteResolution.Blocked(
+                TranslationPreparation.TargetLanguageRequired(
+                    sourceLanguage = sourceLanguage,
+                    reason = TranslationTargetChoiceReason.SourceEqualsTarget,
+                ),
+            )
+        }
+
+        val engineId = when (engineSelection) {
+            TranslationEngineSelection.ProfileDefault -> selectedEngine()
+                ?: return RouteResolution.Blocked(noEngineConfigured())
+            is TranslationEngineSelection.Explicit -> engineSelection.engine
+        }
+        val engine = engineRegistry.find(engineId) ?: return RouteResolution.Blocked(missingEngine(engineId))
+        return RouteResolution.Resolved(
+            engine = engine,
+            route = ResolvedTranslationRoute(sourceLanguage, targetLanguage, engine.catalogEntry.id),
+        )
+    }
 
     private fun TranslationEngine.effectiveMaximumInputCodePoints(): Int {
         return minOf(
@@ -191,14 +209,14 @@ class DefaultTranslationFeature(
         )
     }
 
-    private fun missingEngine(engine: TranslationEngineId): TranslationPreparation {
+    private fun missingEngine(engine: TranslationEngineId): TranslationPreparation.EngineChoiceRequired {
         return TranslationPreparation.EngineChoiceRequired(
             reason = TranslationEngineChoiceReason.SelectedEngineUnavailable(engine),
             engines = knownEngineCatalog.knownEngines,
         )
     }
 
-    private fun noEngineConfigured(): TranslationPreparation {
+    private fun noEngineConfigured(): TranslationPreparation.EngineChoiceRequired {
         return TranslationPreparation.EngineChoiceRequired(
             reason = TranslationEngineChoiceReason.NoEngineConfigured,
             engines = knownEngineCatalog.knownEngines,
@@ -216,6 +234,12 @@ class DefaultTranslationFeature(
                 presentation = engine.presentation,
             )
 
+            is TranslationEngineRequirement -> toApi(engine)
+        }
+    }
+
+    private fun TranslationEngineRequirement.toApi(engine: TranslationEngine): TranslationRequirement {
+        return when (this) {
             is TranslationEnginePreparation.ProviderDisclosureRequired ->
                 TranslationPreparation.ProviderDisclosureRequired(
                     engine = engine.catalogEntry.id,
@@ -276,6 +300,12 @@ class DefaultTranslationFeature(
         targetLanguage = request.targetLanguage,
         presentation = presentation,
     )
+
+    private sealed interface RouteResolution {
+        data class Resolved(val engine: TranslationEngine, val route: ResolvedTranslationRoute) : RouteResolution
+
+        class Blocked(val requirement: TranslationRequirement) : RouteResolution
+    }
 
     private data class RuntimeReadyTranslation(
         val engine: TranslationEngine,

@@ -22,7 +22,7 @@ import mihon.translation.api.language.TranslationLanguageSupportInspection
 import mihon.translation.api.preparation.TranslationUnavailableReason
 import mihon.translation.api.provider.TranslationInvocationPolicy
 import mihon.translation.api.provider.TranslationProviderPresentation
-import mihon.translation.api.request.ResolvedTranslationRequest
+import mihon.translation.api.request.ResolvedTranslationRoute
 import mihon.translation.runtime.preference.ProfileTranslationPreferences
 import mihon.translation.runtime.registry.DefaultTranslationEngineRegistry
 import mihon.translation.runtime.selection.ProfileTranslationEngineResolver
@@ -99,13 +99,13 @@ class DefaultTranslationHostActionsTest {
         override suspend fun inspectLanguageSupport() =
             TranslationLanguageSupportInspection.Available(TranslationLanguageSupport.AnyLanguage)
 
-        override suspend fun prepare(request: ResolvedTranslationRequest): TranslationEnginePreparation =
+        override suspend fun prepare(route: ResolvedTranslationRoute): TranslationEnginePreparation =
             error("Not used")
 
         override suspend fun revalidate(ready: ReadyTranslationEngineRequest): TranslationEnginePreparation =
             error("Not used")
 
-        override suspend fun translate(ready: ReadyTranslationEngineRequest): TranslationEngineExecution =
+        override suspend fun translate(ready: ReadyTranslationEngineRequest, text: String): TranslationEngineExecution =
             error("Not used")
     }
 

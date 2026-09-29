@@ -23,7 +23,7 @@ import mihon.translation.api.preparation.TranslationSystemSetupReason
 import mihon.translation.api.preparation.TranslationUnavailableReason
 import mihon.translation.api.provider.TranslationInvocationPolicy
 import mihon.translation.api.provider.TranslationProviderPresentation
-import mihon.translation.api.request.ResolvedTranslationRequest
+import mihon.translation.api.request.ResolvedTranslationRoute
 import mihon.translation.api.request.TranslationRequest
 import mihon.translation.api.request.TranslationSourceLanguageSelection
 import mihon.translation.api.request.TranslationTargetLanguageSelection
@@ -89,7 +89,7 @@ class DefaultTranslationFeatureTest {
                 maximumCodePoints = 2,
             ),
         )
-        engine.preparedRequest shouldBe null
+        engine.preparedRoute shouldBe null
     }
 
     @Test
@@ -208,7 +208,7 @@ class DefaultTranslationFeatureTest {
         override val catalogEntry: KnownTranslationEngine = KNOWN_ENGINE,
     ) : TranslationEngine {
         override val presentation = presentation(catalogEntry)
-        var preparedRequest: ResolvedTranslationRequest? = null
+        var preparedRoute: ResolvedTranslationRoute? = null
         var preparationCount = 0
         var translationCount = 0
 
@@ -219,8 +219,8 @@ class DefaultTranslationFeatureTest {
                 TranslationLanguageSupport.AnyLanguage,
             )
 
-        override suspend fun prepare(request: ResolvedTranslationRequest): TranslationEnginePreparation {
-            preparedRequest = request
+        override suspend fun prepare(route: ResolvedTranslationRoute): TranslationEnginePreparation {
+            preparedRoute = route
             preparationCount += 1
             return preparation
         }
@@ -229,7 +229,7 @@ class DefaultTranslationFeatureTest {
             return revalidation ?: TranslationEnginePreparation.Ready(ready)
         }
 
-        override suspend fun translate(ready: ReadyTranslationEngineRequest): TranslationEngineExecution {
+        override suspend fun translate(ready: ReadyTranslationEngineRequest, text: String): TranslationEngineExecution {
             translationCount += 1
             return executionBlock?.invoke() ?: execution
         }

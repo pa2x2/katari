@@ -33,11 +33,13 @@ import mihon.translation.api.language.TranslationLanguageSupportInspection
 import mihon.translation.api.model.TranslationModelDescriptor
 import mihon.translation.api.preparation.ReadyTranslation
 import mihon.translation.api.preparation.TranslationPreparation
+import mihon.translation.api.preparation.TranslationRoutePreparation
 import mihon.translation.api.provider.TranslationInvocationPolicy
 import mihon.translation.api.provider.TranslationProviderDisclosure
 import mihon.translation.api.provider.TranslationProviderPresentation
 import mihon.translation.api.request.ResolvedTranslationRequest
 import mihon.translation.api.request.TranslationRequest
+import mihon.translation.api.request.TranslationRouteRequest
 import mihon.translation.api.request.TranslationSourceLanguageSelection
 import mihon.translation.api.request.TranslationTargetLanguageSelection
 import mihon.translation.api.result.TranslationExecution
@@ -148,6 +150,9 @@ class TranslatorScreenModelTest {
                 presentation = PRESENTATION,
             )
         }
+
+        override suspend fun prepareRoute(route: TranslationRouteRequest): TranslationRoutePreparation =
+            error("The translator prepares text")
 
         override suspend fun translate(ready: ReadyTranslation): TranslationExecution {
             val request = (ready as FakeReadyTranslation).request

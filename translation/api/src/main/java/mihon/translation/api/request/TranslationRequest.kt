@@ -34,4 +34,7 @@ data class ResolvedTranslationRequest(
     val sourceLanguage: LanguageTag,
     val targetLanguage: LanguageTag,
     val engine: TranslationEngineId,
-)
+) {
+    val route: ResolvedTranslationRoute
+        get() = ResolvedTranslationRoute(sourceLanguage, targetLanguage, engine)
+}

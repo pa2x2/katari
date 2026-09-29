@@ -15,7 +15,7 @@ import mihon.translation.api.provider.TranslationInvocationPolicy
 import mihon.translation.api.provider.TranslationProviderDisclosure
 import mihon.translation.api.provider.TranslationProviderPresentation
 import mihon.translation.api.provider.TranslationResultAttribution
-import mihon.translation.api.request.ResolvedTranslationRequest
+import mihon.translation.api.request.ResolvedTranslationRoute
 import mihon.translation.provider.libretranslate.R
 import mihon.translation.provider.libretranslate.protocol.LibreTranslateException
 import mihon.translation.provider.libretranslate.protocol.LibreTranslateFailureKind
@@ -93,7 +93,7 @@ internal class LibreTranslateServerEngine(
         }
     }
 
-    override suspend fun prepare(request: ResolvedTranslationRequest): TranslationEnginePreparation {
+    override suspend fun prepare(route: ResolvedTranslationRoute): TranslationEnginePreparation {
         if (!settings.isInitiallyVerified) return setupRequired()
         val service = serviceFactory() ?: return setupRequired()
         val languages = try {
@@ -109,44 +109,44 @@ internal class LibreTranslateServerEngine(
             return TranslationEnginePreparation.ProviderDisclosureRequired(DISCLOSURE)
         }
         val resolver = LibreTranslateLanguageResolver(languages)
-        val source = resolver.resolve(request.sourceLanguage)
+        val source = resolver.resolve(route.sourceLanguage)
             ?: return TranslationEnginePreparation.Unavailable(
                 TranslationUnavailableReason.UnsupportedLanguagePair(
-                    request.sourceLanguage,
-                    request.targetLanguage,
+                    route.sourceLanguage,
+                    route.targetLanguage,
                 ),
             )
-        val target = resolver.resolve(request.targetLanguage)
+        val target = resolver.resolve(route.targetLanguage)
             ?: return TranslationEnginePreparation.Unavailable(
                 TranslationUnavailableReason.UnsupportedLanguagePair(
-                    request.sourceLanguage,
-                    request.targetLanguage,
+                    route.sourceLanguage,
+                    route.targetLanguage,
                 ),
             )
         if (!resolver.supportsTarget(source, target)) {
             return TranslationEnginePreparation.Unavailable(
                 TranslationUnavailableReason.UnsupportedLanguagePair(
-                    request.sourceLanguage,
-                    request.targetLanguage,
+                    route.sourceLanguage,
+                    route.targetLanguage,
                 ),
             )
         }
         return TranslationEnginePreparation.Ready(
-            ReadyRequest(request, source.code, target.code),
+            ReadyRequest(route, source.code, target.code),
         )
     }
 
     override suspend fun revalidate(ready: ReadyTranslationEngineRequest): TranslationEnginePreparation {
-        return prepare(ready.requireOwned().request)
+        return prepare(ready.requireOwned().route)
     }
 
-    override suspend fun translate(ready: ReadyTranslationEngineRequest): TranslationEngineExecution {
+    override suspend fun translate(ready: ReadyTranslationEngineRequest, text: String): TranslationEngineExecution {
         val owned = ready.requireOwned()
         val service = serviceFactory()
             ?: return TranslationEngineExecution.PreparationChanged(setupRequired())
         return try {
             TranslationEngineExecution.Success(
-                service.translate(owned.request.text, owned.sourceCode, owned.targetCode),
+                service.translate(text, owned.sourceCode, owned.targetCode),
             )
         } catch (error: CancellationException) {
             throw error
@@ -176,7 +176,7 @@ internal class LibreTranslateServerEngine(
     }
 
     private data class ReadyRequest(
-        val request: ResolvedTranslationRequest,
+        val route: ResolvedTranslationRoute,
         val sourceCode: String,
         val targetCode: String,
     ) : ReadyTranslationEngineRequest

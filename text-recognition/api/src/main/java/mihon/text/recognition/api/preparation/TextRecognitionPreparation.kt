@@ -10,6 +10,7 @@ import mihon.text.recognition.api.pipeline.TextRecognitionPreset
 interface ReadyTextRecognition
 
 sealed interface TextRecognitionPreparation {
+    /** Recognition of the requested image may run. */
     data class Ready(
         val recognition: ReadyTextRecognition,
         val language: LanguageTag,
@@ -19,21 +20,21 @@ sealed interface TextRecognitionPreparation {
     /** The request did not state the language of the text; the host must ask for it. */
     data class LanguageRequired(
         val supportedLanguages: List<LanguageTag>,
-    ) : TextRecognitionPreparation
+    ) : TextRecognitionRequirement
 
     /** No usable pipeline is selected for [language]; the host must let the user choose one. */
     data class PipelineChoiceRequired(
         val language: LanguageTag,
         val reason: TextRecognitionPipelineChoiceReason,
         val presets: List<TextRecognitionPreset>,
-    ) : TextRecognitionPreparation
+    ) : TextRecognitionRequirement
 
     /** The pipeline needs models that are not installed. They are downloaded only after the user approves. */
     data class ModelsRequired(
         val language: LanguageTag,
         val pipeline: TextRecognitionPipeline,
         val models: List<ModelArtifactDescriptor>,
-    ) : TextRecognitionPreparation {
+    ) : TextRecognitionRequirement {
         init {
             require(models.isNotEmpty())
         }
@@ -49,7 +50,7 @@ sealed interface TextRecognitionPreparation {
         val component: TextRecognitionComponentId,
         val description: String,
         val approximateSizeBytes: Long? = null,
-    ) : TextRecognitionPreparation {
+    ) : TextRecognitionRequirement {
         init {
             require(description.isNotBlank())
         }
@@ -57,8 +58,16 @@ sealed interface TextRecognitionPreparation {
 
     data class Unavailable(
         val reason: TextRecognitionUnavailableReason,
-    ) : TextRecognitionPreparation
+    ) : TextRecognitionRequirement
 }
+
+/**
+ * A prerequisite the user must resolve before recognition can run. The same requirements block recognizing an image
+ * and preparing a setup without one.
+ */
+sealed interface TextRecognitionRequirement :
+    TextRecognitionPreparation,
+    TextRecognitionSetupPreparation
 
 sealed interface TextRecognitionPipelineChoiceReason {
     data object NothingSelected : TextRecognitionPipelineChoiceReason

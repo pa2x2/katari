@@ -26,8 +26,10 @@ import mihon.translation.api.language.TranslationLanguageSupportInspection
 import mihon.translation.api.model.TranslationModelDescriptor
 import mihon.translation.api.preparation.ReadyTranslation
 import mihon.translation.api.preparation.TranslationPreparation
+import mihon.translation.api.preparation.TranslationRoutePreparation
 import mihon.translation.api.provider.TranslationProviderDisclosure
 import mihon.translation.api.request.TranslationRequest
+import mihon.translation.api.request.TranslationRouteRequest
 import mihon.translation.api.request.TranslationTargetLanguageSelection
 import mihon.translation.api.result.TranslationExecution
 import mihon.translation.ui.session.TranslationSessionState
@@ -106,6 +108,9 @@ class BookSelectionTranslationControllerTest {
             requests += request
             return TranslationPreparation.SourceUndetermined()
         }
+
+        override suspend fun prepareRoute(route: TranslationRouteRequest): TranslationRoutePreparation =
+            error("Selections translate text")
 
         override suspend fun translate(ready: ReadyTranslation): TranslationExecution = error("Not ready")
     }

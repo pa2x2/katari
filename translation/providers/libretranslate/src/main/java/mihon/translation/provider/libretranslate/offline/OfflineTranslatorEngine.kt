@@ -14,7 +14,7 @@ import mihon.translation.api.provider.TranslationInvocationPolicy
 import mihon.translation.api.provider.TranslationProviderDisclosure
 import mihon.translation.api.provider.TranslationProviderPresentation
 import mihon.translation.api.provider.TranslationResultAttribution
-import mihon.translation.api.request.ResolvedTranslationRequest
+import mihon.translation.api.request.ResolvedTranslationRoute
 import mihon.translation.provider.libretranslate.R
 import mihon.translation.provider.libretranslate.protocol.LibreTranslateException
 import mihon.translation.provider.libretranslate.protocol.LibreTranslateFailureKind
@@ -93,7 +93,7 @@ internal class OfflineTranslatorEngine(
         }
     }
 
-    override suspend fun prepare(request: ResolvedTranslationRequest): TranslationEnginePreparation {
+    override suspend fun prepare(route: ResolvedTranslationRoute): TranslationEnginePreparation {
         if (!application.isInstalled()) {
             return TranslationEnginePreparation.Unavailable(
                 TranslationUnavailableReason.EngineUnavailable(
@@ -115,31 +115,31 @@ internal class OfflineTranslatorEngine(
         }
 
         val resolver = LibreTranslateLanguageResolver(languages)
-        val source = resolver.resolve(request.sourceLanguage)
+        val source = resolver.resolve(route.sourceLanguage)
             ?: return TranslationEnginePreparation.Unavailable(
                 TranslationUnavailableReason.UnsupportedLanguagePair(
-                    request.sourceLanguage,
-                    request.targetLanguage,
+                    route.sourceLanguage,
+                    route.targetLanguage,
                 ),
             )
-        val target = resolver.resolve(request.targetLanguage)
+        val target = resolver.resolve(route.targetLanguage)
             ?: return TranslationEnginePreparation.Unavailable(
                 TranslationUnavailableReason.UnsupportedLanguagePair(
-                    request.sourceLanguage,
-                    request.targetLanguage,
+                    route.sourceLanguage,
+                    route.targetLanguage,
                 ),
             )
         if (!resolver.supportsTarget(source, target)) {
             return TranslationEnginePreparation.Unavailable(
                 TranslationUnavailableReason.UnsupportedLanguagePair(
-                    request.sourceLanguage,
-                    request.targetLanguage,
+                    route.sourceLanguage,
+                    route.targetLanguage,
                 ),
             )
         }
         return TranslationEnginePreparation.Ready(
             OfflineTranslatorReadyRequest(
-                request = request,
+                route = route,
                 sourceCode = source.code,
                 targetCode = target.code,
             ),
@@ -150,17 +150,18 @@ internal class OfflineTranslatorEngine(
         ready: ReadyTranslationEngineRequest,
     ): TranslationEnginePreparation {
         val owned = ready.requireOwned()
-        return prepare(owned.request)
+        return prepare(owned.route)
     }
 
     override suspend fun translate(
         ready: ReadyTranslationEngineRequest,
+        text: String,
     ): TranslationEngineExecution {
         val owned = ready.requireOwned()
         return try {
             TranslationEngineExecution.Success(
                 service().translate(
-                    text = owned.request.text,
+                    text = text,
                     source = owned.sourceCode,
                     target = owned.targetCode,
                 ),
@@ -194,7 +195,7 @@ internal class OfflineTranslatorEngine(
     }
 
     private data class OfflineTranslatorReadyRequest(
-        val request: ResolvedTranslationRequest,
+        val route: ResolvedTranslationRoute,
         val sourceCode: String,
         val targetCode: String,
     ) : ReadyTranslationEngineRequest

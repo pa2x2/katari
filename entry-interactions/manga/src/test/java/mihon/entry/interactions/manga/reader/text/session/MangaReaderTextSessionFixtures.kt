@@ -27,7 +27,9 @@ import mihon.text.recognition.api.image.ImageSize
 import mihon.text.recognition.api.pipeline.TextRecognitionPipeline
 import mihon.text.recognition.api.preparation.ReadyTextRecognition
 import mihon.text.recognition.api.preparation.TextRecognitionPreparation
+import mihon.text.recognition.api.preparation.TextRecognitionSetupPreparation
 import mihon.text.recognition.api.request.TextRecognitionRequest
+import mihon.text.recognition.api.request.TextRecognitionSetupRequest
 import mihon.text.recognition.api.result.TextRecognitionExecution
 import mihon.text.recognition.api.result.TextRecognitionResult
 import mihon.translation.api.TranslationFeature
@@ -35,10 +37,13 @@ import mihon.translation.api.engine.TranslationEngineId
 import mihon.translation.api.engine.TranslationProviderId
 import mihon.translation.api.preparation.ReadyTranslation
 import mihon.translation.api.preparation.TranslationPreparation
+import mihon.translation.api.preparation.TranslationRoutePreparation
 import mihon.translation.api.provider.TranslationInvocationPolicy
 import mihon.translation.api.provider.TranslationProviderPresentation
 import mihon.translation.api.request.ResolvedTranslationRequest
+import mihon.translation.api.request.ResolvedTranslationRoute
 import mihon.translation.api.request.TranslationRequest
+import mihon.translation.api.request.TranslationRouteRequest
 import mihon.translation.api.result.TranslationExecution
 import mihon.translation.api.result.TranslationResult
 
@@ -77,6 +82,9 @@ internal class FakeTextRecognition : TextRecognitionFeature {
 
     override suspend fun prepare(request: TextRecognitionRequest): TextRecognitionPreparation =
         TextRecognitionPreparation.Ready(Ready(request), request.language ?: JAPANESE, PIPELINE)
+
+    override suspend fun prepare(setup: TextRecognitionSetupRequest): TextRecognitionSetupPreparation =
+        TextRecognitionSetupPreparation.Ready(setup.language ?: JAPANESE, PIPELINE)
 
     override suspend fun recognize(ready: ReadyTextRecognition): TextRecognitionExecution {
         release?.await()
@@ -120,6 +128,12 @@ internal class FakeTranslation : TranslationFeature {
             presentation = PRESENTATION,
         )
     }
+
+    override suspend fun prepareRoute(route: TranslationRouteRequest): TranslationRoutePreparation =
+        TranslationRoutePreparation.Ready(
+            route = ResolvedTranslationRoute(route.sourceLanguage, ENGLISH, TranslationEngineId("example")),
+            presentation = PRESENTATION,
+        )
 
     override suspend fun translate(ready: ReadyTranslation): TranslationExecution {
         val text = (ready as Ready).text
