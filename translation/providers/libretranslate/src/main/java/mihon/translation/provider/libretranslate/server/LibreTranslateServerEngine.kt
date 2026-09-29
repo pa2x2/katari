@@ -45,6 +45,7 @@ internal class LibreTranslateServerEngine(
                 "privacy and retention policies apply.",
         ),
         documentationUrl = DOCUMENTATION_URL,
+        usesNetwork = true,
     )
     override val presentation = TranslationProviderPresentation(
         providerId = PROVIDER_ID,

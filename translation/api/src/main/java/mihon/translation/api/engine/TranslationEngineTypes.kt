@@ -51,6 +51,8 @@ data class KnownTranslationEngine(
     val artwork: TranslationEngineArtwork,
     val details: TranslationEngineDetails,
     val documentationUrl: String? = null,
+    /** Whether translating sends text over the network, which background translation can hold for Wi-Fi. */
+    val usesNetwork: Boolean = false,
 ) {
     init {
         require(providerName.isNotBlank())

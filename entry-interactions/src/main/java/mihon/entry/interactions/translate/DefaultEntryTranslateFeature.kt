@@ -11,6 +11,11 @@ import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.onStart
 import mihon.entry.interactions.download.EntryDownloadInteraction
 import mihon.entry.interactions.runtime.applicableProviderTypes
+import mihon.entry.interactions.translate.queue.EntryTranslateFailureCodec
+import mihon.entry.interactions.translate.queue.EntryTranslateSetupCodec
+import mihon.entry.interactions.translate.work.EntryTranslateConditions
+import mihon.entry.interactions.translate.work.EntryTranslateQueueRunner
+import mihon.entry.interactions.translate.work.EntryTranslateWorkController
 import mihon.entry.interactions.translation.EntryTranslationLanguagesFeature
 import mihon.feature.graph.FeatureGraphEvaluation
 import tachiyomi.domain.entry.model.Entry
@@ -31,6 +36,7 @@ internal class DefaultEntryTranslateFeature(
     private val chapters: EntryChapterRepository,
     private val runner: EntryTranslateQueueRunner,
     private val work: EntryTranslateWorkController,
+    conditions: EntryTranslateConditions,
     private val clock: () -> Long = System::currentTimeMillis,
 ) : EntryTranslateFeature {
     private val applicableTypes = evaluation.applicableProviderTypes<EntryTranslateProcessor>(
@@ -40,6 +46,8 @@ internal class DefaultEntryTranslateFeature(
     )
 
     override fun isApplicable(type: EntryType): Boolean = type in applicableTypes
+
+    override val waiting: Flow<EntryTranslateWaiting?> = conditions.waiting
 
     override val queue: Flow<List<EntryTranslateQueueItem>> =
         combine(repository.subscribeAll(), runner.active) { items, active ->

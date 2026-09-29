@@ -59,3 +59,9 @@ data class EntryTranslateQueueItem(
     val chapterId: Long,
     val status: EntryTranslateStatus,
 )
+
+/** What queued chapters wait for before background translation runs, under the charging and Wi-Fi rules. */
+enum class EntryTranslateWaiting {
+    Charger,
+    Wifi,
+}

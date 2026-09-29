@@ -749,7 +749,7 @@
     <string name="pref_library_summary_unified">Categories, display, updates, and behavior</string>
     <string name="pref_reader_summary">Reading mode, display, navigation</string>
     <string name="pref_player_summary">Picture-in-Picture, seek preview</string>
-    <string name="pref_downloads_summary">Automatic download, download ahead</string>
+    <string name="pref_downloads_summary">Automatic download, download ahead, auto-translate</string>
     <string name="pref_tracking_summary">One-way progress sync, enhanced sync</string>
     <string name="pref_browse_summary">Sources, extensions, global search</string>
     <string name="pref_backup_summary">Manual &amp; automatic backups, storage space</string>
@@ -1093,6 +1093,14 @@
     <string name="download_ahead">Download ahead</string>
     <string name="auto_download_while_reading">Auto download while viewing</string>
     <string name="download_ahead_info">Only works if the current item and the next one are already downloaded.</string>
+    <string name="pref_category_auto_translate">Auto-translate</string>
+    <string name="pref_translate_new">Translate new items</string>
+    <string name="pref_translate_new_summary">Items downloaded automatically are translated as well</string>
+    <string name="pref_translate_ahead">Translate ahead while viewing</string>
+    <string name="pref_translate_only_while_charging">Only while charging</string>
+    <string name="pref_translate_only_over_wifi">Only on Wi-Fi</string>
+    <string name="pref_translate_only_over_wifi_summary">For engines that send text over the network</string>
+    <string name="pref_translate_info">Items are translated with their series\' languages and the default translation engine. Only downloaded items or items being downloaded are translated.</string>
     <string name="save_chapter_as_cbz">Save items as CBZ archive</string>
     <string name="split_tall_images">Split tall images</string>
     <string name="split_tall_images_summary">Improves reader performance</string>
@@ -1925,6 +1933,8 @@
     <!-- Download Notification -->
     <string name="download_notifier_downloader_title">Downloader</string>
     <string name="translate_notifier_title">Translating chapters</string>
+    <string name="translate_waiting_for_charger">Waiting for charger</string>
+    <string name="translate_waiting_for_wifi">Waiting for Wi-Fi</string>
     <string name="download_notifier_title_error">Error</string>
     <string name="download_notifier_unknown_error">Could not download item due to unexpected error</string>
     <string name="download_notifier_text_only_wifi">No Wi-Fi connection available</string>

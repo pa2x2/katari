@@ -1,4 +1,4 @@
-package mihon.entry.interactions.translate
+package mihon.entry.interactions.translate.work
 
 import android.content.Context
 import androidx.work.ExistingWorkPolicy

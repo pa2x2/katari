@@ -12,8 +12,11 @@ import androidx.compose.ui.util.fastMap
 import eu.kanade.presentation.category.visualName
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.widget.TriStateListDialog
+import eu.kanade.tachiyomi.source.entry.EntryType
 import mihon.entry.interactions.download.EntryDownloadSetting
 import mihon.entry.interactions.download.EntryDownloadSettingsFeature
+import mihon.entry.interactions.translate.EntryTranslateFeature
+import mihon.entry.interactions.translate.EntryTranslatePreferences
 import tachiyomi.domain.category.interactor.GetCategories
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.download.service.DownloadPreferences
@@ -40,6 +43,11 @@ object SettingsDownloadScreen : SearchableSettings {
         val specializedSettings = downloadSettingsFeature.availableSettings
         val parallelSourceLimit by downloadPreferences.parallelSourceLimit.collectAsState()
         val parallelPageLimit by downloadPreferences.parallelPageLimit.collectAsState()
+        val translatePreferences = remember { Injekt.get<EntryTranslatePreferences>() }
+        val translateAvailable = remember {
+            Injekt.get<EntryTranslateFeature>().let { feature -> EntryType.entries.any(feature::isApplicable) }
+        }
+        val downloadNewItems by downloadPreferences.downloadNewEntryChapters.collectAsState()
         return listOfNotNull(
             Preference.PreferenceItem.SwitchPreference(
                 preference = downloadPreferences.downloadOnlyOverWifi,
@@ -60,6 +68,10 @@ object SettingsDownloadScreen : SearchableSettings {
                 allCategories = allCategories,
             ),
             getDownloadAheadGroup(downloadPreferences = downloadPreferences),
+            getAutoTranslateGroup(
+                translatePreferences = translatePreferences,
+                downloadNewItems = downloadNewItems,
+            ).takeIf { translateAvailable },
         )
     }
 
@@ -226,6 +238,46 @@ object SettingsDownloadScreen : SearchableSettings {
                     title = stringResource(MR.strings.auto_download_while_reading),
                 ),
                 Preference.PreferenceItem.InfoPreference(stringResource(MR.strings.download_ahead_info)),
+            ),
+        )
+    }
+
+    @Composable
+    private fun getAutoTranslateGroup(
+        translatePreferences: EntryTranslatePreferences,
+        downloadNewItems: Boolean,
+    ): Preference.PreferenceGroup {
+        return Preference.PreferenceGroup(
+            title = stringResource(MR.strings.pref_category_auto_translate),
+            preferenceItems = listOf(
+                Preference.PreferenceItem.SwitchPreference(
+                    preference = translatePreferences.translateNewChapters,
+                    title = stringResource(MR.strings.pref_translate_new),
+                    subtitle = stringResource(MR.strings.pref_translate_new_summary),
+                    enabled = downloadNewItems,
+                ),
+                Preference.PreferenceItem.ListPreference(
+                    preference = translatePreferences.translateAheadWhileReading,
+                    entries = listOf(0, 2, 3, 5, 10)
+                        .associateWith {
+                            if (it == 0) {
+                                stringResource(MR.strings.disabled)
+                            } else {
+                                pluralStringResource(MR.plurals.next_unread_chapters, count = it, it)
+                            }
+                        },
+                    title = stringResource(MR.strings.pref_translate_ahead),
+                ),
+                Preference.PreferenceItem.SwitchPreference(
+                    preference = translatePreferences.onlyWhileCharging,
+                    title = stringResource(MR.strings.pref_translate_only_while_charging),
+                ),
+                Preference.PreferenceItem.SwitchPreference(
+                    preference = translatePreferences.onlyOverWifi,
+                    title = stringResource(MR.strings.pref_translate_only_over_wifi),
+                    subtitle = stringResource(MR.strings.pref_translate_only_over_wifi_summary),
+                ),
+                Preference.PreferenceItem.InfoPreference(stringResource(MR.strings.pref_translate_info)),
             ),
         )
     }

@@ -1,7 +1,8 @@
-package mihon.entry.interactions.translate
+package mihon.entry.interactions.translate.queue
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import mihon.entry.interactions.translate.EntryTranslateSetup
 import mihon.language.api.tag.LanguageTag
 import mihon.text.recognition.api.component.TextRecognitionComponentId
 import mihon.text.recognition.api.pipeline.TextRecognitionPipeline

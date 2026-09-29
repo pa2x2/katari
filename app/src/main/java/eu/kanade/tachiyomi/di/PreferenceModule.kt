@@ -19,6 +19,7 @@ import mihon.core.common.CustomPreferences
 import mihon.core.common.GlobalCustomPreferences
 import mihon.core.common.image.progressive.ProgressiveImageEngine
 import mihon.core.common.image.progressive.ProgressiveImagePreferences
+import mihon.entry.interactions.translate.EntryTranslatePreferences
 import mihon.feature.profiles.core.ProfileAwareStore
 import mihon.feature.profiles.core.ProfileStore
 import mihon.feature.profiles.core.ProfileStoreImpl
@@ -137,6 +138,9 @@ class PreferenceModule(val app: Application) : InjektModule {
         addSingletonFactory { GlobalTrackPreferences(get<ProfileStore>().basePreferenceStore()) }
         addSingletonFactory {
             DownloadPreferences(get<ProfileStore>().basePreferenceStore())
+        }
+        addSingletonFactory {
+            EntryTranslatePreferences(get<ProfileStore>().basePreferenceStore())
         }
         addSingletonFactory {
             BackupPreferences(get<ProfileStore>().basePreferenceStore())

@@ -38,6 +38,7 @@ class EntryTranslateContractValidationContributor : FeatureValidationContributor
                         chapters = mockk(relaxed = true),
                         runner = mockk(relaxed = true),
                         work = mockk(relaxed = true),
+                        conditions = mockk(relaxed = true),
                     )
                     val entry = Entry.create().copy(id = 71L, type = provider.type)
 

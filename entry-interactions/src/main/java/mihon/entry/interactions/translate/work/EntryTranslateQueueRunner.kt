@@ -1,15 +1,25 @@
-package mihon.entry.interactions.translate
+package mihon.entry.interactions.translate.work
 
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import logcat.LogPriority
+import mihon.entry.interactions.translate.EntryTranslateFailure
+import mihon.entry.interactions.translate.EntryTranslateInteraction
+import mihon.entry.interactions.translate.EntryTranslateProgress
+import mihon.entry.interactions.translate.EntryTranslateResult
+import mihon.entry.interactions.translate.EntryTranslateSetup
+import mihon.entry.interactions.translate.queue.EntryTranslateSetupCodec
+import mihon.entry.interactions.translate.queue.fail
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
@@ -34,6 +44,11 @@ internal class EntryTranslateQueueRunner(
     private var work: Deferred<EntryTranslateResult>? = null
 
     suspend fun hasPendingWork(): Boolean = next() != null
+
+    /** Whether chapters are queued to be translated. */
+    val pending: Flow<Boolean> = repository.subscribeAll()
+        .map { items -> items.any { it.state == EntryTranslationQueueItem.State.Queued } }
+        .distinctUntilChanged()
 
     /** Translates queued chapters until none is left. */
     suspend fun runUntilIdle() = coroutineScope {

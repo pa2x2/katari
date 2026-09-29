@@ -1,5 +1,6 @@
-package mihon.entry.interactions.translate
+package mihon.entry.interactions.translate.queue
 
+import mihon.entry.interactions.translate.EntryTranslateFailure
 import tachiyomi.domain.entry.model.EntryTranslationQueueItem
 import tachiyomi.domain.entry.repository.EntryTranslationQueueRepository
 

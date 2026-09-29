@@ -39,6 +39,7 @@ import mihon.entry.interactions.runtime.production.EntryFeatureRuntimeInstallati
 import mihon.entry.interactions.runtime.production.validateInstalledEntryFeatureRuntimeModules
 import mihon.entry.interactions.settings.EntryInteractionPreferences
 import mihon.entry.interactions.tracking.host.EntryTrackingHost
+import mihon.entry.interactions.translate.EntryTranslatePreferences
 import mihon.entry.viewer.settings.ViewerSettingOverrideRepository
 import mihon.feature.runtime.FeatureRuntimeComposition
 import mihon.feature.runtime.application.ApplicationFeatureRuntimeDependencies
@@ -209,6 +210,7 @@ class ProductionEntryInteractionValidationEnvironment(
         Injekt.addSingletonFactory<PlaybackPreferencesRepository> { mockk(relaxed = true) }
         Injekt.addSingletonFactory<EntryTranslationLanguagesRepository> { mockk(relaxed = true) }
         Injekt.addSingletonFactory<EntryTranslationQueueRepository> { mockk(relaxed = true) }
+        Injekt.addSingletonFactory { EntryTranslatePreferences(InMemoryPreferenceStore()) }
         Injekt.addSingletonFactory<HistoryRepository> { mockk(relaxed = true) }
         Injekt.addSingletonFactory<GetCategories> { mockk(relaxed = true) }
         Injekt.addSingletonFactory<GetTracks> { mockk(relaxed = true) }
