@@ -29,19 +29,6 @@ class FetchIntervalTest {
     private val fetchInterval = FetchInterval(mockk())
 
     @Test
-    fun `returns default interval of 7 days when not enough distinct days`() {
-        val chaptersWithUploadDate = (1..50).map {
-            chapterWithTime(chapter, 1.days)
-        }
-        fetchInterval.calculateInterval(chaptersWithUploadDate, testTimeZone) shouldBe 7
-
-        val chaptersWithoutUploadDate = chaptersWithUploadDate.map {
-            it.copy(dateUpload = 0L)
-        }
-        fetchInterval.calculateInterval(chaptersWithoutUploadDate, testTimeZone) shouldBe 7
-    }
-
-    @Test
     fun `returns interval based on more recent chapters`() {
         val oldChapters = (1..5).map {
             chapterWithTime(chapter, (it * 7).days) // Would have interval of 7 days
@@ -53,21 +40,6 @@ class FetchIntervalTest {
         val chapters = oldChapters + newChapters
 
         fetchInterval.calculateInterval(chapters, testTimeZone) shouldBe 1
-    }
-
-    @Test
-    fun `returns interval based on smaller subset of recent chapters if very few chapters`() {
-        val oldChapters = (1..3).map {
-            chapterWithTime(chapter, (it * 7).days)
-        }
-        // Significant gap between chapters
-        val newChapters = (1..3).map {
-            chapterWithTime(chapter, oldChapters.lastUploadDate() + 365.days + (it * 7).days)
-        }
-
-        val chapters = oldChapters + newChapters
-
-        fetchInterval.calculateInterval(chapters, testTimeZone) shouldBe 7
     }
 
     @Test

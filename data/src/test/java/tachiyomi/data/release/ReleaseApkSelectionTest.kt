@@ -7,10 +7,14 @@ import org.junit.jupiter.api.Test
 class ReleaseApkSelectionTest {
 
     @Test
-    fun `each flavor updates to its own APK for the device ABI`() {
+    fun `each flavor updates to its own APK for the device ABI and unbuilt ABIs get none`() {
         abis.forEach { abi ->
             selectReleaseApk(release, isFoss = true, primaryAbi = abi)?.name shouldBe "katari_foss_$abi-v2.0.0.apk"
             selectReleaseApk(release, isFoss = false, primaryAbi = abi)?.name shouldBe "katari-$abi-v2.0.0.apk"
+        }
+        listOf("x86", "x86_64").forEach { abi ->
+            selectReleaseApk(release, isFoss = false, primaryAbi = abi).shouldBeNull()
+            selectReleaseApk(release, isFoss = true, primaryAbi = abi).shouldBeNull()
         }
     }
 
@@ -22,14 +26,6 @@ class ReleaseApkSelectionTest {
         selectReleaseApk(withoutFossAbiApks, isFoss = true, primaryAbi = "arm64-v8a")?.name shouldBe
             "katari-v2.0.0-foss.apk"
         selectReleaseApk(withoutArm64Apk, isFoss = false, primaryAbi = "arm64-v8a")?.name shouldBe "katari-v2.0.0.apk"
-    }
-
-    @Test
-    fun `devices whose ABI is not built are offered no APK`() {
-        listOf("x86", "x86_64").forEach { abi ->
-            selectReleaseApk(release, isFoss = false, primaryAbi = abi).shouldBeNull()
-            selectReleaseApk(release, isFoss = true, primaryAbi = abi).shouldBeNull()
-        }
     }
 
     private val abis = listOf("arm64-v8a", "armeabi-v7a")

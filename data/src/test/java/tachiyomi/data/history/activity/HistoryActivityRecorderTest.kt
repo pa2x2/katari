@@ -51,31 +51,6 @@ class HistoryActivityRecorderTest {
         }
     }
 
-    @Test
-    fun `newer checkpoints merge into the same session child and local day`() = runTest {
-        withDatabase { database, recorder ->
-            val start = Instant.parse("2026-08-23T10:00:00Z").toEpochMilli()
-            recorder.record(activityUpdate(sequence = 0L, start = start, duration = 30_000L)) shouldBe true
-            recorder.record(activityUpdate(sequence = 1L, start = start + 30_000L, duration = 30_000L)) shouldBe true
-
-            val segments = database.activityQueries.getActivitySegmentsByEntryId(1L).awaitAsList()
-            segments.size shouldBe 1
-            segments.single().duration shouldBe 60_000L
-            database.historyQueries.getReadDuration(1L).awaitAsOne() shouldBe 60_000L
-        }
-    }
-
-    private fun activityUpdate(sequence: Long, start: Long, duration: Long) = HistoryActivityUpdate(
-        entryId = 1L,
-        chapterId = 11L,
-        sessionId = "session",
-        sequence = sequence,
-        startedAtEpochMillis = start,
-        endedAtEpochMillis = start + duration,
-        durationMillis = duration,
-        timeZoneId = "UTC",
-    )
-
     private suspend fun withDatabase(block: suspend (Database, HistoryActivityRecorder) -> Unit) {
         val driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
         try {

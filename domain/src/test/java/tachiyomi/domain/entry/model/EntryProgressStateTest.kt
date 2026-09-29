@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test
 
 class EntryProgressStateTest {
     @Test
-    fun `merge resolves locator and completion with independent clocks`() {
+    fun `merge resolves locator and completion with independent clocks and keeps local fields on ties`() {
         val current = state(
             locator = EntryProgressLocator(kind = "time", position = 100),
             completed = true,
@@ -25,24 +25,21 @@ class EntryProgressStateTest {
         merged.locatorUpdatedAt shouldBe 20
         merged.completed shouldBe true
         merged.completionUpdatedAt shouldBe 30
-    }
 
-    @Test
-    fun `merge keeps local fields on exact clock ties`() {
-        val current = state(
+        val tiedCurrent = state(
             locator = EntryProgressLocator(kind = "page", position = 4),
             completed = false,
             locatorUpdatedAt = 10,
             completionUpdatedAt = 10,
         )
-        val incoming = state(
+        val tiedIncoming = state(
             locator = EntryProgressLocator(kind = "page", position = 8),
             completed = true,
             locatorUpdatedAt = 10,
             completionUpdatedAt = 10,
         )
 
-        current.mergeWith(incoming) shouldBe current
+        tiedCurrent.mergeWith(tiedIncoming) shouldBe tiedCurrent
     }
 
     private fun state(

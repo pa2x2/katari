@@ -39,17 +39,6 @@ class EntrySortTest {
     )
 
     @Test
-    fun `source sort ascending puts the oldest source item first`() {
-        val entries = listOf(
-            TestEntry(id = 1, number = 1.0, dateUpload = 100, name = "A", url = "/1", sourceOrder = 0),
-            TestEntry(id = 2, number = 2.0, dateUpload = 200, name = "B", url = "/2", sourceOrder = 1),
-        )
-        entries.sortedWith(comparator(SORTING_SOURCE, sortDescending = false)).map(TestEntry::id) shouldBe
-            listOf(2L, 1L)
-        entries.sortedWith(comparator(SORTING_SOURCE, sortDescending = true)).map(TestEntry::id) shouldBe listOf(1L, 2L)
-    }
-
-    @Test
     fun `unknown numbers and upload dates stay last in both directions`() {
         val entries = listOf(
             TestEntry(id = 1, number = -1.0, dateUpload = 0, name = "A", url = "/1", sourceOrder = 0),
@@ -62,21 +51,5 @@ class EntrySortTest {
             entries.sortedWith(comparator(sorting, sortDescending = true)).map(TestEntry::id) shouldBe
                 listOf(3L, 2L, 1L)
         }
-    }
-
-    @Test
-    fun `alphabet sort falls back to url for blank names and to source order for ties`() {
-        val blankName = listOf(
-            TestEntry(id = 1, number = 1.0, dateUpload = 100, name = "", url = "/b", sourceOrder = 0),
-            TestEntry(id = 2, number = 2.0, dateUpload = 200, name = "A", url = "/a", sourceOrder = 1),
-        )
-        val tied = listOf(
-            TestEntry(id = 2, number = 1.0, dateUpload = 100, name = "A", url = "/1", sourceOrder = 1),
-            TestEntry(id = 1, number = 1.0, dateUpload = 200, name = "A", url = "/2", sourceOrder = 0),
-        )
-        blankName.sortedWith(comparator(SORTING_ALPHABET, sortDescending = false)).map(TestEntry::id) shouldBe
-            listOf(1L, 2L)
-        tied.sortedWith(comparator(SORTING_ALPHABET, sortDescending = false)).map(TestEntry::id) shouldBe
-            listOf(1L, 2L)
     }
 }

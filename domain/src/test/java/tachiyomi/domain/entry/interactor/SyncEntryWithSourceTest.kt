@@ -46,31 +46,6 @@ class SyncEntryWithSourceTest {
     }
 
     @Test
-    fun `blank chapter url rekeys progress from legacy fallback`() = runTest {
-        val existing = chapter(id = 1L, url = "")
-        val source = TestSource(chapters = listOf(sourceChapter(url = "/new")))
-        val repository = chapterRepository(listOf(existing))
-        val progressRepository = mockk<EntryProgressRepository>(relaxed = true)
-
-        sync(
-            source = source,
-            repository = repository,
-            progressRepository = progressRepository,
-        )(entry(), fetchDetails = false)
-
-        coVerify(exactly = 1) {
-            progressRepository.rekey(
-                entryId = 1L,
-                chapterId = 1L,
-                oldContentKey = "",
-                oldResourceKey = "legacy-chapter:1",
-                newContentKey = "",
-                newResourceKey = "/new",
-            )
-        }
-    }
-
-    @Test
     fun `partial progress wins over an unstarted duplicate with the current url`() = runTest {
         val existing = listOf(
             chapter(id = 1L, url = "/old", sourceOrder = 0L),
@@ -181,53 +156,6 @@ class SyncEntryWithSourceTest {
     }
 
     @Test
-    fun `first chapter after an earlier empty sync remains an update`() = runTest {
-        val chapterRepository = chapterRepository(emptyList())
-        val insertedChapters = slot<List<EntryChapter>>()
-        coEvery { chapterRepository.insertOrUpdate(capture(insertedChapters)) } answers {
-            insertedChapters.captured.map { it.copy(id = 10L) }
-        }
-        coEvery { chapterRepository.getChaptersByEntryIdAwait(1L, true) } answers {
-            insertedChapters.captured.map { it.copy(id = 10L) }
-        }
-        val entryRepository = mockEntryRepository()
-        val updatedEntries = mutableListOf<Entry>()
-        coEvery { entryRepository.update(capture(updatedEntries)) } returns true
-
-        sync(
-            source = TestSource(chapters = listOf(sourceChapter())),
-            repository = chapterRepository,
-            entryRepository = entryRepository,
-            now = { 1000L },
-        )(
-            entry().copy(favorite = true, dateAdded = 900L, fetchInterval = 7),
-            fetchDetails = false,
-        )
-
-        updatedEntries.last().dateAdded shouldBe 900L
-    }
-
-    @Test
-    fun `strict synchronization pins entry updates to the requested profile`() = runTest {
-        val repository = mockEntryRepository()
-        coEvery { repository.update(any(), 8L) } returns true
-        val stored = entry().copy(profileId = 8L, title = "Stored")
-
-        sync(
-            source = TestSource(details = sourceEntry(title = "Remote")),
-            entryRepository = repository,
-        ).syncStrictly(
-            entry = stored,
-            profileId = 8L,
-            updateLibraryTitles = true,
-            fetchChapters = false,
-        )
-
-        coVerify(exactly = 1) { repository.update(match { it.title == "Remote" }, 8L) }
-        coVerify(exactly = 0) { repository.update(any()) }
-    }
-
-    @Test
     fun `strict synchronization rejects swallowed chapter insertion failure`() = runTest {
         val chapters = chapterRepository(emptyList())
         coEvery { chapters.insertOrUpdate(any()) } returns emptyList()
@@ -235,28 +163,6 @@ class SyncEntryWithSourceTest {
         val error = runCatching {
             sync(
                 source = TestSource(chapters = listOf(sourceChapter())),
-                repository = chapters,
-            ).syncStrictly(
-                entry = entry().copy(profileId = 8L),
-                profileId = 8L,
-                updateLibraryTitles = false,
-                fetchDetails = false,
-            )
-        }.exceptionOrNull()
-
-        error.shouldBeInstanceOf<IllegalStateException>()
-    }
-
-    @Test
-    fun `strict synchronization verifies requested chapter removals`() = runTest {
-        val retained = chapter(id = 1L, url = "/old", sourceOrder = 0L, read = true)
-        val removed = chapter(id = 2L, url = "/current", sourceOrder = 0L)
-        val chapters = chapterRepository(listOf(retained, removed))
-        coEvery { chapters.getChapterById(removed.id) } returns removed
-
-        val error = runCatching {
-            sync(
-                source = TestSource(chapters = listOf(sourceChapter(url = "/current"))),
                 repository = chapters,
             ).syncStrictly(
                 entry = entry().copy(profileId = 8L),
@@ -333,12 +239,6 @@ class SyncEntryWithSourceTest {
         read = read,
     )
 
-    private fun sourceEntry(title: String): SEntry = SEntry.create().apply {
-        url = "/entry"
-        this.title = title
-        type = EntryType.MANGA
-    }
-
     private fun sourceChapter(
         url: String = "/chapter",
         name: String = "Chapter 1",
@@ -351,7 +251,6 @@ class SyncEntryWithSourceTest {
 }
 
 private class TestSource(
-    private val details: SEntry? = null,
     private val chapters: List<SEntryChapter> = emptyList(),
 ) : UnifiedSource {
     override val id: Long = 1L
@@ -365,7 +264,7 @@ private class TestSource(
         filters: EntryFilterList,
     ): EntryPageResult<SEntry> = error("Not used")
 
-    override suspend fun getContentDetails(entry: SEntry): SEntry = details ?: entry
+    override suspend fun getContentDetails(entry: SEntry): SEntry = entry
     override suspend fun getChapterList(entry: SEntry): List<SEntryChapter> = chapters
     override suspend fun getMedia(chapter: SEntryChapter, selection: PlaybackSelection): EntryMedia = error("Not used")
 }

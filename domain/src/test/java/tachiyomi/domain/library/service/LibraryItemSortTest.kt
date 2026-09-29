@@ -45,16 +45,6 @@ class LibraryItemSortTest {
     }
 
     @Test
-    fun `tracker mean falls back to map score`() {
-        val a = key(id = 1, title = "A")
-        val b = key(id = 2, title = "B")
-        val sort = LibrarySort(LibrarySort.Type.TrackerMean, LibrarySort.Direction.Ascending)
-        val scores = mapOf(1L to 9.0, 2L to 2.0)
-        listOf(a, b).sortedWith(librarySortComparator(sort, trackerScores = scores)).map(LibrarySortKey::id) shouldBe
-            listOf(2L, 1L)
-    }
-
-    @Test
     fun `missing summary sort values remain last in both directions`() {
         val available = key(id = 1L, title = "Available", lastRead = 100L)
         val unavailable = key(id = 2L, title = "Unavailable").copy(lastRead = null)

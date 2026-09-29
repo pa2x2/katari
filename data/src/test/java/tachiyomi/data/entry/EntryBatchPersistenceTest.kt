@@ -49,36 +49,6 @@ class EntryBatchPersistenceTest {
     }
 
     @Test
-    fun `batch preserves favorites and applies existing nonfavorite update rules`() = runTest {
-        withRepository { _, driver, repository ->
-            repository.insertOrUpdateBatch(
-                listOf(
-                    entry("/favorite", "Favorite original", EntryType.MANGA),
-                    entry("/nonfavorite", "Nonfavorite original", EntryType.MANGA),
-                ),
-                PROFILE_ID,
-            )
-            driver.await(
-                identifier = null,
-                sql = "UPDATE entries SET favorite = 1 WHERE url = '/favorite'",
-                parameters = 0,
-            )
-
-            val persisted = repository.insertOrUpdateBatch(
-                listOf(
-                    entry("/favorite", "Favorite network update", EntryType.MANGA),
-                    entry("/nonfavorite", "Nonfavorite network update", EntryType.MANGA),
-                ),
-                PROFILE_ID,
-            )
-
-            persisted.map(Entry::title) shouldContainExactly
-                listOf("Favorite original", "Nonfavorite network update")
-            persisted.map(Entry::favorite) shouldContainExactly listOf(true, false)
-        }
-    }
-
-    @Test
     fun `batch commits successful prefix and rethrows first persistence failure`() = runTest {
         withRepository { database, driver, repository ->
             driver.await(

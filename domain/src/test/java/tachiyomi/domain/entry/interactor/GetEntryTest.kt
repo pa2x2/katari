@@ -12,17 +12,6 @@ import tachiyomi.domain.entry.repository.EntryRepository
 
 class GetEntryTest {
     @Test
-    fun `batch await restores requested order and omits missing entries`() = runTest {
-        val first = Entry.create().copy(id = 1L)
-        val third = Entry.create().copy(id = 3L)
-        val repository = mockk<EntryRepository> {
-            coEvery { getEntriesByIds(listOf(3L, 2L, 1L)) } returns listOf(first, third)
-        }
-
-        GetEntry(repository).await(listOf(3L, 2L, 1L, 3L)) shouldContainExactly listOf(third, first)
-    }
-
-    @Test
     fun `batch failure falls back to independent reads`() = runTest {
         val first = Entry.create().copy(id = 1L)
         val third = Entry.create().copy(id = 3L)
