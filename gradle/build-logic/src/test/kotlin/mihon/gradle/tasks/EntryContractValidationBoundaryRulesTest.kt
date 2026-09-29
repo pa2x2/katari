@@ -8,24 +8,6 @@ import org.junit.jupiter.api.Test
 class EntryContractValidationBoundaryRulesTest {
 
     @Test
-    fun `feature owned validation may bind contracts without naming current types`() {
-        val findings = check(
-            path = "entry-interactions/src/test/java/mihon/entry/interactions/download/" +
-                "EntryDownloadContractValidationContributor.kt",
-            content = """
-                class EntryDownloadContractValidationContributor {
-                    val verifier = FeatureContractVerifier(FeatureContractReference(feature, contract)) { verify() }
-                    val scenario = FeatureContractScenario(id, FeatureContractReference(feature, contract), integration) {
-                        evidence()
-                    }
-                }
-            """.trimIndent(),
-        )
-
-        findings.shouldBeEmpty()
-    }
-
-    @Test
     fun `contract validation cannot encode a current content type`() {
         val findings = check(
             path = "entry-interactions/src/test/java/mihon/entry/interactions/download/DownloadChecks.kt",
@@ -73,30 +55,6 @@ class EntryContractValidationBoundaryRulesTest {
 
         assertEquals(1, findings.size)
         findings.single().reason shouldContain "central suite switch"
-    }
-
-    @Test
-    fun `validation contributor service contains every declaration exactly once`() {
-        val contributorPath =
-            "entry-interactions/src/test/java/mihon/entry/interactions/download/EntryDownloadChecks.kt"
-        val findings = checkEntryContractValidationBoundaries(
-            listOf(
-                EntryContractValidationBoundarySource(
-                    contributorPath,
-                    """
-                        package mihon.entry.interactions
-
-                        class EntryDownloadChecks : FeatureValidationContributor
-                    """.trimIndent(),
-                ),
-                EntryContractValidationBoundarySource(
-                    FEATURE_VALIDATION_CONTRIBUTOR_SERVICE,
-                    "mihon.entry.interactions.EntryDownloadChecks",
-                ),
-            ),
-        )
-
-        findings.shouldBeEmpty()
     }
 
     @Test

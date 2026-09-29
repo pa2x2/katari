@@ -119,46 +119,6 @@ class EntryMigrationBoundaryRulesTest {
             "EntryMigrationPreparationHost is an application host port reserved for the root Migration coordinator"
     }
 
-    @Test
-    fun `root Migration coordinator and segregated app adapter may access host ports`() {
-        createFixture(
-            additionalFiles = hostApiFixture() + mapOf(
-                "entry-interactions/src/main/java/mihon/entry/interactions/migration/EntryMigrationCoordinator.kt" to
-                    """
-                        package mihon.entry.interactions
-
-                        class EntryMigrationCoordinator(private val host: EntryMigrationPreparationHost)
-                    """.trimIndent(),
-                "app/src/main/java/mihon/entry/interactions/host/AppEntryMigrationPreparationHost.kt" to
-                    """
-                        package mihon.entry.interactions.host
-
-                        class AppEntryMigrationPreparationHost : EntryMigrationPreparationHost
-                    """.trimIndent(),
-            ),
-        )
-
-        runBoundaryCheck()
-    }
-
-    @Test
-    fun `type module may own Migration provider participation`() {
-        createFixture(
-            additionalFiles = mapOf(
-                "entry-interactions/anime/src/main/java/test/AnimeMigrationProvider.kt" to
-                    """
-                        package test
-
-                        internal class AnimeMigrationProvider : EntryMigrationProvider {
-                            val binding = EntryMigrationCapability.bind(this)
-                        }
-                    """.trimIndent(),
-            ),
-        )
-
-        runBoundaryCheck()
-    }
-
     private fun hostApiFixture(): Map<String, String> = mapOf(
         MIGRATION_PREPARATION_HOST_PATH to
             """

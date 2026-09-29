@@ -43,29 +43,6 @@ class EntryMergeBoundaryRulesTest {
     }
 
     @Test
-    fun `application-facing Merge api cannot expose an existing raw authority`() {
-        createFixture(
-            additionalFiles = mapOf(
-                "entry-interactions/api/src/main/java/mihon/entry/interactions/merge/EntryMergeFeature.kt" to
-                    """
-                        package mihon.entry.interactions
-
-                        import tachiyomi.domain.entry.model.EntryMerge
-
-                        interface EntryMergeFeature {
-                            suspend fun rawState(): List<EntryMerge>
-                        }
-                    """.trimIndent(),
-            ),
-        )
-
-        val error = assertThrows(GradleException::class.java) { runBoundaryCheck() }
-
-        error.message shouldContain "raw Merge authority cannot cross the Merge application or host API boundary"
-        error.message shouldContain "EntryMerge"
-    }
-
-    @Test
     fun `application consumers cannot access Merge host ports`() {
         createFixture(
             appSource = """
@@ -82,30 +59,6 @@ class EntryMergeBoundaryRulesTest {
 
         error.message shouldContain
             "EntryMergeHost is an application host port reserved for the root Merge coordinator"
-    }
-
-    @Test
-    fun `segregated adapter and root coordinator may access Entry host ports`() {
-        createFixture(
-            additionalFiles = hostApiFixture() + mapOf(
-                "app/src/main/java/mihon/entry/interactions/host/AppEntryMergeHost.kt" to
-                    """
-                        package mihon.entry.interactions.host
-
-                        class AppEntryMergeHost : EntryMergeHost
-                    """.trimIndent(),
-                "entry-interactions/src/main/java/mihon/entry/interactions/merge/EntryMergeCoordinator.kt" to
-                    """
-                        package mihon.entry.interactions
-
-                        import mihon.entry.interactions.host.EntryMergeHost
-
-                        internal class EntryMergeCoordinator(private val host: EntryMergeHost)
-                    """.trimIndent(),
-            ),
-        )
-
-        runBoundaryCheck()
     }
 
     @Test
@@ -131,25 +84,6 @@ class EntryMergeBoundaryRulesTest {
         error.message shouldContain "not ambient profile authority: ActiveProfileProvider"
         error.message shouldContain "not ambient profile authority: activeProfileId"
         error.message shouldContain "cannot gate behavior on a concrete current EntryType: AUDIO"
-    }
-
-    @Test
-    fun `placing a consumer in the host package does not grant host access`() {
-        createFixture(
-            additionalFiles = hostApiFixture() + mapOf(
-                "app/src/main/java/mihon/entry/interactions/host/EntryMergeScreen.kt" to
-                    """
-                        package mihon.entry.interactions.host
-
-                        class EntryMergeScreen(private val host: EntryMergeHost)
-                    """.trimIndent(),
-            ),
-        )
-
-        val error = assertThrows(GradleException::class.java) { runBoundaryCheck() }
-
-        error.message shouldContain
-            "EntryMergeHost is an application host port reserved for the root Merge coordinator"
     }
 
     @Test

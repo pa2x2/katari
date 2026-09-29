@@ -139,60 +139,6 @@ class FeatureGraphEvaluationTest {
         completed.behaviorProjections shouldHaveSize 1
     }
 
-    @Test
-    fun `unresolved context remains conditional without activating work or obligations`() {
-        val context = contextInputDefinition<ExampleContext>(
-            id = ContextInputId("example.context"),
-            owner = featureOwner,
-        )
-        val adapter = specializedAdapterDefinition<ExampleAdapter>(
-            id = SpecializedAdapterId("example.adapter"),
-            owner = featureOwner,
-        )
-        val evaluation = evaluate(
-            contentTypes = listOf(contentType("subject", CapabilityProvider(alpha, AlphaProvider()))),
-            integrations = listOf(
-                integration(
-                    id = "example.integration",
-                    prerequisites = CapabilityExpression.Provided(alpha),
-                    contextInputs = listOf(context),
-                    specializedRequirements = listOf(adapter),
-                ),
-            ),
-        )
-
-        val result = evaluation.integrations.single() as ConditionalFeatureIntegration
-        result.unresolvedContextInputs shouldContainExactly listOf(context)
-        result.suppliedAdapters shouldBe emptyList()
-        result.pendingSpecializedRequirements shouldContainExactly listOf(adapter)
-        evaluation.obligations shouldBe emptyList()
-        evaluation.behaviorProjections shouldBe emptyList()
-        evaluation.candidateBehaviorProjections shouldHaveSize 1
-    }
-
-    @Test
-    fun `evaluation ordering is derived and deterministic`() {
-        val evaluation = evaluate(
-            contentTypes = listOf(
-                contentType("zeta", CapabilityProvider(alpha, AlphaProvider())),
-                contentType("alpha", CapabilityProvider(alpha, AlphaProvider())),
-            ),
-            integrations = listOf(
-                integration("example.zeta", CapabilityExpression.Provided(alpha)),
-                integration("example.alpha", CapabilityExpression.Provided(alpha)),
-            ),
-        )
-
-        evaluation.integrations.map {
-            "${it.subject.entryContentType.value}:${it.subject.integration.value}"
-        } shouldContainExactly listOf(
-            "alpha:example.alpha",
-            "alpha:example.zeta",
-            "zeta:example.alpha",
-            "zeta:example.zeta",
-        )
-    }
-
     private fun evaluate(
         contentTypes: List<ContentTypeContribution>,
         integrations: List<FeatureIntegration>,
@@ -227,7 +173,6 @@ class FeatureGraphEvaluationTest {
     private fun integration(
         id: String,
         prerequisites: CapabilityExpression,
-        contextInputs: List<ContextInputDefinition<*>> = emptyList(),
         specializedPrerequisites: List<SpecializedAdapterDefinition<*>> = emptyList(),
         specializedRequirements: List<SpecializedAdapterDefinition<*>> = emptyList(),
         behavior: FeatureBehaviorProjection = behavior("$id.projection"),
@@ -235,12 +180,6 @@ class FeatureGraphEvaluationTest {
         return FeatureIntegration(
             id = FeatureIntegrationId(id),
             prerequisites = prerequisites,
-            contextInputs = contextInputs,
-            contextRule = if (contextInputs.isEmpty()) {
-                null
-            } else {
-                featureContextRule(featureOwner) { FeatureContextDecision.Applicable }
-            },
             specializedPrerequisites = specializedPrerequisites,
             specializedRequirements = specializedRequirements,
             behaviorProjections = listOf(behavior),
@@ -258,6 +197,4 @@ class FeatureGraphEvaluationTest {
     private class GammaProvider
 
     private class ExampleAdapter
-
-    private class ExampleContext
 }

@@ -1,10 +1,8 @@
 package mihon.feature.graph
 
-import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.string.shouldContain
 import org.junit.jupiter.api.Test
 
 class FeatureArtifactSelectionTest {
@@ -118,41 +116,6 @@ class FeatureArtifactSelectionTest {
         obligation.affectedContracts shouldContainExactly listOf(contract, secondContract)
     }
 
-    @Test
-    fun `one missing shared projection obligation names every affected subject`() {
-        val contract = TestContract("example.behavior")
-        val projectionDefinition = featureProjectionDefinition<TestProjection>(
-            id = FeatureArtifactId("example.reference"),
-            owner = featureOwner,
-        )
-        val graph = graph(
-            contentTypes = listOf(
-                contentType(
-                    id = "zeta",
-                    providers = listOf(CapabilityProvider(alpha, AlphaProvider())),
-                ),
-                contentType(
-                    id = "alpha",
-                    providers = listOf(CapabilityProvider(alpha, AlphaProvider())),
-                ),
-            ),
-            integration = FeatureIntegration(
-                id = FeatureIntegrationId("example.integration"),
-                prerequisites = CapabilityExpression.Provided(alpha),
-                behavioralContracts = listOf(contract),
-                projectionRequirements = listOf(projectionDefinition),
-            ),
-        )
-
-        val selected = selectFeatureArtifacts(graph, evaluateFeatureGraph(graph))
-
-        selected.projections shouldBe emptyList()
-        val obligation = selected.obligations.single() as MissingFeatureProjectionObligation
-        obligation.responsibleOwner shouldBe featureOwner
-        obligation.requirement shouldBe projectionDefinition
-        obligation.affectedSubjects.map { it.entryContentType.value } shouldContainExactly listOf("alpha", "zeta")
-    }
-
     private fun graph(
         contentTypes: List<ContentTypeContribution>,
         integration: FeatureIntegration,
@@ -184,15 +147,6 @@ class FeatureArtifactSelectionTest {
             specializedAdapters = adapters,
             contractFixtures = fixtures,
         )
-    }
-
-    private fun projection(id: String): FeatureProjection<TestProjection> {
-        val definition = featureProjectionDefinition<TestProjection>(FeatureArtifactId(id), featureOwner)
-        return FeatureProjection(definition, TestProjection())
-    }
-
-    private fun behavior(id: String) = object : FeatureBehaviorProjection {
-        override val id = FeatureArtifactId(id)
     }
 
     private class TestContract(

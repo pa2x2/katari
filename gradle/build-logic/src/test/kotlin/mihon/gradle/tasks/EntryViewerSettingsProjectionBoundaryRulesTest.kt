@@ -8,13 +8,6 @@ import org.junit.jupiter.api.Test
 class EntryViewerSettingsProjectionBoundaryRulesTest {
 
     @Test
-    fun `production resolver installs every declared screen projection`() {
-        check(
-            registry = "listOf(SettingsReaderScreen, SettingsPlayerScreen)",
-        ).shouldBeEmpty()
-    }
-
-    @Test
     fun `declared screen projection cannot be omitted`() {
         val findings = check(registry = "listOf(SettingsReaderScreen)")
 

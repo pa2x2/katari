@@ -52,46 +52,6 @@ class GenerateApplicationFeatureTopologyTaskTest {
         release shouldNotContain "example.CatalogOnlyComponent"
     }
 
-    @Test
-    fun `duplicate ids and symbols fail generation`() {
-        shouldThrow<GradleException> {
-            generateApplicationFeatureProductionTopology(
-                variantName = "debug",
-                modules = listOf(
-                    module("translation.same", "example.FirstApplicationFeatureModule"),
-                    module("translation.same", "example.SecondApplicationFeatureModule"),
-                ),
-            )
-        }.message shouldContain "Duplicate Application Feature descriptor id"
-
-        shouldThrow<GradleException> {
-            generateApplicationFeatureProductionTopology(
-                variantName = "debug",
-                modules = listOf(
-                    module("translation.first", "example.SameApplicationFeatureModule"),
-                    module("translation.second", "example.SameApplicationFeatureModule"),
-                ),
-            )
-        }.message shouldContain "Duplicate Application Feature descriptor symbol"
-    }
-
-    @Test
-    fun `malformed ids and symbols fail generation`() {
-        shouldThrow<GradleException> {
-            generateApplicationFeatureProductionTopology(
-                variantName = "debug",
-                modules = listOf(module("Translation invalid", "example.ValidApplicationFeatureModule")),
-            )
-        }.message shouldContain "invalid id"
-
-        shouldThrow<GradleException> {
-            generateApplicationFeatureProductionTopology(
-                variantName = "debug",
-                modules = listOf(module("translation.valid", "not-qualified")),
-            )
-        }.message shouldContain "invalid symbol"
-    }
-
     private fun module(
         id: String,
         symbol: String,

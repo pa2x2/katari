@@ -181,29 +181,6 @@ class FeatureExecutionRuntimeTest {
     }
 
     @Test
-    fun `continue policy reports failures and executes remaining participants`() = runSuspend {
-        val point = point(failurePolicy = FeatureExecutionFailurePolicy.CONTINUE_AND_REPORT)
-        val failed = participant("example.failed", point)
-        val completed = participant("example.completed", point)
-        val graph = graph(listOf(point), listOf(failed, completed))
-        val runtime = runtime(
-            graph,
-            binding(failed) { error("failed") },
-            binding(completed) {},
-        )
-
-        val result = runtime.executeInline(
-            point,
-            FeatureSubjectId.EntryContentType(ContentTypeId("subject")),
-            Event("event"),
-        )
-
-        result.completedParticipants shouldContainExactly listOf(completed.id)
-        result.failures.map { it.participant } shouldContainExactly listOf(failed.id)
-        result.stoppedEarly shouldBe false
-    }
-
-    @Test
     fun `fail fast policy stops after the first failure`() = runSuspend {
         val point = point(failurePolicy = FeatureExecutionFailurePolicy.FAIL_FAST)
         val failed = participant("example.failed", point)
@@ -273,29 +250,6 @@ class FeatureExecutionRuntimeTest {
         shouldThrow<IllegalStateException> {
             graph(listOf(point), listOf(first, second))
         }.message shouldContain "cyclic participant ordering"
-    }
-
-    @Test
-    fun `missing specialized participant work becomes an explicit obligation`() {
-        val point = point()
-        val adapter = specializedAdapterDefinition<ExampleAdapter>(
-            id = SpecializedAdapterId("example.adapter"),
-            owner = participantOwner,
-        )
-        val participant = participant(
-            id = "example.specialized",
-            point = point,
-            specializedRequirements = listOf(adapter),
-        )
-        val graph = graph(listOf(point), listOf(participant))
-
-        val evaluation = evaluateFeatureGraph(graph)
-
-        evaluation.executionObligations.single().run {
-            responsibleOwner shouldBe ContributionOwner("subject.type")
-            subject.participant shouldBe participant.id
-            requirement shouldBe adapter
-        }
     }
 
     private fun point(

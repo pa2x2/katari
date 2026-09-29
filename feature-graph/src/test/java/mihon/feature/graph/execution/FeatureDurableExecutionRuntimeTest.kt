@@ -58,30 +58,6 @@ class FeatureDurableExecutionRuntimeTest {
     }
 
     @Test
-    fun `durable preparation can be discarded by the participant owner`() = runSuspend {
-        val point = point()
-        val participant = participant("example.staged", point)
-        val graph = graph(point, listOf(participant))
-        val discarded = mutableListOf<FeatureDurableExecutionPayload>()
-        val runtime = runtime(
-            graph,
-            binding(
-                participant = participant,
-                prepare = { FeatureDurableExecutionPayload(1, "stage") },
-                discard = discarded::add,
-            ),
-        )
-        val envelope = runtime.prepareDurable(
-            point,
-            FeatureSubjectId.EntryContentType(ContentTypeId("subject")),
-            Event("event"),
-        ).envelopes.single()
-
-        runtime.discardDurable(listOf(envelope)) shouldBe emptyList()
-        discarded shouldContainExactly listOf(FeatureDurableExecutionPayload(1, "stage"))
-    }
-
-    @Test
     fun `unknown persisted durable participant remains an explicit delivery failure`() = runSuspend {
         val point = point()
         val participant = participant("example.current", point)

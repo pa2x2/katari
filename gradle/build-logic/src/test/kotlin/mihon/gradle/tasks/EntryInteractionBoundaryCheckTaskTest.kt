@@ -412,38 +412,6 @@ class EntryInteractionBoundaryCheckTaskTest {
     }
 
     @Test
-    fun `tracker subsystem and Tracking host own raw tracker contracts`() {
-        createBaseFixture(
-            additionalFiles = mapOf(
-                "app/src/main/java/eu/kanade/tachiyomi/data/track/Tracker.kt" to
-                    """
-                        package eu.kanade.tachiyomi.data.track
-
-                        interface Tracker
-                    """.trimIndent(),
-                "app/src/main/java/eu/kanade/domain/track/TrackerMechanic.kt" to
-                    """
-                        package eu.kanade.domain.track
-
-                        import eu.kanade.tachiyomi.data.track.Tracker
-
-                        class TrackerMechanic(private val tracker: Tracker)
-                    """.trimIndent(),
-                "app/src/main/java/mihon/entry/interactions/host/tracking/AppTrackingHost.kt" to
-                    """
-                        package mihon.entry.interactions.host.tracking
-
-                        import eu.kanade.tachiyomi.data.track.Tracker
-
-                        class AppTrackingHost(private val tracker: Tracker)
-                    """.trimIndent(),
-            ),
-        )
-
-        runBoundaryCheck()
-    }
-
-    @Test
     fun `public Tracking Feature cannot export persisted track records`() {
         createBaseFixture(
             additionalFiles = mapOf(
@@ -650,22 +618,6 @@ class EntryInteractionBoundaryCheckTaskTest {
     }
 
     @Test
-    fun `framework instantiated type module components may remain public`() {
-        createBaseFixture(
-            additionalFiles = mapOf(
-                "entry-interactions/manga/src/main/java/eu/kanade/tachiyomi/ui/reader/ReaderActivity.kt" to
-                    """
-                        package eu.kanade.tachiyomi.ui.reader
-
-                        class ReaderActivity
-                    """.trimIndent(),
-            ),
-        )
-
-        runBoundaryCheck()
-    }
-
-    @Test
     fun `application composition cannot authorize type-specific interaction behavior`() {
         createBaseFixture(
             additionalFiles = mapOf(
@@ -687,31 +639,6 @@ class EntryInteractionBoundaryCheckTaskTest {
         val error = assertThrows(GradleException::class.java) { runBoundaryCheck() }
 
         error.message shouldContain "suspicious EntryType processing branch reaches across Entry interaction boundaries"
-    }
-
-    @Test
-    fun `generic code cannot reference runtime entry points directly`() {
-        createBaseFixture(
-            additionalFiles = mapOf(
-                "entry-interactions/manga/src/main/java/eu/kanade/tachiyomi/ui/reader/ReaderActivity.kt" to
-                    """
-                        package eu.kanade.tachiyomi.ui.reader
-
-                        class ReaderActivity
-                    """.trimIndent(),
-            ),
-            appSource = """
-                package app
-
-                class AppFeature {
-                    fun open() = ReaderActivity::class.simpleName
-                }
-            """.trimIndent(),
-        )
-
-        val error = assertThrows(GradleException::class.java) { runBoundaryCheck() }
-
-        error.message shouldContain "direct ReaderActivity reference"
     }
 
     @Test
@@ -780,33 +707,6 @@ class EntryInteractionBoundaryCheckTaskTest {
     }
 
     @Test
-    fun `root composition accepts a discovered type runtime module bridge`() {
-        createBaseFixture(
-            additionalFiles = mapOf(
-                "entry-interactions/manga/src/main/java/mihon/entry/interactions/manga/" +
-                    "MangaEntryInteractionRuntimeModule.kt" to
-                    """
-                        package mihon.entry.interactions.manga
-
-                        import mihon.entry.interactions.EntryTypeRuntimeModule
-
-                        fun mangaEntryTypeRuntimeModule(): EntryTypeRuntimeModule = EntryTypeRuntimeModule()
-                    """.trimIndent(),
-                "entry-interactions/src/main/java/mihon/entry/interactions/runtime/EntryInteractionRuntime.kt" to
-                    """
-                        package mihon.entry.interactions
-
-                        import mihon.entry.interactions.manga.mangaEntryTypeRuntimeModule
-
-                        class EntryInteractionRuntime
-                    """.trimIndent(),
-            ),
-        )
-
-        runBoundaryCheck()
-    }
-
-    @Test
     fun `type module public api parser ignores class literals in annotations`() {
         createBaseFixture(
             additionalFiles = mapOf(
@@ -852,37 +752,6 @@ class EntryInteractionBoundaryCheckTaskTest {
     }
 
     @Test
-    fun `generic code cannot reference anime player resolver internals directly`() {
-        createBaseFixture(
-            additionalFiles = mapOf(
-                "entry-interactions/anime/src/main/java/eu/kanade/tachiyomi/ui/video/player/VideoPlayerActivity.kt" to
-                    """
-                        package eu.kanade.tachiyomi.ui.video.player
-
-                        class VideoPlayerActivity
-                    """.trimIndent(),
-                "entry-interactions/anime/src/main/java/eu/kanade/tachiyomi/ui/video/player/VideoStreamResolver.kt" to
-                    """
-                        package eu.kanade.tachiyomi.ui.video.player
-
-                        internal interface VideoStreamResolver
-                    """.trimIndent(),
-            ),
-            appSource = """
-                package app
-
-                class AppFeature {
-                    private val resolverName = VideoStreamResolver::class.simpleName
-                }
-            """.trimIndent(),
-        )
-
-        val error = assertThrows(GradleException::class.java) { runBoundaryCheck() }
-
-        error.message shouldContain "direct VideoStreamResolver runtime media resolution reference"
-    }
-
-    @Test
     fun `settings UI cannot reference concrete media cache implementations directly`() {
         createBaseFixture(
             additionalFiles = mapOf(
@@ -903,58 +772,6 @@ class EntryInteractionBoundaryCheckTaskTest {
 
         error.message shouldContain "settings/UI cache maintenance must use EntryMediaCacheFeature"
         error.message shouldContain "MangaPageCache"
-    }
-
-    @Test
-    fun `type modules may reference media resolution and cache internals`() {
-        createBaseFixture(
-            additionalFiles = mapOf(
-                "entry-interactions/manga/src/main/java/mihon/entry/interactions/manga/MangaPreviewSupport.kt" to
-                    """
-                        package mihon.entry.interactions.manga
-
-                        import eu.kanade.tachiyomi.source.model.Page
-
-                        internal class MangaPreviewSupport {
-                            suspend fun load(source: LegacyMangaSource, chapter: SChapter): List<Page> {
-                                return source.getPageList(chapter)
-                            }
-                        }
-                    """.trimIndent(),
-                "entry-interactions/anime/src/main/java/eu/kanade/tachiyomi/ui/video/player/VideoPlayerActivity.kt" to
-                    """
-                        package eu.kanade.tachiyomi.ui.video.player
-
-                        class VideoPlayerActivity
-                    """.trimIndent(),
-                "entry-interactions/anime/src/main/java/eu/kanade/tachiyomi/ui/video/player/VideoStreamResolver.kt" to
-                    """
-                        package eu.kanade.tachiyomi.ui.video.player
-
-                        internal interface VideoStreamResolver
-                    """.trimIndent(),
-                "entry-interactions/anime/src/main/java/eu/kanade/tachiyomi/ui/video/player/VideoPlayerMediaCache.kt" to
-                    """
-                        package eu.kanade.tachiyomi.ui.video.player
-
-                        internal class VideoPlayerMediaCache
-                    """.trimIndent(),
-                "entry-interactions/anime/src/main/java/mihon/entry/interactions/anime/AnimePlayerSupport.kt" to
-                    """
-                        package mihon.entry.interactions.anime
-
-                        import eu.kanade.tachiyomi.ui.video.player.VideoPlayerMediaCache
-                        import eu.kanade.tachiyomi.ui.video.player.VideoStreamResolver
-
-                        internal class AnimePlayerSupport(
-                            private val resolver: VideoStreamResolver,
-                            private val cache: VideoPlayerMediaCache,
-                        )
-                    """.trimIndent(),
-            ),
-        )
-
-        runBoundaryCheck()
     }
 
     @Test

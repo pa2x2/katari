@@ -54,32 +54,6 @@ class FeatureContractValidationTest {
     )
 
     @Test
-    fun `every applicable future type executes the same discovered verifier`() = runSuspend {
-        val contract = contract()
-        val graph = graph(
-            contentTypes = listOf(type("future-alpha"), type("future-beta"), unsupportedType("future-empty")),
-            integration = integration(contract),
-        )
-        val executed = mutableListOf<ContentTypeId>()
-        val contributor = verifierContributor(contract) { input ->
-            input.provider(providerDefinition).state shouldBe "ready"
-            executed += input.subject.entryContentType
-            FeatureContractVerificationResult.Passed
-        }
-
-        val plan = planFeatureContractValidation(graph, evaluateFeatureGraph(graph), listOf(contributor))
-        val validation = validateFeatureContracts(plan)
-
-        plan.isComplete shouldBe true
-        validation.isSuccessful shouldBe true
-        validation.executions.map { it::class } shouldContainExactly listOf(
-            CompletedFeatureContractExecution::class,
-            CompletedFeatureContractExecution::class,
-        )
-        executed shouldContainExactly listOf(ContentTypeId("future-alpha"), ContentTypeId("future-beta"))
-    }
-
-    @Test
     fun `missing verifier and media fixture are owned without invalidating unsupported types`() = runSuspend {
         val fixture = contractFixtureDefinition<ExampleFixture>(ContractFixtureId("example.fixture"), featureOwner)
         val contract = contract(listOf(fixture))

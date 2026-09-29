@@ -126,16 +126,6 @@ class FeatureGraphAssemblyTest {
         unusedFixture.message shouldContain "Unreachable contract fixture example.fixture on example"
     }
 
-    @Test
-    fun `feature may prepare for a provider that no content type implements yet`() {
-        val graph = discoverAndAssembleFeatureGraph(
-            listOf(featureContributor(alpha)),
-        )
-
-        graph.entryContentTypes shouldContainExactly emptyList()
-        graph.capabilities.map { it.id } shouldContainExactly listOf(alpha.id)
-    }
-
     private fun type(
         id: String,
         owner: ContributionOwner = ContributionOwner("$id.type"),

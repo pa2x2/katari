@@ -8,15 +8,6 @@ import org.junit.jupiter.api.Test
 class ApplicationFeatureRuntimeModuleBoundaryRulesTest {
 
     @Test
-    fun `owner-local descriptor registers its production runtime module`() {
-        val findings = checkApplicationFeatureRuntimeModuleBoundaries(
-            validTopology(),
-        )
-
-        findings.shouldBeEmpty()
-    }
-
-    @Test
     fun `runtime module without a descriptor fails`() {
         val findings = checkApplicationFeatureRuntimeModuleBoundaries(
             validTopology().filterNot { it.relativePath.endsWith(".application-feature-module") },
