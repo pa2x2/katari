@@ -2129,6 +2129,7 @@
     <string name="filter_date_bounds_invalid">Choose a date within the supported range.</string>
     <string name="filter_date_range_invalid">The start date must not be after the end date.</string>
     <string name="filter_value_invalid">Check this value before continuing.</string>
+    <string name="filter_source_callback_failed">This filter reported an error, so its summary and checks are unavailable.</string>
     <string name="filter_any_date">Any date</string>
     <string name="filter_clear">Clear selections</string>
     <string name="filter_reset_defaults">Reset to defaults</string>

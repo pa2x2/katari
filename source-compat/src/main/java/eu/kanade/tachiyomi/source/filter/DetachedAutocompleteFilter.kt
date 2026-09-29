@@ -22,12 +22,11 @@ internal fun EntryFilter.Autocomplete.detachedAutocomplete(
         ),
         DetachedEntryFilter,
         EntryFilterMetadataProvider,
-        EntryFilterValueMigration by FilterCapabilities(source),
-        EntryFilterValidator by FilterCapabilities(source) {
+        EntryFilterValueMigration by FilterCapabilities(source, owner),
+        EntryFilterValidator by FilterCapabilities(source, owner) {
         override val sourceFilter = source
         override val binding = owner
-        override val filterMetadata get() = (source as? EntryFilterMetadataProvider)?.filterMetadata
-            ?: EntryFilterMetadata()
+        override val filterMetadata get() = FilterCapabilities(source, owner).filterMetadata
         override fun getSuggestionQuery(input: EntryFilterTextInput): String? = source.getSuggestionQuery(input)
         override suspend fun getSuggestions(input: EntryFilterTextInput, query: String): List<EntryFilterSuggestion> =
             EntryFilterList(this).withSourceFilterValues { source.getSuggestions(input, query) }

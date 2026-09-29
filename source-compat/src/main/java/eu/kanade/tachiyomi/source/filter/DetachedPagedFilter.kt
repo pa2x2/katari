@@ -33,13 +33,12 @@ internal fun detachedPagedGroup(
         DetachedEntryFilter,
         DetachedPagedGroup,
         EntryFilterMetadataProvider,
-        EntryFilterValueMigration by FilterCapabilities(source),
-        EntryFilterValidator by FilterCapabilities(source) {
+        EntryFilterValueMigration by FilterCapabilities(source, owner),
+        EntryFilterValidator by FilterCapabilities(source, owner) {
         override val defaultState = initial
         override val sourceFilter = source
         override val binding = owner
-        override val filterMetadata get() = (source as? EntryFilterMetadataProvider)?.filterMetadata
-            ?: EntryFilterMetadata()
+        override val filterMetadata get() = FilterCapabilities(source, owner).filterMetadata
         override suspend fun getPage(request: EntryFilterPageRequest): EntryFilterPage =
             EntryFilterList(this).withSourceFilterValues { source.getPage(request) }
         override suspend fun getNavigation(request: EntryFilterNavigationRequest): EntryFilterNavigation =
@@ -48,7 +47,8 @@ internal fun detachedPagedGroup(
             withBoundFilterValues(listOf(this)) { source.projectItem(item, previous) }
         override fun reduceItemUpdate(item: EntryFilterPageItem, updatedFilter: EntryFilter<*>): Any? =
             withBoundFilterValues(listOf(this)) { source.reduceItemUpdate(item, updatedFilter) }
-        override fun selectedItemCount(state: Any?): Int = source.selectedItemCount(state)
+        override fun selectedItemCount(state: Any?): Int =
+            source.guardSourceCallback(owner, 0) { source.selectedItemCount(state) }
         override fun encodeState(state: Any?): String = source.encodeState(state)
         override fun decodeState(value: String): Any? = source.decodeState(value)
     }.also { it.state = current.state }

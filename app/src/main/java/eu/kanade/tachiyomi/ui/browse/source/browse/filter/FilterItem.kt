@@ -11,9 +11,11 @@ import androidx.compose.ui.unit.dp
 import eu.kanade.tachiyomi.source.entry.EntryFilter
 import eu.kanade.tachiyomi.source.entry.EntryFilterTextInput
 import eu.kanade.tachiyomi.source.entry.filter.EntryDateFilter
+import eu.kanade.tachiyomi.source.filter.hasFailedSourceCallback
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.date.DateFilterItem
 import mihon.entry.interactions.catalogue.EntryCatalogueFilterSuggestionsResult
 import tachiyomi.core.common.preference.TriState
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.CheckboxItem
 import tachiyomi.presentation.core.components.CollapsibleBox
 import tachiyomi.presentation.core.components.HeadingItem
@@ -21,6 +23,7 @@ import tachiyomi.presentation.core.components.SelectItem
 import tachiyomi.presentation.core.components.SortItem
 import tachiyomi.presentation.core.components.TextItem
 import tachiyomi.presentation.core.components.TriStateItem
+import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable
 internal fun FilterItem(
@@ -86,6 +89,14 @@ internal fun FilterItem(
                 it,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 12.dp),
+            )
+        }
+        if (filter.hasFailedSourceCallback()) {
+            Text(
+                stringResource(MR.strings.filter_source_callback_failed),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error,
                 modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 12.dp),
             )
         }
