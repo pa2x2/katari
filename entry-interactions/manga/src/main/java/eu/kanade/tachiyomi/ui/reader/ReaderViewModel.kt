@@ -68,11 +68,13 @@ import mihon.entry.interactions.manga.media.session.MangaMediaSessionProcessor
 import mihon.entry.interactions.manga.reader.settings.MangaReaderSettingsBindings
 import mihon.entry.interactions.manga.reader.text.session.MangaReaderTextSession
 import mihon.entry.interactions.manga.reader.text.session.declaredContentLanguage
+import mihon.entry.interactions.manga.reader.text.stored.MangaReaderStoredTranslations
 import mihon.entry.interactions.manga.reader.text.translation.MangaPageTranslator
 import mihon.entry.interactions.manga.reader.text.translation.MangaTextTranslationController
 import mihon.entry.interactions.manga.reader.text.translation.MangaTranslationLanguageStore
 import mihon.entry.interactions.manga.state.mangaProgressState
 import mihon.entry.interactions.manga.state.pageIndex
+import mihon.entry.interactions.manga.translation.artifact.MangaChapterTranslationStore
 import mihon.entry.interactions.media.session.EntryMediaSessionActivitySession
 import mihon.entry.interactions.media.session.EntryMediaSessionEvent
 import mihon.entry.interactions.reader.navigation.EntryReaderNavigationPresentation
@@ -173,6 +175,13 @@ internal class ReaderViewModel @JvmOverloads constructor(
         languageStore = MangaTranslationLanguageStore(feature = Injekt.get(), series = series),
     )
 
+    private val storedTranslations = MangaReaderStoredTranslations(
+        store = MangaChapterTranslationStore(downloadProvider),
+        downloadManager = downloadManager,
+        sourceManager = sourceManager,
+        series = { series.value },
+    )
+
     /** Recognizes page text while the reader's translate mode is on. */
     val textSession = MangaReaderTextSession(
         recognition = Injekt.get(),
@@ -192,6 +201,7 @@ internal class ReaderViewModel @JvmOverloads constructor(
                 declaredContentLanguage(source?.lang)
             },
         pageLanguage = textTranslation.pageLanguage,
+        storedTranslation = { page -> storedTranslations.of(page.chapter) },
     )
 
     /** Languages page text can be read in. */
@@ -380,6 +390,15 @@ internal class ReaderViewModel @JvmOverloads constructor(
             .filterNotNull()
             .onEach { currentChapter ->
                 chapterId = currentChapter.chapter.id!!
+            }
+            .launchIn(viewModelScope)
+
+        // A chapter with a stored translation opens with its translations drawn over the pages.
+        state.map { it.currentChapter }
+            .filterNotNull()
+            .distinctUntilChanged()
+            .onEach { chapter ->
+                if (storedTranslations.of(chapter) != null) eventChannel.send(Event.StoredTranslationOpened)
             }
             .launchIn(viewModelScope)
 
@@ -995,9 +1014,19 @@ internal class ReaderViewModel @JvmOverloads constructor(
 
     /** Switches between drawing translations over pages and translating tapped text, for this manga. */
     fun toggleTextTranslationOverlay() {
-        val binding = readerSettings.pageTextTranslationOverlay
-        val enabled = !binding.effectiveValue
-        viewModelScope.launchIO { binding.updateEntry(enabled) }
+        // The session's state, not the setting: a chapter with a stored translation turns translations on by itself.
+        val enabled = !textSession.state.value.overlay
+        textSession.setOverlay(enabled)
+        viewModelScope.launchIO { readerSettings.pageTextTranslationOverlay.updateEntry(enabled) }
+    }
+
+    /** Deletes the stored translation of the chapter on screen, keeping its download, and processes its pages live. */
+    fun deleteStoredTranslation() {
+        val chapter = getCurrentChapter() ?: return
+        viewModelScope.launchIO {
+            storedTranslations.delete(chapter)
+            withUIContext { textSession.reloadStoredPages() }
+        }
     }
 
     fun toggleCropBorders(): Boolean {
@@ -1276,6 +1305,9 @@ internal class ReaderViewModel @JvmOverloads constructor(
     sealed interface Event {
         data object ReloadViewerChapters : Event
         data object PageChanged : Event
+
+        /** The chapter on screen has a stored translation to show. */
+        data object StoredTranslationOpened : Event
         data class SetCoverResult(val result: SetAsCoverResult) : Event
 
         data class SavedImage(val result: SaveImageResult) : Event

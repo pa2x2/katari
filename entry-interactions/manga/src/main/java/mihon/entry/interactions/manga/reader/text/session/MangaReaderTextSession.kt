@@ -16,11 +16,14 @@ import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
 import mihon.entry.interactions.manga.reader.text.overlay.overlayArea
 import mihon.entry.interactions.manga.reader.text.overlay.sampleTextBackground
+import mihon.entry.interactions.manga.reader.text.stored.MangaStoredPage
+import mihon.entry.interactions.manga.reader.text.stored.pageShownBy
 import mihon.entry.interactions.manga.reader.text.surface.MangaPageTextDecoration
 import mihon.entry.interactions.manga.reader.text.surface.MangaPageTextSurface
 import mihon.entry.interactions.manga.reader.text.translation.MangaPageTranslation
 import mihon.entry.interactions.manga.reader.text.translation.MangaPageTranslationIssue
 import mihon.entry.interactions.manga.reader.text.translation.MangaPageTranslator
+import mihon.entry.interactions.manga.translation.artifact.MangaChapterTranslation
 import mihon.language.api.tag.LanguageTag
 import mihon.model.artifacts.api.ModelArtifactStore
 import mihon.model.artifacts.api.descriptor.ModelArtifactDescriptor
@@ -46,6 +49,9 @@ import mihon.text.recognition.api.result.TextRecognitionResult
  * and resumes on its own once that prerequisite is met. Pages are read in the [pageLanguage] kept for the series, or
  * else in the source's [declaredLanguage], which is null until the series is known or when the source spans several
  * languages; a different page language reads them again.
+ *
+ * Pages with a [storedTranslation] made from the same raw file are drawn from it instead, whatever the current
+ * settings, and only its gaps are translated live.
  */
 internal class MangaReaderTextSession(
     private val recognition: TextRecognitionFeature,
@@ -58,6 +64,7 @@ internal class MangaReaderTextSession(
     private val scope: CoroutineScope,
     declaredLanguage: Flow<LanguageTag?>,
     pageLanguage: Flow<LanguageTag?>,
+    private val storedTranslation: suspend (ReaderPage) -> MangaChapterTranslation? = { null },
     private val sampleBackground: suspend (TextRecognitionImage, ImageRect) -> Int = ::sampleTextBackground,
 ) {
     private val mutableState = MutableStateFlow(MangaReaderTextState())
@@ -70,6 +77,13 @@ internal class MangaReaderTextSession(
     private val jobs = mutableMapOf<ReaderPage, Job>()
     private val translationJobs = mutableMapOf<ReaderPage, Job>()
     private var modelWait: Job? = null
+
+    /** Translations drawn from storage, which translating again with other choices keeps. */
+    private val storedOverlays = mutableMapOf<ReaderPage, List<MangaPageTextOverlay>>()
+
+    /** Stored pages with regions the stored translation lacks, and those still to be translated live. */
+    private val storedGaps = mutableSetOf<ReaderPage>()
+    private val pendingGaps = mutableSetOf<ReaderPage>()
 
     init {
         scope.launch {
@@ -92,6 +106,7 @@ internal class MangaReaderTextSession(
         if (!active) {
             cancelRecognition()
             cancelTranslation()
+            forgetStoredPages()
             mutableState.update {
                 MangaReaderTextState(
                     language = it.language,
@@ -103,6 +118,21 @@ internal class MangaReaderTextSession(
             return
         }
         mutableState.update { it.copy(active = true, blocker = null) }
+        recognizeVisible()
+    }
+
+    /** Processes pages drawn from a stored translation live again, after that translation was deleted. */
+    fun reloadStoredPages() {
+        val stored = storedOverlays.keys + mutableState.value.storedSetups.keys
+        stored.forEach { translationJobs.remove(it)?.cancel() }
+        forgetStoredPages()
+        mutableState.update { state ->
+            state.copy(
+                pages = state.pages - stored,
+                overlays = state.overlays - stored,
+                translating = state.translating - stored,
+            )
+        }
         recognizeVisible()
     }
 
@@ -252,6 +282,12 @@ internal class MangaReaderTextSession(
         val page = surface.page
         val image = surface.displayedImage() ?: return
         image.use {
+            val stored = storedTranslation(page)?.pageShownBy(image)
+            if (stored != null) {
+                showStored(page, image, stored)
+                if (mutableState.value.overlay) translateRecognized()
+                return
+            }
             val preparation = recognition.prepare(TextRecognitionRequest(image, language()))
             if (preparation !is TextRecognitionPreparation.Ready) {
                 block(preparation)
@@ -273,25 +309,67 @@ internal class MangaReaderTextSession(
         if (mutableState.value.overlay) translateRecognized()
     }
 
-    /** Translates recognized on-screen and preloaded pages that have no translations yet, on-screen pages first. */
+    private suspend fun showStored(page: ReaderPage, image: TextRecognitionImage, stored: MangaStoredPage) {
+        val overlays = stored.result.regions.mapNotNull { region ->
+            stored.translations[region.bounds]?.let { text ->
+                MangaPageTextOverlay(
+                    source = region.bounds,
+                    area = overlayArea(region),
+                    text = text,
+                    background = sampleBackground(image, region.bounds),
+                )
+            }
+        }
+        storedOverlays[page] = overlays
+        if (overlays.size < stored.result.regions.size) {
+            storedGaps += page
+            pendingGaps += page
+        }
+        mutableState.update {
+            it.copy(
+                pages = it.pages + (page to MangaPageTextStatus.Recognized(stored.result)),
+                overlays = it.overlays + (page to overlays),
+                storedSetups = it.storedSetups + (page to stored.setup),
+            )
+        }
+    }
+
+    private fun forgetStoredPages() {
+        storedOverlays.clear()
+        storedGaps.clear()
+        pendingGaps.clear()
+        mutableState.update { it.copy(storedSetups = emptyMap()) }
+    }
+
+    /**
+     * Translates recognized on-screen and preloaded pages that have no translations yet, and the gaps of stored ones,
+     * on-screen pages first.
+     */
     private fun translateRecognized() {
         val state = mutableState.value
         if (!state.active || !state.overlay || state.translationIssue != null) return
         (visible + ahead).forEach { surface ->
             val page = surface.page
             val result = (state.pages[page] as? MangaPageTextStatus.Recognized)?.result ?: return@forEach
-            if (page in state.overlays || translationJobs[page]?.isActive == true) return@forEach
+            val translated = page in state.overlays && page !in pendingGaps
+            if (translated || translationJobs[page]?.isActive == true) return@forEach
             translationJobs[page] = scope.launch {
                 var completed = false
                 try {
                     completed = translate(surface, result)
                 } finally {
                     translationJobs.remove(page, coroutineContext.job)
-                    // An interrupted page starts over later instead of keeping a partial set of translations.
+                    // An interrupted page starts over later instead of keeping a partial set of translations, apart
+                    // from those it has stored.
+                    if (completed) pendingGaps -= page
                     mutableState.update { state ->
                         state.copy(
                             translating = state.translating - page,
-                            overlays = if (completed) state.overlays else state.overlays - page,
+                            overlays = when {
+                                completed -> state.overlays
+                                else -> storedOverlays[page]?.let { state.overlays + (page to it) }
+                                    ?: (state.overlays - page)
+                            },
                         )
                     }
                 }
@@ -299,15 +377,17 @@ internal class MangaReaderTextSession(
         }
     }
 
-    /** Translates every region of [result]; returns whether the page is complete. */
+    /** Translates every region of [result] without a stored translation; returns whether the page is complete. */
     private suspend fun translate(surface: MangaPageTextSurface, result: TextRecognitionResult): Boolean {
         val page = surface.page
         val image = surface.displayedImage() ?: return false
         mutableState.update { it.copy(translating = it.translating + page) }
         image.use {
             val pageText = result.regions.joinToString("\n") { it.text }
-            val overlays = mutableListOf<MangaPageTextOverlay>()
+            val overlays = storedOverlays[page].orEmpty().toMutableList()
+            val stored = overlays.mapTo(HashSet()) { it.source }
             for (region in result.regions) {
+                if (region.bounds in stored) continue
                 val text = when (val translation = translator.translate(region.text, result.language, pageText)) {
                     is MangaPageTranslation.Translated -> translation.text
                     MangaPageTranslation.Skipped -> continue
@@ -330,10 +410,11 @@ internal class MangaReaderTextSession(
         return true
     }
 
-    /** Replaces drawn translations with ones made with the current target and engine. */
+    /** Replaces live translations with ones made with the current target and engine; stored ones stay. */
     private fun translateAgain() {
         cancelTranslation()
-        mutableState.update { it.copy(overlays = emptyMap(), translationIssue = null) }
+        pendingGaps += storedGaps
+        mutableState.update { it.copy(overlays = storedOverlays.toMap(), translationIssue = null) }
         translateRecognized()
     }
 
@@ -358,6 +439,7 @@ internal class MangaReaderTextSession(
         if (language != null && language == previous.language) return
         cancelRecognition()
         cancelTranslation()
+        forgetStoredPages()
         mutableState.update {
             it.copy(
                 language = language,

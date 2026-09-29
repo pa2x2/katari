@@ -309,6 +309,10 @@ class ReaderActivity : EntryInteractionActivity() {
                     ReaderViewModel.Event.PageChanged -> {
                         displayRefreshHost?.flash()
                     }
+                    ReaderViewModel.Event.StoredTranslationOpened -> {
+                        viewModel.textSession.setOverlay(true)
+                        textInteraction.setActive(true)
+                    }
                     is ReaderViewModel.Event.SavedImage -> {
                         onSaveImageResult(event.result)
                     }
@@ -690,6 +694,7 @@ class ReaderActivity : EntryInteractionActivity() {
             onDismissTranslation = textInteraction::dismissTranslation,
             onToggleOverlay = viewModel::toggleTextTranslationOverlay,
             onToggleOriginal = viewModel.textSession::toggleOriginal,
+            onDeleteStoredTranslation = viewModel::deleteStoredTranslation,
             onOpenTranslationSettings = ::openTranslationSettings,
             onClose = { textInteraction.setActive(false) },
         )

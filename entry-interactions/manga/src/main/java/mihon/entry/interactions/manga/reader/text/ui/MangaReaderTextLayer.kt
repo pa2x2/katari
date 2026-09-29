@@ -64,6 +64,7 @@ internal fun MangaReaderTextLayer(
     onDismissTranslation: () -> Unit,
     onToggleOverlay: () -> Unit,
     onToggleOriginal: () -> Unit,
+    onDeleteStoredTranslation: () -> Unit,
     onOpenTranslationSettings: () -> Unit,
     onClose: () -> Unit,
 ) {
@@ -109,7 +110,16 @@ internal fun MangaReaderTextLayer(
                     progress = state.progress,
                     overlay = state.overlay,
                     showOriginal = state.showOriginal,
-                    languages = state.language?.let { language ->
+                    languages = state.storedSetup?.let { stored ->
+                        stringResource(
+                            MR.strings.reader_text_saved_languages,
+                            stringResource(
+                                MR.strings.translation_language_pair,
+                                stored.route.sourceLanguage.displayName(),
+                                stored.route.targetLanguage.displayName(),
+                            ),
+                        )
+                    } ?: state.language?.let { language ->
                         target?.let {
                             stringResource(
                                 MR.strings.translation_language_pair,
@@ -118,6 +128,7 @@ internal fun MangaReaderTextLayer(
                             )
                         } ?: language.displayName()
                     },
+                    stored = state.storedSetup != null,
                     observeModels = observeModels,
                     onDownloadModels = { approving = it },
                     onDownloadPlatformModels = { approvingPlatform = it },
@@ -133,6 +144,7 @@ internal fun MangaReaderTextLayer(
                     },
                     onToggleOverlay = onToggleOverlay,
                     onToggleOriginal = onToggleOriginal,
+                    onDeleteStoredTranslation = onDeleteStoredTranslation,
                     onSelectArea = { selectingArea = true },
                     onClose = onClose,
                     modifier = toolbarModifier,
