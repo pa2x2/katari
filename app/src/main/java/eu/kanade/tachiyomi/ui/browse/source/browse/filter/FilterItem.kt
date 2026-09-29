@@ -28,14 +28,15 @@ import tachiyomi.presentation.core.i18n.stringResource
 @Composable
 internal fun FilterItem(
     filter: EntryFilter<*>,
+    changes: FilterChanges,
     onUpdate: () -> Unit,
     onOpenPagedGroup: (EntryFilter.PagedGroup<*>) -> Unit,
     onRequestSuggestions: suspend (
         EntryFilter.Autocomplete,
         EntryFilterTextInput,
     ) -> EntryCatalogueFilterSuggestionsResult,
-    activeOnly: Boolean = false,
-    onReset: (EntryFilter<*>) -> Unit = {},
+    changedOnly: Boolean,
+    onReset: (EntryFilter<*>) -> Unit,
 ) {
     Column {
         when (filter) {
@@ -79,8 +80,8 @@ internal fun FilterItem(
                     }
                 }
             }
-            is EntryFilter.Group<*> -> GroupFilterItem(filter, activeOnly, onUpdate, onReset) { child, selected ->
-                FilterItem(child, onUpdate, onOpenPagedGroup, onRequestSuggestions, selected, onReset)
+            is EntryFilter.Group<*> -> GroupFilterItem(filter, changes, changedOnly, onUpdate, onReset) { child ->
+                FilterItem(child, changes, onUpdate, onOpenPagedGroup, onRequestSuggestions, changedOnly, onReset)
             }
             is EntryFilter.PagedGroup<*> -> PagedGroupSummaryItem(filter) { onOpenPagedGroup(filter) }
         }

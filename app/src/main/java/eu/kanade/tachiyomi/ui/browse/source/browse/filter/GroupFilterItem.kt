@@ -35,17 +35,18 @@ import tachiyomi.presentation.core.i18n.stringResource
 @Composable
 internal fun GroupFilterItem(
     filter: EntryFilter.Group<*>,
-    activeOnly: Boolean,
+    changes: FilterChanges,
+    changedOnly: Boolean,
     onUpdate: () -> Unit,
     onReset: (EntryFilter<*>) -> Unit,
-    item: @Composable (EntryFilter<*>, Boolean) -> Unit,
+    item: @Composable (EntryFilter<*>) -> Unit,
 ) {
     var expanded by rememberSaveable(filter) { mutableStateOf(false) }
     var selectedOnly by rememberSaveable(filter) { mutableStateOf(false) }
     val issues = filter.validationIssues()
     LaunchedEffect(issues.isNotEmpty()) { if (issues.isNotEmpty()) expanded = true }
-    LaunchedEffect(activeOnly) { if (activeOnly) expanded = true }
-    val count = filter.activeCount()
+    LaunchedEffect(changedOnly) { if (changedOnly) expanded = true }
+    val change = changes[filter]
     val summary = (filter as? EntryFilterGroupSummary)?.selectionSummary(
         filter.state.filterIsInstance<EntryFilter<*>>(),
     )
@@ -76,20 +77,7 @@ internal fun GroupFilterItem(
                     )
                 }
             }
-            if (count != null && count > 0) {
-                Badge(
-                    containerColor = if (issues.isEmpty()) {
-                        MaterialTheme.colorScheme.primaryContainer
-                    } else {
-                        MaterialTheme.colorScheme.errorContainer
-                    },
-                    contentColor = if (issues.isEmpty()) {
-                        MaterialTheme.colorScheme.onPrimaryContainer
-                    } else {
-                        MaterialTheme.colorScheme.onErrorContainer
-                    },
-                ) { Text(count.toString()) }
-            }
+            FilterChangeBadges(change, hasIssues = issues.isNotEmpty())
             Icon(if (expanded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore, contentDescription = null)
         }
         if (expanded) {
@@ -97,7 +85,7 @@ internal fun GroupFilterItem(
                 Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                FilterChip(enabled = !activeOnly, selected = selectedOnly || activeOnly, onClick = {
+                FilterChip(enabled = !changedOnly, selected = selectedOnly || changedOnly, onClick = {
                     selectedOnly = !selectedOnly
                 }, label = { Text(stringResource(MR.strings.filter_selected)) })
                 TextButton(onClick = {
@@ -111,12 +99,15 @@ internal fun GroupFilterItem(
                     }) { Text(stringResource(MR.strings.filter_clear)) }
                 }
             }
-            SearchableFilterGroupContent(group = filter, selectedOnly = selectedOnly || activeOnly) {
-                item(
-                    it,
-                    selectedOnly || activeOnly,
-                )
-            }
+            SearchableFilterGroupContent(
+                group = filter,
+                shows = when {
+                    changedOnly -> { child -> changes[child].isChanged || child.validationIssues().isNotEmpty() }
+                    selectedOnly -> { child -> child.activeCount() != 0 }
+                    else -> null
+                },
+                itemContent = item,
+            )
             issues.forEach {
                 Text(
                     it.displayMessage(),

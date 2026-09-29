@@ -25,14 +25,14 @@ import tachiyomi.presentation.core.i18n.stringResource
 @Composable
 internal fun SearchableFilterGroupContent(
     group: EntryFilter.Group<*>,
-    selectedOnly: Boolean = false,
+    shows: ((EntryFilter<*>) -> Boolean)?,
     itemContent: @Composable (EntryFilter<*>) -> Unit,
 ) {
     val filters = group.state.filterIsInstance<EntryFilter<*>>()
     val isSearchable = filters.hasSearchableOptionList()
     var query by rememberSaveable(group) { mutableStateOf("") }
     val matchingFilters = if (isSearchable) filters.filterGroupOptions(query) else filters
-    val visibleFilters = if (selectedOnly) matchingFilters.filter { it.activeCount() != 0 } else matchingFilters
+    val visibleFilters = if (shows != null) matchingFilters.filter(shows) else matchingFilters
 
     Column {
         if (isSearchable) {

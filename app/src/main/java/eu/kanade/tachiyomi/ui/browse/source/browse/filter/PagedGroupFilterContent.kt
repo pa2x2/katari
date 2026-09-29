@@ -348,6 +348,7 @@ private fun ProjectedFilterItem(
         is ProjectedFilterItemState.Ready -> key(encodedState) {
             FilterItem(
                 filter = current.filter,
+                changes = FilterChanges.Empty,
                 onUpdate = {
                     onEditItem(item, current.filter) { success ->
                         if (!success) projection = ProjectedFilterItemState.Failed
@@ -356,6 +357,8 @@ private fun ProjectedFilterItem(
                 },
                 onOpenPagedGroup = {},
                 onRequestSuggestions = onRequestSuggestions,
+                changedOnly = false,
+                onReset = {},
             )
         }
     }

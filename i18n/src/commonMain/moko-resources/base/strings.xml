@@ -2156,10 +2156,10 @@
     <string name="filter_day_selected">Exact date selected</string>
     <string name="filter_date_confirm_help">Your changes are kept only when confirmed.</string>
     <string name="filter_type_date">Type a date</string>
-    <string name="filter_active">Active filters</string>
-    <string name="filter_all">All filters</string>
+    <string name="filter_view_changed">Changed · %1$d</string>
+    <string name="filter_view_all">All</string>
+    <string name="filter_changes_description">%1$d included, %2$d excluded</string>
     <string name="filter_selected">Selected</string>
-    <string name="filter_other_settings">Other settings</string>
     <string name="filter_updating">Updating selections…</string>
     <string name="filter_unapplied">Unapplied changes</string>
     <string name="browse_search_kept_filter_changes">Search used your applied filters. Unapplied filter changes were kept.</string>
@@ -2179,7 +2179,7 @@
     <string name="filter_remove_value">Remove saved value</string>
     <string name="filter_save_repair">Save repaired preset</string>
     <string name="filter_validation_help">Check the highlighted values before applying or saving.</string>
-    <string name="filter_no_active">No active filters</string>
+    <string name="filter_no_changes">No filters differ from the source defaults</string>
     <string name="filter_show_all">Show all filters</string>
     <string name="filter_sorting">Sorting</string>
     <string name="filter_save_required">Save the repaired preset before applying it.</string>

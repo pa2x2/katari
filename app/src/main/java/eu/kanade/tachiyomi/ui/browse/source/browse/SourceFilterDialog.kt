@@ -36,6 +36,7 @@ import eu.kanade.tachiyomi.source.entry.EntryFilterPageLoadReason
 import eu.kanade.tachiyomi.source.entry.EntryFilterPageScope
 import eu.kanade.tachiyomi.source.entry.EntryFilterTextInput
 import eu.kanade.tachiyomi.source.entry.filter.validationIssues
+import eu.kanade.tachiyomi.ui.browse.source.browse.filter.FilterChanges
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.FilterItem
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.FilterPresetRepairItem
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.PagedFilterBrowseSession
@@ -59,6 +60,7 @@ import tachiyomi.presentation.core.i18n.stringResource
 fun SourceFilterDialog(
     onDismissRequest: () -> Unit,
     filters: EntryFilterList,
+    defaultFilters: EntryFilterList,
     filterRevision: Int = 0,
     isLoading: Boolean = false,
     errorMessage: String? = null,
@@ -107,8 +109,9 @@ fun SourceFilterDialog(
     var route by rememberSaveable(stateSaver = sourceFilterRouteSaver()) {
         mutableStateOf<SourceFilterRoute>(SourceFilterRoute.Root)
     }
-    var activeOnly by rememberSaveable { mutableStateOf(false) }
+    var changedOnly by rememberSaveable { mutableStateOf(false) }
     val validation = filters.validationIssues()
+    val changes = FilterChanges.of(filters, defaultFilters)
     val isError = errorMessage != null
     val slideDistance = rememberSlideDistance()
     val leavePagedGroup = { route = SourceFilterRoute.Root }
@@ -122,7 +125,7 @@ fun SourceFilterDialog(
         }
     }
     val filterAndDismiss = {
-        if (onFilter()) onDismissRequest() else activeOnly = false
+        if (onFilter()) onDismissRequest() else changedOnly = false
     }
 
     BackHandler(enabled = route is SourceFilterRoute.PagedGroup, onBack = leavePagedGroup)
@@ -175,12 +178,18 @@ fun SourceFilterDialog(
                                 Modifier.padding(horizontal = 16.dp),
                                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                             ) {
-                                FilterChip(selected = !activeOnly, onClick = {
-                                    activeOnly = false
-                                }, label = { Text(stringResource(MR.strings.filter_all)) })
-                                FilterChip(selected = activeOnly, onClick = {
-                                    activeOnly = true
-                                }, label = { Text(stringResource(MR.strings.filter_active)) })
+                                FilterChip(
+                                    selected = !changedOnly,
+                                    onClick = { changedOnly = false },
+                                    label = { Text(stringResource(MR.strings.filter_view_all)) },
+                                )
+                                FilterChip(
+                                    selected = changedOnly,
+                                    onClick = { changedOnly = true },
+                                    label = {
+                                        Text(stringResource(MR.strings.filter_view_changed, changes.total.changed))
+                                    },
+                                )
                             }
                             if (pendingFilterEdits > 0) {
                                 Text(
@@ -209,16 +218,23 @@ fun SourceFilterDialog(
                                     onSaveRepair = onSaveRepair,
                                     hasPendingEdits = pendingFilterEdits > 0,
                                     onResolveIssue = onResolveIssue,
-                                    activeOnly = activeOnly,
-                                    onShowAll = { activeOnly = false },
-                                ) { filter, selectedOnly ->
-                                    FilterItem(filter, updateFilters, {
-                                        filters.pathTo(it)?.let { path ->
-                                            route = SourceFilterRoute.PagedGroup(path)
-                                        }
-                                    }, onRequestSuggestions, selectedOnly) {
-                                        onResetGroup(it)
-                                    }
+                                    changes = changes,
+                                    changedOnly = changedOnly,
+                                    onShowAll = { changedOnly = false },
+                                ) { filter, changedOnlyChildren ->
+                                    FilterItem(
+                                        filter = filter,
+                                        changes = changes,
+                                        onUpdate = updateFilters,
+                                        onOpenPagedGroup = {
+                                            filters.pathTo(it)?.let { path ->
+                                                route = SourceFilterRoute.PagedGroup(path)
+                                            }
+                                        },
+                                        onRequestSuggestions = onRequestSuggestions,
+                                        changedOnly = changedOnlyChildren,
+                                        onReset = onResetGroup,
+                                    )
                                 }
                             }
                             SourceFilterRootFooter(

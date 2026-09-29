@@ -15,8 +15,8 @@ import eu.kanade.tachiyomi.source.entry.EntryFilter
 import eu.kanade.tachiyomi.source.entry.EntryFilterList
 import eu.kanade.tachiyomi.source.entry.filter.EntryFilterValidationIssue
 import eu.kanade.tachiyomi.source.entry.filter.validationIssues
+import eu.kanade.tachiyomi.ui.browse.source.browse.filter.FilterChanges
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.FilterPresetRepairItem
-import eu.kanade.tachiyomi.ui.browse.source.browse.filter.activeCount
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.displayMessage
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.isOrdering
 import tachiyomi.i18n.*
@@ -34,7 +34,8 @@ internal fun LazyListScope.sourceFilterFields(
     onSaveRepair: () -> Unit,
     hasPendingEdits: Boolean,
     onResolveIssue: (FilterRestoreIssue, Boolean) -> Unit,
-    activeOnly: Boolean,
+    changes: FilterChanges,
+    changedOnly: Boolean,
     onShowAll: () -> Unit,
     filterItem: @Composable (EntryFilter<*>, Boolean) -> Unit,
 ) {
@@ -94,7 +95,8 @@ internal fun LazyListScope.sourceFilterFields(
                 }
             }
         }
-        val ordering = filters.filter { it.isOrdering }
+        val shown = filters.filter { !changedOnly || changes[it].isChanged || it.validationIssues().isNotEmpty() }
+        val ordering = shown.filter { it.isOrdering }
         if (ordering.isNotEmpty()) {
             item {
                 HeadingItem(stringResource(MR.strings.filter_sorting))
@@ -103,39 +105,17 @@ internal fun LazyListScope.sourceFilterFields(
         items(ordering) { filter ->
             filterItem(filter, false)
         }
-        val visible = filters.filterNot { it.isOrdering }.filter {
-            !activeOnly ||
-                it.activeCount() != 0 ||
-                it.validationIssues().isNotEmpty()
-        }
-        if (activeOnly && visible.isEmpty()) {
+        val constraints = shown.filterNot { it.isOrdering }
+        if (changedOnly && shown.isEmpty()) {
             item {
                 Column(Modifier.padding(16.dp)) {
-                    Text(stringResource(MR.strings.filter_no_active))
-                    TextButton(onClick = {
-                        onShowAll()
-                    }) { Text(stringResource(MR.strings.filter_show_all)) }
+                    Text(stringResource(MR.strings.filter_no_changes))
+                    TextButton(onClick = onShowAll) { Text(stringResource(MR.strings.filter_show_all)) }
                 }
             }
         }
-        val known = if (activeOnly) visible.filter { it.activeCount() != null } else visible
-        val unknown = if (activeOnly) {
-            visible.filter {
-                it.activeCount() == null
-            }
-        } else {
-            emptyList()
-        }
-        items(known) { filter ->
-            filterItem(filter, activeOnly)
-        }
-        if (unknown.isNotEmpty()) {
-            item {
-                HeadingItem(stringResource(MR.strings.filter_other_settings))
-            }
-        }
-        items(unknown) { filter ->
-            filterItem(filter, activeOnly)
+        items(constraints) { filter ->
+            filterItem(filter, changedOnly)
         }
     }
 }
