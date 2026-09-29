@@ -30,9 +30,9 @@ class CatalogPresetHelper(
             .sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.name })
 
         return buildList {
-            add(popularFeedPreset(sourceId, "Popular"))
+            add(popularFeedPreset(sourceId))
             if (supportsLatest) {
-                add(latestFeedPreset(sourceId, "Latest"))
+                add(latestFeedPreset(sourceId))
             }
             addAll(custom)
         }

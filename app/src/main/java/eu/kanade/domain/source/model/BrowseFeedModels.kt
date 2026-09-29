@@ -98,27 +98,35 @@ data class SourceFeed(
     val presetId: String,
     val enabled: Boolean = true,
     val displayMode: String? = null,
+    /** A name the user gave the feed; the preset name is shown when it is null. */
+    val title: String? = null,
 )
 
+/**
+ * Feeds offer the same display modes as the source's catalog, which has no cover-only grid. A feed
+ * saved with that mode shows as the compact grid it was already drawn as.
+ */
 fun SourceFeed.resolvedDisplayMode(defaultDisplayMode: LibraryDisplayMode): LibraryDisplayMode {
-    return displayMode?.let(LibraryDisplayMode::deserialize) ?: defaultDisplayMode
+    val mode = displayMode?.let(LibraryDisplayMode::deserialize) ?: defaultDisplayMode
+    return if (mode == LibraryDisplayMode.CoverOnlyGrid) LibraryDisplayMode.CompactGrid else mode
 }
 
-fun popularFeedPreset(sourceId: Long, name: String): SourceFeedPreset {
+/** Built-in presets are never saved; their names are resolved from their ids where they are shown. */
+fun popularFeedPreset(sourceId: Long): SourceFeedPreset {
     return SourceFeedPreset(
         id = BUILTIN_POPULAR_PRESET_ID,
         sourceId = sourceId,
-        name = name,
+        name = "",
         listingMode = FeedListingMode.Popular,
         chronological = false,
     )
 }
 
-fun latestFeedPreset(sourceId: Long, name: String): SourceFeedPreset {
+fun latestFeedPreset(sourceId: Long): SourceFeedPreset {
     return SourceFeedPreset(
         id = BUILTIN_LATEST_PRESET_ID,
         sourceId = sourceId,
-        name = name,
+        name = "",
         listingMode = FeedListingMode.Latest,
         chronological = true,
     )

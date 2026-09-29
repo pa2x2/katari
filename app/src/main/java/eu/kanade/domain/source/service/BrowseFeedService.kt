@@ -138,16 +138,46 @@ class BrowseFeedService(
         }
     }
 
-    fun removeFeed(feedId: String) {
+    fun renameFeed(feedId: String, title: String?) {
         preferences.savedFeeds.set(
-            preferences.savedFeeds.get().filterNot { it.id == feedId },
+            preferences.savedFeeds.get().map { if (it.id == feedId) it.copy(title = title) else it },
         )
+    }
+
+    /** Removes the feed and returns what [restoreFeed] needs to put it back, or null if it did not exist. */
+    fun removeFeed(feedId: String): RemovedFeed? {
+        val feeds = preferences.savedFeeds.get()
+        val index = feeds.indexOfFirst { it.id == feedId }
+        if (index == -1) return null
+        val timeline = preferences.feedTimeline(feedId)
+        val anchor = preferences.feedAnchor(feedId)
+        val selectedFeed = selectedFeedPreference(feeds[index].contentMode)
+        val removed = RemovedFeed(
+            feed = feeds[index],
+            index = index,
+            timeline = timeline.get().takeIf { timeline.isSet() },
+            anchor = anchor.get().takeIf { anchor.isSet() },
+            wasSelected = selectedFeed.get() == feedId,
+        )
+
+        preferences.savedFeeds.set(feeds.filterNot { it.id == feedId })
         clearTimeline(feedId)
-        if (preferences.selectedFeedId.get() == feedId) {
-            preferences.selectedFeedId.set("")
+        if (removed.wasSelected) {
+            selectedFeed.set("")
         }
-        if (preferences.selectedVideoFeedId.get() == feedId) {
-            preferences.selectedVideoFeedId.set("")
+        return removed
+    }
+
+    fun restoreFeed(removed: RemovedFeed) {
+        val feeds = preferences.savedFeeds.get()
+        if (feeds.any { it.id == removed.feed.id }) return
+        preferences.savedFeeds.set(
+            feeds.toMutableList().apply { add(removed.index.coerceAtMost(size), removed.feed) },
+        )
+        removed.timeline?.let { saveTimeline(removed.feed.id, it) }
+        removed.anchor?.let { saveAnchor(removed.feed.id, it) }
+        if (removed.wasSelected) {
+            selectedFeedPreference(removed.feed.contentMode).set(removed.feed.id)
         }
     }
 
@@ -198,6 +228,14 @@ class BrowseFeedService(
     fun saveAnchor(feedId: String, anchor: SourceFeedAnchor) {
         preferences.feedAnchor(feedId).set(anchor)
     }
+
+    data class RemovedFeed(
+        val feed: SourceFeed,
+        val index: Int,
+        val timeline: SourceFeedTimeline?,
+        val anchor: SourceFeedAnchor?,
+        val wasSelected: Boolean,
+    )
 
     data class State(
         val presets: List<SourceFeedPreset>,

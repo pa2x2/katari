@@ -63,4 +63,30 @@ class BrowseFeedServiceTest {
         service.timelineSnapshot(untouchedFeed.id) shouldBe untouchedTimeline
         service.anchorSnapshot(untouchedFeed.id) shouldBe untouchedAnchor
     }
+
+    @Test
+    fun `restoring a removed feed puts back its place, saved position and selection`() {
+        val first = SourceFeed(id = "feed-1", sourceId = 1L, presetId = "a")
+        val removed = SourceFeed(id = "feed-2", sourceId = 1L, presetId = "b", title = "Mine")
+        val last = SourceFeed(id = "feed-3", sourceId = 2L, presetId = "c")
+        preferences.savedFeeds.set(listOf(first, removed, last))
+        service.selectFeed(removed.id)
+        val timeline = SourceFeedTimeline(items = listOf(FeedItemRef(7L, EntryType.MANGA)), nextPageKey = 2L)
+        val anchor = SourceFeedAnchor(item = FeedItemRef(7L, EntryType.MANGA), scrollOffset = 30)
+        service.saveTimeline(removed.id, timeline)
+        service.saveAnchor(removed.id, anchor)
+
+        val snapshot = service.removeFeed(removed.id)!!
+
+        service.stateSnapshot().feeds shouldBe listOf(first, last)
+        service.stateSnapshot().selectedFeedId shouldBe null
+        service.timelineSnapshot(removed.id) shouldBe SourceFeedTimeline()
+
+        service.restoreFeed(snapshot)
+
+        service.stateSnapshot().feeds shouldBe listOf(first, removed, last)
+        service.stateSnapshot().selectedFeedId shouldBe removed.id
+        service.timelineSnapshot(removed.id) shouldBe timeline
+        service.anchorSnapshot(removed.id) shouldBe anchor
+    }
 }
