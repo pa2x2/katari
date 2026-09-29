@@ -197,6 +197,7 @@ fun LibraryContent(
     getColumnsForOrientation: (Boolean) -> PreferenceMutableState<Int>,
     getItemsForPage: (LibraryPage) -> List<LibraryItem>,
     displaySettingsForPage: (LibraryPage) -> LibraryDisplaySettings,
+    scrollToTopTarget: LibraryScrollToTopTarget,
 ) {
     SharedLibraryContent(
         pages = pages,
@@ -239,6 +240,7 @@ fun LibraryContent(
             },
             onClickContinueReading = onContinueReadingClicked,
             isContinueReadingAvailable = isContinueReadingAvailable,
+            scrollToTopTarget = scrollToTopTarget,
         )
     }
 }

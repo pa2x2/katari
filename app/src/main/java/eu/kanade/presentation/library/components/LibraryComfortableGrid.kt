@@ -30,9 +30,11 @@ internal fun LibraryComfortableGrid(
     searchQuery: String?,
     onGlobalSearchClicked: () -> Unit,
     displaySettings: LibraryDisplaySettings,
+    scrollToTopTarget: LibraryScrollToTopTarget?,
 ) {
     val gridState = rememberLazyGridState()
     val (pinnedItems, regularItems) = items.partition(LibraryItem::isPinned)
+    BindScrollToTop(scrollToTopTarget, gridState) { gridState.animateScrollToItem(0) }
     LazyLibraryGrid(
         modifier = Modifier
             .fillMaxSize()

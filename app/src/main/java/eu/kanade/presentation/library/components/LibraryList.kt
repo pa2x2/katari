@@ -32,9 +32,11 @@ internal fun LibraryList(
     searchQuery: String?,
     onGlobalSearchClicked: () -> Unit,
     displaySettings: LibraryDisplaySettings,
+    scrollToTopTarget: LibraryScrollToTopTarget?,
 ) {
     val listState = rememberLazyListState()
     val (pinnedItems, regularItems) = items.partition(LibraryItem::isPinned)
+    BindScrollToTop(scrollToTopTarget, listState) { listState.animateScrollToItem(0) }
     FastScrollLazyColumn(
         modifier = Modifier
             .fillMaxSize()

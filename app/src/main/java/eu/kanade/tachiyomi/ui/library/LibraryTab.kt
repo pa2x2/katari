@@ -40,6 +40,7 @@ import eu.kanade.presentation.library.MoveEntriesCategoryDialog
 import eu.kanade.presentation.library.MoveEntriesConflictDialog
 import eu.kanade.presentation.library.MoveEntriesProfileDialog
 import eu.kanade.presentation.library.components.LibraryContent
+import eu.kanade.presentation.library.components.LibraryScrollToTopTarget
 import eu.kanade.presentation.library.components.LibraryToolbar
 import eu.kanade.presentation.more.onboarding.GETTING_STARTED_URL
 import eu.kanade.presentation.util.Tab
@@ -89,7 +90,7 @@ data object LibraryTab : Tab {
         }
 
     override suspend fun onReselect(navigator: Navigator) {
-        requestOpenSettingsSheet()
+        reselectEvent.send(Unit)
     }
 
     @Composable
@@ -109,6 +110,7 @@ data object LibraryTab : Tab {
         val state by screenModel.state.collectAsState()
 
         val snackbarHostState = remember { SnackbarHostState() }
+        val scrollToTopTarget = remember { LibraryScrollToTopTarget() }
 
         fun showRefreshMessage(started: Boolean, messageRes: StringResource) {
             scope.launch {
@@ -278,6 +280,7 @@ data object LibraryTab : Tab {
                         getColumnsForOrientation = { screenModel.getColumnsForOrientation(it) },
                         getItemsForPage = { state.getItemsForPage(it) },
                         displaySettingsForPage = state::displaySettingsForPage,
+                        scrollToTopTarget = scrollToTopTarget,
                     )
                 }
             }
@@ -398,7 +401,12 @@ data object LibraryTab : Tab {
 
         LaunchedEffect(Unit) {
             launch { queryEvent.receiveAsFlow().collect(screenModel::search) }
-            launch { requestSettingsSheetEvent.receiveAsFlow().collectLatest { screenModel.showSettingsDialog() } }
+            launch {
+                // Reselecting the tab first returns the page to its top; only a page already there opens the sheet.
+                reselectEvent.receiveAsFlow().collectLatest {
+                    if (!scrollToTopTarget.scrollToTop()) screenModel.showSettingsDialog()
+                }
+            }
             launch {
                 screenModel.moveEvents.receiveAsFlow().collect { event ->
                     val message = when (event) {
@@ -421,9 +429,8 @@ data object LibraryTab : Tab {
     private val queryEvent = Channel<String>()
     suspend fun search(query: String) = queryEvent.send(query)
 
-    // For opening settings sheet in LibraryController
-    private val requestSettingsSheetEvent = Channel<Unit>()
-    private suspend fun requestOpenSettingsSheet() = requestSettingsSheetEvent.send(Unit)
+    // Tab reselection, handled by the visible page
+    private val reselectEvent = Channel<Unit>()
 }
 
 @Composable

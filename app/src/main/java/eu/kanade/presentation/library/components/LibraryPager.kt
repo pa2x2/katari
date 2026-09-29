@@ -41,6 +41,7 @@ fun LibraryPager(
     onLongClickItem: (LibraryPage, LibraryItem) -> Unit,
     onClickContinueReading: ((LibraryItem) -> Unit)?,
     isContinueReadingAvailable: (LibraryItem) -> Boolean,
+    scrollToTopTarget: LibraryScrollToTopTarget,
 ) {
     HorizontalPager(
         modifier = Modifier.fillMaxSize(),
@@ -78,6 +79,7 @@ fun LibraryPager(
         }
 
         val displaySettings = displaySettingsForPage(libraryPage)
+        val pageScrollToTopTarget = scrollToTopTarget.takeIf { page == state.currentPage }
         val onClick: (LibraryItem) -> Unit = { onClickItem(libraryPage, it) }
         val onLongClick: (LibraryItem) -> Unit = { onLongClickItem(libraryPage, it) }
 
@@ -94,6 +96,7 @@ fun LibraryPager(
                     searchQuery = searchQuery,
                     onGlobalSearchClicked = onGlobalSearchClicked,
                     displaySettings = displaySettings,
+                    scrollToTopTarget = pageScrollToTopTarget,
                 )
             }
             LibraryDisplayMode.CompactGrid, LibraryDisplayMode.CoverOnlyGrid -> {
@@ -110,6 +113,7 @@ fun LibraryPager(
                     searchQuery = searchQuery,
                     onGlobalSearchClicked = onGlobalSearchClicked,
                     displaySettings = displaySettings,
+                    scrollToTopTarget = pageScrollToTopTarget,
                 )
             }
             LibraryDisplayMode.ComfortableGrid -> {
@@ -125,6 +129,7 @@ fun LibraryPager(
                     searchQuery = searchQuery,
                     onGlobalSearchClicked = onGlobalSearchClicked,
                     displaySettings = displaySettings,
+                    scrollToTopTarget = pageScrollToTopTarget,
                 )
             }
             LibraryDisplayMode.ComfortableList -> {
@@ -140,6 +145,7 @@ fun LibraryPager(
                     searchQuery = searchQuery,
                     onGlobalSearchClicked = onGlobalSearchClicked,
                     displaySettings = displaySettings,
+                    scrollToTopTarget = pageScrollToTopTarget,
                 )
             }
         }
