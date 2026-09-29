@@ -264,6 +264,12 @@ tasks.register(VERIFY_TESTS_TASK_NAME) {
 }
 
 tasks {
+    wrapper {
+        // Retry transient distribution download failures; regenerating the wrapper otherwise resets these.
+        retries.set(3)
+        retryBackOffMs.set(1000)
+    }
+
     listOf("clean", "spotlessApply", "spotlessCheck").forEach { task ->
         named(task) {
             dependsOn(buildLogic.task(":$task"))
