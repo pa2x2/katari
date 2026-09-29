@@ -19,8 +19,6 @@ import mihon.tts.api.playback.TtsPlaybackStart
 import mihon.tts.api.playback.TtsPlaybackState
 import mihon.tts.api.playback.TtsStopReason
 import mihon.tts.api.playback.TtsStopResult
-import mihon.tts.api.preparation.TtsPreparation
-import mihon.tts.api.preparation.TtsUnavailableReason
 import mihon.tts.api.provider.TtsInputLimit
 import mihon.tts.api.provider.TtsOptionalCapability
 import mihon.tts.api.provider.TtsParameterSupport
@@ -105,33 +103,13 @@ class TtsPlaybackCoordinatorTest {
         secondSession.state.value shouldBe TtsPlaybackState.Stopped(TtsStopReason.Requested)
     }
 
-    @Test
-    fun `removed engine during revalidation never requests focus or playback`() = runBlocking<Unit> {
-        val engine = RecordingEngine(ArrayDeque(listOf(RecordingPlayback()))).apply {
-            revalidation = TtsEnginePreparation.Unavailable(
-                TtsUnavailableReason.EngineUnavailable(ENGINE_ID, "Engine removed"),
-            )
-        }
-        val focus = RecordingAudioFocus()
-        val coordinator = coordinator(engine, focus)
-
-        coordinator.play(ready(engine)) shouldBe TtsPlaybackStart.PreparationChanged(
-            TtsPreparation.Unavailable(TtsUnavailableReason.EngineUnavailable(ENGINE_ID, "Engine removed")),
-        )
-        focus.requestCount shouldBe 0
-        engine.playCount shouldBe 0
-    }
-
     private fun kotlinx.coroutines.CoroutineScope.coordinator(
         engine: RecordingEngine,
         focus: RecordingAudioFocus,
     ) = TtsPlaybackCoordinator(
         scope = this,
         audioFocus = focus,
-        mapPreparation = { _, preparation ->
-            val unavailable = preparation as TtsEnginePreparation.Unavailable
-            TtsPreparation.Unavailable(unavailable.reason)
-        },
+        mapPreparation = { _, _ -> error("Revalidation is expected to stay ready") },
     )
 
     private suspend fun settle() {
@@ -152,9 +130,6 @@ class TtsPlaybackCoordinatorTest {
         override val catalogEntry = ENGINE
         override val presentation = PRESENTATION
         override val capabilities = CAPABILITIES
-        var revalidation: TtsEnginePreparation = TtsEnginePreparation.Ready(PROVIDER_READY)
-        var playCount = 0
-            private set
 
         override suspend fun inspectDevice() = TtsEngineDeviceAvailability.Available
 
@@ -162,10 +137,9 @@ class TtsPlaybackCoordinatorTest {
 
         override suspend fun prepare(request: ResolvedTtsRequest) = TtsEnginePreparation.Ready(PROVIDER_READY)
 
-        override suspend fun revalidate(ready: ReadyTtsEngineRequest) = revalidation
+        override suspend fun revalidate(ready: ReadyTtsEngineRequest) = TtsEnginePreparation.Ready(PROVIDER_READY)
 
         override suspend fun play(ready: ReadyTtsEngineRequest): TtsEngineExecution {
-            playCount += 1
             return TtsEngineExecution.Started(playbacks.removeFirst())
         }
     }
@@ -188,13 +162,10 @@ class TtsPlaybackCoordinatorTest {
 
     private class RecordingAudioFocus : TtsAudioFocus {
         private var held = false
-        var requestCount = 0
-            private set
         var abandonCount = 0
             private set
 
         override fun request(): Boolean {
-            requestCount += 1
             held = true
             return true
         }

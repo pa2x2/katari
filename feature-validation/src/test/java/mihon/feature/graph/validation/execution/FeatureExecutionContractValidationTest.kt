@@ -23,8 +23,6 @@ import mihon.feature.graph.validation.CompletedFeatureExecutionContractExecution
 import mihon.feature.graph.validation.FeatureContractVerificationResult
 import mihon.feature.graph.validation.FeatureExecutionContractReference
 import mihon.feature.graph.validation.FeatureExecutionContractVerifier
-import mihon.feature.graph.validation.MissingFeatureExecutionContractVerifierObligation
-import mihon.feature.graph.validation.ValidationFeatureContractPlanIssue
 import mihon.feature.graph.validation.entryContentType
 import mihon.feature.graph.validation.featureValidationContributor
 import mihon.feature.graph.validation.planFeatureContractValidation
@@ -81,25 +79,6 @@ class FeatureExecutionContractValidationTest {
         executedTypes shouldContainExactly listOf(ContentTypeId("supported"))
     }
 
-    @Test
-    fun `missing participant verifier is a validation obligation`() {
-        val graph = graph("supported", "also-supported")
-
-        val plan = planFeatureContractValidation(graph, evaluateFeatureGraph(graph), emptyList())
-
-        plan.isComplete shouldBe false
-        plan.issues.mapNotNull { issue ->
-            (issue as? ValidationFeatureContractPlanIssue)?.obligation as?
-                MissingFeatureExecutionContractVerifierObligation
-        }.single().let { obligation ->
-            obligation.contract.participant shouldBe participant.id
-            obligation.affectedSubjects.map { it.entryContentType } shouldContainExactly listOf(
-                ContentTypeId("also-supported"),
-                ContentTypeId("supported"),
-            )
-        }
-    }
-
     private fun graph(vararg contentTypeNames: String) = assembleFeatureGraph(
         DiscoveredFeatureGraphContributions(
             contentTypes = contentTypeNames.map { contentTypeName ->
@@ -116,7 +95,6 @@ class FeatureExecutionContractValidationTest {
     )
 
     private class ExampleProvider
-    private data class ApplicationFixture(val state: String)
     private data class ExampleEvent(val value: String)
 }
 

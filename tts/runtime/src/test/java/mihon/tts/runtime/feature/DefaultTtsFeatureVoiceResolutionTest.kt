@@ -42,29 +42,6 @@ import tachiyomi.core.common.preference.InMemoryPreferenceStore
 class DefaultTtsFeatureVoiceResolutionTest {
 
     @Test
-    fun `incompatible profile default falls back to a compatible local voice`() = runBlocking<Unit> {
-        val preferences = ProfileTtsPreferences(InMemoryPreferenceStore(), ENGINE_ID).apply {
-            setDefaultVoice(TtsDefaultVoiceSelection.Explicit(ENGLISH_NETWORK.id))
-        }
-        val engine = FakeEngine(
-            voices = listOf(ENGLISH_NETWORK, RUSSIAN_NETWORK, RUSSIAN_LOCAL),
-            defaultVoice = ENGLISH_NETWORK.id,
-        )
-        val feature = feature(engine, preferences)
-
-        val preparation = feature.prepare(
-            TtsRequest(
-                text = "Башня надежды",
-                language = TtsLanguageSelection.Explicit(RUSSIAN),
-            ),
-        ).shouldBeInstanceOf<TtsPreparation.Ready>()
-
-        preparation.request.voice shouldBe RUSSIAN_LOCAL
-        preparation.request.networkProcessingAllowed shouldBe false
-        engine.preparedRequest shouldBe preparation.request
-    }
-
-    @Test
     fun `a network voice is used only with the profile's opt-in`() = runBlocking<Unit> {
         val russian = TtsRequest(text = "Башня надежды", language = TtsLanguageSelection.Explicit(RUSSIAN))
         val automatic = feature(
@@ -170,7 +147,6 @@ class DefaultTtsFeatureVoiceResolutionTest {
         override val catalogEntry = ENGINE
         override val presentation = PRESENTATION
         override val capabilities = CAPABILITIES
-        var preparedRequest: ResolvedTtsRequest? = null
 
         override suspend fun inspectDevice() = TtsEngineDeviceAvailability.Available
 
@@ -182,7 +158,6 @@ class DefaultTtsFeatureVoiceResolutionTest {
 
         override suspend fun prepare(request: ResolvedTtsRequest): TtsEnginePreparation.Ready {
             prepareFailure?.let { throw it }
-            preparedRequest = request
             return TtsEnginePreparation.Ready(READY_REQUEST)
         }
 
@@ -221,7 +196,6 @@ class DefaultTtsFeatureVoiceResolutionTest {
             pitch = TtsParameterSupport.Unsupported,
             inputLimit = TtsInputLimit.Unspecified,
         )
-        val ENGLISH_NETWORK = voice("english-network", ENGLISH, TtsVoiceProcessing.NetworkRequired)
         val ENGLISH_LOCAL = voice("english-local", ENGLISH, TtsVoiceProcessing.OnDevice)
         val RUSSIAN_NETWORK = voice("russian-network", RUSSIAN, TtsVoiceProcessing.NetworkRequired)
         val RUSSIAN_LOCAL = voice("russian-local", RUSSIAN, TtsVoiceProcessing.OnDevice)

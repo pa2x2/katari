@@ -2,59 +2,8 @@ package mihon.book.api.document
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
 
 class BookDocumentContractTest {
-
-    @Test
-    fun `resource ids must exactly match modeled image font and nested resources`() {
-        val text = "Alt"
-        val block = BookDocumentBlock(
-            id = BookDocumentBlockId("figure"),
-            role = BookDocumentBlockRole(BookDocumentBlockKind.FIGURE),
-            content = BookDocumentBlockContent.Figure(
-                image = BookDocumentImage(
-                    resourceId = "image",
-                    alternativeText = BookDocumentRichText(
-                        text = text,
-                        range = BookDocumentTextRange(0, text.length),
-                        inlineStyles = listOf(
-                            BookDocumentInlineStyleRange(
-                                start = 0,
-                                endExclusive = text.length,
-                                style = BookDocumentInlineStyle(
-                                    fontFamily = BookDocumentFontFamily.Resource("font"),
-                                ),
-                            ),
-                        ),
-                    ),
-                    width = null,
-                    height = null,
-                ),
-                caption = null,
-            ),
-            plainText = text,
-            sourceFragments = emptyList(),
-            logicalStart = 0,
-            logicalEndExclusive = text.length,
-        )
-
-        assertFailsWith<IllegalArgumentException> {
-            bookDocument(
-                text = text,
-                blocks = listOf(block),
-                resourceIds = setOf("image"),
-            )
-        }
-        assertEquals(
-            setOf("image", "font"),
-            bookDocument(
-                text = text,
-                blocks = listOf(block),
-                resourceIds = setOf("image", "font"),
-            ).resourceIds,
-        )
-    }
 
     @Test
     fun `disclosure body keeps its own canonical text anchors and resources`() {

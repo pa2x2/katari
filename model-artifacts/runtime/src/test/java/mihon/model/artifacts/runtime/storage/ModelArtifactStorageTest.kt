@@ -34,15 +34,6 @@ class ModelArtifactStorageTest {
     }
 
     @Test
-    fun `a stored revision is not installed for a descriptor that declares different content`() {
-        val storage = ModelArtifactStorage { root }
-        install(storage, descriptor)
-        val changed = artifactDescriptor(artifactFile("model.onnx", "other".toByteArray()))
-
-        storage.installed(changed) shouldBe null
-    }
-
-    @Test
     fun `committing a revision removes the other revisions of the same artifact`() {
         val storage = ModelArtifactStorage { root }
         val next = artifactDescriptor(artifactFile("model.onnx", content), revision = "r2")

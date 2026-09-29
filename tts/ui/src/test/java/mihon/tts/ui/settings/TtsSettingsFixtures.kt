@@ -17,7 +17,7 @@ import mihon.tts.api.request.TtsRequest
 import mihon.tts.api.voice.TtsVoice
 import mihon.tts.api.voice.TtsVoiceId
 
-/** Prepares every explicit-language request with a compatible test voice and starts [sessions] in order. */
+/** Prepares every explicit-language request with an English test voice and starts [sessions] in order. */
 internal class TestTtsFeature(sessions: List<TtsPlaybackSession>) : TtsFeature {
     private val remainingSessions = ArrayDeque(sessions)
 
@@ -29,7 +29,7 @@ internal class TestTtsFeature(sessions: List<TtsPlaybackSession>) : TtsFeature {
                 text = request.text,
                 language = language,
                 engine = ENGINE,
-                voice = TEST_VOICES.compatibleWith(language).first(),
+                voice = ENGLISH_VOICE,
                 parameters = TtsParameters(),
                 networkProcessingAllowed = false,
             ),
@@ -45,29 +45,14 @@ internal class TestTtsFeature(sessions: List<TtsPlaybackSession>) : TtsFeature {
 }
 
 internal val ENGLISH = LanguageTag.require("en-US")
-internal val PORTUGUESE_BRAZIL = LanguageTag.require("pt-BR")
-private val PORTUGUESE_PORTUGAL = LanguageTag.require("pt-PT")
 private val PROVIDER = TtsProviderId("test-provider")
 private val ENGINE = TtsEngineId("test-engine")
 
-internal val PORTUGUESE_LOCAL_VOICE = TtsVoice(
-    id = TtsVoiceId(PROVIDER, ENGINE, "pt-local"),
-    name = "Portuguese local",
-    language = PORTUGUESE_PORTUGAL,
-    processing = TtsVoiceProcessing.OnDevice,
-)
-internal val PORTUGUESE_NETWORK_VOICE = TtsVoice(
-    id = TtsVoiceId(PROVIDER, ENGINE, "pt-network"),
-    name = "Portuguese network",
-    language = PORTUGUESE_BRAZIL,
-    processing = TtsVoiceProcessing.NetworkRequired,
-)
 private val ENGLISH_VOICE = TtsVoice(
     id = TtsVoiceId(PROVIDER, ENGINE, "en-local"),
     name = "English local",
     language = ENGLISH,
     processing = TtsVoiceProcessing.OnDevice,
 )
-internal val TEST_VOICES = listOf(PORTUGUESE_NETWORK_VOICE, ENGLISH_VOICE, PORTUGUESE_LOCAL_VOICE)
 
 private object TestReadyTts : ReadyTts

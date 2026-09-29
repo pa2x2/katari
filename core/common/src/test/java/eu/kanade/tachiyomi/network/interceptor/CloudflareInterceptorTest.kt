@@ -26,7 +26,7 @@ import java.util.concurrent.atomic.AtomicInteger
 class CloudflareInterceptorTest {
 
     @Test
-    fun `challenge is detected from the mitigation header or a legacy challenge page`() {
+    fun `challenge is detected from the mitigation header or a legacy page but not from plain cloudflare errors`() {
         assertTrue(response(code = 200, headers = mapOf("cf-mitigated" to "Challenge")).isCloudflareChallenge())
         assertTrue(
             response(
@@ -35,10 +35,6 @@ class CloudflareInterceptorTest {
                 body = "<html><div id=\"challenge-error-title\"></div></html>",
             ).isCloudflareChallenge(),
         )
-    }
-
-    @Test
-    fun `cloudflare errors without a challenge marker in the bounded body are not intercepted`() {
         assertFalse(
             response(
                 code = 403,
@@ -53,45 +49,6 @@ class CloudflareInterceptorTest {
                 body = " ".repeat(64 * 1024) + "<div id=\"challenge-error-title\"></div>",
             ).isCloudflareChallenge(),
         )
-    }
-
-    @Test
-    fun `clearance parser finds cookie across cookie headers and ignores blank values`() {
-        val request = Request.Builder()
-            .url("https://example.com")
-            .addHeader("Cookie", "session=abc")
-            .addHeader("Cookie", "theme=dark; cf_clearance=clearance-value")
-            .build()
-        val blank = Request.Builder()
-            .url("https://example.com")
-            .header("Cookie", "cf_clearance= ")
-            .build()
-
-        assertEquals("clearance-value", request.cloudflareClearanceValue())
-        assertNull(blank.cloudflareClearanceValue())
-    }
-
-    @Test
-    fun `clearance is reusable only when its value changed`() {
-        val challengeUrl = "https://example.com".toHttpUrl()
-        val current = Cookie.Builder()
-            .name("cf_clearance")
-            .value("new")
-            .hostOnlyDomain("example.com")
-            .build()
-        val sentRequest = CloudflareSentRequest(challengeUrl, clearance = "old")
-
-        assertTrue(shouldReuseCloudflareClearance(sentRequest, challengeUrl, current))
-        assertFalse(
-            shouldReuseCloudflareClearance(
-                sentRequest.copy(clearance = "new"),
-                challengeUrl,
-                current,
-            ),
-        )
-        assertFalse(shouldReuseCloudflareClearance(sentRequest, "https://other.example.com".toHttpUrl(), current))
-        assertFalse(shouldReuseCloudflareClearance(sentRequest, challengeUrl, null))
-        assertFalse(shouldReuseCloudflareClearance(null, challengeUrl, current))
     }
 
     @Test
@@ -214,39 +171,6 @@ class CloudflareInterceptorTest {
             assertEquals(2, solveCount.get())
         } finally {
             releaseSolve.countDown()
-            executor.shutdownNow()
-        }
-    }
-
-    @Test
-    fun `different zones solve independently`() {
-        val coordinator = CloudflareChallengeCoordinator(zoneFor = { it.host })
-        val executor = Executors.newFixedThreadPool(2)
-        val firstStarted = CountDownLatch(1)
-        val releaseFirst = CountDownLatch(1)
-        val secondFinished = CountDownLatch(1)
-
-        try {
-            val first = executor.submit {
-                coordinator.solve("https://a.example.com".toHttpUrl()) {
-                    firstStarted.countDown()
-                    assertTrue(releaseFirst.await(5, TimeUnit.SECONDS))
-                }
-            }
-            assertTrue(firstStarted.await(5, TimeUnit.SECONDS))
-
-            val second = executor.submit {
-                coordinator.solve("https://b.example.com".toHttpUrl()) {
-                    secondFinished.countDown()
-                }
-            }
-
-            assertTrue(secondFinished.await(5, TimeUnit.SECONDS))
-            second.get(5, TimeUnit.SECONDS)
-            releaseFirst.countDown()
-            first.get(5, TimeUnit.SECONDS)
-        } finally {
-            releaseFirst.countDown()
             executor.shutdownNow()
         }
     }

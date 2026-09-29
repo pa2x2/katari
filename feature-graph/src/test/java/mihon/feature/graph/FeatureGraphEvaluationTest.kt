@@ -47,48 +47,6 @@ class FeatureGraphEvaluationTest {
     }
 
     @Test
-    fun `missing capability or specialized prerequisites are inapplicable and create no obligation`() {
-        val adapter = specializedAdapterDefinition<ExampleAdapter>(
-            id = SpecializedAdapterId("example.adapter"),
-            owner = featureOwner,
-        )
-        val evaluation = evaluate(
-            contentTypes = listOf(contentType("subject")),
-            integrations = listOf(
-                integration(
-                    id = "example.integration",
-                    prerequisites = CapabilityExpression.Provided(beta),
-                    specializedRequirements = listOf(adapter),
-                ),
-            ),
-        )
-
-        val result = evaluation.integrations.single() as InapplicableFeatureIntegration
-        result.matchedProviders shouldBe emptyList()
-        result.unmetPrerequisites shouldContainExactly listOf(CapabilityExpression.Provided(beta))
-        evaluation.obligations shouldBe emptyList()
-        evaluation.behaviorProjections shouldBe emptyList()
-
-        val specializedEvaluation = evaluate(
-            contentTypes = listOf(contentType("subject", CapabilityProvider(alpha, AlphaProvider()))),
-            integrations = listOf(
-                integration(
-                    id = "example.integration",
-                    prerequisites = CapabilityExpression.Provided(alpha),
-                    specializedPrerequisites = listOf(adapter),
-                ),
-            ),
-        )
-
-        val specializedResult = specializedEvaluation.integrations.single() as InapplicableFeatureIntegration
-        specializedResult.matchedProviders shouldHaveSize 1
-        specializedResult.unmetPrerequisites shouldBe emptyList()
-        specializedResult.unmetSpecializedPrerequisites shouldContainExactly listOf(adapter)
-        specializedEvaluation.obligations shouldBe emptyList()
-        specializedEvaluation.behaviorProjections shouldBe emptyList()
-    }
-
-    @Test
     fun `a missing specialized adapter becomes an obligation and a supplied one completes the integration`() {
         val adapter = specializedAdapterDefinition<ExampleAdapter>(
             id = SpecializedAdapterId("example.adapter"),

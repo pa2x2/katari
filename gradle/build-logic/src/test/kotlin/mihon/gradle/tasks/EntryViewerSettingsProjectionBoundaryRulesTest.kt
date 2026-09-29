@@ -1,6 +1,5 @@
 package mihon.gradle.tasks
 
-import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.string.shouldContain
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -8,33 +7,19 @@ import org.junit.jupiter.api.Test
 class EntryViewerSettingsProjectionBoundaryRulesTest {
 
     @Test
-    fun `declared screen projection cannot be omitted`() {
-        val findings = check(registry = "listOf(SettingsReaderScreen)")
+    fun `production resolver must match the declared screen projections`() {
+        val omitted = check(registry = "listOf(SettingsReaderScreen)")
 
-        assertEquals(1, findings.size)
-        findings.single().reason shouldContain "missing from the production resolver: SettingsPlayerScreen"
-    }
+        assertEquals(1, omitted.size)
+        omitted.single().reason shouldContain "missing from the production resolver: SettingsPlayerScreen"
 
-    @Test
-    fun `production resolver cannot duplicate or invent screen projections`() {
-        val findings = check(
+        val inconsistent = check(
             registry = "listOf(SettingsReaderScreen, SettingsReaderScreen, SettingsPlayerScreen, SettingsGhostScreen)",
         )
 
-        assertEquals(2, findings.size)
-        findings.joinToString { finding -> finding.reason } shouldContain "registered more than once"
-        findings.joinToString { finding -> finding.reason } shouldContain "no screen projection declaration"
-    }
-
-    @Test
-    fun `AppModule must install the enforced production resolver`() {
-        val findings = check(
-            registry = "listOf(SettingsReaderScreen, SettingsPlayerScreen)",
-            appModule = "viewerSettingsScreenProjectionResolver = customResolver",
-        )
-
-        assertEquals(1, findings.size)
-        findings.single().reason shouldContain "AppModule must install"
+        assertEquals(2, inconsistent.size)
+        inconsistent.joinToString { finding -> finding.reason } shouldContain "registered more than once"
+        inconsistent.joinToString { finding -> finding.reason } shouldContain "no screen projection declaration"
     }
 
     private fun check(

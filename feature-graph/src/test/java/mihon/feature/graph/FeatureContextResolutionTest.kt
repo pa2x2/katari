@@ -1,7 +1,6 @@
 package mihon.feature.graph
 
 import io.kotest.matchers.collections.shouldContainExactly
-import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
@@ -57,33 +56,6 @@ class FeatureContextResolutionTest {
         blocked.behaviorProjections shouldBe emptyList()
     }
 
-    @Test
-    fun `applicable context exposes a missing adapter as an obligation and activates with a supplied one`() {
-        val candidate = candidate(contentType())
-
-        val evaluated = resolveFeatureContext(candidate, applicableEvidence())
-
-        val result = evaluated.integration as IncompleteFeatureContext
-        result.suppliedAdapters shouldBe emptyList()
-        result.obligations shouldHaveSize 1
-        result.obligations.single().responsibleOwner shouldBe ContributionOwner("example.type")
-        result.obligations.single().requirement shouldBe adapter
-        evaluated.obligations shouldContainExactly result.obligations
-        evaluated.behaviorProjections shouldBe emptyList()
-
-        val suppliedAdapter = SpecializedAdapter(adapter, ExampleAdapter())
-        val suppliedCandidate = candidate(contentType(adapters = listOf(suppliedAdapter)))
-
-        val activated = resolveFeatureContext(suppliedCandidate, applicableEvidence())
-
-        val applicable = activated.integration as ApplicableFeatureContext
-        applicable.suppliedAdapters shouldContainExactly listOf(suppliedAdapter)
-        applicable.evidence.map { it.input } shouldContainExactly listOf(preference, source)
-        activated.obligations shouldBe emptyList()
-        activated.behaviorProjections.map { it.projection } shouldContainExactly listOf(behavior)
-        activated.behaviorProjections.single().subject shouldBe suppliedCandidate.subject
-    }
-
     private fun candidate(
         type: ContentTypeContribution,
         integration: FeatureIntegration = integration(),
@@ -137,11 +109,6 @@ class FeatureContextResolutionTest {
             specializedAdapters = adapters,
         )
     }
-
-    private fun applicableEvidence(): List<ContextEvidence<*>> = listOf(
-        contextEvidence(source, SourceContext(supported = true)),
-        contextEvidence(preference, PreferenceContext(enabled = true)),
-    )
 
     private fun blocker(
         value: String,

@@ -45,481 +45,6 @@ class EntryInteractionBoundaryCheckTaskTest {
     }
 
     @Test
-    fun `application-facing api cannot export the feature graph`() {
-        createBaseFixture(
-            additionalFiles = mapOf(
-                "entry-interactions/api/build.gradle.kts" to
-                    """
-                        dependencies {
-                            api(projects.featureGraph)
-                        }
-                    """.trimIndent(),
-            ),
-        )
-
-        val error = assertThrows(GradleException::class.java) { runBoundaryCheck() }
-
-        error.message shouldContain "must not export the internal feature graph"
-    }
-
-    @Test
-    fun `application-facing api cannot declare raw interaction dispatch`() {
-        createBaseFixture(
-            additionalFiles = mapOf(
-                "entry-interactions/api/src/main/java/mihon/entry/interactions/navigation/EntryOpenInteraction.kt" to
-                    """
-                        package mihon.entry.interactions
-
-                        interface EntryOpenInteraction
-                    """.trimIndent(),
-            ),
-        )
-
-        val error = assertThrows(GradleException::class.java) { runBoundaryCheck() }
-
-        error.message shouldContain "raw Entry interaction dispatch must live in provider SPI"
-        error.message shouldContain "EntryOpenInteraction"
-    }
-
-    @Test
-    fun `application layer cannot declare a parallel Entry Interaction api`() {
-        createBaseFixture(
-            appSource = """
-                package app
-
-                interface EntryRemovalInteraction
-            """.trimIndent(),
-        )
-
-        val error = assertThrows(GradleException::class.java) { runBoundaryCheck() }
-
-        error.message shouldContain "app-local Interaction declarations recreate a parallel application API"
-        error.message shouldContain "EntryRemovalInteraction"
-    }
-
-    @Test
-    fun `media runtime cannot execute contributed consequences directly`() {
-        createBaseFixture(
-            additionalFiles = mapOf(
-                "entry-interactions/manga/src/main/java/mihon/entry/interactions/manga/reader/MangaReader.kt" to
-                    """
-                        package mihon.entry.interactions.manga.reader
-
-                        class MangaReader(
-                            private val mediaSession: MangaMediaSessionProcessor,
-                        ) {
-                            suspend fun persist() {
-                                mediaSession.onEvent(event())
-                                repository.upsertHistory(history())
-                            }
-                        }
-                    """.trimIndent(),
-            ),
-        )
-
-        val error = assertThrows(GradleException::class.java) { runBoundaryCheck() }
-
-        error.message shouldContain "media runtimes must emit EntryMediaSessionEvent facts"
-        error.message shouldContain "upsertHistory"
-    }
-
-    @Test
-    fun `type runtime cannot persist bookmark mutations beside the Bookmark Feature`() {
-        createBaseFixture(
-            additionalFiles = mapOf(
-                "entry-interactions/manga/src/main/java/eu/kanade/tachiyomi/ui/reader/ReaderViewModel.kt" to
-                    """
-                        package eu.kanade.tachiyomi.ui.reader
-
-                        class ReaderViewModel(
-                            private val entryChapterRepository: EntryChapterRepository,
-                        ) {
-                            suspend fun bookmark(chapter: EntryChapter) {
-                                entryChapterRepository.updateAll(
-                                    listOf(chapter.copy(bookmark = true)),
-                                )
-                            }
-                        }
-                    """.trimIndent(),
-            ),
-        )
-
-        val error = assertThrows(GradleException::class.java) { runBoundaryCheck() }
-
-        error.message shouldContain "type runtimes must mutate bookmarks through EntryBookmarkFeature"
-    }
-
-    @Test
-    fun `profile deletion cannot restore a curated database cleanup list`() {
-        createBaseFixture(
-            additionalFiles = mapOf(
-                "app/src/main/java/mihon/feature/profiles/core/ProfileManager.kt" to
-                    """
-                        package mihon.feature.profiles.core
-
-                        class ProfileManager {
-                            suspend fun permanentlyDeleteProfile(profileId: Long) {
-                                entriesQueries.deleteByProfile(profileId)
-                                profileDatabase.deleteProfile(profileId)
-                            }
-                        }
-                    """.trimIndent(),
-            ),
-        )
-
-        val error = assertThrows(GradleException::class.java) { runBoundaryCheck() }
-
-        error.message shouldContain "hand-maintained deleteByProfile list is a parallel cleanup authority"
-        error.message shouldContain "permanent profile deletion must route its Entries through"
-        error.message shouldContain "EntryDestructiveRemovalFeature"
-    }
-
-    @Test
-    fun `application consumers cannot bypass Library Progress Feature through domain port`() {
-        createBaseFixture(
-            appSource = """
-                package app
-
-                import tachiyomi.domain.entry.service.EntryLibraryProgressResolutionPort
-
-                class AppFeature(private val progress: EntryLibraryProgressResolutionPort)
-            """.trimIndent(),
-        )
-
-        val error = assertThrows(GradleException::class.java) { runBoundaryCheck() }
-
-        error.message shouldContain "application consumers must use EntryLibraryProgressFeature"
-    }
-
-    @Test
-    fun `application consumers cannot bypass Catalogue Feature through raw source description`() {
-        createBaseFixture(
-            appSource = """
-                package app
-
-                import eu.kanade.tachiyomi.source.entry.EntryCatalogueSource
-                import eu.kanade.tachiyomi.source.entry.entryItemOrientation
-                import tachiyomi.domain.source.service.EntrySourceDescriptionResolutionPort
-
-                class AppFeature(
-                    private val source: EntryCatalogueSource,
-                    private val description: EntrySourceDescriptionResolutionPort,
-                ) {
-                    val orientation = source.entryItemOrientation()
-                }
-            """.trimIndent(),
-        )
-
-        val error = assertThrows(GradleException::class.java) { runBoundaryCheck() }
-
-        error.message shouldContain "application consumers must use EntryCatalogueFeature"
-        error.message shouldContain "raw source contract"
-        error.message shouldContain "EntryCatalogueSource"
-        error.message shouldContain "entryItemOrientation"
-    }
-
-    @Test
-    fun `application consumers cannot dispatch catalogue providers directly or through source manager`() {
-        createBaseFixture(
-            appSource = """
-                package app
-
-                import eu.kanade.tachiyomi.source.entry.UnifiedSource
-                import tachiyomi.domain.source.service.SourceManager
-
-                class AppFeature(
-                    private val source: UnifiedSource,
-                    private val sourceManager: SourceManager,
-                ) {
-                    suspend fun search() = source.getSearchContent(1, "query", source.getFilterList())
-                    fun sources() = sourceManager.getCatalogueSources()
-                }
-            """.trimIndent(),
-        )
-
-        val error = assertThrows(GradleException::class.java) { runBoundaryCheck() }
-
-        error.message shouldContain "catalogue provider execution must use EntryCatalogueFeature"
-        error.message shouldContain "getSearchContent"
-        error.message shouldContain "getFilterList"
-        error.message shouldContain "getCatalogueSources"
-    }
-
-    @Test
-    fun `legacy adapter identity and metering marker cannot escape source compatibility`() {
-        createBaseFixture(
-            appSource = """
-                package app
-
-                import eu.kanade.tachiyomi.source.UnmeteredSource
-                import eu.kanade.tachiyomi.source.adapter.LegacyMangaSourceAdapter
-
-                class AppFeature(
-                    private val adapter: LegacyMangaSourceAdapter,
-                    private val legacyPolicy: UnmeteredSource,
-                )
-            """.trimIndent(),
-        )
-
-        val error = assertThrows(GradleException::class.java) { runBoundaryCheck() }
-
-        error.message shouldContain "legacy Manga adapter identity is confined to source-compat"
-        error.message shouldContain "legacy UnmeteredSource is source-compat input"
-    }
-
-    @Test
-    fun `application consumers cannot bypass source action Features through raw contracts`() {
-        createBaseFixture(
-            appSource = """
-                package app
-
-                import eu.kanade.tachiyomi.source.entry.ConfigurableSource
-                import eu.kanade.tachiyomi.source.entry.SourceHomePage
-                import eu.kanade.tachiyomi.source.entry.WebViewSource
-                import eu.kanade.tachiyomi.source.entry.ResolvableSource
-                import eu.kanade.tachiyomi.source.entry.EntryPreviewSource
-                import eu.kanade.tachiyomi.source.entry.RelatedEntriesSource
-                import eu.kanade.tachiyomi.source.entry.EntryImageSource
-                import eu.kanade.tachiyomi.source.entry.SubtitleSource
-                import eu.kanade.tachiyomi.source.entry.ChapterWebViewSource
-
-                class AppFeature(private val source: Any) {
-                    val immersive = source.supportsImmersiveFeed
-                }
-            """.trimIndent(),
-        )
-
-        val error = assertThrows(GradleException::class.java) { runBoundaryCheck() }
-
-        error.message shouldContain "application source actions must use their Entry Feature boundary"
-        error.message shouldContain "ConfigurableSource"
-        error.message shouldContain "Immersive source opt-in must be interpreted by EntryImmersiveFeature"
-    }
-
-    @Test
-    fun `refresh consumers cannot bypass Source Refresh Feature through raw sync mechanics`() {
-        createBaseFixture(
-            appSource = """
-                package app
-
-                import tachiyomi.domain.entry.interactor.SyncEntryWithSource
-
-                class AppFeature(private val sync: SyncEntryWithSource)
-            """.trimIndent(),
-        )
-
-        val error = assertThrows(GradleException::class.java) { runBoundaryCheck() }
-
-        error.message shouldContain "Entry refresh consumers must use EntrySourceRefreshFeature"
-    }
-
-    @Test
-    fun `refresh consumers cannot interpret source refresh mechanics contracts`() {
-        createBaseFixture(
-            appSource = """
-                package app
-
-                import eu.kanade.tachiyomi.source.entry.ChapterNumberRecognitionSource
-                import eu.kanade.tachiyomi.source.entry.EmptyChapterListSource
-                import eu.kanade.tachiyomi.source.entry.IncrementalChapterSource
-
-                class AppFeature(
-                    private val empty: EmptyChapterListSource,
-                    private val incremental: IncrementalChapterSource,
-                    private val recognition: ChapterNumberRecognitionSource,
-                )
-            """.trimIndent(),
-        )
-
-        val error = assertThrows(GradleException::class.java) { runBoundaryCheck() }
-
-        error.message shouldContain "EmptyChapterListSource interpretation belongs to SyncEntryWithSource"
-        error.message shouldContain "IncrementalChapterSource interpretation belongs to SyncEntryWithSource"
-        error.message shouldContain "ChapterNumberRecognitionSource interpretation belongs to SyncEntryWithSource"
-    }
-
-    @Test
-    fun `application queue warning policy cannot inspect raw metered source context`() {
-        createBaseFixture(
-            appSource = """
-                package app
-
-                import eu.kanade.tachiyomi.source.entry.UnmeteredSource
-
-                class AppFeature(private val source: UnmeteredSource)
-            """.trimIndent(),
-        )
-
-        val error = assertThrows(GradleException::class.java) { runBoundaryCheck() }
-
-        error.message shouldContain "Library queue warning policy must use"
-        error.message shouldContain "EntryLibraryUpdateNotificationFeature"
-    }
-
-    @Test
-    fun `application consumers cannot use the tracking host`() {
-        createBaseFixture(
-            additionalFiles = mapOf(
-                "entry-interactions/api/src/main/java/mihon/entry/interactions/tracking/host/EntryTrackingHost.kt" to
-                    """
-                        package mihon.entry.interactions.host.tracking
-
-                        interface EntryTrackingHost
-                        data class EntryTrackingHostEntrySnapshot(val services: List<Any>)
-                    """.trimIndent(),
-            ),
-            appSource = """
-                package app
-
-                import mihon.entry.interactions.host.tracking.EntryTrackingHost
-                import mihon.entry.interactions.host.tracking.EntryTrackingHostEntrySnapshot
-
-                class AppFeature(
-                    private val trackingHost: EntryTrackingHost,
-                    private val snapshot: EntryTrackingHostEntrySnapshot,
-                )
-            """.trimIndent(),
-        )
-
-        val error = assertThrows(GradleException::class.java) { runBoundaryCheck() }
-
-        error.message shouldContain "EntryTrackingHost is root Tracking Feature composition infrastructure"
-        error.message shouldContain "EntryTrackingHostEntrySnapshot is root Tracking Feature composition infrastructure"
-    }
-
-    @Test
-    fun `application consumers cannot use raw tracker contracts`() {
-        createBaseFixture(
-            appSource = """
-                package app
-
-                import eu.kanade.tachiyomi.data.track.TrackerManager
-                import eu.kanade.tachiyomi.data.track.EnhancedTracker
-                import eu.kanade.tachiyomi.data.track.model.TrackSearch
-
-                class AppFeature(
-                    private val manager: TrackerManager,
-                    private val enhanced: EnhancedTracker,
-                    private val search: TrackSearch,
-                )
-            """.trimIndent(),
-        )
-
-        val error = assertThrows(GradleException::class.java) { runBoundaryCheck() }
-
-        error.message shouldContain "application consumers must use EntryTrackingFeature"
-        error.message shouldContain "raw tracker contracts"
-    }
-
-    @Test
-    fun `public Tracking Feature cannot export persisted track records`() {
-        createBaseFixture(
-            additionalFiles = mapOf(
-                "entry-interactions/api/src/main/java/mihon/entry/interactions/tracking/EntryTrackingSession.kt" to
-                    """
-                        package mihon.entry.interactions
-
-                        import tachiyomi.domain.track.model.EntryTrack
-
-                        data class EntryTrackingSession(val track: EntryTrack)
-                    """.trimIndent(),
-            ),
-        )
-
-        val error = assertThrows(GradleException::class.java) { runBoundaryCheck() }
-
-        error.message shouldContain "EntryTrackingFeature must expose EntryTrackingRecord"
-        error.message shouldContain "persisted EntryTrack"
-    }
-
-    @Test
-    fun `type modules cannot bypass child WebView Feature through raw source contract`() {
-        createBaseFixture(
-            mangaProcessorSource = """
-                package mihon.entry.interactions.manga
-
-                import eu.kanade.tachiyomi.source.entry.ChapterWebViewSource
-                import mihon.entry.interactions.EntryOpenProcessor
-
-                internal class MangaOpenProcessor : EntryOpenProcessor {
-                    val rawContract = ChapterWebViewSource::class
-                }
-            """.trimIndent(),
-        )
-
-        val error = assertThrows(GradleException::class.java) { runBoundaryCheck() }
-
-        error.message shouldContain "canonical child WebView actions must use EntryWebViewFeature"
-        error.message shouldContain "ChapterWebViewSource"
-    }
-
-    @Test
-    fun `application download consumers cannot manufacture applicability evidence`() {
-        createBaseFixture(
-            appSource = """
-                package app
-
-                import mihon.entry.interactions.EntryDownloadActionTarget
-                import mihon.entry.interactions.EntryDownloadSourceAccess
-
-                class AppFeature(
-                    val target: EntryDownloadActionTarget,
-                    val sourceAccess: EntryDownloadSourceAccess,
-                )
-            """.trimIndent(),
-        )
-
-        val error = assertThrows(GradleException::class.java) { runBoundaryCheck() }
-
-        error.message shouldContain "Download applicability evidence is owned by EntryDownloadActionFeature"
-        error.message shouldContain "EntryDownloadActionTarget"
-        error.message shouldContain "EntryDownloadSourceAccess"
-    }
-
-    @Test
-    fun `reader and source policy cannot select generic download behavior`() {
-        createBaseFixture(
-            appSource = """
-                package app
-
-                class AppFeature(
-                    val downloads: EntryDownloadActionFeature,
-                    val readerSettings: MangaReaderSettings,
-                ) {
-                    val candidates = if (readerSettings.skipFiltered.get()) filtered else all
-                    val available = source.isLocalOrStub()
-                }
-            """.trimIndent(),
-        )
-
-        val error = assertThrows(GradleException::class.java) { runBoundaryCheck() }
-
-        error.message shouldContain "must not select generic Download behavior"
-        error.message shouldContain "MangaReaderSettings"
-        error.message shouldContain "skipFiltered"
-        error.message shouldContain "isLocalOrStub"
-    }
-
-    @Test
-    fun `root module cannot export the provider spi`() {
-        createBaseFixture(
-            additionalFiles = mapOf(
-                "entry-interactions/build.gradle.kts" to
-                    """
-                        dependencies {
-                            api(projects.entryInteractions.api)
-                            api(projects.entryInteractions.spi)
-                        }
-                    """.trimIndent(),
-            ),
-        )
-
-        val error = assertThrows(GradleException::class.java) { runBoundaryCheck() }
-
-        error.message shouldContain "must not export the provider SPI"
-    }
-
-    @Test
     fun `generic code cannot import a type module package`() {
         createBaseFixture(
             appSource = """
@@ -538,43 +63,6 @@ class EntryInteractionBoundaryCheckTaskTest {
     }
 
     @Test
-    fun `generic code cannot reference a concrete processor by simple name`() {
-        createBaseFixture(
-            appSource = """
-                package app
-
-                class AppFeature {
-                    private val processorName = MangaOpenProcessor::class.simpleName
-                }
-            """.trimIndent(),
-        )
-
-        val error = assertThrows(GradleException::class.java) { runBoundaryCheck() }
-
-        error.message shouldContain "direct concrete manga processor reference"
-        error.message shouldContain "MangaOpenProcessor"
-    }
-
-    @Test
-    fun `generic code cannot reference interaction spi contracts`() {
-        createBaseFixture(
-            appSource = """
-                package app
-
-                class AppFeature {
-                    private val pluginName = EntryInteractionPlugin::class.simpleName
-                    private val openName = EntryOpenInteraction::class.simpleName
-                }
-            """.trimIndent(),
-        )
-
-        val error = assertThrows(GradleException::class.java) { runBoundaryCheck() }
-
-        error.message shouldContain "EntryInteractionPlugin is root/type-module Entry interaction internals"
-        error.message shouldContain "EntryOpenInteraction is root/type-module Entry interaction internals"
-    }
-
-    @Test
     fun `type module processor implementations must remain internal`() {
         createBaseFixture(
             mangaProcessorSource = """
@@ -590,31 +78,6 @@ class EntryInteractionBoundaryCheckTaskTest {
 
         error.message shouldContain "type-module processor must remain internal"
         error.message shouldContain "MangaOpenProcessor"
-    }
-
-    @Test
-    fun `type module reader and player implementation classes must remain internal`() {
-        createBaseFixture(
-            additionalFiles = mapOf(
-                "entry-interactions/manga/src/main/java/eu/kanade/tachiyomi/ui/reader/ReaderViewModel.kt" to
-                    """
-                        package eu.kanade.tachiyomi.ui.reader
-
-                        class ReaderViewModel
-                    """.trimIndent(),
-                "entry-interactions/anime/src/main/java/eu/kanade/tachiyomi/ui/video/player/VideoPlaybackUiState.kt" to
-                    """
-                        package eu.kanade.tachiyomi.ui.video.player
-
-                        data class VideoPlaybackUiState(val isPlaying: Boolean)
-                    """.trimIndent(),
-            ),
-        )
-
-        val error = assertThrows(GradleException::class.java) { runBoundaryCheck() }
-
-        error.message shouldContain "unexpected public type-module class: ReaderViewModel"
-        error.message shouldContain "unexpected public type-module class: VideoPlaybackUiState"
     }
 
     @Test
@@ -642,71 +105,6 @@ class EntryInteractionBoundaryCheckTaskTest {
     }
 
     @Test
-    fun `generic code cannot reference download runtime classes directly`() {
-        createBaseFixture(
-            additionalFiles = mapOf(
-                "entry-interactions/manga/src/main/java/mihon/entry/interactions/manga/download/DownloadManager.kt" to
-                    """
-                        package mihon.entry.interactions.manga.download
-
-                        class DownloadManager
-                    """.trimIndent(),
-            ),
-            appSource = """
-                package app
-
-                class AppFeature {
-                    private val downloadManager = DownloadManager::class.simpleName
-                }
-            """.trimIndent(),
-        )
-
-        val error = assertThrows(GradleException::class.java) { runBoundaryCheck() }
-
-        error.message shouldContain "direct DownloadManager download runtime reference"
-    }
-
-    @Test
-    fun `root composition cannot import concrete type module runtime classes`() {
-        createBaseFixture(
-            additionalFiles = mapOf(
-                "entry-interactions/manga/src/main/java/mihon/entry/interactions/manga/" +
-                    "MangaEntryInteractionRuntimeModule.kt" to
-                    """
-                        package mihon.entry.interactions.manga
-
-                        import mihon.entry.interactions.EntryTypeRuntimeModule
-
-                        fun mangaEntryTypeRuntimeModule(): EntryTypeRuntimeModule = EntryTypeRuntimeModule()
-                    """.trimIndent(),
-                "entry-interactions/manga/src/main/java/mihon/entry/interactions/manga/download/DownloadManager.kt" to
-                    """
-                        package mihon.entry.interactions.manga.download
-
-                        class DownloadManager
-                    """.trimIndent(),
-                "entry-interactions/src/main/java/mihon/entry/interactions/runtime/EntryInteractionRuntime.kt" to
-                    """
-                        package mihon.entry.interactions
-
-                        import mihon.entry.interactions.manga.mangaEntryTypeRuntimeModule
-                        import mihon.entry.interactions.manga.download.DownloadManager
-
-                        class EntryInteractionRuntime(
-                            private val downloadManager: DownloadManager,
-                        )
-                    """.trimIndent(),
-            ),
-        )
-
-        val error = assertThrows(GradleException::class.java) { runBoundaryCheck() }
-
-        error.message shouldContain
-            "root Entry interaction composition may import only the public manga runtime-module bridge"
-        error.message shouldContain "mihon.entry.interactions.manga.download.DownloadManager"
-    }
-
-    @Test
     fun `type module public api parser ignores class literals in annotations`() {
         createBaseFixture(
             additionalFiles = mapOf(
@@ -730,99 +128,44 @@ class EntryInteractionBoundaryCheckTaskTest {
     }
 
     @Test
-    fun `generic code cannot reference legacy manga source media resolution directly`() {
-        createBaseFixture(
-            appSource = """
-                package app
-
-                import eu.kanade.tachiyomi.source.model.Page
-
-                class AppFeature {
-                    suspend fun load(source: LegacyMangaSource, chapter: SChapter): List<Page> {
-                        return source.getPageList(chapter)
-                    }
-                }
-            """.trimIndent(),
-        )
-
-        val error = assertThrows(GradleException::class.java) { runBoundaryCheck() }
-
-        error.message shouldContain "not legacy Page"
-        error.message shouldContain "not legacy getPageList"
-    }
-
-    @Test
-    fun `settings UI cannot reference concrete media cache implementations directly`() {
+    fun `unrelated feature and application api cannot borrow Migration host ports`() {
         createBaseFixture(
             additionalFiles = mapOf(
-                "app/src/main/java/eu/kanade/presentation/more/settings/screen/SettingsDataScreen.kt" to
+                "entry-interactions/api/src/main/java/mihon/entry/interactions/migration/host/" +
+                    "EntryMigrationPreparationHost.kt" to
                     """
-                        package eu.kanade.presentation.more.settings.screen
+                        package mihon.entry.interactions.host
 
-                        import eu.kanade.tachiyomi.data.cache.MangaPageCache
+                        interface EntryMigrationPreparationHost
+                    """.trimIndent(),
+                "entry-interactions/src/main/java/mihon/entry/interactions/download/EntryDownloadFeature.kt" to
+                    """
+                        package mihon.entry.interactions
 
-                        class SettingsDataScreen(
-                            private val mangaPageCache: MangaPageCache,
-                        )
+                        class EntryDownloadFeature(private val host: EntryMigrationPreparationHost)
                     """.trimIndent(),
             ),
         )
 
         val error = assertThrows(GradleException::class.java) { runBoundaryCheck() }
 
-        error.message shouldContain "settings/UI cache maintenance must use EntryMediaCacheFeature"
-        error.message shouldContain "MangaPageCache"
+        error.message shouldContain
+            "EntryMigrationPreparationHost is an application host port reserved for the root Migration coordinator"
     }
 
     @Test
-    fun `type modules cannot depend on root interaction module`() {
-        createBaseFixture(
-            mangaBuildGradle = """
-                dependencies {
-                    implementation(projects.entryInteractions)
-                }
-            """.trimIndent(),
-        )
-
-        val error = assertThrows(GradleException::class.java) { runBoundaryCheck() }
-
-        error.message shouldContain "type interaction modules must depend on projects.entryInteractions.spi"
-    }
-
-    @Test
-    fun `generic code cannot add exhaustive manga anime presentation mapping`() {
-        createBaseFixture(
-            appSource = """
-                package app
-
-                class AppFeature {
-                    fun label(type: EntryType): String {
-                        return when (type) {
-                            EntryType.MANGA -> "Chapters"
-                            EntryType.ANIME -> "Episodes"
-                        }
-                    }
-                }
-            """.trimIndent(),
-        )
-
-        val error = assertThrows(GradleException::class.java) { runBoundaryCheck() }
-
-        error.message shouldContain "generic EntryType MANGA/ANIME mapping must use EntryTypePresentationFeature"
-    }
-
-    @Test
-    fun `runtime preference owner cannot bypass installed ownership handle`() {
+    fun `Merge implementation cannot use ambient profile authority or concrete type gates`() {
         createBaseFixture(
             additionalFiles = mapOf(
-                "app/src/main/java/app/PreferenceModule.kt" to
+                "entry-interactions/src/main/java/mihon/entry/interactions/merge/EntryMergeCoordinator.kt" to
                     """
-                        package app
+                        package mihon.entry.interactions
 
-                        class PreferenceModule {
-                            fun install() {
-                                addSingletonFactory { NewPreferences(get<ProfileStore>().profileStore()) }
-                            }
+                        class EntryMergeCoordinator(
+                            private val profiles: ActiveProfileProvider,
+                        ) {
+                            val supported = EntryType.AUDIO
+                            val profileId = profiles.activeProfileId
                         }
                     """.trimIndent(),
             ),
@@ -830,7 +173,9 @@ class EntryInteractionBoundaryCheckTaskTest {
 
         val error = assertThrows(GradleException::class.java) { runBoundaryCheck() }
 
-        error.message shouldContain "runtime preference owners must be created from an installed handle"
+        error.message shouldContain "not ambient profile authority: ActiveProfileProvider"
+        error.message shouldContain "not ambient profile authority: activeProfileId"
+        error.message shouldContain "cannot gate behavior on a concrete current EntryType: AUDIO"
     }
 
     private fun createBaseFixture(

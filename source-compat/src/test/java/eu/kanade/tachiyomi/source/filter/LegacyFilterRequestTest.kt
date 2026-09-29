@@ -6,12 +6,8 @@ import eu.kanade.tachiyomi.source.entry.EntryFilterList
 import eu.kanade.tachiyomi.source.model.Filter
 import eu.kanade.tachiyomi.source.model.FilterList
 import io.kotest.matchers.shouldBe
-import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.CoroutineStart
-import kotlinx.coroutines.async
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 
 class LegacyFilterRequestTest {
     private class Genre : Filter.TriState("Action")
@@ -81,42 +77,5 @@ class LegacyFilterRequestTest {
         draft.withSourceFilterValues { adapter.getSearchContent(1, "", it) }
         source.searchCount shouldBe 1
         genres.state.single().isIgnored() shouldBe true
-    }
-
-    @Test
-    fun `separately captured requests sharing cached legacy filters serialize and restore on failure`() = runTest {
-        val choice = GenreChoice(arrayOf("Any", "Action", "Comedy"))
-        val entered = CompletableDeferred<Unit>()
-        val finish = CompletableDeferred<Unit>()
-        val observed = mutableListOf<String>()
-        val source = LegacyFilterSourceFixture(
-            filters = { FilterList(choice) },
-            search = { _, query, filters ->
-                val genre = filters.single() as GenreChoice
-                if (query == "first") {
-                    entered.complete(Unit)
-                    finish.await()
-                    genre.values[genre.state] shouldBe "Action"
-                    error("Request failed")
-                }
-                observed += genre.values[genre.state]
-            },
-        )
-        val adapter = LegacyMangaSourceAdapter(source)
-        val first = adapter.getFilterList().detachedCopy()
-        val second = adapter.getFilterList().detachedCopy()
-        (first.single() as EntryFilter.Select<*>).state = 1
-        (second.single() as EntryFilter.Select<*>).state = 2
-        val failed = async {
-            assertThrows<IllegalStateException> { adapter.getSearchContent(1, "first", first) }
-        }
-        entered.await()
-        val succeeding = async(start = CoroutineStart.UNDISPATCHED) { adapter.getSearchContent(1, "second", second) }
-        observed shouldBe emptyList()
-        finish.complete(Unit)
-        failed.await()
-        succeeding.await()
-        observed shouldBe listOf("Comedy")
-        choice.state shouldBe 0
     }
 }

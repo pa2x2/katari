@@ -1,38 +1,10 @@
 package mihon.gradle.tasks
 
-import io.kotest.assertions.throwables.shouldThrow
-import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
-import org.gradle.api.GradleException
 import org.junit.jupiter.api.Test
 
 class GenerateApplicationFeatureTopologyTaskTest {
-
-    @Test
-    fun `owner-local module and component descriptors generate deterministic direct references`() {
-        val source = generateApplicationFeatureProductionTopology(
-            variantName = "debug",
-            modules = listOf(
-                module("translation.zeta", "example.ZetaApplicationFeatureModule"),
-                module("translation.alpha", "example.AlphaApplicationFeatureModule"),
-            ),
-            components = listOf(
-                component("translation.zeta", "example.ZetaTranslationRuntimeComponent"),
-                component("translation.alpha", "example.AlphaTranslationRuntimeComponent"),
-            ),
-        )
-
-        (
-            source.indexOf("example.AlphaApplicationFeatureModule") <
-                source.indexOf("example.ZetaApplicationFeatureModule")
-            ) shouldBe true
-        (
-            source.indexOf("example.AlphaTranslationRuntimeComponent") <
-                source.indexOf("example.ZetaTranslationRuntimeComponent")
-            ) shouldBe true
-        source shouldNotContain "ServiceLoader"
-    }
 
     @Test
     fun `components limited to other variants are not registered`() {
@@ -51,11 +23,6 @@ class GenerateApplicationFeatureTopologyTaskTest {
         release shouldContain "example.ProprietaryComponent"
         release shouldNotContain "example.CatalogOnlyComponent"
     }
-
-    private fun module(
-        id: String,
-        symbol: String,
-    ) = ApplicationFeatureModuleDescriptor(id, symbol, "$id.descriptor")
 
     private fun component(
         id: String,

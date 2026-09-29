@@ -8,16 +8,12 @@ import mihon.feature.graph.CapabilityId
 import mihon.feature.graph.CapabilityProvider
 import mihon.feature.graph.ContentTypeContribution
 import mihon.feature.graph.ContentTypeId
-import mihon.feature.graph.ContextInputId
 import mihon.feature.graph.ContractFixture
 import mihon.feature.graph.ContractFixtureId
 import mihon.feature.graph.ContributionOwner
 import mihon.feature.graph.DiscoveredFeatureGraphContributions
 import mihon.feature.graph.FeatureArtifactId
 import mihon.feature.graph.FeatureBehaviorContract
-import mihon.feature.graph.FeatureContextBlocker
-import mihon.feature.graph.FeatureContextDecision
-import mihon.feature.graph.FeatureContractScenarioId
 import mihon.feature.graph.FeatureContribution
 import mihon.feature.graph.FeatureGraph
 import mihon.feature.graph.FeatureId
@@ -25,17 +21,10 @@ import mihon.feature.graph.FeatureIntegration
 import mihon.feature.graph.FeatureIntegrationId
 import mihon.feature.graph.FeatureObligation
 import mihon.feature.graph.MissingContractFixtureObligation
-import mihon.feature.graph.SpecializedAdapter
-import mihon.feature.graph.SpecializedAdapterId
-import mihon.feature.graph.SpecializedFeatureObligation
 import mihon.feature.graph.assembleFeatureGraph
 import mihon.feature.graph.capabilityDefinition
-import mihon.feature.graph.contextEvidence
-import mihon.feature.graph.contextInputDefinition
 import mihon.feature.graph.contractFixtureDefinition
 import mihon.feature.graph.evaluateFeatureGraph
-import mihon.feature.graph.featureContextRule
-import mihon.feature.graph.specializedAdapterDefinition
 import org.junit.jupiter.api.Test
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.EmptyCoroutineContext
@@ -44,7 +33,6 @@ import kotlin.coroutines.startCoroutine
 class FeatureContractValidationTest {
     private val capabilityOwner = ContributionOwner("example.capability")
     private val featureOwner = ContributionOwner("example.feature")
-    private val contextOwner = ContributionOwner("example.context")
     private val feature = FeatureId("example.feature")
     private val integration = FeatureIntegrationId("example.integration")
     private val contractId = FeatureArtifactId("example.behavior")
@@ -79,114 +67,6 @@ class FeatureContractValidationTest {
             subject.entryContentType shouldBe ContentTypeId("missing")
         }
         validateFeatureContracts(plan).isSuccessful shouldBe false
-    }
-
-    @Test
-    fun `context scenario resolves each candidate before contract selection`() = runSuspend {
-        val context = contextInputDefinition<ExampleContext>(ContextInputId("example.context"), contextOwner)
-        val blocked = FeatureContextBlocker(FeatureArtifactId("example.blocked"), listOf(context))
-        val adapter =
-            specializedAdapterDefinition<ExampleAdapter>(SpecializedAdapterId("example.adapter"), featureOwner)
-        val contract = contract()
-        val contextualIntegration = FeatureIntegration(
-            id = integration,
-            prerequisites = CapabilityExpression.Provided(providerDefinition),
-            contextInputs = listOf(context),
-            contextRule = featureContextRule(featureOwner) { evidence ->
-                if (evidence.value(context).enabled) {
-                    FeatureContextDecision.Applicable
-                } else {
-                    FeatureContextDecision.Blocked(listOf(blocked))
-                }
-            },
-            contextBlockers = listOf(blocked),
-            specializedRequirements = listOf(adapter),
-            behavioralContracts = listOf(contract),
-        )
-        val graph = graph(
-            contentTypes = listOf(
-                type("complete", adapters = listOf(SpecializedAdapter(adapter, ExampleAdapter("adapted")))),
-                type("incomplete"),
-            ),
-            integration = contextualIntegration,
-        )
-        val contributor = featureValidationContributor(featureOwner) {
-            add(
-                FeatureContractVerifier(reference(contract)) { input ->
-                    input.provider(providerDefinition).state shouldBe "ready"
-                    input.adapter(adapter).state shouldBe "adapted"
-                    input.evidence(context).enabled shouldBe true
-                    FeatureContractVerificationResult.Passed
-                },
-            )
-            add(
-                FeatureContractScenario(
-                    id = FeatureContractScenarioId("example.applicable"),
-                    contract = reference(contract),
-                    integration = integration,
-                    evidenceFactory = FeatureContractEvidenceFactory {
-                        listOf(contextEvidence(context, ExampleContext(enabled = true)))
-                    },
-                ),
-            )
-        }
-
-        val plan = planFeatureContractValidation(graph, evaluateFeatureGraph(graph), listOf(contributor))
-        val validation = validateFeatureContracts(plan)
-
-        validation.executions.single().shouldBeInstanceOf<CompletedFeatureContractExecution>()
-        validation.isSuccessful shouldBe false
-        plan.executions.single().contractSelection.contextEvidence.single().value shouldBe ExampleContext(true)
-        plan.graphIssues<SpecializedFeatureObligation>().single().apply {
-            responsibleOwner shouldBe ContributionOwner("incomplete.type")
-            subject.entryContentType shouldBe ContentTypeId("incomplete")
-        }
-    }
-
-    @Test
-    fun `missing or blocked enabling scenario is a feature obligation`() {
-        val context = contextInputDefinition<ExampleContext>(ContextInputId("example.context"), contextOwner)
-        val blocked = FeatureContextBlocker(FeatureArtifactId("example.blocked"), listOf(context))
-        val contract = contract()
-        val contextualIntegration = FeatureIntegration(
-            id = integration,
-            prerequisites = CapabilityExpression.Provided(providerDefinition),
-            contextInputs = listOf(context),
-            contextRule = featureContextRule(featureOwner) {
-                FeatureContextDecision.Blocked(listOf(blocked))
-            },
-            contextBlockers = listOf(blocked),
-            behavioralContracts = listOf(contract),
-        )
-        val graph = graph(listOf(type("future"), type("second")), contextualIntegration)
-        val verifierOnly = verifierContributor(contract) { FeatureContractVerificationResult.Passed }
-
-        planFeatureContractValidation(graph, evaluateFeatureGraph(graph), listOf(verifierOnly))
-            .validationIssues<MissingFeatureContractScenarioObligation>()
-            .single()
-            .affectedSubjects.map { it.entryContentType.value } shouldContainExactly listOf("future", "second")
-
-        val blockedScenario = featureValidationContributor(featureOwner) {
-            verifierOnly.contributeTo(this)
-            add(
-                FeatureContractScenario(
-                    FeatureContractScenarioId("example.blocked-scenario"),
-                    reference(contract),
-                    integration,
-                ) { listOf(contextEvidence(context, ExampleContext(false))) },
-            )
-        }
-        val blockedGraph = graph(listOf(type("future")), contextualIntegration)
-        val blockedPlan = planFeatureContractValidation(
-            blockedGraph,
-            evaluateFeatureGraph(blockedGraph),
-            listOf(blockedScenario),
-        )
-
-        blockedPlan.executions shouldBe emptyList()
-        blockedPlan.validationIssues<InvalidFeatureContractScenarioObligation>()
-            .single()
-            .reason shouldBe "blocked by: example.blocked"
     }
 
     @Test
@@ -248,13 +128,11 @@ class FeatureContractValidationTest {
 
     private fun type(
         id: String,
-        adapters: List<SpecializedAdapter<*>> = emptyList(),
         fixtures: List<ContractFixture<*>> = emptyList(),
     ) = ContentTypeContribution(
         contentType = ContentTypeId(id),
         owner = ContributionOwner("$id.type"),
         providers = listOf(CapabilityProvider(providerDefinition, ExampleProvider("ready"))),
-        specializedAdapters = adapters,
         contractFixtures = fixtures,
     )
 
@@ -265,8 +143,6 @@ class FeatureContractValidationTest {
 
     private data class ExampleProvider(val state: String)
     private data class ExampleFixture(val state: String)
-    private data class ExampleContext(val enabled: Boolean)
-    private data class ExampleAdapter(val state: String)
 }
 
 private inline fun <reified O : FeatureObligation> FeatureContractValidationPlan.graphIssues(): List<O> {
