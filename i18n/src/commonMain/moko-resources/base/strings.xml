@@ -2122,6 +2122,10 @@
     <string name="statistics_sources">Sources</string>
     <string name="statistics_added_in_year">Added in %s</string>
 
+    <string name="tristate_not_used">Not used</string>
+    <string name="tristate_included">Included</string>
+    <string name="tristate_excluded">Excluded</string>
+
     <!-- Source filter editing -->
     <string name="filter_value_required">Choose a value.</string>
     <string name="filter_date_invalid">Enter a valid year, year-month, or full date.</string>
@@ -2172,7 +2176,6 @@
     <string name="filter_changes_description">%1$d included, %2$d excluded</string>
     <string name="filter_selected_only">Selected only</string>
     <string name="filter_search_group">Search %1$s</string>
-    <string name="filter_not_used">Not used</string>
     <string name="filter_exclude">Exclude</string>
     <string name="filter_tristate_chip_hint">Tap to include, tap again to exclude. Long-press to exclude.</string>
     <string name="filter_updating">Updating selections…</string>

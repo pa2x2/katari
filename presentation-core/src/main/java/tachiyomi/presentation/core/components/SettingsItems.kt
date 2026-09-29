@@ -46,6 +46,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.semantics.toggleableState
+import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
@@ -53,6 +58,7 @@ import dev.icerock.moko.resources.StringResource
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.TriState
 import tachiyomi.core.common.preference.toggle
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.material.DISABLED_ALPHA
 import tachiyomi.presentation.core.components.material.Slider
 import tachiyomi.presentation.core.components.material.padding
@@ -380,10 +386,26 @@ fun TriStateItem(
     enabled: Boolean = true,
     onClick: ((TriState) -> Unit)?,
 ) {
+    val stateText = stringResource(
+        when (state) {
+            TriState.DISABLED -> MR.strings.tristate_not_used
+            TriState.ENABLED_IS -> MR.strings.tristate_included
+            TriState.ENABLED_NOT -> MR.strings.tristate_excluded
+        },
+    )
     Row(
         modifier = Modifier
+            .semantics {
+                stateDescription = stateText
+                toggleableState = when (state) {
+                    TriState.DISABLED -> ToggleableState.Off
+                    TriState.ENABLED_IS -> ToggleableState.On
+                    TriState.ENABLED_NOT -> ToggleableState.Indeterminate
+                }
+            }
             .clickable(
                 enabled = enabled && onClick != null,
+                role = Role.Checkbox,
                 onClick = {
                     when (state) {
                         TriState.DISABLED -> onClick?.invoke(TriState.ENABLED_IS)

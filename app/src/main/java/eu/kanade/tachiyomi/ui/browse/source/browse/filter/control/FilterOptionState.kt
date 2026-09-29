@@ -29,8 +29,8 @@ internal val EntryFilter.TriState.optionState: FilterOptionState
 @Composable
 internal fun FilterOptionState.description(): String = stringResource(
     when (this) {
-        FilterOptionState.NotUsed -> MR.strings.filter_not_used
-        FilterOptionState.Included -> MR.strings.filter_included
-        FilterOptionState.Excluded -> MR.strings.filter_excluded
+        FilterOptionState.NotUsed -> MR.strings.tristate_not_used
+        FilterOptionState.Included -> MR.strings.tristate_included
+        FilterOptionState.Excluded -> MR.strings.tristate_excluded
     },
 )
