@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test
 class TextRecognitionSelectionCodecTest {
 
     @Test
-    fun `presets and custom pipelines keep their stored format`() {
+    fun `stored selections keep their format, and unreadable values restore the default`() {
         val preset = TextRecognitionPipelineSelection.Preset(TextRecognitionPresetId("onnx.japanese-manga"))
         val custom = TextRecognitionPipelineSelection.Custom(
             TextRecognitionPipeline(
@@ -24,10 +24,6 @@ class TextRecognitionSelectionCodecTest {
         TextRecognitionSelectionCodec.decode("preset:onnx.japanese-manga") shouldBe preset
         TextRecognitionSelectionCodec.encode(custom) shouldBe storedCustom
         TextRecognitionSelectionCodec.decode(storedCustom) shouldBe custom
-    }
-
-    @Test
-    fun `unreadable stored values restore the default`() {
         TextRecognitionSelectionCodec.decode("staged:Not An Id:x") shouldBe null
         TextRecognitionSelectionCodec.decode("unknown:value") shouldBe null
     }

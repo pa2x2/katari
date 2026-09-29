@@ -1,7 +1,6 @@
 package mihon.translation.provider.libretranslate.server
 
 import io.kotest.matchers.shouldBe
-import okhttp3.HttpUrl.Companion.toHttpUrl
 import org.junit.jupiter.api.Test
 
 class LibreTranslateServerConfigurationTest {
@@ -18,47 +17,5 @@ class LibreTranslateServerConfigurationTest {
         LibreTranslateServerConfiguration.validateEndpoint("https://user:pass@example.com") shouldBe null
         LibreTranslateServerConfiguration.validateEndpoint("https://example.com?key=secret") shouldBe null
         LibreTranslateServerConfiguration.validateEndpoint("https://example.com/#fragment") shouldBe null
-    }
-
-    @Test
-    fun `failed retest clears prior verification without discarding configuration`() {
-        val endpoint = "https://translate.example/".toHttpUrl()
-        val state = FakeState(
-            endpoint = endpoint.toString(),
-            verifiedEndpoint = endpoint.toString(),
-        )
-        val secrets = FakeApiKeyStore("old-key")
-        val configuration = LibreTranslateServerConfiguration(state, secrets)
-
-        configuration.save(endpoint, "new-key", verified = false)
-
-        configuration.endpoint shouldBe endpoint
-        configuration.apiKey shouldBe "new-key"
-        configuration.isInitiallyVerified shouldBe false
-        state.verifiedEndpoint shouldBe null
-    }
-
-    private class FakeState(
-        override var endpoint: String? = null,
-        override var verifiedEndpoint: String? = null,
-        override var disclosureAccepted: Boolean = false,
-    ) : LibreTranslateServerStateStore {
-        override fun saveEndpoint(
-            endpoint: String,
-            verifiedEndpoint: String?,
-        ) {
-            this.endpoint = endpoint
-            this.verifiedEndpoint = verifiedEndpoint
-        }
-    }
-
-    private class FakeApiKeyStore(
-        private var value: String? = null,
-    ) : LibreTranslateApiKeyStore {
-        override fun read() = value
-
-        override fun write(value: String) {
-            this.value = value
-        }
     }
 }

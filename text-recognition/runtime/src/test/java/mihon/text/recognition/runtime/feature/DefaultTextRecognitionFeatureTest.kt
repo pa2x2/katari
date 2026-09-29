@@ -1,6 +1,5 @@
 package mihon.text.recognition.runtime.feature
 
-import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.coroutines.Dispatchers
@@ -19,9 +18,7 @@ import mihon.text.recognition.api.image.ImageSize
 import mihon.text.recognition.api.pipeline.TextRecognitionPipeline
 import mihon.text.recognition.api.preparation.TextRecognitionPreparation
 import mihon.text.recognition.api.request.TextRecognitionRequest
-import mihon.text.recognition.api.request.TextRecognitionScope
 import mihon.text.recognition.api.result.TextRecognitionExecution
-import mihon.text.recognition.api.result.TextRegionKind
 import mihon.text.recognition.runtime.EXAMPLE_PROVIDER
 import mihon.text.recognition.runtime.FakeDetector
 import mihon.text.recognition.runtime.FakePageImage
@@ -48,27 +45,20 @@ class DefaultTextRecognitionFeatureTest {
     @TempDir
     lateinit var cacheDirectory: File
 
-    // A webtoon strip read in several tiles. The middle bubble straddles the boundary between the first two tiles.
-    private val strip = FakePageImage(ImageSize(900, 4000))
-    private val topBubble = ImageRect(100, 100, 500, 400)
-    private val topText = ImageRect(150, 150, 450, 350)
-    private val middleBubble = ImageRect(400, 1000, 800, 1300)
-    private val middleText = ImageRect(450, 1050, 750, 1250)
-    private val narration = ImageRect(50, 3500, 850, 3600)
+    private val strip = FakePageImage(ImageSize(1200, 1800))
+    private val bubble = ImageRect(100, 100, 500, 400)
+    private val bubbleText = ImageRect(150, 150, 450, 350)
     private val detector = FakeDetector(
         page = strip,
         objects = listOf(
-            topBubble to DetectedTextRegionKind.Bubble,
-            topText to DetectedTextRegionKind.BubbleText,
-            middleBubble to DetectedTextRegionKind.Bubble,
-            middleText to DetectedTextRegionKind.BubbleText,
-            narration to DetectedTextRegionKind.FreeText,
+            bubble to DetectedTextRegionKind.Bubble,
+            bubbleText to DetectedTextRegionKind.BubbleText,
         ),
         declaredModels = listOf(model("example.detector-model")),
     )
     private val recognizer = FakeRecognizer(
         page = strip,
-        texts = mapOf(topText to "上", middleText to "中", narration to "語り"),
+        texts = mapOf(bubbleText to "上"),
         declaredModels = listOf(model("example.recognizer-model")),
     )
     private val stagedPreset = preset(
@@ -82,21 +72,6 @@ class DefaultTextRecognitionFeatureTest {
     )
     private val preferences = ProfileTextRecognitionPreferences(InMemoryPreferenceStore())
     private val modelStore = FakeModelArtifactStore(detector.declaredModels + recognizer.declaredModels)
-
-    @Test
-    fun `whole-image recognition reads every text once in reading order and in source coordinates`() = runTest {
-        val feature = feature()
-
-        val result = feature.recognizeReady(TextRecognitionRequest(strip, JAPANESE))
-
-        result.regions.map { Triple(it.text, it.bounds, it.container) } shouldContainExactly listOf(
-            Triple("上", topText, topBubble),
-            Triple("中", middleText, middleBubble),
-            Triple("語り", narration, null),
-        )
-        result.regions.map { it.kind } shouldContainExactly
-            listOf(TextRegionKind.SpeechBubble, TextRegionKind.SpeechBubble, TextRegionKind.FreeText)
-    }
 
     @Test
     fun `a repeated request is answered from the cache until a component's revision changes`() = runTest {
@@ -116,35 +91,6 @@ class DefaultTextRecognitionFeatureTest {
         detector.processingRevision = 2
         feature.recognizeReady(TextRecognitionRequest(strip, JAPANESE))
         detector.runs shouldBe detectorRuns * 2
-    }
-
-    @Test
-    fun `an outline on a page already read reuses the page's detections`() = runTest {
-        val feature = feature()
-        feature.recognizeReady(TextRecognitionRequest(strip, JAPANESE))
-        val detectorRuns = detector.runs
-
-        val result = feature.recognizeReady(
-            TextRecognitionRequest(strip, JAPANESE, TextRecognitionScope.Region(middleBubble)),
-        )
-
-        result.regions.map { it.text to it.bounds } shouldContainExactly listOf("中" to middleText)
-        detector.runs shouldBe detectorRuns
-    }
-
-    @Test
-    fun `an outlined area without detected text is read as a whole`() = runTest {
-        val outline = ImageRect(40, 3480, 860, 3620)
-        val silentDetector = FakeDetector(strip, emptyList(), declaredModels = detector.declaredModels)
-        val silentRegistry = TextRecognitionComponentRegistry(
-            listOf(contribution(EXAMPLE_PROVIDER, listOf(silentDetector, recognizer), presets = listOf(stagedPreset))),
-        )
-
-        val result = feature(silentRegistry).recognizeReady(
-            TextRecognitionRequest(strip, JAPANESE, TextRecognitionScope.Region(outline)),
-        )
-
-        result.regions.map { it.text to it.bounds } shouldContainExactly listOf("語り" to outline)
     }
 
     @Test

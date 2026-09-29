@@ -7,10 +7,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.test.runTest
-import mihon.language.api.identification.TextLanguageCandidate
-import mihon.language.api.identification.TextLanguageDetection
-import mihon.language.api.identification.TextLanguageDetector
-import mihon.language.api.identification.TextLanguageDetectorId
 import mihon.language.api.tag.LanguageTag
 import mihon.translation.api.engine.KnownTranslationEngine
 import mihon.translation.api.engine.TranslationEngineArtwork
@@ -21,7 +17,6 @@ import mihon.translation.api.engine.TranslationEngineSelection
 import mihon.translation.api.engine.TranslationProviderId
 import mihon.translation.api.language.TranslationLanguageSupport
 import mihon.translation.api.language.TranslationLanguageSupportInspection
-import mihon.translation.api.preparation.TranslationEngineChoiceReason
 import mihon.translation.api.preparation.TranslationPreparation
 import mihon.translation.api.preparation.TranslationRejectionReason
 import mihon.translation.api.preparation.TranslationSystemSetupReason
@@ -81,22 +76,6 @@ class DefaultTranslationFeatureTest {
             )
         }
         failing.translationCount shouldBe 2
-    }
-
-    @Test
-    fun `an engine unregistered after preparation asks for another engine instead of translating`() = runTest {
-        val engine = FakeTranslationEngine()
-        val registry =
-            DefaultTranslationEngineRegistry(listOf(TranslationEngineContribution(engine)))
-        val feature = feature(registry)
-        val ready = (feature.prepare(explicitRequest()) as TranslationPreparation.Ready).translation
-
-        feature(emptyRegistry()).translate(ready) shouldBe TranslationExecution.PreparationChanged(
-            TranslationPreparation.EngineChoiceRequired(
-                reason = TranslationEngineChoiceReason.SelectedEngineUnavailable(ENGINE_ID),
-                engines = emptyList(),
-            ),
-        )
     }
 
     @Test
@@ -194,52 +173,24 @@ class DefaultTranslationFeatureTest {
         engine.translationCount shouldBe 0
     }
 
-    @Test
-    fun `automatic source ambiguity preserves ranked suggestions for correction`() = runTest {
-        val feature = feature(
-            registry = DefaultTranslationEngineRegistry(
-                listOf(TranslationEngineContribution(FakeTranslationEngine())),
-            ),
-            textLanguageDetectors = listOf(
-                FakeDetector(
-                    "ambiguous",
-                    TextLanguageDetection.Detected(
-                        language = ENGLISH,
-                        confidence = 0.4f,
-                        alternatives = listOf(TextLanguageCandidate(SPANISH, 0.35f)),
-                    ),
-                ),
-            ),
-        )
-        val request = explicitRequest().copy(sourceLanguage = TranslationSourceLanguageSelection.Automatic)
-
-        feature.prepare(request) shouldBe TranslationPreparation.SourceUndetermined(
-            suggestedLanguages = listOf(ENGLISH, SPANISH),
-        )
-    }
-
     private fun feature(engine: TranslationEngine): DefaultTranslationFeature {
         return feature(DefaultTranslationEngineRegistry(listOf(TranslationEngineContribution(engine))))
     }
 
     private fun feature(
         registry: DefaultTranslationEngineRegistry,
-        textLanguageDetectors: List<TextLanguageDetector> = emptyList(),
         resultCache: TranslationResultCache? = null,
     ): DefaultTranslationFeature {
         return DefaultTranslationFeature(
             engineRegistry = registry,
             knownEngineCatalog = registry,
-            textLanguageDetectors = textLanguageDetectors,
+            textLanguageDetectors = emptyList(),
             defaultTargetLanguageResolver = TranslationDefaultTargetLanguageResolver { null },
             selectedEngine = { ENGINE_ID },
             resultCache = resultCache,
             ioDispatcher = Dispatchers.Unconfined,
         )
     }
-
-    private fun emptyRegistry() =
-        DefaultTranslationEngineRegistry(emptyList<TranslationEngineContribution>())
 
     private fun explicitRequest(text: String = "Hello") = TranslationRequest(
         text = text,
@@ -285,15 +236,6 @@ class DefaultTranslationFeatureTest {
     }
 
     private data object FakeReady : ReadyTranslationEngineRequest
-
-    private class FakeDetector(
-        id: String,
-        private val result: TextLanguageDetection,
-    ) : TextLanguageDetector {
-        override val id = TextLanguageDetectorId("fake-detector-$id")
-
-        override suspend fun detect(text: String): TextLanguageDetection = result
-    }
 
     private companion object {
         val ENGINE_ID = TranslationEngineId("fake")

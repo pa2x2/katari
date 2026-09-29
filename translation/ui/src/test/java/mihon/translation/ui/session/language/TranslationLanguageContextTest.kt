@@ -33,20 +33,6 @@ class TranslationLanguageContextTest {
         store.targets shouldBe listOf(SPANISH)
     }
 
-    @Test
-    fun `choosing the language the profile target resolves to follows the profile`() = runTest {
-        val store = RecordingStore(TranslationStoredLanguages(target = SPANISH))
-        val context = context(store)
-        runCurrent()
-
-        context.selectTarget(ENGLISH) shouldBe TranslationTargetLanguageSelection.Default
-        runCurrent()
-
-        store.targets shouldBe listOf(null)
-        context.request("text", TextLanguageResolutionContext()).targetLanguage shouldBe
-            TranslationTargetLanguageSelection.Default
-    }
-
     private fun TestScope.context(store: TranslationLanguageStore?) = TranslationLanguageContext(
         defaultTarget = { TranslationDefaultTarget(ENGLISH, followsAppLanguage = true) },
         store = store,

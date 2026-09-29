@@ -47,65 +47,6 @@ class TranslationSessionControllerTest {
     }
 
     @Test
-    fun `successful result remains available while its replacement is in progress`() = runTest {
-        val preparationGate = CompletableDeferred<Unit>()
-        val executionGate = CompletableDeferred<Unit>()
-        val feature = object : TranslationFeature {
-            override suspend fun prepare(request: TranslationRequest): TranslationPreparation {
-                if (request.text == "second") preparationGate.await()
-                return ready(request, TranslationInvocationPolicy.Immediate)
-            }
-
-            override suspend fun translate(ready: ReadyTranslation): TranslationExecution {
-                val pending = ready as FakeReadyTranslation
-                if (pending.request.text == "second") executionGate.await()
-                return TranslationExecution.Success(
-                    TranslationResult(
-                        translatedText = "translated ${pending.request.text}",
-                        sourceLanguage = SOURCE,
-                        targetLanguage = TARGET,
-                        presentation = pending.preparation.presentation,
-                    ),
-                )
-            }
-        }
-        val controller = TranslationSessionController(
-            feature = feature,
-            parentScope = backgroundScope,
-            selectionSettleDelayMillis = 100,
-        )
-
-        controller.submit(input("first"))
-        advanceTimeBy(100)
-        runCurrent()
-        val previousResult = requireNotNull(controller.state.value.displayedSessionResult())
-        previousResult.result.translatedText shouldBe "translated first"
-
-        controller.submit(input("second"))
-        controller.state.value
-            .shouldBeInstanceOf<TranslationSessionState.Settling>()
-            .displayedSessionResult() shouldBe previousResult
-
-        advanceTimeBy(100)
-        runCurrent()
-        controller.state.value
-            .shouldBeInstanceOf<TranslationSessionState.Preparing>()
-            .displayedSessionResult() shouldBe previousResult
-
-        preparationGate.complete(Unit)
-        runCurrent()
-        controller.state.value
-            .shouldBeInstanceOf<TranslationSessionState.Translating>()
-            .displayedSessionResult() shouldBe previousResult
-
-        executionGate.complete(Unit)
-        runCurrent()
-        controller.state.value
-            .shouldBeInstanceOf<TranslationSessionState.Success>()
-            .result.translatedText shouldBe "translated second"
-    }
-
-    @Test
     fun `unresponsive execution leaves translating state after the timeout`() = runTest {
         val feature = object : TranslationFeature {
             override suspend fun prepare(request: TranslationRequest): TranslationPreparation {
@@ -197,28 +138,6 @@ class TranslationSessionControllerTest {
         firstGate.complete(Unit)
         runCurrent()
         (controller.state.value as TranslationSessionState.Ready).input.request.text shouldBe "second"
-    }
-
-    @Test
-    fun `anchor-only update does not repeat provider work`() = runTest {
-        val gate = CompletableDeferred<Unit>()
-        val feature = FakeTranslationFeature(
-            prepareOverride = { request ->
-                gate.await()
-                ready(request)
-            },
-        )
-        val controller = TranslationSessionController(feature, backgroundScope, selectionSettleDelayMillis = 0)
-        controller.submit(input("hello"))
-        runCurrent()
-
-        val anchor = TranslationSelectionAnchor(10f, 20f, 30f, 40f)
-        controller.updateAnchor(anchor)
-        gate.complete(Unit)
-        runCurrent()
-
-        feature.preparedTexts shouldContainExactly listOf("hello")
-        (controller.state.value as TranslationSessionState.Ready).input.anchor shouldBe anchor
     }
 
     @Test

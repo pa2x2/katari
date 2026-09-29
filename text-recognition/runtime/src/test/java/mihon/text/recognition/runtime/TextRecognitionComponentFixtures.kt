@@ -32,7 +32,6 @@ import mihon.text.recognition.spi.contribution.TextRecognitionProviderContributi
 import mihon.text.recognition.spi.model.TextRecognitionModels
 
 internal val JAPANESE = LanguageTag.require("ja")
-internal val ENGLISH = LanguageTag.require("en")
 
 internal val EXAMPLE_PROVIDER = provider("example")
 internal val EXCLUDED_PROVIDER = provider("excluded", TextRecognitionBuildAvailability.NotIncluded("Not in this build"))

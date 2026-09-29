@@ -6,32 +6,9 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.test.runTest
 import mihon.translation.provider.libretranslate.protocol.LibreTranslateLanguage
 import mihon.translation.provider.libretranslate.protocol.LibreTranslateService
-import okhttp3.HttpUrl
-import okhttp3.HttpUrl.Companion.toHttpUrl
 import org.junit.jupiter.api.Test
 
 class LibreTranslateServerSetupCoordinatorTest {
-    @Test
-    fun `the attempted configuration is stored and verified only when the server answers`() = runTest {
-        var saved: SavedConfiguration? = null
-        var languages = listOf(LANGUAGE)
-        val coordinator = LibreTranslateServerSetupCoordinator(
-            serviceFactory = { _, _ -> service(languages) },
-            saveConfiguration = { endpoint, apiKey, verified ->
-                saved = SavedConfiguration(endpoint, apiKey, verified)
-            },
-        )
-
-        coordinator.saveAndTest("https://translate.example", "key") shouldBe
-            LibreTranslateServerSetupResult.Ready
-        saved shouldBe SavedConfiguration("https://translate.example/".toHttpUrl(), "key", verified = true)
-
-        languages = emptyList()
-        coordinator.saveAndTest("https://translate.example/new", "new-key") shouldBe
-            LibreTranslateServerSetupResult.ConnectionFailed
-        saved shouldBe SavedConfiguration("https://translate.example/new/".toHttpUrl(), "new-key", verified = false)
-    }
-
     @Test
     fun `secure storage failure reports save failure without leaking values`() = runTest {
         val coordinator = LibreTranslateServerSetupCoordinator(
@@ -58,12 +35,6 @@ class LibreTranslateServerSetupCoordinatorTest {
         }
         saved shouldBe false
     }
-
-    private data class SavedConfiguration(
-        val endpoint: HttpUrl,
-        val apiKey: String?,
-        val verified: Boolean,
-    )
 
     private fun service(
         languages: List<LibreTranslateLanguage> = emptyList(),

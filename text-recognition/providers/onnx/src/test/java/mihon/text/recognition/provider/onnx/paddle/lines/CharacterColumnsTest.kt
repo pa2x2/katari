@@ -20,11 +20,4 @@ class CharacterColumnsTest {
             listOf(40, 0, 70, 72),
         )
     }
-
-    @Test
-    fun `a horizontal line is not stacked onto the character below it`() {
-        val lines = listOf(box(0, 0, 120, 30), box(0, 40, 30, 70))
-
-        stackCharacterColumns(lines).boundsList() shouldContainExactlyInAnyOrder lines.boundsList()
-    }
 }

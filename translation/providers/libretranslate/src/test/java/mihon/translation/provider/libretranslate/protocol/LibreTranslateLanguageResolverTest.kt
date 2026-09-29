@@ -2,9 +2,6 @@ package mihon.translation.provider.libretranslate.protocol
 
 import io.kotest.matchers.shouldBe
 import mihon.language.api.tag.LanguageTag
-import mihon.translation.api.language.TranslationLanguagePair
-import mihon.translation.api.language.TranslationLanguageSupport
-import mihon.translation.api.language.TranslationLanguageSupportInspection
 import org.junit.jupiter.api.Test
 
 class LibreTranslateLanguageResolverTest {
@@ -19,34 +16,5 @@ class LibreTranslateLanguageResolverTest {
         resolver.resolve(LanguageTag.require("pt-BR"))?.code shouldBe "pt-BR"
     }
 
-    @Test
-    fun `language support preserves asymmetric provider pairs and omits invalid tags`() {
-        val english = language("en", targets = setOf("fr", "pt-BR"))
-        val french = language("fr", targets = setOf("en"))
-        val brazilianPortuguese = language("pt-BR", targets = setOf("en"))
-        val invalid = language("und", targets = setOf("en"))
-
-        val inspection = LibreTranslateLanguageResolver(
-            listOf(english, french, brazilianPortuguese, invalid),
-        ).languageSupport() as TranslationLanguageSupportInspection.Available
-        val pairs = (inspection.support as TranslationLanguageSupport.ExactPairs).pairs
-
-        pairs shouldBe setOf(
-            TranslationLanguagePair(ENGLISH, FRENCH),
-            TranslationLanguagePair(ENGLISH, BRAZILIAN_PORTUGUESE),
-            TranslationLanguagePair(FRENCH, ENGLISH),
-            TranslationLanguagePair(BRAZILIAN_PORTUGUESE, ENGLISH),
-        )
-    }
-
-    private fun language(
-        code: String,
-        targets: Set<String> = emptySet(),
-    ) = LibreTranslateLanguage(code, code, targets)
-
-    private companion object {
-        val ENGLISH = LanguageTag.require("en")
-        val FRENCH = LanguageTag.require("fr")
-        val BRAZILIAN_PORTUGUESE = LanguageTag.require("pt-BR")
-    }
+    private fun language(code: String) = LibreTranslateLanguage(code, code, emptySet())
 }

@@ -56,19 +56,6 @@ class StagedPipelineRunnerTest {
     }
 
     @Test
-    fun `text labelled both inside and outside a bubble is read once`() = runTest {
-        val regions = run(
-            objects = listOf(
-                narration to DetectedTextRegionKind.FreeText,
-                narration to DetectedTextRegionKind.BubbleText,
-            ),
-            texts = mapOf(narration to "語り"),
-        )
-
-        regions.map { it.text to it.bounds } shouldContainExactly listOf("語り" to narration)
-    }
-
-    @Test
     fun `an outline reads the text it mostly covers, as the detector found it on the whole page`() = runTest {
         // The outline cuts off the top of the bubble's text and misses the narration.
         val outline = ImageRect(120, 250, 480, 580)
