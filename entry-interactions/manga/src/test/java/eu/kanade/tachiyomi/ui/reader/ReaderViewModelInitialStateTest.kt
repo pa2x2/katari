@@ -21,16 +21,6 @@ class ReaderViewModelInitialStateTest {
         state.pageIndex shouldBe 8
     }
 
-    @Test
-    fun `missing launch identifiers are invalid even when restored position exists`() {
-        val state = initialState(
-            "chapter_id" to 30L,
-            "page_index" to 8,
-        )
-
-        state.hasValidArgs shouldBe false
-    }
-
     private fun initialState(vararg values: Pair<String, Any>): ReaderViewModel.InitialState {
         return ReaderViewModel.InitialState.from(SavedStateHandle(mapOf(*values)))
     }

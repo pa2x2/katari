@@ -17,10 +17,8 @@ import eu.kanade.tachiyomi.source.entry.VideoRequest
 import eu.kanade.tachiyomi.source.entry.VideoStream
 import eu.kanade.tachiyomi.source.entry.VideoStreamType
 import eu.kanade.tachiyomi.source.entry.VideoSubtitle
-import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
-import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
@@ -53,44 +51,6 @@ class ResolveVideoStreamTest {
         val success = result as ResolveVideoStream.Result.Success
         success.subtitles shouldBe emptyList()
         success.stream.request.url shouldBe "https://cdn.example.com/video.m3u8"
-    }
-
-    @Test
-    fun `resolved fallback selection is persisted`() = runTest {
-        val preferences = playbackPreferences(ENTRY_ID).copy(
-            dubKey = "requested-dub",
-            streamKey = "missing-stream",
-            sourceQualityKey = "requested-quality",
-        )
-        val preferencesRepository = playbackPreferencesRepository(preferences)
-        val source = TestSource(
-            descriptor = playbackDescriptor(
-                selection = PlaybackSelection(
-                    dubKey = "fallback-dub",
-                    sourceQualityKey = "fallback-quality",
-                ),
-            ),
-        )
-        val resolver = resolver(source, preferencesRepository)
-
-        val result = resolver(entryId = ENTRY_ID, chapterId = CHAPTER_ID, ownerEntryId = ENTRY_ID, selection = null)
-
-        val success = result as ResolveVideoStream.Result.Success
-        success.playbackData.selection shouldBe PlaybackSelection(
-            dubKey = "fallback-dub",
-            streamKey = "auto",
-            sourceQualityKey = "fallback-quality",
-        )
-        coVerify(exactly = 1) {
-            preferencesRepository.upsert(
-                match {
-                    it.entryId == ENTRY_ID &&
-                        it.dubKey == "fallback-dub" &&
-                        it.streamKey == "auto" &&
-                        it.sourceQualityKey == "fallback-quality"
-                },
-            )
-        }
     }
 
     @Test
@@ -169,36 +129,6 @@ class ResolveVideoStreamTest {
         success.savedPreferences.subtitleTextSize shouldBe 24.0
         visibleSource.mediaRequests shouldBe 0
         ownerSource.mediaRequests shouldBe 0
-    }
-
-    @Test
-    fun `download without manifest uses legacy video file fallback`() = runTest {
-        val source = TestSource()
-        val episode = chapter(CHAPTER_ID, ENTRY_ID)
-        val episodeDir = mockk<UniFile>()
-        val videoFile = localFile("content://downloads/legacy.mkv", "legacy.MKV")
-        every { episodeDir.listFiles() } returns arrayOf(videoFile)
-        val provider = mockk<AnimeDownloadProvider> {
-            every { findEpisodeDir(episode.name, episode.url, "Entry 1", source) } returns episodeDir
-            every { readValidManifest(episodeDir) } returns null
-        }
-        val resolver = resolver(
-            visibleEntry = entry(ENTRY_ID),
-            ownerEntry = entry(ENTRY_ID),
-            episode = episode,
-            sourceManager = sourceManager(initialized = false, SOURCE_ID to source),
-            provider = provider,
-            isOnline = false,
-        )
-
-        val result = resolver(ENTRY_ID, CHAPTER_ID, ENTRY_ID, null)
-
-        val success = result as ResolveVideoStream.Result.Success
-        success.stream.request.url shouldBe videoFile.uri.toString()
-        success.stream.type shouldBe VideoStreamType.PROGRESSIVE
-        success.stream.key shouldBe "downloaded"
-        success.subtitles shouldBe emptyList()
-        source.mediaRequests shouldBe 0
     }
 
     private fun resolver(

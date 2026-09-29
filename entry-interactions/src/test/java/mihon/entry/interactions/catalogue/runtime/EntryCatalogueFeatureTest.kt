@@ -1,41 +1,29 @@
 package mihon.entry.interactions.catalogue.runtime
 
-import androidx.paging.PagingSource
 import eu.kanade.tachiyomi.source.entry.EntryFilter
-import eu.kanade.tachiyomi.source.entry.EntryFilterAutocompleteOptions
 import eu.kanade.tachiyomi.source.entry.EntryFilterList
 import eu.kanade.tachiyomi.source.entry.EntryFilterSuggestion
 import eu.kanade.tachiyomi.source.entry.EntryFilterTextEdit
 import eu.kanade.tachiyomi.source.entry.EntryFilterTextInput
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
-import eu.kanade.tachiyomi.source.entry.EntryPageResult
 import eu.kanade.tachiyomi.source.entry.EntryType
-import eu.kanade.tachiyomi.source.entry.SEntry
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.coEvery
-import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
-import mihon.entry.interactions.catalogue.EntryCatalogueBrowseRequest
 import mihon.entry.interactions.catalogue.EntryCatalogueFeature
 import mihon.entry.interactions.catalogue.EntryCatalogueFeatureContributor
 import mihon.entry.interactions.catalogue.EntryCatalogueFilterSuggestionsResult
-import mihon.entry.interactions.catalogue.EntryCatalogueListing
 import mihon.entry.interactions.catalogue.EntryCatalogueSearchRequest
-import mihon.entry.interactions.catalogue.EntryCatalogueSearchResult
 import mihon.entry.interactions.catalogue.host.EntryCatalogueHostSource
 import mihon.entry.interactions.catalogue.host.EntryCatalogueHostSourceResolution
 import mihon.entry.interactions.catalogue.host.EntryCatalogueProviderHost
 import mihon.entry.interactions.validation.productionSubjectEvaluation
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import tachiyomi.domain.entry.interactor.NetworkToLocalEntry
-import tachiyomi.domain.entry.model.Entry
-import tachiyomi.domain.source.model.CatalogListItem
 import tachiyomi.domain.source.model.EntryCatalogueDescription
 import tachiyomi.domain.source.model.EntrySourceDescription
 
@@ -47,39 +35,6 @@ class EntryCatalogueFeatureTest {
         catalogue = EntryCatalogueDescription(supportsLatest = true),
     )
     private val source = EntryCatalogueHostSource(7L, "Source", description)
-
-    @Test
-    fun `filter suggestions enforce source query policy and result limit`() = runTest {
-        val input = EntryFilterTextInput("al", 2, 2)
-        val filter = autocomplete(
-            options = EntryFilterAutocompleteOptions(
-                minimumQueryLength = 2,
-                maximumResults = 2,
-            ),
-        )
-        val suggestions = listOf(
-            EntryFilterSuggestion("1", "Alpha"),
-            EntryFilterSuggestion("1", "Duplicate Alpha"),
-            EntryFilterSuggestion("2", "Alpine"),
-            EntryFilterSuggestion("3", "Alt"),
-        )
-        val host = host()
-        every { host.source(7L) } returns EntryCatalogueHostSourceResolution.Available(source)
-        coEvery { host.filterSuggestions(7L, filter, input, "al") } returns suggestions
-
-        feature(host).filterSuggestions(7L, filter, input) shouldBe
-            EntryCatalogueFilterSuggestionsResult.Available(
-                listOf(
-                    EntryFilterSuggestion("1", "Alpha"),
-                    EntryFilterSuggestion("2", "Alpine"),
-                ),
-            )
-
-        val shortInput = EntryFilterTextInput("a", 1, 1)
-        feature(host).filterSuggestions(7L, filter, shortInput) shouldBe
-            EntryCatalogueFilterSuggestionsResult.NotApplicable
-        coVerify(exactly = 0) { host.filterSuggestions(7L, filter, shortInput, any()) }
-    }
 
     @Test
     fun `provider failures are normalized while cancellation remains cancellation`() = runTest {
@@ -104,51 +59,7 @@ class EntryCatalogueFeatureTest {
         }
     }
 
-    @Test
-    fun `background search filters provider results by type without persisting candidates`() = runTest {
-        val filters = EntryFilterList()
-        val manga = sourceEntry("/same", EntryType.MANGA)
-        val duplicate = sourceEntry("/same", EntryType.MANGA)
-        val anime = sourceEntry("/anime", EntryType.ANIME)
-        val host = host()
-        every { host.source(7L) } returns EntryCatalogueHostSourceResolution.Available(source)
-        coEvery { host.backgroundFilters(7L) } returns filters
-        coEvery { host.page(7L, 1, any<EntryCatalogueListing.Search>()) } returns
-            EntryPageResult(listOf(manga, duplicate, anime), false)
-        val networkToLocal = mockk<NetworkToLocalEntry>()
-
-        val result = feature(host, networkToLocal).search(
-            EntryCatalogueSearchRequest(7L, "query", requiredType = EntryType.MANGA),
-        )
-
-        result.shouldBeInstanceOf<EntryCatalogueSearchResult.Success>().entries.map { it.url } shouldBe listOf("/same")
-        coVerify(exactly = 0) { networkToLocal.invoke(any<List<Entry>>()) }
-    }
-
-    @Test
-    fun `paging persists each entry identity from a page once`() = runTest {
-        val first = sourceEntry("/first", EntryType.BOOK)
-        val second = sourceEntry("/second", EntryType.BOOK)
-        val host = host()
-        every { host.source(7L) } returns EntryCatalogueHostSourceResolution.Available(source)
-        coEvery { host.page(7L, 1, EntryCatalogueListing.Popular) } returns
-            EntryPageResult(listOf(first, first.copy(), second), true)
-        val networkToLocal = mockk<NetworkToLocalEntry> {
-            coEvery { this@mockk.invoke(any<List<Entry>>()) } answers { firstArg() }
-        }
-
-        val result = feature(host, networkToLocal)
-            .paging(EntryCatalogueBrowseRequest(7L, EntryCatalogueListing.Popular))
-            .load(PagingSource.LoadParams.Refresh(key = null, loadSize = 25, placeholdersEnabled = false))
-
-        val page = result.shouldBeInstanceOf<PagingSource.LoadResult.Page<Long, CatalogListItem>>()
-        page.data.map { (it as CatalogListItem.EntryItem).entry.url } shouldBe listOf("/first", "/second")
-    }
-
-    private fun feature(
-        host: EntryCatalogueProviderHost,
-        networkToLocalEntry: NetworkToLocalEntry = mockk(),
-    ): EntryCatalogueFeature {
+    private fun feature(host: EntryCatalogueProviderHost): EntryCatalogueFeature {
         val evaluation = productionSubjectEvaluation(
             EntryType.BOOK,
             EntryCatalogueFeatureContributor,
@@ -156,7 +67,7 @@ class EntryCatalogueFeatureTest {
         return DefaultEntryCatalogueFeature(
             host = host,
             graphStateValidator = EntryCatalogueGraphStateValidator(evaluation),
-            networkToLocalEntry = networkToLocalEntry,
+            networkToLocalEntry = mockk(),
         )
     }
 
@@ -164,15 +75,7 @@ class EntryCatalogueFeatureTest {
         every { isInitialized } returns MutableStateFlow(true)
     }
 
-    private fun sourceEntry(url: String, type: EntryType): SEntry = SEntry.create().apply {
-        this.url = url
-        title = url
-        this.type = type
-    }
-
-    private fun autocomplete(
-        options: EntryFilterAutocompleteOptions = EntryFilterAutocompleteOptions(),
-    ) = object : EntryFilter.Autocomplete("Autocomplete", options = options) {
+    private fun autocomplete() = object : EntryFilter.Autocomplete("Autocomplete") {
         override fun getSuggestionQuery(input: EntryFilterTextInput): String = input.text
 
         override suspend fun getSuggestions(

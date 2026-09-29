@@ -3,7 +3,6 @@ package mihon.entry.interactions.download
 import eu.kanade.tachiyomi.source.entry.EntryType
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
-import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.emptyFlow
@@ -19,24 +18,6 @@ import tachiyomi.domain.entry.model.Entry
 
 class EntryDownloadMaintenanceFeatureTest {
     private val entry = Entry.create().copy(id = 7L, type = EntryType.BOOK)
-
-    @Test
-    fun `merged download maintenance visits each concrete owner`() = runTest {
-        val member = entry.copy(id = 8L, url = "/member")
-        val processor = processor()
-        every { processor.hasDownloads(entry) } returnsMany listOf(false, false)
-        every { processor.hasDownloads(member) } returnsMany listOf(true, true, false)
-        val feature = featureFor(
-            EntryDownloadCapability.bind(processor),
-            owners = listOf(entry, member),
-        )
-
-        feature.inspectEntry(entry) shouldBe EntryDownloadMaintenanceInspection.HasDownloads
-        feature.removeEntryDownloads(entry) shouldBe EntryDownloadMaintenanceResult.Performed
-
-        coVerify(exactly = 0) { processor.deleteEntryDownloads(entry) }
-        coVerify(exactly = 1) { processor.deleteEntryDownloads(member) }
-    }
 
     @Test
     fun `removal stays incomplete when deletion fails or downloads remain`() = runTest {

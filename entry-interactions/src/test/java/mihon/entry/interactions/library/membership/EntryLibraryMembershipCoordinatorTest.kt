@@ -29,27 +29,20 @@ import tachiyomi.domain.entry.model.Entry
 class EntryLibraryMembershipCoordinatorTest {
 
     @Test
-    fun `addition consequence runs only after persistence commits`() = runTest {
-        val trace = mutableListOf<String>()
-        val host = RecordingHost(trace)
-        val feature = feature(host, trace = trace)
+    fun `addition consequence runs only after persistence commits and never after a conflict`() = runTest {
+        val committedTrace = mutableListOf<String>()
+        val committed = feature(RecordingHost(committedTrace), trace = committedTrace)
+            .add(EntryLibraryAddRequest(entry()))
 
-        val result = feature.add(EntryLibraryAddRequest(entry()))
+        check(committed is EntryLibraryAddResult.Added) { "Unexpected addition result: $committed" }
+        committedTrace shouldContainExactly listOf("membership-committed", "addition-consequence")
 
-        check(result is EntryLibraryAddResult.Added) { "Unexpected addition result: $result" }
-        trace shouldContainExactly listOf("membership-committed", "addition-consequence")
-    }
+        val conflictTrace = mutableListOf<String>()
+        val conflicted = feature(RecordingHost(conflictTrace, additionConflicts = true), trace = conflictTrace)
+            .add(EntryLibraryAddRequest(entry()))
 
-    @Test
-    fun `addition conflict suppresses volatile consequence`() = runTest {
-        val trace = mutableListOf<String>()
-        val host = RecordingHost(trace, additionConflicts = true)
-        val feature = feature(host, trace = trace)
-
-        val result = feature.add(EntryLibraryAddRequest(entry()))
-
-        (result is EntryLibraryAddResult.Failed) shouldBe true
-        trace shouldContainExactly emptyList()
+        (conflicted is EntryLibraryAddResult.Failed) shouldBe true
+        conflictTrace shouldContainExactly emptyList()
     }
 
     @Test

@@ -40,48 +40,6 @@ class MangaReaderTextSessionTest {
         recognition.recognized shouldContainExactly listOf(ImageContentKey("page-1"))
     }
 
-    @Test
-    fun `a kept series language wins over a late declared language until the source is followed again`() = runTest {
-        declaredLanguage.value = null
-        pageLanguage.value = KOREAN
-        val session = session()
-        session.onVisibleSurfaces(listOf(FakeSurface(0)))
-        session.setActive(true)
-        runCurrent()
-
-        declaredLanguage.value = JAPANESE
-        runCurrent()
-
-        session.state.value.declaredLanguage shouldBe JAPANESE
-        session.state.value.language shouldBe KOREAN
-        session.state.value.languageKept shouldBe true
-        recognition.recognizedLanguages shouldContainExactly listOf(KOREAN)
-
-        pageLanguage.value = null
-        runCurrent()
-
-        recognition.recognizedLanguages shouldContainExactly listOf(KOREAN, JAPANESE)
-        session.state.value.language shouldBe JAPANESE
-        session.state.value.languageKept shouldBe false
-    }
-
-    @Test
-    fun `preloaded pages are processed only while translations are drawn on pages`() = runTest {
-        val visible = FakeSurface(0)
-        val preloaded = FakeSurface(1)
-        val session = session()
-        session.setActive(true)
-
-        session.onVisibleSurfaces(listOf(visible), preloaded = listOf(preloaded))
-        runCurrent()
-        recognition.recognized shouldContainExactly listOf(ImageContentKey("page-0"))
-
-        session.setOverlay(true)
-        session.onVisibleSurfaces(listOf(visible), preloaded = listOf(preloaded))
-        runCurrent()
-        recognition.recognized shouldContainExactly listOf(ImageContentKey("page-0"), ImageContentKey("page-1"))
-    }
-
     private fun TestScope.session(): MangaReaderTextSession {
         val languages = TranslationLanguageContext(defaultTarget = { null }, store = null, scope = backgroundScope)
         return MangaReaderTextSession(

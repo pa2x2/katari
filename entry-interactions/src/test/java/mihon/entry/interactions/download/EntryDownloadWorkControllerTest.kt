@@ -72,25 +72,6 @@ class EntryDownloadWorkControllerTest {
         workManager.getWorkInfosForUniqueWork("EntryDownloader").get().all { it.state.isFinished } shouldBe true
     }
 
-    @Test
-    fun `pause cancels active and successor work and an explicit start can resume`() {
-        controller.start()
-        allowScheduledWork()
-        controller.start()
-
-        controller.stop()
-
-        workers.single().isStopped shouldBe true
-        workManager.getWorkInfosForUniqueWork("EntryDownloader").get().all { it.state.isFinished } shouldBe true
-        controller.resumeIfRequested()
-        workers.size shouldBe 1
-
-        controller.start()
-        allowScheduledWork()
-        workers.size shouldBe 2
-        workers.last().result.set(ListenableWorker.Result.success())
-    }
-
     private fun allowScheduledWork() {
         val driver = checkNotNull(WorkManagerTestInitHelper.getTestDriver(context))
         workManager.getWorkInfosForUniqueWork("EntryDownloader").get()

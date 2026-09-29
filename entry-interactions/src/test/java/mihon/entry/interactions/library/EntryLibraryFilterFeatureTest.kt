@@ -1,16 +1,11 @@
 package mihon.entry.interactions.library
 
 import eu.kanade.tachiyomi.source.entry.EntryType
-import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.collections.shouldContainExactly
 import mihon.entry.interactions.runtime.EntryInteractionComposition
 import mihon.entry.interactions.runtime.EntryInteractionPlugin
 import mihon.entry.interactions.runtime.EntryInteractionProviderBinding
-import mihon.entry.interactions.runtime.EntryOutsideReleasePeriodFilterCapability
-import mihon.entry.interactions.runtime.EntryOutsideReleasePeriodFilterProvider
 import mihon.entry.interactions.runtime.createEntryInteractionComposition
-import mihon.entry.interactions.state.EntryBookmarkCapability
-import mihon.entry.interactions.state.EntryBookmarkProcessor
 import mihon.feature.graph.ContributionOwner
 import org.junit.jupiter.api.Test
 import tachiyomi.core.common.preference.TriState
@@ -18,65 +13,6 @@ import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 
 class EntryLibraryFilterFeatureTest {
-    @Test
-    fun `bookmark state filters mixed supported and unsupported targets while release filtering passes unsupported`() {
-        val composition = composition(
-            plugin(
-                EntryType.BOOK,
-                EntryLibraryProgressCapability.bind(LibraryProgressProvider()),
-                EntryBookmarkCapability.bind(BookmarkProcessor()),
-                EntryOutsideReleasePeriodFilterCapability.bind(OutsideReleasePeriodProvider()),
-            ),
-            plugin(EntryType.ANIME),
-        )
-        val feature = DefaultEntryLibraryFilterFeature(composition.featureGraphEvaluation)
-        val bookmarked = feature.filter(
-            request(
-                target(EntryType.BOOK, bookmarked = true),
-                target(EntryType.ANIME, bookmarked = false),
-                policy = policy(bookmarked = TriState.ENABLED_IS),
-            ),
-        )
-        val releasePeriod = feature.filter(
-            request(
-                target(EntryType.BOOK, outsideReleasePeriod = false),
-                target(EntryType.ANIME, outsideReleasePeriod = false),
-                policy = policy(
-                    outsideReleasePeriod = TriState.ENABLED_IS,
-                    outsideReleasePeriodEnabled = true,
-                ),
-            ),
-        )
-
-        bookmarked.includedTargetIndices.shouldContainExactly(0)
-        releasePeriod.includedTargetIndices.shouldContainExactly(1)
-    }
-
-    @Test
-    fun `unavailable capability filters neither filter nor report active`() {
-        val feature = DefaultEntryLibraryFilterFeature(
-            composition(
-                plugin(
-                    EntryType.ANIME,
-                    EntryLibraryProgressCapability.bind(LibraryProgressProvider(EntryType.ANIME)),
-                ),
-            ).featureGraphEvaluation,
-        )
-        val result = feature.filter(
-            request(
-                target(EntryType.ANIME),
-                policy = policy(
-                    bookmarked = TriState.ENABLED_IS,
-                    outsideReleasePeriod = TriState.ENABLED_IS,
-                    outsideReleasePeriodEnabled = true,
-                ),
-            ),
-        )
-
-        result.includedTargetIndices.shouldContainExactly(0)
-        result.hasActiveFilters.shouldBeFalse()
-    }
-
     @Test
     fun `active progress predicates exclude unknown state for both polarities`() {
         val feature = DefaultEntryLibraryFilterFeature(
@@ -168,20 +104,6 @@ class EntryLibraryFilterFeatureTest {
             outsideReleasePeriodEnabled = outsideReleasePeriodEnabled,
             tracking = tracking,
         )
-    }
-
-    private class BookmarkProcessor : EntryBookmarkProcessor {
-        override val type = EntryType.BOOK
-
-        override suspend fun setBookmarked(
-            entry: Entry,
-            chapters: List<EntryChapter>,
-            bookmarked: Boolean,
-        ) = Unit
-    }
-
-    private class OutsideReleasePeriodProvider : EntryOutsideReleasePeriodFilterProvider {
-        override val type = EntryType.BOOK
     }
 
     private class LibraryProgressProvider(

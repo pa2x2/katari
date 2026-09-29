@@ -22,25 +22,20 @@ class ImageDownloadRequestTest {
     }
 
     @Test
-    fun `a resumable source appends only when the server answers with partial content`() = runTest {
+    fun `only a resumable source answered with partial content appends to the existing file`() = runTest {
         val partial = mockk<ResumableEntryImageSource> {
             coEvery { getImage(page, progress, 37L) } returns response(code = 206)
         }
         val full = mockk<ResumableEntryImageSource> {
             coEvery { getImage(page, progress, 37L) } returns response(code = 200)
         }
-
-        partial.getImageForDownload(page, progress, partialFile).appendToExistingFile shouldBe true
-        full.getImageForDownload(page, progress, partialFile).appendToExistingFile shouldBe false
-    }
-
-    @Test
-    fun `a non resumable source never appends even when it returns partial content`() = runTest {
-        val source = mockk<EntryImageSource> {
+        val nonResumable = mockk<EntryImageSource> {
             coEvery { getImage(page, progress) } returns response(code = 206)
         }
 
-        source.getImageForDownload(page, progress, partialFile).appendToExistingFile shouldBe false
+        partial.getImageForDownload(page, progress, partialFile).appendToExistingFile shouldBe true
+        full.getImageForDownload(page, progress, partialFile).appendToExistingFile shouldBe false
+        nonResumable.getImageForDownload(page, progress, partialFile).appendToExistingFile shouldBe false
     }
 
     private fun response(code: Int): Response = mockk {

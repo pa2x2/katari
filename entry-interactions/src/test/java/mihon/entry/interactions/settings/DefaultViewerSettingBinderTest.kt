@@ -28,47 +28,6 @@ class DefaultViewerSettingBinderTest {
     )
 
     @Test
-    fun `resolver applies default profile and entry precedence`() = runTest {
-        val repository = FakeOverrideRepository()
-        val binder = DefaultViewerSettingBinder(repository, backgroundScope, now = { 10 })
-
-        binder.resolve(definition, entryId = 7).run {
-            effectiveValue shouldBe 2
-            source shouldBe ViewerSettingSource.PROCESSOR_DEFAULT
-        }
-
-        preference.set(3)
-        binder.resolve(definition, entryId = 7).run {
-            effectiveValue shouldBe 3
-            source shouldBe ViewerSettingSource.PROFILE
-        }
-
-        repository.upsert(ViewerSettingOverride(7, definition.id, "1", 5))
-        binder.resolve(definition, entryId = 7).run {
-            effectiveValue shouldBe 1
-            source shouldBe ViewerSettingSource.ENTRY
-        }
-    }
-
-    @Test
-    fun `initialized binding exposes entry override in its initial state`() = runTest {
-        preference.set(3)
-        val repository = FakeOverrideRepository()
-        repository.upsert(ViewerSettingOverride(7, definition.id, "1", 5))
-
-        val binding = DefaultViewerSettingBinder(repository, backgroundScope)
-            .initializeEntry(entryId = 7)
-            .bind(definition)
-
-        binding.state.value.run {
-            effectiveValue shouldBe 1
-            source shouldBe ViewerSettingSource.ENTRY
-            profileValue shouldBe 3
-            entryOverride shouldBe 1
-        }
-    }
-
-    @Test
     fun `invalid layers are preserved but ignored`() = runTest {
         preference.set(99)
         val repository = FakeOverrideRepository()

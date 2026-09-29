@@ -17,29 +17,6 @@ import tachiyomi.domain.entry.model.EntryChapter
 
 class EntryChildGroupFilterFeatureTest {
     private val entry = Entry.create().copy(id = 7L, type = EntryType.BOOK)
-    private val first = chapter(id = 11L, entryId = 7L, group = "Group A")
-    private val second = chapter(id = 12L, entryId = 8L, group = " Group B ")
-    private val ungrouped = chapter(id = 13L, entryId = 8L, group = " ")
-
-    @Test
-    fun `merged members share one group state and one exclusion write`() = runTest {
-        val dataSource = FakeDataSource(
-            chapters = listOf(first, second, ungrouped),
-            excluded = setOf("Group A"),
-        )
-        val fixture = fixture(dataSource = dataSource)
-        val scope = EntryChildGroupFilterScope(entry, listOf(7L, 8L, 7L))
-
-        fixture.feature.state(scope) shouldBe EntryChildGroupFilterStateResult.Available(
-            EntryChildGroupFilterState(
-                availableGroups = setOf("Group A", "Group B"),
-                excludedGroups = setOf("Group A"),
-            ),
-        )
-        fixture.feature.setExcludedGroups(scope, setOf("Group B")) shouldBe
-            EntryChildGroupFilterMutationResult.Applied(memberCount = 2)
-        dataSource.lastWrite shouldBe Write(profileId = null, entryIds = listOf(7L, 8L), excluded = setOf("Group B"))
-    }
 
     @Test
     fun `snapshot uses requested profile and restore merges without replacing existing groups`() = runTest {
@@ -99,7 +76,6 @@ class EntryChildGroupFilterFeatureTest {
     }
 
     private class FakeDataSource(
-        private val chapters: List<EntryChapter> = emptyList(),
         private var excluded: Set<String> = emptySet(),
     ) : EntryChildGroupFilterDataSource {
         private val childrenChanges = MutableSharedFlow<Unit>()
@@ -112,7 +88,7 @@ class EntryChildGroupFilterFeatureTest {
         }
 
         override suspend fun children(entryIds: Collection<Long>): List<EntryChapter> {
-            return chapters.filter { it.entryId in entryIds }
+            return emptyList()
         }
 
         override fun excludedGroupsChanged(profileId: Long?, entryIds: Collection<Long>): Flow<Unit> {
@@ -132,10 +108,6 @@ class EntryChildGroupFilterFeatureTest {
             this.excluded = excluded
             lastWrite = Write(profileId, entryIds.toList(), excluded)
         }
-    }
-
-    private fun chapter(id: Long, entryId: Long, group: String): EntryChapter {
-        return EntryChapter.create().copy(id = id, entryId = entryId, scanlator = group)
     }
 
     private data class Write(

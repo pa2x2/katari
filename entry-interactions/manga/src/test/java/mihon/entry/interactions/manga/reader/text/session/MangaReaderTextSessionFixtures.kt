@@ -43,7 +43,6 @@ import mihon.translation.api.result.TranslationExecution
 import mihon.translation.api.result.TranslationResult
 
 internal val JAPANESE = LanguageTag.require("ja")
-internal val KOREAN = LanguageTag.require("ko")
 private val PAGE_SIZE = ImageSize(1200, 1800)
 private val PIPELINE = TextRecognitionPipeline(
     TextRecognitionComponentId("example.detector"),
@@ -76,9 +75,6 @@ internal class FakeTextRecognition : TextRecognitionFeature {
     var release: CompletableDeferred<Unit>? = null
     val recognized = mutableListOf<ImageContentKey>()
 
-    /** The language of each recognition, in order. */
-    val recognizedLanguages = mutableListOf<LanguageTag?>()
-
     override suspend fun prepare(request: TextRecognitionRequest): TextRecognitionPreparation =
         TextRecognitionPreparation.Ready(Ready(request), request.language ?: JAPANESE, PIPELINE)
 
@@ -86,7 +82,6 @@ internal class FakeTextRecognition : TextRecognitionFeature {
         release?.await()
         val request = (ready as Ready).request
         recognized += request.image.key
-        recognizedLanguages += request.language
         return TextRecognitionExecution.Success(
             TextRecognitionResult(request.image.key, request.image.size, JAPANESE, emptyList()),
         )

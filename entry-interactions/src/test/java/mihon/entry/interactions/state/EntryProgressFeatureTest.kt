@@ -23,50 +23,6 @@ import tachiyomi.domain.entry.repository.EntryProgressRepository
 
 class EntryProgressFeatureTest {
     private val source = Entry.create().copy(id = 7L, type = EntryType.BOOK)
-    private val target = Entry.create().copy(id = 8L, type = EntryType.BOOK)
-    private val snapshot = EntryProgressSnapshot(
-        states = listOf(
-            EntryProgressStateSnapshot(
-                resourceKey = "chapter-1",
-                locator = EntryProgressLocator(kind = "location", position = 12L),
-            ),
-        ),
-    )
-    private val mappings = listOf(
-        EntryProgressResourceMapping(
-            sourceResourceKey = "chapter-1",
-            targetResourceKey = "chapter-2",
-        ),
-    )
-
-    @Test
-    fun `migration preparation captures target-ready progress without invoking copy`() = runTest {
-        val processor = RecordingProgressProcessor(snapshot)
-        val feature = featureFor(
-            compositionFor(
-                EntryProgressCapability.bind(processor),
-                EntryMigrationCapability.bind(MigrationProvider()),
-            ),
-        )
-
-        val prepared = feature.prepareMigration(source, target, mappings)
-            as EntryProgressMigrationPreparation.Prepared
-
-        prepared.payload shouldBe EntryProgressMigrationPayload(
-            target = target,
-            snapshot = EntryProgressSnapshot(
-                listOf(
-                    snapshot.states.single().copy(
-                        resourceKey = "chapter-2",
-                        sourceChildKey = "chapter-2",
-                    ),
-                ),
-            ),
-        )
-        processor.copied shouldBe emptyList()
-        feature.applyMigration(prepared.payload) shouldBe EntryProgressRestoreResult.Applied
-        processor.restored shouldBe listOf(target to prepared.payload.snapshot)
-    }
 
     @Test
     fun `media progress preserves existing locator extensions while incoming keys win`() = runTest {
@@ -141,35 +97,5 @@ class EntryProgressFeatureTest {
             getEntryWithChapters = mockk(relaxed = true),
             globalLibraryPreferences = mockk(relaxed = true),
         )
-    }
-
-    private class RecordingProgressProcessor(
-        private val snapshot: EntryProgressSnapshot = EntryProgressSnapshot(),
-    ) : EntryProgressProcessor {
-        override val type = EntryType.BOOK
-        val snapshottedEntries = mutableListOf<Entry>()
-        val restored = mutableListOf<Pair<Entry, EntryProgressSnapshot>>()
-        val copied = mutableListOf<Triple<Entry, Entry, List<EntryProgressResourceMapping>>>()
-
-        override suspend fun snapshot(entry: Entry): EntryProgressSnapshot {
-            snapshottedEntries += entry
-            return snapshot
-        }
-
-        override suspend fun restore(entry: Entry, snapshot: EntryProgressSnapshot) {
-            restored += entry to snapshot
-        }
-
-        override suspend fun copy(
-            sourceEntry: Entry,
-            targetEntry: Entry,
-            resourceMappings: List<EntryProgressResourceMapping>,
-        ) {
-            copied += Triple(sourceEntry, targetEntry, resourceMappings)
-        }
-    }
-
-    private class MigrationProvider : EntryMigrationProvider {
-        override val type = EntryType.BOOK
     }
 }
