@@ -41,9 +41,11 @@ import eu.kanade.presentation.entry.components.EntryChapterDownloadIndicator
 import eu.kanade.presentation.entry.components.EntryCover
 import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.presentation.entry.partialProgressLabel
+import eu.kanade.presentation.entry.translation.ChapterTranslateAction
 import eu.kanade.presentation.util.relativeTimeSpanString
 import eu.kanade.tachiyomi.ui.updates.UpdatesItem
 import mihon.entry.interactions.download.EntryDownloadState
+import mihon.entry.interactions.translate.EntryTranslateStatus
 import tachiyomi.domain.updates.model.UpdateItem
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.DotSeparatorText
@@ -112,6 +114,9 @@ internal fun LazyListScope.unifiedUpdatesUiItems(
     isOpenApplicable: (UpdatesItem) -> Boolean,
     onClickUpdate: (UpdatesItem) -> Unit,
     onDownloadChapter: (List<UpdatesItem>, ChapterDownloadAction) -> Unit,
+    translateStatusOf: (UpdatesItem) -> EntryTranslateStatus?,
+    isTranslateApplicable: (UpdatesItem) -> Boolean,
+    onTranslateChapter: (UpdatesItem, ChapterTranslateAction) -> Unit,
 ) {
     updatesUiItems(
         uiModels = uiModels,
@@ -126,6 +131,9 @@ internal fun LazyListScope.unifiedUpdatesUiItems(
             isOpenApplicable = isOpenApplicable,
             onClickUpdate = onClickUpdate,
             onDownloadChapter = onDownloadChapter,
+            translateStatusOf = translateStatusOf,
+            isTranslateApplicable = isTranslateApplicable,
+            onTranslateChapter = onTranslateChapter,
         )
     }
 }
@@ -199,6 +207,9 @@ internal fun UnifiedUpdatesUiItem(
     isOpenApplicable: (UpdatesItem) -> Boolean,
     onClickUpdate: (UpdatesItem) -> Unit,
     onDownloadChapter: (List<UpdatesItem>, ChapterDownloadAction) -> Unit,
+    translateStatusOf: (UpdatesItem) -> EntryTranslateStatus?,
+    isTranslateApplicable: (UpdatesItem) -> Boolean,
+    onTranslateChapter: (UpdatesItem, ChapterTranslateAction) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val update = item.update
@@ -284,6 +295,9 @@ internal fun UnifiedUpdatesUiItem(
                     downloadStateProvider = item.downloadStateProvider,
                     downloadProgressProvider = item.downloadProgressProvider,
                     onClick = { onDownloadChapter(listOf(item), it) },
+                    translateStatusProvider = { translateStatusOf(item) },
+                    onTranslateClick = { action: ChapterTranslateAction -> onTranslateChapter(item, action) }
+                        .takeIf { isTranslateApplicable(item) },
                 )
             }
         } else {

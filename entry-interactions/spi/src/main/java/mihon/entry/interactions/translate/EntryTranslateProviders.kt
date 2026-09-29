@@ -3,6 +3,7 @@ package mihon.entry.interactions.translate
 import kotlinx.coroutines.flow.Flow
 import mihon.entry.interactions.runtime.EntryInteractionProvider
 import mihon.entry.interactions.runtime.entryInteractionCapability
+import mihon.entry.interactions.translation.EntryTranslationLanguageChoices
 import mihon.feature.graph.CapabilityId
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
@@ -11,6 +12,11 @@ import tachiyomi.domain.entry.model.EntryChapter
 interface EntryTranslateProcessor : EntryInteractionProvider {
     /** Emits when stored translations were written or deleted. */
     val changes: Flow<Unit>
+
+    /**
+     * What [entry]'s chapters would be translated with, given the series' chosen [languages], and what blocks it.
+     */
+    suspend fun prepare(entry: Entry, languages: EntryTranslationLanguageChoices): EntryTranslatePreparation
 
     /** Those of [chapters] that have a stored translation. */
     suspend fun translatedChapters(entry: Entry, chapters: List<EntryChapter>): Set<Long>

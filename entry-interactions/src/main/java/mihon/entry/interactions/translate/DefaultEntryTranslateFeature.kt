@@ -5,11 +5,13 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.onStart
 import mihon.entry.interactions.download.EntryDownloadInteraction
 import mihon.entry.interactions.runtime.applicableProviderTypes
+import mihon.entry.interactions.translation.EntryTranslationLanguagesFeature
 import mihon.feature.graph.FeatureGraphEvaluation
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
@@ -23,6 +25,7 @@ internal class DefaultEntryTranslateFeature(
     evaluation: FeatureGraphEvaluation,
     private val repository: EntryTranslationQueueRepository,
     private val translate: EntryTranslateInteraction,
+    private val languages: EntryTranslationLanguagesFeature,
     private val download: EntryDownloadInteraction,
     private val entries: EntryRepository,
     private val chapters: EntryChapterRepository,
@@ -42,6 +45,11 @@ internal class DefaultEntryTranslateFeature(
         combine(repository.subscribeAll(), runner.active) { items, active ->
             items.map { item -> EntryTranslateQueueItem(item.entryId, item.chapterId, item.status(active)) }
         }
+
+    override suspend fun prepare(entry: Entry): EntryTranslatePreparation? {
+        if (!isApplicable(entry.type)) return null
+        return translate.prepare(entry, languages.observe(entry).first())
+    }
 
     override fun observeStatuses(entry: Entry): Flow<Map<Long, EntryTranslateStatus>> {
         if (!isApplicable(entry.type)) return flowOf(emptyMap())

@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <plurals name="chapter_translation_queued">
+        <item quantity="one">%d chapter queued for translation</item>
+        <item quantity="other">%d chapters queued for translation</item>
+    </plurals>
     <plurals name="text_recognition_settings_languages_choices">
         <item quantity="one">%d language uses your choice</item>
         <item quantity="other">%d languages use your choice</item>

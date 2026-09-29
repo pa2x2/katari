@@ -27,6 +27,7 @@ import eu.kanade.presentation.util.formattedMessage
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import eu.kanade.tachiyomi.source.getDisplayNameForEntryInfo
+import eu.kanade.tachiyomi.ui.entry.translation.ChapterTranslationModel
 import eu.kanade.tachiyomi.util.lang.toStoredDisplayName
 import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.collections.immutable.ImmutableList
@@ -202,6 +203,22 @@ class EntryScreenModel(
 ) : StateScreenModel<EntryScreenModel.State>(State.Loading) {
 
     private val mergeTargetSearchController = MergeTargetSearchController<MergeTarget>(screenModelScope)
+
+    /** Translation of the listed chapters; chapters to translate that are not downloaded yet are downloaded. */
+    val translation = ChapterTranslationModel(
+        scope = screenModelScope,
+        context = context,
+        snackbarHostState = snackbarHostState,
+        download = { chapters ->
+            val ids = chapters.mapTo(HashSet()) { it.id }
+            startDownload(successState?.chapters.orEmpty().filter { it.id in ids }, startNow = false)
+        },
+        feature = Injekt.get(),
+        languages = Injekt.get(),
+        recognitionHost = Injekt.get(),
+        translationHost = Injekt.get(),
+        modelStore = Injekt.get(),
+    )
 
     private val successState: State.Success?
         get() = state.value as? State.Success

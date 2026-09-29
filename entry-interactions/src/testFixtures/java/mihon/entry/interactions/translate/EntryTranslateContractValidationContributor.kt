@@ -32,6 +32,7 @@ class EntryTranslateContractValidationContributor : FeatureValidationContributor
                         evaluation = evaluation,
                         repository = mockk(relaxed = true),
                         translate = mockk(relaxed = true),
+                        languages = mockk(relaxed = true),
                         download = mockk(relaxed = true),
                         entries = mockk(relaxed = true),
                         chapters = mockk(relaxed = true),

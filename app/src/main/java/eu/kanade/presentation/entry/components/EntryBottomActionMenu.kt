@@ -34,8 +34,10 @@ import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.PushPin
 import androidx.compose.material.icons.outlined.RemoveDone
+import androidx.compose.material.icons.outlined.Translate
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -89,6 +91,8 @@ fun EntryBottomActionMenu(
     onMarkPreviousAsReadClicked: (() -> Unit)? = null,
     onDownloadClicked: (() -> Unit)? = null,
     onDeleteClicked: (() -> Unit)? = null,
+    onTranslateClicked: (() -> Unit)? = null,
+    onDeleteTranslationClicked: (() -> Unit)? = null,
 ) {
     AnimatedVisibility(
         visible = visible,
@@ -102,7 +106,7 @@ fun EntryBottomActionMenu(
             color = MaterialTheme.colorScheme.surfaceContainerHigh,
         ) {
             val haptic = LocalHapticFeedback.current
-            val confirm = remember { mutableStateListOf(false, false, false, false, false, false, false) }
+            val confirm = remember { mutableStateListOf(false, false, false, false, false, false, false, false) }
             var resetJob by remember { mutableStateOf<Job?>(null) }
             val onLongClickItem: (Int) -> Unit = { toConfirmIndex ->
                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -176,6 +180,15 @@ fun EntryBottomActionMenu(
                         onClick = onDownloadClicked,
                     )
                 }
+                if (onTranslateClicked != null) {
+                    Button(
+                        title = stringResource(MR.strings.action_translate),
+                        icon = Icons.Outlined.Translate,
+                        toConfirm = confirm[7],
+                        onLongClick = { onLongClickItem(7) },
+                        onClick = onTranslateClicked,
+                    )
+                }
                 if (onDeleteClicked != null) {
                     Button(
                         title = stringResource(MR.strings.action_delete),
@@ -184,6 +197,29 @@ fun EntryBottomActionMenu(
                         onLongClick = { onLongClickItem(6) },
                         onClick = onDeleteClicked,
                     )
+                }
+                if (onDeleteTranslationClicked != null) {
+                    var overflowMenuOpen by remember { mutableStateOf(false) }
+                    Box {
+                        IconButton(onClick = { overflowMenuOpen = true }) {
+                            Icon(
+                                imageVector = Icons.Outlined.MoreVert,
+                                contentDescription = stringResource(MR.strings.label_more),
+                            )
+                        }
+                        DropdownMenu(
+                            expanded = overflowMenuOpen,
+                            onDismissRequest = { overflowMenuOpen = false },
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(MR.strings.action_delete_translation)) },
+                                onClick = {
+                                    overflowMenuOpen = false
+                                    onDeleteTranslationClicked()
+                                },
+                            )
+                        }
+                    }
                 }
             }
         }

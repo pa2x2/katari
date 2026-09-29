@@ -10,6 +10,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
@@ -17,6 +18,7 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
 import cafe.adriel.voyager.navigator.tab.TabOptions
 import eu.kanade.presentation.entry.components.ChapterDownloadAction
+import eu.kanade.presentation.entry.translation.EntryTranslateSetupSheet
 import eu.kanade.presentation.updates.UpdatesBottomBarConfig
 import eu.kanade.presentation.updates.UpdatesDeleteConfirmationDialog
 import eu.kanade.presentation.updates.UpdatesFilterDialog
@@ -74,6 +76,8 @@ data object UpdatesTab : Tab {
         val screenModel = rememberScreenModel { UpdatesScreenModel() }
         val settingsScreenModel = rememberScreenModel { UpdatesSettingsScreenModel() }
         val state by screenModel.state.collectAsState()
+        val translationStatuses by screenModel.translationStatuses.collectAsStateWithLifecycle()
+        val translationSetup by screenModel.translation.sheet.collectAsStateWithLifecycle()
 
         val selected = state.selected
         val actionLabels = selected.map { it.update.entryType }.entrySelectionActionLabels()
@@ -157,8 +161,13 @@ data object UpdatesTab : Tab {
                     }
                 },
                 onDownloadChapter = screenModel::downloadChapters,
+                translateStatusOf = { translationStatuses[(it.update as? UpdateItem.EntryUpdate)?.update?.chapterId] },
+                isTranslateApplicable = { screenModel.translation.isApplicable(it.update.entryType) },
+                onTranslateChapter = screenModel::translateChapter,
             )
         }
+
+        translationSetup?.let { EntryTranslateSetupSheet(it, screenModel.translation) }
 
         val onDismissDialog = { screenModel.setDialog(null) }
         when (val dialog = state.dialog) {

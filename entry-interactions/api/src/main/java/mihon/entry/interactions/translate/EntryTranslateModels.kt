@@ -1,19 +1,20 @@
 package mihon.entry.interactions.translate
 
 import mihon.language.api.tag.LanguageTag
+import mihon.text.recognition.api.pipeline.TextRecognitionPipeline
+import mihon.translation.api.engine.TranslationEngineId
 
 /**
  * What a chapter is translated with. It is frozen when the chapter is queued, so changing settings afterwards does not
  * change queued or finished work.
  *
- * @property engine the translation engine's id.
- * @property recognition component ids of the text recognition pipeline, for types whose text is recognized in images.
+ * @property recognition the text recognition pipeline, for types whose text is recognized in images.
  */
 data class EntryTranslateSetup(
     val contentLanguage: LanguageTag,
     val targetLanguage: LanguageTag,
-    val engine: String,
-    val recognition: List<String> = emptyList(),
+    val engine: TranslationEngineId,
+    val recognition: TextRecognitionPipeline? = null,
 )
 
 /** Where a chapter stands with background translation. A chapter with none of these is not translated. */

@@ -1,20 +1,21 @@
 package mihon.entry.interactions.manga.translation.background
 
+import eu.kanade.tachiyomi.source.entry.EntryCatalogueSource
 import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
+import mihon.entry.interactions.manga.reader.text.session.declaredContentLanguage
 import mihon.entry.interactions.manga.translation.artifact.MangaChapterTranslationSetup
 import mihon.entry.interactions.manga.translation.artifact.MangaChapterTranslationStore
 import mihon.entry.interactions.manga.translation.pages.MangaDownloadedChapterPages
 import mihon.entry.interactions.translate.EntryTranslateFailure
+import mihon.entry.interactions.translate.EntryTranslatePreparation
 import mihon.entry.interactions.translate.EntryTranslateProcessor
 import mihon.entry.interactions.translate.EntryTranslateProgress
 import mihon.entry.interactions.translate.EntryTranslateResult
 import mihon.entry.interactions.translate.EntryTranslateSetup
-import mihon.text.recognition.api.component.TextRecognitionComponentId
-import mihon.text.recognition.api.pipeline.TextRecognitionPipeline
-import mihon.translation.api.engine.TranslationEngineId
+import mihon.entry.interactions.translation.EntryTranslationLanguageChoices
 import mihon.translation.api.request.ResolvedTranslationRoute
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
@@ -26,10 +27,22 @@ internal class MangaEntryTranslateProcessor(
     private val store: () -> MangaChapterTranslationStore,
     private val pages: () -> MangaDownloadedChapterPages,
     private val translator: () -> MangaChapterTranslator,
+    private val preparer: () -> MangaChapterTranslationPreparer,
 ) : EntryTranslateProcessor {
     override val type = EntryType.MANGA
 
     override val changes: Flow<Unit> = flow { emitAll(store().changes) }
+
+    override suspend fun prepare(
+        entry: Entry,
+        languages: EntryTranslationLanguageChoices,
+    ): EntryTranslatePreparation {
+        val source = sourceManager.get(entry.source) as? EntryCatalogueSource
+        return preparer().prepare(
+            pageLanguage = languages.contentLanguage ?: declaredContentLanguage(source?.lang),
+            targetLanguage = languages.targetLanguage,
+        )
+    }
 
     override suspend fun translatedChapters(entry: Entry, chapters: List<EntryChapter>): Set<Long> {
         val source = sourceManager.get(entry.source) ?: return emptySet()
@@ -69,18 +82,10 @@ internal class MangaEntryTranslateProcessor(
         chapters.forEach { store().delete(it, entry, source) }
     }
 
-    /** The setup as stored with the translation; `null` when it does not name a two-step recognition pipeline. */
-    private fun EntryTranslateSetup.toChapterSetup(): MangaChapterTranslationSetup? {
-        val (detector, recognizer) = recognition.takeIf { it.size == 2 } ?: return null
-        return runCatching {
-            MangaChapterTranslationSetup(
-                pageLanguage = contentLanguage,
-                pipeline = TextRecognitionPipeline(
-                    detector = TextRecognitionComponentId(detector),
-                    recognizer = TextRecognitionComponentId(recognizer),
-                ),
-                route = ResolvedTranslationRoute(contentLanguage, targetLanguage, TranslationEngineId(engine)),
-            )
-        }.getOrNull()
-    }
+    /** The setup as stored with the translation; `null` when it names no recognition pipeline. */
+    private fun EntryTranslateSetup.toChapterSetup(): MangaChapterTranslationSetup? = MangaChapterTranslationSetup(
+        pageLanguage = contentLanguage,
+        pipeline = recognition ?: return null,
+        route = ResolvedTranslationRoute(contentLanguage, targetLanguage, engine),
+    )
 }

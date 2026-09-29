@@ -4,6 +4,7 @@ import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.coroutines.flow.Flow
 import mihon.entry.interactions.runtime.combinedLatestUnit
 import mihon.entry.interactions.runtime.requireProcessor
+import mihon.entry.interactions.translation.EntryTranslationLanguageChoices
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 
@@ -13,6 +14,8 @@ interface EntryTranslateInteraction {
 
     /** Emits when stored translations of any type were written or deleted. */
     val changes: Flow<Unit>
+
+    suspend fun prepare(entry: Entry, languages: EntryTranslationLanguageChoices): EntryTranslatePreparation
 
     suspend fun translatedChapters(entry: Entry, chapters: List<EntryChapter>): Set<Long>
 
@@ -32,6 +35,9 @@ internal class EntryTranslateInteractionDispatch(
     override val types: Set<EntryType> = processors.keys
 
     override val changes: Flow<Unit> = processors.values.map { it.changes }.combinedLatestUnit()
+
+    override suspend fun prepare(entry: Entry, languages: EntryTranslationLanguageChoices): EntryTranslatePreparation =
+        processors.requireProcessor("prepare translation", entry.type).prepare(entry, languages)
 
     override suspend fun translatedChapters(entry: Entry, chapters: List<EntryChapter>): Set<Long> =
         processors[entry.type]?.translatedChapters(entry, chapters).orEmpty()

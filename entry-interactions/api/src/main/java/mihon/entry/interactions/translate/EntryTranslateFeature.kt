@@ -15,6 +15,12 @@ interface EntryTranslateFeature {
     /** The active profile's queue, in processing order. */
     val queue: Flow<List<EntryTranslateQueueItem>>
 
+    /**
+     * Resolves what [entry]'s chapters would be translated with from its languages and the profile's settings, and
+     * what the user must resolve first. `null` when the feature does not apply to [entry].
+     */
+    suspend fun prepare(entry: Entry): EntryTranslatePreparation?
+
     /** Statuses of [entry]'s chapters that are translated, queued or failed. */
     fun observeStatuses(entry: Entry): Flow<Map<Long, EntryTranslateStatus>>
 

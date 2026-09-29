@@ -20,9 +20,6 @@ import mihon.translation.api.TranslationFeature
 import mihon.translation.api.engine.TranslationEngineSelection
 import mihon.translation.api.preparation.TranslationPreparation
 import mihon.translation.api.preparation.TranslationRoutePreparation
-import mihon.translation.api.provider.TranslationInvocationPolicy
-import mihon.translation.api.provider.TranslationProviderOutputMode
-import mihon.translation.api.provider.TranslationProviderPresentation
 import mihon.translation.api.request.TranslationRequest
 import mihon.translation.api.request.TranslationRouteRequest
 import mihon.translation.api.request.TranslationSourceLanguageSelection
@@ -134,10 +131,6 @@ internal class MangaChapterTranslator(
                 TextOutcome.SetupRequired
         }
     }
-
-    private fun TranslationProviderPresentation.answersInline() =
-        outputMode == TranslationProviderOutputMode.InlineResult &&
-            invocationPolicy == TranslationInvocationPolicy.Immediate
 
     private sealed interface PageOutcome {
         data class Translated(val page: MangaTranslatedPage) : PageOutcome

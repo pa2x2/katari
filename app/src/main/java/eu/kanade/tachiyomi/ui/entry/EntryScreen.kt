@@ -42,6 +42,9 @@ import eu.kanade.presentation.entry.components.ManageMergeDialog
 import eu.kanade.presentation.entry.components.PreviewSizeUi
 import eu.kanade.presentation.entry.components.ScanlatorFilterDialog
 import eu.kanade.presentation.entry.components.SetIntervalDialog
+import eu.kanade.presentation.entry.translation.EntryChapterTranslationUi
+import eu.kanade.presentation.entry.translation.EntryTranslateSetupSheet
+import eu.kanade.presentation.entry.translation.TranslatableChapter
 import eu.kanade.presentation.library.DeleteLibraryEntriesDialog
 import eu.kanade.presentation.util.AssistContentScreen
 import eu.kanade.presentation.util.Screen
@@ -168,6 +171,19 @@ class EntryScreen(
         val bulkDownloadsAvailable = downloadCapabilities.second
         val bookmarksSupported = entryBookmarkFeature.isApplicable(successState.entry.type)
         val bookmarkedDownloadsSupported = downloadCapabilities.third
+        val translationEntries = remember(successState.chapters.map { it.entry.id }.distinct()) {
+            successState.chapters.map { it.entry }.distinctBy { it.id }
+        }
+        val translationStatuses by remember(translationEntries) {
+            screenModel.translation.statuses(translationEntries)
+        }.collectAsStateWithLifecycle(emptyMap())
+        val translationUi = remember(translationStatuses) {
+            EntryChapterTranslationUi(translationStatuses) { items, action ->
+                val chapters = items.map { TranslatableChapter(it.entry, it.chapter, it.downloadState) }
+                screenModel.translation.run(chapters, action, translationStatuses)
+            }
+        }.takeIf { downloadsAvailable && translationEntries.any { screenModel.translation.isApplicable(it.type) } }
+        val translationSetup by screenModel.translation.sheet.collectAsStateWithLifecycle()
         val previewConfig by screenModel.previewConfig.collectAsStateWithLifecycle()
         val previewState by screenModel.previewState.collectAsStateWithLifecycle()
         val webView = remember(successState.entry) {
@@ -216,6 +232,7 @@ class EntryScreen(
                 Unit
             }.takeIf { openApplicable },
             onDownloadChapter = screenModel::runChapterDownloadActions.takeIf { downloadsAvailable },
+            translation = translationUi,
             onAddToLibraryClicked = {
                 screenModel.toggleFavorite()
                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -316,6 +333,8 @@ class EntryScreen(
                 }
                 ).takeIf { screenModel.isPreviewOpenApplicable(successState.entry.type) },
         )
+
+        translationSetup?.let { EntryTranslateSetupSheet(it, screenModel.translation) }
 
         if (showRelatedEntriesDialog) {
             RelatedEntriesDialog(

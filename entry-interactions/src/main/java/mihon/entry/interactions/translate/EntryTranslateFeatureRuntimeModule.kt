@@ -40,6 +40,7 @@ internal val EntryTranslateFeatureRuntimeModule = EntryFeatureRuntimeModule(
             evaluation = get<FeatureRuntimeComposition>().evaluation,
             repository = get(),
             translate = get<EntryInteractions>().translate,
+            languages = get(),
             download = get<EntryInteractions>().download,
             entries = get(),
             chapters = get(),

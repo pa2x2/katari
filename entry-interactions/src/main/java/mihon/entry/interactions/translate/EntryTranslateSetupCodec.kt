@@ -3,6 +3,9 @@ package mihon.entry.interactions.translate
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import mihon.language.api.tag.LanguageTag
+import mihon.text.recognition.api.component.TextRecognitionComponentId
+import mihon.text.recognition.api.pipeline.TextRecognitionPipeline
+import mihon.translation.api.engine.TranslationEngineId
 
 /** Encodes the setup a queued chapter was queued with, as the queue stores it until the chapter is translated. */
 internal object EntryTranslateSetupCodec {
@@ -12,8 +15,8 @@ internal object EntryTranslateSetupCodec {
         StoredSetup(
             contentLanguage = setup.contentLanguage.value,
             targetLanguage = setup.targetLanguage.value,
-            engine = setup.engine,
-            recognition = setup.recognition,
+            engine = setup.engine.value,
+            recognition = setup.recognition?.components?.map { it.value }.orEmpty(),
         ),
     )
 
@@ -23,8 +26,15 @@ internal object EntryTranslateSetupCodec {
         EntryTranslateSetup(
             contentLanguage = LanguageTag.parse(stored.contentLanguage) ?: return null,
             targetLanguage = LanguageTag.parse(stored.targetLanguage) ?: return null,
-            engine = stored.engine,
-            recognition = stored.recognition,
+            engine = TranslationEngineId(stored.engine),
+            recognition = when (stored.recognition.size) {
+                0 -> null
+                2 -> TextRecognitionPipeline(
+                    detector = TextRecognitionComponentId(stored.recognition[0]),
+                    recognizer = TextRecognitionComponentId(stored.recognition[1]),
+                )
+                else -> return null
+            },
         )
     } catch (_: IllegalArgumentException) {
         null

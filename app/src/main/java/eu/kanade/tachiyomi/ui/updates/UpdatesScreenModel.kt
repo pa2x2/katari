@@ -10,16 +10,22 @@ import cafe.adriel.voyager.core.model.screenModelScope
 import eu.kanade.core.preference.asState
 import eu.kanade.core.util.addOrRemove
 import eu.kanade.presentation.entry.components.ChapterDownloadAction
+import eu.kanade.presentation.entry.translation.ChapterTranslateAction
+import eu.kanade.presentation.entry.translation.TranslatableChapter
 import eu.kanade.presentation.updates.UpdatesSelectionState
 import eu.kanade.presentation.updates.UpdatesUiModel
 import eu.kanade.presentation.updates.toUpdatesUiModels
 import eu.kanade.tachiyomi.data.library.LibraryUpdateJob
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.ui.collapseByVisibleEntry
+import eu.kanade.tachiyomi.ui.entry.translation.ChapterTranslationModel
 import eu.kanade.tachiyomi.util.lang.toLocalDate
 import kotlinx.collections.immutable.toPersistentList
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
@@ -28,8 +34,10 @@ import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.datetime.DateTimeUnit
@@ -51,6 +59,7 @@ import mihon.entry.interactions.state.EntryBookmarkStatus
 import mihon.entry.interactions.state.EntryBookmarkTarget
 import mihon.entry.interactions.state.EntryConsumptionFeature
 import mihon.entry.interactions.state.EntryConsumptionStatus
+import mihon.entry.interactions.translate.EntryTranslateStatus
 import mihon.feature.profiles.core.ProfileScopedStateEvent
 import mihon.feature.profiles.core.observeProfileScopedState
 import tachiyomi.core.common.preference.TriState
@@ -88,8 +97,52 @@ class UpdatesScreenModel(
     private val libraryPreferences: LibraryPreferences = Injekt.get(),
     private val updatesPreferences: UpdatesPreferences = Injekt.get(),
     private val activeProfileProvider: ActiveProfileProvider = Injekt.get(),
+    application: Application = Injekt.get(),
     val snackbarHostState: SnackbarHostState = SnackbarHostState(),
 ) : StateScreenModel<UpdatesScreenModel.State>(State()) {
+
+    /** Translation of listed chapters; chapters to translate that are not downloaded yet are downloaded. */
+    val translation = ChapterTranslationModel(
+        scope = screenModelScope,
+        context = application,
+        snackbarHostState = snackbarHostState,
+        download = { chapters ->
+            screenModelScope.launch {
+                chapters.groupBy { it.entry }.forEach { (entry, group) ->
+                    entryDownloadActionFeature.download(entry, group.map { it.chapter }, startNow = false)
+                }
+            }
+        },
+        feature = Injekt.get(),
+        languages = Injekt.get(),
+        recognitionHost = Injekt.get(),
+        translationHost = Injekt.get(),
+        modelStore = Injekt.get(),
+    )
+
+    /**
+     * Statuses of listed chapters that are translated, queued or failed. Only downloaded chapters can be translated,
+     * so only their entries are looked at for stored translations.
+     */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val translationStatuses: StateFlow<Map<Long, EntryTranslateStatus>> = state
+        .map { state ->
+            state.items
+                .filter {
+                    it.update is UpdateItem.EntryUpdate &&
+                        it.downloadStateProvider() == EntryDownloadState.DOWNLOADED
+                }
+                .map { it.update.entryId }
+                .distinct()
+        }
+        .distinctUntilChanged()
+        .mapLatest { entryIds -> entryIds.mapNotNull { getEntry.await(it) } }
+        .flatMapLatest { entries ->
+            combine(translation.statuses(entries), translation.queueStatuses()) { translated, queued ->
+                translated + queued
+            }
+        }
+        .stateIn(screenModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
 
     private val _events: Channel<Event> = Channel(Int.MAX_VALUE)
     val events: Flow<Event> = _events.receiveAsFlow()
@@ -322,6 +375,19 @@ class UpdatesScreenModel(
                 }
             }
             toggleAllSelection(false)
+        }
+    }
+
+    fun translateChapter(item: UpdatesItem, action: ChapterTranslateAction) {
+        val update = item.update as? UpdateItem.EntryUpdate ?: return
+        screenModelScope.launch {
+            val entry = getEntry.await(update.update.entryId) ?: return@launch
+            val chapter = entryChapterRepository.getChapterById(update.update.chapterId) ?: return@launch
+            translation.run(
+                listOf(TranslatableChapter(entry, chapter, item.downloadStateProvider())),
+                action,
+                translationStatuses.value,
+            )
         }
     }
 

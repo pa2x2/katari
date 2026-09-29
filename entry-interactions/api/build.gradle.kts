@@ -16,6 +16,8 @@ dependencies {
     api(projects.entrySourceApi)
     api(projects.i18n)
     api(projects.language.api)
+    api(projects.textRecognition.api)
+    api(projects.translation.api)
     api(libs.kotlinx.coroutines.core)
 
     implementation(libs.androidx.compose.materialIcons)
