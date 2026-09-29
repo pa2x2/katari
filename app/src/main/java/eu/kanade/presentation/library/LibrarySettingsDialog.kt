@@ -285,9 +285,9 @@ private fun DisplayPage(
     )
 
     if (displayMode != LibraryDisplayMode.List && displayMode != LibraryDisplayMode.ComfortableList) {
-        val configuration = LocalConfiguration.current
-        val columnPreference = remember {
-            if (configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+        val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
+        val columnPreference = remember(isLandscape) {
+            if (isLandscape) {
                 screenModel.libraryPreferences.landscapeColumns
             } else {
                 screenModel.libraryPreferences.portraitColumns
@@ -298,7 +298,10 @@ private fun DisplayPage(
         SliderItem(
             value = columns,
             valueRange = 0..10,
-            label = stringResource(MR.strings.pref_library_columns),
+            label = stringResource(
+                MR.strings.pref_library_columns_for_orientation,
+                stringResource(if (isLandscape) MR.strings.landscape else MR.strings.portrait),
+            ),
             valueString = if (columns > 0) {
                 columns.toString()
             } else {
@@ -330,6 +333,8 @@ private fun DisplayPage(
         label = stringResource(MR.strings.action_display_entry_type_badge),
         pref = screenModel.libraryPreferences.entryTypeBadge,
     )
+
+    HeadingItem(MR.strings.library_cover_actions_header)
     CheckboxItem(
         label = stringResource(MR.strings.action_display_show_continue_button),
         pref = screenModel.libraryPreferences.showContinueReadingButton,
