@@ -8,6 +8,10 @@ pluginManagement {
     }
 }
 
+plugins {
+    id("mihon.plugins.android.settings")
+}
+
 dependencyResolutionManagement {
     versionCatalogs {
         create("mihonx") {
