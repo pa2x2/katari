@@ -45,8 +45,8 @@ import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.filter.validationIssues
 import eu.kanade.tachiyomi.source.filter.detachedCopy
-import eu.kanade.tachiyomi.ui.browse.source.browse.filter.PagedFilterBrowseSession
-import eu.kanade.tachiyomi.ui.browse.source.browse.filter.PagedFilterBrowseSessionStore
+import eu.kanade.tachiyomi.ui.browse.source.browse.filter.paged.PagedFilterBrowseSession
+import eu.kanade.tachiyomi.ui.browse.source.browse.filter.paged.PagedFilterBrowseSessionStore
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList

@@ -25,6 +25,7 @@ import eu.kanade.tachiyomi.ui.browse.source.browse.filter.date.DateFilterItem
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.group.FilterGroupUiState
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.group.GroupFilterHeader
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.group.GroupFilterItem
+import eu.kanade.tachiyomi.ui.browse.source.browse.filter.paged.PagedGroupSummaryItem
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.validation.LocalFilterValidation
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.validation.displayMessage
 import mihon.entry.interactions.catalogue.EntryCatalogueFilterSuggestionsResult
@@ -100,7 +101,7 @@ internal fun FilterItem(
                     )
                 }
             }
-            is EntryFilter.PagedGroup<*> -> PagedGroupSummaryItem(filter) { onOpenPagedGroup(filter) }
+            is EntryFilter.PagedGroup<*> -> PagedGroupSummaryItem(filter, changes) { onOpenPagedGroup(filter) }
         }
         // A group shows its description in its header.
         filter.metadata?.description?.takeIf { it.isNotBlank() && filter !is EntryFilter.Group<*> }?.let {

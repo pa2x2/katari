@@ -26,12 +26,12 @@ import eu.kanade.tachiyomi.source.entry.EntryFilterPageLoadReason
 import eu.kanade.tachiyomi.source.entry.EntryFilterPageScope
 import eu.kanade.tachiyomi.source.entry.EntryFilterTextInput
 import eu.kanade.tachiyomi.source.entry.filter.validationIssues
-import eu.kanade.tachiyomi.ui.browse.source.browse.filter.PagedFilterBrowseSession
-import eu.kanade.tachiyomi.ui.browse.source.browse.filter.PagedGroupFilterContent
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.change.FilterChanges
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.date.DateFilterEditorHost
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.date.DateFilterEditorSession
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.group.FilterGroupUiStates
+import eu.kanade.tachiyomi.ui.browse.source.browse.filter.paged.PagedFilterBrowseSession
+import eu.kanade.tachiyomi.ui.browse.source.browse.filter.paged.PagedGroupFilterContent
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.validation.FilterValidation
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.validation.FilterValidationBar
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.validation.LocalFilterValidation
@@ -232,9 +232,7 @@ fun SourceFilterDialog(
                                     filter = liveFilter,
                                     filterRevision = filterRevision,
                                     onBack = leavePagedGroup,
-                                    onFilter = filterAndDismiss,
                                     onReset = { onResetGroup(liveFilter) },
-                                    canApply = canSaveDraft && !repairNeedsSave,
                                     onEditItem = { item, value, complete ->
                                         onEditPagedItem(liveFilter, item, value, complete)
                                     },

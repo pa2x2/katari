@@ -1,4 +1,4 @@
-package eu.kanade.tachiyomi.ui.browse.source.browse.filter
+package eu.kanade.tachiyomi.ui.browse.source.browse.filter.paged
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -34,22 +34,25 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.paging.LoadState
 import androidx.paging.PagingSource
+import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import eu.kanade.tachiyomi.source.entry.EntryFilter
+import eu.kanade.tachiyomi.source.entry.EntryFilterNavigationTarget
 import eu.kanade.tachiyomi.source.entry.EntryFilterPageItem
 import eu.kanade.tachiyomi.source.entry.EntryFilterPageLoadReason
 import eu.kanade.tachiyomi.source.entry.EntryFilterPageScope
 import eu.kanade.tachiyomi.source.entry.EntryFilterTextInput
 import eu.kanade.tachiyomi.source.filter.withProjectedState
-import eu.kanade.tachiyomi.ui.browse.source.browse.SourceFilterPagedGroupHeader
+import eu.kanade.tachiyomi.ui.browse.source.browse.SourceFilterSheetFooter
+import eu.kanade.tachiyomi.ui.browse.source.browse.filter.FilterItem
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.change.FilterChanges
+import eu.kanade.tachiyomi.ui.browse.source.browse.filter.control.FilterSheetInsets
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import mihon.entry.interactions.catalogue.EntryCatalogueFilterNavigationResult
 import mihon.entry.interactions.catalogue.EntryCatalogueFilterSuggestionsResult
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.SettingsItemsPaddings
 import tachiyomi.presentation.core.components.material.PullRefresh
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -58,9 +61,7 @@ internal fun PagedGroupFilterContent(
     filter: EntryFilter.PagedGroup<*>,
     filterRevision: Int,
     onBack: () -> Unit,
-    onFilter: () -> Unit,
     onReset: () -> Unit,
-    canApply: Boolean,
     onEditItem: (EntryFilterPageItem, EntryFilter<*>, (Boolean) -> Unit) -> Unit,
     onRequestSuggestions: suspend (
         EntryFilter.Autocomplete,
@@ -164,16 +165,10 @@ internal fun PagedGroupFilterContent(
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        SourceFilterPagedGroupHeader(
+        PagedGroupFilterHeader(
             title = filter.name,
+            selectedCount = filter.currentSelectedItemCount(),
             onBack = onBack,
-            onReset = {
-                onReset()
-                items.refresh()
-            },
-            onRefresh = { browseSession.refresh(viewKey) },
-            onFilter = onFilter,
-            filterEnabled = canApply,
         )
         banner()
 
@@ -183,10 +178,7 @@ internal fun PagedGroupFilterContent(
                 onValueChange = { browseSession.query = it },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(
-                        horizontal = SettingsItemsPaddings.Horizontal,
-                        vertical = SettingsItemsPaddings.Vertical,
-                    ),
+                    .padding(horizontal = FilterSheetInsets.Horizontal, vertical = 4.dp),
                 placeholder = { Text(stringResource(MR.strings.action_search_hint)) },
                 leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null) },
                 trailingIcon = {
@@ -203,7 +195,7 @@ internal fun PagedGroupFilterContent(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = SettingsItemsPaddings.Horizontal),
+                .padding(horizontal = FilterSheetInsets.Horizontal),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             FilterChip(
@@ -231,15 +223,66 @@ internal fun PagedGroupFilterContent(
                     MR.strings.browse_filter_type_more_characters,
                     searchOptions.minimumQueryLength,
                 ),
-                modifier = Modifier.padding(SettingsItemsPaddings.Horizontal),
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(FilterSheetInsets.Horizontal),
             )
-            return@Column
+        } else {
+            PagedGroupItemList(
+                filter = filter,
+                items = items,
+                listState = listState,
+                scope = scope,
+                refreshing = refreshing,
+                encodedState = encodedState,
+                navigationTargets = navigationTargets,
+                usesNavigationRail = usesNavigationRail,
+                currentNavigationTargetId = currentNavigationTargetId,
+                onRefresh = { browseSession.refresh(viewKey) },
+                onJump = { browseSession.jump(viewKey, it) },
+                onEditItem = onEditItem,
+                onRequestSuggestions = onRequestSuggestions,
+                modifier = Modifier.weight(1f),
+            )
         }
+        SourceFilterSheetFooter(
+            onReset = {
+                onReset()
+                items.refresh()
+            },
+            resetEnabled = true,
+            onApply = onBack,
+            applyEnabled = true,
+            applyLabel = stringResource(MR.strings.action_done),
+        )
+    }
+}
 
+@Composable
+private fun PagedGroupItemList(
+    filter: EntryFilter.PagedGroup<*>,
+    items: LazyPagingItems<EntryFilterPageItem>,
+    listState: LazyListState,
+    scope: EntryFilterPageScope,
+    refreshing: Boolean,
+    encodedState: String?,
+    navigationTargets: List<EntryFilterNavigationTarget>,
+    usesNavigationRail: Boolean,
+    currentNavigationTargetId: String?,
+    onRefresh: () -> Unit,
+    onJump: (EntryFilterNavigationTarget) -> Unit,
+    onEditItem: (EntryFilterPageItem, EntryFilter<*>, (Boolean) -> Unit) -> Unit,
+    onRequestSuggestions: suspend (
+        EntryFilter.Autocomplete,
+        EntryFilterTextInput,
+    ) -> EntryCatalogueFilterSuggestionsResult,
+    modifier: Modifier,
+) {
+    Column(modifier) {
         if (navigationTargets.isNotEmpty() && !usesNavigationRail) {
             PagedFilterNavigationMenu(
                 targets = navigationTargets,
-                onJump = { browseSession.jump(viewKey, it) },
+                onJump = onJump,
             )
         }
 
@@ -247,7 +290,7 @@ internal fun PagedGroupFilterContent(
             PullRefresh(
                 refreshing = refreshing,
                 enabled = items.loadState.refresh !is LoadState.Loading,
-                onRefresh = { browseSession.refresh(viewKey) },
+                onRefresh = onRefresh,
                 modifier = Modifier.weight(1f),
             ) {
                 LazyColumn(
@@ -257,7 +300,7 @@ internal fun PagedGroupFilterContent(
                     if (items.loadState.refresh is LoadState.Loading && items.itemCount == 0) {
                         item {
                             Row(
-                                modifier = Modifier.fillMaxWidth().padding(SettingsItemsPaddings.Horizontal),
+                                modifier = Modifier.fillMaxWidth().padding(FilterSheetInsets.Horizontal),
                                 horizontalArrangement = Arrangement.Center,
                             ) {
                                 CircularProgressIndicator()
@@ -275,7 +318,7 @@ internal fun PagedGroupFilterContent(
                                         MR.strings.no_results_found
                                     },
                                 ),
-                                modifier = Modifier.padding(SettingsItemsPaddings.Horizontal),
+                                modifier = Modifier.padding(FilterSheetInsets.Horizontal),
                             )
                         }
                     }
@@ -296,7 +339,7 @@ internal fun PagedGroupFilterContent(
                     if (items.loadState.append is LoadState.Loading) {
                         item {
                             Row(
-                                modifier = Modifier.fillMaxWidth().padding(SettingsItemsPaddings.Horizontal),
+                                modifier = Modifier.fillMaxWidth().padding(FilterSheetInsets.Horizontal),
                                 horizontalArrangement = Arrangement.Center,
                             ) {
                                 CircularProgressIndicator()
@@ -311,7 +354,7 @@ internal fun PagedGroupFilterContent(
                 PagedFilterNavigationRail(
                     targets = navigationTargets,
                     currentTargetId = currentNavigationTargetId,
-                    onJump = { browseSession.jump(viewKey, it) },
+                    onJump = onJump,
                 )
             }
         }
@@ -370,7 +413,7 @@ private fun ProjectedFilterItem(
 @Composable
 private fun RetryItem(onRetry: () -> Unit) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(SettingsItemsPaddings.Horizontal),
+        modifier = Modifier.fillMaxWidth().padding(FilterSheetInsets.Horizontal),
         horizontalArrangement = Arrangement.Center,
     ) {
         TextButton(onClick = onRetry) {

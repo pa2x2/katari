@@ -1,4 +1,4 @@
-package eu.kanade.tachiyomi.ui.browse.source.browse.filter
+package eu.kanade.tachiyomi.ui.browse.source.browse.filter.paged
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable

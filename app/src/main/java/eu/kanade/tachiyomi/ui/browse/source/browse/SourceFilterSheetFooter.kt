@@ -21,6 +21,7 @@ internal fun SourceFilterSheetFooter(
     onApply: () -> Unit,
     applyEnabled: Boolean,
     applyBlockedReason: String? = null,
+    applyLabel: String = stringResource(MR.strings.action_apply),
 ) {
     SourceFilterSheetActionRow {
         TextButton(onClick = onReset, enabled = resetEnabled) {
@@ -38,7 +39,7 @@ internal fun SourceFilterSheetFooter(
             }
         }
         Button(onClick = onApply, enabled = applyEnabled) {
-            Text(stringResource(MR.strings.action_apply))
+            Text(applyLabel)
         }
     }
 }
