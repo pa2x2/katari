@@ -43,7 +43,7 @@ class DefaultModelArtifactStoreTest {
         val dispatcher = StandardTestDispatcher(testScheduler)
         return DefaultModelArtifactStore(
             storage = ModelArtifactStorage { root },
-            downloader = ModelArtifactFileDownloader(server.artifactHttpClient()),
+            downloader = ModelArtifactFileDownloader { server.artifactHttpClient() },
             networkPolicy = ModelArtifactNetworkPolicy { metered },
             scope = backgroundScope,
             ioDispatcher = dispatcher,

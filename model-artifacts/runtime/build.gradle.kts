@@ -11,6 +11,7 @@ android {
 dependencies {
     api(projects.modelArtifacts.api)
 
+    implementation(projects.core.common)
     implementation(projects.featureGraph)
     implementation(projects.featureRuntime)
     implementation(libs.injekt)

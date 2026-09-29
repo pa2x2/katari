@@ -17,7 +17,7 @@ import java.security.MessageDigest
  * target file appears only after its size and SHA-256 digest match the declaration.
  */
 internal class ModelArtifactFileDownloader(
-    private val httpClient: OkHttpClient,
+    private val httpClient: () -> OkHttpClient,
 ) {
     suspend fun download(
         file: ModelArtifactFile,
@@ -68,7 +68,7 @@ internal class ModelArtifactFileDownloader(
             .apply { if (resumeFrom > 0) header("Range", "bytes=$resumeFrom-") }
             .build()
         try {
-            httpClient.newCall(request).execute().use { response ->
+            httpClient().newCall(request).execute().use { response ->
                 val append = when {
                     response.code == HTTP_PARTIAL_CONTENT && resumeFrom > 0 -> true
                     response.code == HTTP_RANGE_NOT_SATISFIABLE && resumeFrom > 0 ->

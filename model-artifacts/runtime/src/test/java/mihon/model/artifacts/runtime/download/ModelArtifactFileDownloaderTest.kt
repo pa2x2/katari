@@ -31,7 +31,7 @@ class ModelArtifactFileDownloaderTest {
                     .build(),
             )
 
-            val result = ModelArtifactFileDownloader(server.artifactHttpClient()).download(file, target) {}
+            val result = ModelArtifactFileDownloader { server.artifactHttpClient() }.download(file, target) {}
 
             result shouldBe ModelArtifactFileDownloadResult.Completed
             target.readBytes().toList() shouldBe content.toList()
@@ -49,7 +49,7 @@ class ModelArtifactFileDownloaderTest {
         MockWebServer().apply { start() }.use { server ->
             server.enqueue(MockResponse.Builder().body(Buffer().write(content)).build())
 
-            val result = ModelArtifactFileDownloader(server.artifactHttpClient()).download(file, target) {}
+            val result = ModelArtifactFileDownloader { server.artifactHttpClient() }.download(file, target) {}
 
             result shouldBe ModelArtifactFileDownloadResult.Completed
             target.readBytes().toList() shouldBe content.toList()
@@ -64,7 +64,7 @@ class ModelArtifactFileDownloaderTest {
         MockWebServer().apply { start() }.use { server ->
             server.enqueue(MockResponse.Builder().body(Buffer().write("tampered".toByteArray())).build())
 
-            val result = ModelArtifactFileDownloader(server.artifactHttpClient()).download(file, target) {}
+            val result = ModelArtifactFileDownloader { server.artifactHttpClient() }.download(file, target) {}
 
             result shouldBe ModelArtifactFileDownloadResult.ChecksumMismatch
             target.exists() shouldBe false
