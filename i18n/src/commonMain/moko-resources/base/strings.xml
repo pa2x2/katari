@@ -571,6 +571,16 @@
     <string name="chapter_translation_queued">Queued for translation</string>
     <string name="chapter_translation_translating">Translating %1$d/%2$d</string>
     <string name="chapter_translation_failed">Translation failed</string>
+    <string name="chapter_translation_failed_reason">Failed · %1$s</string>
+    <string name="chapter_translation_failure_download_failed">Download failed</string>
+    <string name="chapter_translation_failure_download_missing">Download is missing</string>
+    <string name="chapter_translation_failure_setup_required">Needs setting up</string>
+    <string name="chapter_translation_paused">Paused</string>
+    <string name="action_fix">Fix</string>
+    <string name="action_start_now">Start now</string>
+    <string name="label_downloads_tab">Downloads</string>
+    <string name="label_translations_tab">Translations</string>
+    <string name="information_no_translations">No chapters are queued for translation</string>
     <string name="chapter_translation_setup_title">Before translating</string>
     <string name="chapter_translation_setup_uses">Translates %1$s with %2$s</string>
     <string name="chapter_translation_setup_resolved">Everything is ready.</string>

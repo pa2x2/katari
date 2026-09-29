@@ -46,6 +46,9 @@ internal class EntryTranslateConditions(
         }
     }.distinctUntilChanged()
 
+    /** Whether the user paused the queue. */
+    val paused: Flow<Boolean> = preferences.queuePaused.values()
+
     private fun needsNetwork(items: List<EntryTranslationQueueItem>): Boolean {
         val networkEngines = engines().filter(KnownTranslationEngine::usesNetwork).mapTo(HashSet()) { it.id }
         if (networkEngines.isEmpty()) return false

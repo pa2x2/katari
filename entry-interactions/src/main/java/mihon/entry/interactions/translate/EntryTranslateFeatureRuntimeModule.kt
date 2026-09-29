@@ -67,6 +67,7 @@ internal val EntryTranslateFeatureRuntimeModule = EntryFeatureRuntimeModule(
             runner = get(),
             work = get(),
             conditions = get(),
+            preferences = get(),
         )
     }
     addSingletonFactory {

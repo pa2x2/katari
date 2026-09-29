@@ -21,7 +21,8 @@ import uy.kohesive.injekt.api.get
 
 /**
  * Drains the translation queue in the background, with an ongoing notification of the chapter being translated. While
- * the charging or Wi-Fi rule holds the queue, it waits in the foreground and says what it waits for.
+ * the charging or Wi-Fi rule holds the queue, it waits in the foreground and says what it waits for; pausing the queue
+ * ends it until the queue is resumed.
  */
 class EntryTranslateJob(context: Context, workerParams: WorkerParameters) : CoroutineWorker(context, workerParams) {
 
@@ -30,7 +31,9 @@ class EntryTranslateJob(context: Context, workerParams: WorkerParameters) : Coro
     override suspend fun doWork(): Result {
         val dependencies = dependencies()
         while (true) {
-            if (!dependencies.runner.hasPendingWork()) return Result.success()
+            if (dependencies.conditions.paused.first() || !dependencies.runner.hasPendingWork()) {
+                return Result.success()
+            }
             try {
                 setForeground(foregroundInfo(dependencies.notifier))
             } catch (error: IllegalStateException) {
@@ -40,7 +43,9 @@ class EntryTranslateJob(context: Context, workerParams: WorkerParameters) : Coro
         }
     }
 
-    /** Runs until the queue is idle, which returns true, or until the rules hold it, which returns false. */
+    /**
+     * Runs until the queue is idle or paused, which returns true, or until the rules hold it, which returns false.
+     */
     private suspend fun runUntilHeld(dependencies: Dependencies): Boolean = coroutineScope {
         val (runner, notifier, conditions) = dependencies
         val notifications = launch {
@@ -48,19 +53,27 @@ class EntryTranslateJob(context: Context, workerParams: WorkerParameters) : Coro
                 notifier.update(active, waiting)
             }
         }
-        // Chapters cancelled while the queue is held leave nothing to wait for.
-        combine(conditions.waiting, runner.pending) { waiting, pending -> waiting == null || !pending }.first { it }
+        // Chapters cancelled or a queue paused while it is held leave nothing to wait for.
+        combine(conditions.waiting, runner.pending, conditions.paused) { waiting, pending, paused ->
+            waiting == null || !pending || paused
+        }.first { it }
+        if (conditions.paused.first()) {
+            notifications.cancel()
+            return@coroutineScope true
+        }
         val processing = async { runner.runUntilIdle() }
-        val held = async { conditions.waiting.first { it != null } }
+        val held = async {
+            combine(conditions.waiting, conditions.paused) { waiting, paused -> waiting != null || paused }.first { it }
+        }
         select {
             processing.onAwait {
                 held.cancelAndJoin()
                 true
             }
             held.onAwait {
-                // The chapter being translated keeps its place in the queue and starts over when the rules allow.
+                // The chapter being translated keeps its place in the queue and starts over when it may run again.
                 processing.cancelAndJoin()
-                false
+                conditions.paused.first()
             }
         }.also { notifications.cancel() }
     }

@@ -30,17 +30,7 @@ fun ChapterTranslationBadge(
         EntryTranslateStatus.WaitingForDownload, EntryTranslateStatus.Queued -> colors.onSurfaceVariant
         is EntryTranslateStatus.Failed -> colors.error
     }
-    val description = when (status) {
-        EntryTranslateStatus.Translated -> stringResource(MR.strings.chapter_translation_translated)
-        EntryTranslateStatus.WaitingForDownload -> stringResource(MR.strings.chapter_translation_waiting)
-        EntryTranslateStatus.Queued -> stringResource(MR.strings.chapter_translation_queued)
-        is EntryTranslateStatus.Translating -> stringResource(
-            MR.strings.chapter_translation_translating,
-            status.progress.done,
-            status.progress.total,
-        )
-        is EntryTranslateStatus.Failed -> stringResource(MR.strings.chapter_translation_failed)
-    }
+    val description = entryTranslateStatusText(status)
     Box(
         modifier = modifier
             .size(BadgeSize)

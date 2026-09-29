@@ -18,6 +18,14 @@ interface EntryTranslateFeature {
     /** What queued chapters wait for before they are translated; null when they may be translated now. */
     val waiting: Flow<EntryTranslateWaiting?>
 
+    /** Whether the user paused the queue; queued chapters stay queued until it is resumed. */
+    val paused: Flow<Boolean>
+
+    /** Pauses the queue; the chapter being translated stops and keeps no partial result. */
+    fun pause()
+
+    fun resume()
+
     /**
      * Resolves what [entry]'s chapters would be translated with from its languages and the profile's settings, and
      * what the user must resolve first. `null` when the feature does not apply to [entry].
@@ -51,6 +59,9 @@ interface EntryTranslateFeature {
 
     /** Removes chapters from the queue; a chapter being translated stops and keeps no partial result. */
     suspend fun cancel(chapterIds: List<Long>)
+
+    /** Removes every chapter of the active profile from the queue. */
+    suspend fun cancelAll()
 
     /** Deletes the stored translations of [chapters] and keeps their downloads. */
     suspend fun deleteTranslation(entry: Entry, chapters: List<EntryChapter>)

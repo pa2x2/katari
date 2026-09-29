@@ -17,4 +17,7 @@ class EntryTranslatePreferences(
 
     /** Chapters translated by an engine that sends text over the network wait for Wi-Fi. */
     val onlyOverWifi: Preference<Boolean> = preferenceStore.getBoolean("translate_only_over_wifi", true)
+
+    /** Whether the user paused the translation queue, which stays paused across restarts until resumed. */
+    val queuePaused: Preference<Boolean> = preferenceStore.getBoolean("translate_queue_paused", false)
 }

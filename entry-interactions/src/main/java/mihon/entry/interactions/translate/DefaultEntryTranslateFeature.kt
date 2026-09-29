@@ -37,6 +37,7 @@ internal class DefaultEntryTranslateFeature(
     private val runner: EntryTranslateQueueRunner,
     private val work: EntryTranslateWorkController,
     conditions: EntryTranslateConditions,
+    private val preferences: EntryTranslatePreferences,
     private val clock: () -> Long = System::currentTimeMillis,
 ) : EntryTranslateFeature {
     private val applicableTypes = evaluation.applicableProviderTypes<EntryTranslateProcessor>(
@@ -48,6 +49,18 @@ internal class DefaultEntryTranslateFeature(
     override fun isApplicable(type: EntryType): Boolean = type in applicableTypes
 
     override val waiting: Flow<EntryTranslateWaiting?> = conditions.waiting
+
+    override val paused: Flow<Boolean> = conditions.paused
+
+    override fun pause() {
+        // The worker sees the preference change, stops the chapter it is on and ends.
+        preferences.queuePaused.set(true)
+    }
+
+    override fun resume() {
+        preferences.queuePaused.set(false)
+        work.start()
+    }
 
     override val queue: Flow<List<EntryTranslateQueueItem>> =
         combine(repository.subscribeAll(), runner.active) { items, active ->
@@ -175,6 +188,10 @@ internal class DefaultEntryTranslateFeature(
     override suspend fun cancel(chapterIds: List<Long>) {
         repository.delete(chapterIds)
         runner.stop(chapterIds)
+    }
+
+    override suspend fun cancelAll() {
+        cancel(repository.getAll().map { it.chapterId })
     }
 
     override suspend fun deleteTranslation(entry: Entry, chapters: List<EntryChapter>) {
