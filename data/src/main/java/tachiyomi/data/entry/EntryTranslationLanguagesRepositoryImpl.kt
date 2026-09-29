@@ -28,14 +28,15 @@ class EntryTranslationLanguagesRepositoryImpl(
     }
 
     override suspend fun upsert(languages: EntryTranslationLanguages) {
-        require(languages.contentLanguage != null || languages.targetLanguage != null) {
-            "Entry translation languages must set at least one language"
+        require(languages.contentLanguage != null || languages.targetLanguage != null || languages.translateDownloads) {
+            "Entry translation languages must choose a language or translate downloads"
         }
         handler.await {
             entry_translation_languagesQueries.upsert(
                 entryId = languages.entryId,
                 contentLanguage = languages.contentLanguage,
                 targetLanguage = languages.targetLanguage,
+                translateDownloads = languages.translateDownloads,
                 updatedAt = languages.updatedAt,
             )
         }
@@ -71,23 +72,42 @@ class EntryTranslationLanguagesRepositoryImpl(
         }
     }
 
-    override suspend fun delete(entryId: Long) {
-        handler.await { entry_translation_languagesQueries.delete(entryId) }
+    override suspend fun setTranslateDownloads(entryId: Long, enabled: Boolean, updatedAt: Long) {
+        handler.await(inTransaction = true) {
+            if (enabled) {
+                entry_translation_languagesQueries.enableTranslateDownloads(entryId = entryId, updatedAt = updatedAt)
+            } else {
+                entry_translation_languagesQueries.deleteIfOnlyTranslateDownloads(entryId)
+                entry_translation_languagesQueries.clearTranslateDownloads(updatedAt = updatedAt, entryId = entryId)
+            }
+        }
     }
 
-    override suspend fun deleteByProfile(profileId: Long) {
-        handler.await { entry_translation_languagesQueries.deleteByProfile(profileId) }
+    override suspend fun clearLanguages(entryId: Long, updatedAt: Long) {
+        handler.await(inTransaction = true) {
+            entry_translation_languagesQueries.deleteIfOnlyLanguages(entryId)
+            entry_translation_languagesQueries.clearLanguages(updatedAt = updatedAt, entryId = entryId)
+        }
+    }
+
+    override suspend fun clearLanguagesByProfile(profileId: Long, updatedAt: Long) {
+        handler.await(inTransaction = true) {
+            entry_translation_languagesQueries.deleteLanguagesOnlyByProfile(profileId)
+            entry_translation_languagesQueries.clearLanguagesByProfile(updatedAt = updatedAt, profileId = profileId)
+        }
     }
 
     private fun mapLanguages(
         entryId: Long,
         contentLanguage: String?,
         targetLanguage: String?,
+        translateDownloads: Boolean,
         updatedAt: Long,
     ) = EntryTranslationLanguages(
         entryId = entryId,
         contentLanguage = contentLanguage,
         targetLanguage = targetLanguage,
         updatedAt = updatedAt,
+        translateDownloads = translateDownloads,
     )
 }

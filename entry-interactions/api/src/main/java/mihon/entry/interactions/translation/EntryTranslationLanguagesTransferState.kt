@@ -9,11 +9,13 @@ data class EntryTranslationLanguagesSnapshot(
     val contentLanguage: String? = null,
     val targetLanguage: String? = null,
     val updatedAt: Long = 0L,
+    val translateDownloads: Boolean = false,
 )
 
-/** The target language captured from the Migration source, so durable retry never rereads it. */
+/** What the Migration source carries over, captured so durable retry never rereads it. */
 @Serializable
 data class EntryTranslationLanguagesMigrationPayload(
     val target: Entry,
-    val targetLanguage: String,
+    val targetLanguage: String? = null,
+    val translateDownloads: Boolean = false,
 )

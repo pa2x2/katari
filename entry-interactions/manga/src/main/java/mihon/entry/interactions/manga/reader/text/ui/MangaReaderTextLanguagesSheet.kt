@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material3.HorizontalDivider
@@ -13,11 +14,13 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.reader.components.AdaptiveSheet
 import mihon.entry.interactions.manga.reader.text.session.MangaReaderTextState
@@ -25,13 +28,18 @@ import mihon.translation.ui.picker.language.displayName
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
-/** The languages translate mode uses for the series, each opening its picker. */
+/**
+ * The languages translate mode uses for the series, each opening its picker, and whether the series' downloads are
+ * translated in the background; [translateDownloads] is null when they cannot be.
+ */
 @Composable
 internal fun MangaReaderTextLanguagesSheet(
     pageLanguage: String,
     target: String?,
+    translateDownloads: Boolean?,
     onChoosePageLanguage: () -> Unit,
     onChooseTarget: () -> Unit,
+    onTranslateDownloadsChange: (Boolean) -> Unit,
     onDismiss: () -> Unit,
 ) {
     AdaptiveSheet(
@@ -71,6 +79,20 @@ internal fun MangaReaderTextLanguagesSheet(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 style = MaterialTheme.typography.bodySmall,
             )
+            if (translateDownloads != null) {
+                HorizontalDivider()
+                ListItem(
+                    supportingContent = { Text(stringResource(MR.strings.reader_text_translate_downloads_summary)) },
+                    trailingContent = { Switch(checked = translateDownloads, onCheckedChange = null) },
+                    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                    modifier = Modifier.toggleable(
+                        value = translateDownloads,
+                        role = Role.Switch,
+                        onValueChange = onTranslateDownloadsChange,
+                    ),
+                    content = { Text(stringResource(MR.strings.reader_text_translate_downloads)) },
+                )
+            }
         }
     }
 }

@@ -623,6 +623,9 @@
     <string name="reader_text_page_language_from_source">%1$s · from the source</string>
     <string name="reader_text_page_language_follow_source">From the source</string>
     <string name="reader_text_page_language_rereads">Changing the page language reads the pages again.</string>
+    <string name="reader_text_translate_downloads">Translate downloads</string>
+    <string name="reader_text_translate_downloads_summary">Chapters of this series are translated in the background once downloaded</string>
+    <string name="reader_text_translate_downloads_offer_title">Translate downloaded chapters?</string>
     <string name="pref_page_text_translation">Page translation</string>
     <string name="pref_page_text_translation_overlay">Show translations on the page</string>
     <string name="pref_page_text_translation_overlay_summary">Translate every recognized text while translate mode is on, instead of only tapped text</string>

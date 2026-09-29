@@ -33,11 +33,13 @@ internal class SeriesTranslationLanguagesScreenModel(
 
     /** Makes the series follow the default languages again. */
     fun clear(entryId: Long) {
-        screenModelScope.launch { repository.delete(entryId) }
+        screenModelScope.launch { repository.clearLanguages(entryId, System.currentTimeMillis()) }
     }
 
     fun clearAll() {
-        screenModelScope.launch { repository.deleteByProfile(activeProfile.activeProfileId) }
+        screenModelScope.launch {
+            repository.clearLanguagesByProfile(activeProfile.activeProfileId, System.currentTimeMillis())
+        }
     }
 
     private fun seriesOf(profileId: Long): Flow<List<SeriesTranslationLanguages>> =

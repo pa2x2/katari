@@ -9,6 +9,8 @@ import mihon.entry.interactions.runtime.EntryInteractions
 import mihon.entry.interactions.runtime.production.EntryFeatureRuntimeArtifacts
 import mihon.entry.interactions.runtime.production.EntryFeatureRuntimeModule
 import mihon.entry.interactions.runtime.production.entryFeatureRuntimeBoundary
+import mihon.entry.interactions.translate.download.EntryTranslateDownloadChaining
+import mihon.entry.interactions.translate.download.EntryTranslateSeriesDownloads
 import mihon.feature.runtime.FeatureRuntimeComposition
 import uy.kohesive.injekt.api.addSingletonFactory
 import uy.kohesive.injekt.api.get
@@ -57,10 +59,22 @@ internal val EntryTranslateFeatureRuntimeModule = EntryFeatureRuntimeModule(
             onReady = get<EntryTranslateWorkController>()::start,
         )
     }
+    addSingletonFactory {
+        EntryTranslateSeriesDownloads(
+            download = get<EntryInteractions>().download,
+            languages = get(),
+            feature = get(),
+            repository = get(),
+            entries = get(),
+            chapters = get(),
+        )
+    }
     EntryFeatureRuntimeArtifacts(
         runtimeBoundaries = listOf(entryFeatureRuntimeBoundary { get<EntryTranslateFeature>() }),
         warmups = listOf {
-            CoroutineScope(SupervisorJob() + Dispatchers.IO).launch { get<EntryTranslateDownloadChaining>().run() }
+            val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+            scope.launch { get<EntryTranslateDownloadChaining>().run() }
+            scope.launch { get<EntryTranslateSeriesDownloads>().run() }
         },
     )
 }

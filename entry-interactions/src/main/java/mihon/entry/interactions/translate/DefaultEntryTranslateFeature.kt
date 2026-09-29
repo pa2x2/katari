@@ -99,21 +99,69 @@ internal class DefaultEntryTranslateFeature(
         val failed = repository.getAll()
             .filter { it.chapterId in chapterIds && it.state == EntryTranslationQueueItem.State.Failed }
         var ready = false
+        val preparations = mutableMapOf<Long, EntryTranslatePreparation?>()
         failed.forEach { item ->
             val entry = entries.getEntryById(item.entryId)
             val chapter = chapters.getChapterById(item.chapterId)
             if (entry == null || chapter == null) {
                 repository.delete(listOf(item.chapterId))
-            } else if (download.isDownloaded(entry, chapter)) {
-                repository.setState(item.chapterId, EntryTranslationQueueItem.State.Queued)
-                ready = true
-            } else {
-                // A chapter whose download failed or went away is downloaded again before it is translated.
-                repository.setState(item.chapterId, EntryTranslationQueueItem.State.WaitingForDownload)
-                download.download(entry, listOf(chapter))
+                return@forEach
             }
+            // The frozen setup stopped working, so the chapter is translated with what the settings resolve to now.
+            val setup = if (item.needsSetup()) {
+                val preparation = preparations.getOrPut(entry.id) { prepare(entry) }
+                (preparation as? EntryTranslatePreparation.Ready)?.setup ?: return@forEach
+            } else {
+                null
+            }
+            val downloaded = download.isDownloaded(entry, chapter)
+            val state = if (downloaded) {
+                EntryTranslationQueueItem.State.Queued
+            } else {
+                EntryTranslationQueueItem.State.WaitingForDownload
+            }
+            if (setup != null) {
+                repository.enqueue(
+                    entry.id,
+                    listOf(chapter.id),
+                    state,
+                    EntryTranslateSetupCodec.encode(setup),
+                    first = false,
+                    queuedAt = clock(),
+                )
+            } else {
+                repository.setState(item.chapterId, state)
+            }
+            // A chapter whose download failed or went away is downloaded again before it is translated.
+            if (!downloaded) download.download(entry, listOf(chapter))
+            ready = ready || downloaded
         }
         if (ready) work.start()
+    }
+
+    override suspend fun translateWithCurrentSettings(entry: Entry, chapters: List<EntryChapter>) {
+        if (!isApplicable(entry.type) || chapters.isEmpty()) return
+        when (val preparation = prepare(entry)) {
+            is EntryTranslatePreparation.Ready -> translate(entry, chapters, preparation.setup, startNow = false)
+            is EntryTranslatePreparation.Blocked -> repository.enqueue(
+                entry.id,
+                chapters.map { it.id },
+                EntryTranslationQueueItem.State.Failed,
+                setup = null,
+                first = false,
+                queuedAt = clock(),
+                failure = EntryTranslateFailureCodec.encode(EntryTranslateFailure.SetupRequired),
+            )
+            null -> Unit
+        }
+    }
+
+    override suspend fun untranslatedDownloads(entry: Entry): List<EntryChapter> {
+        if (!isApplicable(entry.type)) return emptyList()
+        val downloaded = chapters.getChaptersByEntryIdAwait(entry.id).filter { download.isDownloaded(entry, it) }
+        val translated = translate.translatedChapters(entry, downloaded)
+        val queued = repository.getAll().mapTo(HashSet()) { it.chapterId }
+        return downloaded.filter { it.id !in translated && it.id !in queued }
     }
 
     override suspend fun cancel(chapterIds: List<Long>) {
@@ -125,6 +173,9 @@ internal class DefaultEntryTranslateFeature(
         if (!isApplicable(entry.type)) return
         translate.deleteTranslation(entry, chapters)
     }
+
+    private fun EntryTranslationQueueItem.needsSetup(): Boolean =
+        setup == null || EntryTranslateFailureCodec.decode(failure) == EntryTranslateFailure.SetupRequired
 
     private fun EntryTranslationQueueItem.status(active: EntryTranslateQueueRunner.Active?) = when (state) {
         EntryTranslationQueueItem.State.WaitingForDownload -> EntryTranslateStatus.WaitingForDownload

@@ -70,6 +70,7 @@ import mihon.entry.interactions.manga.reader.text.session.MangaReaderTextSession
 import mihon.entry.interactions.manga.reader.text.session.declaredContentLanguage
 import mihon.entry.interactions.manga.reader.text.stored.MangaReaderStoredTranslations
 import mihon.entry.interactions.manga.reader.text.translation.MangaPageTranslator
+import mihon.entry.interactions.manga.reader.text.translation.MangaReaderTranslateDownloads
 import mihon.entry.interactions.manga.reader.text.translation.MangaTextTranslationController
 import mihon.entry.interactions.manga.reader.text.translation.MangaTranslationLanguageStore
 import mihon.entry.interactions.manga.state.mangaProgressState
@@ -173,6 +174,14 @@ internal class ReaderViewModel @JvmOverloads constructor(
         hostActions = translationHostActions,
         scope = viewModelScope,
         languageStore = MangaTranslationLanguageStore(feature = Injekt.get(), series = series),
+    )
+
+    /** Whether the series' downloads are translated in the background, as the languages sheet sets it. */
+    val translateDownloads = MangaReaderTranslateDownloads(
+        scope = viewModelScope,
+        series = series,
+        languages = Injekt.get(),
+        translate = Injekt.get(),
     )
 
     private val storedTranslations = MangaReaderStoredTranslations(

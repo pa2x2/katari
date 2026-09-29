@@ -15,7 +15,7 @@ internal sealed interface EntryTranslationLanguagesMigrationPreparation {
         val payload: EntryTranslationLanguagesMigrationPayload,
     ) : EntryTranslationLanguagesMigrationPreparation
 
-    data object NoTargetLanguage : EntryTranslationLanguagesMigrationPreparation
+    data object NothingToCarry : EntryTranslationLanguagesMigrationPreparation
 
     data class Inapplicable(val types: Set<EntryType>) : EntryTranslationLanguagesMigrationPreparation
 

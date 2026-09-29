@@ -682,6 +682,7 @@ class ReaderActivity : EntryInteractionActivity() {
             state = textState,
             menuVisible = menuVisible,
             translationCoordinator = viewModel.textTranslation.hostCoordinator,
+            translateDownloads = viewModel.translateDownloads,
             recognitionLanguages = viewModel.textRecognitionLanguages,
             areaResult = areaResult,
             observeModels = viewModel.textSession::observeModels,

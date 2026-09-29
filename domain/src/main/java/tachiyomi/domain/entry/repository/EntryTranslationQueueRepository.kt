@@ -12,15 +12,16 @@ interface EntryTranslationQueueRepository {
 
     /**
      * Queues [chapterIds] of [entryId] in [state], after the rest of the queue or, when [first], before it. Chapters
-     * already queued are queued again with the new setup.
+     * already queued are queued again with the new setup and [failure].
      */
     suspend fun enqueue(
         entryId: Long,
         chapterIds: List<Long>,
         state: EntryTranslationQueueItem.State,
-        setup: String,
+        setup: String?,
         first: Boolean,
         queuedAt: Long,
+        failure: String? = null,
     )
 
     suspend fun setState(chapterId: Long, state: EntryTranslationQueueItem.State, failure: String? = null)

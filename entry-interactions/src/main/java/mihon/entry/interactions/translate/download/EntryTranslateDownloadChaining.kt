@@ -1,9 +1,12 @@
-package mihon.entry.interactions.translate
+package mihon.entry.interactions.translate.download
 
 import kotlinx.coroutines.flow.first
 import mihon.entry.interactions.download.EntryDownloadInteraction
 import mihon.entry.interactions.download.EntryDownloadState
 import mihon.entry.interactions.download.EntryDownloadStatus
+import mihon.entry.interactions.translate.EntryTranslateFailure
+import mihon.entry.interactions.translate.EntryTranslateFailureCodec
+import mihon.entry.interactions.translate.fail
 import tachiyomi.domain.entry.model.EntryTranslationQueueItem
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryRepository

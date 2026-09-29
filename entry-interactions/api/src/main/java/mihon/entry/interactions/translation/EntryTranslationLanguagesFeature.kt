@@ -11,6 +11,8 @@ data class EntryTranslationLanguageChoices(
     val contentLanguage: LanguageTag? = null,
     /** The language the series is translated into; null follows the profile's target. */
     val targetLanguage: LanguageTag? = null,
+    /** Whether every download of the series is also translated in the background. */
+    val translateDownloads: Boolean = false,
 )
 
 /** Feature-owned boundary for the translation languages a reader chooses per series. */
@@ -25,6 +27,9 @@ interface EntryTranslationLanguagesFeature {
 
     /** Pins the series' target language, or follows the profile again when [language] is null. */
     suspend fun setTargetLanguage(entry: Entry, language: LanguageTag?): EntryTranslationLanguagesWriteResult
+
+    /** Sets whether every download of the series is also translated in the background. */
+    suspend fun setTranslateDownloads(entry: Entry, enabled: Boolean): EntryTranslationLanguagesWriteResult
 }
 
 sealed interface EntryTranslationLanguagesWriteResult {

@@ -31,9 +31,10 @@ class EntryTranslationQueueRepositoryImpl(
         entryId: Long,
         chapterIds: List<Long>,
         state: EntryTranslationQueueItem.State,
-        setup: String,
+        setup: String?,
         first: Boolean,
         queuedAt: Long,
+        failure: String?,
     ) {
         handler.await(inTransaction = true) {
             val range = entry_translation_queueQueries.getPositionRange(profileProvider.activeProfileId)
@@ -45,6 +46,7 @@ class EntryTranslationQueueRepositoryImpl(
                     entryId = entryId,
                     position = start + index,
                     state = state.toDb(),
+                    failure = failure,
                     setup = setup,
                     queuedAt = queuedAt,
                 )
@@ -78,7 +80,7 @@ class EntryTranslationQueueRepositoryImpl(
         position: Long,
         state: String,
         failure: String?,
-        setup: String,
+        setup: String?,
         queuedAt: Long,
     ) = EntryTranslationQueueItem(
         chapterId = chapterId,

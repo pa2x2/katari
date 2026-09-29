@@ -30,6 +30,16 @@ interface EntryTranslateFeature {
      */
     suspend fun translate(entry: Entry, chapters: List<EntryChapter>, setup: EntryTranslateSetup, startNow: Boolean)
 
+    /**
+     * Queues [chapters] with what [entry]'s languages and the profile's settings resolve to, for callers that cannot
+     * resolve requirements with the user first. When translation still needs setting up, the chapters are recorded as
+     * failed for that, so the user finds them in the queue with a way to fix it.
+     */
+    suspend fun translateWithCurrentSettings(entry: Entry, chapters: List<EntryChapter>)
+
+    /** [entry]'s downloaded chapters that have no stored translation and are not in the queue. */
+    suspend fun untranslatedDownloads(entry: Entry): List<EntryChapter>
+
     /** Moves queued chapters ahead of the rest of the queue. */
     suspend fun startNow(chapterIds: List<Long>)
 

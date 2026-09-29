@@ -2,7 +2,8 @@ package tachiyomi.domain.entry.model
 
 /**
  * A chapter queued to be translated in the background. [setup] is what it will be translated with, frozen when it was
- * queued and encoded by the translation feature; a finished item leaves the queue.
+ * queued and encoded by the translation feature; a finished item leaves the queue. Only a failed item lacks a setup:
+ * one queued automatically while translation still needed setting up.
  */
 data class EntryTranslationQueueItem(
     val chapterId: Long,
@@ -10,7 +11,7 @@ data class EntryTranslationQueueItem(
     val position: Long,
     val state: State,
     val failure: String?,
-    val setup: String,
+    val setup: String?,
     val queuedAt: Long,
 ) {
     enum class State {

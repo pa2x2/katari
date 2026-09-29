@@ -22,6 +22,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import mihon.entry.interactions.download.EntryDownloadState
+import mihon.entry.interactions.translate.EntryTranslateFailure
 import mihon.entry.interactions.translate.EntryTranslateFeature
 import mihon.entry.interactions.translate.EntryTranslatePreparation
 import mihon.entry.interactions.translate.EntryTranslateStatus
@@ -93,7 +94,14 @@ class ChapterTranslationModel(
             ChapterTranslateAction.TRANSLATE_AGAIN, ChapterTranslateAction.DOWNLOAD_AND_TRANSLATE -> queue(items)
             ChapterTranslateAction.TRANSLATE_NOW -> scope.launch { feature.startNow(ids) }
             ChapterTranslateAction.CANCEL -> scope.launch { feature.cancel(ids) }
-            ChapterTranslateAction.RETRY -> scope.launch { feature.retry(ids) }
+            ChapterTranslateAction.RETRY -> {
+                // Chapters that failed for want of setup go through the requirements again, where the user fixes them.
+                val (needSetup, others) = items.partition { item ->
+                    (statuses[item.id] as? EntryTranslateStatus.Failed)?.failure == EntryTranslateFailure.SetupRequired
+                }
+                if (needSetup.isNotEmpty()) queue(needSetup)
+                if (others.isNotEmpty()) scope.launch { feature.retry(others.map { it.id }) }
+            }
             ChapterTranslateAction.DELETE_TRANSLATION -> scope.launch {
                 items.groupBy { it.entry }.forEach { (entry, group) ->
                     feature.deleteTranslation(entry, group.map { it.chapter })

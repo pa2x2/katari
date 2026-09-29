@@ -4,7 +4,7 @@ CREATE TABLE entry_translation_queue(
     position INTEGER NOT NULL,
     state TEXT NOT NULL CHECK(state IN ('waiting_for_download', 'queued', 'failed')),
     failure TEXT,
-    setup TEXT NOT NULL,
+    setup TEXT,
     queued_at INTEGER NOT NULL,
     FOREIGN KEY(chapter_id) REFERENCES chapters(_id) ON DELETE CASCADE,
     FOREIGN KEY(entry_id) REFERENCES entries(_id) ON DELETE CASCADE
@@ -33,11 +33,11 @@ WHERE ENT.profile_id = :profileId;
 
 upsert:
 INSERT INTO entry_translation_queue(chapter_id, entry_id, position, state, failure, setup, queued_at)
-VALUES (:chapterId, :entryId, :position, :state, NULL, :setup, :queuedAt)
+VALUES (:chapterId, :entryId, :position, :state, :failure, :setup, :queuedAt)
 ON CONFLICT(chapter_id) DO UPDATE SET
     position = excluded.position,
     state = excluded.state,
-    failure = NULL,
+    failure = excluded.failure,
     setup = excluded.setup,
     queued_at = excluded.queued_at;
 

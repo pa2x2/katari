@@ -41,14 +41,15 @@ internal class EntryTranslateQueueRunner(
             val item = next() ?: return@coroutineScope
             val entry = entries.getEntryById(item.entryId)
             val chapter = chapters.getChapterById(item.chapterId)
-            val setup = EntryTranslateSetupCodec.decode(item.setup)
+            val setup = item.setup?.let(EntryTranslateSetupCodec::decode)
             if (entry == null || chapter == null) {
                 repository.delete(listOf(item.chapterId))
                 continue
             }
             if (setup == null) {
-                logcat(LogPriority.ERROR) { "Queued setup of chapter ${item.chapterId} cannot be read: ${item.setup}" }
-                repository.fail(item.chapterId, EntryTranslateFailure.Error(null))
+                // Retrying prepares the chapter again with the current settings.
+                logcat(LogPriority.WARN) { "Queued setup of chapter ${item.chapterId} cannot be read: ${item.setup}" }
+                repository.fail(item.chapterId, EntryTranslateFailure.SetupRequired)
                 continue
             }
             mutableActive.value = Active(entry, chapter, EntryTranslateProgress(0, 0))
