@@ -938,6 +938,14 @@ class CatalogScreenModel(
         return presetHelper.customPreset(state.value.draftPresetId)
     }
 
+    /** The preset the draft stands for: the custom preset it was loaded from, or the built-in listing it equals. */
+    fun draftPreset(): SourceFeedPreset? {
+        if (!feedsEnabled) return null
+        val current = state.value
+        return presetHelper.customPreset(current.draftPresetId)
+            ?: presetHelper.builtInPreset(current.toSavedPresetState(current.defaultFilters).listingMode)
+    }
+
     fun feedPresets(): List<SourceFeedPreset> {
         if (!feedsEnabled) return emptyList()
         return presetHelper.feedPresets()

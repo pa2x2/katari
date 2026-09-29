@@ -330,7 +330,8 @@ data class CatalogScreen(
         }
 
         val onDismissRequest = screenModel::dismissDialog
-        val appliedCustomPreset = if (feedsEnabled) screenModel.draftCustomPreset() else null
+        val draftPreset = if (feedsEnabled) screenModel.draftPreset() else null
+        val draftCustomPreset = if (feedsEnabled) screenModel.draftCustomPreset() else null
         when (val dialog = state.dialog) {
             is CatalogScreenModel.Dialog.Filter -> {
                 SourceFilterDialog(
@@ -346,14 +347,14 @@ data class CatalogScreen(
                     presetActions = if (feedsEnabled) {
                         SourceFilterPresetActions(
                             presets = screenModel.feedPresets(),
-                            currentPresetId = appliedCustomPreset?.id,
-                            currentPresetName = appliedCustomPreset?.name,
+                            currentPresetId = draftPreset?.id,
+                            currentPresetName = draftPreset?.name,
                             onApply = screenModel::applyPreset,
                             onEdit = screenModel::showEditPresetDialog,
                             onDelete = { presetPendingDeletion = it },
                             canDelete = screenModel::canDeletePreset,
                             onSaveAsNew = screenModel::showSavePresetDialog,
-                            onUpdateCurrent = screenModel::showUpdateCurrentPresetDialog,
+                            onUpdateCurrent = draftCustomPreset?.let { screenModel::showUpdateCurrentPresetDialog },
                         )
                     } else {
                         null

@@ -5,7 +5,8 @@ import eu.kanade.domain.source.model.SourceFeedPreset
 /**
  * Preset state and actions offered by the filter sheet header.
  *
- * [currentPresetId] and [currentPresetName] describe the custom preset the draft was loaded from, if any.
+ * [currentPresetId] and [currentPresetName] describe the preset the draft stands for, if any: the custom preset it
+ * was loaded from, or the built-in listing it equals. [onUpdateCurrent] is offered only for a custom one.
  */
 class SourceFilterPresetActions(
     val presets: List<SourceFeedPreset>,

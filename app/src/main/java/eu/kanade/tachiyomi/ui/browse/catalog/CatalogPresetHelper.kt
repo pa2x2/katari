@@ -2,6 +2,7 @@ package eu.kanade.tachiyomi.ui.browse.catalog
 
 import eu.kanade.domain.source.model.BUILTIN_LATEST_PRESET_ID
 import eu.kanade.domain.source.model.BUILTIN_POPULAR_PRESET_ID
+import eu.kanade.domain.source.model.FeedListingMode
 import eu.kanade.domain.source.model.SourceFeedPreset
 import eu.kanade.domain.source.model.latestFeedPreset
 import eu.kanade.domain.source.model.popularFeedPreset
@@ -35,6 +36,16 @@ class CatalogPresetHelper(
             }
             addAll(custom)
         }
+    }
+
+    /** The built-in preset a draft listing in [listingMode] with untouched filters equals, if the source offers it. */
+    fun builtInPreset(listingMode: FeedListingMode): SourceFeedPreset? {
+        val presetId = when (listingMode) {
+            FeedListingMode.Popular -> BUILTIN_POPULAR_PRESET_ID
+            FeedListingMode.Latest -> BUILTIN_LATEST_PRESET_ID
+            FeedListingMode.Search -> return null
+        }
+        return feedPresets().firstOrNull { it.id == presetId }
     }
 
     fun customPreset(presetId: String?): SourceFeedPreset? {
