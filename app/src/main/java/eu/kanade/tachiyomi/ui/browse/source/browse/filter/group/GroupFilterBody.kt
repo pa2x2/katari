@@ -16,7 +16,7 @@ import eu.kanade.tachiyomi.ui.browse.source.browse.filter.activeCount
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.change.FilterChanges
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.control.FilterOptionChip
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.control.FilterSheetInsets
-import eu.kanade.tachiyomi.ui.browse.source.browse.filter.displayMessage
+import eu.kanade.tachiyomi.ui.browse.source.browse.filter.validation.displayMessage
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -72,7 +72,9 @@ internal fun GroupFilterBody(
         } else {
             visible.forEach { child -> item(child, focus?.drop(1)?.takeIf { child === focusedChild }) }
         }
-        filter.validationIssues().forEach {
+        // Children list their own issues; the group lists only the issues it reports about them together.
+        val childIssues = children.flatMapTo(HashSet()) { it.validationIssues() }
+        filter.validationIssues().filterNot { it in childIssues }.forEach {
             Text(
                 it.displayMessage(),
                 color = MaterialTheme.colorScheme.error,

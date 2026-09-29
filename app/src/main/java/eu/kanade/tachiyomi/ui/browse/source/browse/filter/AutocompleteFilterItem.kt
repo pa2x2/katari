@@ -34,6 +34,7 @@ import tachiyomi.presentation.core.i18n.stringResource
 @Composable
 internal fun AutocompleteFilterItem(
     filter: EntryFilter.Autocomplete,
+    isError: Boolean,
     onUpdate: () -> Unit,
     onRequestSuggestions: suspend (
         EntryFilter.Autocomplete,
@@ -89,6 +90,7 @@ internal fun AutocompleteFilterItem(
                 .padding(horizontal = 16.dp, vertical = 4.dp)
                 .onFocusChanged { controller.updateFocus(it.isFocused) },
             label = { Text(text = filter.name) },
+            isError = isError,
             value = fieldValue,
             onValueChange = { value ->
                 fieldValue = value

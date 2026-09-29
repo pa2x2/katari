@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -31,6 +32,10 @@ import eu.kanade.tachiyomi.ui.browse.source.browse.filter.change.FilterChanges
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.date.DateFilterEditorHost
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.date.DateFilterEditorSession
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.group.FilterGroupUiStates
+import eu.kanade.tachiyomi.ui.browse.source.browse.filter.validation.FilterValidation
+import eu.kanade.tachiyomi.ui.browse.source.browse.filter.validation.FilterValidationBar
+import eu.kanade.tachiyomi.ui.browse.source.browse.filter.validation.LocalFilterValidation
+import eu.kanade.tachiyomi.ui.browse.source.browse.filter.validation.filterApplyBlockedReason
 import eu.kanade.tachiyomi.ui.browse.source.browse.preset.SourceFilterPresetActions
 import eu.kanade.tachiyomi.ui.browse.source.browse.preset.SourceFilterPresetChip
 import mihon.entry.interactions.catalogue.EntryCatalogueFilterNavigationResult
@@ -90,6 +95,7 @@ fun SourceFilterDialog(
     var focusRevealed by rememberSaveable { mutableStateOf(false) }
     val focus = focusPath?.takeUnless { focusRevealed }
     val validation = filters.validationIssues()
+    val filterValidation = FilterValidation(validation)
     val changes = FilterChanges.of(filters, defaultFilters)
     val isError = errorMessage != null
     val slideDistance = rememberSlideDistance()
@@ -112,6 +118,16 @@ fun SourceFilterDialog(
     val groupStates = rememberSaveable(saver = FilterGroupUiStates.Saver) {
         FilterGroupUiStates(expandedIndex = focusPath?.firstOrNull())
     }
+    // Top-level filter the root page should scroll to once it is shown, after a Show on the validation bar.
+    var pendingReveal by remember { mutableStateOf<Int?>(null) }
+    val showFirstProblem: () -> Unit = {
+        filterValidation.firstInvalidIndex(filters)?.let { index ->
+            if (filters[index] is EntryFilter.Group<*>) groupStates.of(index).expanded = true
+            pendingReveal = index
+            route = SourceFilterRoute.Root
+        }
+    }
+    val validationBar: @Composable () -> Unit = { FilterValidationBar(filterValidation, onShow = showFirstProblem) }
 
     BackHandler(enabled = route is SourceFilterRoute.PagedGroup, onBack = leavePagedGroup)
 
@@ -121,113 +137,124 @@ fun SourceFilterDialog(
         modifier = if (route is SourceFilterRoute.PagedGroup) Modifier.fillMaxHeight(0.9f) else Modifier,
     ) {
         DateFilterEditorHost(dateEditor) {
-            AnimatedContent(
-                targetState = route,
-                transitionSpec = {
-                    materialSharedAxisX(
-                        forward = targetState is SourceFilterRoute.PagedGroup,
-                        slideDistance = slideDistance,
-                    )
-                },
-                modifier = if (route is SourceFilterRoute.PagedGroup) Modifier.fillMaxSize() else Modifier,
-                label = "sourceFilterRoute",
-            ) { currentRoute ->
-                when (currentRoute) {
-                    SourceFilterRoute.Root -> {
-                        val rows = sourceFilterRows(
-                            filters = filters,
-                            isLoading = isLoading,
-                            errorMessage = errorMessage,
-                            validation = validation,
-                            repairIssues = repairIssues,
-                            repairNeedsSave = repairNeedsSave,
-                            hasPendingEdits = pendingFilterEdits > 0,
-                            changes = changes,
-                            changedOnly = changedOnly,
-                            isGroupExpanded = { groupStates.of(it).expanded },
+            CompositionLocalProvider(LocalFilterValidation provides filterValidation) {
+                AnimatedContent(
+                    targetState = route,
+                    transitionSpec = {
+                        materialSharedAxisX(
+                            forward = targetState is SourceFilterRoute.PagedGroup,
+                            slideDistance = slideDistance,
                         )
-                        LaunchedEffect(Unit) {
-                            val focusIndex = focus?.firstOrNull() ?: return@LaunchedEffect
-                            val row = rows.indexOfFirst { it is SourceFilterRow.Filter && it.index == focusIndex }
-                            if (row >= 0) rootListState.scrollToItem(row)
-                            focusRevealed = true
-                        }
-                        Column(Modifier.fillMaxHeight(0.9f)) {
-                            SourceFilterRootHeader(
-                                status = SourceFilterSheetStatus(
-                                    changedCount = changes.total.changed,
-                                    updating = pendingFilterEdits > 0,
-                                    unapplied = hasUnappliedChanges,
-                                    query = draftQuery,
-                                ),
-                                changedOnly = changedOnly,
-                                onChangedOnlyChange = { changedOnly = it },
-                                presetChip = presetActions?.let { actions ->
-                                    { SourceFilterPresetChip(actions, canSave = canSaveDraft) }
-                                },
-                            )
-                            SourceFilterRootList(
-                                rows = rows,
-                                listState = rootListState,
+                    },
+                    modifier = if (route is SourceFilterRoute.PagedGroup) Modifier.fillMaxSize() else Modifier,
+                    label = "sourceFilterRoute",
+                ) { currentRoute ->
+                    when (currentRoute) {
+                        SourceFilterRoute.Root -> {
+                            val rows = sourceFilterRows(
                                 filters = filters,
+                                isLoading = isLoading,
+                                errorMessage = errorMessage,
+                                validation = validation,
+                                repairIssues = repairIssues,
+                                repairNeedsSave = repairNeedsSave,
+                                hasPendingEdits = pendingFilterEdits > 0,
                                 changes = changes,
-                                groupStates = groupStates,
-                                focus = focus,
-                                onUpdate = updateFilters,
-                                onOpenPagedGroup = {
-                                    filters.pathTo(it)?.let { path -> route = SourceFilterRoute.PagedGroup(path) }
-                                },
-                                onRequestSuggestions = onRequestSuggestions,
-                                onResetGroup = onResetGroup,
-                                onRetry = onRetry,
-                                onSaveRepair = onSaveRepair,
-                                onResolveIssue = onResolveIssue,
-                                onShowAll = { changedOnly = false },
-                                modifier = Modifier.weight(1f),
+                                changedOnly = changedOnly,
+                                isGroupExpanded = { groupStates.of(it).expanded },
                             )
-                            SourceFilterSheetFooter(
-                                onReset = onReset,
-                                resetEnabled = !isLoading,
-                                onApply = filterAndDismiss,
-                                applyEnabled = canSaveDraft && !repairNeedsSave,
-                            )
-                        }
-                    }
-                    is SourceFilterRoute.PagedGroup -> {
-                        val liveFilter = filters.resolvePagedGroup(currentRoute.path)
-                        if (liveFilter == null) {
-                            LaunchedEffect(currentRoute.path) {
-                                leavePagedGroup()
+                            LaunchedEffect(Unit) {
+                                val focusIndex = focus?.firstOrNull() ?: return@LaunchedEffect
+                                val row = rows.indexOfFirst { it is SourceFilterRow.Filter && it.index == focusIndex }
+                                if (row >= 0) rootListState.scrollToItem(row)
+                                focusRevealed = true
                             }
-                            Box(
-                                modifier = Modifier.fillMaxSize(),
-                            )
-                        } else {
-                            PagedGroupFilterContent(
-                                filter = liveFilter,
-                                filterRevision = filterRevision,
-                                onBack = leavePagedGroup,
-                                onFilter = filterAndDismiss,
-                                onReset = { onResetGroup(liveFilter) },
-                                canApply = canSaveDraft && !repairNeedsSave,
-                                onEditItem = { item, value, complete ->
-                                    onEditPagedItem(liveFilter, item, value, complete)
-                                },
-                                onRequestSuggestions = onRequestSuggestions,
-                                onRequestNavigation = { scope, query ->
-                                    onRequestPagedFilterNavigation(liveFilter, scope, query)
-                                },
-                                browseSession = pagedFilterBrowseSession(liveFilter),
-                                pagingSourceFactory = { scope, query, reason, initialAnchor ->
-                                    onRequestPagedFilterItems(
-                                        liveFilter,
-                                        scope,
-                                        query,
-                                        reason,
-                                        initialAnchor,
-                                    )
-                                },
-                            )
+                            LaunchedEffect(pendingReveal) {
+                                val index = pendingReveal ?: return@LaunchedEffect
+                                val row = rows.indexOfFirst { it is SourceFilterRow.Filter && it.index == index }
+                                if (row >= 0) rootListState.animateScrollToItem(row)
+                                pendingReveal = null
+                            }
+                            Column(Modifier.fillMaxHeight(0.9f)) {
+                                SourceFilterRootHeader(
+                                    status = SourceFilterSheetStatus(
+                                        changedCount = changes.total.changed,
+                                        updating = pendingFilterEdits > 0,
+                                        unapplied = hasUnappliedChanges,
+                                        query = draftQuery,
+                                    ),
+                                    changedOnly = changedOnly,
+                                    onChangedOnlyChange = { changedOnly = it },
+                                    presetChip = presetActions?.let { actions ->
+                                        { SourceFilterPresetChip(actions, canSave = canSaveDraft) }
+                                    },
+                                )
+                                validationBar()
+                                SourceFilterRootList(
+                                    rows = rows,
+                                    listState = rootListState,
+                                    filters = filters,
+                                    changes = changes,
+                                    groupStates = groupStates,
+                                    focus = focus,
+                                    onUpdate = updateFilters,
+                                    onOpenPagedGroup = {
+                                        filters.pathTo(it)?.let { path -> route = SourceFilterRoute.PagedGroup(path) }
+                                    },
+                                    onRequestSuggestions = onRequestSuggestions,
+                                    onResetGroup = onResetGroup,
+                                    onRetry = onRetry,
+                                    onSaveRepair = onSaveRepair,
+                                    onResolveIssue = onResolveIssue,
+                                    onShowAll = { changedOnly = false },
+                                    modifier = Modifier.weight(1f),
+                                )
+                                SourceFilterSheetFooter(
+                                    onReset = onReset,
+                                    resetEnabled = !isLoading,
+                                    onApply = filterAndDismiss,
+                                    applyEnabled = canSaveDraft && !repairNeedsSave,
+                                    applyBlockedReason = filterApplyBlockedReason(filterValidation, repairNeedsSave),
+                                )
+                            }
+                        }
+                        is SourceFilterRoute.PagedGroup -> {
+                            val liveFilter = filters.resolvePagedGroup(currentRoute.path)
+                            if (liveFilter == null) {
+                                LaunchedEffect(currentRoute.path) {
+                                    leavePagedGroup()
+                                }
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                )
+                            } else {
+                                PagedGroupFilterContent(
+                                    filter = liveFilter,
+                                    filterRevision = filterRevision,
+                                    onBack = leavePagedGroup,
+                                    onFilter = filterAndDismiss,
+                                    onReset = { onResetGroup(liveFilter) },
+                                    canApply = canSaveDraft && !repairNeedsSave,
+                                    onEditItem = { item, value, complete ->
+                                        onEditPagedItem(liveFilter, item, value, complete)
+                                    },
+                                    onRequestSuggestions = onRequestSuggestions,
+                                    onRequestNavigation = { scope, query ->
+                                        onRequestPagedFilterNavigation(liveFilter, scope, query)
+                                    },
+                                    browseSession = pagedFilterBrowseSession(liveFilter),
+                                    pagingSourceFactory = { scope, query, reason, initialAnchor ->
+                                        onRequestPagedFilterItems(
+                                            liveFilter,
+                                            scope,
+                                            query,
+                                            reason,
+                                            initialAnchor,
+                                        )
+                                    },
+                                    banner = validationBar,
+                                )
+                            }
                         }
                     }
                 }

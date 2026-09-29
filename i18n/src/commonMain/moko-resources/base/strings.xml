@@ -2201,7 +2201,8 @@
     <string name="filter_use_value">Use this value</string>
     <string name="filter_remove_value">Remove saved value</string>
     <string name="filter_save_repair">Save repaired preset</string>
-    <string name="filter_validation_help">Check the highlighted values before applying or saving.</string>
+    <string name="filter_problem_summary">%1$s · %2$s</string>
+    <string name="filter_problem_show">Show</string>
     <string name="filter_no_changes">No filters differ from the source defaults</string>
     <string name="filter_show_all">Show all filters</string>
     <string name="filter_save_required">Save the repaired preset before applying it.</string>

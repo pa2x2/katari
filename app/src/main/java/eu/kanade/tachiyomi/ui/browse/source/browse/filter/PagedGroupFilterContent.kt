@@ -77,6 +77,7 @@ internal fun PagedGroupFilterContent(
         EntryFilterPageLoadReason,
         String?,
     ) -> PagingSource<String, EntryFilterPageItem>,
+    banner: @Composable () -> Unit = {},
 ) {
     val scope = browseSession.scope
     val query = browseSession.query
@@ -174,6 +175,7 @@ internal fun PagedGroupFilterContent(
             onFilter = onFilter,
             filterEnabled = canApply,
         )
+        banner()
 
         if (searchOptions != null) {
             OutlinedTextField(

@@ -21,13 +21,14 @@ private fun Modifier.filterField(): Modifier = fillMaxWidth()
 
 /** A free-form text filter. */
 @Composable
-internal fun FilterTextField(label: String, value: String, onValueChange: (String) -> Unit) {
+internal fun FilterTextField(label: String, value: String, isError: Boolean, onValueChange: (String) -> Unit) {
     OutlinedTextField(
         modifier = Modifier.filterField(),
         label = { Text(text = label) },
         value = value,
         onValueChange = onValueChange,
         singleLine = true,
+        isError = isError,
     )
 }
 
@@ -37,6 +38,7 @@ internal fun FilterSelectField(
     label: String,
     options: Array<out Any?>,
     selectedIndex: Int,
+    isError: Boolean,
     onSelect: (Int) -> Unit,
 ) {
     var expanded by remember { mutableStateOf(false) }
@@ -48,6 +50,7 @@ internal fun FilterSelectField(
             onValueChange = {},
             readOnly = true,
             singleLine = true,
+            isError = isError,
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
             colors = ExposedDropdownMenuDefaults.textFieldColors(),
         )

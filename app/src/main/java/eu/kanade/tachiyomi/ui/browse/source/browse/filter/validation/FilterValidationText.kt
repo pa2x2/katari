@@ -1,4 +1,4 @@
-package eu.kanade.tachiyomi.ui.browse.source.browse.filter
+package eu.kanade.tachiyomi.ui.browse.source.browse.filter.validation
 
 import androidx.compose.runtime.Composable
 import eu.kanade.tachiyomi.source.entry.filter.EntryFilterValidationCode

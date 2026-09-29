@@ -20,7 +20,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import eu.kanade.tachiyomi.source.entry.filter.EntryDateFilter
 import eu.kanade.tachiyomi.source.entry.filter.EntryDatePrecision
-import eu.kanade.tachiyomi.ui.browse.source.browse.filter.displayMessage
+import eu.kanade.tachiyomi.ui.browse.source.browse.filter.validation.displayMessage
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

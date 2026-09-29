@@ -11,6 +11,7 @@ import androidx.compose.ui.unit.dp
 import eu.kanade.tachiyomi.source.entry.EntryFilter
 import eu.kanade.tachiyomi.source.entry.EntryFilterTextInput
 import eu.kanade.tachiyomi.source.entry.filter.EntryDateFilter
+import eu.kanade.tachiyomi.source.entry.filter.validationIssues
 import eu.kanade.tachiyomi.source.filter.hasFailedSourceCallback
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.change.FilterChanges
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.control.FilterCheckboxRow
@@ -24,6 +25,8 @@ import eu.kanade.tachiyomi.ui.browse.source.browse.filter.date.DateFilterItem
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.group.FilterGroupUiState
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.group.GroupFilterHeader
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.group.GroupFilterItem
+import eu.kanade.tachiyomi.ui.browse.source.browse.filter.validation.LocalFilterValidation
+import eu.kanade.tachiyomi.ui.browse.source.browse.filter.validation.displayMessage
 import mihon.entry.interactions.catalogue.EntryCatalogueFilterSuggestionsResult
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -48,6 +51,7 @@ internal fun FilterItem(
     leadingDivider: Boolean = true,
     groupState: FilterGroupUiState? = null,
 ) {
+    val invalid = LocalFilterValidation.current.isInvalid(filter)
     Column {
         when (filter) {
             is EntryFilter.Header -> FilterSourceHeader(filter.name)
@@ -57,16 +61,16 @@ internal fun FilterItem(
                 onUpdate()
             }
             is EntryFilter.TriState -> FilterTriStateRow(filter, onUpdate)
-            is EntryDateFilter -> DateFilterItem(filter, onUpdate)
-            is EntryFilter.Autocomplete -> AutocompleteFilterItem(filter, onUpdate, onRequestSuggestions)
-            is EntryFilter.Text -> FilterTextField(filter.name, filter.state) {
+            is EntryDateFilter -> DateFilterItem(filter, invalid, onUpdate)
+            is EntryFilter.Autocomplete -> AutocompleteFilterItem(filter, invalid, onUpdate, onRequestSuggestions)
+            is EntryFilter.Text -> FilterTextField(filter.name, filter.state, invalid) {
                 filter.state = it
                 onUpdate()
             }
             is EntryFilter.Select<*> -> if (filter.isOrdering) {
                 FilterOrderingSelectRow(filter, onUpdate)
             } else {
-                FilterSelectField(filter.name, filter.values, filter.state) {
+                FilterSelectField(filter.name, filter.values, filter.state, invalid) {
                     filter.state = it
                     onUpdate()
                 }
@@ -110,6 +114,17 @@ internal fun FilterItem(
                     bottom = 12.dp,
                 ),
             )
+        }
+        // Groups list their issues under their options and date filters under their value.
+        if (filter !is EntryFilter.Group<*> && filter !is EntryDateFilter) {
+            filter.validationIssues().forEach {
+                Text(
+                    it.displayMessage(),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(horizontal = FilterSheetInsets.Horizontal),
+                )
+            }
         }
         if (filter.hasFailedSourceCallback()) {
             Text(

@@ -14,7 +14,6 @@ import eu.kanade.tachiyomi.source.entry.EntryFilter
 import eu.kanade.tachiyomi.source.entry.EntryFilterList
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.FilterPresetRepairItem
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.control.FilterSheetInsets
-import eu.kanade.tachiyomi.ui.browse.source.browse.filter.displayMessage
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -51,16 +50,6 @@ internal fun SourceFilterRowContent(
             }
         }
         is SourceFilterRow.RepairIssue -> FilterPresetRepairItem(row.issue, filters, onResolveIssue, repairFilterItem)
-        is SourceFilterRow.ValidationSummary -> Column(blockModifier) {
-            Text(stringResource(MR.strings.filter_validation_help), color = MaterialTheme.colorScheme.error)
-            row.issues.forEach {
-                Text(
-                    it.displayMessage(),
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall,
-                )
-            }
-        }
         SourceFilterRow.NoChanges -> Column(blockModifier) {
             Text(stringResource(MR.strings.filter_no_changes))
             TextButton(onClick = onShowAll) { Text(stringResource(MR.strings.filter_show_all)) }

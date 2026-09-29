@@ -277,4 +277,14 @@
         <item quantity="one">%1$d update failed</item>
         <item quantity="other">%1$d updates failed</item>
     </plurals>
+
+    <plurals name="filter_problem_count">
+        <item quantity="one">%1$d problem</item>
+        <item quantity="other">%1$d problems</item>
+    </plurals>
+
+    <plurals name="filter_fix_problems_to_apply">
+        <item quantity="one">Fix %1$d problem to apply</item>
+        <item quantity="other">Fix %1$d problems to apply</item>
+    </plurals>
 </resources>

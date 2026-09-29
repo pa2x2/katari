@@ -19,8 +19,6 @@ internal sealed interface SourceFilterRow {
 
     data class RepairIssue(val issue: FilterRestoreIssue) : SourceFilterRow
 
-    data class ValidationSummary(val issues: List<EntryFilterValidationIssue>) : SourceFilterRow
-
     data object NoChanges : SourceFilterRow
 
     /** Separates the ordering block from the filters that narrow results. */
@@ -73,7 +71,6 @@ internal fun sourceFilterRows(
                 )
                 repairIssues.forEach { add(SourceFilterRow.RepairIssue(it)) }
             }
-            if (validation.isNotEmpty()) add(SourceFilterRow.ValidationSummary(validation))
             val shown = filters.withIndex().filter { (_, filter) ->
                 !changedOnly || changes[filter].isChanged || filter.validationIssues().isNotEmpty()
             }
