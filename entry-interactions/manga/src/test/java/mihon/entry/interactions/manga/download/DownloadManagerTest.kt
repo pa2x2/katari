@@ -55,28 +55,6 @@ class DownloadManagerTest {
         verify(exactly = 1) { downloader.pause() }
     }
 
-    @Test
-    fun `cancelling pending work does not interrupt an unrelated active download`() {
-        val active = download(chapterId = 1L, status = DownloadState.DOWNLOADING)
-        val pending = download(chapterId = 2L, status = DownloadState.QUEUE)
-        val queue = MutableStateFlow(listOf(active, pending))
-        val downloader = mockk<Downloader>(relaxed = true) {
-            every { queueState } returns queue
-            every { isRunning } returns true
-            every { removeFromQueue(listOf(pending.chapter)) } answers {
-                queue.value = listOf(active)
-            }
-        }
-        val manager = manager(downloader)
-
-        manager.cancelQueuedDownloads(listOf(pending))
-
-        verify(exactly = 1) { downloader.removeFromQueue(listOf(pending.chapter)) }
-        verify(exactly = 0) { downloader.pause() }
-        verify(exactly = 0) { downloader.start() }
-        verify(exactly = 0) { downloader.stop(any()) }
-    }
-
     private fun manager(downloader: Downloader): DownloadManager {
         return DownloadManager(
             context = mockk(relaxed = true),

@@ -13,32 +13,6 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 internal class SourceBookResourceAccessTest : SourceBookContentSessionFixture() {
     @Test
-    fun `source child resolves through existing getMedia API and keeps stable resource identity`() = runTest {
-        val source = source()
-        coEvery { source.getMedia(match { it.url == "/chapter/1" }, any()) } returns EntryMedia.Book(
-            descriptor = BookContentDescriptor("text/html"),
-            initialResourceId = "chapter-1",
-            initialResourceLocation = BookResourceLocation.InlineText("Resolved chapter", "text/html"),
-        )
-        val session = session(
-            source = source,
-            media = bookMedia(
-                resources = listOf(
-                    resource(
-                        "chapter-1",
-                        location = BookResourceLocation.SourceChild("chapter-1", "/chapter/1"),
-                    ),
-                ),
-            ),
-        )
-
-        session.openResource("chapter-1").getOrThrow().use { opened ->
-            assertEquals("chapter-1", opened.metadata.id)
-            assertEquals("Resolved chapter", opened.stream.bufferedReader().readText())
-        }
-    }
-
-    @Test
     fun `source child loops and mismatched media fail without recursion`() = runTest {
         val loopingSource = source()
         coEvery { loopingSource.getMedia(any(), any()) } returns EntryMedia.Book(

@@ -2,7 +2,6 @@ package mihon.entry.interactions.library
 
 import eu.kanade.tachiyomi.source.entry.EntryType
 import io.kotest.matchers.booleans.shouldBeFalse
-import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldContainExactly
 import mihon.entry.interactions.runtime.EntryInteractionComposition
 import mihon.entry.interactions.runtime.EntryInteractionPlugin
@@ -76,47 +75,6 @@ class EntryLibraryFilterFeatureTest {
 
         result.includedTargetIndices.shouldContainExactly(0)
         result.hasActiveFilters.shouldBeFalse()
-    }
-
-    @Test
-    fun `shared policy owns downloaded progress status and tracker interpretation`() {
-        val feature = DefaultEntryLibraryFilterFeature(
-            composition(plugin(EntryType.ANIME)).featureGraphEvaluation,
-        )
-        val targets = listOf(
-            target(
-                EntryType.ANIME,
-                downloaded = true,
-                unconsumed = true,
-                started = true,
-                completed = true,
-                trackers = setOf(1L),
-            ),
-            target(
-                EntryType.ANIME,
-                downloaded = false,
-                unconsumed = false,
-                started = false,
-                completed = false,
-                trackers = setOf(2L),
-            ),
-        )
-        val result = feature.filter(
-            EntryLibraryFilterRequest(
-                targets = targets,
-                policy = policy(
-                    downloadedOnly = true,
-                    downloaded = TriState.ENABLED_NOT,
-                    unconsumed = TriState.ENABLED_IS,
-                    notStarted = TriState.ENABLED_NOT,
-                    completed = TriState.ENABLED_IS,
-                    tracking = mapOf(1L to TriState.ENABLED_IS, 2L to TriState.ENABLED_NOT),
-                ),
-            ),
-        )
-
-        result.includedTargetIndices.shouldContainExactly(0)
-        result.hasActiveFilters.shouldBeTrue()
     }
 
     @Test

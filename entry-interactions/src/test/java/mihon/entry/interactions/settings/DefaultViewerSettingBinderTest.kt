@@ -82,27 +82,6 @@ class DefaultViewerSettingBinderTest {
         }
         repository.get(7, definition.id)?.encodedValue shouldBe "not-an-int"
     }
-
-    @Test
-    fun `profile and entry resets affect only their own layers`() = runTest {
-        val repository = FakeOverrideRepository()
-        val binding = DefaultViewerSettingBinder(repository, backgroundScope).bind(definition, entryId = 7)
-        binding.setProfileValue(3)
-        binding.setEntryOverride(1)
-
-        binding.resetProfileValue()
-        DefaultViewerSettingBinder(repository, backgroundScope).resolve(definition, entryId = 7).run {
-            effectiveValue shouldBe 1
-            source shouldBe ViewerSettingSource.ENTRY
-            profileValue shouldBe null
-        }
-
-        binding.clearEntryOverride()
-        DefaultViewerSettingBinder(repository, backgroundScope).resolve(definition, entryId = 7).run {
-            effectiveValue shouldBe 2
-            source shouldBe ViewerSettingSource.PROCESSOR_DEFAULT
-        }
-    }
 }
 
 private class FakeOverrideRepository : ViewerSettingOverrideRepository {

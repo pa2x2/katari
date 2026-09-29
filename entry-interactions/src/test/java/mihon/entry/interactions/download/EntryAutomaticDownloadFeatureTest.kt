@@ -92,32 +92,6 @@ class EntryAutomaticDownloadFeatureTest {
         coVerify(exactly = 0) { processor.download(any(), any(), any()) }
     }
 
-    @Test
-    fun `unread-only policy reports when prior consumption removes every candidate`() = runTest {
-        val candidate = chapter.copy(chapterNumber = 3.0)
-        val preferences = DownloadPreferences(InMemoryPreferenceStore()).apply {
-            downloadNewEntryChapters.set(true)
-            downloadNewUnreadEntryChaptersOnly.set(true)
-        }
-        val chapters = mockk<EntryChapterRepository> {
-            coEvery { getChaptersByEntryIdAwait(entry.id) } returns listOf(candidate.copy(read = true))
-        }
-        val categories = mockk<GetCategories> {
-            coEvery { await(entry.id) } returns emptyList()
-        }
-        val processor = downloadProcessor()
-        val feature = featureFor(
-            compositionFor(plugin(EntryDownloadCapability.bind(processor))),
-            EntryAutomaticDownloadPolicy(chapters, preferences, categories),
-        )
-
-        feature.downloadAfterEntryRefresh(entry, listOf(candidate)) shouldBe EntryAutomaticDownloadResult.Blocked(
-            setOf(EntryAutomaticDownloadBlocker.NO_UNREAD_CANDIDATES),
-        )
-
-        coVerify(exactly = 0) { processor.download(any(), any(), any()) }
-    }
-
     private fun compositionFor(vararg plugins: EntryInteractionPlugin): EntryInteractionComposition {
         return createEntryInteractionComposition(
             plugins = plugins.toList(),

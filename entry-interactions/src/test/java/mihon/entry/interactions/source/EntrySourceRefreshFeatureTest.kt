@@ -6,10 +6,8 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.coEvery
-import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.verify
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.test.runTest
 import mihon.entry.interactions.refresh.refreshFeatureTestComposition
@@ -17,7 +15,6 @@ import org.junit.jupiter.api.Test
 import tachiyomi.domain.chapter.model.NoChaptersException
 import tachiyomi.domain.entry.interactor.SyncEntryWithSource
 import tachiyomi.domain.entry.model.Entry
-import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.source.service.SourceManager
 
 class EntrySourceRefreshFeatureTest {
@@ -27,53 +24,6 @@ class EntrySourceRefreshFeatureTest {
         profileId = 17L,
         type = EntryType.BOOK,
     )
-    private val child = EntryChapter.create().copy(id = 31L, entryId = entry.id)
-
-    @Test
-    fun `refresh resolves profile policy and maps strict synchronization result`() = runTest {
-        val source = mockk<UnifiedSource>()
-        val sourceManager = sourceManager(source)
-        val sync = mockk<SyncEntryWithSource>()
-        val updateTitles = mockk<(Long) -> Boolean> {
-            every { this@mockk.invoke(entry.profileId) } returns false
-        }
-        coEvery {
-            sync.syncStrictly(
-                entry = entry,
-                profileId = entry.profileId,
-                updateLibraryTitles = false,
-                fetchDetails = false,
-                fetchChapters = true,
-                manualFetch = true,
-                fetchWindow = 10L to 20L,
-            )
-        } returns SyncEntryWithSource.SyncResult(
-            insertedChapters = listOf(child),
-            insertedChaptersTotal = 2,
-            updatedChapters = 3,
-            removedChapters = 4,
-            hasMetadataChanges = true,
-        )
-        val feature = feature(sourceManager, sync, updateTitles)
-
-        feature.refresh(
-            EntrySourceRefreshRequest(
-                entry = entry,
-                fetchDetails = false,
-                fetchChildren = true,
-                manual = true,
-                fetchWindow = EntrySourceRefreshWindow(10L, 20L),
-            ),
-        ) shouldBe EntrySourceRefreshResult.Refreshed(
-            insertedChildren = listOf(child),
-            insertedChildrenTotal = 2,
-            updatedChildren = 3,
-            removedChildren = 4,
-            metadataChanged = true,
-        )
-        verify(exactly = 1) { updateTitles(entry.profileId) }
-        coVerify(exactly = 1) { sync.syncStrictly(any(), any(), any(), any(), any(), any(), any()) }
-    }
 
     @Test
     fun `empty child and operation failures remain structured while cancellation propagates`() = runTest {

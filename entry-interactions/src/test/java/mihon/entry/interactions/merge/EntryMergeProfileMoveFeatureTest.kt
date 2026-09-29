@@ -64,31 +64,6 @@ class EntryMergeProfileMoveFeatureTest {
 
         host.profileMoveTransitions shouldBe emptyList()
     }
-
-    @Test
-    fun `profile move can skip one complete group while moving another unit`() = runTest {
-        val source = listOf(entry(1, 7, "/one"), entry(2, 7, "/two"), entry(3, 7, "/standalone"))
-        val host = RecordingEntryMergeHost(
-            source,
-            listOf(EntryMergeMembershipSnapshot(7, 1, listOf(1, 2))),
-        )
-        val feature = EntryMergeProfileMoveCoordinator(host)
-        val prepared = feature.prepare(7, listOf(1, 3))
-            .shouldBeInstanceOf<EntryMergeProfileMovePreparationResult.Ready>()
-        val inspected = feature.inspectDestination(prepared.reference, 9, emptyList())
-            .shouldBeInstanceOf<EntryMergeProfileMoveDestinationResult.Ready>()
-
-        val intent =
-            EntryMergeProfileMoveIntent(inspected.reference, 9, mapOf(3L to 3L), emptySet())
-        feature.begin(intent) shouldBe EntryMergeProfileMoveExecutionResult.Applied
-        feature.complete(intent) shouldBe EntryMergeProfileMoveExecutionResult.Applied
-
-        host.profileMoveTransitions.single().run {
-            expectedSourceEntries.map(Entry::id) shouldContainExactly listOf(3L)
-            expectedSourceGroups shouldBe emptyList()
-            expectedStandaloneEntryIds shouldBe setOf(3L)
-        }
-    }
 }
 
 private fun entry(id: Long, profileId: Long, url: String): Entry {

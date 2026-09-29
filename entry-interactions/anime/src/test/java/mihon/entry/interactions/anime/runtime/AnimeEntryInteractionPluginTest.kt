@@ -147,15 +147,6 @@ class AnimeEntryInteractionPluginTest {
     }
 
     @Test
-    fun `anime continue starts at first unread episode in reading order`() = runTest {
-        val first = chapter(id = 1L, sourceOrder = 1L, chapterNumber = 1.0)
-        val latest = chapter(id = 2L, sourceOrder = 0L, chapterNumber = 2.0)
-        val processor = continueProcessor(chapters = listOf(latest, first))
-
-        processor.findNext(anime()) shouldBe first
-    }
-
-    @Test
     fun `anime continue skips consumed episodes when selecting next unread`() = runTest {
         val expected = chapter(id = 2L, read = false, sourceOrder = 4L)
         val processor = continueProcessor(

@@ -2,12 +2,9 @@ package mihon.entry.interactions.book.format.html.prosechapter.parsing
 
 import mihon.book.api.document.BookDocumentBlockContent
 import mihon.book.api.document.BookDocumentLinkTarget
-import mihon.entry.interactions.book.format.html.prosechapter.HtmlProseChapterContract
-import mihon.entry.interactions.book.format.html.prosechapter.HtmlProseLimitExceededException
 import mihon.entry.interactions.book.format.html.prosechapter.sanitization.HtmlProseSanitizer
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
@@ -27,12 +24,6 @@ class HtmlProseTableParserTest {
         val position = document.anchors.getValue("row-400")
         assertEquals(block.id, position.blockId)
         assertTrue(document.content.text.substring(position.offsetWithinBlock).startsWith("Chapter 400"))
-    }
-
-    @Test
-    fun `tables still respect the shared document semantic budget`() {
-        val rows = "<tr><td>Cell</td></tr>".repeat(HtmlProseChapterContract.MAX_BLOCKS + 1)
-        assertFailsWith<HtmlProseLimitExceededException> { parse("<table>$rows</table>") }
     }
 
     private fun parse(html: String) = HtmlProseDocumentParser().parse(

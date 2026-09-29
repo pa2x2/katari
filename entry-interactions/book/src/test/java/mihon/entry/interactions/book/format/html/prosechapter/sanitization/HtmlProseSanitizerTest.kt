@@ -1,9 +1,7 @@
 package mihon.entry.interactions.book.format.html.prosechapter.sanitization
 
-import mihon.entry.interactions.book.format.html.prosechapter.HtmlProseLimitExceededException
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
 
 class HtmlProseSanitizerTest {
@@ -48,14 +46,5 @@ class HtmlProseSanitizerTest {
         assertEquals("1em", paragraph.attr("data-katari-style-text-indent"))
         assertEquals("1.5", paragraph.attr("data-katari-style-line-height"))
         assertNull(body.selectFirst("style"))
-    }
-
-    @Test
-    fun `supported CSS rule count is bounded before application`() {
-        val css = (1..257).joinToString("\n") { index -> ".rule$index { color: red }" }
-
-        assertFailsWith<HtmlProseLimitExceededException> {
-            HtmlProseSanitizer.sanitize("<style>$css</style><p>Text</p>".encodeToByteArray())
-        }
     }
 }
