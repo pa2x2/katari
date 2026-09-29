@@ -213,6 +213,7 @@
     <string name="action_save">Save</string>
     <string name="action_set_as_root">Set as root</string>
     <string name="action_reset">Reset</string>
+    <string name="action_review">Review</string>
     <string name="action_open_default_reader_settings">Default reader settings</string>
     <string name="action_show_password">Show password</string>
     <string name="action_hide_password">Hide password</string>
@@ -2160,6 +2161,7 @@
     <string name="filter_other_settings">Other settings</string>
     <string name="filter_updating">Updating selections…</string>
     <string name="filter_unapplied">Unapplied changes</string>
+    <string name="browse_search_kept_filter_changes">Search used your applied filters. Unapplied filter changes were kept.</string>
     <string name="filter_feed_repair">This preset needs repair before the feed can load new results. Saved items remain available.</string>
     <string name="filter_preset_name">Preset: %1$s</string>
     <string name="filter_query">Search: %1$s</string>

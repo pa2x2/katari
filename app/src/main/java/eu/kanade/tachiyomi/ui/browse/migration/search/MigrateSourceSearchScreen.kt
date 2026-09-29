@@ -24,6 +24,7 @@ import eu.kanade.presentation.browse.CatalogContent
 import eu.kanade.presentation.components.AppSnackbarHost
 import eu.kanade.presentation.components.SearchToolbar
 import eu.kanade.presentation.util.Screen
+import eu.kanade.tachiyomi.ui.browse.catalog.CatalogScreenEventsEffect
 import eu.kanade.tachiyomi.ui.browse.catalog.CatalogScreenModel
 import eu.kanade.tachiyomi.ui.browse.catalog.FilterUiState
 import eu.kanade.tachiyomi.ui.browse.source.browse.SourceFilterDialog
@@ -79,6 +80,7 @@ data class MigrateSourceSearchScreen(
         val migrationFailureMessage = stringResource(MR.strings.internal_error)
 
         val catalogList = screenModel.catalogPagerFlowFlow.collectAsLazyPagingItems()
+        CatalogScreenEventsEffect(screenModel, snackbarHostState)
 
         Scaffold(
             topBar = { scrollBehavior ->

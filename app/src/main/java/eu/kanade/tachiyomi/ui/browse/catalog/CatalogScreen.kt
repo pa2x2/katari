@@ -130,6 +130,7 @@ data class CatalogScreen(
         val snackbarHostState = remember { SnackbarHostState() }
 
         val catalogList = screenModel.catalogPagerFlowFlow.collectAsLazyPagingItems()
+        CatalogScreenEventsEffect(screenModel, snackbarHostState)
         var presetPendingDeletion by rememberSaveable { mutableStateOf<String?>(null) }
         var immersiveMode by rememberSaveable(sourceId) { mutableStateOf(false) }
         val immersivePositionState = rememberEntryImmersivePositionState(resetKey = state.listing)
@@ -223,10 +224,7 @@ data class CatalogScreen(
                         ) {
                             FilterChip(
                                 selected = state.listing == CatalogScreenModel.Listing.Popular,
-                                onClick = {
-                                    screenModel.resetFilters()
-                                    screenModel.setListing(CatalogScreenModel.Listing.Popular)
-                                },
+                                onClick = { screenModel.setListing(CatalogScreenModel.Listing.Popular) },
                                 leadingIcon = {
                                     Icon(
                                         imageVector = Icons.Outlined.Favorite,
@@ -239,10 +237,7 @@ data class CatalogScreen(
                             if (screenModel.supportsLatest) {
                                 FilterChip(
                                     selected = state.listing == CatalogScreenModel.Listing.Latest,
-                                    onClick = {
-                                        screenModel.resetFilters()
-                                        screenModel.setListing(CatalogScreenModel.Listing.Latest)
-                                    },
+                                    onClick = { screenModel.setListing(CatalogScreenModel.Listing.Latest) },
                                     leadingIcon = {
                                         Icon(
                                             imageVector = Icons.Outlined.NewReleases,
@@ -256,7 +251,7 @@ data class CatalogScreen(
                             if (state.filters.isNotEmpty() || screenModel.hasFilterCapability) {
                                 FilterChip(
                                     selected = state.listing is CatalogScreenModel.Listing.Search,
-                                    onClick = screenModel::openFilterSheet,
+                                    onClick = screenModel::onFilterChipClick,
                                     leadingIcon = {
                                         Icon(
                                             imageVector = Icons.Outlined.FilterList,
