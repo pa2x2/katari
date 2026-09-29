@@ -16,7 +16,7 @@ import eu.kanade.tachiyomi.source.filter.hasFailedSourceCallback
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.change.FilterChanges
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.control.FilterCheckboxRow
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.control.FilterOrderingSelectRow
-import eu.kanade.tachiyomi.ui.browse.source.browse.filter.control.FilterSelectField
+import eu.kanade.tachiyomi.ui.browse.source.browse.filter.control.FilterSelectControl
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.control.FilterSheetInsets
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.control.FilterSortRow
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.control.FilterTextField
@@ -71,7 +71,7 @@ internal fun FilterItem(
             is EntryFilter.Select<*> -> if (filter.isOrdering) {
                 FilterOrderingSelectRow(filter, onUpdate)
             } else {
-                FilterSelectField(filter.name, filter.values, filter.state, invalid) {
+                FilterSelectControl(filter.name, filter.values, filter.state, invalid) {
                     filter.state = it
                     onUpdate()
                 }

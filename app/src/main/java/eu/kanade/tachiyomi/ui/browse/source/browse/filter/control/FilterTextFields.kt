@@ -2,21 +2,23 @@ package eu.kanade.tachiyomi.ui.browse.source.browse.filter.control
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExposedDropdownMenu
-import androidx.compose.material3.ExposedDropdownMenuAnchorType
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Clear
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.input.ImeAction
+import tachiyomi.i18n.*
+import tachiyomi.presentation.core.i18n.stringResource
 
-private fun Modifier.filterField(): Modifier = fillMaxWidth()
+internal fun Modifier.filterField(): Modifier = fillMaxWidth()
     .padding(horizontal = FilterSheetInsets.Horizontal, vertical = FilterSheetInsets.FieldVertical)
 
 /** A free-form text filter. */
@@ -29,46 +31,25 @@ internal fun FilterTextField(label: String, value: String, isError: Boolean, onV
         onValueChange = onValueChange,
         singleLine = true,
         isError = isError,
+        trailingIcon = { FilterFieldClearButton(label, visible = value.isNotEmpty()) { onValueChange("") } },
+        keyboardOptions = FilterFieldKeyboardOptions,
+        keyboardActions = filterFieldKeyboardActions(),
     )
 }
 
-/** A single-choice filter presented as a dropdown field. */
+/** Text filters move on to the field below; the last one closes the keyboard instead of wrapping to the top. */
+internal val FilterFieldKeyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
+
 @Composable
-internal fun FilterSelectField(
-    label: String,
-    options: Array<out Any?>,
-    selectedIndex: Int,
-    isError: Boolean,
-    onSelect: (Int) -> Unit,
-) {
-    var expanded by remember { mutableStateOf(false) }
-    ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }) {
-        OutlinedTextField(
-            modifier = Modifier.filterField().menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
-            label = { Text(text = label) },
-            value = options.getOrNull(selectedIndex)?.toString().orEmpty(),
-            onValueChange = {},
-            readOnly = true,
-            singleLine = true,
-            isError = isError,
-            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-            colors = ExposedDropdownMenuDefaults.textFieldColors(),
-        )
-        ExposedDropdownMenu(
-            modifier = Modifier.exposedDropdownSize(),
-            expanded = expanded,
-            onDismissRequest = { expanded = false },
-        ) {
-            options.forEachIndexed { index, option ->
-                DropdownMenuItem(
-                    text = { Text(option.toString()) },
-                    onClick = {
-                        onSelect(index)
-                        expanded = false
-                    },
-                    contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
-                )
-            }
-        }
+internal fun filterFieldKeyboardActions(): KeyboardActions {
+    val focusManager = LocalFocusManager.current
+    return KeyboardActions(onNext = { if (!focusManager.moveFocus(FocusDirection.Down)) focusManager.clearFocus() })
+}
+
+@Composable
+internal fun FilterFieldClearButton(label: String, visible: Boolean, onClear: () -> Unit) {
+    if (!visible) return
+    IconButton(onClick = onClear) {
+        Icon(Icons.Outlined.Clear, contentDescription = stringResource(MR.strings.filter_clear_value, label))
     }
 }

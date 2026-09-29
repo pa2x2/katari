@@ -27,6 +27,10 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import eu.kanade.tachiyomi.source.entry.EntryFilter
 import eu.kanade.tachiyomi.source.entry.EntryFilterTextInput
+import eu.kanade.tachiyomi.ui.browse.source.browse.filter.control.FilterFieldClearButton
+import eu.kanade.tachiyomi.ui.browse.source.browse.filter.control.FilterFieldKeyboardOptions
+import eu.kanade.tachiyomi.ui.browse.source.browse.filter.control.FilterSheetInsets
+import eu.kanade.tachiyomi.ui.browse.source.browse.filter.control.filterFieldKeyboardActions
 import mihon.entry.interactions.catalogue.EntryCatalogueFilterSuggestionsResult
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -73,6 +77,18 @@ internal fun AutocompleteFilterItem(
         is FilterAutocompleteUiState.Error -> true
     }
 
+    fun updateField(value: TextFieldValue) {
+        fieldValue = value
+        val textChanged = controller.updateInput(
+            EntryFilterTextInput(
+                text = value.text,
+                selectionStart = value.selection.start,
+                selectionEnd = value.selection.end,
+            ),
+        )
+        if (textChanged) onUpdate()
+    }
+
     ExposedDropdownMenuBox(
         expanded = expanded,
         onExpandedChange = { shouldExpand ->
@@ -87,24 +103,19 @@ internal fun AutocompleteFilterItem(
             modifier = Modifier
                 .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryEditable)
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 4.dp)
+                .padding(horizontal = FilterSheetInsets.Horizontal, vertical = FilterSheetInsets.FieldVertical)
                 .onFocusChanged { controller.updateFocus(it.isFocused) },
             label = { Text(text = filter.name) },
             isError = isError,
             value = fieldValue,
-            onValueChange = { value ->
-                fieldValue = value
-                val textChanged = controller.updateInput(
-                    EntryFilterTextInput(
-                        text = value.text,
-                        selectionStart = value.selection.start,
-                        selectionEnd = value.selection.end,
-                    ),
-                )
-                if (textChanged) {
-                    onUpdate()
+            onValueChange = ::updateField,
+            trailingIcon = {
+                FilterFieldClearButton(filter.name, visible = fieldValue.text.isNotEmpty()) {
+                    updateField(TextFieldValue())
                 }
             },
+            keyboardOptions = FilterFieldKeyboardOptions,
+            keyboardActions = filterFieldKeyboardActions(),
             singleLine = true,
         )
 
