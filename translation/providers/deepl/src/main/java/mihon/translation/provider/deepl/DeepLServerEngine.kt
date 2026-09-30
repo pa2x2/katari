@@ -20,6 +20,7 @@ import mihon.translation.api.request.TranslationContext
 import mihon.translation.provider.deepl.protocol.DeepLException
 import mihon.translation.provider.deepl.protocol.DeepLFailureKind
 import mihon.translation.provider.deepl.protocol.DeepLLanguageResolver
+import mihon.translation.provider.deepl.protocol.DeepLLanguages
 import mihon.translation.provider.deepl.protocol.DeepLService
 import mihon.translation.provider.deepl.protocol.toDeepLContext
 import mihon.translation.provider.server.ServerConnectionSettings
@@ -107,27 +108,30 @@ internal class DeepLServerEngine(
     override suspend fun prepare(route: ResolvedTranslationRoute): TranslationEnginePreparation {
         if (!settings.isInitiallyVerified) return setupRequired()
         val service = serviceFactory() ?: return setupRequired()
-        val languages = try {
-            catalog.languages(service)
+        return try {
+            val languages = catalog.languages(service)
+            if (!settings.disclosureAccepted) {
+                return TranslationEnginePreparation.ProviderDisclosureRequired(DISCLOSURE)
+            }
+            // A language may have been added to the server since its languages were remembered.
+            ready(route, languages)
+                ?: catalog.refreshed(service, languages)?.let { ready(route, it) }
+                ?: TranslationEnginePreparation.Unavailable(
+                    TranslationUnavailableReason.UnsupportedLanguagePair(route.sourceLanguage, route.targetLanguage),
+                )
         } catch (error: CancellationException) {
             throw error
         } catch (error: DeepLException) {
-            if (error.kind == DeepLFailureKind.Unauthorized) return setupRequired()
-            return unreachable()
+            if (error.kind == DeepLFailureKind.Unauthorized) setupRequired() else unreachable()
         } catch (_: Exception) {
-            return unreachable()
+            unreachable()
         }
-        if (!settings.disclosureAccepted) {
-            return TranslationEnginePreparation.ProviderDisclosureRequired(DISCLOSURE)
-        }
+    }
+
+    private fun ready(route: ResolvedTranslationRoute, languages: DeepLLanguages): TranslationEnginePreparation? {
         val resolver = DeepLLanguageResolver(languages)
-        val source = resolver.source(route.sourceLanguage)
-        val target = resolver.target(route.targetLanguage)
-        if (source == null || target == null) {
-            return TranslationEnginePreparation.Unavailable(
-                TranslationUnavailableReason.UnsupportedLanguagePair(route.sourceLanguage, route.targetLanguage),
-            )
-        }
+        val source = resolver.source(route.sourceLanguage) ?: return null
+        val target = resolver.target(route.targetLanguage) ?: return null
         return TranslationEnginePreparation.Ready(ReadyRequest(route, source, target))
     }
 
