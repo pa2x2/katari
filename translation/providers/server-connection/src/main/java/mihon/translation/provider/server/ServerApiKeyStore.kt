@@ -15,14 +15,23 @@ internal interface ServerApiKeyStore {
     fun write(value: String)
 }
 
-/** Keeps an API key in [preferences] only as ciphertext of the Android Keystore key [keyAlias]. */
+/**
+ * Keeps an API key in [preferences] only as ciphertext of the Android Keystore key [keyAlias].
+ *
+ * The key is read before every call to the server, so it is decrypted once and remembered for as long as the stored
+ * ciphertext stays the one it was decrypted from, whichever store wrote it.
+ */
 internal class AndroidKeystoreApiKeyStore(
     private val preferences: SharedPreferences,
     private val keyAlias: String,
 ) : ServerApiKeyStore {
+    @Volatile
+    private var decrypted: Decrypted? = null
+
     override fun read(): String? {
         val encoded = preferences.getString(CIPHERTEXT_KEY, null) ?: return null
         val iv = preferences.getString(IV_KEY, null) ?: return null
+        decrypted?.takeIf { it.ciphertext == encoded && it.iv == iv }?.let { return it.key }
         return runCatching {
             val cipher = Cipher.getInstance(TRANSFORMATION)
             cipher.init(
@@ -31,7 +40,7 @@ internal class AndroidKeystoreApiKeyStore(
                 GCMParameterSpec(128, Base64.decode(iv, Base64.NO_WRAP)),
             )
             cipher.doFinal(Base64.decode(encoded, Base64.NO_WRAP)).toString(Charsets.UTF_8)
-        }.getOrNull()
+        }.getOrNull()?.also { decrypted = Decrypted(encoded, iv, it) }
     }
 
     override fun write(value: String) {
@@ -66,6 +75,12 @@ internal class AndroidKeystoreApiKeyStore(
             generateKey()
         }
     }
+
+    private class Decrypted(
+        val ciphertext: String,
+        val iv: String,
+        val key: String,
+    )
 
     private companion object {
         const val TRANSFORMATION = "AES/GCM/NoPadding"
