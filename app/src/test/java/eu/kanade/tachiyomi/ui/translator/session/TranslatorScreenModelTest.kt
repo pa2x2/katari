@@ -3,6 +3,7 @@ package eu.kanade.tachiyomi.ui.translator.session
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
@@ -38,10 +39,12 @@ import mihon.translation.api.provider.TranslationInvocationPolicy
 import mihon.translation.api.provider.TranslationProviderDisclosure
 import mihon.translation.api.provider.TranslationProviderPresentation
 import mihon.translation.api.request.ResolvedTranslationRequest
+import mihon.translation.api.request.TranslationBatch
 import mihon.translation.api.request.TranslationRequest
 import mihon.translation.api.request.TranslationRouteRequest
 import mihon.translation.api.request.TranslationSourceLanguageSelection
 import mihon.translation.api.request.TranslationTargetLanguageSelection
+import mihon.translation.api.result.TranslationBatchUpdate
 import mihon.translation.api.result.TranslationExecution
 import mihon.translation.api.result.TranslationResult
 import mihon.tts.api.TtsFeature
@@ -152,6 +155,9 @@ class TranslatorScreenModelTest {
         }
 
         override suspend fun prepareRoute(route: TranslationRouteRequest): TranslationRoutePreparation =
+            error("The translator prepares text")
+
+        override fun translateBatch(batch: TranslationBatch): Flow<TranslationBatchUpdate> =
             error("The translator prepares text")
 
         override suspend fun translate(ready: ReadyTranslation): TranslationExecution {

@@ -7,6 +7,7 @@ import io.mockk.mockk
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import mihon.entry.interactions.manga.reader.text.geometry.MangaDisplayedPageGeometry
 import mihon.entry.interactions.manga.reader.text.geometry.MangaPageTransform
@@ -44,8 +45,10 @@ import mihon.translation.api.provider.TranslationInvocationPolicy
 import mihon.translation.api.provider.TranslationProviderPresentation
 import mihon.translation.api.request.ResolvedTranslationRequest
 import mihon.translation.api.request.ResolvedTranslationRoute
+import mihon.translation.api.request.TranslationBatch
 import mihon.translation.api.request.TranslationRequest
 import mihon.translation.api.request.TranslationRouteRequest
+import mihon.translation.api.result.TranslationBatchUpdate
 import mihon.translation.api.result.TranslationExecution
 import mihon.translation.api.result.TranslationResult
 
@@ -138,6 +141,12 @@ internal class FakeTranslation : TranslationFeature {
             route = ResolvedTranslationRoute(route.sourceLanguage, ENGLISH, TranslationEngineId("example")),
             presentation = PRESENTATION,
         )
+
+    override fun translateBatch(batch: TranslationBatch): Flow<TranslationBatchUpdate> = flow {
+        batch.segments.forEachIndexed { index, text ->
+            emit(TranslationBatchUpdate.Translated(index, text.uppercase()))
+        }
+    }
 
     override suspend fun translate(ready: ReadyTranslation): TranslationExecution {
         val text = (ready as Ready).text

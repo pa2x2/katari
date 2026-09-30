@@ -11,6 +11,7 @@ data class TranslationRequest(
     val targetLanguage: TranslationTargetLanguageSelection = TranslationTargetLanguageSelection.Default,
     val engine: TranslationEngineSelection = TranslationEngineSelection.ProfileDefault,
     val languageContext: TextLanguageResolutionContext = TextLanguageResolutionContext(),
+    val context: TranslationContext = TranslationContext.None,
 )
 
 sealed interface TranslationSourceLanguageSelection {

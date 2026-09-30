@@ -7,7 +7,8 @@ import java.io.IOException
 import java.security.MessageDigest
 
 /**
- * Persistent, size-limited store of inline translations keyed by engine, language pair, and exact text.
+ * Persistent, size-limited store of inline translations keyed by engine, language pair, exact text, and whatever
+ * else influenced the translation, such as the context a contextual engine read.
  *
  * Readers translate the same text again and again (reopened chapters, recognized pages), so answers are kept across
  * sessions; the least recently used ones are evicted first. Storage failures only disable reuse, never translation.
@@ -19,17 +20,17 @@ class TranslationResultCache(
     private val cache by lazy { DiskLruCache.open(directory(), CACHE_VERSION, VALUE_COUNT, maximumBytes) }
 
     @Synchronized
-    fun get(request: ResolvedTranslationRequest): String? = try {
-        cache.get(request.key())?.use { it.getString(0) }?.takeIf(String::isNotBlank)
+    fun get(request: ResolvedTranslationRequest, influences: List<String> = emptyList()): String? = try {
+        cache.get(request.key(influences))?.use { it.getString(0) }?.takeIf(String::isNotBlank)
     } catch (_: IOException) {
         null
     }
 
     @Synchronized
-    fun put(request: ResolvedTranslationRequest, translatedText: String) {
+    fun put(request: ResolvedTranslationRequest, translatedText: String, influences: List<String> = emptyList()) {
         var editor: DiskLruCache.Editor? = null
         try {
-            editor = cache.edit(request.key()) ?: return
+            editor = cache.edit(request.key(influences)) ?: return
             editor.set(0, translatedText)
             editor.commit()
         } catch (_: IOException) {
@@ -37,9 +38,10 @@ class TranslationResultCache(
         }
     }
 
-    private fun ResolvedTranslationRequest.key(): String {
+    /** Without [influences] the key is the one earlier versions stored translations under. */
+    private fun ResolvedTranslationRequest.key(influences: List<String>): String {
         val digest = MessageDigest.getInstance("SHA-256")
-        listOf(engine.value, sourceLanguage.value, targetLanguage.value, text).forEach { part ->
+        (listOf(engine.value, sourceLanguage.value, targetLanguage.value, text) + influences).forEach { part ->
             digest.update(part.toByteArray(Charsets.UTF_8))
             digest.update(0)
         }

@@ -2,6 +2,9 @@ package mihon.translation.runtime.feature
 
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
 import mihon.language.api.identification.TextLanguageDetector
 import mihon.language.api.tag.LanguageTag
@@ -22,14 +25,21 @@ import mihon.translation.api.provider.TranslationProviderOutputMode
 import mihon.translation.api.provider.TranslationProviderPresentation
 import mihon.translation.api.request.ResolvedTranslationRequest
 import mihon.translation.api.request.ResolvedTranslationRoute
+import mihon.translation.api.request.TranslationBatch
+import mihon.translation.api.request.TranslationContext
 import mihon.translation.api.request.TranslationRequest
 import mihon.translation.api.request.TranslationRouteRequest
 import mihon.translation.api.request.TranslationSourceLanguageSelection
 import mihon.translation.api.request.TranslationTargetLanguageSelection
+import mihon.translation.api.result.TranslationBatchUpdate
 import mihon.translation.api.result.TranslationExecution
 import mihon.translation.api.result.TranslationFailureReason
 import mihon.translation.api.result.TranslationResult
+import mihon.translation.runtime.batch.TranslationBatchExecutor
 import mihon.translation.runtime.cache.TranslationResultCache
+import mihon.translation.runtime.context.influences
+import mihon.translation.runtime.context.readBy
+import mihon.translation.spi.engine.ContextualTranslationEngine
 import mihon.translation.spi.engine.KnownTranslationEngineCatalog
 import mihon.translation.spi.engine.ReadyTranslationEngineRequest
 import mihon.translation.spi.engine.TranslationEngine
@@ -37,6 +47,7 @@ import mihon.translation.spi.engine.TranslationEngineExecution
 import mihon.translation.spi.engine.TranslationEnginePreparation
 import mihon.translation.spi.engine.TranslationEngineRegistry
 import mihon.translation.spi.engine.TranslationEngineRequirement
+import mihon.translation.spi.engine.translate
 
 fun interface TranslationDefaultTargetLanguageResolver {
     fun resolve(): TranslationDefaultTarget?
@@ -52,6 +63,7 @@ class DefaultTranslationFeature(
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : TranslationFeature {
     private val automaticLanguageResolver = AutomaticTextLanguageResolver(textLanguageDetectors)
+    private val batchExecutor = TranslationBatchExecutor(resultCache, ioDispatcher)
 
     override suspend fun prepare(request: TranslationRequest): TranslationPreparation {
         if (request.text.isBlank()) {
@@ -85,7 +97,7 @@ class DefaultTranslationFeature(
             targetLanguage = route.targetLanguage,
             engine = route.engine,
         )
-        return engine.prepare(route).toApi(engine, resolvedRequest)
+        return engine.prepare(route).toApi(engine, resolvedRequest, request.context.readBy(engine))
     }
 
     override suspend fun prepareRoute(route: TranslationRouteRequest): TranslationRoutePreparation {
@@ -111,8 +123,9 @@ class DefaultTranslationFeature(
             )
         }
 
+        val influences = prepared.context.influences()
         if (prepared.presentation.outputMode == TranslationProviderOutputMode.InlineResult) {
-            cached(prepared.request)?.let { translatedText ->
+            cached(prepared.request, influences)?.let { translatedText ->
                 return TranslationExecution.Success(prepared.result(translatedText))
             }
         }
@@ -120,21 +133,27 @@ class DefaultTranslationFeature(
         val refreshed = prepared.engine.revalidate(prepared.engineRequest)
         if (refreshed !is TranslationEnginePreparation.Ready) {
             return TranslationExecution.PreparationChanged(
-                refreshed.toApi(prepared.engine, prepared.request),
+                refreshed.toApi(prepared.engine, prepared.request, prepared.context),
             )
         }
 
-        return when (val execution = prepared.engine.translate(refreshed.request, prepared.request.text)) {
+        val engine = prepared.engine
+        val execution = if (engine is ContextualTranslationEngine) {
+            engine.translate(refreshed.request, prepared.request.text, prepared.context)
+        } else {
+            engine.translate(refreshed.request, prepared.request.text)
+        }
+        return when (execution) {
             is TranslationEngineExecution.Success ->
                 if (prepared.presentation.outputMode == TranslationProviderOutputMode.InlineResult) {
-                    remember(prepared.request, execution.translatedText)
+                    remember(prepared.request, execution.translatedText, influences)
                     TranslationExecution.Success(prepared.result(execution.translatedText))
                 } else {
                     invalidProviderOutput(prepared.request.engine)
                 }
 
             is TranslationEngineExecution.PreparationChanged -> TranslationExecution.PreparationChanged(
-                execution.preparation.toApi(prepared.engine, prepared.request),
+                execution.preparation.toApi(prepared.engine, prepared.request, prepared.context),
             )
 
             TranslationEngineExecution.ProviderSurfaceOpened ->
@@ -151,6 +170,25 @@ class DefaultTranslationFeature(
                 ),
             )
         }
+    }
+
+    override fun translateBatch(batch: TranslationBatch): Flow<TranslationBatchUpdate> = flow {
+        val engine = engineRegistry.find(batch.route.engine)
+            ?: return@flow emit(TranslationBatchUpdate.Blocked(missingEngine(batch.route.engine)))
+        val ready = when (val preparation = engine.prepare(batch.route)) {
+            is TranslationEnginePreparation.Ready -> preparation.request
+            is TranslationEngineRequirement ->
+                return@flow emit(TranslationBatchUpdate.Blocked(preparation.toApi(engine)))
+        }
+        emitAll(
+            batchExecutor.execute(
+                engine = engine,
+                ready = ready,
+                batch = batch,
+                maximumCodePoints = engine.effectiveMaximumInputCodePoints(),
+                requirement = { it.toApi(engine) },
+            ),
+        )
     }
 
     private suspend fun resolveSourceLanguage(request: TranslationRequest): AutomaticTextLanguageResolution {
@@ -226,10 +264,11 @@ class DefaultTranslationFeature(
     private fun TranslationEnginePreparation.toApi(
         engine: TranslationEngine,
         request: ResolvedTranslationRequest,
+        context: TranslationContext,
     ): TranslationPreparation {
         return when (this) {
             is TranslationEnginePreparation.Ready -> TranslationPreparation.Ready(
-                translation = RuntimeReadyTranslation(engine, this.request, request, engine.presentation),
+                translation = RuntimeReadyTranslation(engine, this.request, request, context, engine.presentation),
                 request = request,
                 presentation = engine.presentation,
             )
@@ -287,11 +326,15 @@ class DefaultTranslationFeature(
         )
     }
 
-    private suspend fun cached(request: ResolvedTranslationRequest): String? =
-        resultCache?.let { cache -> withContext(ioDispatcher) { cache.get(request) } }
+    private suspend fun cached(request: ResolvedTranslationRequest, influences: List<String>): String? =
+        resultCache?.let { cache -> withContext(ioDispatcher) { cache.get(request, influences) } }
 
-    private suspend fun remember(request: ResolvedTranslationRequest, translatedText: String) {
-        resultCache?.let { cache -> withContext(ioDispatcher) { cache.put(request, translatedText) } }
+    private suspend fun remember(
+        request: ResolvedTranslationRequest,
+        translatedText: String,
+        influences: List<String>,
+    ) {
+        resultCache?.let { cache -> withContext(ioDispatcher) { cache.put(request, translatedText, influences) } }
     }
 
     private fun RuntimeReadyTranslation.result(translatedText: String) = TranslationResult(
@@ -311,6 +354,8 @@ class DefaultTranslationFeature(
         val engine: TranslationEngine,
         val engineRequest: ReadyTranslationEngineRequest,
         val request: ResolvedTranslationRequest,
+        /** The part of the request's context the engine reads. */
+        val context: TranslationContext,
         val presentation: TranslationProviderPresentation,
     ) : ReadyTranslation
 
