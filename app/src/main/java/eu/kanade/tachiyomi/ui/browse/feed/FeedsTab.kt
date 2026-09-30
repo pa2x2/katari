@@ -262,15 +262,10 @@ private fun Screen.FeedsTabContent(
         )
     } else if (activeFeed != null && activeSource != null && activePreset != null) {
         val enabledFeeds = state.enabledFeeds
-        val activeIndex = remember(enabledFeeds, activeFeed.id) {
-            enabledFeeds.indexOfFirst { it.id == activeFeed.id }
-        }
         val activeDisplayMode = screenModel.displayModeFor(
             activeFeed,
             screenModel.sourceDisplayMode(activeFeed.sourceId),
         )
-        val hasPreviousFeed = activeIndex > 0
-        val hasNextFeed = activeIndex in 0 until enabledFeeds.lastIndex
         var showFeedPicker by remember(activeFeed.id) { mutableStateOf(false) }
         var jumpToNewestRequest by remember(activeFeed.id) { mutableIntStateOf(0) }
 
@@ -461,17 +456,9 @@ private fun Screen.FeedsTabContent(
                     selectedDisplayMode = activeDisplayMode,
                     sourceFor = screenModel::sourceFor,
                     presetFor = screenModel::presetFor,
-                    canGoPrevious = hasPreviousFeed,
-                    canGoNext = hasNextFeed,
                     immersiveAvailable = immersiveAvailable,
                     onFeedViewModeChange = onFeedViewModeChange,
                     onDisplayModeChange = { screenModel.updateFeedDisplayMode(activeFeed.id, it) },
-                    onPreviousClick = {
-                        enabledFeeds.getOrNull(activeIndex - 1)?.let { screenModel.selectFeed(it.id) }
-                    },
-                    onNextClick = {
-                        enabledFeeds.getOrNull(activeIndex + 1)?.let { screenModel.selectFeed(it.id) }
-                    },
                     onFeedSelect = screenModel::selectFeed,
                     onRenameFeed = { renamingFeedId = activeFeed.id },
                     onAddFeed = screenModel::showCreateDialog,
