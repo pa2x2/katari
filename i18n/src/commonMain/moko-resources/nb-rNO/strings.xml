@@ -86,7 +86,6 @@
     <string name="ext_untrusted">Ubetrodd</string>
     <string name="ext_uninstall">Avinstaller</string>
     <string name="untrusted_extension">Ubetrodd utvidelse</string>
-    <string name="pref_fullscreen">Fullskjermsvisning</string>
     <string name="pref_page_transitions">Sideovergangsanimasjoner</string>
     <string name="pref_show_page_number">Vis sidenummer</string>
     <string name="pref_keep_screen_on">Behold skjerm på</string>

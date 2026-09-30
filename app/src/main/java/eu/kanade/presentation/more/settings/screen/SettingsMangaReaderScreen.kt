@@ -89,8 +89,6 @@ object SettingsMangaReaderScreen : AppEntryViewerSettingsScreenProjection() {
         settingBinder: ViewerSettingBinder,
         defaultOrientation: CorePreference<Int>,
     ): Preference.PreferenceGroup {
-        val fullscreenPreference = settings.profilePreference(settingBinder, settings.display.fullscreen)
-        val fullscreen by fullscreenPreference.collectAsState()
         return Preference.PreferenceGroup(
             title = stringResource(MR.strings.pref_category_display),
             preferenceItems = listOf(
@@ -111,13 +109,17 @@ object SettingsMangaReaderScreen : AppEntryViewerSettingsScreenProjection() {
                     title = stringResource(MR.strings.pref_reader_theme),
                 ),
                 Preference.PreferenceItem.SwitchPreference(
-                    preference = fullscreenPreference,
-                    title = stringResource(MR.strings.pref_fullscreen),
+                    preference = settings.profilePreference(settingBinder, settings.display.showStatusBar),
+                    title = stringResource(MR.strings.pref_reader_show_status_bar),
+                ),
+                Preference.PreferenceItem.SwitchPreference(
+                    preference = settings.profilePreference(settingBinder, settings.display.showNavigationBar),
+                    title = stringResource(MR.strings.pref_reader_show_navigation_bar),
                 ),
                 Preference.PreferenceItem.SwitchPreference(
                     preference = settings.profilePreference(settingBinder, settings.display.drawUnderCutout),
                     title = stringResource(MR.strings.pref_cutout_short),
-                    enabled = LocalView.current.hasDisplayCutout() && fullscreen,
+                    enabled = LocalView.current.hasDisplayCutout(),
                 ),
                 Preference.PreferenceItem.SwitchPreference(
                     preference = settings.profilePreference(settingBinder, settings.display.keepScreenOn),

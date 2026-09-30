@@ -76,6 +76,8 @@ interface MangaReaderSettings : ViewerSettingsProvider {
         const val CHAPTER_TRANSITION_PREFERENCE_KEY = "chapter_transition"
         const val VERTICAL_NAVIGATOR_PREFERENCE_KEY = "pref_vertical_navigator"
         const val VERTICAL_NAVIGATOR_ON_LEFT_PREFERENCE_KEY = "pref_vertical_navigator_on_left"
+        const val SHOW_STATUS_BAR_PREFERENCE_KEY = "pref_reader_show_status_bar"
+        const val SHOW_NAVIGATION_BAR_PREFERENCE_KEY = "pref_reader_show_navigation_bar"
 
         const val AUTO_SCROLL_LEVEL_MIN = 0
         const val AUTO_SCROLL_LEVEL_MAX = 6

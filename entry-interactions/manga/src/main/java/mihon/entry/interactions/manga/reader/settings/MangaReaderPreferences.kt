@@ -58,7 +58,15 @@ internal class MangaReaderPreferences(
 
     val showReadingMode: Preference<Boolean> = preferenceStore.getBoolean("pref_show_reading_mode", true)
 
-    val fullscreen: Preference<Boolean> = preferenceStore.getBoolean("fullscreen", true)
+    val showStatusBar: Preference<Boolean> = preferenceStore.getBoolean(
+        MangaReaderSettings.SHOW_STATUS_BAR_PREFERENCE_KEY,
+        false,
+    )
+
+    val showNavigationBar: Preference<Boolean> = preferenceStore.getBoolean(
+        MangaReaderSettings.SHOW_NAVIGATION_BAR_PREFERENCE_KEY,
+        false,
+    )
 
     val drawUnderCutout: Preference<Boolean> = preferenceStore.getBoolean("cutout_short", true)
 

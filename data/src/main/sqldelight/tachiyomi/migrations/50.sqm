@@ -1,0 +1,28 @@
+-- The manga reader's Fullscreen override became separate status bar and navigation bar overrides.
+-- A series that turned Fullscreen off keeps both bars shown, and one that turned it on keeps both hidden.
+INSERT INTO viewer_setting_overrides(
+    entry_id,
+    provider_id,
+    setting_key,
+    encoded_value,
+    updated_at
+)
+SELECT
+    entry_id,
+    provider_id,
+    bar.setting_key,
+    CASE encoded_value WHEN 'true' THEN 'false' ELSE 'true' END,
+    updated_at
+FROM viewer_setting_overrides
+CROSS JOIN (
+    SELECT 'show_status_bar' AS setting_key
+    UNION ALL
+    SELECT 'show_navigation_bar'
+) AS bar
+WHERE provider_id = 'builtin.manga.reader'
+AND viewer_setting_overrides.setting_key = 'fullscreen'
+AND encoded_value IN ('true', 'false');
+
+DELETE FROM viewer_setting_overrides
+WHERE provider_id = 'builtin.manga.reader'
+AND setting_key = 'fullscreen';

@@ -70,7 +70,6 @@
     <string name="charging">Khi đang sạc</string>
     <string name="pref_update_only_non_completed">Bỏ qua truyện có trạng thái \"Đã hoàn thành\"</string>
     <string name="pref_auto_update_manga_sync">Cập nhật tiến trình sau khi đọc</string>
-    <string name="pref_fullscreen">Toàn màn hình</string>
     <string name="pref_page_transitions">Hoạt ảnh chuyển trang</string>
     <string name="pref_show_page_number">Hiện số trang</string>
     <string name="pref_custom_brightness">Tùy chỉnh độ sáng</string>

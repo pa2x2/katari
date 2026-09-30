@@ -56,7 +56,6 @@
     <string name="charging">Ao carregar</string>
     <string name="pref_update_only_non_completed">Com estado \'\'Terminado\'\'</string>
     <string name="pref_auto_update_manga_sync">Atualizar progresso após a leitura</string>
-    <string name="pref_fullscreen">Ecrã inteiro</string>
     <string name="pref_page_transitions">Animar transições de página</string>
     <string name="pref_show_page_number">Mostrar número de página</string>
     <string name="pref_custom_brightness">Brilho personalizado</string>

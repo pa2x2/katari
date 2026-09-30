@@ -56,7 +56,6 @@
     <string name="charging">Mientras se carga la batería</string>
     <string name="pref_update_only_non_completed">Saltarse títulos cuyo estado de publicación sea «completado»</string>
     <string name="pref_auto_update_manga_sync">Actualizar progreso al terminar un capítulo</string>
-    <string name="pref_fullscreen">Pantalla completa</string>
     <string name="pref_page_transitions">Transiciones de página animadas</string>
     <string name="pref_show_page_number">Mostrar el número de página</string>
     <string name="pref_custom_brightness">Utilizar brillo personalizado</string>

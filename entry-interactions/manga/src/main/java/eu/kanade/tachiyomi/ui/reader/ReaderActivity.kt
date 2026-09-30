@@ -44,7 +44,6 @@ import androidx.core.net.toUri
 import androidx.core.transition.doOnEnd
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.lifecycleScope
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView
 import com.google.android.material.transition.platform.MaterialContainerTransform
@@ -181,7 +180,8 @@ class ReaderActivity : EntryInteractionActivity() {
     private var readingModeToast: Toast? = null
     private var displayRefreshHost: DisplayRefreshHost? = null
 
-    private val windowInsetsController by lazy { WindowInsetsControllerCompat(window, window.decorView) }
+    private lateinit var systemBars: ReaderSystemBars
+    private var readerBackgroundColor: Int? = null
 
     private var loadingIndicator: ReaderProgressIndicator? = null
     private var isAutoScrollRunning by mutableStateOf(false)
@@ -210,10 +210,7 @@ class ReaderActivity : EntryInteractionActivity() {
         }
 
         enableEdgeToEdge()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            window.isNavigationBarContrastEnforced = false
-        }
-        windowInsetsController.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        systemBars = ReaderSystemBars(window)
 
         super.onCreate(savedInstanceState)
 
@@ -451,6 +448,7 @@ class ReaderActivity : EntryInteractionActivity() {
      */
     override fun onDestroy() {
         stopAutoScroll(showToast = false)
+        systemBars.release()
         super.onDestroy()
         viewModel.state.value.viewer?.destroy()
         config = null
@@ -706,11 +704,17 @@ class ReaderActivity : EntryInteractionActivity() {
      */
     private fun setMenuVisibility(visible: Boolean) {
         viewModel.showMenus(visible)
-        if (visible) {
-            windowInsetsController.show(WindowInsetsCompat.Type.systemBars())
-        } else if (viewModel.settingsBindings.value?.fullscreen?.state?.value?.effectiveValue != false) {
-            windowInsetsController.hide(WindowInsetsCompat.Type.systemBars())
-        }
+        applySystemBars()
+    }
+
+    private fun applySystemBars() {
+        val settings = viewModel.settingsBindings.value
+        systemBars.apply(
+            menuVisible = viewModel.state.value.menuVisible,
+            keepStatusBarVisible = settings?.showStatusBar?.state?.value?.effectiveValue == true,
+            keepNavigationBarVisible = settings?.showNavigationBar?.state?.value?.effectiveValue == true,
+            readerBackgroundColor = readerBackgroundColor,
+        )
     }
 
     /**
@@ -753,10 +757,7 @@ class ReaderActivity : EntryInteractionActivity() {
         }
         viewModel.onViewerLoaded(newViewer)
         val settings = viewModel.readerSettings
-        updateViewerInset(
-            settings.fullscreen.state.value.effectiveValue,
-            settings.drawUnderCutout.state.value.effectiveValue,
-        )
+        updateViewerInset(settings.drawUnderCutout.state.value.effectiveValue)
         binding.viewerContainer.addView(newViewer.getView())
 
         if (settings.showReadingMode.state.value.effectiveValue) {
@@ -1084,29 +1085,27 @@ class ReaderActivity : EntryInteractionActivity() {
     }
 
     /**
-     * Updates viewer inset depending on fullscreen reader preferences.
+     * Keeps the viewer edge-to-edge behind system bars so showing or hiding them never resizes the page, and only
+     * insets it from the display cutout when the reader must not draw there.
      */
-    private fun updateViewerInset(fullscreen: Boolean, drawUnderCutout: Boolean) {
+    private fun updateViewerInset(drawUnderCutout: Boolean) {
         if (!::binding.isInitialized) return
         val view = binding.viewerContainer
 
-        view.applyInsetsPadding(ViewCompat.getRootWindowInsets(view), fullscreen, drawUnderCutout)
+        view.applyInsetsPadding(ViewCompat.getRootWindowInsets(view), drawUnderCutout)
         ViewCompat.setOnApplyWindowInsetsListener(view) { view, windowInsets ->
-            view.applyInsetsPadding(windowInsets, fullscreen, drawUnderCutout)
+            view.applyInsetsPadding(windowInsets, drawUnderCutout)
             windowInsets
         }
     }
 
     private fun View.applyInsetsPadding(
         windowInsets: WindowInsetsCompat?,
-        fullscreen: Boolean,
         drawUnderCutout: Boolean,
     ) {
-        val insets = when {
-            !fullscreen -> windowInsets?.getInsets(WindowInsetsCompat.Type.systemBars())
-            !drawUnderCutout -> windowInsets?.getInsets(WindowInsetsCompat.Type.displayCutout())
-            else -> null
-        }
+        val insets = windowInsets
+            ?.takeUnless { drawUnderCutout }
+            ?.getInsets(WindowInsetsCompat.Type.displayCutout())
             ?: Insets.NONE
 
         setPadding(insets.left, insets.top, insets.right, insets.bottom)
@@ -1153,14 +1152,15 @@ class ReaderActivity : EntryInteractionActivity() {
                 .map { it.effectiveValue }
                 .distinctUntilChanged()
                 .onEach { theme ->
-                    binding.readerContainer.setBackgroundColor(
-                        when (theme) {
-                            0 -> Color.WHITE
-                            2 -> grayBackgroundColor
-                            3 -> automaticBackgroundColor()
-                            else -> Color.BLACK
-                        },
-                    )
+                    val backgroundColor = when (theme) {
+                        0 -> Color.WHITE
+                        2 -> grayBackgroundColor
+                        3 -> automaticBackgroundColor()
+                        else -> Color.BLACK
+                    }
+                    binding.readerContainer.setBackgroundColor(backgroundColor)
+                    readerBackgroundColor = backgroundColor
+                    applySystemBars()
                 }
                 .launchIn(lifecycleScope)
 
@@ -1189,13 +1189,17 @@ class ReaderActivity : EntryInteractionActivity() {
                 }
                 .launchIn(lifecycleScope)
 
+            settings.drawUnderCutout.state
+                .map { it.effectiveValue }
+                .distinctUntilChanged()
+                .onEach(::updateViewerInset)
+                .launchIn(lifecycleScope)
+
             combine(
-                settings.fullscreen.state.map { it.effectiveValue }.distinctUntilChanged(),
-                settings.drawUnderCutout.state.map { it.effectiveValue }.distinctUntilChanged(),
-            ) { fullscreen, drawUnderCutout -> fullscreen to drawUnderCutout }
-                .onEach { (fullscreen, drawUnderCutout) ->
-                    updateViewerInset(fullscreen, drawUnderCutout)
-                }
+                settings.showStatusBar.state.map { it.effectiveValue }.distinctUntilChanged(),
+                settings.showNavigationBar.state.map { it.effectiveValue }.distinctUntilChanged(),
+            ) { _, _ -> }
+                .onEach { applySystemBars() }
                 .launchIn(lifecycleScope)
         }
 

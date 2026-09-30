@@ -191,7 +191,6 @@
     <string name="pref_color_filter_mode">Тӗс алипе хутӑштармалли тытӑм</string>
     <string name="pref_show_reading_mode_summary">Вулӑш уҫӑ пулсан хальхи тытӑма кӗскен палӑртмалла</string>
     <string name="pref_show_reading_mode">Вулав тытӑма кӑтарт</string>
-    <string name="pref_fullscreen">Тулли ыкран</string>
     <string name="untrusted_extension">Шанчӑклӑ мар хушма</string>
     <string name="lock_when_idle">Ним туман чух ҫаклатни</string>
     <string name="display_mode_chapter">%1$s-мӗш сыпӑк</string>

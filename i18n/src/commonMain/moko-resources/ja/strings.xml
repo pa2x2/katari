@@ -87,7 +87,6 @@
     <string name="ext_untrusted">信用できない</string>
     <string name="ext_uninstall">アンインストール</string>
     <string name="untrusted_extension">信頼できない拡張</string>
-    <string name="pref_fullscreen">フルスクリーン</string>
     <string name="pref_page_transitions">ページ遷移エフェクトを表示</string>
     <string name="pref_double_tap_anim_speed">ダブルタップアニメーション速度</string>
     <string name="pref_crop_borders">クロップボーダー</string>

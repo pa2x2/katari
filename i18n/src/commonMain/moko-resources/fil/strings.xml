@@ -174,7 +174,6 @@
     <string name="pref_double_tap_anim_speed">Bilis ng animasyon sa pagdoble-pindot</string>
     <string name="pref_page_transitions">I-animate ang paglipat-pahina</string>
     <string name="pref_cutout_short">Ipakita ang laman sa cutout area</string>
-    <string name="pref_fullscreen">Naka-fullscreen</string>
     <string name="obsolete_extension_message">Ang extension na ito ay walang kaugnayan sa anumang store. Hindi ito makatatanggap ng mga update, maaaring hindi gumana nang maayos, at pwedeng magdulot ng problema sa app. Inirerekomendang i-uninstall ito.</string>
     <string name="untrusted_extension_message">Maaaring basahin ng mga mapanganib na extension ang anumang nakatagong kredensyal sa pag-log in o magsagawa ng arbitrary code.
 \n

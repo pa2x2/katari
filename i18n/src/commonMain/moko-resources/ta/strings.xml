@@ -355,7 +355,6 @@
     <string name="pref_flash_page">பக்க மாற்றத்தில் ஃபிளாச்</string>
     <string name="pref_flash_page_summ">ஈ-மை காட்சிகளில் பேயைக் குறைக்கிறது</string>
     <string name="pref_flash_duration">ஃபிளாச் காலம்</string>
-    <string name="pref_fullscreen">முழு திரை</string>
     <string name="pref_show_navigation_mode">குழாய் மண்டலங்கள் மேலடுக்கைக் காட்டு</string>
     <string name="pref_show_navigation_mode_summary">வாசகர் திறக்கப்படும்போது சுருக்கமாகக் காட்டுங்கள்</string>
     <string name="pref_flash_duration_summary">%1$s மிநொ</string>

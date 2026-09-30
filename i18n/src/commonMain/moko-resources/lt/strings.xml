@@ -180,7 +180,6 @@
     <string name="pref_dual_page_invert">Apkeisti perskirtų puslapių padėtį</string>
     <string name="pref_dual_page_split">Perskirti plačius puslapius</string>
     <string name="pref_show_navigation_mode_summary">Trumpai parodyti skaitytuvą, kai atidarytas</string>
-    <string name="pref_fullscreen">Pilno ekrano rėžimas</string>
     <string name="ext_nsfw_warning">Šaltiniuose gali būti N18 turinio</string>
     <string name="ext_nsfw_short">18+</string>
     <string name="obsolete_extension_message">Šis plėtinys nebėra prieinamas. Plėtinys gali veikti netinkamai arba sukelti problemas programėlėje. Rekomenduojama išdiegti plėtinį.</string>

@@ -98,7 +98,6 @@
     <string name="ext_uninstall">Disinstalla</string>
     <string name="untrusted_extension">Estensione non afidàbile</string>
     <string name="untrusted_extension_message">Un\'estensione mala diat pòdere lèghere totu sas informatziones de atzessu sarvadas o fàghere esecutare còdighe arbitràriu. \n \nPonende fide in custa estensione atzetas custos arriscos.</string>
-    <string name="pref_fullscreen">Ischermu intreu</string>
     <string name="pref_page_transitions">Ànima sas transitziones de sas pàginas</string>
     <string name="pref_double_tap_anim_speed">Lestresa de s\'animatzione de su tocu dòpiu</string>
     <string name="pref_show_page_number">Ammustra su nùmeru de sa pàgina</string>

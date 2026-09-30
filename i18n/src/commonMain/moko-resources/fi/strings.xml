@@ -141,7 +141,6 @@
     <string name="untrusted_extension_message">Haitallinen laajennus voi lukea tallennetut kirjautumistiedot Mihonista tai suorittaa luvatonta koodia.
 \n
 \nLuottamalla tähän laajennokseen hyväksyt nämä riskit.</string>
-    <string name="pref_fullscreen">Koko näyttö</string>
     <string name="pref_page_transitions">Animoi sivusiirtymät</string>
     <string name="pref_double_tap_anim_speed">Tuplanäpäytyksen animaation nopeus</string>
     <string name="pref_show_page_number">Näytä sivunumero</string>

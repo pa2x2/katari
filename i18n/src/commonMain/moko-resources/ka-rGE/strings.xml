@@ -118,7 +118,6 @@
     <string name="ext_downloading">იტვირთება</string>
     <string name="ext_pending">მოლოდინში</string>
     <string name="ext_uninstall">წაშლა</string>
-    <string name="pref_fullscreen">მთლიან ეკრანზე</string>
     <string name="pref_cutout_short">კონტენტის ჩვენება ჩამოჭრილ ადგილზე</string>
     <string name="pref_page_transitions">გვერდის გადასვლების ანიმირება</string>
     <string name="pref_show_page_number">გვერდის ნომრის ჩვენება</string>

@@ -64,7 +64,6 @@
     <string name="untrusted_extension_message">Škodlivé rozšíření může přečíst jakékoliv uložené přihlašovací údaje nebo spustit libovolný kód.
 \n
 \nDůvěřováním tohoto rozšířeni přijímáte tato rizika.</string>
-    <string name="pref_fullscreen">Celá obrazovka</string>
     <string name="pref_page_transitions">Animovat přechody stránek</string>
     <string name="pref_show_page_number">Zobrazit číslo stránky</string>
     <string name="pref_read_with_volume_keys">Tlačítka hlasitosti</string>

@@ -163,7 +163,6 @@
     <string name="pref_crop_borders">Stuci borderojn</string>
     <string name="pref_show_reading_mode">Montri legadan reĝimon</string>
     <string name="pref_show_page_number">Montri paĝan nombron</string>
-    <string name="pref_fullscreen">Plenekrano</string>
     <string name="obsolete_extension_message">Ĉi tiu etendaĵo estas ligita al neniu etendaĵejo. Ĝi ne ricevos ĝisdatigojn, eble ne funkcios ĝuste kaj povas kaŭzi problemojn pri la apo. Malinstalado de ĝi estas rekomendata.</string>
     <string name="all">Ĉio</string>
     <string name="update_48hour">Ĉiun 2-an tagon</string>

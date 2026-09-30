@@ -70,7 +70,6 @@
     <string name="charging">На зарядно устройство</string>
     <string name="pref_update_only_non_completed">Със статус \"Завършена\"</string>
     <string name="pref_auto_update_manga_sync">Обнови прогреса след прочитане</string>
-    <string name="pref_fullscreen">Цял екран</string>
     <string name="pref_page_transitions">Анимирани преходи</string>
     <string name="pref_show_page_number">Номер на страница</string>
     <string name="pref_custom_brightness">Персонализирана яркост</string>

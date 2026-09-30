@@ -248,7 +248,6 @@
     <string name="ext_nsfw_warning">Burimet nga kjo shtesë mund të përmbajnë përmbajtje NSFW (18+)</string>
     <string name="ext_install_service_notif">Po instalon shtesën…</string>
     <string name="ext_installer_pref">Instalues</string>
-    <string name="pref_fullscreen">Ekran i plotë</string>
     <string name="pref_show_navigation_mode">Shfaq mbivendosjen e zonave të prekjes</string>
     <string name="pref_show_navigation_mode_summary">Trego shkurtimisht kur hapet lexuesi</string>
     <string name="pref_dual_page_split">Ndani faqet e gjera</string>

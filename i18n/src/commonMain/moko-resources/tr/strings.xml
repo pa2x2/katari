@@ -100,7 +100,6 @@
     <string name="untrusted_extension_message">Kötü niyetli uzantılar, oturum açma bilgilerini okuyabilir veya güvenilmeyen kodlar çalıştırabilir.
 \n
 \nBu uzantıya güvenerek bu riskleri kabul etmiş olursunuz.</string>
-    <string name="pref_fullscreen">Tam ekran</string>
     <string name="pref_page_transitions">Sayfa geçişlerini animasyonla yap</string>
     <string name="pref_double_tap_anim_speed">Çift dokunma animasyon hızı</string>
     <string name="pref_show_page_number">Sayfa numarası göster</string>

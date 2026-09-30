@@ -80,7 +80,6 @@
     <string name="pref_auto_update_manga_sync">Fortschritt nach dem Lesen aktualisieren</string>
     <string name="default_category">Standardkategorie</string>
     <string name="default_category_summary">Immer fragen</string>
-    <string name="pref_fullscreen">Vollbild</string>
     <string name="pref_page_transitions">Animierte Seitenübergänge</string>
     <string name="pref_show_page_number">Seitennummer anzeigen</string>
     <string name="pref_crop_borders">Rand abschneiden</string>

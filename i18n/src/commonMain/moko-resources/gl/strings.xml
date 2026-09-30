@@ -73,7 +73,6 @@
     <string name="pref_double_tap_anim_speed">Velocidade da animación de doble toque</string>
     <string name="pref_page_transitions">Animar transición de páxinas</string>
     <string name="pref_cutout_short">Mostrar contido na área recortada</string>
-    <string name="pref_fullscreen">Pantalla completa</string>
     <string name="ext_nsfw_warning">As fontes desta extensión poden ter contido NSFW (+18)</string>
     <string name="ext_nsfw_short">+18</string>
     <string name="obsolete_extension_message">Esta extensión xa non está dispoñible. Pode que non funcione ben e cause problemas na aplicación. Recoméndase desinstalala.</string>

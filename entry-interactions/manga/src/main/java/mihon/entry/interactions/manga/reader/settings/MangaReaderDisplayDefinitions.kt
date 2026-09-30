@@ -6,7 +6,8 @@ internal fun mangaReaderDisplayDefinitions(preferences: MangaReaderPreferences):
     return MangaReaderDisplayDefinitions(
         readerTheme = entryInt("reader_theme", preferences.readerTheme),
         showPageNumber = entryBoolean("show_page_number", preferences.showPageNumber),
-        fullscreen = entryBoolean("fullscreen", preferences.fullscreen),
+        showStatusBar = entryBoolean("show_status_bar", preferences.showStatusBar),
+        showNavigationBar = entryBoolean("show_navigation_bar", preferences.showNavigationBar),
         drawUnderCutout = entryBoolean("draw_under_cutout", preferences.drawUnderCutout),
         keepScreenOn = entryBoolean("keep_screen_on", preferences.keepScreenOn),
         showReadingMode = profileBoolean("show_reading_mode", preferences.showReadingMode),

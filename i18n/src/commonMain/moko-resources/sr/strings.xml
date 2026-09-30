@@ -103,7 +103,6 @@
 \nЗлонамерни додатак може прочитати све податке за пријаву или извршити произвољни код.
 \n
 \nВерујући овом сертификату прихватате ове ризике.</string>
-    <string name="pref_fullscreen">Цео екран</string>
     <string name="pref_page_transitions">Анимације при промени странице</string>
     <string name="pref_double_tap_anim_speed">Брзина анимације двоклика</string>
     <string name="pref_show_page_number">Прикажи број странице</string>

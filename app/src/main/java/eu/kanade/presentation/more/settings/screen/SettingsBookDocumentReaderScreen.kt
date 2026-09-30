@@ -150,11 +150,11 @@ object SettingsBookDocumentReaderScreen : AppEntryViewerSettingsScreenProjection
                     ),
                     Preference.PreferenceItem.SwitchPreference(
                         preference = showStatusBar,
-                        title = stringResource(MR.strings.pref_book_document_reader_show_status_bar),
+                        title = stringResource(MR.strings.pref_reader_show_status_bar),
                     ),
                     Preference.PreferenceItem.SwitchPreference(
                         preference = showNavigationBar,
-                        title = stringResource(MR.strings.pref_book_document_reader_show_navigation_bar),
+                        title = stringResource(MR.strings.pref_reader_show_navigation_bar),
                     ),
                     Preference.PreferenceItem.SwitchPreference(
                         preference = showReadingProgress,

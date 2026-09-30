@@ -100,7 +100,6 @@
     <string name="untrusted_extension_message">Οι κακόβουλες επεκτάσεις μπορούν να διαβάσουν τυχόν αποθηκευμένα διαπιστευτήρια σύνδεσης ή να εκτελέσουν αυθαίρετο κώδικα.
 \n
 \nΜε την εμπιστοσύνη αυτής της επέκτασης, αποδέχεστε αυτούς τους κινδύνους.</string>
-    <string name="pref_fullscreen">Πλήρης οθόνη</string>
     <string name="pref_page_transitions">Ζωντανή μετάβαση σελίδας</string>
     <string name="pref_double_tap_anim_speed">Ταχύτητα κίνησης διπλού αγγίγματος</string>
     <string name="pref_show_page_number">Εμφάνιση αριθμού σελίδας</string>
