@@ -11,8 +11,9 @@ import mihon.translation.provider.libretranslate.offline.OfflineTranslatorSetup
 import mihon.translation.provider.libretranslate.protocol.LibreTranslateHttpClient
 import mihon.translation.provider.libretranslate.server.LibreTranslateServerEngine
 import mihon.translation.provider.libretranslate.server.LibreTranslateServerNetwork
-import mihon.translation.provider.libretranslate.server.LibreTranslateServerSetup
 import mihon.translation.provider.libretranslate.server.libreTranslateServerConfiguration
+import mihon.translation.provider.libretranslate.server.setup.LibreTranslateServerSetupActivity
+import mihon.translation.provider.server.engine.ServerEngineSetup
 import mihon.translation.runtime.component.TranslationRuntimeComponent
 import mihon.translation.runtime.component.TranslationRuntimeContribution
 import mihon.translation.spi.contribution.TranslationEngineContribution
@@ -59,7 +60,13 @@ val libreTranslateRuntimeComponent: ApplicationFeatureRuntimeComponent =
                     ),
                     TranslationEngineContribution(
                         engine = serverEngine,
-                        setup = LibreTranslateServerSetup(application, serverConfiguration),
+                        setup = ServerEngineSetup(
+                            context = application,
+                            settings = serverConfiguration,
+                            engine = LibreTranslateServerEngine.ENGINE_ID,
+                            disclosure = LibreTranslateServerEngine.DISCLOSURE,
+                            setupActivity = LibreTranslateServerSetupActivity::class.java,
+                        ),
                         order = LIBRETRANSLATE_SERVER_ORDER,
                     ),
                 ),

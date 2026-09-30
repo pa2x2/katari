@@ -2,7 +2,7 @@ package mihon.translation.provider.deepl
 
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import mihon.translation.provider.deepl.protocol.DeepLLanguages
+import mihon.translation.provider.deepl.protocol.DeepLLanguageResolver
 import mihon.translation.provider.deepl.protocol.DeepLService
 import mihon.translation.provider.server.ServerConnectionSettings
 
@@ -18,28 +18,32 @@ internal class DeepLLanguageCatalog(
     private val mutex = Mutex()
     private var remembered: Remembered? = null
 
-    suspend fun languages(service: DeepLService): DeepLLanguages = mutex.withLock {
+    suspend fun languages(service: DeepLService): DeepLLanguageResolver = mutex.withLock {
         val connection = connection()
         remembered
             ?.takeIf { it.connection == connection && now() - it.readAt < VALIDITY_NANOS }
             ?.let { return it.languages }
-        service.languages().also { remembered = Remembered(connection, it, now()) }
+        read(service, connection)
     }
 
     /** The languages the server has now, or null when [known] were read from it only moments ago. */
-    suspend fun refreshed(service: DeepLService, known: DeepLLanguages): DeepLLanguages? = mutex.withLock {
-        val connection = connection()
-        val latest = remembered?.takeIf { it.connection == connection }
-        if (latest != null && latest.languages !== known) return latest.languages
-        if (latest != null && now() - latest.readAt < FRESH_NANOS) return null
-        service.languages().also { remembered = Remembered(connection, it, now()) }
-    }
+    suspend fun refreshed(service: DeepLService, known: DeepLLanguageResolver): DeepLLanguageResolver? =
+        mutex.withLock {
+            val connection = connection()
+            val latest = remembered?.takeIf { it.connection == connection }
+            if (latest != null && latest.languages !== known) return latest.languages
+            if (latest != null && now() - latest.readAt < FRESH_NANOS) return null
+            read(service, connection)
+        }
+
+    private suspend fun read(service: DeepLService, connection: Pair<String?, String?>): DeepLLanguageResolver =
+        DeepLLanguageResolver(service.languages()).also { remembered = Remembered(connection, it, now()) }
 
     private fun connection(): Pair<String?, String?> = settings.endpoint?.toString() to settings.apiKey
 
     private class Remembered(
         val connection: Pair<String?, String?>,
-        val languages: DeepLLanguages,
+        val languages: DeepLLanguageResolver,
         val readAt: Long,
     )
 

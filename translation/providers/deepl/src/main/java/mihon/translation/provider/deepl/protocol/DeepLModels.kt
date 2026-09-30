@@ -44,27 +44,3 @@ internal data class DeepLTranslateResponse(
 internal data class DeepLTranslation(
     val text: String,
 )
-
-internal enum class DeepLFailureKind {
-    Connection,
-    Unauthorized,
-    QuotaExceeded,
-    Rejected,
-    Server,
-    InvalidResponse,
-}
-
-internal class DeepLException(
-    val kind: DeepLFailureKind,
-    cause: Throwable? = null,
-) : Exception(
-    when (kind) {
-        DeepLFailureKind.Connection -> "DeepL-compatible server connection failed"
-        DeepLFailureKind.Unauthorized -> "DeepL-compatible server did not accept the API key"
-        DeepLFailureKind.QuotaExceeded -> "DeepL-compatible server translation quota is used up"
-        DeepLFailureKind.Rejected -> "DeepL-compatible server rejected the request"
-        DeepLFailureKind.Server -> "DeepL-compatible server failed"
-        DeepLFailureKind.InvalidResponse -> "DeepL-compatible server returned an invalid response"
-    },
-    cause,
-)

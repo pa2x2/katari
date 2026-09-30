@@ -3,6 +3,9 @@ package mihon.translation.provider.deepl.protocol
 import mihon.language.api.tag.LanguageTag
 import mihon.translation.api.language.TranslationLanguageSupport
 import mihon.translation.api.language.TranslationLanguageSupportInspection
+import mihon.translation.api.request.ResolvedTranslationRoute
+import mihon.translation.provider.server.engine.ServerLanguageCodes
+import mihon.translation.provider.server.engine.ServerLanguages
 import java.util.Locale
 
 /**
@@ -14,15 +17,24 @@ import java.util.Locale
  */
 internal class DeepLLanguageResolver(
     languages: DeepLLanguages,
-) {
+) : ServerLanguages {
     private val sources = languages.sources.tagged()
     private val targets = languages.targets.tagged()
+
+    override val isEmpty = languages.sources.isEmpty() || languages.targets.isEmpty()
 
     fun source(language: LanguageTag): String? = resolve(language, sources)
 
     fun target(language: LanguageTag): String? = resolve(language, targets)
 
-    fun languageSupport(): TranslationLanguageSupportInspection {
+    override fun codes(route: ResolvedTranslationRoute): ServerLanguageCodes? {
+        return ServerLanguageCodes(
+            source = source(route.sourceLanguage) ?: return null,
+            target = target(route.targetLanguage) ?: return null,
+        )
+    }
+
+    override fun languageSupport(): TranslationLanguageSupportInspection {
         if (sources.isEmpty() || targets.isEmpty()) {
             return TranslationLanguageSupportInspection.Unavailable("Server reported no supported languages")
         }

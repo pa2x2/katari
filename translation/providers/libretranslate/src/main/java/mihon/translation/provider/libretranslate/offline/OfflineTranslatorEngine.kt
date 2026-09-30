@@ -16,10 +16,9 @@ import mihon.translation.api.provider.TranslationProviderPresentation
 import mihon.translation.api.provider.TranslationResultAttribution
 import mihon.translation.api.request.ResolvedTranslationRoute
 import mihon.translation.provider.libretranslate.R
-import mihon.translation.provider.libretranslate.protocol.LibreTranslateException
-import mihon.translation.provider.libretranslate.protocol.LibreTranslateFailureKind
 import mihon.translation.provider.libretranslate.protocol.LibreTranslateLanguageResolver
 import mihon.translation.provider.libretranslate.protocol.LibreTranslateService
+import mihon.translation.provider.server.call.ServerCallException
 import mihon.translation.spi.engine.ReadyTranslationEngineRequest
 import mihon.translation.spi.engine.TranslationEngine
 import mihon.translation.spi.engine.TranslationEngineDeviceAvailability
@@ -114,34 +113,18 @@ internal class OfflineTranslatorEngine(
             return TranslationEnginePreparation.ProviderDisclosureRequired(DISCLOSURE)
         }
 
-        val resolver = LibreTranslateLanguageResolver(languages)
-        val source = resolver.resolve(route.sourceLanguage)
+        val codes = LibreTranslateLanguageResolver(languages).codes(route)
             ?: return TranslationEnginePreparation.Unavailable(
                 TranslationUnavailableReason.UnsupportedLanguagePair(
                     route.sourceLanguage,
                     route.targetLanguage,
                 ),
             )
-        val target = resolver.resolve(route.targetLanguage)
-            ?: return TranslationEnginePreparation.Unavailable(
-                TranslationUnavailableReason.UnsupportedLanguagePair(
-                    route.sourceLanguage,
-                    route.targetLanguage,
-                ),
-            )
-        if (!resolver.supportsTarget(source, target)) {
-            return TranslationEnginePreparation.Unavailable(
-                TranslationUnavailableReason.UnsupportedLanguagePair(
-                    route.sourceLanguage,
-                    route.targetLanguage,
-                ),
-            )
-        }
         return TranslationEnginePreparation.Ready(
             OfflineTranslatorReadyRequest(
                 route = route,
-                sourceCode = source.code,
-                targetCode = target.code,
+                sourceCode = codes.source,
+                targetCode = codes.target,
             ),
         )
     }
@@ -168,8 +151,8 @@ internal class OfflineTranslatorEngine(
             )
         } catch (error: CancellationException) {
             throw error
-        } catch (error: LibreTranslateException) {
-            if (error.kind == LibreTranslateFailureKind.Rejected) {
+        } catch (error: ServerCallException) {
+            if (error.isRejection) {
                 TranslationEngineExecution.PreparationChanged(setupRequired())
             } else {
                 TranslationEngineExecution.Failed("Offline Translator did not complete the translation")

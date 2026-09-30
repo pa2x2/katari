@@ -36,23 +36,3 @@ internal data class LibreTranslateRequest(
 internal data class LibreTranslateResponse(
     val translatedText: String,
 )
-
-internal enum class LibreTranslateFailureKind {
-    Connection,
-    Rejected,
-    Server,
-    InvalidResponse,
-}
-
-internal class LibreTranslateException(
-    val kind: LibreTranslateFailureKind,
-    cause: Throwable? = null,
-) : Exception(
-    when (kind) {
-        LibreTranslateFailureKind.Connection -> "LibreTranslate connection failed"
-        LibreTranslateFailureKind.Rejected -> "LibreTranslate rejected the request"
-        LibreTranslateFailureKind.Server -> "LibreTranslate server failed"
-        LibreTranslateFailureKind.InvalidResponse -> "LibreTranslate returned an invalid response"
-    },
-    cause,
-)

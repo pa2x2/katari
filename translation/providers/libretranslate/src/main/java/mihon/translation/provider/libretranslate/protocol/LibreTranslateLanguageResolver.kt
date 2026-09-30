@@ -4,11 +4,23 @@ import mihon.language.api.tag.LanguageTag
 import mihon.translation.api.language.TranslationLanguagePair
 import mihon.translation.api.language.TranslationLanguageSupport
 import mihon.translation.api.language.TranslationLanguageSupportInspection
+import mihon.translation.api.request.ResolvedTranslationRoute
+import mihon.translation.provider.server.engine.ServerLanguageCodes
+import mihon.translation.provider.server.engine.ServerLanguages
 import java.util.Locale
 
 internal class LibreTranslateLanguageResolver(
     private val languages: List<LibreTranslateLanguage>,
-) {
+) : ServerLanguages {
+    override val isEmpty: Boolean
+        get() = languages.isEmpty()
+
+    override fun codes(route: ResolvedTranslationRoute): ServerLanguageCodes? {
+        val source = resolve(route.sourceLanguage) ?: return null
+        val target = resolve(route.targetLanguage) ?: return null
+        return ServerLanguageCodes(source.code, target.code).takeIf { supportsTarget(source, target) }
+    }
+
     fun resolve(language: LanguageTag): LibreTranslateLanguage? {
         val exact = languages.filter { candidate ->
             candidate.normalizedTag()?.equals(language.value, ignoreCase = true) == true
@@ -37,7 +49,7 @@ internal class LibreTranslateLanguageResolver(
         }
     }
 
-    fun languageSupport(): TranslationLanguageSupportInspection {
+    override fun languageSupport(): TranslationLanguageSupportInspection {
         val resolvable = languages.mapNotNull { language ->
             val tag = LanguageTag.parse(language.code) ?: return@mapNotNull null
             (language to tag).takeIf { resolve(tag) == language }

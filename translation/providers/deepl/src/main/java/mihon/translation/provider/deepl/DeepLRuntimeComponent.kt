@@ -4,6 +4,8 @@ import android.app.Application
 import eu.kanade.tachiyomi.network.localnetwork.guardingLocalNetworkAccess
 import mihon.feature.runtime.application.ApplicationFeatureRuntimeComponent
 import mihon.translation.provider.deepl.protocol.DeepLHttpClient
+import mihon.translation.provider.deepl.setup.DeepLServerSetupActivity
+import mihon.translation.provider.server.engine.ServerEngineSetup
 import mihon.translation.runtime.component.TranslationRuntimeComponent
 import mihon.translation.runtime.component.TranslationRuntimeContribution
 import mihon.translation.spi.contribution.TranslationEngineContribution
@@ -29,7 +31,13 @@ val deepLRuntimeComponent: ApplicationFeatureRuntimeComponent =
                 engineContributions = listOf(
                     TranslationEngineContribution(
                         engine = engine,
-                        setup = DeepLServerSetup(application, configuration),
+                        setup = ServerEngineSetup(
+                            context = application,
+                            settings = configuration,
+                            engine = DeepLServerEngine.ENGINE_ID,
+                            disclosure = DeepLServerEngine.DISCLOSURE,
+                            setupActivity = DeepLServerSetupActivity::class.java,
+                        ),
                         order = DEEPL_SERVER_ORDER,
                     ),
                 ),
