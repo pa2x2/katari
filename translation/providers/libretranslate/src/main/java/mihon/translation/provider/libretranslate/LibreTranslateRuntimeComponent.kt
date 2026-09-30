@@ -9,10 +9,10 @@ import mihon.translation.provider.libretranslate.offline.OfflineTranslatorEngine
 import mihon.translation.provider.libretranslate.offline.OfflineTranslatorNetwork
 import mihon.translation.provider.libretranslate.offline.OfflineTranslatorSetup
 import mihon.translation.provider.libretranslate.protocol.LibreTranslateHttpClient
-import mihon.translation.provider.libretranslate.server.LibreTranslateServerConfiguration
 import mihon.translation.provider.libretranslate.server.LibreTranslateServerEngine
 import mihon.translation.provider.libretranslate.server.LibreTranslateServerNetwork
 import mihon.translation.provider.libretranslate.server.LibreTranslateServerSetup
+import mihon.translation.provider.libretranslate.server.libreTranslateServerConfiguration
 import mihon.translation.runtime.component.TranslationRuntimeComponent
 import mihon.translation.runtime.component.TranslationRuntimeContribution
 import mihon.translation.spi.contribution.TranslationEngineContribution
@@ -32,7 +32,7 @@ val libreTranslateRuntimeComponent: ApplicationFeatureRuntimeComponent =
                     )
                 },
             )
-            val serverConfiguration = LibreTranslateServerConfiguration(application)
+            val serverConfiguration = libreTranslateServerConfiguration(application)
             val serverHttpClient = LibreTranslateServerNetwork.httpClient.guardingLocalNetworkAccess(application)
             val serverEngine = LibreTranslateServerEngine(
                 settings = serverConfiguration,

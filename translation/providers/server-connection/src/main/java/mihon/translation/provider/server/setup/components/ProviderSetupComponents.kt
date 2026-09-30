@@ -1,4 +1,4 @@
-package mihon.translation.provider.libretranslate.setup.components
+package mihon.translation.provider.server.setup.components
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
@@ -36,7 +36,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 
-internal sealed interface ProviderSetupStatus {
+sealed interface ProviderSetupStatus {
     data object Testing : ProviderSetupStatus
 
     data class Success(
@@ -50,7 +50,7 @@ internal sealed interface ProviderSetupStatus {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun ProviderSetupScaffold(
+fun ProviderSetupScaffold(
     title: String,
     backContentDescription: String,
     onBack: () -> Unit,
@@ -91,7 +91,7 @@ internal fun ProviderSetupScaffold(
 }
 
 @Composable
-internal fun ProviderSetupHeader(
+fun ProviderSetupHeader(
     @DrawableRes artworkResourceId: Int,
     title: String,
     description: String,
@@ -135,7 +135,7 @@ internal fun ProviderSetupHeader(
 }
 
 @Composable
-internal fun ProviderInformationCard(
+fun ProviderInformationCard(
     title: String? = null,
     lines: List<String>,
 ) {
@@ -167,7 +167,7 @@ internal fun ProviderInformationCard(
 }
 
 @Composable
-internal fun ProviderSetupStatusPanel(
+fun ProviderSetupStatusPanel(
     status: ProviderSetupStatus,
     testingLabel: String,
     successLabel: String,
@@ -230,7 +230,7 @@ internal fun ProviderSetupStatusPanel(
 }
 
 @Composable
-internal fun ProviderSetupPrimaryButton(
+fun ProviderSetupPrimaryButton(
     label: String,
     enabled: Boolean,
     onClick: () -> Unit,
@@ -245,7 +245,7 @@ internal fun ProviderSetupPrimaryButton(
 }
 
 @Composable
-internal fun ProviderSetupSecondaryButton(
+fun ProviderSetupSecondaryButton(
     label: String,
     enabled: Boolean,
     onClick: () -> Unit,

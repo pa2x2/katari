@@ -8,6 +8,7 @@ import mihon.translation.api.preparation.TranslationSystemSetupReason
 import mihon.translation.api.request.ResolvedTranslationRoute
 import mihon.translation.provider.libretranslate.protocol.LibreTranslateLanguage
 import mihon.translation.provider.libretranslate.protocol.LibreTranslateService
+import mihon.translation.provider.server.ServerConnectionSettings
 import mihon.translation.spi.engine.TranslationEngineDeviceAvailability
 import mihon.translation.spi.engine.TranslationEnginePreparation
 import okhttp3.HttpUrl
@@ -78,7 +79,7 @@ class LibreTranslateServerEngineTest {
         override val apiKey: String? = null,
         override val isInitiallyVerified: Boolean = true,
         override var disclosureAccepted: Boolean = true,
-    ) : LibreTranslateServerSettings
+    ) : ServerConnectionSettings
 
     private class FakeService(
         private val languages: List<LibreTranslateLanguage> = emptyList(),

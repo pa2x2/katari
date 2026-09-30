@@ -21,6 +21,7 @@ import mihon.translation.provider.libretranslate.protocol.LibreTranslateExceptio
 import mihon.translation.provider.libretranslate.protocol.LibreTranslateFailureKind
 import mihon.translation.provider.libretranslate.protocol.LibreTranslateLanguageResolver
 import mihon.translation.provider.libretranslate.protocol.LibreTranslateService
+import mihon.translation.provider.server.ServerConnectionSettings
 import mihon.translation.spi.engine.ReadyTranslationEngineRequest
 import mihon.translation.spi.engine.TranslationEngine
 import mihon.translation.spi.engine.TranslationEngineDeviceAvailability
@@ -28,7 +29,7 @@ import mihon.translation.spi.engine.TranslationEngineExecution
 import mihon.translation.spi.engine.TranslationEnginePreparation
 
 internal class LibreTranslateServerEngine(
-    private val settings: LibreTranslateServerSettings,
+    private val settings: ServerConnectionSettings,
     private val serviceFactory: () -> LibreTranslateService?,
 ) : TranslationEngine {
     override val catalogEntry = KnownTranslationEngine(

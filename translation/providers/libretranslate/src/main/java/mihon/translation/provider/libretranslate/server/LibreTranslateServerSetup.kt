@@ -7,12 +7,13 @@ import mihon.translation.api.model.TranslationModelId
 import mihon.translation.api.model.TranslationModelOperationResult
 import mihon.translation.api.provider.TranslationProviderDisclosure
 import mihon.translation.provider.libretranslate.server.setup.LibreTranslateServerSetupActivity
+import mihon.translation.provider.server.ServerConnectionConfiguration
 import mihon.translation.spi.setup.TranslationEngineSetup
 import mihon.translation.spi.setup.TranslationSetupResult
 
 internal class LibreTranslateServerSetup(
     private val context: Context,
-    private val configuration: LibreTranslateServerConfiguration,
+    private val configuration: ServerConnectionConfiguration,
     private val openInAppSetup: () -> Boolean = {
         runCatching {
             context.startActivity(
