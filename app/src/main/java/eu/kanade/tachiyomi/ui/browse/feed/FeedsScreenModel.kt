@@ -55,21 +55,16 @@ class FeedsScreenModel(
                     val nextState = state.copy(
                         profileId = observedState.profileId,
                         sources = observedState.sources,
+                        listedSources = observedState.listedSources,
                         presets = observedState.presets,
                         feeds = observedState.feeds,
                         sourcesLoaded = observedState.sourcesLoaded,
                     )
-                    val nextDialog = when {
-                        nextState.validFeeds.isEmpty() && state.dialog == Dialog.ManageFeeds -> null
-                        else -> nextState.dialog
-                    }
-
                     nextState.copy(
                         selectedFeedId = resolveSelectedFeedId(
                             requestedId = observedState.selectedFeedId,
                             state = nextState,
                         ),
-                        dialog = nextDialog,
                     )
                 }
 
@@ -79,7 +74,7 @@ class FeedsScreenModel(
     }
 
     fun showCreateDialog() {
-        mutableState.update { it.copy(dialog = Dialog.SelectSource) }
+        mutableState.update { it.copy(dialog = Dialog.AddFeed) }
     }
 
     fun showManageDialog() {
@@ -94,10 +89,6 @@ class FeedsScreenModel(
 
     fun closeDialog() {
         mutableState.update { it.copy(dialog = null) }
-    }
-
-    fun selectSource(source: Source) {
-        mutableState.update { it.copy(dialog = Dialog.SelectPreset(source.id)) }
     }
 
     fun selectFeed(feedId: String) {
@@ -148,8 +139,16 @@ class FeedsScreenModel(
         return sourcePreferences().sourceDisplayMode(sourceId).get()
     }
 
-    fun removeFeed(feedId: String) {
-        profileBrowseFeedService().removeFeed(feedId)
+    fun renameFeed(feedId: String, title: String) {
+        profileBrowseFeedService().renameFeed(feedId, title.trim().ifEmpty { null })
+    }
+
+    fun removeFeed(feedId: String): BrowseFeedService.RemovedFeed? {
+        return profileBrowseFeedService().removeFeed(feedId)
+    }
+
+    fun restoreFeed(removed: BrowseFeedService.RemovedFeed) {
+        profileBrowseFeedService().restoreFeed(removed)
     }
 
     fun reorderFeed(fromFeedId: String, toFeedId: String) {
@@ -163,9 +162,9 @@ class FeedsScreenModel(
 
     fun presetsFor(source: Source): List<SourceFeedPreset> {
         val builtin = buildList {
-            add(popularFeedPreset(source.id, "Popular"))
+            add(popularFeedPreset(source.id))
             if (source.catalogue?.supportsLatest == true) {
-                add(latestFeedPreset(source.id, "Latest"))
+                add(latestFeedPreset(source.id))
             }
         }
         val custom = state.value.presets.filter { it.sourceId == source.id }
@@ -181,11 +180,11 @@ class FeedsScreenModel(
     fun presetFor(feed: SourceFeed): SourceFeedPreset? {
         val source = state.value.sources.firstOrNull { it.id == feed.sourceId } ?: return null
         return when (feed.presetId) {
-            BUILTIN_POPULAR_PRESET_ID -> popularFeedPreset(source.id, "Popular")
+            BUILTIN_POPULAR_PRESET_ID -> popularFeedPreset(source.id)
             BUILTIN_LATEST_PRESET_ID ->
                 source
                     .takeIf { it.catalogue?.supportsLatest == true }
-                    ?.let { latestFeedPreset(it.id, "Latest") }
+                    ?.let { latestFeedPreset(it.id) }
 
             else -> state.value.presets.firstOrNull {
                 it.id == feed.presetId && it.sourceId == source.id
@@ -233,8 +232,7 @@ class FeedsScreenModel(
     }
 
     sealed interface Dialog {
-        data object SelectSource : Dialog
-        data class SelectPreset(val sourceId: Long) : Dialog
+        data object AddFeed : Dialog
         data object ManageFeeds : Dialog
     }
 
@@ -242,6 +240,8 @@ class FeedsScreenModel(
     data class State(
         val profileId: Long? = null,
         val sources: ImmutableList<Source> = persistentListOf(),
+        /** Enabled sources as the Sources tab lists them, including the separate last-used entry. */
+        val listedSources: ImmutableList<Source> = persistentListOf(),
         val presets: ImmutableList<SourceFeedPreset> = persistentListOf(),
         val feeds: ImmutableList<SourceFeed> = persistentListOf(),
         val sourcesLoaded: Boolean = false,
@@ -292,6 +292,7 @@ internal fun observeProfileAwareFeedState(
                         }
                         .sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.name })
                         .toImmutableList(),
+                    listedSources = sources.toImmutableList(),
                     presets = browseState.presets.toImmutableList(),
                     feeds = browseState.feeds
                         .filter { it.contentMode == contentMode }

@@ -27,6 +27,10 @@ import mihon.entry.interactions.manga.state.MangaConsumptionProcessor
 import mihon.entry.interactions.manga.state.MangaProgressProcessor
 import mihon.entry.interactions.manga.state.MangaTranslationLanguagesProvider
 import mihon.entry.interactions.manga.statistics.MangaEntryStatisticsProvider
+import mihon.entry.interactions.manga.translation.background.MangaChapterTranslationPreparer
+import mihon.entry.interactions.manga.translation.background.MangaChapterTranslator
+import mihon.entry.interactions.manga.translation.background.MangaEntryTranslateProcessor
+import mihon.entry.interactions.manga.translation.pages.MangaDownloadedChapterPages
 import mihon.entry.interactions.media.EntryMediaCacheCapability
 import mihon.entry.interactions.media.EntryMediaSessionCapability
 import mihon.entry.interactions.media.EntryMediaSessionProcessor
@@ -52,7 +56,9 @@ import mihon.entry.interactions.state.EntryConsumptionCapability
 import mihon.entry.interactions.state.EntryMigrationCapability
 import mihon.entry.interactions.state.EntryProgressCapability
 import mihon.entry.interactions.state.EntryTranslationLanguagesCapability
+import mihon.entry.interactions.translate.EntryTranslateCapability
 import mihon.feature.graph.ContributionOwner
+import mihon.translation.api.host.TranslationHostActions
 import tachiyomi.domain.download.service.DownloadPreferences
 import tachiyomi.domain.entry.interactor.GetEntryWithChapters
 import tachiyomi.domain.entry.repository.EntryChapterRepository
@@ -108,6 +114,17 @@ internal fun mangaEntryInteractionPlugin(
     val childGroupFilterProcessor = MangaChildGroupFilterProcessor
     val outsideReleasePeriodFilterProvider = MangaOutsideReleasePeriodFilterProvider()
     val previewProcessor = MangaPreviewInteraction(dependencies.entryInteractionPreferences)
+    val translateProcessor = MangaEntryTranslateProcessor(
+        sourceManager = dependencies.sourceManager,
+        store = { Injekt.get() },
+        pages = { MangaDownloadedChapterPages(Injekt.get(), Injekt.get()) },
+        translator = { MangaChapterTranslator(Injekt.get(), Injekt.get()) },
+        preparer = {
+            MangaChapterTranslationPreparer(Injekt.get(), Injekt.get()) {
+                Injekt.get<TranslationHostActions>().defaultTarget()?.language
+            }
+        },
+    )
     val immersiveProcessor = MangaImmersiveProcessor(
         entryProgressRepository = dependencies.entryProgressRepository,
         mediaSession = dependencies.mediaSession,
@@ -131,6 +148,7 @@ internal fun mangaEntryInteractionPlugin(
                     EntryBulkDownloadCandidateCapability.bind(downloadProcessor),
                     EntryMigrationCapability.bind(migrationProvider),
                     EntryTranslationLanguagesCapability.bind(MangaTranslationLanguagesProvider),
+                    EntryTranslateCapability.bind(translateProcessor),
                     EntryChildListCapability.bind(childListProcessor),
                     EntryChildProgressCapability.bind(childListProcessor),
                     EntryMissingChildGapCapability.bind(childListProcessor),

@@ -103,12 +103,16 @@ internal fun ColumnScope.GeneralPage(screenModel: ReaderSettingsScreenModel) {
     }
 
     BindingCheckboxItem(
-        label = stringResource(MR.strings.pref_fullscreen),
-        binding = settings.fullscreen,
+        label = stringResource(MR.strings.pref_reader_show_status_bar),
+        binding = settings.showStatusBar,
     )
 
-    val isFullscreen by settings.fullscreen.state.collectAsState()
-    if (LocalActivity.current?.hasDisplayCutout() == true && isFullscreen.effectiveValue) {
+    BindingCheckboxItem(
+        label = stringResource(MR.strings.pref_reader_show_navigation_bar),
+        binding = settings.showNavigationBar,
+    )
+
+    if (LocalActivity.current?.hasDisplayCutout() == true) {
         BindingCheckboxItem(
             label = stringResource(MR.strings.pref_cutout_short),
             binding = settings.drawUnderCutout,

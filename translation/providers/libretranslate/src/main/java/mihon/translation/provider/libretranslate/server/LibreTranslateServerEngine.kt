@@ -9,18 +9,17 @@ import mihon.translation.api.engine.TranslationEngineDetails
 import mihon.translation.api.engine.TranslationEngineId
 import mihon.translation.api.engine.TranslationProviderId
 import mihon.translation.api.language.TranslationLanguageSupportInspection
-import mihon.translation.api.preparation.TranslationSystemSetupReason
-import mihon.translation.api.preparation.TranslationUnavailableReason
 import mihon.translation.api.provider.TranslationInvocationPolicy
 import mihon.translation.api.provider.TranslationProviderDisclosure
 import mihon.translation.api.provider.TranslationProviderPresentation
 import mihon.translation.api.provider.TranslationResultAttribution
-import mihon.translation.api.request.ResolvedTranslationRequest
+import mihon.translation.api.request.ResolvedTranslationRoute
 import mihon.translation.provider.libretranslate.R
-import mihon.translation.provider.libretranslate.protocol.LibreTranslateException
-import mihon.translation.provider.libretranslate.protocol.LibreTranslateFailureKind
 import mihon.translation.provider.libretranslate.protocol.LibreTranslateLanguageResolver
 import mihon.translation.provider.libretranslate.protocol.LibreTranslateService
+import mihon.translation.provider.server.ServerConnectionSettings
+import mihon.translation.provider.server.call.ServerCallException
+import mihon.translation.provider.server.engine.ServerEngineReadiness
 import mihon.translation.spi.engine.ReadyTranslationEngineRequest
 import mihon.translation.spi.engine.TranslationEngine
 import mihon.translation.spi.engine.TranslationEngineDeviceAvailability
@@ -28,9 +27,17 @@ import mihon.translation.spi.engine.TranslationEngineExecution
 import mihon.translation.spi.engine.TranslationEnginePreparation
 
 internal class LibreTranslateServerEngine(
-    private val settings: LibreTranslateServerSettings,
+    settings: ServerConnectionSettings,
     private val serviceFactory: () -> LibreTranslateService?,
 ) : TranslationEngine {
+    private val readiness = ServerEngineReadiness(
+        engine = ENGINE_ID,
+        settings = settings,
+        disclosure = DISCLOSURE,
+        configurationDescription = CONFIGURATION_DESCRIPTION,
+        service = serviceFactory,
+        languages = { service -> LibreTranslateLanguageResolver(service.languages()) },
+    )
     override val catalogEntry = KnownTranslationEngine(
         id = ENGINE_ID,
         providerId = PROVIDER_ID,
@@ -45,6 +52,7 @@ internal class LibreTranslateServerEngine(
                 "privacy and retention policies apply.",
         ),
         documentationUrl = DOCUMENTATION_URL,
+        usesNetwork = true,
     )
     override val presentation = TranslationProviderPresentation(
         providerId = PROVIDER_ID,
@@ -57,102 +65,31 @@ internal class LibreTranslateServerEngine(
     )
     override val maximumInputCodePoints: Int? = null
 
-    override suspend fun inspectDevice(): TranslationEngineDeviceAvailability {
-        if (!settings.isInitiallyVerified) {
-            return TranslationEngineDeviceAvailability.ConfigurationRequired(CONFIGURATION_DESCRIPTION)
-        }
-        val service = serviceFactory()
-            ?: return TranslationEngineDeviceAvailability.ConfigurationRequired(CONFIGURATION_DESCRIPTION)
-        return try {
-            if (service.languages().isEmpty()) {
-                TranslationEngineDeviceAvailability.ConfigurationRequired(CONFIGURATION_DESCRIPTION)
-            } else {
-                TranslationEngineDeviceAvailability.Available
-            }
-        } catch (error: CancellationException) {
-            throw error
-        } catch (_: Exception) {
-            TranslationEngineDeviceAvailability.Unavailable("Configured server is unreachable")
-        }
-    }
+    override suspend fun inspectDevice(): TranslationEngineDeviceAvailability = readiness.inspectDevice()
 
-    override suspend fun inspectLanguageSupport(): TranslationLanguageSupportInspection {
-        if (!settings.isInitiallyVerified) {
-            return TranslationLanguageSupportInspection.Unavailable(CONFIGURATION_DESCRIPTION)
-        }
-        val service = serviceFactory()
-            ?: return TranslationLanguageSupportInspection.Unavailable(CONFIGURATION_DESCRIPTION)
-        return try {
-            LibreTranslateLanguageResolver(service.languages()).languageSupport()
-        } catch (error: CancellationException) {
-            throw error
-        } catch (_: Exception) {
-            TranslationLanguageSupportInspection.Unavailable(
-                "Configured server languages are unavailable",
-            )
-        }
-    }
+    override suspend fun inspectLanguageSupport(): TranslationLanguageSupportInspection =
+        readiness.inspectLanguageSupport()
 
-    override suspend fun prepare(request: ResolvedTranslationRequest): TranslationEnginePreparation {
-        if (!settings.isInitiallyVerified) return setupRequired()
-        val service = serviceFactory() ?: return setupRequired()
-        val languages = try {
-            service.languages()
-        } catch (error: CancellationException) {
-            throw error
-        } catch (_: Exception) {
-            return TranslationEnginePreparation.Unavailable(
-                TranslationUnavailableReason.EngineUnavailable(ENGINE_ID, "Configured server is unreachable"),
-            )
-        }
-        if (!settings.disclosureAccepted) {
-            return TranslationEnginePreparation.ProviderDisclosureRequired(DISCLOSURE)
-        }
-        val resolver = LibreTranslateLanguageResolver(languages)
-        val source = resolver.resolve(request.sourceLanguage)
-            ?: return TranslationEnginePreparation.Unavailable(
-                TranslationUnavailableReason.UnsupportedLanguagePair(
-                    request.sourceLanguage,
-                    request.targetLanguage,
-                ),
-            )
-        val target = resolver.resolve(request.targetLanguage)
-            ?: return TranslationEnginePreparation.Unavailable(
-                TranslationUnavailableReason.UnsupportedLanguagePair(
-                    request.sourceLanguage,
-                    request.targetLanguage,
-                ),
-            )
-        if (!resolver.supportsTarget(source, target)) {
-            return TranslationEnginePreparation.Unavailable(
-                TranslationUnavailableReason.UnsupportedLanguagePair(
-                    request.sourceLanguage,
-                    request.targetLanguage,
-                ),
-            )
-        }
-        return TranslationEnginePreparation.Ready(
-            ReadyRequest(request, source.code, target.code),
-        )
-    }
+    override suspend fun prepare(route: ResolvedTranslationRoute): TranslationEnginePreparation =
+        readiness.prepare(route)
 
     override suspend fun revalidate(ready: ReadyTranslationEngineRequest): TranslationEnginePreparation {
-        return prepare(ready.requireOwned().request)
+        return prepare(readiness.owned(ready).route)
     }
 
-    override suspend fun translate(ready: ReadyTranslationEngineRequest): TranslationEngineExecution {
-        val owned = ready.requireOwned()
+    override suspend fun translate(ready: ReadyTranslationEngineRequest, text: String): TranslationEngineExecution {
+        val owned = readiness.owned(ready)
         val service = serviceFactory()
-            ?: return TranslationEngineExecution.PreparationChanged(setupRequired())
+            ?: return TranslationEngineExecution.PreparationChanged(readiness.setupRequired())
         return try {
             TranslationEngineExecution.Success(
-                service.translate(owned.request.text, owned.sourceCode, owned.targetCode),
+                service.translate(text, owned.sourceCode, owned.targetCode),
             )
         } catch (error: CancellationException) {
             throw error
-        } catch (error: LibreTranslateException) {
-            if (error.kind == LibreTranslateFailureKind.Rejected) {
-                TranslationEngineExecution.PreparationChanged(setupRequired())
+        } catch (error: ServerCallException) {
+            if (error.isRejection) {
+                TranslationEngineExecution.PreparationChanged(readiness.setupRequired())
             } else {
                 TranslationEngineExecution.Failed(
                     error.localNetworkAccessDenial()?.message
@@ -163,23 +100,6 @@ internal class LibreTranslateServerEngine(
             TranslationEngineExecution.Failed("LibreTranslate Server did not complete the translation")
         }
     }
-
-    private fun setupRequired() = TranslationEnginePreparation.SystemSetupRequired(
-        TranslationSystemSetupReason.ProviderActionRequired(CONFIGURATION_DESCRIPTION),
-    )
-
-    private fun ReadyTranslationEngineRequest.requireOwned(): ReadyRequest {
-        require(this is ReadyRequest) {
-            "Ready Translation request was not created by LibreTranslate Server"
-        }
-        return this
-    }
-
-    private data class ReadyRequest(
-        val request: ResolvedTranslationRequest,
-        val sourceCode: String,
-        val targetCode: String,
-    ) : ReadyTranslationEngineRequest
 
     companion object {
         val ENGINE_ID = TranslationEngineId("libretranslate-server")

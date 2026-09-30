@@ -199,7 +199,6 @@
     <string name="ext_installer_legacy">Kabilin</string>
     <string name="ext_installer_shizuku_stopped">Si Shizuku wala modagan</string>
     <string name="ext_installer_shizuku_unavailable_dialog">I-install ug sugdi ang Shizuku aron gamiton ang Shizuku isip extension installer.</string>
-    <string name="pref_fullscreen">Fullscreen</string>
     <string name="pref_dual_page_split">Duha ka panid nga bahin</string>
     <string name="pref_dual_page_invert">Balita ang duha ka panid nga pagbahin sa pagbutang</string>
     <string name="pref_dual_page_invert_summary">Kung ang pagbutang sa doble nga panid sa panid dili motakdo sa direksyon sa pagbasa</string>

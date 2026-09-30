@@ -39,6 +39,7 @@ import tachiyomi.data.entry.EntryProgressRepositoryImpl
 import tachiyomi.data.entry.EntryRepositoryImpl
 import tachiyomi.data.entry.EntrySyncRepositoryImpl
 import tachiyomi.data.entry.EntryTranslationLanguagesRepositoryImpl
+import tachiyomi.data.entry.EntryTranslationQueueRepositoryImpl
 import tachiyomi.data.entry.PlaybackPreferencesRepositoryImpl
 import tachiyomi.data.entry.ViewerSettingOverrideRepositoryImpl
 import tachiyomi.data.history.HistoryRepositoryImpl
@@ -78,6 +79,7 @@ import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.entry.repository.EntrySyncRepository
 import tachiyomi.domain.entry.repository.EntryTranslationLanguagesRepository
+import tachiyomi.domain.entry.repository.EntryTranslationQueueRepository
 import tachiyomi.domain.entry.repository.PlaybackPreferencesRepository
 import tachiyomi.domain.entry.service.FetchInterval
 import tachiyomi.domain.history.interactor.GetHistory
@@ -126,6 +128,7 @@ class DomainModule : InjektModule {
         addSingletonFactory<EntryProgressRepository> { EntryProgressRepositoryImpl(get()) }
         addSingletonFactory<PlaybackPreferencesRepository> { PlaybackPreferencesRepositoryImpl(get()) }
         addSingletonFactory<EntryTranslationLanguagesRepository> { EntryTranslationLanguagesRepositoryImpl(get()) }
+        addSingletonFactory<EntryTranslationQueueRepository> { EntryTranslationQueueRepositoryImpl(get(), get()) }
         addSingletonFactory<ViewerSettingOverrideRepository> { ViewerSettingOverrideRepositoryImpl(get()) }
         addSingletonFactory<DownloadPreferencesRepository> { DownloadPreferencesRepositoryImpl(get()) }
         addSingletonFactory<EntrySyncRepository> { EntrySyncRepositoryImpl(get(), get()) }

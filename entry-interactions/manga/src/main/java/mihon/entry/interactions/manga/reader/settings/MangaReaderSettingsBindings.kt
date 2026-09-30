@@ -42,7 +42,8 @@ internal class MangaReaderSettingsBindings private constructor(
 
     val readerTheme: ViewerSettingBinding<Int> get() = binding(definitions.display.readerTheme)
     val showPageNumber: ViewerSettingBinding<Boolean> get() = binding(definitions.display.showPageNumber)
-    val fullscreen: ViewerSettingBinding<Boolean> get() = binding(definitions.display.fullscreen)
+    val showStatusBar: ViewerSettingBinding<Boolean> get() = binding(definitions.display.showStatusBar)
+    val showNavigationBar: ViewerSettingBinding<Boolean> get() = binding(definitions.display.showNavigationBar)
     val drawUnderCutout: ViewerSettingBinding<Boolean> get() = binding(definitions.display.drawUnderCutout)
     val keepScreenOn: ViewerSettingBinding<Boolean> get() = binding(definitions.display.keepScreenOn)
     val showReadingMode: ViewerSettingBinding<Boolean> get() = binding(definitions.display.showReadingMode)

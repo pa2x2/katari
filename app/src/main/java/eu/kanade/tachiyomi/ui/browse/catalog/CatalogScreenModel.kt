@@ -130,6 +130,7 @@ class CatalogScreenModel(
     private val migrationEntryType: EntryType? = null,
     private val initialFilterSnapshot: List<FilterStateNode> = emptyList(),
     private val initialPresetId: String? = null,
+    openFilterSheetOnStart: Boolean = false,
     private val sourceManager: SourceManager = Injekt.get(),
     sourcePreferences: SourcePreferences = Injekt.get(),
     customPreferences: CustomPreferences = Injekt.get(),
@@ -194,6 +195,9 @@ class CatalogScreenModel(
         } else {
             screenModelScope.launchIO {
                 loadFilters(initialFilterSnapshot = initialFilterSnapshot)
+            }
+            if (openFilterSheetOnStart) {
+                mutableState.update { it.copy(dialog = Dialog.Filter) }
             }
 
             if (!getIncognitoState.await(sourceId)) {
@@ -936,6 +940,14 @@ class CatalogScreenModel(
     fun draftCustomPreset(): SourceFeedPreset? {
         if (!feedsEnabled) return null
         return presetHelper.customPreset(state.value.draftPresetId)
+    }
+
+    /** The preset the draft stands for: the custom preset it was loaded from, or the built-in listing it equals. */
+    fun draftPreset(): SourceFeedPreset? {
+        if (!feedsEnabled) return null
+        val current = state.value
+        return presetHelper.customPreset(current.draftPresetId)
+            ?: presetHelper.builtInPreset(current.toSavedPresetState(current.defaultFilters).listingMode)
     }
 
     fun feedPresets(): List<SourceFeedPreset> {

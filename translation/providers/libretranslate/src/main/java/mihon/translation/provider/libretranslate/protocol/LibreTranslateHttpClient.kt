@@ -1,18 +1,11 @@
 package mihon.translation.provider.libretranslate.protocol
 
-import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlinx.serialization.SerializationException
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
-import okhttp3.Call
-import okhttp3.Callback
+import mihon.translation.provider.server.call.ServerCallException
+import mihon.translation.provider.server.call.ServerCallFailure
+import mihon.translation.provider.server.call.ServerJsonCalls
 import okhttp3.HttpUrl
-import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import okhttp3.RequestBody.Companion.toRequestBody
-import okhttp3.Response
-import java.io.IOException
 
 internal interface LibreTranslateService {
     suspend fun languages(): List<LibreTranslateLanguage>
@@ -25,18 +18,18 @@ internal interface LibreTranslateService {
 }
 
 internal class LibreTranslateHttpClient(
-    private val httpClient: OkHttpClient,
+    httpClient: OkHttpClient,
     private val endpoint: HttpUrl,
     private val apiKey: String? = null,
-    private val json: Json = DEFAULT_JSON,
 ) : LibreTranslateService {
+    private val calls = ServerJsonCalls(httpClient)
+
     override suspend fun languages(): List<LibreTranslateLanguage> {
         val request = Request.Builder()
             .url(endpoint.newBuilder().addPathSegment("languages").build())
             .get()
             .build()
-        val body = execute(request)
-        val response = decode<List<LibreTranslateLanguageResponse>>(body)
+        val response = calls.answer<List<LibreTranslateLanguageResponse>>(request)
         return try {
             response.map { language ->
                 LibreTranslateLanguage(
@@ -46,7 +39,7 @@ internal class LibreTranslateHttpClient(
                 )
             }
         } catch (_: IllegalArgumentException) {
-            throw LibreTranslateException(LibreTranslateFailureKind.InvalidResponse)
+            throw ServerCallException(ServerCallFailure.InvalidAnswer)
         }
     }
 
@@ -55,79 +48,19 @@ internal class LibreTranslateHttpClient(
         source: String,
         target: String,
     ): String {
-        val payload = json.encodeToString(
-            LibreTranslateRequest(
-                q = text,
-                source = source,
-                target = target,
-                apiKey = apiKey,
-            ),
+        val payload = LibreTranslateRequest(
+            q = text,
+            source = source,
+            target = target,
+            apiKey = apiKey,
         )
         val request = Request.Builder()
             .url(endpoint.newBuilder().addPathSegment("translate").build())
-            .post(payload.toRequestBody(JSON_MEDIA_TYPE))
+            .post(calls.body(payload))
             .build()
-        return decode<LibreTranslateResponse>(execute(request))
+        return calls.answer<LibreTranslateResponse>(request)
             .translatedText
             .takeIf(String::isNotBlank)
-            ?: throw LibreTranslateException(LibreTranslateFailureKind.InvalidResponse)
-    }
-
-    /**
-     * Keeps the call cancellable until its body has been read, so cancelling a translation aborts
-     * a slow response body instead of waiting for the socket read timeout.
-     */
-    private suspend fun execute(request: Request): String {
-        val call = httpClient.newCall(request)
-        return suspendCancellableCoroutine { continuation ->
-            continuation.invokeOnCancellation { call.cancel() }
-            call.enqueue(
-                object : Callback {
-                    override fun onFailure(call: Call, e: IOException) {
-                        continuation.resumeWith(
-                            Result.failure(LibreTranslateException(LibreTranslateFailureKind.Connection, e)),
-                        )
-                    }
-
-                    override fun onResponse(call: Call, response: Response) {
-                        continuation.resumeWith(runCatching { response.use(::readBody) })
-                    }
-                },
-            )
-        }
-    }
-
-    private fun readBody(response: Response): String {
-        if (!response.isSuccessful) {
-            throw LibreTranslateException(
-                when (response.code) {
-                    in 400..499 -> LibreTranslateFailureKind.Rejected
-                    else -> LibreTranslateFailureKind.Server
-                },
-            )
-        }
-        return try {
-            response.body.string()
-        } catch (e: IOException) {
-            throw LibreTranslateException(LibreTranslateFailureKind.Connection, e)
-        }
-    }
-
-    private inline fun <reified T> decode(body: String): T {
-        return try {
-            json.decodeFromString(body)
-        } catch (_: SerializationException) {
-            throw LibreTranslateException(LibreTranslateFailureKind.InvalidResponse)
-        } catch (_: IllegalArgumentException) {
-            throw LibreTranslateException(LibreTranslateFailureKind.InvalidResponse)
-        }
-    }
-
-    private companion object {
-        val JSON_MEDIA_TYPE = "application/json; charset=utf-8".toMediaType()
-        val DEFAULT_JSON = Json {
-            ignoreUnknownKeys = true
-            explicitNulls = false
-        }
+            ?: throw ServerCallException(ServerCallFailure.InvalidAnswer)
     }
 }

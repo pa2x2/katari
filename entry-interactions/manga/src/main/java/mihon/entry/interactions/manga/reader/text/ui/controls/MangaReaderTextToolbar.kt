@@ -1,6 +1,7 @@
 package mihon.entry.interactions.manga.reader.text.ui.controls
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
@@ -9,6 +10,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.HighlightAlt
 import androidx.compose.material.icons.outlined.Subtitles
@@ -16,6 +18,8 @@ import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
@@ -26,7 +30,9 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
@@ -49,7 +55,8 @@ import tachiyomi.presentation.core.i18n.stringResource
  * Status and actions of translate mode, shown while it is active.
  *
  * [languages] names the page language and the target, and is null while the page language is unknown: the target alone
- * would read as the answer to the question which language the pages are in.
+ * would read as the answer to the question which language the pages are in. While the pages on screen are [stored]
+ * translations, it names the languages they were translated between and the stored translation can be deleted.
  */
 @Composable
 internal fun MangaReaderTextToolbar(
@@ -57,6 +64,7 @@ internal fun MangaReaderTextToolbar(
     overlay: Boolean,
     showOriginal: Boolean,
     languages: String?,
+    stored: Boolean,
     observeModels: (List<ModelArtifactDescriptor>) -> Flow<List<ModelArtifactState>>,
     onDownloadModels: (List<ModelArtifactDescriptor>) -> Unit,
     onDownloadPlatformModels: (MangaReaderTextBlocker.PlatformModelsRequired) -> Unit,
@@ -66,6 +74,7 @@ internal fun MangaReaderTextToolbar(
     onFixTranslationIssue: (MangaPageTranslationIssue) -> Unit,
     onToggleOverlay: () -> Unit,
     onToggleOriginal: () -> Unit,
+    onDeleteStoredTranslation: () -> Unit,
     onSelectArea: () -> Unit,
     onClose: () -> Unit,
     modifier: Modifier = Modifier,
@@ -151,6 +160,9 @@ internal fun MangaReaderTextToolbar(
                         )
                     }
                 }
+                if (stored) {
+                    StoredTranslationMenu(onDelete = onDeleteStoredTranslation)
+                }
                 IconButton(onClick = onClose) {
                     Icon(Icons.Outlined.Close, contentDescription = stringResource(MR.strings.action_close))
                 }
@@ -158,6 +170,28 @@ internal fun MangaReaderTextToolbar(
             (progress as? MangaReaderTextProgress.TranslationUnavailable)?.let {
                 MangaPageTranslationIssueRow(issue = it.issue, onFix = onFixTranslationIssue)
             }
+        }
+    }
+}
+
+@Composable
+private fun StoredTranslationMenu(onDelete: () -> Unit) {
+    var expanded by remember { mutableStateOf(false) }
+    Box {
+        IconButton(onClick = { expanded = true }) {
+            Icon(
+                Icons.Filled.MoreVert,
+                contentDescription = stringResource(MR.strings.action_menu_overflow_description),
+            )
+        }
+        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            DropdownMenuItem(
+                text = { Text(stringResource(MR.strings.action_delete_translation)) },
+                onClick = {
+                    expanded = false
+                    onDelete()
+                },
+            )
         }
     }
 }

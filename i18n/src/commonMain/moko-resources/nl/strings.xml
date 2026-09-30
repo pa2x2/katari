@@ -71,7 +71,6 @@
     <string name="all">Alles</string>
     <string name="default_category">Standaard categorie</string>
     <string name="default_category_summary">Altijd vragen</string>
-    <string name="pref_fullscreen">Volledig scherm</string>
     <string name="pref_page_transitions">Animeer pagina-overgangen</string>
     <string name="pref_show_page_number">Toon paginanummer</string>
     <string name="pref_crop_borders">Randen bijsnijden</string>

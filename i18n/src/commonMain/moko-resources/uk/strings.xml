@@ -100,7 +100,6 @@
     <string name="untrusted_extension_message">Шкідливе розширення може зчитувати будь-які збережені облікові дані для входу або виконати довільний код.
 \n
 \nДовіряючи цьому розширенню, ви приймаєте ці ризики.</string>
-    <string name="pref_fullscreen">Повноекранний режим</string>
     <string name="pref_page_transitions">Анімація переходів сторінки</string>
     <string name="pref_double_tap_anim_speed">Швидкість анімації при подвійному натиснені</string>
     <string name="pref_show_page_number">Показувати номер сторінки</string>

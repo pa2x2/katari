@@ -101,7 +101,6 @@
     <string name="ext_installing">Instalatzen</string>
     <string name="ext_nsfw_warning">NSFW (18+) edukia izan dezake</string>
     <string name="ext_installer_pref">Instalatzailea</string>
-    <string name="pref_fullscreen">Pantaila osoa</string>
     <string name="pref_grayscale">Gris-eskala</string>
     <string name="pref_inverted_colors">Alderantzikatua</string>
     <string name="pref_color_filter_mode">Kolore-iragazkia modu nahastuan</string>

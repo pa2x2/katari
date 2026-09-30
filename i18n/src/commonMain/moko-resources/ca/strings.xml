@@ -98,7 +98,6 @@
     <string name="ext_uninstall">Desinstal·la</string>
     <string name="untrusted_extension">Extensió que no és de confiança</string>
     <string name="untrusted_extension_message">Les extensions malicioses poden llegir qualsevol credencial d’inici de sessió desada o executar codi arbitrari.\n\nSi confieu en aquesta extensió, accepteu aquests riscos.</string>
-    <string name="pref_fullscreen">Pantalla completa</string>
     <string name="pref_page_transitions">Anima les transicions de pàgina</string>
     <string name="pref_show_page_number">Mostra el número de pàgina</string>
     <string name="pref_crop_borders">Retalla les vores</string>

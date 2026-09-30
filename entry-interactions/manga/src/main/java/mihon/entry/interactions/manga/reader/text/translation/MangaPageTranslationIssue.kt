@@ -54,6 +54,9 @@ internal sealed interface MangaPageTranslationIssue {
     /** The engine opens its own surface or needs an action per text, so nothing can be drawn; an engine is chosen. */
     data object EngineUnsupported : MangaPageTranslationIssue
 
+    /** The engine failed to translate a page, for the reason in [message] when it gave one; it is asked again. */
+    data class EngineFailed(val message: String?) : MangaPageTranslationIssue
+
     /** Something Android or the engine controls, fixed from settings. */
     data class Unavailable(val reason: TranslationUnavailableReason) : MangaPageTranslationIssue
 }

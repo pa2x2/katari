@@ -9,7 +9,7 @@ import mihon.translation.api.preparation.TranslationSystemSetupReason
 import mihon.translation.api.preparation.TranslationUnavailableReason
 import mihon.translation.api.provider.TranslationProviderDisclosure
 import mihon.translation.api.provider.TranslationProviderPresentation
-import mihon.translation.api.request.ResolvedTranslationRequest
+import mihon.translation.api.request.ResolvedTranslationRoute
 
 /**
  * Internal provider adapter. Platform and future engines implement this contract without becoming public API.
@@ -25,11 +25,12 @@ interface TranslationEngine {
     /** Provider-owned language support inspection. No sample text may be sent to the provider. */
     suspend fun inspectLanguageSupport(): TranslationLanguageSupportInspection
 
-    suspend fun prepare(request: ResolvedTranslationRequest): TranslationEnginePreparation
+    /** Readiness depends on the route only, so the same preparation serves every text translated along it. */
+    suspend fun prepare(route: ResolvedTranslationRoute): TranslationEnginePreparation
 
     suspend fun revalidate(ready: ReadyTranslationEngineRequest): TranslationEnginePreparation
 
-    suspend fun translate(ready: ReadyTranslationEngineRequest): TranslationEngineExecution
+    suspend fun translate(ready: ReadyTranslationEngineRequest, text: String): TranslationEngineExecution
 }
 
 sealed interface TranslationEngineDeviceAvailability {
@@ -74,11 +75,11 @@ sealed interface TranslationEnginePreparation {
 
     data class ProviderDisclosureRequired(
         val disclosure: TranslationProviderDisclosure,
-    ) : TranslationEnginePreparation
+    ) : TranslationEngineRequirement
 
     data class ModelDownloadRequired(
         val models: List<TranslationModelDescriptor>,
-    ) : TranslationEnginePreparation {
+    ) : TranslationEngineRequirement {
         init {
             require(models.isNotEmpty())
         }
@@ -86,16 +87,19 @@ sealed interface TranslationEnginePreparation {
 
     data class SystemSetupRequired(
         val reason: TranslationSystemSetupReason,
-    ) : TranslationEnginePreparation
+    ) : TranslationEngineRequirement
 
     data class SetupInProgress(
         val progress: TranslationOperationProgress? = null,
-    ) : TranslationEnginePreparation
+    ) : TranslationEngineRequirement
 
     data class Unavailable(
         val reason: TranslationUnavailableReason,
-    ) : TranslationEnginePreparation
+    ) : TranslationEngineRequirement
 }
+
+/** Everything but [TranslationEnginePreparation.Ready]: what the user must resolve before the engine can run. */
+sealed interface TranslationEngineRequirement : TranslationEnginePreparation
 
 sealed interface TranslationEngineExecution {
     data class Success(

@@ -6,6 +6,7 @@
     <string name="on">On</string>
     <string name="off">Off</string>
     <string name="selected">Selected</string>
+    <string name="library_selected_count">%1$d selected</string>
     <string name="action_back">Back</string>
     <string name="not_selected">Not selected</string>
     <string name="action_menu_overflow_description">More options</string>
@@ -163,7 +164,7 @@
     <string name="action_display_comfortable_list">Comfortable list</string>
     <string name="action_display_list">List</string>
     <string name="action_display_cover_only_grid">Cover-only grid</string>
-    <string name="action_display_download_badge">Downloaded</string>
+    <string name="action_display_download_badge">Download count</string>
     <string name="action_display_unread_badge">Unread</string>
     <string name="action_display_unwatched_badge">Unwatched episodes</string>
     <string name="action_display_local_badge">Local source</string>
@@ -176,7 +177,7 @@
     <string name="action_display_show_number_of_items">Show number of items</string>
     <string name="action_display_show_continue_reading_button">Continue reading button</string>
     <string name="action_display_show_continue_watching_button">Continue watching button</string>
-    <string name="action_display_unseen_badge">Unseen badge</string>
+    <string name="action_display_unseen_badge">Unread count</string>
     <string name="action_display_show_continue_button">Continue button</string>
     <string name="action_disable">Disable</string>
     <string name="action_pin">Pin</string>
@@ -555,6 +556,46 @@
     <string name="reader_text_recognizing">Recognizing text…</string>
     <string name="reader_text_ready">Tap a speech bubble to translate it</string>
     <string name="reader_text_no_text">No text found on this page</string>
+    <string name="reader_text_saved_languages">Saved · %1$s</string>
+    <string name="action_delete_translation">Delete translation</string>
+    <!-- Chapter translation -->
+    <string name="action_translate_again">Translate again</string>
+    <string name="action_start_translating_now">Start translating now</string>
+    <string name="action_cancel_translation">Cancel translation</string>
+    <string name="action_retry_translation">Retry translation</string>
+    <string name="action_download_and_translate">Download and translate</string>
+    <string name="action_set_up">Set up</string>
+    <string name="action_choose">Choose</string>
+    <string name="chapter_translation_translated">Translated</string>
+    <string name="chapter_translation_waiting">Waiting for download</string>
+    <string name="chapter_translation_queued">Queued for translation</string>
+    <string name="chapter_translation_translating">Translating %1$d/%2$d</string>
+    <string name="chapter_translation_failed">Translation failed</string>
+    <string name="chapter_translation_failed_reason">Failed · %1$s</string>
+    <string name="chapter_translation_failure_download_failed">Download failed</string>
+    <string name="chapter_translation_failure_download_missing">Download is missing</string>
+    <string name="chapter_translation_failure_setup_required">Needs setting up</string>
+    <string name="chapter_translation_paused">Paused</string>
+    <string name="action_fix">Fix</string>
+    <string name="action_start_now">Start now</string>
+    <string name="label_downloads_tab">Downloads</string>
+    <string name="label_translations_tab">Translations</string>
+    <string name="information_no_translations">No chapters are queued for translation</string>
+    <string name="chapter_translation_setup_title">Before translating</string>
+    <string name="chapter_translation_setup_uses">Translates %1$s with %2$s</string>
+    <string name="chapter_translation_setup_resolved">Everything is ready.</string>
+    <string name="chapter_translation_page_language">Which language are the pages in?</string>
+    <string name="chapter_translation_pipeline_required">Choose how %1$s text is read</string>
+    <string name="chapter_translation_recognition_models">Text recognition needs models to download</string>
+    <string name="chapter_translation_unsupported_language">Text in %1$s can\'t be read in this build</string>
+    <string name="chapter_translation_recognition_unavailable">Text recognition is unavailable: %1$s</string>
+    <string name="chapter_translation_translation_models">Translation needs language data to download</string>
+    <string name="chapter_translation_system_setup">%1$s needs to be set up</string>
+    <string name="chapter_translation_setup_in_progress">%1$s is being set up…</string>
+    <string name="chapter_translation_target_required">Choose a language to translate to</string>
+    <string name="chapter_translation_engine_required">Choose a translation engine</string>
+    <string name="chapter_translation_unavailable">Translation is unavailable for these languages</string>
+    <string name="chapter_translation_engine_needs_user">%1$s can\'t translate in the background. Choose another engine.</string>
     <string name="reader_text_waiting">Waiting for the page to load</string>
     <string name="reader_text_failed">Text recognition failed: %s</string>
     <string name="reader_text_select_area">Select area</string>
@@ -592,6 +633,9 @@
     <string name="reader_text_page_language_from_source">%1$s · from the source</string>
     <string name="reader_text_page_language_follow_source">From the source</string>
     <string name="reader_text_page_language_rereads">Changing the page language reads the pages again.</string>
+    <string name="reader_text_translate_downloads">Translate downloads</string>
+    <string name="reader_text_translate_downloads_summary">Chapters of this series are translated in the background once downloaded</string>
+    <string name="reader_text_translate_downloads_offer_title">Translate downloaded chapters?</string>
     <string name="pref_page_text_translation">Page translation</string>
     <string name="pref_page_text_translation_overlay">Show translations on the page</string>
     <string name="pref_page_text_translation_overlay_summary">Translate every recognized text while translate mode is on, instead of only tapped text</string>
@@ -663,8 +707,8 @@
     <string name="pref_book_document_reader_theme">Theme</string>
     <string name="pref_book_document_reader_text_size">Text size</string>
     <string name="pref_book_document_reader_keep_screen_alive">Keep screen alive</string>
-    <string name="pref_book_document_reader_show_status_bar">Show status bar</string>
-    <string name="pref_book_document_reader_show_navigation_bar">Show navigation bar</string>
+    <string name="pref_reader_show_status_bar">Show status bar</string>
+    <string name="pref_reader_show_navigation_bar">Show navigation bar</string>
     <string name="pref_book_document_reader_show_text_selection_menu">Show text selection menu</string>
     <string name="pref_book_document_reader_show_reading_progress">Show reading progress</string>
     <string name="pref_book_document_reader_reading_progress_style">Reading progress style</string>
@@ -715,7 +759,7 @@
     <string name="pref_library_summary_unified">Categories, display, updates, and behavior</string>
     <string name="pref_reader_summary">Reading mode, display, navigation</string>
     <string name="pref_player_summary">Picture-in-Picture, seek preview</string>
-    <string name="pref_downloads_summary">Automatic download, download ahead</string>
+    <string name="pref_downloads_summary">Automatic download, download ahead, auto-translate</string>
     <string name="pref_tracking_summary">One-way progress sync, enhanced sync</string>
     <string name="pref_browse_summary">Sources, extensions, global search</string>
     <string name="pref_backup_summary">Manual &amp; automatic backups, storage space</string>
@@ -774,6 +818,7 @@
       <!-- Library section -->
     <string name="pref_category_display">Display</string>
     <string name="pref_library_columns">Items per row</string>
+    <string name="pref_library_columns_for_orientation">Items per row · %1$s</string>
     <string name="portrait">Portrait</string>
     <string name="landscape">Landscape</string>
 
@@ -908,7 +953,6 @@
     <string name="extensionStoresScreen.deleteStore.body">Do you wish to remove the extension store \"%1$s\" (%2$s)?</string>
 
       <!-- Reader section -->
-    <string name="pref_fullscreen">Fullscreen</string>
     <string name="pref_show_navigation_mode">Show tap zones overlay</string>
     <string name="pref_show_navigation_mode_summary">Briefly show when reader is opened</string>
     <string name="pref_dual_page_split">Split wide pages</string>
@@ -1058,6 +1102,14 @@
     <string name="download_ahead">Download ahead</string>
     <string name="auto_download_while_reading">Auto download while viewing</string>
     <string name="download_ahead_info">Only works if the current item and the next one are already downloaded.</string>
+    <string name="pref_category_auto_translate">Auto-translate</string>
+    <string name="pref_translate_new">Translate new items</string>
+    <string name="pref_translate_new_summary">Items downloaded automatically are translated as well</string>
+    <string name="pref_translate_ahead">Translate ahead while viewing</string>
+    <string name="pref_translate_only_while_charging">Only while charging</string>
+    <string name="pref_translate_only_over_wifi">Only on Wi-Fi</string>
+    <string name="pref_translate_only_over_wifi_summary">For engines that send text over the network</string>
+    <string name="pref_translate_info">Items are translated with their series\' languages and the default translation engine. Only downloaded items or items being downloaded are translated.</string>
     <string name="save_chapter_as_cbz">Save items as CBZ archive</string>
     <string name="split_tall_images">Split tall images</string>
     <string name="split_tall_images_summary">Improves reader performance</string>
@@ -1390,7 +1442,8 @@
     <string name="downloaded_chapters">Downloaded items</string>
     <string name="intervals_header">Intervals</string>
     <!-- For badges/buttons on library covers. -->
-    <string name="overlay_header">Overlay</string>
+    <string name="overlay_header">Cover badges</string>
+    <string name="library_cover_actions_header">Cover actions</string>
     <string name="tabs_header">Tabs</string>
 
     <!-- Browse source -->
@@ -1403,14 +1456,31 @@
     <string name="pinned_sources">Pinned</string>
     <string name="action_global_search_hint">Global search…</string>
     <string name="action_global_search_query">Search for \"%1$s\" globally</string>
+    <string name="library_search_see_all">See all</string>
+    <string name="library_search_tips_title">Search tips</string>
+    <string name="library_search_tips_examples">genre:action unread&gt;0 — unread action series\nauthor:ONE || author:Murata — either author\n-genre:romance — leave a genre out</string>
+    <string name="library_search_no_match">Nothing in your library matches “%1$s”</string>
+    <string name="library_search_sources_for">Search sources for “%1$s”</string>
+    <string name="library_search_no_match_tip">Tip: search a single field with author: or genre:</string>
     <string name="latest">Latest</string>
     <string name="popular">Popular</string>
     <string name="browse">Browse</string>
     <string name="browse_enter_immersive">Enter immersive mode</string>
     <string name="browse_exit_immersive">Exit immersive mode</string>
     <string name="browse_feeds">Feeds</string>
-    <string name="browse_feeds_empty">No feeds configured yet</string>
+    <string name="browse_feeds_empty">No feeds yet</string>
+    <string name="browse_feeds_empty_summary">A feed follows one source\'s Popular, Latest or a saved filter, and remembers where you stopped.</string>
     <string name="browse_manage_feeds">Manage feeds</string>
+    <string name="browse_feed_add">Add feed</string>
+    <string name="browse_feed_search_sources">Search sources</string>
+    <string name="browse_feed_added">Added</string>
+    <string name="browse_feed_filtered">Filtered feed…</string>
+    <string name="browse_feed_filtered_summary">Opens %1$s with filters; saving a preset adds it here</string>
+    <string name="browse_feed_rename">Rename</string>
+    <string name="browse_feed_rename_title">Rename feed</string>
+    <string name="browse_feed_rename_hint">Leave empty to use the preset name (%1$s)</string>
+    <string name="browse_feed_removed">Feed removed</string>
+    <string name="browse_feed_long_press_actions_for_source">Long-press actions for %1$s</string>
     <string name="browse_feed_regular_mode">Regular feed view</string>
     <string name="browse_feed_immersive_mode">Immersive feed view</string>
     <string name="browse_feed_playback_mode">Playback feed view</string>
@@ -1690,6 +1760,8 @@
     <!-- Updates -->
     <string name="updating_library">Updating library</string>
     <string name="update_already_running">An update is already running</string>
+    <string name="library_update_progress">%1$s · %2$d / %3$d</string>
+    <string name="library_update_cancel">Cancel update</string>
     <string name="cant_open_last_read_chapter">Unable to open last seen item</string>
     <string name="updates_last_update_info">Library last updated: %s</string>
     <string name="updates_last_update_info_just_now">Just now</string>
@@ -1859,6 +1931,8 @@
     <string name="information_no_recent">No recent updates</string>
     <string name="information_no_recent_manga">Nothing read recently</string>
     <string name="information_empty_library">Your library is empty</string>
+    <string name="information_empty_library_hint">Add series from a source, or bring your library back from a backup.</string>
+    <string name="action_browse_sources">Browse sources</string>
     <string name="information_no_manga_category">Category is empty</string>
     <string name="information_no_manga_group">Group is empty</string>
     <string name="information_no_entries_found">No entries found in this group</string>
@@ -1878,6 +1952,10 @@
 
     <!-- Download Notification -->
     <string name="download_notifier_downloader_title">Downloader</string>
+    <string name="translate_notifier_title">Translating chapters</string>
+    <string name="translate_waiting_for_charger">Waiting for charger</string>
+    <string name="translate_waiting_for_wifi">Waiting for Wi-Fi</string>
+    <string name="translate_notifier_paused">Translations paused</string>
     <string name="download_notifier_title_error">Error</string>
     <string name="download_notifier_unknown_error">Could not download item due to unexpected error</string>
     <string name="download_notifier_text_only_wifi">No Wi-Fi connection available</string>

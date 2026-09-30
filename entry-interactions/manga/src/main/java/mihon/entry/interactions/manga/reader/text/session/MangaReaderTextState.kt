@@ -2,6 +2,7 @@ package mihon.entry.interactions.manga.reader.text.session
 
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
 import mihon.entry.interactions.manga.reader.text.translation.MangaPageTranslationIssue
+import mihon.entry.interactions.manga.translation.artifact.MangaChapterTranslationSetup
 import mihon.language.api.tag.LanguageTag
 import mihon.model.artifacts.api.descriptor.ModelArtifactDescriptor
 import mihon.text.recognition.api.component.TextRecognitionComponentId
@@ -32,7 +33,13 @@ internal data class MangaReaderTextState(
     val overlays: Map<ReaderPage, List<MangaPageTextOverlay>> = emptyMap(),
     val translating: Set<ReaderPage> = emptySet(),
     val translationIssue: MangaPageTranslationIssue? = null,
+    /** What produced the stored translations pages are drawn from. */
+    val storedSetups: Map<ReaderPage, MangaChapterTranslationSetup> = emptyMap(),
 ) {
+    /** What produced the stored translation of the pages on screen, when they are drawn from one. */
+    val storedSetup: MangaChapterTranslationSetup?
+        get() = visiblePages.firstNotNullOfOrNull(storedSetups::get)
+
     /** What the reader should tell the user about the pages on screen. */
     val progress: MangaReaderTextProgress
         get() {

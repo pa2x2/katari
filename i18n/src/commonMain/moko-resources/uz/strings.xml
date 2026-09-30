@@ -195,7 +195,6 @@
 \n
 \nBu sertifikatga ishonish orqali, ushbu xavflarni qabul qilasiz.</string>
     <string name="pref_dual_page_invert_summary">Agar keng sahifalarning bo\'linishi o\'qish yo\'nalishiga mos kelmasa</string>
-    <string name="pref_fullscreen">To\'liq ekran rejimi</string>
     <string name="pref_dual_page_split">Keng sahifalarni bo\'lish</string>
     <string name="pref_dual_page_invert">Keng sahifalarni teskarisiga ajratish</string>
     <string name="pref_crop_borders">Chetlarini kesish</string>

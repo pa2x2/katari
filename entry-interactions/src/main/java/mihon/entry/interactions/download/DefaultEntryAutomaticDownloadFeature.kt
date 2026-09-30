@@ -1,6 +1,9 @@
 package mihon.entry.interactions.download
 
 import eu.kanade.tachiyomi.source.entry.EntryType
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import mihon.feature.graph.FeatureGraphEvaluation
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
@@ -30,6 +33,9 @@ internal class DefaultEntryAutomaticDownloadFeature(
     private val sharedPolicy: EntryAutomaticDownloadPolicy,
 ) : EntryAutomaticDownloadCoordinator {
     private val applicableTypes = evaluation.automaticDownloadTypes()
+    private val mutableScheduled = MutableSharedFlow<EntryAutomaticDownloadScheduled>(extraBufferCapacity = 64)
+
+    override val scheduled: Flow<EntryAutomaticDownloadScheduled> = mutableScheduled.asSharedFlow()
 
     override fun isApplicable(type: EntryType): Boolean = type in applicableTypes
 
@@ -45,6 +51,7 @@ internal class DefaultEntryAutomaticDownloadFeature(
             is SelectedCandidates.Empty -> candidates.result
             is SelectedCandidates.Selected -> {
                 interaction.download(entry, candidates.chapters)
+                mutableScheduled.emit(EntryAutomaticDownloadScheduled(entry, candidates.chapters))
                 EntryAutomaticDownloadResult.Scheduled(candidates.chapters.size)
             }
         }
@@ -58,6 +65,7 @@ internal class DefaultEntryAutomaticDownloadFeature(
             is SelectedCandidates.Empty -> candidates.result
             is SelectedCandidates.Selected -> {
                 interaction.queue(entry, candidates.chapters, autoStart = false)
+                mutableScheduled.emit(EntryAutomaticDownloadScheduled(entry, candidates.chapters))
                 EntryAutomaticDownloadResult.Scheduled(candidates.chapters.size)
             }
         }

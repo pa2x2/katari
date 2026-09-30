@@ -28,6 +28,7 @@ import mihon.entry.interactions.manga.reader.text.interaction.MangaReaderTextInt
 import mihon.entry.interactions.manga.reader.text.session.MangaReaderTextBlocker
 import mihon.entry.interactions.manga.reader.text.session.MangaReaderTextState
 import mihon.entry.interactions.manga.reader.text.translation.MangaPageTranslationIssue
+import mihon.entry.interactions.manga.reader.text.translation.MangaReaderTranslateDownloads
 import mihon.entry.interactions.manga.reader.text.ui.controls.MangaReaderTextControlsEdge
 import mihon.entry.interactions.manga.reader.text.ui.controls.MangaReaderTextControlsPlacement
 import mihon.entry.interactions.manga.reader.text.ui.controls.MangaReaderTextFloatingControls
@@ -52,6 +53,7 @@ internal fun MangaReaderTextLayer(
     state: MangaReaderTextState,
     menuVisible: Boolean,
     translationCoordinator: TranslationSessionHostCoordinator,
+    translateDownloads: MangaReaderTranslateDownloads,
     recognitionLanguages: List<LanguageTag>,
     areaResult: MangaReaderTextInteraction.AreaResult?,
     observeModels: (List<ModelArtifactDescriptor>) -> Flow<List<ModelArtifactState>>,
@@ -62,8 +64,10 @@ internal fun MangaReaderTextLayer(
     onChooseLanguage: (LanguageTag?) -> Unit,
     onChoosePipeline: (LanguageTag) -> Unit,
     onDismissTranslation: () -> Unit,
+    onRetryTranslation: () -> Unit,
     onToggleOverlay: () -> Unit,
     onToggleOriginal: () -> Unit,
+    onDeleteStoredTranslation: () -> Unit,
     onOpenTranslationSettings: () -> Unit,
     onClose: () -> Unit,
 ) {
@@ -77,6 +81,8 @@ internal fun MangaReaderTextLayer(
     val snackbarHostState = remember { SnackbarHostState() }
     val choices by translationCoordinator.languages.choices.collectAsState()
     val target = remember(choices) { translationCoordinator.languages.effectiveTarget(choices) }
+    val translatesDownloads by translateDownloads.enabled.collectAsState()
+    val translateDownloadsOffer by translateDownloads.offer.collectAsState()
     var controlsPlacement by rememberSaveable(stateSaver = MangaReaderTextControlsPlacementSaver) {
         mutableStateOf(MangaReaderTextControlsPlacement())
     }
@@ -109,7 +115,16 @@ internal fun MangaReaderTextLayer(
                     progress = state.progress,
                     overlay = state.overlay,
                     showOriginal = state.showOriginal,
-                    languages = state.language?.let { language ->
+                    languages = state.storedSetup?.let { stored ->
+                        stringResource(
+                            MR.strings.reader_text_saved_languages,
+                            stringResource(
+                                MR.strings.translation_language_pair,
+                                stored.route.sourceLanguage.displayName(),
+                                stored.route.targetLanguage.displayName(),
+                            ),
+                        )
+                    } ?: state.language?.let { language ->
                         target?.let {
                             stringResource(
                                 MR.strings.translation_language_pair,
@@ -118,6 +133,7 @@ internal fun MangaReaderTextLayer(
                             )
                         } ?: language.displayName()
                     },
+                    stored = state.storedSetup != null,
                     observeModels = observeModels,
                     onDownloadModels = { approving = it },
                     onDownloadPlatformModels = { approvingPlatform = it },
@@ -129,10 +145,12 @@ internal fun MangaReaderTextLayer(
                             issue = issue,
                             openSettings = onOpenTranslationSettings,
                             askDisclosure = { disclosing = it },
+                            retry = onRetryTranslation,
                         )
                     },
                     onToggleOverlay = onToggleOverlay,
                     onToggleOriginal = onToggleOriginal,
+                    onDeleteStoredTranslation = onDeleteStoredTranslation,
                     onSelectArea = { selectingArea = true },
                     onClose = onClose,
                     modifier = toolbarModifier,
@@ -195,6 +213,7 @@ internal fun MangaReaderTextLayer(
         MangaReaderTextLanguagesSheet(
             pageLanguage = mangaPageLanguageSummary(state),
             target = target?.let { translationEffectiveTargetSummary(it) },
+            translateDownloads = translatesDownloads,
             onChoosePageLanguage = {
                 showingLanguages = false
                 choosingLanguage = true
@@ -203,7 +222,15 @@ internal fun MangaReaderTextLayer(
                 showingLanguages = false
                 translationCoordinator.handleExternalAction(TranslationSessionExternalAction.ChooseTargetLanguage) {}
             },
+            onTranslateDownloadsChange = translateDownloads::setEnabled,
             onDismiss = { showingLanguages = false },
+        )
+    }
+    translateDownloadsOffer?.let { offer ->
+        MangaTranslateDownloadsOfferDialog(
+            count = offer.chapters.size,
+            onTranslate = translateDownloads::acceptOffer,
+            onDismiss = translateDownloads::declineOffer,
         )
     }
     if (choosingLanguage) {

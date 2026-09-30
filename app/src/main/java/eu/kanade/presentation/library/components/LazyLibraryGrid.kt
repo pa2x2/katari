@@ -3,7 +3,6 @@ package eu.kanade.presentation.library.components
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridScope
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
@@ -30,21 +29,4 @@ internal fun LazyLibraryGrid(
         horizontalArrangement = Arrangement.spacedBy(CommonEntryItemDefaults.GridHorizontalSpacer),
         content = content,
     )
-}
-
-internal fun LazyGridScope.globalSearchItem(
-    searchQuery: String?,
-    onGlobalSearchClicked: () -> Unit,
-) {
-    if (!searchQuery.isNullOrEmpty()) {
-        item(
-            span = { GridItemSpan(maxLineSpan) },
-            contentType = { "library_global_search_item" },
-        ) {
-            GlobalSearchItem(
-                searchQuery = searchQuery,
-                onClick = onGlobalSearchClicked,
-            )
-        }
-    }
 }

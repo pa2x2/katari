@@ -3,6 +3,7 @@ import mihon.gradle.tasks.GenerateEntryInteractionTopologyTask
 plugins {
     alias(mihonx.plugins.android.library)
     alias(mihonx.plugins.spotless)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 android {

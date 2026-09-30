@@ -62,6 +62,7 @@ class EntryTranslationLanguagesContractValidationContributor : FeatureValidation
                     val source = Entry.create().copy(id = 61L, type = provider.type)
                     val target = source.copy(id = 62L)
                     feature.setTargetLanguage(source, LanguageTag.require("es"))
+                    feature.setTranslateDownloads(source, enabled = true)
                     val binding = entryTranslationLanguagesMigrationBinding { feature }
                     val prepared = binding.preparer.prepare(
                         EntryMigrationDurableEvent("contract", source, target, emptySet(), emptyList(), emptyList()),
@@ -71,9 +72,10 @@ class EntryTranslationLanguagesContractValidationContributor : FeatureValidation
                         "Translation languages must prepare a durable Migration payload",
                     )
                     binding.deliveryHandler.deliver(requireNotNull(prepared))
+                    val carried = feature.observe(target).first()
                     contractExpectation(
-                        feature.observe(target).first().targetLanguage == LanguageTag.require("es"),
-                        "Translation-language Migration must carry the target language",
+                        carried.targetLanguage == LanguageTag.require("es") && carried.translateDownloads,
+                        "Translation-language Migration must carry the target language and translated downloads",
                     )
                 }
             },
@@ -103,6 +105,7 @@ class EntryTranslationLanguagesContractValidationContributor : FeatureValidation
                     )
                     feature.setContentLanguage(entry, LanguageTag.require("ja"))
                     feature.setTargetLanguage(entry, LanguageTag.require("es"))
+                    feature.setTranslateDownloads(entry, enabled = true)
                     val snapshot = feature.snapshot(entry)
                     contractExpectation(
                         snapshot is EntryTranslationLanguagesSnapshotResult.Captured,

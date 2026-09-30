@@ -7,6 +7,7 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -17,12 +18,16 @@ import mihon.translation.api.engine.TranslationEngineId
 import mihon.translation.api.engine.TranslationProviderId
 import mihon.translation.api.preparation.ReadyTranslation
 import mihon.translation.api.preparation.TranslationPreparation
+import mihon.translation.api.preparation.TranslationRoutePreparation
 import mihon.translation.api.provider.TranslationInvocationPolicy
 import mihon.translation.api.provider.TranslationProviderPresentation
 import mihon.translation.api.request.ResolvedTranslationRequest
+import mihon.translation.api.request.TranslationBatch
 import mihon.translation.api.request.TranslationRequest
+import mihon.translation.api.request.TranslationRouteRequest
 import mihon.translation.api.request.TranslationSourceLanguageSelection
 import mihon.translation.api.request.TranslationTargetLanguageSelection
+import mihon.translation.api.result.TranslationBatchUpdate
 import mihon.translation.api.result.TranslationExecution
 import mihon.translation.api.result.TranslationResult
 import org.junit.jupiter.api.Test
@@ -52,6 +57,12 @@ class TranslationSessionControllerTest {
             override suspend fun prepare(request: TranslationRequest): TranslationPreparation {
                 return ready(request, TranslationInvocationPolicy.Immediate)
             }
+
+            override suspend fun prepareRoute(route: TranslationRouteRequest): TranslationRoutePreparation =
+                error("Sessions prepare text")
+
+            override fun translateBatch(batch: TranslationBatch): Flow<TranslationBatchUpdate> =
+                error("Sessions prepare text")
 
             override suspend fun translate(ready: ReadyTranslation): TranslationExecution {
                 awaitCancellation()
@@ -188,6 +199,12 @@ class TranslationSessionControllerTest {
             preparedTexts += request.text
             return prepareOverride?.invoke(request) ?: ready(request, invocationPolicy)
         }
+
+        override suspend fun prepareRoute(route: TranslationRouteRequest): TranslationRoutePreparation =
+            error("Sessions prepare text")
+
+        override fun translateBatch(batch: TranslationBatch): Flow<TranslationBatchUpdate> =
+            error("Sessions prepare text")
 
         override suspend fun translate(ready: ReadyTranslation): TranslationExecution {
             val fake = ready as FakeReadyTranslation

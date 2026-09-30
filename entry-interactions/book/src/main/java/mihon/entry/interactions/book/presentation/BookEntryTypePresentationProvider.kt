@@ -23,7 +23,7 @@ internal object BookEntryTypePresentationProvider : EntryTypePresentationProvide
         unconsumedIndicatorLabel = MR.strings.action_filter_unconsumed,
         bookmarkChildLabel = MR.strings.action_bookmark,
         removeBookmarkChildLabel = MR.strings.action_remove_bookmark,
-        filterUnconsumedLabel = MR.strings.action_filter_unconsumed,
+        filterUnconsumedLabel = MR.strings.action_filter_unread,
         childListTitle = MR.strings.chapters,
         childCountPlural = MR.plurals.manga_num_chapters,
         completedChildCountPlural = MR.plurals.activity_completed_chapters,

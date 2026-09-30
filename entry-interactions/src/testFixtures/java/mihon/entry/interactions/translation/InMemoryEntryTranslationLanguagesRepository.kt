@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.update
 import tachiyomi.domain.entry.model.EntryTranslationLanguages
 import tachiyomi.domain.entry.repository.EntryTranslationLanguagesRepository
 
-/** Keeps records in memory with the database's rule that an entry without languages has no record. */
+/** Keeps records in memory with the database's rule that an entry that chooses nothing has no record. */
 internal class InMemoryEntryTranslationLanguagesRepository : EntryTranslationLanguagesRepository {
     private val records = MutableStateFlow(emptyMap<Long, EntryTranslationLanguages>())
 
@@ -19,7 +19,7 @@ internal class InMemoryEntryTranslationLanguagesRepository : EntryTranslationLan
         error("Profile listing needs entry ownership, which this fake does not model")
 
     override suspend fun upsert(languages: EntryTranslationLanguages) {
-        require(languages.contentLanguage != null || languages.targetLanguage != null)
+        require(languages.contentLanguage != null || languages.targetLanguage != null || languages.translateDownloads)
         records.update { it + (languages.entryId to languages) }
     }
 
@@ -29,15 +29,19 @@ internal class InMemoryEntryTranslationLanguagesRepository : EntryTranslationLan
     override suspend fun setTargetLanguage(entryId: Long, language: String?, updatedAt: Long) =
         write(entryId) { it.copy(targetLanguage = language, updatedAt = updatedAt) }
 
-    override suspend fun delete(entryId: Long) = records.update { it - entryId }
+    override suspend fun setTranslateDownloads(entryId: Long, enabled: Boolean, updatedAt: Long) =
+        write(entryId) { it.copy(translateDownloads = enabled, updatedAt = updatedAt) }
 
-    override suspend fun deleteByProfile(profileId: Long) =
-        error("Profile deletion needs entry ownership, which this fake does not model")
+    override suspend fun clearLanguages(entryId: Long, updatedAt: Long) =
+        write(entryId) { it.copy(contentLanguage = null, targetLanguage = null, updatedAt = updatedAt) }
+
+    override suspend fun clearLanguagesByProfile(profileId: Long, updatedAt: Long) =
+        error("Profile listing needs entry ownership, which this fake does not model")
 
     private fun write(entryId: Long, change: (EntryTranslationLanguages) -> EntryTranslationLanguages) {
         records.update { current ->
             val updated = change(current[entryId] ?: EntryTranslationLanguages(entryId, null, null, 0L))
-            if (updated.contentLanguage == null && updated.targetLanguage == null) {
+            if (updated.contentLanguage == null && updated.targetLanguage == null && !updated.translateDownloads) {
                 current - entryId
             } else {
                 current + (entryId to updated)

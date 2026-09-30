@@ -2,6 +2,7 @@ package eu.kanade.presentation.library.components
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.Folder
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -19,8 +20,9 @@ internal fun DownloadsBadge(count: Int) {
     if (count > 0) {
         Badge(
             text = "$count",
-            color = MaterialTheme.colorScheme.tertiary,
-            textColor = MaterialTheme.colorScheme.onTertiary,
+            icon = Icons.Outlined.Download,
+            color = MaterialTheme.colorScheme.surfaceContainerHighest,
+            textColor = MaterialTheme.colorScheme.onSurface,
         )
     }
 }
@@ -28,7 +30,11 @@ internal fun DownloadsBadge(count: Int) {
 @Composable
 internal fun UnreadBadge(count: Long) {
     if (count > 0) {
-        Badge(text = "$count")
+        Badge(
+            text = "$count",
+            color = MaterialTheme.colorScheme.primary,
+            textColor = MaterialTheme.colorScheme.onPrimary,
+        )
     }
 }
 
@@ -61,6 +67,31 @@ internal fun LanguageBadge(sourceLanguage: String) {
 @Composable
 internal fun EntryTypeBadge(entryType: EntryType) {
     CatalogTypeBadge(entryType = entryType)
+}
+
+/** Progress badges: the unread count leads, downloads follow with their own glyph so the two never read alike. */
+@Composable
+internal fun LibraryItemProgressBadges(item: LibraryItem, settings: LibraryDisplaySettings) {
+    if (settings.unreadBadge) {
+        item.unconsumedCount?.let { UnreadBadge(count = it) }
+    }
+    if (settings.downloadBadge) {
+        DownloadsBadge(count = item.downloadCount)
+    }
+}
+
+/** Origin badges: entry type, local source and language. */
+@Composable
+internal fun LibraryItemOriginBadges(item: LibraryItem, settings: LibraryDisplaySettings) {
+    if (settings.entryTypeBadge) {
+        EntryTypeBadge(entryType = item.entry.type)
+    }
+    if (settings.localBadge) {
+        LocalBadge(isLocal = item.isLocal)
+    }
+    if (settings.languageBadge) {
+        LanguageBadge(sourceLanguage = item.sourceLanguage)
+    }
 }
 
 @PreviewLightDark

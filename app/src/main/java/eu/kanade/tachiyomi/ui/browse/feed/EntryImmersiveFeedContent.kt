@@ -47,7 +47,7 @@ internal fun EntryImmersiveFeedContent(
     immersiveModel: EntryImmersiveScreenModel,
     snackbarHostState: SnackbarHostState,
     activeSource: Source,
-    feedLabel: String,
+    feedLabel: FeedLabel,
     onShowFeedPicker: () -> Unit,
     onExitImmersive: () -> Unit,
     onEntryClick: (Entry) -> Unit,
@@ -106,7 +106,8 @@ internal fun EntryImmersiveFeedContent(
             timelineState.itemRefs.getOrNull(page)?.let { rememberFeedEntry(it, timelineModel) }
         },
         immersiveModel = immersiveModel,
-        contextLabel = feedLabel,
+        contextLabel = feedLabel.title,
+        contextSupportingLabel = feedLabel.subtitle,
         contextLeadingContent = {
             SourceIcon(
                 source = activeSource,

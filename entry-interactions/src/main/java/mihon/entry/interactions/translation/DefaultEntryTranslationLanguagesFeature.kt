@@ -66,15 +66,26 @@ internal class DefaultEntryTranslationLanguagesFeature(
         return EntryTranslationLanguagesWriteResult.Applied
     }
 
+    override suspend fun setTranslateDownloads(entry: Entry, enabled: Boolean): EntryTranslationLanguagesWriteResult {
+        if (!isApplicable(entry.type)) return EntryTranslationLanguagesWriteResult.Inapplicable(entry.type)
+        repository.setTranslateDownloads(entry.id, enabled, clock())
+        return EntryTranslationLanguagesWriteResult.Applied
+    }
+
     suspend fun snapshot(entry: Entry): EntryTranslationLanguagesSnapshotResult {
         if (!isApplicable(entry.type)) return EntryTranslationLanguagesSnapshotResult.Inapplicable(entry.type)
         val stored = repository.getByEntryId(entry.id) ?: return EntryTranslationLanguagesSnapshotResult.NoLanguages
         return EntryTranslationLanguagesSnapshotResult.Captured(
-            EntryTranslationLanguagesSnapshot(stored.contentLanguage, stored.targetLanguage, stored.updatedAt),
+            EntryTranslationLanguagesSnapshot(
+                contentLanguage = stored.contentLanguage,
+                targetLanguage = stored.targetLanguage,
+                updatedAt = stored.updatedAt,
+                translateDownloads = stored.translateDownloads,
+            ),
         )
     }
 
-    /** Replaces the entry's languages with the snapshot's; tags that no longer parse are dropped. */
+    /** Replaces the entry's record with the snapshot's; tags that no longer parse are dropped. */
     suspend fun restore(
         entry: Entry,
         snapshot: EntryTranslationLanguagesSnapshot,
@@ -82,13 +93,14 @@ internal class DefaultEntryTranslationLanguagesFeature(
         if (!isApplicable(entry.type)) return EntryTranslationLanguagesWriteResult.Inapplicable(entry.type)
         val contentLanguage = snapshot.contentLanguage?.let(LanguageTag::parse)
         val targetLanguage = snapshot.targetLanguage?.let(LanguageTag::parse)
-        if (contentLanguage != null || targetLanguage != null) {
+        if (contentLanguage != null || targetLanguage != null || snapshot.translateDownloads) {
             repository.upsert(
                 EntryTranslationLanguages(
                     entryId = entry.id,
                     contentLanguage = contentLanguage?.value,
                     targetLanguage = targetLanguage?.value,
                     updatedAt = snapshot.updatedAt,
+                    translateDownloads = snapshot.translateDownloads,
                 ),
             )
         }
@@ -96,8 +108,8 @@ internal class DefaultEntryTranslationLanguagesFeature(
     }
 
     /**
-     * Captures only the target language: the content language describes the source's text, so the Migration
-     * target follows the language its own source declares.
+     * Captures the target language and whether downloads are translated, not the content language: that describes
+     * the source's text, so the Migration target follows the language its own source declares.
      */
     suspend fun prepareMigration(source: Entry, target: Entry): EntryTranslationLanguagesMigrationPreparation {
         if (source.type != target.type) {
@@ -107,23 +119,31 @@ internal class DefaultEntryTranslationLanguagesFeature(
         if (inapplicableTypes.isNotEmpty()) {
             return EntryTranslationLanguagesMigrationPreparation.Inapplicable(inapplicableTypes)
         }
-        val targetLanguage = repository.getByEntryId(source.id)?.targetLanguage?.let(LanguageTag::parse)
-            ?: return EntryTranslationLanguagesMigrationPreparation.NoTargetLanguage
+        val stored = repository.getByEntryId(source.id)
+        val targetLanguage = stored?.targetLanguage?.let(LanguageTag::parse)
+        val translateDownloads = stored?.translateDownloads == true
+        if (targetLanguage == null && !translateDownloads) {
+            return EntryTranslationLanguagesMigrationPreparation.NothingToCarry
+        }
         return EntryTranslationLanguagesMigrationPreparation.Prepared(
-            EntryTranslationLanguagesMigrationPayload(target, targetLanguage.value),
+            EntryTranslationLanguagesMigrationPayload(target, targetLanguage?.value, translateDownloads),
         )
     }
 
     suspend fun applyMigration(
         payload: EntryTranslationLanguagesMigrationPayload,
     ): EntryTranslationLanguagesWriteResult {
-        val targetLanguage = LanguageTag.parse(payload.targetLanguage)
-            ?: return EntryTranslationLanguagesWriteResult.Applied
-        return setTargetLanguage(payload.target, targetLanguage)
+        payload.targetLanguage?.let(LanguageTag::parse)?.let { language ->
+            val result = setTargetLanguage(payload.target, language)
+            if (result != EntryTranslationLanguagesWriteResult.Applied) return result
+        }
+        if (!payload.translateDownloads) return EntryTranslationLanguagesWriteResult.Applied
+        return setTranslateDownloads(payload.target, enabled = true)
     }
 }
 
 private fun EntryTranslationLanguages.toChoices() = EntryTranslationLanguageChoices(
     contentLanguage = contentLanguage?.let(LanguageTag::parse),
     targetLanguage = targetLanguage?.let(LanguageTag::parse),
+    translateDownloads = translateDownloads,
 )

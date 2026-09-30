@@ -181,7 +181,6 @@
     <string name="pref_dual_page_split">Падзяляць шырокія старонкі напалову</string>
     <string name="pref_show_navigation_mode_summary">Кароткачасова паказваць пры адкрыцці чытанкі</string>
     <string name="pref_show_navigation_mode">Паказваць накладанне зон дотыку</string>
-    <string name="pref_fullscreen">На ўвесь экран</string>
     <string name="ext_nsfw_warning">Крыніцы з гэтага пашырэння могуць утрымліваць 18+ кантэнт (NSFW)</string>
     <string name="ext_nsfw_short">18+</string>
     <string name="obsolete_extension_message">Гэта пашырэнне больш недаступнае. Яно можа працаваць некарэктна і выклікаць праблемы ў праграме. Рэкамендуецца яго дэінсталяваць.</string>

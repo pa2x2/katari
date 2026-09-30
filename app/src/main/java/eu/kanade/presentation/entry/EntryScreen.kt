@@ -59,6 +59,8 @@ import eu.kanade.presentation.entry.components.EntryContinueActions
 import eu.kanade.presentation.entry.components.EntryInfoBox
 import eu.kanade.presentation.entry.components.EntryToolbar
 import eu.kanade.presentation.entry.components.ExpandableEntryDescription
+import eu.kanade.presentation.entry.translation.ChapterTranslateAction
+import eu.kanade.presentation.entry.translation.EntryChapterTranslationUi
 import eu.kanade.presentation.util.formatChapterNumber
 import eu.kanade.tachiyomi.ui.entry.EntryChapterList
 import eu.kanade.tachiyomi.ui.entry.EntryScreenModel
@@ -66,6 +68,7 @@ import eu.kanade.tachiyomi.ui.entry.entrySelectionActionLabels
 import eu.kanade.tachiyomi.util.system.copyToClipboard
 import mihon.entry.interactions.child.EntryChildProgressLabel
 import mihon.entry.interactions.download.EntryDownloadState
+import mihon.entry.interactions.translate.EntryTranslateStatus
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.library.service.LibraryPreferences
@@ -89,6 +92,7 @@ fun EntryScreen(
     navigateUp: () -> Unit,
     onChapterClicked: ((EntryChapter) -> Unit)?,
     onDownloadChapter: ((List<EntryChapterList.Item>, ChapterDownloadAction) -> Unit)?,
+    translation: EntryChapterTranslationUi?,
     onAddToLibraryClicked: () -> Unit,
     onAddToMergeClicked: (() -> Unit)?,
     onWebViewClicked: (() -> Unit)?,
@@ -158,6 +162,7 @@ fun EntryScreen(
             navigateUp = navigateUp,
             onChapterClicked = onChapterClicked,
             onDownloadChapter = onDownloadChapter,
+            translation = translation,
             onAddToLibraryClicked = onAddToLibraryClicked,
             onAddToMergeClicked = onAddToMergeClicked,
             onWebViewClicked = onWebViewClicked,
@@ -208,6 +213,7 @@ fun EntryScreen(
             navigateUp = navigateUp,
             onChapterClicked = onChapterClicked,
             onDownloadChapter = onDownloadChapter,
+            translation = translation,
             onAddToLibraryClicked = onAddToLibraryClicked,
             onAddToMergeClicked = onAddToMergeClicked,
             onWebViewClicked = onWebViewClicked,
@@ -261,6 +267,7 @@ private fun EntryScreenSmallImpl(
     navigateUp: () -> Unit,
     onChapterClicked: ((EntryChapter) -> Unit)?,
     onDownloadChapter: ((List<EntryChapterList.Item>, ChapterDownloadAction) -> Unit)?,
+    translation: EntryChapterTranslationUi?,
     onAddToLibraryClicked: () -> Unit,
     onAddToMergeClicked: (() -> Unit)?,
     onWebViewClicked: (() -> Unit)?,
@@ -381,6 +388,7 @@ private fun EntryScreenSmallImpl(
                 onMultiMarkAsReadClicked = onMultiMarkAsReadClicked,
                 onMarkPreviousAsReadClicked = onMarkPreviousAsReadClicked,
                 onDownloadChapter = onDownloadChapter,
+                translation = translation,
                 onMultiDeleteClicked = onMultiDeleteClicked,
                 fillFraction = 1f,
             )
@@ -526,6 +534,7 @@ private fun EntryScreenSmallImpl(
                             chapterSwipeEndAction = chapterSwipeEndAction,
                             onChapterClicked = onChapterClicked,
                             onDownloadChapter = onDownloadChapter,
+                            translation = translation,
                             onChapterSelected = onChapterSelected,
                             onChapterSwipe = onChapterSwipe,
                         )
@@ -546,6 +555,7 @@ fun EntryScreenLargeImpl(
     navigateUp: () -> Unit,
     onChapterClicked: ((EntryChapter) -> Unit)?,
     onDownloadChapter: ((List<EntryChapterList.Item>, ChapterDownloadAction) -> Unit)?,
+    translation: EntryChapterTranslationUi?,
     onAddToLibraryClicked: () -> Unit,
     onAddToMergeClicked: (() -> Unit)?,
     onWebViewClicked: (() -> Unit)?,
@@ -661,6 +671,7 @@ fun EntryScreenLargeImpl(
                     onMultiMarkAsReadClicked = onMultiMarkAsReadClicked,
                     onMarkPreviousAsReadClicked = onMarkPreviousAsReadClicked,
                     onDownloadChapter = onDownloadChapter,
+                    translation = translation,
                     onMultiDeleteClicked = onMultiDeleteClicked,
                     fillFraction = 0.5f,
                 )
@@ -795,6 +806,7 @@ fun EntryScreenLargeImpl(
                                     chapterSwipeEndAction = chapterSwipeEndAction,
                                     onChapterClicked = onChapterClicked,
                                     onDownloadChapter = onDownloadChapter,
+                                    translation = translation,
                                     onChapterSelected = onChapterSelected,
                                     onChapterSwipe = onChapterSwipe,
                                 )
@@ -854,6 +866,7 @@ private fun SharedEntryBottomActionMenu(
     onMultiMarkAsReadClicked: ((List<EntryChapter>, markAsRead: Boolean) -> Unit)?,
     onMarkPreviousAsReadClicked: ((EntryChapter) -> Unit)?,
     onDownloadChapter: ((List<EntryChapterList.Item>, ChapterDownloadAction) -> Unit)?,
+    translation: EntryChapterTranslationUi?,
     onMultiDeleteClicked: (List<EntryChapter>) -> Unit,
     fillFraction: Float,
     modifier: Modifier = Modifier,
@@ -895,6 +908,19 @@ private fun SharedEntryBottomActionMenu(
         }.takeIf {
             selected.fastAny { it.downloadState == EntryDownloadState.DOWNLOADED }
         },
+        onTranslateClicked = translation?.let { ui ->
+            { ui.onAction(selected.toList(), ChapterTranslateAction.TRANSLATE) }
+        }?.takeIf {
+            selected.fastAny { item ->
+                val status = translation.statuses[item.id]
+                status == null || status is EntryTranslateStatus.Failed
+            }
+        },
+        onDeleteTranslationClicked = translation?.let { ui ->
+            { ui.onAction(selected.toList(), ChapterTranslateAction.DELETE_TRANSLATION) }
+        }?.takeIf {
+            selected.fastAny { translation.statuses[it.id] == EntryTranslateStatus.Translated }
+        },
     )
 }
 
@@ -911,6 +937,7 @@ private fun LazyListScope.sharedChapterItems(
     chapterSwipeEndAction: LibraryPreferences.ChapterSwipeAction,
     onChapterClicked: ((EntryChapter) -> Unit)?,
     onDownloadChapter: ((List<EntryChapterList.Item>, ChapterDownloadAction) -> Unit)?,
+    translation: EntryChapterTranslationUi?,
     onChapterSelected: (EntryChapterList.Item, Boolean, Boolean) -> Unit,
     onChapterSwipe: (EntryChapterList.Item, LibraryPreferences.ChapterSwipeAction) -> Unit,
 ) {
@@ -985,6 +1012,8 @@ private fun LazyListScope.sharedChapterItems(
                     onChapterSwipe = {
                         onChapterSwipe(item, it)
                     },
+                    translateStatusProvider = { translation?.statuses?.get(item.id) },
+                    onTranslateClick = translation?.let { ui -> { action -> ui.onAction(listOf(item), action) } },
                 )
             }
         }

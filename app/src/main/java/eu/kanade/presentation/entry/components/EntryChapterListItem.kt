@@ -20,8 +20,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import dev.icerock.moko.resources.StringResource
+import eu.kanade.presentation.entry.translation.ChapterTranslateAction
 import me.saket.swipe.SwipeableActionsBox
 import mihon.entry.interactions.download.EntryDownloadState
+import mihon.entry.interactions.translate.EntryTranslateStatus
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.EntryChildListItemContent
@@ -49,6 +51,8 @@ fun EntryChapterListItem(
     onDownloadClick: ((ChapterDownloadAction) -> Unit)?,
     onChapterSwipe: (LibraryPreferences.ChapterSwipeAction) -> Unit,
     highlightTrigger: Int? = null,
+    translateStatusProvider: () -> EntryTranslateStatus? = { null },
+    onTranslateClick: ((ChapterTranslateAction) -> Unit)? = null,
 ) {
     val start = getSwipeAction(
         action = chapterSwipeStartAction,
@@ -102,6 +106,8 @@ fun EntryChapterListItem(
                     downloadStateProvider = downloadStateProvider,
                     downloadProgressProvider = downloadProgressProvider,
                     onClick = onDownloadClick,
+                    translateStatusProvider = translateStatusProvider,
+                    onTranslateClick = onTranslateClick,
                 )
             },
         )

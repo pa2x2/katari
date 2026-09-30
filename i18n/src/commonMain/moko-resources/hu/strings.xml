@@ -43,7 +43,6 @@
     <string name="pref_update_only_non_completed">\"Befejezett\" állapotú elemek kihagyása</string>
     <string name="default_category">Alapértelmezett kategória</string>
     <string name="default_category_summary">Mindig kérdezzen rá</string>
-    <string name="pref_fullscreen">Teljes képernyő</string>
     <string name="pref_show_page_number">Oldalszám megjelenítése</string>
     <string name="pref_keep_screen_on">Képernyő bekapcsolva tartása</string>
     <string name="pref_reader_navigation">Lapozás</string>

@@ -105,7 +105,6 @@
     <string name="untrusted_extension_message">ส่วนขยายที่เป็นอันตรายสามารถอ่านข้อมูลการเข้าสู่ระบบที่จัดเก็บไว้ หรือเรียกใช้โค้ดโดยอำเภอใจ
 \n
 \nการเชื่อถือส่วนขยายนี้แสดงว่าคุณยอมรับความเสี่ยงเหล่านี้</string>
-    <string name="pref_fullscreen">เต็มหน้าจอ</string>
     <string name="pref_page_transitions">แสดงแอนิเมชั่นเมื่อเปลี่ยนหน้า</string>
     <string name="pref_double_tap_anim_speed">ความเร็วแอนิเมชั่นเมื่อแตะ 2 ครั้ง</string>
     <string name="pref_show_page_number">แสดงหมายเลขหน้า</string>

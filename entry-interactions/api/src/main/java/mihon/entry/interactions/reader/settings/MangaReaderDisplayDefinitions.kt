@@ -8,7 +8,8 @@ import mihon.entry.viewer.settings.ViewerSettingDefinition
 class MangaReaderDisplayDefinitions(
     val readerTheme: ViewerSettingDefinition<Int>,
     val showPageNumber: ViewerSettingDefinition<Boolean>,
-    val fullscreen: ViewerSettingDefinition<Boolean>,
+    val showStatusBar: ViewerSettingDefinition<Boolean>,
+    val showNavigationBar: ViewerSettingDefinition<Boolean>,
     val drawUnderCutout: ViewerSettingDefinition<Boolean>,
     val keepScreenOn: ViewerSettingDefinition<Boolean>,
     val showReadingMode: ViewerSettingDefinition<Boolean>,
@@ -19,7 +20,8 @@ class MangaReaderDisplayDefinitions(
     val all: List<ViewerSettingDefinition<*>> = listOf(
         readerTheme,
         showPageNumber,
-        fullscreen,
+        showStatusBar,
+        showNavigationBar,
         drawUnderCutout,
         keepScreenOn,
         showReadingMode,

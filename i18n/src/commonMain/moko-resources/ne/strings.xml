@@ -245,7 +245,6 @@
     <string name="exclude">समावेश नगर्नुहोस्: %s</string>
     <string name="ext_installer_pref">इंस्टलर</string>
     <string name="untrusted_extension_message">खराब एक्सटेन्शनहरूले कुनै पनि भण्डारण लगइन प्रमाणहरू पढ्न वा मनमानी कोड कार्यान्वयन गर्न सक्छ। \n \nयस एक्सटेन्शनमा विश्वास गरेर तपाईंले यी जोखिमहरू स्वीकार गर्नुहुन्छ।</string>
-    <string name="pref_fullscreen">पूर्ण स्क्रिन</string>
     <string name="pref_show_navigation_mode_summary">रिडर खोलिएको बेला छोटकरीमा देखाउनुहोस्</string>
     <string name="pref_dual_page_invert_summary">यदि विभाजित चौडा पृष्ठहरूको प्लेसमेन्ट पढ्ने दिशासँग मेल खाँदैन</string>
     <string name="pref_show_reading_mode">पढ्ने मोड देखाउनुहोस्</string>

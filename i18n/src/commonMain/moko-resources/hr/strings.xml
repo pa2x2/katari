@@ -2,7 +2,6 @@
 <resources>
     <string name="lock_never">Nikada</string>
     <string name="lock_always">Uvijek</string>
-    <string name="pref_fullscreen">Cjeloekranski prikaz</string>
     <string name="obsolete_extension_message">Ovo proširenje više nije dostupno. Možda neće ispravno funkcionirati i može izazvati probleme s aplikacijom. Preporučuje se deinstalirati proširenje.</string>
     <string name="untrusted_extension_message">Zlonamjerno proširenje može pročitati sve spremljene podatke za prijavu ili izvršiti proizvoljni kod.
 \n

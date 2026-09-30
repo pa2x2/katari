@@ -12,6 +12,7 @@ import android.graphics.Rect
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.GradientDrawable
 import android.os.Build
+import android.util.Size
 import androidx.annotation.ColorInt
 import androidx.core.graphics.alpha
 import androidx.core.graphics.applyCanvas
@@ -121,6 +122,12 @@ object ImageUtil {
     fun isWideImage(imageSource: BufferedSource): Boolean {
         val options = extractImageOptions(imageSource)
         return options.outWidth > options.outHeight
+    }
+
+    /** The encoded image's width and height, read without decoding its pixels. */
+    fun imageSize(imageSource: BufferedSource): Size {
+        val options = extractImageOptions(imageSource)
+        return Size(options.outWidth, options.outHeight)
     }
 
     /**

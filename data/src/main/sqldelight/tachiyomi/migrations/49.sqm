@@ -1,0 +1,41 @@
+-- A series can translate its downloads without choosing its own languages, so a record may hold only that flag.
+CREATE TABLE entry_translation_languages_new(
+    entry_id INTEGER NOT NULL PRIMARY KEY,
+    content_language TEXT CHECK(length(content_language) BETWEEN 1 AND 64),
+    target_language TEXT CHECK(length(target_language) BETWEEN 1 AND 64),
+    translate_downloads INTEGER NOT NULL DEFAULT 0,
+    updated_at INTEGER NOT NULL,
+    FOREIGN KEY(entry_id) REFERENCES entries(_id) ON DELETE CASCADE,
+    CHECK(content_language IS NOT NULL OR target_language IS NOT NULL OR translate_downloads = 1)
+);
+
+INSERT INTO entry_translation_languages_new(entry_id, content_language, target_language, updated_at)
+SELECT entry_id, content_language, target_language, updated_at
+FROM entry_translation_languages;
+
+DROP TABLE entry_translation_languages;
+
+ALTER TABLE entry_translation_languages_new RENAME TO entry_translation_languages;
+
+-- A chapter queued automatically while translation still needs setting up fails without a setup until it is fixed.
+CREATE TABLE entry_translation_queue_new(
+    chapter_id INTEGER NOT NULL PRIMARY KEY,
+    entry_id INTEGER NOT NULL,
+    position INTEGER NOT NULL,
+    state TEXT NOT NULL CHECK(state IN ('waiting_for_download', 'queued', 'failed')),
+    failure TEXT,
+    setup TEXT,
+    queued_at INTEGER NOT NULL,
+    FOREIGN KEY(chapter_id) REFERENCES chapters(_id) ON DELETE CASCADE,
+    FOREIGN KEY(entry_id) REFERENCES entries(_id) ON DELETE CASCADE
+);
+
+INSERT INTO entry_translation_queue_new(chapter_id, entry_id, position, state, failure, setup, queued_at)
+SELECT chapter_id, entry_id, position, state, failure, setup, queued_at
+FROM entry_translation_queue;
+
+DROP TABLE entry_translation_queue;
+
+ALTER TABLE entry_translation_queue_new RENAME TO entry_translation_queue;
+
+CREATE INDEX entry_translation_queue_entry_index ON entry_translation_queue(entry_id);

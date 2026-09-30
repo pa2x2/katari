@@ -34,9 +34,10 @@ fun TabbedScreen(
     state: PagerState = rememberPagerState { tabs.size },
     searchQuery: String? = null,
     onChangeSearchQuery: (String?) -> Unit = {},
+    navigateUp: (() -> Unit)? = null,
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
 ) {
     val scope = rememberCoroutineScope()
-    val snackbarHostState = remember { SnackbarHostState() }
     val tab = tabs[state.currentPage]
     val chromeVisible = tab.chromeVisible()
 
@@ -47,6 +48,7 @@ fun TabbedScreen(
 
                 SearchToolbar(
                     titleContent = { AppBarTitle(stringResource(titleRes)) },
+                    navigateUp = navigateUp,
                     searchEnabled = searchEnabled,
                     searchQuery = if (searchEnabled) searchQuery else null,
                     onChangeSearchQuery = onChangeSearchQuery,

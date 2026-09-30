@@ -100,7 +100,6 @@
     <string name="untrusted_extension_message">Ett skadligt tillägg kan läsa lagrade inloggningsuppgifter eller köra arbiträr kod.
 \n
 \nGenom att lita på detta tillägg accepterar du dessa risker.</string>
-    <string name="pref_fullscreen">Fullskärm</string>
     <string name="pref_page_transitions">Animera sidändringar</string>
     <string name="pref_double_tap_anim_speed">Animationshastighet för dubbelklick</string>
     <string name="pref_show_page_number">Visa sidnummer</string>

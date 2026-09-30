@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="deepl_server_setup_title">DeepL-compatible server setup</string>
+    <string name="deepl_server_setup_description">Translation through DeepL, or through a server of your own that speaks the DeepL API. It reads the surrounding text to translate in context.</string>
+    <string name="deepl_server_api_key">API key (optional for your own server)</string>
+    <string name="deepl_server_connection_failed">Katari could not validate this server. Check the URL and the API key, and that the server lists its languages the way the DeepL API does.</string>
+    <string name="deepl_server_suggestion_free">DeepL API Free</string>
+    <string name="deepl_server_suggestion_pro">DeepL API Pro</string>
+</resources>

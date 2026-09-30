@@ -11,9 +11,12 @@ import mihon.text.recognition.api.pipeline.TextRecognitionPipeline
 import mihon.text.recognition.api.preparation.ReadyTextRecognition
 import mihon.text.recognition.api.preparation.TextRecognitionPipelineChoiceReason
 import mihon.text.recognition.api.preparation.TextRecognitionPreparation
+import mihon.text.recognition.api.preparation.TextRecognitionRequirement
+import mihon.text.recognition.api.preparation.TextRecognitionSetupPreparation
 import mihon.text.recognition.api.preparation.TextRecognitionUnavailableReason
 import mihon.text.recognition.api.request.TextRecognitionRequest
 import mihon.text.recognition.api.request.TextRecognitionScope
+import mihon.text.recognition.api.request.TextRecognitionSetupRequest
 import mihon.text.recognition.api.result.RecognizedTextRegion
 import mihon.text.recognition.api.result.TextRecognitionExecution
 import mihon.text.recognition.api.result.TextRecognitionResult
@@ -42,13 +45,38 @@ internal class DefaultTextRecognitionFeature(
     private val detection: PageTextDetection,
 ) : TextRecognitionFeature {
 
-    override suspend fun prepare(request: TextRecognitionRequest): TextRecognitionPreparation {
-        val language = request.language
-            ?: return TextRecognitionPreparation.LanguageRequired(registry.supportedLanguages)
-        val pipeline = request.pipeline
+    override suspend fun prepare(request: TextRecognitionRequest): TextRecognitionPreparation =
+        when (val resolution = resolve(request.setup)) {
+            is SetupResolution.Blocked -> resolution.requirement
+            is SetupResolution.Resolved -> TextRecognitionPreparation.Ready(
+                recognition = PreparedRecognition(
+                    request = request,
+                    language = resolution.language,
+                    pipeline = resolution.pipeline,
+                    components = resolution.components,
+                ),
+                language = resolution.language,
+                pipeline = resolution.pipeline,
+            )
+        }
+
+    override suspend fun prepare(setup: TextRecognitionSetupRequest): TextRecognitionSetupPreparation =
+        when (val resolution = resolve(setup)) {
+            is SetupResolution.Blocked -> resolution.requirement
+            is SetupResolution.Resolved -> TextRecognitionSetupPreparation.Ready(
+                language = resolution.language,
+                pipeline = resolution.pipeline,
+            )
+        }
+
+    /** Resolves the pipeline for the setup's language and checks every prerequisite that does not need an image. */
+    private suspend fun resolve(setup: TextRecognitionSetupRequest): SetupResolution {
+        val language = setup.language
+            ?: return blocked(TextRecognitionPreparation.LanguageRequired(registry.supportedLanguages))
+        val pipeline = setup.pipeline
             ?.also { explicit ->
                 if (!registry.isWellFormed(explicit) || !registry.reads(explicit, language)) {
-                    return choiceRequired(language, TextRecognitionPipelineChoiceReason.NothingSelected)
+                    return blocked(choiceRequired(language, TextRecognitionPipelineChoiceReason.NothingSelected))
                 }
             }
             ?: when (val resolution = resolver.resolve(preferences.configuration(), language)) {
@@ -56,54 +84,58 @@ internal class DefaultTextRecognitionFeature(
                 is TextRecognitionPipelineResolution.OverrideUnavailable -> {
                     val missing = resolver.pipeline(resolution.selection)?.components
                         ?.firstOrNull { registry.component(it) == null }
-                    return choiceRequired(
-                        language,
-                        missing?.let(TextRecognitionPipelineChoiceReason::SelectedComponentUnavailable)
-                            ?: TextRecognitionPipelineChoiceReason.NothingSelected,
+                    return blocked(
+                        choiceRequired(
+                            language,
+                            missing?.let(TextRecognitionPipelineChoiceReason::SelectedComponentUnavailable)
+                                ?: TextRecognitionPipelineChoiceReason.NothingSelected,
+                        ),
                     )
                 }
                 TextRecognitionPipelineResolution.ChoiceRequired ->
-                    return choiceRequired(language, TextRecognitionPipelineChoiceReason.NothingSelected)
-                TextRecognitionPipelineResolution.UnsupportedLanguage -> return TextRecognitionPreparation.Unavailable(
-                    TextRecognitionUnavailableReason.UnsupportedLanguage(language),
+                    return blocked(choiceRequired(language, TextRecognitionPipelineChoiceReason.NothingSelected))
+                TextRecognitionPipelineResolution.UnsupportedLanguage -> return blocked(
+                    TextRecognitionPreparation.Unavailable(
+                        TextRecognitionUnavailableReason.UnsupportedLanguage(language),
+                    ),
                 )
             }
         val components = pipeline.components.map { id ->
-            registry.component(id) ?: return choiceRequired(
-                language,
-                TextRecognitionPipelineChoiceReason.SelectedComponentUnavailable(id),
+            registry.component(id) ?: return blocked(
+                choiceRequired(language, TextRecognitionPipelineChoiceReason.SelectedComponentUnavailable(id)),
             )
         }
         components.forEach { component ->
             when (val availability = component.inspectDevice(language)) {
                 TextRecognitionComponentAvailability.Available -> Unit
-                is TextRecognitionComponentAvailability.Unavailable -> return TextRecognitionPreparation.Unavailable(
-                    TextRecognitionUnavailableReason.ComponentUnavailable(
-                        component.catalogEntry.id,
-                        availability.reason,
+                is TextRecognitionComponentAvailability.Unavailable -> return blocked(
+                    TextRecognitionPreparation.Unavailable(
+                        TextRecognitionUnavailableReason.ComponentUnavailable(
+                            component.catalogEntry.id,
+                            availability.reason,
+                        ),
                     ),
                 )
-                is TextRecognitionComponentAvailability.PlatformModelsRequired ->
-                    return TextRecognitionPreparation.PlatformModelsRequired(
+                is TextRecognitionComponentAvailability.PlatformModelsRequired -> return blocked(
+                    TextRecognitionPreparation.PlatformModelsRequired(
                         language = language,
                         pipeline = pipeline,
                         component = component.catalogEntry.id,
                         description = availability.description,
                         approximateSizeBytes = availability.approximateSizeBytes,
-                    )
+                    ),
+                )
             }
         }
         val missingModels = components.flatMap { it.models(language) }.distinct()
             .filter { modelStore.installed(it) == null }
         if (missingModels.isNotEmpty()) {
-            return TextRecognitionPreparation.ModelsRequired(language, pipeline, missingModels)
+            return blocked(TextRecognitionPreparation.ModelsRequired(language, pipeline, missingModels))
         }
-        return TextRecognitionPreparation.Ready(
-            recognition = PreparedRecognition(request, language, pipeline, components),
-            language = language,
-            pipeline = pipeline,
-        )
+        return SetupResolution.Resolved(language, pipeline, components)
     }
+
+    private fun blocked(requirement: TextRecognitionRequirement) = SetupResolution.Blocked(requirement)
 
     private fun choiceRequired(language: LanguageTag, reason: TextRecognitionPipelineChoiceReason) =
         TextRecognitionPreparation.PipelineChoiceRequired(language, reason, registry.presets(language))
@@ -123,7 +155,7 @@ internal class DefaultTextRecognitionFeature(
                 ?: return TextRecognitionExecution.Success(result(prepared, emptyList()))
         }
         return try {
-            val regions = executor.execute(cacheKey(prepared, area, installed)) {
+            val regions = executor.execute(cacheKey(prepared, area, installed), prepared.request.priority) {
                 prepared.runner().run(
                     image = image,
                     area = area,
@@ -176,6 +208,16 @@ internal class DefaultTextRecognitionFeature(
         recognizer = components[1] as TextRecognizer,
         detection = detection,
     )
+
+    private sealed interface SetupResolution {
+        class Resolved(
+            val language: LanguageTag,
+            val pipeline: TextRecognitionPipeline,
+            val components: List<TextRecognitionComponent>,
+        ) : SetupResolution
+
+        class Blocked(val requirement: TextRecognitionRequirement) : SetupResolution
+    }
 
     private class PreparedRecognition(
         val request: TextRecognitionRequest,

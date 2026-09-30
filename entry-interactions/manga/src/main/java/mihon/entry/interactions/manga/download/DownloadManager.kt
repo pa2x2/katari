@@ -4,15 +4,18 @@ import android.content.Context
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import eu.kanade.tachiyomi.source.model.Page
 import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.launch
 import logcat.LogPriority
 import mihon.entry.interactions.download.EntryDownloadQueuePolicy
 import mihon.entry.interactions.download.EntryDownloadWorkController
@@ -30,6 +33,7 @@ import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.i18n.*
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * This class is used to manage chapter downloads in the application. It must be instantiated once
@@ -244,7 +248,14 @@ internal class DownloadManager(
             removeFromDownloadQueue(chapters)
 
             val (mangaDir, chapterDirs) = provider.findChapterDirs(chapters, entry, source)
-            chapterDirs.forEach { it.delete() }
+            chapterDirs.forEach { chapterDir ->
+                // A translation belongs to its download; left behind, it would also keep the entry folder.
+                listOf(
+                    provider.getChapterTranslationFileName(chapterDir),
+                    provider.getChapterTranslationTemporaryFileName(chapterDir),
+                ).forEach { mangaDir?.findFile(it)?.delete() }
+                chapterDir.delete()
+            }
             cache.removeChapters(chapters, entry)
 
             // Delete manga directory if empty
@@ -371,16 +382,34 @@ internal class DownloadManager(
         }
     }
 
-    fun statusFlow(): Flow<MangaDownload> = merge(
-        addedToQueueFlow(),
-        queueState.flatMapLatest { downloads ->
-            downloads
-                .map { download ->
-                    download.statusFlow.drop(1).map { download }
+    /**
+     * Emits a download when it joins the queue and whenever its status changes, including the status it had when it
+     * left the queue. A download leaves the queue right after it finishes or is cancelled, which can stop its status
+     * from being watched before that last change was seen, so the change is emitted on leaving instead.
+     */
+    fun statusFlow(): Flow<MangaDownload> = channelFlow {
+        val watchers = mutableMapOf<Long, Pair<MangaDownload, Job>>()
+        val lastSent = ConcurrentHashMap<Long, DownloadState>()
+        queueState.collect { downloads ->
+            val current = downloads.mapTo(HashSet()) { it.chapter.id }
+            (watchers.keys - current).forEach { chapterId ->
+                val (download, watcher) = watchers.remove(chapterId) ?: return@forEach
+                watcher.cancelAndJoin()
+                if (lastSent.remove(chapterId) != download.status) send(download)
+            }
+            downloads.filter { it.chapter.id !in watchers }.forEach { download ->
+                lastSent[download.chapter.id] = download.status
+                send(download)
+                val watcher = launch {
+                    download.statusFlow.drop(1).collect { status ->
+                        lastSent[download.chapter.id] = status
+                        send(download)
+                    }
                 }
-                .merge()
-        },
-    )
+                watchers[download.chapter.id] = download to watcher
+            }
+        }
+    }
 
     fun progressFlow(): Flow<MangaDownload> = queueState
         .flatMapLatest { downloads ->
@@ -396,13 +425,4 @@ internal class DownloadManager(
                     .asFlow(),
             )
         }
-
-    private fun addedToQueueFlow(): Flow<MangaDownload> = flow {
-        var previousChapterIds = emptySet<Long>()
-        queueState.collect { downloads ->
-            val currentChapterIds = downloads.mapTo(mutableSetOf()) { it.chapter.id }
-            downloads.filter { it.chapter.id !in previousChapterIds }.forEach { emit(it) }
-            previousChapterIds = currentChapterIds
-        }
-    }
 }

@@ -83,7 +83,6 @@
     <string name="pref_auto_update_manga_sync">Kemas kini kemajuan selepas dibaca</string>
     <string name="default_category">Kategori lalai</string>
     <string name="default_category_summary">Sentiasa tanya</string>
-    <string name="pref_fullscreen">Skrin penuh</string>
     <string name="pref_page_transitions">Menggerakkan peralihan muka surat</string>
     <string name="pref_show_page_number">Tunjuk nombor muka surat</string>
     <string name="pref_crop_borders">Potong pinggiran</string>

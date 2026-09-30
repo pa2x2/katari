@@ -11,6 +11,7 @@ import androidx.compose.ui.unit.dp
 import eu.kanade.tachiyomi.ui.browse.catalog.CatalogScreenModel
 import eu.kanade.tachiyomi.ui.browse.source.browse.SourceFilterDialog
 import eu.kanade.tachiyomi.ui.browse.source.browse.preset.SourceFilterPresetActions
+import eu.kanade.tachiyomi.ui.browse.source.browse.preset.displayName
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -30,7 +31,11 @@ internal fun FeedPresetRepairSheet(screenModel: CatalogScreenModel, state: Catal
         defaultFilters = state.defaultFilters,
         filterRevision = state.filterRevision,
         presetActions = screenModel.draftCustomPreset()?.let {
-            SourceFilterPresetActions(presets = emptyList(), currentPresetId = it.id, currentPresetName = it.name)
+            SourceFilterPresetActions(
+                presets = emptyList(),
+                currentPresetId = it.id,
+                currentPresetName = it.displayName(),
+            )
         },
         onReset = screenModel::resetFilters,
         onResetGroup = screenModel::resetFilterGroup,

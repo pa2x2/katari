@@ -15,7 +15,7 @@ import mihon.translation.api.preparation.TranslationUnavailableReason
 import mihon.translation.api.provider.TranslationInvocationPolicy
 import mihon.translation.api.provider.TranslationProviderDisclosure
 import mihon.translation.api.provider.TranslationProviderPresentation
-import mihon.translation.api.request.ResolvedTranslationRequest
+import mihon.translation.api.request.ResolvedTranslationRoute
 import mihon.translation.runtime.R
 import mihon.translation.spi.engine.ReadyTranslationEngineRequest
 import mihon.translation.spi.engine.TranslationEngine
@@ -69,10 +69,9 @@ internal class AndroidSystemTranslationEngine(
     override suspend fun inspectLanguageSupport(): TranslationLanguageSupportInspection =
         platform.inspectLanguageSupport()
 
-    override suspend fun prepare(request: ResolvedTranslationRequest): TranslationEnginePreparation {
+    override suspend fun prepare(route: ResolvedTranslationRoute): TranslationEnginePreparation {
         val ready = AndroidSystemReadyRequest(
-            pair = AndroidSystemTranslationPair(request.sourceLanguage, request.targetLanguage),
-            text = request.text,
+            pair = AndroidSystemTranslationPair(route.sourceLanguage, route.targetLanguage),
         )
         return platform.inspect(ready.pair).toPreparation(ready)
     }
@@ -86,12 +85,13 @@ internal class AndroidSystemTranslationEngine(
 
     override suspend fun translate(
         ready: ReadyTranslationEngineRequest,
+        text: String,
     ): TranslationEngineExecution {
         val systemReady = ready.requireOwned()
         return when (
             val result = platform.translate(
                 pair = systemReady.pair,
-                text = systemReady.text,
+                text = text,
             )
         ) {
             is AndroidSystemPlatformExecution.Success ->
@@ -182,7 +182,6 @@ internal class AndroidSystemTranslationEngine(
 
     private data class AndroidSystemReadyRequest(
         val pair: AndroidSystemTranslationPair,
-        val text: String,
     ) : ReadyTranslationEngineRequest
 
     companion object {

@@ -78,7 +78,7 @@ internal fun SourceFilterPresetChip(actions: SourceFilterPresetActions, canSave:
             }
             actions.presets.forEach { preset ->
                 DropdownMenuItem(
-                    text = { Text(text = preset.name, maxLines = 2, overflow = TextOverflow.Ellipsis) },
+                    text = { Text(text = preset.displayName(), maxLines = 2, overflow = TextOverflow.Ellipsis) },
                     leadingIcon = {
                         if (preset.id == actions.currentPresetId) {
                             Icon(Icons.Outlined.Check, contentDescription = null)

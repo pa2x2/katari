@@ -29,13 +29,13 @@ import mihon.translation.provider.libretranslate.offline.OfflineTranslatorApplic
 import mihon.translation.provider.libretranslate.offline.OfflineTranslatorConfiguration
 import mihon.translation.provider.libretranslate.offline.OfflineTranslatorNetwork
 import mihon.translation.provider.libretranslate.protocol.LibreTranslateHttpClient
-import mihon.translation.provider.libretranslate.setup.components.ProviderInformationCard
-import mihon.translation.provider.libretranslate.setup.components.ProviderSetupHeader
-import mihon.translation.provider.libretranslate.setup.components.ProviderSetupPrimaryButton
-import mihon.translation.provider.libretranslate.setup.components.ProviderSetupScaffold
-import mihon.translation.provider.libretranslate.setup.components.ProviderSetupSecondaryButton
-import mihon.translation.provider.libretranslate.setup.components.ProviderSetupStatus
-import mihon.translation.provider.libretranslate.setup.components.ProviderSetupStatusPanel
+import mihon.translation.provider.server.setup.components.ProviderInformationCard
+import mihon.translation.provider.server.setup.components.ProviderSetupHeader
+import mihon.translation.provider.server.setup.components.ProviderSetupPrimaryButton
+import mihon.translation.provider.server.setup.components.ProviderSetupScaffold
+import mihon.translation.provider.server.setup.components.ProviderSetupSecondaryButton
+import mihon.translation.provider.server.setup.components.ProviderSetupStatus
+import mihon.translation.provider.server.setup.components.ProviderSetupStatusPanel
 
 internal class OfflineTranslatorSetupActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

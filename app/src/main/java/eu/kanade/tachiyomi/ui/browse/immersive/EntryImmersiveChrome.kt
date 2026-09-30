@@ -49,6 +49,7 @@ internal fun ImmersiveOverlay(
     entry: Entry,
     chapterName: String?,
     contextLabel: String,
+    contextSupportingLabel: String?,
     contextLeadingContent: (@Composable () -> Unit)?,
     onContextClick: (() -> Unit)?,
     onExitImmersive: () -> Unit,
@@ -86,6 +87,7 @@ internal fun ImmersiveOverlay(
             ) {
                 ImmersiveContextPill(
                     label = contextLabel,
+                    supportingLabel = contextSupportingLabel,
                     leadingContent = contextLeadingContent,
                     onClick = onContextClick,
                     modifier = Modifier.weight(1f, fill = false),
@@ -185,6 +187,7 @@ internal fun ImmersiveOverlay(
 @Composable
 private fun ImmersiveContextPill(
     label: String,
+    supportingLabel: String?,
     leadingContent: (@Composable () -> Unit)?,
     onClick: (() -> Unit)?,
     modifier: Modifier = Modifier,
@@ -196,12 +199,23 @@ private fun ImmersiveContextPill(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             leadingContent?.invoke()
-            Text(
-                text = label,
-                style = MaterialTheme.typography.labelLarge,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
+            Column {
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.labelLarge,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                supportingLabel?.let {
+                    Text(
+                        text = it,
+                        color = Color.White.copy(alpha = 0.72f),
+                        style = MaterialTheme.typography.labelSmall,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
         }
     }
     if (onClick != null) {

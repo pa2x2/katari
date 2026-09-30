@@ -1,10 +1,13 @@
+import kotlin.Boolean;
+
 CREATE TABLE entry_translation_languages(
     entry_id INTEGER NOT NULL PRIMARY KEY,
     content_language TEXT CHECK(length(content_language) BETWEEN 1 AND 64),
     target_language TEXT CHECK(length(target_language) BETWEEN 1 AND 64),
+    translate_downloads INTEGER AS Boolean NOT NULL DEFAULT 0,
     updated_at INTEGER NOT NULL,
     FOREIGN KEY(entry_id) REFERENCES entries(_id) ON DELETE CASCADE,
-    CHECK(content_language IS NOT NULL OR target_language IS NOT NULL)
+    CHECK(content_language IS NOT NULL OR target_language IS NOT NULL OR translate_downloads = 1)
 );
 
 getByEntryId:
@@ -16,15 +19,16 @@ getByProfile:
 SELECT ETL.*
 FROM entry_translation_languages ETL
 JOIN entries ENT ON ENT._id = ETL.entry_id
-WHERE ENT.profile_id = :profileId
+WHERE ENT.profile_id = :profileId AND (ETL.content_language IS NOT NULL OR ETL.target_language IS NOT NULL)
 ORDER BY ENT.title COLLATE NOCASE, ETL.entry_id;
 
 upsert:
-INSERT INTO entry_translation_languages(entry_id, content_language, target_language, updated_at)
-VALUES (:entryId, :contentLanguage, :targetLanguage, :updatedAt)
+INSERT INTO entry_translation_languages(entry_id, content_language, target_language, translate_downloads, updated_at)
+VALUES (:entryId, :contentLanguage, :targetLanguage, :translateDownloads, :updatedAt)
 ON CONFLICT(entry_id) DO UPDATE SET
     content_language = excluded.content_language,
     target_language = excluded.target_language,
+    translate_downloads = excluded.translate_downloads,
     updated_at = excluded.updated_at;
 
 upsertContentLanguage:
@@ -41,28 +45,54 @@ ON CONFLICT(entry_id) DO UPDATE SET
     target_language = excluded.target_language,
     updated_at = excluded.updated_at;
 
+enableTranslateDownloads:
+INSERT INTO entry_translation_languages(entry_id, translate_downloads, updated_at)
+VALUES (:entryId, 1, :updatedAt)
+ON CONFLICT(entry_id) DO UPDATE SET
+    translate_downloads = 1,
+    updated_at = excluded.updated_at;
+
 clearContentLanguage:
 UPDATE entry_translation_languages
 SET content_language = NULL, updated_at = :updatedAt
-WHERE entry_id = :entryId AND target_language IS NOT NULL;
+WHERE entry_id = :entryId AND (target_language IS NOT NULL OR translate_downloads = 1);
 
 clearTargetLanguage:
 UPDATE entry_translation_languages
 SET target_language = NULL, updated_at = :updatedAt
-WHERE entry_id = :entryId AND content_language IS NOT NULL;
+WHERE entry_id = :entryId AND (content_language IS NOT NULL OR translate_downloads = 1);
+
+clearLanguages:
+UPDATE entry_translation_languages
+SET content_language = NULL, target_language = NULL, updated_at = :updatedAt
+WHERE entry_id = :entryId AND translate_downloads = 1;
+
+clearTranslateDownloads:
+UPDATE entry_translation_languages
+SET translate_downloads = 0, updated_at = :updatedAt
+WHERE entry_id = :entryId AND (content_language IS NOT NULL OR target_language IS NOT NULL);
+
+clearLanguagesByProfile:
+UPDATE entry_translation_languages
+SET content_language = NULL, target_language = NULL, updated_at = :updatedAt
+WHERE translate_downloads = 1 AND entry_id IN (SELECT _id FROM entries WHERE profile_id = :profileId);
 
 deleteIfOnlyContentLanguage:
 DELETE FROM entry_translation_languages
-WHERE entry_id = :entryId AND target_language IS NULL;
+WHERE entry_id = :entryId AND target_language IS NULL AND translate_downloads = 0;
 
 deleteIfOnlyTargetLanguage:
 DELETE FROM entry_translation_languages
-WHERE entry_id = :entryId AND content_language IS NULL;
+WHERE entry_id = :entryId AND content_language IS NULL AND translate_downloads = 0;
 
-delete:
+deleteIfOnlyLanguages:
 DELETE FROM entry_translation_languages
-WHERE entry_id = :entryId;
+WHERE entry_id = :entryId AND translate_downloads = 0;
 
-deleteByProfile:
+deleteIfOnlyTranslateDownloads:
 DELETE FROM entry_translation_languages
-WHERE entry_id IN (SELECT _id FROM entries WHERE profile_id = :profileId);
+WHERE entry_id = :entryId AND content_language IS NULL AND target_language IS NULL;
+
+deleteLanguagesOnlyByProfile:
+DELETE FROM entry_translation_languages
+WHERE translate_downloads = 0 AND entry_id IN (SELECT _id FROM entries WHERE profile_id = :profileId);

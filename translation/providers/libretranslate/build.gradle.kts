@@ -15,6 +15,7 @@ dependencies {
     implementation(projects.translation.api)
     implementation(projects.translation.runtime)
     implementation(projects.translation.spi)
+    implementation(projects.translation.providers.serverConnection)
     implementation(libs.androidx.appCompat)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.foundation)

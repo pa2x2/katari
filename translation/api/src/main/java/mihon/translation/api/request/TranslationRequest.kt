@@ -11,6 +11,7 @@ data class TranslationRequest(
     val targetLanguage: TranslationTargetLanguageSelection = TranslationTargetLanguageSelection.Default,
     val engine: TranslationEngineSelection = TranslationEngineSelection.ProfileDefault,
     val languageContext: TextLanguageResolutionContext = TextLanguageResolutionContext(),
+    val context: TranslationContext = TranslationContext.None,
 )
 
 sealed interface TranslationSourceLanguageSelection {
@@ -34,4 +35,7 @@ data class ResolvedTranslationRequest(
     val sourceLanguage: LanguageTag,
     val targetLanguage: LanguageTag,
     val engine: TranslationEngineId,
-)
+) {
+    val route: ResolvedTranslationRoute
+        get() = ResolvedTranslationRoute(sourceLanguage, targetLanguage, engine)
+}

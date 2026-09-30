@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="server_connection_security_title">Connection security</string>
+    <string name="server_connection_security_description">HTTPS is required for remote servers. HTTP is allowed only on localhost or a loopback address. Your API key is encrypted with Android Keystore.</string>
+    <string name="server_connection_endpoint">Server URL</string>
+    <string name="server_connection_save_and_test">Save and test connection</string>
+    <string name="server_connection_invalid_endpoint">Enter an HTTPS URL, or an HTTP loopback URL, without credentials, query, or fragment.</string>
+    <string name="server_connection_ready">Ready to use</string>
+    <string name="server_connection_save_failed">Katari could not securely save this server configuration.</string>
+    <string name="translation_provider_done">Done</string>
+    <string name="translation_provider_status_testing">Testing connection</string>
+    <string name="translation_provider_status_success">Connection successful</string>
+    <string name="translation_provider_status_failure">Action required</string>
+    <string name="translation_provider_back">Back</string>
+    <string name="translation_provider_show_api_key">Show API key</string>
+    <string name="translation_provider_hide_api_key">Hide API key</string>
+</resources>

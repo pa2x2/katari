@@ -45,6 +45,7 @@ import mihon.entry.interactions.host.tracking.AppEntryTrackingHost
 import mihon.entry.interactions.runtime.EntryInteractionActivityTheme
 import mihon.entry.interactions.runtime.EntryInteractionRuntimeDependencies
 import mihon.entry.interactions.runtime.addEntryInteractionRuntime
+import mihon.entry.interactions.translate.markEntryTranslateRuntimeDependenciesRegistered
 import mihon.feature.migration.discovery.SourceMigrationCandidateDiscovery
 import mihon.feature.migration.discovery.SourceMigrationDiscoveryRunner
 import mihon.feature.migration.execution.SourceMigrationExecutionPlanner
@@ -312,6 +313,7 @@ class AppModule(val app: Application) : InjektModule {
         addSingletonFactory { ImageSaver(app) }
 
         markEntryDownloadRuntimeDependenciesRegistered()
+        markEntryTranslateRuntimeDependenciesRegistered()
 
         // Asynchronously init expensive components for a faster cold start
         ContextCompat.getMainExecutor(app).execute {

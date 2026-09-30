@@ -1,0 +1,56 @@
+CREATE TABLE entry_translation_queue(
+    chapter_id INTEGER NOT NULL PRIMARY KEY,
+    entry_id INTEGER NOT NULL,
+    position INTEGER NOT NULL,
+    state TEXT NOT NULL CHECK(state IN ('waiting_for_download', 'queued', 'failed')),
+    failure TEXT,
+    setup TEXT,
+    queued_at INTEGER NOT NULL,
+    FOREIGN KEY(chapter_id) REFERENCES chapters(_id) ON DELETE CASCADE,
+    FOREIGN KEY(entry_id) REFERENCES entries(_id) ON DELETE CASCADE
+);
+
+CREATE INDEX entry_translation_queue_entry_index ON entry_translation_queue(entry_id);
+
+getByProfile:
+SELECT ETQ.*
+FROM entry_translation_queue ETQ
+JOIN entries ENT ON ENT._id = ETQ.entry_id
+WHERE ENT.profile_id = :profileId
+ORDER BY ETQ.position, ETQ.chapter_id;
+
+getByEntryId:
+SELECT *
+FROM entry_translation_queue
+WHERE entry_id = :entryId
+ORDER BY position, chapter_id;
+
+getPositionRange:
+SELECT min(ETQ.position) AS first, max(ETQ.position) AS last
+FROM entry_translation_queue ETQ
+JOIN entries ENT ON ENT._id = ETQ.entry_id
+WHERE ENT.profile_id = :profileId;
+
+upsert:
+INSERT INTO entry_translation_queue(chapter_id, entry_id, position, state, failure, setup, queued_at)
+VALUES (:chapterId, :entryId, :position, :state, :failure, :setup, :queuedAt)
+ON CONFLICT(chapter_id) DO UPDATE SET
+    position = excluded.position,
+    state = excluded.state,
+    failure = excluded.failure,
+    setup = excluded.setup,
+    queued_at = excluded.queued_at;
+
+setState:
+UPDATE entry_translation_queue
+SET state = :state, failure = :failure
+WHERE chapter_id = :chapterId;
+
+setPosition:
+UPDATE entry_translation_queue
+SET position = :position
+WHERE chapter_id = :chapterId;
+
+delete:
+DELETE FROM entry_translation_queue
+WHERE chapter_id IN :chapterIds;

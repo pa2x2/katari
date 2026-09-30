@@ -39,6 +39,7 @@ import mihon.entry.interactions.runtime.production.EntryFeatureRuntimeInstallati
 import mihon.entry.interactions.runtime.production.validateInstalledEntryFeatureRuntimeModules
 import mihon.entry.interactions.settings.EntryInteractionPreferences
 import mihon.entry.interactions.tracking.host.EntryTrackingHost
+import mihon.entry.interactions.translate.EntryTranslatePreferences
 import mihon.entry.viewer.settings.ViewerSettingOverrideRepository
 import mihon.feature.runtime.FeatureRuntimeComposition
 import mihon.feature.runtime.application.ApplicationFeatureRuntimeDependencies
@@ -64,6 +65,7 @@ import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.entry.repository.EntryTranslationLanguagesRepository
+import tachiyomi.domain.entry.repository.EntryTranslationQueueRepository
 import tachiyomi.domain.entry.repository.PlaybackPreferencesRepository
 import tachiyomi.domain.history.repository.HistoryRepository
 import tachiyomi.domain.library.service.GlobalLibraryPreferences
@@ -207,6 +209,8 @@ class ProductionEntryInteractionValidationEnvironment(
         Injekt.addSingletonFactory<DownloadPreferencesRepository> { mockk(relaxed = true) }
         Injekt.addSingletonFactory<PlaybackPreferencesRepository> { mockk(relaxed = true) }
         Injekt.addSingletonFactory<EntryTranslationLanguagesRepository> { mockk(relaxed = true) }
+        Injekt.addSingletonFactory<EntryTranslationQueueRepository> { mockk(relaxed = true) }
+        Injekt.addSingletonFactory { EntryTranslatePreferences(InMemoryPreferenceStore()) }
         Injekt.addSingletonFactory<HistoryRepository> { mockk(relaxed = true) }
         Injekt.addSingletonFactory<GetCategories> { mockk(relaxed = true) }
         Injekt.addSingletonFactory<GetTracks> { mockk(relaxed = true) }

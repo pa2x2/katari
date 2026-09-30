@@ -84,7 +84,6 @@
     <string name="pref_auto_update_manga_sync">पढ़ने के बाद प्रगति अपडेट करें</string>
     <string name="default_category">डिफ़ॉल्ट श्रेणी</string>
     <string name="default_category_summary">हमेशा पूछे</string>
-    <string name="pref_fullscreen">पूर्ण स्क्रीन</string>
     <string name="pref_page_transitions">चेतन पृष्ठ संक्रमण</string>
     <string name="pref_show_page_number">पृष्ठ संख्या दिखाएं</string>
     <string name="pref_crop_borders">किनारा कांटे</string>

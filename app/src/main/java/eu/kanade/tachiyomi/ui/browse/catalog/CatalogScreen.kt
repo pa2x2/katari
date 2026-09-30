@@ -72,6 +72,7 @@ import eu.kanade.tachiyomi.ui.browse.source.browse.SourceFilterDialog
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.change.FilterChanges
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.change.changeLabels
 import eu.kanade.tachiyomi.ui.browse.source.browse.preset.SourceFilterPresetActions
+import eu.kanade.tachiyomi.ui.browse.source.browse.preset.displayName
 import eu.kanade.tachiyomi.ui.category.CategoryScreen
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
 import eu.kanade.tachiyomi.ui.webview.WebViewScreen
@@ -94,6 +95,8 @@ import tachiyomi.presentation.core.screens.LoadingScreen
 data class CatalogScreen(
     val sourceId: Long,
     private val listingQuery: String?,
+    /** Opens the filter sheet right away, for building a preset to add as a feed. */
+    private val openFilters: Boolean = false,
 ) : Screen(), AssistContentScreen {
 
     private var assistUrl: String? = null
@@ -107,7 +110,8 @@ data class CatalogScreen(
             return
         }
 
-        val screenModel = rememberScreenModel { CatalogScreenModel(sourceId, listingQuery) }
+        val screenModel =
+            rememberScreenModel { CatalogScreenModel(sourceId, listingQuery, openFilterSheetOnStart = openFilters) }
         val state by screenModel.state.collectAsState()
         val feedsEnabled = screenModel.feedsEnabled
 
@@ -330,7 +334,8 @@ data class CatalogScreen(
         }
 
         val onDismissRequest = screenModel::dismissDialog
-        val appliedCustomPreset = if (feedsEnabled) screenModel.draftCustomPreset() else null
+        val draftPreset = if (feedsEnabled) screenModel.draftPreset() else null
+        val draftCustomPreset = if (feedsEnabled) screenModel.draftCustomPreset() else null
         when (val dialog = state.dialog) {
             is CatalogScreenModel.Dialog.Filter -> {
                 SourceFilterDialog(
@@ -346,14 +351,14 @@ data class CatalogScreen(
                     presetActions = if (feedsEnabled) {
                         SourceFilterPresetActions(
                             presets = screenModel.feedPresets(),
-                            currentPresetId = appliedCustomPreset?.id,
-                            currentPresetName = appliedCustomPreset?.name,
+                            currentPresetId = draftPreset?.id,
+                            currentPresetName = draftPreset?.displayName(),
                             onApply = screenModel::applyPreset,
                             onEdit = screenModel::showEditPresetDialog,
                             onDelete = { presetPendingDeletion = it },
                             canDelete = screenModel::canDeletePreset,
                             onSaveAsNew = screenModel::showSavePresetDialog,
-                            onUpdateCurrent = screenModel::showUpdateCurrentPresetDialog,
+                            onUpdateCurrent = draftCustomPreset?.let { screenModel::showUpdateCurrentPresetDialog },
                         )
                     } else {
                         null
@@ -508,7 +513,7 @@ data class CatalogScreen(
             ?.let { presetId -> screenModel.feedPresets().firstOrNull { it.id == presetId } }
             ?.let { preset ->
                 DeleteBrowsePresetDialog(
-                    presetName = preset.name,
+                    presetName = preset.displayName(),
                     onDismissRequest = { presetPendingDeletion = null },
                     onConfirm = { screenModel.removePreset(preset.id) },
                 )

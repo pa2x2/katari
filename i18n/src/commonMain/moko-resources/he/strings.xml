@@ -262,7 +262,6 @@
     <string name="pref_cutout_short">הצג תוכן באזור החתוך</string>
     <string name="untrusted_extension">תוסף לא מאומת</string>
     <string name="obsolete_extension_message">תוסף זה אינו זמין עוד. ייתכן שאינו פועל כצפוי ויכול לגרום לבעיות באפליקציה. מומלץ להסיר את התקנת התוסף.</string>
-    <string name="pref_fullscreen">מסך מלא</string>
     <string name="action_add">הוסף</string>
     <string name="action_edit">ערוך</string>
     <string name="action_update_library">עדכן ספרייה</string>

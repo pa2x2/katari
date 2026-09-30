@@ -96,7 +96,6 @@
     <string name="untrusted_extension_message">일부 악의적인 확장 앱은 Mihon에 저장된 로그인 정보를 읽거나 임의의 코드를 실행할 수도 있습니다.
 \n
 \n이 확장 앱을 신뢰하면 이러한 위험에 노출될 수 있습니다.</string>
-    <string name="pref_fullscreen">전체화면</string>
     <string name="pref_double_tap_anim_speed">더블 탭 애니메이션 속도</string>
     <string name="pref_show_page_number">페이지 번호 표시</string>
     <string name="pref_crop_borders">모서리 자르기</string>

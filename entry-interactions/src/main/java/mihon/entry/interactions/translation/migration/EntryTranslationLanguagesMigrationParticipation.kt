@@ -59,7 +59,7 @@ internal fun entryTranslationLanguagesMigrationBinding(
                     schemaVersion = 1,
                     value = json.encodeToString(EntryTranslationLanguagesMigrationPayload.serializer(), result.payload),
                 )
-                EntryTranslationLanguagesMigrationPreparation.NoTargetLanguage,
+                EntryTranslationLanguagesMigrationPreparation.NothingToCarry,
                 is EntryTranslationLanguagesMigrationPreparation.Inapplicable,
                 -> null
                 is EntryTranslationLanguagesMigrationPreparation.TypeMismatch -> error(

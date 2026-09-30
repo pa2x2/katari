@@ -1,5 +1,46 @@
 # Changelog
 
+## [1.12.0] - 2026-09-30
+
+### ✨ Added
+
+- Downloaded manga chapters can be translated in the background from the chapter menu, the selection bar, or Updates.
+- Chapters with a stored translation open with it already drawn over their pages.
+- A series can translate every chapter it downloads, set with "Translate downloads" in the reader's series languages.
+- Settings > Downloads > Auto-translate translates new downloads and upcoming chapters, optionally only while charging or on Wi-Fi.
+- The download queue has a Translations tab to follow, retry, pause, or cancel chapter translations.
+- DeepL is available as a translation engine, through the DeepL API or a compatible server of your own, and translates manga pages in context.
+- The library shows a running update's progress and can cancel it.
+- Library search shows matches from every group in one list and suggests search syntax.
+- An empty library links to Browse sources and backup restore.
+- Feeds can be renamed, and removing a feed can be undone.
+
+### 🔄 Changed
+
+- The manga reader's Fullscreen setting is replaced by separate Show status bar and Show navigation bar settings.
+- The feed switcher is dragged sideways to change feeds, replacing the arrow buttons.
+- Lower library grouping levels appear as chip rows that scroll with the grid.
+- Reselecting the Library tab scrolls to the top before opening the settings sheet.
+
+### 🧩 Improved
+
+- Library unread and download badges are easier to tell apart.
+- Library covers show their selection state while selecting.
+- Library display modes are picked from preview tiles.
+- Feeds show their source's language, and the add-feed sheet can search sources.
+- Tabbed settings sheets no longer change height when switching tabs.
+
+### 🐛 Fixed
+
+- The filter sheet shows Popular or Latest as the selected preset when the filters match it.
+- The Sources app shortcut opens the Sources page of Browse.
+- The library's unread filter no longer reads "Unconsumed".
+- The library's items-per-row slider follows the device orientation.
+
+### ⚡️ Performance
+
+- LibreTranslate requests no longer decrypt the saved API key every time.
+
 ## [1.11.0] - 2026-09-29
 
 ### ✨ Added
@@ -516,7 +557,8 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v1.11.0...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/v1.12.0...HEAD
+[1.12.0]: https://github.com/pa2x2/katari/releases/tag/v1.12.0
 [1.11.0]: https://github.com/pa2x2/katari/releases/tag/v1.11.0
 [1.10.2]: https://github.com/pa2x2/katari/releases/tag/v1.10.2
 [1.10.1]: https://github.com/pa2x2/katari/releases/tag/v1.10.1

@@ -202,7 +202,6 @@
     <string name="pref_show_reading_mode">نمایش حالت خواندن</string>
     <string name="pref_show_page_number">نمایش شماره صفحه</string>
     <string name="pref_page_transitions">انمیشن‌های تغییر صفحه</string>
-    <string name="pref_fullscreen">تمام صفحه</string>
     <string name="obsolete_extension_message">این افزونه دیگر در دسترس نیست. ممکن است به درستی کار نکند و باعث ایجاد مشکلاتی در برنامه شود. حذف نصب آن توصیه می شود.</string>
     <string name="untrusted_extension_message">یک افزونه مخرب می تواند هر گونه طلاعات ورود به سیستم زخیره شده را بخواند یا اختیاری یک کد را اجرا کند.
 \n

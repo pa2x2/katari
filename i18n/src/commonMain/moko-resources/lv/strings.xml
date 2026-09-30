@@ -223,7 +223,6 @@
 \nUzticoties šim sertifikātam, jūs piekrītat šiem riskiem.</string>
     <string name="ext_installer_legacy">Mantots</string>
     <string name="ext_installer_shizuku_unavailable_dialog">Instalējiet un startējiet Shizuku, lai izmantotu Shizuku kā paplašinājuma instalētāju.</string>
-    <string name="pref_fullscreen">Pilnekrāns</string>
     <string name="pref_show_navigation_mode">Rādīt skāriena zonu pārklājumu</string>
     <string name="pref_dual_page_invert_summary">Ja sadalīto plato lapu izvietojums neatbilst lasīšanas virzienam</string>
     <string name="pref_page_transitions">Animēt lappušu pārejas</string>

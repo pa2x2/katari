@@ -61,6 +61,10 @@ import mihon.entry.interactions.state.ProviderBackedEntryPlaybackPreferencesInte
 import mihon.entry.interactions.state.ProviderBackedEntryProgressInteraction
 import mihon.entry.interactions.statistics.EntryStatisticsInteraction
 import mihon.entry.interactions.statistics.ProviderBackedEntryStatisticsInteraction
+import mihon.entry.interactions.translate.EntryTranslateCapability
+import mihon.entry.interactions.translate.EntryTranslateInteraction
+import mihon.entry.interactions.translate.EntryTranslateInteractionDispatch
+import mihon.entry.interactions.translate.EntryTranslateProcessor
 import mihon.feature.graph.FeatureGraphContributor
 import mihon.feature.graph.execution.FeatureDurableExecutionParticipantBinding
 import mihon.feature.graph.execution.FeatureExecutionParticipantBinding
@@ -151,6 +155,7 @@ fun createEntryInteractionInstallation(
             viewerSettingsProviders = providers[EntryViewerSettingsCapability],
             mediaCacheProviders = providers[EntryMediaCacheCapability],
             statisticsProviders = providers[EntryStatisticsCapability],
+            translateProcessors = providers[EntryTranslateCapability],
         ),
         featureRuntimeInputs = FeatureRuntimeInputs(
             graphContributors = plugins + featureContributors,
@@ -217,6 +222,7 @@ private class DefaultEntryInteractions(
     viewerSettingsProviders: Map<EntryType, EntryViewerSettingsProvider>,
     mediaCacheProviders: Map<EntryType, EntryMediaCacheProvider>,
     statisticsProviders: Map<EntryType, EntryStatisticsProvider>,
+    translateProcessors: Map<EntryType, EntryTranslateProcessor>,
 ) : EntryInteractions {
     override val open: EntryOpenInteraction = ProviderBackedEntryOpenInteraction(openProcessors)
     override val continueEntry: EntryContinueInteraction =
@@ -255,4 +261,5 @@ private class DefaultEntryInteractions(
         ProviderBackedEntryMediaCacheInteraction(mediaCacheProviders)
     override val statistics: EntryStatisticsInteraction =
         ProviderBackedEntryStatisticsInteraction(statisticsProviders)
+    override val translate: EntryTranslateInteraction = EntryTranslateInteractionDispatch(translateProcessors)
 }

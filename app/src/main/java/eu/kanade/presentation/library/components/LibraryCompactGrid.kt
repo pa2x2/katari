@@ -28,12 +28,12 @@ internal fun LibraryCompactGrid(
     onLongClick: (LibraryItem) -> Unit,
     onClickContinueReading: ((LibraryItem) -> Unit)?,
     isContinueReadingAvailable: (LibraryItem) -> Boolean,
-    searchQuery: String?,
-    onGlobalSearchClicked: () -> Unit,
     displaySettings: LibraryDisplaySettings,
+    scrollToTopTarget: LibraryScrollToTopTarget?,
 ) {
     val gridState = rememberLazyGridState()
     val (pinnedItems, regularItems) = items.partition(LibraryItem::isPinned)
+    BindScrollToTop(scrollToTopTarget, gridState) { gridState.animateScrollToItem(0) }
     LazyLibraryGrid(
         modifier = Modifier
             .fillMaxSize()
@@ -47,8 +47,6 @@ internal fun LibraryCompactGrid(
         columns = columns,
         contentPadding = contentPadding,
     ) {
-        globalSearchItem(searchQuery, onGlobalSearchClicked)
-
         libraryPinnedGridItems(
             items = pinnedItems,
             style = displaySettings.pinnedDisplayStyle,
@@ -102,7 +100,7 @@ internal fun LibraryCompactGrid(
 }
 
 @Composable
-private fun LibraryCompactGridEntry(
+internal fun LibraryCompactGridEntry(
     libraryItem: LibraryItem,
     showTitle: Boolean,
     selection: Set<LibraryItemKey>,
@@ -117,6 +115,7 @@ private fun LibraryCompactGridEntry(
     EntryCompactGridItem(
         modifier = modifier,
         isSelected = libraryItem.key in selection,
+        selectionMode = selection.isNotEmpty(),
         title = libraryItem.title.takeIf { showTitle },
         coverData = libraryItem.entry.asEntryCover(),
         coverType = libraryItem.sourceItemOrientation.toLibraryGridCoverType(),
@@ -127,23 +126,10 @@ private fun LibraryCompactGridEntry(
             Color.Transparent
         },
         coverBadgeStart = {
-            if (displaySettings.downloadBadge) {
-                DownloadsBadge(count = libraryItem.downloadCount)
-            }
-            if (displaySettings.unreadBadge) {
-                libraryItem.unconsumedCount?.let { UnreadBadge(count = it) }
-            }
+            LibraryItemProgressBadges(libraryItem, displaySettings)
         },
         coverBadgeEnd = {
-            if (displaySettings.entryTypeBadge) {
-                EntryTypeBadge(entryType = libraryItem.entry.type)
-            }
-            if (displaySettings.localBadge) {
-                LocalBadge(isLocal = libraryItem.isLocal)
-            }
-            if (displaySettings.languageBadge) {
-                LanguageBadge(sourceLanguage = libraryItem.sourceLanguage)
-            }
+            LibraryItemOriginBadges(libraryItem, displaySettings)
         },
         onLongClick = { onLongClick(libraryItem) },
         onClick = { onClick(libraryItem) },

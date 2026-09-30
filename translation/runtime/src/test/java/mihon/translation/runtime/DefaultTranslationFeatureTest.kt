@@ -6,6 +6,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import mihon.language.api.tag.LanguageTag
 import mihon.translation.api.engine.KnownTranslationEngine
@@ -23,10 +24,14 @@ import mihon.translation.api.preparation.TranslationSystemSetupReason
 import mihon.translation.api.preparation.TranslationUnavailableReason
 import mihon.translation.api.provider.TranslationInvocationPolicy
 import mihon.translation.api.provider.TranslationProviderPresentation
-import mihon.translation.api.request.ResolvedTranslationRequest
+import mihon.translation.api.request.ResolvedTranslationRoute
+import mihon.translation.api.request.TranslationBatch
+import mihon.translation.api.request.TranslationContext
 import mihon.translation.api.request.TranslationRequest
 import mihon.translation.api.request.TranslationSourceLanguageSelection
 import mihon.translation.api.request.TranslationTargetLanguageSelection
+import mihon.translation.api.request.TranslationWorkContext
+import mihon.translation.api.result.TranslationBatchUpdate
 import mihon.translation.api.result.TranslationExecution
 import mihon.translation.api.result.TranslationFailureReason
 import mihon.translation.runtime.cache.TranslationResultCache
@@ -34,8 +39,11 @@ import mihon.translation.runtime.feature.DefaultTranslationFeature
 import mihon.translation.runtime.feature.TranslationDefaultTargetLanguageResolver
 import mihon.translation.runtime.registry.DefaultTranslationEngineRegistry
 import mihon.translation.spi.contribution.TranslationEngineContribution
+import mihon.translation.spi.engine.ContextualTranslationEngine
 import mihon.translation.spi.engine.ReadyTranslationEngineRequest
+import mihon.translation.spi.engine.TranslationContextElement
 import mihon.translation.spi.engine.TranslationEngine
+import mihon.translation.spi.engine.TranslationEngineBatchExecution
 import mihon.translation.spi.engine.TranslationEngineDeviceAvailability
 import mihon.translation.spi.engine.TranslationEngineExecution
 import mihon.translation.spi.engine.TranslationEnginePreparation
@@ -89,7 +97,7 @@ class DefaultTranslationFeatureTest {
                 maximumCodePoints = 2,
             ),
         )
-        engine.preparedRequest shouldBe null
+        engine.preparedRoute shouldBe null
     }
 
     @Test
@@ -173,6 +181,67 @@ class DefaultTranslationFeatureTest {
         engine.translationCount shouldBe 0
     }
 
+    @Test
+    fun `a translation is reused in another context only when the engine read nothing that differs`() = runTest {
+        val plain = FakeTranslationEngine()
+        val contextual = FakeContextualEngine()
+        val feature = feature(
+            DefaultTranslationEngineRegistry(
+                listOf(TranslationEngineContribution(plain), TranslationEngineContribution(contextual)),
+            ),
+            resultCache = TranslationResultCache({ cacheDirectory }, maximumBytes = 1_000_000),
+        )
+        val morning = TranslationContext(TranslationWorkContext("First work"), precedingText = listOf("Morning"))
+        val otherWork = morning.copy(work = TranslationWorkContext("Second work"))
+        val evening = morning.copy(precedingText = listOf("Evening"))
+
+        listOf(morning, evening).forEach { context ->
+            feature.translateBatch(TranslationBatch(route(plain), listOf("Hello"), context)).toList() shouldBe
+                listOf(TranslationBatchUpdate.Translated(0, "translated"))
+        }
+        plain.translationCount shouldBe 1
+
+        listOf(morning, otherWork, evening).forEach { context ->
+            feature.translateBatch(TranslationBatch(route(contextual), listOf("Hello", "World"), context)).toList()
+        }
+        // The engine reads preceding text but not the work, so only the evening differs for it.
+        contextual.contexts shouldBe listOf(
+            TranslationContext(precedingText = listOf("Morning")),
+            TranslationContext(precedingText = listOf("Evening")),
+        )
+    }
+
+    @Test
+    fun `translations that do not answer every text are dropped instead of landing on the wrong texts`() = runTest {
+        val contextual = FakeContextualEngine(answer = { segments -> segments.drop(1) })
+        val feature = feature(
+            DefaultTranslationEngineRegistry(listOf(TranslationEngineContribution(contextual))),
+            resultCache = TranslationResultCache({ cacheDirectory }, maximumBytes = 1_000_000),
+        )
+        val batch = TranslationBatch(route(contextual), listOf("Hello", "World"))
+
+        repeat(2) {
+            feature.translateBatch(batch).toList() shouldBe
+                listOf(TranslationBatchUpdate.Failed(0), TranslationBatchUpdate.Failed(1))
+        }
+        contextual.contexts.size shouldBe 2
+    }
+
+    @Test
+    fun `a call the engine fails ends the batch with its reason instead of passing for untranslated texts`() = runTest {
+        val contextual = FakeContextualEngine(failure = "Quota is used up")
+        val feature = feature(DefaultTranslationEngineRegistry(listOf(TranslationEngineContribution(contextual))))
+
+        feature.translateBatch(TranslationBatch(route(contextual), listOf("Hello", "World"))).toList() shouldBe
+            listOf(
+                TranslationBatchUpdate.EngineFailed(
+                    TranslationFailureReason.ProviderFailure(contextual.catalogEntry.id, "Quota is used up"),
+                ),
+            )
+    }
+
+    private fun route(engine: TranslationEngine) = ResolvedTranslationRoute(ENGLISH, SPANISH, engine.catalogEntry.id)
+
     private fun feature(engine: TranslationEngine): DefaultTranslationFeature {
         return feature(DefaultTranslationEngineRegistry(listOf(TranslationEngineContribution(engine))))
     }
@@ -208,7 +277,7 @@ class DefaultTranslationFeatureTest {
         override val catalogEntry: KnownTranslationEngine = KNOWN_ENGINE,
     ) : TranslationEngine {
         override val presentation = presentation(catalogEntry)
-        var preparedRequest: ResolvedTranslationRequest? = null
+        var preparedRoute: ResolvedTranslationRoute? = null
         var preparationCount = 0
         var translationCount = 0
 
@@ -219,8 +288,8 @@ class DefaultTranslationFeatureTest {
                 TranslationLanguageSupport.AnyLanguage,
             )
 
-        override suspend fun prepare(request: ResolvedTranslationRequest): TranslationEnginePreparation {
-            preparedRequest = request
+        override suspend fun prepare(route: ResolvedTranslationRoute): TranslationEnginePreparation {
+            preparedRoute = route
             preparationCount += 1
             return preparation
         }
@@ -229,9 +298,42 @@ class DefaultTranslationFeatureTest {
             return revalidation ?: TranslationEnginePreparation.Ready(ready)
         }
 
-        override suspend fun translate(ready: ReadyTranslationEngineRequest): TranslationEngineExecution {
+        override suspend fun translate(ready: ReadyTranslationEngineRequest, text: String): TranslationEngineExecution {
             translationCount += 1
             return executionBlock?.invoke() ?: execution
+        }
+    }
+
+    private class FakeContextualEngine(
+        private val answer: (List<String>) -> List<String> = { segments -> segments.map { "translated $it" } },
+        private val failure: String? = null,
+    ) : ContextualTranslationEngine {
+        override val catalogEntry = knownEngine("contextual")
+        override val presentation = presentation(catalogEntry)
+        override val maximumInputCodePoints: Int? = null
+        override val contextSupport = setOf(TranslationContextElement.PrecedingText)
+        override val maximumBatchSegments = 10
+        val contexts = mutableListOf<TranslationContext>()
+
+        override suspend fun inspectDevice() = TranslationEngineDeviceAvailability.Available
+
+        override suspend fun inspectLanguageSupport() =
+            TranslationLanguageSupportInspection.Available(TranslationLanguageSupport.AnyLanguage)
+
+        override suspend fun prepare(route: ResolvedTranslationRoute): TranslationEnginePreparation =
+            TranslationEnginePreparation.Ready(FakeReady)
+
+        override suspend fun revalidate(ready: ReadyTranslationEngineRequest): TranslationEnginePreparation =
+            TranslationEnginePreparation.Ready(ready)
+
+        override suspend fun translate(
+            ready: ReadyTranslationEngineRequest,
+            segments: List<String>,
+            context: TranslationContext,
+        ): TranslationEngineBatchExecution {
+            contexts += context
+            failure?.let { return TranslationEngineBatchExecution.Failed(it) }
+            return TranslationEngineBatchExecution.Success(answer(segments))
         }
     }
 

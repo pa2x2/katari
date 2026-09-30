@@ -5,9 +5,10 @@ import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.coroutines.test.runTest
 import mihon.language.api.tag.LanguageTag
 import mihon.translation.api.preparation.TranslationSystemSetupReason
-import mihon.translation.api.request.ResolvedTranslationRequest
+import mihon.translation.api.request.ResolvedTranslationRoute
 import mihon.translation.provider.libretranslate.protocol.LibreTranslateLanguage
 import mihon.translation.provider.libretranslate.protocol.LibreTranslateService
+import mihon.translation.provider.server.ServerConnectionSettings
 import mihon.translation.spi.engine.TranslationEngineDeviceAvailability
 import mihon.translation.spi.engine.TranslationEnginePreparation
 import okhttp3.HttpUrl
@@ -31,7 +32,7 @@ class LibreTranslateServerEngineTest {
             TranslationEngineDeviceAvailability.ConfigurationRequired(
                 LibreTranslateServerEngine.CONFIGURATION_DESCRIPTION,
             )
-        engine.prepare(request()) shouldBe setupRequired()
+        engine.prepare(route()) shouldBe setupRequired()
         serviceCreated shouldBe false
     }
 
@@ -46,11 +47,11 @@ class LibreTranslateServerEngineTest {
         )
         val engine = engine(settings = settings, serviceFactory = { service })
 
-        engine.prepare(request()) shouldBe
+        engine.prepare(route()) shouldBe
             TranslationEnginePreparation.ProviderDisclosureRequired(LibreTranslateServerEngine.DISCLOSURE)
 
         settings.disclosureAccepted = true
-        engine.prepare(request()).shouldBeInstanceOf<TranslationEnginePreparation.Ready>()
+        engine.prepare(route()).shouldBeInstanceOf<TranslationEnginePreparation.Ready>()
     }
 
     private fun engine(
@@ -58,11 +59,10 @@ class LibreTranslateServerEngineTest {
         serviceFactory: () -> LibreTranslateService? = { FakeService() },
     ) = LibreTranslateServerEngine(settings, serviceFactory)
 
-    private fun request(
+    private fun route(
         source: LanguageTag = ENGLISH,
         target: LanguageTag = FRENCH,
-    ) = ResolvedTranslationRequest(
-        text = "Hello",
+    ) = ResolvedTranslationRoute(
         sourceLanguage = source,
         targetLanguage = target,
         engine = LibreTranslateServerEngine.ENGINE_ID,
@@ -79,7 +79,7 @@ class LibreTranslateServerEngineTest {
         override val apiKey: String? = null,
         override val isInitiallyVerified: Boolean = true,
         override var disclosureAccepted: Boolean = true,
-    ) : LibreTranslateServerSettings
+    ) : ServerConnectionSettings
 
     private class FakeService(
         private val languages: List<LibreTranslateLanguage> = emptyList(),

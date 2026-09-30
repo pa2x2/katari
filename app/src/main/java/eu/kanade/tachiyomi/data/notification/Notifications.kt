@@ -9,6 +9,7 @@ import eu.kanade.tachiyomi.util.system.buildNotificationChannel
 import eu.kanade.tachiyomi.util.system.buildNotificationChannelGroup
 import mihon.entry.interactions.download.EntryDownloadNotifications
 import mihon.entry.interactions.library.EntryLibraryUpdateNotificationRoute
+import mihon.entry.interactions.translate.EntryTranslateNotifications
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.*
 
@@ -42,6 +43,11 @@ object Notifications {
      * Notification channel and ids used by the downloader.
      */
     private const val GROUP_DOWNLOADER = "group_downloader"
+
+    /**
+     * Notification channel group of background chapter translation.
+     */
+    private const val GROUP_TRANSLATOR = "group_translator"
 
     /**
      * Notification channel and ids used by the backup/restore system.
@@ -124,6 +130,9 @@ object Notifications {
                 buildNotificationChannelGroup(GROUP_DOWNLOADER) {
                     setName(context.stringResource(MR.strings.download_notifier_downloader_title))
                 },
+                buildNotificationChannelGroup(GROUP_TRANSLATOR) {
+                    setName(context.stringResource(MR.strings.translation_title))
+                },
                 buildNotificationChannelGroup(GROUP_LIBRARY) {
                     setName(context.stringResource(MR.strings.label_library))
                 },
@@ -168,6 +177,11 @@ object Notifications {
                 buildNotificationChannel(EntryDownloadNotifications.CHANNEL_ERROR, IMPORTANCE_LOW) {
                     setName(context.stringResource(MR.strings.channel_errors))
                     setGroup(GROUP_DOWNLOADER)
+                    setShowBadge(false)
+                },
+                buildNotificationChannel(EntryTranslateNotifications.CHANNEL_PROGRESS, IMPORTANCE_LOW) {
+                    setName(context.stringResource(MR.strings.channel_progress))
+                    setGroup(GROUP_TRANSLATOR)
                     setShowBadge(false)
                 },
                 buildNotificationChannel(CHANNEL_BACKUP_RESTORE_PROGRESS, IMPORTANCE_LOW) {

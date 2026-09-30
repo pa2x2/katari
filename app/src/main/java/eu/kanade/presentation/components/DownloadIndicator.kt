@@ -23,6 +23,7 @@ import androidx.compose.material3.ProgressIndicatorDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -60,6 +61,13 @@ enum class DownloadIndicatorAction {
     DELETE,
 }
 
+/** A menu entry an indicator offers besides its own download actions. */
+@Immutable
+class DownloadIndicatorMenuItem(
+    val text: String,
+    val onClick: () -> Unit,
+)
+
 @Composable
 fun DownloadIndicator(
     enabled: Boolean,
@@ -75,40 +83,87 @@ fun DownloadIndicator(
     deleteText: String,
     onClick: (DownloadIndicatorAction) -> Unit,
     modifier: Modifier = Modifier,
+    badge: (@Composable () -> Unit)? = null,
+    menuItems: List<DownloadIndicatorMenuItem> = emptyList(),
+    notDownloadedMenuItems: List<DownloadIndicatorMenuItem> = emptyList(),
 ) {
-    when (val downloadState = downloadStateProvider()) {
-        DownloadIndicatorState.NOT_DOWNLOADED -> NotDownloadedIndicator(
+    Box(modifier = modifier) {
+        DownloadIndicatorContent(
             enabled = enabled,
-            modifier = modifier,
+            downloadState = downloadStateProvider(),
+            downloadProgressProvider = downloadProgressProvider,
             startContentDescription = startContentDescription,
+            errorContentDescription = errorContentDescription,
+            queuedContentDescription = queuedContentDescription,
+            downloadingContentDescription = downloadingContentDescription,
+            downloadedContentDescription = downloadedContentDescription,
+            startNowText = startNowText,
+            cancelText = cancelText,
+            deleteText = deleteText,
+            menuItems = menuItems,
+            notDownloadedMenuItems = notDownloadedMenuItems,
             onClick = onClick,
         )
-        DownloadIndicatorState.DELETING -> DeletingIndicator(
-            modifier = modifier,
+        if (badge != null) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(BadgeInset),
+            ) {
+                badge()
+            }
+        }
+    }
+}
+
+@Composable
+private fun DownloadIndicatorContent(
+    enabled: Boolean,
+    downloadState: DownloadIndicatorState,
+    downloadProgressProvider: () -> Int,
+    startContentDescription: String,
+    errorContentDescription: String,
+    queuedContentDescription: String,
+    downloadingContentDescription: String,
+    downloadedContentDescription: String,
+    startNowText: String,
+    cancelText: String,
+    deleteText: String,
+    menuItems: List<DownloadIndicatorMenuItem>,
+    notDownloadedMenuItems: List<DownloadIndicatorMenuItem>,
+    onClick: (DownloadIndicatorAction) -> Unit,
+) {
+    when (downloadState) {
+        DownloadIndicatorState.NOT_DOWNLOADED -> NotDownloadedIndicator(
+            enabled = enabled,
+            startContentDescription = startContentDescription,
+            startNowText = startNowText,
+            menuItems = notDownloadedMenuItems,
+            onClick = onClick,
         )
+        DownloadIndicatorState.DELETING -> DeletingIndicator()
         DownloadIndicatorState.QUEUE,
         DownloadIndicatorState.DOWNLOADING,
         -> DownloadingIndicator(
             enabled = enabled,
-            modifier = modifier,
             downloadState = downloadState,
             downloadProgressProvider = downloadProgressProvider,
             queuedContentDescription = queuedContentDescription,
             downloadingContentDescription = downloadingContentDescription,
             startNowText = startNowText,
             cancelText = cancelText,
+            menuItems = menuItems,
             onClick = onClick,
         )
         DownloadIndicatorState.DOWNLOADED -> DownloadedIndicator(
             enabled = enabled,
-            modifier = modifier,
             deleteText = deleteText,
             downloadedContentDescription = downloadedContentDescription,
+            menuItems = menuItems,
             onClick = onClick,
         )
         DownloadIndicatorState.ERROR -> ErrorIndicator(
             enabled = enabled,
-            modifier = modifier,
             errorContentDescription = errorContentDescription,
             onClick = onClick,
         )
@@ -163,26 +218,56 @@ private fun DeletingIndicator(
 private fun NotDownloadedIndicator(
     enabled: Boolean,
     startContentDescription: String,
+    startNowText: String,
+    menuItems: List<DownloadIndicatorMenuItem>,
     onClick: (DownloadIndicatorAction) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    var isMenuExpanded by remember { mutableStateOf(false) }
     Box(
         modifier = modifier
             .size(IconButtonTokens.StateLayerSize)
             .commonClickable(
                 enabled = enabled,
                 hapticFeedback = LocalHapticFeedback.current,
-                onLongClick = { onClick(DownloadIndicatorAction.START_NOW) },
+                // Without other choices a long press starts the download right away, as it always did.
+                onLongClick = {
+                    if (menuItems.isEmpty()) onClick(DownloadIndicatorAction.START_NOW) else isMenuExpanded = true
+                },
                 onClick = { onClick(DownloadIndicatorAction.START) },
-            )
-            .secondaryItemAlpha(),
+            ),
         contentAlignment = Alignment.Center,
     ) {
         Icon(
             painter = painterResource(R.drawable.ic_download_chapter_24dp),
             contentDescription = startContentDescription,
-            modifier = Modifier.size(IndicatorSize),
+            modifier = Modifier
+                .size(IndicatorSize)
+                .secondaryItemAlpha(),
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        DropdownMenu(expanded = isMenuExpanded, onDismissRequest = { isMenuExpanded = false }) {
+            DropdownMenuItem(
+                text = { Text(text = startNowText) },
+                onClick = {
+                    onClick(DownloadIndicatorAction.START_NOW)
+                    isMenuExpanded = false
+                },
+            )
+            MenuItems(menuItems, onDismiss = { isMenuExpanded = false })
+        }
+    }
+}
+
+@Composable
+private fun MenuItems(items: List<DownloadIndicatorMenuItem>, onDismiss: () -> Unit) {
+    items.forEach { item ->
+        DropdownMenuItem(
+            text = { Text(text = item.text) },
+            onClick = {
+                item.onClick()
+                onDismiss()
+            },
         )
     }
 }
@@ -196,6 +281,7 @@ private fun DownloadingIndicator(
     downloadingContentDescription: String,
     startNowText: String,
     cancelText: String,
+    menuItems: List<DownloadIndicatorMenuItem>,
     onClick: (DownloadIndicatorAction) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -261,6 +347,7 @@ private fun DownloadingIndicator(
                     isMenuExpanded = false
                 },
             )
+            MenuItems(menuItems, onDismiss = { isMenuExpanded = false })
         }
         Icon(
             imageVector = Icons.Outlined.ArrowDownward,
@@ -280,6 +367,7 @@ private fun DownloadedIndicator(
     enabled: Boolean,
     deleteText: String,
     downloadedContentDescription: String,
+    menuItems: List<DownloadIndicatorMenuItem>,
     onClick: (DownloadIndicatorAction) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -302,6 +390,7 @@ private fun DownloadedIndicator(
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         DropdownMenu(expanded = isMenuExpanded, onDismissRequest = { isMenuExpanded = false }) {
+            MenuItems(menuItems, onDismiss = { isMenuExpanded = false })
             DropdownMenuItem(
                 text = { Text(text = deleteText) },
                 onClick = {
@@ -361,6 +450,7 @@ private fun Modifier.commonClickable(
 )
 
 private val IndicatorSize = 26.dp
+private val BadgeInset = 4.dp
 private val IndicatorPadding = 2.dp
 private val IndicatorStrokeWidth = IndicatorPadding
 

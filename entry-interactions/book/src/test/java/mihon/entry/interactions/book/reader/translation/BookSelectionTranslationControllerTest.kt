@@ -2,6 +2,7 @@ package mihon.entry.interactions.book.reader.translation
 
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
@@ -26,9 +27,13 @@ import mihon.translation.api.language.TranslationLanguageSupportInspection
 import mihon.translation.api.model.TranslationModelDescriptor
 import mihon.translation.api.preparation.ReadyTranslation
 import mihon.translation.api.preparation.TranslationPreparation
+import mihon.translation.api.preparation.TranslationRoutePreparation
 import mihon.translation.api.provider.TranslationProviderDisclosure
+import mihon.translation.api.request.TranslationBatch
 import mihon.translation.api.request.TranslationRequest
+import mihon.translation.api.request.TranslationRouteRequest
 import mihon.translation.api.request.TranslationTargetLanguageSelection
+import mihon.translation.api.result.TranslationBatchUpdate
 import mihon.translation.api.result.TranslationExecution
 import mihon.translation.ui.session.TranslationSessionState
 import org.junit.jupiter.api.Test
@@ -106,6 +111,12 @@ class BookSelectionTranslationControllerTest {
             requests += request
             return TranslationPreparation.SourceUndetermined()
         }
+
+        override suspend fun prepareRoute(route: TranslationRouteRequest): TranslationRoutePreparation =
+            error("Selections translate text")
+
+        override fun translateBatch(batch: TranslationBatch): Flow<TranslationBatchUpdate> =
+            error("Selections translate text")
 
         override suspend fun translate(ready: ReadyTranslation): TranslationExecution = error("Not ready")
     }

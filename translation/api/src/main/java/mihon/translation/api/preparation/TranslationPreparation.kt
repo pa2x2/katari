@@ -23,13 +23,13 @@ sealed interface TranslationPreparation {
         val engine: TranslationEngineId,
         val presentation: TranslationProviderPresentation,
         val disclosure: TranslationProviderDisclosure,
-    ) : TranslationPreparation
+    ) : TranslationRequirement
 
     data class ModelDownloadRequired(
         val engine: TranslationEngineId,
         val presentation: TranslationProviderPresentation,
         val models: List<TranslationModelDescriptor>,
-    ) : TranslationPreparation {
+    ) : TranslationRequirement {
         init {
             require(models.isNotEmpty())
         }
@@ -39,13 +39,13 @@ sealed interface TranslationPreparation {
         val engine: TranslationEngineId,
         val presentation: TranslationProviderPresentation,
         val reason: TranslationSystemSetupReason,
-    ) : TranslationPreparation
+    ) : TranslationRequirement
 
     data class SetupInProgress(
         val engine: TranslationEngineId,
         val presentation: TranslationProviderPresentation,
         val progress: TranslationOperationProgress? = null,
-    ) : TranslationPreparation
+    ) : TranslationRequirement
 
     data class SourceUndetermined(
         val suggestedLanguages: List<LanguageTag> = emptyList(),
@@ -54,21 +54,29 @@ sealed interface TranslationPreparation {
     data class TargetLanguageRequired(
         val sourceLanguage: LanguageTag?,
         val reason: TranslationTargetChoiceReason,
-    ) : TranslationPreparation
+    ) : TranslationRequirement
 
     data class EngineChoiceRequired(
         val reason: TranslationEngineChoiceReason,
         val engines: List<KnownTranslationEngine>,
-    ) : TranslationPreparation
+    ) : TranslationRequirement
 
     data class Unavailable(
         val reason: TranslationUnavailableReason,
-    ) : TranslationPreparation
+    ) : TranslationRequirement
 
     data class Rejected(
         val reason: TranslationRejectionReason,
     ) : TranslationPreparation
 }
+
+/**
+ * A prerequisite the user must resolve before translation can run. The same requirements block translating text and
+ * preparing a route without it.
+ */
+sealed interface TranslationRequirement :
+    TranslationPreparation,
+    TranslationRoutePreparation
 
 sealed interface TranslationSystemSetupReason {
     data object ServiceDisabled : TranslationSystemSetupReason
