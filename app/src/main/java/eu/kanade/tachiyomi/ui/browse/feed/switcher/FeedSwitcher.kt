@@ -37,14 +37,10 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
-import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import eu.kanade.domain.source.model.SourceFeed
 import eu.kanade.domain.source.model.SourceFeedPreset
@@ -118,10 +114,12 @@ internal fun FeedSwitcher(
     }
 
     Box(modifier = modifier.onSizeChanged { anchorWidth = it.width }) {
+        // Swiping past the first or last feed stretches the switcher instead of moving the Browse tabs.
+        val edgeOverscroll = rememberEdgeContainedOverscroll()
         HorizontalPager(
             state = pagerState,
-            // Swiping past the first or last feed stays on the switcher instead of moving the Browse tabs.
-            modifier = Modifier.nestedScroll(ConsumeHorizontalScroll),
+            modifier = Modifier.nestedScroll(edgeOverscroll),
+            overscrollEffect = edgeOverscroll,
             pageSpacing = MaterialTheme.padding.small,
             key = { feeds[it].id },
         ) { page ->
@@ -226,14 +224,4 @@ internal fun FeedSourceIcon(source: Source, size: Dp) {
             .size(size)
             .clip(MaterialTheme.shapes.extraSmall),
     )
-}
-
-private val ConsumeHorizontalScroll = object : NestedScrollConnection {
-    override fun onPostScroll(consumed: Offset, available: Offset, source: NestedScrollSource): Offset {
-        return available.copy(y = 0f)
-    }
-
-    override suspend fun onPostFling(consumed: Velocity, available: Velocity): Velocity {
-        return available.copy(y = 0f)
-    }
 }
