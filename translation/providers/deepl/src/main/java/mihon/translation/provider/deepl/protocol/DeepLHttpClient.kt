@@ -23,7 +23,7 @@ internal class DeepLHttpClient(
     private val endpoint: HttpUrl,
     private val apiKey: String? = null,
 ) : DeepLService {
-    private val calls = ServerJsonCalls(httpClient)
+    private val calls = ServerJsonCalls(httpClient, retries = BUSY_RETRIES)
 
     override suspend fun languages(): DeepLLanguages =
         DeepLLanguages(sources = languages("source"), targets = languages("target"))
@@ -56,5 +56,10 @@ internal class DeepLHttpClient(
             .url(endpoint.newBuilder().addPathSegment("v2").addPathSegment(path).apply(url).build())
         apiKey?.let { builder.header("Authorization", "DeepL-Auth-Key $it") }
         return builder
+    }
+
+    private companion object {
+        /** DeepL limits how often it is asked, and asks to be asked again when it is. */
+        const val BUSY_RETRIES = 3
     }
 }

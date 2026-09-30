@@ -53,6 +53,25 @@ class ServerJsonCallsTest {
         }
     }
 
+    @Test
+    fun `a busy server is asked again until it answers but a rejected request is not repeated`() = runTest {
+        MockWebServer().use { server ->
+            server.enqueue(MockResponse.Builder().code(429).addHeader("Retry-After", "2").build())
+            server.enqueue(MockResponse.Builder().code(503).build())
+            server.enqueue(MockResponse.Builder().body("\"answered\"").build())
+            server.enqueue(MockResponse.Builder().code(400).build())
+            server.start()
+            val calls = ServerJsonCalls(OkHttpClient(), retries = 2)
+
+            calls.answer<String>(request(server)) shouldBe "answered"
+            server.requestCount shouldBe 3
+
+            shouldThrow<ServerCallException> { calls.answer<String>(request(server)) }
+                .failure shouldBe ServerCallFailure.Status(400)
+            server.requestCount shouldBe 4
+        }
+    }
+
     private fun calls() = ServerJsonCalls(OkHttpClient())
 
     private fun request(server: MockWebServer) = Request.Builder().url(server.url("/")).build()
