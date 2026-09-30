@@ -457,8 +457,7 @@ internal class MangaReaderTextSession(
     }
 
     private fun cancelTranslation() {
-        translationJobs.values.forEach(Job::cancel)
-        translationJobs.clear()
+        translationJobs.cancelAll()
         mutableState.update { it.copy(translating = emptySet()) }
     }
 
@@ -516,12 +515,21 @@ internal class MangaReaderTextSession(
     }
 
     private fun cancelRecognition() {
-        jobs.values.forEach(Job::cancel)
-        jobs.clear()
+        jobs.cancelAll()
         modelWait?.cancel()
         modelWait = null
         mutableState.update { state ->
             state.copy(pages = state.pages.filterValues { it !is MangaPageTextStatus.Recognizing })
         }
+    }
+
+    /**
+     * Cancels every job and forgets it. A cancelled job may finish on the spot and take itself out of the map, so the
+     * map is emptied before any job is cancelled instead of while they are gone through.
+     */
+    private fun MutableMap<ReaderPage, Job>.cancelAll() {
+        val cancelled = values.toList()
+        clear()
+        cancelled.forEach(Job::cancel)
     }
 }
