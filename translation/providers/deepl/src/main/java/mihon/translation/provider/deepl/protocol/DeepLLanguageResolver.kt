@@ -11,9 +11,9 @@ import java.util.Locale
 /**
  * Names languages the way a server does.
  *
- * A language the server lists is named exactly. Any other variant of a listed language is named by the one variant
- * the server has, or, when it has several (as with `EN-GB` and `EN-US`), by the bare language code, which the DeepL
- * API accepts for every language it lists variants of.
+ * A language the server lists is named exactly. Any other variant of a listed language is named by the listed
+ * variant closest to it, such as `ZH-HANT` for `zh-TW` and `ES-419` for `es-MX`, and by the first the server lists
+ * when several are as close, as `EN-GB` and `EN-US` are to `en-AU`. A code the server does not list is never used.
  */
 internal class DeepLLanguageResolver(
     languages: DeepLLanguages,
@@ -48,12 +48,11 @@ internal class DeepLLanguageResolver(
 
     private fun resolve(language: LanguageTag, listed: Map<LanguageTag, String>): String? {
         listed[language]?.let { return it }
-        val variants = listed.filterKeys { it.baseLanguage() == language.baseLanguage() }
-        return when (variants.size) {
-            0 -> null
-            1 -> variants.values.single()
-            else -> language.baseLanguage().uppercase(Locale.ROOT)
-        }
+        val requested = language.locale()
+        return listed.entries
+            .filter { it.key.baseLanguage() == requested.language }
+            .maxByOrNull { it.key.locale().closenessTo(requested) }
+            ?.value
     }
 
     /** The listed languages and the bare languages they are variants of, each of which resolves to a code. */
@@ -63,5 +62,7 @@ internal class DeepLLanguageResolver(
     private fun List<DeepLLanguage>.tagged(): Map<LanguageTag, String> =
         mapNotNull { language -> LanguageTag.parse(language.code)?.let { it to language.code } }.toMap()
 
-    private fun LanguageTag.baseLanguage(): String = Locale.forLanguageTag(value).language
+    private fun LanguageTag.baseLanguage(): String = locale().language
+
+    private fun LanguageTag.locale(): Locale = Locale.forLanguageTag(value)
 }
