@@ -3,14 +3,17 @@ package mihon.entry.interactions.manga.reader.text.translation
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
-import mihon.language.api.identification.TextLanguageResolutionContext
 import mihon.language.api.tag.LanguageTag
 import mihon.translation.api.TranslationFeature
-import mihon.translation.api.preparation.TranslationPreparation
+import mihon.translation.api.preparation.TranslationRequirement
+import mihon.translation.api.preparation.TranslationRoutePreparation
 import mihon.translation.api.provider.TranslationInvocationPolicy
 import mihon.translation.api.provider.TranslationProviderOutputMode
-import mihon.translation.api.result.TranslationExecution
+import mihon.translation.api.request.TranslationBatch
+import mihon.translation.api.request.TranslationContext
+import mihon.translation.api.result.TranslationBatchUpdate
 import mihon.translation.ui.session.language.TranslationLanguageContext
 
 /**
@@ -32,44 +35,44 @@ internal class MangaPageTranslator(
         .drop(1)
         .map { }
 
-    suspend fun translate(text: String, language: LanguageTag, pageText: String): MangaPageTranslation {
-        val request = languages.request(
-            text = text,
-            languageContext = TextLanguageResolutionContext(
-                surroundingText = pageText.takeIf(String::isNotBlank),
-                declaredLanguages = listOf(language),
-            ),
-            knownSource = language,
-        )
-        val ready = when (val preparation = feature.prepare(request)) {
-            is TranslationPreparation.Ready -> preparation
-            else -> return preparation.blocked()
+    /**
+     * Translates [texts] of a page in [language] together and in their [context], reporting each translation as soon
+     * as it is known. A text that could not be translated is not reported; the rest of the page still is.
+     */
+    fun translate(texts: List<String>, language: LanguageTag, context: TranslationContext): Flow<MangaPageTranslation> =
+        flow {
+            if (texts.isEmpty()) return@flow
+            val route = when (val preparation = feature.prepareRoute(languages.routeRequest(language))) {
+                is TranslationRoutePreparation.Ready -> preparation
+                is TranslationRequirement -> {
+                    preparation.blocked()?.let { emit(it) }
+                    return@flow
+                }
+            }
+            if (
+                route.presentation.outputMode != TranslationProviderOutputMode.InlineResult ||
+                route.presentation.invocationPolicy != TranslationInvocationPolicy.Immediate
+            ) {
+                emit(MangaPageTranslation.Blocked(MangaPageTranslationIssue.EngineUnsupported))
+                return@flow
+            }
+            feature.translateBatch(TranslationBatch(route.route, texts, context)).collect { update ->
+                when (update) {
+                    is TranslationBatchUpdate.Translated ->
+                        emit(MangaPageTranslation.Translated(update.index, update.text))
+                    is TranslationBatchUpdate.Failed -> Unit
+                    is TranslationBatchUpdate.Blocked -> update.requirement.blocked()?.let { emit(it) }
+                }
+            }
         }
-        val presentation = ready.presentation
-        if (
-            presentation.outputMode != TranslationProviderOutputMode.InlineResult ||
-            presentation.invocationPolicy != TranslationInvocationPolicy.Immediate
-        ) {
-            return MangaPageTranslation.Blocked(MangaPageTranslationIssue.EngineUnsupported)
-        }
-        return when (val execution = feature.translate(ready.translation)) {
-            is TranslationExecution.Success -> MangaPageTranslation.Translated(execution.result.translatedText)
-            is TranslationExecution.PreparationChanged -> execution.preparation.blocked()
-            is TranslationExecution.ProviderSurfaceOpened ->
-                MangaPageTranslation.Blocked(MangaPageTranslationIssue.EngineUnsupported)
-            is TranslationExecution.Failed -> MangaPageTranslation.Skipped
-        }
-    }
 
-    private fun TranslationPreparation.blocked(): MangaPageTranslation =
-        pageTranslationIssue(engineName())?.let(MangaPageTranslation::Blocked) ?: MangaPageTranslation.Skipped
+    private fun TranslationRequirement.blocked(): MangaPageTranslation.Blocked? =
+        pageTranslationIssue(engineName())?.let(MangaPageTranslation::Blocked)
 }
 
 internal sealed interface MangaPageTranslation {
-    data class Translated(val text: String) : MangaPageTranslation
-
-    /** This text could not be translated; the rest of the page can still be. */
-    data object Skipped : MangaPageTranslation
+    /** The text at [index] of the translated texts reads [text]. */
+    data class Translated(val index: Int, val text: String) : MangaPageTranslation
 
     /** Nothing can be translated until [issue] is resolved. */
     data class Blocked(val issue: MangaPageTranslationIssue) : MangaPageTranslation

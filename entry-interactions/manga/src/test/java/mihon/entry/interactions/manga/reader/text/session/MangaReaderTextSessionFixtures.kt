@@ -2,6 +2,7 @@ package mihon.entry.interactions.manga.reader.text.session
 
 import android.graphics.Bitmap
 import android.graphics.RectF
+import eu.kanade.tachiyomi.ui.reader.model.ReaderChapter
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
 import io.mockk.mockk
 import kotlinx.coroutines.CompletableDeferred
@@ -33,8 +34,11 @@ import mihon.text.recognition.api.preparation.TextRecognitionPreparation
 import mihon.text.recognition.api.preparation.TextRecognitionSetupPreparation
 import mihon.text.recognition.api.request.TextRecognitionRequest
 import mihon.text.recognition.api.request.TextRecognitionSetupRequest
+import mihon.text.recognition.api.result.RecognizedTextRegion
+import mihon.text.recognition.api.result.TextOrientation
 import mihon.text.recognition.api.result.TextRecognitionExecution
 import mihon.text.recognition.api.result.TextRecognitionResult
+import mihon.text.recognition.api.result.TextRegionKind
 import mihon.translation.api.TranslationFeature
 import mihon.translation.api.engine.TranslationEngineId
 import mihon.translation.api.engine.TranslationProviderId
@@ -60,8 +64,8 @@ private val PIPELINE = TextRecognitionPipeline(
 )
 
 /** A visible page whose image is always available. */
-internal class FakeSurface(private val index: Int) : MangaPageTextSurface {
-    override val page = ReaderPage(index)
+internal class FakeSurface(private val index: Int, chapter: ReaderChapter? = null) : MangaPageTextSurface {
+    override val page = ReaderPage(index).also { page -> chapter?.let { page.chapter = it } }
 
     override suspend fun displayedImage(): DisplayedPageImage = object : DisplayedPageImage {
         override val key = ImageContentKey("page-$index")
@@ -80,11 +84,14 @@ internal class FakeSurface(private val index: Int) : MangaPageTextSurface {
 }
 
 /**
- * Prepares every request as ready and answers every recognition without regions; recognition waits for [release]
- * when it is set, so tests can observe work in progress.
+ * Prepares every request as ready and answers every recognition with the [texts] of the image, none unless set;
+ * recognition waits for [release] when it is set, and an image in [held] for its own release, so tests can observe
+ * work in progress.
  */
 internal class FakeTextRecognition : TextRecognitionFeature {
     var release: CompletableDeferred<Unit>? = null
+    val held = mutableMapOf<ImageContentKey, CompletableDeferred<Unit>>()
+    var texts: Map<ImageContentKey, List<String>> = emptyMap()
     val recognized = mutableListOf<ImageContentKey>()
 
     override suspend fun prepare(request: TextRecognitionRequest): TextRecognitionPreparation =
@@ -96,9 +103,18 @@ internal class FakeTextRecognition : TextRecognitionFeature {
     override suspend fun recognize(ready: ReadyTextRecognition): TextRecognitionExecution {
         release?.await()
         val request = (ready as Ready).request
+        held[request.image.key]?.await()
         recognized += request.image.key
+        val regions = texts[request.image.key].orEmpty().mapIndexed { index, text ->
+            RecognizedTextRegion(
+                bounds = ImageRect(0, index * 100, 100, index * 100 + 50),
+                text = text,
+                kind = TextRegionKind.SpeechBubble,
+                orientation = TextOrientation.Vertical,
+            )
+        }
         return TextRecognitionExecution.Success(
-            TextRecognitionResult(request.image.key, request.image.size, JAPANESE, emptyList()),
+            TextRecognitionResult(request.image.key, request.image.size, JAPANESE, regions),
         )
     }
 
@@ -121,8 +137,10 @@ internal class FakeModelStore : ModelArtifactStore {
     override fun observeStored(): Flow<List<StoredModelArtifact>> = emptyFlow()
 }
 
-/** Translates text by upper-casing it. */
+/** Translates text by upper-casing it, and remembers the [batches] it was given. */
 internal class FakeTranslation : TranslationFeature {
+    val batches = mutableListOf<TranslationBatch>()
+
     override suspend fun prepare(request: TranslationRequest): TranslationPreparation {
         return TranslationPreparation.Ready(
             translation = Ready(request.text),
@@ -143,6 +161,7 @@ internal class FakeTranslation : TranslationFeature {
         )
 
     override fun translateBatch(batch: TranslationBatch): Flow<TranslationBatchUpdate> = flow {
+        batches += batch
         batch.segments.forEachIndexed { index, text ->
             emit(TranslationBatchUpdate.Translated(index, text.uppercase()))
         }

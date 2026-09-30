@@ -8,6 +8,7 @@ import mihon.entry.interactions.manga.translation.artifact.MangaChapterTranslati
 import mihon.entry.interactions.manga.translation.artifact.MangaChapterTranslationSetup
 import mihon.entry.interactions.manga.translation.artifact.MangaTranslatedPage
 import mihon.entry.interactions.manga.translation.artifact.MangaTranslatedRegion
+import mihon.entry.interactions.manga.translation.context.mangaPageContext
 import mihon.entry.interactions.manga.translation.pages.MangaDownloadedPage
 import mihon.text.recognition.api.TextRecognitionFeature
 import mihon.text.recognition.api.preparation.TextRecognitionPreparation
@@ -18,22 +19,22 @@ import mihon.text.recognition.api.request.TextRecognitionSetupRequest
 import mihon.text.recognition.api.result.TextRecognitionExecution
 import mihon.translation.api.TranslationFeature
 import mihon.translation.api.engine.TranslationEngineSelection
-import mihon.translation.api.preparation.TranslationPreparation
 import mihon.translation.api.preparation.TranslationRoutePreparation
-import mihon.translation.api.request.TranslationRequest
+import mihon.translation.api.request.TranslationBatch
+import mihon.translation.api.request.TranslationContext
 import mihon.translation.api.request.TranslationRouteRequest
-import mihon.translation.api.request.TranslationSourceLanguageSelection
 import mihon.translation.api.request.TranslationTargetLanguageSelection
-import mihon.translation.api.result.TranslationExecution
+import mihon.translation.api.request.TranslationWorkContext
+import mihon.translation.api.result.TranslationBatchUpdate
 import okio.ByteString.Companion.toByteString
 import tachiyomi.core.common.util.system.logcat
 
 /**
  * Recognizes and translates the raw pages of a chapter with exactly the given setup, without asking anyone.
  *
- * A page that cannot be decoded or recognized is left out, and a text that cannot be translated is kept without a
- * translation; the reader fills both in live. Anything that needs the user, such as a deleted model, stops the whole
- * chapter instead.
+ * The texts of a page are translated together, in light of the series and of the page before. A page that cannot be
+ * decoded or recognized is left out, and a text that cannot be translated is kept without a translation; the reader
+ * fills both in live. Anything that needs the user, such as a deleted model, stops the whole chapter instead.
  */
 internal class MangaChapterTranslator(
     private val recognition: TextRecognitionFeature,
@@ -42,17 +43,23 @@ internal class MangaChapterTranslator(
     suspend fun translate(
         pages: List<MangaDownloadedPage>,
         setup: MangaChapterTranslationSetup,
+        work: TranslationWorkContext?,
         onPageDone: (done: Int) -> Unit,
     ): MangaChapterTranslationOutcome {
         if (!isReady(setup)) return MangaChapterTranslationOutcome.SetupRequired
         val translated = mutableListOf<MangaTranslatedPage>()
         var lastSkip: String? = null
+        var textBefore = emptyList<String>()
         pages.forEachIndexed { index, page ->
-            when (val outcome = translatePage(page, setup)) {
-                is PageOutcome.Translated -> translated += outcome.page
+            when (val outcome = translatePage(page, setup, mangaPageContext(work, textBefore))) {
+                is PageOutcome.Translated -> {
+                    translated += outcome.page
+                    textBefore = outcome.page.regions.map { it.region.text }
+                }
                 is PageOutcome.Skipped -> {
                     logcat(LogPriority.WARN) { "Page ${page.fileName} left for the reader: ${outcome.reason}" }
                     lastSkip = outcome.reason
+                    textBefore = emptyList()
                 }
                 PageOutcome.SetupRequired -> return MangaChapterTranslationOutcome.SetupRequired
             }
@@ -78,7 +85,11 @@ internal class MangaChapterTranslator(
         return route is TranslationRoutePreparation.Ready && route.presentation.answersInline()
     }
 
-    private suspend fun translatePage(page: MangaDownloadedPage, setup: MangaChapterTranslationSetup): PageOutcome {
+    private suspend fun translatePage(
+        page: MangaDownloadedPage,
+        setup: MangaChapterTranslationSetup,
+        context: TranslationContext,
+    ): PageOutcome {
         val still = DisplayedStillImage(
             encoded = page.read().toByteString(),
             cropBorders = false,
@@ -101,35 +112,19 @@ internal class MangaChapterTranslator(
                 is TextRecognitionExecution.Failed -> return PageOutcome.Skipped(execution.message)
             }
         }
-        val regions = result.regions.map { region ->
-            when (val text = translateText(region.text, setup)) {
-                is TextOutcome.Translated -> MangaTranslatedRegion(region, text.text)
-                TextOutcome.Gap -> MangaTranslatedRegion(region, null)
-                TextOutcome.SetupRequired -> return PageOutcome.SetupRequired
+        val translations = arrayOfNulls<String>(result.regions.size)
+        var blocked = false
+        translation.translateBatch(TranslationBatch(setup.route, result.regions.map { it.text }, context))
+            .collect { update ->
+                when (update) {
+                    is TranslationBatchUpdate.Translated -> translations[update.index] = update.text
+                    is TranslationBatchUpdate.Failed -> Unit
+                    is TranslationBatchUpdate.Blocked -> blocked = true
+                }
             }
-        }
+        if (blocked) return PageOutcome.SetupRequired
+        val regions = result.regions.mapIndexed { index, region -> MangaTranslatedRegion(region, translations[index]) }
         return PageOutcome.Translated(MangaTranslatedPage(page.fileName, image.rawContent, image.size, regions))
-    }
-
-    private suspend fun translateText(text: String, setup: MangaChapterTranslationSetup): TextOutcome {
-        val request = TranslationRequest(
-            text = text,
-            sourceLanguage = TranslationSourceLanguageSelection.Explicit(setup.route.sourceLanguage),
-            targetLanguage = TranslationTargetLanguageSelection.Explicit(setup.route.targetLanguage),
-            engine = TranslationEngineSelection.Explicit(setup.route.engine),
-        )
-        val ready = when (val preparation = translation.prepare(request)) {
-            is TranslationPreparation.Ready -> preparation
-            is TranslationPreparation.Rejected, is TranslationPreparation.SourceUndetermined -> return TextOutcome.Gap
-            else -> return TextOutcome.SetupRequired
-        }
-        if (!ready.presentation.answersInline()) return TextOutcome.SetupRequired
-        return when (val execution = translation.translate(ready.translation)) {
-            is TranslationExecution.Success -> TextOutcome.Translated(execution.result.translatedText)
-            is TranslationExecution.Failed -> TextOutcome.Gap
-            is TranslationExecution.PreparationChanged, is TranslationExecution.ProviderSurfaceOpened ->
-                TextOutcome.SetupRequired
-        }
     }
 
     private sealed interface PageOutcome {
@@ -138,14 +133,6 @@ internal class MangaChapterTranslator(
         data class Skipped(val reason: String?) : PageOutcome
 
         data object SetupRequired : PageOutcome
-    }
-
-    private sealed interface TextOutcome {
-        data class Translated(val text: String) : TextOutcome
-
-        data object Gap : TextOutcome
-
-        data object SetupRequired : TextOutcome
     }
 }
 

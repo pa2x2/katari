@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.flow
 import mihon.entry.interactions.manga.reader.text.session.declaredContentLanguage
 import mihon.entry.interactions.manga.translation.artifact.MangaChapterTranslationSetup
 import mihon.entry.interactions.manga.translation.artifact.MangaChapterTranslationStore
+import mihon.entry.interactions.manga.translation.context.mangaWorkContext
 import mihon.entry.interactions.manga.translation.pages.MangaDownloadedChapterPages
 import mihon.entry.interactions.translate.EntryTranslateFailure
 import mihon.entry.interactions.translate.EntryTranslatePreparation
@@ -61,7 +62,11 @@ internal class MangaEntryTranslateProcessor(
             ?: return EntryTranslateResult.Failed(EntryTranslateFailure.DownloadMissing)
         val outcome = pages().use(chapter, entry, source) { chapterPages ->
             onProgress(EntryTranslateProgress(0, chapterPages.size))
-            translator().translate(chapterPages, chapterSetup) { done ->
+            translator().translate(
+                chapterPages,
+                chapterSetup,
+                mangaWorkContext(entry.title, entry.description),
+            ) { done ->
                 onProgress(EntryTranslateProgress(done, chapterPages.size))
             }
         } ?: return EntryTranslateResult.Failed(EntryTranslateFailure.DownloadMissing)

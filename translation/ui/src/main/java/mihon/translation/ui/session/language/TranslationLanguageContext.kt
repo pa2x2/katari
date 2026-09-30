@@ -12,6 +12,7 @@ import mihon.translation.api.engine.TranslationEngineId
 import mihon.translation.api.engine.TranslationEngineSelection
 import mihon.translation.api.language.TranslationDefaultTarget
 import mihon.translation.api.request.TranslationRequest
+import mihon.translation.api.request.TranslationRouteRequest
 import mihon.translation.api.request.TranslationSourceLanguageSelection
 import mihon.translation.api.request.TranslationTargetLanguageSelection
 
@@ -60,6 +61,18 @@ class TranslationLanguageContext(
                 ?.let(TranslationEngineSelection::Explicit)
                 ?: TranslationEngineSelection.ProfileDefault,
             languageContext = languageContext,
+        )
+    }
+
+    /** Builds the request for the route that text known to be in [source] takes with the current choices. */
+    fun routeRequest(source: LanguageTag): TranslationRouteRequest {
+        val current = mutableChoices.value
+        return TranslationRouteRequest(
+            sourceLanguage = source,
+            targetLanguage = targetSelection(current.target),
+            engine = current.engine
+                ?.let(TranslationEngineSelection::Explicit)
+                ?: TranslationEngineSelection.ProfileDefault,
         )
     }
 

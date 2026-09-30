@@ -76,6 +76,7 @@ import mihon.entry.interactions.manga.reader.text.translation.MangaTranslationLa
 import mihon.entry.interactions.manga.state.mangaProgressState
 import mihon.entry.interactions.manga.state.pageIndex
 import mihon.entry.interactions.manga.translation.artifact.MangaChapterTranslationStore
+import mihon.entry.interactions.manga.translation.context.mangaWorkContext
 import mihon.entry.interactions.media.session.EntryMediaSessionActivitySession
 import mihon.entry.interactions.media.session.EntryMediaSessionEvent
 import mihon.entry.interactions.reader.navigation.EntryReaderNavigationPresentation
@@ -211,6 +212,7 @@ internal class ReaderViewModel @JvmOverloads constructor(
             },
         pageLanguage = textTranslation.pageLanguage,
         storedTranslation = { page -> storedTranslations.of(page.chapter) },
+        work = { series.value?.let { mangaWorkContext(it.title, it.description) } },
     )
 
     /** Languages page text can be read in. */

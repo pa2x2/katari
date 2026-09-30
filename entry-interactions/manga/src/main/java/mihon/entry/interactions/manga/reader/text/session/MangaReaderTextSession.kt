@@ -1,5 +1,6 @@
 package mihon.entry.interactions.manga.reader.text.session
 
+import eu.kanade.tachiyomi.ui.reader.model.InsertPage
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -24,6 +25,7 @@ import mihon.entry.interactions.manga.reader.text.translation.MangaPageTranslati
 import mihon.entry.interactions.manga.reader.text.translation.MangaPageTranslationIssue
 import mihon.entry.interactions.manga.reader.text.translation.MangaPageTranslator
 import mihon.entry.interactions.manga.translation.artifact.MangaChapterTranslation
+import mihon.entry.interactions.manga.translation.context.mangaPageContext
 import mihon.language.api.tag.LanguageTag
 import mihon.model.artifacts.api.ModelArtifactStore
 import mihon.model.artifacts.api.descriptor.ModelArtifactDescriptor
@@ -41,6 +43,7 @@ import mihon.text.recognition.api.request.TextRecognitionScope
 import mihon.text.recognition.api.result.RecognizedTextRegion
 import mihon.text.recognition.api.result.TextRecognitionExecution
 import mihon.text.recognition.api.result.TextRecognitionResult
+import mihon.translation.api.request.TranslationWorkContext
 
 /**
  * Recognizes the text of the pages a reader displays while text features are active.
@@ -51,7 +54,8 @@ import mihon.text.recognition.api.result.TextRecognitionResult
  * languages; a different page language reads them again.
  *
  * Pages with a [storedTranslation] made from the same raw file are drawn from it instead, whatever the current
- * settings, and only its gaps are translated live.
+ * settings, and only its gaps are translated live. Live translations are made in light of the series, described by
+ * [work], and of the page read before.
  */
 internal class MangaReaderTextSession(
     private val recognition: TextRecognitionFeature,
@@ -65,6 +69,7 @@ internal class MangaReaderTextSession(
     declaredLanguage: Flow<LanguageTag?>,
     pageLanguage: Flow<LanguageTag?>,
     private val storedTranslation: suspend (ReaderPage) -> MangaChapterTranslation? = { null },
+    private val work: () -> TranslationWorkContext? = { null },
     private val sampleBackground: suspend (TextRecognitionImage, ImageRect) -> Int = ::sampleTextBackground,
 ) {
     private val mutableState = MutableStateFlow(MangaReaderTextState())
@@ -377,37 +382,65 @@ internal class MangaReaderTextSession(
         }
     }
 
-    /** Translates every region of [result] without a stored translation; returns whether the page is complete. */
+    /**
+     * Translates the regions of [result] without a stored translation, together and in light of what is read before
+     * them; returns whether the page is complete.
+     */
     private suspend fun translate(surface: MangaPageTextSurface, result: TextRecognitionResult): Boolean {
         val page = surface.page
         val image = surface.displayedImage() ?: return false
         mutableState.update { it.copy(translating = it.translating + page) }
         image.use {
-            val pageText = result.regions.joinToString("\n") { it.text }
             val overlays = storedOverlays[page].orEmpty().toMutableList()
             val stored = overlays.mapTo(HashSet()) { it.source }
-            for (region in result.regions) {
-                if (region.bounds in stored) continue
-                val text = when (val translation = translator.translate(region.text, result.language, pageText)) {
-                    is MangaPageTranslation.Translated -> translation.text
-                    MangaPageTranslation.Skipped -> continue
-                    is MangaPageTranslation.Blocked -> {
-                        reportTranslationIssue(translation.issue)
-                        return false
+            val regions = result.regions.filterNot { it.bounds in stored }
+            val readBefore = textBefore(page) + result.regions.takeWhile { it.bounds in stored }.map { it.text }
+            val context = mangaPageContext(work(), readBefore)
+            var issue: MangaPageTranslationIssue? = null
+            translator.translate(regions.map { it.text }, result.language, context).collect { translation ->
+                when (translation) {
+                    is MangaPageTranslation.Translated -> {
+                        val region = regions[translation.index]
+                        overlays += MangaPageTextOverlay(
+                            source = region.bounds,
+                            area = overlayArea(region),
+                            text = translation.text,
+                            background = sampleBackground(image, region.bounds),
+                        )
+                        // Translations appear as soon as the engine has them instead of once the page is done.
+                        mutableState.update { it.copy(overlays = it.overlays + (page to overlays.toList())) }
                     }
+                    is MangaPageTranslation.Blocked -> issue = translation.issue
                 }
-                overlays += MangaPageTextOverlay(
-                    source = region.bounds,
-                    area = overlayArea(region),
-                    text = text,
-                    background = sampleBackground(image, region.bounds),
-                )
-                // Translations appear bubble by bubble instead of all at once.
-                mutableState.update { it.copy(overlays = it.overlays + (page to overlays.toList())) }
+            }
+            issue?.let {
+                reportTranslationIssue(it)
+                return false
             }
             mutableState.update { it.copy(overlays = it.overlays + (page to overlays.toList())) }
         }
         return true
+    }
+
+    /**
+     * The text of the page read right before [page] in its chapter, in reading order, or nothing when that page is
+     * not among those recognized here. A page still being recognized is waited for, so that reading pages in order
+     * gives each the same context however fast the pages around it are recognized.
+     */
+    private suspend fun textBefore(page: ReaderPage): List<String> {
+        fun ReaderPage.isReadBefore(): Boolean = when {
+            page is InsertPage -> this === page.parent
+            else -> index == page.index - 1 && chapter == page.chapter
+        }
+
+        // The second half of a split page is read after its first half.
+        fun Collection<ReaderPage>.readBefore(): ReaderPage? =
+            filter { it.isReadBefore() }.let { pages -> pages.firstOrNull { it is InsertPage } ?: pages.firstOrNull() }
+
+        jobs.keys.readBefore()?.let { jobs[it]?.join() }
+        val pages = mutableState.value.pages
+        val recognized = pages.keys.readBefore()?.let { pages[it] } as? MangaPageTextStatus.Recognized
+        return recognized?.result?.regions.orEmpty().map { it.text }
     }
 
     /** Replaces live translations with ones made with the current target and engine; stored ones stay. */
