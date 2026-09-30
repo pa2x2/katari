@@ -26,6 +26,7 @@ import mihon.translation.api.request.TranslationRouteRequest
 import mihon.translation.api.request.TranslationTargetLanguageSelection
 import mihon.translation.api.request.TranslationWorkContext
 import mihon.translation.api.result.TranslationBatchUpdate
+import mihon.translation.api.result.TranslationFailureReason
 import okio.ByteString.Companion.toByteString
 import tachiyomi.core.common.util.system.logcat
 
@@ -34,7 +35,8 @@ import tachiyomi.core.common.util.system.logcat
  *
  * The texts of a page are translated together, in light of the series and of the page before. A page that cannot be
  * decoded or recognized is left out, and a text that cannot be translated is kept without a translation; the reader
- * fills both in live. Anything that needs the user, such as a deleted model, stops the whole chapter instead.
+ * fills both in live. Anything that needs the user, such as a deleted model, stops the whole chapter instead, and so
+ * does an engine that fails: its translations would be missing from every page that follows.
  */
 internal class MangaChapterTranslator(
     private val recognition: TextRecognitionFeature,
@@ -62,6 +64,7 @@ internal class MangaChapterTranslator(
                     textBefore = emptyList()
                 }
                 PageOutcome.SetupRequired -> return MangaChapterTranslationOutcome.SetupRequired
+                is PageOutcome.EngineFailed -> return MangaChapterTranslationOutcome.TranslationFailed(outcome.reason)
             }
             onPageDone(index + 1)
         }
@@ -114,15 +117,18 @@ internal class MangaChapterTranslator(
         }
         val translations = arrayOfNulls<String>(result.regions.size)
         var blocked = false
+        var failure: TranslationFailureReason.ProviderFailure? = null
         translation.translateBatch(TranslationBatch(setup.route, result.regions.map { it.text }, context))
             .collect { update ->
                 when (update) {
                     is TranslationBatchUpdate.Translated -> translations[update.index] = update.text
                     is TranslationBatchUpdate.Failed -> Unit
+                    is TranslationBatchUpdate.EngineFailed -> failure = update.failure
                     is TranslationBatchUpdate.Blocked -> blocked = true
                 }
             }
         if (blocked) return PageOutcome.SetupRequired
+        failure?.let { return PageOutcome.EngineFailed(it.message) }
         val regions = result.regions.mapIndexed { index, region -> MangaTranslatedRegion(region, translations[index]) }
         return PageOutcome.Translated(MangaTranslatedPage(page.fileName, image.rawContent, image.size, regions))
     }
@@ -133,6 +139,8 @@ internal class MangaChapterTranslator(
         data class Skipped(val reason: String?) : PageOutcome
 
         data object SetupRequired : PageOutcome
+
+        data class EngineFailed(val reason: String?) : PageOutcome
     }
 }
 
@@ -144,4 +152,7 @@ internal sealed interface MangaChapterTranslationOutcome {
 
     /** No page could be recognized; [reason] is why the last one could not. */
     data class NothingRecognized(val reason: String?) : MangaChapterTranslationOutcome
+
+    /** The translation engine failed, for [reason] when it gave one; nothing of the chapter is kept. */
+    data class TranslationFailed(val reason: String?) : MangaChapterTranslationOutcome
 }

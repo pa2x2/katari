@@ -64,6 +64,7 @@ internal fun MangaReaderTextLayer(
     onChooseLanguage: (LanguageTag?) -> Unit,
     onChoosePipeline: (LanguageTag) -> Unit,
     onDismissTranslation: () -> Unit,
+    onRetryTranslation: () -> Unit,
     onToggleOverlay: () -> Unit,
     onToggleOriginal: () -> Unit,
     onDeleteStoredTranslation: () -> Unit,
@@ -144,6 +145,7 @@ internal fun MangaReaderTextLayer(
                             issue = issue,
                             openSettings = onOpenTranslationSettings,
                             askDisclosure = { disclosing = it },
+                            retry = onRetryTranslation,
                         )
                     },
                     onToggleOverlay = onToggleOverlay,

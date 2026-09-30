@@ -691,6 +691,7 @@ class ReaderActivity : EntryInteractionActivity() {
             onChooseLanguage = viewModel::chooseTextLanguage,
             onChoosePipeline = ::openTextRecognitionPipelineChoice,
             onDismissTranslation = textInteraction::dismissTranslation,
+            onRetryTranslation = viewModel.textSession::resume,
             onToggleOverlay = viewModel::toggleTextTranslationOverlay,
             onToggleOriginal = viewModel.textSession::toggleOriginal,
             onDeleteStoredTranslation = viewModel::deleteStoredTranslation,

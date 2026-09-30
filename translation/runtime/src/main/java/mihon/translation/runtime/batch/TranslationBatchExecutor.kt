@@ -11,6 +11,7 @@ import mihon.translation.api.request.ResolvedTranslationRequest
 import mihon.translation.api.request.ResolvedTranslationRoute
 import mihon.translation.api.request.TranslationBatch
 import mihon.translation.api.result.TranslationBatchUpdate
+import mihon.translation.api.result.TranslationFailureReason
 import mihon.translation.runtime.cache.TranslationResultCache
 import mihon.translation.runtime.context.influences
 import mihon.translation.runtime.context.readBy
@@ -28,6 +29,9 @@ import mihon.translation.spi.engine.TranslationEngineRequirement
  * A contextual engine is given as many segments per call as it takes, along with the context it reads and the
  * segments of earlier calls; any other engine translates each segment on its own. A translation is reused when
  * nothing that shaped it differs.
+ *
+ * A call a contextual engine fails says nothing about any one of its segments, so it ends the batch with the engine's
+ * reason instead of leaving each of them untranslated as if the engine had no answer for it.
  */
 internal class TranslationBatchExecutor(
     private val resultCache: TranslationResultCache?,
@@ -125,7 +129,11 @@ internal class TranslationBatchExecutor(
                         }
                         texts.map { null }
                     }
-                    is TranslationEngineBatchExecution.Failed -> texts.map { null }
+                    is TranslationEngineBatchExecution.Failed -> {
+                        val failure = TranslationFailureReason.ProviderFailure(batch.route.engine, execution.message)
+                        emit(TranslationBatchUpdate.EngineFailed(failure))
+                        return
+                    }
                 }
             }
             call.forEachIndexed { position, segment ->

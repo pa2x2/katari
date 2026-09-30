@@ -81,6 +81,7 @@ internal fun mangaPageTranslationIssueMessage(issue: MangaPageTranslationIssue):
     MangaPageTranslationIssue.SetupInProgress -> stringResource(MR.strings.translation_setup_in_progress)
     MangaPageTranslationIssue.EngineChoiceRequired -> stringResource(MR.strings.reader_text_translation_engine_required)
     MangaPageTranslationIssue.EngineUnsupported -> stringResource(MR.strings.reader_text_translation_surface)
+    is MangaPageTranslationIssue.EngineFailed -> issue.message ?: stringResource(MR.strings.translation_failed)
     is MangaPageTranslationIssue.Unavailable -> when (val reason = issue.reason) {
         is TranslationUnavailableReason.UnsupportedOs ->
             stringResource(MR.strings.translation_unsupported_os, reason.minimumApi)
@@ -118,5 +119,6 @@ private fun mangaPageTranslationIssueAction(issue: MangaPageTranslationIssue): S
     MangaPageTranslationIssue.EngineChoiceRequired,
     MangaPageTranslationIssue.EngineUnsupported,
     -> stringResource(MR.strings.reader_text_translation_choose)
+    is MangaPageTranslationIssue.EngineFailed -> stringResource(MR.strings.action_retry)
     is MangaPageTranslationIssue.Unavailable -> stringResource(MR.strings.action_settings)
 }

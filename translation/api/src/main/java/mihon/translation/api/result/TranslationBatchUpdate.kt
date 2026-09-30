@@ -19,6 +19,14 @@ sealed interface TranslationBatchUpdate {
         val index: Int,
     ) : TranslationBatchUpdate
 
+    /**
+     * The engine failed to translate, for the reason in [failure] when it gave one. Segments not reported by now stay
+     * untranslated and the batch ends here; unlike after [Blocked], translating it again later may succeed as it is.
+     */
+    data class EngineFailed(
+        val failure: TranslationFailureReason.ProviderFailure,
+    ) : TranslationBatchUpdate
+
     /** Nothing more is translated until the user resolves [requirement]; the batch ends here. */
     data class Blocked(
         val requirement: TranslationRequirement,

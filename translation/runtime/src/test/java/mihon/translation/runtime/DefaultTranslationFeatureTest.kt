@@ -227,6 +227,19 @@ class DefaultTranslationFeatureTest {
         contextual.contexts.size shouldBe 2
     }
 
+    @Test
+    fun `a call the engine fails ends the batch with its reason instead of passing for untranslated texts`() = runTest {
+        val contextual = FakeContextualEngine(failure = "Quota is used up")
+        val feature = feature(DefaultTranslationEngineRegistry(listOf(TranslationEngineContribution(contextual))))
+
+        feature.translateBatch(TranslationBatch(route(contextual), listOf("Hello", "World"))).toList() shouldBe
+            listOf(
+                TranslationBatchUpdate.EngineFailed(
+                    TranslationFailureReason.ProviderFailure(contextual.catalogEntry.id, "Quota is used up"),
+                ),
+            )
+    }
+
     private fun route(engine: TranslationEngine) = ResolvedTranslationRoute(ENGLISH, SPANISH, engine.catalogEntry.id)
 
     private fun feature(engine: TranslationEngine): DefaultTranslationFeature {
@@ -293,6 +306,7 @@ class DefaultTranslationFeatureTest {
 
     private class FakeContextualEngine(
         private val answer: (List<String>) -> List<String> = { segments -> segments.map { "translated $it" } },
+        private val failure: String? = null,
     ) : ContextualTranslationEngine {
         override val catalogEntry = knownEngine("contextual")
         override val presentation = presentation(catalogEntry)
@@ -318,6 +332,7 @@ class DefaultTranslationFeatureTest {
             context: TranslationContext,
         ): TranslationEngineBatchExecution {
             contexts += context
+            failure?.let { return TranslationEngineBatchExecution.Failed(it) }
             return TranslationEngineBatchExecution.Success(answer(segments))
         }
     }

@@ -5,13 +5,15 @@ import mihon.translation.ui.presentation.TranslationSessionExternalAction
 import mihon.translation.ui.session.TranslationSessionHostCoordinator
 
 /**
- * Starts the fix for [issue] over the reader: a picker, the engine's download or setup, or [askDisclosure] for a
- * disclosure the user must read first. Only what Android controls goes to [openSettings].
+ * Starts the fix for [issue] over the reader: a picker, the engine's download or setup, [askDisclosure] for a
+ * disclosure the user must read first, or [retry] after the engine failed. Only what Android controls goes to
+ * [openSettings].
  */
 internal fun TranslationSessionHostCoordinator.fixPageTranslation(
     issue: MangaPageTranslationIssue,
     openSettings: () -> Unit,
     askDisclosure: (MangaPageTranslationIssue.DisclosureRequired) -> Unit,
+    retry: () -> Unit,
 ) {
     val action = when (issue) {
         is MangaPageTranslationIssue.SameLanguage,
@@ -25,6 +27,7 @@ internal fun TranslationSessionHostCoordinator.fixPageTranslation(
         MangaPageTranslationIssue.EngineUnsupported,
         -> TranslationSessionExternalAction.ChooseEngine
         is MangaPageTranslationIssue.DisclosureRequired -> return askDisclosure(issue)
+        is MangaPageTranslationIssue.EngineFailed -> return retry()
         is MangaPageTranslationIssue.Unavailable -> return openSettings()
         MangaPageTranslationIssue.SetupInProgress -> return
     }

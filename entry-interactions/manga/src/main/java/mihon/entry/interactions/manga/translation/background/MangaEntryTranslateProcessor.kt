@@ -79,6 +79,8 @@ internal class MangaEntryTranslateProcessor(
                 EntryTranslateResult.Failed(EntryTranslateFailure.SetupRequired)
             is MangaChapterTranslationOutcome.NothingRecognized ->
                 EntryTranslateResult.Failed(EntryTranslateFailure.Error(outcome.reason))
+            is MangaChapterTranslationOutcome.TranslationFailed ->
+                EntryTranslateResult.Failed(EntryTranslateFailure.Error(outcome.reason))
         }
     }
 

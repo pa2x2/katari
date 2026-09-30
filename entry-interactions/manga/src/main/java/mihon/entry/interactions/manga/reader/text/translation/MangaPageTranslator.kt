@@ -37,7 +37,8 @@ internal class MangaPageTranslator(
 
     /**
      * Translates [texts] of a page in [language] together and in their [context], reporting each translation as soon
-     * as it is known. A text that could not be translated is not reported; the rest of the page still is.
+     * as it is known. A text that could not be translated is not reported; the rest of the page still is, unless the
+     * engine failed, which is reported as an issue of its own.
      */
     fun translate(texts: List<String>, language: LanguageTag, context: TranslationContext): Flow<MangaPageTranslation> =
         flow {
@@ -61,6 +62,10 @@ internal class MangaPageTranslator(
                     is TranslationBatchUpdate.Translated ->
                         emit(MangaPageTranslation.Translated(update.index, update.text))
                     is TranslationBatchUpdate.Failed -> Unit
+                    is TranslationBatchUpdate.EngineFailed -> {
+                        val issue = MangaPageTranslationIssue.EngineFailed(update.failure.message)
+                        emit(MangaPageTranslation.Blocked(issue))
+                    }
                     is TranslationBatchUpdate.Blocked -> update.requirement.blocked()?.let { emit(it) }
                 }
             }
