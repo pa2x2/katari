@@ -16,6 +16,7 @@ import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 import java.io.IOException
+import java.util.concurrent.TimeUnit
 import kotlin.random.Random
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
@@ -30,11 +31,15 @@ class ServerJsonCalls(
     private val httpClient: OkHttpClient,
     private val retries: Int = 0,
 ) {
-    /** What the server answers to [request]. */
-    suspend inline fun <reified T> answer(request: Request): T = answer(request, serializer<T>())
+    /**
+     * What the server answers to [request]. Each time it is asked, it has [within] to answer in full, or as long as
+     * the client allows when no time is given.
+     */
+    suspend inline fun <reified T> answer(request: Request, within: Duration? = null): T =
+        answer(request, serializer<T>(), within)
 
-    suspend fun <T> answer(request: Request, answer: DeserializationStrategy<T>): T {
-        val text = answerText(request)
+    suspend fun <T> answer(request: Request, answer: DeserializationStrategy<T>, within: Duration? = null): T {
+        val text = answerText(request, within)
         return try {
             JSON.decodeFromString(answer, text)
         } catch (_: SerializationException) {
@@ -50,10 +55,10 @@ class ServerJsonCalls(
     fun <T> body(payload: T, serializer: SerializationStrategy<T>): RequestBody =
         JSON.encodeToString(serializer, payload).toRequestBody(JSON_MEDIA_TYPE)
 
-    private suspend fun answerText(request: Request): String {
+    private suspend fun answerText(request: Request, within: Duration?): String {
         var retried = 0
         while (true) {
-            when (val answer = execute(request)) {
+            when (val answer = execute(request, within)) {
                 is Answer.Body -> return answer.text
                 is Answer.Refusal -> {
                     if (!answer.mayPass || retried == retries) {
@@ -70,8 +75,9 @@ class ServerJsonCalls(
      * Keeps the call cancellable until its body has been read, so cancelling a translation aborts
      * a slow response body instead of waiting for the socket read timeout.
      */
-    private suspend fun execute(request: Request): Answer {
+    private suspend fun execute(request: Request, within: Duration?): Answer {
         val call = httpClient.newCall(request)
+        within?.let { call.timeout().timeout(it.inWholeMilliseconds, TimeUnit.MILLISECONDS) }
         return suspendCancellableCoroutine { continuation ->
             continuation.invokeOnCancellation { call.cancel() }
             call.enqueue(

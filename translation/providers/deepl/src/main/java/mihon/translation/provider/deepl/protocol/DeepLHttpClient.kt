@@ -1,9 +1,12 @@
 package mihon.translation.provider.deepl.protocol
 
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import mihon.translation.provider.server.call.ServerJsonCalls
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import kotlin.time.Duration.Companion.seconds
 
 internal interface DeepLService {
     suspend fun languages(): DeepLLanguages
@@ -25,12 +28,14 @@ internal class DeepLHttpClient(
 ) : DeepLService {
     private val calls = ServerJsonCalls(httpClient, retries = BUSY_RETRIES)
 
-    override suspend fun languages(): DeepLLanguages =
-        DeepLLanguages(sources = languages("source"), targets = languages("target"))
+    override suspend fun languages(): DeepLLanguages = coroutineScope {
+        val sources = async { languages("source") }
+        DeepLLanguages(sources = sources.await(), targets = languages("target"))
+    }
 
     private suspend fun languages(type: String): List<DeepLLanguage> {
         val request = request("languages") { addQueryParameter("type", type) }.get().build()
-        return calls.answer<List<DeepLLanguageResponse>>(request)
+        return calls.answer<List<DeepLLanguageResponse>>(request, within = LANGUAGES_TIME)
             .filter { it.language.isNotBlank() }
             .map { DeepLLanguage(code = it.language, name = it.name) }
     }
@@ -48,7 +53,9 @@ internal class DeepLHttpClient(
             context = context,
         )
         val request = request("translate").post(calls.body(payload)).build()
-        return calls.answer<DeepLTranslateResponse>(request).translations.map(DeepLTranslation::text)
+        return calls.answer<DeepLTranslateResponse>(request, within = TRANSLATION_TIME)
+            .translations
+            .map(DeepLTranslation::text)
     }
 
     private fun request(path: String, url: HttpUrl.Builder.() -> Unit = {}): Request.Builder {
@@ -61,5 +68,11 @@ internal class DeepLHttpClient(
     private companion object {
         /** DeepL limits how often it is asked, and asks to be asked again when it is. */
         const val BUSY_RETRIES = 3
+
+        /** Readiness is checked before every page and waits for the languages, which any server has at hand. */
+        val LANGUAGES_TIME = 20.seconds
+
+        /** A whole page is translated per call, which takes a language model a while. */
+        val TRANSLATION_TIME = 150.seconds
     }
 }
