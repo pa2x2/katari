@@ -17,6 +17,14 @@
 - Avoid catch-all directories such as `common`, `misc`, or `utils`. Name structural groups after concrete ownership, and place narrowly shared helpers with the feature that owns their semantics.
 - Before finishing a change, inspect every touched source file and directory. If responsibilities or ownership are not clear from the tree alone, reorganize that area before committing rather than leaving cleanup for a follow-up.
 
+## Comments
+A comment earns its place by telling the reader something the code can't: why it's done this way, a constraint or platform quirk it works around, a bug it prevents, or what a non-obvious value means. If deleting the comment loses nothing a careful reader couldn't get from the code, delete it.
+
+- **Don't restate the code.** No `/** Cancels a running download. */` over `cancelDownload`, no `// Refresh on resume` over an `onResume` override, no `/** Last failure, as a user-facing message. */` over `error: String?`.
+- **Don't narrate names or types.** If a property, parameter or function name plus its type already says it, leave it bare. Document a property only when its meaning isn't obvious: units, what `null` stands for, who sets it, what it must never be.
+- **Don't write file headers that only name the file.** "Tests for the library repository" or "Chapter list screen model" add nothing. A header is worth it when it explains a design: how the parts fit, what the module owns, a contract callers rely on.
+- **Keep comments true.** When you change code, update or delete the comments it touches. A stale comment is worse than none.
+
 ## Writing tests
 A change does not come with tests by default. Most features and fixes need none: Kotlin compilation (warnings are errors), spotless, the architecture boundary checks, and trying the change on the test device catch most mistakes. Tests written just because a change was made are how this suite once grew to more than two thirds the size of the production code, and most of them were deleted.
 
