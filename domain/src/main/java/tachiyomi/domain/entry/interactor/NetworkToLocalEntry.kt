@@ -8,26 +8,22 @@ class NetworkToLocalEntry(
 ) {
 
     suspend operator fun invoke(entry: Entry): Entry {
-        return invoke(listOf(entry)).single()
+        return entryRepository.insertOrUpdate(entry)
     }
 
     suspend operator fun invoke(entry: Entry, profileId: Long): Entry {
-        return invoke(listOf(entry), profileId).single()
+        return entryRepository.insertOrUpdate(entry, profileId)
     }
 
+    /**
+     * Persists a whole page of network results in one transaction, so entry observers are
+     * notified once per page instead of once per entry.
+     */
     suspend operator fun invoke(entries: List<Entry>): List<Entry> {
-        return entries.map {
-            entryRepository.insertOrUpdate(it)
-        }
+        return entryRepository.insertOrUpdateBatch(entries)
     }
 
     suspend operator fun invoke(entries: List<Entry>, profileId: Long): List<Entry> {
-        return entries.map {
-            entryRepository.insertOrUpdate(it, profileId)
-        }
-    }
-
-    suspend fun persistBatch(entries: List<Entry>, profileId: Long): List<Entry> {
         return entryRepository.insertOrUpdateBatch(entries, profileId)
     }
 }

@@ -363,6 +363,10 @@ class EntryRepositoryImpl(
         }
     }
 
+    override suspend fun insertOrUpdateBatch(entries: List<Entry>): List<Entry> {
+        return insertOrUpdateBatch(entries, profileProvider.activeProfileId)
+    }
+
     override suspend fun insertOrUpdateBatch(entries: List<Entry>, profileId: Long): List<Entry> {
         if (entries.isEmpty()) return emptyList()
 
