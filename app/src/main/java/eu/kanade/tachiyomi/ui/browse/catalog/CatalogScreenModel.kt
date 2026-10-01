@@ -45,6 +45,7 @@ import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.filter.validationIssues
 import eu.kanade.tachiyomi.source.filter.detachedCopy
+import eu.kanade.tachiyomi.ui.base.observation.ObservedItemStore
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.paged.PagedFilterBrowseSession
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.paged.PagedFilterBrowseSessionStore
 import kotlinx.collections.immutable.ImmutableList
@@ -53,6 +54,7 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.map
@@ -207,7 +209,15 @@ class CatalogScreenModel(
     }
 
     private val hideInLibraryItems = sourcePreferences.hideInLibraryItems.get()
-    private val catalogEntryStateStore = CatalogEntryStateStore(ioCoroutineScope, getEntry::subscribe)
+    private val catalogItemStore = ObservedItemStore<Long, CatalogListItem.EntryItem>(
+        scope = ioCoroutineScope,
+        keyOf = { it.entry.id },
+        supersedes = { candidate, current -> candidate.entry.version >= current.entry.version },
+    ) { entryIds ->
+        getEntry.subscribe(entryIds).map { entries ->
+            entries.map { CatalogListItem.EntryItem(it, sourceItemOrientation) }
+        }
+    }
 
     val catalogPagerFlowFlow = state.map { it.pageableListing }
         .distinctUntilChanged()
@@ -220,12 +230,12 @@ class CatalogScreenModel(
                         EntryCatalogueBrowseRequest(sourceId, listing.toFeatureListing()),
                     )
                 }.flow.map { pagingData ->
-                    pagingData.map { item ->
+                    pagingData.map<CatalogListItem, StateFlow<CatalogListItem?>> { item ->
                         val entryItem = item as CatalogListItem.EntryItem
-                        catalogEntryStateStore.stateFor(entryItem)
+                        catalogItemStore.seed(entryItem)
                     }
-                        .filter { migrationEntryType == null || it.value.entry.type == migrationEntryType }
-                        .filter { !hideInLibraryItems || !it.value.favorite }
+                        .filter { migrationEntryType == null || it.value?.entryType == migrationEntryType }
+                        .filter { !hideInLibraryItems || it.value?.favorite != true }
                 }
                     .cachedIn(ioCoroutineScope)
             }

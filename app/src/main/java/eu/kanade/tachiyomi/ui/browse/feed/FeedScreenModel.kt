@@ -11,13 +11,16 @@ import eu.kanade.domain.source.model.snapshot
 import eu.kanade.domain.source.service.BrowseFeedService
 import eu.kanade.tachiyomi.source.entry.EntryFilterList
 import eu.kanade.tachiyomi.source.entry.filter.requireValidFilters
+import eu.kanade.tachiyomi.ui.base.observation.ObservedItemStore
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.plus
 import java.util.concurrent.atomic.AtomicLong
 
 abstract class FeedScreenModel<T : Any>(
@@ -34,6 +37,12 @@ abstract class FeedScreenModel<T : Any>(
     private var persistedAnchor = currentSavedAnchor
     private var resolvedFilters: EntryFilterList? = null
     private val refreshGeneration = AtomicLong()
+    private val itemStore = ObservedItemStore(
+        scope = screenModelScope + workerDispatcher,
+        keyOf = ::itemRef,
+        supersedes = ::supersedes,
+        observeItems = ::observeItems,
+    )
 
     init {
         screenModelScope.launch(workerDispatcher) {
@@ -155,7 +164,13 @@ abstract class FeedScreenModel<T : Any>(
         }
     }
 
-    abstract suspend fun subscribeItem(ref: FeedItemRef): Flow<T>
+    fun itemState(ref: FeedItemRef): StateFlow<T?> {
+        return itemStore.stateOf(ref)
+    }
+
+    protected abstract suspend fun observeItems(refs: List<FeedItemRef>): Flow<List<T>>
+
+    protected abstract fun supersedes(candidate: T, current: T): Boolean
 
     protected abstract suspend fun resolveFilters(): EntryFilterList
 
@@ -227,7 +242,7 @@ abstract class FeedScreenModel<T : Any>(
             return
         }
 
-        val pageRefs = visibleRefs(page.data)
+        val pageRefs = acceptVisibleItems(page.data)
         val overlapIndex = pageRefs.indexOfFirst { it in existingRefSet }
 
         if (existingRefs.isNotEmpty() && overlapIndex < 0 && pageRefs.isNotEmpty()) {
@@ -322,7 +337,7 @@ abstract class FeedScreenModel<T : Any>(
             if (refreshGeneration.get() != generation) return
 
             pagesLoaded++
-            val pageRefs = visibleRefs(page.data)
+            val pageRefs = acceptVisibleItems(page.data)
             val overlapIndex = pageRefs.indexOfFirst { it in existingRefSet }
 
             if (overlapIndex >= 0) {
@@ -464,7 +479,7 @@ abstract class FeedScreenModel<T : Any>(
             null
         }
 
-        val refs = page?.data?.let(::visibleRefs).orEmpty()
+        val refs = page?.data?.let(::acceptVisibleItems).orEmpty()
         val nextPageKey = page?.nextKey
 
         if (page != null) {
@@ -528,7 +543,7 @@ abstract class FeedScreenModel<T : Any>(
 
             pagesScanned++
 
-            val newRefs = visibleRefs(page.data).filter(currentRefSet::add)
+            val newRefs = acceptVisibleItems(page.data).filter(currentRefSet::add)
             nextPageKey = page.nextKey
 
             if (newRefs.isNotEmpty()) {
@@ -598,10 +613,10 @@ abstract class FeedScreenModel<T : Any>(
         return filters
     }
 
-    private fun visibleRefs(items: List<T>): List<FeedItemRef> {
-        if (!hideInLibraryItems) return items.map(::itemRef)
-
-        return items.filterNot(::isItemInLibrary).map(::itemRef)
+    private fun acceptVisibleItems(items: List<T>): List<FeedItemRef> {
+        val visibleItems = if (hideInLibraryItems) items.filterNot(::isItemInLibrary) else items
+        itemStore.seedAll(visibleItems)
+        return visibleItems.map(::itemRef)
     }
 
     private suspend fun normalizeTimeline() {
