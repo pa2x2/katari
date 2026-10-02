@@ -64,6 +64,8 @@ class LibraryUpdateReportScreen : Screen() {
                 is LibraryUpdateReportScreenModel.State.Ready -> LibraryUpdateReportContent(
                     report = current.report,
                     sourceNames = current.sourceNames,
+                    pausedSourceIds = current.pausedSourceIds,
+                    pausedEntryIds = current.pausedEntryIds,
                     contentPadding = contentPadding,
                     actions = LibraryUpdateReportActions(
                         onClickEntry = { navigator.push(EntryScreen(it.id)) },
@@ -82,8 +84,8 @@ class LibraryUpdateReportScreen : Screen() {
                                 )
                             }
                         },
-                        onPause = screenModel::pause,
-                        onPauseSource = screenModel::pauseSource,
+                        onSetPaused = screenModel::setEntryPaused,
+                        onSetSourcePaused = screenModel::setSourcePaused,
                         onRetry = { entry -> scope.launch { reportStart(screenModel.retry(entry)) } },
                         onCheckSkipped = { scope.launch { reportStart(screenModel.checkSkipped()) } },
                     ),

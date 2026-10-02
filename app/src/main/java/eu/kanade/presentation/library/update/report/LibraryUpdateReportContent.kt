@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material.icons.outlined.ExpandLess
 import androidx.compose.material.icons.outlined.ExpandMore
@@ -23,6 +24,7 @@ import androidx.compose.material.icons.outlined.ReportProblem
 import androidx.compose.material.icons.outlined.SkipNext
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -57,8 +59,8 @@ class LibraryUpdateReportActions(
     val onClickEntry: (Entry) -> Unit,
     val onMigrate: (Entry) -> Unit,
     val onWebView: (Entry) -> Unit,
-    val onPause: (Entry) -> Unit,
-    val onPauseSource: (Long) -> Unit,
+    val onSetPaused: (Entry, Boolean) -> Unit,
+    val onSetSourcePaused: (Long, Boolean) -> Unit,
     val onRetry: (Entry) -> Unit,
     val onCheckSkipped: () -> Unit,
 )
@@ -67,6 +69,8 @@ class LibraryUpdateReportActions(
 fun LibraryUpdateReportContent(
     report: LibraryUpdateReport,
     sourceNames: Map<Long, String>,
+    pausedSourceIds: Set<Long>,
+    pausedEntryIds: Set<Long>,
     actions: LibraryUpdateReportActions,
     contentPadding: PaddingValues,
 ) {
@@ -104,7 +108,7 @@ fun LibraryUpdateReportContent(
                 count = failingCount,
                 isError = true,
             )
-            sourceFailureItems("failing", repeatedSources, sourceNames, actions)
+            sourceFailureItems("failing", repeatedSources, sourceNames, pausedSourceIds, actions)
             items(report.failingRepeatedly, key = { "failing-${it.entry.id}" }) { item ->
                 Column {
                     ReportRow(
@@ -128,9 +132,10 @@ fun LibraryUpdateReportContent(
                             onClick = { actions.onWebView(item.entry) },
                             label = { Text(stringResource(MR.strings.library_update_report_webview)) },
                         )
-                        AssistChip(
-                            onClick = { actions.onPause(item.entry) },
-                            label = { Text(stringResource(MR.strings.library_update_report_pause)) },
+                        PauseChip(
+                            paused = item.entry.id in pausedEntryIds,
+                            label = MR.strings.library_update_report_pause,
+                            onPausedChange = { actions.onSetPaused(item.entry, it) },
                         )
                     }
                 }
@@ -146,7 +151,7 @@ fun LibraryUpdateReportContent(
                 count = failedCount,
                 isError = true,
             )
-            sourceFailureItems("failed", failedSources, sourceNames, actions)
+            sourceFailureItems("failed", failedSources, sourceNames, pausedSourceIds, actions)
             items(report.failed, key = { "failed-${it.entry.id}" }) { item ->
                 ReportRow(
                     entry = item.entry,
@@ -241,6 +246,7 @@ private fun LazyListScope.sourceFailureItems(
     key: String,
     sources: List<LibraryUpdateReport.FailingSource>,
     sourceNames: Map<Long, String>,
+    pausedSourceIds: Set<Long>,
     actions: LibraryUpdateReportActions,
 ) {
     items(sources, key = { "$key-source-${it.sourceId}-${it.error}" }) { source ->
@@ -257,9 +263,10 @@ private fun LazyListScope.sourceFailureItems(
                 isError = true,
             )
             ActionChips(start = SOURCE_ACTIONS_START) {
-                AssistChip(
-                    onClick = { actions.onPauseSource(source.sourceId) },
-                    label = { Text(stringResource(MR.strings.library_update_report_pause_source)) },
+                PauseChip(
+                    paused = source.sourceId in pausedSourceIds,
+                    label = MR.strings.library_update_report_pause_source,
+                    onPausedChange = { actions.onSetSourcePaused(source.sourceId, it) },
                 )
             }
         }
@@ -426,6 +433,20 @@ private fun ReportRow(
 // Lines the chips up with the row's title: past the cover for entries, past the padding for sources.
 private val ENTRY_ACTIONS_START = 76.dp
 private val SOURCE_ACTIONS_START = 32.dp
+
+@Composable
+private fun PauseChip(paused: Boolean, label: StringResource, onPausedChange: (Boolean) -> Unit) {
+    FilterChip(
+        selected = paused,
+        onClick = { onPausedChange(!paused) },
+        label = { Text(stringResource(label)) },
+        leadingIcon = if (paused) {
+            { Icon(imageVector = Icons.Outlined.Check, contentDescription = null) }
+        } else {
+            null
+        },
+    )
+}
 
 @Composable
 private fun ActionChips(start: Dp = ENTRY_ACTIONS_START, content: @Composable () -> Unit) {

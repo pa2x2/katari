@@ -37,6 +37,17 @@ class LibraryUpdateRulesRepositoryImpl(
             .toMap()
     }
 
+    override fun subscribeEntryModes(): Flow<Map<Long, EntryUpdateMode>> {
+        return profileProvider.activeProfileIdFlow.flatMapLatest { profileId ->
+            handler.subscribeToList {
+                entry_update_modesQueries.getByProfile(profileId) { entryId, mode ->
+                    entryId to mode.toEntryUpdateMode()
+                }
+            }
+        }
+            .map { it.toMap() }
+    }
+
     override suspend fun setEntryMode(entryIds: Collection<Long>, mode: EntryUpdateMode) {
         handler.await(inTransaction = true) {
             entryIds.forEach { entryId ->
