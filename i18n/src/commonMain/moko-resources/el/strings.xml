@@ -873,7 +873,6 @@
     <string name="pref_download_concurrent_pages">Ταυτόχρονες λήψεις σελίδων</string>
     <string name="pref_download_concurrent_pages_summary">Σελίδες που λήφθηκαν ταυτόχρονα ανά πηγή</string>
     <string name="download_bookmarked">Προστέθηκε στους σελιδοδείκτες</string>
-    <string name="action_filter_excluded_scanlators">Φιλτράρισμα εξαιρούμενων scanlator</string>
     <string name="label_support_us">Υποστηρίξτε μας</string>
     <string name="extensionStores">Καταστήματα επεκτάσεων</string>
     <string name="action.addExtensionStore">Προσθήκη καταστήματος επεκτάσεων</string>

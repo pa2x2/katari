@@ -872,7 +872,6 @@
     <string name="download_bookmarked">Favoritos</string>
     <string name="pref_download_concurrent_pages">Download simultâneo de páginas</string>
     <string name="pref_download_concurrent_pages_summary">Páginas baixadas simultâneamente por fonte</string>
-    <string name="action_filter_excluded_scanlators">Filtrar scanlators excluídos</string>
     <string name="label_support_us">Apoie-nos</string>
     <string name="pref_download_concurrent_sources">Download simultâneo de fontes</string>
     <string name="supportUsScreen.perks">Patrons tem acesso a canais exclusivos, com mais recursos por vir.</string>

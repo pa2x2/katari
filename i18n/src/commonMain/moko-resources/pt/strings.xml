@@ -833,7 +833,6 @@
     <string name="tracked_privately">Rastreado de forma privada</string>
     <string name="action_toggle_private_on">Rastrear privadamente</string>
     <string name="action_toggle_private_off">Rastrear publicamente</string>
-    <string name="action_filter_excluded_scanlators">Filtrar scanlators excluídos</string>
     <string name="notes_placeholder">Gostou da parte onde…</string>
     <string name="migrationConfigScreen.selectedHeader">Selecionado</string>
     <string name="migrationConfigScreen.availableHeader">Disponível</string>

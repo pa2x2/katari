@@ -884,7 +884,6 @@
     <string name="theme_tokyonight">Tokyo Night</string>
     <string name="download_bookmarked">Ditanda</string>
     <string name="considering">Dalam fikiran</string>
-    <string name="action_filter_excluded_scanlators">Tapis scanlator dikecualikan</string>
     <string name="pref_filter_update_categories_details">Kemas kini dalam kategori yang dikecualikan tidak akan ditunjuk walaupun ia ada dalam kategori yang disertakan.</string>
     <string name="pref_filter_upcoming_categories_details">Tajuk dalam kategori yang dikecualikan tidak akan ditunjuk, walaupun ia juga terdapat dalam kategori yang disertakan.</string>
     <string name="supportUsScreen.perks">Patron mendapat akses ke saluran eksklusif, dengan lebih faedah akan datang.</string>

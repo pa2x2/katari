@@ -3,6 +3,7 @@ package tachiyomi.domain.updates.interactor
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import tachiyomi.domain.source.service.HiddenSourceIds
+import tachiyomi.domain.updates.model.UpdatesFeed
 import tachiyomi.domain.updates.model.UpdatesWithRelations
 import tachiyomi.domain.updates.repository.UpdatesRepository
 import kotlin.time.Instant
@@ -19,56 +20,14 @@ class GetUpdates(
         )
     }
 
-    fun subscribe(
-        instant: Instant,
-        unread: Boolean?,
-        started: Boolean?,
-        bookmarked: Boolean?,
-        hideExcludedScanlators: Boolean,
-        includedCategories: List<Long>,
-        excludedCategories: List<Long>,
-    ): Flow<List<UpdatesWithRelations>> {
+    fun subscribeFeed(profileId: Long, after: Instant): Flow<UpdatesFeed> {
         return combine(
-            repository.subscribeAll(
-                instant.toEpochMilliseconds(),
-                limit = 500,
-                unread = unread,
-                started = started,
-                bookmarked = bookmarked,
-                hideExcludedScanlators = hideExcludedScanlators,
-                includedCategories = includedCategories,
-                excludedCategories = excludedCategories,
-            ),
-            hiddenSourceIds.subscribe(),
-            ::filterHiddenSources,
-        )
-    }
-
-    fun subscribe(
-        profileId: Long,
-        instant: Instant,
-        unread: Boolean?,
-        started: Boolean?,
-        bookmarked: Boolean?,
-        hideExcludedScanlators: Boolean,
-        includedCategories: List<Long>,
-        excludedCategories: List<Long>,
-    ): Flow<List<UpdatesWithRelations>> {
-        return combine(
-            repository.subscribeAll(
-                profileId = profileId,
-                after = instant.toEpochMilliseconds(),
-                limit = 500,
-                unread = unread,
-                started = started,
-                bookmarked = bookmarked,
-                hideExcludedScanlators = hideExcludedScanlators,
-                includedCategories = includedCategories,
-                excludedCategories = excludedCategories,
-            ),
+            repository.subscribeFeed(profileId, after.toEpochMilliseconds()),
             hiddenSourceIds.subscribe(profileId),
-            ::filterHiddenSources,
-        )
+        ) { rows, hiddenSources ->
+            val (fromHiddenSources, visible) = rows.partition { it.update.sourceId in hiddenSources }
+            UpdatesFeed(rows = visible, fromHiddenSources = fromHiddenSources.size)
+        }
     }
 
     fun subscribe(read: Boolean, after: Long): Flow<List<UpdatesWithRelations>> {

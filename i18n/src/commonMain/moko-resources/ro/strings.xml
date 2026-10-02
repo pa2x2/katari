@@ -872,7 +872,6 @@
     <string name="action_webview_close_tab">Inchide tab-ul</string>
     <string name="pref_download_concurrent_pages_summary">Pagini descarcate simultan pe sursa</string>
     <string name="download_bookmarked">Adaugat la preferate</string>
-    <string name="action_filter_excluded_scanlators">Filtreaza scanatorii exclusi</string>
     <string name="supportUsScreen.perks">Abonatii au acces la canale exclusive, iar in viitor vor beneficia de si mai multe beneficii.</string>
     <string name="supportUsScreen.donationPlatform.patreon">Patreon (preferabil)</string>
     <string name="supportUsScreen.currentlySupportedBy">Mihon este sustinut de %d+ contribuitori. Va multumim tuturor pentru sustinere. Haideti sa imbunatatim impreuna Mihon.</string>

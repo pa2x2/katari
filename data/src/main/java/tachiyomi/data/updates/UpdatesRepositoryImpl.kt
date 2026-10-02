@@ -3,9 +3,9 @@ package tachiyomi.data.updates
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
-import tachiyomi.core.common.util.lang.toLong
 import tachiyomi.data.ActiveProfileProvider
 import tachiyomi.data.DatabaseHandler
+import tachiyomi.domain.updates.model.UpdatesFeedRow
 import tachiyomi.domain.updates.model.UpdatesWithRelations
 import tachiyomi.domain.updates.repository.UpdatesRepository
 
@@ -31,56 +31,12 @@ class UpdatesRepositoryImpl(
         }
     }
 
-    override fun subscribeAll(
-        after: Long,
-        limit: Long,
-        unread: Boolean?,
-        started: Boolean?,
-        bookmarked: Boolean?,
-        hideExcludedScanlators: Boolean,
-        includedCategories: List<Long>,
-        excludedCategories: List<Long>,
-    ): Flow<List<UpdatesWithRelations>> {
-        return profileProvider.activeProfileIdFlow.flatMapLatest { profileId ->
-            subscribeAll(
-                profileId,
-                after,
-                limit,
-                unread,
-                started,
-                bookmarked,
-                hideExcludedScanlators,
-                includedCategories,
-                excludedCategories,
-            )
-        }
-    }
-
-    override fun subscribeAll(
-        profileId: Long,
-        after: Long,
-        limit: Long,
-        unread: Boolean?,
-        started: Boolean?,
-        bookmarked: Boolean?,
-        hideExcludedScanlators: Boolean,
-        includedCategories: List<Long>,
-        excludedCategories: List<Long>,
-    ): Flow<List<UpdatesWithRelations>> {
+    override fun subscribeFeed(profileId: Long, after: Long): Flow<List<UpdatesFeedRow>> {
         return databaseHandler.subscribeToList {
-            updatesViewQueries.getRecentUpdatesWithFilters(
+            updatesViewQueries.getFeedUpdates(
                 profileId = profileId,
                 after = after,
-                limit = limit,
-                read = unread?.let { !it },
-                started = started?.toLong(),
-                bookmarked = bookmarked,
-                hideExcludedScanlators = hideExcludedScanlators.toLong(),
-                includedEmpty = includedCategories.isEmpty(),
-                excludedEmpty = excludedCategories.isEmpty(),
-                includedCategories = includedCategories,
-                excludedCategories = excludedCategories,
-                mapper = UpdatesMapper::mapUpdatesWithRelations,
+                mapper = UpdatesMapper::mapFeedRow,
             )
         }
     }

@@ -843,7 +843,6 @@
     <string name="possible_duplicates_title">Möjliga dubbletter</string>
     <string name="possible_duplicates_summary">Du har artiklar i ditt bibliotek med ett liknande namn.\n\nVälj en artikel att sammanslå med, eller lägg till ändå.</string>
     <string name="download_bookmarked">Bokmärkt</string>
-    <string name="action_filter_excluded_scanlators">Filtrera uteslutna scanöversättare</string>
     <string name="notes_placeholder">Gillade delen där…</string>
     <string name="migrationConfigScreen.selectedHeader">Vald</string>
     <string name="migrationConfigScreen.availableHeader">Tillgänglig</string>

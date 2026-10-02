@@ -1,12 +1,13 @@
 package eu.kanade.presentation.updates
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
@@ -44,7 +45,6 @@ import eu.kanade.presentation.entry.partialProgressLabel
 import eu.kanade.presentation.entry.translation.ChapterTranslateAction
 import eu.kanade.presentation.util.relativeTimeSpanString
 import eu.kanade.tachiyomi.ui.updates.UpdatesItem
-import mihon.entry.interactions.download.EntryDownloadState
 import mihon.entry.interactions.translate.EntryTranslateStatus
 import tachiyomi.domain.updates.model.UpdateItem
 import tachiyomi.i18n.*
@@ -52,23 +52,39 @@ import tachiyomi.presentation.core.components.DotSeparatorText
 import tachiyomi.presentation.core.components.ListGroupHeader
 import tachiyomi.presentation.core.components.material.DISABLED_ALPHA
 import tachiyomi.presentation.core.components.material.padding
+import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.selectedBackground
 import tachiyomi.domain.entry.model.EntryCover as EntryCoverData
 
+/**
+ * @param failed entries the latest update failed to check, named so a failure is noticed without opening the report.
+ * @param onClick opens the latest update's report; null while there is none.
+ */
 internal fun LazyListScope.updatesLastUpdatedItem(
     lastUpdated: Long,
+    failed: Int,
+    onClick: (() -> Unit)?,
 ) {
     item(key = "updates-lastUpdated") {
-        Box(
+        Row(
             modifier = Modifier
                 .animateItem(fadeInSpec = null, fadeOutSpec = null)
+                .fillMaxWidth()
+                .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
                 .padding(horizontal = MaterialTheme.padding.medium, vertical = MaterialTheme.padding.small),
         ) {
             Text(
                 text = stringResource(MR.strings.updates_last_update_info, relativeTimeSpanString(lastUpdated)),
                 fontStyle = FontStyle.Italic,
             )
+            if (failed > 0) {
+                Text(
+                    text = " · " + pluralStringResource(MR.plurals.library_updates_failed, failed, failed),
+                    fontStyle = FontStyle.Italic,
+                    color = MaterialTheme.colorScheme.error,
+                )
+            }
         }
     }
 }

@@ -367,4 +367,16 @@
         <item quantity="one">Update mode for %d entry</item>
         <item quantity="other">Update mode for %d entries</item>
     </plurals>
+    <plurals name="updates_hidden">
+        <item quantity="one">%d hidden</item>
+        <item quantity="other">%d hidden</item>
+    </plurals>
+    <plurals name="updates_hidden_by_filters">
+        <item quantity="one">%d hidden by filters</item>
+        <item quantity="other">%d hidden by filters</item>
+    </plurals>
+    <plurals name="updates_from_hidden_sources">
+        <item quantity="one">%d from hidden sources</item>
+        <item quantity="other">%d from hidden sources</item>
+    </plurals>
 </resources>

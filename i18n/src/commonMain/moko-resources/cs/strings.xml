@@ -859,7 +859,6 @@
     <string name="migrationListScreen.progressDialog.cancelLabel">Zrušit</string>
     <string name="migrationListScreen.matchWithoutChapterToast">Žádné kapitoly nebyly nalezeny, tuto položku nelze použít pro migraci</string>
     <string name="download_bookmarked">Založeno</string>
-    <string name="action_filter_excluded_scanlators">Filtrovat vyloučené scanlátory</string>
     <string name="migrationConfigScreen.selectedHeader">Vybrané</string>
     <string name="migrationConfigScreen.availableHeader">Dostupné</string>
     <string name="migrationConfigScreen.additionalSearchQueryLabel">Dodatečná klíčová slova (volitelné)</string>

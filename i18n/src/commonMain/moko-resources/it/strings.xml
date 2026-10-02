@@ -873,6 +873,5 @@
     <string name="migrationListScreen.progressDialog.cancelLabel">Annulla</string>
     <string name="migrationListScreen.matchWithoutChapterToast">Nessun capitolo trovato, questa voce non può essere utilizzata per la migrazione</string>
     <string name="download_bookmarked">Segnato</string>
-    <string name="action_filter_excluded_scanlators">Filtrare i scanlator esclusi</string>
     <string name="considering">Considerando</string>
 </resources>

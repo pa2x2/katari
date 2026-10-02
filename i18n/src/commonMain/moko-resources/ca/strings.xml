@@ -864,5 +864,4 @@
     <string name="migrationListScreen.migrateDialog.cancelLabel">Cancel·la</string>
     <string name="migrationListScreen.progressDialog.cancelLabel">Cancel·la</string>
     <string name="migrationListScreen.matchWithoutChapterToast">No s’ha trobat cap capítol, aquest element no es pot utilitzar per a migrar</string>
-    <string name="action_filter_excluded_scanlators">Filtra els scanlators exclosos</string>
 </resources>

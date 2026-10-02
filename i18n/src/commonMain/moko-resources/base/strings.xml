@@ -64,6 +64,7 @@
     <string name="action_filter_unread">Unread</string>
     <string name="action_filter_unwatched">Unwatched</string>
     <string name="action_filter_unconsumed">Unconsumed</string>
+    <string name="action_filter_unseen">Unseen</string>
     <string name="action_filter_interval_custom">Customized update frequency</string>
     <!-- reserved for #4048 -->
     <string name="action_filter_empty">Remove filter</string>
@@ -214,6 +215,8 @@
     <string name="action_save">Save</string>
     <string name="action_set_as_root">Set as root</string>
     <string name="action_reset">Reset</string>
+    <string name="action_clear">Clear</string>
+    <string name="action_clear_filters">Clear filters</string>
     <string name="action_review">Review</string>
     <string name="action_open_default_reader_settings">Default reader settings</string>
     <string name="action_show_password">Show password</string>
@@ -1841,7 +1844,6 @@
     <string name="action_view_upcoming">View Upcoming Updates</string>
     <string name="anime_schedule">Schedule</string>
     <string name="anime_schedule_loading">Loading</string>
-    <string name="action_filter_excluded_scanlators">Filter excluded scanlators</string>
     <string name="anime_schedule_season">Season %1$d</string>
     <string name="anime_schedule_episode">Episode</string>
     <string name="pref_filter_update_categories_details">Updates in excluded categories will not be shown even if they are also in any included categories.</string>
@@ -1995,6 +1997,9 @@
     <!-- Information Text -->
     <string name="information_no_downloads">No downloads</string>
     <string name="information_no_recent">No recent updates</string>
+    <string name="updates_no_match">No updates match %s</string>
+    <string name="updates_window">Showing updates from the last 3 months</string>
+    <string name="updates_filter_not">not %s</string>
     <string name="information_no_recent_manga">Nothing read recently</string>
     <string name="information_empty_library">Your library is empty</string>
     <string name="information_empty_library_hint">Add series from a source, or bring your library back from a backup.</string>

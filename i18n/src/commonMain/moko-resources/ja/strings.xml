@@ -845,7 +845,6 @@
     <string name="extensionStoresScreen.deleteStore.title">拡張機能ストアを削除</string>
     <string name="extensionStoresScreen.deleteStore.body">拡張機能ストア「%1$s」（%2$s）を削除しますか？</string>
     <string name="considering">検討中</string>
-    <string name="action_filter_excluded_scanlators">除外されたスキャンレーターをフィルタリング</string>
     <string name="notes_placeholder">あの場面が面白かった…</string>
     <string name="migrationConfigScreen.selectedHeader">選択済み</string>
     <string name="migrationConfigScreen.selectNoneLabel">すべて選択解除</string>

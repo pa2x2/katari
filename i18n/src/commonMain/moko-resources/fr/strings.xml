@@ -872,7 +872,6 @@
     <string name="pref_download_concurrent_sources">Téléchargements simultanés de sources</string>
     <string name="pref_download_concurrent_pages">Téléchargements simultanés de pages</string>
     <string name="pref_download_concurrent_pages_summary">Pages téléchargées simultanément par source</string>
-    <string name="action_filter_excluded_scanlators">Filtrer les scantrads exclus</string>
     <string name="label_support_us">Nous Soutenir</string>
     <string name="extensionStores">Magasin d\'extensions</string>
     <string name="action.addExtensionStore">Ajouter un magasin d\'extension</string>

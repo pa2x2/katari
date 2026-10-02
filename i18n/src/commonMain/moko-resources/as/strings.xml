@@ -827,7 +827,6 @@
     <string name="tracked_privately">ব্যক্তিগতভাৱে ট্ৰেক কৰা</string>
     <string name="action_toggle_private_on">ব্যক্তিগতভাৱে ট্ৰেক কৰক</string>
     <string name="action_toggle_private_off">সাৰ্বজনীনভাৱে ট্ৰেক কৰক</string>
-    <string name="action_filter_excluded_scanlators">বাদ দিয়া স্কেনলেটৰ ফিল্টাৰ কৰক</string>
     <string name="notes_placeholder">য\'ত অংশটো উপভোগ কৰিলোঁ…</string>
     <string name="migrationConfigScreen.selectedHeader">নিৰ্বাচিত</string>
     <string name="migrationConfigScreen.availableHeader">উপলব্ধ</string>

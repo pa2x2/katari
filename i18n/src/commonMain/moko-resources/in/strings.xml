@@ -872,7 +872,6 @@
     <string name="pref_download_concurrent_pages">Ambil berkas halaman secara bersamaan</string>
     <string name="pref_download_concurrent_pages_summary">Halaman yang diunduh secara bersamaan per sumber</string>
     <string name="action_webview_close_tab">Tutup tab</string>
-    <string name="action_filter_excluded_scanlators">Filter yang mengecualikan pemindai</string>
     <string name="label_support_us">Dukung Kami</string>
     <string name="extensionStores">Tempat ekstensi</string>
     <string name="action.addExtensionStore">Tambah ekstensi</string>

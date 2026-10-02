@@ -865,5 +865,4 @@
     <string name="pref_download_concurrent_pages">ஒரே நேரத்தில் பக்க பதிவிறக்கங்கள்</string>
     <string name="pref_download_concurrent_pages_summary">ஒவ்வொரு மூலத்திற்கும் ஒரே நேரத்தில் பதிவிறக்கம் செய்யப்பட்ட பக்கங்கள்</string>
     <string name="download_bookmarked">புத்தகக்குறி செய்யப்பட்டது</string>
-    <string name="action_filter_excluded_scanlators">நீக்கப்பட்ட ச்கேலேட்டர்களை வடிகட்டி</string>
 </resources>
