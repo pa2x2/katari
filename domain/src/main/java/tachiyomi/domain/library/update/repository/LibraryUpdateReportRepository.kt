@@ -2,7 +2,6 @@ package tachiyomi.domain.library.update.repository
 
 import kotlinx.coroutines.flow.Flow
 import tachiyomi.domain.library.update.model.EntryUpdateDecisionReason
-import tachiyomi.domain.library.update.model.EntryUpdateOutcome
 import tachiyomi.domain.library.update.model.EntryUpdateStatus
 import tachiyomi.domain.library.update.model.LibraryUpdateRun
 import tachiyomi.domain.library.update.model.LibraryUpdateTrigger
@@ -24,16 +23,17 @@ interface LibraryUpdateReportRepository {
 
     suspend fun finishRun(startedAt: Long, finishedAt: Long)
 
+    /** Records the entries an update left out; checked entries are recorded as their checks finish. */
     suspend fun recordDecisions(decidedAt: Long, decisions: List<Decision>)
 
     suspend fun recordChecked(entryId: Long, decidedAt: Long, checkedAt: Long, newChapters: Int)
 
-    suspend fun recordFailed(entryId: Long, decidedAt: Long, checkedAt: Long, error: String?)
+    /** Leaves the last check time alone, so a failed entry is retried by the next update that runs. */
+    suspend fun recordFailed(entryId: Long, decidedAt: Long, error: String?)
 
     data class Decision(
         val entryId: Long,
-        val outcome: EntryUpdateOutcome,
-        val reason: EntryUpdateDecisionReason?,
+        val reason: EntryUpdateDecisionReason,
         val reasonCategoryId: Long?,
     )
 }

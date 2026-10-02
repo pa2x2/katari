@@ -7,6 +7,8 @@ data class LibraryUpdateProgress(
     val scope: LibraryUpdateScope,
     val completed: Int,
     val total: Int,
+    /** Entries in scope that the skip rules left out. */
+    val skipped: Int,
 )
 
 /** Which part of the library an update was asked to cover. */
@@ -18,6 +20,9 @@ enum class LibraryUpdateScope {
 
     /** More than one of category, source and entry type. */
     Group,
+
+    /** Entries the user picked. */
+    Selection,
     ;
 
     companion object {

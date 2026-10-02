@@ -1,16 +1,19 @@
 package tachiyomi.domain.library.service
 
+import eu.kanade.tachiyomi.source.entry.EntryType
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.core.common.preference.ProfilePreferenceKeyPattern
 import tachiyomi.core.common.preference.TriState
 import tachiyomi.core.common.preference.getEnum
+import tachiyomi.core.common.preference.getEnumSet
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.domain.library.model.LibraryGroupType
 import tachiyomi.domain.library.model.LibraryGrouping
 import tachiyomi.domain.library.model.LibraryPinnedDisplayStyle
 import tachiyomi.domain.library.model.LibrarySort
+import tachiyomi.domain.library.update.model.LibraryUpdateSkipRules
 
 class LibraryPreferences(
     private val preferenceStore: PreferenceStore,
@@ -58,14 +61,23 @@ class LibraryPreferences(
             DEVICE_ONLY_ON_WIFI,
         ),
     )
-    val autoUpdateEntryRestrictions: Preference<Set<String>> = preferenceStore.getStringSet(
-        "library_update_manga_restriction",
+    val updateSkipRules: Preference<Set<String>> = preferenceStore.getStringSet(
+        UPDATE_SKIP_RULES_PREF_KEY,
         setOf(
-            ENTRY_HAS_UNCONSUMED,
-            ENTRY_NON_COMPLETED,
-            ENTRY_NON_STARTED,
-            ENTRY_OUTSIDE_RELEASE_PERIOD,
+            SKIP_COMPLETED,
+            SKIP_OUTSIDE_RELEASE_PERIOD,
         ),
+    )
+
+    /** Ids of sources whose entries library updates never check. */
+    val updateExcludedSources: Preference<Set<String>> = preferenceStore.getStringSet(
+        "library_update_excluded_sources",
+        emptySet(),
+    )
+
+    val updateExcludedEntryTypes: Preference<Set<EntryType>> = preferenceStore.getEnumSet(
+        "library_update_excluded_entry_types",
+        emptySet(),
     )
 
     val autoUpdateMetadata: Preference<Boolean> = preferenceStore.getBoolean("auto_update_metadata", false)
@@ -164,16 +176,6 @@ class LibraryPreferences(
 
     val categorizedDisplaySettings: Preference<Boolean> = preferenceStore.getBoolean("categorized_display", false)
 
-    val updateCategories: Preference<Set<String>> = preferenceStore.getStringSet(
-        LIBRARY_UPDATE_CATEGORIES_PREF_KEY,
-        emptySet(),
-    )
-
-    val updateCategoriesExclude: Preference<Set<String>> = preferenceStore.getStringSet(
-        LIBRARY_UPDATE_CATEGORIES_EXCLUDE_PREF_KEY,
-        emptySet(),
-    )
-
     // endregion
 
     // region Chapter
@@ -257,21 +259,34 @@ class LibraryPreferences(
         const val DEVICE_NETWORK_NOT_METERED = "network_not_metered"
         const val DEVICE_CHARGING = "ac"
 
-        const val ENTRY_NON_COMPLETED = "manga_ongoing"
-        const val ENTRY_HAS_UNCONSUMED = "manga_fully_read"
-        const val ENTRY_NON_STARTED = "manga_started"
-        const val ENTRY_OUTSIDE_RELEASE_PERIOD = "manga_outside_release_period"
+        const val UPDATE_SKIP_RULES_PREF_KEY = "library_update_manga_restriction"
+        const val SKIP_COMPLETED = "manga_ongoing"
+        const val SKIP_UNSEEN = "manga_fully_read"
+        const val SKIP_NOT_STARTED = "manga_started"
+        const val SKIP_OUTSIDE_RELEASE_PERIOD = "manga_outside_release_period"
+
+        fun skipRulesOf(values: Set<String>) = LibraryUpdateSkipRules(
+            skipCompleted = SKIP_COMPLETED in values,
+            skipUnseen = SKIP_UNSEEN in values,
+            skipNotStarted = SKIP_NOT_STARTED in values,
+            skipOutsideReleasePeriod = SKIP_OUTSIDE_RELEASE_PERIOD in values,
+        )
 
         const val MARK_DUPLICATE_CHAPTER_READ_NEW = "new"
         const val MARK_DUPLICATE_CHAPTER_READ_EXISTING = "existing"
 
         const val DEFAULT_CATEGORY_PREF_KEY = "default_category"
-        private const val LIBRARY_UPDATE_CATEGORIES_PREF_KEY = "library_update_categories"
-        private const val LIBRARY_UPDATE_CATEGORIES_EXCLUDE_PREF_KEY = "library_update_categories_exclude"
+
+        /**
+         * Category ids that library updates used to be limited to and to leave out. They are now category update
+         * rules, but older backups still carry them and restoring converts them.
+         */
+        const val LEGACY_UPDATE_CATEGORIES_PREF_KEY = "library_update_categories"
+        const val LEGACY_UPDATE_CATEGORIES_EXCLUDE_PREF_KEY = "library_update_categories_exclude"
         val categoryPreferenceKeys = setOf(
             DEFAULT_CATEGORY_PREF_KEY,
-            LIBRARY_UPDATE_CATEGORIES_PREF_KEY,
-            LIBRARY_UPDATE_CATEGORIES_EXCLUDE_PREF_KEY,
+            LEGACY_UPDATE_CATEGORIES_PREF_KEY,
+            LEGACY_UPDATE_CATEGORIES_EXCLUDE_PREF_KEY,
         )
     }
 }

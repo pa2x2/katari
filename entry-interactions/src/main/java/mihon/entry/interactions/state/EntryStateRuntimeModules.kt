@@ -20,7 +20,6 @@ import mihon.feature.graph.execution.FeatureExecutionContextResolver
 import mihon.feature.graph.execution.FeatureExecutionHandler
 import mihon.feature.graph.execution.FeatureExecutionParticipantBinding
 import mihon.feature.runtime.FeatureRuntimeComposition
-import tachiyomi.domain.library.service.LibraryPreferences
 import uy.kohesive.injekt.api.addSingletonFactory
 import uy.kohesive.injekt.api.get
 
@@ -63,14 +62,7 @@ internal val EntryUpdateEligibilityFeatureRuntimeModule = EntryFeatureRuntimeMod
     contributor = EntryUpdateEligibilityFeatureContributor,
 ) {
     addSingletonFactory<EntryUpdateEligibilityFeature> {
-        val composition = get<FeatureRuntimeComposition>()
-        val preferences = get<LibraryPreferences>()
-        DefaultEntryUpdateEligibilityFeature(
-            evaluation = composition.evaluation,
-            currentPolicy = {
-                preferences.autoUpdateEntryRestrictions.get().toEntryUpdateEligibilityPolicy()
-            },
-        )
+        DefaultEntryUpdateEligibilityFeature(evaluation = get<FeatureRuntimeComposition>().evaluation)
     }
     EntryFeatureRuntimeArtifacts(
         runtimeBoundaries = listOf(entryFeatureRuntimeBoundary { get<EntryUpdateEligibilityFeature>() }),
@@ -153,12 +145,3 @@ internal fun entryProgressMediaSessionBinding(
         execution.progressResult = feature().recordMediaProgress(event)
     },
 )
-
-internal fun Set<String>.toEntryUpdateEligibilityPolicy(): EntryUpdateEligibilityPolicy {
-    return EntryUpdateEligibilityPolicy(
-        skipCompleted = LibraryPreferences.ENTRY_NON_COMPLETED in this,
-        skipWhenUnconsumed = LibraryPreferences.ENTRY_HAS_UNCONSUMED in this,
-        skipWhenNotStarted = LibraryPreferences.ENTRY_NON_STARTED in this,
-        skipOutsideReleasePeriod = LibraryPreferences.ENTRY_OUTSIDE_RELEASE_PERIOD in this,
-    )
-}

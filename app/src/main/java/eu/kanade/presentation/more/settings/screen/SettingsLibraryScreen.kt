@@ -36,12 +36,12 @@ import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.library.service.LibraryPreferences.Companion.DEVICE_CHARGING
 import tachiyomi.domain.library.service.LibraryPreferences.Companion.DEVICE_NETWORK_NOT_METERED
 import tachiyomi.domain.library.service.LibraryPreferences.Companion.DEVICE_ONLY_ON_WIFI
-import tachiyomi.domain.library.service.LibraryPreferences.Companion.ENTRY_HAS_UNCONSUMED
-import tachiyomi.domain.library.service.LibraryPreferences.Companion.ENTRY_NON_COMPLETED
-import tachiyomi.domain.library.service.LibraryPreferences.Companion.ENTRY_NON_STARTED
-import tachiyomi.domain.library.service.LibraryPreferences.Companion.ENTRY_OUTSIDE_RELEASE_PERIOD
 import tachiyomi.domain.library.service.LibraryPreferences.Companion.MARK_DUPLICATE_CHAPTER_READ_EXISTING
 import tachiyomi.domain.library.service.LibraryPreferences.Companion.MARK_DUPLICATE_CHAPTER_READ_NEW
+import tachiyomi.domain.library.service.LibraryPreferences.Companion.SKIP_COMPLETED
+import tachiyomi.domain.library.service.LibraryPreferences.Companion.SKIP_NOT_STARTED
+import tachiyomi.domain.library.service.LibraryPreferences.Companion.SKIP_OUTSIDE_RELEASE_PERIOD
+import tachiyomi.domain.library.service.LibraryPreferences.Companion.SKIP_UNSEEN
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
@@ -101,7 +101,7 @@ object SettingsLibraryScreen : SearchableSettings {
                 null
             },
             if (LibrarySettingsSection.LibraryUpdate in visibleSections) {
-                getGlobalUpdateGroup(allCategories, libraryPreferences)
+                getGlobalUpdateGroup(libraryPreferences)
             } else {
                 null
             },
@@ -163,36 +163,14 @@ object SettingsLibraryScreen : SearchableSettings {
 
     @Composable
     private fun getGlobalUpdateGroup(
-        allCategories: List<Category>,
         libraryPreferences: LibraryPreferences,
     ): Preference.PreferenceGroup {
         val context = LocalContext.current
 
         val autoUpdateIntervalPref = libraryPreferences.autoUpdateInterval
-        val autoUpdateCategoriesPref = libraryPreferences.updateCategories
-        val autoUpdateCategoriesExcludePref = libraryPreferences.updateCategoriesExclude
+        val scope = rememberCoroutineScope()
 
         val autoUpdateInterval by autoUpdateIntervalPref.collectAsState()
-
-        val included by autoUpdateCategoriesPref.collectAsState()
-        val excluded by autoUpdateCategoriesExcludePref.collectAsState()
-        var showCategoriesDialog by rememberSaveable { mutableStateOf(false) }
-        if (showCategoriesDialog) {
-            TriStateListDialog(
-                title = stringResource(MR.strings.categories),
-                message = stringResource(MR.strings.pref_library_update_categories_details),
-                items = allCategories,
-                initialChecked = included.mapNotNull { id -> allCategories.find { it.id.toString() == id } },
-                initialInversed = excluded.mapNotNull { id -> allCategories.find { it.id.toString() == id } },
-                itemLabel = { it.visualName },
-                onDismissRequest = { showCategoriesDialog = false },
-                onValueChanged = { newIncluded, newExcluded ->
-                    autoUpdateCategoriesPref.set(newIncluded.map { it.id.toString() }.toSet())
-                    autoUpdateCategoriesExcludePref.set(newExcluded.map { it.id.toString() }.toSet())
-                    showCategoriesDialog = false
-                },
-            )
-        }
 
         return Preference.PreferenceGroup(
             title = stringResource(MR.strings.pref_category_library_update),
@@ -209,7 +187,7 @@ object SettingsLibraryScreen : SearchableSettings {
                     ),
                     title = stringResource(MR.strings.pref_library_update_interval),
                     onValueChanged = {
-                        LibraryUpdateJob.setupTask(context, it)
+                        scope.launch { LibraryUpdateJob.setupTask(context, it) }
                         true
                     },
                 ),
@@ -225,18 +203,11 @@ object SettingsLibraryScreen : SearchableSettings {
                     enabled = autoUpdateInterval > 0,
                     onValueChanged = {
                         // Post to event looper to allow the preference to be updated.
-                        ContextCompat.getMainExecutor(context).execute { LibraryUpdateJob.setupTask(context) }
+                        ContextCompat.getMainExecutor(context).execute {
+                            scope.launch { LibraryUpdateJob.setupTask(context) }
+                        }
                         true
                     },
-                ),
-                Preference.PreferenceItem.TextPreference(
-                    title = stringResource(MR.strings.categories),
-                    subtitle = getCategoriesLabel(
-                        allCategories = allCategories,
-                        included = included,
-                        excluded = excluded,
-                    ),
-                    onClick = { showCategoriesDialog = true },
                 ),
                 Preference.PreferenceItem.SwitchPreference(
                     preference = libraryPreferences.autoUpdateMetadata,
@@ -244,12 +215,12 @@ object SettingsLibraryScreen : SearchableSettings {
                     subtitle = stringResource(MR.strings.pref_library_update_refresh_metadata_summary),
                 ),
                 Preference.PreferenceItem.MultiSelectListPreference(
-                    preference = libraryPreferences.autoUpdateEntryRestrictions,
+                    preference = libraryPreferences.updateSkipRules,
                     entries = mapOf(
-                        ENTRY_HAS_UNCONSUMED to stringResource(MR.strings.pref_update_only_completely_read),
-                        ENTRY_NON_STARTED to stringResource(MR.strings.pref_update_only_started),
-                        ENTRY_NON_COMPLETED to stringResource(MR.strings.pref_update_only_non_completed),
-                        ENTRY_OUTSIDE_RELEASE_PERIOD to stringResource(MR.strings.pref_update_only_in_release_period),
+                        SKIP_UNSEEN to stringResource(MR.strings.pref_update_only_completely_read),
+                        SKIP_NOT_STARTED to stringResource(MR.strings.pref_update_only_started),
+                        SKIP_COMPLETED to stringResource(MR.strings.pref_update_only_non_completed),
+                        SKIP_OUTSIDE_RELEASE_PERIOD to stringResource(MR.strings.pref_update_only_in_release_period),
                     ),
                     title = stringResource(MR.strings.pref_library_update_smart_update),
                 ),

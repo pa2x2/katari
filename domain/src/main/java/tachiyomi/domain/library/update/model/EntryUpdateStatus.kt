@@ -30,18 +30,23 @@ enum class EntryUpdateOutcome {
     NOT_CHECKED,
 }
 
-/** The step that kept an entry out of an update, in the order the steps are evaluated. */
-enum class EntryUpdateDecisionReason {
-    ENTRY_NEVER,
-    CATEGORY_OFF,
-    SOURCE_OFF,
-    TYPE_OFF,
+/**
+ * The step that kept an entry out of an update, in the order the steps are evaluated.
+ *
+ * Settings that turn checking off for an entry leave it [EntryUpdateOutcome.NOT_CHECKED]. Skip rules, which a user may
+ * want to override for one run, leave it [EntryUpdateOutcome.SKIPPED].
+ */
+enum class EntryUpdateDecisionReason(val outcome: EntryUpdateOutcome) {
+    ENTRY_NEVER(EntryUpdateOutcome.NOT_CHECKED),
+    CATEGORY_OFF(EntryUpdateOutcome.NOT_CHECKED),
+    SOURCE_OFF(EntryUpdateOutcome.NOT_CHECKED),
+    TYPE_OFF(EntryUpdateOutcome.NOT_CHECKED),
+    FETCH_ONCE(EntryUpdateOutcome.SKIPPED),
+    COMPLETED(EntryUpdateOutcome.SKIPPED),
+    HAS_UNSEEN(EntryUpdateOutcome.SKIPPED),
+    NOT_STARTED(EntryUpdateOutcome.SKIPPED),
+    OUTSIDE_RELEASE_PERIOD(EntryUpdateOutcome.SKIPPED),
 
-    /** The entry's category checks less often than the update ran. */
-    NOT_DUE,
-    FETCH_ONCE,
-    COMPLETED,
-    HAS_UNSEEN,
-    NOT_STARTED,
-    OUTSIDE_RELEASE_PERIOD,
+    /** An automatic update ran sooner than the entry's categories ask to be checked. */
+    NOT_DUE(EntryUpdateOutcome.NOT_CHECKED),
 }

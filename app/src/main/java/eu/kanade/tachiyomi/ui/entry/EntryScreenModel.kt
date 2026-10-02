@@ -254,7 +254,7 @@ class EntryScreenModel(
     private var refreshFromSourceJob: Job? = null
 
     val isUpdateIntervalEnabled =
-        LibraryPreferences.ENTRY_OUTSIDE_RELEASE_PERIOD in libraryPreferences.autoUpdateEntryRestrictions.get()
+        LibraryPreferences.SKIP_OUTSIDE_RELEASE_PERIOD in libraryPreferences.updateSkipRules.get()
 
     private val selectedPositions: Array<Int> = arrayOf(-1, -1) // first and last selected index in list
     private val selectedChapterIds: HashSet<Long> = HashSet()

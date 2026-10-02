@@ -90,7 +90,7 @@ private fun FilterPage(
 ) {
     val filterDownloaded by screenModel.libraryPreferences.filterDownloaded.collectAsState()
     val downloadedOnly by screenModel.libraryPreferences.downloadedOnly.collectAsState()
-    val autoUpdateEntryRestrictions by screenModel.libraryPreferences.autoUpdateEntryRestrictions.collectAsState()
+    val updateSkipRules by screenModel.libraryPreferences.updateSkipRules.collectAsState()
 
     TriStateItem(
         label = stringResource(MR.strings.label_downloaded),
@@ -141,7 +141,7 @@ private fun FilterPage(
     if (
         (!isReleaseBuildType) &&
         filterAvailability.outsideReleasePeriod.isAvailable &&
-        LibraryPreferences.ENTRY_OUTSIDE_RELEASE_PERIOD in autoUpdateEntryRestrictions
+        LibraryPreferences.SKIP_OUTSIDE_RELEASE_PERIOD in updateSkipRules
     ) {
         val filterIntervalCustom by screenModel.libraryPreferences.filterIntervalCustom.collectAsState()
         TriStateItem(

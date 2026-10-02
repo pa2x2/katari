@@ -924,10 +924,7 @@ class MainActivity : BaseActivity() {
                 }
             }
 
-            LibraryUpdateJob.setupTask(
-                context = this,
-                prefInterval = libraryPreferences.autoUpdateInterval.get(),
-            )
+            LibraryUpdateJob.setupTask(context = this)
         }
 
         ready = true

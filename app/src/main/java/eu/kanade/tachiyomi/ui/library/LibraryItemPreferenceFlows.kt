@@ -22,7 +22,7 @@ internal fun observeLibraryFilterPreferences(
     preferences: LibraryPreferences,
 ): Flow<LibraryFilterPreferences> {
     return combine(
-        preferences.autoUpdateEntryRestrictions.changes(),
+        preferences.updateSkipRules.changes(),
         preferences.downloadedOnly.changes(),
         preferences.filterDownloaded.changes(),
         preferences.filterUnread.changes(),
@@ -32,7 +32,7 @@ internal fun observeLibraryFilterPreferences(
         preferences.filterIntervalCustom.changes(),
     ) { values ->
         LibraryFilterPreferences(
-            skipOutsideReleasePeriod = LibraryPreferences.ENTRY_OUTSIDE_RELEASE_PERIOD in (values[0] as Set<*>),
+            skipOutsideReleasePeriod = LibraryPreferences.SKIP_OUTSIDE_RELEASE_PERIOD in (values[0] as Set<*>),
             globalFilterDownloaded = values[1] as Boolean,
             filterDownloaded = values[2] as TriState,
             filterUnread = values[3] as TriState,

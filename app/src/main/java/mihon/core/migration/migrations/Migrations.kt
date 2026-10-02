@@ -12,4 +12,5 @@ val migrations: List<Migration>
         VerticalNavigatorMigration(),
         ChapterTransitionMigration(),
         MangaReaderSystemBarsMigration(),
+        LibraryUpdateRulesMigration(),
     )

@@ -14,6 +14,7 @@ import mihon.feature.graph.validation.FeatureContractVerifier
 import mihon.feature.graph.validation.FeatureValidationContributionSink
 import mihon.feature.graph.validation.FeatureValidationContributor
 import tachiyomi.domain.entry.model.Entry
+import tachiyomi.domain.library.update.model.LibraryUpdateSkipRules
 
 class EntryUpdateEligibilityContractValidationContributor : FeatureValidationContributor {
     override val owner = EntryUpdateEligibilityFeatureContributor.owner
@@ -28,10 +29,9 @@ class EntryUpdateEligibilityContractValidationContributor : FeatureValidationCon
             ) { input ->
                 verifyFeatureContract {
                     val type = EntryType.entries.single { it.toContentTypeId() == input.subject.entryContentType }
-                    val policy = EntryUpdateEligibilityPolicy(false, false, false, false)
-                    val feature = eligibilityFeature(type, policy)
                     contractExpectation(
-                        feature.evaluate(unrestrictedRequest(type)) == EntryUpdateEligibility.Eligible,
+                        eligibilityFeature(type).evaluate(unrestrictedRequest(type, LibraryUpdateSkipRules.None)) ==
+                            EntryUpdateEligibility.Eligible,
                         "Update eligibility must accept an unrestricted entry",
                     )
                 }
@@ -45,17 +45,14 @@ class EntryUpdateEligibilityContractValidationContributor : FeatureValidationCon
                 ),
             ) { input ->
                 verifyFeatureContract {
-                    val policy = input.evidence(ENTRY_UPDATE_ELIGIBILITY_POLICY_CONTEXT)
+                    val skipRules = input.evidence(ENTRY_UPDATE_ELIGIBILITY_POLICY_CONTEXT)
                     val type = EntryType.entries.single { it.toContentTypeId() == input.subject.entryContentType }
                     contractExpectation(
-                        !policy.skipCompleted &&
-                            !policy.skipWhenUnconsumed &&
-                            !policy.skipWhenNotStarted &&
-                            !policy.skipOutsideReleasePeriod,
+                        skipRules == LibraryUpdateSkipRules.None,
                         "Update eligibility applicable scenario must disable every optional restriction",
                     )
                     contractExpectation(
-                        eligibilityFeature(type, policy).evaluate(unrestrictedRequest(type)) ==
+                        eligibilityFeature(type).evaluate(unrestrictedRequest(type, skipRules)) ==
                             EntryUpdateEligibility.Eligible,
                         "Update eligibility applicable scenario must execute the eligible decision",
                     )
@@ -74,7 +71,7 @@ class EntryUpdateEligibilityContractValidationContributor : FeatureValidationCon
                 listOf(
                     contextEvidence(
                         ENTRY_UPDATE_ELIGIBILITY_POLICY_CONTEXT,
-                        EntryUpdateEligibilityPolicy(false, false, false, false),
+                        LibraryUpdateSkipRules.None,
                     ),
                     contextEvidence(ENTRY_UPDATE_ELIGIBILITY_ONE_SHOT_CONTEXT, false),
                     contextEvidence(ENTRY_UPDATE_ELIGIBILITY_COMPLETED_CONTEXT, false),
@@ -86,17 +83,15 @@ class EntryUpdateEligibilityContractValidationContributor : FeatureValidationCon
         )
     }
 
-    private fun eligibilityFeature(
-        type: EntryType,
-        policy: EntryUpdateEligibilityPolicy,
-    ): EntryUpdateEligibilityFeature = DefaultEntryUpdateEligibilityFeature(
-        evaluation = productionSubjectEvaluation(type, EntryUpdateEligibilityFeatureContributor),
-        currentPolicy = { policy },
-    )
+    private fun eligibilityFeature(type: EntryType): EntryUpdateEligibilityFeature =
+        DefaultEntryUpdateEligibilityFeature(
+            evaluation = productionSubjectEvaluation(type, EntryUpdateEligibilityFeatureContributor),
+        )
 
-    private fun unrestrictedRequest(type: EntryType): EntryUpdateEligibilityRequest =
+    private fun unrestrictedRequest(type: EntryType, skipRules: LibraryUpdateSkipRules): EntryUpdateEligibilityRequest =
         EntryUpdateEligibilityRequest(
             entry = Entry.create().copy(type = type),
+            skipRules = skipRules,
             totalCount = null,
             unconsumedCount = null,
             hasStarted = null,

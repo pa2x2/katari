@@ -93,7 +93,7 @@ class ProfileManager(
             ?: visibleProfiles.firstOrNull()
             ?: loadedProfiles.firstOrNull { it.id == ProfileConstants.DEFAULT_PROFILE_ID }
         if (initialProfile != null) {
-            activateProfile(initialProfile, rescheduleJobs = false)
+            activateProfile(initialProfile)
         }
         return ProfileStartupSnapshot(
             initialProfile = initialProfile,
@@ -104,19 +104,19 @@ class ProfileManager(
 
     suspend fun setActiveProfile(profileId: Long, rescheduleJobs: Boolean = true) {
         val profile = profileDatabase.getProfileById(profileId) ?: return
-        activateProfile(profile, rescheduleJobs)
+        activateProfile(profile)
+        if (rescheduleJobs) {
+            LibraryUpdateJob.setupTask(application)
+        }
     }
 
-    private fun activateProfile(profile: Profile, rescheduleJobs: Boolean) {
+    private fun activateProfile(profile: Profile) {
         val previousProfileId = profileStore.currentProfileId
         if (previousProfileId != profile.id) {
             lockGate.markInactive(previousProfileId)
         }
         profileStore.setCurrentProfileId(profile.id)
         switchRequests.value = profile.id
-        if (rescheduleJobs) {
-            LibraryUpdateJob.setupTask(application)
-        }
     }
 
     suspend fun createProfile(name: String): Profile {

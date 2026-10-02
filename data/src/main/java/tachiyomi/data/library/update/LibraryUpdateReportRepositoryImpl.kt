@@ -84,8 +84,8 @@ class LibraryUpdateReportRepositoryImpl(
                 entry_update_statusQueries.upsertDecision(
                     entryId = decision.entryId,
                     decidedAt = decidedAt,
-                    outcome = decision.outcome.name.lowercase(),
-                    reason = decision.reason?.name?.lowercase(),
+                    outcome = decision.reason.outcome.name.lowercase(),
+                    reason = decision.reason.name.lowercase(),
                     reasonCategoryId = decision.reasonCategoryId,
                 )
             }
@@ -105,13 +105,12 @@ class LibraryUpdateReportRepositoryImpl(
         }
     }
 
-    override suspend fun recordFailed(entryId: Long, decidedAt: Long, checkedAt: Long, error: String?) {
+    override suspend fun recordFailed(entryId: Long, decidedAt: Long, error: String?) {
         handler.await {
             entry_update_statusQueries.recordFailed(
                 entryId = entryId,
                 decidedAt = decidedAt,
                 error = error,
-                checkedAt = checkedAt,
             )
         }
     }

@@ -67,10 +67,9 @@ INSERT INTO entry_update_status(
     decided_at,
     outcome,
     error,
-    last_checked_at,
     consecutive_failures
 )
-VALUES (:entryId, :decidedAt, 'failed', :error, :checkedAt, 1)
+VALUES (:entryId, :decidedAt, 'failed', :error, 1)
 ON CONFLICT(entry_id) DO UPDATE SET
     decided_at = excluded.decided_at,
     outcome = 'failed',
@@ -78,5 +77,4 @@ ON CONFLICT(entry_id) DO UPDATE SET
     reason_category_id = NULL,
     error = excluded.error,
     new_chapters = 0,
-    last_checked_at = excluded.last_checked_at,
     consecutive_failures = entry_update_status.consecutive_failures + 1;

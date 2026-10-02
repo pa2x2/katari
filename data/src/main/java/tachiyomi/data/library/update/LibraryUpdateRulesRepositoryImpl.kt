@@ -66,7 +66,10 @@ class LibraryUpdateRulesRepositoryImpl(
     }
 
     override suspend fun setCategoryRules(rules: CategoryUpdateRules) {
-        val profileId = profileProvider.activeProfileId
+        setCategoryRules(profileProvider.activeProfileId, rules)
+    }
+
+    override suspend fun setCategoryRules(profileId: Long, rules: CategoryUpdateRules) {
         handler.await {
             if (rules.isDefault) {
                 category_update_rulesQueries.delete(profileId, rules.categoryId)

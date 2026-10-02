@@ -86,6 +86,7 @@ private fun LibraryUpdateStripContent(
             LibraryUpdateScope.Source -> MR.strings.updating_extension
             LibraryUpdateScope.Type -> MR.strings.updating_type
             LibraryUpdateScope.Group -> MR.strings.updating_group
+            LibraryUpdateScope.Selection -> MR.strings.updating_selection
         },
     )
     Surface(

@@ -4,10 +4,10 @@ import eu.kanade.tachiyomi.source.entry.EntryUpdateStrategy
 import mihon.entry.interactions.runtime.toContentTypeId
 import mihon.feature.graph.FeatureGraphEvaluation
 import tachiyomi.domain.entry.model.EntryStatus
+import tachiyomi.domain.library.update.model.LibraryUpdateSkipRules
 
 internal class DefaultEntryUpdateEligibilityFeature(
     private val evaluation: FeatureGraphEvaluation,
-    private val currentPolicy: () -> EntryUpdateEligibilityPolicy,
 ) : EntryUpdateEligibilityFeature {
     private val selectedTypes = evaluation.updateEligibilityContentTypes()
 
@@ -16,10 +16,10 @@ internal class DefaultEntryUpdateEligibilityFeature(
             "Entry type ${request.entry.type} was not contributed to the update eligibility feature graph"
         }
 
-        val policy = currentPolicy()
+        val skipRules = request.skipRules
         val context = request.toContext()
-        val reason = context.skipReason(policy)
-        evaluation.requireUpdateEligibilityContext(request.entry.type, policy, context, applicable = reason == null)
+        val reason = context.skipReason(skipRules)
+        evaluation.requireUpdateEligibilityContext(request.entry.type, skipRules, context, applicable = reason == null)
         return reason?.let(EntryUpdateEligibility::Skipped) ?: EntryUpdateEligibility.Eligible
     }
 }
@@ -36,14 +36,14 @@ private fun EntryUpdateEligibilityRequest.toContext(): EntryUpdateEligibilityCon
 }
 
 private fun EntryUpdateEligibilityContext.skipReason(
-    policy: EntryUpdateEligibilityPolicy,
+    skipRules: LibraryUpdateSkipRules,
 ): EntryUpdateSkipReason? {
     return when {
         oneShotAlreadyFetched -> EntryUpdateSkipReason.NOT_ALWAYS_UPDATE
-        policy.skipCompleted && completed -> EntryUpdateSkipReason.COMPLETED
-        policy.skipWhenUnconsumed && hasUnconsumed -> EntryUpdateSkipReason.NOT_CAUGHT_UP
-        policy.skipWhenNotStarted && notStartedWithChildren -> EntryUpdateSkipReason.NOT_STARTED
-        policy.skipOutsideReleasePeriod && outsideReleasePeriod -> EntryUpdateSkipReason.OUTSIDE_RELEASE_PERIOD
+        skipRules.skipCompleted && completed -> EntryUpdateSkipReason.COMPLETED
+        skipRules.skipUnseen && hasUnconsumed -> EntryUpdateSkipReason.NOT_CAUGHT_UP
+        skipRules.skipNotStarted && notStartedWithChildren -> EntryUpdateSkipReason.NOT_STARTED
+        skipRules.skipOutsideReleasePeriod && outsideReleasePeriod -> EntryUpdateSkipReason.OUTSIDE_RELEASE_PERIOD
         else -> null
     }
 }

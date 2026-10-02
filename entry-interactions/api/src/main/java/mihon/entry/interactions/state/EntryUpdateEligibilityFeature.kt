@@ -1,6 +1,7 @@
 package mihon.entry.interactions.state
 
 import tachiyomi.domain.entry.model.Entry
+import tachiyomi.domain.library.update.model.LibraryUpdateSkipRules
 
 interface EntryUpdateEligibilityFeature {
     fun evaluate(request: EntryUpdateEligibilityRequest): EntryUpdateEligibility
@@ -8,6 +9,7 @@ interface EntryUpdateEligibilityFeature {
 
 data class EntryUpdateEligibilityRequest(
     val entry: Entry,
+    val skipRules: LibraryUpdateSkipRules,
     val totalCount: Long?,
     val unconsumedCount: Long?,
     val hasStarted: Boolean?,

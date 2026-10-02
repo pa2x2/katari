@@ -1438,6 +1438,7 @@
     <string name="updating_type">Updating type</string>
     <string name="updating_extension">Updating extension</string>
     <string name="updating_group">Updating group</string>
+    <string name="updating_selection">Updating selection</string>
     <string name="manga_from_library">From library</string>
     <string name="downloaded_chapters">Downloaded items</string>
     <string name="intervals_header">Intervals</string>

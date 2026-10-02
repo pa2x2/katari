@@ -285,10 +285,7 @@ class BackupRestorer(
         }
 
         if (options.appSettings) {
-            LibraryUpdateJob.setupTask(
-                context = context,
-                prefInterval = libraryPreferences.autoUpdateInterval.get(),
-            )
+            LibraryUpdateJob.setupTask(context)
             BackupCreateJob.setupTask(context)
         }
     }

@@ -23,4 +23,6 @@ interface LibraryUpdateRulesRepository {
     fun subscribeCategoryRules(): Flow<Map<Long, CategoryUpdateRules>>
 
     suspend fun setCategoryRules(rules: CategoryUpdateRules)
+
+    suspend fun setCategoryRules(profileId: Long, rules: CategoryUpdateRules)
 }

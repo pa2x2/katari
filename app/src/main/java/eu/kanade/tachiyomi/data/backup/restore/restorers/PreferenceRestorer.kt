@@ -14,6 +14,7 @@ import eu.kanade.tachiyomi.data.backup.models.StringPreferenceValue
 import eu.kanade.tachiyomi.data.backup.models.StringSetPreferenceValue
 import eu.kanade.tachiyomi.data.library.LibraryUpdateJob
 import eu.kanade.tachiyomi.source.sourcePreferences
+import mihon.feature.library.update.legacy.LegacyUpdateCategoriesConversion
 import mihon.feature.profiles.core.ProfileStore
 import tachiyomi.core.common.preference.AndroidPreferenceStore
 import tachiyomi.core.common.preference.PreferenceStore
@@ -30,6 +31,8 @@ class PreferenceRestorer(
     private val getCategories: GetCategories = Injekt.get(),
     private val preferenceStore: PreferenceStore = Injekt.get(),
     private val profileStore: ProfileStore = Injekt.get(),
+    private val legacyUpdateCategoriesConversion: LegacyUpdateCategoriesConversion =
+        LegacyUpdateCategoriesConversion(Injekt.get(), Injekt.get()),
 ) {
     suspend fun restoreApp(
         preferences: List<BackupPreference>,
@@ -68,11 +71,13 @@ class PreferenceRestorer(
         includeGlobalRestore: Boolean,
         scheduleJobs: Boolean,
     ) {
+        val store = profileStore.profileStore(profileId)
         restorePreferences(
             toRestore = preferences,
-            preferenceStore = profileStore.profileStore(profileId),
+            preferenceStore = store,
             backupCategories = backupCategories,
         )
+        legacyUpdateCategoriesConversion.convert(profileId, store)
 
         if (includeGlobalRestore) {
             restorePreferences(
