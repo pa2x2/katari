@@ -1,5 +1,42 @@
 # Changelog
 
+## [1.13.0] - 2026-10-02
+
+### ✨ Added
+
+- Settings > Library updates chooses which categories, sources, and entry types library updates check.
+- Categories can have their own update schedule and skip rules.
+- An entry's Updates button sets it to always or never be checked and shows what the last update decided for it.
+- The latest library update has a report with retry, pause, and WebView actions for failed entries.
+- Selected library entries can be checked for updates or given an update mode together.
+- The Updates feed can be filtered by entry type and source.
+- Upcoming marks entries that library updates won't check.
+- App updates download and install inside Katari, with notes for every version since the installed one and an option to skip a version.
+- About has a pre-release update channel and a switch for checking on launch.
+
+### 🔄 Changed
+
+- Library update settings moved from Library settings to their own screen.
+- An entry in a category switched off for updates is no longer checked, even if it is also in a checked category.
+- The library update failure notification opens the update report instead of a text log.
+
+### 🧩 Improved
+
+- A library update names what it covers and sums up the result when it finishes.
+- The Updates feed groups three or more updates of an entry from one day into one expandable row.
+- The Updates feed says how many updates its filters hide.
+- Tapping the large-update warning opens the library update settings.
+
+### 🐛 Fixed
+
+- FOSS releases now include the in-app updater.
+- Chapter actions and filters shared by mixed entry types say seen and unseen instead of consumed.
+
+### ⚡️ Performance
+
+- Loading a page in Browse, feeds, or search no longer rebuilds the library.
+- Covers that fail to load share one error image instead of drawing it for each cover.
+
 ## [1.12.0] - 2026-09-30
 
 ### ✨ Added
@@ -557,7 +594,8 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v1.12.0...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/v1.13.0...HEAD
+[1.13.0]: https://github.com/pa2x2/katari/releases/tag/v1.13.0
 [1.12.0]: https://github.com/pa2x2/katari/releases/tag/v1.12.0
 [1.11.0]: https://github.com/pa2x2/katari/releases/tag/v1.11.0
 [1.10.2]: https://github.com/pa2x2/katari/releases/tag/v1.10.2
