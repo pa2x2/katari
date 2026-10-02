@@ -63,7 +63,6 @@
     <string name="action_filter_tracked">Tracked</string>
     <string name="action_filter_unread">Unread</string>
     <string name="action_filter_unwatched">Unwatched</string>
-    <string name="action_filter_unconsumed">Unconsumed</string>
     <string name="action_filter_unseen">Unseen</string>
     <string name="action_filter_interval_custom">Customized update frequency</string>
     <!-- reserved for #4048 -->
@@ -93,11 +92,10 @@
     <string name="action_mark_as_watched">Mark as watched</string>
     <string name="action_mark_as_unwatched">Mark as unwatched</string>
     <string name="action_mark_as_seen">Mark as seen</string>
-    <string name="action_mark_as_consumed">Mark as consumed</string>
-    <string name="action_mark_as_unconsumed">Mark as unconsumed</string>
+    <string name="action_mark_as_unseen">Mark as unseen</string>
     <string name="action_mark_previous_as_read">Mark previous as read</string>
     <string name="action_mark_previous_as_watched">Mark previous as watched</string>
-    <string name="action_mark_previous_as_consumed">Mark previous as consumed</string>
+    <string name="action_mark_previous_as_seen">Mark previous as seen</string>
     <string name="action_download">Download</string>
     <string name="action_bookmark">Bookmark chapter</string>
     <string name="action_remove_bookmark">Unbookmark chapter</string>
@@ -1716,7 +1714,7 @@
     <string name="manga_download">Download</string>
     <string name="download_unread">Unread</string>
     <string name="download_unwatched">Unwatched</string>
-    <string name="download_unconsumed">Unconsumed</string>
+    <string name="download_unseen">Unseen</string>
     <string name="download_bookmarked">Bookmarked</string>
     <string name="custom_cover">Custom cover</string>
     <string name="manga_cover">Cover</string>
