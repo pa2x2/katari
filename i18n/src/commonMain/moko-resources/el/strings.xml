@@ -38,7 +38,6 @@
     <string name="action_add">Προσθήκη</string>
     <string name="action_add_category">Προσθήκη κατηγορίας</string>
     <string name="action_edit_categories">Επεξεργασία κατηγοριών</string>
-    <string name="action_rename_category">Μετονομασία κατηγορίας</string>
     <string name="action_move_category">Ορισμός κατηγοριών</string>
     <string name="action_edit_cover">Επεξεργασία εξώφυλλου</string>
     <string name="action_pause">Παύση</string>

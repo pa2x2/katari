@@ -146,7 +146,6 @@
     <string name="login">ログイン</string>
     <string name="login_success">ログインしました</string>
     <string name="action_add">追加</string>
-    <string name="action_rename_category">カテゴリー名を編集</string>
     <string name="action_move_category">カテゴリーを設定</string>
     <string name="action_remove">削除</string>
     <string name="action_install">インストール</string>

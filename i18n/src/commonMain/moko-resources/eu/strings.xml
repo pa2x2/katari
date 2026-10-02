@@ -364,7 +364,6 @@
     <string name="action_add">Gehitu</string>
     <string name="action_add_category">Gehitu kategoria</string>
     <string name="action_edit_categories">Editatu kategoria</string>
-    <string name="action_rename_category">Izena aldatu kategoriari</string>
     <string name="action_move_category">Kategoriak ezarri</string>
     <string name="action_edit_cover">Editatu azala</string>
     <string name="action_view_chapters">Ikusi kapituluak</string>

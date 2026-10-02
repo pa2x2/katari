@@ -31,7 +31,6 @@
     <string name="action_add">เพิ่ม</string>
     <string name="action_add_category">เพิ่มหมวดหมู่</string>
     <string name="action_edit_categories">แก้ไขหมวดหมู่</string>
-    <string name="action_rename_category">เปลี่ยนชื่อหมวดหมู่</string>
     <string name="action_edit_cover">แก้ไขปก</string>
     <string name="action_previous_chapter">ตอนก่อนหน้า</string>
     <string name="action_next_chapter">ตอนถัดไป</string>

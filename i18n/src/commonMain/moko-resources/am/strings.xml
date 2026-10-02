@@ -100,7 +100,6 @@
     <string name="action_view_chapters">ምዕራፎችን ይመልከቱ</string>
     <string name="action_edit_cover">ሽፋን አርትዕ</string>
     <string name="action_move_category">ምድቦችን ያዘጋጁ</string>
-    <string name="action_rename_category">ምድብ እንደገና ይሰይሙ</string>
     <string name="action_edit_categories">ምድቦችን ያርትዑ</string>
     <string name="action_add_category">ምድብ አክል</string>
     <string name="action_add">አክል</string>

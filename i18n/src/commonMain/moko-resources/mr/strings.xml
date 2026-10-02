@@ -73,7 +73,6 @@
     <string name="action_view_chapters">अध्याय बघा</string>
     <string name="action_edit_cover">कव्हर बदलवा</string>
     <string name="action_move_category">श्रेणी सेट करा</string>
-    <string name="action_rename_category">श्रेणी पुन्हा नामांकित करा</string>
     <string name="action_edit_categories">श्रेणी संपादन</string>
     <string name="action_add_category">श्रेणी जोडा</string>
     <string name="action_add">जोडा</string>

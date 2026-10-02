@@ -27,7 +27,6 @@
     <string name="action_add">추가</string>
     <string name="action_add_category">카테고리 추가</string>
     <string name="action_edit_categories">카테고리 편집</string>
-    <string name="action_rename_category">카테고리 이름 바꾸기</string>
     <string name="action_move_category">카테고리 지정</string>
     <string name="action_edit_cover">표지 편집</string>
     <string name="action_remove">제거</string>

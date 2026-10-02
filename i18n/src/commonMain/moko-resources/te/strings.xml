@@ -14,7 +14,6 @@
     <string name="label_settings">అమరికలు</string>
     <string name="label_more">మరింత</string>
     <string name="name">పేరు</string>
-    <string name="action_rename_category">విభాగ పేరును మార్చుము</string>
     <string name="action_edit_categories">విభాగములను సవరించుము</string>
     <string name="action_add_category">విభాగమును జోడించుము</string>
     <string name="action_add">జోడించుము</string>

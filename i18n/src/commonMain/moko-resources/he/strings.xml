@@ -176,7 +176,6 @@
     <string name="action_view_chapters">הצג פרקים</string>
     <string name="action_edit_cover">ערוך את הכריכה</string>
     <string name="action_move_category">סדר קטגוריות</string>
-    <string name="action_rename_category">שנה שם קטגוריה</string>
     <string name="action_edit_categories">ערוך קטגוריות</string>
     <string name="action_add_category">הוסף קטגוריה</string>
     <string name="version">גרסה</string>

@@ -33,7 +33,6 @@
     <string name="action_add">Tambah</string>
     <string name="action_add_category">Tambah kategori</string>
     <string name="action_edit_categories">Ubah kategori</string>
-    <string name="action_rename_category">Ubah nama kategori</string>
     <string name="action_move_category">Tentukan kategori</string>
     <string name="action_edit_cover">Ubah gambar sampul</string>
     <string name="action_pause">Hentikan sementara</string>

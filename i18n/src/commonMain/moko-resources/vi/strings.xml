@@ -28,7 +28,6 @@
     <string name="action_add">Thêm</string>
     <string name="action_add_category">Thêm danh mục</string>
     <string name="action_edit_categories">Chỉnh sửa danh mục</string>
-    <string name="action_rename_category">Đổi tên danh mục</string>
     <string name="action_move_category">Đặt danh mục</string>
     <string name="action_edit_cover">Sửa ảnh bìa</string>
     <string name="action_pause">Tạm dừng</string>

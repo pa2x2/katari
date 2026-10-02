@@ -42,7 +42,6 @@
     <string name="action_move_category">I-set ang kategorya</string>
     <string name="action_add_category">Magdagdag ng kategorya</string>
     <string name="action_edit_categories">Ayusin ang kategorya</string>
-    <string name="action_rename_category">Palitan ang pangalan ng kategorya</string>
     <string name="action_add">Magdagdag</string>
     <string name="action_edit">Isaayos</string>
     <string name="action_disable_all">Di-paganahin lahat</string>

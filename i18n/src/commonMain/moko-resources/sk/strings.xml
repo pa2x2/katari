@@ -39,7 +39,6 @@
     <string name="action_add">Pridať</string>
     <string name="action_add_category">Pridať kategóriu</string>
     <string name="action_edit_categories">Upraviť kategórie</string>
-    <string name="action_rename_category">Premenovať kategóriu</string>
     <string name="action_move_category">Určiť kategórie</string>
     <string name="action_edit_cover">Upraviť obal</string>
     <string name="action_pause">Pauza</string>

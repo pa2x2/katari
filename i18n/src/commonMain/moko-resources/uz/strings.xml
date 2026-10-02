@@ -3,7 +3,6 @@
     <string name="action_view_chapters">Bõlimlarni kõrish</string>
     <string name="action_edit_cover">Muqovani õzgartirish</string>
     <string name="action_move_category">Kategoriyalar õrnatish</string>
-    <string name="action_rename_category">Kategoriyani qayta nomlash</string>
     <string name="action_edit_categories">Kategoriyalarni õzgartirish</string>
     <string name="action_add_category">Kategoriya qõshish</string>
     <string name="information_empty_category">Kutubxonada toifalar yo\'q. Toifalar yaratish uchun «Qo\'shish» tugmasini bosing.</string>

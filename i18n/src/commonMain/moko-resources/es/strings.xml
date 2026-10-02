@@ -22,7 +22,6 @@
     <string name="action_edit">Editar</string>
     <string name="action_add_category">Añadir categoría</string>
     <string name="action_edit_categories">Editar categorías</string>
-    <string name="action_rename_category">Renombrar categoría</string>
     <string name="action_move_category">Asignar categorías</string>
     <string name="action_edit_cover">Editar la portada</string>
     <string name="action_pause">Pausar</string>

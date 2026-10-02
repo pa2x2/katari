@@ -19,6 +19,7 @@ import eu.kanade.tachiyomi.core.security.SecurityPreferences
 import eu.kanade.tachiyomi.data.notification.NotificationHandler
 import eu.kanade.tachiyomi.data.notification.NotificationReceiver
 import eu.kanade.tachiyomi.data.notification.Notifications
+import eu.kanade.tachiyomi.ui.library.update.LibraryUpdateSettingsNavigation
 import eu.kanade.tachiyomi.ui.library.update.report.LibraryUpdateReportNavigation
 import eu.kanade.tachiyomi.ui.main.MainActivity
 import eu.kanade.tachiyomi.util.lang.chop
@@ -120,9 +121,12 @@ class LibraryUpdateNotifier(
     }
 
     /**
-     * Warn when excessively checking any single source.
+     * Warns when an update checks too much of one source.
+     *
+     * @param rulesProfileId the profile whose library update rules decided what is checked, so tapping the warning
+     * opens them; null for updates the rules don't shape, whose warning links to the explanation instead.
      */
-    fun showQueueSizeWarningNotificationIfNeeded(entriesToUpdate: List<LibraryItem>) {
+    fun showQueueSizeWarningNotificationIfNeeded(entriesToUpdate: List<LibraryItem>, rulesProfileId: Long?) {
         if (
             notificationFeature.queueWarning(entriesToUpdate.map(LibraryItem::entry)) ==
             EntryLibraryUpdateQueueWarning.NotRequired
@@ -130,17 +134,40 @@ class LibraryUpdateNotifier(
             return
         }
 
+        val helpIntent = NotificationHandler.openUrl(context, HELP_WARNING_URL)
         context.notify(
             Notifications.ID_LIBRARY_SIZE_WARNING,
             Notifications.CHANNEL_LIBRARY_PROGRESS,
         ) {
             setContentTitle(context.stringResource(MR.strings.label_warning))
-            setStyle(
-                NotificationCompat.BigTextStyle().bigText(context.stringResource(MR.strings.notification_size_warning)),
-            )
             setSmallIcon(R.drawable.ic_warning_white_24dp)
             setTimeoutAfter(WARNING_NOTIF_TIMEOUT_MS)
-            setContentIntent(NotificationHandler.openUrl(context, HELP_WARNING_URL))
+            if (rulesProfileId != null) {
+                setStyle(
+                    NotificationCompat.BigTextStyle().bigText(
+                        context.stringResource(MR.strings.notification_large_update_warning),
+                    ),
+                )
+                setContentIntent(
+                    LibraryUpdateSettingsNavigation.pendingIntent(
+                        context,
+                        rulesProfileId,
+                        Notifications.ID_LIBRARY_SIZE_WARNING,
+                    ),
+                )
+                addAction(
+                    R.drawable.ic_warning_white_24dp,
+                    context.stringResource(MR.strings.action_learn_more),
+                    helpIntent,
+                )
+            } else {
+                setStyle(
+                    NotificationCompat.BigTextStyle().bigText(
+                        context.stringResource(MR.strings.notification_size_warning),
+                    ),
+                )
+                setContentIntent(helpIntent)
+            }
         }
     }
 

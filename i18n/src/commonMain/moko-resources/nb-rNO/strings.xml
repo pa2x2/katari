@@ -36,7 +36,6 @@
     <string name="action_add">Legg til</string>
     <string name="action_add_category">Legg til kategori</string>
     <string name="action_edit_categories">Rediger kategorier</string>
-    <string name="action_rename_category">Gi kategori nytt navn</string>
     <string name="action_move_category">Sett kategorier</string>
     <string name="action_edit_cover">Rediger omslag</string>
     <string name="action_pause">Pause</string>

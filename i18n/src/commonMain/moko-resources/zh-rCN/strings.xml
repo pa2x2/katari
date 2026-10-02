@@ -35,7 +35,6 @@
     <string name="action_add">添加</string>
     <string name="action_add_category">添加分类</string>
     <string name="action_edit_categories">编辑分类</string>
-    <string name="action_rename_category">重命名分类</string>
     <string name="action_move_category">设置分类</string>
     <string name="action_edit_cover">编辑封面</string>
     <string name="action_pause">暂停</string>

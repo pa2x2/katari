@@ -130,7 +130,6 @@
     <string name="action_view_chapters">Түһүмэхтэри көр</string>
     <string name="action_edit_cover">Таһын уларытыы</string>
     <string name="action_move_category">Бөлө(ххө/хтөргө) киллэр</string>
-    <string name="action_rename_category">Бөлөх аатын уларыт</string>
     <string name="action_edit_categories">Бөлөхтөрү уларыт</string>
     <string name="action_add_category">Бөлөҕү киллэр</string>
     <string name="pref_webtoon_side_padding">Ойоҕостон тэйии</string>

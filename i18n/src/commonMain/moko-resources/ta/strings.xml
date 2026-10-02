@@ -140,7 +140,6 @@
     <string name="action_open_random_manga">சீரற்ற நுழைவைத் திறக்கவும்</string>
     <string name="action_add_category">வகையைச் சேர்க்கவும்</string>
     <string name="action_edit_categories">வகைகளைத் திருத்து</string>
-    <string name="action_rename_category">வகை மறுபெயரிடுதல்</string>
     <string name="action_edit_cover">கவர் திருத்து</string>
     <string name="action_view_chapters">அத்தியாயங்களைக் காண்க</string>
     <string name="action_pause">இடைநிறுத்தம்</string>

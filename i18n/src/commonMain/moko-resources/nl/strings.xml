@@ -29,7 +29,6 @@
     <string name="action_add">Toevoegen</string>
     <string name="action_add_category">Categorie toevoegen</string>
     <string name="action_edit_categories">Categorieën bewerken</string>
-    <string name="action_rename_category">Categorie hernoemen</string>
     <string name="action_move_category">Zet categorieën</string>
     <string name="action_edit_cover">Omslag wijzigen</string>
     <string name="action_pause">Pauzeren</string>

@@ -81,7 +81,6 @@
     <string name="action_add">Lisää</string>
     <string name="action_add_category">Lisää kategoria</string>
     <string name="action_edit_categories">Muokkaa kategorioita</string>
-    <string name="action_rename_category">Nimeä kategoria uudelleen</string>
     <string name="action_retry">Yritä uudelleen</string>
     <string name="action_pause">Pysäytä</string>
     <string name="action_previous_chapter">Aiempi luku</string>

@@ -130,7 +130,6 @@
     <string name="action_open_random_manga">এলোমেলো প্ৰৱিষ্টি খোলক</string>
     <string name="action_add_category">শ্ৰেণী যোগ কৰক</string>
     <string name="action_edit_categories">শ্ৰেণীসমূহ সম্পাদনা কৰক</string>
-    <string name="action_rename_category">শ্ৰেণীৰ নাম সলনি কৰক</string>
     <string name="action_move_category">শ্ৰেণীসমূহ নিৰ্ধাৰণ কৰক</string>
     <string name="delete_category_confirmation">আপুনি \"%s\" শ্ৰেণী মচিব খোজে নেকি?</string>
     <string name="delete_category">শ্ৰেণী মচক</string>

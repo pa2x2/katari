@@ -207,7 +207,6 @@
     <string name="action_open_random_manga">Hap hyrje të rastësishme</string>
     <string name="action_add_category">Shto kategori</string>
     <string name="action_edit_categories">Redakto kategoritë</string>
-    <string name="action_rename_category">Riemërto kategorinë</string>
     <string name="action_move_category">Vendosni kategori</string>
     <string name="delete_category_confirmation">Dëshironi të fshini kategorinë \"%s\"?</string>
     <string name="delete_category">Fshi kategorinë</string>

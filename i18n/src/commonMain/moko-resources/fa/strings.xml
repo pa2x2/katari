@@ -342,7 +342,6 @@
     <string name="invalid_backup_file">فایل پشتیبان نامعتبر است</string>
     <string name="backup_created">نسخه پشتیبان ایجاد شد</string>
     <string name="action_edit_cover">ویرایش عکس روی جلد</string>
-    <string name="action_rename_category">تغییر نام دسته</string>
     <string name="action_edit_categories">ویرایش دسته ها</string>
     <string name="action_add_category">افزودن دسته</string>
     <string name="action_add">افزودن</string>

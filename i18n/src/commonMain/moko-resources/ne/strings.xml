@@ -54,7 +54,6 @@
     <string name="action_view_chapters">अध्यायहरू हेर्नुहोस्</string>
     <string name="action_edit_cover">आवरण सम्पादन गर्नुहोस्</string>
     <string name="action_move_category">वर्गहरू सेट गर्नुहोस्</string>
-    <string name="action_rename_category">वर्गहरू को नाम बदल्नुहोस्</string>
     <string name="action_edit_categories">वर्गहरू सम्पादन गर्नुहोस्</string>
     <string name="action_add_category">वर्ग थप्नुहोस्</string>
     <string name="action_add">थप्नुहोस्</string>

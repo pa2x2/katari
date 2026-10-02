@@ -12,6 +12,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TriStateCheckbox
@@ -93,15 +94,18 @@ fun CategoryCreateDialog(
     }
 }
 
+/** Renames a category and switches whether library updates check it, applying both on confirm. */
 @Composable
-fun CategoryRenameDialog(
+fun CategoryEditDialog(
     onDismissRequest: () -> Unit,
-    onRename: (String) -> Unit,
+    onConfirm: (name: String, autoUpdate: Boolean) -> Unit,
     categories: List<String>,
     category: String,
+    autoUpdate: Boolean,
 ) {
     var name by remember { mutableStateOf(category) }
-    var valueHasChanged by remember { mutableStateOf(false) }
+    var checked by remember { mutableStateOf(autoUpdate) }
+    val nameHasChanged = name != category
 
     val focusRequester = remember { FocusRequester() }
     val nameAlreadyExists = remember(name) { categories.contains(name) }
@@ -110,9 +114,11 @@ fun CategoryRenameDialog(
         onDismissRequest = onDismissRequest,
         confirmButton = {
             TextButton(
-                enabled = valueHasChanged && !nameAlreadyExists,
+                enabled = (nameHasChanged || checked != autoUpdate) &&
+                    name.isNotEmpty() &&
+                    !(nameHasChanged && nameAlreadyExists),
                 onClick = {
-                    onRename(name)
+                    onConfirm(name, checked)
                     onDismissRequest()
                 },
             ) {
@@ -125,28 +131,49 @@ fun CategoryRenameDialog(
             }
         },
         title = {
-            Text(text = stringResource(MR.strings.action_rename_category))
+            Text(text = stringResource(MR.strings.action_edit_category))
         },
         text = {
-            OutlinedTextField(
-                modifier = Modifier.focusRequester(focusRequester),
-                value = name,
-                onValueChange = {
-                    valueHasChanged = name != it
-                    name = it
-                },
-                label = { Text(text = stringResource(MR.strings.name)) },
-                supportingText = {
-                    val msgRes = if (valueHasChanged && nameAlreadyExists) {
-                        MR.strings.error_category_exists
-                    } else {
-                        MR.strings.information_required_plain
+            Column {
+                OutlinedTextField(
+                    modifier = Modifier.focusRequester(focusRequester),
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text(text = stringResource(MR.strings.name)) },
+                    supportingText = {
+                        val msgRes = if (nameHasChanged && nameAlreadyExists) {
+                            MR.strings.error_category_exists
+                        } else {
+                            MR.strings.information_required_plain
+                        }
+                        Text(text = stringResource(msgRes))
+                    },
+                    isError = nameHasChanged && nameAlreadyExists,
+                    singleLine = true,
+                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { checked = !checked }
+                        .padding(vertical = MaterialTheme.padding.small),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = stringResource(MR.strings.library_updates_check_automatically),
+                            style = MaterialTheme.typography.bodyLarge,
+                        )
+                        if (!checked) {
+                            Text(
+                                text = stringResource(MR.strings.library_updates_category_off_summary),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
                     }
-                    Text(text = stringResource(msgRes))
-                },
-                isError = valueHasChanged && nameAlreadyExists,
-                singleLine = true,
-            )
+                    Switch(checked = checked, onCheckedChange = { checked = it })
+                }
+            }
         },
     )
 

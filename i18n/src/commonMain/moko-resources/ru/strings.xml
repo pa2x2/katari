@@ -28,7 +28,6 @@
     <string name="action_previous_chapter">Предыдущая глава</string>
     <string name="action_remove">Удалить</string>
     <string name="action_remove_bookmark">Удалить закладку</string>
-    <string name="action_rename_category">Переименовать категорию</string>
     <string name="action_reset">Сбросить</string>
     <string name="action_resume">Продолжить</string>
     <string name="action_retry">Повторить</string>

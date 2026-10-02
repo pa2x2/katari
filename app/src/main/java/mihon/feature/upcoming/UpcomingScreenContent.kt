@@ -189,6 +189,7 @@ private fun UpcomingScreenSmallImpl(
                 is UpcomingUIModel.Item -> {
                     UpcomingItem(
                         upcoming = item.entry,
+                        notCheckedReason = item.notCheckedReason,
                         onClick = { onClickUpcoming(item.entry) },
                     )
                 }
@@ -241,6 +242,7 @@ private fun UpcomingScreenLargeImpl(
                         is UpcomingUIModel.Item -> {
                             UpcomingItem(
                                 upcoming = item.entry,
+                                notCheckedReason = item.notCheckedReason,
                                 onClick = { onClickUpcoming(item.entry) },
                             )
                         }

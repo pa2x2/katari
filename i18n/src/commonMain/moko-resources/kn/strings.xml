@@ -61,7 +61,6 @@
     <string name="action_view_chapters">ಅಧ್ಯಾಯಗಳನ್ನು ವೀಕ್ಷಿಸಿ</string>
     <string name="action_edit_cover">ಕವರ್ ತಿದ್ದಿ</string>
     <string name="action_move_category">ವರ್ಗಗಳನ್ನು ಹೊಂದಿಸಿ</string>
-    <string name="action_rename_category">ವರ್ಗವನ್ನು ಮರುಹೆಸರಿಸಿ</string>
     <string name="action_edit_categories">ವರ್ಗವನ್ನು ತಿದ್ದಿ</string>
     <string name="action_add_category">ವರ್ಗವನ್ನು ಸೇರಿಸಿ</string>
     <string name="action_add">ಸೇರಿಸಿ</string>

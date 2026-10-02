@@ -35,7 +35,6 @@
     <string name="action_mark_as_read">បញ្ជាក់ថាបានអាន</string>
     <string name="action_download">ទាញយក</string>
     <string name="action_bookmark">ចំណាំភាគនេះទុក</string>
-    <string name="action_rename_category">ប្ដូរឈ្មោះថ្នាក់ក្រម</string>
     <string name="action_move_category">កំណត់</string>
     <string name="action_edit_cover">ផ្លាស់ប្ដូរកម្របត្លុក</string>
     <string name="action_view_chapters">មើលភាគ</string>

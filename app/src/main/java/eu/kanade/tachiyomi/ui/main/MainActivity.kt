@@ -99,6 +99,7 @@ import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchScreen
 import eu.kanade.tachiyomi.ui.deeplink.DeepLinkScreen
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
 import eu.kanade.tachiyomi.ui.home.HomeScreen
+import eu.kanade.tachiyomi.ui.library.update.LibraryUpdateSettingsNavigation
 import eu.kanade.tachiyomi.ui.library.update.report.LibraryUpdateReportNavigation
 import eu.kanade.tachiyomi.ui.library.update.report.LibraryUpdateReportScreen
 import eu.kanade.tachiyomi.ui.more.NewUpdateScreen
@@ -786,6 +787,11 @@ class MainActivity : BaseActivity() {
             }
             TranslationSettingsNavigation.ACTION_OPEN_SETTINGS -> {
                 navigator.push(SettingsScreen(SettingsScreen.Destination.Translation))
+                null
+            }
+            LibraryUpdateSettingsNavigation.ACTION_OPEN_SETTINGS -> {
+                navigator.popUntilRoot()
+                navigator.push(SettingsScreen(SettingsScreen.Destination.LibraryUpdates))
                 null
             }
             SourceMigrationNotifier.ACTION_OPEN_SOURCE_MIGRATION_SESSION -> {

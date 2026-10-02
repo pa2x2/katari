@@ -38,7 +38,6 @@
     <string name="action_add">Afegeix</string>
     <string name="action_add_category">Afegeix una categoria</string>
     <string name="action_edit_categories">Edita les categories</string>
-    <string name="action_rename_category">Canvia el nom de la categoria</string>
     <string name="action_move_category">Defineix les categories</string>
     <string name="action_edit_cover">Edita la portada</string>
     <string name="action_pause">Pausa</string>

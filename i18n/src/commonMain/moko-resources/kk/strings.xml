@@ -112,7 +112,6 @@
     <string name="action_add">Қосу</string>
     <string name="action_add_category">Санат қосу</string>
     <string name="action_edit_categories">Санаттарды өңдеу</string>
-    <string name="action_rename_category">Санаттың атын өзгерту</string>
     <string name="action_move_category">Санаттарды орнату</string>
     <string name="action_edit_cover">Мұқабасын өзгерту</string>
     <string name="action_view_chapters">Тарауларды қарау</string>

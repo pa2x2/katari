@@ -28,7 +28,6 @@
     <string name="action_add">Ajouter</string>
     <string name="action_add_category">Ajouter une catégorie</string>
     <string name="action_edit_categories">Modifier les catégories</string>
-    <string name="action_rename_category">Renommer la catégorie</string>
     <string name="action_move_category">Définir la catégorie</string>
     <string name="action_edit_cover">Modifier la couverture</string>
     <string name="action_pause">Pause</string>

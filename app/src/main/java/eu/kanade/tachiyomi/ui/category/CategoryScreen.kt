@@ -12,7 +12,7 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.category.CategoryScreen
 import eu.kanade.presentation.category.components.CategoryCreateDialog
 import eu.kanade.presentation.category.components.CategoryDeleteDialog
-import eu.kanade.presentation.category.components.CategoryRenameDialog
+import eu.kanade.presentation.category.components.CategoryEditDialog
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.flow.collectLatest
@@ -38,7 +38,7 @@ class CategoryScreen : Screen() {
         CategoryScreen(
             state = successState,
             onClickCreate = { screenModel.showDialog(CategoryDialog.Create) },
-            onClickRename = { screenModel.showDialog(CategoryDialog.Rename(it)) },
+            onClickEdit = screenModel::showEditDialog,
             onClickDelete = { screenModel.showDialog(CategoryDialog.Delete(it)) },
             onChangeOrder = screenModel::changeOrder,
             navigateUp = navigator::pop,
@@ -53,12 +53,15 @@ class CategoryScreen : Screen() {
                     categories = successState.categories.fastMap { it.name },
                 )
             }
-            is CategoryDialog.Rename -> {
-                CategoryRenameDialog(
+            is CategoryDialog.Edit -> {
+                CategoryEditDialog(
                     onDismissRequest = screenModel::dismissDialog,
-                    onRename = { screenModel.renameCategory(dialog.category, it) },
+                    onConfirm = { name, autoUpdate ->
+                        screenModel.editCategory(dialog.category, dialog.rules, name, autoUpdate)
+                    },
                     categories = successState.categories.fastMap { it.name },
                     category = dialog.category.name,
+                    autoUpdate = dialog.rules.autoUpdate,
                 )
             }
             is CategoryDialog.Delete -> {

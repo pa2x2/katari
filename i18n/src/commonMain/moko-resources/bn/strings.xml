@@ -35,7 +35,6 @@
     <string name="action_add">যোগ করুন</string>
     <string name="action_add_category">ক্যাটাগরি অ্যাড</string>
     <string name="action_edit_categories">ক্যাটাগরি এডিট</string>
-    <string name="action_rename_category">ক্যাটাগরির নাম পরিবর্তন</string>
     <string name="action_move_category">ক্যাটাগরি সেট করুন</string>
     <string name="action_edit_cover">মোড়ক সম্পাদনা করুন</string>
     <string name="action_pause">বিরতি দিন</string>

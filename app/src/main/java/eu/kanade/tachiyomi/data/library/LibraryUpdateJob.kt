@@ -254,7 +254,7 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
         val left = decisions.filterIsInstance<LibraryUpdateDecision.Leave>()
         skippedCount = left.count { it.reason.outcome == EntryUpdateOutcome.SKIPPED }
 
-        notifier.showQueueSizeWarningNotificationIfNeeded(checks.map { it.item })
+        notifier.showQueueSizeWarningNotificationIfNeeded(checks.map { it.item }, profileId)
 
         entriesToUpdate = checks.expandToMemberEntries()
             .sortedBy { it.title }

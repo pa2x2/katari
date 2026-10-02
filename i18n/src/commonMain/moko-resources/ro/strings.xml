@@ -38,7 +38,6 @@
     <string name="action_add">Adaugă</string>
     <string name="action_add_category">Adaugă categorie</string>
     <string name="action_edit_categories">Modifică categoriile</string>
-    <string name="action_rename_category">Redenumește categoria</string>
     <string name="action_move_category">Setați categoriile</string>
     <string name="action_edit_cover">Modifică coperta</string>
     <string name="action_pause">Pauză</string>

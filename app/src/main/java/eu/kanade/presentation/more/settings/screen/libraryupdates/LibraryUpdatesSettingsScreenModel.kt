@@ -13,8 +13,6 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
 import mihon.entry.interactions.state.EntryUpdateEligibilityFeature
 import mihon.feature.library.update.planning.LibraryUpdatePlanner
 import mihon.feature.library.update.planning.LibraryUpdatePlanningContext
@@ -46,14 +44,15 @@ class LibraryUpdatesSettingsScreenModel(
     private val getLibraryEntries: GetLibraryEntries = Injekt.get(),
     private val getCategories: GetCategories = Injekt.get(),
     private val rulesRepository: LibraryUpdateRulesRepository = Injekt.get(),
-    private val reportRepository: LibraryUpdateReportRepository = Injekt.get(),
+    reportRepository: LibraryUpdateReportRepository = Injekt.get(),
     private val sourceManager: SourceManager = Injekt.get(),
-    private val fetchInterval: FetchInterval = Injekt.get(),
+    fetchInterval: FetchInterval = Injekt.get(),
     eligibility: EntryUpdateEligibilityFeature = Injekt.get(),
 ) : StateScreenModel<LibraryUpdatesSettingsScreenModel.State>(State()) {
 
     private val previewCalculator = LibraryUpdatePreview.Calculator(LibraryUpdatePlanner(eligibility), eligibility)
     private val settingsReader = LibraryUpdateSettings.Reader(libraryPreferences, rulesRepository)
+    private val contextReader = LibraryUpdatePlanningContext.Reader(reportRepository, fetchInterval)
 
     init {
         screenModelScope.launch {
@@ -68,17 +67,11 @@ class LibraryUpdatesSettingsScreenModel(
         }
         screenModelScope.launch {
             // The library settings are read again when planning, so their changes only need to trigger it.
-            val settingsChanges = combine(
-                libraryPreferences.updateSkipRules.changes(),
-                libraryPreferences.autoUpdateInterval.changes(),
-                libraryPreferences.updateExcludedSources.changes(),
-                libraryPreferences.updateExcludedEntryTypes.changes(),
-            ) { _, _, _, _ -> }
             combine(
                 getLibraryEntries.subscribe(),
                 getCategories.subscribe(),
                 rulesRepository.subscribeCategoryRules(),
-                settingsChanges,
+                settingsReader.changes(),
             ) { items, categories, categoryRules, _ -> Inputs(items, categories, categoryRules) }
                 .mapLatest { inputs -> inputs.toContent() }
                 .collectLatest { content ->
@@ -139,19 +132,10 @@ class LibraryUpdatesSettingsScreenModel(
 
     private suspend fun Inputs.toContent(): Content {
         val settings = settingsReader.read()
-        val now = Clock.System.now()
-        val timeZone = TimeZone.currentSystemDefault()
-        val lastCheckedAt = reportRepository.getStatuses().values
-            .mapNotNull { status -> status.lastCheckedAt?.let { status.entryId to it } }
-            .toMap()
         val preview = previewCalculator.preview(
             items = items,
             settings = settings,
-            context = LibraryUpdatePlanningContext(
-                now = now.toEpochMilliseconds(),
-                fetchWindowUpperBound = fetchInterval.getWindow(now.toLocalDateTime(timeZone).date, timeZone).second,
-                lastCheckedAt = lastCheckedAt,
-            ),
+            context = contextReader.read(Clock.System.now()),
         )
 
         val entriesPerCategory = items.flatMap { it.categories }.groupingBy { it }.eachCount()

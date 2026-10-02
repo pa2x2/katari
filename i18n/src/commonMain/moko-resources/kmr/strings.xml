@@ -76,7 +76,6 @@
     <string name="action_add">Nû</string>
     <string name="action_update_category">Komê nû bike</string>
     <string name="action_edit_categories">Koman serast bike</string>
-    <string name="action_rename_category">Navê komê biguherîne</string>
     <string name="delete_category_confirmation">Hûn dixwazin koma \"%s\" rakin?</string>
     <string name="delete_category">Komê rake</string>
     <string name="action_edit_cover">Bergê biguherîne</string>

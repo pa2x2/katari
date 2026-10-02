@@ -34,7 +34,6 @@
     <string name="action_add">أضف</string>
     <string name="action_add_category">إضافة فئة</string>
     <string name="action_edit_categories">تعديل الفئات</string>
-    <string name="action_rename_category">إعادة تسمية الفئة</string>
     <string name="action_move_category">تعيين الفئات</string>
     <string name="action_edit_cover">تعديل صورة الغلاف</string>
     <string name="action_pause">إيقاف موقت</string>

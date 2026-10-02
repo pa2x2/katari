@@ -38,7 +38,6 @@
     <string name="action_add">Ekle</string>
     <string name="action_add_category">Kategori ekle</string>
     <string name="action_edit_categories">Kategorileri düzenle</string>
-    <string name="action_rename_category">Kategoriyi yeniden adlandır</string>
     <string name="action_move_category">Kategorileri ayarla</string>
     <string name="action_edit_cover">Kapağı düzenle</string>
     <string name="action_pause">Duraklat</string>

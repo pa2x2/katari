@@ -131,7 +131,6 @@
     <string name="action_view_chapters">Rodyti skyrius</string>
     <string name="action_edit_cover">Keisti viršelį</string>
     <string name="action_move_category">Perkelti kategorijas</string>
-    <string name="action_rename_category">Pervardinti kategoriją</string>
     <string name="action_edit_categories">Redaguoti kategorijas</string>
     <string name="action_add_category">Pridėti kategorija</string>
     <string name="action_add">Pridėti</string>

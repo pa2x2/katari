@@ -38,7 +38,6 @@
     <string name="action_add">Annanghe</string>
     <string name="action_add_category">Annanghe una categoria</string>
     <string name="action_edit_categories">Modìfica sas categorias</string>
-    <string name="action_rename_category">Cambia su nùmene de sa categoria</string>
     <string name="action_move_category">Imposta sas categorias</string>
     <string name="action_edit_cover">Muda sa cobertedda</string>
     <string name="action_pause">Pone in pàusa</string>

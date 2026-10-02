@@ -38,7 +38,6 @@
     <string name="action_add">Додати</string>
     <string name="action_add_category">Додати категорію</string>
     <string name="action_edit_categories">Редагувати категорію</string>
-    <string name="action_rename_category">Перейменувати категорію</string>
     <string name="action_move_category">Помістити в категорію</string>
     <string name="action_edit_cover">Змінити обкладинку</string>
     <string name="action_pause">Пауза</string>

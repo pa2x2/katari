@@ -1,9 +1,11 @@
 package eu.kanade.tachiyomi.ui.category
 
+import android.app.Application
 import androidx.compose.runtime.Immutable
 import cafe.adriel.voyager.core.model.StateScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import dev.icerock.moko.resources.StringResource
+import eu.kanade.tachiyomi.data.library.LibraryUpdateJob
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -15,6 +17,8 @@ import tachiyomi.domain.category.interactor.GetCategories
 import tachiyomi.domain.category.interactor.RenameCategory
 import tachiyomi.domain.category.interactor.ReorderCategory
 import tachiyomi.domain.category.model.Category
+import tachiyomi.domain.library.update.model.CategoryUpdateRules
+import tachiyomi.domain.library.update.repository.LibraryUpdateRulesRepository
 import tachiyomi.i18n.*
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
@@ -25,6 +29,8 @@ class CategoryScreenModel(
     private val deleteCategory: DeleteCategory = Injekt.get(),
     private val reorderCategory: ReorderCategory = Injekt.get(),
     private val renameCategory: RenameCategory = Injekt.get(),
+    private val rulesRepository: LibraryUpdateRulesRepository = Injekt.get(),
+    private val application: Application = Injekt.get(),
 ) : StateScreenModel<CategoryScreenState>(CategoryScreenState.Loading) {
 
     private val _events: Channel<CategoryEvent> = Channel()
@@ -71,11 +77,25 @@ class CategoryScreenModel(
         }
     }
 
-    fun renameCategory(category: Category, name: String) {
+    fun showEditDialog(category: Category) {
         screenModelScope.launch {
-            when (renameCategory.await(category, name)) {
-                is RenameCategory.Result.InternalError -> _events.send(CategoryEvent.InternalError)
-                else -> {}
+            val rules = rulesRepository.getCategoryRules()[category.id] ?: CategoryUpdateRules(category.id)
+            showDialog(CategoryDialog.Edit(category, rules))
+        }
+    }
+
+    fun editCategory(category: Category, rules: CategoryUpdateRules, name: String, autoUpdate: Boolean) {
+        screenModelScope.launch {
+            if (name != category.name) {
+                when (renameCategory.await(category, name)) {
+                    is RenameCategory.Result.InternalError -> _events.send(CategoryEvent.InternalError)
+                    else -> {}
+                }
+            }
+            if (autoUpdate != rules.autoUpdate) {
+                rulesRepository.setCategoryRules(rules.copy(autoUpdate = autoUpdate))
+                // Automatic updates run as often as the most frequent category that is checked asks.
+                LibraryUpdateJob.setupTask(application)
             }
         }
     }
@@ -101,7 +121,7 @@ class CategoryScreenModel(
 
 sealed interface CategoryDialog {
     data object Create : CategoryDialog
-    data class Rename(val category: Category) : CategoryDialog
+    data class Edit(val category: Category, val rules: CategoryUpdateRules) : CategoryDialog
     data class Delete(val category: Category) : CategoryDialog
 }
 

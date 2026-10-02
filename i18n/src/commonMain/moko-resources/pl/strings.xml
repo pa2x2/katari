@@ -30,7 +30,6 @@
     <string name="action_add">Dodaj</string>
     <string name="action_add_category">Dodaj kategorię</string>
     <string name="action_edit_categories">Edytuj kategorie</string>
-    <string name="action_rename_category">Zmień nazwę kategorii</string>
     <string name="action_move_category">Zmień kategorie</string>
     <string name="action_edit_cover">Edytuj okładkę</string>
     <string name="action_sort_total">Ilość rozdziałów</string>

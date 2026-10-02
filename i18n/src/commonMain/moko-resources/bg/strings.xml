@@ -28,7 +28,6 @@
     <string name="action_add">Добави</string>
     <string name="action_add_category">Добави категория</string>
     <string name="action_edit_categories">Редактирай категории</string>
-    <string name="action_rename_category">Преименувай категория</string>
     <string name="action_move_category">Запиши в категории</string>
     <string name="action_edit_cover">Промени корица</string>
     <string name="action_pause">Паузирай</string>

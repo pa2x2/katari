@@ -1,6 +1,8 @@
 package mihon.feature.library.update.planning
 
 import eu.kanade.tachiyomi.source.entry.EntryType
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.library.update.model.CategoryUpdateRules
 import tachiyomi.domain.library.update.model.EntryUpdateMode
@@ -46,5 +48,18 @@ data class LibraryUpdateSettings(
             categoryRules = rulesRepository.getCategoryRules(),
             entryModes = rulesRepository.getEntryModes(),
         )
+
+        /**
+         * Emits when a library-wide setting or a category's rules change, for screens that show what an update
+         * would do. Entry modes are left out: they change on other screens, and these screens read them again when
+         * they are opened.
+         */
+        fun changes(): Flow<Unit> = combine(
+            libraryPreferences.updateSkipRules.changes(),
+            libraryPreferences.autoUpdateInterval.changes(),
+            libraryPreferences.updateExcludedSources.changes(),
+            libraryPreferences.updateExcludedEntryTypes.changes(),
+            rulesRepository.subscribeCategoryRules(),
+        ) { _, _, _, _, _ -> }
     }
 }

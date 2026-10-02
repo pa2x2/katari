@@ -109,7 +109,6 @@
     <string name="action_view_chapters">Pogledaj poglavlja</string>
     <string name="action_edit_cover">Uredi naslovnicu</string>
     <string name="action_move_category">Postavi kategorije</string>
-    <string name="action_rename_category">Preimenuj kategoriju</string>
     <string name="action_edit_categories">Uredi kategorije</string>
     <string name="action_add_category">Dodaj kategoriju</string>
     <string name="action_add">Dodaj</string>

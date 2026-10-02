@@ -60,7 +60,6 @@
     <string name="action_add">Idugang</string>
     <string name="action_add_category">Idugang ang kategorya</string>
     <string name="action_edit_categories">Usba ang mga kategorya</string>
-    <string name="action_rename_category">Usba ang ngalan sa kategorya</string>
     <string name="action_edit_cover">Usba ang hapin</string>
     <string name="action_view_chapters">Tan-awa ang mga kapitulo</string>
     <string name="action_remove">Kuhaa</string>

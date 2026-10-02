@@ -38,7 +38,6 @@
     <string name="action_add">Lägg till</string>
     <string name="action_add_category">Lägg till kategori</string>
     <string name="action_edit_categories">Redigera kategorier</string>
-    <string name="action_rename_category">Byt namn på kategori</string>
     <string name="action_move_category">Välj kategorier</string>
     <string name="action_edit_cover">Redigera omslaget</string>
     <string name="action_pause">Paus</string>

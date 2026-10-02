@@ -178,7 +178,6 @@
     <string name="action_view_chapters">Ver capítulos</string>
     <string name="action_edit_cover">Editar portada</string>
     <string name="action_move_category">Establecer categorías</string>
-    <string name="action_rename_category">Renomear categoría</string>
     <string name="action_edit_categories">Editar categorías</string>
     <string name="action_add_category">Engadir categoría</string>
     <string name="action_add">Engadir</string>

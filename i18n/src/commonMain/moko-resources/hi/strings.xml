@@ -35,7 +35,6 @@
     <string name="action_add">जोड़े</string>
     <string name="action_add_category">श्रेणियाँ जोड़े</string>
     <string name="action_edit_categories">श्रेणियाँ संपादित करें</string>
-    <string name="action_rename_category">श्रेणियाँ का पुन:नामकरण</string>
     <string name="action_move_category">श्रेणियां निर्धारित करें</string>
     <string name="action_edit_cover">कवर संपादित करें</string>
     <string name="action_pause">ठहराव</string>

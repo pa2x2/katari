@@ -20,6 +20,7 @@ internal fun resolveSettingsStartScreen(
         SettingsScreen.Destination.Translation -> SettingsTranslationScreen
         SettingsScreen.Destination.TextRecognition -> SettingsTextRecognitionScreen
         SettingsScreen.Destination.Readers -> viewerSettingsScreen ?: SettingsReaderScreen
+        SettingsScreen.Destination.LibraryUpdates -> SettingsLibraryUpdatesScreen
         null -> if (twoPane) SettingsAppearanceScreen else SettingsMainScreen
     }
 

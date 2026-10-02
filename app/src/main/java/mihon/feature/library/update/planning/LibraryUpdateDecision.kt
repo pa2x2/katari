@@ -19,11 +19,3 @@ sealed interface LibraryUpdateDecision {
         val categoryId: Long? = null,
     ) : LibraryUpdateDecision
 }
-
-data class LibraryUpdatePlanningContext(
-    val now: Long,
-    /** End of the window in which a predicted release counts as expected now. */
-    val fetchWindowUpperBound: Long,
-    /** When each entry was last checked by a library update. */
-    val lastCheckedAt: Map<Long, Long>,
-)

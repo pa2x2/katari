@@ -148,7 +148,6 @@
     <string name="action_bookmark">Založit kapitolu</string>
     <string name="action_remove_bookmark">Odstranit záložku</string>
     <string name="action_update_library">Aktualizovat knihovnu</string>
-    <string name="action_rename_category">Přejmenovat kategorii</string>
     <string name="action_move_category">Vybrat kategorie</string>
     <string name="action_pause">Pauza</string>
     <string name="action_retry">Opakovat</string>

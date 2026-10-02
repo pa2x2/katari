@@ -32,7 +32,6 @@
     <string name="action_add">Hinzufügen</string>
     <string name="action_add_category">Kategorie hinzufügen</string>
     <string name="action_edit_categories">Kategorien bearbeiten</string>
-    <string name="action_rename_category">Kategorie umbenennen</string>
     <string name="action_move_category">Kategorien festlegen</string>
     <string name="action_edit_cover">Cover bearbeiten</string>
     <string name="action_pause">Pause</string>

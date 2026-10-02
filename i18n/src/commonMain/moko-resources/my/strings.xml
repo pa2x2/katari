@@ -101,7 +101,6 @@
     <string name="action_bookmark">စာအမှတ်အထား ထည့်ပါ</string>
     <string name="action_remove_bookmark">စာအမှတ်အထား ဖယ်ရှားပါ</string>
     <string name="action_delete">ဖျက်ပါ</string>
-    <string name="action_rename_category">အမျိုးအစား အမည်ပြောင်းပါ</string>
     <string name="action_move_category">အမျိုးအစား ရွှေ့ပါ</string>
     <string name="delete_category_confirmation">အမျိုးအစား ဖျက်မည်ဟု အတည်ပြုပါ</string>
     <string name="delete_category">အမျိုးအစား ဖျက်ပါ</string>

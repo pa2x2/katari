@@ -33,7 +33,6 @@
     <string name="action_add">Pievienot</string>
     <string name="action_add_category">Pievienot kategoriju</string>
     <string name="action_edit_categories">Rediģēt kategorijas</string>
-    <string name="action_rename_category">Pārdēvēt kategoriju</string>
     <string name="action_move_category">Noteikt kategorijas</string>
     <string name="action_edit_cover">Rediģēt vāku</string>
     <string name="action_pause">Pārtraukt</string>

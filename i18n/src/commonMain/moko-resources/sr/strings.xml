@@ -39,7 +39,6 @@
     <string name="action_add">Додај</string>
     <string name="action_add_category">Додај категорију</string>
     <string name="action_edit_categories">Уреди категорије</string>
-    <string name="action_rename_category">Преименуј категорију</string>
     <string name="action_move_category">Изабери категорије</string>
     <string name="action_edit_cover">Промени омот</string>
     <string name="action_pause">Паузирај</string>

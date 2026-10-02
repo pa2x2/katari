@@ -12,6 +12,8 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapLatest
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
@@ -20,13 +22,25 @@ import kotlinx.datetime.YearMonth
 import kotlinx.datetime.toLocalDateTime
 import kotlinx.datetime.yearMonth
 import mihon.domain.upcoming.interactor.GetUpcomingEntries
+import mihon.entry.interactions.state.EntryUpdateEligibilityFeature
+import mihon.feature.library.update.planning.LibraryUpdateDecision
+import mihon.feature.library.update.planning.LibraryUpdatePlanner
+import mihon.feature.library.update.planning.LibraryUpdatePlanningContext
+import mihon.feature.library.update.planning.LibraryUpdateRequest
+import mihon.feature.library.update.planning.LibraryUpdateSettings
 import mihon.feature.profiles.core.ProfileScopedStateEvent
 import mihon.feature.profiles.core.observeProfileScopedState
 import tachiyomi.core.common.preference.getAndSet
 import tachiyomi.data.ActiveProfileProvider
 import tachiyomi.domain.category.interactor.GetCategories
 import tachiyomi.domain.category.model.Category
+import tachiyomi.domain.entry.interactor.GetLibraryEntries
 import tachiyomi.domain.entry.model.Entry
+import tachiyomi.domain.entry.service.FetchInterval
+import tachiyomi.domain.library.service.LibraryPreferences
+import tachiyomi.domain.library.update.model.EntryUpdateDecisionReason
+import tachiyomi.domain.library.update.repository.LibraryUpdateReportRepository
+import tachiyomi.domain.library.update.repository.LibraryUpdateRulesRepository
 import tachiyomi.domain.source.service.HiddenSourceIds
 import tachiyomi.domain.upcoming.service.UpcomingPreferences
 import uy.kohesive.injekt.Injekt
@@ -39,7 +53,17 @@ class UpcomingScreenModel(
     val upcomingPreferences: UpcomingPreferences = Injekt.get(),
     private val hiddenSourceIds: HiddenSourceIds = Injekt.get(),
     private val activeProfileProvider: ActiveProfileProvider = Injekt.get(),
+    private val getLibraryEntries: GetLibraryEntries = Injekt.get(),
+    libraryPreferences: LibraryPreferences = Injekt.get(),
+    rulesRepository: LibraryUpdateRulesRepository = Injekt.get(),
+    reportRepository: LibraryUpdateReportRepository = Injekt.get(),
+    fetchInterval: FetchInterval = Injekt.get(),
+    eligibility: EntryUpdateEligibilityFeature = Injekt.get(),
 ) : StateScreenModel<UpcomingScreenModel.State>(State()) {
+
+    private val planner = LibraryUpdatePlanner(eligibility)
+    private val settingsReader = LibraryUpdateSettings.Reader(libraryPreferences, rulesRepository)
+    private val contextReader = LibraryUpdatePlanningContext.Reader(reportRepository, fetchInterval)
 
     val excludedCategories = upcomingPreferences.filterExcludedCategories
     val includedCategories = upcomingPreferences.filterIncludedCategories
@@ -47,18 +71,21 @@ class UpcomingScreenModel(
     init {
         screenModelScope.launch {
             observeProfileScopedState(activeProfileProvider.activeProfileIdFlow) { profileId ->
-                getUpcomingItemPreferenceFlow(profileId)
-                    .distinctUntilChanged()
-                    .flatMapLatest { preferences ->
-                        getUpcomingEntries.subscribe(
-                            profileId = profileId,
-                            excludedCategories = preferences.filterExcludedCategories,
-                            includedCategories = preferences.filterIncludedCategories,
-                            hiddenSources = preferences.hiddenSources,
-                        )
-                            .distinctUntilChanged()
-                            .map { preferences to it }
-                    }
+                combine(
+                    getUpcomingItemPreferenceFlow(profileId)
+                        .distinctUntilChanged()
+                        .flatMapLatest { preferences ->
+                            getUpcomingEntries.subscribe(
+                                profileId = profileId,
+                                excludedCategories = preferences.filterExcludedCategories,
+                                includedCategories = preferences.filterIncludedCategories,
+                                hiddenSources = preferences.hiddenSources,
+                            )
+                                .distinctUntilChanged()
+                                .map { preferences to it }
+                        },
+                    notCheckedReasons(profileId),
+                ) { (preferences, entries), notChecked -> Triple(preferences, entries, notChecked) }
             }.collectLatest { event ->
                 when (event) {
                     is ProfileScopedStateEvent.Reset -> mutableState.update {
@@ -72,8 +99,8 @@ class UpcomingScreenModel(
                         )
                     }
                     is ProfileScopedStateEvent.Value -> mutableState.update { state ->
-                        val (preferences, entries) = event.value
-                        val upcomingItems = entries.toUpcomingUIModels()
+                        val (preferences, entries, notChecked) = event.value
+                        val upcomingItems = entries.toUpcomingUIModels(notChecked)
                         state.copy(
                             profileId = event.profileId,
                             items = upcomingItems,
@@ -88,9 +115,35 @@ class UpcomingScreenModel(
         }
     }
 
-    private fun List<Entry>.toUpcomingUIModels(): List<UpcomingUIModel> {
+    /**
+     * Why the next automatic update would leave out an entry, by entry and merged member id. Reasons that pass with
+     * time are left out: an upcoming entry is outside its release window by definition, and one not yet due will be.
+     * Starts empty so the calendar doesn't wait for the library to be planned.
+     */
+    private fun notCheckedReasons(profileId: Long): Flow<Map<Long, EntryUpdateDecisionReason>> {
+        return combine(getLibraryEntries.subscribe(profileId), settingsReader.changes()) { items, _ -> items }
+            .mapLatest { items ->
+                planner.plan(
+                    request = LibraryUpdateRequest.FollowRules(automatic = true),
+                    items = items,
+                    settings = settingsReader.read(),
+                    context = contextReader.read(Clock.System.now()),
+                )
+                    .filterIsInstance<LibraryUpdateDecision.Leave>()
+                    .filter { it.reason !in PASSING_REASONS }
+                    .flatMap { leave ->
+                        (listOf(leave.item.entry) + leave.item.memberEntries).map { it.id to leave.reason }
+                    }
+                    .toMap()
+            }
+            .onStart { emit(emptyMap()) }
+    }
+
+    private fun List<Entry>.toUpcomingUIModels(
+        notChecked: Map<Long, EntryUpdateDecisionReason>,
+    ): List<UpcomingUIModel> {
         var entryCount = 0
-        return fastMap { UpcomingUIModel.Item(it) }
+        return fastMap { UpcomingUIModel.Item(it, notChecked[it.id]) }
             .insertSeparatorsReversed { before, after ->
                 if (after != null) entryCount++
 
@@ -194,5 +247,12 @@ class UpcomingScreenModel(
 
     sealed interface Dialog {
         data object FilterSheet : Dialog
+    }
+
+    private companion object {
+        val PASSING_REASONS = setOf(
+            EntryUpdateDecisionReason.OUTSIDE_RELEASE_PERIOD,
+            EntryUpdateDecisionReason.NOT_DUE,
+        )
     }
 }

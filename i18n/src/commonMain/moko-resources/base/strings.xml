@@ -119,7 +119,7 @@
     <string name="action_open_random_manga">Open random entry</string>
     <string name="action_add_category">Add category</string>
     <string name="action_edit_categories">Edit categories</string>
-    <string name="action_rename_category">Rename category</string>
+    <string name="action_edit_category">Edit category</string>
     <string name="action_move_category">Set categories</string>
     <string name="delete_category_confirmation">Do you wish to delete the category \"%s\"?</string>
     <string name="delete_category">Delete category</string>
@@ -887,6 +887,7 @@
     <string name="library_update_report_pause">Pause</string>
     <string name="library_update_report_pause_source">Pause source</string>
     <string name="library_update_report_retry">Retry</string>
+    <string name="upcoming_not_checked">Won\'t be checked · %s</string>
     <string name="library_update_reason_never">Set to never check</string>
     <string name="library_update_reason_category_off">Category switched off</string>
     <string name="library_update_reason_source_off">Source switched off</string>
@@ -1962,6 +1963,7 @@
     <!-- Library update service notifications -->
     <string name="notification_updating_progress">Updating library… (%s)</string>
     <string name="notification_size_warning">Large updates harm sources and may lead to slower updates and also increased battery usage. Tap to learn more.</string>
+    <string name="notification_large_update_warning">Large updates harm sources and may lead to slower updates and also increased battery usage. Tap to choose what updates check.</string>
     <string name="notification_new_items">New items found</string>
     <string name="notification_chapters_single">Chapter %1$s</string>
     <string name="notification_chapters_single_and_more">Chapter %1$s and %2$d more</string>

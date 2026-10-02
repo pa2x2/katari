@@ -72,6 +72,7 @@ class SettingsScreen(
             Destination.Translation.id -> Destination.Translation
             Destination.Readers.id -> Destination.Readers
             Destination.TextRecognition.id -> Destination.TextRecognition
+            Destination.LibraryUpdates.id -> Destination.LibraryUpdates
             else -> null
         }.let {
             resolveSettingsStartScreen(
@@ -125,5 +126,6 @@ class SettingsScreen(
         data object Translation : Destination(3)
         data object Readers : Destination(4)
         data object TextRecognition : Destination(5)
+        data object LibraryUpdates : Destination(6)
     }
 }

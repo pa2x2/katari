@@ -82,7 +82,6 @@
     <string name="action_add">Hozzáadás</string>
     <string name="action_add_category">Kategória hozzáadása</string>
     <string name="action_edit_categories">Kategóriák szerkesztése</string>
-    <string name="action_rename_category">Kategória átnevezése</string>
     <string name="action_move_category">Kategóriák beállítása</string>
     <string name="action_edit_cover">Borító szerkesztése</string>
     <string name="action_pause">Szüneteltetés</string>

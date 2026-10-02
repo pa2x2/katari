@@ -22,7 +22,6 @@
     <string name="action_edit">Editar</string>
     <string name="action_add_category">Adicionar categoria</string>
     <string name="action_edit_categories">Editar categorias</string>
-    <string name="action_rename_category">Renomear categoria</string>
     <string name="action_move_category">Definir categorias</string>
     <string name="action_edit_cover">Editar capa</string>
     <string name="action_pause">Pausar</string>
