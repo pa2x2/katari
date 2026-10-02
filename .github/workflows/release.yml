@@ -131,7 +131,8 @@ jobs:
           cache-read-only: true
 
       - name: Build
-        run: ./gradlew assembleFoss
+        # FOSS builds update themselves too; unlike -Pinclude-telemetry, -Penable-updater adds no Google services.
+        run: ./gradlew assembleFoss -Penable-updater
         env:
           storeFileBase64: ${{ secrets.SIGNING_KEY }}
           storePassword: ${{ secrets.KEY_STORE_PASSWORD }}
