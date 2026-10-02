@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -89,43 +88,12 @@ internal fun LazyListScope.updatesLastUpdatedItem(
     }
 }
 
-internal fun <T> LazyListScope.updatesUiItems(
-    uiModels: List<UpdatesUiModel<T>>,
-    itemKey: (T) -> String,
-    itemContent: @Composable LazyItemScope.(T) -> Unit,
-) {
-    items(
-        items = uiModels,
-        contentType = {
-            when (it) {
-                is UpdatesUiModel.Header -> "header"
-                is UpdatesUiModel.Item -> "item"
-            }
-        },
-        key = {
-            when (it) {
-                is UpdatesUiModel.Header -> "updatesHeader-${it.date}"
-                is UpdatesUiModel.Item -> itemKey(it.item)
-            }
-        },
-    ) { item ->
-        when (item) {
-            is UpdatesUiModel.Header -> {
-                ListGroupHeader(
-                    modifier = Modifier.animateItem(),
-                    text = relativeDateText(item.date),
-                )
-            }
-
-            is UpdatesUiModel.Item -> itemContent(item.item)
-        }
-    }
-}
-
 internal fun LazyListScope.unifiedUpdatesUiItems(
     uiModels: List<UpdatesUiModel<UpdatesItem>>,
     selectionMode: Boolean,
     onUpdateSelected: (UpdatesItem, Boolean, Boolean) -> Unit,
+    onGroupSelected: (List<UpdatesItem>, Boolean) -> Unit,
+    onToggleGroupExpanded: (String) -> Unit,
     onClickCover: (UpdatesItem) -> Unit,
     isOpenApplicable: (UpdatesItem) -> Boolean,
     onClickUpdate: (UpdatesItem) -> Unit,
@@ -134,23 +102,53 @@ internal fun LazyListScope.unifiedUpdatesUiItems(
     isTranslateApplicable: (UpdatesItem) -> Boolean,
     onTranslateChapter: (UpdatesItem, ChapterTranslateAction) -> Unit,
 ) {
-    updatesUiItems(
-        uiModels = uiModels,
-        itemKey = { "updates-${it.update.key.type.name}-${it.update.key.id}" },
-    ) { updatesItem ->
-        UnifiedUpdatesUiItem(
-            modifier = Modifier.animateItem(),
-            item = updatesItem,
-            selectionMode = selectionMode,
-            onUpdateSelected = onUpdateSelected,
-            onClickCover = onClickCover,
-            isOpenApplicable = isOpenApplicable,
-            onClickUpdate = onClickUpdate,
-            onDownloadChapter = onDownloadChapter,
-            translateStatusOf = translateStatusOf,
-            isTranslateApplicable = isTranslateApplicable,
-            onTranslateChapter = onTranslateChapter,
-        )
+    items(
+        items = uiModels,
+        contentType = {
+            when (it) {
+                is UpdatesUiModel.Header -> "header"
+                is UpdatesUiModel.Item -> "item"
+                is UpdatesUiModel.Group -> "group"
+            }
+        },
+        key = {
+            when (it) {
+                is UpdatesUiModel.Header -> "updatesHeader-${it.date}"
+                is UpdatesUiModel.Item -> "updates-${it.item.update.key.type.name}-${it.item.update.key.id}"
+                is UpdatesUiModel.Group -> "updatesGroup-${it.key}"
+            }
+        },
+    ) { model ->
+        when (model) {
+            is UpdatesUiModel.Header -> {
+                ListGroupHeader(
+                    modifier = Modifier.animateItem(),
+                    text = relativeDateText(model.date),
+                )
+            }
+            is UpdatesUiModel.Item -> UnifiedUpdatesUiItem(
+                modifier = Modifier.animateItem(),
+                item = model.item,
+                selectionMode = selectionMode,
+                onUpdateSelected = onUpdateSelected,
+                onClickCover = onClickCover,
+                isOpenApplicable = isOpenApplicable,
+                onClickUpdate = onClickUpdate,
+                onDownloadChapter = onDownloadChapter,
+                translateStatusOf = translateStatusOf,
+                isTranslateApplicable = isTranslateApplicable,
+                onTranslateChapter = onTranslateChapter,
+            )
+            is UpdatesUiModel.Group -> UpdatesGroupUiItem(
+                modifier = Modifier.animateItem(),
+                group = model,
+                selectionMode = selectionMode,
+                onToggleExpanded = { onToggleGroupExpanded(model.key) },
+                onGroupSelected = onGroupSelected,
+                onClickCover = onClickCover,
+                onDownloadChapter = onDownloadChapter,
+            )
+        }
     }
 }
 

@@ -184,6 +184,8 @@ data object UpdatesTab : Tab {
                 uiModels = state.getUiModel(),
                 selectionMode = state.selectionMode,
                 onUpdateSelected = screenModel::toggleSelection,
+                onGroupSelected = screenModel::setGroupSelection,
+                onToggleGroupExpanded = screenModel::toggleGroupExpanded,
                 onClickCover = { item ->
                     navigator.push(EntryScreen(item.visibleEntryId))
                 },

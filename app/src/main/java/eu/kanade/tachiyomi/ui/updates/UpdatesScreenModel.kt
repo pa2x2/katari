@@ -348,10 +348,7 @@ class UpdatesScreenModel(
                     )
                 }
                 ChapterDownloadAction.CANCEL -> {
-                    val update = chapterItems.singleOrNull()
-                        ?.let { it.update as UpdateItem.EntryUpdate }
-                        ?: return@launch
-                    cancelDownload(update)
+                    chapterItems.forEach { cancelDownload(it.update as UpdateItem.EntryUpdate) }
                 }
                 ChapterDownloadAction.DELETE -> {
                     deleteChapters(chapterItems)
@@ -517,6 +514,27 @@ class UpdatesScreenModel(
         }
     }
 
+    /** Selects or deselects the updates of a group together, as its single row stands for them all. */
+    fun setGroupSelection(items: List<UpdatesItem>, selected: Boolean) {
+        val keys = items.mapTo(mutableSetOf()) { it.update.key }
+        mutableState.update { state ->
+            val newItems = state.items.map {
+                if (it.update.key !in keys) return@map it
+                selectedKeys.addOrRemove(it.update.key, selected)
+                it.copy(selected = selected)
+            }
+            state.copy(items = newItems)
+        }
+        selectionState.reset()
+    }
+
+    fun toggleGroupExpanded(key: String) {
+        mutableState.update {
+            val expanded = if (key in it.expandedGroups) it.expandedGroups - key else it.expandedGroups + key
+            it.copy(expandedGroups = expanded)
+        }
+    }
+
     fun toggleAllSelection(selected: Boolean) {
         mutableState.update { state ->
             val newItems = state.items.map {
@@ -578,13 +596,18 @@ class UpdatesScreenModel(
         val isLoading: Boolean = true,
         val items: List<UpdatesItem> = listOf(),
         val feed: FeedSummary = FeedSummary(),
+        val expandedGroups: Set<String> = emptySet(),
         val dialog: Dialog? = null,
     ) {
         val selected = items.filter { it.selected }
         val selectionMode = selected.isNotEmpty()
 
         fun getUiModel(): List<UpdatesUiModel<UpdatesItem>> {
-            return items.toUpdatesUiModels { it.update.dateFetch.toLocalDate() }
+            return items.toUpdatesUiModels(
+                dateProvider = { it.update.dateFetch.toLocalDate() },
+                entryIdProvider = { it.visibleEntryId },
+                expandedGroups = expandedGroups,
+            )
         }
     }
 
