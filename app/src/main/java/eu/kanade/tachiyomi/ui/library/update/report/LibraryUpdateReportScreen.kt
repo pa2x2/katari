@@ -38,7 +38,7 @@ class LibraryUpdateReportScreen : Screen() {
         val state by screenModel.state.collectAsState()
         val snackbarHostState = remember { SnackbarHostState() }
 
-        // A started update replaces this report as it runs, so only a refused start needs a message.
+        // A started recheck shows up in this report as it runs, so only a refused start needs a message.
         fun reportStart(started: Boolean) {
             if (started) return
             scope.launch {
@@ -62,27 +62,20 @@ class LibraryUpdateReportScreen : Screen() {
                     stringRes = MR.strings.library_updates_last_update_none,
                 )
                 is LibraryUpdateReportScreenModel.State.Ready -> LibraryUpdateReportContent(
-                    report = current.report,
-                    sourceNames = current.sourceNames,
-                    pausedSourceIds = current.pausedSourceIds,
-                    pausedEntryIds = current.pausedEntryIds,
+                    state = current,
                     contentPadding = contentPadding,
                     actions = LibraryUpdateReportActions(
                         onClickEntry = { navigator.push(EntryScreen(it.id)) },
-                        onMigrate = { entry ->
-                            screenModel.migrationSubject(entry)?.let { navigator.push(MigrationConfigScreen(it)) }
-                        },
-                        onWebView = { entry ->
-                            screenModel.webView(entry)?.let { webView ->
-                                navigator.push(
-                                    WebViewScreen(
-                                        url = webView.url,
-                                        initialTitle = entry.title,
-                                        sourceId = webView.sourceId,
-                                        headers = webView.headers,
-                                    ),
-                                )
-                            }
+                        onMigrate = { navigator.push(MigrationConfigScreen(it)) },
+                        onWebView = { entry, webView ->
+                            navigator.push(
+                                WebViewScreen(
+                                    url = webView.url,
+                                    initialTitle = entry.title,
+                                    sourceId = webView.sourceId,
+                                    headers = webView.headers,
+                                ),
+                            )
                         },
                         onSetPaused = screenModel::setEntryPaused,
                         onSetSourcePaused = screenModel::setSourcePaused,

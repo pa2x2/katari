@@ -82,6 +82,17 @@ class AndroidSourceManager(
                     stubSourcesMap.putAll(mutableMap)
                 }
         }
+
+        // A stub looked up before the extension repository loaded has no name and would otherwise keep showing its id.
+        scope.launch {
+            extensionManager.availableExtensionsFlow
+                .collect { extensions ->
+                    val repositorySources = extensions.flatMap { it.sources }.associateBy { it.id }
+                    stubSourcesMap.replaceAll { id, stub ->
+                        stub.takeIf { it.name.isNotBlank() } ?: repositorySources[id]?.toStubSource() ?: stub
+                    }
+                }
+        }
     }
 
     override fun get(sourceKey: Long): UnifiedSource? {
@@ -115,6 +126,7 @@ class AndroidSourceManager(
                 name = source.name,
                 lang = (source as? EntryCatalogueSource)?.lang ?: "",
                 isMissing = false,
+                hasKnownName = true,
             )
         }
 
@@ -126,6 +138,7 @@ class AndroidSourceManager(
             name = stub.name.ifBlank { stub.id.toString() },
             lang = stub.lang,
             isMissing = true,
+            hasKnownName = stub.name.isNotBlank(),
         )
     }
 

@@ -15,6 +15,7 @@ fun Source.getDisplayNameForEntryInfo(): String {
         name = name,
         lang = lang,
         isMissing = this is StubSource,
+        hasKnownName = name.isNotBlank(),
     ).getDisplayNameForEntryInfo()
 }
 

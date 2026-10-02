@@ -24,11 +24,11 @@ FROM entry_update_status EUS
 JOIN entries ENT ON ENT._id = EUS.entry_id
 WHERE ENT.profile_id = :profileId;
 
-getDecidedAt:
+getDecidedSince:
 SELECT EUS.*
 FROM entry_update_status EUS
 JOIN entries ENT ON ENT._id = EUS.entry_id
-WHERE ENT.profile_id = :profileId AND EUS.decided_at = :decidedAt;
+WHERE ENT.profile_id = :profileId AND EUS.decided_at >= :decidedAt;
 
 upsertDecision:
 INSERT INTO entry_update_status(entry_id, decided_at, outcome, reason, reason_category_id, error, new_chapters)

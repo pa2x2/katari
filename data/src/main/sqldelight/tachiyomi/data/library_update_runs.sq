@@ -1,4 +1,5 @@
--- The latest library update of each profile. Its entries are the entry_update_status rows decided at started_at.
+-- The latest library update of each profile that covered the whole library. Its entries are the entry_update_status
+-- rows decided since started_at, so updates of part of the library made later fold into it.
 CREATE TABLE library_update_runs(
     profile_id INTEGER NOT NULL PRIMARY KEY,
     started_at INTEGER NOT NULL,

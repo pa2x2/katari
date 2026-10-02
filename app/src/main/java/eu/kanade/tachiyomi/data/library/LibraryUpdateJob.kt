@@ -202,9 +202,9 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
             return LibraryUpdateRequest.Selection(selectionFile.read(selectionName))
         }
         if (inputData.getBoolean(KEY_SKIPPED_OF_LATEST, false)) {
-            val latestRun = reportRepository.getLatestRun()
+            val reportStart = reportRepository.getLatestRun()?.startedAt ?: Long.MAX_VALUE
             val skipped = reportRepository.getStatuses().values
-                .filter { it.decidedAt == latestRun?.startedAt && it.outcome == EntryUpdateOutcome.SKIPPED }
+                .filter { it.decidedAt >= reportStart && it.outcome == EntryUpdateOutcome.SKIPPED }
                 .mapTo(mutableSetOf(), EntryUpdateStatus::entryId)
             return LibraryUpdateRequest.Selection(skipped)
         }
@@ -259,16 +259,19 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
         entriesToUpdate = checks.expandToMemberEntries()
             .sortedBy { it.title }
 
-        reportRepository.startRun(
-            startedAt = startedAt,
-            trigger = when {
-                request is LibraryUpdateRequest.Selection -> LibraryUpdateTrigger.SELECTION
-                request is LibraryUpdateRequest.FollowRules && request.automatic -> LibraryUpdateTrigger.AUTOMATIC
-                else -> LibraryUpdateTrigger.MANUAL
-            },
-            // Merged entries are checked, and reported, member by member.
-            librarySize = left.size + entriesToUpdate.size,
-        )
+        // Keeping the report of the last full update lets a retry from it recheck one entry without losing the rest.
+        if (request.coversLibrary || reportRepository.getLatestRun() == null) {
+            reportRepository.startRun(
+                startedAt = startedAt,
+                trigger = when {
+                    request is LibraryUpdateRequest.Selection -> LibraryUpdateTrigger.SELECTION
+                    request is LibraryUpdateRequest.FollowRules && request.automatic -> LibraryUpdateTrigger.AUTOMATIC
+                    else -> LibraryUpdateTrigger.MANUAL
+                },
+                // Merged entries are checked, and reported, member by member.
+                librarySize = left.size + entriesToUpdate.size,
+            )
+        }
         reportRepository.recordDecisions(
             decidedAt = startedAt,
             decisions = left.map {

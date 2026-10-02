@@ -9,6 +9,8 @@ import tachiyomi.domain.library.update.model.LibraryUpdateRun
 /**
  * What the latest library update did, grouped the way the report shows it.
  *
+ * Entries a later update of part of the library decided about again show that update's result.
+ *
  * Failures that keep happening are separated from one-off ones because they need a fix rather than a retry. When most
  * of one source's checks failed with the same error, they are one problem with the source and are listed once.
  */
@@ -25,7 +27,8 @@ data class LibraryUpdateReport(
     val skippedCount: Int
         get() = skipped.values.sumOf { it.size }
 
-    data class Item(val entry: Entry, val status: EntryUpdateStatus)
+    /** @param isRechecked whether a partial update made after the report's run decided about the entry again. */
+    data class Item(val entry: Entry, val status: EntryUpdateStatus, val isRechecked: Boolean)
 
     data class FailingSource(val sourceId: Long, val error: String?, val items: List<Item>) {
         val isFailingRepeatedly: Boolean
@@ -42,8 +45,10 @@ data class LibraryUpdateReport(
             entries: Map<Long, Entry>,
         ): LibraryUpdateReport {
             val items = statuses
-                .filter { it.decidedAt == run.startedAt }
-                .mapNotNull { status -> entries[status.entryId]?.let { Item(it, status) } }
+                .filter { it.decidedAt >= run.startedAt }
+                .mapNotNull { status ->
+                    entries[status.entryId]?.let { Item(it, status, isRechecked = status.decidedAt > run.startedAt) }
+                }
                 .sortedBy { it.entry.title.lowercase() }
             val byOutcome = items.groupBy { it.status.outcome }
 
