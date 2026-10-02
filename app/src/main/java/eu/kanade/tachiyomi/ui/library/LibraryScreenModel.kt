@@ -108,6 +108,8 @@ import tachiyomi.domain.library.model.effectiveLibrarySort
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.library.service.LibrarySortKey
 import tachiyomi.domain.library.service.librarySortComparator
+import tachiyomi.domain.library.update.model.EntryUpdateMode
+import tachiyomi.domain.library.update.repository.LibraryUpdateRulesRepository
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.i18n.*
 import tachiyomi.source.local.LocalSource
@@ -125,6 +127,7 @@ class LibraryScreenModel(
     private val setEntryCategories: SetEntryCategories = Injekt.get(),
     private val entryChapterRepository: EntryChapterRepository = Injekt.get(),
     private val libraryPreferences: LibraryPreferences = Injekt.get(),
+    private val updateRulesRepository: LibraryUpdateRulesRepository = Injekt.get(),
     private val sourceManager: SourceManager = Injekt.get(),
     private val downloadRuntime: EntryDownloadRuntimeFeature = Injekt.get(),
     private val entryDownloadActionFeature: EntryDownloadActionFeature = Injekt.get(),
@@ -790,6 +793,30 @@ class LibraryScreenModel(
         }
     }
 
+    fun openUpdateModeDialog() {
+        val entryIds = state.value.selectedLibraryItems.map { it.entry.id }.distinct()
+        screenModelScope.launchIO {
+            val modes = updateRulesRepository.getEntryModes()
+            val currentMode = entryIds
+                .map { modes[it] ?: EntryUpdateMode.FOLLOW_RULES }
+                .distinct()
+                .singleOrNull()
+            mutableState.update { it.copy(dialog = Dialog.UpdateMode(entryIds, currentMode)) }
+        }
+    }
+
+    fun setUpdateMode(entryIds: List<Long>, mode: EntryUpdateMode) {
+        clearSelection()
+        screenModelScope.launchIO { updateRulesRepository.setEntryMode(entryIds, mode) }
+    }
+
+    /** The selected entries to check for updates, clearing the selection as the check takes over. */
+    fun takeSelectionForUpdate(): List<Long> {
+        val entryIds = state.value.selectedLibraryItems.map { it.entry.id }.distinct()
+        clearSelection()
+        return entryIds
+    }
+
     fun openMoveProfileDialog() {
         screenModelScope.launchIO {
             val sourceProfileId = profileStore.currentProfileId
@@ -1004,6 +1031,9 @@ class LibraryScreenModel(
             val containsMergedEntries: Boolean,
         ) : Dialog
         data class MoveProfile(val profiles: List<Profile>) : Dialog
+
+        /** @param currentMode the mode every selected entry shares, or null when they differ. */
+        data class UpdateMode(val entryIds: List<Long>, val currentMode: EntryUpdateMode?) : Dialog
         data class MoveCategory(val profile: Profile, val categories: List<Category>) : Dialog
         data class MoveConflict(
             val profile: Profile,

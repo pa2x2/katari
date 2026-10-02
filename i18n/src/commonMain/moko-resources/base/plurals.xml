@@ -351,4 +351,20 @@
         <item quantity="one">Check the skipped entry</item>
         <item quantity="other">Check the %d skipped</item>
     </plurals>
+    <plurals name="library_update_skipped_by_rules">
+        <item quantity="one">%d skipped by rules</item>
+        <item quantity="other">%d skipped by rules</item>
+    </plurals>
+    <plurals name="library_update_never_left_out">
+        <item quantity="one">%d set to never check, left out</item>
+        <item quantity="other">%d set to never check, left out</item>
+    </plurals>
+    <plurals name="library_update_switched_off">
+        <item quantity="one">%d switched off in settings</item>
+        <item quantity="other">%d switched off in settings</item>
+    </plurals>
+    <plurals name="library_update_mode_title">
+        <item quantity="one">Update mode for %d entry</item>
+        <item quantity="other">Update mode for %d entries</item>
+    </plurals>
 </resources>

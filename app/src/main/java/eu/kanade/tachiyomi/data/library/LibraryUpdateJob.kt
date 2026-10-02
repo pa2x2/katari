@@ -19,6 +19,7 @@ import androidx.work.WorkInfo
 import androidx.work.WorkQuery
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
+import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.tachiyomi.data.notification.Notifications
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.visualName
@@ -56,6 +57,7 @@ import tachiyomi.core.common.util.lang.withNonCancellableContext
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.data.ActiveProfileProvider
 import tachiyomi.domain.category.model.Category
+import tachiyomi.domain.category.repository.CategoryRepository
 import tachiyomi.domain.entry.interactor.GetLibraryEntries
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
@@ -91,6 +93,7 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
     private val planner = LibraryUpdatePlanner(Injekt.get())
     private val reportRepository: LibraryUpdateReportRepository = Injekt.get()
     private val getLibraryEntries: GetLibraryEntries = Injekt.get()
+    private val categoryRepository: CategoryRepository = Injekt.get()
     private val entryRepository: EntryRepository = Injekt.get()
     private val fetchInterval: FetchInterval = Injekt.get()
     private val entryLibraryUpdateRefreshFeature: EntryLibraryUpdateRefreshFeature = Injekt.get()
@@ -102,6 +105,9 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
 
     private var entriesToUpdate: List<Entry> = mutableListOf()
     private var updateScope = LibraryUpdateScope.Library
+
+    /** The category, source or type a page refresh covers, as the user knows it. */
+    private var updateScopeName: String? = null
     private var skippedCount = 0
     private var currentFetchWindow: Pair<Long, Long> = Pair(0L, 0L)
 
@@ -144,6 +150,7 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
                 entryType = request.entryType,
             )
         }
+        updateScopeName = (request as? LibraryUpdateRequest.FollowRules)?.let { scopeName(it) }
         publishProgress(completed = 0)
 
         setForegroundSafely()
@@ -175,6 +182,19 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
                 notifier.cancelProgressNotification()
             }
         }
+    }
+
+    /** "Reading", or "Reading · Manga" for a page limited by more than one of category, source and type. */
+    private suspend fun scopeName(request: LibraryUpdateRequest.FollowRules): String? {
+        return listOfNotNull(
+            request.categoryId
+                ?.let { categoryRepository.get(it) }
+                ?.let { if (it.isSystemCategory) context.stringResource(MR.strings.label_default) else it.name },
+            request.sourceId?.let { sourceManager.getDisplayInfo(it).visualName() },
+            request.entryType?.let { context.stringResource(it.entryTypePresentation().displayNameLabel) },
+        )
+            .takeIf { it.isNotEmpty() }
+            ?.joinToString(" · ")
     }
 
     private suspend fun readRequest(automatic: Boolean, selectionName: String?): LibraryUpdateRequest {
@@ -452,6 +472,7 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
         setProgress(
             workDataOf(
                 KEY_PROGRESS_SCOPE to updateScope.name,
+                KEY_PROGRESS_SCOPE_NAME to updateScopeName,
                 KEY_PROGRESS_COMPLETED to completed,
                 KEY_PROGRESS_TOTAL to entriesToUpdate.size,
                 KEY_PROGRESS_SKIPPED to skippedCount,
@@ -480,6 +501,7 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
         private const val KEY_ENTRY_TYPE = "entry_type"
 
         private const val KEY_PROGRESS_SCOPE = "progress_scope"
+        private const val KEY_PROGRESS_SCOPE_NAME = "progress_scope_name"
         private const val KEY_PROGRESS_COMPLETED = "progress_completed"
         private const val KEY_PROGRESS_TOTAL = "progress_total"
         private const val KEY_PROGRESS_SKIPPED = "progress_skipped"
@@ -522,6 +544,7 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
                 ?: return null
             return LibraryUpdateProgress(
                 scope = scope,
+                scopeName = getString(KEY_PROGRESS_SCOPE_NAME),
                 completed = getInt(KEY_PROGRESS_COMPLETED, 0),
                 total = getInt(KEY_PROGRESS_TOTAL, 0),
                 skipped = getInt(KEY_PROGRESS_SKIPPED, 0),

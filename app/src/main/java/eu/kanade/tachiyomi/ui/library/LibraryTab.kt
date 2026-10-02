@@ -10,8 +10,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
@@ -40,6 +43,8 @@ import eu.kanade.presentation.library.MoveEntriesProfileDialog
 import eu.kanade.presentation.library.components.LibraryContent
 import eu.kanade.presentation.library.components.LibraryScrollToTopTarget
 import eu.kanade.presentation.library.components.LibraryToolbar
+import eu.kanade.presentation.library.components.LibraryUpdateModeDialog
+import eu.kanade.presentation.library.update.LibraryUpdateResultSnackbar
 import eu.kanade.presentation.more.onboarding.GETTING_STARTED_URL
 import eu.kanade.presentation.more.settings.screen.data.rememberRestoreBackupLauncher
 import eu.kanade.presentation.util.Tab
@@ -71,6 +76,7 @@ import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.screens.LoadingScreen
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
+import kotlin.time.Clock
 import androidx.compose.runtime.collectAsState as collectFlowAsState
 
 data object LibraryTab : Tab {
@@ -111,26 +117,42 @@ data object LibraryTab : Tab {
         val snackbarHostState = remember { SnackbarHostState() }
         val scrollToTopTarget = remember { LibraryScrollToTopTarget() }
 
-        // A started update reports itself on the library's progress strip; only a refused start needs a message.
-        fun showAlreadyRunningMessage(started: Boolean) {
-            if (started) return
-            scope.launch {
-                snackbarHostState.showSnackbar(context.stringResource(MR.strings.update_already_running))
+        // A started update reports itself on the library's progress strip and sums itself up once it finishes;
+        // a refused start only needs a message.
+        var awaitedUpdateRequestedAt by rememberSaveable { mutableStateOf<Long?>(null) }
+        suspend fun startUpdate(start: suspend () -> Boolean): Boolean {
+            val requestedAt = Clock.System.now().toEpochMilliseconds()
+            val started = start()
+            if (started) {
+                awaitedUpdateRequestedAt = requestedAt
+            } else {
+                scope.launch {
+                    snackbarHostState.showSnackbar(context.stringResource(MR.strings.update_already_running))
+                }
             }
+            return started
         }
+        LibraryUpdateResultSnackbar(
+            requestedAt = awaitedUpdateRequestedAt,
+            snackbarHostState = snackbarHostState,
+            onShown = { awaitedUpdateRequestedAt = null },
+            onCheckSkipped = { scope.launch { startUpdate { LibraryUpdateJob.startSkippedOfLatest(context) } } },
+        )
 
         val onClickRefresh: suspend (LibraryScreenModel.State) -> Boolean = { state ->
             val activePage = state.activePage
-            LibraryUpdateJob.startNow(
-                context = context,
-                category = activePage?.category,
-                sourceId = activePage?.sourceId,
-                entryType = activePage?.entryType,
-            ).also(::showAlreadyRunningMessage)
+            startUpdate {
+                LibraryUpdateJob.startNow(
+                    context = context,
+                    category = activePage?.category,
+                    sourceId = activePage?.sourceId,
+                    entryType = activePage?.entryType,
+                )
+            }
         }
 
         val onClickGlobalUpdate: suspend () -> Boolean = {
-            LibraryUpdateJob.startNow(context).also(::showAlreadyRunningMessage)
+            startUpdate { LibraryUpdateJob.startNow(context) }
         }
 
         Scaffold(
@@ -199,6 +221,11 @@ data object LibraryTab : Tab {
                     }.takeIf { screenModel.canMigrateSelection() },
                     onMoveToProfileClicked = screenModel::openMoveProfileDialog
                         .takeIf { visibleProfiles.any { it.id != activeProfile?.id } },
+                    onCheckForUpdatesClicked = {
+                        val entryIds = screenModel.takeSelectionForUpdate()
+                        scope.launch { startUpdate { LibraryUpdateJob.startSelection(context, entryIds) } }
+                    },
+                    onUpdateModeClicked = screenModel::openUpdateModeDialog,
                 )
             },
             snackbarHost = { AppSnackbarHost(hostState = snackbarHostState) },
@@ -319,6 +346,14 @@ data object LibraryTab : Tab {
                     onMove = screenModel::reorderMergeSelection,
                     onSelectTarget = screenModel::setMergeTarget,
                     onConfirm = screenModel::confirmMergeSelection,
+                )
+            }
+            is LibraryScreenModel.Dialog.UpdateMode -> {
+                LibraryUpdateModeDialog(
+                    entryCount = dialog.entryIds.size,
+                    currentMode = dialog.currentMode,
+                    onDismissRequest = onDismissRequest,
+                    onModeSelected = { mode -> screenModel.setUpdateMode(dialog.entryIds, mode) },
                 )
             }
             is LibraryScreenModel.Dialog.MoveProfile -> {
