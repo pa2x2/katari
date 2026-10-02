@@ -45,6 +45,8 @@ import tachiyomi.data.entry.ViewerSettingOverrideRepositoryImpl
 import tachiyomi.data.history.HistoryRepositoryImpl
 import tachiyomi.data.history.activity.HistoryActivityBackupRepositoryImpl
 import tachiyomi.data.history.activity.HistoryActivityRepositoryImpl
+import tachiyomi.data.library.update.LibraryUpdateReportRepositoryImpl
+import tachiyomi.data.library.update.LibraryUpdateRulesRepositoryImpl
 import tachiyomi.data.release.ReleaseServiceImpl
 import tachiyomi.data.source.SourceRepositoryImpl
 import tachiyomi.data.source.StubSourceRepositoryImpl
@@ -90,6 +92,8 @@ import tachiyomi.domain.history.interactor.UpsertHistory
 import tachiyomi.domain.history.repository.HistoryActivityBackupRepository
 import tachiyomi.domain.history.repository.HistoryActivityRepository
 import tachiyomi.domain.history.repository.HistoryRepository
+import tachiyomi.domain.library.update.repository.LibraryUpdateReportRepository
+import tachiyomi.domain.library.update.repository.LibraryUpdateRulesRepository
 import tachiyomi.domain.release.interactor.GetApplicationRelease
 import tachiyomi.domain.release.service.ReleaseService
 import tachiyomi.domain.source.interactor.GetSourcesWithNonLibraryEntries
@@ -122,6 +126,9 @@ class DomainModule : InjektModule {
         addFactory { RenameCategory(get()) }
         addFactory { ReorderCategory(get()) }
         addFactory { DeleteCategory(get(), get(), get(), get(), get()) }
+
+        addSingletonFactory<LibraryUpdateRulesRepository> { LibraryUpdateRulesRepositoryImpl(get(), get()) }
+        addSingletonFactory<LibraryUpdateReportRepository> { LibraryUpdateReportRepositoryImpl(get(), get()) }
 
         addSingletonFactory<EntryRepository> { EntryRepositoryImpl(get(), get()) }
         addSingletonFactory<EntryChapterRepository> { EntryChapterRepositoryImpl(get(), get()) }

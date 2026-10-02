@@ -13,6 +13,7 @@ data class Backup(
     @ProtoNumber(104) var backupPreferences: List<BackupPreference> = emptyList(),
     @ProtoNumber(105) var backupSourcePreferences: List<BackupSourcePreferences> = emptyList(),
     @ProtoNumber(106) var backupExtensionStores: List<BackupExtensionStore> = emptyList(),
+    @ProtoNumber(107) var backupDefaultCategoryUpdateRules: BackupCategoryUpdateRules? = null,
     @ProtoNumber(200) var backupProfiles: List<ProfileScopedBackup> = emptyList(),
     @ProtoNumber(201) var activeProfileUuid: String? = null,
     @ProtoNumber(202) internal val backupAnime: List<LegacyBackupAnime> = emptyList(),
