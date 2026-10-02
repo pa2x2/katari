@@ -61,7 +61,7 @@ class LibraryUpdateReportActions(
     val onWebView: (Entry, EntryWebViewResolution.Available) -> Unit,
     val onSetPaused: (Entry, Boolean) -> Unit,
     val onSetSourcePaused: (Long, Boolean) -> Unit,
-    val onRetry: (Entry) -> Unit,
+    val onRetry: (List<Entry>) -> Unit,
     val onCheckSkipped: () -> Unit,
 )
 
@@ -170,7 +170,7 @@ fun LibraryUpdateReportContent(
                     isError = true,
                     onClick = { actions.onClickEntry(item.entry) },
                     trailing = {
-                        IconButton(onClick = { actions.onRetry(item.entry) }) {
+                        IconButton(onClick = { actions.onRetry(listOf(item.entry)) }) {
                             Icon(
                                 imageVector = Icons.Outlined.Refresh,
                                 contentDescription = stringResource(MR.strings.library_update_report_retry),
@@ -266,6 +266,7 @@ private fun LazyListScope.failingSourceItems(
             source = source,
             name = state.sourceNames[source.sourceId],
             isPaused = source.sourceId in state.pausedSourceIds,
+            migrations = source.items.mapNotNull { state.migrations[it.entry.id] },
             actions = actions,
         )
     }

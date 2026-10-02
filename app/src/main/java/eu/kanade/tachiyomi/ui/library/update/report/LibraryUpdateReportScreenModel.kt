@@ -112,7 +112,9 @@ class LibraryUpdateReportScreenModel(
     }
 
     /** @return false when another update is already running. */
-    suspend fun retry(entry: Entry): Boolean = LibraryUpdateJob.startSelection(application, listOf(entry.id))
+    suspend fun retry(entries: List<Entry>): Boolean {
+        return LibraryUpdateJob.startSelection(application, entries.map { it.id })
+    }
 
     suspend fun checkSkipped(): Boolean = LibraryUpdateJob.startSkippedOfLatest(application)
 
