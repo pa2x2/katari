@@ -39,7 +39,7 @@ class LibraryUpdateReportRepositoryImpl(
                         flowOf(emptyList())
                     } else {
                         handler.subscribeToList {
-                            entry_update_statusQueries.getDecidedAt(profileId, run.startedAt, ::mapStatus)
+                            entry_update_statusQueries.getDecidedSince(profileId, run.startedAt, ::mapStatus)
                         }
                     }
                 }

@@ -57,7 +57,7 @@ fun LibraryUpdateReportRepository.subscribeLatestSummary(): Flow<LibraryUpdateRu
             flowOf(null)
         } else {
             subscribeLatestRunStatuses().map { statuses ->
-                LibraryUpdateRunSummary.of(run, statuses.filter { it.decidedAt == run.startedAt })
+                LibraryUpdateRunSummary.of(run, statuses.filter { it.decidedAt >= run.startedAt })
             }
         }
     }

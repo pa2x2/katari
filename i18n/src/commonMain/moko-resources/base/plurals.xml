@@ -347,6 +347,14 @@
         <item quantity="one">%1$s · %2$d entry</item>
         <item quantity="other">%1$s · %2$d entries</item>
     </plurals>
+    <plurals name="library_update_report_retry_entries">
+        <item quantity="one">Retry %d</item>
+        <item quantity="other">Retry %d</item>
+    </plurals>
+    <plurals name="library_update_report_migrate_entries">
+        <item quantity="one">Migrate %d</item>
+        <item quantity="other">Migrate %d</item>
+    </plurals>
     <plurals name="library_update_report_check_skipped">
         <item quantity="one">Check the skipped entry</item>
         <item quantity="other">Check the %d skipped</item>

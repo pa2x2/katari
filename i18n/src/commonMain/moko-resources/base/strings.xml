@@ -885,6 +885,9 @@
     <string name="library_update_report_pause">Pause</string>
     <string name="library_update_report_pause_source">Pause source</string>
     <string name="library_update_report_retry">Retry</string>
+    <string name="library_update_report_unknown_source">Unknown source</string>
+    <string name="library_update_report_rechecked">Rechecked</string>
+    <string name="library_update_report_with_rechecked">%s · rechecked</string>
     <string name="upcoming_not_checked">Won\'t be checked · %s</string>
     <string name="library_update_reason_never">Set to never check</string>
     <string name="library_update_reason_category_off">Category switched off</string>

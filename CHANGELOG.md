@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.13.1] - 2026-10-02
+
+### 🔄 Changed
+
+- Updating selected entries or a single library page adds its results to the last full update's report and marks them as rechecked, instead of replacing the report.
+
+### 🧩 Improved
+
+- Failing sources in the update report expand to list their entries and can retry or migrate them together.
+
+### 🐛 Fixed
+
+- Pause buttons in the update report show what is paused and can be tapped again to resume.
+- The update report no longer offers Migrate or WebView for entries where they can't work.
+- Nothing new in the update report has a section header like the other groups.
+- Uninstalled sources show their name from the extension repository instead of an id.
+
 ## [1.13.0] - 2026-10-02
 
 ### ✨ Added
@@ -594,7 +611,8 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v1.13.0...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/v1.13.1...HEAD
+[1.13.1]: https://github.com/pa2x2/katari/releases/tag/v1.13.1
 [1.13.0]: https://github.com/pa2x2/katari/releases/tag/v1.13.0
 [1.12.0]: https://github.com/pa2x2/katari/releases/tag/v1.12.0
 [1.11.0]: https://github.com/pa2x2/katari/releases/tag/v1.11.0

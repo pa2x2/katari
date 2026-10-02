@@ -12,6 +12,6 @@ enum class LibraryUpdateTrigger {
     AUTOMATIC,
     MANUAL,
 
-    /** Entries picked by the user, such as a library selection or the entries the previous update skipped. */
+    /** Entries picked by the user before any full update left a report for them to fold into. */
     SELECTION,
 }

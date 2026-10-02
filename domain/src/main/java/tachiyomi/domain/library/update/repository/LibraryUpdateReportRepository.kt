@@ -6,13 +6,17 @@ import tachiyomi.domain.library.update.model.EntryUpdateStatus
 import tachiyomi.domain.library.update.model.LibraryUpdateRun
 import tachiyomi.domain.library.update.model.LibraryUpdateTrigger
 
-/** The latest library update of the active profile and what it decided about each entry. */
+/**
+ * The latest library update of the active profile that covered the whole library, and what it decided about each
+ * entry. Later updates of part of the library don't start a run of their own; their decisions replace the ones they
+ * redo.
+ */
 interface LibraryUpdateReportRepository {
     fun subscribeLatestRun(): Flow<LibraryUpdateRun?>
 
     suspend fun getLatestRun(): LibraryUpdateRun?
 
-    /** Statuses of the entries the latest run decided about. */
+    /** Statuses decided by the latest run or by a partial update since. */
     fun subscribeLatestRunStatuses(): Flow<List<EntryUpdateStatus>>
 
     fun subscribeStatus(entryId: Long): Flow<EntryUpdateStatus?>
