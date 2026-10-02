@@ -138,7 +138,6 @@
     <string name="pref_remove_after_read">Удалять после прочтения</string>
     <string name="pref_rotation_type">Ориентация по умолчанию</string>
     <string name="pref_show_page_number">Номер страницы</string>
-    <string name="pref_update_only_non_completed">Пропускать завершённые серии</string>
     <string name="pref_viewer_type">Режим чтения</string>
     <string name="pref_zoom_start">Стартовая позиция увеличения</string>
     <string name="reading">Читаю</string>
@@ -284,7 +283,6 @@
     <string name="ext_obsolete">Неиспользумое</string>
     <string name="obsolete_extension_message">Это расширение больше не находится ни в одном из хранилищ и не будет получать обновления. Оно может работать неправильно, а также вызывать проблемы с приложением. Рекомендуется его удалить.</string>
     <string name="pref_date_format">Формат даты</string>
-    <string name="pref_category_library_update">Глобальное обновление</string>
     <string name="logout_title">Выйти из %1$s?</string>
     <string name="logout">Выйти</string>
     <string name="logout_success">Вы успешно вышли</string>
@@ -456,7 +454,6 @@
     <string name="include">Включать: %s</string>
     <string name="action_sort_chapter_fetch_date">Последнее получение главы</string>
     <string name="pref_download_new_categories_details">Серии в исключённых категориях не будут загружаться, даже если находятся во включённых категориях.</string>
-    <string name="pref_library_update_categories_details">Серии в исключённых категориях не будут обновляться, даже если находятся во включённых категориях.</string>
     <string name="pref_category_auto_download">Автозагрузка</string>
     <string name="action_show_errors">Нажать, чтобы увидеть подробности</string>
     <string name="update_check_eol">Эта версия Android больше не поддерживается</string>
@@ -543,7 +540,6 @@
     <string name="database_clean">Нечего очищать</string>
     <string name="extension_api_error">Не удалось получить доступные расширения</string>
     <string name="privacy_policy">Политика конфиденциальности</string>
-    <string name="pref_update_only_completely_read">Пропускать серии с непрочитанными главами</string>
     <string name="library_errors_help">Для помощи в исправлении ошибок библиотеки, нажмите %1$s</string>
     <string name="save_chapter_as_cbz">Сохранить как архив CBZ</string>
     <string name="cancelled">Отменено</string>
@@ -553,7 +549,6 @@
     <string name="action_display_cover_only_grid">Сетка без названия</string>
     <string name="pref_navigate_pan">Панорамирование широких изображений</string>
     <string name="pref_landscape_zoom">Автоматически увеличивать широкие изображения</string>
-    <string name="pref_update_only_started">Пропускать не начатые серии</string>
     <string name="skipped_reason_completed">Пропущено, т.к серия завершена</string>
     <string name="skipped_reason_not_caught_up">Пропущено, т.к есть непрочитанные главы</string>
     <string name="skipped_reason_not_started">Пропущено, т.к серия не начата</string>
@@ -687,7 +682,6 @@
     <string name="manga_display_interval_title">Оценивать каждые</string>
     <string name="action_set_interval">Задать интервал</string>
     <string name="action_sort_next_updated">Следующее ожидамое обновление</string>
-    <string name="pref_update_only_in_release_period">Предсказать время выхода новых глав</string>
     <string name="manga_display_modified_interval_title">Задать обновления каждые</string>
     <string name="skipped_reason_not_in_release_period">Пропущено, т.к сегодня не ожидается выпуска</string>
     <string name="track_delete_title">Удалить отслеживание %s?</string>

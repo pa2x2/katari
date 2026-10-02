@@ -83,7 +83,6 @@
     <string name="all">Όλα</string>
     <string name="pref_library_update_restriction">Περιορισμοί αυτόματων ενημερώσεων συσκευής</string>
     <string name="charging">Κατά τη φόρτιση</string>
-    <string name="pref_update_only_non_completed">Παράλειψη καταχωρήσεων με κατάσταση \"Ολοκληρώθηκε\"</string>
     <string name="pref_auto_update_manga_sync">Ενημέρωση προόδου μετά την ανάγνωση</string>
     <string name="default_category">Προεπιλεγμένη κατηγορία</string>
     <string name="default_category_summary">Ερώτηση πάντα</string>
@@ -325,7 +324,6 @@
     <string name="pref_skip_filtered_chapters">Παράλειψη φιλτραρισμένων κεφαλαίων</string>
     <string name="pref_cutout_short">Εμφάνιση περιεχομένου στην περιοχή αποκοπής</string>
     <string name="ext_updates_pending">Εκκρεμούν ενημερώσεις</string>
-    <string name="pref_category_library_update">Καθολική ενημέρωση</string>
     <string name="pref_category_display">Προβολή</string>
     <string name="hide_notification_content">Απόκρυψη περιεχομένου ειδοποιήσεων</string>
     <string name="secure_screen_summary">Η ασφαλής οθόνη αποκρύπτει τα περιεχόμενα εφαρμογών κατά την εναλλαγή εφαρμογών και εμποδίζει τα στιγμιότυπα οθόνης</string>
@@ -457,7 +455,6 @@
     <string name="action_sort_chapter_fetch_date">Ημερομηνία ανάκτησης κεφαλαίου</string>
     <string name="pref_download_new_categories_details">Οι καταχωρήσεις σε εξαιρούμενες κατηγορίες δε θα ληφθούν ακόμη και αν βρίσκονται επίσης σε κατηγορίες που περιλαμβάνονται.</string>
     <string name="pref_category_auto_download">Αυτόματη λήψη</string>
-    <string name="pref_library_update_categories_details">Οι καταχωρίσεις σε εξαιρούμενες κατηγορίες δε θα ενημερώνονται ακόμη και αν περιλαμβάνονται επίσης σε κατηγορίες που περιλαμβάνονται.</string>
     <string name="action_show_errors">Πατήστε για να δείτε λεπτομέρειες</string>
     <string name="update_check_eol">Αυτή η έκδοση Android δεν υποστηρίζεται πλέον</string>
     <string name="clipboard_copy_error">Απέτυχε η αντιγραφή στο πρόχειρο</string>
@@ -543,7 +540,6 @@
     <string name="database_clean">Τίποτα προς εκκαθάριση</string>
     <string name="extension_api_error">Αποτυχία ανάκτησης διαθέσιμων επεκτάσεων</string>
     <string name="privacy_policy">Πολιτική απορρήτου</string>
-    <string name="pref_update_only_completely_read">Παράλειψη καταχωρήσεων με αδιάβαστο(α) κεφάλαιο(α)</string>
     <string name="library_errors_help">Για βοήθεια σχετικά με τον τρόπο διόρθωσης σφαλμάτων ενημέρωσης βιβλιοθήκης, ανατρέξτε στο %1$s</string>
     <string name="save_chapter_as_cbz">Αποθήκευση ως αρχείο CBZ</string>
     <string name="cancelled">Ακυρώθηκε</string>
@@ -552,7 +548,6 @@
     <string name="action_show_manga">Εμφάνιση καταχώρισης</string>
     <string name="pref_landscape_zoom">Αυτόματο ζουμ σε ευρείες εικόνες</string>
     <string name="action_display_cover_only_grid">Πλέγμα μόνο με εξώφυλλα</string>
-    <string name="pref_update_only_started">Παράλειψη καταχωρήσεων που δεν έχουν αρχίσει</string>
     <string name="pref_navigate_pan">Μετατόπιση πλατιών εικόνων</string>
     <string name="skipped_reason_completed">Παραλείφθηκε επειδή η σειρά ολοκληρώθηκε</string>
     <string name="skipped_reason_not_caught_up">Παραβλέφθηκε επειδή υπάρχουν μη αναγνωσμένα κεφάλαια</string>
@@ -684,7 +679,6 @@
     <string name="pref_chapter_swipe_end">Κεφάλαιο με σύρσιμο προς τα δεξιά</string>
     <string name="action_set_interval">Ορισμός χρονικού διαστήματος</string>
     <string name="action_filter_interval_custom">Προσαρμοσμένη συχνότητα ενημέρωσης</string>
-    <string name="pref_update_only_in_release_period">Πρόβλεψη χρόνου επόμενης απελευθέρωσης</string>
     <string name="intervals_header">Διαστήματα</string>
     <string name="manga_display_interval_title">Εκτίμηση κάθε</string>
     <string name="manga_display_modified_interval_title">Ρύθμιση για ενημέρωση κάθε</string>

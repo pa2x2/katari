@@ -40,7 +40,6 @@
     <string name="all">Összes</string>
     <string name="pref_library_update_restriction">Frissítések korlátozása</string>
     <string name="charging">Töltés közben</string>
-    <string name="pref_update_only_non_completed">\"Befejezett\" állapotú elemek kihagyása</string>
     <string name="default_category">Alapértelmezett kategória</string>
     <string name="default_category_summary">Mindig kérdezzen rá</string>
     <string name="pref_show_page_number">Oldalszám megjelenítése</string>
@@ -182,7 +181,6 @@
     <string name="ext_updates_pending">Függőben lévő frissítések</string>
     <string name="pref_library_update_refresh_metadata_summary">Új borító és részletek keresése a könyvtár frissítésekor</string>
     <string name="pref_library_update_refresh_metadata">Metaadatokat frissítse automatikusan</string>
-    <string name="pref_category_library_update">Minden frissítése</string>
     <string name="pref_category_display">Megjelenés</string>
     <string name="parental_controls_info">Ez nem akadályozza meg a nem hivatalos vagy az esetlegesen helytelenül megjelölt bővítményeket a 18+-os tartalmak megjelenítésétől az alkalmazáson belül.</string>
     <string name="pref_show_nsfw_source">Megjelenítés a forrás- és kiterjesztéseklistában</string>
@@ -274,7 +272,6 @@
     <string name="include">Kedvelt: %s</string>
     <string name="none">Semmi</string>
     <string name="pref_download_new_categories_details">Elemek a tiltott kategóriákban nem lesznek letöltve, még akkor se, ha a kedvelt kategóriában is vannak.</string>
-    <string name="pref_library_update_categories_details">Elemek a tiltott kategóriákban nem lesznek frissítve, még akkor se, ha a kedvelt kategóriákban is vannak.</string>
     <string name="secure_screen">Biztonságos képernyő</string>
     <string name="lock_when_idle">Zárás tétlen állapotban</string>
     <string name="lock_with_biometrics">Biometrikus zár</string>
@@ -419,7 +416,6 @@
     <string name="action_global_search_hint">Globális keresés…</string>
     <string name="sort_by_upload_date">Feltöltési dátum szerint</string>
     <string name="dialog_with_checkbox_remove_description">Ez eltávolítja a fejezet olvasási dátumát. Biztos benne?</string>
-    <string name="pref_update_only_completely_read">Olvasatlan fejezet(ek)et tartalmazó elemek kihagyása</string>
     <string name="delete_category_confirmation">Törölni akarja a %s kategóriát ?</string>
     <string name="internal_error">InternalError: Nézze meg a hibaüzenetet további információért</string>
     <string name="network_not_metered">Csak korlátlan hálózatokon</string>
@@ -490,7 +486,6 @@
     <string name="recent_manga_time">Fej. %1$s - %2$s</string>
     <string name="getting_started_guide">Kezdési útmutató</string>
     <string name="database_clean">Adatbázis törlése</string>
-    <string name="pref_update_only_started">El nem kezdett elemek kihagyása</string>
     <string name="backup_in_progress">Biztonsági mentés már folyamatban van</string>
     <string name="not_installed">Nincs telepítve</string>
     <string name="download_queue_size_warning">Figyelmeztetés: a tömeges letöltések a források lelassulásához és/vagy a %s leállásához vezethetnek. Koppintson további információért.</string>
@@ -672,7 +667,6 @@
     <string name="track_activity_name">Bejelentkezés nyilvántartóhoz</string>
     <string name="delete_downloaded">Letöltött törlése</string>
     <string name="split_tall_images">Magas képek szétvágása</string>
-    <string name="pref_update_only_in_release_period">Következő kiadás idejének megjóslása</string>
     <string name="pref_page_rotate">Széles oldalak forgatása az illeszkedéshez</string>
     <string name="pref_chapter_swipe_end">Fejezet jobbra húzásakor</string>
     <string name="pref_page_rotate_invert">Forgatott széles oldalak megfordítása</string>

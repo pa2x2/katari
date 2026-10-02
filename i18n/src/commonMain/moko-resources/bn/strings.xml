@@ -80,7 +80,6 @@
     <string name="all">সব</string>
     <string name="pref_library_update_restriction">নিজেথেকে আপডেটের সীমাবদ্ধতা</string>
     <string name="charging">চার্জ হচ্ছে</string>
-    <string name="pref_update_only_non_completed">\"সম্পূর্ন\" শর্তসহিত</string>
     <string name="pref_auto_update_manga_sync">পড়ার পরে অগ্রগতি আপডেট করুন</string>
     <string name="default_category">সাধারণ বিভাগ</string>
     <string name="default_category_summary">সর্বদা জিজ্ঞাসা করুন</string>
@@ -322,7 +321,6 @@
     <string name="action_disable_all">সব অক্ষম করুন</string>
     <string name="action_enable_all">সব সক্রিয় করুন</string>
     <string name="pref_library_update_refresh_metadata">মেটাডাটা স্বয়ংক্রিয়ভাবে রিফ্রেশ</string>
-    <string name="pref_category_library_update">ব্যাপক আপডেট</string>
     <string name="secure_screen_summary">অ্যাপ পাল্টানোর সময় অ্যাপের কন্টেন্ট লুকান ও স্ক্রিনসট ব্লক করুন</string>
     <string name="action_search_settings">সেটিংসে খুঁজুন</string>
     <string name="lock_when_idle">কর্মহীন হলে লক হবে</string>
@@ -490,7 +488,6 @@
     <string name="exclude">বাদ দিন: %s</string>
     <string name="include">অন্তর্ভুক্ত করুন: %s</string>
     <string name="none">শূন্য</string>
-    <string name="pref_library_update_categories_details">বাদ দেওয়া ক্যাটাগরিতে মঙ্গা আপডেট করা হবে না যদিও সেগুলি অন্তর্ভুক্ত ক্যাটাগরিতেও থাকে।</string>
     <string name="categorized_display_settings">সাজানোর এবং প্রদর্শনের জন্য প্রতি শ্রেণীর সেটিংস</string>
     <string name="restrictions">বিধিনিষেধ: %s</string>
     <string name="relative_time_today">সম্প্রতি</string>
@@ -562,8 +559,6 @@
     <string name="unfinished_list">অসম্পূর্ণ তালিকা</string>
     <string name="on_hold_list">স্থগিত তালিকা</string>
     <string name="auto_download_while_reading">পড়ার সময় সয়ংক্রিয়ভাবে ডাউনলোড</string>
-    <string name="pref_update_only_completely_read">অপঠিত অধ্যায়সহ</string>
-    <string name="pref_update_only_started">যেগুলো শুরু করা হয়নি</string>
     <string name="webview_data_deleted">ওয়েবভিউ ডাটা মুছা হয়েছে</string>
     <string name="split_tall_images_summary">পঠন কর্মক্ষমতা উন্নত করে</string>
     <string name="pref_clear_webview_data">ওয়েবভিইউ ডাটা মুছুন</string>
@@ -651,7 +646,6 @@
     <string name="firebase_summary">ক্র্যাশ লগ ও অ্যানালিটিক্স পাঠালে আমরা সমস্যা খুঁজে বের করে ঠিক করতে পারব, কর্মক্ষমতা ভালো হবে, এবং ভবিষ্যৎ আপডেটগুলো আপনার কাজে লাগবে</string>
     <string name="network_not_metered">শুধু আনলিমিটেড নেটওয়ার্কে</string>
     <string name="pref_library_update_smart_update">স্মার্ট আপডেট</string>
-    <string name="pref_update_only_in_release_period">পরবর্তী রিলিজের সময় অনুমান করুন</string>
     <string name="pref_library_update_show_tab_badge">আপডেট আইকনে অপঠিত সংখ্যা দেখান</string>
     <string name="pref_behavior">ব্যবহার</string>
     <string name="pref_chapter_swipe_end">অধ্যায় ডানে সোয়াইপ করলে</string>

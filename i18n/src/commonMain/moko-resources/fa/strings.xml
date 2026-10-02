@@ -222,7 +222,6 @@
     <string name="default_category">دسته بندی پیشفرض</string>
     <string name="pref_library_update_refresh_metadata_summary">هنگام آپدیت عکس روی جلد و اطلاعات مانگا ها (در صورت تغییر) آپدیت شوند</string>
     <string name="pref_library_update_refresh_metadata">متادیتا فقط به صورت خودکار آپدیت شود</string>
-    <string name="pref_update_only_non_completed">با وضعیت \"کامل‌شده\"</string>
     <string name="charging">هنگام شارژ کردن</string>
     <string name="pref_library_update_restriction">محدودیت‌های دستگاهی به‌روزرسانی‌ خودکار</string>
     <string name="update_weekly">هفتگی</string>
@@ -231,7 +230,6 @@
     <string name="update_6hour">هر ۶ ساعت یکبار</string>
     <string name="update_never">خاموش</string>
     <string name="pref_library_update_interval">به‌روزرسانی‌های خودکار</string>
-    <string name="pref_category_library_update">به‌روزرسانی همگانی</string>
     <string name="landscape">افقی</string>
     <string name="portrait">عمودی</string>
     <string name="pref_library_columns">موارد در هر ردیف</string>
@@ -478,9 +476,7 @@
     <string name="action_start_downloading_now">همین الان شروع به دانلود کن</string>
     <string name="action_show_errors">برای دیدن جزئیات لمس کنید</string>
     <string name="network_not_metered">فقط روی شبکه‌ی نامحدود</string>
-    <string name="pref_update_only_started">که شروع نشده‌اند</string>
     <string name="restrictions">محدودیت‌ها: %s</string>
-    <string name="pref_update_only_completely_read">با قسمت‌(های) خوانده‌نشده</string>
     <string name="relative_time_today">امروز</string>
     <string name="update_72hour">هر 3 روز</string>
     <string name="connected_to_wifi">فقط روی Wi-Fi</string>
@@ -526,7 +522,6 @@
     <string name="none">هیچ‌کدام</string>
     <string name="include">شامل: %s</string>
     <string name="exclude">بدون: %s</string>
-    <string name="pref_library_update_categories_details">ورودی هایی که در دسته‌بندی های حذف‌شده هستند، حتی اگر هم‌زمان در دسته‌بندی های مشمول باشند به‌روزرسانی نمی‌شوند.</string>
     <string name="save_chapter_as_cbz">ذخیره به عنوان فایل آرشیو CBZ</string>
     <string name="publishing_finished">انتشار به پایان رسید</string>
     <string name="local_invalid_format">قالب فصل نامعتبر است</string>
@@ -602,7 +597,6 @@
     <string name="pref_flash_page">در هنگام عوض شدن صفحه فلاش سفید بزن</string>
     <string name="pref_chapter_swipe_start">حرکت کشیدن به چپ</string>
     <string name="updates_last_update_info">آخرین به روز رسانی کتابخانه: %s</string>
-    <string name="pref_update_only_in_release_period">خارج از دوره انتشار موزد انتظار</string>
     <string name="pref_double_tap_zoom">برای بزرگ نمایی دوبار ضربه بزنید</string>
     <string name="action_filter_interval_custom">تناوب به روز رسانی شخسی سازی شده</string>
     <string name="onboarding_heading">خوش آمدید!</string>

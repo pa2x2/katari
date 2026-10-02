@@ -67,7 +67,6 @@
     <string name="all">Tout</string>
     <string name="pref_library_update_restriction">Restrictions matérielles pour les mises à jour automatiques</string>
     <string name="charging">Lors de la charge</string>
-    <string name="pref_update_only_non_completed">Exclure si le statut est « Terminé »</string>
     <string name="pref_auto_update_manga_sync">Synchroniser la progression après lecture</string>
     <string name="pref_page_transitions">Activer les transitions</string>
     <string name="pref_show_page_number">Afficher le numéro des pages</string>
@@ -280,7 +279,6 @@
     <string name="pref_category_library">Bibliothèque</string>
     <string name="obsolete_extension_message">Cette extension n\'est plus disponible. Elle peut ne pas fonctionner correctement et causer des problèmes avec l\'application. Il est recommandé de la désinstaller.</string>
     <string name="pref_date_format">Format de date</string>
-    <string name="pref_category_library_update">Mises à jour</string>
     <string name="action_webview_back">Précédent</string>
     <string name="action_webview_forward">Suivant</string>
     <string name="action_webview_refresh">Actualiser</string>
@@ -455,7 +453,6 @@
     <string name="include">Inclure : %s</string>
     <string name="none">Aucun(e)</string>
     <string name="action_sort_chapter_fetch_date">Date de récupération du chapitre</string>
-    <string name="pref_library_update_categories_details">Les séries dans les catégories exclues ne seront pas mises à jour même si elles sont aussi dans les catégories inclues.</string>
     <string name="pref_download_new_categories_details">Les séries des catégories exclues ne seront pas mis à jour même si elles appartiennent également à des catégories incluses.</string>
     <string name="pref_category_auto_download">Téléchargement automatique</string>
     <string name="action_show_errors">Appuyez pour voir les détails</string>
@@ -543,7 +540,6 @@
     <string name="database_clean">Rien à effacer</string>
     <string name="extension_api_error">Aucune extension trouvée</string>
     <string name="privacy_policy">Politique de confidentialité</string>
-    <string name="pref_update_only_completely_read">Exclure s\'il reste un/des chapitre(s) à lire</string>
     <string name="save_chapter_as_cbz">Enregistrer comme archive CBZ</string>
     <string name="library_errors_help">Pour savoir comment corriger les erreurs de mise à jour de la bibliothèque, voir %1$s</string>
     <string name="on_hiatus">En pause</string>
@@ -553,7 +549,6 @@
     <string name="action_display_cover_only_grid">Grille avec seulement la couverture</string>
     <string name="pref_navigate_pan">Panoramique des images larges</string>
     <string name="pref_landscape_zoom">Zoom automatique dans les images larges</string>
-    <string name="pref_update_only_started">Exclure si lecture pas encore débutée</string>
     <string name="skipped_reason_completed">Sauté car la série est terminée</string>
     <string name="skipped_reason_not_started">Sauté car aucun chapitre n\'est lu</string>
     <string name="skipped_reason_not_caught_up">Sauté car il y a des chapitres non lus</string>
@@ -683,7 +678,6 @@
     <string name="pref_chapter_swipe_end">Action de glisser à droite</string>
     <string name="pref_double_tap_zoom">Appuyez deux fois pour zoomer</string>
     <string name="action_sort_next_updated">Prochaine mise à jour prévue</string>
-    <string name="pref_update_only_in_release_period">Prédiction de la prochaine date sortie</string>
     <string name="action_set_interval">Définir l\'intervalle</string>
     <string name="action_ok">Valider</string>
     <string name="action_filter_interval_custom">Fréquence de mise à jour personnalisée</string>

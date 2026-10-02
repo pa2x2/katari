@@ -68,7 +68,6 @@
     <string name="all">Tất cả</string>
     <string name="pref_library_update_restriction">Hạn chế cập nhật tự động trên thiết bị</string>
     <string name="charging">Khi đang sạc</string>
-    <string name="pref_update_only_non_completed">Bỏ qua truyện có trạng thái \"Đã hoàn thành\"</string>
     <string name="pref_auto_update_manga_sync">Cập nhật tiến trình sau khi đọc</string>
     <string name="pref_page_transitions">Hoạt ảnh chuyển trang</string>
     <string name="pref_show_page_number">Hiện số trang</string>
@@ -291,7 +290,6 @@
     <string name="pref_cutout_short">Hiển thị nội dung ở phần rìa</string>
     <string name="obsolete_extension_message">Phần mở rộng này không liên kết với bất kỳ cửa hàng nào. Nó sẽ không nhận cập nhật, có thể không hoạt động đúng cách và có thể gây ra lỗi với ứng dụng. Kiến nghị bạn nên gỡ cài đặt.</string>
     <string name="ext_updates_pending">Đang chờ cập nhật</string>
-    <string name="pref_category_library_update">Cập nhật toàn bộ</string>
     <string name="pref_category_display">Hiển thị</string>
     <string name="hide_notification_content">Ẩn nội dung thông báo</string>
     <string name="secure_screen_summary">Màn hình bảo vệ sẽ ẩn nội dung ứng dụng khi chuyển đổi ứng dụng và chặn chụp màn hình</string>
@@ -350,7 +348,6 @@
     <string name="action_search_settings">Cài đặt tìm kiếm</string>
     <string name="backup_in_progress">Sao lưu đang trong quá trình thực hiện</string>
     <string name="clear_history_confirmation">Bạn có chắc không? Tất cả lịch sử sẽ bị xoá.</string>
-    <string name="pref_library_update_categories_details">Truyện trong danh mục bị loại trừ sẽ không được cập nhật, kể cả khi chúng ở trong danh mục được phép.</string>
     <string name="track_finished_reading_date">Ngày kết thúc</string>
     <string name="filter_mode_lighten">Chế độ làm sáng lên</string>
     <string name="filter_mode_darken">Chế độ làm tối đi</string>
@@ -540,13 +537,11 @@
     <string name="database_clean">Không có gì để dọn</string>
     <string name="extension_api_error">Không tải được danh sách tiện ích mở rộng</string>
     <string name="privacy_policy">Chính sách quyền riêng tư</string>
-    <string name="pref_update_only_completely_read">Bỏ qua truyện có chương chưa đọc</string>
     <string name="publishing_finished">Đã hoàn thành xuất bản</string>
     <string name="cancelled">Đã hủy</string>
     <string name="on_hiatus">Đang tạm ngưng</string>
     <string name="library_errors_help">Để được trợ giúp về cách sửa lỗi cập nhật thư viện, hãy xem %1$s</string>
     <string name="save_chapter_as_cbz">Lưu dưới dạng lưu trữ CBZ</string>
-    <string name="pref_update_only_started">Bỏ qua chuyện chưa bắt đầu đọc</string>
     <string name="learn_more">Nhấn để tìm hiểu thêm</string>
     <string name="pref_landscape_zoom">Tự động phóng ảnh rộng</string>
     <string name="action_show_manga">Hiển thị truyện</string>
@@ -687,7 +682,6 @@
     <string name="action_filter_interval_custom">Khoảng thời gian cập nhật tùy chỉnh</string>
     <string name="action_sort_next_updated">Cập nhật dự kiến tiếp theo</string>
     <string name="information_cloudflare_help">Nhấn vào đây để được trợ giúp về Cloudflare</string>
-    <string name="pref_update_only_in_release_period">Dự đoán thời gian phát hành tiếp theo</string>
     <string name="unlock_app_title">Mở khoá %s</string>
     <string name="source_settings">Cài đặt nguồn</string>
     <string name="app_settings">Cài đặt ứng dụng</string>

@@ -175,7 +175,6 @@
     <string name="ext_app_info">Aplikācijas informācija</string>
     <string name="ext_nsfw_short">18+</string>
     <string name="confirm_lock_change">Autentificējaties, lai apstriprinātu izmaiņas</string>
-    <string name="pref_update_only_non_completed">Ar \'\'Pabeigts\'\' statusu</string>
     <string name="action_start_downloading_now">Sākt lejupielādi tūlīt</string>
     <string name="extension_api_error">Neizdevās iegūt paplašinājumu sarakstu</string>
     <string name="pref_show_navigation_mode_summary">Īsi parādīt, kad ir atvērts lasītājs</string>
@@ -204,7 +203,6 @@
     <string name="action_display_language_badge">Valoda</string>
     <string name="action_sort_chapter_fetch_date">Nodaļas ieneses datums</string>
     <string name="action_close">Aizvērt</string>
-    <string name="pref_category_library_update">Globāls atjauninājums</string>
     <string name="parental_controls_info">Šis neliedz neoficiāliem vai, iespējams, nepareizi atzīmētiem paplašinājumiem parādīties NSFW (18+) saturu lietotnē.</string>
     <string name="relative_time_today">Šodien</string>
     <string name="pref_library_update_interval">Automātiskie atjauninājumi</string>
@@ -248,11 +246,8 @@
     <string name="theme_yotsuba">Yotsuba</string>
     <string name="pref_dark_theme_pure_black">Pilnīgi melns tumšais režīms</string>
     <string name="pref_app_language">Aplikācijas valoda</string>
-    <string name="pref_update_only_completely_read">Ar nelasītu(ām) nodaļu(ām)</string>
-    <string name="pref_update_only_started">Kas nav sāktas</string>
     <string name="default_category_summary">Vienmēr jautāt</string>
     <string name="categorized_display_settings">Kategorijas iestatījumi kārtošanai</string>
-    <string name="pref_library_update_categories_details">Izslēgto kategoriju ieraksti netiks atjaunināti, pat ja tie ir iekļautajās kategorijās.</string>
     <string name="none">Neviens</string>
     <string name="include">Iekļaut: %s</string>
     <string name="ext_update_all">Atjaunināt visu</string>
@@ -703,7 +698,6 @@
     <string name="delete_downloaded">Izdzēst lejupielādētos</string>
     <string name="track_delete_title">Vai noņemt %s izsekošanu?</string>
     <string name="action_ok">OK</string>
-    <string name="pref_update_only_in_release_period">Ārpus paredzamā izlaišanas perioda</string>
     <string name="pref_double_tap_zoom">Dubult-pieskarieties, lai tuvinātu</string>
     <string name="unlock_app_title">Atbloķēt %s</string>
     <string name="manga_display_modified_interval_title">Atjaunināt katru</string>

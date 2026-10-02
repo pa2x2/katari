@@ -78,7 +78,6 @@
     <string name="all">Todas</string>
     <string name="pref_library_update_restriction">Restrições do dispositivo para atualizações automáticas</string>
     <string name="charging">Quando carregando</string>
-    <string name="pref_update_only_non_completed">Pular itens com o estado \"Completo\"</string>
     <string name="pref_auto_update_manga_sync">Atualizar o progresso após a leitura</string>
     <string name="default_category">Categoria padrão</string>
     <string name="default_category_summary">Sempre perguntar</string>
@@ -284,7 +283,6 @@
     <string name="no_results_found">Nenhum resultado encontrado</string>
     <string name="migration_selection_prompt">Selecione uma fonte da qual migrar</string>
     <string name="pref_date_format">Formato de data</string>
-    <string name="pref_category_library_update">Atualização global</string>
     <string name="logout_title">Desconectar de %1$s?</string>
     <string name="logout">Desconectar</string>
     <string name="logout_success">Você foi desconectado</string>
@@ -455,7 +453,6 @@
     <string name="exclude">Excluir: %s</string>
     <string name="include">Incluir: %s</string>
     <string name="action_sort_chapter_fetch_date">Data de busca do capítulo</string>
-    <string name="pref_library_update_categories_details">Os itens nas categorias excluídas não serão atualizados mesmo que eles também estejam nas categorias incluídas.</string>
     <string name="pref_download_new_categories_details">Os itens nas categorias excluídas não serão disponibilizados offline mesmo que eles também estejam nas categorias incluídas.</string>
     <string name="pref_category_auto_download">Download automático</string>
     <string name="action_show_errors">Toque para ver os detalhes</string>
@@ -543,7 +540,6 @@
     <string name="database_clean">Nada a ser limpo</string>
     <string name="extension_api_error">Erro ao obter as extensões disponíveis</string>
     <string name="privacy_policy">Política de privacidade</string>
-    <string name="pref_update_only_completely_read">Pular itens com capítulos não lidos</string>
     <string name="library_errors_help">Para obter ajuda sobre como corrigir erros de atualização da biblioteca, veja %1$s</string>
     <string name="save_chapter_as_cbz">Salvar como arquivo CBZ</string>
     <string name="publishing_finished">Publicação finalizada</string>
@@ -553,7 +549,6 @@
     <string name="pref_navigate_pan">Navegar imagens longas</string>
     <string name="pref_landscape_zoom">Dar zoom automaticamente em imagens largas</string>
     <string name="action_display_cover_only_grid">Grade somente com capas</string>
-    <string name="pref_update_only_started">Pular itens que não tiveram a leitura iniciada</string>
     <string name="skipped_reason_completed">Pulado porque a série está finalizada</string>
     <string name="skipped_reason_not_caught_up">Pulado porque há capítulos não lidos</string>
     <string name="skipped_reason_not_started">Pulado porque nenhum capítulo foi lido</string>
@@ -683,7 +678,6 @@
     <string name="pref_chapter_swipe_start">Ação de deslizar para a esquerda</string>
     <string name="pref_double_tap_zoom">Toque duplo para dar zoom</string>
     <string name="action_sort_next_updated">Próxima atualização esperada</string>
-    <string name="pref_update_only_in_release_period">Prever a data do próximo lançamento</string>
     <string name="action_set_interval">Definir intervalo</string>
     <string name="action_filter_interval_custom">Personalizar a frequência de atualizações</string>
     <string name="skipped_reason_not_in_release_period">Pulado porque nenhum lançamento era esperado hoje</string>

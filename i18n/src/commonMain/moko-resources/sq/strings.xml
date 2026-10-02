@@ -47,7 +47,6 @@
     <string name="relative_time_today">Sot</string>
     <string name="pref_category_display">Shfaqja</string>
     <string name="pref_library_columns">Përmasat e grafikut</string>
-    <string name="pref_category_library_update">Përditësim global</string>
     <string name="update_never">Joaktiv</string>
     <string name="update_12hour">Çdo 12 orë</string>
     <string name="update_24hour">Ditore</string>
@@ -55,10 +54,8 @@
     <string name="connected_to_wifi">Vetëm në Wi-Fi</string>
     <string name="network_not_metered">Vetëm në rrjet pa matje</string>
     <string name="charging">Gjatë karikimit</string>
-    <string name="pref_update_only_completely_read">Me kapituj të palexuar</string>
     <string name="pref_library_update_refresh_metadata_summary">Kontrolloni për kopertinë dhe detaje të reja kur përditësoni bibliotekën</string>
     <string name="default_category">Kategoria e parazgjedhur</string>
-    <string name="pref_library_update_categories_details">Elementet në kategoritë e përjashtuara nuk do të përditësohen edhe nëse janë gjithashtu në kategoritë e përfshira.</string>
     <string name="all">Të gjitha</string>
     <string name="none">Asnje</string>
     <string name="include">Përfshi: %s</string>
@@ -170,8 +167,6 @@
     <string name="update_6hour">Çdo 6 orë</string>
     <string name="update_72hour">Çdo 3 ditë</string>
     <string name="pref_library_update_restriction">Përditësimet automatike të kufizimet e pajisjes</string>
-    <string name="pref_update_only_non_completed">Me statusin \"Përfunduar\"</string>
-    <string name="pref_update_only_started">Kjo nuk ka filluar</string>
     <string name="update_48hour">Çdo 2 ditë</string>
     <string name="pref_library_update_refresh_metadata">Rifresko automatikisht të dhënat meta</string>
     <string name="default_category_summary">Gjithmonë pyesni</string>

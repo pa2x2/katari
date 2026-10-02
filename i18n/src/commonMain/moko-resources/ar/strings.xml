@@ -78,7 +78,6 @@
     <string name="all">الكل</string>
     <string name="pref_library_update_restriction">تقييد التحديث التلقائي للجهاز</string>
     <string name="charging">عند الشحن</string>
-    <string name="pref_update_only_non_completed">تجاهل المجلات التي حالتها \"منتهية\"</string>
     <string name="pref_auto_update_manga_sync">تحديث تقدّم الفصول بعد القراءة</string>
     <string name="default_category">الفئة الافتراضية</string>
     <string name="default_category_summary">اسأل دائماً</string>
@@ -308,7 +307,6 @@
     <string name="obsolete_extension_message">هذه الإضافة لم تعد متوفرة. قد لا تعمل بشكل صحيح ويمكن أن تسبب بمشاكل في التطبيق. يوصى بإلغاء تثبيتها.</string>
     <string name="ext_obsolete">قديم جدًا</string>
     <string name="ext_updates_pending">التحديثات معلقة</string>
-    <string name="pref_category_library_update">التحديث العام</string>
     <string name="pref_category_display">العرض</string>
     <string name="hide_notification_content">أخفِ محتوى الإشعارات</string>
     <string name="secure_screen_summary">تُخفي الشاشة الآمنة محتوى التطبيق عند التبديل بين التطبيقات، وتمنع التقاط الشاشة كذلك</string>
@@ -461,7 +459,6 @@
     <string name="exclude">إستثناء: %s</string>
     <string name="include">تضمين: %s</string>
     <string name="none">لا شيء</string>
-    <string name="pref_library_update_categories_details">الإدخالات في الفئات المستبعدة لن يتم تحديثها حتى و ان كانت أيضا في الفئات المضمنة.</string>
     <string name="action_show_errors">إنقر لإظهار التفاصيل</string>
     <string name="pref_category_auto_download">التنزيل التلقائي</string>
     <string name="pref_download_new_categories_details">لن يتم تنزيل الإدخالات في الفئات المستبعدة حتى إذا كانت موجودة أيضًا في الفئات المضمنة.</string>
@@ -539,7 +536,6 @@
     <string name="library_errors_help">للحصول على المساعده في إصلاح أخطاء تحديث المكتبة، أنظر هنا%1$s</string>
     <string name="save_chapter_as_cbz">احفظ كأرشيف CBZ</string>
     <string name="privacy_policy">سياسة الخصوصية</string>
-    <string name="pref_update_only_completely_read">تجاهل المجلات ذات الفصول الغير مقروءة</string>
     <string name="ext_installer_legacy">قياسي</string>
     <string name="pref_auto_clear_chapter_cache">امسح ملفات التخزين المؤقت عند فتح التطبيق</string>
     <string name="database_clean">لا شئ للتنظيف</string>
@@ -551,7 +547,6 @@
     <string name="action_display_cover_only_grid">شبكة بالاغلفة فقط</string>
     <string name="skipped_reason_not_started">تُخُطِّيت بسبب عدم وجود فصول قُرئت</string>
     <string name="skipped_reason_not_caught_up">تُخُطِّيت لوجود فصول لم تُقرأ</string>
-    <string name="pref_update_only_started">تجاهل المجلات التي لما تبدأ بقراءتها بعد</string>
     <string name="skipped_reason_completed">تُخُطِّيت لأنها مكتملة</string>
     <string name="pref_navigate_pan">حرِّك الصور الواسعة</string>
     <string name="pref_landscape_zoom">كبِّر الصور العريضة تلقائيًّا</string>
@@ -683,7 +678,6 @@
     <string name="action_set_interval">عيِّن المدة</string>
     <string name="action_filter_interval_custom">فترة تحديث مخصَّصة</string>
     <string name="manga_display_interval_title">قدِّر كلَّ</string>
-    <string name="pref_update_only_in_release_period">توقع موعد الإصدار القادم</string>
     <string name="skipped_reason_not_in_release_period">تُخُطِّيت بسبب عدم توقع صدور اليوم</string>
     <string name="manga_display_modified_interval_title">عيِّن التحديث كلَّ</string>
     <string name="intervals_header">المدة</string>

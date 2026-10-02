@@ -539,6 +539,18 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
                 .distinctUntilChanged()
         }
 
+        /** When the next automatic update is due to start, or null when none is scheduled. */
+        fun nextAutomaticRunFlow(context: Context): Flow<Long?> {
+            return context.workManager.getWorkInfosForUniqueWorkFlow(WORK_NAME_AUTO)
+                .map { workInfos ->
+                    workInfos
+                        .firstOrNull { !it.state.isFinished }
+                        ?.nextScheduleTimeMillis
+                        ?.takeIf { it != Long.MAX_VALUE }
+                }
+                .distinctUntilChanged()
+        }
+
         private fun Data.toLibraryUpdateProgress(): LibraryUpdateProgress? {
             val scope = getString(KEY_PROGRESS_SCOPE)
                 ?.let { name -> LibraryUpdateScope.entries.find { it.name == name } }

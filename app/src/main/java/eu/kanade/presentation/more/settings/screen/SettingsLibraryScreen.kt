@@ -53,7 +53,6 @@ internal enum class LibrarySettingsSection {
     Categories,
     Display,
     Group,
-    LibraryUpdate,
     Behavior,
 }
 
@@ -62,7 +61,6 @@ internal fun visibleLibrarySettingsSections(): List<LibrarySettingsSection> {
         LibrarySettingsSection.Categories,
         LibrarySettingsSection.Display,
         LibrarySettingsSection.Group,
-        LibrarySettingsSection.LibraryUpdate,
         LibrarySettingsSection.Behavior,
     )
 }
@@ -97,11 +95,6 @@ object SettingsLibraryScreen : SearchableSettings {
             },
             if (LibrarySettingsSection.Group in visibleSections) {
                 getGroupGroup(libraryPreferences)
-            } else {
-                null
-            },
-            if (LibrarySettingsSection.LibraryUpdate in visibleSections) {
-                getGlobalUpdateGroup(libraryPreferences)
             } else {
                 null
             },
@@ -156,77 +149,6 @@ object SettingsLibraryScreen : SearchableSettings {
                         }
                         true
                     },
-                ),
-            ),
-        )
-    }
-
-    @Composable
-    private fun getGlobalUpdateGroup(
-        libraryPreferences: LibraryPreferences,
-    ): Preference.PreferenceGroup {
-        val context = LocalContext.current
-
-        val autoUpdateIntervalPref = libraryPreferences.autoUpdateInterval
-        val scope = rememberCoroutineScope()
-
-        val autoUpdateInterval by autoUpdateIntervalPref.collectAsState()
-
-        return Preference.PreferenceGroup(
-            title = stringResource(MR.strings.pref_category_library_update),
-            preferenceItems = listOf(
-                Preference.PreferenceItem.ListPreference(
-                    preference = autoUpdateIntervalPref,
-                    entries = mapOf(
-                        0 to stringResource(MR.strings.update_never),
-                        12 to stringResource(MR.strings.update_12hour),
-                        24 to stringResource(MR.strings.update_24hour),
-                        48 to stringResource(MR.strings.update_48hour),
-                        72 to stringResource(MR.strings.update_72hour),
-                        168 to stringResource(MR.strings.update_weekly),
-                    ),
-                    title = stringResource(MR.strings.pref_library_update_interval),
-                    onValueChanged = {
-                        scope.launch { LibraryUpdateJob.setupTask(context, it) }
-                        true
-                    },
-                ),
-                Preference.PreferenceItem.MultiSelectListPreference(
-                    preference = libraryPreferences.autoUpdateDeviceRestrictions,
-                    entries = mapOf(
-                        DEVICE_ONLY_ON_WIFI to stringResource(MR.strings.connected_to_wifi),
-                        DEVICE_NETWORK_NOT_METERED to stringResource(MR.strings.network_not_metered),
-                        DEVICE_CHARGING to stringResource(MR.strings.charging),
-                    ),
-                    title = stringResource(MR.strings.pref_library_update_restriction),
-                    subtitle = stringResource(MR.strings.restrictions),
-                    enabled = autoUpdateInterval > 0,
-                    onValueChanged = {
-                        // Post to event looper to allow the preference to be updated.
-                        ContextCompat.getMainExecutor(context).execute {
-                            scope.launch { LibraryUpdateJob.setupTask(context) }
-                        }
-                        true
-                    },
-                ),
-                Preference.PreferenceItem.SwitchPreference(
-                    preference = libraryPreferences.autoUpdateMetadata,
-                    title = stringResource(MR.strings.pref_library_update_refresh_metadata),
-                    subtitle = stringResource(MR.strings.pref_library_update_refresh_metadata_summary),
-                ),
-                Preference.PreferenceItem.MultiSelectListPreference(
-                    preference = libraryPreferences.updateSkipRules,
-                    entries = mapOf(
-                        SKIP_UNSEEN to stringResource(MR.strings.pref_update_only_completely_read),
-                        SKIP_NOT_STARTED to stringResource(MR.strings.pref_update_only_started),
-                        SKIP_COMPLETED to stringResource(MR.strings.pref_update_only_non_completed),
-                        SKIP_OUTSIDE_RELEASE_PERIOD to stringResource(MR.strings.pref_update_only_in_release_period),
-                    ),
-                    title = stringResource(MR.strings.pref_library_update_smart_update),
-                ),
-                Preference.PreferenceItem.SwitchPreference(
-                    preference = libraryPreferences.newShowUpdatesCount,
-                    title = stringResource(MR.strings.pref_library_update_show_tab_badge),
                 ),
             ),
         )

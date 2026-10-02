@@ -159,13 +159,10 @@
     <string name="update_72hour">प्रतिदिनत्रयम्</string>
     <string name="charging">पारणसमये</string>
     <string name="restrictions">निर्बन्धाः - %s</string>
-    <string name="pref_category_library_update">सार्वत्रिकनवीकरणम्</string>
     <string name="update_12hour">प्रतिद्वादशघण्टा</string>
     <string name="update_weekly">प्रतिसप्ताहिकम्</string>
     <string name="pref_library_update_restriction">स्वयङ्कृतनवीकरणनाम् उपकरणनिर्बन्धाः</string>
     <string name="connected_to_wifi">केवलं वै-फ़ै माध्यमेन</string>
-    <string name="pref_update_only_completely_read">अपठितान् अध्यायान् गृह्णाति</string>
-    <string name="pref_update_only_non_completed">समापितधारावाहिकाः</string>
     <string name="pref_library_update_refresh_metadata_summary">ग्रन्थालयनवीकरणे सति नूतनमुखचित्राय विवरणाय च मार्गतु</string>
     <string name="default_category">प्राथमिकवर्गः</string>
     <string name="default_category_summary">सदा पृच्छतु</string>
@@ -188,7 +185,6 @@
     <string name="categorized_display_settings">प्रतिवर्गं विन्यासस्य प्रदर्शनस्य च कृते समायोजनानि</string>
     <string name="untrusted_extension">अविश्वस्तविस्तारः</string>
     <string name="extension_api_error">विस्तारसूच्याः प्राप्तिः अनुत्तीर्णा</string>
-    <string name="pref_library_update_categories_details">माङ्गाः याः वर्जितवर्गेषु सन्ति ताः अन्तर्भूतवर्गेषु सन्ति चेदपि तासां नवीकरणं न भविष्यति।</string>
     <string name="obsolete_extension_message">अयं विस्तारः इतःपरं न उपलभ्यः।</string>
     <string name="ext_trust">विश्वासः</string>
     <string name="ext_update_all">सर्वाणि नवीकरोतु</string>
@@ -498,7 +494,6 @@
     <string name="transition_no_next">अग्रिमाध्यायः नास्ति</string>
     <string name="transition_no_previous">पूर्वाध्यायः नास्ति</string>
     <string name="share_page_info">%1$s: %2$s पुटः च %3$d</string>
-    <string name="pref_update_only_started">पठिताः अध्यायाः न सन्ति</string>
     <string name="update_check_no_new_updates">नूतननवीकरणानि न उपलभ्यानि</string>
     <string name="chapter_settings_updated">अध्यायस्य प्राथमिकसमायोजनानि नवीकृतानि</string>
     <string name="source_unsupported">मूलं न भरितम्</string>

@@ -80,7 +80,6 @@
     <string name="all">समस्त</string>
     <string name="pref_library_update_restriction">स्वचालित अपडेट डिवाइस प्रतिबंध</string>
     <string name="charging">चार्ज होते समय</string>
-    <string name="pref_update_only_non_completed">पूरी की गई श्रृंखला</string>
     <string name="pref_auto_update_manga_sync">पढ़ने के बाद प्रगति अपडेट करें</string>
     <string name="default_category">डिफ़ॉल्ट श्रेणी</string>
     <string name="default_category_summary">हमेशा पूछे</string>
@@ -286,7 +285,6 @@
     <string name="ext_obsolete">अप्रचलित</string>
     <string name="obsolete_extension_message">यह एक्सटेंशन अब उपलब्ध नहीं है। यह अब शायद ठीक से काम न करे और मसला खड़ा करे। इसे अनइंस्टॉल करने की सलाह दी गई है।</string>
     <string name="pref_date_format">दिनांक स्वरूप</string>
-    <string name="pref_category_library_update">वैश्विक अपडेट</string>
     <string name="logout_title">%1$s से लॉगआउट करें?</string>
     <string name="logout">लॉग आउट</string>
     <string name="logout_success">अब आप लॉग आउट है</string>
@@ -512,7 +510,6 @@
     <string name="information_empty_category_dialog">आपके पास अभी तक कोई श्रेणी नहीं है।</string>
     <string name="confirm_lock_change">परिवर्तन की पुष्टि करने के लिए प्रमाणित करें</string>
     <string name="action_sort_chapter_fetch_date">अध्याय लाई की तिथि</string>
-    <string name="pref_library_update_categories_details">बहिष्कृत श्रेणियों की पुस्तकें अपडेट नहीं की जाएंगी, भले ही वे भी शामिल श्रेणियों में हों।</string>
     <string name="ext_installer_shizuku_unavailable_dialog">शिज़ुकु को एक्सटेंशन इंस्टॉलर के रूप में उपयोग करने के लिए शिज़ुकु को इंस्टॉल और प्रारंभ करें।</string>
     <string name="help_translate">अनुवाद में मदद करें</string>
     <string name="date">दिनांक</string>
@@ -543,7 +540,6 @@
     <string name="clear_database_source_item_count">डेटाबेस में %1$d गैर-पुस्तकालय आइटम</string>
     <string name="pref_auto_clear_chapter_cache">ऐप लॉन्च पर चैप्टर कैशे साफ़ करें</string>
     <string name="database_clean">साफ़ करने के लिए कुछ नहीं है</string>
-    <string name="pref_update_only_completely_read">अपठित अध्याय हैं</string>
     <string name="save_chapter_as_cbz">CBZ आर्कैव के रूप में सहेजें</string>
     <string name="privacy_policy">गोपनीयता नीति</string>
     <string name="library_errors_help">लाइब्रेरी अपडेट त्रुटियों को ठीक करने के तरीके पर सहायता के लिए, %1$s देखें</string>
@@ -555,7 +551,6 @@
     <string name="skipped_reason_completed">छोड़े गए क्योंकि श्रृंखला पूरी हो गई है</string>
     <string name="skipped_reason_not_caught_up">छोड़ दिया गया क्योंकि वहाँ अपठित अध्याय हैं</string>
     <string name="skipped_reason_not_started">छोड़ दिया गया क्योंकि कोई अध्याय पढ़ा नहीं गया</string>
-    <string name="pref_update_only_started">जो शुरू नहीं हुए हैं</string>
     <string name="action_show_manga">प्रविष्टि दिखाएँ</string>
     <string name="action_display_cover_only_grid">केवल कवर ग्रिड</string>
     <string name="disabled_nav">अक्षम</string>
@@ -644,7 +639,6 @@
     <string name="action_sort_next_updated">अगला अपेक्षित अपडेट</string>
     <string name="pref_debug_info">डीबग जानकारी</string>
     <string name="pref_advanced_summary">डंप क्रैश लॉग, बैटरी अनुकूलन</string>
-    <string name="pref_update_only_in_release_period">अपेक्षित रिलीज़ अवधि से बाहर</string>
     <string name="pref_chapter_swipe_start">अध्यााय: बाएँ स्वाइप करें</string>
     <string name="library_sync_complete">लाइब्रेरी सिंक पूरा</string>
     <string name="download_cache_invalidated">डाउनलोड अनुक्रमणिका अमान्य</string>

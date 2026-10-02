@@ -272,6 +272,13 @@ class LibraryPreferences(
             skipOutsideReleasePeriod = SKIP_OUTSIDE_RELEASE_PERIOD in values,
         )
 
+        fun skipRulesValues(rules: LibraryUpdateSkipRules): Set<String> = buildSet {
+            if (rules.skipCompleted) add(SKIP_COMPLETED)
+            if (rules.skipUnseen) add(SKIP_UNSEEN)
+            if (rules.skipNotStarted) add(SKIP_NOT_STARTED)
+            if (rules.skipOutsideReleasePeriod) add(SKIP_OUTSIDE_RELEASE_PERIOD)
+        }
+
         const val MARK_DUPLICATE_CHAPTER_READ_NEW = "new"
         const val MARK_DUPLICATE_CHAPTER_READ_EXISTING = "existing"
 

@@ -113,7 +113,6 @@
     <string name="all">הכל</string>
     <string name="default_category_summary">שאל תמיד</string>
     <string name="default_category">קטגוריית ברירת המחדל</string>
-    <string name="pref_update_only_non_completed">במצב \"נגמרה\"</string>
     <string name="charging">טוען</string>
     <string name="pref_library_update_restriction">הגבלות עדכונים אוטומטיים</string>
     <string name="update_weekly">פעם בשבוע</string>
@@ -123,7 +122,6 @@
     <string name="update_6hour">כל 6 שעות</string>
     <string name="update_never">כבוי</string>
     <string name="pref_library_update_interval">עדכונים אוטומטיים</string>
-    <string name="pref_category_library_update">עדכון גלובלי</string>
     <string name="landscape">מאוזן</string>
     <string name="portrait">מאונך</string>
     <string name="hide_notification_content">הסתר תוכן התראות</string>
@@ -355,12 +353,9 @@
     <string name="action_sort_date_added">תאריך הוספה</string>
     <string name="action_sort_chapter_fetch_date">תאריך האחזור של הפרקים</string>
     <string name="theme_monet">דינמי</string>
-    <string name="pref_library_update_categories_details">פריט הנמצא בקטגוריית מנועי העדכונים לא יעודכן גם אם הוא נכלל בקטגורייה אחרת שכן מתעדכנת.</string>
     <string name="action_show_manga">הראה פריט</string>
-    <string name="pref_update_only_completely_read">עם פרק(ים) שלא נקרא(ו)</string>
     <string name="action_move_to_top_all_for_series">העבר סדרה לראש</string>
     <string name="ext_obsolete">מיושן</string>
-    <string name="pref_update_only_started">זה עוד לא התחיל</string>
     <string name="ext_update_all">עדכן הכל</string>
     <string name="ext_trust">האמן</string>
     <string name="ext_nsfw_warning">עלול להכיל תוכן שלא מתאים למקום העבודה (18+)</string>
@@ -633,7 +628,6 @@
     <string name="not_applicable">N/A</string>
     <string name="library_errors_help">לזערה לגבי איך לתקן בעיות בעדכוני ספריה, ראה %1$s</string>
     <string name="exception_unknown_host">לא יכל להשיג את %s</string>
-    <string name="pref_update_only_in_release_period">מחוץ לתקופת הפרסום הצפויה</string>
     <string name="pref_page_rotate">סובב עמודים רחבים להתאמה</string>
     <string name="updates_last_update_info_just_now">ממש עכשיו</string>
     <string name="auto_download_while_reading">הורד אוטומטית בזמן קריאה</string>

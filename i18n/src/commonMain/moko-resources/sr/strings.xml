@@ -84,7 +84,6 @@
     <string name="all">Све</string>
     <string name="pref_library_update_restriction">Ограничења уређаја за аутоматска ажурирања</string>
     <string name="charging">Пуњење</string>
-    <string name="pref_update_only_non_completed">Прескочи уносе са статусом \"Завршено\"</string>
     <string name="pref_auto_update_manga_sync">Ажурирај пратиоца након читања</string>
     <string name="default_category">Подразумевана категорија</string>
     <string name="default_category_summary">Увек питај</string>
@@ -224,7 +223,6 @@
     <string name="pref_category_library">Колекција</string>
     <string name="obsolete_extension_message">Овај додатак није више доступан. Можда неће исправно функционисати и може изазвати проблеме са апликацијом. Препоручује се деинсталирање.</string>
     <string name="pref_date_format">Формат датума</string>
-    <string name="pref_category_library_update">Глобално ажурирање</string>
     <string name="logout_title">Излогуј се из %1$s?</string>
     <string name="logout">Излогуј се</string>
     <string name="logout_success">Сада сте излоговани</string>
@@ -492,7 +490,6 @@
     <string name="connected_to_wifi">Само преко Wi-Fi-а</string>
     <string name="restrictions">Ограничења: %s</string>
     <string name="categorized_display_settings">Поставке за сортирање одвојено за сваку категорију</string>
-    <string name="pref_library_update_categories_details">Наслови у искљученим категоријама се неће ажурирати иако су такође у укљученим категоријама.</string>
     <string name="include">Укључи: %s</string>
     <string name="exclude">Искључи: %s</string>
     <string name="ext_install_service_notif">Инсталирање додатка…</string>
@@ -547,11 +544,9 @@
     <string name="extension_api_error">Преузимање листе додатака није успело</string>
     <string name="pref_auto_clear_chapter_cache">Испразни кеш меморију поглавља током покретања апликације</string>
     <string name="database_clean">Нема ништа за чишћење</string>
-    <string name="pref_update_only_completely_read">Прескочи уносе са непрочитаним поглављима</string>
     <string name="privacy_policy">Политика приватности</string>
     <string name="cancelled">Отказано</string>
     <string name="on_hiatus">На паузи</string>
-    <string name="pref_update_only_started">Прескочи уносе који нису започети</string>
     <string name="action_show_manga">Прикажи наслов</string>
     <string name="action_move_to_top_all_for_series">Помакни наслов на врх</string>
     <string name="learn_more">Додирните да сазнате више</string>
@@ -690,7 +685,6 @@
     <string name="create_backup_file_error">Није могуће створити датотеку резервне копије</string>
     <string name="has_results">Има резултата</string>
     <string name="skipped_reason_not_in_release_period">Прескочено јер данас није очекивано издање</string>
-    <string name="pref_update_only_in_release_period">Предвиди очекивано време изласка</string>
     <string name="action_set_interval">Постави интервал</string>
     <string name="intervals_header">Интервали</string>
     <string name="track_delete_remote_text">Такође уклони из %s</string>

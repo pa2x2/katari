@@ -54,7 +54,6 @@
     <string name="all">Tudo</string>
     <string name="pref_library_update_restriction">Restrições do aparelho para atualizações automáticas</string>
     <string name="charging">Ao carregar</string>
-    <string name="pref_update_only_non_completed">Com estado \'\'Terminado\'\'</string>
     <string name="pref_auto_update_manga_sync">Atualizar progresso após a leitura</string>
     <string name="pref_page_transitions">Animar transições de página</string>
     <string name="pref_show_page_number">Mostrar número de página</string>
@@ -282,7 +281,6 @@
     <string name="ext_obsolete">Obsoleto</string>
     <string name="obsolete_extension_message">Esta extensão não está mais disponível. Ela pode não funcionar corretamente e pode causar problemas na app. É recomendado desinstalá-la.</string>
     <string name="pref_date_format">Formato da data</string>
-    <string name="pref_category_library_update">Atualização global</string>
     <string name="logout_title">Terminar sessão em %1$s?</string>
     <string name="logout">Terminar sessão</string>
     <string name="logout_success">Sua sessão está agora encerrada</string>
@@ -456,7 +454,6 @@
     <string name="pref_download_new_categories_details">Os itens nas categorias excluídas não serão disponibilizados offline mesmo que eles também estejam nas categorias incluídas.</string>
     <string name="exclude">Excluir: %s</string>
     <string name="include">Incluir: %s</string>
-    <string name="pref_library_update_categories_details">Os itens nas categorias excluídas não serão atualizados mesmo que eles também estejam nas categorias incluídas.</string>
     <string name="action_show_errors">Toque para ver detalhes</string>
     <string name="action_sort_chapter_fetch_date">Data de procura do capítulo</string>
     <string name="rotation_landscape">Horizontal</string>
@@ -524,7 +521,6 @@
     <string name="notification_size_warning">Grandes atualizações prejudicam as fontes e podem levar a atualizações lentas e ainda ao aumento do uso da bateria. Toque para saber mais.</string>
     <string name="library_errors_help">Para obter ajuda sobre como corrigir erros de atualização da biblioteca, veja %1$s</string>
     <string name="pref_auto_clear_chapter_cache">Limpar a cache de capítulos ao fechar a app</string>
-    <string name="pref_update_only_completely_read">Com capítulo(s) não lidos</string>
     <string name="pref_hide_threshold">Sensibilidade para ocultar menu ao deslocar</string>
     <string name="pref_high">Alta</string>
     <string name="pref_low">Baixa</string>
@@ -556,7 +552,6 @@
     <string name="skipped_reason_not_started">Ignorado porque nenhum capítulo foi lido</string>
     <string name="skipped_reason_not_caught_up">Ignorado porque existem capítulos não lidos</string>
     <string name="empty_backup_error">Sem entradas na biblioteca para fazer cópia de segurança</string>
-    <string name="pref_update_only_started">Que não começaram a ser lidos</string>
     <string name="pref_clear_webview_data">Limpar dados do WebView</string>
     <string name="webview_data_deleted">Dados do WebView limpos</string>
     <string name="rotation_reverse_portrait">Vertical invertido</string>
@@ -679,7 +674,6 @@
     <string name="pref_chapter_swipe_start">Capítulo ao deslizar para a esquerda</string>
     <string name="pref_double_tap_zoom">Toque duplo para aproximar</string>
     <string name="action_set_interval">Definir intervalo</string>
-    <string name="pref_update_only_in_release_period">Fora do período esperado de lançamento</string>
     <string name="pref_debug_info">Informações de depuração</string>
     <string name="pref_chapter_swipe_end">Capítulo ao deslizar para a direita</string>
     <string name="intervals_header">intervalos</string>

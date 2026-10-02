@@ -217,7 +217,6 @@
     <string name="download_notifier_unknown_error">다운로드 중에 예기치 않은 오류가 발생하였습니다</string>
     <string name="download_notifier_download_paused">다운로드 일시중지됨</string>
     <string name="action_display_download_badge">다운로드한 챕터</string>
-    <string name="pref_update_only_non_completed">연재가 끝났을 때 항목 건너뛰기</string>
     <string name="pref_auto_update_manga_sync">읽은 기록 동기화</string>
     <string name="default_category_summary">항상 물어보기</string>
     <string name="pref_create_backup_summ">현재 서재를 나중에 복구하는 데 사용 가능</string>
@@ -382,7 +381,6 @@
     <string name="lock_with_biometrics">잠금 해제 필요</string>
     <string name="pref_category_appearance">모양</string>
     <string name="relative_time_today">오늘</string>
-    <string name="pref_category_library_update">전역 업데이트</string>
     <string name="pref_category_security">보안 및 개인정보 보호</string>
     <string name="lock_always">항상</string>
     <string name="lock_never">끄기</string>
@@ -420,7 +418,6 @@
     <string name="chapter_settings_updated">기본 회차 설정을 업데이트 했습니다</string>
     <string name="include">포함: %s</string>
     <string name="label_background_activity">백그라운드 활동</string>
-    <string name="pref_update_only_completely_read">안 읽은 회차가 있을 때 항목 건너뛰기</string>
     <string name="categorized_display_settings">카테고리 별 정렬 설정</string>
     <string name="ext_installer_shizuku_unavailable_dialog">Shizuku를 확장 앱 인스톨러로 사용하려면 Shizuku를 먼저 설치해 주세요.</string>
     <string name="ext_update_all">전부 업데이트</string>
@@ -542,7 +539,6 @@
     <string name="cancel_all_for_series">이 만화의 항목을 모두 취소</string>
     <string name="action_webview_forward">앞으로</string>
     <string name="pref_create_folder_per_manga">각각의 폴더에 페이지 저장</string>
-    <string name="pref_update_only_started">읽지 않은 항목 건너뛰기</string>
     <string name="action_move_to_top_all_for_series">이 시리즈를 맨 위로 이동</string>
     <string name="action_webview_refresh">새로고침</string>
     <string name="theme_greenapple">청사과</string>
@@ -555,7 +551,6 @@
     <string name="action_show_errors">터치하여 자세히 보기</string>
     <string name="update_72hour">3일</string>
     <string name="restrictions">제한: %s</string>
-    <string name="pref_library_update_categories_details">카테고리가 업데이트에서 제외된 경우 다른 카테고리에 포함되어 있어도 업데이트 되지 않습니다.</string>
     <string name="ext_updates_pending">업데이트 대기 중</string>
     <string name="pref_library_update_refresh_metadata_summary">서재 업데이트 시 새로운 표지와 설명 확인</string>
     <string name="notification_chapters_single_and_more">%1$s화와 그 외 %2$d화</string>
@@ -692,7 +687,6 @@
     <string name="action_ok">OK</string>
     <string name="skipped_reason_not_in_release_period">오늘 연재가 예상되지 않았기 때문에 건너뛰었습니다</string>
     <string name="track_delete_title">%s 동기화를 삭제 하시겠습니까?</string>
-    <string name="pref_update_only_in_release_period">다음 연재 기간 예측</string>
     <string name="download_cache_invalidated">다운로드 인덱스 재생성</string>
     <string name="action_sort_next_updated">다음 업데이트 예정</string>
     <string name="information_cloudflare_help">탭하여 Cloudflare에 관한 도움말 보기</string>

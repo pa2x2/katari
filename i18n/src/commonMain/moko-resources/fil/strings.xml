@@ -195,7 +195,6 @@
     <string name="default_category">Default na kategorya</string>
     <string name="pref_library_update_refresh_metadata_summary">Maghanap ng mga bagong pabalat at detalye kapag nag-a-update ng aklatan</string>
     <string name="pref_library_update_refresh_metadata">Awtomatikong i-refresh ang metadata</string>
-    <string name="pref_update_only_non_completed">Laktawan ang mga entry na may katayuang \"Nakumpleto\"</string>
     <string name="charging">Kapag naka-charge</string>
     <string name="pref_library_update_restriction">Awtomatikong ina-update ang mga paghihigpit sa device</string>
     <string name="update_weekly">Linggo-linggo</string>
@@ -205,7 +204,6 @@
     <string name="update_6hour">Kada 6 na oras</string>
     <string name="update_never">Nakapatay</string>
     <string name="pref_library_update_interval">Awtomatikong pag-update</string>
-    <string name="pref_category_library_update">Panlahatang update</string>
     <string name="landscape">Pahiga</string>
     <string name="portrait">Patayo</string>
     <string name="pref_library_columns">Mga item kada row</string>
@@ -456,7 +454,6 @@
     <string name="exclude">Na-ibukod: %s</string>
     <string name="include">Kasali ang: %s</string>
     <string name="none">Wala</string>
-    <string name="pref_library_update_categories_details">Hindi ia-update ang mga entry na nasa na-ibukod na mga kategorya kahit na nasa mga kasamang kategorya rin sila.</string>
     <string name="action_sort_chapter_fetch_date">Petsa ng pagkuha ng kabanata</string>
     <string name="action_show_errors">I-tap para makita ang detalye</string>
     <string name="update_check_eol">Di na suportado ang bersyong ito ng Android</string>
@@ -544,7 +541,6 @@
     <string name="extension_api_error">Bigong makuha ng mga available na extension</string>
     <string name="privacy_policy">Patakaran sa Pagkapribado</string>
     <string name="library_errors_help">Para sa tulong sa pag-aayos ng mga error sa pag-update ng aklatan, tingnan ang %1$s</string>
-    <string name="pref_update_only_completely_read">Laktawan ang mga entry na hindi pa nababasang kabanata</string>
     <string name="save_chapter_as_cbz">I-save bilang CBZ archive</string>
     <string name="publishing_finished">Tapos na ang paglalathala</string>
     <string name="on_hiatus">Naka-hiatus</string>
@@ -552,7 +548,6 @@
     <string name="action_show_manga">Ipakita ang entry</string>
     <string name="action_display_cover_only_grid">Pabalat lamang na grid</string>
     <string name="skipped_reason_completed">Nilaktawan dahil kumpleto na ang serye</string>
-    <string name="pref_update_only_started">Laktawan ang hindi nasimulang mga entry</string>
     <string name="skipped_reason_not_caught_up">Nilaktawan dahil may di pa nabasang mga kabanata</string>
     <string name="skipped_reason_not_started">Nilaktawan dahil wala pang nabasang mga kabanata</string>
     <string name="pref_landscape_zoom">Awtomatikong mag-zoom sa mga malalawak na larawan</string>
@@ -687,7 +682,6 @@
     <string name="action_sort_next_updated">Susunod na inaasahang update</string>
     <string name="manga_display_interval_title">Tantyahin bawat</string>
     <string name="manga_display_modified_interval_title">Itakdang i-update bawat</string>
-    <string name="pref_update_only_in_release_period">Hulaan ang susunod na oras ng release</string>
     <string name="intervals_header">Mga pagitan</string>
     <string name="skipped_reason_not_in_release_period">Nilaktawan dahil walang inaasahang release ngayong araw</string>
     <string name="has_results">May mga resulta</string>

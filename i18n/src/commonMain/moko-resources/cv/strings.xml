@@ -44,7 +44,6 @@
     <string name="update_12hour">Кашни 12 сехет</string>
     <string name="update_6hour">Кашни 6 сехет</string>
     <string name="pref_library_update_interval">Ҫӗнетни тӑтӑшлӑхӗ</string>
-    <string name="pref_category_library_update">Пӗтӗмӗшле ҫӗнетӳ</string>
     <string name="pref_category_display">Кӑтарт</string>
     <string name="secure_screen">Ыкран сыхлавӗ</string>
     <string name="pref_category_security">Сыхлав тата вӑрттӑнлӑх</string>
@@ -172,7 +171,6 @@
     <string name="default_category">Йаланхилле пухмӑш</string>
     <string name="pref_library_update_refresh_metadata_summary">Вулавӑша ҫӗнетнӗ чухне ҫӗнӗ хуплашка тата вак-тӗвек пуррине тӗрӗслени</string>
     <string name="pref_library_update_refresh_metadata">Хӑй-халлӗн метта пӗлӗмсене ҫӗнетмелле</string>
-    <string name="pref_update_only_non_completed">Вӗҫленнисене сиктермелле</string>
     <string name="pref_category_about">Ап ҫинчен</string>
     <string name="ext_untrusted">Шанчӑклӑ мар</string>
     <string name="ext_trust">Шанчӑклӑ</string>
@@ -495,7 +493,6 @@
     <string name="action_display_show_continue_reading_button">«Малалла вула» пускӑч</string>
     <string name="pref_security_summary">Апа ҫаклатни, ыкран хӳтӗлевӗ</string>
     <string name="restrictions">Чарусем: %s</string>
-    <string name="pref_update_only_completely_read">Вуламан сыпӑклисене сиктермелле</string>
     <string name="label_started">Пуҫланӑ</string>
     <string name="label_local">Вырӑнти</string>
     <string name="label_downloaded">Тийесе илнӗ</string>
@@ -508,7 +505,6 @@
     <string name="theme_greenapple">Симӗс пан улми</string>
     <string name="theme_yotsuba">Йутсупа</string>
     <string name="network_not_metered">Чараксӑр тетел урлӑ ҫеҫ</string>
-    <string name="pref_update_only_started">Пуҫнанисене сиктермелле</string>
     <string name="theme_tako">Такку</string>
     <string name="pref_dark_theme_pure_black">Хуп-хура темӗ</string>
     <string name="pref_app_language">Ап чӗлхи</string>
@@ -538,7 +534,6 @@
     <string name="ext_info_version">Верҫҫи</string>
     <string name="ext_update_all">Пурне те ҫӗнет</string>
     <string name="delete_downloaded">Тийесе илнисене катерт</string>
-    <string name="pref_update_only_in_release_period">Ҫӗнӗ сыпӑк хӑҫан тухассине шутламалла</string>
     <string name="pref_chapter_swipe_end">Сылтӑмалла туртсан сыпӑк</string>
     <string name="pref_chapter_swipe_start">Сулахайалла туртсан сыпӑк</string>
     <string name="ext_installer_pref">Ларткӑч</string>
@@ -553,7 +548,6 @@
     <string name="action_ok">Йурӗ</string>
     <string name="unlock_app_title">%s уҫ</string>
     <string name="action_move_to_bottom_all_for_series">Хайлава вӗҫе куҫар</string>
-    <string name="pref_library_update_categories_details">Кӗртнӗ пухмӑшсенче пулнӑ пулсан та кӑларса пӑрахнӑ пухмӑшсенче пулнӑ серилӗхсем ҫӗнелмӗҫ.</string>
     <string name="selected">Суйланӑ</string>
     <string name="not_selected">Суйламан</string>
     <string name="action_bar_up_description">Ҫӳлелле куҫ</string>

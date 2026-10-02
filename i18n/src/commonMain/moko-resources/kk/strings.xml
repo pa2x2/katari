@@ -174,7 +174,6 @@
     <string name="pref_category_display">Көрсету</string>
     <string name="portrait">Портрет</string>
     <string name="landscape">Пейзаж</string>
-    <string name="pref_category_library_update">Ауқымды жаңарту</string>
     <string name="pref_library_update_interval">Автоматты жаңартулар</string>
     <string name="action_resume">Жалғастыру</string>
     <string name="pref_app_language">Қолданба тілі</string>
@@ -204,7 +203,6 @@
     <string name="action_display_comfortable_grid">Ыңғайлы кесте</string>
     <string name="action_display_cover_only_grid">Атаусыз кесте</string>
     <string name="pref_library_update_refresh_metadata">Метадеректерді автоматты түрде жаңарту</string>
-    <string name="pref_library_update_categories_details">Шығарылған санаттардағы жазбалар енгізілген санаттарда болса да жаңартылмайды.</string>
     <string name="all">Барлығы</string>
     <string name="none">Ешқайсы</string>
     <string name="exclude">Шығару: %s</string>
@@ -219,15 +217,12 @@
     <string name="pref_dual_page_split">Қең беттерді бөлу</string>
     <string name="pref_show_page_number">Бет нөмірін көрсету</string>
     <string name="pref_color_filter_mode">Жарықты сүзу режимі</string>
-    <string name="pref_update_only_completely_read">Тарауы оқылмаған топтаманы өткізе беру</string>
-    <string name="pref_update_only_non_completed">«Аяқталған» күйімен</string>
     <string name="pref_dual_page_invert">Қос бетті бөлуді инверттеу</string>
     <string name="action_display_grid">Ықшам кесте</string>
     <string name="pref_show_reading_mode_summary">Оқыма ашылғаннан кейін оқу түрін қысқаша көрсету</string>
     <string name="pref_crop_borders">Кесу жиектері</string>
     <string name="extension_api_error">Кеңейтулер тізімін алу сәтсіз өтті</string>
     <string name="pref_cutout_short">Мазмұнды кесу аймағында көрсету</string>
-    <string name="pref_update_only_started">Бұл басталған жоқ</string>
     <string name="pref_library_update_refresh_metadata_summary">Кітапхананы жаңарту кезінде жаңа мұқаба мен мәліметтерді тексеру</string>
     <string name="ext_updates_pending">Жаңартулар күтілуде</string>
     <string name="ext_update_all">Барлығын жаңарту</string>

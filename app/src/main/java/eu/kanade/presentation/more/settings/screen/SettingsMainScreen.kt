@@ -24,6 +24,7 @@ import androidx.compose.material.icons.outlined.Security
 import androidx.compose.material.icons.outlined.Storage
 import androidx.compose.material.icons.outlined.Sync
 import androidx.compose.material.icons.outlined.Translate
+import androidx.compose.material.icons.outlined.Update
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.TopAppBarDefaults
@@ -204,6 +205,12 @@ object SettingsMainScreen : Screen() {
             subtitleRes = MR.strings.pref_library_summary_unified,
             icon = Icons.Outlined.CollectionsBookmark,
             screen = SettingsLibraryScreen,
+        ),
+        Item(
+            titleRes = MR.strings.pref_category_library_updates,
+            subtitleRes = MR.strings.pref_library_updates_summary,
+            icon = Icons.Outlined.Update,
+            screen = SettingsLibraryUpdatesScreen,
         ),
         Item(
             titleRes = MR.strings.pref_category_readers,

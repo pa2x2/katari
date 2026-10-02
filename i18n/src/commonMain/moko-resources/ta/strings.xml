@@ -271,7 +271,6 @@
     <string name="pref_library_columns">ஒரு வரிசையில் உருப்படிகள்</string>
     <string name="portrait">உருவப்படம்</string>
     <string name="landscape">நிலப்பரப்பு</string>
-    <string name="pref_category_library_update">உலகளாவிய புதுப்பிப்பு</string>
     <string name="pref_library_update_interval">தானியங்கி புதுப்பிப்புகள்</string>
     <string name="update_never">அணை</string>
     <string name="update_6hour">ஒவ்வொரு 6 மணி நேரமும்</string>
@@ -293,17 +292,12 @@
     <string name="charging">கட்டணம் வசூலிக்கும்போது</string>
     <string name="restrictions">கட்டுப்பாடுகள்: %s</string>
     <string name="pref_library_update_smart_update">அறிவுள்ள புதுப்பிப்பு</string>
-    <string name="pref_update_only_completely_read">படிக்காத அத்தியாயம் (கள்) உடன் உள்ளீடுகளைத் தவிர்க்கவும்</string>
-    <string name="pref_update_only_non_completed">\"நிறைவு செய்யப்பட்ட\" நிலையுடன் உள்ளீடுகளைத் தவிர்க்கவும்</string>
-    <string name="pref_update_only_started">சிக்கலற்ற உள்ளீடுகளைத் தவிர்க்கவும்</string>
-    <string name="pref_update_only_in_release_period">அடுத்த வெளியீட்டு நேரத்தை கணிக்கவும்</string>
     <string name="pref_library_update_show_tab_badge">புதுப்பிப்புகள் ஐகானில் படிக்காத எண்ணிக்கையைக் காட்டுங்கள்</string>
     <string name="pref_library_update_refresh_metadata">மெட்டாடேட்டாவை தானாக புதுப்பிக்கவும்</string>
     <string name="pref_library_update_refresh_metadata_summary">நூலகத்தைப் புதுப்பிக்கும்போது புதிய கவர் மற்றும் விவரங்களைச் சரிபார்க்கவும்</string>
     <string name="default_category">இயல்புநிலை வகை</string>
     <string name="default_category_summary">எப்போதும் கேளுங்கள்</string>
     <string name="categorized_display_settings">வரிசைக்கான ஒரு வகை அமைப்புகள்</string>
-    <string name="pref_library_update_categories_details">விலக்கப்பட்ட வகைகளில் உள்ளீடுகள் சேர்க்கப்பட்ட வகைகளில் இருந்தாலும் அவை புதுப்பிக்கப்படாது.</string>
     <string name="all">அனைத்தும்</string>
     <string name="none">எதுவுமில்லை</string>
     <string name="include">அடங்கும்: %s</string>

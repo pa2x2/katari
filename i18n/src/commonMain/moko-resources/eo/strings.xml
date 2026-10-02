@@ -170,7 +170,6 @@
     <string name="update_6hour">Ĉiun 6-an horon</string>
     <string name="update_never">Malŝaltitaj</string>
     <string name="pref_library_update_interval">Aŭtomataj ĝisdatigoj</string>
-    <string name="pref_category_library_update">Tuta ĝisdatigo</string>
     <string name="landscape">Horizontale</string>
     <string name="portrait">Vertikale</string>
     <string name="pref_category_display">Montrado</string>
@@ -401,7 +400,6 @@
     <string name="pref_inverted_colors">Inversigita</string>
     <string name="pref_dual_page_split">Dividi larĝajn paĝojn</string>
     <string name="ext_pending">Atendanta</string>
-    <string name="pref_update_only_non_completed">Preterpasi elementojn kun \"Finita\" statuso</string>
     <string name="restrictions">Limigoj: %s</string>
     <string name="theme_yotsuba">Jocuba</string>
     <string name="theme_tealturquoise">Bluverda k verdblua</string>
@@ -553,21 +551,17 @@
     <string name="firebase_summary">Sendado de prikolapsaj protokoloj kaj analitikoj eblos al ni identigi kaj ripari problemojn, plibonigi rendimenton kaj igi estontajn ĝisdatigojn pli rilataj al viaj bezonoj</string>
     <string name="parental_controls_info">Tio ne preventas neoficialajn aŭ eventuale malĝuste markitajn etendaĵojn montri NSFW-enhavon (18+) ene de la apo.</string>
     <string name="update_72hour">Ĉiun 3-an tagon</string>
-    <string name="pref_update_only_started">Preterpasi nekomencitajn elementojn</string>
     <string name="pref_chapter_swipe_end">Ĉapitro je ŝovumo dekstren</string>
     <string name="ext_remove">Forigi</string>
     <string name="ext_confirm_remove">Ĉu forigi etendaĵon?</string>
     <string name="remove_private_extension_message">Ĉu vi vere volas forigi etendaĵon \"%s\"?</string>
     <string name="label_completed_titles">Finitaj elementoj</string>
-    <string name="pref_update_only_in_release_period">Prognozi daton de sekva eldono</string>
     <string name="connected_to_wifi">Nur per vifio</string>
     <string name="ext_installer_shizuku_stopped">Shizuku ne ruliĝas</string>
     <string name="categorized_display_settings">Agordoj de ordigo laŭ kategorio</string>
     <string name="pref_chapter_swipe_start">Ĉapitro je ŝovumo maldekstren</string>
     <string name="untrusted_extension_message">Malicaj etendaĵoj povas legi ĉiujn el konservitaj ensalutiloj aŭ plenumi arbitran kodon.\n\nFidante ĉi tiun etendaĵon, vi akceptas tiujn riskojn.</string>
     <string name="pref_library_update_smart_update">Saĝa ĝisdatigo</string>
-    <string name="pref_update_only_completely_read">Preterpasi elementojn kun nelegita(j)n ĉapitro(j)n</string>
-    <string name="pref_library_update_categories_details">Elementoj en ekskluzivitaj kategorioj ne estos ĝisdatigotaj, eĉ se ili estas ankaŭ en inkluzivitaj kategorioj.</string>
     <string name="pref_library_update_show_tab_badge">Montri nombron de la nelegitaj sur piktogramo Ĝisdatigoj</string>
     <string name="multi_lang">Plur</string>
     <string name="ext_app_info">Pri apo</string>

@@ -756,7 +756,7 @@
     <string name="pref_appearance_summary">Theme, date &amp; time format</string>
     <string name="pref_library_summary">Categories, global update, chapter swipe</string>
     <string name="pref_library_summary_anime">Categories, display, group, updates</string>
-    <string name="pref_library_summary_unified">Categories, display, updates, and behavior</string>
+    <string name="pref_library_summary_unified">Categories, display, and behavior</string>
     <string name="pref_reader_summary">Reading mode, display, navigation</string>
     <string name="pref_player_summary">Picture-in-Picture, seek preview</string>
     <string name="pref_downloads_summary">Automatic download, download ahead, auto-translate</string>
@@ -822,7 +822,32 @@
     <string name="portrait">Portrait</string>
     <string name="landscape">Landscape</string>
 
-    <string name="pref_category_library_update">Global update</string>
+    <string name="pref_category_library_updates">Library updates</string>
+    <string name="pref_library_updates_summary">Schedule, categories, sources, skip rules</string>
+    <string name="library_updates_last_update">Last update</string>
+    <string name="library_updates_last_update_none">No update has run yet</string>
+    <string name="library_updates_running">Running now</string>
+    <string name="library_updates_next_automatic">Next automatic update</string>
+    <string name="library_updates_automatic_off">Automatic updates are off</string>
+    <string name="library_updates_schedule">Schedule</string>
+    <string name="library_updates_types">Types</string>
+    <string name="library_updates_skip_when">Skip an entry when…</string>
+    <string name="library_updates_also">Also</string>
+    <string name="library_updates_not_checked">Not checked</string>
+    <string name="library_updates_own_skip_rules">Own skip rules</string>
+    <string name="library_updates_show_all">Show all</string>
+    <string name="library_updates_show_fewer">Show fewer</string>
+    <string name="library_updates_skip_completed">It\'s completed</string>
+    <string name="library_updates_skip_unseen">It has unseen items</string>
+    <string name="library_updates_skip_not_started">You haven\'t started it</string>
+    <string name="library_updates_skip_outside_release">Only check near its expected release</string>
+    <string name="library_updates_check_automatically">Check automatically</string>
+    <string name="library_updates_category_off_summary">Its entries are only checked when set to Always check</string>
+    <string name="library_updates_use_library_rules">Use library rules</string>
+    <string name="library_updates_library_on">Library: on</string>
+    <string name="library_updates_library_off">Library: off</string>
+    <string name="library_updates_check_every">Check every</string>
+    <string name="library_updates_library_interval">Library interval (%s)</string>
     <string name="pref_library_update_interval">Automatic updates</string>
     <string name="update_never">Off</string>
     <string name="update_6hour">Every 6 hours</string>
@@ -838,10 +863,6 @@
     <string name="restrictions">Restrictions: %s</string>
 
     <string name="pref_library_update_smart_update">Smart update</string>
-    <string name="pref_update_only_completely_read">Skip entries with unseen items</string>
-    <string name="pref_update_only_non_completed">Skip entries with \"Completed\" status</string>
-    <string name="pref_update_only_started">Skip unstarted entries</string>
-    <string name="pref_update_only_in_release_period">Predict next release time</string>
     <string name="pref_library_update_show_tab_badge">Show unseen count on Updates icon</string>
 
     <string name="pref_library_update_refresh_metadata">Automatically refresh metadata</string>
@@ -850,7 +871,6 @@
     <string name="default_category">Default category</string>
     <string name="default_category_summary">Always ask</string>
     <string name="categorized_display_settings">Per-category settings for sort</string>
-    <string name="pref_library_update_categories_details">Entries in excluded categories will not be updated even if they are also in included categories.</string>
     <string name="all">All</string>
     <string name="none">None</string>
     <string name="include">Include: %s</string>

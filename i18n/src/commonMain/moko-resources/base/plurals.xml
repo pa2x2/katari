@@ -299,4 +299,40 @@
         <item quantity="one">Fix %1$d problem to apply</item>
         <item quantity="other">Fix %1$d problems to apply</item>
     </plurals>
+    <plurals name="library_updates_entries">
+        <item quantity="one">%d entry</item>
+        <item quantity="other">%d entries</item>
+    </plurals>
+    <plurals name="library_updates_new_chapters">
+        <item quantity="one">%d new chapter</item>
+        <item quantity="other">%d new chapters</item>
+    </plurals>
+    <plurals name="library_updates_failed">
+        <item quantity="one">%d failed</item>
+        <item quantity="other">%d failed</item>
+    </plurals>
+    <plurals name="library_updates_skipped">
+        <item quantity="one">%d skipped</item>
+        <item quantity="other">%d skipped</item>
+    </plurals>
+    <plurals name="library_updates_checks_of">
+        <item quantity="one">Checks %1$d of %2$d entry</item>
+        <item quantity="other">Checks %1$d of %2$d entries</item>
+    </plurals>
+    <plurals name="library_updates_manual_checks_of">
+        <item quantity="one">Updating now would check %1$d of %2$d entry</item>
+        <item quantity="other">Updating now would check %1$d of %2$d entries</item>
+    </plurals>
+    <plurals name="library_updates_sources_all_checked">
+        <item quantity="one">%d source checked</item>
+        <item quantity="other">All %d sources checked</item>
+    </plurals>
+    <plurals name="library_updates_sources_some_off">
+        <item quantity="one">%1$d of %2$d source not checked</item>
+        <item quantity="other">%1$d of %2$d sources not checked</item>
+    </plurals>
+    <plurals name="library_updates_defers">
+        <item quantity="one">Defers %d entry today</item>
+        <item quantity="other">Defers %d entries today</item>
+    </plurals>
 </resources>

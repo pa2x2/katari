@@ -208,7 +208,6 @@
     <string name="all">ಎಲ್ಲಾ</string>
     <string name="default_category_summary">ಯಾವಾಗಲೂ ಕೇಳಿ</string>
     <string name="default_category">ಡೀಫಾಲ್ಟ್ ವರ್ಗ</string>
-    <string name="pref_update_only_non_completed">ಚಾಲ್ತಿಯಿರುವ ಮಾಂಗಾವನ್ನು ಮಾತ್ರ ನವೀಕರಿಸಿ</string>
     <string name="charging">ಚಾರ್ಜಿಂಗ್</string>
     <string name="pref_library_update_restriction">ನವೀಕರಣ ನಿರ್ಬಂಧಗಳು</string>
     <string name="update_weekly">ವಾರಕ್ಕೊಮ್ಮೆ</string>
@@ -218,7 +217,6 @@
     <string name="update_6hour">ಪ್ರತಿ 6 ಗಂಟೆಗಳಿಗೊಮ್ಮೆ</string>
     <string name="update_never">ಸ್ವಂತ ಮಾಡು</string>
     <string name="pref_library_update_interval">ನವೀಕರಣ ಆವರ್ತನ</string>
-    <string name="pref_category_library_update">ನವೀಕರಣಗಳು</string>
     <string name="channel_ext_updates">ವಿಸ್ತರಣೆ ನವೀಕರಣಗಳು</string>
     <string name="channel_common">ಸಾಮಾನ್ಯ</string>
     <string name="download_notifier_download_paused">ಡೌನ್‌ಲೋಡ್ ವಿರಾಮಗೊಳಿಸಲಾಗಿದೆ</string>
@@ -461,7 +459,6 @@
     <string name="exclude">ಹೊರಗಿಡಿ: %s</string>
     <string name="include">ಸೇರಿಸಿ: %s</string>
     <string name="none">ಯಾವುದು ಅಲ್ಲ</string>
-    <string name="pref_library_update_categories_details">ಹೊರಗಿಡಲಾದ ವರ್ಗಗಳಲ್ಲಿನ ಮಾಂಗಾ ಸೇರಿಸಿದ ವಿಭಾಗಗಳಲ್ಲಿದ್ದರೂ ನವೀಕರಿಸಲಾಗುವುದಿಲ್ಲ.</string>
     <string name="action_show_errors">ದೋಷಗಳನ್ನು ತೋರಿಸು</string>
     <string name="cancel_all_for_series">ಈ ಸರಣಿಯ ಎಲ್ಲವನ್ನೂ ರದ್ದುಮಾಡಿ</string>
     <string name="action_display_local_badge">ಸ್ಥಳೀಯ ಬ್ಯಾಡ್ಜ್ ಗಳು</string>

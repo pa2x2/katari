@@ -68,7 +68,6 @@
     <string name="all">Всички</string>
     <string name="pref_library_update_restriction">Автоматични актуализации на ограниченията на устройството</string>
     <string name="charging">На зарядно устройство</string>
-    <string name="pref_update_only_non_completed">Със статус \"Завършена\"</string>
     <string name="pref_auto_update_manga_sync">Обнови прогреса след прочитане</string>
     <string name="pref_page_transitions">Анимирани преходи</string>
     <string name="pref_show_page_number">Номер на страница</string>
@@ -286,7 +285,6 @@
     <string name="ext_obsolete">Остарял</string>
     <string name="obsolete_extension_message">Това разширение вече не е достъпно.</string>
     <string name="pref_date_format">Формат на датата</string>
-    <string name="pref_category_library_update">Глобалния обновявания</string>
     <string name="logout_title">Искате ли да излезете от %1$s?</string>
     <string name="logout">Излез</string>
     <string name="logout_success">Излязохте успешно</string>
@@ -472,7 +470,6 @@
     <string name="theme_yotsuba">Йоцуба</string>
     <string name="restrictions">Ограничения: %s</string>
     <string name="categorized_display_settings">Различно сортиране и показване за всяка категоря</string>
-    <string name="pref_library_update_categories_details">Манга в изключените категории няма да бъде обновявана дори ако се намира във включените категории.</string>
     <string name="none">Никоя</string>
     <string name="include">Включва: %s</string>
     <string name="exclude">Изключва: %s</string>
@@ -542,7 +539,6 @@
     <string name="channel_app_updates">Актуализации на приложението</string>
     <string name="pref_auto_clear_chapter_cache">Изчистване на кеша на главата при затваряне на приложението</string>
     <string name="privacy_policy">Политика за поверителност</string>
-    <string name="pref_update_only_completely_read">С непрочетени глави</string>
     <string name="ext_update_all">Обнови всички</string>
     <string name="extension_api_error">Неуспешно получаване на списък с разширения</string>
     <string name="update_72hour">На всеки 3 дена</string>
@@ -576,7 +572,6 @@
     <string name="skipped_reason_not_always_update">Пропусната, понеже поредицата не изисква обновления</string>
     <string name="skipped_reason_not_started">Пропусната, понеже не е започната</string>
     <string name="update_check_open">Отвори в GitHub</string>
-    <string name="pref_update_only_started">Незапочнати</string>
     <string name="pref_reset_viewer_flags">Нулирай отделните настройки на четеца</string>
     <string name="skipped_reason_not_caught_up">Пропусната, понеже има непрочетени глави</string>
     <string name="pref_user_agent_string">User agent string по подразбиране</string>

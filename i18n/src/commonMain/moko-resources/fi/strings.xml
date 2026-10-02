@@ -124,7 +124,6 @@
     <string name="all">Kaikki</string>
     <string name="pref_library_update_restriction">Automaattisen päivityksen laitteistorajoitukset</string>
     <string name="charging">Latauksessa</string>
-    <string name="pref_update_only_non_completed">Sarja on päättynyt</string>
     <string name="pref_auto_update_manga_sync">Päivitä luvun edistyminen lukemisen jälkeen</string>
     <string name="default_category">Oletus kategoria</string>
     <string name="default_category_summary">Kysy aina</string>
@@ -284,7 +283,6 @@
     <string name="ext_obsolete">Vanhentunut</string>
     <string name="obsolete_extension_message">Tämä laajennos ei ole enää saatavilla. Se ei välttämättä toimi oikein ja voi aiheuttaa ongelmia Mihonin kanssa. Laajennoksen poistoa suositellaan.</string>
     <string name="pref_date_format">Päivämäärän muoto</string>
-    <string name="pref_category_library_update">Globaali päivitys</string>
     <string name="logout_title">Kirjaa ulos kohteesta %1$s?</string>
     <string name="logout">Kirjaudu ulos</string>
     <string name="logout_success">Kirjauduttu ulos</string>
@@ -459,7 +457,6 @@
     <string name="action_sort_chapter_fetch_date">Haettu päivämäärä</string>
     <string name="pref_download_new_categories_details">Poissuljettuihin kategorioihin kuuluvia mangoja ei ladata, vaikka ne olisivat myös sisällytetyissä kategorioissa.</string>
     <string name="pref_category_auto_download">Automaattinen lataus</string>
-    <string name="pref_library_update_categories_details">Poissuljettuihin kategorioihin sisältyvää mangaa ei päivitetä, vaikka ne olisivat myös sisällytetyissä kategorioissa.</string>
     <string name="action_show_errors">Näytä lisätiedot</string>
     <string name="update_check_eol">Tätä Android-versiota ei enää tueta</string>
     <string name="clipboard_copy_error">Kopiointi leikepöydälle epäonnistui</string>
@@ -499,9 +496,7 @@
     <string name="theme_tealturquoise">Sinivihreä ja turkoosi</string>
     <string name="theme_yotsuba">Yotsuba</string>
     <string name="pref_dark_theme_pure_black">Täysin musta pimeätila</string>
-    <string name="pref_update_only_started">Ei lukemattomia lukuja</string>
     <string name="relative_time_today">Tänään</string>
-    <string name="pref_update_only_completely_read">Sarjalla on lukemattomia kappaleita</string>
     <string name="pref_app_theme">Sovelluksen teema</string>
     <string name="label_warning">Varoitus</string>
     <string name="confirm_lock_change">Tunnistaudu vahvistaaksesi muutokset</string>

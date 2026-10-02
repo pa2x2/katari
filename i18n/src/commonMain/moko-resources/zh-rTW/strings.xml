@@ -80,7 +80,6 @@
     <string name="all">全部</string>
     <string name="pref_library_update_restriction">自動更新的裝置限制</string>
     <string name="charging">僅充電時</string>
-    <string name="pref_update_only_non_completed">略過已完結的作品</string>
     <string name="default_category">預設類別</string>
     <string name="default_category_summary">總是詢問</string>
     <string name="ext_update">更新</string>
@@ -308,7 +307,6 @@
     <string name="action_display_comfortable_grid">鬆散格狀</string>
     <string name="pref_category_for_this_series">套用於這部作品</string>
     <string name="pref_category_reading">翻閱</string>
-    <string name="pref_category_library_update">全域更新</string>
     <string name="battery_optimization_disabled">已停用電池效能最佳化</string>
     <string name="battery_optimization_setting_activity_not_found">無法前往裝置設定</string>
     <string name="pref_disable_battery_optimization">停用電池效能最佳化</string>
@@ -463,7 +461,6 @@
     <string name="pref_create_folder_per_manga_summary">根據作品標題建立資料夾</string>
     <string name="pref_show_navigation_mode_summary">開始閱讀時，短暫浮現輕觸區域</string>
     <string name="pref_show_navigation_mode">輕觸區域提示</string>
-    <string name="pref_library_update_categories_details">類別同時屬於「排除」及「包含」的作品將不會自動更新</string>
     <string name="cancel_all_for_series">取消此作品</string>
     <string name="automatic_background">自動</string>
     <string name="pref_grayscale">灰階</string>
@@ -540,7 +537,6 @@
     <string name="database_clean">無須清理</string>
     <string name="extension_api_error">無法取得可用的擴充套件</string>
     <string name="privacy_policy">隱私權政策</string>
-    <string name="pref_update_only_completely_read">略過有未讀章節的作品</string>
     <string name="library_errors_help">如欲瞭解如何修復書櫃更新失敗，請參閱 %1$s</string>
     <string name="save_chapter_as_cbz">以 CBZ 封存檔格式儲存</string>
     <string name="on_hiatus">休刊中</string>
@@ -550,7 +546,6 @@
     <string name="pref_landscape_zoom">自動縮放寬頁</string>
     <string name="pref_navigate_pan">導覽寬頁時先平移後翻頁</string>
     <string name="action_display_cover_only_grid">純封面格狀</string>
-    <string name="pref_update_only_started">略過無已讀章節的作品</string>
     <string name="skipped_reason_completed">由於連載已完結，因此略過</string>
     <string name="skipped_reason_not_caught_up">由於有未讀章節，因此略過</string>
     <string name="skipped_reason_not_started">由於無已讀章節，因此略過</string>
@@ -688,7 +683,6 @@
     <string name="action_sort_next_updated">下次預期更新</string>
     <string name="intervals_header">刊期</string>
     <string name="manga_display_interval_title">預計每個</string>
-    <string name="pref_update_only_in_release_period">預估下次更新時間</string>
     <string name="manga_display_modified_interval_title">設定為每個</string>
     <string name="skipped_reason_not_in_release_period">由於未臨更新日，因此略過</string>
     <string name="has_results">有結果</string>

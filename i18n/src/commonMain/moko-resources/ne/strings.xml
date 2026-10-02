@@ -114,7 +114,6 @@
     <string name="action_sort_latest_chapter">नवीनतम अध्याय</string>
     <string name="pref_library_update_refresh_metadata_summary">पुस्तकालय अपडेट गर्दा नयाँ आवरण र विवरणहरूको लागि जाँच गर्नुहोस्</string>
     <string name="pref_library_update_refresh_metadata">मेटाडेटा स्वतः रिफ्रेस गर्नुहोस्</string>
-    <string name="pref_update_only_non_completed">\"समाप्त\" स्थिति भएको इन्ट्रीहरू छोड्नुहोस्</string>
     <string name="restrictions">प्रतिबन्धहरू: %s</string>
     <string name="charging">चार्ज हुँदा</string>
     <string name="pref_library_update_restriction">स्वचालित अपडेट्स यन्त्र प्रतिबन्धहरू</string>
@@ -125,7 +124,6 @@
     <string name="update_6hour">प्रत्येक ६ घण्टा</string>
     <string name="update_never">अफ</string>
     <string name="pref_library_update_interval">स्वचालित अपडेट्स</string>
-    <string name="pref_category_library_update">ग्लोबल अपडेट</string>
     <string name="landscape">ल्याण्डस्केप</string>
     <string name="pref_library_columns">प्रति रो वस्तुहरू</string>
     <string name="pref_category_display">प्रदर्शन</string>
@@ -239,7 +237,6 @@
     <string name="default_category">पूर्वनिर्धारित वर्ग</string>
     <string name="categorized_display_settings">क्रमबद्धका लागि प्रति-वर्ग सेटिंग्स</string>
     <string name="include">समावेश गर्नुहोस्: %s</string>
-    <string name="pref_library_update_categories_details">\"बहिष्कृत\" वर्गहरूमा रहेका इन्ट्री \"समावेश गरिएका\" वर्गहरूमा भए पनि अपडेट हुने छैनन्।</string>
     <string name="ext_app_info">एप जानकारी</string>
     <string name="untrusted_extension">अविश्वसनीय एक्सटेन्शन</string>
     <string name="exclude">समावेश नगर्नुहोस्: %s</string>
@@ -361,7 +358,6 @@
     <string name="pref_zoom_start">जूम सुरु स्थिति</string>
     <string name="pref_auto_clear_chapter_cache">एप खोलेमा अध्याय cache खाली गर्नुहोस्</string>
     <string name="information_webview_outdated">राम्रो संगतताको लागि कृपया WebView एप अपडेट गर्नुहोस्</string>
-    <string name="pref_update_only_completely_read">नपढेको अध्याय(हरू) सँग</string>
     <string name="pref_viewer_nav">ट्याप क्षेत्रहरू</string>
     <string name="pager_viewer">पृष्ठांकित</string>
     <string name="pref_image_scale_type">स्केल को प्रकार</string>
@@ -484,7 +480,6 @@
 \n%1$s</string>
     <string name="clipboard_copy_error">क्लिपबोर्डमा प्रतिलिपि गर्न असफल</string>
     <string name="delete_downloads_for_manga">डाउनलोड गरिएका अध्यायहरू हटाउने हो?</string>
-    <string name="pref_update_only_started">जो सुरु भएको छैन</string>
     <string name="cover_updated">आवरण अपडेट भयो</string>
     <string name="share_page_info">%1$s: %2$s, पृष्ठ %3$d</string>
     <string name="pref_clear_history">इतिहास हटाउनुहोस्</string>
@@ -686,7 +681,6 @@
     <string name="skipped_reason_not_in_release_period">छोडियो किनभने आज कुनै रिलीज अपेक्षित थिएन</string>
     <string name="intervals_header">अन्तरालहरू</string>
     <string name="action_sort_next_updated">अर्को अपेक्षित अपडेट</string>
-    <string name="pref_update_only_in_release_period">अपेक्षित रिलीज अवधि बाहिर</string>
     <string name="manga_display_interval_title">प्रत्येक अनुमान लगाउनुहोस्</string>
     <string name="track_delete_title">%s ट्र्याकिङ हटाउने हो?</string>
     <string name="track_delete_remote_text">%s बाट पनि हटाउनुहोस्</string>
