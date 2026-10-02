@@ -750,7 +750,6 @@
     <string name="manga_interval_custom_amount">Benutzerdefinierte Aktualisierungshäufigkeit:</string>
     <string name="onboarding_storage_help_info">Du aktualisierst von einer älteren Version und bist dir nicht sicher, was du auswählen sollst? Schau dir den Speicherleitfaden für mehr Informationen an.</string>
     <string name="onboarding_storage_help_action">Speicherleitfaden</string>
-    <string name="pref_library_update_smart_update">Intelligentes Aktualisieren</string>
     <string name="manga_interval_expected_update">Ca. %1$s bis zur Veröffentlichung neuer Kapitel, wird ca. alle %2$s überprüft.</string>
     <string name="theme_nord">Nord</string>
     <string name="action_open_repo">Open-Source-Repository</string>

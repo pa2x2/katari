@@ -561,7 +561,6 @@
     <string name="categorized_display_settings">Agordoj de ordigo laŭ kategorio</string>
     <string name="pref_chapter_swipe_start">Ĉapitro je ŝovumo maldekstren</string>
     <string name="untrusted_extension_message">Malicaj etendaĵoj povas legi ĉiujn el konservitaj ensalutiloj aŭ plenumi arbitran kodon.\n\nFidante ĉi tiun etendaĵon, vi akceptas tiujn riskojn.</string>
-    <string name="pref_library_update_smart_update">Saĝa ĝisdatigo</string>
     <string name="pref_library_update_show_tab_badge">Montri nombron de la nelegitaj sur piktogramo Ĝisdatigoj</string>
     <string name="multi_lang">Plur</string>
     <string name="ext_app_info">Pri apo</string>

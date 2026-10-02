@@ -291,7 +291,6 @@
     <string name="network_not_metered">அளவிடப்படாத நெட்வொர்க்கில் மட்டுமே</string>
     <string name="charging">கட்டணம் வசூலிக்கும்போது</string>
     <string name="restrictions">கட்டுப்பாடுகள்: %s</string>
-    <string name="pref_library_update_smart_update">அறிவுள்ள புதுப்பிப்பு</string>
     <string name="pref_library_update_show_tab_badge">புதுப்பிப்புகள் ஐகானில் படிக்காத எண்ணிக்கையைக் காட்டுங்கள்</string>
     <string name="pref_library_update_refresh_metadata">மெட்டாடேட்டாவை தானாக புதுப்பிக்கவும்</string>
     <string name="pref_library_update_refresh_metadata_summary">நூலகத்தைப் புதுப்பிக்கும்போது புதிய கவர் மற்றும் விவரங்களைச் சரிபார்க்கவும்</string>

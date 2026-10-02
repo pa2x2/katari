@@ -693,7 +693,6 @@
     <string name="pref_display_images_description">Zobraziť obrázky v popisoch mangy</string>
     <string name="pref_firebase">Analytické dáta a záznamy v prípade zlyhania</string>
     <string name="firebase_summary">Posielaním záznamov v prípade zlyhania aplikácie a analytických údajov nám umožníte identifikovať a opraviť chyby, zlepšiť rýchlost aplikácie a urobiť aplikáciu viac relevantnejšiu pre vaše potreby</string>
-    <string name="pref_library_update_smart_update">Inteligentné aktualizácie</string>
     <string name="pref_library_update_show_tab_badge">Zobraziť počet neprečítaných na ikone Aktualizácii</string>
     <string name="pref_behavior">Správanie</string>
     <string name="pref_chapter_swipe_end">Kapitola po potiahnutí prstom doprava</string>

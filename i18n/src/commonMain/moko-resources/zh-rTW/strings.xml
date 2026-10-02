@@ -741,7 +741,6 @@
     <string name="manga_interval_expected_update">預計 %1$s後更新，每 %2$s檢查一次</string>
     <string name="invalid_backup_file_error">完整錯誤訊息：</string>
     <string name="manga_interval_custom_amount">自訂更新頻率：</string>
-    <string name="pref_library_update_smart_update">智慧更新</string>
     <string name="onboarding_storage_help_action">儲存空間指南</string>
     <string name="onboarding_storage_help_info">從舊版升級而不確定該如何選擇嗎？請參閱儲存空間指南以取得更多資訊</string>
     <string name="theme_nord">北風</string>

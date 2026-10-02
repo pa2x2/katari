@@ -748,7 +748,6 @@
     <string name="onboarding_permission_action_grant">Fruni</string>
     <string name="onboarding_guides_new_user">Nou in %s? Ti cussigiamus de t\'abbistare sa ghia de introdutzione.</string>
     <string name="theme_nord">Nord</string>
-    <string name="pref_library_update_smart_update">Agiornamentu inteligente</string>
     <string name="private_settings">Include impostatziones sensìbiles ( a es. getones de intrada a sos arrastadores)</string>
     <string name="manga_interval_expected_update_soon">Luego</string>
     <string name="action_add_anyway">Annanghe su matessi</string>

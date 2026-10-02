@@ -641,7 +641,6 @@
     <string name="pref_firebase">অ্যানালিটিক্স ও ক্র্যাশ লগস</string>
     <string name="firebase_summary">ক্র্যাশ লগ ও অ্যানালিটিক্স পাঠালে আমরা সমস্যা খুঁজে বের করে ঠিক করতে পারব, কর্মক্ষমতা ভালো হবে, এবং ভবিষ্যৎ আপডেটগুলো আপনার কাজে লাগবে</string>
     <string name="network_not_metered">শুধু আনলিমিটেড নেটওয়ার্কে</string>
-    <string name="pref_library_update_smart_update">স্মার্ট আপডেট</string>
     <string name="pref_library_update_show_tab_badge">আপডেট আইকনে অপঠিত সংখ্যা দেখান</string>
     <string name="pref_behavior">ব্যবহার</string>
     <string name="pref_chapter_swipe_end">অধ্যায় ডানে সোয়াইপ করলে</string>

@@ -725,7 +725,6 @@
     <string name="onboarding_storage_selection_required">Потрібно обрати папку</string>
     <string name="onboarding_permission_notifications">Дозвіл на сповіщення</string>
     <string name="onboarding_permission_notifications_description">Отримувати сповіщення про оновлення бібліотек та інше.</string>
-    <string name="pref_library_update_smart_update">Розумні оновлення</string>
     <string name="manga_interval_expected_update">Нові розділи передбачено будуть випущені приблизно в %1$s, перевіряючи кожні %2$s.</string>
     <string name="onboarding_storage_help_info">Оновлюєтесь з попередньої версії і не впевнені яку обрати? Перегляньте гайд по сховищу для додаткової інформації.</string>
     <string name="onboarding_storage_help_action">Гайд по сховищу</string>

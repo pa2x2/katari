@@ -43,6 +43,7 @@ import androidx.compose.material.icons.outlined.OpenInBrowser
 import androidx.compose.material.icons.outlined.PersonOutline
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Sync
+import androidx.compose.material.icons.outlined.Update
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -103,6 +104,7 @@ import eu.kanade.presentation.components.MARKDOWN_INLINE_IMAGE_TAG
 import eu.kanade.presentation.components.MarkdownRender
 import eu.kanade.presentation.components.getMarkdownLinkStyle
 import eu.kanade.presentation.entry.components.preview.rememberProgressiveEntryPreviewBitmap
+import eu.kanade.presentation.entry.updates.EntryUpdatesLabel
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.ui.entry.EntryScreenModel
 import eu.kanade.tachiyomi.util.system.copyToClipboard
@@ -207,29 +209,18 @@ fun EntryInfoBox(
 fun EntryActionRow(
     favorite: Boolean,
     trackingCount: Int,
-    nextUpdate: Instant?,
-    isUserIntervalMode: Boolean,
+    updatesLabel: EntryUpdatesLabel,
     onAddToLibraryClicked: () -> Unit,
     onAddToMergeClicked: (() -> Unit)?,
     onWebViewClicked: (() -> Unit)?,
     onWebViewLongClicked: (() -> Unit)?,
     onTrackingClicked: (() -> Unit)?,
     onDuplicatesClicked: (() -> Unit)?,
-    onEditIntervalClicked: (() -> Unit)?,
+    onUpdatesClicked: (() -> Unit)?,
     onEditCategory: (() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
     val defaultActionButtonColor = MaterialTheme.colorScheme.onSurface.copy(alpha = DISABLED_ALPHA)
-
-    // TODO: show something better when using custom interval
-    val nextUpdateDays = remember(nextUpdate) {
-        return@remember if (nextUpdate != null) {
-            val now = Clock.System.now()
-            now.daysUntil(nextUpdate, TimeZone.currentSystemDefault()).coerceAtLeast(0)
-        } else {
-            null
-        }
-    }
 
     Row(modifier = modifier.padding(start = 16.dp, top = 8.dp, end = 16.dp)) {
         EntryActionButton(
@@ -252,18 +243,14 @@ fun EntryActionRow(
             )
         }
         EntryActionButton(
-            title = when (nextUpdateDays) {
-                null -> stringResource(MR.strings.not_applicable)
-                0 -> stringResource(MR.strings.manga_interval_expected_update_soon)
-                else -> pluralStringResource(
-                    MR.plurals.day,
-                    count = nextUpdateDays,
-                    nextUpdateDays,
-                )
+            title = updatesLabel.text,
+            icon = Icons.Outlined.Update,
+            color = when (updatesLabel.emphasis) {
+                EntryUpdatesLabel.Emphasis.Quiet -> defaultActionButtonColor
+                EntryUpdatesLabel.Emphasis.Highlighted -> MaterialTheme.colorScheme.primary
+                EntryUpdatesLabel.Emphasis.Error -> MaterialTheme.colorScheme.error
             },
-            icon = Icons.Filled.HourglassEmpty,
-            color = if (isUserIntervalMode) MaterialTheme.colorScheme.primary else defaultActionButtonColor,
-            onClick = { onEditIntervalClicked?.invoke() },
+            onClick = { onUpdatesClicked?.invoke() },
         )
         if (onTrackingClicked != null) {
             EntryActionButton(

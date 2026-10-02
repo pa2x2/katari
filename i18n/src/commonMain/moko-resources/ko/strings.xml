@@ -710,7 +710,6 @@
     <string name="onboarding_storage_action_select">폴더를 선택하기</string>
     <string name="onboarding_action_skip">건너뛰기</string>
     <string name="onboarding_permission_ignore_battery_opts_description">시간이 많이 걸리는 서재 업데이트, 다운로드 및 백업 복원이 중단되지 않도록 합니다.</string>
-    <string name="pref_library_update_smart_update">스마트 업데이트</string>
     <string name="onboarding_storage_help_info">이전 버전에서 업데이트하는데 무엇을 선택해야 할지 모르시나요? 자세한 내용은 저장공간 가이드를 참조하세요.</string>
     <string name="onboarding_permission_ignore_battery_opts">백그라운드 배터리 사용</string>
     <string name="onboarding_permission_action_grant">허용</string>

@@ -706,7 +706,6 @@
     <string name="pref_security">सुरक्षा</string>
     <string name="pref_firebase">एनालिटिक्स और क्रैश लॉग्स</string>
     <string name="firebase_summary">क्रैश लॉग्स और एनालिटिक्स भेजने से हम समस्याएँ पहचानकर ठीक कर पाएँगे, प्रदर्शन सुधार पाएँगे, और भविष्य के अपडेट आपकी ज़रूरतों के अनुसार बना पाएँगे</string>
-    <string name="pref_library_update_smart_update">स्मार्ट अपडेट</string>
     <string name="pref_hide_missing_chapter_indicators">गुम हुए अध्याय के संकेत छुपाएँ</string>
     <string name="ext_revoke_trust">विश्वसनीय अज्ञात एक्सटेंशन्स रद्द करें</string>
     <string name="action_open_repo">ओपन सोर्स रिपॉ</string>

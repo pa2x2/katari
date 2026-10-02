@@ -749,7 +749,6 @@
     <string name="manga_interval_expected_update">Novos capítulos com previsão de serem lançados em torno de %1$s, verificando em torno de cada %2$s.</string>
     <string name="manga_interval_custom_amount">Frequência de atualização personalizada:</string>
     <string name="invalid_backup_file_error">Erro completo:</string>
-    <string name="pref_library_update_smart_update">Atualização inteligente</string>
     <string name="onboarding_storage_help_action">Guia de armazenamento</string>
     <string name="onboarding_storage_help_info">Atualizando de uma versão anterior e não tem certeza do que selecionar? Consulte o guia de armazenamento para mais informações.</string>
     <string name="manga_interval_expected_update_soon">Em breve</string>

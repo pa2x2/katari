@@ -749,7 +749,6 @@
     <string name="manga_interval_expected_update">Nya kapitel förväntas att släppas varje \"%1$s\", kontrollerar varje \"%2$s\".</string>
     <string name="invalid_backup_file_error">Fullständigt fel:</string>
     <string name="onboarding_storage_help_info">Osäker på vad du ska välja då du uppdaterar från en äldre version? Se lagerhanteringsguiden för mer information.</string>
-    <string name="pref_library_update_smart_update">Smart uppdatering</string>
     <string name="onboarding_storage_help_action">Lagerhanteringsguide</string>
     <string name="theme_nord">Nord</string>
     <string name="ext_revoke_trust">Återkalla tillförlitliga okända tillägg</string>

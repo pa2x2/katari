@@ -725,7 +725,6 @@
     <string name="onboarding_storage_help_info">Mise à jour depuis une ancienne version et pas sûr de quoi choisir ? Consultez le guide de stockage pour plus d\'informations.</string>
     <string name="onboarding_storage_help_action">Guide de stockage</string>
     <string name="onboarding_permission_notifications_description">Soyez notifié des mises à jour de la bibliothèque et autre.</string>
-    <string name="pref_library_update_smart_update">Mise à jour intelligente</string>
     <string name="pref_onboarding_guide">Guide de premier lancement</string>
     <string name="onboarding_description">Commençons par paramétrer certaines choses. Vous pouvez toujours changer ces paramètres plus tard.</string>
     <string name="onboarding_storage_info">Sélectionnez un dossier où %1$s stockera les chapitres téléchargés, les sauvegardes et plus encore.

@@ -749,7 +749,6 @@
     <string name="ext_permission_install_apps_warning">Kinakailangan ng permiso para mag-install ng mga extension. I-tap upang mapayagan ito.</string>
     <string name="private_settings">Kasali ang mga sensitibong setting (hal., mga tracker login token)</string>
     <string name="onboarding_storage_help_info">Nag-a-update mula sa isang mas lumang bersyon at hindi sigurado kung ano ang pipiliin? Sumangguni sa gabay sa storage para sa higit pang impormasyon.</string>
-    <string name="pref_library_update_smart_update">Matalas na pag-update</string>
     <string name="onboarding_storage_help_action">Gabay sa storage</string>
     <string name="manga_interval_custom_amount">Custom na frequency sa pag-update:</string>
     <string name="theme_nord">Nord</string>

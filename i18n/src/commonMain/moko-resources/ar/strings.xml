@@ -746,7 +746,6 @@
     <string name="onboarding_storage_help_info">هل تقوم بالتحديث من إصدار أقدم ولست متأكداً مما تختاره؟ إرجع إلى دليل التخزين للمزيد من المعلومات.</string>
     <string name="onboarding_storage_help_action">دليل التخزين</string>
     <string name="onboarding_permission_ignore_battery_opts_description">تجنّب الانقطاعات في تحديثات المكتبة الطويلة الأمد والتنزيلات واستعادة النسخ الاحتياطية.</string>
-    <string name="pref_library_update_smart_update">تحديث ذكي</string>
     <string name="theme_nord">نورد</string>
     <string name="manga_interval_expected_update">من المتوقع أن يتم إصدار فصول جديدة في حوالي 1%1$s، والتحقق من كل 2%2$s .</string>
     <string name="available_disk_space_info">متاح: %1$s / الكل: %2$s</string>

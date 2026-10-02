@@ -597,7 +597,6 @@
     <string name="pref_security">Сыхлав</string>
     <string name="pref_firebase">Тишкерӳ тата йӑнӑшсен кӗнеки</string>
     <string name="firebase_summary">Йӑнӑшсен кӗнекине тата тишкерӗве йарса йӑнӑшсене тупма, тухӑҫлӑхне аталантарма тата пулас ҫӗнетӳсене санӑн кирлӗлӗх тивӗҫтерме пулӑшӗ</string>
-    <string name="pref_library_update_smart_update">Тӑнлӑ ҫӗнетӳ</string>
     <string name="pref_behavior">Тыткалу</string>
     <string name="pref_mark_duplicate_read_chapter_read">Иккӗллӗ сыпӑкне вуланӑ тесе палӑртмалла</string>
     <string name="pref_mark_duplicate_read_chapter_read_existing">Сыпӑк вуланӑ хыҫҫӑн</string>

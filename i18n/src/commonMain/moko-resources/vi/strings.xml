@@ -746,7 +746,6 @@
     <string name="private_settings">Bao gồm những cài đặt nhạy cảm (ví dụ như token đăng nhập tracker)</string>
     <string name="action_add_anyway">Vẫn thêm</string>
     <string name="theme_nord">Phương bắc</string>
-    <string name="pref_library_update_smart_update">Cập nhật thông minh</string>
     <string name="label_upcoming">Sắp tới</string>
     <string name="onboarding_storage_help_info">Cập nhật từ phiên bản cũ hơn và không biết nên chọn gì? Tham khảo hướng dẫn lưu trữ để biết thêm thông tin.</string>
     <string name="ext_revoke_trust">Thu hồi quyền truy cập của tiện ích không xác định</string>

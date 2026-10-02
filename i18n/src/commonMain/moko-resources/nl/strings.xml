@@ -742,7 +742,6 @@
     <string name="onboarding_permission_ignore_battery_opts_description">Vermijd onderbrekingen van langlopende bibliotheekupdates, downloads en back-upherstellen.</string>
     <string name="onboarding_permission_install_apps_description">Om bronextensies te installeren.</string>
     <string name="onboarding_permission_notifications_description">Ontvang meldingen over bibliotheekupdates en meer.</string>
-    <string name="pref_library_update_smart_update">Slimme update</string>
     <string name="ext_permission_install_apps_warning">Er zijn rechten nodig om extensies te installeren. Tik hier om deze toe te staan.</string>
     <string name="no_location_set">Geen opslaglocatie ingesteld</string>
     <string name="action_add_anyway">Toch toevoegen</string>

@@ -684,7 +684,6 @@
     <string name="onboarding_storage_help_info">Actualizaches dende unha versión máis antiga e non sabes que elixir? Bótalle unha ollada á guía de almacenamento.</string>
     <string name="theme_nord">Nórdico</string>
     <string name="pref_relative_format">Marcas de tempo relativas</string>
-    <string name="pref_library_update_smart_update">Actualizacións intelixentes</string>
     <string name="track_activity_name">Iniciar sesión no servizo de seguimento</string>
     <string name="pref_storage_location">Ubicación do almacenamento</string>
     <string name="action_filter_interval_custom">Frecuencia de actualización personalizada</string>

@@ -649,7 +649,6 @@
     <string name="onboarding_permission_install_apps_description">Да инсталира разширения за източници.</string>
     <string name="onboarding_permission_notifications">Разрешение за известия</string>
     <string name="onboarding_permission_notifications_description">Получавай известия за обновления в библиотеката и други</string>
-    <string name="pref_library_update_smart_update">Умно обновяване</string>
     <string name="pref_mark_duplicate_read_chapter_read_existing">След прочитане на глава</string>
     <string name="has_results">Има резултати</string>
     <string name="unknown_title">Непознато заглавие</string>

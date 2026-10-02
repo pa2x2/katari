@@ -404,7 +404,6 @@
     <string name="pref_security">Бяспека</string>
     <string name="pref_firebase">Аналітыка і журналы збояў</string>
     <string name="firebase_summary">Адпраўка журналаў збояў і аналітыкі дазволіць нам выяўляць і выпраўляць памылкі, паляпшаць прадукцыйнасць і развіваць праграму з улікам вашых патрэб</string>
-    <string name="pref_library_update_smart_update">Разумнае абнаўленне</string>
     <string name="pref_library_update_show_tab_badge">Паказваць колькасць непрачытаных на значку «Абнаўленні»</string>
     <string name="pref_behavior">Паводзіны</string>
     <string name="pref_chapter_swipe_end">Раздзел пры змахванні ўправа</string>
