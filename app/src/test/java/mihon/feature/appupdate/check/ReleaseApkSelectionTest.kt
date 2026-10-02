@@ -1,4 +1,4 @@
-package tachiyomi.data.release
+package mihon.feature.appupdate.check
 
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
@@ -37,5 +37,5 @@ class ReleaseApkSelectionTest {
         "katari-v2.0.0-foss.apk",
         "katari_foss_arm64-v8a-v2.0.0.apk",
         "katari_foss_armeabi-v7a-v2.0.0.apk",
-    ).map { GitHubAsset(name = it, downloadLink = "https://example.org/$it") }
+    ).map { GithubAsset(name = it, downloadUrl = "https://example.org/$it") }
 }

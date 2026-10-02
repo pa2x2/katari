@@ -790,12 +790,7 @@
     <string name="file_picker_error">Праграма для выбару файлаў не знойдзена</string>
     <string name="file_picker_uri_permission_unsupported">Не ўдалося атрымаць пастаянны доступ да тэчкі. Праграма можа паводзіць сябе непрадбачана.</string>
     <string name="file_null_uri_error">Файл не выбраны</string>
-    <string name="update_check_confirm">Спампаваць</string>
     <string name="update_check_open">Адкрыць на GitHub</string>
-    <string name="update_check_eol">Гэтая версія Android больш не падтрымліваецца</string>
-    <string name="update_check_no_new_updates">Няма новых абнаўленняў</string>
-    <string name="update_check_notification_download_in_progress">Спампоўванне…</string>
-    <string name="update_check_notification_update_available">Даступная новая версія!</string>
     <string name="information_no_manga_category">Катэгорыя пустая</string>
     <string name="information_no_entries_found">У гэтай катэгорыі твораў не знойдзена</string>
     <string name="information_empty_category_dialog">У вас яшчэ няма катэгорый.</string>
@@ -818,7 +813,6 @@
     <string name="channel_progress">Прагрэс</string>
     <string name="channel_complete">Завершэнні</string>
     <string name="channel_errors">Памылкі</string>
-    <string name="channel_app_updates">Абнаўленні праграмы</string>
     <string name="channel_ext_updates">Абнаўленні пашырэнняў</string>
     <string name="spen_previous_page">Папярэдняя старонка</string>
     <string name="spen_next_page">Наступная старонка</string>

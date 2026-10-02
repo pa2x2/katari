@@ -1,4 +1,4 @@
-package tachiyomi.data.release
+package mihon.feature.appupdate.check
 
 /**
  * Picks the release APK that installs over this build: the one for its distribution and the device's primary ABI,
@@ -10,7 +10,7 @@ package tachiyomi.data.release
  *   `-foss` nor `-<abi>`, which is how earlier app versions recognise assets, so those versions keep choosing the
  *   universal FOSS APK and the standard per-ABI APKs.
  */
-internal fun selectReleaseApk(assets: List<GitHubAsset>, isFoss: Boolean, primaryAbi: String): GitHubAsset? {
+internal fun selectReleaseApk(assets: List<GithubAsset>, isFoss: Boolean, primaryAbi: String): GithubAsset? {
     if (primaryAbi !in ABIS) return null
     val (fossAssets, standardAssets) = assets.partition { it.isFoss() }
     return if (isFoss) {
@@ -22,10 +22,10 @@ internal fun selectReleaseApk(assets: List<GitHubAsset>, isFoss: Boolean, primar
     }
 }
 
-private fun GitHubAsset.isFoss() = name.endsWith(FOSS_UNIVERSAL_SUFFIX) || FOSS_ABI_MARKER in name
+private fun GithubAsset.isFoss() = name.endsWith(FOSS_UNIVERSAL_SUFFIX) || FOSS_ABI_MARKER in name
 
 private const val FOSS_UNIVERSAL_SUFFIX = "-foss.apk"
 private const val FOSS_ABI_MARKER = "_foss_"
 
-/** The ABIs of the published APKs; see releasedAbis in the app module. */
+/** The ABIs of the published APKs; see releasedAbis in app/build.gradle.kts. */
 private val ABIS = listOf("arm64-v8a", "armeabi-v7a")

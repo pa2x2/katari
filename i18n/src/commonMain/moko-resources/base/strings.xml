@@ -1983,16 +1983,41 @@
     <string name="file_picker_uri_permission_unsupported">Failed to acquire persistent folder access. The app may behave unexpectedly.</string>
     <string name="file_null_uri_error">No file selected</string>
 
-    <!--UpdateCheck-->
-    <string name="update_check_confirm">Download</string>
+    <!--App updates-->
     <string name="update_check_open">Open on GitHub</string>
-    <!-- reserved for future use -->
-    <string name="update_check_eol">This Android version is no longer supported</string>
-    <string name="update_check_no_new_updates">No new updates available</string>
-
-    <!--UpdateCheck Notifications-->
-    <string name="update_check_notification_download_in_progress">Downloading…</string>
-    <string name="update_check_notification_update_available">New version available!</string>
+    <string name="app_update_available">Update available</string>
+    <string name="app_update_version">Version %1$s</string>
+    <string name="app_update_now">Update now</string>
+    <string name="app_update_skip_version">Skip this version</string>
+    <string name="app_update_cancel_download">Cancel download</string>
+    <string name="app_update_allow_installs">Allow installs</string>
+    <string name="app_update_permission_note">Android needs your permission for Katari to install updates. Allow Katari to install apps, then come back. You only need to do this once.</string>
+    <string name="app_update_installing">Installing…</string>
+    <string name="app_update_installing_note">Katari closes to finish the update. Open it again to use the new version.</string>
+    <string name="app_update_checking">Checking…</string>
+    <string name="app_update_just_now">just now</string>
+    <string name="app_update_up_to_date">Up to date · checked %1$s</string>
+    <string name="app_update_last_checked">Last checked %1$s</string>
+    <string name="app_update_version_available">Version %1$s is available</string>
+    <string name="app_update_waiting_permission">Waiting for permission to install</string>
+    <string name="app_update_check_on_launch">Check for updates on launch</string>
+    <string name="app_update_check_on_launch_summary">Look for a new version on GitHub when Katari opens</string>
+    <string name="app_update_channel">Update channel</string>
+    <string name="app_update_channel_stable">Stable</string>
+    <string name="app_update_channel_prerelease">Pre-release</string>
+    <string name="app_update_error_github_unreachable">Couldn\'t reach GitHub. Check your internet connection.</string>
+    <string name="app_update_error_github_rate_limited">GitHub is limiting update checks from this network. Try again later.</string>
+    <string name="app_update_error_github_status">GitHub answered the update check with HTTP %1$d.</string>
+    <string name="app_update_error_github_unexpected">GitHub sent an unexpected release list.</string>
+    <string name="app_update_error_download">The download failed.</string>
+    <string name="app_update_error_download_detail">The download failed: %1$s</string>
+    <string name="app_update_error_damaged">The download was damaged. Try again to download it afresh.</string>
+    <string name="app_update_error_signature">This update is signed with a different key than the installed app, so Android won\'t install it over this build. Install it from GitHub instead.</string>
+    <string name="app_update_error_not_newer">The downloaded file isn\'t a newer version of this app.</string>
+    <string name="app_update_error_storage">There isn\'t enough free storage to install the update.</string>
+    <string name="app_update_error_incompatible">This update isn\'t compatible with your device.</string>
+    <string name="app_update_error_install">The update couldn\'t be installed.</string>
+    <string name="app_update_error_install_detail">The update couldn\'t be installed: %1$s</string>
 
     <!-- Information Text -->
     <string name="information_no_downloads">No downloads</string>
@@ -2060,7 +2085,6 @@
     <string name="channel_complete">Complete</string>
     <string name="channel_errors">Errors</string>
     <string name="channel_library_updates">Library updates</string>
-    <string name="channel_app_updates">App updates</string>
     <string name="channel_ext_updates">Extension updates</string>
 
     <!-- S Pen actions -->

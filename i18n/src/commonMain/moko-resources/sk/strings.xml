@@ -265,10 +265,6 @@
     <string name="notification_first_add_to_library">Predtým, ako to urobíte, pridajte do svojej knižnice mangu</string>
     <string name="file_select_cover">Vyberte obrázok obalu</string>
     <string name="file_select_backup">Vyberte záložný súbor</string>
-    <string name="update_check_confirm">Stiahnuť</string>
-    <string name="update_check_no_new_updates">Žiadné nové aktualizácie</string>
-    <string name="update_check_notification_download_in_progress">Prebiehá stahovanie…</string>
-    <string name="update_check_notification_update_available">Dostupná nová aktualizácia!</string>
     <string name="information_no_downloads">Žiadne sťahovanie</string>
     <string name="information_no_recent">Žiadne nedávne aktualizácie</string>
     <string name="information_no_recent_manga">Nič nedávno čítané</string>
@@ -491,7 +487,6 @@
     <string name="download_notifier_split_page_not_found">Strana %d sa pri rozdeľovaní nenašla</string>
     <string name="publishing_finished">Publikovanie ukončené</string>
     <string name="no_pinned_sources">Nemáte žiadne pripnuté zdroje</string>
-    <string name="update_check_eol">Táto verzia systému Android už nie je podporovaná</string>
     <string name="action_sort_unread_count">Počet neprečítaných</string>
     <string name="kindlish_nav">Podobné Kindl-u</string>
     <string name="pref_lowest">Najnižšie</string>
@@ -571,7 +566,6 @@
     <string name="about_dont_kill_my_app">Niektorí výrobcovia majú ďalšie obmedzenia aplikácií, ktoré vypínajú služby na pozadí. Na tejto webovej stránke nájdete viac informácií o tom, ako to opraviť.</string>
     <string name="viewer">Režim čítania</string>
     <string name="error_saving_picture">Chyba pri ukladaní obrázka</string>
-    <string name="channel_app_updates">Aktualizácie aplikácie</string>
     <string name="appwidget_unavailable_locked">Widget nie je k dispozícii, keď je povolený zámok aplikácie</string>
     <string name="local_filter_order_by">Zoradiť podľa</string>
     <string name="local_invalid_format">Neplatný formát kapitoly</string>

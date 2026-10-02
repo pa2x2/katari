@@ -46,6 +46,11 @@ import mihon.entry.interactions.runtime.EntryInteractionActivityTheme
 import mihon.entry.interactions.runtime.EntryInteractionRuntimeDependencies
 import mihon.entry.interactions.runtime.addEntryInteractionRuntime
 import mihon.entry.interactions.translate.markEntryTranslateRuntimeDependenciesRegistered
+import mihon.feature.appupdate.AppUpdateController
+import mihon.feature.appupdate.check.GithubReleaseSource
+import mihon.feature.appupdate.install.AppUpdateInstaller
+import mihon.feature.appupdate.install.UpdateApkDownloader
+import mihon.feature.appupdate.install.UpdateApkVerifier
 import mihon.feature.migration.discovery.SourceMigrationCandidateDiscovery
 import mihon.feature.migration.discovery.SourceMigrationDiscoveryRunner
 import mihon.feature.migration.execution.SourceMigrationExecutionPlanner
@@ -311,6 +316,16 @@ class AppModule(val app: Application) : InjektModule {
         }
 
         addSingletonFactory { ImageSaver(app) }
+
+        addSingletonFactory {
+            AppUpdateController(
+                preferences = get(),
+                source = GithubReleaseSource(get(), get()),
+                downloader = UpdateApkDownloader(app, get()),
+                verifier = UpdateApkVerifier(app),
+                installer = AppUpdateInstaller(app),
+            )
+        }
 
         markEntryDownloadRuntimeDependenciesRegistered()
         markEntryTranslateRuntimeDependenciesRegistered()

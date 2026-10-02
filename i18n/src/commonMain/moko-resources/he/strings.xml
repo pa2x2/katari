@@ -12,10 +12,6 @@
     <string name="information_empty_category">אין לך קטגוריות. לחץ על כפתור הפלוס כדי ליצור אחד לארגון הספרייה שלך.</string>
     <string name="information_empty_library">הספרייה שלך ריקה</string>
     <string name="information_no_downloads">אין הורדות</string>
-    <string name="update_check_notification_update_available">גרסה חדשה זמינה!</string>
-    <string name="update_check_notification_download_in_progress">מוריד…</string>
-    <string name="update_check_no_new_updates">אין עדכונים חדשים זמינים</string>
-    <string name="update_check_confirm">הורדה</string>
     <string name="file_select_backup">בחר קובץ גיבוי</string>
     <string name="file_select_cover">בחר תמונת כריכה</string>
     <string name="notification_first_add_to_library">אנא הוסף את הפריט לספרייה שלך לפני שתעשה זאת</string>
@@ -497,7 +493,6 @@
     <string name="empty_screen">אוקיי, זה מביך</string>
     <string name="pref_reset_viewer_flags_success">כל הגדרות מצב הקריאה אופסו</string>
     <string name="exclude">החרגה: %s</string>
-    <string name="channel_app_updates">עדכוני אפליקציה</string>
     <string name="source_filter_empty_screen">לא נמצאו מקורות מותקנים</string>
     <string name="notification_size_warning">הורדות גדולות פוגעות במקורות ויכולות לגרום לעדכונים איטיים יותר וגם לשימוש מוגבר בסוללה. לחץ כדי ללמוד עוד.</string>
     <string name="information_empty_category_dialog">עדיין אין קטגוריות.</string>
@@ -508,7 +503,6 @@
     <string name="action_sort_unread_count">לא נקראו</string>
     <string name="categorized_display_settings">הגדרות מיון לכל קטגוריה בנפרד</string>
     <string name="source_empty_screen">מקור לא נמצא</string>
-    <string name="update_check_eol">גרסת האנדרואיד הזאת כבר לא נתמכת</string>
     <string name="information_webview_required">WebView נצרך ל-Mihon</string>
     <string name="action_display_cover_only_grid">רשת רק של הכריכות</string>
     <string name="action_open_log">פתח את יומן האירועים</string>

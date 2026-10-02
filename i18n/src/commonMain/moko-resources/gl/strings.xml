@@ -580,7 +580,6 @@
     <string name="loader_not_implemented_error">Non se atopou a fonte</string>
     <string name="label_used">En uso</string>
     <string name="day_short">%dd</string>
-    <string name="update_check_eol">Esta versión de Android xa non ten soporte</string>
     <string name="download_notifier_no_network">Non hai ningunha conexión de rede dispoñible</string>
     <string name="remove_from_library">Eliminar da biblioteca</string>
     <string name="chapter_settings_updated">Actualizáronse os axustes por defecto dos capítulos</string>
@@ -591,8 +590,6 @@
     <string name="transition_finished">Rematado:</string>
     <string name="chapter_progress">Páxina: %1$d</string>
     <string name="error_saving_picture">Produciuse un erro ao gardar a imaxe</string>
-    <string name="update_check_confirm">Descargar</string>
-    <string name="channel_app_updates">Actualizacións da aplicación</string>
     <string name="learn_more">Preme para saber máis</string>
     <string name="notification_cover_update_failed">Erro ao actualizar a portada</string>
     <string name="show_chapter_number">Número do capítulo</string>
@@ -625,7 +622,6 @@
     <string name="label_read_duration">Tempo de lectura</string>
     <string name="label_titles_in_global_update">Na actualización global</string>
     <string name="label_total_chapters">Totais</string>
-    <string name="update_check_notification_download_in_progress">Descargando…</string>
     <string name="information_empty_category_dialog">Aínda non tes categorías.</string>
     <string name="information_required_plain">*necesario</string>
     <string name="spen_previous_page">Páxina anterior</string>
@@ -656,8 +652,6 @@
     <string name="notification_chapters_multiple">Capítulos %1$s</string>
     <string name="file_select_cover">Elexir a imaxe de portada</string>
     <string name="file_select_backup">Elexir o ficheiro da copia de seguridade</string>
-    <string name="update_check_no_new_updates">Non hai novas actualizacións dispoñibles</string>
-    <string name="update_check_notification_update_available">Nova versión dispoñible!</string>
     <string name="channel_errors">Erros</string>
     <string name="action_global_search_query">Procurar \"%1$s\" globalmente</string>
     <string name="split_tall_images">Dividir as imaxes altas</string>

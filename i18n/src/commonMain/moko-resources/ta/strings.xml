@@ -748,12 +748,7 @@
     <string name="file_picker_error">கோப்பு பிக்கர் பயன்பாடு எதுவும் கிடைக்கவில்லை</string>
     <string name="file_picker_uri_permission_unsupported">தொடர்ச்சியான கோப்புறை அணுகலைப் பெறுவதில் தோல்வி. பயன்பாடு எதிர்பாராத விதமாக நடந்து கொள்ளலாம்.</string>
     <string name="file_null_uri_error">எந்த கோப்பும் தேர்ந்தெடுக்கப்படவில்லை</string>
-    <string name="update_check_confirm">பதிவிறக்கம்</string>
     <string name="update_check_open">கிட்அப்பில் திறந்திருக்கும்</string>
-    <string name="update_check_eol">இந்த ஆண்ட்ராய்டு பதிப்பு இனி ஆதரிக்கப்படாது</string>
-    <string name="update_check_no_new_updates">புதிய புதுப்பிப்புகள் எதுவும் கிடைக்கவில்லை</string>
-    <string name="update_check_notification_download_in_progress">பதிவிறக்கம்…</string>
-    <string name="update_check_notification_update_available">புதிய பதிப்பு கிடைக்கிறது!</string>
     <string name="information_no_downloads">பதிவிறக்கங்கள் இல்லை</string>
     <string name="information_no_recent">அண்மைக் கால புதுப்பிப்புகள் இல்லை</string>
     <string name="information_no_recent_manga">அண்மைக் காலத்தில் எதுவும் படிக்கவில்லை</string>
@@ -782,7 +777,6 @@
     <string name="channel_progress">முன்னேற்றம்</string>
     <string name="channel_complete">முழுமையானது</string>
     <string name="channel_errors">பிழைகள்</string>
-    <string name="channel_app_updates">பயன்பாட்டு புதுப்பிப்புகள்</string>
     <string name="channel_ext_updates">நீட்டிப்பு புதுப்பிப்புகள்</string>
     <string name="spen_previous_page">முந்தைய பக்கம்</string>
     <string name="spen_next_page">அடுத்த பக்கம்</string>

@@ -245,10 +245,6 @@
     <string name="information_webview_outdated">Paki-update ang WebView app para sa mas mahusay na pagkakatugma</string>
     <string name="information_webview_required">Kinakailangan ng app ang WebView upang gumana ito</string>
     <string name="information_cloudflare_bypass_failure">Bigong ma-bypass ang Cloudflare</string>
-    <string name="update_check_notification_update_available">May bagong bersyon!</string>
-    <string name="update_check_notification_download_in_progress">Dina-download…</string>
-    <string name="update_check_no_new_updates">Walang bagong update</string>
-    <string name="update_check_confirm">I-download</string>
     <string name="file_select_backup">Pumili ng backup</string>
     <string name="file_select_cover">Piliin ang larawan na pabalat</string>
     <string name="notification_first_add_to_library">Maaaring ilagay ang entry sa iyong library bago ito gawin</string>
@@ -455,7 +451,6 @@
     <string name="none">Wala</string>
     <string name="action_sort_chapter_fetch_date">Petsa ng pagkuha ng kabanata</string>
     <string name="action_show_errors">I-tap para makita ang detalye</string>
-    <string name="update_check_eol">Di na suportado ang bersyong ito ng Android</string>
     <string name="clipboard_copy_error">Bigong makopya sa clipboard</string>
     <string name="rotation_landscape">Pahiga</string>
     <string name="rotation_portrait">Patayo</string>
@@ -532,7 +527,6 @@
     <string name="connected_to_wifi">Sa Wi-Fi lang</string>
     <string name="update_72hour">Kada 3 araw</string>
     <string name="download_queue_size_warning">Babala: maaaring humantong sa pagbagal at/o pagharang ng mga source sa %s ang maramihang pag-download. I-tap para matuto pa.</string>
-    <string name="channel_app_updates">Mga update sa app</string>
     <string name="ext_update_all">I-update lahat</string>
     <string name="clear_database_source_item_count">%1$d na entry sa database na wala sa aklatan</string>
     <string name="pref_auto_clear_chapter_cache">Linisin ang cache ng kabanata sa paglulunsad ng app</string>

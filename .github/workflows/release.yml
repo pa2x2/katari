@@ -199,7 +199,8 @@ jobs:
             katari_foss_arm64-v8a-${{ needs.get_tag.outputs.tag }}.apk
             katari_foss_armeabi-v7a-${{ needs.get_tag.outputs.tag }}.apk
           draft: true
-          prerelease: false
+          # A suffixed version (v1.2.0-beta1) is offered in the app only on the Pre-release update channel.
+          prerelease: ${{ contains(needs.get_tag.outputs.tag, '-') }}
 
       # GitHub tags a draft only once it is published. The tag goes in now, and last: it is what
       # tells later pushes to main that this version is released.

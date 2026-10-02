@@ -122,7 +122,6 @@
     <string name="download_notifier_no_network">Тетел ҫыхӑну ҫук</string>
     <string name="download_notifier_text_only_wifi">Wi-Fi ҫыхӑну ҫук</string>
     <string name="download_notifier_title_error">Йӑнӑш</string>
-    <string name="update_check_notification_update_available">Ҫӗнӗ версси пур!</string>
     <string name="notification_chapters_single">%1$s-мӗш сыпӑк</string>
     <string name="information_no_recent_manga">Йулашки вӑхӑтра нимӗн те вуламан</string>
     <string name="information_no_recent">Пӗр ҫӗнетӳ те ҫук</string>
@@ -247,9 +246,6 @@
     <string name="download_notifier_unknown_error">Кӗтмен йӑнӑша пула сыпӑксене тийесе илеймест</string>
     <string name="download_notifier_downloader_title">Тийевҫӗ</string>
     <string name="information_webview_required">Mihon валли WebView кирлӗ</string>
-    <string name="update_check_notification_download_in_progress">Тийев…</string>
-    <string name="update_check_no_new_updates">Ҫӗнетӳ тупӑнман</string>
-    <string name="update_check_confirm">Тиесе ил</string>
     <string name="file_select_cover">Хуплашка суйла</string>
     <string name="notification_first_add_to_library">Ҫакна тӑвас умӗн манкка санӑн вулавӑша хуш-ха</string>
     <string name="notification_cover_update_failed">Хуплашкана ҫӗнетеймерӗ</string>
@@ -448,7 +444,6 @@
     <string name="include">Кӗртмелле: %s</string>
     <string name="none">Ҫук</string>
     <string name="action_sort_chapter_fetch_date">Йулашки сыпӑк илнипе</string>
-    <string name="update_check_eol">Ҫак Android версси урӑх</string>
     <string name="clipboard_copy_error">Пайлашу аса ӑтавланаймарӗ</string>
     <string name="rotation_landscape">Тӑрӑх</string>
     <string name="rotation_portrait">Урлӑ</string>

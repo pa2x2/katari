@@ -299,7 +299,6 @@
     <string name="download_notifier_downloader_title">डाउनलोडर</string>
     <string name="restore_duration">%1$02d मिनेट, %2$02d सेकेन्ड</string>
     <string name="backup_in_progress">ब्याकअप पहिले नै प्रगतिमा छ</string>
-    <string name="update_check_notification_update_available">नयाँ संस्करण उपलब्ध छ!</string>
     <string name="rotation_portrait">पोर्ट्रेट</string>
     <string name="scale_type_fit_height">फिट उचाइ</string>
     <string name="scale_type_fit_width">फिट चौडाइ</string>
@@ -350,7 +349,6 @@
     <string name="label_data">डेटा</string>
     <string name="cache_delete_error">खाली गर्दा त्रुटि भयो</string>
     <string name="status">स्थिति</string>
-    <string name="update_check_notification_download_in_progress">डाउनलोड गर्दै…</string>
     <string name="download_notifier_unknown_error">अप्रत्याशित त्रुटिका कारण अध्याय डाउनलोड गर्न सकिएन</string>
     <string name="notification_chapters_single">अध्याय %1$s</string>
     <string name="scale_type_original_size">मूल आकार</string>
@@ -526,15 +524,12 @@
     <string name="add_tracking">ट्र्याक गर्नुहोस्</string>
     <string name="reading">पढ्दै</string>
     <string name="file_picker_error">कुनै फाइल पिकर एप फेला परेन</string>
-    <string name="update_check_confirm">डाउनलोड गर्नुहोस्</string>
     <string name="learn_more">थप जान्नका लागि ट्याप गर्नुहोस्</string>
-    <string name="update_check_no_new_updates">कुनै नयाँ अपडेट उपलब्ध छैन</string>
     <string name="information_empty_category_dialog">तपाईंसँग अहिलेसम्म कुनै पनि वर्गहरू छैन।</string>
     <string name="chapter_settings_updated">पूर्वनिर्धारित अध्याय सेटिंग्स अपडेट गरियो</string>
     <string name="spen_next_page">अर्को पृष्ठ</string>
     <string name="channel_progress">प्रगति</string>
     <string name="channel_complete">पूरा</string>
-    <string name="channel_app_updates">एप अपडेट्स</string>
     <string name="channel_errors">त्रुटिहरू</string>
     <string name="notification_size_warning">ठूला अपडेटले स्रोतहरूलाई हानि पुर्‍याउँछ र यसले ढिलो अपडेट्स निम्त्याउन सक्छ र ब्याट्रीको प्रयोग पनि बढाउँछ। थप जान्न ट्याप गर्नुहोस्।</string>
     <string name="information_webview_required">एप काम गर्नका लागि WebView आवश्यक छ</string>
@@ -544,7 +539,6 @@
     <string name="file_select_backup">ब्याकअप फाइल चयन गर्नुहोस्</string>
     <string name="channel_common">साधारण</string>
     <string name="spen_previous_page">अघिल्लो पृष्ठ</string>
-    <string name="update_check_eol">यो एन्ड्रोइड संस्करण अब समर्थित छैन</string>
     <string name="getting_started_guide">सुरु गर्ने गाइड</string>
     <string name="pref_navigate_pan">चौडा छविहरू प्यान गर्नुहोस्</string>
     <string name="pref_landscape_zoom">फराकिलो छविहरूमा स्वचालित रूपमा जूम गर्नुहोस्</string>

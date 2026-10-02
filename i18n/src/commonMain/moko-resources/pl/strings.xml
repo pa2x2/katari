@@ -80,10 +80,6 @@
     <string name="chapter_progress">Strona: %1$d</string>
     <string name="no_next_chapter">Nie znaleziono następnego rozdziału</string>
     <string name="file_select_cover">Wybierz okładkę</string>
-    <string name="update_check_confirm">Pobierz</string>
-    <string name="update_check_no_new_updates">Brak nowych aktualizacji</string>
-    <string name="update_check_notification_download_in_progress">Pobieranie…</string>
-    <string name="update_check_notification_update_available">Dostępna nowa wersja!</string>
     <string name="information_empty_library">Twoja biblioteka jest pusta</string>
     <string name="download_notifier_title_error">Błąd</string>
     <string name="download_notifier_unknown_error">Podczas pobierania rozdziału wystąpił nieoczekiwany błąd</string>
@@ -455,7 +451,6 @@
     <string name="exclude">Wyklucz: %s</string>
     <string name="include">Uwzględnij: %s</string>
     <string name="none">Brak</string>
-    <string name="update_check_eol">Ta wersja Androida nie jest już wspierana</string>
     <string name="clipboard_copy_error">Nie udało się skopiować do schowka</string>
     <string name="pref_download_new_categories_details">Tytuły w wykluczonych kategoriach nie będą pobierane, nawet jeśli są również w uwzględnionych kategoriach.</string>
     <string name="pref_category_auto_download">Automatyczne pobieranie</string>
@@ -535,7 +530,6 @@
     <string name="connected_to_wifi">Tylko przez Wi-Fi</string>
     <string name="enhanced_tracking_info">Usługi dostarczania ulepszonych funkcji dla niektórych źródeł. Mangi po dodaniu do biblioteki są automatycznie śledzone.</string>
     <string name="enhanced_services">Ulepszone usługi śledzenia</string>
-    <string name="channel_app_updates">Aktualizacje aplikacji</string>
     <string name="ext_update_all">Zaktualizuj wszystko</string>
     <string name="ext_installer_legacy">Przestarzały</string>
     <string name="pref_auto_clear_chapter_cache">Wyczyść cache rozdziałów przy uruchamianiu aplikacji</string>

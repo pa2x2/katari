@@ -247,10 +247,6 @@
     <string name="notification_first_add_to_library">Vă rugăm să adăugați intrarea în biblioteca dumneavoastră înainte de a face acest lucru</string>
     <string name="file_select_cover">Selectează imagine de copertă</string>
     <string name="file_select_backup">Selectează fișierul de rezervă</string>
-    <string name="update_check_confirm">Descarcă</string>
-    <string name="update_check_no_new_updates">Nu sunt exista actualizări noi</string>
-    <string name="update_check_notification_download_in_progress">Se descarcă…</string>
-    <string name="update_check_notification_update_available">Versiune nouă disponibilă!</string>
     <string name="information_no_downloads">Fără descărcări</string>
     <string name="information_no_recent">Nu există actualizări recente</string>
     <string name="information_no_recent_manga">Nimic citit recent</string>
@@ -455,7 +451,6 @@
     <string name="nav_zone_prev">Anterior</string>
     <string name="right_and_left_nav">Dreapta și stânga</string>
     <string name="pref_dual_page_invert_summary">Dacă amplasarea divizării duble a paginii nu corespunde cu direcția de citire</string>
-    <string name="update_check_eol">Această versiune Android nu mai este suportată</string>
     <string name="clipboard_copy_error">Nu s-a reușit copierea în clipboard</string>
     <string name="error_sharing_cover">Eroare la distribuirea copertei</string>
     <string name="error_saving_cover">Eroare la salvarea copertei</string>
@@ -467,7 +462,6 @@
     <string name="theme_monet">Dinamic</string>
     <string name="label_default">Implicit</string>
     <string name="theme_midnightdusk">Amurg de Miazănoapte</string>
-    <string name="channel_app_updates">Actualizări de aplicație</string>
     <string name="theme_tealturquoise">Teal și turcoaz</string>
     <string name="action_display_local_badge">Sursă locală</string>
     <string name="pref_category_appearance">Aspect</string>

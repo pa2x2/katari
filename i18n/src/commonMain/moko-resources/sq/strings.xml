@@ -84,7 +84,6 @@
     <string name="spen_next_page">Faqja tjetër</string>
     <string name="spen_previous_page">Faqja e meparshme</string>
     <string name="channel_ext_updates">Përditësimet shtesë</string>
-    <string name="channel_app_updates">Përditësimet e aplikacioneve</string>
     <string name="download_notifier_cache_renewal">Shkarkimet e indeksimit</string>
     <string name="download_notifier_split_page_not_found">Faqja %d nuk u gjet gjatë ndarjes</string>
     <string name="download_notifier_downloader_title">Shkarkues</string>
@@ -413,7 +412,6 @@
     <string name="pref_clear_history">Pastro historinë</string>
     <string name="file_select_cover">Zgjidhni imazhin e kopertinës</string>
     <string name="update_check_open">Hapni në GitHub</string>
-    <string name="update_check_confirm">Shkarko</string>
     <string name="transition_no_previous">Nuk ka kapitull të mëparshëm</string>
     <string name="database_clean">Asgjë për të pastruar</string>
     <string name="notification_incognito_text">Çaktivizo modalitetin e fshehtë</string>
@@ -601,9 +599,6 @@
     <string name="learn_more">Trokit për të mësuar më shumë</string>
     <string name="notification_cover_update_failed">Përditësimi i kopertinës dështoi</string>
     <string name="file_select_backup">Zgjidhni skedarin rezervë</string>
-    <string name="update_check_no_new_updates">Nuk disponohen përditësime të reja</string>
-    <string name="update_check_notification_download_in_progress">Po shkarkohet…</string>
-    <string name="update_check_notification_update_available">Versioni i ri në dispozicion!</string>
     <string name="chapter_settings_updated">Cilësimet e kapitullit të parazgjedhur të përditësuara</string>
     <string name="theme_midnightdusk">Perëndim Mesnate</string>
     <string name="pref_restore_backup_summ">Rivendosni bibliotekën nga skedari rezervë</string>
@@ -624,7 +619,6 @@
     <string name="confirm_set_chapter_settings">Jeni i sigurt që dëshironi t\'i ruani këto cilësime si parazgjedhje?</string>
     <string name="dialog_with_checkbox_remove_description">Kjo do të heqë datën e leximit të këtij kapitulli. A je i sigurt?</string>
     <string name="track_remove_start_date_conf_text">Kjo do të heqë datën e fillimit të zgjedhur më parë nga %s</string>
-    <string name="update_check_eol">Ky version Android nuk mbështetet më</string>
     <string name="website">Faqja e internetit</string>
     <string name="version">Version</string>
     <string name="whats_new">Cfare ka te re</string>

@@ -47,7 +47,6 @@ import tachiyomi.data.history.activity.HistoryActivityBackupRepositoryImpl
 import tachiyomi.data.history.activity.HistoryActivityRepositoryImpl
 import tachiyomi.data.library.update.LibraryUpdateReportRepositoryImpl
 import tachiyomi.data.library.update.LibraryUpdateRulesRepositoryImpl
-import tachiyomi.data.release.ReleaseServiceImpl
 import tachiyomi.data.source.SourceRepositoryImpl
 import tachiyomi.data.source.StubSourceRepositoryImpl
 import tachiyomi.data.statistics.StatisticsRepositoryImpl
@@ -94,8 +93,6 @@ import tachiyomi.domain.history.repository.HistoryActivityRepository
 import tachiyomi.domain.history.repository.HistoryRepository
 import tachiyomi.domain.library.update.repository.LibraryUpdateReportRepository
 import tachiyomi.domain.library.update.repository.LibraryUpdateRulesRepository
-import tachiyomi.domain.release.interactor.GetApplicationRelease
-import tachiyomi.domain.release.service.ReleaseService
 import tachiyomi.domain.source.interactor.GetSourcesWithNonLibraryEntries
 import tachiyomi.domain.source.repository.SourceRepository
 import tachiyomi.domain.source.repository.StubSourceRepository
@@ -158,8 +155,6 @@ class DomainModule : InjektModule {
         addFactory { FetchInterval(get()) }
         addFactory { SetEntryViewerFlags(get()) }
         addFactory { UpdateEntry(get()) }
-        addSingletonFactory<ReleaseService> { ReleaseServiceImpl(get(), get()) }
-        addFactory { GetApplicationRelease(get()) }
 
         addSingletonFactory<TrackRepository> { TrackRepositoryImpl(get(), get()) }
         addFactory { TrackChapter(get(), get(), get(), get()) }

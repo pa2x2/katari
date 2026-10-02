@@ -206,10 +206,6 @@
     <string name="notification_first_add_to_library">الرجاء إضافة الإدخال إلى مكتبتك قبل القيام بذلك</string>
     <string name="file_select_cover">اختر صورة الغلاف</string>
     <string name="file_select_backup">اختر ملف النسخة الاحتياطية</string>
-    <string name="update_check_confirm">تنزيل</string>
-    <string name="update_check_no_new_updates">لا تتوفر تحديثات جديدة</string>
-    <string name="update_check_notification_download_in_progress">جار التنزيل…</string>
-    <string name="update_check_notification_update_available">نسخة جديدة متوفرة!</string>
     <string name="information_no_downloads">لا توجد تنزيلات</string>
     <string name="information_no_recent">لا توجد تحديثات جديدة</string>
     <string name="information_no_recent_manga">لم تقرأ شيئًا مؤخَّرًا</string>
@@ -463,7 +459,6 @@
     <string name="pref_download_new_categories_details">لن يتم تنزيل الإدخالات في الفئات المستبعدة حتى إذا كانت موجودة أيضًا في الفئات المضمنة.</string>
     <string name="notification_incognito_text">إلغاء تفعيل الوضع الخفي</string>
     <string name="clipboard_copy_error">فشل النسخ إلى الحافظة</string>
-    <string name="update_check_eol">نسخة الاندرويد هذه اصبحت غير مدعومة</string>
     <string name="source_unsupported">المصدر غير مدعوم</string>
     <string name="unread">لم يُقرأ</string>
     <string name="date">التاريخ</string>
@@ -524,7 +519,6 @@
     <string name="ext_app_info">معلومات التطبيق</string>
     <string name="ext_install_service_notif">جارٍ تثبيت الإضافة …</string>
     <string name="pref_verbose_logging_summary">طباعة السجلات المطولة في سجل النظام (يقلل من أداء التطبيق)</string>
-    <string name="channel_app_updates">تحديثات التطبيق</string>
     <string name="ext_update_all">تحديث الكل</string>
     <string name="update_72hour">كل ثلاثة ايام</string>
     <string name="connected_to_wifi">فقط على شبكة Wi-Fi</string>

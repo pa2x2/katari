@@ -479,7 +479,6 @@
     <string name="paused">Тоқтатылған</string>
     <string name="repeating">Қайта оқылуда</string>
     <string name="reading_list">Оқылудағылар Тізімі</string>
-    <string name="update_check_no_new_updates">Жаңалтулар жоқ</string>
     <string name="information_webview_required">Mihon-ны қолдану үшін WebView керек</string>
     <string name="chapter_settings_updated">Әдепкі тарау параметрлері жаңартылды</string>
     <string name="download_notifier_no_network">Желі байланысы жоқ</string>
@@ -500,7 +499,6 @@
     <string name="clear_history_confirmation">Сенімдісіз бе? Бар тарих жоғалады.</string>
     <string name="source_empty_screen">Дереккөз табылмады</string>
     <string name="notification_cover_update_failed">Мұқаба жаңартылмады</string>
-    <string name="update_check_notification_update_available">Жаңа нұсқа қолжетімді!</string>
     <string name="download_notifier_split_page_not_found">%d бет табылмады, бөлінгенде</string>
     <string name="channel_complete">Аяқталды</string>
     <string name="pref_reader_summary">Оқу түрі, көрсету, навигация</string>
@@ -518,7 +516,6 @@
     <string name="cover_saved">Мұқаба сақталды</string>
     <string name="confirm_set_chapter_settings">Бұл баптауды әдепкі қылып сақтағыңыз келеді ме?</string>
     <string name="learn_more">Көбірек білу үшін басу</string>
-    <string name="update_check_confirm">Жүктеп алу</string>
     <string name="channel_common">Ортақ</string>
     <string name="channel_progress">Прогресс</string>
     <string name="also_set_chapter_settings_for_library">Сонымен қоса кітапханадағы жазбаларға қолдану</string>
@@ -563,16 +560,13 @@
     <string name="notification_chapters_single_and_more">%1$s тарау мен %2$d</string>
     <string name="notification_first_add_to_library">Бұны істер алдыңда жазбаны кітапханаңызға қосыңыз</string>
     <string name="update_check_open">GitHub-та ашу</string>
-    <string name="update_check_eol">Бұл Android нұсқасы қолжетімсіз</string>
     <string name="download_notifier_unknown_error">Белгісіз қателіктің кесірінен тарау жүктеп алынбады</string>
     <string name="download_notifier_split_page_path_not_found">Бет файлының жолы %d табылмады</string>
-    <string name="channel_app_updates">Қолданба жаңартулары</string>
     <string name="channel_ext_updates">Кеңейту жаңартулары</string>
     <string name="spen_previous_page">Алдыңғы бет</string>
     <string name="spen_next_page">Келесі бет</string>
     <string name="appwidget_updates_description">Жақында кітапханада жаңартылған жазбаларды қарау</string>
     <string name="remove_manga">\"%s\"ті кітапханадан жойғай тұрсыз</string>
-    <string name="update_check_notification_download_in_progress">Жүктелуде…</string>
     <string name="channel_errors">Қателіктер</string>
     <string name="unfinished_list">Аяқталмағандар Тізімі</string>
     <string name="score">Бағалау</string>

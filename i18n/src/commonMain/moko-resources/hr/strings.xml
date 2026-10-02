@@ -213,10 +213,6 @@
     <string name="pref_reader_navigation">Navigacija</string>
     <string name="pref_skip_filtered_chapters">Preskoči filtrirana poglavlja</string>
     <string name="pref_skip_read_chapters">Preskoči pročitana poglavlja</string>
-    <string name="update_check_notification_update_available">Dostupna je nova verzija!</string>
-    <string name="update_check_notification_download_in_progress">Preuzimanje …</string>
-    <string name="update_check_no_new_updates">Nema novih verzija</string>
-    <string name="update_check_confirm">Preuzmi</string>
     <string name="file_select_backup">Odaberi datoteku sigurnosne kopije</string>
     <string name="file_select_cover">Odaberi sliku naslovnice</string>
     <string name="notification_first_add_to_library">Prije toga, dodajte stavku u biblioteku</string>
@@ -455,7 +451,6 @@
     <string name="include">Uključi: %s</string>
     <string name="action_sort_chapter_fetch_date">Datum preuzimanja poglavlja</string>
     <string name="action_show_errors">Dodirni za prikaz detalja</string>
-    <string name="update_check_eol">Ove se Android verzija više ne podržava</string>
     <string name="clipboard_copy_error">Kopiranje nije uspješno</string>
     <string name="rotation_landscape">Polegnuti format</string>
     <string name="rotation_portrait">Uspravni format</string>
@@ -526,7 +521,6 @@
     <string name="label_background_activity">Aktivnost u pozadini</string>
     <string name="pref_hide_threshold">Osjetljivost za skrivanje izbornika pri listanju</string>
     <string name="pref_auto_clear_chapter_cache">Izbriši predmemoriju poglavlja tijekom pokretanja aplikacije</string>
-    <string name="channel_app_updates">Aktualiziranja aplikacije</string>
     <string name="database_clean">Nema se što raščistiti</string>
     <string name="enhanced_services">Poboljšane usluge praćenja</string>
     <string name="enhanced_tracking_info">Pruža poboljšane značajke za određene izvore. Unosi se automatski prate kada se dodaju u biblioteku.</string>
