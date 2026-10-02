@@ -55,6 +55,8 @@ class BackupEntry(
     @ProtoNumber(40) var activitySessions: List<BackupActivitySession> = emptyList(),
     @ProtoNumber(41) var activityCompletions: List<BackupActivityCompletion> = emptyList(),
     @ProtoNumber(42) var statisticsEpoch: Long? = null,
+    /** Lowercase [tachiyomi.domain.library.update.model.EntryUpdateMode] name; null follows the library rules. */
+    @ProtoNumber(43) var updateMode: String? = null,
     @ProtoNumber(100) var type: EntryType = EntryType.MANGA,
 ) {
     fun toEntry(): Entry {

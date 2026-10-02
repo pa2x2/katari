@@ -7,6 +7,7 @@ import eu.kanade.tachiyomi.data.backup.BackupDecoder
 import eu.kanade.tachiyomi.data.backup.BackupNotifier
 import eu.kanade.tachiyomi.data.backup.create.BackupCreateJob
 import eu.kanade.tachiyomi.data.backup.models.BackupCategory
+import eu.kanade.tachiyomi.data.backup.models.BackupCategoryUpdateRules
 import eu.kanade.tachiyomi.data.backup.models.BackupEntry
 import eu.kanade.tachiyomi.data.backup.models.BackupExtensionStore
 import eu.kanade.tachiyomi.data.backup.models.BackupPreference
@@ -140,7 +141,7 @@ class BackupRestorer(
 
         coroutineScope {
             if (options.categories) {
-                restoreCategories(backup.backupCategories)
+                restoreCategories(backup.backupCategories, backup.backupDefaultCategoryUpdateRules)
             }
             if (options.appSettings) {
                 restoreAppPreferences(backup.backupPreferences, backup.backupCategories.takeIf { options.categories })
@@ -197,7 +198,7 @@ class BackupRestorer(
             profileManager.setActiveProfile(profile.id, rescheduleJobs = false)
 
             if (options.categories) {
-                categoriesRestorer(profileBackup.categories)
+                categoriesRestorer(profileBackup.categories, profileBackup.defaultCategoryUpdateRules)
                 val progress = restoreProgress.incrementAndFetch()
                 notifier.showRestoreProgress(
                     "${profile.name}: ${context.stringResource(MR.strings.categories)}",
@@ -284,10 +285,7 @@ class BackupRestorer(
         }
 
         if (options.appSettings) {
-            LibraryUpdateJob.setupTask(
-                context = context,
-                prefInterval = libraryPreferences.autoUpdateInterval.get(),
-            )
+            LibraryUpdateJob.setupTask(context)
             BackupCreateJob.setupTask(context)
         }
     }
@@ -323,9 +321,12 @@ class BackupRestorer(
         return requireNotNull(profileDatabase.getProfileById(id))
     }
 
-    private fun CoroutineScope.restoreCategories(backupCategories: List<BackupCategory>) = launch {
+    private fun CoroutineScope.restoreCategories(
+        backupCategories: List<BackupCategory>,
+        defaultCategoryUpdateRules: BackupCategoryUpdateRules?,
+    ) = launch {
         ensureActive()
-        categoriesRestorer(backupCategories)
+        categoriesRestorer(backupCategories, defaultCategoryUpdateRules)
 
         val progress = restoreProgress.incrementAndFetch()
         notifier.showRestoreProgress(

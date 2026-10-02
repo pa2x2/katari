@@ -23,8 +23,6 @@ class CategoryPreferencesCleanupMigration : Migration {
         }
 
         val categoryPreferences = listOf(
-            libraryPreferences.updateCategories,
-            libraryPreferences.updateCategoriesExclude,
             downloadPreferences.removeExcludeCategories,
             downloadPreferences.downloadNewEntryChapterCategories,
             downloadPreferences.downloadNewEntryChapterCategoriesExclude,

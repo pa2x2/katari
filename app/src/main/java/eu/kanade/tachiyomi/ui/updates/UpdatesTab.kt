@@ -19,13 +19,17 @@ import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
 import cafe.adriel.voyager.navigator.tab.TabOptions
 import eu.kanade.presentation.entry.components.ChapterDownloadAction
 import eu.kanade.presentation.entry.translation.EntryTranslateSetupSheet
+import eu.kanade.presentation.library.update.rememberLibraryUpdateStarter
 import eu.kanade.presentation.updates.UpdatesBottomBarConfig
 import eu.kanade.presentation.updates.UpdatesDeleteConfirmationDialog
 import eu.kanade.presentation.updates.UpdatesFilterDialog
+import eu.kanade.presentation.updates.UpdatesFilterSummaryBar
+import eu.kanade.presentation.updates.UpdatesFilteredEmptyScreen
 import eu.kanade.presentation.updates.UpdatesScreen
 import eu.kanade.presentation.updates.UpdatesScreenState
-import eu.kanade.presentation.updates.unifiedUpdatesFilterOptions
 import eu.kanade.presentation.updates.unifiedUpdatesUiItems
+import eu.kanade.presentation.updates.updatesFeedFilterSummary
+import eu.kanade.presentation.updates.updatesFeedFooterItem
 import eu.kanade.presentation.updates.updatesLastUpdatedItem
 import eu.kanade.presentation.util.Tab
 import eu.kanade.tachiyomi.R
@@ -33,19 +37,18 @@ import eu.kanade.tachiyomi.ui.download.DownloadQueueScreen
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
 import eu.kanade.tachiyomi.ui.entry.entrySelectionActionLabels
 import eu.kanade.tachiyomi.ui.home.HomeScreen
+import eu.kanade.tachiyomi.ui.library.update.report.LibraryUpdateReportScreen
 import eu.kanade.tachiyomi.ui.main.MainActivity
-import eu.kanade.tachiyomi.ui.updates.UpdatesScreenModel.Event
-import kotlinx.coroutines.flow.collectLatest
 import mihon.entry.interactions.download.EntryDownloadState
 import mihon.entry.interactions.navigation.EntryOpenFeature
 import mihon.feature.upcoming.UpcomingScreen
-import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.updates.model.UpdateItem
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
+import tachiyomi.presentation.core.screens.EmptyScreen
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
@@ -78,6 +81,16 @@ data object UpdatesTab : Tab {
         val state by screenModel.state.collectAsState()
         val translationStatuses by screenModel.translationStatuses.collectAsStateWithLifecycle()
         val translationSetup by screenModel.translation.sheet.collectAsStateWithLifecycle()
+
+        val categories by settingsScreenModel.getCategories.subscribe().collectAsState(initial = emptyList())
+        val feed = state.feed
+        val filterSummary = updatesFeedFilterSummary(feed.filter, categories, feed.sources)
+
+        val latestUpdateSummary by screenModel.latestUpdateSummary.collectAsStateWithLifecycle()
+        val updateStarter = rememberLibraryUpdateStarter(
+            snackbarHostState = screenModel.snackbarHostState,
+            startSkippedOfLatest = screenModel::updateSkippedOfLatest,
+        )
 
         val selected = state.selected
         val actionLabels = selected.map { it.update.entryType }.entrySelectionActionLabels()
@@ -134,16 +147,45 @@ data object UpdatesTab : Tab {
             snackbarHostState = screenModel.snackbarHostState,
             onSelectAll = screenModel::toggleAllSelection,
             onInvertSelection = screenModel::invertSelection,
-            onUpdateLibrary = screenModel::updateLibrary,
+            onUpdateLibrary = { updateStarter.start(screenModel::updateLibrary) },
             onCalendarClicked = { navigator.push(UpcomingScreen()) },
             onFilterClicked = screenModel::showFilterDialog,
-            hasActiveFilters = state.hasActiveFilters,
+            hasActiveFilters = feed.filter.isActive,
+            filterSummary = if (feed.filter.isActive && state.items.isNotEmpty()) {
+                {
+                    UpdatesFilterSummaryBar(
+                        summary = filterSummary,
+                        hiddenByFilters = feed.hiddenByFilters,
+                        onClick = screenModel::showFilterDialog,
+                        onClear = settingsScreenModel::clearFilters,
+                    )
+                }
+            } else {
+                null
+            },
+            emptyContent = { modifier ->
+                if (feed.hiddenByFilters > 0) {
+                    UpdatesFilteredEmptyScreen(
+                        summary = filterSummary,
+                        onClearFilters = settingsScreenModel::clearFilters,
+                        modifier = modifier,
+                    )
+                } else {
+                    EmptyScreen(stringRes = MR.strings.information_no_recent, modifier = modifier)
+                }
+            },
         ) {
-            updatesLastUpdatedItem(screenModel.lastUpdated)
+            updatesLastUpdatedItem(
+                lastUpdated = screenModel.lastUpdated,
+                failed = latestUpdateSummary?.failed ?: 0,
+                onClick = { navigator.push(LibraryUpdateReportScreen()) }.takeIf { latestUpdateSummary != null },
+            )
             unifiedUpdatesUiItems(
                 uiModels = state.getUiModel(),
                 selectionMode = state.selectionMode,
                 onUpdateSelected = screenModel::toggleSelection,
+                onGroupSelected = screenModel::setGroupSelection,
+                onToggleGroupExpanded = screenModel::toggleGroupExpanded,
                 onClickCover = { item ->
                     navigator.push(EntryScreen(item.visibleEntryId))
                 },
@@ -165,6 +207,11 @@ data object UpdatesTab : Tab {
                 isTranslateApplicable = { screenModel.translation.isApplicable(it.update.entryType) },
                 onTranslateChapter = screenModel::translateChapter,
             )
+            updatesFeedFooterItem(
+                hiddenByFilters = feed.hiddenByFilters,
+                fromHiddenSources = feed.fromHiddenSources,
+                onClearFilters = settingsScreenModel::clearFilters,
+            )
         }
 
         translationSetup?.let { EntryTranslateSetupSheet(it, screenModel.translation) }
@@ -182,28 +229,12 @@ data object UpdatesTab : Tab {
                 UpdatesFilterDialog(
                     onDismissRequest = onDismissDialog,
                     screenModel = settingsScreenModel,
-                    options = unifiedUpdatesFilterOptions(),
+                    filter = feed.filter,
+                    entryTypes = feed.entryTypes,
+                    sources = feed.sources,
                 )
             }
             null -> {}
-        }
-
-        LaunchedEffect(Unit) {
-            screenModel.events.collectLatest { event ->
-                when (event) {
-                    Event.InternalError -> screenModel.snackbarHostState.showSnackbar(
-                        context.stringResource(MR.strings.internal_error),
-                    )
-                    is Event.LibraryUpdateTriggered -> {
-                        val msg = if (event.started) {
-                            MR.strings.updating_library
-                        } else {
-                            MR.strings.update_already_running
-                        }
-                        screenModel.snackbarHostState.showSnackbar(context.stringResource(msg))
-                    }
-                }
-            }
         }
 
         LaunchedEffect(state.selectionMode) {

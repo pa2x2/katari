@@ -40,7 +40,6 @@
     <string name="all">Összes</string>
     <string name="pref_library_update_restriction">Frissítések korlátozása</string>
     <string name="charging">Töltés közben</string>
-    <string name="pref_update_only_non_completed">\"Befejezett\" állapotú elemek kihagyása</string>
     <string name="default_category">Alapértelmezett kategória</string>
     <string name="default_category_summary">Mindig kérdezzen rá</string>
     <string name="pref_show_page_number">Oldalszám megjelenítése</string>
@@ -83,7 +82,6 @@
     <string name="action_add">Hozzáadás</string>
     <string name="action_add_category">Kategória hozzáadása</string>
     <string name="action_edit_categories">Kategóriák szerkesztése</string>
-    <string name="action_rename_category">Kategória átnevezése</string>
     <string name="action_move_category">Kategóriák beállítása</string>
     <string name="action_edit_cover">Borító szerkesztése</string>
     <string name="action_pause">Szüneteltetés</string>
@@ -156,7 +154,6 @@
     <string name="download_notifier_unknown_error">Egy váratlan hiba miatt nem sikerült letölteni a fejezetet</string>
     <string name="download_notifier_title_error">Hiba</string>
     <string name="information_webview_outdated">A jobb kompatibilitás érdekében kérlek, frissítsd a WebView alkalmazást</string>
-    <string name="update_check_notification_update_available">Új verzió érhető el!</string>
     <string name="email">E-mail-cím</string>
     <string name="pref_category_nsfw_content">NSFW (18+) források</string>
     <string name="show_chapter_number">Fejezetszám</string>
@@ -182,7 +179,6 @@
     <string name="ext_updates_pending">Függőben lévő frissítések</string>
     <string name="pref_library_update_refresh_metadata_summary">Új borító és részletek keresése a könyvtár frissítésekor</string>
     <string name="pref_library_update_refresh_metadata">Metaadatokat frissítse automatikusan</string>
-    <string name="pref_category_library_update">Minden frissítése</string>
     <string name="pref_category_display">Megjelenés</string>
     <string name="parental_controls_info">Ez nem akadályozza meg a nem hivatalos vagy az esetlegesen helytelenül megjelölt bővítményeket a 18+-os tartalmak megjelenítésétől az alkalmazáson belül.</string>
     <string name="pref_show_nsfw_source">Megjelenítés a forrás- és kiterjesztéseklistában</string>
@@ -274,7 +270,6 @@
     <string name="include">Kedvelt: %s</string>
     <string name="none">Semmi</string>
     <string name="pref_download_new_categories_details">Elemek a tiltott kategóriákban nem lesznek letöltve, még akkor se, ha a kedvelt kategóriában is vannak.</string>
-    <string name="pref_library_update_categories_details">Elemek a tiltott kategóriákban nem lesznek frissítve, még akkor se, ha a kedvelt kategóriákban is vannak.</string>
     <string name="secure_screen">Biztonságos képernyő</string>
     <string name="lock_when_idle">Zárás tétlen állapotban</string>
     <string name="lock_with_biometrics">Biometrikus zár</string>
@@ -419,7 +414,6 @@
     <string name="action_global_search_hint">Globális keresés…</string>
     <string name="sort_by_upload_date">Feltöltési dátum szerint</string>
     <string name="dialog_with_checkbox_remove_description">Ez eltávolítja a fejezet olvasási dátumát. Biztos benne?</string>
-    <string name="pref_update_only_completely_read">Olvasatlan fejezet(ek)et tartalmazó elemek kihagyása</string>
     <string name="delete_category_confirmation">Törölni akarja a %s kategóriát ?</string>
     <string name="internal_error">InternalError: Nézze meg a hibaüzenetet további információért</string>
     <string name="network_not_metered">Csak korlátlan hálózatokon</string>
@@ -457,7 +451,6 @@
     <string name="on_hold">Szüneteltetve</string>
     <string name="snack_categories_deleted">Kategóriák törölve</string>
     <string name="file_select_cover">Válasszon képet a fedlapnak</string>
-    <string name="update_check_no_new_updates">Nem található új frissítés</string>
     <string name="ext_info_version">Verzió</string>
     <string name="ext_info_language">Nyelv</string>
     <string name="ext_info_age_rating">Korhatár</string>
@@ -490,19 +483,13 @@
     <string name="recent_manga_time">Fej. %1$s - %2$s</string>
     <string name="getting_started_guide">Kezdési útmutató</string>
     <string name="database_clean">Adatbázis törlése</string>
-    <string name="pref_update_only_started">El nem kezdett elemek kihagyása</string>
     <string name="backup_in_progress">Biztonsági mentés már folyamatban van</string>
     <string name="not_installed">Nincs telepítve</string>
     <string name="download_queue_size_warning">Figyelmeztetés: a tömeges letöltések a források lelassulásához és/vagy a %s leállásához vezethetnek. Koppintson további információért.</string>
     <string name="learn_more">Koppintson további információért</string>
     <string name="notification_cover_update_failed">Nem sikerült a fedlap frissítése</string>
     <string name="notification_first_add_to_library">Először adja az elemet a könyvtárhoz</string>
-    <string name="skipped_reason_not_caught_up">Átugorva, mivel tartalmaz olvasatlan fejezeteket</string>
-    <string name="skipped_reason_not_started">Átugorva, mivel nincs olvasott fejezet</string>
-    <string name="update_check_confirm">Letöltés</string>
     <string name="update_check_open">Megnyitás GitHub-on</string>
-    <string name="update_check_eol">Ez az Android verzió már nem támogatott</string>
-    <string name="channel_app_updates">Alkalmazás frissítések</string>
     <string name="cant_open_last_read_chapter">Nem sikerült megnyitni az utoljára olvasott fejezetet</string>
     <string name="pref_navigate_pan">Széles képek pásztázása</string>
     <string name="save_chapter_as_cbz">Mentés CBZ archívumkén</string>
@@ -520,7 +507,6 @@
     <string name="migration_dialog_what_to_include">Válaszon beletartozó adatokat</string>
     <string name="chapter_settings_updated">Fejezet beállításai frissültek</string>
     <string name="download_notifier_downloader_title">Letöltő</string>
-    <string name="update_check_notification_download_in_progress">Letöltés…</string>
     <string name="source_filter_empty_screen">Nincs telepített forrás</string>
     <string name="migration_help_guide">Forrás imortálási útmutató</string>
     <string name="picture_saved">Kép elmentve</string>
@@ -591,8 +577,6 @@
     <string name="show_title">Forrás címe</string>
     <string name="sort_by_source">Forrás szerint</string>
     <string name="sort_by_number">Fejezetek száma szerint</string>
-    <string name="library_errors_help">Könyvtárfrissítési hibák kijavításához sgítségért, tekintese meg %1$s</string>
-    <string name="skipped_reason_completed">Átugorva, mivel a sorozat befejeződött</string>
     <string name="download_notifier_split_page_not_found">%d oldal nem található felosztás közben</string>
     <string name="download_notifier_split_page_path_not_found">Nem található az útvonal a %d-ik oldalhoz</string>
     <string name="confirm_set_image_as_cover">Ez a kép legyen a fedlap?</string>
@@ -672,7 +656,6 @@
     <string name="track_activity_name">Bejelentkezés nyilvántartóhoz</string>
     <string name="delete_downloaded">Letöltött törlése</string>
     <string name="split_tall_images">Magas képek szétvágása</string>
-    <string name="pref_update_only_in_release_period">Következő kiadás idejének megjóslása</string>
     <string name="pref_page_rotate">Széles oldalak forgatása az illeszkedéshez</string>
     <string name="pref_chapter_swipe_end">Fejezet jobbra húzásakor</string>
     <string name="pref_page_rotate_invert">Forgatott széles oldalak megfordítása</string>
@@ -680,7 +663,6 @@
     <string name="pref_storage_location">Tárolási hely</string>
     <string name="information_cloudflare_help">Érints ide, ha Cloudflare segítségre van szükséged</string>
     <string name="relative_time_span_never">Soha</string>
-    <string name="skipped_reason_not_always_update">Átlépve, mert a sorozatot nem kell frissíteni</string>
     <string name="pref_flash_page_summ">E-ink képernyőkön csökkenti a visszamaradó képet</string>
     <string name="unlock_app_title">%s feloldása</string>
     <string name="pref_storage_location_info">Automatikus biztonsági mentésekhez, fejezetek letöltéséhez, és helyi forráshoz használt.</string>
@@ -705,7 +687,6 @@
     <string name="label_titles_section">Elemek</string>
     <string name="action_bar_up_description">Felnavigálás</string>
     <string name="label_data_storage">Adatok és tárolás</string>
-    <string name="skipped_reason_not_in_release_period">Átlépve, mert ma nem várható kiadás</string>
     <string name="file_null_uri_error">Nincs fájl kiválasztva</string>
     <string name="error_user_agent_string_invalid">Érvénytelen felhasználói ágens (user agent) szöveg</string>
     <string name="source_settings">Forrás beállítások</string>
@@ -740,7 +721,6 @@
     <string name="onboarding_permission_action_grant">Engedélyezés</string>
     <string name="onboarding_guides_new_user">Új a(z) %s az ön számára? Javasoljuk, hogy olvassa el a Kezdő útmutatót.</string>
     <string name="onboarding_guides_returning_user">Újratelepíti a(z) %s?</string>
-    <string name="pref_library_update_smart_update">Intelligens frissítés</string>
     <string name="ext_permission_install_apps_warning">A bővítmények telepítéséhez engedélyek szükségesek. Az engedélyezéshez koppintson ide.</string>
     <string name="ext_revoke_trust">Megbízható ismeretlen kiterjesztések visszavonása</string>
     <string name="action_open_repo">Nyílt forráskódú tároló</string>

@@ -11,6 +11,7 @@ import eu.kanade.tachiyomi.data.backup.create.creators.PreferenceBackupCreator
 import eu.kanade.tachiyomi.data.backup.create.creators.SourcesBackupCreator
 import eu.kanade.tachiyomi.data.backup.models.Backup
 import eu.kanade.tachiyomi.data.backup.models.BackupCategory
+import eu.kanade.tachiyomi.data.backup.models.BackupCategoryUpdateRules
 import eu.kanade.tachiyomi.data.backup.models.BackupEntry
 import eu.kanade.tachiyomi.data.backup.models.BackupExtensionStore
 import eu.kanade.tachiyomi.data.backup.models.BackupPreference
@@ -86,6 +87,7 @@ class BackupCreator(
 
             val backup = Backup(
                 backupCategories = backupCategories(options),
+                backupDefaultCategoryUpdateRules = backupDefaultCategoryUpdateRules(options),
                 backupSources = backupSources,
                 backupPreferences = backupAppPreferences(options),
                 backupExtensionStores = backupExtensionStores(options),
@@ -133,6 +135,16 @@ class BackupCreator(
             categoriesBackupCreator(activeProfileId)
         } else {
             categoriesBackupCreator()
+        }
+    }
+
+    private suspend fun backupDefaultCategoryUpdateRules(options: BackupOptions): BackupCategoryUpdateRules? {
+        if (!options.categories) return null
+        val activeProfileId = profileManager.activeProfile.value?.id
+        return if (activeProfileId != null) {
+            categoriesBackupCreator.defaultCategoryUpdateRules(activeProfileId)
+        } else {
+            categoriesBackupCreator.defaultCategoryUpdateRules()
         }
     }
 
@@ -192,6 +204,11 @@ class BackupCreator(
             } else {
                 emptyList()
             }
+            val defaultCategoryUpdateRules = if (options.categories) {
+                categoriesBackupCreator.defaultCategoryUpdateRules(profileId)
+            } else {
+                null
+            }
 
             val appPreferences = if (options.appSettings) {
                 preferenceBackupCreator.createApp(
@@ -221,6 +238,7 @@ class BackupCreator(
                     isArchived = bundle.profile.isArchived,
                 ),
                 categories = categories,
+                defaultCategoryUpdateRules = defaultCategoryUpdateRules,
                 entries = entries,
                 preferences = appPreferences,
                 sourcePreferences = sourcePreferences,

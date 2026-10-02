@@ -2,10 +2,13 @@ package eu.kanade.tachiyomi.data.backup.restore.restorers
 
 import app.cash.sqldelight.async.coroutines.awaitAsOne
 import eu.kanade.tachiyomi.data.backup.models.BackupCategory
+import eu.kanade.tachiyomi.data.backup.models.BackupCategoryUpdateRules
 import tachiyomi.data.ActiveProfileProvider
 import tachiyomi.data.DatabaseHandler
 import tachiyomi.domain.category.interactor.GetCategories
+import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.library.service.LibraryPreferences
+import tachiyomi.domain.library.update.repository.LibraryUpdateRulesRepository
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
@@ -14,9 +17,16 @@ class CategoriesRestorer(
     private val profileProvider: ActiveProfileProvider = Injekt.get(),
     private val getCategories: GetCategories = Injekt.get(),
     private val libraryPreferences: LibraryPreferences = Injekt.get(),
+    private val updateRulesRepository: LibraryUpdateRulesRepository = Injekt.get(),
 ) {
 
-    suspend operator fun invoke(backupCategories: List<BackupCategory>) {
+    suspend operator fun invoke(
+        backupCategories: List<BackupCategory>,
+        defaultCategoryUpdateRules: BackupCategoryUpdateRules?,
+    ) {
+        defaultCategoryUpdateRules?.let {
+            updateRulesRepository.setCategoryRules(it.toCategoryUpdateRules(Category.UNCATEGORIZED_ID))
+        }
         if (backupCategories.isNotEmpty()) {
             val dbCategories = getCategories.await()
             val dbCategoriesByName = dbCategories.associateBy { it.name }
@@ -35,6 +45,12 @@ class CategoriesRestorer(
                             .awaitAsOne()
                             .let { id -> it.toCategory(id).copy(order = order) }
                     }
+            }
+
+            backupCategories.forEach { backupCategory ->
+                val rules = backupCategory.updateRules ?: return@forEach
+                val category = categories.firstOrNull { it.name == backupCategory.name } ?: return@forEach
+                updateRulesRepository.setCategoryRules(rules.toCategoryUpdateRules(category.id))
             }
 
             libraryPreferences.categorizedDisplaySettings.set(

@@ -48,10 +48,6 @@
     <string name="notification_first_add_to_library">Lisää sarja kirjastoosi ensin</string>
     <string name="file_select_cover">Valitse kansikuva</string>
     <string name="file_select_backup">Valitse varmuuskopio-tiedosto</string>
-    <string name="update_check_confirm">Lataa</string>
-    <string name="update_check_no_new_updates">Ei päivityksiä saatavilla</string>
-    <string name="update_check_notification_download_in_progress">Ladataan…</string>
-    <string name="update_check_notification_update_available">Uusi versio saatavilla!</string>
     <string name="information_no_downloads">Ei latauksia</string>
     <string name="information_no_recent">Ei viimeisimpiä päivityksiä</string>
     <string name="information_no_recent_manga">Ei mitään luettu viime aikoina</string>
@@ -81,7 +77,6 @@
     <string name="action_add">Lisää</string>
     <string name="action_add_category">Lisää kategoria</string>
     <string name="action_edit_categories">Muokkaa kategorioita</string>
-    <string name="action_rename_category">Nimeä kategoria uudelleen</string>
     <string name="action_retry">Yritä uudelleen</string>
     <string name="action_pause">Pysäytä</string>
     <string name="action_previous_chapter">Aiempi luku</string>
@@ -124,7 +119,6 @@
     <string name="all">Kaikki</string>
     <string name="pref_library_update_restriction">Automaattisen päivityksen laitteistorajoitukset</string>
     <string name="charging">Latauksessa</string>
-    <string name="pref_update_only_non_completed">Sarja on päättynyt</string>
     <string name="pref_auto_update_manga_sync">Päivitä luvun edistyminen lukemisen jälkeen</string>
     <string name="default_category">Oletus kategoria</string>
     <string name="default_category_summary">Kysy aina</string>
@@ -284,7 +278,6 @@
     <string name="ext_obsolete">Vanhentunut</string>
     <string name="obsolete_extension_message">Tämä laajennos ei ole enää saatavilla. Se ei välttämättä toimi oikein ja voi aiheuttaa ongelmia Mihonin kanssa. Laajennoksen poistoa suositellaan.</string>
     <string name="pref_date_format">Päivämäärän muoto</string>
-    <string name="pref_category_library_update">Globaali päivitys</string>
     <string name="logout_title">Kirjaa ulos kohteesta %1$s?</string>
     <string name="logout">Kirjaudu ulos</string>
     <string name="logout_success">Kirjauduttu ulos</string>
@@ -459,9 +452,7 @@
     <string name="action_sort_chapter_fetch_date">Haettu päivämäärä</string>
     <string name="pref_download_new_categories_details">Poissuljettuihin kategorioihin kuuluvia mangoja ei ladata, vaikka ne olisivat myös sisällytetyissä kategorioissa.</string>
     <string name="pref_category_auto_download">Automaattinen lataus</string>
-    <string name="pref_library_update_categories_details">Poissuljettuihin kategorioihin sisältyvää mangaa ei päivitetä, vaikka ne olisivat myös sisällytetyissä kategorioissa.</string>
     <string name="action_show_errors">Näytä lisätiedot</string>
-    <string name="update_check_eol">Tätä Android-versiota ei enää tueta</string>
     <string name="clipboard_copy_error">Kopiointi leikepöydälle epäonnistui</string>
     <string name="rotation_landscape">Vaakatasossa</string>
     <string name="rotation_portrait">Pystysuunnassa</string>
@@ -499,9 +490,7 @@
     <string name="theme_tealturquoise">Sinivihreä ja turkoosi</string>
     <string name="theme_yotsuba">Yotsuba</string>
     <string name="pref_dark_theme_pure_black">Täysin musta pimeätila</string>
-    <string name="pref_update_only_started">Ei lukemattomia lukuja</string>
     <string name="relative_time_today">Tänään</string>
-    <string name="pref_update_only_completely_read">Sarjalla on lukemattomia kappaleita</string>
     <string name="pref_app_theme">Sovelluksen teema</string>
     <string name="label_warning">Varoitus</string>
     <string name="confirm_lock_change">Tunnistaudu vahvistaaksesi muutokset</string>
@@ -564,17 +553,14 @@
     <string name="error_saving_picture">Virhe tallentaessa kuvaa</string>
     <string name="update_already_running">Kirjastoa ollaan jo päivitämässä</string>
     <string name="updates_last_update_info">Kirjasto päivitetty viimeksi: %s</string>
-    <string name="skipped_reason_completed">Ohitettu, koska sarja on päättynyt</string>
     <string name="information_empty_category_dialog">Sinulla ei vielä ole kategorioita.</string>
     <string name="on_hiatus">Tauolla</string>
     <string name="not_installed">Ei asennettu</string>
-    <string name="skipped_reason_not_started">Ohitettu, koska yhtään lukua ei ole luettu sarjasta</string>
     <string name="update_check_open">Avaa GitHubissa</string>
     <string name="label_background_activity">Taustatoiminta</string>
     <string name="help_translate">Auta kääntämisessä</string>
     <string name="pref_clear_webview_data">Tyhjennä WebView-tiedot</string>
     <string name="privacy_policy">Tietosuojakäytäntö</string>
-    <string name="channel_app_updates">Sovelluspäivitykset</string>
     <string name="clear_database_source_item_count">%1$d sarjaa joita ei olla lisätty kirjastoon tietokanassa</string>
     <string name="database_clean">Ei mitään tyhjennettävää</string>
     <string name="pref_reset_viewer_flags">Poista sarjakohtaiset lukijan asetukset</string>
@@ -593,8 +579,6 @@
     <string name="pref_verbose_logging">Yksityiskohtainen kirjaaminen</string>
     <string name="cover_saved">Kansikuva tallennettu</string>
     <string name="error_saving_cover">Virhe tallentaessa kansikuvaa</string>
-    <string name="skipped_reason_not_caught_up">Ohitettu, koska sarjassa on luettomia lukuja</string>
-    <string name="skipped_reason_not_always_update">Ohitettu, koska sarja ei vaadi päivityksiä</string>
     <string name="remove_manga">Olet poistamassa \"%s\" kirjastostasi</string>
     <string name="pref_verbose_logging_summary">Kirjoittaa yksityiskohtaiset lokit järjestelmälokiin (heikentää sovelluksen suorituskykyä)</string>
     <string name="backup_info">Varmuuskopioita kannattaa säilyttää myös muissa paikoissa.</string>

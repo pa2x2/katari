@@ -42,7 +42,6 @@
     <string name="action_move_category">I-set ang kategorya</string>
     <string name="action_add_category">Magdagdag ng kategorya</string>
     <string name="action_edit_categories">Ayusin ang kategorya</string>
-    <string name="action_rename_category">Palitan ang pangalan ng kategorya</string>
     <string name="action_add">Magdagdag</string>
     <string name="action_edit">Isaayos</string>
     <string name="action_disable_all">Di-paganahin lahat</string>
@@ -195,7 +194,6 @@
     <string name="default_category">Default na kategorya</string>
     <string name="pref_library_update_refresh_metadata_summary">Maghanap ng mga bagong pabalat at detalye kapag nag-a-update ng aklatan</string>
     <string name="pref_library_update_refresh_metadata">Awtomatikong i-refresh ang metadata</string>
-    <string name="pref_update_only_non_completed">Laktawan ang mga entry na may katayuang \"Nakumpleto\"</string>
     <string name="charging">Kapag naka-charge</string>
     <string name="pref_library_update_restriction">Awtomatikong ina-update ang mga paghihigpit sa device</string>
     <string name="update_weekly">Linggo-linggo</string>
@@ -205,7 +203,6 @@
     <string name="update_6hour">Kada 6 na oras</string>
     <string name="update_never">Nakapatay</string>
     <string name="pref_library_update_interval">Awtomatikong pag-update</string>
-    <string name="pref_category_library_update">Panlahatang update</string>
     <string name="landscape">Pahiga</string>
     <string name="portrait">Patayo</string>
     <string name="pref_library_columns">Mga item kada row</string>
@@ -248,10 +245,6 @@
     <string name="information_webview_outdated">Paki-update ang WebView app para sa mas mahusay na pagkakatugma</string>
     <string name="information_webview_required">Kinakailangan ng app ang WebView upang gumana ito</string>
     <string name="information_cloudflare_bypass_failure">Bigong ma-bypass ang Cloudflare</string>
-    <string name="update_check_notification_update_available">May bagong bersyon!</string>
-    <string name="update_check_notification_download_in_progress">Dina-download…</string>
-    <string name="update_check_no_new_updates">Walang bagong update</string>
-    <string name="update_check_confirm">I-download</string>
     <string name="file_select_backup">Pumili ng backup</string>
     <string name="file_select_cover">Piliin ang larawan na pabalat</string>
     <string name="notification_first_add_to_library">Maaaring ilagay ang entry sa iyong library bago ito gawin</string>
@@ -456,10 +449,8 @@
     <string name="exclude">Na-ibukod: %s</string>
     <string name="include">Kasali ang: %s</string>
     <string name="none">Wala</string>
-    <string name="pref_library_update_categories_details">Hindi ia-update ang mga entry na nasa na-ibukod na mga kategorya kahit na nasa mga kasamang kategorya rin sila.</string>
     <string name="action_sort_chapter_fetch_date">Petsa ng pagkuha ng kabanata</string>
     <string name="action_show_errors">I-tap para makita ang detalye</string>
-    <string name="update_check_eol">Di na suportado ang bersyong ito ng Android</string>
     <string name="clipboard_copy_error">Bigong makopya sa clipboard</string>
     <string name="rotation_landscape">Pahiga</string>
     <string name="rotation_portrait">Patayo</string>
@@ -536,25 +527,18 @@
     <string name="connected_to_wifi">Sa Wi-Fi lang</string>
     <string name="update_72hour">Kada 3 araw</string>
     <string name="download_queue_size_warning">Babala: maaaring humantong sa pagbagal at/o pagharang ng mga source sa %s ang maramihang pag-download. I-tap para matuto pa.</string>
-    <string name="channel_app_updates">Mga update sa app</string>
     <string name="ext_update_all">I-update lahat</string>
     <string name="clear_database_source_item_count">%1$d na entry sa database na wala sa aklatan</string>
     <string name="pref_auto_clear_chapter_cache">Linisin ang cache ng kabanata sa paglulunsad ng app</string>
     <string name="database_clean">Walang malilinis</string>
     <string name="extension_api_error">Bigong makuha ng mga available na extension</string>
     <string name="privacy_policy">Patakaran sa Pagkapribado</string>
-    <string name="library_errors_help">Para sa tulong sa pag-aayos ng mga error sa pag-update ng aklatan, tingnan ang %1$s</string>
-    <string name="pref_update_only_completely_read">Laktawan ang mga entry na hindi pa nababasang kabanata</string>
     <string name="save_chapter_as_cbz">I-save bilang CBZ archive</string>
     <string name="publishing_finished">Tapos na ang paglalathala</string>
     <string name="on_hiatus">Naka-hiatus</string>
     <string name="cancelled">Kinansela</string>
     <string name="action_show_manga">Ipakita ang entry</string>
     <string name="action_display_cover_only_grid">Pabalat lamang na grid</string>
-    <string name="skipped_reason_completed">Nilaktawan dahil kumpleto na ang serye</string>
-    <string name="pref_update_only_started">Laktawan ang hindi nasimulang mga entry</string>
-    <string name="skipped_reason_not_caught_up">Nilaktawan dahil may di pa nabasang mga kabanata</string>
-    <string name="skipped_reason_not_started">Nilaktawan dahil wala pang nabasang mga kabanata</string>
     <string name="pref_landscape_zoom">Awtomatikong mag-zoom sa mga malalawak na larawan</string>
     <string name="pref_navigate_pan">I-pan ang mga malalapad na larawan</string>
     <string name="learn_more">Matuto pa</string>
@@ -614,7 +598,6 @@
     <string name="updates_last_update_info">Huling update sa aklatan: %s</string>
     <string name="popular">Sikat</string>
     <string name="missing_storage_permission">Hindi binigay ang mga permiso sa storage</string>
-    <string name="skipped_reason_not_always_update">Nilaktawan dahil hindi kailangan ang pag-update sa serye</string>
     <string name="action_search_hint">Maghanap…</string>
     <string name="pref_reader_summary">Paraan ng pagbasa, pagpapakita, nabigasyon</string>
     <string name="pref_downloads_summary">Awtomatikong pag-download, i-download nang maaga</string>
@@ -687,9 +670,7 @@
     <string name="action_sort_next_updated">Susunod na inaasahang update</string>
     <string name="manga_display_interval_title">Tantyahin bawat</string>
     <string name="manga_display_modified_interval_title">Itakdang i-update bawat</string>
-    <string name="pref_update_only_in_release_period">Hulaan ang susunod na oras ng release</string>
     <string name="intervals_header">Mga pagitan</string>
-    <string name="skipped_reason_not_in_release_period">Nilaktawan dahil walang inaasahang release ngayong araw</string>
     <string name="has_results">May mga resulta</string>
     <string name="delete_downloaded">Burahin ang na-download</string>
     <string name="action_ok">OK</string>
@@ -761,7 +742,6 @@
     <string name="ext_permission_install_apps_warning">Kinakailangan ng permiso para mag-install ng mga extension. I-tap upang mapayagan ito.</string>
     <string name="private_settings">Kasali ang mga sensitibong setting (hal., mga tracker login token)</string>
     <string name="onboarding_storage_help_info">Nag-a-update mula sa isang mas lumang bersyon at hindi sigurado kung ano ang pipiliin? Sumangguni sa gabay sa storage para sa higit pang impormasyon.</string>
-    <string name="pref_library_update_smart_update">Matalas na pag-update</string>
     <string name="onboarding_storage_help_action">Gabay sa storage</string>
     <string name="manga_interval_custom_amount">Custom na frequency sa pag-update:</string>
     <string name="theme_nord">Nord</string>
@@ -885,7 +865,6 @@
     <string name="action_webview_close_tab">Isara ang tab</string>
     <string name="theme_catppuccin">Catppuccin</string>
     <string name="migrationConfigScreen.availableHeader">Maaaring Magamit</string>
-    <string name="action_filter_excluded_scanlators">Isala ang na-ibukod na mga scanlator</string>
     <string name="download_bookmarked">Na-bookmark</string>
     <string name="label_support_us">Suportahan Kami</string>
     <string name="supportUsScreen.perks">Ang mga patron ay may access sa exclusive channels, at marami pang perks ang darating.</string>

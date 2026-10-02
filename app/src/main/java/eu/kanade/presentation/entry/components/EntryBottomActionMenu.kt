@@ -301,6 +301,8 @@ fun LibraryBottomActionMenu(
     onDeleteClicked: (() -> Unit)?,
     onMigrateClicked: (() -> Unit)?,
     onMoveToProfileClicked: (() -> Unit)?,
+    onCheckForUpdatesClicked: () -> Unit,
+    onUpdateModeClicked: () -> Unit,
     modifier: Modifier = Modifier,
     markAsReadLabel: StringResource = MR.strings.action_mark_as_read,
     markAsUnreadLabel: StringResource = MR.strings.action_mark_as_unread,
@@ -317,7 +319,6 @@ fun LibraryBottomActionMenu(
             shape = MaterialTheme.shapes.large.copy(bottomEnd = ZeroCornerSize, bottomStart = ZeroCornerSize),
             color = MaterialTheme.colorScheme.surfaceContainerHigh,
         ) {
-            val itemOverflow = onDownloadClicked != null || onMoveToProfileClicked != null
             Row(
                 modifier = Modifier
                     .windowInsetsPadding(
@@ -396,60 +397,51 @@ fun LibraryBottomActionMenu(
                         )
                     }
                 }
-                if (!itemOverflow) {
-                    if (onMigrateClicked != null) {
-                        Button(
-                            title = stringResource(MR.strings.migrate),
-                            icon = EntryActionIcons.migrate,
-                            toConfirm = false,
-                            onLongClick = {},
-                            showLabel = true,
-                            onClick = onMigrateClicked,
-                        )
-                    }
-                    if (onDeleteClicked != null) {
-                        Button(
-                            title = stringResource(MR.strings.action_delete),
-                            icon = Icons.Outlined.Delete,
-                            toConfirm = false,
-                            onLongClick = {},
-                            showLabel = true,
-                            onClick = onDeleteClicked,
-                        )
-                    }
-                } else if (onDeleteClicked != null || onMigrateClicked != null || onMoveToProfileClicked != null) {
-                    var overflowMenuOpen by remember { mutableStateOf(false) }
-                    Button(
-                        title = stringResource(MR.strings.label_more),
-                        icon = Icons.Outlined.MoreVert,
-                        toConfirm = false,
-                        onLongClick = {},
-                        showLabel = true,
-                        onClick = { overflowMenuOpen = true },
+                var overflowMenuOpen by remember { mutableStateOf(false) }
+                Button(
+                    title = stringResource(MR.strings.label_more),
+                    icon = Icons.Outlined.MoreVert,
+                    toConfirm = false,
+                    onLongClick = {},
+                    showLabel = true,
+                    onClick = { overflowMenuOpen = true },
+                ) {
+                    DropdownMenu(
+                        expanded = overflowMenuOpen,
+                        onDismissRequest = { overflowMenuOpen = false },
+                        offset = BottomBarMenuDpOffset,
                     ) {
-                        DropdownMenu(
-                            expanded = overflowMenuOpen,
-                            onDismissRequest = { overflowMenuOpen = false },
-                            offset = BottomBarMenuDpOffset,
-                        ) {
-                            if (onMoveToProfileClicked != null) {
-                                DropdownMenuItem(
-                                    text = { Text(stringResource(MR.strings.move_entries_action)) },
-                                    onClick = onMoveToProfileClicked,
-                                )
-                            }
-                            if (onMigrateClicked != null) {
-                                DropdownMenuItem(
-                                    text = { Text(stringResource(MR.strings.migrate)) },
-                                    onClick = onMigrateClicked,
-                                )
-                            }
-                            if (onDeleteClicked != null) {
-                                DropdownMenuItem(
-                                    text = { Text(stringResource(MR.strings.action_delete)) },
-                                    onClick = onDeleteClicked,
-                                )
-                            }
+                        DropdownMenuItem(
+                            text = { Text(stringResource(MR.strings.action_check_for_updates)) },
+                            onClick = {
+                                overflowMenuOpen = false
+                                onCheckForUpdatesClicked()
+                            },
+                        )
+                        DropdownMenuItem(
+                            text = { Text(stringResource(MR.strings.action_update_mode)) },
+                            onClick = {
+                                overflowMenuOpen = false
+                                onUpdateModeClicked()
+                            },
+                        )
+                        if (onMoveToProfileClicked != null) {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(MR.strings.move_entries_action)) },
+                                onClick = onMoveToProfileClicked,
+                            )
+                        }
+                        if (onMigrateClicked != null) {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(MR.strings.migrate)) },
+                                onClick = onMigrateClicked,
+                            )
+                        }
+                        if (onDeleteClicked != null) {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(MR.strings.action_delete)) },
+                                onClick = onDeleteClicked,
+                            )
                         }
                     }
                 }

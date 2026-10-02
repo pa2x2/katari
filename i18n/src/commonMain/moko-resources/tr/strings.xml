@@ -38,7 +38,6 @@
     <string name="action_add">Ekle</string>
     <string name="action_add_category">Kategori ekle</string>
     <string name="action_edit_categories">Kategorileri düzenle</string>
-    <string name="action_rename_category">Kategoriyi yeniden adlandır</string>
     <string name="action_move_category">Kategorileri ayarla</string>
     <string name="action_edit_cover">Kapağı düzenle</string>
     <string name="action_pause">Duraklat</string>
@@ -83,7 +82,6 @@
     <string name="all">Tümü</string>
     <string name="pref_library_update_restriction">Otomatik güncelleme cihaz kısıtlamaları</string>
     <string name="charging">Şarj olurken</string>
-    <string name="pref_update_only_non_completed">\"Tamamlanmış\" durumda olan girdileri atla</string>
     <string name="pref_auto_update_manga_sync">Okuduktan sonra ilerlemeyi güncelle</string>
     <string name="default_category">Varsayılan kategori</string>
     <string name="default_category_summary">Her zaman sor</string>
@@ -241,10 +239,6 @@
     <string name="notification_first_add_to_library">Lütfen bunu yapmadan önce girdiyi kitaplığınıza ekleyin</string>
     <string name="file_select_cover">Kapak görselini seç</string>
     <string name="file_select_backup">Yedek dosyasını seç</string>
-    <string name="update_check_confirm">İndir</string>
-    <string name="update_check_no_new_updates">Yeni güncelleme yok</string>
-    <string name="update_check_notification_download_in_progress">İndiriliyor…</string>
-    <string name="update_check_notification_update_available">Yeni sürüm var!</string>
     <string name="information_no_downloads">İndirme yok</string>
     <string name="information_no_recent">Yeni güncelleme yok</string>
     <string name="information_no_recent_manga">Yakında okunan yok</string>
@@ -284,7 +278,6 @@
     <string name="ext_obsolete">Kullanılamıyor</string>
     <string name="obsolete_extension_message">Bu uzantı herhangi bir mağazaya bağlı değil. Yeni güncellemeler almayacak, beklendiği gibi çalışmayabilir ve uygulama içerisinde sorunlara sebep olabilir. Kaldırmanız önerilir.</string>
     <string name="pref_date_format">Tarih biçimi</string>
-    <string name="pref_category_library_update">Genel güncelleme</string>
     <string name="logout_title">%1$s \'den çıkılsın mı?</string>
     <string name="logout">Çıkış yap</string>
     <string name="logout_success">Çıkış yaptınız</string>
@@ -457,9 +450,7 @@
     <string name="action_sort_chapter_fetch_date">Bölümün alındığı tarih</string>
     <string name="pref_download_new_categories_details">Hariç tutulan kategorilerdeki girdiler, dahil edilen kategorilerde olsa bile indirilmeyecektir.</string>
     <string name="pref_category_auto_download">Otomatik indir</string>
-    <string name="pref_library_update_categories_details">Hariç tutulan kategorilerdeki girdiler, dahil edilen kategorilerde de olsa bile güncellenmeyecektir.</string>
     <string name="action_show_errors">Ayrıntıları görmek için dokun</string>
-    <string name="update_check_eol">Bu Android sürümü artık desteklenmiyor</string>
     <string name="clipboard_copy_error">Panoya kopyalanamadı</string>
     <string name="rotation_landscape">Manzara</string>
     <string name="rotation_portrait">Portre</string>
@@ -537,7 +528,6 @@
     <string name="download_queue_size_warning">Uyarı: Büyük toplu indirmeler kaynakların yavaşlamasına ve/veya %s\'u engellemesine neden olabilir. Daha fazla bilgi için dokunun.</string>
     <string name="update_72hour">3 günde bir</string>
     <string name="ext_update_all">Tümünü güncelle</string>
-    <string name="channel_app_updates">Uygulama güncellemeleri</string>
     <string name="pref_auto_clear_chapter_cache">Uygulama başlatıldığında bölüm önbelleğini temizle</string>
     <string name="clear_database_source_item_count">Veri tabanında %1$d kitaplık dışı girdi</string>
     <string name="database_clean">Temizlenecek bir şey yok</string>
@@ -548,13 +538,7 @@
     <string name="cancelled">İptal edildi</string>
     <string name="on_hiatus">Molada</string>
     <string name="action_show_manga">Girdiyi göster</string>
-    <string name="library_errors_help">Kitaplık güncelleme hatalarının nasıl düzeltileceği konusunda yardım için bkz. %1$s</string>
     <string name="action_display_cover_only_grid">Izgara (Yalnızca kapak)</string>
-    <string name="pref_update_only_completely_read">Okunmamış bölümü olan girdileri atla</string>
-    <string name="pref_update_only_started">Başlanmamış girdileri atla</string>
-    <string name="skipped_reason_completed">Seri tamamlandığı için atlandı</string>
-    <string name="skipped_reason_not_caught_up">Okunmamış bölümler olduğu için atlandı</string>
-    <string name="skipped_reason_not_started">Hiçbir bölüm okunmadığı için atlandı</string>
     <string name="pref_navigate_pan">Geniş görselleri kaydır</string>
     <string name="pref_landscape_zoom">Geniş görsellere otomatik yakınlaştır</string>
     <string name="learn_more">Daha fazla bilgi için dokunun</string>
@@ -614,7 +598,6 @@
     <string name="multi_lang">Çoklu</string>
     <string name="popular">Popüler</string>
     <string name="missing_storage_permission">Depolama izinleri verilmedi</string>
-    <string name="skipped_reason_not_always_update">Seri güncelleme gerektirmediği için atlandı</string>
     <string name="action_search_hint">Ara…</string>
     <string name="pref_backup_summary">Elle ve otomatik yedeklemeler, depolama alanı</string>
     <string name="pref_security_summary">Uygulama kilidi, güvenli ekran</string>
@@ -686,11 +669,9 @@
     <string name="action_filter_interval_custom">Özel güncelleme sıklığı</string>
     <string name="intervals_header">Zaman aralıkları</string>
     <string name="action_sort_next_updated">Sonraki beklenen güncelleme</string>
-    <string name="pref_update_only_in_release_period">Bir sonraki yayınlama zamanını tahmin et</string>
     <string name="action_ok">TAMAM</string>
     <string name="manga_display_interval_title">Şu sıklıkla tahmin et:</string>
     <string name="track_delete_title">%s izlemesi kaldırılsın mı?</string>
-    <string name="skipped_reason_not_in_release_period">Bugün bir yayın beklenmedigi için atlandı</string>
     <string name="track_delete_text">Bu, izlemeyi yerel olarak kaldıracak.</string>
     <string name="track_delete_remote_text">Ayrıca şuradan da kaldır: %s</string>
     <string name="manga_display_modified_interval_title">Şu sıklıkla güncellemeye ayarla:</string>
@@ -763,7 +744,6 @@
     <string name="onboarding_storage_help_action">Depolama kılavuzu</string>
     <string name="manga_interval_custom_amount">Özel güncelleme sıklığı:</string>
     <string name="onboarding_storage_help_info">Eski bir sürümden güncelleme yapıyorsunuz ve neyi seçeceğinizden emin değil misiniz? Daha fazla bilgi için depolama kılavuzuna bakın.</string>
-    <string name="pref_library_update_smart_update">Akıllı güncelleme</string>
     <string name="theme_nord">Nord</string>
     <string name="ext_revoke_trust">Güvenilmiş bilinmeyen uzantıları geri al</string>
     <string name="manga_interval_expected_update_soon">Yakında</string>
@@ -885,7 +865,6 @@
     <string name="pref_download_concurrent_pages_summary">Her kaynak için aynı anda indirilen sayfa sayısı</string>
     <string name="pref_download_concurrent_sources">Tek seferde indirilen kaynak sayısı</string>
     <string name="action_webview_close_tab">Sekmeyi kapat</string>
-    <string name="action_filter_excluded_scanlators">Hariç tutulan Çevirenleri filtrele</string>
     <string name="download_bookmarked">Yer imli</string>
     <string name="label_support_us">Bizi Destekleyin</string>
     <string name="supportUsScreen.perks">Patronlar, özel kanallara ve gelecekte daha fazlasına erişim elde eder.</string>

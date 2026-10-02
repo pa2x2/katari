@@ -35,7 +35,6 @@
     <string name="action_add">যোগ করুন</string>
     <string name="action_add_category">ক্যাটাগরি অ্যাড</string>
     <string name="action_edit_categories">ক্যাটাগরি এডিট</string>
-    <string name="action_rename_category">ক্যাটাগরির নাম পরিবর্তন</string>
     <string name="action_move_category">ক্যাটাগরি সেট করুন</string>
     <string name="action_edit_cover">মোড়ক সম্পাদনা করুন</string>
     <string name="action_pause">বিরতি দিন</string>
@@ -80,7 +79,6 @@
     <string name="all">সব</string>
     <string name="pref_library_update_restriction">নিজেথেকে আপডেটের সীমাবদ্ধতা</string>
     <string name="charging">চার্জ হচ্ছে</string>
-    <string name="pref_update_only_non_completed">\"সম্পূর্ন\" শর্তসহিত</string>
     <string name="pref_auto_update_manga_sync">পড়ার পরে অগ্রগতি আপডেট করুন</string>
     <string name="default_category">সাধারণ বিভাগ</string>
     <string name="default_category_summary">সর্বদা জিজ্ঞাসা করুন</string>
@@ -209,10 +207,6 @@
     <string name="notification_first_add_to_library">এটা করার আগে দয়া করে মাংগাটি আপনার সংগ্রহশালায় যোগ করুন</string>
     <string name="file_select_cover">প্রচ্ছদ চিত্র নির্বাচন করুন</string>
     <string name="file_select_backup">ব্যাকআপ ফাইল নির্বাচন করুন</string>
-    <string name="update_check_confirm">ডাউনলোড</string>
-    <string name="update_check_no_new_updates">নতুন কোন হালনাগাদ নেই</string>
-    <string name="update_check_notification_download_in_progress">ডাউনলোড হচ্ছে…</string>
-    <string name="update_check_notification_update_available">নতুন সংস্করণ উপলভ্য!</string>
     <string name="information_no_downloads">ডাউনলোড নেই</string>
     <string name="information_no_recent">কোন নতুন হালনাগাদ নেই</string>
     <string name="information_no_recent_manga">সম্প্রতি কিছু পড়া হয়নি</string>
@@ -322,7 +316,6 @@
     <string name="action_disable_all">সব অক্ষম করুন</string>
     <string name="action_enable_all">সব সক্রিয় করুন</string>
     <string name="pref_library_update_refresh_metadata">মেটাডাটা স্বয়ংক্রিয়ভাবে রিফ্রেশ</string>
-    <string name="pref_category_library_update">ব্যাপক আপডেট</string>
     <string name="secure_screen_summary">অ্যাপ পাল্টানোর সময় অ্যাপের কন্টেন্ট লুকান ও স্ক্রিনসট ব্লক করুন</string>
     <string name="action_search_settings">সেটিংসে খুঁজুন</string>
     <string name="lock_when_idle">কর্মহীন হলে লক হবে</string>
@@ -490,7 +483,6 @@
     <string name="exclude">বাদ দিন: %s</string>
     <string name="include">অন্তর্ভুক্ত করুন: %s</string>
     <string name="none">শূন্য</string>
-    <string name="pref_library_update_categories_details">বাদ দেওয়া ক্যাটাগরিতে মঙ্গা আপডেট করা হবে না যদিও সেগুলি অন্তর্ভুক্ত ক্যাটাগরিতেও থাকে।</string>
     <string name="categorized_display_settings">সাজানোর এবং প্রদর্শনের জন্য প্রতি শ্রেণীর সেটিংস</string>
     <string name="restrictions">বিধিনিষেধ: %s</string>
     <string name="relative_time_today">সম্প্রতি</string>
@@ -510,7 +502,6 @@
     <string name="cancel_all_for_series">এই সিরিজের সব বাতিল করুন</string>
     <string name="action_display_local_badge">লোকাল সোর্স</string>
     <string name="information_empty_category_dialog">আপনার এখনও কোন বিভাগ নেই |</string>
-    <string name="update_check_eol">এই অ্যান্ড্রয়েড সংস্করণটি আর সমর্থিত নয়</string>
     <string name="confirm_lock_change">পরিবর্তন নিশ্চিত করতে প্রমাণীকরণ করুন</string>
     <string name="action_sort_chapter_fetch_date">প্রাপ্তির তারিখ</string>
     <string name="label_default">সাধারণ</string>
@@ -519,7 +510,6 @@
     <string name="ext_update_all">শব উপদাতে কর</string>
     <string name="backup_info">স্বয়ংক্রিয় ব্যাকআপ অত্যন্ত সুপারিশময়. আপনি অন্যান্য জায়গায়ও কপি রাখা উচিত।</string>
     <string name="getting_started_guide">শুরু হওয়ার গাইড</string>
-    <string name="channel_app_updates">অ্যাপ আপডেট</string>
     <string name="ext_installer_pref">ইন্সটলআর</string>
     <string name="ext_installer_legacy">লেগাছি</string>
     <string name="ext_installer_shizuku_stopped">শিজুকু চলছে না</string>
@@ -541,7 +531,6 @@
     <string name="clear_database_source_item_count">তথ্যশালায় %1$d টি মাঙ্গা যেগুলি লাইব্রেরীতে নেই</string>
     <string name="privacy_policy">গোপনীয়তা নীতি</string>
     <string name="extension_api_error">এক্সটেনশন তালিকা পেতে ব্যার্থ হলো</string>
-    <string name="skipped_reason_completed">এড়িয়ে যাওয়া হয়েছে কারণ সিরিজটি সম্পূর্ণ</string>
     <string name="cancelled">বাতিল করা হয়েছে</string>
     <string name="on_hiatus">বিরতিতে রয়েছে</string>
     <string name="publishing_finished">সম্পূর্ণ প্রকাশিত</string>
@@ -562,8 +551,6 @@
     <string name="unfinished_list">অসম্পূর্ণ তালিকা</string>
     <string name="on_hold_list">স্থগিত তালিকা</string>
     <string name="auto_download_while_reading">পড়ার সময় সয়ংক্রিয়ভাবে ডাউনলোড</string>
-    <string name="pref_update_only_completely_read">অপঠিত অধ্যায়সহ</string>
-    <string name="pref_update_only_started">যেগুলো শুরু করা হয়নি</string>
     <string name="webview_data_deleted">ওয়েবভিউ ডাটা মুছা হয়েছে</string>
     <string name="split_tall_images_summary">পঠন কর্মক্ষমতা উন্নত করে</string>
     <string name="pref_clear_webview_data">ওয়েবভিইউ ডাটা মুছুন</string>
@@ -574,7 +561,6 @@
     <string name="pref_reader_summary">পঠনের ধরন, ডিসপ্লে,নেভিগেশন</string>
     <string name="pref_backup_summary">ম্যানুয়াল ও সয়ংক্রিয় ব্যাকআপ</string>
     <string name="pref_security_summary">অ্যাপ লক,নিরাপদ পর্দা</string>
-    <string name="skipped_reason_not_caught_up">অপঠিত অধ্যায় থাকায় এড়িয়ে যাওয়া হয়েছে</string>
     <string name="label_local">লোকাল</string>
     <string name="action_copy_to_clipboard">ক্লিপবোর্ডে কপি করুন</string>
     <string name="pref_reset_viewer_flags_success">সমস্ত পাঠক সেটিংস আবার</string>
@@ -590,7 +576,6 @@
     <string name="pref_invalidate_download_cache">ডাউনলোড পুনঃসূচিপত্র</string>
     <string name="action_not_now">এখন না</string>
     <string name="pref_debug_info">ডিবাগ তথ্য</string>
-    <string name="skipped_reason_not_always_update">বাদ দেওয়া হয়েছে কারণ সিরিজের আপডেটের প্রয়োজন নেই</string>
     <string name="unlock_app_title">আনলক %s</string>
     <string name="action_set_interval">সেট ইন্টারভেল</string>
     <string name="delete_downloaded">ডাউনলোড করা ফাইল ডিলেট করুন</string>
@@ -616,7 +601,6 @@
     <string name="onboarding_permission_install_apps_description">সোর্স এক্সটেনশন ইনস্টল করার জন্য।</string>
     <string name="onboarding_description">প্রথমে কিছু ঠিক করে নিন , পরবর্তীতে আপনি চাইলে সেটিং থেকে সবকিছু পরিবর্তন করতে পারবেন।</string>
     <string name="internal_error">ইন্টারনাল ইরর: বাকি ইনফরমেশন পেতে ক্যাশ লগ দেখুন</string>
-    <string name="skipped_reason_not_started">স্কিপ করা হয়েছে কারণ আগে কোন চ্যাপ্টার পড়া হয়নি</string>
     <string name="action_sort_tracker_score">ট্রেকার স্কোর</string>
     <string name="action_ok">ওকে</string>
     <string name="action_sort_next_updated">পরবর্তী আপডেটের সম্ভাব্য সময়</string>
@@ -650,8 +634,6 @@
     <string name="pref_firebase">অ্যানালিটিক্স ও ক্র্যাশ লগস</string>
     <string name="firebase_summary">ক্র্যাশ লগ ও অ্যানালিটিক্স পাঠালে আমরা সমস্যা খুঁজে বের করে ঠিক করতে পারব, কর্মক্ষমতা ভালো হবে, এবং ভবিষ্যৎ আপডেটগুলো আপনার কাজে লাগবে</string>
     <string name="network_not_metered">শুধু আনলিমিটেড নেটওয়ার্কে</string>
-    <string name="pref_library_update_smart_update">স্মার্ট আপডেট</string>
-    <string name="pref_update_only_in_release_period">পরবর্তী রিলিজের সময় অনুমান করুন</string>
     <string name="pref_library_update_show_tab_badge">আপডেট আইকনে অপঠিত সংখ্যা দেখান</string>
     <string name="pref_behavior">ব্যবহার</string>
     <string name="pref_chapter_swipe_end">অধ্যায় ডানে সোয়াইপ করলে</string>

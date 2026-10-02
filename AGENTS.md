@@ -17,6 +17,14 @@
 - Avoid catch-all directories such as `common`, `misc`, or `utils`. Name structural groups after concrete ownership, and place narrowly shared helpers with the feature that owns their semantics.
 - Before finishing a change, inspect every touched source file and directory. If responsibilities or ownership are not clear from the tree alone, reorganize that area before committing rather than leaving cleanup for a follow-up.
 
+## Comments
+A comment earns its place by telling the reader something the code can't: why it's done this way, a constraint or platform quirk it works around, a bug it prevents, or what a non-obvious value means. If deleting the comment loses nothing a careful reader couldn't get from the code, delete it.
+
+- **Don't restate the code.** No `/** Cancels a running download. */` over `cancelDownload`, no `// Refresh on resume` over an `onResume` override, no `/** Last failure, as a user-facing message. */` over `error: String?`.
+- **Don't narrate names or types.** If a property, parameter or function name plus its type already says it, leave it bare. Document a property only when its meaning isn't obvious: units, what `null` stands for, who sets it, what it must never be.
+- **Don't write file headers that only name the file.** "Tests for the library repository" or "Chapter list screen model" add nothing. A header is worth it when it explains a design: how the parts fit, what the module owns, a contract callers rely on.
+- **Keep comments true.** When you change code, update or delete the comments it touches. A stale comment is worse than none.
+
 ## Writing tests
 A change does not come with tests by default. Most features and fixes need none: Kotlin compilation (warnings are errors), spotless, the architecture boundary checks, and trying the change on the test device catch most mistakes. Tests written just because a change was made are how this suite once grew to more than two thirds the size of the production code, and most of them were deleted.
 
@@ -62,7 +70,7 @@ Every one of these has been written here before and deleted.
 - `./gradlew verifyTests --console=plain --warning-mode=all` runs every module's host tests and build-logic tests and compiles every device test. Every change that touches production or test code must pass it; `testFossUnitTest` and other module-specific test tasks cover a single module and leave failures elsewhere unnoticed. Modules join `verifyTests` through the convention plugins, so do not add per-module test tasks to aggregate verification lists.
 - Changes to application or Entry Feature runtime modules, production runtime components, platform-service factories used during module installation, the production validation environment, or the Android minimum SDK must pass `./gradlew verifyEntryFeatureArchitecture verifyTests --console=plain --warning-mode=all`. Focused module tests and compilation do not exercise the complete production composition and are insufficient for these changes. Do not report the work complete until this command passes.
 - FOSS compilation can be verified with `:app:compileFossKotlin`; telemetry-enabled release compilation uses `:app:compileReleaseKotlin -Pinclude-telemetry`.
-- Never combine FOSS/unit/architecture tasks with `-Pinclude-telemetry` or `-Penable-updater` in the same Gradle invocation. Those project properties affect every configured variant and can make `processFossGoogleServices` reject the `app.katari.foss` application ID. Run FOSS checks without telemetry/updater properties, let that invocation finish, then run telemetry-enabled release compilation or assembly in a separate invocation.
+- Never combine FOSS/unit/architecture tasks with `-Pinclude-telemetry` in the same Gradle invocation. The property applies Google services to every configured variant and makes `processFossGoogleServices` reject the `app.katari.foss` application ID. Run FOSS checks without it, let that invocation finish, then run telemetry-enabled release compilation or assembly in a separate invocation. `-Penable-updater` only sets `BuildConfig.UPDATER_ENABLED` and is safe with FOSS tasks.
 - Do not infer the installable variant for emulator/device validation from the `foss` unit-test buildType. Before installing, identify the package that is actually running and use the matching Gradle variant: `installDebug` installs `app.katari.dev`, while `installFoss` installs the separate `app.katari.foss` application. After installation, verify that the intended package was launched and that its process changed or restarted; installing a different application ID does not update the app under test.
 - After touching `data/src/main/sqldelight`, run `./gradlew verifySqlDelightMigration`.
 

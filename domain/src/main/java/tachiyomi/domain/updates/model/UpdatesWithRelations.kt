@@ -19,5 +19,4 @@ data class UpdatesWithRelations(
     val dateFetch: Long,
     val coverData: EntryCover,
     val dateUpload: Long = 0,
-    val excludedScanlator: String? = null,
 )

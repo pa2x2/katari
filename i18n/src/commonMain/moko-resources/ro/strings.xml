@@ -38,7 +38,6 @@
     <string name="action_add">Adaugă</string>
     <string name="action_add_category">Adaugă categorie</string>
     <string name="action_edit_categories">Modifică categoriile</string>
-    <string name="action_rename_category">Redenumește categoria</string>
     <string name="action_move_category">Setați categoriile</string>
     <string name="action_edit_cover">Modifică coperta</string>
     <string name="action_pause">Pauză</string>
@@ -81,7 +80,6 @@
     <string name="all">Toate</string>
     <string name="pref_library_update_restriction">Actualizează automat restricțiile dispozitivului</string>
     <string name="charging">La încărcare</string>
-    <string name="pref_update_only_non_completed">Cu statutul \"Completată\"</string>
     <string name="pref_auto_update_manga_sync">Actualizarea progresului după citire</string>
     <string name="default_category">Categorie implicită</string>
     <string name="default_category_summary">Întreabă mereu</string>
@@ -249,10 +247,6 @@
     <string name="notification_first_add_to_library">Vă rugăm să adăugați intrarea în biblioteca dumneavoastră înainte de a face acest lucru</string>
     <string name="file_select_cover">Selectează imagine de copertă</string>
     <string name="file_select_backup">Selectează fișierul de rezervă</string>
-    <string name="update_check_confirm">Descarcă</string>
-    <string name="update_check_no_new_updates">Nu sunt exista actualizări noi</string>
-    <string name="update_check_notification_download_in_progress">Se descarcă…</string>
-    <string name="update_check_notification_update_available">Versiune nouă disponibilă!</string>
     <string name="information_no_downloads">Fără descărcări</string>
     <string name="information_no_recent">Nu există actualizări recente</string>
     <string name="information_no_recent_manga">Nimic citit recent</string>
@@ -284,7 +278,6 @@
     <string name="ext_obsolete">Învechit</string>
     <string name="obsolete_extension_message">Această extensie nu mai este disponibilă. Este posibil să nu funcționeze corect și poate cauza probleme cu aplicația. Se recomandă dezinstalarea acesteia.</string>
     <string name="pref_date_format">Formatul datei</string>
-    <string name="pref_category_library_update">Actualizare globală</string>
     <string name="logout_title">Deconectează-te de la %1$s?</string>
     <string name="logout">Deconectează-te</string>
     <string name="logout_success">Acum ești deconectat</string>
@@ -435,7 +428,6 @@
     <string name="action_order_by_upload_date">După data postării</string>
     <string name="exclude">Excludeți: %s</string>
     <string name="include">Includeți: %s</string>
-    <string name="pref_library_update_categories_details">Înscrierile din categoriile excluse nu vor fi actualizate, chiar dacă acestea se află și în categoriile incluse.</string>
     <string name="action_show_errors">Atingeți pentru a vedea detaliile</string>
     <string name="action_display_show_number_of_items">Afișare număr de elemente</string>
     <string name="none">Nici unul</string>
@@ -459,7 +451,6 @@
     <string name="nav_zone_prev">Anterior</string>
     <string name="right_and_left_nav">Dreapta și stânga</string>
     <string name="pref_dual_page_invert_summary">Dacă amplasarea divizării duble a paginii nu corespunde cu direcția de citire</string>
-    <string name="update_check_eol">Această versiune Android nu mai este suportată</string>
     <string name="clipboard_copy_error">Nu s-a reușit copierea în clipboard</string>
     <string name="error_sharing_cover">Eroare la distribuirea copertei</string>
     <string name="error_saving_cover">Eroare la salvarea copertei</string>
@@ -471,7 +462,6 @@
     <string name="theme_monet">Dinamic</string>
     <string name="label_default">Implicit</string>
     <string name="theme_midnightdusk">Amurg de Miazănoapte</string>
-    <string name="channel_app_updates">Actualizări de aplicație</string>
     <string name="theme_tealturquoise">Teal și turcoaz</string>
     <string name="action_display_local_badge">Sursă locală</string>
     <string name="pref_category_appearance">Aspect</string>
@@ -488,12 +478,9 @@
     <string name="publishing_finished">Editare finalizată</string>
     <string name="cancelled">Anulat</string>
     <string name="on_hiatus">În hiatus</string>
-    <string name="skipped_reason_completed">Ignorata deoarece seria este completa</string>
-    <string name="skipped_reason_not_started">Ignorat din cauza lipsei de capitolel citite</string>
     <string name="local_invalid_format">Format de capitol invalid</string>
     <string name="download_queue_size_warning">Atenție : actualizarile mari în masă vor face sursele mai incete și/sau vor bloca %s. Apăsați pentru mai multe informatii.</string>
     <string name="getting_started_guide">Ghidul de inceput</string>
-    <string name="skipped_reason_not_caught_up">Ignorata deoarece sunt capitole necitite</string>
     <string name="empty_backup_error">Nu există intrări în bibliotecă pentru a face backupuri</string>
     <string name="delete_category">Ștergeți categoria</string>
     <string name="pref_inverted_colors">Inversate</string>
@@ -524,7 +511,6 @@
     <string name="complete_list">Lista completă</string>
     <string name="action_display_cover_only_grid">Acoperire tip grilaj</string>
     <string name="action_move_to_top_all_for_series">Mutați seria pe prima poziție</string>
-    <string name="pref_update_only_started">Care nu au fost începute</string>
     <string name="ext_installer_shizuku_stopped">Shizuku nu rulează</string>
     <string name="pref_app_language">Limba aplicației</string>
     <string name="restrictions">Restricții: %s</string>
@@ -533,7 +519,6 @@
     <string name="pref_low">Scăzut</string>
     <string name="pref_clear_webview_data">Ștergeți datele WebView</string>
     <string name="on_hold_list">Lista în așteptare</string>
-    <string name="pref_update_only_completely_read">Cu capitol(e) necitit(e)</string>
     <string name="pref_lowest">Cel mai scăzut</string>
     <string name="unfinished_list">Lista neterminată</string>
     <string name="action_sort_unread_count">Număr de necitite</string>
@@ -574,7 +559,6 @@
     <string name="description_placeholder">Fără descriere</string>
     <string name="notification_incognito_text">Dezactivează modul incognito</string>
     <string name="download_ahead_info">Funcționează numai dacă capitolul curent + următorul sunt deja descărcate.</string>
-    <string name="library_errors_help">Pentru ajutor în cum se repară erori de actualizări de bibliotecă, vezi %1$s</string>
     <string name="pref_grayscale">Alb-negru</string>
     <string name="rotation_landscape">Peisaj</string>
     <string name="learn_more">Apasă pentru a afla mai multe</string>
@@ -605,7 +589,6 @@
     <string name="appwidget_updates_description">Vizualizați intrările recent actualizate din bibliotecă</string>
     <string name="pref_reset_viewer_flags_error">Nu am putut reseta setările de citire</string>
     <string name="source_empty_screen">Nici o sursă găsită</string>
-    <string name="skipped_reason_not_always_update">Ignorat deoarece seria nu necesită actualizări</string>
     <string name="updates_last_update_info">Ultima actualizare a bibliotecii: %s</string>
     <string name="empty_screen">Ei bine, nu ar trebui sa vezi asta</string>
     <string name="download_notifier_split_page_path_not_found">Nu am putut găsi calea paginii %d</string>
@@ -707,7 +690,6 @@
     <string name="download_cache_invalidated">Indexul de descărcări a fost invalidat</string>
     <string name="action_bar_up_description">Navighează în sus</string>
     <string name="action_sort_tracker_score">Scorul serviciului de urmărire</string>
-    <string name="skipped_reason_not_in_release_period">Sărit peste deoarece nici o lansare nu era așteptată astăzi</string>
     <string name="file_null_uri_error">Nici o filă selectată</string>
     <string name="track_delete_title">Eliminați monitorizarea %s?</string>
     <string name="source_settings">Setări surse</string>
@@ -717,7 +699,6 @@
     <string name="split_tall_images">Împărțiți imaginile înalte</string>
     <string name="has_results">Au fost găsite rezultate</string>
     <string name="track_delete_text">Această acțiune va elimina local monitorizarea.</string>
-    <string name="pref_update_only_in_release_period">În afara perioadei de lansare estimată</string>
     <string name="action_ok">Ok</string>
     <string name="pref_double_tap_zoom">Atingeți de două ori pentru a mări</string>
     <string name="track_activity_name">Autentificare serviciu de urmărire</string>
@@ -742,7 +723,6 @@
     <string name="onboarding_permission_ignore_battery_opts_description">Evitați întreruperile actualizărilor bibliotecii, descărcărilor, și restaurărilor de lungă durată.</string>
     <string name="onboarding_permission_action_grant">Acordă</string>
     <string name="onboarding_guides_returning_user">Reinstalare %s?</string>
-    <string name="pref_library_update_smart_update">Actualizare inteligentă</string>
     <string name="action_open_repo">Repozitoriu open source</string>
     <string name="no_location_set">Nici o locație pentru stocare nu a fost setată</string>
     <string name="invalid_backup_file_error">Eroarea completă:</string>
@@ -885,7 +865,6 @@
     <string name="action_webview_close_tab">Inchide tab-ul</string>
     <string name="pref_download_concurrent_pages_summary">Pagini descarcate simultan pe sursa</string>
     <string name="download_bookmarked">Adaugat la preferate</string>
-    <string name="action_filter_excluded_scanlators">Filtreaza scanatorii exclusi</string>
     <string name="supportUsScreen.perks">Abonatii au acces la canale exclusive, iar in viitor vor beneficia de si mai multe beneficii.</string>
     <string name="supportUsScreen.donationPlatform.patreon">Patreon (preferabil)</string>
     <string name="supportUsScreen.currentlySupportedBy">Mihon este sustinut de %d+ contribuitori. Va multumim tuturor pentru sustinere. Haideti sa imbunatatim impreuna Mihon.</string>

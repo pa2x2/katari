@@ -33,7 +33,7 @@ import tachiyomi.presentation.core.util.plus
 fun CategoryScreen(
     state: CategoryScreenState.Success,
     onClickCreate: () -> Unit,
-    onClickRename: (Category) -> Unit,
+    onClickEdit: (Category) -> Unit,
     onClickDelete: (Category) -> Unit,
     onChangeOrder: (Category, Int) -> Unit,
     navigateUp: () -> Unit,
@@ -66,7 +66,7 @@ fun CategoryScreen(
             categories = state.categories,
             lazyListState = lazyListState,
             paddingValues = paddingValues,
-            onClickRename = onClickRename,
+            onClickEdit = onClickEdit,
             onClickDelete = onClickDelete,
             onChangeOrder = onChangeOrder,
         )
@@ -78,7 +78,7 @@ private fun CategoryContent(
     categories: List<Category>,
     lazyListState: LazyListState,
     paddingValues: PaddingValues,
-    onClickRename: (Category) -> Unit,
+    onClickEdit: (Category) -> Unit,
     onClickDelete: (Category) -> Unit,
     onChangeOrder: (Category, Int) -> Unit,
 ) {
@@ -112,7 +112,7 @@ private fun CategoryContent(
                 CategoryListItem(
                     modifier = Modifier.animateItem(),
                     category = category,
-                    onRename = { onClickRename(category) },
+                    onEdit = { onClickEdit(category) },
                     onDelete = { onClickDelete(category) },
                 )
             }

@@ -1,8 +1,12 @@
 name: Release
+
+# A push to main releases the app version once CHANGELOG.md has notes for it and no tag holds it
+# yet. The release is a draft, to try the APKs before anyone is offered them, and its commit is
+# tagged along with it.
 on:
   push:
-    tags:
-      - v*
+    branches:
+      - main
 
 env:
   KATARI_GITHUB_RELEASE: true
@@ -13,20 +17,59 @@ concurrency:
 
 jobs:
   get_tag:
-    name: Extract tag name
+    name: Decide what to release
     runs-on: 'ubuntu-24.04'
     outputs:
+      # Empty when there is nothing to release, which skips every other job.
       tag: ${{ steps.extract.outputs.tag }}
+      notes: ${{ steps.extract.outputs.notes }}
 
     steps:
-      - name: Get tag name
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Get tag name and release notes
         id: extract
-        run: echo "tag=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUT
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          version="$(sed -n 's/^ *versionName = "\(.*\)"$/\1/p' app/build.gradle.kts)"
+          if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+            echo "::error::app/build.gradle.kts versionName is not X.Y.Z or X.Y.Z-prerelease, got '$version'"
+            exit 1
+          fi
+          tag="v$version"
+
+          # The checkout is shallow and has no tags.
+          released="$(git ls-remote --tags origin "refs/tags/$tag")"
+          if [[ -n "$released" ]]; then
+            echo "::notice::$tag is already released."
+            exit 0
+          fi
+
+          # The version's section without its heading: the release is already named after it.
+          notes="$(awk -v heading="## [$version]" '
+            /^## \[/ { inside = index($0, heading) == 1; next }
+            inside && (seen || NF) { seen = 1; print }
+          ' CHANGELOG.md)"
+          if [[ -z "$notes" ]]; then
+            echo "::notice::CHANGELOG.md has no notes for $version, so this push releases nothing."
+            exit 0
+          fi
+
+          {
+            echo "tag=$tag"
+            echo "notes<<END_OF_NOTES"
+            echo "$notes"
+            echo "END_OF_NOTES"
+          } >> "$GITHUB_OUTPUT"
 
   build:
     name: Build
     runs-on: ubuntu-24.04
     needs: get_tag
+    if: needs.get_tag.outputs.tag != ''
 
     steps:
       - name: Checkout
@@ -70,6 +113,7 @@ jobs:
     name: Build (FOSS)
     runs-on: ubuntu-24.04
     needs: get_tag
+    if: needs.get_tag.outputs.tag != ''
 
     steps:
       - name: Checkout
@@ -87,7 +131,8 @@ jobs:
           cache-read-only: true
 
       - name: Build
-        run: ./gradlew assembleFoss
+        # FOSS builds update themselves too; unlike -Pinclude-telemetry, -Penable-updater adds no Google services.
+        run: ./gradlew assembleFoss -Penable-updater
         env:
           storeFileBase64: ${{ secrets.SIGNING_KEY }}
           storePassword: ${{ secrets.KEY_STORE_PASSWORD }}
@@ -139,8 +184,10 @@ jobs:
         with:
           tag_name: ${{ needs.get_tag.outputs.tag }}
           name: ${{ needs.get_tag.outputs.tag }}
+          # The commit GitHub tags on publishing, when the tag is not there yet.
+          target_commitish: ${{ github.sha }}
           body: |
-            Release ${{ needs.get_tag.outputs.tag }}
+            ${{ needs.get_tag.outputs.notes }}
 
             > [!TIP]
             >
@@ -153,4 +200,13 @@ jobs:
             katari_foss_arm64-v8a-${{ needs.get_tag.outputs.tag }}.apk
             katari_foss_armeabi-v7a-${{ needs.get_tag.outputs.tag }}.apk
           draft: true
-          prerelease: false
+          # A suffixed version (v1.2.0-beta1) is offered in the app only on the Pre-release update channel.
+          prerelease: ${{ contains(needs.get_tag.outputs.tag, '-') }}
+
+      # GitHub tags a draft only once it is published. The tag goes in now, and last: it is what
+      # tells later pushes to main that this version is released.
+      - name: Tag the draft's commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ needs.get_tag.outputs.tag }}
+        run: gh api "repos/$GITHUB_REPOSITORY/git/refs" -f "ref=refs/tags/$TAG" -f "sha=$GITHUB_SHA"

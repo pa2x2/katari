@@ -28,7 +28,7 @@ import tachiyomi.presentation.core.screens.LoadingScreen
 
 @Composable
 internal fun CatalogImmersiveContent(
-    catalogList: LazyPagingItems<StateFlow<CatalogListItem>>,
+    catalogList: LazyPagingItems<StateFlow<CatalogListItem?>>,
     immersiveModel: EntryImmersiveScreenModel,
     sourceName: String,
     snackbarHostState: SnackbarHostState,
@@ -97,7 +97,7 @@ internal fun CatalogImmersiveContent(
 
 @Composable
 private fun catalogEntry(
-    catalogList: LazyPagingItems<StateFlow<CatalogListItem>>,
+    catalogList: LazyPagingItems<StateFlow<CatalogListItem?>>,
     index: Int,
 ): Entry? {
     val itemFlow = catalogList[index] ?: return null

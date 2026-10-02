@@ -1,6 +1,7 @@
 package mihon.feature.profiles.core
 
 import eu.kanade.tachiyomi.data.backup.models.BackupCategory
+import eu.kanade.tachiyomi.data.backup.models.BackupCategoryUpdateRules
 import eu.kanade.tachiyomi.data.backup.models.BackupEntry
 import eu.kanade.tachiyomi.data.backup.models.BackupPreference
 import eu.kanade.tachiyomi.data.backup.models.BackupSourcePreferences
@@ -19,6 +20,7 @@ data class ProfileScopedBackup(
     @ProtoNumber(5) val sourcePreferences: List<BackupSourcePreferences> = emptyList(),
     @ProtoNumber(6) val anime: List<LegacyBackupAnime> = emptyList(),
     @ProtoNumber(7) val entries: List<BackupEntry> = emptyList(),
+    @ProtoNumber(8) val defaultCategoryUpdateRules: BackupCategoryUpdateRules? = null,
 ) {
     fun allEntries(): List<BackupEntry> {
         return entries + manga.map { it.toBackupEntry() } + anime.map { it.toBackupEntry() }

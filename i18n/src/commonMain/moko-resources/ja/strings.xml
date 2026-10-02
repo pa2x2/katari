@@ -73,7 +73,6 @@
     <string name="all">すべて</string>
     <string name="pref_library_update_restriction">自動更新の条件</string>
     <string name="charging">充電中</string>
-    <string name="pref_update_only_non_completed">ステータスが「完結済み」の作品をスキップ</string>
     <string name="pref_auto_update_manga_sync">読んだ後に読書進捗を更新</string>
     <string name="default_category">デフォルトカテゴリー</string>
     <string name="default_category_summary">毎回尋ねる</string>
@@ -147,7 +146,6 @@
     <string name="login">ログイン</string>
     <string name="login_success">ログインしました</string>
     <string name="action_add">追加</string>
-    <string name="action_rename_category">カテゴリー名を編集</string>
     <string name="action_move_category">カテゴリーを設定</string>
     <string name="action_remove">削除</string>
     <string name="action_install">インストール</string>
@@ -236,10 +234,6 @@
     <string name="notification_first_add_to_library">まずは項目をライブラリに追加してください</string>
     <string name="file_select_cover">表紙画像を選択</string>
     <string name="file_select_backup">バックアップファイルを選択</string>
-    <string name="update_check_confirm">ダウンロード</string>
-    <string name="update_check_no_new_updates">新しいバージョンがありません</string>
-    <string name="update_check_notification_download_in_progress">ダウンロード中…</string>
-    <string name="update_check_notification_update_available">新しいバージョンがリリースされました！</string>
     <string name="information_no_downloads">ダウンロードがありません</string>
     <string name="information_no_recent">最近の更新はありません</string>
     <string name="information_no_recent_manga">最近は何も読んでいません</string>
@@ -276,7 +270,6 @@
     <string name="ext_obsolete">孤立した</string>
     <string name="obsolete_extension_message">この拡張機能はどのストアにも関連付けられていません。アップデートは提供されず、正常に動作しない可能性があり、アプリに問題を引き起こす可能性があります。アンインストールすることをお勧めします。</string>
     <string name="pref_date_format">日付形式</string>
-    <string name="pref_category_library_update">グローバルアップデート</string>
     <string name="logout_title">%1$s からログアウトしますか？</string>
     <string name="logout">ログアウト</string>
     <string name="logout_success">ログアウトしました</string>
@@ -454,11 +447,9 @@
     <string name="exclude">下記を除外: %s</string>
     <string name="include">下記を含む: %s</string>
     <string name="none">なし</string>
-    <string name="pref_library_update_categories_details">除外対象カテゴリーに含まれる項目は、たとえそれらが対象カテゴリーにも含まれている場合でも更新されません。</string>
     <string name="action_show_errors">タップで詳細を表示</string>
     <string name="action_sort_chapter_fetch_date">章の取得された日付順</string>
     <string name="information_empty_category_dialog">まだカテゴリーを登録していません。</string>
-    <string name="update_check_eol">この Android バージョンはサポート対象外となりました</string>
     <string name="error_no_match">結果が見つかりませんでした</string>
     <string name="source_unsupported">ソースはサポートされていません</string>
     <string name="unread">未読</string>
@@ -535,25 +526,18 @@
     <string name="update_72hour">3 日ごと</string>
     <string name="connected_to_wifi">Wi-Fi 接続時のみ</string>
     <string name="ext_update_all">すべて更新</string>
-    <string name="channel_app_updates">アプリ更新</string>
     <string name="clear_database_source_item_count">データベース内に %1$d 件のライブラリにない項目があります</string>
     <string name="pref_auto_clear_chapter_cache">アプリ起動時に章のキャッシュを消去</string>
     <string name="database_clean">消去できるものはありませんでした</string>
     <string name="extension_api_error">利用可能な拡張機能を取得できませんでした</string>
     <string name="privacy_policy">プライバシーポリシー</string>
-    <string name="pref_update_only_completely_read">未読の章がある作品をスキップ</string>
-    <string name="library_errors_help">ライブラリ更新エラーの修正については、%1$sをご覧ください</string>
     <string name="save_chapter_as_cbz">CBZ アーカイブとして保存</string>
     <string name="publishing_finished">完結済み</string>
     <string name="cancelled">キャンセル済み</string>
     <string name="on_hiatus">休載中</string>
     <string name="action_show_manga">項目を表示</string>
     <string name="action_display_cover_only_grid">表紙グリッド</string>
-    <string name="pref_update_only_started">読み始めていない作品をスキップ</string>
-    <string name="skipped_reason_not_caught_up">未読の章がある為スキップしました</string>
     <string name="pref_landscape_zoom">横長の画像に自動でズームイン</string>
-    <string name="skipped_reason_completed">完結済みの為スキップしました</string>
-    <string name="skipped_reason_not_started">読了した章がない為スキップしました</string>
     <string name="pref_navigate_pan">幅広い画像を左右に移動</string>
     <string name="learn_more">タップして詳細をご覧ください</string>
     <string name="rotation_reverse_portrait">縦向き（反転）</string>
@@ -612,7 +596,6 @@
     <string name="remove_manga">ライブラリから「%s」を削除しようとしています</string>
     <string name="popular">人気</string>
     <string name="missing_storage_permission">ストレージ権限を持っていません</string>
-    <string name="skipped_reason_not_always_update">シリーズの更新が不要なためスキップしました</string>
     <string name="action_search_hint">検索…</string>
     <string name="crash_screen_description">%s で予期せぬエラーが発生しました。クラッシュログを Discord のサポートチャンネルで共有することをお勧めします。</string>
     <string name="invalid_location">無効な場所: %s</string>
@@ -682,9 +665,7 @@
     <string name="action_set_interval">間隔を設定</string>
     <string name="action_filter_interval_custom">カスタマイズした更新頻度</string>
     <string name="action_sort_next_updated">次の更新予定</string>
-    <string name="pref_update_only_in_release_period">次の更新時間を予測</string>
     <string name="intervals_header">間隔</string>
-    <string name="skipped_reason_not_in_release_period">本日は連載更新の予定がないためスキップしました</string>
     <string name="has_results">結果あり</string>
     <string name="track_delete_title">%s の追跡を削除しますか?</string>
     <string name="manga_display_interval_title">毎に評価</string>
@@ -760,7 +741,6 @@
     <string name="action_open_repo">ソースリポジトリを開く</string>
     <string name="onboarding_storage_help_info">古いバージョンからアップデートする場合で、どのオプションを選択すればよいか分からない場合は、ストレージガイドを参照してください。</string>
     <string name="theme_nord">Nord</string>
-    <string name="pref_library_update_smart_update">スマート・アップデート</string>
     <string name="pref_webtoon_disable_zoom_out">ズームアウトを無効にする</string>
     <string name="action_add_anyway">追加</string>
     <string name="pref_display_profile">カスタム表示プロファイル</string>
@@ -858,7 +838,6 @@
     <string name="extensionStoresScreen.deleteStore.title">拡張機能ストアを削除</string>
     <string name="extensionStoresScreen.deleteStore.body">拡張機能ストア「%1$s」（%2$s）を削除しますか？</string>
     <string name="considering">検討中</string>
-    <string name="action_filter_excluded_scanlators">除外されたスキャンレーターをフィルタリング</string>
     <string name="notes_placeholder">あの場面が面白かった…</string>
     <string name="migrationConfigScreen.selectedHeader">選択済み</string>
     <string name="migrationConfigScreen.selectNoneLabel">すべて選択解除</string>

@@ -1,6 +1,9 @@
 package eu.kanade.presentation.updates
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -15,6 +18,7 @@ import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.TopAppBarScrollBehavior
+import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -22,6 +26,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppBarActions
@@ -50,6 +55,7 @@ fun <T> UpdatesScreen(
     onCalendarClicked: (() -> Unit)?,
     onFilterClicked: (() -> Unit)?,
     hasActiveFilters: Boolean,
+    filterSummary: (@Composable () -> Unit)? = null,
     loadingContent: @Composable (Modifier) -> Unit = { LoadingScreen(it) },
     emptyContent: @Composable (Modifier) -> Unit = {
         EmptyScreen(
@@ -67,17 +73,31 @@ fun <T> UpdatesScreen(
 
     Scaffold(
         topBar = { scrollBehavior ->
-            UpdatesAppBar(
-                onCalendarClicked = onCalendarClicked,
-                onUpdateLibrary = { scope.launch { onUpdateLibrary() } },
-                onFilterClicked = onFilterClicked,
-                hasFilters = hasActiveFilters,
-                actionModeCounter = state.selectedCount,
-                onSelectAll = { onSelectAll(true) },
-                onInvertSelection = onInvertSelection,
-                onCancelActionMode = { onSelectAll(false) },
-                scrollBehavior = scrollBehavior,
-            )
+            Column {
+                UpdatesAppBar(
+                    onCalendarClicked = onCalendarClicked,
+                    onUpdateLibrary = { scope.launch { onUpdateLibrary() } },
+                    onFilterClicked = onFilterClicked,
+                    hasFilters = hasActiveFilters,
+                    actionModeCounter = state.selectedCount,
+                    onSelectAll = { onSelectAll(true) },
+                    onInvertSelection = onInvertSelection,
+                    onCancelActionMode = { onSelectAll(false) },
+                    scrollBehavior = scrollBehavior,
+                )
+                if (filterSummary != null) {
+                    // The feed scrolls under the bar, so it takes the app bar's colour, raised in action mode.
+                    Box(
+                        modifier = Modifier.background(
+                            MaterialTheme.colorScheme.surfaceColorAtElevation(
+                                if (state.selectionMode) 3.dp else 0.dp,
+                            ),
+                        ),
+                    ) {
+                        filterSummary()
+                    }
+                }
+            }
         },
         bottomBar = {
             state.bottomBarConfig?.let { bottomBarConfig ->

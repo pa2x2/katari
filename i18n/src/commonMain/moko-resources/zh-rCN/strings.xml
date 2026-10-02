@@ -35,7 +35,6 @@
     <string name="action_add">添加</string>
     <string name="action_add_category">添加分类</string>
     <string name="action_edit_categories">编辑分类</string>
-    <string name="action_rename_category">重命名分类</string>
     <string name="action_move_category">设置分类</string>
     <string name="action_edit_cover">编辑封面</string>
     <string name="action_pause">暂停</string>
@@ -83,7 +82,6 @@
     <string name="all">全部</string>
     <string name="pref_library_update_restriction">自动更新的系统限制</string>
     <string name="charging">充电时</string>
-    <string name="pref_update_only_non_completed">跳过已完结的作品</string>
     <string name="pref_auto_update_manga_sync">阅读后更新进度</string>
     <string name="default_category">默认归入分类</string>
     <string name="default_category_summary">每次都询问</string>
@@ -249,10 +247,6 @@
     <string name="notification_first_add_to_library">请先将作品添加到书架</string>
     <string name="file_select_cover">选择封面图片</string>
     <string name="file_select_backup">选择备份文件</string>
-    <string name="update_check_confirm">下载</string>
-    <string name="update_check_no_new_updates">没有新版本</string>
-    <string name="update_check_notification_download_in_progress">正在下载…</string>
-    <string name="update_check_notification_update_available">有新版本！</string>
     <string name="information_no_downloads">无下载任务</string>
     <string name="information_no_recent">最近没有更新</string>
     <string name="information_no_recent_manga">最近没有阅读</string>
@@ -284,7 +278,6 @@
     <string name="ext_obsolete">无归属</string>
     <string name="obsolete_extension_message">此插件不属于任何商店，将不会收到更新，可能无法正常运行或导致应用发生故障，建议卸载。</string>
     <string name="pref_date_format">日期格式</string>
-    <string name="pref_category_library_update">全局更新</string>
     <string name="logout_title">要退出 %1$s 吗？</string>
     <string name="logout">退出</string>
     <string name="logout_success">已退出</string>
@@ -455,11 +448,9 @@
     <string name="exclude">排除：%s</string>
     <string name="include">包含：%s</string>
     <string name="action_sort_chapter_fetch_date">章节获取时间</string>
-    <string name="pref_library_update_categories_details">排除优先于包含，同时属于包含和排除分类的作品不会自动更新。</string>
     <string name="pref_download_new_categories_details">排除优先于包含，同时属于包含和排除分类的作品不会自动下载。</string>
     <string name="pref_category_auto_download">自动下载</string>
     <string name="action_show_errors">点击查看详情</string>
-    <string name="update_check_eol">应用不再支持此 Android 版本</string>
     <string name="clipboard_copy_error">复制到剪贴板失败</string>
     <string name="rotation_landscape">横屏</string>
     <string name="rotation_portrait">竖屏</string>
@@ -537,14 +528,11 @@
     <string name="update_72hour">每 3 天</string>
     <string name="download_queue_size_warning">警告：批量下载可能导致图源变慢，甚至会使得它们屏蔽 %s 。点击了解详情。</string>
     <string name="ext_update_all">全部更新</string>
-    <string name="channel_app_updates">应用更新</string>
     <string name="pref_auto_clear_chapter_cache">启动时清除章节缓存</string>
     <string name="database_clean">无需清理</string>
     <string name="clear_database_source_item_count">数据库中有 %1$d 部作品未添加到书架</string>
     <string name="extension_api_error">获取插件列表失败</string>
     <string name="privacy_policy">隐私声明</string>
-    <string name="pref_update_only_completely_read">跳过有未读章节的作品</string>
-    <string name="library_errors_help">关于书架更新出错的解决方法，请参阅 %1$s</string>
     <string name="save_chapter_as_cbz">保存为 CBZ 压缩包</string>
     <string name="publishing_finished">出版完毕</string>
     <string name="cancelled">已中止</string>
@@ -553,10 +541,6 @@
     <string name="action_display_cover_only_grid">封面网格</string>
     <string name="pref_landscape_zoom">自动放大横向图片</string>
     <string name="pref_navigate_pan">图片放大时先平移再翻页</string>
-    <string name="pref_update_only_started">跳过尚未开始阅读的作品</string>
-    <string name="skipped_reason_completed">已跳过，因为作品已完结</string>
-    <string name="skipped_reason_not_caught_up">已跳过，因为有未读章节</string>
-    <string name="skipped_reason_not_started">已跳过，因为尚未开始阅读</string>
     <string name="learn_more">点击了解详情</string>
     <string name="rotation_reverse_portrait">反向竖屏</string>
     <string name="action_move_to_top_all_for_series">将作品移到顶部</string>
@@ -614,7 +598,6 @@
     <string name="remove_manga">即将从书架中删除 \"%s\"</string>
     <string name="popular">热门</string>
     <string name="missing_storage_permission">未授予存储权限</string>
-    <string name="skipped_reason_not_always_update">已跳过，因为作品无需更新</string>
     <string name="action_search_hint">搜索…</string>
     <string name="crash_screen_title">哦豁！</string>
     <string name="crash_screen_description">%s 发生了意外错误。建议你反馈时提供崩溃日志。</string>
@@ -682,7 +665,6 @@
     <string name="pref_chapter_swipe_end">向右滑动章节</string>
     <string name="pref_chapter_swipe_start">向左滑动章节</string>
     <string name="pref_double_tap_zoom">双击放大</string>
-    <string name="pref_update_only_in_release_period">预测下次更新时间</string>
     <string name="action_ok">确定</string>
     <string name="track_delete_title">要删除 %s 的记录吗？</string>
     <string name="track_delete_remote_text">同时删除 %s 上的数据</string>
@@ -694,7 +676,6 @@
     <string name="intervals_header">间隔</string>
     <string name="manga_display_interval_title">估计每个</string>
     <string name="manga_display_modified_interval_title">设定更新为每</string>
-    <string name="skipped_reason_not_in_release_period">已跳过，因为预计今天没有更新</string>
     <string name="has_results">有结果</string>
     <string name="syncing_library">正在同步书架</string>
     <string name="library_sync_complete">书架同步完成</string>
@@ -751,7 +732,6 @@
     <string name="onboarding_permission_notifications">通知权限</string>
     <string name="onboarding_guides_new_user">如果你是第一次使用 %s，推荐查看入门指南。</string>
     <string name="onboarding_guides_returning_user">如果你是重新安装了 %s，可以使用以下功能。</string>
-    <string name="pref_library_update_smart_update">智能更新</string>
     <string name="onboarding_permission_notifications_description">用来发送书架更新等通知。</string>
     <string name="onboarding_storage_help_info">如果你是从旧版更新而来，可以查看存储指南了解详情。</string>
     <string name="onboarding_storage_help_action">存储指南</string>
@@ -885,7 +865,6 @@
     <string name="pref_download_concurrent_pages">同时下载的页数</string>
     <string name="pref_download_concurrent_pages_summary">每个图源同时下载的页数</string>
     <string name="action_webview_close_tab">关闭标签</string>
-    <string name="action_filter_excluded_scanlators">筛选排除翻译组</string>
     <string name="download_bookmarked">已添加书签</string>
     <string name="label_support_us">支持我们</string>
     <string name="supportUsScreen.perks">赞助者可访问专属频道，更多福利即将推出。</string>

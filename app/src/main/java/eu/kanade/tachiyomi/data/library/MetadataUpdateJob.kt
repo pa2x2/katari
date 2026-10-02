@@ -94,7 +94,7 @@ class MetadataUpdateJob(private val context: Context, workerParams: WorkerParame
      */
     private suspend fun addEntriesToQueue() {
         val libraryItems = getLibraryEntries.await()
-        notifier.showQueueSizeWarningNotificationIfNeeded(libraryItems)
+        notifier.showQueueSizeWarningNotificationIfNeeded(libraryItems, rulesProfileId = null)
         entriesToUpdate = libraryItems.expandToMemberEntries()
     }
 

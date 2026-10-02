@@ -73,7 +73,6 @@
     <string name="action_view_chapters">अध्याय बघा</string>
     <string name="action_edit_cover">कव्हर बदलवा</string>
     <string name="action_move_category">श्रेणी सेट करा</string>
-    <string name="action_rename_category">श्रेणी पुन्हा नामांकित करा</string>
     <string name="action_edit_categories">श्रेणी संपादन</string>
     <string name="action_add_category">श्रेणी जोडा</string>
     <string name="action_add">जोडा</string>
@@ -134,7 +133,6 @@
     <string name="all">सगडे</string>
     <string name="default_category_summary">नेहमी विचारायचे</string>
     <string name="default_category">मूलभूत श्रेणी</string>
-    <string name="pref_update_only_non_completed">फक्त चालू असलेल्याच मांगा आधीतणीत करायचे</string>
     <string name="charging">चार्ज होत आहे</string>
     <string name="pref_library_update_restriction">लायब्ररी अद्ययावत प्रतिबंधी</string>
     <string name="double_tap_anim_speed_0">अनिमेशन नाही</string>
@@ -182,7 +180,6 @@
     <string name="update_6hour">दर ६ तासाला</string>
     <string name="update_never">स्वतः करा</string>
     <string name="pref_library_update_interval">लायब्ररी अद्यतन वारंवारता</string>
-    <string name="pref_category_library_update">अद्यतने</string>
     <string name="landscape">लँडस्केप</string>
     <string name="portrait">पोर्ट्रेट</string>
     <string name="pref_library_columns">आयटम प्रती पंक्ती</string>

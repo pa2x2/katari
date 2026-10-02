@@ -2,15 +2,16 @@ package eu.kanade.tachiyomi.ui.entry.related
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
-import androidx.compose.runtime.produceState
 import cafe.adriel.voyager.core.model.StateScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
+import eu.kanade.presentation.util.ioCoroutineScope
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
+import eu.kanade.tachiyomi.ui.base.observation.ObservedItemStore
+import eu.kanade.tachiyomi.ui.base.observation.collectAsState
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import mihon.entry.interactions.child.EntryRelatedEntriesFeature
@@ -27,13 +28,16 @@ class RelatedEntriesScreenModel(
 
     private var loadJob: Job? = null
     private var loadGeneration = 0L
+    private val entryStore = ObservedItemStore<Long, Entry>(
+        scope = ioCoroutineScope,
+        keyOf = Entry::id,
+        supersedes = { candidate, current -> candidate.version >= current.version },
+        observeItems = relatedEntriesFeature::observeEntries,
+    )
 
     @Composable
     fun getEntryState(initialEntry: Entry): androidx.compose.runtime.State<Entry> {
-        return produceState(initialValue = initialEntry) {
-            relatedEntriesFeature.observeEntry(initialEntry)
-                .collectLatest { entry -> value = entry }
-        }
+        return entryStore.collectAsState(initialEntry)
     }
 
     fun load() {

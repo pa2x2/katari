@@ -31,6 +31,8 @@ import tachiyomi.domain.history.model.activity.HistoryCompletionCause
 import tachiyomi.domain.history.model.activity.HistoryCompletionSnapshot
 import tachiyomi.domain.history.repository.HistoryActivityBackupRepository
 import tachiyomi.domain.history.repository.HistoryRepository
+import tachiyomi.domain.library.update.model.EntryUpdateMode
+import tachiyomi.domain.library.update.repository.LibraryUpdateRulesRepository
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.util.Date
@@ -49,6 +51,7 @@ class EntryRestorer(
     private val historyRepository: HistoryRepository = Injekt.get(),
     private val activityBackupRepository: HistoryActivityBackupRepository = Injekt.get(),
     private val fetchInterval: FetchInterval = Injekt.get(),
+    private val updateRulesRepository: LibraryUpdateRulesRepository = Injekt.get(),
 ) {
 
     private val timeZone = TimeZone.currentSystemDefault()
@@ -163,6 +166,9 @@ class EntryRestorer(
         restoreChapters(entry, backupEntry.chapters)
         restoreHistory(entry, backupEntry.history)
         restoreActivity(entry, backupEntry)
+        backupEntry.updateMode?.let { mode ->
+            updateRulesRepository.setEntryMode(listOf(entry.id), EntryUpdateMode.valueOf(mode.uppercase()))
+        }
         entryBackupFeature.restore(
             session = restoreSession,
             profileId = profileProvider.activeProfileId,

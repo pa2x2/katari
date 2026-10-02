@@ -38,7 +38,6 @@
     <string name="action_add">Додати</string>
     <string name="action_add_category">Додати категорію</string>
     <string name="action_edit_categories">Редагувати категорію</string>
-    <string name="action_rename_category">Перейменувати категорію</string>
     <string name="action_move_category">Помістити в категорію</string>
     <string name="action_edit_cover">Змінити обкладинку</string>
     <string name="action_pause">Пауза</string>
@@ -83,7 +82,6 @@
     <string name="all">Всі</string>
     <string name="pref_library_update_restriction">Обмеження пристрою для автоматичних оновлень</string>
     <string name="charging">Коли заряджається</string>
-    <string name="pref_update_only_non_completed">Пропустити глави з статусом \"Завершено\"</string>
     <string name="pref_auto_update_manga_sync">Оновлювати прогрес після прочитання</string>
     <string name="default_category">Типова категорія</string>
     <string name="default_category_summary">Завжди запитувати</string>
@@ -249,10 +247,6 @@
     <string name="notification_first_add_to_library">Будь ласка, додайте запис до своєї бібліотеки перед тим як робити це</string>
     <string name="file_select_cover">Вибрати обкладинку</string>
     <string name="file_select_backup">Виберіть файл резервної копії</string>
-    <string name="update_check_confirm">Завантажити</string>
-    <string name="update_check_no_new_updates">Оновлень не виявлено</string>
-    <string name="update_check_notification_download_in_progress">Завантаження в процесі…</string>
-    <string name="update_check_notification_update_available">Доступна нова версія!</string>
     <string name="information_no_downloads">Завантажень немає</string>
     <string name="information_no_recent">Без оновлень</string>
     <string name="information_no_recent_manga">Останнім часом нічого не прочитано</string>
@@ -284,7 +278,6 @@
     <string name="ext_obsolete">Застарілий</string>
     <string name="obsolete_extension_message">Це розширення більше не доступне. Воно може працювати невірно, а також викликати проблеми із застосунком. Рекомендується його видалити.</string>
     <string name="pref_date_format">Формат дати</string>
-    <string name="pref_category_library_update">Глобальне оновлення</string>
     <string name="logout_title">Вихід із %1$s?</string>
     <string name="logout">Вихід</string>
     <string name="logout_success">Ви вийшли з системи</string>
@@ -456,10 +449,8 @@
     <string name="exclude">Виключати: %s</string>
     <string name="include">Включати: %s</string>
     <string name="none">Немає</string>
-    <string name="pref_library_update_categories_details">Записи в виключених категоріях не буде оновлено, навіть якщо вони також знаходяться у включених категоріях.</string>
     <string name="action_sort_chapter_fetch_date">Дата отримання розділу</string>
     <string name="action_show_errors">Тицьніть для перегляду подробиць</string>
-    <string name="update_check_eol">Ця версія Android більше не підтримується</string>
     <string name="clipboard_copy_error">Не вдалось скопіювати до буферу обміну</string>
     <string name="rotation_landscape">Альбомна</string>
     <string name="rotation_portrait">Портретна</string>
@@ -530,7 +521,6 @@
     <string name="pref_verbose_logging">Докладне журналювання</string>
     <string name="pref_verbose_logging_summary">Записувати докладні журнали до системного журналу (знижує продуктивність застосунку)</string>
     <string name="notification_size_warning">Попередження: великі оновлення можуть призвести до сповільнення джерел або збільшити використання батареї. Тицьніть задля подробиць.</string>
-    <string name="channel_app_updates">Оновлення застосунку</string>
     <string name="download_queue_size_warning">Попередження: великий об\'єм завантажень може призвести до сповільнення роботи джерел та/або блокуванню %s.</string>
     <string name="ext_update_all">Оновити все</string>
     <string name="backup_info">Ви повинні зберігати декілька резервних копій в інших місцях. Резервні копії можуть містити конфіденційні дані, включно зі збереженими паролями; будьте обережні, якщо ділитеся ними.</string>
@@ -543,20 +533,14 @@
     <string name="clear_database_source_item_count">%1$d небібліотечних записів у базі даних</string>
     <string name="database_clean">Немає чого очищувати</string>
     <string name="privacy_policy">Політика конфіденційності</string>
-    <string name="pref_update_only_completely_read">Пропустити непрочитаний(ні) розділ(и)</string>
     <string name="save_chapter_as_cbz">Зберегти архів як CBZ</string>
-    <string name="library_errors_help">Для допомоги в виправленні помилок оновлення бібліотеки, дивіться %1$s</string>
     <string name="publishing_finished">Публікація завершена</string>
     <string name="cancelled">Відмінено</string>
     <string name="on_hiatus">Заморожено</string>
     <string name="action_show_manga">Показати запис</string>
     <string name="action_display_cover_only_grid">Сітка тільки з обкладинками</string>
-    <string name="pref_update_only_started">Пропустити непочаті глави</string>
     <string name="action_move_to_top_all_for_series">Перемістити серію на початок</string>
     <string name="rotation_reverse_portrait">Портретна навпаки</string>
-    <string name="skipped_reason_completed">Пропущено, оскільки серія завершена</string>
-    <string name="skipped_reason_not_caught_up">Пропущено через те, що є непрочитані розділи</string>
-    <string name="skipped_reason_not_started">Пропущено, оскільки серія не почата</string>
     <string name="empty_backup_error">Немає елементів у бібліотеці для резервування</string>
     <string name="download_notifier_split_page_not_found">Сторінку %d не знайдено, при розділенні</string>
     <string name="split_tall_images_summary">Покращує продуктивність читалки</string>
@@ -626,7 +610,6 @@
     <string name="pref_advanced_summary">Вивантаження журнала з помилками, оптимізація батареї</string>
     <string name="crash_screen_title">Ой!</string>
     <string name="crash_screen_restart_application">Перезапустити застосунок</string>
-    <string name="skipped_reason_not_always_update">Пропущено, оскільки серія не потребує оновлень</string>
     <string name="action_search_hint">Шукати…</string>
     <string name="invalid_location">Неприпустиме місцезнаходження %s</string>
     <string name="unknown_title">Невідомий тайтл</string>
@@ -685,11 +668,9 @@
     <string name="action_set_interval">Встановити інтервал</string>
     <string name="manga_display_interval_title">Оцініть кожну</string>
     <string name="action_filter_interval_custom">Налаштувати інтервал оновленнь</string>
-    <string name="pref_update_only_in_release_period">Передбачити наступний випуск</string>
     <string name="action_sort_next_updated">Наступне очікуване оновлення</string>
     <string name="intervals_header">Інтервали</string>
     <string name="manga_display_modified_interval_title">Налаштовано на оновлення кожної</string>
-    <string name="skipped_reason_not_in_release_period">Пропущено, оскільки сьогодні не очікується жодного релізу</string>
     <string name="action_ok">ОК</string>
     <string name="track_delete_remote_text">Також видалити з %s</string>
     <string name="track_delete_title">Видалити відстеження %s?</string>
@@ -737,7 +718,6 @@
     <string name="onboarding_storage_selection_required">Потрібно обрати папку</string>
     <string name="onboarding_permission_notifications">Дозвіл на сповіщення</string>
     <string name="onboarding_permission_notifications_description">Отримувати сповіщення про оновлення бібліотек та інше.</string>
-    <string name="pref_library_update_smart_update">Розумні оновлення</string>
     <string name="manga_interval_expected_update">Нові розділи передбачено будуть випущені приблизно в %1$s, перевіряючи кожні %2$s.</string>
     <string name="onboarding_storage_help_info">Оновлюєтесь з попередньої версії і не впевнені яку обрати? Перегляньте гайд по сховищу для додаткової інформації.</string>
     <string name="onboarding_storage_help_action">Гайд по сховищу</string>

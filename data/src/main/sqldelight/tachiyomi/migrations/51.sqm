@@ -1,0 +1,46 @@
+import kotlin.Boolean;
+
+-- Library update rules: per-entry modes, per-category switches and overrides, and what the latest update decided.
+
+CREATE TABLE entry_update_modes(
+    entry_id INTEGER NOT NULL PRIMARY KEY,
+    mode TEXT NOT NULL CHECK(mode IN ('always', 'never')),
+    FOREIGN KEY(entry_id) REFERENCES entries(_id) ON DELETE CASCADE
+);
+
+CREATE TABLE category_update_rules(
+    profile_id INTEGER NOT NULL,
+    category_id INTEGER NOT NULL,
+    auto_update INTEGER AS Boolean NOT NULL DEFAULT 1,
+    custom_rules INTEGER AS Boolean NOT NULL DEFAULT 0,
+    skip_completed INTEGER AS Boolean NOT NULL DEFAULT 0,
+    skip_unseen INTEGER AS Boolean NOT NULL DEFAULT 0,
+    skip_not_started INTEGER AS Boolean NOT NULL DEFAULT 0,
+    skip_outside_release_period INTEGER AS Boolean NOT NULL DEFAULT 0,
+    interval_hours INTEGER,
+    PRIMARY KEY(profile_id, category_id),
+    FOREIGN KEY(profile_id) REFERENCES profiles(_id) ON DELETE CASCADE,
+    FOREIGN KEY(category_id) REFERENCES categories(_id) ON DELETE CASCADE
+);
+
+CREATE TABLE entry_update_status(
+    entry_id INTEGER NOT NULL PRIMARY KEY,
+    decided_at INTEGER NOT NULL,
+    outcome TEXT NOT NULL,
+    reason TEXT,
+    reason_category_id INTEGER,
+    error TEXT,
+    new_chapters INTEGER NOT NULL DEFAULT 0,
+    last_checked_at INTEGER,
+    consecutive_failures INTEGER NOT NULL DEFAULT 0,
+    FOREIGN KEY(entry_id) REFERENCES entries(_id) ON DELETE CASCADE
+);
+
+CREATE TABLE library_update_runs(
+    profile_id INTEGER NOT NULL PRIMARY KEY,
+    started_at INTEGER NOT NULL,
+    finished_at INTEGER,
+    trigger TEXT NOT NULL,
+    library_size INTEGER NOT NULL,
+    FOREIGN KEY(profile_id) REFERENCES profiles(_id) ON DELETE CASCADE
+);

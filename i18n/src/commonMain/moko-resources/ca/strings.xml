@@ -38,7 +38,6 @@
     <string name="action_add">Afegeix</string>
     <string name="action_add_category">Afegeix una categoria</string>
     <string name="action_edit_categories">Edita les categories</string>
-    <string name="action_rename_category">Canvia el nom de la categoria</string>
     <string name="action_move_category">Defineix les categories</string>
     <string name="action_edit_cover">Edita la portada</string>
     <string name="action_pause">Pausa</string>
@@ -83,7 +82,6 @@
     <string name="all">Tot</string>
     <string name="pref_library_update_restriction">Restriccions del dispositiu per a les actualitzacions automàtiques</string>
     <string name="charging">Quan s’estigui carregant</string>
-    <string name="pref_update_only_non_completed">Omet els elements amb l’estat «Completat»</string>
     <string name="pref_auto_update_manga_sync">Actualitza el progrés després de llegir</string>
     <string name="default_category">Categoria per defecte</string>
     <string name="default_category_summary">Demana-ho sempre</string>
@@ -246,10 +244,6 @@
     <string name="notification_first_add_to_library">Afegiu l’element a la vostra biblioteca abans de fer això</string>
     <string name="file_select_cover">Seleccioneu la imatge de portada</string>
     <string name="file_select_backup">Seleccioneu el fitxer de còpia de seguretat</string>
-    <string name="update_check_confirm">Baixa</string>
-    <string name="update_check_no_new_updates">No hi ha cap nova actualització disponible</string>
-    <string name="update_check_notification_download_in_progress">S’està baixant…</string>
-    <string name="update_check_notification_update_available">Nova versió disponible!</string>
     <string name="information_no_downloads">No hi ha baixades</string>
     <string name="information_no_recent">No hi ha actualitzacions recents</string>
     <string name="information_no_recent_manga">No heu llegit res recentment</string>
@@ -281,7 +275,6 @@
     <string name="ext_obsolete">Obsoleta</string>
     <string name="obsolete_extension_message">Aquesta extensió ja no està disponible. És possible que no funcioni correctament i pot causar problemes a l’aplicació. És recomanable que la desinstal·leu.</string>
     <string name="pref_date_format">Format de data</string>
-    <string name="pref_category_library_update">Actualització global</string>
     <string name="logout_title">Voleu tancar la sessió a %1$s?</string>
     <string name="logout">Tanca la sessió</string>
     <string name="logout_success">S’ha tancat la sessió</string>
@@ -441,7 +434,6 @@
     <string name="pref_dual_page_invert_summary">Si la ubicació de les pàgines amples dividides no encaixa amb la direcció de lectura</string>
     <string name="pref_dual_page_invert">Inverteix la ubicació de la divisió de pàgines</string>
     <string name="backup_restore_content_full">Caldrà que instal·leu les extensions que manquin i que després inicieu la sessió als serveis de seguiment per a utilitzar-los.</string>
-    <string name="update_check_eol">Aquesta versió d’Android ja no està suportada</string>
     <string name="error_no_match">No s’ha trobat cap coincidència</string>
     <string name="source_unsupported">La font no està suportada</string>
     <string name="unread">No llegit</string>
@@ -449,7 +441,6 @@
     <string name="notification_incognito_text">Desactiva el mode d’incògnit</string>
     <string name="pref_dns_over_https">DNS sobre HTTPS (DoH)</string>
     <string name="pref_download_new_categories_details">Els elements de les categories excloses no es baixaran encara que també siguin a les categories incloses.</string>
-    <string name="pref_library_update_categories_details">Els elements de les categories excloses no s’actualitzaran encara que també siguin a les categories incloses.</string>
     <string name="pref_category_auto_download">Baixada automàtica</string>
     <string name="rotation_landscape">Horitzontal</string>
     <string name="rotation_portrait">Vertical</string>
@@ -532,16 +523,13 @@
     <string name="about_dont_kill_my_app">Alguns fabricants tenen restriccions addicionals per a les aplicacions que finalitzen els serveis en segon pla. Aquest lloc web té més informació de com solucionar-ho.</string>
     <string name="clear_database_source_item_count">Hi ha %1$d elements a la base de dades que no són a la biblioteca</string>
     <string name="cancelled">Cancel·lada</string>
-    <string name="library_errors_help">Per a obtenir ajuda per a resoldre errors d’actualització de la biblioteca, vegeu %1$s</string>
     <string name="extension_api_error">No s’han pogut obtenir les extensions disponibles</string>
-    <string name="pref_update_only_completely_read">Omet els elements amb capítols no llegits</string>
     <string name="save_chapter_as_cbz">Desa com a arxiu CBZ</string>
     <string name="backup_info">També hauríeu de desar còpies de les còpies de seguretat en altres llocs. Les còpies de seguretat poden contenir dades sensibles, incloent-hi les contrasenyes desades; aneu amb compte si les compartiu.</string>
     <string name="database_clean">No hi ha res que calgui buidar</string>
     <string name="pref_verbose_logging_summary">Imprimeix registres detallats al registre del sistema (redueix el rendiment de l’aplicació)</string>
     <string name="publishing_finished">Publicació finalitzada</string>
     <string name="on_hiatus">En pausa</string>
-    <string name="channel_app_updates">Actualitzacions de l’aplicació</string>
     <string name="action_track">Segueix</string>
     <string name="ext_app_info">Informació de l’aplicació</string>
     <string name="download_queue_size_warning">Advertència: Les baixades massa grosses poden fer que les fonts es tornin més lentes i/o bloquin el %s. Premeu per a obtenir-ne més informació.</string>
@@ -550,10 +538,6 @@
     <string name="action_show_manga">Mostra l’element</string>
     <string name="pref_navigate_pan">Fes panoràmiques les imatges amples</string>
     <string name="action_display_cover_only_grid">Graella només a la portada</string>
-    <string name="pref_update_only_started">Omet els elements no començats</string>
-    <string name="skipped_reason_completed">S’ha omès perquè la sèrie està completada</string>
-    <string name="skipped_reason_not_started">S’ha omès perquè no hi ha cap capítol llegit</string>
-    <string name="skipped_reason_not_caught_up">S’ha omès perquè hi ha capítols no llegits</string>
     <string name="learn_more">Premeu per a obtenir més informació</string>
     <string name="rotation_reverse_portrait">Vertical inversa</string>
     <string name="action_move_to_top_all_for_series">Mou la sèrie a dalt de tot</string>
@@ -625,7 +609,6 @@
     <string name="pref_security_summary">Blocatge de l’aplicació i mode discret</string>
     <string name="pref_advanced_summary">Bolcatge de registres d’errors i optimitzacions de la bateria</string>
     <string name="crash_screen_restart_application">Reinicia l’aplicació</string>
-    <string name="skipped_reason_not_always_update">S’ha omès perquè no cal actualitzar la sèrie</string>
     <string name="remove_manga">Suprimireu «%s» de la vostra biblioteca</string>
     <string name="action_search_hint">Cerca…</string>
     <string name="updates_last_update_info">Biblioteca actualitzada per darrera vegada: %s</string>
@@ -682,14 +665,12 @@
     <string name="action_filter_interval_custom">Freqüència d’actualització personalitzat</string>
     <string name="action_sort_next_updated">Pròxima actualització prevista</string>
     <string name="action_ok">D’acord</string>
-    <string name="pref_update_only_in_release_period">Preveu el moment de la pròxima publicació</string>
     <string name="intervals_header">Intervals</string>
     <string name="manga_display_interval_title">Estima cada</string>
     <string name="manga_display_modified_interval_title">S’actualitzarà cada</string>
     <string name="track_delete_title">Voleu deixar de seguir %s?</string>
     <string name="track_delete_remote_text">Elimina també de %s</string>
     <string name="track_delete_text">Se n’eliminarà el seguiment local.</string>
-    <string name="skipped_reason_not_in_release_period">S’ha omès perquè no se n’espera cap publicació avui</string>
     <string name="delete_downloaded">Suprimeix els baixats</string>
     <string name="has_results">Té resultats</string>
     <string name="syncing_library">S’està sincronitzant la biblioteca</string>
@@ -755,7 +736,6 @@
     <string name="onboarding_storage_help_action">Guia d’emmagatzematge</string>
     <string name="onboarding_storage_help_info">Heu actualitzat d’una versió més antiga i no sabeu què heu de seleccionar? Consulteu la guia d’emmagatzematge per a més informació.</string>
     <string name="theme_nord">Nòrdic</string>
-    <string name="pref_library_update_smart_update">Actualitzacions intel·ligents</string>
     <string name="ext_revoke_trust">Revoca les extensions de confiança desconegudes</string>
     <string name="manga_interval_expected_update_soon">Aviat</string>
     <string name="manga_interval_custom_amount">Freqüència d’actualització personalitzada:</string>
@@ -877,5 +857,4 @@
     <string name="migrationListScreen.migrateDialog.cancelLabel">Cancel·la</string>
     <string name="migrationListScreen.progressDialog.cancelLabel">Cancel·la</string>
     <string name="migrationListScreen.matchWithoutChapterToast">No s’ha trobat cap capítol, aquest element no es pot utilitzar per a migrar</string>
-    <string name="action_filter_excluded_scanlators">Filtra els scanlators exclosos</string>
 </resources>

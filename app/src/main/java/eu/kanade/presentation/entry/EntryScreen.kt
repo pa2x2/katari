@@ -61,6 +61,7 @@ import eu.kanade.presentation.entry.components.EntryToolbar
 import eu.kanade.presentation.entry.components.ExpandableEntryDescription
 import eu.kanade.presentation.entry.translation.ChapterTranslateAction
 import eu.kanade.presentation.entry.translation.EntryChapterTranslationUi
+import eu.kanade.presentation.entry.updates.EntryUpdatesLabel
 import eu.kanade.presentation.util.formatChapterNumber
 import eu.kanade.tachiyomi.ui.entry.EntryChapterList
 import eu.kanade.tachiyomi.ui.entry.EntryScreenModel
@@ -85,7 +86,7 @@ import kotlin.time.Instant
 fun EntryScreen(
     state: EntryScreenModel.State.Success,
     snackbarHostState: SnackbarHostState,
-    nextUpdate: Instant?,
+    updatesLabel: EntryUpdatesLabel,
     isTabletUi: Boolean,
     chapterSwipeStartAction: LibraryPreferences.ChapterSwipeAction,
     chapterSwipeEndAction: LibraryPreferences.ChapterSwipeAction,
@@ -116,7 +117,7 @@ fun EntryScreen(
     onDownloadActionClicked: ((DownloadAction) -> Unit)?,
     bookmarkedDownloadsSupported: Boolean,
     onEditCategoryClicked: (() -> Unit)?,
-    onEditFetchIntervalClicked: (() -> Unit)?,
+    onUpdatesClicked: (() -> Unit)?,
     onEditDisplayNameClicked: (() -> Unit)?,
     onManageMergeClicked: (() -> Unit)?,
     onOpenMergedEntryClicked: (() -> Unit)?,
@@ -156,7 +157,7 @@ fun EntryScreen(
         EntryScreenSmallImpl(
             state = state,
             snackbarHostState = snackbarHostState,
-            nextUpdate = nextUpdate,
+            updatesLabel = updatesLabel,
             chapterSwipeStartAction = chapterSwipeStartAction,
             chapterSwipeEndAction = chapterSwipeEndAction,
             navigateUp = navigateUp,
@@ -180,7 +181,7 @@ fun EntryScreen(
             onDownloadActionClicked = onDownloadActionClicked,
             bookmarkedDownloadsSupported = bookmarkedDownloadsSupported,
             onEditCategoryClicked = onEditCategoryClicked,
-            onEditIntervalClicked = onEditFetchIntervalClicked,
+            onUpdatesClicked = onUpdatesClicked,
             onEditDisplayNameClicked = onEditDisplayNameClicked,
             onManageMergeClicked = onManageMergeClicked,
             onOpenMergedEntryClicked = onOpenMergedEntryClicked,
@@ -209,7 +210,7 @@ fun EntryScreen(
             snackbarHostState = snackbarHostState,
             chapterSwipeStartAction = chapterSwipeStartAction,
             chapterSwipeEndAction = chapterSwipeEndAction,
-            nextUpdate = nextUpdate,
+            updatesLabel = updatesLabel,
             navigateUp = navigateUp,
             onChapterClicked = onChapterClicked,
             onDownloadChapter = onDownloadChapter,
@@ -231,7 +232,7 @@ fun EntryScreen(
             onDownloadActionClicked = onDownloadActionClicked,
             bookmarkedDownloadsSupported = bookmarkedDownloadsSupported,
             onEditCategoryClicked = onEditCategoryClicked,
-            onEditIntervalClicked = onEditFetchIntervalClicked,
+            onUpdatesClicked = onUpdatesClicked,
             onEditDisplayNameClicked = onEditDisplayNameClicked,
             onManageMergeClicked = onManageMergeClicked,
             onOpenMergedEntryClicked = onOpenMergedEntryClicked,
@@ -261,7 +262,7 @@ fun EntryScreen(
 private fun EntryScreenSmallImpl(
     state: EntryScreenModel.State.Success,
     snackbarHostState: SnackbarHostState,
-    nextUpdate: Instant?,
+    updatesLabel: EntryUpdatesLabel,
     chapterSwipeStartAction: LibraryPreferences.ChapterSwipeAction,
     chapterSwipeEndAction: LibraryPreferences.ChapterSwipeAction,
     navigateUp: () -> Unit,
@@ -292,7 +293,7 @@ private fun EntryScreenSmallImpl(
     onDownloadActionClicked: ((DownloadAction) -> Unit)?,
     bookmarkedDownloadsSupported: Boolean,
     onEditCategoryClicked: (() -> Unit)?,
-    onEditIntervalClicked: (() -> Unit)?,
+    onUpdatesClicked: (() -> Unit)?,
     onEditDisplayNameClicked: (() -> Unit)?,
     onManageMergeClicked: (() -> Unit)?,
     onOpenMergedEntryClicked: (() -> Unit)?,
@@ -472,15 +473,14 @@ private fun EntryScreenSmallImpl(
                         EntryActionRow(
                             favorite = state.entry.favorite,
                             trackingCount = state.trackingCount,
-                            nextUpdate = nextUpdate,
-                            isUserIntervalMode = state.entry.fetchInterval < 0,
+                            updatesLabel = updatesLabel,
                             onAddToLibraryClicked = onAddToLibraryClicked,
                             onAddToMergeClicked = onAddToMergeClicked,
                             onWebViewClicked = onWebViewClicked,
                             onWebViewLongClicked = onWebViewLongClicked,
                             onTrackingClicked = onTrackingClicked,
                             onDuplicatesClicked = onDuplicatesClicked,
-                            onEditIntervalClicked = onEditIntervalClicked,
+                            onUpdatesClicked = onUpdatesClicked,
                             onEditCategory = onEditCategoryClicked,
                         )
                     }
@@ -549,7 +549,7 @@ private fun EntryScreenSmallImpl(
 fun EntryScreenLargeImpl(
     state: EntryScreenModel.State.Success,
     snackbarHostState: SnackbarHostState,
-    nextUpdate: Instant?,
+    updatesLabel: EntryUpdatesLabel,
     chapterSwipeStartAction: LibraryPreferences.ChapterSwipeAction,
     chapterSwipeEndAction: LibraryPreferences.ChapterSwipeAction,
     navigateUp: () -> Unit,
@@ -580,7 +580,7 @@ fun EntryScreenLargeImpl(
     onDownloadActionClicked: ((DownloadAction) -> Unit)?,
     bookmarkedDownloadsSupported: Boolean,
     onEditCategoryClicked: (() -> Unit)?,
-    onEditIntervalClicked: (() -> Unit)?,
+    onUpdatesClicked: (() -> Unit)?,
     onEditDisplayNameClicked: (() -> Unit)?,
     onManageMergeClicked: (() -> Unit)?,
     onOpenMergedEntryClicked: (() -> Unit)?,
@@ -737,15 +737,14 @@ fun EntryScreenLargeImpl(
                         EntryActionRow(
                             favorite = state.entry.favorite,
                             trackingCount = state.trackingCount,
-                            nextUpdate = nextUpdate,
-                            isUserIntervalMode = state.entry.fetchInterval < 0,
+                            updatesLabel = updatesLabel,
                             onAddToLibraryClicked = onAddToLibraryClicked,
                             onAddToMergeClicked = onAddToMergeClicked,
                             onWebViewClicked = onWebViewClicked,
                             onWebViewLongClicked = onWebViewLongClicked,
                             onTrackingClicked = onTrackingClicked,
                             onDuplicatesClicked = onDuplicatesClicked,
-                            onEditIntervalClicked = onEditIntervalClicked,
+                            onUpdatesClicked = onUpdatesClicked,
                             onEditCategory = onEditCategoryClicked,
                         )
                         ExpandableEntryDescription(

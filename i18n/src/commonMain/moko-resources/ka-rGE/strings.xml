@@ -36,7 +36,6 @@
     <string name="action_add">დამატება</string>
     <string name="action_add_category">კატეგორიის დამატება</string>
     <string name="action_edit_categories">კატეგორიის რედაქტირება</string>
-    <string name="action_rename_category">კატეგორიის სახელის ვცლილება</string>
     <string name="action_view_chapters">თავების ხილვა</string>
     <string name="action_pause">პაუზა</string>
     <string name="action_previous_chapter">წინა თავი</string>
@@ -95,7 +94,6 @@
     <string name="pref_library_columns">ელემენტი თითოეულ მწკრივში</string>
     <string name="portrait">პორტრეტი</string>
     <string name="landscape">პეიზაჟი</string>
-    <string name="pref_category_library_update">განახლებები</string>
     <string name="pref_library_update_interval">ბიბლიოთეკის განახლების სიხშირე</string>
     <string name="update_never">ხელით</string>
     <string name="update_6hour">ყოველ 6 საათში</string>
@@ -105,7 +103,6 @@
     <string name="update_weekly">ყოველ კვირა</string>
     <string name="pref_library_update_restriction">ბიბლიოთეკის განახლების შეზღუდვები</string>
     <string name="charging">იტენება</string>
-    <string name="pref_update_only_non_completed">მხოლოდ განაახლე მიმდინარე მანგა</string>
     <string name="pref_library_update_refresh_metadata">ავტომატურად განაახლე მეტადატა</string>
     <string name="label_migration">მიგრაცია</string>
     <string name="default_category">ნაგულისხმევი კატეგორია</string>
@@ -311,10 +308,6 @@
     <string name="notification_first_add_to_library">გთხოვთ ჯერ დაამატოთ ჩანაწერი თქვენს ბიბლიოთეკაში</string>
     <string name="file_select_cover">ამოირჩიე ყდის სურათი</string>
     <string name="file_select_backup">ამოირჩიე რეზერვის ფაილი</string>
-    <string name="update_check_confirm">გადმოწერა</string>
-    <string name="update_check_no_new_updates">განახლება ვერ მოიძებნა</string>
-    <string name="update_check_notification_download_in_progress">გადმოწერა…</string>
-    <string name="update_check_notification_update_available">ხელმისაწვდომია ახალი ვერსია!</string>
     <string name="information_no_downloads">გადმოწერები არ არის</string>
     <string name="information_no_recent">განახლებები არ არის</string>
     <string name="information_empty_library">თქვენი ბიბლიოთეკა ცარიელია</string>

@@ -88,7 +88,6 @@ import eu.kanade.presentation.util.DefaultNavigatorScreenTransition
 import eu.kanade.tachiyomi.core.security.SecurityPreferences
 import eu.kanade.tachiyomi.data.library.LibraryUpdateJob
 import eu.kanade.tachiyomi.data.notification.NotificationReceiver
-import eu.kanade.tachiyomi.data.updater.AppUpdateChecker
 import eu.kanade.tachiyomi.extension.ExtensionManager
 import eu.kanade.tachiyomi.ui.base.activity.BaseActivity
 import eu.kanade.tachiyomi.ui.base.delegate.SecureActivityDelegate
@@ -99,7 +98,9 @@ import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchScreen
 import eu.kanade.tachiyomi.ui.deeplink.DeepLinkScreen
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
 import eu.kanade.tachiyomi.ui.home.HomeScreen
-import eu.kanade.tachiyomi.ui.more.NewUpdateScreen
+import eu.kanade.tachiyomi.ui.library.update.LibraryUpdateSettingsNavigation
+import eu.kanade.tachiyomi.ui.library.update.report.LibraryUpdateReportNavigation
+import eu.kanade.tachiyomi.ui.library.update.report.LibraryUpdateReportScreen
 import eu.kanade.tachiyomi.ui.more.OnboardingScreen
 import eu.kanade.tachiyomi.ui.security.BiometricAuthentication.authenticate
 import eu.kanade.tachiyomi.ui.setting.SettingsScreen
@@ -107,7 +108,6 @@ import eu.kanade.tachiyomi.ui.translator.TranslatorScreen
 import eu.kanade.tachiyomi.util.system.dpToPx
 import eu.kanade.tachiyomi.util.system.isBenchmarkBuildType
 import eu.kanade.tachiyomi.util.system.isNavigationBarNeedsScrim
-import eu.kanade.tachiyomi.util.system.updaterEnabled
 import eu.kanade.tachiyomi.util.view.setComposeContent
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
@@ -126,6 +126,7 @@ import mihon.entry.interactions.media.EntryMediaCacheClearResult
 import mihon.entry.interactions.media.EntryMediaCacheFeature
 import mihon.entry.interactions.merge.EntryMergeNavigationFeature
 import mihon.entry.viewer.settings.navigation.ViewerSettingsNavigation
+import mihon.feature.appupdate.ui.AppUpdatePrompt
 import mihon.feature.migration.review.SourceMigrationReviewScreen
 import mihon.feature.migration.session.SourceMigrationSessionStore
 import mihon.feature.migration.session.model.SourceMigrationSessionId
@@ -139,7 +140,6 @@ import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.library.service.LibraryPreferences
-import tachiyomi.domain.release.interactor.GetApplicationRelease
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.components.material.padding
@@ -447,7 +447,7 @@ class MainActivity : BaseActivity() {
                     HandleOnNewIntent(context = context, navigator = navigator)
 
                     if (!isBenchmarkBuildType) {
-                        CheckForUpdates()
+                        AppUpdatePrompt()
                         ShowOnboarding()
                         ShowDonationCampaign()
                     }
@@ -523,32 +523,6 @@ class MainActivity : BaseActivity() {
                         handleIntentAction(it, navigator)
                     }
                 }
-        }
-    }
-
-    @Composable
-    private fun CheckForUpdates() {
-        val context = LocalContext.current
-        val navigator = LocalNavigator.currentOrThrow
-
-        // App updates
-        LaunchedEffect(Unit) {
-            if (updaterEnabled) {
-                try {
-                    val result = AppUpdateChecker().checkForUpdate()
-                    if (result is GetApplicationRelease.Result.NewUpdate) {
-                        val updateScreen = NewUpdateScreen(
-                            versionName = result.release.version,
-                            changelogInfo = result.release.info,
-                            releaseLink = result.release.releaseLink,
-                            downloadLink = result.release.downloadLink,
-                        )
-                        navigator.push(updateScreen)
-                    }
-                } catch (e: Exception) {
-                    logcat(LogPriority.ERROR, e)
-                }
-            }
         }
     }
 
@@ -777,8 +751,18 @@ class MainActivity : BaseActivity() {
                 navigator.push(SettingsScreen())
                 null
             }
+            LibraryUpdateReportNavigation.ACTION_OPEN_REPORT -> {
+                navigator.popUntilRoot()
+                navigator.push(LibraryUpdateReportScreen())
+                null
+            }
             TranslationSettingsNavigation.ACTION_OPEN_SETTINGS -> {
                 navigator.push(SettingsScreen(SettingsScreen.Destination.Translation))
+                null
+            }
+            LibraryUpdateSettingsNavigation.ACTION_OPEN_SETTINGS -> {
+                navigator.popUntilRoot()
+                navigator.push(SettingsScreen(SettingsScreen.Destination.LibraryUpdates))
                 null
             }
             SourceMigrationNotifier.ACTION_OPEN_SOURCE_MIGRATION_SESSION -> {
@@ -924,10 +908,7 @@ class MainActivity : BaseActivity() {
                 }
             }
 
-            LibraryUpdateJob.setupTask(
-                context = this,
-                prefInterval = libraryPreferences.autoUpdateInterval.get(),
-            )
+            LibraryUpdateJob.setupTask(context = this)
         }
 
         ready = true

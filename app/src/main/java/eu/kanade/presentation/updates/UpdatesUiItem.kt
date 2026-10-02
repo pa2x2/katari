@@ -1,17 +1,17 @@
 package eu.kanade.presentation.updates
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -44,7 +44,6 @@ import eu.kanade.presentation.entry.partialProgressLabel
 import eu.kanade.presentation.entry.translation.ChapterTranslateAction
 import eu.kanade.presentation.util.relativeTimeSpanString
 import eu.kanade.tachiyomi.ui.updates.UpdatesItem
-import mihon.entry.interactions.download.EntryDownloadState
 import mihon.entry.interactions.translate.EntryTranslateStatus
 import tachiyomi.domain.updates.model.UpdateItem
 import tachiyomi.i18n.*
@@ -52,56 +51,39 @@ import tachiyomi.presentation.core.components.DotSeparatorText
 import tachiyomi.presentation.core.components.ListGroupHeader
 import tachiyomi.presentation.core.components.material.DISABLED_ALPHA
 import tachiyomi.presentation.core.components.material.padding
+import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.selectedBackground
 import tachiyomi.domain.entry.model.EntryCover as EntryCoverData
 
+/**
+ * @param failed entries the latest update failed to check, named so a failure is noticed without opening the report.
+ * @param onClick opens the latest update's report; null while there is none.
+ */
 internal fun LazyListScope.updatesLastUpdatedItem(
     lastUpdated: Long,
+    failed: Int,
+    onClick: (() -> Unit)?,
 ) {
     item(key = "updates-lastUpdated") {
-        Box(
+        Row(
             modifier = Modifier
                 .animateItem(fadeInSpec = null, fadeOutSpec = null)
+                .fillMaxWidth()
+                .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
                 .padding(horizontal = MaterialTheme.padding.medium, vertical = MaterialTheme.padding.small),
         ) {
             Text(
                 text = stringResource(MR.strings.updates_last_update_info, relativeTimeSpanString(lastUpdated)),
                 fontStyle = FontStyle.Italic,
             )
-        }
-    }
-}
-
-internal fun <T> LazyListScope.updatesUiItems(
-    uiModels: List<UpdatesUiModel<T>>,
-    itemKey: (T) -> String,
-    itemContent: @Composable LazyItemScope.(T) -> Unit,
-) {
-    items(
-        items = uiModels,
-        contentType = {
-            when (it) {
-                is UpdatesUiModel.Header -> "header"
-                is UpdatesUiModel.Item -> "item"
-            }
-        },
-        key = {
-            when (it) {
-                is UpdatesUiModel.Header -> "updatesHeader-${it.date}"
-                is UpdatesUiModel.Item -> itemKey(it.item)
-            }
-        },
-    ) { item ->
-        when (item) {
-            is UpdatesUiModel.Header -> {
-                ListGroupHeader(
-                    modifier = Modifier.animateItem(),
-                    text = relativeDateText(item.date),
+            if (failed > 0) {
+                Text(
+                    text = " · " + pluralStringResource(MR.plurals.library_updates_failed, failed, failed),
+                    fontStyle = FontStyle.Italic,
+                    color = MaterialTheme.colorScheme.error,
                 )
             }
-
-            is UpdatesUiModel.Item -> itemContent(item.item)
         }
     }
 }
@@ -110,6 +92,8 @@ internal fun LazyListScope.unifiedUpdatesUiItems(
     uiModels: List<UpdatesUiModel<UpdatesItem>>,
     selectionMode: Boolean,
     onUpdateSelected: (UpdatesItem, Boolean, Boolean) -> Unit,
+    onGroupSelected: (List<UpdatesItem>, Boolean) -> Unit,
+    onToggleGroupExpanded: (String) -> Unit,
     onClickCover: (UpdatesItem) -> Unit,
     isOpenApplicable: (UpdatesItem) -> Boolean,
     onClickUpdate: (UpdatesItem) -> Unit,
@@ -118,23 +102,53 @@ internal fun LazyListScope.unifiedUpdatesUiItems(
     isTranslateApplicable: (UpdatesItem) -> Boolean,
     onTranslateChapter: (UpdatesItem, ChapterTranslateAction) -> Unit,
 ) {
-    updatesUiItems(
-        uiModels = uiModels,
-        itemKey = { "updates-${it.update.key.type.name}-${it.update.key.id}" },
-    ) { updatesItem ->
-        UnifiedUpdatesUiItem(
-            modifier = Modifier.animateItem(),
-            item = updatesItem,
-            selectionMode = selectionMode,
-            onUpdateSelected = onUpdateSelected,
-            onClickCover = onClickCover,
-            isOpenApplicable = isOpenApplicable,
-            onClickUpdate = onClickUpdate,
-            onDownloadChapter = onDownloadChapter,
-            translateStatusOf = translateStatusOf,
-            isTranslateApplicable = isTranslateApplicable,
-            onTranslateChapter = onTranslateChapter,
-        )
+    items(
+        items = uiModels,
+        contentType = {
+            when (it) {
+                is UpdatesUiModel.Header -> "header"
+                is UpdatesUiModel.Item -> "item"
+                is UpdatesUiModel.Group -> "group"
+            }
+        },
+        key = {
+            when (it) {
+                is UpdatesUiModel.Header -> "updatesHeader-${it.date}"
+                is UpdatesUiModel.Item -> "updates-${it.item.update.key.type.name}-${it.item.update.key.id}"
+                is UpdatesUiModel.Group -> "updatesGroup-${it.key}"
+            }
+        },
+    ) { model ->
+        when (model) {
+            is UpdatesUiModel.Header -> {
+                ListGroupHeader(
+                    modifier = Modifier.animateItem(),
+                    text = relativeDateText(model.date),
+                )
+            }
+            is UpdatesUiModel.Item -> UnifiedUpdatesUiItem(
+                modifier = Modifier.animateItem(),
+                item = model.item,
+                selectionMode = selectionMode,
+                onUpdateSelected = onUpdateSelected,
+                onClickCover = onClickCover,
+                isOpenApplicable = isOpenApplicable,
+                onClickUpdate = onClickUpdate,
+                onDownloadChapter = onDownloadChapter,
+                translateStatusOf = translateStatusOf,
+                isTranslateApplicable = isTranslateApplicable,
+                onTranslateChapter = onTranslateChapter,
+            )
+            is UpdatesUiModel.Group -> UpdatesGroupUiItem(
+                modifier = Modifier.animateItem(),
+                group = model,
+                selectionMode = selectionMode,
+                onToggleExpanded = { onToggleGroupExpanded(model.key) },
+                onGroupSelected = onGroupSelected,
+                onClickCover = onClickCover,
+                onDownloadChapter = onDownloadChapter,
+            )
+        }
     }
 }
 

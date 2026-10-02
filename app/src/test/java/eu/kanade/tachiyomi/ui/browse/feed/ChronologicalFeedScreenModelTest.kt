@@ -282,10 +282,11 @@ private class FakeFeedScreenModel(
     workerDispatcher = Dispatchers.Main,
 ) {
 
-    override suspend fun subscribeItem(ref: FeedItemRef): Flow<FakeItem> {
-        val item = itemsById[ref.id] ?: error("Unknown item $ref")
-        return flowOf(item)
+    override suspend fun observeItems(refs: List<FeedItemRef>): Flow<List<FakeItem>> {
+        return flowOf(refs.mapNotNull { itemsById[it.id] })
     }
+
+    override fun supersedes(candidate: FakeItem, current: FakeItem): Boolean = true
 
     override suspend fun resolveFilters(): EntryFilterList = EntryFilterList()
 

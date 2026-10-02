@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="update_check_notification_download_in_progress">Ndonlot…</string>
-    <string name="update_check_confirm">Donlot</string>
     <string name="track_type">Jinis</string>
     <string name="title">Judhul</string>
     <string name="no_chapters_error">Ora ditemokake bab</string>
@@ -57,7 +55,6 @@
     <string name="action_next_chapter">Bab sabanjure</string>
     <string name="action_previous_chapter">Bab sadurunge</string>
     <string name="action_view_chapters">Ndeleng bab</string>
-    <string name="action_rename_category">Ganti jeneng kategori</string>
     <string name="action_edit_categories">Sunting kategori</string>
     <string name="action_add_category">Tambah kategori</string>
     <string name="action_add">Tambah</string>
@@ -167,7 +164,6 @@
     <string name="action_display_language_badge">basa</string>
     <string name="action_close">Tutup</string>
     <string name="restrictions">Batesan: %s</string>
-    <string name="pref_update_only_non_completed">Karo status \"Rampung\"</string>
     <string name="action_display_cover_only_grid">Kothak sampul</string>
     <string name="theme_system">Tumuti sistem</string>
     <string name="pref_app_theme">Tema aplikasi</string>
@@ -180,7 +176,6 @@
     <string name="lock_always">Tansah</string>
     <string name="pref_category_nsfw_content">Sumber NSFW (18+)</string>
     <string name="pref_show_nsfw_source">Tampilaken ing sumber lan dhaptar ekstensi</string>
-    <string name="pref_update_only_completely_read">Karo bab durung diwaca</string>
     <string name="pref_manage_notifications">Kelola notifikasi</string>
     <string name="secure_screen_summary">Amanaken layar sembunikan konten aplikasi wektu ngaleh aplikasi lan blokir tangkapan layar</string>
     <string name="theme_midnightdusk">Surup wengi</string>
@@ -196,7 +191,6 @@
     <string name="update_72hour">Saben 3 dinten</string>
     <string name="connected_to_wifi">Namung ing Wi-Fi</string>
     <string name="ext_untrusted">Ora kapracaya</string>
-    <string name="pref_update_only_started">Iku durung diwiwiti</string>
     <string name="pref_library_update_refresh_metadata_summary">periksa sampul lan rinci anyar wektu memerbarui pustaka</string>
     <string name="default_category">kategori gawan</string>
     <string name="include">Kalebu: %s</string>
@@ -237,7 +231,6 @@
     <string name="l_nav">Wangun L</string>
     <string name="action_sort_last_manga_update">Priksa nganyari pungkasan</string>
     <string name="action_sort_unread_count">Total gak diwoco</string>
-    <string name="pref_category_library_update">Updatean umum</string>
     <string name="pref_library_update_interval">Updatean otomatis</string>
     <string name="lock_with_biometrics">Mbutuhake mbukak kunci</string>
     <string name="pref_library_update_refresh_metadata">Nganyari metadata otomatis</string>
@@ -246,7 +239,6 @@
     <string name="untrusted_extension_message">Ekstensi iki ditandatangani nganggo sertifikat sing ora dipercaya lan ora diaktifake.\n\nEkstensi angkoro bisa maca kredensial login sing disimpen ing Mihon utawa nglakokake kode sewenang-wenang. Kanthi percaya karo sertifikat iki, sampeyan nampa risiko kasebut.</string>
     <string name="ext_downloading">Ndownload</string>
     <string name="pref_show_navigation_mode">Tampilake overlay zona tutul</string>
-    <string name="pref_library_update_categories_details">Manga ing kategori sing ora kalebu ora bakal dianyari sanajan uga ana ing kategori sing kalebu.</string>
     <string name="none">Ora ono</string>
     <string name="ext_pending">Ketunda</string>
     <string name="ext_info_version">Versine</string>

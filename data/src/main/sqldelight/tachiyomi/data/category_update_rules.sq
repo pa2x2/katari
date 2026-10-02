@@ -1,0 +1,67 @@
+import kotlin.Boolean;
+
+-- A category without a row is checked automatically and uses the library rules. Category 0 (Default) is shared
+-- by every profile, so rows are keyed by profile as well.
+CREATE TABLE category_update_rules(
+    profile_id INTEGER NOT NULL,
+    category_id INTEGER NOT NULL,
+    auto_update INTEGER AS Boolean NOT NULL DEFAULT 1,
+    custom_rules INTEGER AS Boolean NOT NULL DEFAULT 0,
+    skip_completed INTEGER AS Boolean NOT NULL DEFAULT 0,
+    skip_unseen INTEGER AS Boolean NOT NULL DEFAULT 0,
+    skip_not_started INTEGER AS Boolean NOT NULL DEFAULT 0,
+    skip_outside_release_period INTEGER AS Boolean NOT NULL DEFAULT 0,
+    interval_hours INTEGER,
+    PRIMARY KEY(profile_id, category_id),
+    FOREIGN KEY(profile_id) REFERENCES profiles(_id) ON DELETE CASCADE,
+    FOREIGN KEY(category_id) REFERENCES categories(_id) ON DELETE CASCADE
+);
+
+getByProfile:
+SELECT
+    category_id,
+    auto_update,
+    custom_rules,
+    skip_completed,
+    skip_unseen,
+    skip_not_started,
+    skip_outside_release_period,
+    interval_hours
+FROM category_update_rules
+WHERE profile_id = :profileId;
+
+upsert:
+INSERT INTO category_update_rules(
+    profile_id,
+    category_id,
+    auto_update,
+    custom_rules,
+    skip_completed,
+    skip_unseen,
+    skip_not_started,
+    skip_outside_release_period,
+    interval_hours
+)
+VALUES (
+    :profileId,
+    :categoryId,
+    :autoUpdate,
+    :customRules,
+    :skipCompleted,
+    :skipUnseen,
+    :skipNotStarted,
+    :skipOutsideReleasePeriod,
+    :intervalHours
+)
+ON CONFLICT(profile_id, category_id) DO UPDATE SET
+    auto_update = excluded.auto_update,
+    custom_rules = excluded.custom_rules,
+    skip_completed = excluded.skip_completed,
+    skip_unseen = excluded.skip_unseen,
+    skip_not_started = excluded.skip_not_started,
+    skip_outside_release_period = excluded.skip_outside_release_period,
+    interval_hours = excluded.interval_hours;
+
+delete:
+DELETE FROM category_update_rules
+WHERE profile_id = :profileId AND category_id = :categoryId;

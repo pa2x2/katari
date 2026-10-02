@@ -61,7 +61,6 @@
     <string name="action_view_chapters">ಅಧ್ಯಾಯಗಳನ್ನು ವೀಕ್ಷಿಸಿ</string>
     <string name="action_edit_cover">ಕವರ್ ತಿದ್ದಿ</string>
     <string name="action_move_category">ವರ್ಗಗಳನ್ನು ಹೊಂದಿಸಿ</string>
-    <string name="action_rename_category">ವರ್ಗವನ್ನು ಮರುಹೆಸರಿಸಿ</string>
     <string name="action_edit_categories">ವರ್ಗವನ್ನು ತಿದ್ದಿ</string>
     <string name="action_add_category">ವರ್ಗವನ್ನು ಸೇರಿಸಿ</string>
     <string name="action_add">ಸೇರಿಸಿ</string>
@@ -208,7 +207,6 @@
     <string name="all">ಎಲ್ಲಾ</string>
     <string name="default_category_summary">ಯಾವಾಗಲೂ ಕೇಳಿ</string>
     <string name="default_category">ಡೀಫಾಲ್ಟ್ ವರ್ಗ</string>
-    <string name="pref_update_only_non_completed">ಚಾಲ್ತಿಯಿರುವ ಮಾಂಗಾವನ್ನು ಮಾತ್ರ ನವೀಕರಿಸಿ</string>
     <string name="charging">ಚಾರ್ಜಿಂಗ್</string>
     <string name="pref_library_update_restriction">ನವೀಕರಣ ನಿರ್ಬಂಧಗಳು</string>
     <string name="update_weekly">ವಾರಕ್ಕೊಮ್ಮೆ</string>
@@ -218,7 +216,6 @@
     <string name="update_6hour">ಪ್ರತಿ 6 ಗಂಟೆಗಳಿಗೊಮ್ಮೆ</string>
     <string name="update_never">ಸ್ವಂತ ಮಾಡು</string>
     <string name="pref_library_update_interval">ನವೀಕರಣ ಆವರ್ತನ</string>
-    <string name="pref_category_library_update">ನವೀಕರಣಗಳು</string>
     <string name="channel_ext_updates">ವಿಸ್ತರಣೆ ನವೀಕರಣಗಳು</string>
     <string name="channel_common">ಸಾಮಾನ್ಯ</string>
     <string name="download_notifier_download_paused">ಡೌನ್‌ಲೋಡ್ ವಿರಾಮಗೊಳಿಸಲಾಗಿದೆ</string>
@@ -230,10 +227,6 @@
     <string name="information_webview_outdated">ಉತ್ತಮ ಹೊಂದಾಣಿಕೆಗಾಗಿ ದಯವಿಟ್ಟು ವೆಬ್‌ವೀಕ್ಷಣೆ ಅಪ್ಲಿಕೇಶನ್ ಅನ್ನು ನವೀಕರಿಸಿ</string>
     <string name="information_webview_required">ತಚಿಯೋಮಿಗೆ ವೆಬ್‌ವೀಕ್ಷಣೆ ಅಗತ್ಯವಿದೆ</string>
     <string name="information_cloudflare_bypass_failure">ಕ್ಲೌಡ್‌ಫ್ಲೇರ್ ಅನ್ನು ಬೈಪಾಸ್ ಮಾಡಲು ವಿಫಲವಾಗಿದೆ</string>
-    <string name="update_check_notification_update_available">ಹೊಸ ಆವೃತ್ತಿ ಲಭ್ಯವಿದೆ!</string>
-    <string name="update_check_notification_download_in_progress">ಡೌನ್‌ಲೋಡ್ ಮಾಡಲಾಗುತ್ತಿದೆ…</string>
-    <string name="update_check_no_new_updates">ಹೊಸ ನವೀಕರಣಗಳು ಲಭ್ಯವಿಲ್ಲ</string>
-    <string name="update_check_confirm">ಡೌನ್‌ಲೋಡ್ ಮಾಡಿ</string>
     <string name="file_select_backup">ಬ್ಯಾಕಪ್ ಫೈಲ್ ಆಯ್ಕೆಮಾಡಿ</string>
     <string name="file_select_cover">ಕವರ್ ಇಮೇಜ್ ಆಯ್ಕೆಮಾಡಿ</string>
     <string name="notification_first_add_to_library">ಇದನ್ನು ಮಾಡುವ ಮೊದಲು ದಯವಿಟ್ಟು ನಿಮ್ಮ ಗ್ರಂಥಾಲಯಕ್ಕೆ ಮಾಂಗಾವನ್ನು ಸೇರಿಸಿ</string>
@@ -461,12 +454,10 @@
     <string name="exclude">ಹೊರಗಿಡಿ: %s</string>
     <string name="include">ಸೇರಿಸಿ: %s</string>
     <string name="none">ಯಾವುದು ಅಲ್ಲ</string>
-    <string name="pref_library_update_categories_details">ಹೊರಗಿಡಲಾದ ವರ್ಗಗಳಲ್ಲಿನ ಮಾಂಗಾ ಸೇರಿಸಿದ ವಿಭಾಗಗಳಲ್ಲಿದ್ದರೂ ನವೀಕರಿಸಲಾಗುವುದಿಲ್ಲ.</string>
     <string name="action_show_errors">ದೋಷಗಳನ್ನು ತೋರಿಸು</string>
     <string name="cancel_all_for_series">ಈ ಸರಣಿಯ ಎಲ್ಲವನ್ನೂ ರದ್ದುಮಾಡಿ</string>
     <string name="action_display_local_badge">ಸ್ಥಳೀಯ ಬ್ಯಾಡ್ಜ್ ಗಳು</string>
     <string name="information_empty_category_dialog">ನೀವು ಇನ್ನೂ ಯಾವುದೇ ವರ್ಗಗಳನ್ನು ಹೊಂದಿಲ್ಲ.</string>
-    <string name="update_check_eol">ಈ ಆಂಡ್ರಾಯ್ಡ್ ಆವೃತ್ತಿಯನ್ನು ಇನ್ನು ಮುಂದೆ ಬೆಂಬಲಿಸುವುದಿಲ್ಲ</string>
     <string name="error_no_match">ಯಾವುದೇ ಹೋಲಿಕೆ ಕಂಡುಬಂದಿಲ್ಲ</string>
     <string name="source_unsupported">ಮೂಲವನ್ನು ಬೆಂಬಲಿಸುವುದಿಲ್ಲ</string>
     <string name="unread">ಓದದ</string>

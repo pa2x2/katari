@@ -79,7 +79,6 @@
     <string name="action_delete">ഇല്ലാതാക്കുക</string>
     <string name="action_update_library">ലൈബ്രറി അപ്ഡേറ്റ് ചെയ്യുക</string>
     <string name="action_edit_categories">വിഭാഗങ്ങൾ എഡിറ്റ് ചെയ്യുക</string>
-    <string name="action_rename_category">വിഭാഗത്തിൻ്റെ പേരുമാറ്റുക</string>
     <string name="action_move_category">വിഭാഗങ്ങൾ സജ്ജമാക്കുക</string>
     <string name="delete_category_confirmation">\"%s\" എന്ന വിഭാഗം ഇല്ലാതാക്കാൻ നിങ്ങൾ ആഗ്രഹിക്കുന്നുണ്ടോ?</string>
     <string name="delete_category">വിഭാഗം ഇല്ലാതാക്കുക</string>

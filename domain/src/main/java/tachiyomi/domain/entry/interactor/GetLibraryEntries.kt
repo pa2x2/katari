@@ -144,6 +144,9 @@ class GetLibraryEntries(
                     lastReadByEntryId = detailInput.lastReadByEntryId,
                 )
             }
+                // Any write to the entries table re-emits unchanged favorites, such as when browsing
+                // persists catalogue results; rebuilding the whole library for those is wasted work.
+                .distinctUntilChanged()
                 .debounce(LIBRARY_INVALIDATION_DEBOUNCE)
                 .mapLatest { input ->
                     val items = previousInput

@@ -4,7 +4,6 @@ import android.app.Application
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.util.fastFilter
 import cafe.adriel.voyager.core.model.StateScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import eu.kanade.core.preference.asState
@@ -17,13 +16,12 @@ import eu.kanade.presentation.updates.UpdatesUiModel
 import eu.kanade.presentation.updates.toUpdatesUiModels
 import eu.kanade.tachiyomi.data.library.LibraryUpdateJob
 import eu.kanade.tachiyomi.source.entry.EntryType
+import eu.kanade.tachiyomi.source.visualName
 import eu.kanade.tachiyomi.ui.collapseByVisibleEntry
 import eu.kanade.tachiyomi.ui.entry.translation.ChapterTranslationModel
 import eu.kanade.tachiyomi.util.lang.toLocalDate
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
@@ -36,7 +34,6 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.merge
-import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -60,6 +57,8 @@ import mihon.entry.interactions.state.EntryBookmarkTarget
 import mihon.entry.interactions.state.EntryConsumptionFeature
 import mihon.entry.interactions.state.EntryConsumptionStatus
 import mihon.entry.interactions.translate.EntryTranslateStatus
+import mihon.feature.library.update.report.LibraryUpdateRunSummary
+import mihon.feature.library.update.report.subscribeLatestSummary
 import mihon.feature.profiles.core.ProfileScopedStateEvent
 import mihon.feature.profiles.core.observeProfileScopedState
 import tachiyomi.core.common.preference.TriState
@@ -75,12 +74,15 @@ import tachiyomi.domain.entry.model.asEntryCover
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.library.model.LibraryItemKey
 import tachiyomi.domain.library.service.LibraryPreferences
+import tachiyomi.domain.library.update.repository.LibraryUpdateReportRepository
+import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.domain.updates.interactor.GetUpdates
 import tachiyomi.domain.updates.model.UpdateItem
+import tachiyomi.domain.updates.model.UpdatesFeed
+import tachiyomi.domain.updates.model.UpdatesFeedFilter
 import tachiyomi.domain.updates.model.UpdatesWithRelations
 import tachiyomi.domain.updates.model.toUpdateItem
 import tachiyomi.domain.updates.service.UpdatesPreferences
-import tachiyomi.domain.util.applyFilter
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import kotlin.time.Clock
@@ -96,8 +98,10 @@ class UpdatesScreenModel(
     private val entryChapterRepository: EntryChapterRepository = Injekt.get(),
     private val libraryPreferences: LibraryPreferences = Injekt.get(),
     private val updatesPreferences: UpdatesPreferences = Injekt.get(),
+    private val sourceManager: SourceManager = Injekt.get(),
     private val activeProfileProvider: ActiveProfileProvider = Injekt.get(),
-    application: Application = Injekt.get(),
+    private val application: Application = Injekt.get(),
+    reportRepository: LibraryUpdateReportRepository = Injekt.get(),
     val snackbarHostState: SnackbarHostState = SnackbarHostState(),
 ) : StateScreenModel<UpdatesScreenModel.State>(State()) {
 
@@ -144,10 +148,10 @@ class UpdatesScreenModel(
         }
         .stateIn(screenModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
 
-    private val _events: Channel<Event> = Channel(Int.MAX_VALUE)
-    val events: Flow<Event> = _events.receiveAsFlow()
-
     val lastUpdated by libraryPreferences.lastUpdatedTimestamp.asState(screenModelScope)
+
+    val latestUpdateSummary: StateFlow<LibraryUpdateRunSummary?> = reportRepository.subscribeLatestSummary()
+        .stateIn(screenModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     private val selectionState = UpdatesSelectionState()
     private val selectedKeys: HashSet<LibraryItemKey> = HashSet()
@@ -158,10 +162,11 @@ class UpdatesScreenModel(
             val limit = Clock.System.now().minus(3, DateTimeUnit.MONTH, TimeZone.currentSystemDefault())
 
             observeProfileScopedState(activeProfileProvider.activeProfileIdFlow) { profileId ->
-                val durableDownloadChanges = getUpdatesItemPreferenceFlow()
-                    .distinctUntilChanged { old, new -> old.filterDownloaded == new.filterDownloaded }
-                    .flatMapLatest { preferences ->
-                        if (preferences.filterDownloaded == TriState.DISABLED) {
+                val filters = updatesPreferences.feedFilterChanges()
+                val durableDownloadChanges = filters
+                    .distinctUntilChanged { old, new -> old.downloaded == new.downloaded }
+                    .flatMapLatest { filter ->
+                        if (filter.downloaded == TriState.DISABLED) {
                             emptyFlow<Unit>()
                         } else {
                             downloadRuntime.statusUpdates()
@@ -170,28 +175,11 @@ class UpdatesScreenModel(
                         }
                     }
                 combine(
-                    // needed for SQL filters (unread, started, bookmarked, etc)
-                    getUpdatesItemPreferenceFlow()
-                        .distinctUntilChanged()
-                        .flatMapLatest {
-                            getUpdates.subscribe(
-                                profileId = profileId,
-                                instant = limit,
-                                unread = it.filterUnread.toBooleanOrNull(),
-                                started = it.filterStarted.toBooleanOrNull(),
-                                bookmarked = it.filterBookmarked.toBooleanOrNull(),
-                                hideExcludedScanlators = it.filterExcludedScanlators,
-                                includedCategories = it.filterIncludedCategories,
-                                excludedCategories = it.filterExcludedCategories,
-                            ).distinctUntilChanged()
-                        },
+                    getUpdates.subscribeFeed(profileId, limit).distinctUntilChanged(),
                     merge(downloadRuntime.changes, durableDownloadChanges),
-                    // needed for Kotlin filters (downloaded)
-                    getUpdatesItemPreferenceFlow().distinctUntilChanged { old, new ->
-                        old.filterDownloaded == new.filterDownloaded
-                    },
-                ) { updates, _, itemPreferences ->
-                    UpdatesData(updates, itemPreferences)
+                    filters,
+                ) { feed, _, filter ->
+                    UpdatesData(feed, filter)
                 }
             }.collectLatest { event ->
                 when (event) {
@@ -202,15 +190,19 @@ class UpdatesScreenModel(
                             it.copy(
                                 isLoading = true,
                                 items = emptyList(),
-                                hasActiveFilters = false,
+                                feed = FeedSummary(),
                                 dialog = null,
                             )
                         }
                     }
                     is ProfileScopedStateEvent.Value -> {
-                        val updateItems = event.value.updates
+                        val (feed, filter) = event.value
+                        val shownRows = feed.rows.filter { row ->
+                            filter.matches(row) { downloadStatus(row.update).state == EntryDownloadState.DOWNLOADED }
+                        }
+                        val updateItems = shownRows
+                            .map { it.update }
                             .toUpdateItems()
-                            .applyFilters(event.value.itemPreferences)
                             .collapseByVisibleEntry(
                                 actualEntryId = { it.update.entryId },
                                 visibleEntryId = { it.visibleEntryId },
@@ -220,7 +212,17 @@ class UpdatesScreenModel(
                             it.copy(
                                 isLoading = false,
                                 items = updateItems,
-                                hasActiveFilters = event.value.itemPreferences.hasActiveFilters,
+                                feed = FeedSummary(
+                                    filter = filter,
+                                    hiddenByFilters = feed.rows.size - shownRows.size,
+                                    fromHiddenSources = feed.fromHiddenSources,
+                                    entryTypes = (feed.rows.map { row -> row.update.entryType } + filter.types.all)
+                                        .distinct()
+                                        .sorted(),
+                                    sources = (feed.rows.map { row -> row.update.sourceId } + filter.sources.all)
+                                        .distinct()
+                                        .associateWith { sourceManager.getDisplayInfo(it).visualName() },
+                                ),
                             )
                         }
                     }
@@ -232,23 +234,6 @@ class UpdatesScreenModel(
             downloadRuntime.statusUpdates()
                 .catch { logcat(LogPriority.ERROR, it) }
                 .collect(this@UpdatesScreenModel::updateDownloadState)
-        }
-    }
-
-    private fun List<UpdatesItem>.applyFilters(
-        preferences: ItemPreferences,
-    ): List<UpdatesItem> {
-        val filterDownloaded = preferences.filterDownloaded
-
-        val filterFnDownloaded: (UpdatesItem) -> Boolean = {
-            applyFilter(filterDownloaded) {
-                it.update is UpdateItem.EntryUpdate &&
-                    it.downloadStateProvider() == EntryDownloadState.DOWNLOADED
-            }
-        }
-
-        return fastFilter {
-            filterFnDownloaded(it)
         }
     }
 
@@ -273,19 +258,7 @@ class UpdatesScreenModel(
             when (update) {
                 is UpdateItem.EntryUpdate -> {
                     val chapterUpdate = update.update
-                    val downloadStatus = downloadRuntime.status(
-                        type = update.entryType,
-                        childId = chapterUpdate.chapterId,
-                        childName = chapterUpdate.chapterName,
-                        childScanlator = chapterUpdate.scanlator,
-                        childUrl = chapterUpdate.chapterUrl,
-                        entryTitle = chapterUpdate.entryTitle,
-                        sourceId = chapterUpdate.sourceId,
-                    ) ?: EntryDownloadStatus(
-                        update.entryType,
-                        chapterUpdate.chapterId,
-                        EntryDownloadState.NOT_DOWNLOADED,
-                    )
+                    val downloadStatus = downloadStatus(chapterUpdate)
                     UpdatesItem(
                         update = update,
                         visibleEntryId = visibleEntryId,
@@ -303,11 +276,21 @@ class UpdatesScreenModel(
         }
     }
 
-    suspend fun updateLibrary(): Boolean {
-        val started = LibraryUpdateJob.startNow(Injekt.get<Application>())
-        _events.send(Event.LibraryUpdateTriggered(started))
-        return started
+    private fun downloadStatus(update: UpdatesWithRelations): EntryDownloadStatus {
+        return downloadRuntime.status(
+            type = update.entryType,
+            childId = update.chapterId,
+            childName = update.chapterName,
+            childScanlator = update.scanlator,
+            childUrl = update.chapterUrl,
+            entryTitle = update.entryTitle,
+            sourceId = update.sourceId,
+        ) ?: EntryDownloadStatus(update.entryType, update.chapterId, EntryDownloadState.NOT_DOWNLOADED)
     }
+
+    suspend fun updateLibrary(): Boolean = LibraryUpdateJob.startNow(application)
+
+    suspend fun updateSkippedOfLatest(): Boolean = LibraryUpdateJob.startSkippedOfLatest(application)
 
     /**
      * Update status of downloads.
@@ -365,10 +348,7 @@ class UpdatesScreenModel(
                     )
                 }
                 ChapterDownloadAction.CANCEL -> {
-                    val update = chapterItems.singleOrNull()
-                        ?.let { it.update as UpdateItem.EntryUpdate }
-                        ?: return@launch
-                    cancelDownload(update)
+                    chapterItems.forEach { cancelDownload(it.update as UpdateItem.EntryUpdate) }
                 }
                 ChapterDownloadAction.DELETE -> {
                     deleteChapters(chapterItems)
@@ -534,6 +514,27 @@ class UpdatesScreenModel(
         }
     }
 
+    /** Selects or deselects the updates of a group together, as its single row stands for them all. */
+    fun setGroupSelection(items: List<UpdatesItem>, selected: Boolean) {
+        val keys = items.mapTo(mutableSetOf()) { it.update.key }
+        mutableState.update { state ->
+            val newItems = state.items.map {
+                if (it.update.key !in keys) return@map it
+                selectedKeys.addOrRemove(it.update.key, selected)
+                it.copy(selected = selected)
+            }
+            state.copy(items = newItems)
+        }
+        selectionState.reset()
+    }
+
+    fun toggleGroupExpanded(key: String) {
+        mutableState.update {
+            val expanded = if (key in it.expandedGroups) it.expandedGroups - key else it.expandedGroups + key
+            it.copy(expandedGroups = expanded)
+        }
+    }
+
     fun toggleAllSelection(selected: Boolean) {
         mutableState.update { state ->
             val newItems = state.items.map {
@@ -565,78 +566,54 @@ class UpdatesScreenModel(
         libraryPreferences.newUpdatesCount.set(0)
     }
 
-    private fun getUpdatesItemPreferenceFlow(): Flow<ItemPreferences> {
-        return combine(
-            updatesPreferences.filterDownloaded.changes(),
-            updatesPreferences.filterUnread.changes(),
-            updatesPreferences.filterStarted.changes(),
-            updatesPreferences.filterBookmarked.changes(),
-            updatesPreferences.filterExcludedScanlators.changes(),
-            updatesPreferences.filterIncludedCategories.changes(),
-            updatesPreferences.filterExcludedCategories.changes(),
-        ) {
-            @Suppress("UNCHECKED_CAST")
-            ItemPreferences(
-                filterDownloaded = it[0] as TriState,
-                filterUnread = it[1] as TriState,
-                filterStarted = it[2] as TriState,
-                filterBookmarked = it[3] as TriState,
-                filterExcludedScanlators = it[4] as Boolean,
-                filterIncludedCategories = it[5] as List<Long>,
-                filterExcludedCategories = it[6] as List<Long>,
-            )
-        }
-    }
-
     fun showFilterDialog() {
         mutableState.update { it.copy(dialog = Dialog.FilterSheet) }
     }
 
-    @Immutable
-    private data class ItemPreferences(
-        val filterDownloaded: TriState,
-        val filterUnread: TriState,
-        val filterStarted: TriState,
-        val filterBookmarked: TriState,
-        val filterExcludedScanlators: Boolean,
-        val filterIncludedCategories: List<Long>,
-        val filterExcludedCategories: List<Long>,
-    ) {
-        val hasActiveFilters: Boolean
-            get() = filterIncludedCategories.isNotEmpty() ||
-                filterExcludedCategories.isNotEmpty() ||
-                listOf(filterUnread, filterDownloaded, filterStarted, filterBookmarked)
-                    .any { it != TriState.DISABLED }
-    }
-
     private data class UpdatesData(
-        val updates: List<UpdatesWithRelations>,
-        val itemPreferences: ItemPreferences,
+        val feed: UpdatesFeed,
+        val filter: UpdatesFeedFilter,
+    )
+
+    /**
+     * What the feed's filters left out, and what there is to filter by.
+     *
+     * @param entryTypes the types of the window's updates, so the sheet offers only types that can match, and of
+     * the ones already filtered by, so they can be cleared.
+     * @param sources names by id of the sources of the window's updates and of the ones already filtered by.
+     */
+    @Immutable
+    data class FeedSummary(
+        val filter: UpdatesFeedFilter = UpdatesFeedFilter(),
+        val hiddenByFilters: Int = 0,
+        val fromHiddenSources: Int = 0,
+        val entryTypes: List<EntryType> = emptyList(),
+        val sources: Map<Long, String> = emptyMap(),
     )
 
     @Immutable
     data class State(
         val isLoading: Boolean = true,
-        val hasActiveFilters: Boolean = false,
         val items: List<UpdatesItem> = listOf(),
+        val feed: FeedSummary = FeedSummary(),
+        val expandedGroups: Set<String> = emptySet(),
         val dialog: Dialog? = null,
     ) {
         val selected = items.filter { it.selected }
         val selectionMode = selected.isNotEmpty()
 
         fun getUiModel(): List<UpdatesUiModel<UpdatesItem>> {
-            return items.toUpdatesUiModels { it.update.dateFetch.toLocalDate() }
+            return items.toUpdatesUiModels(
+                dateProvider = { it.update.dateFetch.toLocalDate() },
+                entryIdProvider = { it.visibleEntryId },
+                expandedGroups = expandedGroups,
+            )
         }
     }
 
     sealed interface Dialog {
         data class DeleteConfirmation(val toDelete: List<UpdatesItem>) : Dialog
         data object FilterSheet : Dialog
-    }
-
-    sealed interface Event {
-        data object InternalError : Event
-        data class LibraryUpdateTriggered(val started: Boolean) : Event
     }
 
     private suspend fun List<UpdatesItem>.entryChapterSelections(): List<EntryChapterSelection> {
@@ -658,14 +635,6 @@ class UpdatesScreenModel(
         val entry: Entry,
         val chapters: List<EntryChapter>,
     )
-}
-
-private fun TriState.toBooleanOrNull(): Boolean? {
-    return when (this) {
-        TriState.DISABLED -> null
-        TriState.ENABLED_IS -> true
-        TriState.ENABLED_NOT -> false
-    }
 }
 
 @Immutable

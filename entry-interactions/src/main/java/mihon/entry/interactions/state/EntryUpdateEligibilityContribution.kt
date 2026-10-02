@@ -22,6 +22,7 @@ import mihon.feature.graph.FeatureIntegrationId
 import mihon.feature.graph.contextEvidence
 import mihon.feature.graph.contextInputDefinition
 import mihon.feature.graph.featureContextRule
+import tachiyomi.domain.library.update.model.LibraryUpdateSkipRules
 
 internal val ENTRY_UPDATE_ELIGIBILITY_FEATURE_ID = FeatureId("entry.update-eligibility")
 private val FEATURE_OWNER = ContributionOwner("entry-update-eligibility")
@@ -54,13 +55,6 @@ internal object EntryUpdateEligibilityDecisionBehaviorContract : FeatureBehavior
     override val id = FeatureArtifactId("entry.update-eligibility.decision-behavior")
 }
 
-internal data class EntryUpdateEligibilityPolicy(
-    val skipCompleted: Boolean,
-    val skipWhenUnconsumed: Boolean,
-    val skipWhenNotStarted: Boolean,
-    val skipOutsideReleasePeriod: Boolean,
-)
-
 internal data class EntryUpdateEligibilityContext(
     val oneShotAlreadyFetched: Boolean,
     val completed: Boolean,
@@ -69,7 +63,7 @@ internal data class EntryUpdateEligibilityContext(
     val outsideReleasePeriod: Boolean,
 )
 
-internal val ENTRY_UPDATE_ELIGIBILITY_POLICY_CONTEXT = contextInputDefinition<EntryUpdateEligibilityPolicy>(
+internal val ENTRY_UPDATE_ELIGIBILITY_POLICY_CONTEXT = contextInputDefinition<LibraryUpdateSkipRules>(
     ContextInputId("entry.update-eligibility.configuration"),
     ContributionOwner("entry-update-configuration"),
 )
@@ -148,11 +142,11 @@ internal object EntryUpdateEligibilityFeatureContributor : FeatureGraphContribut
                                     FeatureContextDecision.Blocked(listOf(NOT_ALWAYS_UPDATE_BLOCKER))
                                 policy.skipCompleted && evidence.value(ENTRY_UPDATE_ELIGIBILITY_COMPLETED_CONTEXT) ->
                                     FeatureContextDecision.Blocked(listOf(COMPLETED_BLOCKER))
-                                policy.skipWhenUnconsumed && evidence.value(
+                                policy.skipUnseen && evidence.value(
                                     ENTRY_UPDATE_ELIGIBILITY_UNCONSUMED_CONTEXT,
                                 ) ->
                                     FeatureContextDecision.Blocked(listOf(NOT_CAUGHT_UP_BLOCKER))
-                                policy.skipWhenNotStarted &&
+                                policy.skipNotStarted &&
                                     evidence.value(ENTRY_UPDATE_ELIGIBILITY_NOT_STARTED_CONTEXT) ->
                                     FeatureContextDecision.Blocked(listOf(NOT_STARTED_BLOCKER))
                                 policy.skipOutsideReleasePeriod &&
@@ -189,7 +183,7 @@ internal fun FeatureGraphEvaluation.updateEligibilityContentTypes(): Set<Content
 
 internal fun FeatureGraphEvaluation.requireUpdateEligibilityContext(
     type: EntryType,
-    policy: EntryUpdateEligibilityPolicy,
+    skipRules: LibraryUpdateSkipRules,
     context: EntryUpdateEligibilityContext,
     applicable: Boolean,
 ) {
@@ -201,7 +195,7 @@ internal fun FeatureGraphEvaluation.requireUpdateEligibilityContext(
             EntryUpdateEligibilityDecisionBehavior::id,
         ),
         evidence = listOf(
-            contextEvidence(ENTRY_UPDATE_ELIGIBILITY_POLICY_CONTEXT, policy),
+            contextEvidence(ENTRY_UPDATE_ELIGIBILITY_POLICY_CONTEXT, skipRules),
             contextEvidence(ENTRY_UPDATE_ELIGIBILITY_ONE_SHOT_CONTEXT, context.oneShotAlreadyFetched),
             contextEvidence(ENTRY_UPDATE_ELIGIBILITY_COMPLETED_CONTEXT, context.completed),
             contextEvidence(ENTRY_UPDATE_ELIGIBILITY_UNCONSUMED_CONTEXT, context.hasUnconsumed),

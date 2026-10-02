@@ -1,9 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="update_check_notification_update_available">نسخه جدید موجود است!</string>
-    <string name="update_check_notification_download_in_progress">در حال دانلود…</string>
-    <string name="update_check_no_new_updates">آپدیت جدیدی موجود نیست</string>
-    <string name="update_check_confirm">دانلود</string>
     <string name="file_select_backup">فایل پشتیبان را انتخاب کنید</string>
     <string name="file_select_cover">عکس روی جلد را انتخاب کنید</string>
     <string name="notification_first_add_to_library">لطفا قبل این کار مانگای موردنظر را به کتابخانه اضافه کنید</string>
@@ -222,7 +218,6 @@
     <string name="default_category">دسته بندی پیشفرض</string>
     <string name="pref_library_update_refresh_metadata_summary">هنگام آپدیت عکس روی جلد و اطلاعات مانگا ها (در صورت تغییر) آپدیت شوند</string>
     <string name="pref_library_update_refresh_metadata">متادیتا فقط به صورت خودکار آپدیت شود</string>
-    <string name="pref_update_only_non_completed">با وضعیت \"کامل‌شده\"</string>
     <string name="charging">هنگام شارژ کردن</string>
     <string name="pref_library_update_restriction">محدودیت‌های دستگاهی به‌روزرسانی‌ خودکار</string>
     <string name="update_weekly">هفتگی</string>
@@ -231,7 +226,6 @@
     <string name="update_6hour">هر ۶ ساعت یکبار</string>
     <string name="update_never">خاموش</string>
     <string name="pref_library_update_interval">به‌روزرسانی‌های خودکار</string>
-    <string name="pref_category_library_update">به‌روزرسانی همگانی</string>
     <string name="landscape">افقی</string>
     <string name="portrait">عمودی</string>
     <string name="pref_library_columns">موارد در هر ردیف</string>
@@ -344,7 +338,6 @@
     <string name="invalid_backup_file">فایل پشتیبان نامعتبر است</string>
     <string name="backup_created">نسخه پشتیبان ایجاد شد</string>
     <string name="action_edit_cover">ویرایش عکس روی جلد</string>
-    <string name="action_rename_category">تغییر نام دسته</string>
     <string name="action_edit_categories">ویرایش دسته ها</string>
     <string name="action_add_category">افزودن دسته</string>
     <string name="action_add">افزودن</string>
@@ -443,16 +436,13 @@
     <string name="confirm_lock_change">احراز هویت جهت تایید تغییرات</string>
     <string name="enhanced_services">سرویس های بهینه شده</string>
     <string name="unread">خوانده نشده</string>
-    <string name="update_check_eol">این نسخه آندروید دیگر پشتیبانی نمی‌شود</string>
     <string name="update_check_open">بازکردن در گیت هاب</string>
     <string name="getting_started_guide">راهنمای شروع</string>
     <string name="information_empty_category_dialog">شما هنوز هیچ دسته‌بندی ندارید.</string>
-    <string name="channel_app_updates">بروزرسانی برنامه</string>
     <string name="pref_navigate_pan">هنگام ضربه زدن تصاویر را عریض کنید</string>
     <string name="pref_landscape_zoom">بزرگنمایی تصویر چشم انداز</string>
     <string name="action_sort_last_manga_update">بررسی آخرین به روزرسانی</string>
     <string name="action_sort_unread_count">تعداد نخوانده‌ها</string>
-    <string name="skipped_reason_completed">به دلیل کامل‌بودن سری، رد شد</string>
     <string name="action_display_local_badge">منبع محلی</string>
     <string name="action_display_show_number_of_items">نمایش تعداد موارد</string>
     <string name="action_desc">نزولی</string>
@@ -478,9 +468,7 @@
     <string name="action_start_downloading_now">همین الان شروع به دانلود کن</string>
     <string name="action_show_errors">برای دیدن جزئیات لمس کنید</string>
     <string name="network_not_metered">فقط روی شبکه‌ی نامحدود</string>
-    <string name="pref_update_only_started">که شروع نشده‌اند</string>
     <string name="restrictions">محدودیت‌ها: %s</string>
-    <string name="pref_update_only_completely_read">با قسمت‌(های) خوانده‌نشده</string>
     <string name="relative_time_today">امروز</string>
     <string name="update_72hour">هر 3 روز</string>
     <string name="connected_to_wifi">فقط روی Wi-Fi</string>
@@ -526,7 +514,6 @@
     <string name="none">هیچ‌کدام</string>
     <string name="include">شامل: %s</string>
     <string name="exclude">بدون: %s</string>
-    <string name="pref_library_update_categories_details">ورودی هایی که در دسته‌بندی های حذف‌شده هستند، حتی اگر هم‌زمان در دسته‌بندی های مشمول باشند به‌روزرسانی نمی‌شوند.</string>
     <string name="save_chapter_as_cbz">ذخیره به عنوان فایل آرشیو CBZ</string>
     <string name="publishing_finished">انتشار به پایان رسید</string>
     <string name="local_invalid_format">قالب فصل نامعتبر است</string>
@@ -592,9 +579,6 @@
     <string name="action_ok">باشه</string>
     <string name="action_sort_next_updated">به روز رسانی مورد انتظار بعدی</string>
     <string name="download_queue_size_warning">هشدار: حجم زیاد بارگیری ممکن است باعث اهسته تر شدن سرعت ویا مسدود کردن %s از منبع شود. برای اطلاعات بیشتر لمس کنید.</string>
-    <string name="skipped_reason_not_always_update">به دلیل این که این مجموعه نیازی به به روز رسانی نداشت رد شد</string>
-    <string name="skipped_reason_not_caught_up">به دلیل وجود چپتر های خوانده نشده رد شد</string>
-    <string name="skipped_reason_not_started">به دلیل این که هیچ چپتری خوانده نشده بود رد شد</string>
     <string name="pref_relative_format_summary">\"%1$s\" به جای \"%2$s\"</string>
     <string name="pref_page_rotate">صفحات عریض را بچرخان تا جا شوند</string>
     <string name="popular">محبوب</string>
@@ -602,7 +586,6 @@
     <string name="pref_flash_page">در هنگام عوض شدن صفحه فلاش سفید بزن</string>
     <string name="pref_chapter_swipe_start">حرکت کشیدن به چپ</string>
     <string name="updates_last_update_info">آخرین به روز رسانی کتابخانه: %s</string>
-    <string name="pref_update_only_in_release_period">خارج از دوره انتشار موزد انتظار</string>
     <string name="pref_double_tap_zoom">برای بزرگ نمایی دوبار ضربه بزنید</string>
     <string name="action_filter_interval_custom">تناوب به روز رسانی شخسی سازی شده</string>
     <string name="onboarding_heading">خوش آمدید!</string>
@@ -617,7 +600,6 @@
     <string name="onboarding_guides_new_user">به %s نا آشنا هستید؟ ما پیشنهاد میکنیم تا یک سر به راهنمای شروع بزنید.</string>
     <string name="onboarding_guides_returning_user">نصب مجدد %s؟</string>
     <string name="pref_relative_format">زمان بندی های نسبی</string>
-    <string name="pref_library_update_smart_update">به روز رسانی هوشمند</string>
     <string name="ext_revoke_trust">لغو اعتماد افزونه های ناشناخته</string>
     <string name="pref_page_rotate_invert">جهت چرخش صفحات گسترده را برعکس کن</string>
     <string name="no_location_set">مکان ذخیره سازی تنظیم نشده است</string>

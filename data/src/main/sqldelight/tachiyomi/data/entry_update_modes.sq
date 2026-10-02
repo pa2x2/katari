@@ -1,0 +1,26 @@
+-- An entry without a row follows the library update rules.
+CREATE TABLE entry_update_modes(
+    entry_id INTEGER NOT NULL PRIMARY KEY,
+    mode TEXT NOT NULL CHECK(mode IN ('always', 'never')),
+    FOREIGN KEY(entry_id) REFERENCES entries(_id) ON DELETE CASCADE
+);
+
+getByEntryId:
+SELECT mode
+FROM entry_update_modes
+WHERE entry_id = :entryId;
+
+getByProfile:
+SELECT EUM.entry_id, EUM.mode
+FROM entry_update_modes EUM
+JOIN entries ENT ON ENT._id = EUM.entry_id
+WHERE ENT.profile_id = :profileId;
+
+upsert:
+INSERT INTO entry_update_modes(entry_id, mode)
+VALUES (:entryId, :mode)
+ON CONFLICT(entry_id) DO UPDATE SET mode = excluded.mode;
+
+delete:
+DELETE FROM entry_update_modes
+WHERE entry_id = :entryId;

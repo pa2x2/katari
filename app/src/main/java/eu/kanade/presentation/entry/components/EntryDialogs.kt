@@ -37,6 +37,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.entry.entryTypePresentation
+import eu.kanade.presentation.entry.updates.entryReleaseEstimateText
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.ui.entry.EntryScreenModel
 import eu.kanade.tachiyomi.util.system.isReleaseBuildType
@@ -95,43 +96,13 @@ fun SetIntervalDialog(
     onValueChanged: ((Int) -> Unit)? = null,
 ) {
     var selectedInterval by rememberSaveable { mutableIntStateOf(if (interval < 0) -interval else 0) }
-    val presentation = entryType.entryTypePresentation()
-
-    val nextUpdateDays = remember(nextUpdate) {
-        return@remember if (nextUpdate != null) {
-            val now = Clock.System.now()
-            now.daysUntil(nextUpdate, TimeZone.currentSystemDefault()).coerceAtLeast(0)
-        } else {
-            null
-        }
-    }
 
     AlertDialog(
         onDismissRequest = onDismissRequest,
-        title = { Text(stringResource(MR.strings.pref_library_update_smart_update)) },
+        title = { Text(stringResource(MR.strings.entry_updates_release_estimate)) },
         text = {
             Column {
-                if (nextUpdateDays != null && nextUpdateDays >= 0 && interval >= 0) {
-                    Text(
-                        stringResource(
-                            presentation.intervalExpectedUpdateLabel,
-                            pluralStringResource(
-                                MR.plurals.day,
-                                count = nextUpdateDays,
-                                nextUpdateDays,
-                            ),
-                            pluralStringResource(
-                                MR.plurals.day,
-                                count = interval.absoluteValue,
-                                interval.absoluteValue,
-                            ),
-                        ),
-                    )
-                } else {
-                    Text(
-                        stringResource(presentation.intervalExpectedUpdateNullLabel),
-                    )
-                }
+                Text(entryReleaseEstimateText(interval, nextUpdate, entryType))
                 Spacer(Modifier.height(MaterialTheme.padding.small))
 
                 if (onValueChanged != null && (!isReleaseBuildType)) {

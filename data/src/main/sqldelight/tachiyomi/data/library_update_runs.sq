@@ -1,0 +1,28 @@
+-- The latest library update of each profile. Its entries are the entry_update_status rows decided at started_at.
+CREATE TABLE library_update_runs(
+    profile_id INTEGER NOT NULL PRIMARY KEY,
+    started_at INTEGER NOT NULL,
+    finished_at INTEGER,
+    trigger TEXT NOT NULL,
+    library_size INTEGER NOT NULL,
+    FOREIGN KEY(profile_id) REFERENCES profiles(_id) ON DELETE CASCADE
+);
+
+getByProfile:
+SELECT started_at, finished_at, trigger, library_size
+FROM library_update_runs
+WHERE profile_id = :profileId;
+
+start:
+INSERT INTO library_update_runs(profile_id, started_at, finished_at, trigger, library_size)
+VALUES (:profileId, :startedAt, NULL, :trigger, :librarySize)
+ON CONFLICT(profile_id) DO UPDATE SET
+    started_at = excluded.started_at,
+    finished_at = NULL,
+    trigger = excluded.trigger,
+    library_size = excluded.library_size;
+
+finish:
+UPDATE library_update_runs
+SET finished_at = :finishedAt
+WHERE profile_id = :profileId AND started_at = :startedAt;

@@ -18,6 +18,8 @@ import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.history.model.History
 import tachiyomi.domain.history.repository.HistoryActivityBackupRepository
+import tachiyomi.domain.library.update.model.EntryUpdateMode
+import tachiyomi.domain.library.update.repository.LibraryUpdateRulesRepository
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
@@ -27,6 +29,7 @@ class EntryBackupCreator(
     private val entryBackupFeature: EntryBackupFeature = Injekt.get(),
     private val entryChapterRepository: EntryChapterRepository = Injekt.get(),
     private val activityBackupRepository: HistoryActivityBackupRepository = Injekt.get(),
+    private val updateRulesRepository: LibraryUpdateRulesRepository = Injekt.get(),
 ) {
 
     suspend operator fun invoke(entries: List<Entry>, options: BackupOptions): List<BackupEntry> {
@@ -53,6 +56,10 @@ class EntryBackupCreator(
         statisticsEpoch: Long?,
     ): BackupEntry {
         val entryObject = entry.toBackupEntry()
+        entryObject.updateMode = updateRulesRepository.getEntryMode(entry.id)
+            .takeIf { it != EntryUpdateMode.FOLLOW_RULES }
+            ?.name
+            ?.lowercase()
         val featureStates = entryBackupFeature.snapshot(
             profileId = profileId,
             entry = entry,

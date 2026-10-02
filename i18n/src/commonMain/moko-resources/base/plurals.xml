@@ -299,4 +299,84 @@
         <item quantity="one">Fix %1$d problem to apply</item>
         <item quantity="other">Fix %1$d problems to apply</item>
     </plurals>
+    <plurals name="library_updates_entries">
+        <item quantity="one">%d entry</item>
+        <item quantity="other">%d entries</item>
+    </plurals>
+    <plurals name="library_updates_new_chapters">
+        <item quantity="one">%d new chapter</item>
+        <item quantity="other">%d new chapters</item>
+    </plurals>
+    <plurals name="library_updates_failed">
+        <item quantity="one">%d failed</item>
+        <item quantity="other">%d failed</item>
+    </plurals>
+    <plurals name="library_updates_skipped">
+        <item quantity="one">%d skipped</item>
+        <item quantity="other">%d skipped</item>
+    </plurals>
+    <plurals name="library_updates_checks_of">
+        <item quantity="one">Checks %1$d of %2$d entry</item>
+        <item quantity="other">Checks %1$d of %2$d entries</item>
+    </plurals>
+    <plurals name="library_updates_manual_checks_of">
+        <item quantity="one">Updating now would check %1$d of %2$d entry</item>
+        <item quantity="other">Updating now would check %1$d of %2$d entries</item>
+    </plurals>
+    <plurals name="library_updates_sources_all_checked">
+        <item quantity="one">%d source checked</item>
+        <item quantity="other">All %d sources checked</item>
+    </plurals>
+    <plurals name="library_updates_sources_some_off">
+        <item quantity="one">%1$d of %2$d source not checked</item>
+        <item quantity="other">%1$d of %2$d sources not checked</item>
+    </plurals>
+    <plurals name="library_updates_defers">
+        <item quantity="one">Defers %d entry today</item>
+        <item quantity="other">Defers %d entries today</item>
+    </plurals>
+    <plurals name="library_update_report_considered">
+        <item quantity="one">%d entry considered</item>
+        <item quantity="other">%d entries considered</item>
+    </plurals>
+    <plurals name="library_update_report_failed_in_a_row">
+        <item quantity="one">%1$s · failed %2$d check in a row</item>
+        <item quantity="other">%1$s · failed %2$d checks in a row</item>
+    </plurals>
+    <plurals name="library_update_report_source_entries">
+        <item quantity="one">%1$s · %2$d entry</item>
+        <item quantity="other">%1$s · %2$d entries</item>
+    </plurals>
+    <plurals name="library_update_report_check_skipped">
+        <item quantity="one">Check the skipped entry</item>
+        <item quantity="other">Check the %d skipped</item>
+    </plurals>
+    <plurals name="library_update_skipped_by_rules">
+        <item quantity="one">%d skipped by rules</item>
+        <item quantity="other">%d skipped by rules</item>
+    </plurals>
+    <plurals name="library_update_never_left_out">
+        <item quantity="one">%d set to never check, left out</item>
+        <item quantity="other">%d set to never check, left out</item>
+    </plurals>
+    <plurals name="library_update_switched_off">
+        <item quantity="one">%d switched off in settings</item>
+        <item quantity="other">%d switched off in settings</item>
+    </plurals>
+    <plurals name="library_update_mode_title">
+        <item quantity="one">Update mode for %d entry</item>
+        <item quantity="other">Update mode for %d entries</item>
+    </plurals>
+    <plurals name="updates_hidden">
+        <item quantity="one">%d hidden</item>
+        <item quantity="other">%d hidden</item>
+    </plurals>
+    <plurals name="updates_hidden_by_filters">
+        <item quantity="one">%d hidden by filters</item>
+        <item quantity="other">%d hidden by filters</item>
+    </plurals>
+    <plurals name="updates_from_hidden_sources">
+        <item quantity="one">%d from hidden sources</item>
+        <item quantity="other">%d from hidden sources</item>
+    </plurals>
 </resources>

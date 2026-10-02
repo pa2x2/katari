@@ -9,5 +9,5 @@ interface EntryRelatedEntriesFeature {
 
     suspend fun load(entryId: Long): EntryRelatedEntriesLoadResult
 
-    fun observeEntry(entry: Entry): Flow<Entry>
+    suspend fun observeEntries(entryIds: List<Long>): Flow<List<Entry>>
 }

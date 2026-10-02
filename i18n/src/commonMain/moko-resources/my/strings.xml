@@ -101,7 +101,6 @@
     <string name="action_bookmark">စာအမှတ်အထား ထည့်ပါ</string>
     <string name="action_remove_bookmark">စာအမှတ်အထား ဖယ်ရှားပါ</string>
     <string name="action_delete">ဖျက်ပါ</string>
-    <string name="action_rename_category">အမျိုးအစား အမည်ပြောင်းပါ</string>
     <string name="action_move_category">အမျိုးအစား ရွှေ့ပါ</string>
     <string name="delete_category_confirmation">အမျိုးအစား ဖျက်မည်ဟု အတည်ပြုပါ</string>
     <string name="delete_category">အမျိုးအစား ဖျက်ပါ</string>
@@ -211,7 +210,6 @@
     <string name="ext_pending">စောင့်ဆိုင်းဆဲ</string>
     <string name="ext_installed">ထည့်သွင်းပြီး</string>
     <string name="obsolete_extension_message">ယခုအခါ ရရှိနိုင်ပါတော့မည်မဟုတ်ပါ။ ၎င်းသည် စနစ်တကျ မလုပ်ဆောင်နိုင်တော့ဘဲ အက်ပ်လီကေးရှင်းတွင် ပြဿနာများ ဖြစ်ပေါ်စေနိုင်ပါသည်။ ဖယ်ရှားပစ်ရန် အကြံပြုအပ်ပါသည်။</string>
-    <string name="pref_update_only_in_release_period">နောက်မည့် အချိန်ကို ခန့်မှန်းခြင်း</string>
     <string name="lock_with_biometrics">လော့ခ်ဖြည်ရန် လိုအပ်သည်</string>
     <string name="lock_when_idle">အသုံးမပြုသည့်အခါ သော့ခတ်ရန်</string>
     <string name="lock_always">ဘာဖြစ်ဖြစ်</string>
@@ -228,13 +226,9 @@
     <string name="update_72hour">သုံးရက်ခြား</string>
     <string name="update_weekly">အပတ်စဥ်</string>
     <string name="charging">အားသွင်းနေစဥ်</string>
-    <string name="pref_update_only_completely_read">မဖတ်ရသေးသော အခန်းများကို ကျော်သွားပါ</string>
-    <string name="pref_update_only_non_completed">ဖတ်ပြီးသား အခန်းများကို ကျော်သွားပါ</string>
-    <string name="pref_update_only_started">မစရသေးသော အခန်းများကို ကျော်သွားပါ</string>
     <string name="connected_to_wifi">Wi-Fi ဖြင့်သာ</string>
     <string name="pref_library_update_show_tab_badge">အိုင်ကွန်ပေါ်တွင် မဖတ်ရသေးတဲ့ အရေအတွက်ကို ပြသပါ</string>
     <string name="default_category_summary">အချိန်တိုင်း မေးပါ။</string>
-    <string name="pref_library_update_categories_details">ဝင်ရောက်ခွင့် ပိတ်ထားသော ကဏ္ဍများရှိ အခန်းများကို ပါဝင်ခွင့်ပြုထားသော ကဏ္ဍများတွင် ပါဝင်နေသည့်တိုင် အပ်ဒိတ်မပြုလုပ်ပါ</string>
     <string name="all">အားလုံး</string>
     <string name="none">တစ်ခုမဟုတ်</string>
     <string name="include">အပါအဝင်: %s</string>
@@ -266,7 +260,6 @@
     <string name="portrait">ပုံတူ</string>
     <string name="pref_library_columns">အတန်းအလိုက် ပစ္စည်းများ</string>
     <string name="pref_category_display">ဖုန်းမျက်နှာပြင်</string>
-    <string name="pref_category_library_update">ကမ္ဘာလုံးဆိုင်ရာ အပ်ဒိတ်</string>
     <string name="theme_greenapple">နီစိမ်းရောင်</string>
     <string name="theme_lavender">ခရမ်းနုရောင်</string>
     <string name="pref_relative_format">အနီးစပ်ဆုံး အချိန်အမှတ်အသား</string>

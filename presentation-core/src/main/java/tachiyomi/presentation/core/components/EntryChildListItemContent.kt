@@ -39,7 +39,7 @@ fun EntryChildListItemContent(
     scanlator: String?,
     read: Boolean?,
     bookmark: Boolean,
-    unconsumedIndicatorLabel: StringResource = MR.strings.action_filter_unconsumed,
+    unconsumedIndicatorLabel: StringResource = MR.strings.action_filter_unseen,
     modifier: Modifier = Modifier,
     trailingContent: @Composable (() -> Unit)? = null,
 ) {

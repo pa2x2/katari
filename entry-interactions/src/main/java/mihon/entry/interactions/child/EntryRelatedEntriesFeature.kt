@@ -4,7 +4,6 @@ import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.RelatedEntriesSource
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.filterNotNull
 import mihon.entry.interactions.runtime.requireEntryContextState
 import mihon.entry.interactions.source.ENTRY_SOURCE_CONTEXT_OWNER
 import mihon.feature.graph.CapabilityExpression
@@ -138,12 +137,12 @@ internal class DefaultEntryRelatedEntriesFeature(
         val entries = relatedSource.getRelatedEntries(entry.toSEntry())
             .map { it.toEntry(source.id) }
             .distinctBy(Entry::identity)
-            .let { networkToLocalEntry.persistBatch(it, entry.profileId) }
+            .let { networkToLocalEntry(it, entry.profileId) }
         return EntryRelatedEntriesLoadResult.Loaded(entries, orientation)
     }
 
-    override fun observeEntry(entry: Entry): Flow<Entry> {
-        return getEntry.subscribe(entry.url, entry.source, entry.type).filterNotNull()
+    override suspend fun observeEntries(entryIds: List<Long>): Flow<List<Entry>> {
+        return getEntry.subscribe(entryIds)
     }
 
     private fun availability(type: EntryType, source: UnifiedSource?): EntryRelatedEntriesAvailability {

@@ -96,7 +96,6 @@
     <string name="default_category">Categoría por defecto</string>
     <string name="pref_library_update_refresh_metadata_summary">Procurar novas portadas e detalles cando se actualice a biblioteca</string>
     <string name="pref_library_update_refresh_metadata">Refrescar os metadatos automaticamente</string>
-    <string name="pref_update_only_non_completed">Co estado de \"Rematados\"</string>
     <string name="charging">Durante a carga</string>
     <string name="pref_library_update_restriction">Restricións do dispositivo para as actualizacións automáticas</string>
     <string name="update_weekly">Semanalmente</string>
@@ -106,7 +105,6 @@
     <string name="update_6hour">Cada 6 horas</string>
     <string name="update_never">Desactivadas</string>
     <string name="pref_library_update_interval">Actualizacións automáticas</string>
-    <string name="pref_category_library_update">Actualización global</string>
     <string name="landscape">Horizontal</string>
     <string name="portrait">Vertical</string>
     <string name="pref_library_columns">Tamaño da reixa</string>
@@ -180,7 +178,6 @@
     <string name="action_view_chapters">Ver capítulos</string>
     <string name="action_edit_cover">Editar portada</string>
     <string name="action_move_category">Establecer categorías</string>
-    <string name="action_rename_category">Renomear categoría</string>
     <string name="action_edit_categories">Editar categorías</string>
     <string name="action_add_category">Engadir categoría</string>
     <string name="action_add">Engadir</string>
@@ -243,8 +240,6 @@
     <string name="pref_advanced_summary">Envorcar os rexistros de erros, optimizacións de batería</string>
     <string name="theme_tidalwave">Maremoto</string>
     <string name="relative_time_today">Hoxe</string>
-    <string name="pref_update_only_completely_read">Con capítulos sin ler</string>
-    <string name="pref_library_update_categories_details">Os elementos das categorías excluídas non se actualizarán aínda se están tamén nas categorías incluídas.</string>
     <string name="ext_info_version">Versión</string>
     <string name="ext_install_service_notif">Instalando a extensión…</string>
     <string name="ext_installer_legacy">Clásico</string>
@@ -326,7 +321,6 @@
     <string name="pref_downloads_summary">Baixadas automáticas e por adiantado</string>
     <string name="pref_backup_summary">Copias de seguridade manuais e automáticas</string>
     <string name="pref_security_summary">Bloqueo da aplicación e modo discreto</string>
-    <string name="pref_update_only_started">Que non foran comezadas</string>
     <string name="ext_update_all">Actualizar todo</string>
     <string name="tracking_info">Sincronización unidireccional para actualizar o progreso dos capítulos en servizos de seguimento externos. Configúraa na biblioteca, dende o botón de seguimento de cada elemento.</string>
     <string name="action_track">Seguir</string>
@@ -518,7 +512,6 @@
     <string name="download_queue_error">Non foi posible descargar os capítulos. Podes tentar de novo na sección de descargas</string>
     <string name="download_insufficient_space">Non se puideron descargar os capítulos por falta de espazo de almacenamento</string>
     <string name="notification_chapters_single">Capítulo %1$s</string>
-    <string name="skipped_reason_completed">Omitiuse porque a serie está rematada</string>
     <string name="information_webview_outdated">Actualiza a aplicación de WebView para mellorar a compatibilidade</string>
     <string name="information_no_manga_category">A categoría está baleira</string>
     <string name="getting_started_guide">Guía de introdución</string>
@@ -587,9 +580,6 @@
     <string name="loader_not_implemented_error">Non se atopou a fonte</string>
     <string name="label_used">En uso</string>
     <string name="day_short">%dd</string>
-    <string name="library_errors_help">Se necesitas axuda para arranxar os erros de actualización da biblioteca, consulta %1$s</string>
-    <string name="skipped_reason_not_caught_up">Oimitiuse porque hai capítulos sin ler</string>
-    <string name="update_check_eol">Esta versión de Android xa non ten soporte</string>
     <string name="download_notifier_no_network">Non hai ningunha conexión de rede dispoñible</string>
     <string name="remove_from_library">Eliminar da biblioteca</string>
     <string name="chapter_settings_updated">Actualizáronse os axustes por defecto dos capítulos</string>
@@ -600,8 +590,6 @@
     <string name="transition_finished">Rematado:</string>
     <string name="chapter_progress">Páxina: %1$d</string>
     <string name="error_saving_picture">Produciuse un erro ao gardar a imaxe</string>
-    <string name="update_check_confirm">Descargar</string>
-    <string name="channel_app_updates">Actualizacións da aplicación</string>
     <string name="learn_more">Preme para saber máis</string>
     <string name="notification_cover_update_failed">Erro ao actualizar a portada</string>
     <string name="show_chapter_number">Número do capítulo</string>
@@ -634,7 +622,6 @@
     <string name="label_read_duration">Tempo de lectura</string>
     <string name="label_titles_in_global_update">Na actualización global</string>
     <string name="label_total_chapters">Totais</string>
-    <string name="update_check_notification_download_in_progress">Descargando…</string>
     <string name="information_empty_category_dialog">Aínda non tes categorías.</string>
     <string name="information_required_plain">*necesario</string>
     <string name="spen_previous_page">Páxina anterior</string>
@@ -661,14 +648,10 @@
     <string name="seconds_short">%dseg</string>
     <string name="label_tracked_titles">Elementos en seguimento</string>
     <string name="label_mean_score">Puntuación media</string>
-    <string name="skipped_reason_not_started">Omitiuse porque non hai capítulos lidos</string>
     <string name="notification_chapters_single_and_more">Capítulo %1$s e %2$d máis</string>
     <string name="notification_chapters_multiple">Capítulos %1$s</string>
-    <string name="skipped_reason_not_always_update">Omitiuse porque esta serie non require actualizarse</string>
     <string name="file_select_cover">Elexir a imaxe de portada</string>
     <string name="file_select_backup">Elexir o ficheiro da copia de seguridade</string>
-    <string name="update_check_no_new_updates">Non hai novas actualizacións dispoñibles</string>
-    <string name="update_check_notification_update_available">Nova versión dispoñible!</string>
     <string name="channel_errors">Erros</string>
     <string name="action_global_search_query">Procurar \"%1$s\" globalmente</string>
     <string name="split_tall_images">Dividir as imaxes altas</string>
@@ -694,7 +677,6 @@
     <string name="onboarding_storage_help_info">Actualizaches dende unha versión máis antiga e non sabes que elixir? Bótalle unha ollada á guía de almacenamento.</string>
     <string name="theme_nord">Nórdico</string>
     <string name="pref_relative_format">Marcas de tempo relativas</string>
-    <string name="pref_library_update_smart_update">Actualizacións intelixentes</string>
     <string name="track_activity_name">Iniciar sesión no servizo de seguimento</string>
     <string name="pref_storage_location">Ubicación do almacenamento</string>
     <string name="action_filter_interval_custom">Frecuencia de actualización personalizada</string>
@@ -729,7 +711,6 @@
     <string name="onboarding_guides_new_user">Primeira vez usando %s? Recomendámosche ler a guía de introdución.</string>
     <string name="onboarding_guides_returning_user">Volvendo instalar %s?</string>
     <string name="pref_relative_format_summary">«%1$s» en lugar de «%2$s»</string>
-    <string name="pref_update_only_in_release_period">Predicir cando sae o seguinte capítulo</string>
     <string name="ext_permission_install_apps_warning">Preme aquí para conceder os permisos para instalar extensións.</string>
     <string name="ext_revoke_trust">Revogar as extensións de confianza de orixe descoñecida</string>
     <string name="action_open_repo">Abrir o repositorio</string>
@@ -763,7 +744,6 @@
     <string name="manga_interval_custom_amount">Frecuencia de actualización personalizada:</string>
     <string name="track_delete_title">Queres deixar de seguir %s?</string>
     <string name="notification_updating_progress">Actualizando a biblioteca… (%s)</string>
-    <string name="skipped_reason_not_in_release_period">Omitiuse porque hoxe non se esperaba ningunha publicación</string>
     <string name="file_null_uri_error">Non se elixiu ningún arquivo</string>
     <string name="last_auto_backup_info">Última copia de seguridade automática: %s</string>
     <string name="manga_display_modified_interval_title">Actualizar cada</string>

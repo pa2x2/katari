@@ -54,7 +54,7 @@ import tachiyomi.core.common.i18n.stringResource as coreStringResource
 
 @Composable
 fun CatalogContent(
-    catalogList: LazyPagingItems<StateFlow<CatalogListItem>>,
+    catalogList: LazyPagingItems<StateFlow<CatalogListItem?>>,
     columns: GridCells,
     displayMode: LibraryDisplayMode,
     sourceItemOrientation: EntryItemOrientation,
@@ -173,7 +173,7 @@ fun CatalogContent(
 
 @Composable
 private fun CatalogList(
-    catalogList: LazyPagingItems<StateFlow<CatalogListItem>>,
+    catalogList: LazyPagingItems<StateFlow<CatalogListItem?>>,
     contentPadding: PaddingValues,
     sourceItemOrientation: EntryItemOrientation,
     onItemClick: (CatalogListItem) -> Unit,
@@ -209,7 +209,7 @@ private fun CatalogList(
             count = catalogList.itemCount,
             key = { index -> catalogList.peek(index)?.value?.id ?: "catalog-list-$index" },
         ) { index ->
-            val item by catalogList[index]?.collectAsState() ?: return@items
+            val item = catalogList[index]?.collectAsState()?.value ?: return@items
             val entryItem = item as? CatalogListItem.EntryItem
             EntryListItem(
                 title = item.title,
@@ -236,7 +236,7 @@ private fun CatalogList(
 
 @Composable
 private fun CatalogComfortableGrid(
-    catalogList: LazyPagingItems<StateFlow<CatalogListItem>>,
+    catalogList: LazyPagingItems<StateFlow<CatalogListItem?>>,
     columns: GridCells,
     contentPadding: PaddingValues,
     sourceItemOrientation: EntryItemOrientation,
@@ -276,7 +276,7 @@ private fun CatalogComfortableGrid(
             count = catalogList.itemCount,
             key = { index -> catalogList.peek(index)?.value?.id ?: "catalog-comfortable-$index" },
         ) { index ->
-            val item by catalogList[index]?.collectAsState() ?: return@items
+            val item = catalogList[index]?.collectAsState()?.value ?: return@items
             val entryItem = item as? CatalogListItem.EntryItem
             EntryComfortableGridItem(
                 title = item.title,
@@ -301,7 +301,7 @@ private fun CatalogComfortableGrid(
 
 @Composable
 private fun CatalogCompactGrid(
-    catalogList: LazyPagingItems<StateFlow<CatalogListItem>>,
+    catalogList: LazyPagingItems<StateFlow<CatalogListItem?>>,
     columns: GridCells,
     contentPadding: PaddingValues,
     sourceItemOrientation: EntryItemOrientation,
@@ -341,7 +341,7 @@ private fun CatalogCompactGrid(
             count = catalogList.itemCount,
             key = { index -> catalogList.peek(index)?.value?.id ?: "catalog-compact-$index" },
         ) { index ->
-            val item by catalogList[index]?.collectAsState() ?: return@items
+            val item = catalogList[index]?.collectAsState()?.value ?: return@items
             val entryItem = item as? CatalogListItem.EntryItem
             EntryCompactGridItem(
                 coverData = item.cover,

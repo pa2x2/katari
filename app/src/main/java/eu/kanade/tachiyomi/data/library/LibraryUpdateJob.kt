@@ -19,11 +19,10 @@ import androidx.work.WorkInfo
 import androidx.work.WorkQuery
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
+import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.tachiyomi.data.notification.Notifications
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.visualName
-import eu.kanade.tachiyomi.util.storage.getUriCompat
-import eu.kanade.tachiyomi.util.system.createFileInCacheDir
 import eu.kanade.tachiyomi.util.system.isConnectedToWifi
 import eu.kanade.tachiyomi.util.system.isRunning
 import eu.kanade.tachiyomi.util.system.setForegroundSafely
@@ -46,30 +45,37 @@ import mihon.entry.interactions.library.EntryLibraryUpdateRefreshFeature
 import mihon.entry.interactions.library.EntryLibraryUpdateRefreshRequest
 import mihon.entry.interactions.library.EntryLibraryUpdateRefreshResult
 import mihon.entry.interactions.merge.EntryMergeMetadataRefreshFeature
-import mihon.entry.interactions.state.EntryUpdateEligibility
-import mihon.entry.interactions.state.EntryUpdateEligibilityFeature
-import mihon.entry.interactions.state.EntryUpdateEligibilityRequest
-import mihon.entry.interactions.state.EntryUpdateSkipReason
+import mihon.feature.library.update.planning.LibraryUpdateDecision
+import mihon.feature.library.update.planning.LibraryUpdatePlanner
+import mihon.feature.library.update.planning.LibraryUpdatePlanningContext
+import mihon.feature.library.update.planning.LibraryUpdateRequest
+import mihon.feature.library.update.planning.LibraryUpdateSettings
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.preference.getAndSet
 import tachiyomi.core.common.util.lang.withIOContext
+import tachiyomi.core.common.util.lang.withNonCancellableContext
 import tachiyomi.core.common.util.system.logcat
+import tachiyomi.data.ActiveProfileProvider
 import tachiyomi.domain.category.model.Category
+import tachiyomi.domain.category.repository.CategoryRepository
 import tachiyomi.domain.entry.interactor.GetLibraryEntries
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.entry.service.FetchInterval
-import tachiyomi.domain.library.model.LibraryItem
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.library.service.LibraryPreferences.Companion.DEVICE_CHARGING
 import tachiyomi.domain.library.service.LibraryPreferences.Companion.DEVICE_NETWORK_NOT_METERED
 import tachiyomi.domain.library.service.LibraryPreferences.Companion.DEVICE_ONLY_ON_WIFI
+import tachiyomi.domain.library.update.model.EntryUpdateOutcome
+import tachiyomi.domain.library.update.model.EntryUpdateStatus
+import tachiyomi.domain.library.update.model.LibraryUpdateTrigger
+import tachiyomi.domain.library.update.repository.LibraryUpdateReportRepository
+import tachiyomi.domain.library.update.repository.LibraryUpdateRulesRepository
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.i18n.*
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
-import java.io.File
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.TimeUnit
 import kotlin.concurrent.atomics.AtomicInt
@@ -83,8 +89,11 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
 
     private val sourceManager: SourceManager = Injekt.get()
     private val libraryPreferences: LibraryPreferences = Injekt.get()
-    private val entryUpdateEligibility: EntryUpdateEligibilityFeature = Injekt.get()
+    private val settingsReader = LibraryUpdateSettings.Reader(Injekt.get(), Injekt.get())
+    private val planner = LibraryUpdatePlanner(Injekt.get())
+    private val reportRepository: LibraryUpdateReportRepository = Injekt.get()
     private val getLibraryEntries: GetLibraryEntries = Injekt.get()
+    private val categoryRepository: CategoryRepository = Injekt.get()
     private val entryRepository: EntryRepository = Injekt.get()
     private val fetchInterval: FetchInterval = Injekt.get()
     private val entryLibraryUpdateRefreshFeature: EntryLibraryUpdateRefreshFeature = Injekt.get()
@@ -92,21 +101,27 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
 
     private val notifier = LibraryUpdateNotifier(context)
 
+    private val selectionFile = LibraryUpdateSelectionFile(context)
+
     private var entriesToUpdate: List<Entry> = mutableListOf()
     private var updateScope = LibraryUpdateScope.Library
+
+    /** The category, source or type a page refresh covers, as the user knows it. */
+    private var updateScopeName: String? = null
+    private var skippedCount = 0
     private var currentFetchWindow: Pair<Long, Long> = Pair(0L, 0L)
 
-    override suspend fun doWork(): Result {
-        logcat(LogPriority.INFO) {
-            "Starting library update (auto=${
-                tags.contains(
-                    WORK_NAME_AUTO,
-                )
-            }, category=${inputData.getLong(KEY_CATEGORY, -1L)}, source=${inputData.getLong(KEY_SOURCE, -1L)}, " +
-                "type=${inputData.getString(KEY_ENTRY_TYPE)})"
-        }
+    /** Start of this update, which also identifies it in the update report. */
+    private var startedAt = 0L
 
-        if (tags.contains(WORK_NAME_AUTO)) {
+    /** The profile this update runs for, so its failure notification opens that profile's report. */
+    private val profileId = Injekt.get<ActiveProfileProvider>().activeProfileId
+
+    override suspend fun doWork(): Result {
+        val automatic = tags.contains(WORK_NAME_AUTO)
+        logcat(LogPriority.INFO) { "Starting library update (auto=$automatic, input=${inputData.keyValueMap})" }
+
+        if (automatic) {
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
                 val preferences = Injekt.get<LibraryPreferences>()
                 val restrictions = preferences.autoUpdateDeviceRestrictions.get()
@@ -125,26 +140,28 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
             }
         }
 
-        val categoryId = inputData.getLong(KEY_CATEGORY, -1L)
-        val sourceId = inputData.getLong(KEY_SOURCE, -1L)
-        val entryType = inputData.getString(KEY_ENTRY_TYPE)
-            ?.let { serialized -> EntryType.entries.find { it.name == serialized } }
-        updateScope = LibraryUpdateScope.of(
-            categoryId = categoryId.takeIf { it != -1L },
-            sourceId = sourceId.takeIf { it != -1L },
-            entryType = entryType,
-        )
+        val selectionName = inputData.getString(KEY_SELECTION)
+        val request = readRequest(automatic, selectionName)
+        updateScope = when (request) {
+            is LibraryUpdateRequest.Selection -> LibraryUpdateScope.Selection
+            is LibraryUpdateRequest.FollowRules -> LibraryUpdateScope.of(
+                categoryId = request.categoryId,
+                sourceId = request.sourceId,
+                entryType = request.entryType,
+            )
+        }
+        updateScopeName = (request as? LibraryUpdateRequest.FollowRules)?.let { scopeName(it) }
         publishProgress(completed = 0)
 
         setForegroundSafely()
 
-        libraryPreferences.lastUpdatedTimestamp.set(Clock.System.now().toEpochMilliseconds())
-
-        addEntryToQueue(categoryId, sourceId, entryType)
-        publishProgress(completed = 0)
+        startedAt = Clock.System.now().toEpochMilliseconds()
+        libraryPreferences.lastUpdatedTimestamp.set(startedAt)
 
         return withIOContext {
             try {
+                planQueue(request)
+                publishProgress(completed = 0)
                 updateEntryChapterList()
                 logcat(LogPriority.INFO) { "Library update completed" }
                 Result.success()
@@ -158,9 +175,46 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
                     Result.failure()
                 }
             } finally {
+                withNonCancellableContext {
+                    reportRepository.finishRun(startedAt, Clock.System.now().toEpochMilliseconds())
+                }
+                selectionName?.let(selectionFile::delete)
                 notifier.cancelProgressNotification()
             }
         }
+    }
+
+    /** "Reading", or "Reading · Manga" for a page limited by more than one of category, source and type. */
+    private suspend fun scopeName(request: LibraryUpdateRequest.FollowRules): String? {
+        return listOfNotNull(
+            request.categoryId
+                ?.let { categoryRepository.get(it) }
+                ?.let { if (it.isSystemCategory) context.stringResource(MR.strings.label_default) else it.name },
+            request.sourceId?.let { sourceManager.getDisplayInfo(it).visualName() },
+            request.entryType?.let { context.stringResource(it.entryTypePresentation().displayNameLabel) },
+        )
+            .takeIf { it.isNotEmpty() }
+            ?.joinToString(" · ")
+    }
+
+    private suspend fun readRequest(automatic: Boolean, selectionName: String?): LibraryUpdateRequest {
+        if (selectionName != null) {
+            return LibraryUpdateRequest.Selection(selectionFile.read(selectionName))
+        }
+        if (inputData.getBoolean(KEY_SKIPPED_OF_LATEST, false)) {
+            val latestRun = reportRepository.getLatestRun()
+            val skipped = reportRepository.getStatuses().values
+                .filter { it.decidedAt == latestRun?.startedAt && it.outcome == EntryUpdateOutcome.SKIPPED }
+                .mapTo(mutableSetOf(), EntryUpdateStatus::entryId)
+            return LibraryUpdateRequest.Selection(skipped)
+        }
+        return LibraryUpdateRequest.FollowRules(
+            automatic = automatic,
+            categoryId = inputData.getLong(KEY_CATEGORY, -1L).takeIf { it != -1L },
+            sourceId = inputData.getLong(KEY_SOURCE, -1L).takeIf { it != -1L },
+            entryType = inputData.getString(KEY_ENTRY_TYPE)
+                ?.let { serialized -> EntryType.entries.find { it.name == serialized } },
+        )
     }
 
     override suspend fun getForegroundInfo(): ForegroundInfo {
@@ -176,95 +230,75 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
         )
     }
 
-    /**
-     * Adds entries to be updated.
-     *
-     * @param categoryId the ID of the category to update, or -1 if no category specified.
-     * @param sourceId the ID of the source to update, or -1 if no source specified.
-     */
-    private suspend fun addEntryToQueue(categoryId: Long, sourceId: Long, entryType: EntryType?) {
-        val libraryEntries = getLibraryEntries.await()
-
-        val listToUpdate = if (categoryId != -1L || sourceId != -1L || entryType != null) {
-            libraryEntries.filter { it.matchesUpdateScope(categoryId, sourceId, entryType) }
-        } else {
-            val includedCategories = libraryPreferences.updateCategories.get().map { it.toLong() }
-            val excludedCategories = libraryPreferences.updateCategoriesExclude.get().map { it.toLong() }
-
-            libraryEntries.filter {
-                val included =
-                    includedCategories.isEmpty() || it.categories.intersect(includedCategories.toSet()).isNotEmpty()
-                val excluded = it.categories.intersect(excludedCategories.toSet()).isNotEmpty()
-                included && !excluded
-            }
-        }
-
-        val skippedUpdates = mutableListOf<Pair<Entry, String?>>()
+    private suspend fun planQueue(request: LibraryUpdateRequest) {
+        val settings = settingsReader.read()
         val timeZone = TimeZone.currentSystemDefault()
         currentFetchWindow = fetchInterval.getWindow(
             Clock.System.now().toLocalDateTime(timeZone).date,
             timeZone,
         )
-        val fetchWindowUpperBound = currentFetchWindow.second
+        val lastCheckedAt = reportRepository.getStatuses().values
+            .mapNotNull { status -> status.lastCheckedAt?.let { status.entryId to it } }
+            .toMap()
+        val decisions = planner.plan(
+            request = request,
+            items = getLibraryEntries.await(),
+            settings = settings,
+            context = LibraryUpdatePlanningContext(
+                now = startedAt,
+                fetchWindowUpperBound = currentFetchWindow.second,
+                lastCheckedAt = lastCheckedAt,
+            ),
+        )
+        val checks = decisions.filterIsInstance<LibraryUpdateDecision.Check>()
+        val left = decisions.filterIsInstance<LibraryUpdateDecision.Leave>()
+        skippedCount = left.count { it.reason.outcome == EntryUpdateOutcome.SKIPPED }
 
-        val eligibleLibraryEntries = listToUpdate
-            .filter {
-                when (
-                    val eligibility = entryUpdateEligibility.evaluate(
-                        EntryUpdateEligibilityRequest(
-                            entry = it.entry,
-                            totalCount = it.totalCount,
-                            unconsumedCount = it.unconsumedCount,
-                            hasStarted = it.hasStarted,
-                            fetchWindowUpperBound = fetchWindowUpperBound,
-                        ),
-                    )
-                ) {
-                    EntryUpdateEligibility.Eligible -> true
-                    is EntryUpdateEligibility.Skipped -> {
-                        skippedUpdates.add(it.entry to eligibility.reason.toSkippedReasonString(context))
-                        false
-                    }
-                }
-            }
-            .sortedBy { it.entry.title }
+        notifier.showQueueSizeWarningNotificationIfNeeded(checks.map { it.item }, profileId)
 
-        notifier.showQueueSizeWarningNotificationIfNeeded(eligibleLibraryEntries)
-
-        entriesToUpdate = eligibleLibraryEntries.expandToMemberEntries()
+        entriesToUpdate = checks.expandToMemberEntries()
             .sortedBy { it.title }
 
-        logcat(LogPriority.INFO) {
-            "Queued ${entriesToUpdate.size} library entries for update (${skippedUpdates.size} skipped)"
-        }
+        reportRepository.startRun(
+            startedAt = startedAt,
+            trigger = when {
+                request is LibraryUpdateRequest.Selection -> LibraryUpdateTrigger.SELECTION
+                request is LibraryUpdateRequest.FollowRules && request.automatic -> LibraryUpdateTrigger.AUTOMATIC
+                else -> LibraryUpdateTrigger.MANUAL
+            },
+            // Merged entries are checked, and reported, member by member.
+            librarySize = left.size + entriesToUpdate.size,
+        )
+        reportRepository.recordDecisions(
+            decidedAt = startedAt,
+            decisions = left.map {
+                LibraryUpdateReportRepository.Decision(
+                    entryId = it.item.entry.id,
+                    reason = it.reason,
+                    reasonCategoryId = it.categoryId,
+                )
+            },
+        )
 
-        if (skippedUpdates.isNotEmpty()) {
+        logcat(LogPriority.INFO) {
+            "Queued ${entriesToUpdate.size} library entries for update (${left.size} left out)"
+        }
+        if (left.isNotEmpty()) {
             logcat(LogPriority.INFO) {
-                skippedUpdates
-                    .groupBy { it.second }
-                    .map { (reason, entries) -> "$reason: [${entries.map { it.first.title }.sorted().joinToString()}]" }
+                left
+                    .groupBy { it.reason }
+                    .map { (reason, entries) -> "$reason: [${entries.map { it.item.title }.sorted().joinToString()}]" }
                     .joinToString()
             }
         }
     }
 
-    private suspend fun List<LibraryItem>.expandToMemberEntries(): List<Entry> {
-        return flatMap { libraryItem ->
-            mergeMetadataRefreshFeature.resolveOwners(libraryItem.entry).orderedOwners
+    private suspend fun List<LibraryUpdateDecision.Check>.expandToMemberEntries(): List<Entry> {
+        return flatMap { check ->
+            mergeMetadataRefreshFeature.resolveOwners(check.item.entry).orderedOwners
+                .filter { it.source !in check.skippedSourceIds }
         }
             .distinctBy(Entry::id)
-    }
-
-    private fun EntryUpdateSkipReason.toSkippedReasonString(context: Context): String {
-        return when (this) {
-            EntryUpdateSkipReason.NOT_ALWAYS_UPDATE ->
-                context.stringResource(MR.strings.skipped_reason_not_always_update)
-            EntryUpdateSkipReason.COMPLETED -> context.stringResource(MR.strings.skipped_reason_completed)
-            EntryUpdateSkipReason.NOT_CAUGHT_UP -> context.stringResource(MR.strings.skipped_reason_not_caught_up)
-            EntryUpdateSkipReason.NOT_STARTED -> context.stringResource(MR.strings.skipped_reason_not_started)
-            EntryUpdateSkipReason.OUTSIDE_RELEASE_PERIOD ->
-                context.stringResource(MR.strings.skipped_reason_not_in_release_period)
-        }
     }
 
     /**
@@ -317,6 +351,12 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
                                         ) {
                                             is EntryLibraryUpdateRefreshResult.Updated -> {
                                                 val newChapters = result.newChildren
+                                                reportRepository.recordChecked(
+                                                    entryId = queuedEntry.id,
+                                                    decidedAt = startedAt,
+                                                    checkedAt = Clock.System.now().toEpochMilliseconds(),
+                                                    newChapters = newChapters.size,
+                                                )
                                                 if (newChapters.isNotEmpty()) {
                                                     libraryPreferences.newUpdatesCount.getAndSet {
                                                         it + newChapters.size
@@ -374,21 +414,18 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
         }
 
         if (failedUpdates.isNotEmpty()) {
-            val errorFile = writeErrorFile(failedUpdates)
-            notifier.showUpdateErrorNotification(
-                failedUpdates.size,
-                errorFile.getUriCompat(context),
-            )
+            notifier.showUpdateErrorNotification(failedUpdates.size, profileId)
         }
     }
 
-    private fun recordFailedUpdate(
+    private suspend fun recordFailedUpdate(
         failedUpdates: CopyOnWriteArrayList<Pair<Entry, String?>>,
         entry: Entry,
         errorMessage: String?,
         error: Throwable? = null,
     ) {
         failedUpdates.add(entry to errorMessage)
+        reportRepository.recordFailed(entry.id, decidedAt = startedAt, error = errorMessage)
         val sourceName = sourceManager.getDisplayInfo(entry.source).visualName()
         val message = buildString {
             append("Library update failed for ${entry.title} ($sourceName)")
@@ -435,49 +472,18 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
         setProgress(
             workDataOf(
                 KEY_PROGRESS_SCOPE to updateScope.name,
+                KEY_PROGRESS_SCOPE_NAME to updateScopeName,
                 KEY_PROGRESS_COMPLETED to completed,
                 KEY_PROGRESS_TOTAL to entriesToUpdate.size,
+                KEY_PROGRESS_SKIPPED to skippedCount,
             ),
         )
-    }
-
-    /**
-     * Writes basic file of update errors to cache dir.
-     */
-    private fun writeErrorFile(errors: List<Pair<Entry, String?>>): File {
-        try {
-            if (errors.isNotEmpty()) {
-                val file = context.createFileInCacheDir("katari_update_errors.txt")
-                file.bufferedWriter().use { out ->
-                    out.write(context.stringResource(MR.strings.library_errors_help, ERROR_LOG_HELP_URL) + "\n\n")
-                    // Error file format:
-                    // ! Error
-                    //   # Source
-                    //     - Entry
-                    errors.groupBy({ it.second }, { it.first }).forEach { (error, entries) ->
-                        out.write("\n! ${error}\n")
-                        entries.groupBy { it.source }.forEach { (srcId, entries) ->
-                            val sourceName = sourceManager.getDisplayInfo(srcId).visualName()
-                            out.write("  # $sourceName\n")
-                            entries.forEach {
-                                out.write("    - ${it.title}\n")
-                            }
-                        }
-                    }
-                }
-                return file
-            }
-        } catch (_: Exception) {
-        }
-        return File("")
     }
 
     companion object {
         private const val TAG = "LibraryUpdate"
         private const val WORK_NAME_AUTO = "LibraryUpdate-auto"
         private const val WORK_NAME_MANUAL = "LibraryUpdate-manual"
-
-        private const val ERROR_LOG_HELP_URL = "https://mihon.app/docs/guides/troubleshooting/"
 
         /**
          * Key for category to update.
@@ -495,8 +501,16 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
         private const val KEY_ENTRY_TYPE = "entry_type"
 
         private const val KEY_PROGRESS_SCOPE = "progress_scope"
+        private const val KEY_PROGRESS_SCOPE_NAME = "progress_scope_name"
         private const val KEY_PROGRESS_COMPLETED = "progress_completed"
         private const val KEY_PROGRESS_TOTAL = "progress_total"
+        private const val KEY_PROGRESS_SKIPPED = "progress_skipped"
+
+        /** Name of the [LibraryUpdateSelectionFile] listing the entries to check. */
+        private const val KEY_SELECTION = "selection"
+
+        /** Checks the entries the latest update skipped by rules. */
+        private const val KEY_SKIPPED_OF_LATEST = "skipped_of_latest"
 
         /**
          * Progress of the running library update, or null when none runs. An update shows up once it has decided
@@ -512,24 +526,46 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
                 .distinctUntilChanged()
         }
 
+        /** When the next automatic update is due to start, or null when none is scheduled. */
+        fun nextAutomaticRunFlow(context: Context): Flow<Long?> {
+            return context.workManager.getWorkInfosForUniqueWorkFlow(WORK_NAME_AUTO)
+                .map { workInfos ->
+                    workInfos
+                        .firstOrNull { !it.state.isFinished }
+                        ?.nextScheduleTimeMillis
+                        ?.takeIf { it != Long.MAX_VALUE }
+                }
+                .distinctUntilChanged()
+        }
+
         private fun Data.toLibraryUpdateProgress(): LibraryUpdateProgress? {
             val scope = getString(KEY_PROGRESS_SCOPE)
                 ?.let { name -> LibraryUpdateScope.entries.find { it.name == name } }
                 ?: return null
             return LibraryUpdateProgress(
                 scope = scope,
+                scopeName = getString(KEY_PROGRESS_SCOPE_NAME),
                 completed = getInt(KEY_PROGRESS_COMPLETED, 0),
                 total = getInt(KEY_PROGRESS_TOTAL, 0),
+                skipped = getInt(KEY_PROGRESS_SKIPPED, 0),
             )
         }
 
-        fun setupTask(
+        /**
+         * Schedules automatic updates at the shortest interval the library or any category asks for.
+         *
+         * @param prefInterval the library interval when its preference is about to change and doesn't hold it yet.
+         */
+        suspend fun setupTask(
             context: Context,
             prefInterval: Int? = null,
         ) {
             val preferences = Injekt.get<LibraryPreferences>()
-            val interval = prefInterval ?: preferences.autoUpdateInterval.get()
-            if (interval > 0) {
+            val interval = LibraryUpdateSettings.schedulePeriodHours(
+                intervalHours = prefInterval ?: preferences.autoUpdateInterval.get(),
+                categoryRules = Injekt.get<LibraryUpdateRulesRepository>().getCategoryRules().values,
+            )
+            if (interval != null) {
                 val restrictions = preferences.autoUpdateDeviceRestrictions.get()
                 val networkType = if (DEVICE_NETWORK_NOT_METERED in restrictions) {
                     NetworkType.UNMETERED
@@ -575,23 +611,41 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
             }
         }
 
+        /** Checks what the update rules allow, limited to one page of the library when a scope is given. */
         suspend fun startNow(
             context: Context,
             category: Category? = null,
             sourceId: Long? = null,
             entryType: EntryType? = null,
         ): Boolean {
+            return enqueueManual(
+                context,
+                workDataOf(
+                    KEY_CATEGORY to category?.id,
+                    KEY_SOURCE to sourceId,
+                    KEY_ENTRY_TYPE to entryType?.name,
+                ),
+            )
+        }
+
+        /** Checks the picked entries whatever the rules say, leaving out only entries set to Never. */
+        suspend fun startSelection(context: Context, entryIds: Collection<Long>): Boolean {
+            if (context.workManager.isRunning(TAG)) return false
+            val selectionName = LibraryUpdateSelectionFile(context).write(entryIds)
+            return enqueueManual(context, workDataOf(KEY_SELECTION to selectionName))
+        }
+
+        suspend fun startSkippedOfLatest(context: Context): Boolean {
+            return enqueueManual(context, workDataOf(KEY_SKIPPED_OF_LATEST to true))
+        }
+
+        private suspend fun enqueueManual(context: Context, inputData: Data): Boolean {
             val wm = context.workManager
             if (wm.isRunning(TAG)) {
                 // Already running either as a scheduled or manual job
                 return false
             }
 
-            val inputData = workDataOf(
-                KEY_CATEGORY to category?.id,
-                KEY_SOURCE to sourceId,
-                KEY_ENTRY_TYPE to entryType?.name,
-            )
             val request = OneTimeWorkRequestBuilder<LibraryUpdateJob>()
                 .addTag(TAG)
                 .addTag(WORK_NAME_MANUAL)
@@ -619,15 +673,4 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
                 }
         }
     }
-}
-
-internal fun LibraryItem.matchesUpdateScope(
-    categoryId: Long,
-    sourceId: Long,
-    entryType: EntryType?,
-): Boolean {
-    val matchesCategory = categoryId == -1L || categoryId in categories
-    val matchesSource = sourceId == -1L || sourceId in sourceIds
-    val matchesType = entryType == null || entry.type == entryType
-    return matchesCategory && matchesSource && matchesType
 }

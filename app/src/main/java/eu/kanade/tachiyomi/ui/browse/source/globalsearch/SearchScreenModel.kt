@@ -2,18 +2,18 @@ package eu.kanade.tachiyomi.ui.browse.source.globalsearch
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
-import androidx.compose.runtime.produceState
 import cafe.adriel.voyager.core.model.StateScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.presentation.util.ioCoroutineScope
 import eu.kanade.tachiyomi.extension.ExtensionManager
+import eu.kanade.tachiyomi.ui.base.observation.ObservedItemStore
+import eu.kanade.tachiyomi.ui.base.observation.collectAsState
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -43,6 +43,12 @@ abstract class SearchScreenModel(
 
     private val coroutineDispatcher = Executors.newFixedThreadPool(5).asCoroutineDispatcher()
     private var searchJob: Job? = null
+    private val entryStore = ObservedItemStore<Long, Entry>(
+        scope = ioCoroutineScope,
+        keyOf = Entry::id,
+        supersedes = { candidate, current -> candidate.version >= current.version },
+        observeItems = getEntry::subscribe,
+    )
 
     private val enabledLanguages = sourcePreferences.enabledLanguages.get()
     private val disabledSources = sourcePreferences.disabledSources.get()
@@ -77,13 +83,7 @@ abstract class SearchScreenModel(
 
     @Composable
     fun getEntryState(initialEntry: Entry): androidx.compose.runtime.State<Entry> {
-        return produceState(initialValue = initialEntry) {
-            getEntry.subscribe(initialEntry.url, initialEntry.source, initialEntry.type)
-                .filterNotNull()
-                .collectLatest { entry ->
-                    value = entry
-                }
-        }
+        return entryStore.collectAsState(initialEntry)
     }
 
     open fun getEnabledSources(): List<EntryCatalogueSourceInfo> {

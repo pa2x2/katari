@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.ui.updates
 
 import cafe.adriel.voyager.core.model.ScreenModel
+import eu.kanade.tachiyomi.source.entry.EntryType
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.TriState
 import tachiyomi.core.common.preference.getAndSet
@@ -15,31 +16,46 @@ class UpdatesSettingsScreenModel(
     val getCategories: GetCategories = Injekt.get(),
 ) : ScreenModel {
 
-    val includedCategories = updatesPreferences.filterIncludedCategories
-    val excludedCategories = updatesPreferences.filterExcludedCategories
-
     fun cycleCategory(category: Category) {
-        when {
-            category.id in excludedCategories.get() -> {
-                excludedCategories.getAndSet { it - category.id }
-                includedCategories.getAndSet { it - category.id }
-            }
+        cycle(category.id, updatesPreferences.filterIncludedCategories, updatesPreferences.filterExcludedCategories)
+    }
 
-            category.id in includedCategories.get() -> {
-                includedCategories.getAndSet { it - category.id }
-                excludedCategories.getAndSet { it + category.id }
-            }
+    fun cycleSource(sourceId: Long) {
+        cycle(sourceId, updatesPreferences.filterIncludedSources, updatesPreferences.filterExcludedSources)
+    }
 
-            else -> {
-                excludedCategories.getAndSet { it - category.id }
-                includedCategories.getAndSet { it + category.id }
+    fun cycleEntryType(type: EntryType) {
+        val included = updatesPreferences.filterIncludedEntryTypes
+        val excluded = updatesPreferences.filterExcludedEntryTypes
+        when (type) {
+            in excluded.get() -> excluded.getAndSet { it - type }
+            in included.get() -> {
+                included.getAndSet { it - type }
+                excluded.getAndSet { it + type }
             }
+            else -> included.getAndSet { it + type }
         }
     }
 
     fun toggleFilter(preference: (UpdatesPreferences) -> Preference<TriState>) {
         preference(updatesPreferences).getAndSet {
             it.next()
+        }
+    }
+
+    fun clearFilters() {
+        updatesPreferences.clearFeedFilter()
+    }
+
+    /** Moves a value from neither list to included, then to excluded, then back, as its tri-state box shows. */
+    private fun cycle(value: Long, included: Preference<List<Long>>, excluded: Preference<List<Long>>) {
+        when (value) {
+            in excluded.get() -> excluded.getAndSet { it - value }
+            in included.get() -> {
+                included.getAndSet { it - value }
+                excluded.getAndSet { it + value }
+            }
+            else -> included.getAndSet { it + value }
         }
     }
 }

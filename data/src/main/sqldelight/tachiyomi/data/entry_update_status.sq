@@ -1,0 +1,80 @@
+-- What the latest library update that considered an entry decided about it, plus what survives across runs:
+-- when it was last checked and how many checks in a row failed.
+CREATE TABLE entry_update_status(
+    entry_id INTEGER NOT NULL PRIMARY KEY,
+    decided_at INTEGER NOT NULL,
+    outcome TEXT NOT NULL,
+    reason TEXT,
+    reason_category_id INTEGER,
+    error TEXT,
+    new_chapters INTEGER NOT NULL DEFAULT 0,
+    last_checked_at INTEGER,
+    consecutive_failures INTEGER NOT NULL DEFAULT 0,
+    FOREIGN KEY(entry_id) REFERENCES entries(_id) ON DELETE CASCADE
+);
+
+getByEntryId:
+SELECT *
+FROM entry_update_status
+WHERE entry_id = :entryId;
+
+getByProfile:
+SELECT EUS.*
+FROM entry_update_status EUS
+JOIN entries ENT ON ENT._id = EUS.entry_id
+WHERE ENT.profile_id = :profileId;
+
+getDecidedAt:
+SELECT EUS.*
+FROM entry_update_status EUS
+JOIN entries ENT ON ENT._id = EUS.entry_id
+WHERE ENT.profile_id = :profileId AND EUS.decided_at = :decidedAt;
+
+upsertDecision:
+INSERT INTO entry_update_status(entry_id, decided_at, outcome, reason, reason_category_id, error, new_chapters)
+VALUES (:entryId, :decidedAt, :outcome, :reason, :reasonCategoryId, NULL, 0)
+ON CONFLICT(entry_id) DO UPDATE SET
+    decided_at = excluded.decided_at,
+    outcome = excluded.outcome,
+    reason = excluded.reason,
+    reason_category_id = excluded.reason_category_id,
+    error = NULL,
+    new_chapters = 0;
+
+recordChecked:
+INSERT INTO entry_update_status(
+    entry_id,
+    decided_at,
+    outcome,
+    new_chapters,
+    last_checked_at,
+    consecutive_failures
+)
+VALUES (:entryId, :decidedAt, :outcome, :newChapters, :checkedAt, 0)
+ON CONFLICT(entry_id) DO UPDATE SET
+    decided_at = excluded.decided_at,
+    outcome = excluded.outcome,
+    reason = NULL,
+    reason_category_id = NULL,
+    error = NULL,
+    new_chapters = excluded.new_chapters,
+    last_checked_at = excluded.last_checked_at,
+    consecutive_failures = 0;
+
+recordFailed:
+INSERT INTO entry_update_status(
+    entry_id,
+    decided_at,
+    outcome,
+    error,
+    consecutive_failures
+)
+VALUES (:entryId, :decidedAt, 'failed', :error, 1)
+ON CONFLICT(entry_id) DO UPDATE SET
+    decided_at = excluded.decided_at,
+    outcome = 'failed',
+    reason = NULL,
+    reason_category_id = NULL,
+    error = excluded.error,
+    new_chapters = 0,
+    consecutive_failures = entry_update_status.consecutive_failures + 1;

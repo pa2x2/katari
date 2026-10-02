@@ -54,7 +54,6 @@
     <string name="default_category">Куолутунан бөлөх</string>
     <string name="pref_library_update_refresh_metadata_summary">Саҥа тас уонна кыра чаастар баалларын, бэрэбиэркэлээ</string>
     <string name="pref_library_update_refresh_metadata">Метаданнайдары автоматическайдык саҥарт</string>
-    <string name="pref_update_only_non_completed">Бүтэ илик маанганы эрэ, саҥарт</string>
     <string name="charging">Иитиллэр</string>
     <string name="pref_library_update_restriction">Саҥардыы хааччахтааһына</string>
     <string name="update_weekly">Нэдиэлэ аайы</string>
@@ -64,7 +63,6 @@
     <string name="update_6hour">Алта чаас аайы</string>
     <string name="update_never">Илиинэн</string>
     <string name="pref_library_update_interval">Саҥардыы түргэнэ</string>
-    <string name="pref_category_library_update">Улахан саҥардыы</string>
     <string name="landscape">Сытыары</string>
     <string name="portrait">Туруору</string>
     <string name="pref_library_columns">Маллары кэккэ туруор</string>
@@ -132,7 +130,6 @@
     <string name="action_view_chapters">Түһүмэхтэри көр</string>
     <string name="action_edit_cover">Таһын уларытыы</string>
     <string name="action_move_category">Бөлө(ххө/хтөргө) киллэр</string>
-    <string name="action_rename_category">Бөлөх аатын уларыт</string>
     <string name="action_edit_categories">Бөлөхтөрү уларыт</string>
     <string name="action_add_category">Бөлөҕү киллэр</string>
     <string name="pref_webtoon_side_padding">Ойоҕостон тэйии</string>
@@ -399,7 +396,6 @@
     <string name="exclude">Киллэримэ: %s</string>
     <string name="include">Киллэр: %s</string>
     <string name="none">Суох</string>
-    <string name="pref_library_update_categories_details">Сотуллубут категориялар маангалара саҥардыллыа суоҕа, холбоммут категорияларга баарын үрдүнэн.</string>
     <string name="action_show_errors">Сыһааһыннары көрдөр</string>
     <string name="action_desc">Кыччыытынан</string>
     <string name="action_asc">Улаатыытынан</string>

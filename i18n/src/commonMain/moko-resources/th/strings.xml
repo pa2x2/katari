@@ -31,7 +31,6 @@
     <string name="action_add">เพิ่ม</string>
     <string name="action_add_category">เพิ่มหมวดหมู่</string>
     <string name="action_edit_categories">แก้ไขหมวดหมู่</string>
-    <string name="action_rename_category">เปลี่ยนชื่อหมวดหมู่</string>
     <string name="action_edit_cover">แก้ไขปก</string>
     <string name="action_previous_chapter">ตอนก่อนหน้า</string>
     <string name="action_next_chapter">ตอนถัดไป</string>
@@ -95,7 +94,6 @@
     <string name="pref_library_update_interval">การอัปเดตอัตโนมัติ</string>
     <string name="update_never">ปิด</string>
     <string name="pref_library_update_restriction">อัปเดตข้อจำกัดของอุปกรณ์โดยอัตโนมัติ</string>
-    <string name="pref_update_only_non_completed">ข้ามรายการที่มีสถานะ \"จบแล้ว\"</string>
     <string name="pref_auto_update_manga_sync">อัปเดตความคืบหน้าหลังอ่าน</string>
     <string name="default_category">หมวดหมู่เริ่มต้น</string>
     <string name="ext_trust">เชื่อถือได้</string>
@@ -258,10 +256,6 @@
     <string name="notification_first_add_to_library">เพิ่มรายการไปยังในคลังก่อนที่จะดำเนินการนี้</string>
     <string name="file_select_cover">เลือกภาพหน้าปก</string>
     <string name="file_select_backup">เลือกแฟ้มข้อมูลสำรอง</string>
-    <string name="update_check_confirm">ดาวน์โหลด</string>
-    <string name="update_check_no_new_updates">ไม่มีการอัปเดตใหม่</string>
-    <string name="update_check_notification_download_in_progress">กำลังดาวน์โหลด…</string>
-    <string name="update_check_notification_update_available">มีเวอร์ชั่นใหม่!</string>
     <string name="information_no_downloads">ไม่มีการดาวน์โหลด</string>
     <string name="information_no_recent">ไม่มีอัปเดตล่าสุด</string>
     <string name="information_no_recent_manga">ไม่มีอะไรที่อ่านเมื่อเร็ว ๆ นี้</string>
@@ -314,10 +308,8 @@
     <string name="exclude">ที่ยกเว้นไว้: %s</string>
     <string name="include">ที่รวมไว้: %s</string>
     <string name="none">ไม่มี</string>
-    <string name="pref_library_update_categories_details">รายการในหมวดหมู่ที่ยกเว้นจะไม่ได้รับการอัปเดตแม้ว่าจะอยู่ในหมวดหมู่ที่รวมอยู่ด้วยก็ตาม</string>
     <string name="pref_library_update_refresh_metadata_summary">ตรวจสอบหน้าปกและรายละเอียดใหม่เมื่ออัปเดตคลัง</string>
     <string name="pref_library_update_refresh_metadata">โหลดข้อมูลเมตาใหม่โดยอัตโนมัติ</string>
-    <string name="pref_category_library_update">อัปเดตทั้งหมด</string>
     <string name="pref_category_display">การแสดงผล</string>
     <string name="parental_controls_info">นี่ไม่ได้เป็นการป้องกันไม่ให้ส่วนขยายที่ไม่เป็นทางการ หรือที่อาจถูกตั้งค่าสถานะไม่ถูกต้อง ให้แสดงเนื้อหา NSFW (18+) ภายในแอป</string>
     <string name="pref_show_nsfw_source">แสดงในรายการแหล่งข้อมูลและส่วนขยาย</string>
@@ -456,7 +448,6 @@
     <string name="pref_download_new_categories_details">รายการในหมวดหมู่ที่ยกเว้นไว้จะไม่ถูกดาวน์โหลดแม้ว่าจะอยู่ในหมวดหมู่ที่รวมอยู่ด้วยก็ตาม</string>
     <string name="pref_category_auto_download">ดาวน์โหลดอัตโนมัติ</string>
     <string name="download_insufficient_space">ไม่สามารถดาวน์โหลดตอนได้เนื่องจากพื้นที่จัดเก็บเหลือน้อย</string>
-    <string name="update_check_eol">ไม่รองรับ Android เวอร์ชันนี้อีกต่อไป</string>
     <string name="file_picker_error">ไม่พบแอปเลือกแฟ้ม</string>
     <string name="notification_chapters_multiple">ตอนที่ %1$s</string>
     <string name="notification_chapters_single_and_more">ตอนที่ %1$s และอีก %2$d ตอน</string>
@@ -473,12 +464,10 @@
     <string name="information_empty_category_dialog">คุณยังไม่มีหมวดหมู่</string>
     <string name="confirm_lock_change">ยืนยันการเปลี่ยนแปลง</string>
     <string name="relative_time_today">วันนี้</string>
-    <string name="pref_update_only_completely_read">ข้ามรายการที่มีตอนที่ยังไม่ได้อ่าน</string>
     <string name="off">ปิด</string>
     <string name="on">เปิด</string>
     <string name="save_chapter_as_cbz">บันทึกเป็นแฟ้ม CBZ</string>
     <string name="privacy_policy">นโยบายความเป็นส่วนตัว</string>
-    <string name="library_errors_help">สำหรับความช่วยเหลือเกี่ยวกับวิธีการแก้ไขข้อผิดพลาดในการอัปเดตคลัง ไปยัง %1$s</string>
     <string name="local_filter_order_by">เรียงตาม</string>
     <string name="date">วันที่</string>
     <string name="categorized_display_settings">การตั้งค่าการจัดเรียงตามหมวดหมู่</string>
@@ -499,7 +488,6 @@
     <string name="cover_saved">บันทึกปกแล้ว</string>
     <string name="error_saving_cover">ผิดพลาดในการบันทึกปก</string>
     <string name="source_unsupported">ไม่รองรับแหล่งที่มานี้</string>
-    <string name="channel_app_updates">แอพอัปเดต</string>
     <string name="label_default">ค่าเริ่มต้น</string>
     <string name="error_sharing_cover">ผิดพลาดในการแบ่งปันปก</string>
     <string name="action_start_downloading_now">เริ่มดาวน์โหลดเลย</string>
@@ -552,11 +540,7 @@
     <string name="pref_navigate_pan">แพนหน้ากว้าง</string>
     <string name="action_display_cover_only_grid">ตารางแสดงแค่หน้าปก</string>
     <string name="pref_landscape_zoom">ซูมภาพกว้างโดยอัตโนมัติ</string>
-    <string name="skipped_reason_not_caught_up">ถูกข้ามเนื่องจากมีตอนที่ยังไม่ได้อ่าน</string>
-    <string name="skipped_reason_not_started">ถูกข้ามเนื่องจากยังไม่มีตอนใด ๆ ถูกอ่าน</string>
     <string name="action_show_manga">แสดงรายการ</string>
-    <string name="pref_update_only_started">ข้ามรายการที่ยังไม่ได้เริ่มอ่าน</string>
-    <string name="skipped_reason_completed">ถูกข้ามเนื่องจากเรื่องนี้จบแล้ว</string>
     <string name="learn_more">แตะเพื่อเรียนรู้เพิ่มเติม</string>
     <string name="rotation_reverse_portrait">แนวตั้งแบบกลับด้าน</string>
     <string name="action_move_to_top_all_for_series">ย้ายเรื่องไปด้านบน</string>
@@ -615,7 +599,6 @@
     <string name="popular">ยอดนิยม</string>
     <string name="missing_storage_permission">ไม่ได้รับการอนุญาตให้ใช้งานที่จัดเก็บ</string>
     <string name="action_search_hint">ค้นหา…</string>
-    <string name="skipped_reason_not_always_update">ถูกข้ามเนื่องจากเรื่องไม่จำเป็นต้องถูกอัปเดต</string>
     <string name="pref_appearance_summary">ธีม, รูปแบบวันที่และเวลา</string>
     <string name="pref_library_summary">หมวดหมู่, การอัปเดตคลัง, การปัดรายการตอน</string>
     <string name="pref_reader_summary">โหมดการอ่าน, การแสดงผล, การนำทาง</string>
@@ -685,8 +668,6 @@
     <string name="action_set_interval">กำหนดช่วงเวลา</string>
     <string name="action_filter_interval_custom">กำหนดความถี่ในการอัปเดต</string>
     <string name="action_sort_next_updated">การอัปเดตที่คาดไว้ต่อไป</string>
-    <string name="pref_update_only_in_release_period">คาดการณ์เวลาออกครั้งต่อไป</string>
-    <string name="skipped_reason_not_in_release_period">ข้ามไปเนื่องจากคาดว่าจะไม่มีการออกในวันนี้</string>
     <string name="manga_display_interval_title">ประมาณทุกๆ</string>
     <string name="manga_display_modified_interval_title">ตั้งค่าให้อัพเดตทุกๆ</string>
     <string name="intervals_header">ช่วงเวลา</string>
@@ -760,7 +741,6 @@
 \nแนะนำให้ใช้โฟลเดอร์เฉพาะ
 \n
 \nโฟลเดอร์ที่เลือก: %2$s</string>
-    <string name="pref_library_update_smart_update">อัปเดตอัจฉริยะ</string>
     <string name="manga_interval_custom_amount">ความถี่ในการอัปเดตกำหนดเอง:</string>
     <string name="onboarding_storage_help_action">คู่มือการจัดเก็บข้อมูล</string>
     <string name="ext_revoke_trust">เพิกถอนส่วนขยายที่ไม่รู้จักที่เชื่อถือไว้</string>

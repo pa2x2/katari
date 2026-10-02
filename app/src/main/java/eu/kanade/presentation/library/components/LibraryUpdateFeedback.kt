@@ -32,6 +32,7 @@ import eu.kanade.tachiyomi.data.library.LibraryUpdateScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withTimeoutOrNull
 import tachiyomi.i18n.*
+import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 import kotlin.time.Duration.Companion.seconds
 
@@ -79,15 +80,19 @@ private fun LibraryUpdateStripContent(
     onCancel: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val scopeLabel = stringResource(
+    val scopeLabel = progress.scopeName?.let { stringResource(MR.strings.updating_named, it) } ?: stringResource(
         when (progress.scope) {
             LibraryUpdateScope.Library -> MR.strings.updating_library
             LibraryUpdateScope.Category -> MR.strings.updating_category
             LibraryUpdateScope.Source -> MR.strings.updating_extension
             LibraryUpdateScope.Type -> MR.strings.updating_type
             LibraryUpdateScope.Group -> MR.strings.updating_group
+            LibraryUpdateScope.Selection -> MR.strings.updating_selection
         },
     )
+    val skippedLabel = progress.skipped.takeIf { it > 0 }?.let {
+        pluralStringResource(MR.plurals.library_update_skipped_by_rules, it, it)
+    }
     Surface(
         modifier = modifier.fillMaxWidth(),
         color = MaterialTheme.colorScheme.surfaceContainer,
@@ -101,16 +106,20 @@ private fun LibraryUpdateStripContent(
                 verticalArrangement = Arrangement.spacedBy(6.dp),
             ) {
                 Text(
-                    text = if (progress.total > 0) {
-                        stringResource(
-                            MR.strings.library_update_progress,
-                            scopeLabel,
-                            progress.completed,
-                            progress.total,
-                        )
-                    } else {
-                        scopeLabel
-                    },
+                    text = listOfNotNull(
+                        if (progress.total > 0) {
+                            stringResource(
+                                MR.strings.library_update_progress,
+                                scopeLabel,
+                                progress.completed,
+                                progress.total,
+                            )
+                        } else {
+                            scopeLabel
+                        },
+                        skippedLabel,
+                    )
+                        .joinToString(" · "),
                     style = MaterialTheme.typography.labelMedium,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,

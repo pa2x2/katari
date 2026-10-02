@@ -15,10 +15,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -30,7 +28,6 @@ import eu.kanade.tachiyomi.ui.browse.immersive.EntryImmersiveContent
 import eu.kanade.tachiyomi.ui.browse.immersive.EntryImmersiveItemKey
 import eu.kanade.tachiyomi.ui.browse.immersive.EntryImmersiveScreenModel
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.source.model.CatalogListItem
@@ -160,13 +157,8 @@ private fun rememberFeedEntry(
     itemRef: FeedItemRef,
     timelineModel: CatalogChronologicalFeedScreenModel,
 ): Entry? {
-    var entry by remember(itemRef) { mutableStateOf<Entry?>(null) }
-    LaunchedEffect(itemRef, timelineModel) {
-        timelineModel.subscribeItem(itemRef).collectLatest { item ->
-            entry = (item as CatalogListItem.EntryItem).entry
-        }
-    }
-    return entry
+    val item by remember(itemRef, timelineModel) { timelineModel.itemState(itemRef) }.collectAsState()
+    return (item as? CatalogListItem.EntryItem)?.entry
 }
 
 private fun FeedItemRef.toImmersiveItemKey(): EntryImmersiveItemKey {

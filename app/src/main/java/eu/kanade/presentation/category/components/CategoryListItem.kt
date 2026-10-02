@@ -25,7 +25,7 @@ import tachiyomi.presentation.core.i18n.stringResource
 @Composable
 fun ReorderableCollectionItemScope.CategoryListItem(
     category: Category,
-    onRename: () -> Unit,
+    onEdit: () -> Unit,
     onDelete: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -33,7 +33,7 @@ fun ReorderableCollectionItemScope.CategoryListItem(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable(onClick = onRename)
+                .clickable(onClick = onEdit)
                 .padding(vertical = MaterialTheme.padding.small)
                 .padding(
                     start = MaterialTheme.padding.small,
@@ -52,10 +52,10 @@ fun ReorderableCollectionItemScope.CategoryListItem(
                 text = category.name,
                 modifier = Modifier.weight(1f),
             )
-            IconButton(onClick = onRename) {
+            IconButton(onClick = onEdit) {
                 Icon(
                     imageVector = Icons.Outlined.Edit,
-                    contentDescription = stringResource(MR.strings.action_rename_category),
+                    contentDescription = stringResource(MR.strings.action_edit_category),
                 )
             }
             IconButton(onClick = onDelete) {

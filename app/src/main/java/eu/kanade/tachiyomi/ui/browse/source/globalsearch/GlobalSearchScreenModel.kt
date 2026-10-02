@@ -2,17 +2,19 @@ package eu.kanade.tachiyomi.ui.browse.source.globalsearch
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
-import androidx.compose.runtime.produceState
 import cafe.adriel.voyager.core.model.StateScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.presentation.util.ioCoroutineScope
 import eu.kanade.tachiyomi.extension.ExtensionManager
+import eu.kanade.tachiyomi.ui.base.observation.ObservedItemStore
+import eu.kanade.tachiyomi.ui.base.observation.collectAsState
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -41,6 +43,13 @@ class GlobalSearchScreenModel(
 
     private val coroutineDispatcher = Executors.newFixedThreadPool(5).asCoroutineDispatcher()
     private var searchJob: Job? = null
+    private val itemStore = ObservedItemStore<Long, GlobalSearchItem>(
+        scope = ioCoroutineScope,
+        keyOf = GlobalSearchItem::id,
+        supersedes = { candidate, current -> candidate.entry.version >= current.entry.version },
+    ) { entryIds ->
+        getEntry.subscribe(entryIds).map { entries -> entries.map(::GlobalSearchItem) }
+    }
 
     private val enabledLanguages = sourcePreferences.enabledLanguages.get()
     private val disabledSources = sourcePreferences.disabledSources.get()
@@ -84,12 +93,7 @@ class GlobalSearchScreenModel(
 
     @Composable
     fun getItem(initialItem: GlobalSearchItem): androidx.compose.runtime.State<GlobalSearchItem> {
-        return produceState(initialValue = initialItem) {
-            getEntry.subscribe(initialItem.url, initialItem.source, initialItem.entryType)
-                .collectLatest { entry ->
-                    if (entry != null) value = GlobalSearchItem(entry)
-                }
-        }
+        return itemStore.collectAsState(initialItem)
     }
 
     private fun getEnabledSources(): List<EntryCatalogueSourceInfo> {

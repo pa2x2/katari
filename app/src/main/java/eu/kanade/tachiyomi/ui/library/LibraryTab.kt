@@ -40,6 +40,8 @@ import eu.kanade.presentation.library.MoveEntriesProfileDialog
 import eu.kanade.presentation.library.components.LibraryContent
 import eu.kanade.presentation.library.components.LibraryScrollToTopTarget
 import eu.kanade.presentation.library.components.LibraryToolbar
+import eu.kanade.presentation.library.components.LibraryUpdateModeDialog
+import eu.kanade.presentation.library.update.rememberLibraryUpdateStarter
 import eu.kanade.presentation.more.onboarding.GETTING_STARTED_URL
 import eu.kanade.presentation.more.settings.screen.data.rememberRestoreBackupLauncher
 import eu.kanade.presentation.util.Tab
@@ -111,26 +113,25 @@ data object LibraryTab : Tab {
         val snackbarHostState = remember { SnackbarHostState() }
         val scrollToTopTarget = remember { LibraryScrollToTopTarget() }
 
-        // A started update reports itself on the library's progress strip; only a refused start needs a message.
-        fun showAlreadyRunningMessage(started: Boolean) {
-            if (started) return
-            scope.launch {
-                snackbarHostState.showSnackbar(context.stringResource(MR.strings.update_already_running))
-            }
+        // A started update also reports its progress on the library's progress strip.
+        val updateStarter = rememberLibraryUpdateStarter(snackbarHostState) {
+            LibraryUpdateJob.startSkippedOfLatest(context)
         }
 
         val onClickRefresh: suspend (LibraryScreenModel.State) -> Boolean = { state ->
             val activePage = state.activePage
-            LibraryUpdateJob.startNow(
-                context = context,
-                category = activePage?.category,
-                sourceId = activePage?.sourceId,
-                entryType = activePage?.entryType,
-            ).also(::showAlreadyRunningMessage)
+            updateStarter.start {
+                LibraryUpdateJob.startNow(
+                    context = context,
+                    category = activePage?.category,
+                    sourceId = activePage?.sourceId,
+                    entryType = activePage?.entryType,
+                )
+            }
         }
 
         val onClickGlobalUpdate: suspend () -> Boolean = {
-            LibraryUpdateJob.startNow(context).also(::showAlreadyRunningMessage)
+            updateStarter.start { LibraryUpdateJob.startNow(context) }
         }
 
         Scaffold(
@@ -199,6 +200,11 @@ data object LibraryTab : Tab {
                     }.takeIf { screenModel.canMigrateSelection() },
                     onMoveToProfileClicked = screenModel::openMoveProfileDialog
                         .takeIf { visibleProfiles.any { it.id != activeProfile?.id } },
+                    onCheckForUpdatesClicked = {
+                        val entryIds = screenModel.takeSelectionForUpdate()
+                        scope.launch { updateStarter.start { LibraryUpdateJob.startSelection(context, entryIds) } }
+                    },
+                    onUpdateModeClicked = screenModel::openUpdateModeDialog,
                 )
             },
             snackbarHost = { AppSnackbarHost(hostState = snackbarHostState) },
@@ -319,6 +325,14 @@ data object LibraryTab : Tab {
                     onMove = screenModel::reorderMergeSelection,
                     onSelectTarget = screenModel::setMergeTarget,
                     onConfirm = screenModel::confirmMergeSelection,
+                )
+            }
+            is LibraryScreenModel.Dialog.UpdateMode -> {
+                LibraryUpdateModeDialog(
+                    entryCount = dialog.entryIds.size,
+                    currentMode = dialog.currentMode,
+                    onDismissRequest = onDismissRequest,
+                    onModeSelected = { mode -> screenModel.setUpdateMode(dialog.entryIds, mode) },
                 )
             }
             is LibraryScreenModel.Dialog.MoveProfile -> {

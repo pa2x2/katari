@@ -21,7 +21,6 @@
     <string name="all">Sve</string>
     <string name="default_category_summary">Uvijek pitaj</string>
     <string name="default_category">Standardna kategorija</string>
-    <string name="pref_update_only_non_completed">Preskoči unose sa stanjem „Završeno“</string>
     <string name="charging">Kad se puni</string>
     <string name="pref_library_update_restriction">Ograničenja uređaja za automatska aktualiziranja</string>
     <string name="update_weekly">Tjedno</string>
@@ -31,7 +30,6 @@
     <string name="update_6hour">Svakih 6 sati</string>
     <string name="update_never">Isključeno</string>
     <string name="pref_library_update_interval">Automatska aktualiziranja</string>
-    <string name="pref_category_library_update">Globalno aktualiziranje</string>
     <string name="landscape">Polegnuti format</string>
     <string name="portrait">Uspravni format</string>
     <string name="pref_library_columns">Broj stavki po retku</string>
@@ -111,7 +109,6 @@
     <string name="action_view_chapters">Pogledaj poglavlja</string>
     <string name="action_edit_cover">Uredi naslovnicu</string>
     <string name="action_move_category">Postavi kategorije</string>
-    <string name="action_rename_category">Preimenuj kategoriju</string>
     <string name="action_edit_categories">Uredi kategorije</string>
     <string name="action_add_category">Dodaj kategoriju</string>
     <string name="action_add">Dodaj</string>
@@ -216,10 +213,6 @@
     <string name="pref_reader_navigation">Navigacija</string>
     <string name="pref_skip_filtered_chapters">Preskoči filtrirana poglavlja</string>
     <string name="pref_skip_read_chapters">Preskoči pročitana poglavlja</string>
-    <string name="update_check_notification_update_available">Dostupna je nova verzija!</string>
-    <string name="update_check_notification_download_in_progress">Preuzimanje …</string>
-    <string name="update_check_no_new_updates">Nema novih verzija</string>
-    <string name="update_check_confirm">Preuzmi</string>
     <string name="file_select_backup">Odaberi datoteku sigurnosne kopije</string>
     <string name="file_select_cover">Odaberi sliku naslovnice</string>
     <string name="notification_first_add_to_library">Prije toga, dodajte stavku u biblioteku</string>
@@ -456,10 +449,8 @@
     <string name="pref_category_auto_download">Automatsko preuzimanje</string>
     <string name="exclude">Isključi: %s</string>
     <string name="include">Uključi: %s</string>
-    <string name="pref_library_update_categories_details">Unosi u isključenim kategorijama neće se aktualizirati čak i ako su u uključenim kategorijama.</string>
     <string name="action_sort_chapter_fetch_date">Datum preuzimanja poglavlja</string>
     <string name="action_show_errors">Dodirni za prikaz detalja</string>
-    <string name="update_check_eol">Ove se Android verzija više ne podržava</string>
     <string name="clipboard_copy_error">Kopiranje nije uspješno</string>
     <string name="rotation_landscape">Polegnuti format</string>
     <string name="rotation_portrait">Uspravni format</string>
@@ -530,9 +521,7 @@
     <string name="label_background_activity">Aktivnost u pozadini</string>
     <string name="pref_hide_threshold">Osjetljivost za skrivanje izbornika pri listanju</string>
     <string name="pref_auto_clear_chapter_cache">Izbriši predmemoriju poglavlja tijekom pokretanja aplikacije</string>
-    <string name="channel_app_updates">Aktualiziranja aplikacije</string>
     <string name="database_clean">Nema se što raščistiti</string>
-    <string name="pref_update_only_completely_read">Preskoči unose s nepročitanim poglavljima</string>
     <string name="enhanced_services">Poboljšane usluge praćenja</string>
     <string name="enhanced_tracking_info">Pruža poboljšane značajke za određene izvore. Unosi se automatski prate kada se dodaju u biblioteku.</string>
     <string name="action_track">Prati</string>
@@ -547,16 +536,11 @@
     <string name="publishing_finished">Objavljivanje završeno</string>
     <string name="cancelled">Prekinuto</string>
     <string name="on_hiatus">Zaustavljeno</string>
-    <string name="library_errors_help">Za pomoć o tome kako popraviti greške aktualiziranja biblioteke, pogledaj %1$s</string>
     <string name="save_chapter_as_cbz">Spremi kao CBZ arhivu</string>
     <string name="action_show_manga">Prikaži unos</string>
     <string name="action_display_cover_only_grid">Samo naslovnice</string>
     <string name="pref_navigate_pan">Panoramski prikaz širokih slika</string>
     <string name="pref_landscape_zoom">Automatski zumiraj u široke slike</string>
-    <string name="pref_update_only_started">Preskoči nepokrenute unose</string>
-    <string name="skipped_reason_completed">Preskočeno, jer je serija kompletna</string>
-    <string name="skipped_reason_not_started">Preskočeno, jer nijedno poglavlje nije pročitano</string>
-    <string name="skipped_reason_not_caught_up">Preskočeno, jer postoje nepročitana poglavlja</string>
     <string name="learn_more">Dodirni za daljnje informacije</string>
     <string name="rotation_reverse_portrait">Preokreni uspravni format</string>
     <string name="action_move_to_top_all_for_series">Premjesti seriju na vrh</string>
@@ -657,7 +641,6 @@
 \nDodirnite da biste saznali više.</string>
     <string name="download_notifier_cache_renewal">Provjeravanje preuzimanja</string>
     <string name="update_check_open">Otvori na GitHubu</string>
-    <string name="skipped_reason_not_always_update">Preskočeno jer serija ne zahtijeva aktualiziranja</string>
     <string name="appwidget_updates_description">Pogledaj nedavno aktualizirane unose u biblioteci</string>
     <string name="remove_manga">Uklonit ćeš „%s” iz svoje biblioteke</string>
     <string name="appwidget_unavailable_locked">Widget nije dostupan kada je zaključavanje aplikacije aktivirano</string>
@@ -688,10 +671,8 @@
     <string name="action_sort_next_updated">Sljedeće očekivano aktualiziranje</string>
     <string name="manga_display_modified_interval_title">Postavi aktualiziranje svakih</string>
     <string name="action_ok">U redu</string>
-    <string name="pref_update_only_in_release_period">Predvidi vrijeme sljedećeg izdanja</string>
     <string name="intervals_header">Intervali</string>
     <string name="track_delete_title">Ukloniti praćenje %s?</string>
-    <string name="skipped_reason_not_in_release_period">Preskočeno, jer se danas nije očekivalo izdanje</string>
     <string name="track_delete_text">Ovo će ukloniti lokalno praćenje.</string>
     <string name="track_delete_remote_text">Također ukloni iz %s</string>
     <string name="delete_downloaded">Izbriši preuzete</string>
@@ -761,7 +742,6 @@
     <string name="onboarding_storage_help_info">Aktualiziraš sa starije verzije i ne znaš što odabrati? Potraži informacije u vodiču spremišta.</string>
     <string name="onboarding_storage_help_action">Vodič spremišta</string>
     <string name="manga_interval_custom_amount">Prilagođena učestalost aktualiziranja:</string>
-    <string name="pref_library_update_smart_update">Pametno aktualiziranje</string>
     <string name="ext_revoke_trust">Opozovi pouzdana nepoznata proširenja</string>
     <string name="action_open_repo">Otvori repozitorij izvora</string>
     <string name="private_settings">Uključi osjetljive postavke (kao što su tokeni za prijavu za usluge praćenja)</string>
@@ -885,7 +865,6 @@
     <string name="pref_download_concurrent_pages">Istovremena preuzimanja stranica</string>
     <string name="pref_download_concurrent_pages_summary">Istovremeno preuzete stranice po izvoru</string>
     <string name="action_webview_close_tab">Zatvori karticu</string>
-    <string name="action_filter_excluded_scanlators">Filtriraj isključene amaterske prevoditelje</string>
     <string name="download_bookmarked">Zabilježeno</string>
     <string name="label_support_us">Podrži nas</string>
     <string name="supportUsScreen.perks">Pokrovitelji dobivaju pristup ekskluzivnim kanalima, a uskoro slijede i dodatne pogodnosti.</string>

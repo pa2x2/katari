@@ -33,7 +33,6 @@
     <string name="action_add">Tambah</string>
     <string name="action_add_category">Tambah kategori</string>
     <string name="action_edit_categories">Ubah kategori</string>
-    <string name="action_rename_category">Ubah nama kategori</string>
     <string name="action_move_category">Tentukan kategori</string>
     <string name="action_edit_cover">Ubah gambar sampul</string>
     <string name="action_pause">Hentikan sementara</string>
@@ -78,7 +77,6 @@
     <string name="all">Semua</string>
     <string name="pref_library_update_restriction">Pembatasan pembaruan otomatis</string>
     <string name="charging">Saat mengisi daya</string>
-    <string name="pref_update_only_non_completed">Lewati daftar dengan status \"Selesai\"</string>
     <string name="pref_auto_update_manga_sync">Perbarui kemajuan setelah membaca</string>
     <string name="default_category">Kategori bawaan</string>
     <string name="default_category_summary">Selalu tanya</string>
@@ -201,10 +199,6 @@
     <string name="notification_first_add_to_library">Tolong tambahkan entri ke pustaka Anda sebelum melakukan ini</string>
     <string name="file_select_cover">Pilih gambar sampul</string>
     <string name="file_select_backup">Pilih berkas cadangan</string>
-    <string name="update_check_confirm">Unduh</string>
-    <string name="update_check_no_new_updates">Pembaruan tidak tersedia</string>
-    <string name="update_check_notification_download_in_progress">Mengunduh…</string>
-    <string name="update_check_notification_update_available">Versi baru tersedia!</string>
     <string name="information_no_downloads">Tidak ada unduhan</string>
     <string name="information_no_recent">Tidak ada pembaruan terkini</string>
     <string name="information_no_recent_manga">Tidak ada yang dibaca baru-baru ini</string>
@@ -296,7 +290,6 @@
     <string name="action_move_to_top">Pindahkan ke atas</string>
     <string name="action_move_to_bottom">Pindahkan ke bawah</string>
     <string name="label_more">Lainnya</string>
-    <string name="pref_category_library_update">Pembaruan</string>
     <string name="lock_with_biometrics">Memerlukan buka kunci</string>
     <string name="lock_when_idle">Kunci saat diam</string>
     <string name="lock_always">Selalu</string>
@@ -452,7 +445,6 @@
     <string name="include">Termasuk: %s</string>
     <string name="pref_dual_page_split">Membagi halaman lebar</string>
     <string name="cancel_all_for_series">Batal semua untuk seri ini</string>
-    <string name="update_check_eol">Versi Android ini tidak lagi didukung</string>
     <string name="clipboard_copy_error">Gagal menyalin ke papan klip</string>
     <string name="pref_dns_over_https">DNS melalui HTTPS (DoH)</string>
     <string name="kindlish_nav">semacam Kindle</string>
@@ -468,7 +460,6 @@
     <string name="rotation_type">Rotasi</string>
     <string name="pref_grayscale">Skala abu-abu</string>
     <string name="pref_show_navigation_mode">Tampilkan zona ketukan</string>
-    <string name="pref_library_update_categories_details">Entri dalam kategori yang dikecualikan tidak akan diperbarui meskipun mereka juga termasuk dalam kategori yang disertakan.</string>
     <string name="date">Tanggal</string>
     <string name="local_filter_order_by">Urutkan menurut</string>
     <string name="local_invalid_format">Format bab tidak valid</string>
@@ -536,25 +527,18 @@
     <string name="action_display_language_badge">Bahasa</string>
     <string name="update_72hour">Tiap 3 hari</string>
     <string name="connected_to_wifi">Hanya pada Wi-FI</string>
-    <string name="channel_app_updates">Pembaruan aplikasi</string>
     <string name="ext_update_all">Perbarui semuanya</string>
     <string name="pref_auto_clear_chapter_cache">Bersihkan cache bab saat aplikasi dibuka</string>
     <string name="database_clean">Tidak ada yang perlu dibersihkan</string>
     <string name="clear_database_source_item_count">%1$d entri non-perpustakaan dalam database</string>
     <string name="extension_api_error">Gagal mendapatkan ekstensi yang tersedia</string>
-    <string name="pref_update_only_completely_read">Lewati daftar dengan chapter yang belum dibaca</string>
     <string name="privacy_policy">Kebijakan privasi</string>
     <string name="publishing_finished">Penerbitan selesai</string>
     <string name="cancelled">Dibatalkan</string>
     <string name="on_hiatus">Sedang Hiatus</string>
-    <string name="library_errors_help">Untuk bantuan cara memperbaiki kesalahan pembaruan pustaka, lihat %1$s</string>
     <string name="save_chapter_as_cbz">Simpan sebagai arsip CBZ</string>
     <string name="action_show_manga">Lihat entri</string>
     <string name="action_display_cover_only_grid">Grid sampul saja</string>
-    <string name="pref_update_only_started">Lewati dafter yang belum mulai dibaca</string>
-    <string name="skipped_reason_completed">Dilewati karena seri telah selesai</string>
-    <string name="skipped_reason_not_caught_up">Dilewati karena ada bab yang belum dibaca</string>
-    <string name="skipped_reason_not_started">Dilewati karena tidak ada bab yang dibaca</string>
     <string name="pref_landscape_zoom">Secara otomatis melebarkan gambar</string>
     <string name="pref_navigate_pan">Geser gambar lebar</string>
     <string name="learn_more">Pelajari lebih lanjut</string>
@@ -614,7 +598,6 @@
     <string name="are_you_sure">Apa kamu yakin?</string>
     <string name="popular">Populer</string>
     <string name="missing_storage_permission">Izin penyimpanan tidak diberikan</string>
-    <string name="skipped_reason_not_always_update">Dilewati karena seri ini tidak memerlukan pembaruan</string>
     <string name="action_search_hint">Cari…</string>
     <string name="pref_browse_summary">Sumber, ekstensi, pencarian global</string>
     <string name="pref_reader_summary">Mode membaca, tampilan, navigasi</string>
@@ -684,10 +667,8 @@
     <string name="pref_double_tap_zoom">Ketuk dua kali untuk memperbesar</string>
     <string name="action_set_interval">Terapkan jeda waktu</string>
     <string name="action_filter_interval_custom">Penyesuaian frekuensi update</string>
-    <string name="skipped_reason_not_in_release_period">Dilewati karena tidak ada rilis yang diharapkan hari ini</string>
     <string name="action_sort_next_updated">Pembaruan yang diharapkan berikutnya</string>
     <string name="intervals_header">Interval</string>
-    <string name="pref_update_only_in_release_period">Prediksikan waktu rilis selanjutnya</string>
     <string name="manga_display_interval_title">Perkirakan setiap</string>
     <string name="manga_display_modified_interval_title">Atur untuk memperbarui setiap</string>
     <string name="track_delete_title">Hapus %s pelacakan?</string>
@@ -756,7 +737,6 @@
 \n
 \nDirektori yang dipilih: %2$s</string>
     <string name="onboarding_storage_help_action">Panduan penyimpanan</string>
-    <string name="pref_library_update_smart_update">Pembauan pintar</string>
     <string name="onboarding_storage_help_info">Memperbarui dari versi lama dan tak yakin harus pilih mana? lihat panduan penyimpanan untuk informasi lebih lanjut.</string>
     <string name="invalid_backup_file_error">Kesalahan penuh:</string>
     <string name="private_settings">Sertakan pengaturan sensitif (contohnya, token login pelacak)</string>
@@ -885,7 +865,6 @@
     <string name="pref_download_concurrent_pages">Ambil berkas halaman secara bersamaan</string>
     <string name="pref_download_concurrent_pages_summary">Halaman yang diunduh secara bersamaan per sumber</string>
     <string name="action_webview_close_tab">Tutup tab</string>
-    <string name="action_filter_excluded_scanlators">Filter yang mengecualikan pemindai</string>
     <string name="label_support_us">Dukung Kami</string>
     <string name="extensionStores">Tempat ekstensi</string>
     <string name="action.addExtensionStore">Tambah ekstensi</string>

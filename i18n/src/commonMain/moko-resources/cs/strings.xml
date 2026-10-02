@@ -49,7 +49,6 @@
     <string name="update_24hour">Denně</string>
     <string name="update_48hour">Každé 2 dny</string>
     <string name="update_weekly">Týdně</string>
-    <string name="pref_update_only_non_completed">Přeskočit položky ve stavu \"Dokončeno\"</string>
     <string name="pref_auto_update_manga_sync">Aktualizovat počet kapitol po přečtení</string>
     <string name="ext_update">Aktualizovat</string>
     <string name="ext_install">Instalovat</string>
@@ -130,9 +129,6 @@
     <string name="copy">Kopírovat</string>
     <string name="download_queue_error">Došlo k chybě při stahování kapitol. Zkuste to znovu v sekci stahování</string>
     <string name="file_select_backup">Vybrat záložní soubor</string>
-    <string name="update_check_confirm">Stáhnout</string>
-    <string name="update_check_no_new_updates">Žádné nové aktualizace</string>
-    <string name="update_check_notification_update_available">Dostupná aktualizace!</string>
     <string name="information_no_recent">Žádné nedávné aktualizace</string>
     <string name="information_no_recent_manga">Nic nedávno čtené</string>
     <string name="download_notifier_title_error">Chyba</string>
@@ -149,7 +145,6 @@
     <string name="action_bookmark">Založit kapitolu</string>
     <string name="action_remove_bookmark">Odstranit záložku</string>
     <string name="action_update_library">Aktualizovat knihovnu</string>
-    <string name="action_rename_category">Přejmenovat kategorii</string>
     <string name="action_move_category">Vybrat kategorie</string>
     <string name="action_pause">Pauza</string>
     <string name="action_retry">Opakovat</string>
@@ -259,7 +254,6 @@
     <string name="notification_cover_update_failed">Chyba při aktualizaci obalu</string>
     <string name="notification_first_add_to_library">Přidejte si prosím položku do knihovny před tím, než toto uděláte</string>
     <string name="file_select_cover">Vybrat obrázek obalu</string>
-    <string name="update_check_notification_download_in_progress">Probíhá stahování…</string>
     <string name="information_no_downloads">Žádné stahování</string>
     <string name="information_empty_library">Vaše knihovna je prázdná</string>
     <string name="information_empty_category">Nemáte žádné kategorie. Klikněte na tlačítko plus a vytvořte nějakou pro zorganizování vaší knihovny.</string>
@@ -285,7 +279,6 @@
     <string name="obsolete_extension_message">Toto rozšíření není spojeno s žádným obchodem. Nebude dostávat aktualizace, nemusí fungovat správně a může způsobit problémy s aplikací. Doporučujeme jej odinstalovat.</string>
     <string name="logout">Odhlásit se</string>
     <string name="pref_date_format">Formát data</string>
-    <string name="pref_category_library_update">Globální aktualizace</string>
     <string name="logout_title">Odhlásit z %1$s?</string>
     <string name="logout_success">Nyní jste odhlášený</string>
     <string name="paused">Pozastaveno</string>
@@ -444,10 +437,8 @@
     <string name="exclude">Vynechat: %s</string>
     <string name="include">Zahrnout: %s</string>
     <string name="none">Žádné</string>
-    <string name="pref_library_update_categories_details">Položky ve vynechaných kategoriích nebudou aktualizovány, i kdyby byly také v zahrnutých kategoriích.</string>
     <string name="pref_category_display">Zobrazení</string>
     <string name="action_display_show_tabs">Zobrazovat karty kategorií</string>
-    <string name="update_check_eol">Tato verze systému Android již není podporována</string>
     <string name="clipboard_copy_error">Kopírování do schránky se nezdařilo</string>
     <string name="vertical_plus_viewer">Dlouhý pruh s mezerami</string>
     <string name="edge_nav">Okraj</string>
@@ -536,27 +527,20 @@
     <string name="download_queue_size_warning">Varování: hromadné stahování může vést k tomu, že zdroje zpomalí a/nebo zablokují %s. Klepnutím se dozvíte více.</string>
     <string name="ext_update_all">Aktualizovat vše</string>
     <string name="pref_verbose_logging_summary">Vypisovat podrobné informace do systémového protokolu (sníží výkon aplikace)</string>
-    <string name="channel_app_updates">Aktualizace aplikace</string>
     <string name="notification_size_warning">Varování: velké aktualizace poškozují zdroje a můžou vést k pomalejším aktualizacím a zvýšenému využití baterie. Klepnutím se dozvíte více.</string>
     <string name="pref_auto_clear_chapter_cache">Vymazat mezipaměť kapitol při spuštění aplikace</string>
     <string name="extension_api_error">Chyba v získání seznamu rozšíření</string>
     <string name="privacy_policy">Zásady ochrany osobních údajů</string>
     <string name="clear_database_source_item_count">%1$d položek v databázi co nejsou v knihovně</string>
-    <string name="pref_update_only_completely_read">Přeskočit položky s nepřečtenými kapitolami</string>
     <string name="database_clean">Nic k vyčištění</string>
     <string name="save_chapter_as_cbz">Uložit jako CBZ archiv</string>
-    <string name="library_errors_help">Nápovědu k tomu, jak opravit chyby při aktualizaci knihovny, viz %1$s</string>
     <string name="publishing_finished">Zveřejnění dokončeno</string>
     <string name="cancelled">Zrušeno</string>
     <string name="action_show_manga">Zobrazit položku</string>
     <string name="action_display_cover_only_grid">Mřížka jen s přebaly</string>
-    <string name="pref_update_only_started">Přeskočit nerozečtené položky</string>
     <string name="on_hiatus">Má pauzu</string>
-    <string name="skipped_reason_not_caught_up">Přeskočeno, protože obsahuje nepřečtené kapitoly</string>
     <string name="action_move_to_top_all_for_series">Přesunout sérii na začátek</string>
     <string name="learn_more">Klepnutím se dozvíte více</string>
-    <string name="skipped_reason_not_started">Přeskočeno, protože nebyly přečteny žádné kapitoly</string>
-    <string name="skipped_reason_completed">Přeskočeno, protože série je dokončena</string>
     <string name="disabled_nav">Zakázáno</string>
     <string name="empty_backup_error">Žádné záznamy v knihovně k zálohování</string>
     <string name="source_empty_screen">Žádný zdroj nenalezen</string>
@@ -614,7 +598,6 @@
     <string name="updates_last_update_info">Poslední aktualizace knihovny: %s</string>
     <string name="popular">Populární</string>
     <string name="missing_storage_permission">Nebyla udělena oprávnění k úložišti</string>
-    <string name="skipped_reason_not_always_update">Přeskočeno, protože série nevyžaduje aktualizace</string>
     <string name="action_search_hint">Vyhledat…</string>
     <string name="pref_reader_summary">Režim čtení, displej, navigace</string>
     <string name="pref_tracking_summary">Jednosměrná synchronizace postupu, rozšířená synchronizace</string>
@@ -687,9 +670,7 @@
     <string name="manga_display_interval_title">Odhadovat každý</string>
     <string name="manga_display_modified_interval_title">Nastavit aktualizaci každých</string>
     <string name="action_set_interval">Nastavit interval</string>
-    <string name="pref_update_only_in_release_period">Předpovědět čas příštího vydání</string>
     <string name="intervals_header">Intervaly</string>
-    <string name="skipped_reason_not_in_release_period">Přeskočeno, protože dnes nebylo očekáváno žádné vydání</string>
     <string name="track_delete_text">Tím se lokálně odstraní sledování.</string>
     <string name="track_delete_remote_text">Odebrat také z %s</string>
     <string name="action_ok">OK</string>
@@ -759,7 +740,6 @@
 \n
 \nVybraná složka: %2$s</string>
     <string name="invalid_backup_file_error">Úplná chyba:</string>
-    <string name="pref_library_update_smart_update">Chytrá aktualizace</string>
     <string name="manga_interval_expected_update">Předpoklad vydání nových kapitol za zhruba %1$s, kontrola co %2$s.</string>
     <string name="manga_interval_custom_amount">Vlastní frekvence aktualizace:</string>
     <string name="onboarding_storage_help_action">Průvodce uložištěm</string>
@@ -872,7 +852,6 @@
     <string name="migrationListScreen.progressDialog.cancelLabel">Zrušit</string>
     <string name="migrationListScreen.matchWithoutChapterToast">Žádné kapitoly nebyly nalezeny, tuto položku nelze použít pro migraci</string>
     <string name="download_bookmarked">Založeno</string>
-    <string name="action_filter_excluded_scanlators">Filtrovat vyloučené scanlátory</string>
     <string name="migrationConfigScreen.selectedHeader">Vybrané</string>
     <string name="migrationConfigScreen.availableHeader">Dostupné</string>
     <string name="migrationConfigScreen.additionalSearchQueryLabel">Dodatečná klíčová slova (volitelné)</string>

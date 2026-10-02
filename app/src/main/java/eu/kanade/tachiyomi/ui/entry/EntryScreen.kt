@@ -45,6 +45,10 @@ import eu.kanade.presentation.entry.components.SetIntervalDialog
 import eu.kanade.presentation.entry.translation.EntryChapterTranslationUi
 import eu.kanade.presentation.entry.translation.EntryTranslateSetupSheet
 import eu.kanade.presentation.entry.translation.TranslatableChapter
+import eu.kanade.presentation.entry.updates.EntryUpdatesSheet
+import eu.kanade.presentation.entry.updates.daysUntilRelease
+import eu.kanade.presentation.entry.updates.entryReleaseEstimateText
+import eu.kanade.presentation.entry.updates.entryUpdatesLabel
 import eu.kanade.presentation.library.DeleteLibraryEntriesDialog
 import eu.kanade.presentation.util.AssistContentScreen
 import eu.kanade.presentation.util.Screen
@@ -56,10 +60,12 @@ import eu.kanade.tachiyomi.ui.category.CategoryScreen
 import eu.kanade.tachiyomi.ui.entry.related.RelatedEntriesDialog
 import eu.kanade.tachiyomi.ui.entry.related.RelatedEntriesScreenModel
 import eu.kanade.tachiyomi.ui.entry.track.TrackInfoDialogHomeScreen
+import eu.kanade.tachiyomi.ui.entry.updates.EntryUpdatesScreenModel
 import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.tachiyomi.ui.setting.SettingsScreen
 import eu.kanade.tachiyomi.ui.webview.WebViewScreen
 import eu.kanade.tachiyomi.util.system.copyToClipboard
+import eu.kanade.tachiyomi.util.system.isReleaseBuildType
 import eu.kanade.tachiyomi.util.system.toShareIntent
 import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.launch
@@ -202,6 +208,40 @@ class EntryScreen(
         val openApplicable = entryOpenFeature.isApplicable(successState.entry.type)
         val consumptionApplicable = entryConsumptionFeature.isApplicable(successState.entry.type)
 
+        val updatesScreenModel = rememberScreenModel(tag = "updates-${successState.entry.id}") {
+            EntryUpdatesScreenModel(successState.entry.id)
+        }
+        val updatesState by updatesScreenModel.state.collectAsStateWithLifecycle()
+        var showUpdatesSheet by rememberSaveable(successState.entry.id) { mutableStateOf(false) }
+        val nextUpdateDays = remember(successState.entry.expectedNextUpdate) {
+            daysUntilRelease(successState.entry.expectedNextUpdate)
+        }
+        val updatesLabel = entryUpdatesLabel(
+            mode = updatesState.mode,
+            status = updatesState.status,
+            nextUpdateDays = nextUpdateDays,
+            isUserInterval = successState.entry.fetchInterval < 0,
+        )
+        if (showUpdatesSheet) {
+            EntryUpdatesSheet(
+                entry = successState.entry,
+                mode = updatesState.mode,
+                status = updatesState.status,
+                categories = updatesState.categories,
+                releaseEstimate = entryReleaseEstimateText(
+                    interval = successState.entry.fetchInterval,
+                    nextUpdate = successState.entry.expectedNextUpdate,
+                    entryType = successState.entry.type,
+                ),
+                onModeSelected = updatesScreenModel::setMode,
+                onReleaseEstimateClicked = {
+                    showUpdatesSheet = false
+                    screenModel.showSetFetchIntervalDialog()
+                }.takeIf { !isReleaseBuildType && screenModel.isUpdateIntervalEnabled },
+                onDismissRequest = { showUpdatesSheet = false },
+            )
+        }
+
         LaunchedEffect(webView) {
             assistUrl = availableWebView?.url
             if (webView is EntryWebViewResolution.Failed) {
@@ -212,7 +252,7 @@ class EntryScreen(
         EntryScreen(
             state = successState,
             snackbarHostState = screenModel.snackbarHostState,
-            nextUpdate = successState.entry.expectedNextUpdate,
+            updatesLabel = updatesLabel,
             isTabletUi = isTabletUi(),
             chapterSwipeStartAction = screenModel.chapterSwipeStartAction.availableFor(
                 downloadsSupported = downloadsAvailable,
@@ -277,9 +317,7 @@ class EntryScreen(
                 .takeIf { bulkDownloadsAvailable },
             bookmarkedDownloadsSupported = bookmarkedDownloadsSupported,
             onEditCategoryClicked = screenModel::showChangeCategoryDialog.takeIf { successState.entry.favorite },
-            onEditFetchIntervalClicked = screenModel::showSetFetchIntervalDialog.takeIf {
-                successState.entry.favorite
-            },
+            onUpdatesClicked = { showUpdatesSheet = true }.takeIf { successState.entry.favorite },
             onEditDisplayNameClicked = screenModel::showEditDisplayNameDialog.takeIf { successState.entry.favorite },
             onManageMergeClicked = screenModel::showManageMergeDialog.takeIf { successState.isPartOfMerge },
             onOpenMergedEntryClicked = {

@@ -16,7 +16,6 @@
     <string name="action_add">زیادکردن</string>
     <string name="action_add_category">زیادکردنی کاتیگۆری</string>
     <string name="action_edit_categories">دەستکاریکردنی کاتیگۆری</string>
-    <string name="action_rename_category">ناونانەوەی کاتیگۆری</string>
     <string name="label_library">کۆکراوەکان</string>
     <string name="label_recent_updates">نوێکارییەکان</string>
     <string name="label_backup">یەدەگ کردن و گەڕانەوە بۆ باری سەرەکی</string>

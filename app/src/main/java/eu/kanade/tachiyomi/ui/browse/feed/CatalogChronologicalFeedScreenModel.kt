@@ -40,9 +40,14 @@ class CatalogChronologicalFeedScreenModel(
 
     private val filterLoader = CatalogFilterLoader(catalogueFeature)
 
-    override suspend fun subscribeItem(ref: FeedItemRef): Flow<CatalogListItem> {
-        return getEntry.subscribe(ref.id)
-            .map { CatalogListItem.EntryItem(it, sourceItemOrientation) }
+    override suspend fun observeItems(refs: List<FeedItemRef>): Flow<List<CatalogListItem>> {
+        return getEntry.subscribe(refs.map(FeedItemRef::id))
+            .map { entries -> entries.map { CatalogListItem.EntryItem(it, sourceItemOrientation) } }
+    }
+
+    override fun supersedes(candidate: CatalogListItem, current: CatalogListItem): Boolean {
+        if (candidate !is CatalogListItem.EntryItem || current !is CatalogListItem.EntryItem) return true
+        return candidate.entry.version >= current.entry.version
     }
 
     override suspend fun resolveFilters(): EntryFilterList {

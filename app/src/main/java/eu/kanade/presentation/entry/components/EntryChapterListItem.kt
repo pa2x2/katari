@@ -43,7 +43,7 @@ fun EntryChapterListItem(
     downloadStateProvider: () -> EntryDownloadState,
     downloadProgressProvider: () -> Int,
     modifier: Modifier = Modifier,
-    unconsumedIndicatorLabel: StringResource = MR.strings.action_filter_unconsumed,
+    unconsumedIndicatorLabel: StringResource = MR.strings.action_filter_unseen,
     chapterSwipeStartAction: LibraryPreferences.ChapterSwipeAction,
     chapterSwipeEndAction: LibraryPreferences.ChapterSwipeAction,
     onLongClick: () -> Unit,

@@ -35,7 +35,6 @@
     <string name="action_mark_as_read">បញ្ជាក់ថាបានអាន</string>
     <string name="action_download">ទាញយក</string>
     <string name="action_bookmark">ចំណាំភាគនេះទុក</string>
-    <string name="action_rename_category">ប្ដូរឈ្មោះថ្នាក់ក្រម</string>
     <string name="action_move_category">កំណត់</string>
     <string name="action_edit_cover">ផ្លាស់ប្ដូរកម្របត្លុក</string>
     <string name="action_view_chapters">មើលភាគ</string>
@@ -163,7 +162,6 @@
     <string name="lock_never">មិនដែល</string>
     <string name="parental_controls_info">ការសម្រេចចិត្តនេះមិនបិទការflagនៃប្រភពទៅលើរឿង(១៨+)នៅក្នុងកម្មវិធីឡើយ។</string>
     <string name="update_24hour">រាល់ថ្ងៃ</string>
-    <string name="pref_category_library_update">ការធ្វើបច្ចុប្បន្នភាពសកល</string>
     <string name="title">ចំណងជើង</string>
     <string name="completed">បានបញ្ចប់ការចេញផ្សាយ</string>
     <string name="ongoing">កំពុងតែចេញផ្សាយ</string>
@@ -180,7 +178,6 @@
     <string name="getting_started_guide">ម​គ្គុ​ទេស​ក៍​</string>
     <string name="browse">ស្វែងរក</string>
     <string name="all">ទាំងអស់</string>
-    <string name="update_check_notification_download_in_progress">កំពុងទាញយក…</string>
     <string name="label_stats">ស្ថិតិ</string>
     <string name="label_downloaded">បានទាញយក</string>
     <string name="information_cloudflare_bypass_failure">បរាជ័យក្នុងការឆ្លងកាត់Cloudflare</string>

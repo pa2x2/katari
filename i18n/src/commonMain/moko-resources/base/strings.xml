@@ -63,7 +63,7 @@
     <string name="action_filter_tracked">Tracked</string>
     <string name="action_filter_unread">Unread</string>
     <string name="action_filter_unwatched">Unwatched</string>
-    <string name="action_filter_unconsumed">Unconsumed</string>
+    <string name="action_filter_unseen">Unseen</string>
     <string name="action_filter_interval_custom">Customized update frequency</string>
     <!-- reserved for #4048 -->
     <string name="action_filter_empty">Remove filter</string>
@@ -92,11 +92,10 @@
     <string name="action_mark_as_watched">Mark as watched</string>
     <string name="action_mark_as_unwatched">Mark as unwatched</string>
     <string name="action_mark_as_seen">Mark as seen</string>
-    <string name="action_mark_as_consumed">Mark as consumed</string>
-    <string name="action_mark_as_unconsumed">Mark as unconsumed</string>
+    <string name="action_mark_as_unseen">Mark as unseen</string>
     <string name="action_mark_previous_as_read">Mark previous as read</string>
     <string name="action_mark_previous_as_watched">Mark previous as watched</string>
-    <string name="action_mark_previous_as_consumed">Mark previous as consumed</string>
+    <string name="action_mark_previous_as_seen">Mark previous as seen</string>
     <string name="action_download">Download</string>
     <string name="action_bookmark">Bookmark chapter</string>
     <string name="action_remove_bookmark">Unbookmark chapter</string>
@@ -118,7 +117,7 @@
     <string name="action_open_random_manga">Open random entry</string>
     <string name="action_add_category">Add category</string>
     <string name="action_edit_categories">Edit categories</string>
-    <string name="action_rename_category">Rename category</string>
+    <string name="action_edit_category">Edit category</string>
     <string name="action_move_category">Set categories</string>
     <string name="delete_category_confirmation">Do you wish to delete the category \"%s\"?</string>
     <string name="delete_category">Delete category</string>
@@ -214,6 +213,8 @@
     <string name="action_save">Save</string>
     <string name="action_set_as_root">Set as root</string>
     <string name="action_reset">Reset</string>
+    <string name="action_clear">Clear</string>
+    <string name="action_clear_filters">Clear filters</string>
     <string name="action_review">Review</string>
     <string name="action_open_default_reader_settings">Default reader settings</string>
     <string name="action_show_password">Show password</string>
@@ -756,7 +757,7 @@
     <string name="pref_appearance_summary">Theme, date &amp; time format</string>
     <string name="pref_library_summary">Categories, global update, chapter swipe</string>
     <string name="pref_library_summary_anime">Categories, display, group, updates</string>
-    <string name="pref_library_summary_unified">Categories, display, updates, and behavior</string>
+    <string name="pref_library_summary_unified">Categories, display, and behavior</string>
     <string name="pref_reader_summary">Reading mode, display, navigation</string>
     <string name="pref_player_summary">Picture-in-Picture, seek preview</string>
     <string name="pref_downloads_summary">Automatic download, download ahead, auto-translate</string>
@@ -822,7 +823,79 @@
     <string name="portrait">Portrait</string>
     <string name="landscape">Landscape</string>
 
-    <string name="pref_category_library_update">Global update</string>
+    <string name="pref_category_library_updates">Library updates</string>
+    <string name="pref_library_updates_summary">Schedule, categories, sources, skip rules</string>
+    <string name="library_updates_last_update">Last update</string>
+    <string name="library_updates_last_update_none">No update has run yet</string>
+    <string name="library_updates_running">Running now</string>
+    <string name="library_updates_next_automatic">Next automatic update</string>
+    <string name="library_updates_automatic_off">Automatic updates are off</string>
+    <string name="library_updates_schedule">Schedule</string>
+    <string name="library_updates_types">Types</string>
+    <string name="library_updates_skip_when">Skip an entry when…</string>
+    <string name="library_updates_also">Also</string>
+    <string name="library_updates_not_checked">Not checked</string>
+    <string name="library_updates_own_skip_rules">Own skip rules</string>
+    <string name="library_updates_show_all">Show all</string>
+    <string name="library_updates_show_fewer">Show fewer</string>
+    <string name="library_updates_skip_completed">It\'s completed</string>
+    <string name="library_updates_skip_unseen">It has unseen items</string>
+    <string name="library_updates_skip_not_started">You haven\'t started it</string>
+    <string name="library_updates_skip_outside_release">Only check near its expected release</string>
+    <string name="library_updates_check_automatically">Check automatically</string>
+    <string name="library_updates_category_off_summary">Its entries are only checked when set to Always check</string>
+    <string name="library_updates_use_library_rules">Use library rules</string>
+    <string name="library_updates_library_on">Library: on</string>
+    <string name="library_updates_library_off">Library: off</string>
+    <string name="library_updates_check_every">Check every</string>
+    <string name="library_updates_library_interval">Library interval (%s)</string>
+    <string name="entry_updates_title">Updates</string>
+    <string name="entry_updates_mode_follow">Follow library rules</string>
+    <string name="entry_updates_mode_follow_summary">Checked unless its categories, source or skip rules leave it out</string>
+    <string name="entry_updates_mode_always">Always check</string>
+    <string name="entry_updates_mode_always_summary">Checked by every library update, whatever the rules say</string>
+    <string name="entry_updates_mode_never">Never check</string>
+    <string name="entry_updates_mode_never_summary">Only checked when you refresh it here</string>
+    <string name="entry_updates_why_none">No library update has considered it yet</string>
+    <string name="entry_updates_why_skipped">The last update skipped it: %s</string>
+    <string name="entry_updates_why_skipped_category">The last update skipped it: %1$s, by the rules of %2$s</string>
+    <string name="entry_updates_why_not_checked">The last update left it out: %s</string>
+    <string name="entry_updates_why_category_off">The last update left it out: the %s category is switched off</string>
+    <string name="entry_updates_why_failed">The last check failed: %s</string>
+    <string name="entry_updates_why_checked">Last checked %s</string>
+    <string name="entry_updates_fetch_once">Its source checks it only once. Always check overrides that.</string>
+    <string name="entry_updates_release_estimate">Release estimate</string>
+    <string name="entry_updates_label_failing">Failing</string>
+    <string name="entry_updates_label_paused">Paused</string>
+    <string name="entry_updates_label_always">Always</string>
+    <string name="entry_updates_label_skipped">Skipped</string>
+    <string name="entry_updates_label_not_checked">Not checked</string>
+    <string name="library_update_report">Update report</string>
+    <string name="library_update_trigger_automatic">Automatic</string>
+    <string name="library_update_trigger_manual">Manual</string>
+    <string name="library_update_trigger_selection">Picked entries</string>
+    <string name="library_update_report_failing">Failing repeatedly</string>
+    <string name="library_update_report_failed">Failed</string>
+    <string name="library_update_report_new">New chapters</string>
+    <string name="library_update_report_no_changes">Nothing new</string>
+    <string name="library_update_report_skipped">Skipped</string>
+    <string name="library_update_report_not_checked">Not checked</string>
+    <string name="library_update_report_unknown_error">Unknown error</string>
+    <string name="library_update_report_webview">WebView</string>
+    <string name="library_update_report_pause">Pause</string>
+    <string name="library_update_report_pause_source">Pause source</string>
+    <string name="library_update_report_retry">Retry</string>
+    <string name="upcoming_not_checked">Won\'t be checked · %s</string>
+    <string name="library_update_reason_never">Set to never check</string>
+    <string name="library_update_reason_category_off">Category switched off</string>
+    <string name="library_update_reason_source_off">Source switched off</string>
+    <string name="library_update_reason_type_off">Type switched off</string>
+    <string name="library_update_reason_not_due">Not due yet</string>
+    <string name="library_update_reason_fetch_once">Source checks it only once</string>
+    <string name="library_update_reason_completed">Completed</string>
+    <string name="library_update_reason_has_unseen">Has unseen items</string>
+    <string name="library_update_reason_not_started">Not started</string>
+    <string name="library_update_reason_outside_release">No release expected yet</string>
     <string name="pref_library_update_interval">Automatic updates</string>
     <string name="update_never">Off</string>
     <string name="update_6hour">Every 6 hours</string>
@@ -837,11 +910,6 @@
     <string name="charging">When charging</string>
     <string name="restrictions">Restrictions: %s</string>
 
-    <string name="pref_library_update_smart_update">Smart update</string>
-    <string name="pref_update_only_completely_read">Skip entries with unseen items</string>
-    <string name="pref_update_only_non_completed">Skip entries with \"Completed\" status</string>
-    <string name="pref_update_only_started">Skip unstarted entries</string>
-    <string name="pref_update_only_in_release_period">Predict next release time</string>
     <string name="pref_library_update_show_tab_badge">Show unseen count on Updates icon</string>
 
     <string name="pref_library_update_refresh_metadata">Automatically refresh metadata</string>
@@ -850,7 +918,6 @@
     <string name="default_category">Default category</string>
     <string name="default_category_summary">Always ask</string>
     <string name="categorized_display_settings">Per-category settings for sort</string>
-    <string name="pref_library_update_categories_details">Entries in excluded categories will not be updated even if they are also in included categories.</string>
     <string name="all">All</string>
     <string name="none">None</string>
     <string name="include">Include: %s</string>
@@ -1438,6 +1505,13 @@
     <string name="updating_type">Updating type</string>
     <string name="updating_extension">Updating extension</string>
     <string name="updating_group">Updating group</string>
+    <string name="updating_selection">Updating selection</string>
+    <string name="updating_named">Updating %s</string>
+    <string name="action_check_for_updates">Check for updates</string>
+    <string name="action_update_mode">Update mode…</string>
+    <string name="library_update_done">Update done</string>
+    <string name="library_update_nothing_checked">Nothing was checked</string>
+    <string name="library_update_check_skipped">Check skipped</string>
     <string name="manga_from_library">From library</string>
     <string name="downloaded_chapters">Downloaded items</string>
     <string name="intervals_header">Intervals</string>
@@ -1640,7 +1714,7 @@
     <string name="manga_download">Download</string>
     <string name="download_unread">Unread</string>
     <string name="download_unwatched">Unwatched</string>
-    <string name="download_unconsumed">Unconsumed</string>
+    <string name="download_unseen">Unseen</string>
     <string name="download_bookmarked">Bookmarked</string>
     <string name="custom_cover">Custom cover</string>
     <string name="manga_cover">Cover</string>
@@ -1769,7 +1843,6 @@
     <string name="action_view_upcoming">View Upcoming Updates</string>
     <string name="anime_schedule">Schedule</string>
     <string name="anime_schedule_loading">Loading</string>
-    <string name="action_filter_excluded_scanlators">Filter excluded scanlators</string>
     <string name="anime_schedule_season">Season %1$d</string>
     <string name="anime_schedule_episode">Episode</string>
     <string name="pref_filter_update_categories_details">Updates in excluded categories will not be shown even if they are also in any included categories.</string>
@@ -1888,6 +1961,7 @@
     <!-- Library update service notifications -->
     <string name="notification_updating_progress">Updating library… (%s)</string>
     <string name="notification_size_warning">Large updates harm sources and may lead to slower updates and also increased battery usage. Tap to learn more.</string>
+    <string name="notification_large_update_warning">Large updates harm sources and may lead to slower updates and also increased battery usage. Tap to choose what updates check.</string>
     <string name="notification_new_items">New items found</string>
     <string name="notification_chapters_single">Chapter %1$s</string>
     <string name="notification_chapters_single_and_more">Chapter %1$s and %2$d more</string>
@@ -1901,12 +1975,6 @@
     <string name="learn_more">Tap to learn more</string>
     <string name="notification_cover_update_failed">Failed to update cover</string>
     <string name="notification_first_add_to_library">Please add the entry to your library before doing this</string>
-    <string name="library_errors_help">For help on how to fix library update errors, see %1$s</string>
-    <string name="skipped_reason_completed">Skipped because series is complete</string>
-    <string name="skipped_reason_not_caught_up">Skipped because there are unseen items</string>
-    <string name="skipped_reason_not_started">Skipped because no items have been started</string>
-    <string name="skipped_reason_not_always_update">Skipped because series does not require updates</string>
-    <string name="skipped_reason_not_in_release_period">Skipped because no release was expected today</string>
 
     <!-- File Picker Titles -->
     <string name="file_select_cover">Select cover image</string>
@@ -1915,20 +1983,48 @@
     <string name="file_picker_uri_permission_unsupported">Failed to acquire persistent folder access. The app may behave unexpectedly.</string>
     <string name="file_null_uri_error">No file selected</string>
 
-    <!--UpdateCheck-->
-    <string name="update_check_confirm">Download</string>
+    <!--App updates-->
     <string name="update_check_open">Open on GitHub</string>
-    <!-- reserved for future use -->
-    <string name="update_check_eol">This Android version is no longer supported</string>
-    <string name="update_check_no_new_updates">No new updates available</string>
-
-    <!--UpdateCheck Notifications-->
-    <string name="update_check_notification_download_in_progress">Downloading…</string>
-    <string name="update_check_notification_update_available">New version available!</string>
+    <string name="app_update_available">Update available</string>
+    <string name="app_update_version">Version %1$s</string>
+    <string name="app_update_now">Update now</string>
+    <string name="app_update_skip_version">Skip this version</string>
+    <string name="app_update_cancel_download">Cancel download</string>
+    <string name="app_update_allow_installs">Allow installs</string>
+    <string name="app_update_permission_note">Android needs your permission for Katari to install updates. Allow Katari to install apps, then come back. You only need to do this once.</string>
+    <string name="app_update_installing">Installing…</string>
+    <string name="app_update_installing_note">Katari closes to finish the update. Open it again to use the new version.</string>
+    <string name="app_update_checking">Checking…</string>
+    <string name="app_update_just_now">just now</string>
+    <string name="app_update_up_to_date">Up to date · checked %1$s</string>
+    <string name="app_update_last_checked">Last checked %1$s</string>
+    <string name="app_update_version_available">Version %1$s is available</string>
+    <string name="app_update_waiting_permission">Waiting for permission to install</string>
+    <string name="app_update_check_on_launch">Check for updates on launch</string>
+    <string name="app_update_check_on_launch_summary">Look for a new version on GitHub when Katari opens</string>
+    <string name="app_update_channel">Update channel</string>
+    <string name="app_update_channel_stable">Stable</string>
+    <string name="app_update_channel_prerelease">Pre-release</string>
+    <string name="app_update_error_github_unreachable">Couldn\'t reach GitHub. Check your internet connection.</string>
+    <string name="app_update_error_github_rate_limited">GitHub is limiting update checks from this network. Try again later.</string>
+    <string name="app_update_error_github_status">GitHub answered the update check with HTTP %1$d.</string>
+    <string name="app_update_error_github_unexpected">GitHub sent an unexpected release list.</string>
+    <string name="app_update_error_download">The download failed.</string>
+    <string name="app_update_error_download_detail">The download failed: %1$s</string>
+    <string name="app_update_error_damaged">The download was damaged. Try again to download it afresh.</string>
+    <string name="app_update_error_signature">This update is signed with a different key than the installed app, so Android won\'t install it over this build. Install it from GitHub instead.</string>
+    <string name="app_update_error_not_newer">The downloaded file isn\'t a newer version of this app.</string>
+    <string name="app_update_error_storage">There isn\'t enough free storage to install the update.</string>
+    <string name="app_update_error_incompatible">This update isn\'t compatible with your device.</string>
+    <string name="app_update_error_install">The update couldn\'t be installed.</string>
+    <string name="app_update_error_install_detail">The update couldn\'t be installed: %1$s</string>
 
     <!-- Information Text -->
     <string name="information_no_downloads">No downloads</string>
     <string name="information_no_recent">No recent updates</string>
+    <string name="updates_no_match">No updates match %s</string>
+    <string name="updates_window">Showing updates from the last 3 months</string>
+    <string name="updates_filter_not">not %s</string>
     <string name="information_no_recent_manga">Nothing read recently</string>
     <string name="information_empty_library">Your library is empty</string>
     <string name="information_empty_library_hint">Add series from a source, or bring your library back from a backup.</string>
@@ -1989,7 +2085,6 @@
     <string name="channel_complete">Complete</string>
     <string name="channel_errors">Errors</string>
     <string name="channel_library_updates">Library updates</string>
-    <string name="channel_app_updates">App updates</string>
     <string name="channel_ext_updates">Extension updates</string>
 
     <!-- S Pen actions -->

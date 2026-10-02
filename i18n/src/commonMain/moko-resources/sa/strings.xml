@@ -40,7 +40,6 @@
     <string name="action_edit">सम्पादयतु</string>
     <string name="action_add">योजयतु</string>
     <string name="action_add_category">वर्गं योजयतु</string>
-    <string name="action_rename_category">वर्गस्य नाम परिणमतु</string>
     <string name="action_move_category">वर्गानि स्थापयतु</string>
     <string name="action_edit_cover">आवरणं सम्पादयतु</string>
     <string name="action_pause">विरामयतु</string>
@@ -159,13 +158,10 @@
     <string name="update_72hour">प्रतिदिनत्रयम्</string>
     <string name="charging">पारणसमये</string>
     <string name="restrictions">निर्बन्धाः - %s</string>
-    <string name="pref_category_library_update">सार्वत्रिकनवीकरणम्</string>
     <string name="update_12hour">प्रतिद्वादशघण्टा</string>
     <string name="update_weekly">प्रतिसप्ताहिकम्</string>
     <string name="pref_library_update_restriction">स्वयङ्कृतनवीकरणनाम् उपकरणनिर्बन्धाः</string>
     <string name="connected_to_wifi">केवलं वै-फ़ै माध्यमेन</string>
-    <string name="pref_update_only_completely_read">अपठितान् अध्यायान् गृह्णाति</string>
-    <string name="pref_update_only_non_completed">समापितधारावाहिकाः</string>
     <string name="pref_library_update_refresh_metadata_summary">ग्रन्थालयनवीकरणे सति नूतनमुखचित्राय विवरणाय च मार्गतु</string>
     <string name="default_category">प्राथमिकवर्गः</string>
     <string name="default_category_summary">सदा पृच्छतु</string>
@@ -188,7 +184,6 @@
     <string name="categorized_display_settings">प्रतिवर्गं विन्यासस्य प्रदर्शनस्य च कृते समायोजनानि</string>
     <string name="untrusted_extension">अविश्वस्तविस्तारः</string>
     <string name="extension_api_error">विस्तारसूच्याः प्राप्तिः अनुत्तीर्णा</string>
-    <string name="pref_library_update_categories_details">माङ्गाः याः वर्जितवर्गेषु सन्ति ताः अन्तर्भूतवर्गेषु सन्ति चेदपि तासां नवीकरणं न भविष्यति।</string>
     <string name="obsolete_extension_message">अयं विस्तारः इतःपरं न उपलभ्यः।</string>
     <string name="ext_trust">विश्वासः</string>
     <string name="ext_update_all">सर्वाणि नवीकरोतु</string>
@@ -379,8 +374,6 @@
     <string name="completed">समापितम्</string>
     <string name="migrate">स्थानान्तरगमनम्</string>
     <string name="copy">प्रतिलेखं करोतु</string>
-    <string name="update_check_confirm">अवतारयतु</string>
-    <string name="update_check_notification_download_in_progress">अवारोपयामि…</string>
     <string name="local_source_help_guide">स्थानीयमूलमार्गदर्शनम्</string>
     <string name="action_global_search_hint">सार्वत्रिकान्वेषणम्…</string>
     <string name="chapter_not_found">अध्यायः न लभ्यः</string>
@@ -453,7 +446,6 @@
     <string name="notification_chapters_single">अध्यायः %1$s</string>
     <string name="notification_chapters_multiple">अध्यायाः %1$s</string>
     <string name="channel_complete">पूर्णम्</string>
-    <string name="channel_app_updates">अनुप्रयोगनवीकरणानि</string>
     <string name="channel_ext_updates">विस्तारनवीकरणानि</string>
     <string name="pref_dns_over_https">HTTPS उपरि DNS (DoH)</string>
     <string name="getting_started_guide">प्रारम्भिकमार्गदर्शनम्</string>
@@ -462,7 +454,6 @@
     <string name="plan_to_read">पठितुं इच्छामि</string>
     <string name="page_list_empty_error">पुटाः न लभ्याः</string>
     <string name="loader_not_implemented_error">मूलं न लभ्यम्</string>
-    <string name="update_check_notification_update_available">नूतनसंस्करणम् उपलभ्यम्</string>
     <string name="action_show_manga">माङ्गां दर्शयतु</string>
     <string name="action_display_cover_only_grid">केवलं मुखचित्रेण इष्टिकाविन्यासः</string>
     <string name="pref_clear_chapter_cache">अध्यायस्य काष्वस्तु मार्जयतु</string>
@@ -498,8 +489,6 @@
     <string name="transition_no_next">अग्रिमाध्यायः नास्ति</string>
     <string name="transition_no_previous">पूर्वाध्यायः नास्ति</string>
     <string name="share_page_info">%1$s: %2$s पुटः च %3$d</string>
-    <string name="pref_update_only_started">पठिताः अध्यायाः न सन्ति</string>
-    <string name="update_check_no_new_updates">नूतननवीकरणानि न उपलभ्यानि</string>
     <string name="chapter_settings_updated">अध्यायस्य प्राथमिकसमायोजनानि नवीकृतानि</string>
     <string name="source_unsupported">मूलं न भरितम्</string>
     <string name="migration_dialog_what_to_include">संयोजयितुं दत्तांशान् चिनोतु</string>
@@ -514,7 +503,6 @@
 \n%1$s</string>
     <string name="notification_chapters_single_and_more">अध्यायः %1$s च इतोऽपि %2$d च</string>
     <string name="file_picker_error">सञ्चिकाग्राही अनुप्रयोगः न लभ्यः</string>
-    <string name="skipped_reason_completed">धारावाहिकः पूर्णः अतः लङ्घितः</string>
     <string name="clear_database_source_item_count">दत्तनिधौ %1$d ग्रन्थालयपराः माङ्गाः सन्ति</string>
     <string name="logout_success">इदानीं त्वं बहिर्गतम्</string>
     <string name="no_pinned_sources">अग्रिमस्थकृतमूलानि तव न सन्ति</string>
@@ -526,7 +514,6 @@
     <string name="download_notifier_unknown_error">यादृच्छिकदोषकारणात् अध्यायस्य अवारोपणम् न शक्नुयात्</string>
     <string name="also_set_chapter_settings_for_library">अपि मम ग्रन्थालये सर्वाभ्यः माङ्गाभ्यः आचरतु</string>
     <string name="clear_history_confirmation">त्वं निश्चितं किम् ? चरित्रं सर्वं लुप्तं भविष्यति।</string>
-    <string name="update_check_eol">एतत् आण्ड्रायिड्-संस्करणम् अधुना न भरितम्</string>
     <string name="information_webview_outdated">इतोऽपि उत्तमतरसङ्गतिं प्रप्तुं कृपया वेब्-व्यू-अनुप्रयोगं नवीकरोतु</string>
     <string name="downloaded_only_summary">तव ग्रन्थालये सर्वाः माङ्गाः शोधनीकरोति</string>
     <string name="pref_clear_database_summary">तव ग्रन्थालये न रक्षितानां माङ्गानां चरित्रं नाशय</string>
@@ -543,11 +530,8 @@
     <string name="error_category_exists">अनेन नाम्ना पूर्वमेव एकः वर्गः अस्ति</string>
     <string name="confirm_set_image_as_cover">इदं चित्रं मुखचित्रम् इव उपयोजनीयं किम्</string>
     <string name="notification_first_add_to_library">एतत् करणात् पूर्वं कृपया तव ग्रन्थालयाय माङ्गाः योजयतु</string>
-    <string name="library_errors_help">ग्रन्थालयनवीकरणदोषान् परिहर्तुं साहाय्यार्थं %1$s पश्य</string>
     <string name="information_empty_category_dialog">तव वर्गाः एव न सन्ति।</string>
     <string name="dialog_with_checkbox_reset">अस्यै माङ्गायै सर्वान् अध्यायान् पुनःस्थापयति</string>
-    <string name="skipped_reason_not_caught_up">अपठिताध्यायाः सन्ति अतः लङ्घितम्</string>
-    <string name="skipped_reason_not_started">काः अपि अध्यायाः न पठिताः अतः लङ्घितम्</string>
     <string name="download_queue_error">अध्यायानाम् अवारोपणं न अशक्नोत्। त्वया अवारोपितानि नाम्नः विभागे पुनः यतितुं शक्यते</string>
     <string name="migration_selection_prompt">यस्मात् स्थानान्तरगमनं करणीयं तत् चिनोतु</string>
     <string name="notification_size_warning">पूर्वसूचना -- मूलेभ्यः महद्नवीकरणानि हानिकारकाणि भवन्ति तस्मात् नवीकरणानि मन्दानि भवेयुः अपि च विद्युत्कोषोपयोगः अधिकं भवेत्</string>

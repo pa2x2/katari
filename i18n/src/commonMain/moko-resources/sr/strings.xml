@@ -39,7 +39,6 @@
     <string name="action_add">Додај</string>
     <string name="action_add_category">Додај категорију</string>
     <string name="action_edit_categories">Уреди категорије</string>
-    <string name="action_rename_category">Преименуј категорију</string>
     <string name="action_move_category">Изабери категорије</string>
     <string name="action_edit_cover">Промени омот</string>
     <string name="action_pause">Паузирај</string>
@@ -84,7 +83,6 @@
     <string name="all">Све</string>
     <string name="pref_library_update_restriction">Ограничења уређаја за аутоматска ажурирања</string>
     <string name="charging">Пуњење</string>
-    <string name="pref_update_only_non_completed">Прескочи уносе са статусом \"Завршено\"</string>
     <string name="pref_auto_update_manga_sync">Ажурирај пратиоца након читања</string>
     <string name="default_category">Подразумевана категорија</string>
     <string name="default_category_summary">Увек питај</string>
@@ -224,7 +222,6 @@
     <string name="pref_category_library">Колекција</string>
     <string name="obsolete_extension_message">Овај додатак није више доступан. Можда неће исправно функционисати и може изазвати проблеме са апликацијом. Препоручује се деинсталирање.</string>
     <string name="pref_date_format">Формат датума</string>
-    <string name="pref_category_library_update">Глобално ажурирање</string>
     <string name="logout_title">Излогуј се из %1$s?</string>
     <string name="logout">Излогуј се</string>
     <string name="logout_success">Сада сте излоговани</string>
@@ -336,10 +333,6 @@
     <string name="information_webview_outdated">Ажурирајте WebView за бољу компатибилност</string>
     <string name="information_webview_required">WebView је потребан како би апликација функционисала</string>
     <string name="information_cloudflare_bypass_failure">Неуспешно заобилажење Cloudflare-а</string>
-    <string name="update_check_notification_update_available">Доступно је ново ажурирање!</string>
-    <string name="update_check_notification_download_in_progress">Преузимање…</string>
-    <string name="update_check_no_new_updates">Нема нових ажурирања</string>
-    <string name="update_check_confirm">Преузми</string>
     <string name="file_select_backup">Изаберите датотеку резервне копије</string>
     <string name="file_select_cover">Изаберите слику за омот</string>
     <string name="notification_first_add_to_library">Морате прво додати наслов у колекцију</string>
@@ -455,7 +448,6 @@
     <string name="channel_complete">Завршено</string>
     <string name="download_insufficient_space">Неуспешно преузимање поглавља због недовољне меморије</string>
     <string name="getting_started_guide">Почетни водич</string>
-    <string name="update_check_eol">Ова Android верзија више није подржана</string>
     <string name="chapter_settings_updated">Ажурирана су подразумевана подешаваља поглавља</string>
     <string name="download_notifier_unknown_error">Није могуће преузети поглавље због неочекиване грешке</string>
     <string name="download_notifier_text_only_wifi">Нема доступне Wi-Fi везе</string>
@@ -492,7 +484,6 @@
     <string name="connected_to_wifi">Само преко Wi-Fi-а</string>
     <string name="restrictions">Ограничења: %s</string>
     <string name="categorized_display_settings">Поставке за сортирање одвојено за сваку категорију</string>
-    <string name="pref_library_update_categories_details">Наслови у искљученим категоријама се неће ажурирати иако су такође у укљученим категоријама.</string>
     <string name="include">Укључи: %s</string>
     <string name="exclude">Искључи: %s</string>
     <string name="ext_install_service_notif">Инсталирање додатка…</string>
@@ -542,29 +533,22 @@
     <string name="download_queue_size_warning">Упозорење: велики број преузимања може довести до успоравања извора и/или блокирања %s-а. Додирни да сазнаш више.</string>
     <string name="notification_size_warning">Велика ажурирања штете изворима и могу довести до споријег ажурирања и повећања потрошње батерије. Кликни да сазнаш више.</string>
     <string name="ext_update_all">Ажурирај све</string>
-    <string name="channel_app_updates">Ажурирања апликације</string>
     <string name="clear_database_source_item_count">Број наслова у бази података које нису у колекцији: %1$d</string>
     <string name="extension_api_error">Преузимање листе додатака није успело</string>
     <string name="pref_auto_clear_chapter_cache">Испразни кеш меморију поглавља током покретања апликације</string>
     <string name="database_clean">Нема ништа за чишћење</string>
-    <string name="pref_update_only_completely_read">Прескочи уносе са непрочитаним поглављима</string>
     <string name="privacy_policy">Политика приватности</string>
     <string name="cancelled">Отказано</string>
     <string name="on_hiatus">На паузи</string>
-    <string name="pref_update_only_started">Прескочи уносе који нису започети</string>
     <string name="action_show_manga">Прикажи наслов</string>
     <string name="action_move_to_top_all_for_series">Помакни наслов на врх</string>
     <string name="learn_more">Додирните да сазнате више</string>
-    <string name="library_errors_help">За помоћ о томе како да поправите грешке у ажурирању колекције, погледајте %1$s</string>
-    <string name="skipped_reason_not_started">Прескочено јер ниједно поглавље није прочитано</string>
     <string name="action_display_cover_only_grid">Мрежа насловница</string>
     <string name="pref_navigate_pan">Померај широке слике</string>
     <string name="pref_landscape_zoom">Аутоматски зумирај слике у пејзажном облику</string>
     <string name="save_chapter_as_cbz">Сачувај као CBZ архиву</string>
     <string name="rotation_reverse_portrait">Обрнути портрет</string>
     <string name="publishing_finished">Издавање завршено</string>
-    <string name="skipped_reason_completed">Прескочено јер је наслов завршен</string>
-    <string name="skipped_reason_not_caught_up">Прескочено јер има непрочитаних поглавља</string>
     <string name="disabled_nav">Onesposobljen</string>
     <string name="empty_backup_error">Нема уноса у колекцији за прављење резервних копија</string>
     <string name="update_check_open">Отвори на GitHub-у</string>
@@ -652,7 +636,6 @@
     <string name="download_ahead">Преузми унапред</string>
     <string name="empty_screen">Е па, ово је незгодно</string>
     <string name="download_notifier_split_page_path_not_found">Није могуће пронаћи пут датотеке странице %d</string>
-    <string name="skipped_reason_not_always_update">Прескочено јер наслов не захтева ажурирање</string>
     <string name="download_notifier_split_page_not_found">Страница %d није пронађена током раздвајања</string>
     <string name="download_notifier_cache_renewal">Провера преузимања</string>
     <string name="action_not_now">Не сада</string>
@@ -689,8 +672,6 @@
     <string name="pref_debug_info">Информације за отклањање грешака</string>
     <string name="create_backup_file_error">Није могуће створити датотеку резервне копије</string>
     <string name="has_results">Има резултата</string>
-    <string name="skipped_reason_not_in_release_period">Прескочено јер данас није очекивано издање</string>
-    <string name="pref_update_only_in_release_period">Предвиди очекивано време изласка</string>
     <string name="action_set_interval">Постави интервал</string>
     <string name="intervals_header">Интервали</string>
     <string name="track_delete_remote_text">Такође уклони из %s</string>
@@ -713,7 +694,6 @@
     <string name="exception_unknown_host">%s је недоступан</string>
     <string name="pref_relative_format">Релативне временске ознаке</string>
     <string name="pref_relative_format_summary">„%1$s” уместо „%2$s”</string>
-    <string name="pref_library_update_smart_update">Паметно ажурирање</string>
     <string name="pref_flash_page">Забљесни приликом листања</string>
     <string name="pref_flash_page_summ">Смањује артефакте на е-инк екранима</string>
     <string name="pref_storage_location">Место складиштења</string>

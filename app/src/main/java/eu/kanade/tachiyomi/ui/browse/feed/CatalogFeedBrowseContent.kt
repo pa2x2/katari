@@ -41,6 +41,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
@@ -381,7 +382,10 @@ internal fun FeedNewItemsIndicator(
             }
     }
 
-    if (!shouldShowNewItemsChip(state, viewport().canScrollBackward)) return
+    // Reading the viewport directly would recompose on every scrolled frame through layout info.
+    val currentViewport by rememberUpdatedState(viewport)
+    val canScrollBackward by remember { derivedStateOf { currentViewport().canScrollBackward } }
+    if (!shouldShowNewItemsChip(state, canScrollBackward)) return
 
     NewItemsChip(
         count = state.newItemsAvailableCount,
@@ -754,15 +758,7 @@ private fun rememberCatalogItem(
     ref: FeedItemRef,
     screenModel: FeedScreenModel<CatalogListItem>,
 ): CatalogListItem? {
-    var item by remember(ref) { mutableStateOf<CatalogListItem?>(null) }
-
-    LaunchedEffect(ref, screenModel) {
-        screenModel.subscribeItem(ref).collectLatest {
-            item = it
-        }
-    }
-
-    return item
+    return remember(ref, screenModel) { screenModel.itemState(ref) }.collectAsState().value
 }
 
 @Composable

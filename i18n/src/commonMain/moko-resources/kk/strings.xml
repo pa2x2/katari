@@ -112,7 +112,6 @@
     <string name="action_add">Қосу</string>
     <string name="action_add_category">Санат қосу</string>
     <string name="action_edit_categories">Санаттарды өңдеу</string>
-    <string name="action_rename_category">Санаттың атын өзгерту</string>
     <string name="action_move_category">Санаттарды орнату</string>
     <string name="action_edit_cover">Мұқабасын өзгерту</string>
     <string name="action_view_chapters">Тарауларды қарау</string>
@@ -174,7 +173,6 @@
     <string name="pref_category_display">Көрсету</string>
     <string name="portrait">Портрет</string>
     <string name="landscape">Пейзаж</string>
-    <string name="pref_category_library_update">Ауқымды жаңарту</string>
     <string name="pref_library_update_interval">Автоматты жаңартулар</string>
     <string name="action_resume">Жалғастыру</string>
     <string name="pref_app_language">Қолданба тілі</string>
@@ -204,7 +202,6 @@
     <string name="action_display_comfortable_grid">Ыңғайлы кесте</string>
     <string name="action_display_cover_only_grid">Атаусыз кесте</string>
     <string name="pref_library_update_refresh_metadata">Метадеректерді автоматты түрде жаңарту</string>
-    <string name="pref_library_update_categories_details">Шығарылған санаттардағы жазбалар енгізілген санаттарда болса да жаңартылмайды.</string>
     <string name="all">Барлығы</string>
     <string name="none">Ешқайсы</string>
     <string name="exclude">Шығару: %s</string>
@@ -219,15 +216,12 @@
     <string name="pref_dual_page_split">Қең беттерді бөлу</string>
     <string name="pref_show_page_number">Бет нөмірін көрсету</string>
     <string name="pref_color_filter_mode">Жарықты сүзу режимі</string>
-    <string name="pref_update_only_completely_read">Тарауы оқылмаған топтаманы өткізе беру</string>
-    <string name="pref_update_only_non_completed">«Аяқталған» күйімен</string>
     <string name="pref_dual_page_invert">Қос бетті бөлуді инверттеу</string>
     <string name="action_display_grid">Ықшам кесте</string>
     <string name="pref_show_reading_mode_summary">Оқыма ашылғаннан кейін оқу түрін қысқаша көрсету</string>
     <string name="pref_crop_borders">Кесу жиектері</string>
     <string name="extension_api_error">Кеңейтулер тізімін алу сәтсіз өтті</string>
     <string name="pref_cutout_short">Мазмұнды кесу аймағында көрсету</string>
-    <string name="pref_update_only_started">Бұл басталған жоқ</string>
     <string name="pref_library_update_refresh_metadata_summary">Кітапхананы жаңарту кезінде жаңа мұқаба мен мәліметтерді тексеру</string>
     <string name="ext_updates_pending">Жаңартулар күтілуде</string>
     <string name="ext_update_all">Барлығын жаңарту</string>
@@ -477,7 +471,6 @@
     <string name="check_for_updates">Жаңартуларға тексеру</string>
     <string name="source_filter_empty_screen">Орнатылған дереккөз табылмады</string>
     <string name="update_already_running">Жаңарту әлдеқашан қосылған</string>
-    <string name="skipped_reason_not_caught_up">Оқылмаған тараулар бар болғандықтан өткізіп жіберілді</string>
     <string name="display_mode_chapter">%1$s-Тарау</string>
     <string name="manga_tracking_tab">Бақылау</string>
     <string name="add_tracking">Бақылау қосу</string>
@@ -486,7 +479,6 @@
     <string name="paused">Тоқтатылған</string>
     <string name="repeating">Қайта оқылуда</string>
     <string name="reading_list">Оқылудағылар Тізімі</string>
-    <string name="update_check_no_new_updates">Жаңалтулар жоқ</string>
     <string name="information_webview_required">Mihon-ны қолдану үшін WebView керек</string>
     <string name="chapter_settings_updated">Әдепкі тарау параметрлері жаңартылды</string>
     <string name="download_notifier_no_network">Желі байланысы жоқ</string>
@@ -507,7 +499,6 @@
     <string name="clear_history_confirmation">Сенімдісіз бе? Бар тарих жоғалады.</string>
     <string name="source_empty_screen">Дереккөз табылмады</string>
     <string name="notification_cover_update_failed">Мұқаба жаңартылмады</string>
-    <string name="update_check_notification_update_available">Жаңа нұсқа қолжетімді!</string>
     <string name="download_notifier_split_page_not_found">%d бет табылмады, бөлінгенде</string>
     <string name="channel_complete">Аяқталды</string>
     <string name="pref_reader_summary">Оқу түрі, көрсету, навигация</string>
@@ -525,7 +516,6 @@
     <string name="cover_saved">Мұқаба сақталды</string>
     <string name="confirm_set_chapter_settings">Бұл баптауды әдепкі қылып сақтағыңыз келеді ме?</string>
     <string name="learn_more">Көбірек білу үшін басу</string>
-    <string name="update_check_confirm">Жүктеп алу</string>
     <string name="channel_common">Ортақ</string>
     <string name="channel_progress">Прогресс</string>
     <string name="also_set_chapter_settings_for_library">Сонымен қоса кітапханадағы жазбаларға қолдану</string>
@@ -537,7 +527,6 @@
     <string name="migration_dialog_what_to_include">Қай деректі тасымалдау керек</string>
     <string name="not_installed">Орнатылмады</string>
     <string name="notification_chapters_multiple">%1$s Тарау</string>
-    <string name="library_errors_help">Кітапхананы жаңарту қателіктерін жөндеу үшін %1$s</string>
     <string name="pref_appearance_summary">Кейіп, күні мен уақыт пішімі</string>
     <string name="pref_library_summary">Санаттар, ауқымды жаңарту</string>
     <string name="pref_tracking_summary">Прогрессті біржақты синхрондау, кеңейтілген синхрондау</string>
@@ -561,7 +550,6 @@
     <string name="dialog_with_checkbox_reset">Бұл жазба үшін түгел тарауларды қалпына келтіру</string>
     <string name="snack_categories_deleted">Санаттар жойылды</string>
     <string name="cover_updated">Мұқаба жаңартылды</string>
-    <string name="skipped_reason_not_started">Оқитын тарау болмағандықтан өткізіп жіберілді</string>
     <string name="file_select_cover">Мұқаба таңдау</string>
     <string name="file_select_backup">Сақтық көшірме файлын таңдау</string>
     <string name="crash_screen_title">Ойбай!</string>
@@ -571,19 +559,14 @@
     <string name="download_insufficient_space">Жадта орын аз болғандықтан тараулар жүктелмейді</string>
     <string name="notification_chapters_single_and_more">%1$s тарау мен %2$d</string>
     <string name="notification_first_add_to_library">Бұны істер алдыңда жазбаны кітапханаңызға қосыңыз</string>
-    <string name="skipped_reason_completed">Туынды аяқталған үшін өткізіп жіберілді</string>
     <string name="update_check_open">GitHub-та ашу</string>
-    <string name="update_check_eol">Бұл Android нұсқасы қолжетімсіз</string>
     <string name="download_notifier_unknown_error">Белгісіз қателіктің кесірінен тарау жүктеп алынбады</string>
     <string name="download_notifier_split_page_path_not_found">Бет файлының жолы %d табылмады</string>
-    <string name="channel_app_updates">Қолданба жаңартулары</string>
     <string name="channel_ext_updates">Кеңейту жаңартулары</string>
     <string name="spen_previous_page">Алдыңғы бет</string>
     <string name="spen_next_page">Келесі бет</string>
     <string name="appwidget_updates_description">Жақында кітапханада жаңартылған жазбаларды қарау</string>
     <string name="remove_manga">\"%s\"ті кітапханадан жойғай тұрсыз</string>
-    <string name="skipped_reason_not_always_update">Туындыға жаңарту керек жоқ болғандықтан өткізіп жіберіледі</string>
-    <string name="update_check_notification_download_in_progress">Жүктелуде…</string>
     <string name="channel_errors">Қателіктер</string>
     <string name="unfinished_list">Аяқталмағандар Тізімі</string>
     <string name="score">Бағалау</string>
