@@ -550,16 +550,12 @@
     <string name="action_show_manga">Прикажи наслов</string>
     <string name="action_move_to_top_all_for_series">Помакни наслов на врх</string>
     <string name="learn_more">Додирните да сазнате више</string>
-    <string name="library_errors_help">За помоћ о томе како да поправите грешке у ажурирању колекције, погледајте %1$s</string>
-    <string name="skipped_reason_not_started">Прескочено јер ниједно поглавље није прочитано</string>
     <string name="action_display_cover_only_grid">Мрежа насловница</string>
     <string name="pref_navigate_pan">Померај широке слике</string>
     <string name="pref_landscape_zoom">Аутоматски зумирај слике у пејзажном облику</string>
     <string name="save_chapter_as_cbz">Сачувај као CBZ архиву</string>
     <string name="rotation_reverse_portrait">Обрнути портрет</string>
     <string name="publishing_finished">Издавање завршено</string>
-    <string name="skipped_reason_completed">Прескочено јер је наслов завршен</string>
-    <string name="skipped_reason_not_caught_up">Прескочено јер има непрочитаних поглавља</string>
     <string name="disabled_nav">Onesposobljen</string>
     <string name="empty_backup_error">Нема уноса у колекцији за прављење резервних копија</string>
     <string name="update_check_open">Отвори на GitHub-у</string>
@@ -647,7 +643,6 @@
     <string name="download_ahead">Преузми унапред</string>
     <string name="empty_screen">Е па, ово је незгодно</string>
     <string name="download_notifier_split_page_path_not_found">Није могуће пронаћи пут датотеке странице %d</string>
-    <string name="skipped_reason_not_always_update">Прескочено јер наслов не захтева ажурирање</string>
     <string name="download_notifier_split_page_not_found">Страница %d није пронађена током раздвајања</string>
     <string name="download_notifier_cache_renewal">Провера преузимања</string>
     <string name="action_not_now">Не сада</string>
@@ -684,7 +679,6 @@
     <string name="pref_debug_info">Информације за отклањање грешака</string>
     <string name="create_backup_file_error">Није могуће створити датотеку резервне копије</string>
     <string name="has_results">Има резултата</string>
-    <string name="skipped_reason_not_in_release_period">Прескочено јер данас није очекивано издање</string>
     <string name="action_set_interval">Постави интервал</string>
     <string name="intervals_header">Интервали</string>
     <string name="track_delete_remote_text">Такође уклони из %s</string>

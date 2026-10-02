@@ -540,7 +540,6 @@
     <string name="database_clean">Niente da Pulire</string>
     <string name="extension_api_error">Impossibile ottenere l\'elenco estensioni</string>
     <string name="privacy_policy">Politica sulla privacy</string>
-    <string name="library_errors_help">Per un aiuto su come risolvere gli errori di aggiornamento della libreria vedi %1$s</string>
     <string name="save_chapter_as_cbz">Salva come archivio CBZ</string>
     <string name="cancelled">Cancellata</string>
     <string name="on_hiatus">In pausa</string>
@@ -549,9 +548,6 @@
     <string name="pref_navigate_pan">Scorri le immagini larghe</string>
     <string name="pref_landscape_zoom">Ingrandisci automaticamente le immagini larghe</string>
     <string name="action_display_cover_only_grid">Griglia con solo copertine</string>
-    <string name="skipped_reason_completed">Saltato perché la serie è completa</string>
-    <string name="skipped_reason_not_caught_up">Saltato perché ci sono capitoli non letti</string>
-    <string name="skipped_reason_not_started">Saltato perché non ci sono capitoli letti</string>
     <string name="learn_more">Tocca per approfondire</string>
     <string name="rotation_reverse_portrait">Verticale inverso</string>
     <string name="action_move_to_top_all_for_series">Sposta la serie in cima</string>
@@ -609,7 +605,6 @@
     <string name="remove_manga">Stai per rimuovere «%s» dalla tua libreria</string>
     <string name="popular">Popolare</string>
     <string name="missing_storage_permission">Autorizzazioni per l\'archiviazione non concesse</string>
-    <string name="skipped_reason_not_always_update">Saltato perché la serie non richiede aggiornamenti</string>
     <string name="action_search_hint">Ricerca…</string>
     <string name="pref_appearance_summary">Tema, formato data e ora</string>
     <string name="crash_screen_description">%s ha riscontrato un errore imprevisto. Ti suggeriamo di condividere il registro degli arresti anomali nel nostro canale di supporto su Discord.</string>
@@ -683,7 +678,6 @@
     <string name="action_filter_interval_custom">Intervallo di aggiornamento personalizzato</string>
     <string name="action_sort_next_updated">Prossimo aggiornamento previsto</string>
     <string name="manga_display_modified_interval_title">Imposta l\'aggiornamento ogni</string>
-    <string name="skipped_reason_not_in_release_period">Saltato perché oggi non era previsto alcun rilascio</string>
     <string name="track_delete_title">Rimuovere il tracking di %s?</string>
     <string name="track_delete_remote_text">Rimuovi anche da %s</string>
     <string name="action_ok">OK</string>

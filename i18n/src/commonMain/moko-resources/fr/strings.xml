@@ -541,7 +541,6 @@
     <string name="extension_api_error">Aucune extension trouvée</string>
     <string name="privacy_policy">Politique de confidentialité</string>
     <string name="save_chapter_as_cbz">Enregistrer comme archive CBZ</string>
-    <string name="library_errors_help">Pour savoir comment corriger les erreurs de mise à jour de la bibliothèque, voir %1$s</string>
     <string name="on_hiatus">En pause</string>
     <string name="publishing_finished">Publication terminée</string>
     <string name="cancelled">Annulé</string>
@@ -549,9 +548,6 @@
     <string name="action_display_cover_only_grid">Grille avec seulement la couverture</string>
     <string name="pref_navigate_pan">Panoramique des images larges</string>
     <string name="pref_landscape_zoom">Zoom automatique dans les images larges</string>
-    <string name="skipped_reason_completed">Sauté car la série est terminée</string>
-    <string name="skipped_reason_not_started">Sauté car aucun chapitre n\'est lu</string>
-    <string name="skipped_reason_not_caught_up">Sauté car il y a des chapitres non lus</string>
     <string name="learn_more">Appuyez pour en savoir plus</string>
     <string name="rotation_reverse_portrait">Portrait inversé</string>
     <string name="action_move_to_top_all_for_series">Déplacer la série vers le haut</string>
@@ -610,7 +606,6 @@
     <string name="remove_manga">Vous êtes sur le point de retirer « %s » de votre bibliothèque</string>
     <string name="missing_storage_permission">Autorisations de stockage non accordées</string>
     <string name="action_search_hint">Recherche…</string>
-    <string name="skipped_reason_not_always_update">Ignorée car la série ne nécessite pas de mises à jour</string>
     <string name="crash_screen_title">Oups !</string>
     <string name="pref_appearance_summary">Thème, format de la date et de l\'heure</string>
     <string name="pref_downloads_summary">Téléchargement automatique, téléchargement anticipé</string>
@@ -688,7 +683,6 @@
     <string name="library_sync_complete">Synchronisation de la bibliothèque complété</string>
     <string name="exception_offline">Aucune connexion internet</string>
     <string name="download_cache_invalidated">Recréation de l\'index de téléchargement</string>
-    <string name="skipped_reason_not_in_release_period">Ignoré car aucune sortie n\'était attendue aujourd\'hui</string>
     <string name="has_results">A des résultats</string>
     <string name="manga_display_interval_title">Estimer chaque</string>
     <string name="exception_http">HTTP %d, consulter le site Web dans WebView</string>

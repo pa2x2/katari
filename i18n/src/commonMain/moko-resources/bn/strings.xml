@@ -538,7 +538,6 @@
     <string name="clear_database_source_item_count">তথ্যশালায় %1$d টি মাঙ্গা যেগুলি লাইব্রেরীতে নেই</string>
     <string name="privacy_policy">গোপনীয়তা নীতি</string>
     <string name="extension_api_error">এক্সটেনশন তালিকা পেতে ব্যার্থ হলো</string>
-    <string name="skipped_reason_completed">এড়িয়ে যাওয়া হয়েছে কারণ সিরিজটি সম্পূর্ণ</string>
     <string name="cancelled">বাতিল করা হয়েছে</string>
     <string name="on_hiatus">বিরতিতে রয়েছে</string>
     <string name="publishing_finished">সম্পূর্ণ প্রকাশিত</string>
@@ -569,7 +568,6 @@
     <string name="pref_reader_summary">পঠনের ধরন, ডিসপ্লে,নেভিগেশন</string>
     <string name="pref_backup_summary">ম্যানুয়াল ও সয়ংক্রিয় ব্যাকআপ</string>
     <string name="pref_security_summary">অ্যাপ লক,নিরাপদ পর্দা</string>
-    <string name="skipped_reason_not_caught_up">অপঠিত অধ্যায় থাকায় এড়িয়ে যাওয়া হয়েছে</string>
     <string name="label_local">লোকাল</string>
     <string name="action_copy_to_clipboard">ক্লিপবোর্ডে কপি করুন</string>
     <string name="pref_reset_viewer_flags_success">সমস্ত পাঠক সেটিংস আবার</string>
@@ -585,7 +583,6 @@
     <string name="pref_invalidate_download_cache">ডাউনলোড পুনঃসূচিপত্র</string>
     <string name="action_not_now">এখন না</string>
     <string name="pref_debug_info">ডিবাগ তথ্য</string>
-    <string name="skipped_reason_not_always_update">বাদ দেওয়া হয়েছে কারণ সিরিজের আপডেটের প্রয়োজন নেই</string>
     <string name="unlock_app_title">আনলক %s</string>
     <string name="action_set_interval">সেট ইন্টারভেল</string>
     <string name="delete_downloaded">ডাউনলোড করা ফাইল ডিলেট করুন</string>
@@ -611,7 +608,6 @@
     <string name="onboarding_permission_install_apps_description">সোর্স এক্সটেনশন ইনস্টল করার জন্য।</string>
     <string name="onboarding_description">প্রথমে কিছু ঠিক করে নিন , পরবর্তীতে আপনি চাইলে সেটিং থেকে সবকিছু পরিবর্তন করতে পারবেন।</string>
     <string name="internal_error">ইন্টারনাল ইরর: বাকি ইনফরমেশন পেতে ক্যাশ লগ দেখুন</string>
-    <string name="skipped_reason_not_started">স্কিপ করা হয়েছে কারণ আগে কোন চ্যাপ্টার পড়া হয়নি</string>
     <string name="action_sort_tracker_score">ট্রেকার স্কোর</string>
     <string name="action_ok">ওকে</string>
     <string name="action_sort_next_updated">পরবর্তী আপডেটের সম্ভাব্য সময়</string>

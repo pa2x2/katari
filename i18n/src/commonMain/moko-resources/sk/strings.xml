@@ -608,10 +608,6 @@
     <string name="email">Emailová adresa</string>
     <string name="pref_skip_filtered_chapters">Preskočiť filtrované kapitoly</string>
     <string name="in_library">V knižnici</string>
-    <string name="library_errors_help">Pomoc s opravou chýb aktualizácie knižnice nájdete v %1$s</string>
-    <string name="skipped_reason_completed">Preskočené, pretože séria je dokončená</string>
-    <string name="skipped_reason_not_caught_up">Preskočené, pretože obsahuje neprečítané kapitoly</string>
-    <string name="skipped_reason_not_started">Preskočené, pretože neboli prečítané žiadne kapitoly</string>
     <string name="label_local">Lokálna</string>
     <string name="label_downloaded">Stiahnuté</string>
     <string name="label_stats">Štatistiky</string>

@@ -540,7 +540,6 @@
     <string name="database_clean">Τίποτα προς εκκαθάριση</string>
     <string name="extension_api_error">Αποτυχία ανάκτησης διαθέσιμων επεκτάσεων</string>
     <string name="privacy_policy">Πολιτική απορρήτου</string>
-    <string name="library_errors_help">Για βοήθεια σχετικά με τον τρόπο διόρθωσης σφαλμάτων ενημέρωσης βιβλιοθήκης, ανατρέξτε στο %1$s</string>
     <string name="save_chapter_as_cbz">Αποθήκευση ως αρχείο CBZ</string>
     <string name="cancelled">Ακυρώθηκε</string>
     <string name="on_hiatus">Σε αναστολή</string>
@@ -549,9 +548,6 @@
     <string name="pref_landscape_zoom">Αυτόματο ζουμ σε ευρείες εικόνες</string>
     <string name="action_display_cover_only_grid">Πλέγμα μόνο με εξώφυλλα</string>
     <string name="pref_navigate_pan">Μετατόπιση πλατιών εικόνων</string>
-    <string name="skipped_reason_completed">Παραλείφθηκε επειδή η σειρά ολοκληρώθηκε</string>
-    <string name="skipped_reason_not_caught_up">Παραβλέφθηκε επειδή υπάρχουν μη αναγνωσμένα κεφάλαια</string>
-    <string name="skipped_reason_not_started">Παραλείπεται επειδή δεν έχουν διαβαστεί κεφάλαια</string>
     <string name="learn_more">Πατήστε για να μάθετε περισσότερα</string>
     <string name="rotation_reverse_portrait">Αντίστροφο πορτρέτο</string>
     <string name="action_move_to_top_all_for_series">Μετακίνηση σειράς προς τα πάνω</string>
@@ -609,7 +605,6 @@
     <string name="updates_last_update_info">Τελευταία ενημέρωση βιβλιοθήκης: %s</string>
     <string name="remove_manga">Πρόκειται να αφαιρέσετε το \"%s\" από τη βιβλιοθήκη σας</string>
     <string name="missing_storage_permission">Δεν έχουν χορηγηθεί δικαιώματα αποθήκευσης</string>
-    <string name="skipped_reason_not_always_update">Παραλείφθηκε επειδή η σειρά δεν απαιτεί ενημερώσεις</string>
     <string name="action_search_hint">Αναζήτηση…</string>
     <string name="pref_browse_summary">Πηγές, επεκτάσεις, καθολική αναζήτηση</string>
     <string name="crash_screen_title">Ουπς!</string>
@@ -683,7 +678,6 @@
     <string name="manga_display_interval_title">Εκτίμηση κάθε</string>
     <string name="manga_display_modified_interval_title">Ρύθμιση για ενημέρωση κάθε</string>
     <string name="action_sort_next_updated">Επόμενη αναμενόμενη ενημέρωση</string>
-    <string name="skipped_reason_not_in_release_period">Παραλείφθηκε επειδή δεν αναμενόταν κυκλοφορία σήμερα</string>
     <string name="action_ok">Εντάξει</string>
     <string name="track_delete_title">Κατάργηση παρακολούθησης %s;</string>
     <string name="track_delete_remote_text">Επίσης, αφαιρέστε από %s</string>

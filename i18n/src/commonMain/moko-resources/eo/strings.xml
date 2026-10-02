@@ -790,12 +790,6 @@
     <string name="notification_size_warning">Grandaj ĝisdatigoj povas damaĝi fontojn kaj konduki al pli malrapidaj ĝisdatigoj kaj pliigan baterian uzadon. Tuŝetu por ekscii pli.</string>
     <string name="learn_more">Tuŝetu por ekscii pli</string>
     <string name="notification_first_add_to_library">Bonvolu aldoni la elementon al via biblioteko antaŭ ol fari tion</string>
-    <string name="library_errors_help">Por helpo pri kiel ripari erarojn de bibliotekaj ĝisdatigoj, vidu %1$s</string>
-    <string name="skipped_reason_completed">Preterlasita ĉar serio estas finita</string>
-    <string name="skipped_reason_not_caught_up">Preterlasita ĉar estas nelegitaj ĉapitroj</string>
-    <string name="skipped_reason_not_started">Preterlasita ĉar neniuj ĉapitroj estas legataj</string>
-    <string name="skipped_reason_not_always_update">Preterlasita ĉar serio ne devigas havi ĝisdatigojn</string>
-    <string name="skipped_reason_not_in_release_period">Preterlasis ĉar neniu eldono estis atendita hodiaŭ</string>
     <string name="file_picker_error">Neniu dosierelektila apo trovita</string>
     <string name="file_picker_uri_permission_unsupported">Fiaskis akiri aliron al persista dosierujo. La apo eble kondutos neatendate.</string>
     <string name="file_null_uri_error">Neniu dosiero elektita</string>

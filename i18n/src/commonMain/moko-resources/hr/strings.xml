@@ -543,15 +543,11 @@
     <string name="publishing_finished">Objavljivanje završeno</string>
     <string name="cancelled">Prekinuto</string>
     <string name="on_hiatus">Zaustavljeno</string>
-    <string name="library_errors_help">Za pomoć o tome kako popraviti greške aktualiziranja biblioteke, pogledaj %1$s</string>
     <string name="save_chapter_as_cbz">Spremi kao CBZ arhivu</string>
     <string name="action_show_manga">Prikaži unos</string>
     <string name="action_display_cover_only_grid">Samo naslovnice</string>
     <string name="pref_navigate_pan">Panoramski prikaz širokih slika</string>
     <string name="pref_landscape_zoom">Automatski zumiraj u široke slike</string>
-    <string name="skipped_reason_completed">Preskočeno, jer je serija kompletna</string>
-    <string name="skipped_reason_not_started">Preskočeno, jer nijedno poglavlje nije pročitano</string>
-    <string name="skipped_reason_not_caught_up">Preskočeno, jer postoje nepročitana poglavlja</string>
     <string name="learn_more">Dodirni za daljnje informacije</string>
     <string name="rotation_reverse_portrait">Preokreni uspravni format</string>
     <string name="action_move_to_top_all_for_series">Premjesti seriju na vrh</string>
@@ -652,7 +648,6 @@
 \nDodirnite da biste saznali više.</string>
     <string name="download_notifier_cache_renewal">Provjeravanje preuzimanja</string>
     <string name="update_check_open">Otvori na GitHubu</string>
-    <string name="skipped_reason_not_always_update">Preskočeno jer serija ne zahtijeva aktualiziranja</string>
     <string name="appwidget_updates_description">Pogledaj nedavno aktualizirane unose u biblioteci</string>
     <string name="remove_manga">Uklonit ćeš „%s” iz svoje biblioteke</string>
     <string name="appwidget_unavailable_locked">Widget nije dostupan kada je zaključavanje aplikacije aktivirano</string>
@@ -685,7 +680,6 @@
     <string name="action_ok">U redu</string>
     <string name="intervals_header">Intervali</string>
     <string name="track_delete_title">Ukloniti praćenje %s?</string>
-    <string name="skipped_reason_not_in_release_period">Preskočeno, jer se danas nije očekivalo izdanje</string>
     <string name="track_delete_text">Ovo će ukloniti lokalno praćenje.</string>
     <string name="track_delete_remote_text">Također ukloni iz %s</string>
     <string name="delete_downloaded">Izbriši preuzete</string>

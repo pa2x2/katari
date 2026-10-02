@@ -36,6 +36,7 @@ import eu.kanade.presentation.more.settings.screen.libraryupdates.libraryUpdateI
 import eu.kanade.presentation.more.settings.screen.libraryupdates.libraryUpdateIntervals
 import eu.kanade.presentation.more.settings.screen.libraryupdates.titleRes
 import eu.kanade.presentation.util.relativeTimeSpanString
+import eu.kanade.tachiyomi.ui.library.update.report.LibraryUpdateReportScreen
 import mihon.feature.library.update.planning.LibraryUpdatePreview
 import mihon.feature.library.update.planning.LibraryUpdateSettings
 import mihon.feature.library.update.planning.LibraryUpdateSkipRule
@@ -79,6 +80,7 @@ object SettingsLibraryUpdatesScreen : SearchableSettings {
                 subtitle = state.lastRun?.let { libraryUpdateRunSummaryText(it) }
                     ?: stringResource(MR.strings.library_updates_last_update_none),
                 isProfileSpecific = true,
+                onClick = { navigator.push(LibraryUpdateReportScreen()) }.takeIf { state.lastRun != null },
             ),
             Preference.PreferenceItem.CustomPreference(
                 title = stringResource(MR.strings.library_updates_next_automatic),

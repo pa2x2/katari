@@ -539,7 +539,6 @@
     <string name="database_clean">Nudda de isboidare</string>
     <string name="privacy_policy">Polìtica de riservadesa</string>
     <string name="save_chapter_as_cbz">Sarva comente archìviu CBZ</string>
-    <string name="library_errors_help">Pro tènnere un\'agiudu pro acontzare sos errores de agiornamentu de sa biblioteca pòmpia·ti %1$s</string>
     <string name="publishing_finished">Publicatzione acabada</string>
     <string name="on_hiatus">In pàusa</string>
     <string name="cancelled">Annullada</string>
@@ -547,9 +546,6 @@
     <string name="pref_landscape_zoom">Ismànnia in automàticu sas immàgines largas</string>
     <string name="action_display_cover_only_grid">Grìllia cun coberteddas ebbia</string>
     <string name="pref_navigate_pan">Iscurre sas pàginas largas</string>
-    <string name="skipped_reason_completed">Brincadu ca sa sèrie est acabada</string>
-    <string name="skipped_reason_not_caught_up">Brincadu ca bi sunt capìtulos non lèghidos</string>
-    <string name="skipped_reason_not_started">Brincadu ca non bi sunt capìtulos lèghidos</string>
     <string name="learn_more">Toca pro àteras informatziones</string>
     <string name="rotation_reverse_portrait">Verticale a s\'imbesse</string>
     <string name="action_move_to_top_all_for_series">Move sa sèrie cara a pitzos</string>
@@ -607,7 +603,6 @@
     <string name="updates_last_update_info">Ùrtimu agiornamentu de sa biblioteca: %s</string>
     <string name="popular">Populare</string>
     <string name="missing_storage_permission">Permissu de archiviatzione non cuntzessu</string>
-    <string name="skipped_reason_not_always_update">Brincadu ca sa sèrie non tenet bisòngiu de agiornamentos</string>
     <string name="action_search_hint">Chirca…</string>
     <string name="crash_screen_description">%s at tentu un\'errore non prevìdidu. Ti cussigiamus de cumpartzire sos registros de sas serraduras anòmalas in su canale de suportu nostru de Discord.</string>
     <string name="crash_screen_restart_application">Torra a allùghere s\'aplicatzione</string>
@@ -680,7 +675,6 @@
     <string name="action_sort_next_updated">Agiornamentu imbente prevìdidu</string>
     <string name="intervals_header">Intervallos</string>
     <string name="manga_display_modified_interval_title">Imposta s\'agiornamentu pro cada</string>
-    <string name="skipped_reason_not_in_release_period">Brincadu ca non bi fiat peruna publicatzione prevìdida oe</string>
     <string name="action_set_interval">Imposta s\'intervallu</string>
     <string name="action_ok">AB</string>
     <string name="track_delete_title">Bogare s\'arrastadore de %s?</string>

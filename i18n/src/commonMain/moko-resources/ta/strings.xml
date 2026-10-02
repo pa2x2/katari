@@ -745,12 +745,6 @@
     <string name="learn_more">மேலும் அறிய தட்டவும்</string>
     <string name="notification_cover_update_failed">அட்டையைப் புதுப்பிக்கத் தவறிவிட்டது</string>
     <string name="notification_first_add_to_library">இதைச் செய்வதற்கு முன் உங்கள் நூலகத்தில் உள்ளீட்டைச் சேர்க்கவும்</string>
-    <string name="library_errors_help">நூலக புதுப்பிப்பு பிழைகளை எவ்வாறு சரிசெய்வது என்பதற்கான உதவிக்கு, %1$s ஐப் பார்க்கவும்</string>
-    <string name="skipped_reason_completed">தொடர் முடிந்ததால் தவிர்க்கப்பட்டது</string>
-    <string name="skipped_reason_not_caught_up">படிக்காத அத்தியாயங்கள் இருப்பதால் தவிர்க்கப்பட்டது</string>
-    <string name="skipped_reason_not_started">அத்தியாயங்கள் எதுவும் படிக்காததால் தவிர்க்கப்பட்டது</string>
-    <string name="skipped_reason_not_always_update">தொடருக்கு புதுப்பிப்புகள் தேவையில்லை என்பதால் தவிர்க்கப்பட்டது</string>
-    <string name="skipped_reason_not_in_release_period">இன்று எந்த வெளியீடும் எதிர்பார்க்கப்படவில்லை என்பதால் தவிர்க்கப்பட்டது</string>
     <string name="file_select_cover">கவர் படத்தைத் தேர்ந்தெடுக்கவும்</string>
     <string name="file_select_backup">காப்புப்பிரதி கோப்பைத் தேர்ந்தெடுக்கவும்</string>
     <string name="file_picker_error">கோப்பு பிக்கர் பயன்பாடு எதுவும் கிடைக்கவில்லை</string>

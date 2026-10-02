@@ -559,11 +559,9 @@
     <string name="error_saving_picture">Virhe tallentaessa kuvaa</string>
     <string name="update_already_running">Kirjastoa ollaan jo päivitämässä</string>
     <string name="updates_last_update_info">Kirjasto päivitetty viimeksi: %s</string>
-    <string name="skipped_reason_completed">Ohitettu, koska sarja on päättynyt</string>
     <string name="information_empty_category_dialog">Sinulla ei vielä ole kategorioita.</string>
     <string name="on_hiatus">Tauolla</string>
     <string name="not_installed">Ei asennettu</string>
-    <string name="skipped_reason_not_started">Ohitettu, koska yhtään lukua ei ole luettu sarjasta</string>
     <string name="update_check_open">Avaa GitHubissa</string>
     <string name="label_background_activity">Taustatoiminta</string>
     <string name="help_translate">Auta kääntämisessä</string>
@@ -588,8 +586,6 @@
     <string name="pref_verbose_logging">Yksityiskohtainen kirjaaminen</string>
     <string name="cover_saved">Kansikuva tallennettu</string>
     <string name="error_saving_cover">Virhe tallentaessa kansikuvaa</string>
-    <string name="skipped_reason_not_caught_up">Ohitettu, koska sarjassa on luettomia lukuja</string>
-    <string name="skipped_reason_not_always_update">Ohitettu, koska sarja ei vaadi päivityksiä</string>
     <string name="remove_manga">Olet poistamassa \"%s\" kirjastostasi</string>
     <string name="pref_verbose_logging_summary">Kirjoittaa yksityiskohtaiset lokit järjestelmälokiin (heikentää sovelluksen suorituskykyä)</string>
     <string name="backup_info">Varmuuskopioita kannattaa säilyttää myös muissa paikoissa.</string>

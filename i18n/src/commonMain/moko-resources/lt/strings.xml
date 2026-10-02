@@ -340,14 +340,12 @@
     <string name="transition_finished">Baigta:</string>
     <string name="transition_current">Dabartinis:</string>
     <string name="notification_first_add_to_library">Prieš atlikdami šį veiksmą, pridėkite įrašą į savo biblioteką</string>
-    <string name="skipped_reason_not_started">Praleista, nes nėra perskaitytų skyrių</string>
     <string name="information_cloudflare_bypass_failure">Nepavyko apeiti \"Cloudflare\"</string>
     <string name="information_webview_required">\"WebView\" reikalingas \"Mihon\"</string>
     <string name="loader_not_implemented_error">Šaltinis nerastas</string>
     <string name="migration_selection_prompt">Pasirinkite šaltinį, iš kurio norite perkelti</string>
     <string name="migrate">Perkelti</string>
     <string name="download_insufficient_space">Nepavyko atsisiųsti skyrių dėl mažos vietos saugykloje</string>
-    <string name="library_errors_help">Jei reikia pagalbos, kaip ištaisyti bibliotekos naujinimo klaidas, žr. %1$s</string>
     <string name="transition_pages_error">Nepavyko įkelti puslapių: %1$s</string>
     <string name="transition_previous">Ankstesnis:</string>
     <string name="update_check_confirm">Parsisiųsti</string>
@@ -355,12 +353,10 @@
     <string name="update_check_no_new_updates">Naujų atnaujinimų nėra</string>
     <string name="migration_dialog_what_to_include">Pasirinkite duomenis, kuriuos norite įtraukti</string>
     <string name="copy">Kopijuoti</string>
-    <string name="skipped_reason_not_caught_up">Praleista, nes yra neperskaitytų skyrių</string>
     <string name="update_check_notification_download_in_progress">Atsiunčiama…</string>
     <string name="file_select_cover">Pasirinkti viršelio vaizdą</string>
     <string name="information_empty_category_dialog">Jūs dar neturite jokių kategorijų.</string>
     <string name="transition_no_previous">Ankstesnio skyriaus nėra</string>
-    <string name="skipped_reason_completed">Praleista, nes leidinys nebeleidžiamas</string>
     <string name="pref_clear_history">Išvalyti istoriją</string>
     <string name="notification_chapters_single_and_more">Skyrius %1$s ir %2$d daugiau</string>
     <string name="notification_chapters_multiple">Skyriai %1$s</string>
@@ -610,7 +606,6 @@
     <string name="download_ahead_info">Veikia tik bibliotekoje esantiems įrašams ir tik tada, jei jau atsisiųstas dabartinis ir kitas skyrius</string>
     <string name="download_ahead">Atsisiųsti į priekį</string>
     <string name="auto_download_while_reading">Automatinis atsisiuntimas beskaitant</string>
-    <string name="skipped_reason_not_always_update">Praleista, nes serijai nereikia atnaujinimų</string>
     <string name="missing_storage_permission">Nesuteikti saugojimo leidimai</string>
     <string name="pref_downloads_summary">Automatinis atsisiuntimas, atsisiuntimas į priekį</string>
     <string name="pref_backup_summary">Rankinės ir automatinės atsarginės kopijos</string>

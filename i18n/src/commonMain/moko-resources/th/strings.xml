@@ -474,7 +474,6 @@
     <string name="on">เปิด</string>
     <string name="save_chapter_as_cbz">บันทึกเป็นแฟ้ม CBZ</string>
     <string name="privacy_policy">นโยบายความเป็นส่วนตัว</string>
-    <string name="library_errors_help">สำหรับความช่วยเหลือเกี่ยวกับวิธีการแก้ไขข้อผิดพลาดในการอัปเดตคลัง ไปยัง %1$s</string>
     <string name="local_filter_order_by">เรียงตาม</string>
     <string name="date">วันที่</string>
     <string name="categorized_display_settings">การตั้งค่าการจัดเรียงตามหมวดหมู่</string>
@@ -548,10 +547,7 @@
     <string name="pref_navigate_pan">แพนหน้ากว้าง</string>
     <string name="action_display_cover_only_grid">ตารางแสดงแค่หน้าปก</string>
     <string name="pref_landscape_zoom">ซูมภาพกว้างโดยอัตโนมัติ</string>
-    <string name="skipped_reason_not_caught_up">ถูกข้ามเนื่องจากมีตอนที่ยังไม่ได้อ่าน</string>
-    <string name="skipped_reason_not_started">ถูกข้ามเนื่องจากยังไม่มีตอนใด ๆ ถูกอ่าน</string>
     <string name="action_show_manga">แสดงรายการ</string>
-    <string name="skipped_reason_completed">ถูกข้ามเนื่องจากเรื่องนี้จบแล้ว</string>
     <string name="learn_more">แตะเพื่อเรียนรู้เพิ่มเติม</string>
     <string name="rotation_reverse_portrait">แนวตั้งแบบกลับด้าน</string>
     <string name="action_move_to_top_all_for_series">ย้ายเรื่องไปด้านบน</string>
@@ -610,7 +606,6 @@
     <string name="popular">ยอดนิยม</string>
     <string name="missing_storage_permission">ไม่ได้รับการอนุญาตให้ใช้งานที่จัดเก็บ</string>
     <string name="action_search_hint">ค้นหา…</string>
-    <string name="skipped_reason_not_always_update">ถูกข้ามเนื่องจากเรื่องไม่จำเป็นต้องถูกอัปเดต</string>
     <string name="pref_appearance_summary">ธีม, รูปแบบวันที่และเวลา</string>
     <string name="pref_library_summary">หมวดหมู่, การอัปเดตคลัง, การปัดรายการตอน</string>
     <string name="pref_reader_summary">โหมดการอ่าน, การแสดงผล, การนำทาง</string>
@@ -680,7 +675,6 @@
     <string name="action_set_interval">กำหนดช่วงเวลา</string>
     <string name="action_filter_interval_custom">กำหนดความถี่ในการอัปเดต</string>
     <string name="action_sort_next_updated">การอัปเดตที่คาดไว้ต่อไป</string>
-    <string name="skipped_reason_not_in_release_period">ข้ามไปเนื่องจากคาดว่าจะไม่มีการออกในวันนี้</string>
     <string name="manga_display_interval_title">ประมาณทุกๆ</string>
     <string name="manga_display_modified_interval_title">ตั้งค่าให้อัพเดตทุกๆ</string>
     <string name="intervals_header">ช่วงเวลา</string>

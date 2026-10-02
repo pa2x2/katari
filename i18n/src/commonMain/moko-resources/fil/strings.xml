@@ -540,16 +540,12 @@
     <string name="database_clean">Walang malilinis</string>
     <string name="extension_api_error">Bigong makuha ng mga available na extension</string>
     <string name="privacy_policy">Patakaran sa Pagkapribado</string>
-    <string name="library_errors_help">Para sa tulong sa pag-aayos ng mga error sa pag-update ng aklatan, tingnan ang %1$s</string>
     <string name="save_chapter_as_cbz">I-save bilang CBZ archive</string>
     <string name="publishing_finished">Tapos na ang paglalathala</string>
     <string name="on_hiatus">Naka-hiatus</string>
     <string name="cancelled">Kinansela</string>
     <string name="action_show_manga">Ipakita ang entry</string>
     <string name="action_display_cover_only_grid">Pabalat lamang na grid</string>
-    <string name="skipped_reason_completed">Nilaktawan dahil kumpleto na ang serye</string>
-    <string name="skipped_reason_not_caught_up">Nilaktawan dahil may di pa nabasang mga kabanata</string>
-    <string name="skipped_reason_not_started">Nilaktawan dahil wala pang nabasang mga kabanata</string>
     <string name="pref_landscape_zoom">Awtomatikong mag-zoom sa mga malalawak na larawan</string>
     <string name="pref_navigate_pan">I-pan ang mga malalapad na larawan</string>
     <string name="learn_more">Matuto pa</string>
@@ -609,7 +605,6 @@
     <string name="updates_last_update_info">Huling update sa aklatan: %s</string>
     <string name="popular">Sikat</string>
     <string name="missing_storage_permission">Hindi binigay ang mga permiso sa storage</string>
-    <string name="skipped_reason_not_always_update">Nilaktawan dahil hindi kailangan ang pag-update sa serye</string>
     <string name="action_search_hint">Maghanap…</string>
     <string name="pref_reader_summary">Paraan ng pagbasa, pagpapakita, nabigasyon</string>
     <string name="pref_downloads_summary">Awtomatikong pag-download, i-download nang maaga</string>
@@ -683,7 +678,6 @@
     <string name="manga_display_interval_title">Tantyahin bawat</string>
     <string name="manga_display_modified_interval_title">Itakdang i-update bawat</string>
     <string name="intervals_header">Mga pagitan</string>
-    <string name="skipped_reason_not_in_release_period">Nilaktawan dahil walang inaasahang release ngayong araw</string>
     <string name="has_results">May mga resulta</string>
     <string name="delete_downloaded">Burahin ang na-download</string>
     <string name="action_ok">OK</string>

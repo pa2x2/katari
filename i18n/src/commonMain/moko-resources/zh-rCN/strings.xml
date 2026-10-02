@@ -540,7 +540,6 @@
     <string name="clear_database_source_item_count">数据库中有 %1$d 部作品未添加到书架</string>
     <string name="extension_api_error">获取插件列表失败</string>
     <string name="privacy_policy">隐私声明</string>
-    <string name="library_errors_help">关于书架更新出错的解决方法，请参阅 %1$s</string>
     <string name="save_chapter_as_cbz">保存为 CBZ 压缩包</string>
     <string name="publishing_finished">出版完毕</string>
     <string name="cancelled">已中止</string>
@@ -549,9 +548,6 @@
     <string name="action_display_cover_only_grid">封面网格</string>
     <string name="pref_landscape_zoom">自动放大横向图片</string>
     <string name="pref_navigate_pan">图片放大时先平移再翻页</string>
-    <string name="skipped_reason_completed">已跳过，因为作品已完结</string>
-    <string name="skipped_reason_not_caught_up">已跳过，因为有未读章节</string>
-    <string name="skipped_reason_not_started">已跳过，因为尚未开始阅读</string>
     <string name="learn_more">点击了解详情</string>
     <string name="rotation_reverse_portrait">反向竖屏</string>
     <string name="action_move_to_top_all_for_series">将作品移到顶部</string>
@@ -609,7 +605,6 @@
     <string name="remove_manga">即将从书架中删除 \"%s\"</string>
     <string name="popular">热门</string>
     <string name="missing_storage_permission">未授予存储权限</string>
-    <string name="skipped_reason_not_always_update">已跳过，因为作品无需更新</string>
     <string name="action_search_hint">搜索…</string>
     <string name="crash_screen_title">哦豁！</string>
     <string name="crash_screen_description">%s 发生了意外错误。建议你反馈时提供崩溃日志。</string>
@@ -688,7 +683,6 @@
     <string name="intervals_header">间隔</string>
     <string name="manga_display_interval_title">估计每个</string>
     <string name="manga_display_modified_interval_title">设定更新为每</string>
-    <string name="skipped_reason_not_in_release_period">已跳过，因为预计今天没有更新</string>
     <string name="has_results">有结果</string>
     <string name="syncing_library">正在同步书架</string>
     <string name="library_sync_complete">书架同步完成</string>

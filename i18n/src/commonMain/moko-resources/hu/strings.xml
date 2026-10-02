@@ -492,8 +492,6 @@
     <string name="learn_more">Koppintson további információért</string>
     <string name="notification_cover_update_failed">Nem sikerült a fedlap frissítése</string>
     <string name="notification_first_add_to_library">Először adja az elemet a könyvtárhoz</string>
-    <string name="skipped_reason_not_caught_up">Átugorva, mivel tartalmaz olvasatlan fejezeteket</string>
-    <string name="skipped_reason_not_started">Átugorva, mivel nincs olvasott fejezet</string>
     <string name="update_check_confirm">Letöltés</string>
     <string name="update_check_open">Megnyitás GitHub-on</string>
     <string name="update_check_eol">Ez az Android verzió már nem támogatott</string>
@@ -586,8 +584,6 @@
     <string name="show_title">Forrás címe</string>
     <string name="sort_by_source">Forrás szerint</string>
     <string name="sort_by_number">Fejezetek száma szerint</string>
-    <string name="library_errors_help">Könyvtárfrissítési hibák kijavításához sgítségért, tekintese meg %1$s</string>
-    <string name="skipped_reason_completed">Átugorva, mivel a sorozat befejeződött</string>
     <string name="download_notifier_split_page_not_found">%d oldal nem található felosztás közben</string>
     <string name="download_notifier_split_page_path_not_found">Nem található az útvonal a %d-ik oldalhoz</string>
     <string name="confirm_set_image_as_cover">Ez a kép legyen a fedlap?</string>
@@ -674,7 +670,6 @@
     <string name="pref_storage_location">Tárolási hely</string>
     <string name="information_cloudflare_help">Érints ide, ha Cloudflare segítségre van szükséged</string>
     <string name="relative_time_span_never">Soha</string>
-    <string name="skipped_reason_not_always_update">Átlépve, mert a sorozatot nem kell frissíteni</string>
     <string name="pref_flash_page_summ">E-ink képernyőkön csökkenti a visszamaradó képet</string>
     <string name="unlock_app_title">%s feloldása</string>
     <string name="pref_storage_location_info">Automatikus biztonsági mentésekhez, fejezetek letöltéséhez, és helyi forráshoz használt.</string>
@@ -699,7 +694,6 @@
     <string name="label_titles_section">Elemek</string>
     <string name="action_bar_up_description">Felnavigálás</string>
     <string name="label_data_storage">Adatok és tárolás</string>
-    <string name="skipped_reason_not_in_release_period">Átlépve, mert ma nem várható kiadás</string>
     <string name="file_null_uri_error">Nincs fájl kiválasztva</string>
     <string name="error_user_agent_string_invalid">Érvénytelen felhasználói ágens (user agent) szöveg</string>
     <string name="source_settings">Forrás beállítások</string>

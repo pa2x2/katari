@@ -509,7 +509,6 @@
 \n%1$s</string>
     <string name="notification_chapters_single_and_more">अध्यायः %1$s च इतोऽपि %2$d च</string>
     <string name="file_picker_error">सञ्चिकाग्राही अनुप्रयोगः न लभ्यः</string>
-    <string name="skipped_reason_completed">धारावाहिकः पूर्णः अतः लङ्घितः</string>
     <string name="clear_database_source_item_count">दत्तनिधौ %1$d ग्रन्थालयपराः माङ्गाः सन्ति</string>
     <string name="logout_success">इदानीं त्वं बहिर्गतम्</string>
     <string name="no_pinned_sources">अग्रिमस्थकृतमूलानि तव न सन्ति</string>
@@ -538,11 +537,8 @@
     <string name="error_category_exists">अनेन नाम्ना पूर्वमेव एकः वर्गः अस्ति</string>
     <string name="confirm_set_image_as_cover">इदं चित्रं मुखचित्रम् इव उपयोजनीयं किम्</string>
     <string name="notification_first_add_to_library">एतत् करणात् पूर्वं कृपया तव ग्रन्थालयाय माङ्गाः योजयतु</string>
-    <string name="library_errors_help">ग्रन्थालयनवीकरणदोषान् परिहर्तुं साहाय्यार्थं %1$s पश्य</string>
     <string name="information_empty_category_dialog">तव वर्गाः एव न सन्ति।</string>
     <string name="dialog_with_checkbox_reset">अस्यै माङ्गायै सर्वान् अध्यायान् पुनःस्थापयति</string>
-    <string name="skipped_reason_not_caught_up">अपठिताध्यायाः सन्ति अतः लङ्घितम्</string>
-    <string name="skipped_reason_not_started">काः अपि अध्यायाः न पठिताः अतः लङ्घितम्</string>
     <string name="download_queue_error">अध्यायानाम् अवारोपणं न अशक्नोत्। त्वया अवारोपितानि नाम्नः विभागे पुनः यतितुं शक्यते</string>
     <string name="migration_selection_prompt">यस्मात् स्थानान्तरगमनं करणीयं तत् चिनोतु</string>
     <string name="notification_size_warning">पूर्वसूचना -- मूलेभ्यः महद्नवीकरणानि हानिकारकाणि भवन्ति तस्मात् नवीकरणानि मन्दानि भवेयुः अपि च विद्युत्कोषोपयोगः अधिकं भवेत्</string>

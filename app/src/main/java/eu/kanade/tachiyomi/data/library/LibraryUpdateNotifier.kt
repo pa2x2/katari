@@ -19,6 +19,7 @@ import eu.kanade.tachiyomi.core.security.SecurityPreferences
 import eu.kanade.tachiyomi.data.notification.NotificationHandler
 import eu.kanade.tachiyomi.data.notification.NotificationReceiver
 import eu.kanade.tachiyomi.data.notification.Notifications
+import eu.kanade.tachiyomi.ui.library.update.report.LibraryUpdateReportNavigation
 import eu.kanade.tachiyomi.ui.main.MainActivity
 import eu.kanade.tachiyomi.util.lang.chop
 import eu.kanade.tachiyomi.util.system.cancelNotification
@@ -149,7 +150,7 @@ class LibraryUpdateNotifier(
      * @param failed Number of entries that failed to update.
      * @param uri Uri for error log file containing all titles that failed.
      */
-    fun showUpdateErrorNotification(failed: Int, uri: Uri) {
+    fun showUpdateErrorNotification(failed: Int, profileId: Long) {
         if (failed == 0) {
             return
         }
@@ -162,7 +163,7 @@ class LibraryUpdateNotifier(
             setContentText(context.stringResource(MR.strings.action_show_errors))
             setSmallIcon(R.drawable.ic_katari)
 
-            setContentIntent(NotificationReceiver.openErrorLogPendingActivity(context, uri))
+            setContentIntent(LibraryUpdateReportNavigation.pendingIntent(context, profileId))
         }
     }
 

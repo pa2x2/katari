@@ -567,13 +567,9 @@
     <string name="cant_open_last_read_chapter">Не може да се отвори последната прочетена глава</string>
     <string name="source_empty_screen">Не беше намерен източник</string>
     <string name="crash_screen_restart_application">Рестартирай приложението</string>
-    <string name="skipped_reason_completed">Пропусната, понеже поредицата е завършена</string>
     <string name="appwidget_unavailable_locked">Приставката не е достъпна, когато е активирано заключване на приложението</string>
-    <string name="skipped_reason_not_always_update">Пропусната, понеже поредицата не изисква обновления</string>
-    <string name="skipped_reason_not_started">Пропусната, понеже не е започната</string>
     <string name="update_check_open">Отвори в GitHub</string>
     <string name="pref_reset_viewer_flags">Нулирай отделните настройки на четеца</string>
-    <string name="skipped_reason_not_caught_up">Пропусната, понеже има непрочетени глави</string>
     <string name="pref_user_agent_string">User agent string по подразбиране</string>
     <string name="error_user_agent_string_blank">User agent string-ът не може да бъде празен</string>
     <string name="pref_reset_user_agent_string">Нулирай user agent string-a по подразбиране</string>
@@ -588,7 +584,6 @@
     <string name="pref_clear_webview_data">Изчисти данните на WebView</string>
     <string name="empty_screen">Това е неудобно</string>
     <string name="cancelled">Отменена</string>
-    <string name="library_errors_help">За помощ при оправянето на грешки с обновленията, виж %1$s</string>
     <string name="theme_tidalwave">Приливна вълна</string>
     <string name="action_sort_unread_count">Брой непрочетени</string>
     <string name="network_not_metered">Само през неограничена мрежа</string>

@@ -515,9 +515,6 @@
     <string name="action_open_log">פתח את יומן האירועים</string>
     <string name="pref_landscape_zoom">בצע קירוב לתמונות אופקיות באופן אוטומטי</string>
     <string name="split_tall_images_summary">משפר את ביצועי מצב הקריאה</string>
-    <string name="skipped_reason_completed">דולג בגלל שהסדרה נגמרה</string>
-    <string name="skipped_reason_not_caught_up">דולג בגלל שיש פרקים שלא נקראו</string>
-    <string name="skipped_reason_not_started">דולג בגלל שאין פרקים שנקראו</string>
     <string name="action_close">סגור</string>
     <string name="channel_errors">שגיאות</string>
     <string name="pref_reset_viewer_flags">אפס את הגדרות מצב הקריאה של כל סדרה בנפרד</string>
@@ -626,7 +623,6 @@
     <string name="label_read_duration">משך קריאה</string>
     <string name="label_titles_in_global_update">בעדכון כללי</string>
     <string name="not_applicable">N/A</string>
-    <string name="library_errors_help">לזערה לגבי איך לתקן בעיות בעדכוני ספריה, ראה %1$s</string>
     <string name="exception_unknown_host">לא יכל להשיג את %s</string>
     <string name="pref_page_rotate">סובב עמודים רחבים להתאמה</string>
     <string name="updates_last_update_info_just_now">ממש עכשיו</string>
@@ -686,8 +682,6 @@
     <string name="crash_screen_title">אופס!</string>
     <string name="crash_screen_restart_application">אתחל את האפליקציה</string>
     <string name="hour_short">%d שעות</string>
-    <string name="skipped_reason_not_always_update">דולג בגלל שהספריה לא דורשת עדכונים</string>
-    <string name="skipped_reason_not_in_release_period">דולג בגלל שלא צפוי פרסום היום</string>
     <string name="file_picker_error">לא נמצאה אפליקציה לאסוף קבצים</string>
     <string name="manga_tracking_tab">במעקב</string>
     <string name="description_placeholder">אין תיאור</string>

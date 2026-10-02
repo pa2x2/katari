@@ -848,6 +848,31 @@
     <string name="library_updates_library_off">Library: off</string>
     <string name="library_updates_check_every">Check every</string>
     <string name="library_updates_library_interval">Library interval (%s)</string>
+    <string name="library_update_report">Update report</string>
+    <string name="library_update_trigger_automatic">Automatic</string>
+    <string name="library_update_trigger_manual">Manual</string>
+    <string name="library_update_trigger_selection">Picked entries</string>
+    <string name="library_update_report_failing">Failing repeatedly</string>
+    <string name="library_update_report_failed">Failed</string>
+    <string name="library_update_report_new">New chapters</string>
+    <string name="library_update_report_no_changes">Nothing new</string>
+    <string name="library_update_report_skipped">Skipped</string>
+    <string name="library_update_report_not_checked">Not checked</string>
+    <string name="library_update_report_unknown_error">Unknown error</string>
+    <string name="library_update_report_webview">WebView</string>
+    <string name="library_update_report_pause">Pause</string>
+    <string name="library_update_report_pause_source">Pause source</string>
+    <string name="library_update_report_retry">Retry</string>
+    <string name="library_update_reason_never">Set to never check</string>
+    <string name="library_update_reason_category_off">Category switched off</string>
+    <string name="library_update_reason_source_off">Source switched off</string>
+    <string name="library_update_reason_type_off">Type switched off</string>
+    <string name="library_update_reason_not_due">Not due yet</string>
+    <string name="library_update_reason_fetch_once">Source checks it only once</string>
+    <string name="library_update_reason_completed">Completed</string>
+    <string name="library_update_reason_has_unseen">Has unseen items</string>
+    <string name="library_update_reason_not_started">Not started</string>
+    <string name="library_update_reason_outside_release">No release expected yet</string>
     <string name="pref_library_update_interval">Automatic updates</string>
     <string name="update_never">Off</string>
     <string name="update_6hour">Every 6 hours</string>
@@ -1922,12 +1947,6 @@
     <string name="learn_more">Tap to learn more</string>
     <string name="notification_cover_update_failed">Failed to update cover</string>
     <string name="notification_first_add_to_library">Please add the entry to your library before doing this</string>
-    <string name="library_errors_help">For help on how to fix library update errors, see %1$s</string>
-    <string name="skipped_reason_completed">Skipped because series is complete</string>
-    <string name="skipped_reason_not_caught_up">Skipped because there are unseen items</string>
-    <string name="skipped_reason_not_started">Skipped because no items have been started</string>
-    <string name="skipped_reason_not_always_update">Skipped because series does not require updates</string>
-    <string name="skipped_reason_not_in_release_period">Skipped because no release was expected today</string>
 
     <!-- File Picker Titles -->
     <string name="file_select_cover">Select cover image</string>

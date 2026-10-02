@@ -540,7 +540,6 @@
     <string name="publishing_finished">Đã hoàn thành xuất bản</string>
     <string name="cancelled">Đã hủy</string>
     <string name="on_hiatus">Đang tạm ngưng</string>
-    <string name="library_errors_help">Để được trợ giúp về cách sửa lỗi cập nhật thư viện, hãy xem %1$s</string>
     <string name="save_chapter_as_cbz">Lưu dưới dạng lưu trữ CBZ</string>
     <string name="learn_more">Nhấn để tìm hiểu thêm</string>
     <string name="pref_landscape_zoom">Tự động phóng ảnh rộng</string>
@@ -548,9 +547,6 @@
     <string name="pref_navigate_pan">Xoay ảnh rộng</string>
     <string name="action_display_cover_only_grid">Lưới chỉ mỗi bìa</string>
     <string name="rotation_reverse_portrait">Đảo ngược chân dung</string>
-    <string name="skipped_reason_completed">Đã bỏ qua vì bộ truyện đã hoàn thành</string>
-    <string name="skipped_reason_not_caught_up">Đã bỏ qua vì vẫn còn chương chưa đọc</string>
-    <string name="skipped_reason_not_started">Đã bỏ qua vì chưa chương nào được đọc</string>
     <string name="action_move_to_top_all_for_series">Di chuyển bộ truyện lên đầu</string>
     <string name="disabled_nav">Tắt</string>
     <string name="error_saving_picture">Lỗi khi lưu ảnh</string>
@@ -606,7 +602,6 @@
     <string name="download_ahead">Tải Trước</string>
     <string name="download_ahead_info">Chỉ áp dụng khi chương hiện giờ + chương tiếp theo đã được tải.</string>
     <string name="multi_lang">Đa Ngôn Ngữ</string>
-    <string name="skipped_reason_not_always_update">Bỏ qua vì loạt truyện không cần cập nhật</string>
     <string name="action_search_hint">Tìm kiếm…</string>
     <string name="pref_appearance_summary">Chủ đề, kiểu hiển thị ngày &amp; giờ</string>
     <string name="pref_library_summary">Danh mục, cập nhật toàn bộ, vuốt chương</string>
@@ -725,7 +720,6 @@
     <string name="action_sort_tracker_score">Điểm bộ theo dõi</string>
     <string name="no_location_set">Chưa đặt vị trí kho chứa</string>
     <string name="label_data_storage">Dữ liệu và kho chứa</string>
-    <string name="skipped_reason_not_in_release_period">Bỏ qua vì dự kiến hôm nay không có bản phát hành nào</string>
     <string name="onboarding_permission_notifications_description">Nhận thông báo khi thư viện cập nhật và hơn thế nữa.</string>
     <string name="file_null_uri_error">Không có tập tin được chọn</string>
     <string name="track_delete_title">Xóa bộ theo dõi %s?</string>

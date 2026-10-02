@@ -335,4 +335,20 @@
         <item quantity="one">Defers %d entry today</item>
         <item quantity="other">Defers %d entries today</item>
     </plurals>
+    <plurals name="library_update_report_considered">
+        <item quantity="one">%d entry considered</item>
+        <item quantity="other">%d entries considered</item>
+    </plurals>
+    <plurals name="library_update_report_failed_in_a_row">
+        <item quantity="one">%1$s · failed %2$d check in a row</item>
+        <item quantity="other">%1$s · failed %2$d checks in a row</item>
+    </plurals>
+    <plurals name="library_update_report_source_entries">
+        <item quantity="one">%1$s · %2$d entry</item>
+        <item quantity="other">%1$s · %2$d entries</item>
+    </plurals>
+    <plurals name="library_update_report_check_skipped">
+        <item quantity="one">Check the skipped entry</item>
+        <item quantity="other">Check the %d skipped</item>
+    </plurals>
 </resources>

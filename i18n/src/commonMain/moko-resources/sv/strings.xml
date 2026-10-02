@@ -538,7 +538,6 @@
     <string name="pref_auto_clear_chapter_cache">Rensa kapitelcache när appen startas</string>
     <string name="clear_database_source_item_count">%1$d icke-biblioteksartiklar i databasen</string>
     <string name="database_clean">Inget att rensa</string>
-    <string name="library_errors_help">För hjälp med att åtgärda fel i biblioteksuppdateringar, se %1$s</string>
     <string name="cancelled">Avbruten</string>
     <string name="on_hiatus">På uppehåll</string>
     <string name="publishing_finished">Publiceringen avslutad</string>
@@ -549,9 +548,6 @@
     <string name="action_display_cover_only_grid">Endast omslags-rutnät</string>
     <string name="pref_navigate_pan">Panorera breda sidor</string>
     <string name="pref_landscape_zoom">Förstora automatiskt breda bilder</string>
-    <string name="skipped_reason_completed">Hoppade över eftersom serien är klar</string>
-    <string name="skipped_reason_not_caught_up">Hoppade över eftersom det finns olästa kapitel</string>
-    <string name="skipped_reason_not_started">Hoppade över eftersom inga kapitel läses</string>
     <string name="learn_more">Tryck på för att få veta mer</string>
     <string name="rotation_reverse_portrait">Omvänt porträtt</string>
     <string name="action_move_to_top_all_for_series">Flytta serien till toppen</string>
@@ -619,7 +615,6 @@
     <string name="pref_backup_summary">Manuell och automatisk säkerhetskopiering, lagringsutrymme</string>
     <string name="invalid_location">Ogiltig plats: %s</string>
     <string name="missing_storage_permission">Lagrings rättigheter inte tillagda</string>
-    <string name="skipped_reason_not_always_update">Hoppat över för att serien inte behöver uppdateras</string>
     <string name="crash_screen_description">%s stötte på ett oväntat fel. Vi föreslår att du delar med dig av kraschloggen i vår supportkanal på Discord.</string>
     <string name="pref_appearance_summary">Tema, datum och tidsformat</string>
     <string name="pref_browse_summary">Källor, tillägg, global sökning</string>
@@ -665,7 +660,6 @@
     <string name="action_set_interval">Ange intervall</string>
     <string name="action_filter_interval_custom">Anpassat uppdateringsintervall</string>
     <string name="action_sort_next_updated">Nästa förväntade uppdatering</string>
-    <string name="skipped_reason_not_in_release_period">Hoppades över eftersom ingen publicering förväntades idag</string>
     <string name="label_tracked_titles">Spårade artiklar</string>
     <string name="day_short">%dd</string>
     <string name="track_error">%1$s fel: %2$s</string>

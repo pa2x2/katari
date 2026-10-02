@@ -541,7 +541,6 @@
     <string name="database_clean">Немає чого очищувати</string>
     <string name="privacy_policy">Політика конфіденційності</string>
     <string name="save_chapter_as_cbz">Зберегти архів як CBZ</string>
-    <string name="library_errors_help">Для допомоги в виправленні помилок оновлення бібліотеки, дивіться %1$s</string>
     <string name="publishing_finished">Публікація завершена</string>
     <string name="cancelled">Відмінено</string>
     <string name="on_hiatus">Заморожено</string>
@@ -549,9 +548,6 @@
     <string name="action_display_cover_only_grid">Сітка тільки з обкладинками</string>
     <string name="action_move_to_top_all_for_series">Перемістити серію на початок</string>
     <string name="rotation_reverse_portrait">Портретна навпаки</string>
-    <string name="skipped_reason_completed">Пропущено, оскільки серія завершена</string>
-    <string name="skipped_reason_not_caught_up">Пропущено через те, що є непрочитані розділи</string>
-    <string name="skipped_reason_not_started">Пропущено, оскільки серія не почата</string>
     <string name="empty_backup_error">Немає елементів у бібліотеці для резервування</string>
     <string name="download_notifier_split_page_not_found">Сторінку %d не знайдено, при розділенні</string>
     <string name="split_tall_images_summary">Покращує продуктивність читалки</string>
@@ -621,7 +617,6 @@
     <string name="pref_advanced_summary">Вивантаження журнала з помилками, оптимізація батареї</string>
     <string name="crash_screen_title">Ой!</string>
     <string name="crash_screen_restart_application">Перезапустити застосунок</string>
-    <string name="skipped_reason_not_always_update">Пропущено, оскільки серія не потребує оновлень</string>
     <string name="action_search_hint">Шукати…</string>
     <string name="invalid_location">Неприпустиме місцезнаходження %s</string>
     <string name="unknown_title">Невідомий тайтл</string>
@@ -683,7 +678,6 @@
     <string name="action_sort_next_updated">Наступне очікуване оновлення</string>
     <string name="intervals_header">Інтервали</string>
     <string name="manga_display_modified_interval_title">Налаштовано на оновлення кожної</string>
-    <string name="skipped_reason_not_in_release_period">Пропущено, оскільки сьогодні не очікується жодного релізу</string>
     <string name="action_ok">ОК</string>
     <string name="track_delete_remote_text">Також видалити з %s</string>
     <string name="track_delete_title">Видалити відстеження %s?</string>

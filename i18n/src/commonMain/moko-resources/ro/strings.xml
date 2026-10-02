@@ -485,12 +485,9 @@
     <string name="publishing_finished">Editare finalizată</string>
     <string name="cancelled">Anulat</string>
     <string name="on_hiatus">În hiatus</string>
-    <string name="skipped_reason_completed">Ignorata deoarece seria este completa</string>
-    <string name="skipped_reason_not_started">Ignorat din cauza lipsei de capitolel citite</string>
     <string name="local_invalid_format">Format de capitol invalid</string>
     <string name="download_queue_size_warning">Atenție : actualizarile mari în masă vor face sursele mai incete și/sau vor bloca %s. Apăsați pentru mai multe informatii.</string>
     <string name="getting_started_guide">Ghidul de inceput</string>
-    <string name="skipped_reason_not_caught_up">Ignorata deoarece sunt capitole necitite</string>
     <string name="empty_backup_error">Nu există intrări în bibliotecă pentru a face backupuri</string>
     <string name="delete_category">Ștergeți categoria</string>
     <string name="pref_inverted_colors">Inversate</string>
@@ -569,7 +566,6 @@
     <string name="description_placeholder">Fără descriere</string>
     <string name="notification_incognito_text">Dezactivează modul incognito</string>
     <string name="download_ahead_info">Funcționează numai dacă capitolul curent + următorul sunt deja descărcate.</string>
-    <string name="library_errors_help">Pentru ajutor în cum se repară erori de actualizări de bibliotecă, vezi %1$s</string>
     <string name="pref_grayscale">Alb-negru</string>
     <string name="rotation_landscape">Peisaj</string>
     <string name="learn_more">Apasă pentru a afla mai multe</string>
@@ -600,7 +596,6 @@
     <string name="appwidget_updates_description">Vizualizați intrările recent actualizate din bibliotecă</string>
     <string name="pref_reset_viewer_flags_error">Nu am putut reseta setările de citire</string>
     <string name="source_empty_screen">Nici o sursă găsită</string>
-    <string name="skipped_reason_not_always_update">Ignorat deoarece seria nu necesită actualizări</string>
     <string name="updates_last_update_info">Ultima actualizare a bibliotecii: %s</string>
     <string name="empty_screen">Ei bine, nu ar trebui sa vezi asta</string>
     <string name="download_notifier_split_page_path_not_found">Nu am putut găsi calea paginii %d</string>
@@ -702,7 +697,6 @@
     <string name="download_cache_invalidated">Indexul de descărcări a fost invalidat</string>
     <string name="action_bar_up_description">Navighează în sus</string>
     <string name="action_sort_tracker_score">Scorul serviciului de urmărire</string>
-    <string name="skipped_reason_not_in_release_period">Sărit peste deoarece nici o lansare nu era așteptată astăzi</string>
     <string name="file_null_uri_error">Nici o filă selectată</string>
     <string name="track_delete_title">Eliminați monitorizarea %s?</string>
     <string name="source_settings">Setări surse</string>

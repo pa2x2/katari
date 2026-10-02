@@ -724,12 +724,6 @@
     <string name="learn_more">অধিক জানিবলৈ টাপ কৰক</string>
     <string name="notification_cover_update_failed">কভাৰ আপডেট কৰিবলৈ বিফল</string>
     <string name="notification_first_add_to_library">এইটো কৰাৰ আগতে অনুগ্ৰহ কৰি প্ৰৱিষ্টিটো আপোনাৰ পুথিভঁৰাললৈ যোগ কৰক</string>
-    <string name="library_errors_help">পুথিভঁৰাল আপডেট ত্ৰুটি কেনেকৈ সমাধান কৰিব তাৰ সহায়ৰ বাবে, %1$s চাওক</string>
-    <string name="skipped_reason_not_caught_up">অপঠিত অধ্যায় থকাৰ বাবে স্কিপ কৰা হৈছে</string>
-    <string name="skipped_reason_not_started">কোনো অধ্যায় পঢ়া নোহোৱাৰ বাবে স্কিপ কৰা হৈছে</string>
-    <string name="skipped_reason_completed">শৃংখলা সম্পূৰ্ণ হোৱাৰ বাবে স্কিপ কৰা হৈছে</string>
-    <string name="skipped_reason_not_always_update">শৃংখলাই আপডেটৰ প্ৰয়োজন নকৰাৰ বাবে স্কিপ কৰা হৈছে</string>
-    <string name="skipped_reason_not_in_release_period">আজি কোনো মুক্তি আশা কৰা নোহোৱাৰ বাবে স্কিপ কৰা হৈছে</string>
     <string name="file_select_cover">কভাৰ ছবি বাছনি কৰক</string>
     <string name="file_select_backup">বেকআপ ফাইল বাছনি কৰক</string>
     <string name="file_picker_error">কোনো ফাইল পিকাৰ এপ পোৱা নগ\'ল</string>

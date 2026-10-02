@@ -513,7 +513,6 @@
     <string name="download_queue_error">Non foi posible descargar os capítulos. Podes tentar de novo na sección de descargas</string>
     <string name="download_insufficient_space">Non se puideron descargar os capítulos por falta de espazo de almacenamento</string>
     <string name="notification_chapters_single">Capítulo %1$s</string>
-    <string name="skipped_reason_completed">Omitiuse porque a serie está rematada</string>
     <string name="information_webview_outdated">Actualiza a aplicación de WebView para mellorar a compatibilidade</string>
     <string name="information_no_manga_category">A categoría está baleira</string>
     <string name="getting_started_guide">Guía de introdución</string>
@@ -582,8 +581,6 @@
     <string name="loader_not_implemented_error">Non se atopou a fonte</string>
     <string name="label_used">En uso</string>
     <string name="day_short">%dd</string>
-    <string name="library_errors_help">Se necesitas axuda para arranxar os erros de actualización da biblioteca, consulta %1$s</string>
-    <string name="skipped_reason_not_caught_up">Oimitiuse porque hai capítulos sin ler</string>
     <string name="update_check_eol">Esta versión de Android xa non ten soporte</string>
     <string name="download_notifier_no_network">Non hai ningunha conexión de rede dispoñible</string>
     <string name="remove_from_library">Eliminar da biblioteca</string>
@@ -656,10 +653,8 @@
     <string name="seconds_short">%dseg</string>
     <string name="label_tracked_titles">Elementos en seguimento</string>
     <string name="label_mean_score">Puntuación media</string>
-    <string name="skipped_reason_not_started">Omitiuse porque non hai capítulos lidos</string>
     <string name="notification_chapters_single_and_more">Capítulo %1$s e %2$d máis</string>
     <string name="notification_chapters_multiple">Capítulos %1$s</string>
-    <string name="skipped_reason_not_always_update">Omitiuse porque esta serie non require actualizarse</string>
     <string name="file_select_cover">Elexir a imaxe de portada</string>
     <string name="file_select_backup">Elexir o ficheiro da copia de seguridade</string>
     <string name="update_check_no_new_updates">Non hai novas actualizacións dispoñibles</string>
@@ -757,7 +752,6 @@
     <string name="manga_interval_custom_amount">Frecuencia de actualización personalizada:</string>
     <string name="track_delete_title">Queres deixar de seguir %s?</string>
     <string name="notification_updating_progress">Actualizando a biblioteca… (%s)</string>
-    <string name="skipped_reason_not_in_release_period">Omitiuse porque hoxe non se esperaba ningunha publicación</string>
     <string name="file_null_uri_error">Non se elixiu ningún arquivo</string>
     <string name="last_auto_backup_info">Última copia de seguridade automática: %s</string>
     <string name="manga_display_modified_interval_title">Actualizar cada</string>

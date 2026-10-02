@@ -29,9 +29,12 @@ class LibraryUpdatePlanner(
         context: LibraryUpdatePlanningContext,
     ): List<LibraryUpdateDecision> {
         return when (request) {
+            // Reports list merged entries member by member, so a picked member stands for its merged entry.
             is LibraryUpdateRequest.Selection ->
                 items
-                    .filter { it.entry.id in request.entryIds }
+                    .filter { item ->
+                        item.entry.id in request.entryIds || item.memberEntries.any { it.id in request.entryIds }
+                    }
                     .map { item ->
                         if (settings.entryModes[item.entry.id] == EntryUpdateMode.NEVER) {
                             LibraryUpdateDecision.Leave(item, EntryUpdateDecisionReason.ENTRY_NEVER)

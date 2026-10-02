@@ -540,7 +540,6 @@
     <string name="database_clean">Nada a ser limpo</string>
     <string name="extension_api_error">Erro ao obter as extensões disponíveis</string>
     <string name="privacy_policy">Política de privacidade</string>
-    <string name="library_errors_help">Para obter ajuda sobre como corrigir erros de atualização da biblioteca, veja %1$s</string>
     <string name="save_chapter_as_cbz">Salvar como arquivo CBZ</string>
     <string name="publishing_finished">Publicação finalizada</string>
     <string name="cancelled">Cancelado</string>
@@ -549,9 +548,6 @@
     <string name="pref_navigate_pan">Navegar imagens longas</string>
     <string name="pref_landscape_zoom">Dar zoom automaticamente em imagens largas</string>
     <string name="action_display_cover_only_grid">Grade somente com capas</string>
-    <string name="skipped_reason_completed">Pulado porque a série está finalizada</string>
-    <string name="skipped_reason_not_caught_up">Pulado porque há capítulos não lidos</string>
-    <string name="skipped_reason_not_started">Pulado porque nenhum capítulo foi lido</string>
     <string name="learn_more">Toque para saber mais</string>
     <string name="rotation_reverse_portrait">Retrato invertido</string>
     <string name="action_move_to_top_all_for_series">Mover série para o começo</string>
@@ -609,7 +605,6 @@
     <string name="remove_manga">Você está prestes a remover \"%s\" de sua biblioteca</string>
     <string name="popular">Popular</string>
     <string name="missing_storage_permission">Permissões de armazenamento não concedidas</string>
-    <string name="skipped_reason_not_always_update">Pulado porque a série não requer atualizações</string>
     <string name="action_search_hint">Pesquisar…</string>
     <string name="pref_appearance_summary">Tema, formato de data e hora</string>
     <string name="pref_library_summary">Categorias, atualização global, ações do capítulo</string>
@@ -680,7 +675,6 @@
     <string name="action_sort_next_updated">Próxima atualização esperada</string>
     <string name="action_set_interval">Definir intervalo</string>
     <string name="action_filter_interval_custom">Personalizar a frequência de atualizações</string>
-    <string name="skipped_reason_not_in_release_period">Pulado porque nenhum lançamento era esperado hoje</string>
     <string name="intervals_header">Intervalos</string>
     <string name="manga_display_modified_interval_title">Definido para atualizar todo</string>
     <string name="manga_display_interval_title">Estimar todo</string>

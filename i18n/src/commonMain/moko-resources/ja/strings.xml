@@ -538,17 +538,13 @@
     <string name="database_clean">消去できるものはありませんでした</string>
     <string name="extension_api_error">利用可能な拡張機能を取得できませんでした</string>
     <string name="privacy_policy">プライバシーポリシー</string>
-    <string name="library_errors_help">ライブラリ更新エラーの修正については、%1$sをご覧ください</string>
     <string name="save_chapter_as_cbz">CBZ アーカイブとして保存</string>
     <string name="publishing_finished">完結済み</string>
     <string name="cancelled">キャンセル済み</string>
     <string name="on_hiatus">休載中</string>
     <string name="action_show_manga">項目を表示</string>
     <string name="action_display_cover_only_grid">表紙グリッド</string>
-    <string name="skipped_reason_not_caught_up">未読の章がある為スキップしました</string>
     <string name="pref_landscape_zoom">横長の画像に自動でズームイン</string>
-    <string name="skipped_reason_completed">完結済みの為スキップしました</string>
-    <string name="skipped_reason_not_started">読了した章がない為スキップしました</string>
     <string name="pref_navigate_pan">幅広い画像を左右に移動</string>
     <string name="learn_more">タップして詳細をご覧ください</string>
     <string name="rotation_reverse_portrait">縦向き（反転）</string>
@@ -607,7 +603,6 @@
     <string name="remove_manga">ライブラリから「%s」を削除しようとしています</string>
     <string name="popular">人気</string>
     <string name="missing_storage_permission">ストレージ権限を持っていません</string>
-    <string name="skipped_reason_not_always_update">シリーズの更新が不要なためスキップしました</string>
     <string name="action_search_hint">検索…</string>
     <string name="crash_screen_description">%s で予期せぬエラーが発生しました。クラッシュログを Discord のサポートチャンネルで共有することをお勧めします。</string>
     <string name="invalid_location">無効な場所: %s</string>
@@ -678,7 +673,6 @@
     <string name="action_filter_interval_custom">カスタマイズした更新頻度</string>
     <string name="action_sort_next_updated">次の更新予定</string>
     <string name="intervals_header">間隔</string>
-    <string name="skipped_reason_not_in_release_period">本日は連載更新の予定がないためスキップしました</string>
     <string name="has_results">結果あり</string>
     <string name="track_delete_title">%s の追跡を削除しますか?</string>
     <string name="manga_display_interval_title">毎に評価</string>

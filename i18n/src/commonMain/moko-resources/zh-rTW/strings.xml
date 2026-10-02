@@ -537,7 +537,6 @@
     <string name="database_clean">無須清理</string>
     <string name="extension_api_error">無法取得可用的擴充套件</string>
     <string name="privacy_policy">隱私權政策</string>
-    <string name="library_errors_help">如欲瞭解如何修復書櫃更新失敗，請參閱 %1$s</string>
     <string name="save_chapter_as_cbz">以 CBZ 封存檔格式儲存</string>
     <string name="on_hiatus">休刊中</string>
     <string name="cancelled">已取消</string>
@@ -546,9 +545,6 @@
     <string name="pref_landscape_zoom">自動縮放寬頁</string>
     <string name="pref_navigate_pan">導覽寬頁時先平移後翻頁</string>
     <string name="action_display_cover_only_grid">純封面格狀</string>
-    <string name="skipped_reason_completed">由於連載已完結，因此略過</string>
-    <string name="skipped_reason_not_caught_up">由於有未讀章節，因此略過</string>
-    <string name="skipped_reason_not_started">由於無已讀章節，因此略過</string>
     <string name="rotation_reverse_portrait">顛倒直向</string>
     <string name="learn_more">瞭解詳情</string>
     <string name="action_move_to_top_all_for_series">置頂此作品</string>
@@ -606,7 +602,6 @@
     <string name="updates_last_update_info">書櫃更新於：%s</string>
     <string name="popular">熱門</string>
     <string name="missing_storage_permission">未被授予儲存空間權限</string>
-    <string name="skipped_reason_not_always_update">由於作品無須更新，因此略過</string>
     <string name="action_search_hint">搜尋…</string>
     <string name="pref_reader_summary">閱讀模式、檢視、導覽</string>
     <string name="pref_appearance_summary">主題、日期格式</string>
@@ -684,7 +679,6 @@
     <string name="intervals_header">刊期</string>
     <string name="manga_display_interval_title">預計每個</string>
     <string name="manga_display_modified_interval_title">設定為每個</string>
-    <string name="skipped_reason_not_in_release_period">由於未臨更新日，因此略過</string>
     <string name="has_results">有結果</string>
     <string name="syncing_library">正在同步書櫃</string>
     <string name="library_sync_complete">書櫃同步完成</string>

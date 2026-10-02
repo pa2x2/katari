@@ -540,7 +540,6 @@
     <string name="database_clean">Нечего очищать</string>
     <string name="extension_api_error">Не удалось получить доступные расширения</string>
     <string name="privacy_policy">Политика конфиденциальности</string>
-    <string name="library_errors_help">Для помощи в исправлении ошибок библиотеки, нажмите %1$s</string>
     <string name="save_chapter_as_cbz">Сохранить как архив CBZ</string>
     <string name="cancelled">Отменено</string>
     <string name="on_hiatus">Перерыв</string>
@@ -549,9 +548,6 @@
     <string name="action_display_cover_only_grid">Сетка без названия</string>
     <string name="pref_navigate_pan">Панорамирование широких изображений</string>
     <string name="pref_landscape_zoom">Автоматически увеличивать широкие изображения</string>
-    <string name="skipped_reason_completed">Пропущено, т.к серия завершена</string>
-    <string name="skipped_reason_not_caught_up">Пропущено, т.к есть непрочитанные главы</string>
-    <string name="skipped_reason_not_started">Пропущено, т.к серия не начата</string>
     <string name="learn_more">Нажать для подробностей</string>
     <string name="rotation_reverse_portrait">Портретная наоборот</string>
     <string name="action_move_to_top_all_for_series">Переместить серию в начало</string>
@@ -609,7 +605,6 @@
     <string name="updates_last_update_info">Последнее обновление библиотеки: %s</string>
     <string name="popular">Популярное</string>
     <string name="missing_storage_permission">Не предоставлены разрешения на хранение</string>
-    <string name="skipped_reason_not_always_update">Пропущено, т.к серия не нуждается в обновлении</string>
     <string name="action_search_hint">Искать…</string>
     <string name="crash_screen_restart_application">Перезапустить приложение</string>
     <string name="pref_appearance_summary">Тема, формат даты и времени</string>
@@ -683,7 +678,6 @@
     <string name="action_set_interval">Задать интервал</string>
     <string name="action_sort_next_updated">Следующее ожидамое обновление</string>
     <string name="manga_display_modified_interval_title">Задать обновления каждые</string>
-    <string name="skipped_reason_not_in_release_period">Пропущено, т.к сегодня не ожидается выпуска</string>
     <string name="track_delete_title">Удалить отслеживание %s?</string>
     <string name="track_delete_text">Это удалит отслеживание в приложении.</string>
     <string name="track_delete_remote_text">Также удалить из %s</string>

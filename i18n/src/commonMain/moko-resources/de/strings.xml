@@ -540,7 +540,6 @@
     <string name="database_clean">Nichts zu bereinigen</string>
     <string name="extension_api_error">Laden der verfügbaren Erweiterungen ist fehlgeschlagen</string>
     <string name="privacy_policy">Datenschutzbestimmungen</string>
-    <string name="library_errors_help">Für Hilfe zum Beheben von Fehlern bei Bibliotheksaktualisierungen, siehe %1$s</string>
     <string name="save_chapter_as_cbz">Als CBZ-Archiv speichern</string>
     <string name="cancelled">Abgebrochen</string>
     <string name="on_hiatus">Unterbrochen</string>
@@ -549,9 +548,6 @@
     <string name="action_display_cover_only_grid">Nur-Cover-Kacheln</string>
     <string name="pref_landscape_zoom">Bei breiten Bildern automatisch hineinzoomen</string>
     <string name="pref_navigate_pan">Innerhalb breiter Seiten navigieren</string>
-    <string name="skipped_reason_completed">Übersprungen, da die Serie abgeschlossen ist</string>
-    <string name="skipped_reason_not_caught_up">Übersprungen, weil es ungelesene Kapitel gibt</string>
-    <string name="skipped_reason_not_started">Übersprungen, weil keine Kapitel gelesen wurden</string>
     <string name="learn_more">Antippen, um mehr zu erfahren</string>
     <string name="rotation_reverse_portrait">Umgekehrtes Hochformat</string>
     <string name="action_move_to_top_all_for_series">Serie nach oben verschieben</string>
@@ -609,7 +605,6 @@
     <string name="updates_last_update_info">Bibliothek zuletzt aktualisiert: %s</string>
     <string name="popular">Beliebt</string>
     <string name="missing_storage_permission">Speicherberechtigungen nicht erteilt</string>
-    <string name="skipped_reason_not_always_update">Übersprungen, da die Serie keine Aktualisierung benötigt</string>
     <string name="action_search_hint">Suchen…</string>
     <string name="pref_appearance_summary">Thema, Datums- und Zeitformat</string>
     <string name="pref_reader_summary">Lesemodus, Anzeige, Navigation</string>
@@ -681,7 +676,6 @@
     <string name="action_filter_interval_custom">Benutzerdefiniertes Aktualisierungsintervall</string>
     <string name="action_set_interval">Intervall einstellen</string>
     <string name="action_sort_next_updated">Nächste erwartete Aktualisierung</string>
-    <string name="skipped_reason_not_in_release_period">Übersprungen, da heute keine Veröffentlichung erwartet wurde</string>
     <string name="manga_display_interval_title">Schätzt alle</string>
     <string name="manga_display_modified_interval_title">Aktualisiert alle</string>
     <string name="track_delete_text">Dies wird das lokale Tracking entfernen.</string>

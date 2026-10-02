@@ -22,8 +22,6 @@ import androidx.work.workDataOf
 import eu.kanade.tachiyomi.data.notification.Notifications
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.visualName
-import eu.kanade.tachiyomi.util.storage.getUriCompat
-import eu.kanade.tachiyomi.util.system.createFileInCacheDir
 import eu.kanade.tachiyomi.util.system.isConnectedToWifi
 import eu.kanade.tachiyomi.util.system.isRunning
 import eu.kanade.tachiyomi.util.system.setForegroundSafely
@@ -56,6 +54,7 @@ import tachiyomi.core.common.preference.getAndSet
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.core.common.util.lang.withNonCancellableContext
 import tachiyomi.core.common.util.system.logcat
+import tachiyomi.data.ActiveProfileProvider
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.entry.interactor.GetLibraryEntries
 import tachiyomi.domain.entry.model.Entry
@@ -75,7 +74,6 @@ import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.i18n.*
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
-import java.io.File
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.TimeUnit
 import kotlin.concurrent.atomics.AtomicInt
@@ -109,6 +107,9 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
 
     /** Start of this update, which also identifies it in the update report. */
     private var startedAt = 0L
+
+    /** The profile this update runs for, so its failure notification opens that profile's report. */
+    private val profileId = Injekt.get<ActiveProfileProvider>().activeProfileId
 
     override suspend fun doWork(): Result {
         val automatic = tags.contains(WORK_NAME_AUTO)
@@ -233,6 +234,11 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
         val left = decisions.filterIsInstance<LibraryUpdateDecision.Leave>()
         skippedCount = left.count { it.reason.outcome == EntryUpdateOutcome.SKIPPED }
 
+        notifier.showQueueSizeWarningNotificationIfNeeded(checks.map { it.item })
+
+        entriesToUpdate = checks.expandToMemberEntries()
+            .sortedBy { it.title }
+
         reportRepository.startRun(
             startedAt = startedAt,
             trigger = when {
@@ -240,7 +246,8 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
                 request is LibraryUpdateRequest.FollowRules && request.automatic -> LibraryUpdateTrigger.AUTOMATIC
                 else -> LibraryUpdateTrigger.MANUAL
             },
-            librarySize = decisions.size,
+            // Merged entries are checked, and reported, member by member.
+            librarySize = left.size + entriesToUpdate.size,
         )
         reportRepository.recordDecisions(
             decidedAt = startedAt,
@@ -252,11 +259,6 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
                 )
             },
         )
-
-        notifier.showQueueSizeWarningNotificationIfNeeded(checks.map { it.item })
-
-        entriesToUpdate = checks.expandToMemberEntries()
-            .sortedBy { it.title }
 
         logcat(LogPriority.INFO) {
             "Queued ${entriesToUpdate.size} library entries for update (${left.size} left out)"
@@ -392,11 +394,7 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
         }
 
         if (failedUpdates.isNotEmpty()) {
-            val errorFile = writeErrorFile(failedUpdates)
-            notifier.showUpdateErrorNotification(
-                failedUpdates.size,
-                errorFile.getUriCompat(context),
-            )
+            notifier.showUpdateErrorNotification(failedUpdates.size, profileId)
         }
     }
 
@@ -461,43 +459,10 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
         )
     }
 
-    /**
-     * Writes basic file of update errors to cache dir.
-     */
-    private fun writeErrorFile(errors: List<Pair<Entry, String?>>): File {
-        try {
-            if (errors.isNotEmpty()) {
-                val file = context.createFileInCacheDir("katari_update_errors.txt")
-                file.bufferedWriter().use { out ->
-                    out.write(context.stringResource(MR.strings.library_errors_help, ERROR_LOG_HELP_URL) + "\n\n")
-                    // Error file format:
-                    // ! Error
-                    //   # Source
-                    //     - Entry
-                    errors.groupBy({ it.second }, { it.first }).forEach { (error, entries) ->
-                        out.write("\n! ${error}\n")
-                        entries.groupBy { it.source }.forEach { (srcId, entries) ->
-                            val sourceName = sourceManager.getDisplayInfo(srcId).visualName()
-                            out.write("  # $sourceName\n")
-                            entries.forEach {
-                                out.write("    - ${it.title}\n")
-                            }
-                        }
-                    }
-                }
-                return file
-            }
-        } catch (_: Exception) {
-        }
-        return File("")
-    }
-
     companion object {
         private const val TAG = "LibraryUpdate"
         private const val WORK_NAME_AUTO = "LibraryUpdate-auto"
         private const val WORK_NAME_MANUAL = "LibraryUpdate-manual"
-
-        private const val ERROR_LOG_HELP_URL = "https://mihon.app/docs/guides/troubleshooting/"
 
         /**
          * Key for category to update.

@@ -99,6 +99,8 @@ import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchScreen
 import eu.kanade.tachiyomi.ui.deeplink.DeepLinkScreen
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
 import eu.kanade.tachiyomi.ui.home.HomeScreen
+import eu.kanade.tachiyomi.ui.library.update.report.LibraryUpdateReportNavigation
+import eu.kanade.tachiyomi.ui.library.update.report.LibraryUpdateReportScreen
 import eu.kanade.tachiyomi.ui.more.NewUpdateScreen
 import eu.kanade.tachiyomi.ui.more.OnboardingScreen
 import eu.kanade.tachiyomi.ui.security.BiometricAuthentication.authenticate
@@ -775,6 +777,11 @@ class MainActivity : BaseActivity() {
             }
             Intent.ACTION_APPLICATION_PREFERENCES -> {
                 navigator.push(SettingsScreen())
+                null
+            }
+            LibraryUpdateReportNavigation.ACTION_OPEN_REPORT -> {
+                navigator.popUntilRoot()
+                navigator.push(LibraryUpdateReportScreen())
                 null
             }
             TranslationSettingsNavigation.ACTION_OPEN_SETTINGS -> {

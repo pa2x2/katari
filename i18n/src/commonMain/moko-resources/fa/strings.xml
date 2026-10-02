@@ -450,7 +450,6 @@
     <string name="pref_landscape_zoom">بزرگنمایی تصویر چشم انداز</string>
     <string name="action_sort_last_manga_update">بررسی آخرین به روزرسانی</string>
     <string name="action_sort_unread_count">تعداد نخوانده‌ها</string>
-    <string name="skipped_reason_completed">به دلیل کامل‌بودن سری، رد شد</string>
     <string name="action_display_local_badge">منبع محلی</string>
     <string name="action_display_show_number_of_items">نمایش تعداد موارد</string>
     <string name="action_desc">نزولی</string>
@@ -587,9 +586,6 @@
     <string name="action_ok">باشه</string>
     <string name="action_sort_next_updated">به روز رسانی مورد انتظار بعدی</string>
     <string name="download_queue_size_warning">هشدار: حجم زیاد بارگیری ممکن است باعث اهسته تر شدن سرعت ویا مسدود کردن %s از منبع شود. برای اطلاعات بیشتر لمس کنید.</string>
-    <string name="skipped_reason_not_always_update">به دلیل این که این مجموعه نیازی به به روز رسانی نداشت رد شد</string>
-    <string name="skipped_reason_not_caught_up">به دلیل وجود چپتر های خوانده نشده رد شد</string>
-    <string name="skipped_reason_not_started">به دلیل این که هیچ چپتری خوانده نشده بود رد شد</string>
     <string name="pref_relative_format_summary">\"%1$s\" به جای \"%2$s\"</string>
     <string name="pref_page_rotate">صفحات عریض را بچرخان تا جا شوند</string>
     <string name="popular">محبوب</string>

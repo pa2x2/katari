@@ -472,7 +472,6 @@
     <string name="check_for_updates">Жаңартуларға тексеру</string>
     <string name="source_filter_empty_screen">Орнатылған дереккөз табылмады</string>
     <string name="update_already_running">Жаңарту әлдеқашан қосылған</string>
-    <string name="skipped_reason_not_caught_up">Оқылмаған тараулар бар болғандықтан өткізіп жіберілді</string>
     <string name="display_mode_chapter">%1$s-Тарау</string>
     <string name="manga_tracking_tab">Бақылау</string>
     <string name="add_tracking">Бақылау қосу</string>
@@ -532,7 +531,6 @@
     <string name="migration_dialog_what_to_include">Қай деректі тасымалдау керек</string>
     <string name="not_installed">Орнатылмады</string>
     <string name="notification_chapters_multiple">%1$s Тарау</string>
-    <string name="library_errors_help">Кітапхананы жаңарту қателіктерін жөндеу үшін %1$s</string>
     <string name="pref_appearance_summary">Кейіп, күні мен уақыт пішімі</string>
     <string name="pref_library_summary">Санаттар, ауқымды жаңарту</string>
     <string name="pref_tracking_summary">Прогрессті біржақты синхрондау, кеңейтілген синхрондау</string>
@@ -556,7 +554,6 @@
     <string name="dialog_with_checkbox_reset">Бұл жазба үшін түгел тарауларды қалпына келтіру</string>
     <string name="snack_categories_deleted">Санаттар жойылды</string>
     <string name="cover_updated">Мұқаба жаңартылды</string>
-    <string name="skipped_reason_not_started">Оқитын тарау болмағандықтан өткізіп жіберілді</string>
     <string name="file_select_cover">Мұқаба таңдау</string>
     <string name="file_select_backup">Сақтық көшірме файлын таңдау</string>
     <string name="crash_screen_title">Ойбай!</string>
@@ -566,7 +563,6 @@
     <string name="download_insufficient_space">Жадта орын аз болғандықтан тараулар жүктелмейді</string>
     <string name="notification_chapters_single_and_more">%1$s тарау мен %2$d</string>
     <string name="notification_first_add_to_library">Бұны істер алдыңда жазбаны кітапханаңызға қосыңыз</string>
-    <string name="skipped_reason_completed">Туынды аяқталған үшін өткізіп жіберілді</string>
     <string name="update_check_open">GitHub-та ашу</string>
     <string name="update_check_eol">Бұл Android нұсқасы қолжетімсіз</string>
     <string name="download_notifier_unknown_error">Белгісіз қателіктің кесірінен тарау жүктеп алынбады</string>
@@ -577,7 +573,6 @@
     <string name="spen_next_page">Келесі бет</string>
     <string name="appwidget_updates_description">Жақында кітапханада жаңартылған жазбаларды қарау</string>
     <string name="remove_manga">\"%s\"ті кітапханадан жойғай тұрсыз</string>
-    <string name="skipped_reason_not_always_update">Туындыға жаңарту керек жоқ болғандықтан өткізіп жіберіледі</string>
     <string name="update_check_notification_download_in_progress">Жүктелуде…</string>
     <string name="channel_errors">Қателіктер</string>
     <string name="unfinished_list">Аяқталмағандар Тізімі</string>

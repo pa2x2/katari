@@ -543,13 +543,9 @@
     <string name="publishing_finished">Penerbitan selesai</string>
     <string name="cancelled">Dibatalkan</string>
     <string name="on_hiatus">Sedang Hiatus</string>
-    <string name="library_errors_help">Untuk bantuan cara memperbaiki kesalahan pembaruan pustaka, lihat %1$s</string>
     <string name="save_chapter_as_cbz">Simpan sebagai arsip CBZ</string>
     <string name="action_show_manga">Lihat entri</string>
     <string name="action_display_cover_only_grid">Grid sampul saja</string>
-    <string name="skipped_reason_completed">Dilewati karena seri telah selesai</string>
-    <string name="skipped_reason_not_caught_up">Dilewati karena ada bab yang belum dibaca</string>
-    <string name="skipped_reason_not_started">Dilewati karena tidak ada bab yang dibaca</string>
     <string name="pref_landscape_zoom">Secara otomatis melebarkan gambar</string>
     <string name="pref_navigate_pan">Geser gambar lebar</string>
     <string name="learn_more">Pelajari lebih lanjut</string>
@@ -609,7 +605,6 @@
     <string name="are_you_sure">Apa kamu yakin?</string>
     <string name="popular">Populer</string>
     <string name="missing_storage_permission">Izin penyimpanan tidak diberikan</string>
-    <string name="skipped_reason_not_always_update">Dilewati karena seri ini tidak memerlukan pembaruan</string>
     <string name="action_search_hint">Cari…</string>
     <string name="pref_browse_summary">Sumber, ekstensi, pencarian global</string>
     <string name="pref_reader_summary">Mode membaca, tampilan, navigasi</string>
@@ -679,7 +674,6 @@
     <string name="pref_double_tap_zoom">Ketuk dua kali untuk memperbesar</string>
     <string name="action_set_interval">Terapkan jeda waktu</string>
     <string name="action_filter_interval_custom">Penyesuaian frekuensi update</string>
-    <string name="skipped_reason_not_in_release_period">Dilewati karena tidak ada rilis yang diharapkan hari ini</string>
     <string name="action_sort_next_updated">Pembaruan yang diharapkan berikutnya</string>
     <string name="intervals_header">Interval</string>
     <string name="manga_display_interval_title">Perkirakan setiap</string>

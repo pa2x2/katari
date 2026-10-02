@@ -519,7 +519,6 @@
     <string name="database_clean">Nada para limpar</string>
     <string name="download_queue_size_warning">Aviso: downloads grandes em massa podem levar as fontes a ficarem lentas e/ou começarem a bloquear o %s. Toque para saber mais.</string>
     <string name="notification_size_warning">Grandes atualizações prejudicam as fontes e podem levar a atualizações lentas e ainda ao aumento do uso da bateria. Toque para saber mais.</string>
-    <string name="library_errors_help">Para obter ajuda sobre como corrigir erros de atualização da biblioteca, veja %1$s</string>
     <string name="pref_auto_clear_chapter_cache">Limpar a cache de capítulos ao fechar a app</string>
     <string name="pref_hide_threshold">Sensibilidade para ocultar menu ao deslocar</string>
     <string name="pref_high">Alta</string>
@@ -548,9 +547,6 @@
     <string name="action_display_cover_only_grid">Grelha apenas de capas</string>
     <string name="action_close">Fechar</string>
     <string name="action_move_to_top_all_for_series">Mover séries para o topo</string>
-    <string name="skipped_reason_completed">Ignorado porque a séria está completa</string>
-    <string name="skipped_reason_not_started">Ignorado porque nenhum capítulo foi lido</string>
-    <string name="skipped_reason_not_caught_up">Ignorado porque existem capítulos não lidos</string>
     <string name="empty_backup_error">Sem entradas na biblioteca para fazer cópia de segurança</string>
     <string name="pref_clear_webview_data">Limpar dados do WebView</string>
     <string name="webview_data_deleted">Dados do WebView limpos</string>
@@ -606,7 +602,6 @@
     <string name="action_remove_everything">Remover tudo</string>
     <string name="theme_lavender">Lavanda</string>
     <string name="popular">Famoso</string>
-    <string name="skipped_reason_not_always_update">Ignorado porque a série não requer atualizações</string>
     <string name="action_search_hint">Pesquisar…</string>
     <string name="missing_storage_permission">Permissões de armazenamento não concedidas</string>
     <string name="action_display_show_continue_reading_button">Botão de continuar a ler</string>
@@ -681,7 +676,6 @@
     <string name="action_filter_interval_custom">Frequência da atualização personalizada</string>
     <string name="action_sort_next_updated">Próxima atualização esperada</string>
     <string name="manga_display_modified_interval_title">Definido para atualizar a cada</string>
-    <string name="skipped_reason_not_in_release_period">Pulado, pois nenhum lançamento é esperado para hoje</string>
     <string name="delete_downloaded">Eliminar transferido</string>
     <string name="selected">Selecionado</string>
     <string name="not_selected">Não selecionado</string>
