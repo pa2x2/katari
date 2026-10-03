@@ -44,6 +44,8 @@ dependencies {
     implementation(projects.textRecognition.ui)
     implementation(projects.translation.api)
     implementation(projects.translation.ui)
+    implementation(projects.tts.api)
+    implementation(projects.tts.ui)
     implementation(projects.presentationCore)
     implementation(projects.sourceApi)
     implementation(projects.sourceCompat)

@@ -14,6 +14,7 @@ import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.OpenInNew
 import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.CloseFullscreen
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.OpenInFull
 import androidx.compose.material.icons.outlined.Settings
@@ -77,6 +78,7 @@ internal fun TranslationSessionContent(
     onSelectSource: (LanguageTag) -> Unit,
     onSelectEngine: (TranslationEngineSelection) -> Unit,
     onExternalAction: (TranslationSessionExternalAction) -> Unit,
+    onCollapse: (() -> Unit)? = null,
     speechState: TranslationResultSpeechState = TranslationResultSpeechState(),
     onSpeechToggle: ((TranslationResultSpeechTarget) -> Unit)? = null,
     modifier: Modifier = Modifier,
@@ -113,9 +115,8 @@ internal fun TranslationSessionContent(
                 title = stringResource(MR.strings.translation_title),
                 onDismiss = onDismiss,
                 compact = compact,
-                onExpand = onExpand.takeIf {
-                    compact && showExpand && state.hasExpandedCompactContent()
-                },
+                onExpand = onExpand.takeIf { compact && showExpand },
+                onCollapse = onCollapse,
                 onDocumentation = documentationUrl?.let { url ->
                     {
                         onExternalAction(TranslationSessionExternalAction.OpenDocumentation(url))
@@ -203,6 +204,7 @@ internal fun TranslationSessionHeader(
     modifier: Modifier = Modifier,
     compact: Boolean = false,
     onExpand: (() -> Unit)? = null,
+    onCollapse: (() -> Unit)? = null,
     onDocumentation: (() -> Unit)? = null,
 ) {
     Row(
@@ -233,6 +235,14 @@ internal fun TranslationSessionHeader(
                 contentDescription = stringResource(MR.strings.action_expand),
                 onClick = it,
             )
+        }
+        onCollapse?.let {
+            IconButton(onClick = it) {
+                Icon(
+                    imageVector = Icons.Outlined.CloseFullscreen,
+                    contentDescription = stringResource(MR.strings.action_collapse),
+                )
+            }
         }
         if (compact) {
             TranslationCompactIconButton(
@@ -863,21 +873,6 @@ private fun TranslationPreparation.contextualDocumentationUrl(): String? {
         is TranslationPreparation.Unavailable,
         is TranslationPreparation.Rejected,
         -> null
-    }
-}
-
-private fun TranslationSessionState.Active.hasExpandedCompactContent(): Boolean {
-    return when (this) {
-        is TranslationSessionState.Ready,
-        is TranslationSessionState.PreparationRequired,
-        is TranslationSessionState.ProviderSurfaceOpened,
-        is TranslationSessionState.Failed,
-        -> true
-        is TranslationSessionState.Settling,
-        is TranslationSessionState.Preparing,
-        is TranslationSessionState.Translating,
-        is TranslationSessionState.Success,
-        -> false
     }
 }
 

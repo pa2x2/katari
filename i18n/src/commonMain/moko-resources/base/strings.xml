@@ -616,6 +616,10 @@
     <string name="reader_text_show_original">Show original text</string>
     <string name="reader_text_show_translations">Show translations</string>
     <string name="reader_text_translating">Translating…</string>
+    <string name="reader_text_speech_language_unavailable">Text to speech can\'t read this language.</string>
+    <string name="reader_text_speech_configuration_required">Text to speech needs attention in Settings.</string>
+    <string name="reader_text_speech_unavailable">Text to speech is unavailable for this text.</string>
+    <string name="reader_text_speech_failed">Text to speech playback failed.</string>
     <string name="reader_text_translation_same_language">This page is already in %1$s</string>
     <string name="reader_text_translation_target_required">Choose a language to show translations on the page</string>
     <string name="reader_text_translation_unsupported_pair">%1$s can\'t translate %2$s → %3$s</string>

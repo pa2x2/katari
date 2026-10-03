@@ -68,6 +68,7 @@ import mihon.entry.interactions.manga.media.session.MangaMediaSessionProcessor
 import mihon.entry.interactions.manga.reader.settings.MangaReaderSettingsBindings
 import mihon.entry.interactions.manga.reader.text.session.MangaReaderTextSession
 import mihon.entry.interactions.manga.reader.text.session.declaredContentLanguage
+import mihon.entry.interactions.manga.reader.text.speech.MangaTranslationSpeechController
 import mihon.entry.interactions.manga.reader.text.stored.MangaReaderStoredTranslations
 import mihon.entry.interactions.manga.reader.text.translation.MangaPageTranslator
 import mihon.entry.interactions.manga.reader.text.translation.MangaReaderTranslateDownloads
@@ -97,6 +98,7 @@ import mihon.language.api.tag.LanguageTag
 import mihon.text.recognition.api.host.TextRecognitionHostActions
 import mihon.translation.api.host.TranslationHostActionResult
 import mihon.translation.api.host.TranslationHostActions
+import mihon.tts.ui.playback.ShortFormSpeechFailure
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.core.common.util.lang.withIOContext
@@ -175,6 +177,13 @@ internal class ReaderViewModel @JvmOverloads constructor(
         hostActions = translationHostActions,
         scope = viewModelScope,
         languageStore = MangaTranslationLanguageStore(feature = Injekt.get(), series = series),
+    )
+
+    val textTranslationSpeech = MangaTranslationSpeechController(
+        feature = Injekt.get(),
+        translation = textTranslation.hostCoordinator.controller.state,
+        scope = viewModelScope,
+        onFailure = { eventChannel.trySend(Event.TranslationSpeechFailed(it)) },
     )
 
     /** Whether the series' downloads are translated in the background, as the languages sheet sets it. */
@@ -433,6 +442,7 @@ internal class ReaderViewModel @JvmOverloads constructor(
     }
 
     override fun onCleared() {
+        textTranslationSpeech.close()
         textTranslation.close()
         val currentChapters = state.value.viewerChapters
         if (currentChapters != null) {
@@ -1319,6 +1329,7 @@ internal class ReaderViewModel @JvmOverloads constructor(
 
         /** The chapter on screen has a stored translation to show. */
         data object StoredTranslationOpened : Event
+        data class TranslationSpeechFailed(val failure: ShortFormSpeechFailure) : Event
         data class SetCoverResult(val result: SetAsCoverResult) : Event
 
         data class SavedImage(val result: SaveImageResult) : Event

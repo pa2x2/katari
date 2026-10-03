@@ -103,6 +103,7 @@ import mihon.entry.interactions.source.launchEntryChildWebViewAction
 import mihon.entry.viewer.settings.navigation.openViewerSettings
 import mihon.text.recognition.api.host.openTextRecognitionPipelineChoice
 import mihon.translation.api.host.openTranslationSettings
+import mihon.tts.ui.playback.ShortFormSpeechFailure
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.launchNonCancellable
@@ -310,6 +311,9 @@ class ReaderActivity : EntryInteractionActivity() {
                         viewModel.textSession.setOverlay(true)
                         textInteraction.setActive(true)
                     }
+                    is ReaderViewModel.Event.TranslationSpeechFailed -> {
+                        onTranslationSpeechFailed(event.failure)
+                    }
                     is ReaderViewModel.Event.SavedImage -> {
                         onSaveImageResult(event.result)
                     }
@@ -454,6 +458,11 @@ class ReaderActivity : EntryInteractionActivity() {
         config = null
         menuToggleToast?.cancel()
         readingModeToast?.cancel()
+    }
+
+    override fun onStop() {
+        viewModel.textTranslationSpeech.stopPlayback()
+        super.onStop()
     }
 
     override fun onPause() {
@@ -676,6 +685,7 @@ class ReaderActivity : EntryInteractionActivity() {
     private fun TextLayer(menuVisible: Boolean) {
         val textState by viewModel.textSession.state.collectAsState()
         val areaResult by textInteraction.areaResult.collectAsState()
+        val translationSpeechState by viewModel.textTranslationSpeech.state.collectAsState()
         MangaReaderTextLayer(
             state = textState,
             menuVisible = menuVisible,
@@ -691,6 +701,8 @@ class ReaderActivity : EntryInteractionActivity() {
             onChooseLanguage = viewModel::chooseTextLanguage,
             onChoosePipeline = ::openTextRecognitionPipelineChoice,
             onDismissTranslation = textInteraction::dismissTranslation,
+            translationSpeechState = translationSpeechState,
+            onTranslationSpeechToggle = viewModel.textTranslationSpeech::toggle,
             onRetryTranslation = viewModel.textSession::resume,
             onToggleOverlay = viewModel::toggleTextTranslationOverlay,
             onToggleOriginal = viewModel.textSession::toggleOriginal,
@@ -1071,6 +1083,17 @@ class ReaderActivity : EntryInteractionActivity() {
                 Success -> MR.strings.cover_updated
                 AddToLibraryFirst -> MR.strings.notification_first_add_to_library
                 Error -> MR.strings.notification_cover_update_failed
+            },
+        )
+    }
+
+    private fun onTranslationSpeechFailed(failure: ShortFormSpeechFailure) {
+        toast(
+            when (failure) {
+                ShortFormSpeechFailure.LanguageUnavailable -> MR.strings.reader_text_speech_language_unavailable
+                ShortFormSpeechFailure.ConfigurationRequired -> MR.strings.reader_text_speech_configuration_required
+                ShortFormSpeechFailure.Unavailable -> MR.strings.reader_text_speech_unavailable
+                ShortFormSpeechFailure.PlaybackFailed -> MR.strings.reader_text_speech_failed
             },
         )
     }

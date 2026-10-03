@@ -41,6 +41,8 @@ import mihon.model.artifacts.ui.approval.ModelArtifactDownloadApprovalDialog
 import mihon.text.recognition.ui.approval.TextRecognitionPlatformModelsDialog
 import mihon.translation.ui.picker.language.displayName
 import mihon.translation.ui.presentation.CoordinatedTranslationSessionHost
+import mihon.translation.ui.presentation.TranslationResultSpeechState
+import mihon.translation.ui.presentation.TranslationResultSpeechTarget
 import mihon.translation.ui.presentation.TranslationSessionExternalAction
 import mihon.translation.ui.presentation.language.translationEffectiveTargetSummary
 import mihon.translation.ui.session.TranslationSessionHostCoordinator
@@ -64,6 +66,8 @@ internal fun MangaReaderTextLayer(
     onChooseLanguage: (LanguageTag?) -> Unit,
     onChoosePipeline: (LanguageTag) -> Unit,
     onDismissTranslation: () -> Unit,
+    translationSpeechState: TranslationResultSpeechState,
+    onTranslationSpeechToggle: (TranslationResultSpeechTarget) -> Unit,
     onRetryTranslation: () -> Unit,
     onToggleOverlay: () -> Unit,
     onToggleOriginal: () -> Unit,
@@ -164,6 +168,8 @@ internal fun MangaReaderTextLayer(
                 isTabletUi = maxWidth >= 720.dp,
                 modifier = Modifier.fillMaxSize(),
                 onDismiss = onDismissTranslation,
+                speechState = translationSpeechState,
+                onSpeechToggle = onTranslationSpeechToggle,
                 snackbarHostState = snackbarHostState,
                 onChooseSourceLanguage = { choosingLanguage = true },
             )

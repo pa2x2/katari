@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.13.2] - 2026-10-03
+
+### ✨ Added
+
+- The manga reader's translation popup can read the original and translated text aloud.
+
+### 🔄 Changed
+
+- Tapping the engine name in a translation popup changes the engine, replacing the menu button.
+
+### 🧩 Improved
+
+- Translation popups always name the engine that translated the text.
+- Translation popups always offer fullscreen, not only when the text is cut off.
+
+### 🐛 Fixed
+
+- Leaving fullscreen returns to the translation popup instead of closing it.
+- Changing the language or engine in fullscreen no longer drops back to the popup.
+
 ## [1.13.1] - 2026-10-02
 
 ### 🔄 Changed
@@ -611,7 +631,8 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v1.13.1...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/v1.13.2...HEAD
+[1.13.2]: https://github.com/pa2x2/katari/releases/tag/v1.13.2
 [1.13.1]: https://github.com/pa2x2/katari/releases/tag/v1.13.1
 [1.13.0]: https://github.com/pa2x2/katari/releases/tag/v1.13.0
 [1.12.0]: https://github.com/pa2x2/katari/releases/tag/v1.12.0
