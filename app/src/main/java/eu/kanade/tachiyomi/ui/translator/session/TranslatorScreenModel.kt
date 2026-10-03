@@ -19,10 +19,10 @@ import mihon.translation.api.request.TranslationSourceLanguageSelection
 import mihon.translation.api.request.TranslationTargetLanguageSelection
 import mihon.translation.ui.picker.language.supportsPair
 import mihon.translation.ui.presentation.TranslationResultSpeechPhase
-import mihon.translation.ui.presentation.TranslationResultSpeechSide
 import mihon.translation.ui.presentation.TranslationResultSpeechState
 import mihon.translation.ui.presentation.TranslationResultSpeechTarget
 import mihon.translation.ui.presentation.TranslationSessionExternalAction
+import mihon.translation.ui.presentation.speechTargets
 import mihon.translation.ui.session.TranslationLanguageSupportState
 import mihon.translation.ui.session.TranslationSessionExecutionMode
 import mihon.translation.ui.session.TranslationSessionHostCoordinator
@@ -229,8 +229,8 @@ internal class TranslatorScreenModel(
         screenModelScope.launch {
             controller.state.collect { session ->
                 mutableState.update { it.copy(session = session) }
-                validSpeechTargets(session.displayedSessionResult())?.let {
-                    speechController.stopIfOwnerChanged(it)
+                session.displayedSessionResult()?.let {
+                    speechController.stopIfOwnerChanged(it.speechTargets())
                 }
             }
         }
@@ -284,24 +284,6 @@ internal class TranslatorScreenModel(
                     targetLanguage = current.targetLanguage,
                     engine = current.engine,
                 ),
-            ),
-        )
-    }
-
-    private fun validSpeechTargets(
-        successful: mihon.translation.ui.session.TranslationSessionResult?,
-    ): Set<TranslationResultSpeechTarget>? {
-        successful ?: return null
-        return setOf(
-            TranslationResultSpeechTarget(
-                side = TranslationResultSpeechSide.Source,
-                text = successful.input.request.text,
-                language = successful.result.sourceLanguage,
-            ),
-            TranslationResultSpeechTarget(
-                side = TranslationResultSpeechSide.Target,
-                text = successful.result.translatedText,
-                language = successful.result.targetLanguage,
             ),
         )
     }

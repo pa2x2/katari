@@ -17,8 +17,9 @@ import mihon.entry.interactions.book.reader.speech.BookShortFormSpeechState
 import mihon.entry.interactions.book.reader.translation.BookSelectionTranslationController
 import mihon.entry.viewer.settings.shared.ReaderCapabilityId
 import mihon.entry.viewer.settings.shared.StandardReaderCapabilities
-import mihon.translation.ui.presentation.TranslationResultSpeechSide
 import mihon.translation.ui.presentation.TranslationResultSpeechTarget
+import mihon.translation.ui.presentation.speechTargets
+import mihon.translation.ui.session.TranslationSessionResult
 import mihon.translation.ui.session.TranslationSessionState
 import mihon.tts.api.request.TtsLanguageSelection
 
@@ -190,16 +191,5 @@ internal class BookSelectionActionCoordinator(
 
 private fun TranslationSessionState.speechTargets(): Set<TranslationResultSpeechTarget> {
     val success = this as? TranslationSessionState.Success ?: return emptySet()
-    return setOf(
-        TranslationResultSpeechTarget(
-            side = TranslationResultSpeechSide.Source,
-            text = success.input.request.text,
-            language = success.result.sourceLanguage,
-        ),
-        TranslationResultSpeechTarget(
-            side = TranslationResultSpeechSide.Target,
-            text = success.result.translatedText,
-            language = success.result.targetLanguage,
-        ),
-    )
+    return TranslationSessionResult(success.input, success.result).speechTargets()
 }
