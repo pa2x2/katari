@@ -3,6 +3,7 @@ package mihon.feature.library.update.planning
 import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import mihon.feature.library.update.pause.LibrarySourcePauses
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.library.update.model.CategoryUpdateRules
 import tachiyomi.domain.library.update.model.EntryUpdateMode
@@ -14,7 +15,8 @@ data class LibraryUpdateSettings(
     val skipRules: LibraryUpdateSkipRules,
     /** Hours between automatic updates; 0 when the library is not updated automatically. */
     val intervalHours: Int,
-    val excludedSourceIds: Set<Long>,
+    /** Sources paused at the time the settings were read. */
+    val pausedSourceIds: Set<Long>,
     val excludedEntryTypes: Set<EntryType>,
     /** Categories whose rules differ from the default. */
     val categoryRules: Map<Long, CategoryUpdateRules>,
@@ -40,10 +42,13 @@ data class LibraryUpdateSettings(
         private val libraryPreferences: LibraryPreferences,
         private val rulesRepository: LibraryUpdateRulesRepository,
     ) {
-        suspend fun read(): LibraryUpdateSettings = LibraryUpdateSettings(
+        private val sourcePauses = LibrarySourcePauses(libraryPreferences)
+
+        /** @param now epoch milliseconds the update starts at, which decides whether a source's pause has ended. */
+        suspend fun read(now: Long): LibraryUpdateSettings = LibraryUpdateSettings(
             skipRules = LibraryPreferences.skipRulesOf(libraryPreferences.updateSkipRules.get()),
             intervalHours = libraryPreferences.autoUpdateInterval.get(),
-            excludedSourceIds = libraryPreferences.updateExcludedSources.get().mapNotNull(String::toLongOrNull).toSet(),
+            pausedSourceIds = sourcePauses.active(now).keys,
             excludedEntryTypes = libraryPreferences.updateExcludedEntryTypes.get(),
             categoryRules = rulesRepository.getCategoryRules(),
             entryModes = rulesRepository.getEntryModes(),
@@ -57,7 +62,7 @@ data class LibraryUpdateSettings(
         fun changes(): Flow<Unit> = combine(
             libraryPreferences.updateSkipRules.changes(),
             libraryPreferences.autoUpdateInterval.changes(),
-            libraryPreferences.updateExcludedSources.changes(),
+            libraryPreferences.updatePausedSources.changes(),
             libraryPreferences.updateExcludedEntryTypes.changes(),
             rulesRepository.subscribeCategoryRules(),
         ) { _, _, _, _, _ -> }

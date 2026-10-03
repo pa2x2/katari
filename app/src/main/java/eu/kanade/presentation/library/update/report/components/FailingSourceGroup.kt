@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import eu.kanade.presentation.library.update.report.LibraryUpdateReportActions
 import mihon.entry.interactions.migration.EntryMigrationSubject
 import mihon.feature.library.update.report.LibraryUpdateReport
+import tachiyomi.domain.library.update.model.SourceUpdatePause
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.pluralStringResource
@@ -30,13 +31,14 @@ import tachiyomi.presentation.core.i18n.stringResource
  * needs its entries moved elsewhere. Pausing the source fits both.
  *
  * @param name null when the source isn't installed and its name was never recorded.
+ * @param pause the source's pause in effect now, or null when it isn't paused.
  * @param migrations the group's entries that can be migrated.
  */
 @Composable
 internal fun FailingSourceGroup(
     source: LibraryUpdateReport.FailingSource,
     name: String?,
-    isPaused: Boolean,
+    pause: SourceUpdatePause?,
     migrations: List<EntryMigrationSubject>,
     actions: LibraryUpdateReportActions,
 ) {
@@ -99,10 +101,10 @@ internal fun FailingSourceGroup(
                     },
                 )
             }
-            PauseChip(
-                paused = isPaused,
-                label = stringResource(MR.strings.library_update_report_pause_source),
-                onPausedChange = { actions.onSetSourcePaused(source.sourceId, it) },
+            SourcePauseChip(
+                pause = pause,
+                onPause = { actions.onPauseSource(source.sourceId, it) },
+                onResume = { actions.onResumeSource(source.sourceId) },
             )
         }
     }

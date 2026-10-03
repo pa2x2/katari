@@ -14,6 +14,7 @@ import eu.kanade.tachiyomi.data.backup.models.StringPreferenceValue
 import eu.kanade.tachiyomi.data.backup.models.StringSetPreferenceValue
 import eu.kanade.tachiyomi.data.library.LibraryUpdateJob
 import eu.kanade.tachiyomi.source.sourcePreferences
+import mihon.feature.library.update.legacy.LegacyExcludedSourcesConversion
 import mihon.feature.library.update.legacy.LegacyUpdateCategoriesConversion
 import mihon.feature.profiles.core.ProfileStore
 import tachiyomi.core.common.preference.AndroidPreferenceStore
@@ -78,6 +79,7 @@ class PreferenceRestorer(
             backupCategories = backupCategories,
         )
         legacyUpdateCategoriesConversion.convert(profileId, store)
+        LegacyExcludedSourcesConversion.convert(store)
 
         if (includeGlobalRestore) {
             restorePreferences(

@@ -15,8 +15,9 @@ import kotlin.time.Duration.Companion.hours
  * Decides which library entries an update checks.
  *
  * A rule-following update walks each entry down a ladder and stops at the first step that decides: the entry's Never
- * mode, its Always mode, a switched-off category, source or entry type, the skip rules, and for automatic updates the
- * check interval of its categories. An entry in several categories is skipped when any of them would skip it.
+ * mode, its Always mode, a switched-off category, a paused source, a switched-off entry type, the skip rules, and for
+ * automatic updates the check interval of its categories. An entry in several categories is skipped when any of them
+ * would skip it.
  */
 class LibraryUpdatePlanner(
     private val eligibility: EntryUpdateEligibilityFeature,
@@ -66,7 +67,7 @@ class LibraryUpdatePlanner(
         categories.firstOrNull { settings.categoryRules[it]?.autoUpdate == false }?.let { categoryId ->
             return LibraryUpdateDecision.Leave(item, EntryUpdateDecisionReason.CATEGORY_OFF, categoryId)
         }
-        if (item.sourceIds.all { it in settings.excludedSourceIds }) {
+        if (item.sourceIds.all { it in settings.pausedSourceIds }) {
             return LibraryUpdateDecision.Leave(item, EntryUpdateDecisionReason.SOURCE_OFF)
         }
         if (item.entry.type in settings.excludedEntryTypes) {
@@ -97,7 +98,7 @@ class LibraryUpdatePlanner(
         if (automatic) {
             notDue(item, categories, settings, context)?.let { return it }
         }
-        return LibraryUpdateDecision.Check(item, skippedSourceIds = item.sourceIds intersect settings.excludedSourceIds)
+        return LibraryUpdateDecision.Check(item, skippedSourceIds = item.sourceIds intersect settings.pausedSourceIds)
     }
 
     /**

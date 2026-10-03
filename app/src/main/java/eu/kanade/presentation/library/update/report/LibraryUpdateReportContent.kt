@@ -27,6 +27,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -41,6 +42,7 @@ import eu.kanade.presentation.library.update.labelRes
 import eu.kanade.presentation.library.update.report.components.ActionChips
 import eu.kanade.presentation.library.update.report.components.FailingSourceGroup
 import eu.kanade.presentation.library.update.report.components.PauseChip
+import eu.kanade.presentation.library.update.report.components.PausedSourceGroup
 import eu.kanade.presentation.library.update.report.components.ReportRow
 import eu.kanade.presentation.util.relativeTimeSpanString
 import eu.kanade.tachiyomi.ui.library.update.report.LibraryUpdateReportScreenModel
@@ -60,7 +62,9 @@ class LibraryUpdateReportActions(
     val onMigrate: (List<EntryMigrationSubject>) -> Unit,
     val onWebView: (Entry, EntryWebViewResolution.Available) -> Unit,
     val onSetPaused: (Entry, Boolean) -> Unit,
-    val onSetSourcePaused: (Long, Boolean) -> Unit,
+    /** Pauses the source until a time in epoch milliseconds, or until resumed for null. */
+    val onPauseSource: (Long, Long?) -> Unit,
+    val onResumeSource: (Long) -> Unit,
     val onRetry: (List<Entry>) -> Unit,
     val onCheckSkipped: () -> Unit,
 )
@@ -245,12 +249,43 @@ fun LibraryUpdateReportContent(
             }
         }
 
-        reasonSection(
+        val notCheckedCount = report.pausedSources.sumOf { it.items.size } + report.notChecked.values.sumOf { it.size }
+        if (notCheckedCount > 0) {
+            item(key = "header-not-checked") {
+                SectionHeader(
+                    icon = Icons.Outlined.PauseCircleOutline,
+                    title = MR.strings.library_update_report_not_checked,
+                    count = notCheckedCount,
+                )
+            }
+        }
+        items(report.pausedSources, key = { "not-checked-source-${it.sourceId}" }) { source ->
+            PausedSourceGroup(
+                source = source,
+                name = state.sourceNames[source.sourceId],
+                pause = state.sourcePauses[source.sourceId],
+                actions = actions,
+            )
+        }
+        reasonGroups(
             key = "not-checked",
-            icon = Icons.Outlined.PauseCircleOutline,
-            title = MR.strings.library_update_report_not_checked,
             groups = report.notChecked,
             onClickEntry = actions.onClickEntry,
+            // Entries set to never check were often paused from this report, so they can be resumed here too.
+            itemTrailing = { item ->
+                if (item.status.reason == EntryUpdateDecisionReason.ENTRY_NEVER) {
+                    val paused = item.entry.id in state.pausedEntryIds
+                    TextButton(onClick = { actions.onSetPaused(item.entry, !paused) }) {
+                        Text(
+                            if (paused) {
+                                stringResource(MR.strings.library_update_report_resume)
+                            } else {
+                                stringResource(MR.strings.library_update_report_pause)
+                            },
+                        )
+                    }
+                }
+            },
         )
     }
 }
@@ -265,7 +300,7 @@ private fun LazyListScope.failingSourceItems(
         FailingSourceGroup(
             source = source,
             name = state.sourceNames[source.sourceId],
-            isPaused = source.sourceId in state.pausedSourceIds,
+            pause = state.sourcePauses[source.sourceId],
             migrations = source.items.mapNotNull { state.migrations[it.entry.id] },
             actions = actions,
         )
@@ -278,13 +313,18 @@ private fun LibraryUpdateReport.Item.withRecheck(subtitle: String): String {
 }
 
 @Composable
-private fun FoldedItems(items: List<LibraryUpdateReport.Item>, onClickEntry: (Entry) -> Unit) {
+private fun FoldedItems(
+    items: List<LibraryUpdateReport.Item>,
+    onClickEntry: (Entry) -> Unit,
+    itemTrailing: (@Composable (LibraryUpdateReport.Item) -> Unit)? = null,
+) {
     items.forEach { item ->
         ReportRow(
             entry = item.entry,
             title = item.entry.title,
             subtitle = if (item.isRechecked) stringResource(MR.strings.library_update_report_rechecked) else null,
             onClick = { onClickEntry(item.entry) },
+            trailing = itemTrailing?.let { { it(item) } },
         )
     }
 }
@@ -373,12 +413,23 @@ private fun LazyListScope.reasonSection(
     item(key = "header-$key") {
         SectionHeader(icon = icon, title = title, count = groups.values.sumOf { it.size })
     }
+    reasonGroups(key = key, groups = groups, onClickEntry = onClickEntry)
+}
+
+/** @param itemTrailing shown at the end of each entry's row once a group is unfolded. */
+private fun LazyListScope.reasonGroups(
+    key: String,
+    groups: Map<EntryUpdateDecisionReason, List<LibraryUpdateReport.Item>>,
+    onClickEntry: (Entry) -> Unit,
+    itemTrailing: (@Composable (LibraryUpdateReport.Item) -> Unit)? = null,
+) {
     groups.forEach { (reason, items) ->
         item(key = "$key-${reason.name}") {
             CollapsibleGroup(
                 title = stringResource(reason.labelRes),
                 items = items,
                 onClickEntry = onClickEntry,
+                itemTrailing = itemTrailing,
             )
         }
     }
@@ -389,6 +440,7 @@ private fun CollapsibleGroup(
     title: String,
     items: List<LibraryUpdateReport.Item>,
     onClickEntry: (Entry) -> Unit,
+    itemTrailing: (@Composable (LibraryUpdateReport.Item) -> Unit)?,
 ) {
     var expanded by rememberSaveable { mutableStateOf(false) }
     Column {
@@ -413,7 +465,7 @@ private fun CollapsibleGroup(
             )
         }
         if (expanded) {
-            FoldedItems(items = items, onClickEntry = onClickEntry)
+            FoldedItems(items = items, onClickEntry = onClickEntry, itemTrailing = itemTrailing)
         }
     }
 }

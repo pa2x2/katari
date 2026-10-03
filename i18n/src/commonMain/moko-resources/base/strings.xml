@@ -867,6 +867,8 @@
     <string name="entry_updates_why_category_off">The last update left it out: the %s category is switched off</string>
     <string name="entry_updates_why_failed">The last check failed: %s</string>
     <string name="entry_updates_why_checked">Last checked %s</string>
+    <string name="entry_updates_source_paused">%s is paused for library updates</string>
+    <string name="entry_updates_source_paused_until">%1$s is paused for library updates until %2$s</string>
     <string name="entry_updates_fetch_once">Its source checks it only once. Always check overrides that.</string>
     <string name="entry_updates_release_estimate">Release estimate</string>
     <string name="entry_updates_label_failing">Failing</string>
@@ -888,6 +890,19 @@
     <string name="library_update_report_webview">WebView</string>
     <string name="library_update_report_pause">Pause</string>
     <string name="library_update_report_pause_source">Pause source</string>
+    <string name="library_update_report_resume">Resume</string>
+    <string name="library_update_report_check_now">Check now</string>
+    <string name="library_update_report_resumed">Resumed</string>
+    <string name="library_update_report_checked">Checked: %s</string>
+    <string name="library_update_source_paused">Paused</string>
+    <string name="library_update_source_paused_until">Paused until %s</string>
+    <string name="library_update_source_paused_until_short">Until %s</string>
+    <string name="library_update_pause_day">For a day</string>
+    <string name="library_update_pause_three_days">For 3 days</string>
+    <string name="library_update_pause_week">For a week</string>
+    <string name="library_update_pause_until_resumed">Until I resume</string>
+    <string name="library_update_pause_pick">Pick a date and time…</string>
+    <string name="library_update_pause_until_title">Pause until</string>
     <string name="library_update_report_retry">Retry</string>
     <string name="library_update_report_unknown_source">Unknown source</string>
     <string name="library_update_report_rechecked">Rechecked</string>
@@ -895,7 +910,7 @@
     <string name="upcoming_not_checked">Won\'t be checked · %s</string>
     <string name="library_update_reason_never">Set to never check</string>
     <string name="library_update_reason_category_off">Category switched off</string>
-    <string name="library_update_reason_source_off">Source switched off</string>
+    <string name="library_update_reason_source_off">Source paused</string>
     <string name="library_update_reason_type_off">Type switched off</string>
     <string name="library_update_reason_not_due">Not due yet</string>
     <string name="library_update_reason_fetch_once">Source checks it only once</string>
@@ -1846,6 +1861,8 @@
     <string name="cant_open_last_read_chapter">Unable to open last seen item</string>
     <string name="updates_last_update_info">Library last updated: %s</string>
     <string name="updates_last_update_info_just_now">Just now</string>
+    <string name="updates_paused_source">%s paused for library updates</string>
+    <string name="updates_paused_two_sources">%1$s and %2$s paused for library updates</string>
     <string name="relative_time_span_never">Never</string>
     <string name="action_view_upcoming">View Upcoming Updates</string>
     <string name="anime_schedule">Schedule</string>

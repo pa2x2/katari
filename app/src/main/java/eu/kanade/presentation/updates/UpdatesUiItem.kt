@@ -58,33 +58,53 @@ import tachiyomi.domain.entry.model.EntryCover as EntryCoverData
 
 /**
  * @param failed entries the latest update failed to check, named so a failure is noticed without opening the report.
+ * @param pausedSources the sources library updates leave out, named so a pause isn't forgotten.
  * @param onClick opens the latest update's report; null while there is none.
  */
 internal fun LazyListScope.updatesLastUpdatedItem(
     lastUpdated: Long,
     failed: Int,
+    pausedSources: List<String>,
     onClick: (() -> Unit)?,
 ) {
     item(key = "updates-lastUpdated") {
-        Row(
+        Column(
             modifier = Modifier
                 .animateItem(fadeInSpec = null, fadeOutSpec = null)
                 .fillMaxWidth()
                 .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
                 .padding(horizontal = MaterialTheme.padding.medium, vertical = MaterialTheme.padding.small),
         ) {
-            Text(
-                text = stringResource(MR.strings.updates_last_update_info, relativeTimeSpanString(lastUpdated)),
-                fontStyle = FontStyle.Italic,
-            )
-            if (failed > 0) {
+            Row {
                 Text(
-                    text = " · " + pluralStringResource(MR.plurals.library_updates_failed, failed, failed),
+                    text = stringResource(MR.strings.updates_last_update_info, relativeTimeSpanString(lastUpdated)),
                     fontStyle = FontStyle.Italic,
-                    color = MaterialTheme.colorScheme.error,
+                )
+                if (failed > 0) {
+                    Text(
+                        text = " · " + pluralStringResource(MR.plurals.library_updates_failed, failed, failed),
+                        fontStyle = FontStyle.Italic,
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                }
+            }
+            if (pausedSources.isNotEmpty()) {
+                Text(
+                    text = pausedSourcesText(pausedSources),
+                    fontStyle = FontStyle.Italic,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun pausedSourcesText(names: List<String>): String {
+    return when (names.size) {
+        1 -> stringResource(MR.strings.updates_paused_source, names[0])
+        2 -> stringResource(MR.strings.updates_paused_two_sources, names[0], names[1])
+        else -> pluralStringResource(MR.plurals.updates_paused_sources, names.size, names.size)
     }
 }
 

@@ -8,7 +8,7 @@ sealed interface LibraryUpdateDecision {
 
     data class Check(
         override val item: LibraryItem,
-        /** Sources whose members of a merged entry stay unchecked because their source is switched off. */
+        /** Sources whose members of a merged entry stay unchecked because the source is paused. */
         val skippedSourceIds: Set<Long> = emptySet(),
     ) : LibraryUpdateDecision
 

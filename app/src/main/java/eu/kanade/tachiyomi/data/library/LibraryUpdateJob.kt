@@ -45,6 +45,7 @@ import mihon.entry.interactions.library.EntryLibraryUpdateRefreshFeature
 import mihon.entry.interactions.library.EntryLibraryUpdateRefreshRequest
 import mihon.entry.interactions.library.EntryLibraryUpdateRefreshResult
 import mihon.entry.interactions.merge.EntryMergeMetadataRefreshFeature
+import mihon.feature.library.update.pause.LibrarySourcePauses
 import mihon.feature.library.update.planning.LibraryUpdateDecision
 import mihon.feature.library.update.planning.LibraryUpdatePlanner
 import mihon.feature.library.update.planning.LibraryUpdatePlanningContext
@@ -90,6 +91,7 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
     private val sourceManager: SourceManager = Injekt.get()
     private val libraryPreferences: LibraryPreferences = Injekt.get()
     private val settingsReader = LibraryUpdateSettings.Reader(Injekt.get(), Injekt.get())
+    private val sourcePauses = LibrarySourcePauses(libraryPreferences)
     private val planner = LibraryUpdatePlanner(Injekt.get())
     private val reportRepository: LibraryUpdateReportRepository = Injekt.get()
     private val getLibraryEntries: GetLibraryEntries = Injekt.get()
@@ -231,7 +233,9 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
     }
 
     private suspend fun planQueue(request: LibraryUpdateRequest) {
-        val settings = settingsReader.read()
+        // Ended pauses already don't count; dropping them lets the screens that list paused sources catch up.
+        sourcePauses.dropEnded(startedAt)
+        val settings = settingsReader.read(startedAt)
         val timeZone = TimeZone.currentSystemDefault()
         currentFetchWindow = fetchInterval.getWindow(
             Clock.System.now().toLocalDateTime(timeZone).date,

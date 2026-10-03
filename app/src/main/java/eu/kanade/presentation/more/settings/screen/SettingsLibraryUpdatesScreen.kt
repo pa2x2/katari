@@ -29,6 +29,7 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.category.visualName
 import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.presentation.library.update.libraryUpdateRunSummaryText
+import eu.kanade.presentation.library.update.sourcePauseStateText
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.screen.libraryupdates.CategoryUpdateRulesScreen
 import eu.kanade.presentation.more.settings.screen.libraryupdates.LibraryUpdatesSettingsScreenModel
@@ -253,20 +254,10 @@ object SettingsLibraryUpdatesScreen : SearchableSettings {
         return Preference.PreferenceGroup(
             title = stringResource(MR.strings.label_sources),
             preferenceItems = if (expanded) {
-                state.sources.map { row ->
-                    Preference.PreferenceItem.TextPreference(
-                        title = row.name,
-                        subtitle = pluralStringResource(
-                            MR.plurals.library_updates_entries,
-                            row.entryCount,
-                            row.entryCount,
-                        ),
-                        isProfileSpecific = true,
-                        widget = { Switch(checked = row.checked, onCheckedChange = null) },
-                        onClick = { screenModel.setSourceChecked(row.id, !row.checked) },
-                    )
-                } + showAllToggle(expanded = true, onToggle = { expanded = false })
+                state.sources.map { sourceSwitch(it, screenModel) } +
+                    showAllToggle(expanded = true, onToggle = { expanded = false })
             } else {
+                // Paused sources stay listed, so resuming one doesn't take a search through every source.
                 listOf(
                     Preference.PreferenceItem.TextPreference(
                         title = if (off == 0) {
@@ -278,10 +269,26 @@ object SettingsLibraryUpdatesScreen : SearchableSettings {
                         isProfileSpecific = true,
                         onClick = { expanded = true },
                     ),
-                )
+                ) + state.sources.filterNot { it.checked }.map { sourceSwitch(it, screenModel) }
             },
         )
     }
+
+    @Composable
+    private fun sourceSwitch(
+        row: LibraryUpdatesSettingsScreenModel.SourceRow,
+        screenModel: LibraryUpdatesSettingsScreenModel,
+    ) = Preference.PreferenceItem.TextPreference(
+        title = row.name,
+        subtitle = listOfNotNull(
+            pluralStringResource(MR.plurals.library_updates_entries, row.entryCount, row.entryCount),
+            row.pausedUntil?.let { sourcePauseStateText(it) },
+        )
+            .joinToString(" · "),
+        isProfileSpecific = true,
+        widget = { Switch(checked = row.checked, onCheckedChange = null) },
+        onClick = { screenModel.setSourceChecked(row.id, !row.checked) },
+    )
 
     @Composable
     private fun getTypesGroup(
