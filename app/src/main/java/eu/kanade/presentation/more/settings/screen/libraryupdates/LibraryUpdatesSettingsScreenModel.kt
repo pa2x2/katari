@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import mihon.entry.interactions.state.EntryUpdateEligibilityFeature
+import mihon.feature.library.update.pause.LibrarySourcePauses
 import mihon.feature.library.update.planning.LibraryUpdatePlanner
 import mihon.feature.library.update.planning.LibraryUpdatePlanningContext
 import mihon.feature.library.update.planning.LibraryUpdatePreview
@@ -52,6 +53,7 @@ class LibraryUpdatesSettingsScreenModel(
 
     private val previewCalculator = LibraryUpdatePreview.Calculator(LibraryUpdatePlanner(eligibility), eligibility)
     private val settingsReader = LibraryUpdateSettings.Reader(libraryPreferences, rulesRepository)
+    private val sourcePauses = LibrarySourcePauses(libraryPreferences)
     private val contextReader = LibraryUpdatePlanningContext.Reader(reportRepository, fetchInterval)
 
     init {
@@ -103,9 +105,9 @@ class LibraryUpdatesSettingsScreenModel(
 
     fun setSourceChecked(sourceId: Long, checked: Boolean) {
         if (checked) {
-            libraryPreferences.updateExcludedSources -= sourceId.toString()
+            sourcePauses.resume(listOf(sourceId))
         } else {
-            libraryPreferences.updateExcludedSources += sourceId.toString()
+            sourcePauses.pause(sourceId, until = null)
         }
     }
 
@@ -131,16 +133,18 @@ class LibraryUpdatesSettingsScreenModel(
     }
 
     private suspend fun Inputs.toContent(): Content {
-        val settings = settingsReader.read()
+        val now = Clock.System.now()
+        val settings = settingsReader.read(now.toEpochMilliseconds())
         val preview = previewCalculator.preview(
             items = items,
             settings = settings,
-            context = contextReader.read(Clock.System.now()),
+            context = contextReader.read(now),
         )
 
         val entriesPerCategory = items.flatMap { it.categories }.groupingBy { it }.eachCount()
         val entriesPerSource = items.flatMap { it.sourceIds }.groupingBy { it }.eachCount()
         val entriesPerType = items.groupingBy { it.entry.type }.eachCount()
+        val pauses = sourcePauses.active(now.toEpochMilliseconds())
         return Content(
             preview = preview,
             categories = categories
@@ -158,7 +162,8 @@ class LibraryUpdatesSettingsScreenModel(
                         id = sourceId,
                         name = sourceManager.getDisplayInfo(sourceId).visualName(),
                         entryCount = count,
-                        checked = sourceId !in settings.excludedSourceIds,
+                        checked = sourceId !in pauses,
+                        pausedUntil = pauses[sourceId]?.until,
                     )
                 }
                 .sortedBy { it.name.lowercase() },
@@ -200,7 +205,14 @@ class LibraryUpdatesSettingsScreenModel(
 
     data class CategoryRow(val category: Category, val entryCount: Int, val rules: CategoryUpdateRules)
 
-    data class SourceRow(val id: Long, val name: String, val entryCount: Int, val checked: Boolean)
+    /** @param pausedUntil when the source's pause ends, or null when it isn't paused or stays paused until resumed. */
+    data class SourceRow(
+        val id: Long,
+        val name: String,
+        val entryCount: Int,
+        val checked: Boolean,
+        val pausedUntil: Long?,
+    )
 
     data class TypeRow(val type: EntryType, val entryCount: Int, val checked: Boolean)
 }

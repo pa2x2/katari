@@ -209,7 +209,7 @@ class EntryScreen(
         val consumptionApplicable = entryConsumptionFeature.isApplicable(successState.entry.type)
 
         val updatesScreenModel = rememberScreenModel(tag = "updates-${successState.entry.id}") {
-            EntryUpdatesScreenModel(successState.entry.id)
+            EntryUpdatesScreenModel(successState.entry.id, successState.memberIds)
         }
         val updatesState by updatesScreenModel.state.collectAsStateWithLifecycle()
         var showUpdatesSheet by rememberSaveable(successState.entry.id) { mutableStateOf(false) }
@@ -228,12 +228,14 @@ class EntryScreen(
                 mode = updatesState.mode,
                 status = updatesState.status,
                 categories = updatesState.categories,
+                pausedSources = updatesState.pausedSources,
                 releaseEstimate = entryReleaseEstimateText(
                     interval = successState.entry.fetchInterval,
                     nextUpdate = successState.entry.expectedNextUpdate,
                     entryType = successState.entry.type,
                 ),
                 onModeSelected = updatesScreenModel::setMode,
+                onResumeSource = updatesScreenModel::resumeSource,
                 onReleaseEstimateClicked = {
                     showUpdatesSheet = false
                     screenModel.showSetFetchIntervalDialog()

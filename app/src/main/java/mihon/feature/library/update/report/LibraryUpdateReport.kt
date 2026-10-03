@@ -13,6 +13,10 @@ import tachiyomi.domain.library.update.model.LibraryUpdateRun
  *
  * Failures that keep happening are separated from one-off ones because they need a fix rather than a retry. When most
  * of one source's checks failed with the same error, they are one problem with the source and are listed once.
+ *
+ * Entries left out because their source was paused are listed by source, so each source can be resumed from the report.
+ * Entries of a still paused source that were checked after the run stay with it, so checking whether a source is back
+ * doesn't take away the way to resume it.
  */
 data class LibraryUpdateReport(
     val run: LibraryUpdateRun,
@@ -23,6 +27,8 @@ data class LibraryUpdateReport(
     val noChanges: List<Item>,
     val skipped: Map<EntryUpdateDecisionReason, List<Item>>,
     val notChecked: Map<EntryUpdateDecisionReason, List<Item>>,
+    /** Their entries are listed nowhere else. */
+    val pausedSources: List<PausedSource>,
 ) {
     val skippedCount: Int
         get() = skipped.values.sumOf { it.size }
@@ -35,21 +41,39 @@ data class LibraryUpdateReport(
             get() = items.all { it.status.isFailingRepeatedly }
     }
 
+    data class PausedSource(val sourceId: Long, val items: List<Item>) {
+        /** The entries checked after the run, such as by checking the source while it stays paused. */
+        val checked: List<Item>
+            get() = items.filter { it.status.outcome in CHECKED_OUTCOMES }
+    }
+
     companion object {
         private const val SOURCE_COLLAPSE_MINIMUM = 3
 
-        /** @param entries the entries the statuses belong to; statuses of entries no longer around are dropped. */
+        /**
+         * @param entries the entries the statuses belong to; statuses of entries no longer around are dropped.
+         * @param pausedSourceIds the sources paused now.
+         */
         fun build(
             run: LibraryUpdateRun,
             statuses: List<EntryUpdateStatus>,
             entries: Map<Long, Entry>,
+            pausedSourceIds: Set<Long>,
         ): LibraryUpdateReport {
-            val items = statuses
+            val (pausedItems, items) = statuses
                 .filter { it.decidedAt >= run.startedAt }
                 .mapNotNull { status ->
                     entries[status.entryId]?.let { Item(it, status, isRechecked = status.decidedAt > run.startedAt) }
                 }
                 .sortedBy { it.entry.title.lowercase() }
+                .partition { item ->
+                    item.status.reason == EntryUpdateDecisionReason.SOURCE_OFF ||
+                        (
+                            item.isRechecked &&
+                                item.status.outcome in CHECKED_OUTCOMES &&
+                                item.entry.source in pausedSourceIds
+                            )
+                }
             val byOutcome = items.groupBy { it.status.outcome }
 
             val checkedPerSource = items
@@ -76,6 +100,9 @@ data class LibraryUpdateReport(
                 noChanges = byOutcome[EntryUpdateOutcome.NO_CHANGES].orEmpty(),
                 skipped = byOutcome[EntryUpdateOutcome.SKIPPED].orEmpty().groupByReason(),
                 notChecked = byOutcome[EntryUpdateOutcome.NOT_CHECKED].orEmpty().groupByReason(),
+                pausedSources = pausedItems
+                    .groupBy { it.entry.source }
+                    .map { (sourceId, group) -> PausedSource(sourceId, group) },
             )
         }
 

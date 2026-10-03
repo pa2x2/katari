@@ -78,7 +78,8 @@ class LibraryUpdateReportScreen : Screen() {
                             )
                         },
                         onSetPaused = screenModel::setEntryPaused,
-                        onSetSourcePaused = screenModel::setSourcePaused,
+                        onPauseSource = screenModel::pauseSource,
+                        onResumeSource = screenModel::resumeSource,
                         onRetry = { entries -> scope.launch { reportStart(screenModel.retry(entries)) } },
                         onCheckSkipped = { scope.launch { reportStart(screenModel.checkSkipped()) } },
                     ),

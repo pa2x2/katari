@@ -87,6 +87,7 @@ data object UpdatesTab : Tab {
         val filterSummary = updatesFeedFilterSummary(feed.filter, categories, feed.sources)
 
         val latestUpdateSummary by screenModel.latestUpdateSummary.collectAsStateWithLifecycle()
+        val pausedSourceNames by screenModel.pausedSourceNames.collectAsStateWithLifecycle()
         val updateStarter = rememberLibraryUpdateStarter(
             snackbarHostState = screenModel.snackbarHostState,
             startSkippedOfLatest = screenModel::updateSkippedOfLatest,
@@ -178,6 +179,7 @@ data object UpdatesTab : Tab {
             updatesLastUpdatedItem(
                 lastUpdated = screenModel.lastUpdated,
                 failed = latestUpdateSummary?.failed ?: 0,
+                pausedSources = pausedSourceNames,
                 onClick = { navigator.push(LibraryUpdateReportScreen()) }.takeIf { latestUpdateSummary != null },
             )
             unifiedUpdatesUiItems(

@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.13.3] - 2026-10-03
+
+### ✨ Added
+
+- Sources can be paused for library updates for a day, 3 days, a week, or until a chosen date and time.
+- The update report lists each paused source with its entries, and can resume it or check it once.
+- An entry's Updates sheet shows which of its sources are paused and can resume them.
+
+### 🧩 Improved
+
+- The Updates tab names the sources paused for library updates.
+- Settings > Library updates keeps paused sources listed and shows when each pause ends.
+- Entries set to never check can be resumed from the update report.
+
 ## [1.13.2] - 2026-10-03
 
 ### ✨ Added
@@ -631,7 +645,8 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v1.13.2...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/v1.13.3...HEAD
+[1.13.3]: https://github.com/pa2x2/katari/releases/tag/v1.13.3
 [1.13.2]: https://github.com/pa2x2/katari/releases/tag/v1.13.2
 [1.13.1]: https://github.com/pa2x2/katari/releases/tag/v1.13.1
 [1.13.0]: https://github.com/pa2x2/katari/releases/tag/v1.13.0

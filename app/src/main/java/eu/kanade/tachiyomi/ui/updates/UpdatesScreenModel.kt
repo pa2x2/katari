@@ -57,6 +57,8 @@ import mihon.entry.interactions.state.EntryBookmarkTarget
 import mihon.entry.interactions.state.EntryConsumptionFeature
 import mihon.entry.interactions.state.EntryConsumptionStatus
 import mihon.entry.interactions.translate.EntryTranslateStatus
+import mihon.feature.library.update.pause.LibrarySourcePauses
+import mihon.feature.library.update.pause.PausedLibrarySources
 import mihon.feature.library.update.report.LibraryUpdateRunSummary
 import mihon.feature.library.update.report.subscribeLatestSummary
 import mihon.feature.profiles.core.ProfileScopedStateEvent
@@ -152,6 +154,14 @@ class UpdatesScreenModel(
 
     val latestUpdateSummary: StateFlow<LibraryUpdateRunSummary?> = reportRepository.subscribeLatestSummary()
         .stateIn(screenModelScope, SharingStarted.WhileSubscribed(5_000), null)
+
+    val pausedSourceNames: StateFlow<List<String>> = PausedLibrarySources(
+        sourcePauses = LibrarySourcePauses(libraryPreferences),
+        sourceRepository = Injekt.get(),
+        sourceManager = sourceManager,
+    )
+        .subscribe()
+        .stateIn(screenModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     private val selectionState = UpdatesSelectionState()
     private val selectedKeys: HashSet<LibraryItemKey> = HashSet()

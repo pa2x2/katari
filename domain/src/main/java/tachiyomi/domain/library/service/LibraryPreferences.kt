@@ -14,6 +14,7 @@ import tachiyomi.domain.library.model.LibraryGrouping
 import tachiyomi.domain.library.model.LibraryPinnedDisplayStyle
 import tachiyomi.domain.library.model.LibrarySort
 import tachiyomi.domain.library.update.model.LibraryUpdateSkipRules
+import tachiyomi.domain.library.update.model.SourceUpdatePause
 
 class LibraryPreferences(
     private val preferenceStore: PreferenceStore,
@@ -69,10 +70,11 @@ class LibraryPreferences(
         ),
     )
 
-    /** Ids of sources whose entries library updates never check. */
-    val updateExcludedSources: Preference<Set<String>> = preferenceStore.getStringSet(
-        "library_update_excluded_sources",
+    val updatePausedSources: Preference<Set<SourceUpdatePause>> = preferenceStore.getObjectSetFromStringSet(
+        "library_update_paused_sources",
         emptySet(),
+        SourceUpdatePause::serialize,
+        SourceUpdatePause::deserialize,
     )
 
     val updateExcludedEntryTypes: Preference<Set<EntryType>> = preferenceStore.getEnumSet(
@@ -290,6 +292,13 @@ class LibraryPreferences(
          */
         const val LEGACY_UPDATE_CATEGORIES_PREF_KEY = "library_update_categories"
         const val LEGACY_UPDATE_CATEGORIES_EXCLUDE_PREF_KEY = "library_update_categories_exclude"
+
+        /**
+         * Ids of sources that library updates left out until resumed, from before a pause could end on its own. Older
+         * backups still carry them and restoring converts them.
+         */
+        const val LEGACY_UPDATE_EXCLUDED_SOURCES_PREF_KEY = "library_update_excluded_sources"
+
         val categoryPreferenceKeys = setOf(
             DEFAULT_CATEGORY_PREF_KEY,
             LEGACY_UPDATE_CATEGORIES_PREF_KEY,

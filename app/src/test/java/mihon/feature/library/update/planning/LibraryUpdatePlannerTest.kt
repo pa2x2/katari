@@ -120,7 +120,7 @@ class LibraryUpdatePlannerTest {
     ) = LibraryUpdateSettings(
         skipRules = LibraryUpdateSkipRules.None,
         intervalHours = 24,
-        excludedSourceIds = emptySet(),
+        pausedSourceIds = emptySet(),
         excludedEntryTypes = emptySet(),
         categoryRules = categoryRules.associateBy(CategoryUpdateRules::categoryId),
         entryModes = entryModes,

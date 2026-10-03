@@ -10,11 +10,13 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.PauseCircleOutline
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -23,8 +25,10 @@ import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.category.visualName
 import eu.kanade.presentation.components.AdaptiveSheet
 import eu.kanade.presentation.library.update.labelRes
+import eu.kanade.presentation.library.update.sourcePauseEndText
 import eu.kanade.presentation.util.relativeTimeSpanString
 import eu.kanade.tachiyomi.source.entry.EntryUpdateStrategy
+import eu.kanade.tachiyomi.ui.entry.updates.EntryUpdatesScreenModel
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.library.update.model.EntryUpdateDecisionReason
@@ -38,7 +42,8 @@ import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 
 /**
- * How library updates treat one entry: its mode, why the latest update did what it did, and its release estimate.
+ * How library updates treat one entry: its mode, why the latest update did what it did, which of its sources are paused,
+ * and its release estimate.
  * Refreshing from the entry's own screen always checks it, so none of this affects that.
  */
 @Composable
@@ -47,8 +52,10 @@ fun EntryUpdatesSheet(
     mode: EntryUpdateMode,
     status: EntryUpdateStatus?,
     categories: Map<Long, Category>,
+    pausedSources: List<EntryUpdatesScreenModel.PausedSource>,
     releaseEstimate: String,
     onModeSelected: (EntryUpdateMode) -> Unit,
+    onResumeSource: (Long) -> Unit,
     onReleaseEstimateClicked: (() -> Unit)?,
     onDismissRequest: () -> Unit,
 ) {
@@ -66,6 +73,10 @@ fun EntryUpdatesSheet(
             )
             if (mode == EntryUpdateMode.FOLLOW_RULES) {
                 DecisionCard(text = decisionText(status, categories))
+                // Always check overrides a paused source, so the pause only matters while the entry follows the rules.
+                pausedSources.forEach { source ->
+                    PausedSourceCard(source = source, onResume = { onResumeSource(source.id) })
+                }
             }
             if (entry.updateStrategy == EntryUpdateStrategy.ONLY_FETCH_ONCE) {
                 DecisionCard(text = stringResource(MR.strings.entry_updates_fetch_once))
@@ -114,6 +125,45 @@ private fun DecisionCard(text: String) {
                 tint = MaterialTheme.colorScheme.primary,
             )
             Text(text = text, style = MaterialTheme.typography.bodyMedium)
+        }
+    }
+}
+
+@Composable
+private fun PausedSourceCard(source: EntryUpdatesScreenModel.PausedSource, onResume: () -> Unit) {
+    Surface(
+        color = MaterialTheme.colorScheme.surfaceContainerHighest,
+        shape = MaterialTheme.shapes.medium,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 4.dp),
+    ) {
+        Row(
+            modifier = Modifier.padding(start = 12.dp, top = 4.dp, bottom = 4.dp, end = 4.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.PauseCircleOutline,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+            )
+            Text(
+                text = if (source.until == null) {
+                    stringResource(MR.strings.entry_updates_source_paused, source.name)
+                } else {
+                    stringResource(
+                        MR.strings.entry_updates_source_paused_until,
+                        source.name,
+                        sourcePauseEndText(source.until),
+                    )
+                },
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.weight(1f),
+            )
+            TextButton(onClick = onResume) {
+                Text(stringResource(MR.strings.library_update_report_resume))
+            }
         }
     }
 }

@@ -123,11 +123,12 @@ class UpcomingScreenModel(
     private fun notCheckedReasons(profileId: Long): Flow<Map<Long, EntryUpdateDecisionReason>> {
         return combine(getLibraryEntries.subscribe(profileId), settingsReader.changes()) { items, _ -> items }
             .mapLatest { items ->
+                val now = Clock.System.now()
                 planner.plan(
                     request = LibraryUpdateRequest.FollowRules(automatic = true),
                     items = items,
-                    settings = settingsReader.read(),
-                    context = contextReader.read(Clock.System.now()),
+                    settings = settingsReader.read(now.toEpochMilliseconds()),
+                    context = contextReader.read(now),
                 )
                     .filterIsInstance<LibraryUpdateDecision.Leave>()
                     .filter { it.reason !in PASSING_REASONS }

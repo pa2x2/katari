@@ -9,6 +9,7 @@ import eu.kanade.tachiyomi.source.visualName
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.update
@@ -18,13 +19,13 @@ import mihon.entry.interactions.migration.EntryMigrationSelectionResult
 import mihon.entry.interactions.migration.EntryMigrationSubject
 import mihon.entry.interactions.source.EntryWebViewFeature
 import mihon.entry.interactions.source.EntryWebViewResolution
+import mihon.feature.library.update.pause.LibrarySourcePauses
 import mihon.feature.library.update.report.LibraryUpdateReport
-import tachiyomi.core.common.preference.minusAssign
-import tachiyomi.core.common.preference.plusAssign
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.library.update.model.EntryUpdateMode
+import tachiyomi.domain.library.update.model.SourceUpdatePause
 import tachiyomi.domain.library.update.repository.LibraryUpdateReportRepository
 import tachiyomi.domain.library.update.repository.LibraryUpdateRulesRepository
 import tachiyomi.domain.source.service.SourceManager
@@ -43,27 +44,29 @@ class LibraryUpdateReportScreenModel(
     private val webViewFeature: EntryWebViewFeature = Injekt.get(),
 ) : StateScreenModel<LibraryUpdateReportScreenModel.State>(State.Loading) {
 
+    private val sourcePauses = LibrarySourcePauses(libraryPreferences)
+
     init {
+        // The report describes a finished run, so pausing from it only shows up through the current rules.
+        val pauses = sourcePauses.changes()
         val reports = combine(
             reportRepository.subscribeLatestRun(),
             reportRepository.subscribeLatestRunStatuses(),
-            ::Pair,
+            pauses.map { it.keys }.distinctUntilChanged(),
+            ::Triple,
         )
-            .mapLatest { (run, statuses) ->
+            .mapLatest { (run, statuses, pausedSourceIds) ->
                 if (run == null) return@mapLatest null
                 val entries = entryRepository.getEntriesByIds(statuses.map { it.entryId }).associateBy(Entry::id)
-                resolve(LibraryUpdateReport.build(run, statuses, entries))
+                resolve(LibraryUpdateReport.build(run, statuses, entries, pausedSourceIds))
             }
-        // The report describes a finished run, so pausing from it only shows up through the current rules.
-        val pausedSourceIds = libraryPreferences.updateExcludedSources.changes()
-            .map { ids -> ids.mapNotNull(String::toLongOrNull).toSet() }
         val pausedEntryIds = rulesRepository.subscribeEntryModes()
             .map { modes -> modes.filterValues { it == EntryUpdateMode.NEVER }.keys }
         // Rechecks started from the report fold into it without starting a run of their own.
         val isUpdating = LibraryUpdateJob.progressFlow(application).map { it != null }
         screenModelScope.launch {
-            combine(reports, pausedSourceIds, pausedEntryIds, isUpdating) { latest, sourceIds, entryIds, updating ->
-                latest?.copy(pausedSourceIds = sourceIds, pausedEntryIds = entryIds, isUpdating = updating)
+            combine(reports, pauses, pausedEntryIds, isUpdating) { latest, sourcePausesNow, entryIds, updating ->
+                latest?.copy(sourcePauses = sourcePausesNow, pausedEntryIds = entryIds, isUpdating = updating)
                     ?: State.Empty
             }
                 .collectLatest { state -> mutableState.update { state } }
@@ -73,12 +76,17 @@ class LibraryUpdateReportScreenModel(
     // Actions that can't work for an entry are left out of the report instead of doing nothing when tapped.
     private fun resolve(report: LibraryUpdateReport): State.Ready {
         val failures = report.failingRepeatedly + report.failingSources.flatMap { it.items }
+        val sourceNames = (report.failingSources.map { it.sourceId } + report.pausedSources.map { it.sourceId })
+            .map(sourceManager::getDisplayInfo)
+            .filter { it.hasKnownName }
+            .associate { it.id to it.visualName() }
         return State.Ready(
-            report = report,
-            sourceNames = report.failingSources
-                .map { sourceManager.getDisplayInfo(it.sourceId) }
-                .filter { it.hasKnownName }
-                .associate { it.id to it.visualName() },
+            report = report.copy(
+                pausedSources = report.pausedSources.sortedBy {
+                    sourceNames[it.sourceId]?.lowercase()
+                },
+            ),
+            sourceNames = sourceNames,
             webViews = report.failingRepeatedly.mapNotNull { item ->
                 (webViewFeature.resolveEntry(item.entry) as? EntryWebViewResolution.Available)
                     ?.let { item.entry.id to it }
@@ -91,7 +99,7 @@ class LibraryUpdateReportScreenModel(
                     ?.let { item.entry.id to it }
             }
                 .toMap(),
-            pausedSourceIds = emptySet(),
+            sourcePauses = emptyMap(),
             pausedEntryIds = emptySet(),
             isUpdating = false,
         )
@@ -103,12 +111,13 @@ class LibraryUpdateReportScreenModel(
         screenModelScope.launch { rulesRepository.setEntryMode(listOf(entry.id), mode) }
     }
 
-    fun setSourcePaused(sourceId: Long, paused: Boolean) {
-        if (paused) {
-            libraryPreferences.updateExcludedSources += sourceId.toString()
-        } else {
-            libraryPreferences.updateExcludedSources -= sourceId.toString()
-        }
+    /** @param until when the pause ends, in epoch milliseconds, or null to pause until the source is resumed. */
+    fun pauseSource(sourceId: Long, until: Long?) {
+        sourcePauses.pause(sourceId, until)
+    }
+
+    fun resumeSource(sourceId: Long) {
+        sourcePauses.resume(listOf(sourceId))
     }
 
     /** @return false when another update is already running. */
@@ -132,7 +141,8 @@ class LibraryUpdateReportScreenModel(
             val webViews: Map<Long, EntryWebViewResolution.Available>,
             /** By entry id, for the failing entries that can be migrated. */
             val migrations: Map<Long, EntryMigrationSubject>,
-            val pausedSourceIds: Set<Long>,
+            /** By source id, the pauses in effect now. */
+            val sourcePauses: Map<Long, SourceUpdatePause>,
             val pausedEntryIds: Set<Long>,
             val isUpdating: Boolean,
         ) : State
