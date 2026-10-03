@@ -76,7 +76,8 @@ fun TranslationSessionHost(
 ) {
     val state by controller.state.collectAsState()
     val active = state as? TranslationSessionState.Active
-    var expanded by remember(active?.input?.request) { mutableStateOf(false) }
+    // Picking a language or engine replaces the request, so fullscreen follows the selected text to survive it.
+    var expanded by remember(active?.input?.request?.text) { mutableStateOf(false) }
     val clipboard = LocalClipboard.current
     val scope = rememberCoroutineScope()
     val clipboardLabel = stringResource(MR.strings.translation_title)
@@ -100,6 +101,7 @@ fun TranslationSessionHost(
             }
         },
         onExpand = { expanded = true },
+        onCollapse = { expanded = false },
         onSelectSource = onSelectSource,
         onSelectTarget = onSelectTarget,
         onSelectEngine = onSelectEngine,
@@ -122,6 +124,7 @@ internal fun TranslationSessionOverlay(
     onRetry: () -> Unit,
     onCopy: (String) -> Unit,
     onExpand: () -> Unit,
+    onCollapse: () -> Unit,
     onSelectSource: (LanguageTag) -> Unit,
     onSelectEngine: (TranslationEngineSelection) -> Unit,
     onExternalAction: (TranslationSessionExternalAction) -> Unit,
@@ -138,12 +141,13 @@ internal fun TranslationSessionOverlay(
         SideEffect { onPopupBoundsChanged(null) }
         return
     }
-    val preferredSurface = if (expanded) {
-        TranslationSessionSurface.AdaptiveSheet
-    } else {
-        state.preferredSurface()
-    }
+    val collapsedSurface = state.preferredSurface()
+    val preferredSurface = if (expanded) TranslationSessionSurface.AdaptiveSheet else collapsedSurface
     if (preferredSurface == TranslationSessionSurface.None) return
+    // Leaving fullscreen returns to the popup it was opened from; only its close button ends the translation.
+    val returnToPopup = onCollapse.takeIf {
+        expanded && collapsedSurface == TranslationSessionSurface.AnchoredPopup
+    }
 
     @Composable
     fun Sheet() {
@@ -151,6 +155,7 @@ internal fun TranslationSessionOverlay(
             state = active,
             isTabletUi = isTabletUi,
             onDismiss = onDismiss,
+            onCollapse = returnToPopup,
             onExecute = onExecute,
             onRetry = onRetry,
             onCopy = onCopy,
@@ -281,6 +286,7 @@ private fun TranslationSessionSheetDialog(
     state: TranslationSessionState.Active,
     isTabletUi: Boolean,
     onDismiss: () -> Unit,
+    onCollapse: (() -> Unit)?,
     onExecute: () -> Unit,
     onRetry: () -> Unit,
     onCopy: (String) -> Unit,
@@ -293,15 +299,16 @@ private fun TranslationSessionSheetDialog(
     speechState: TranslationResultSpeechState,
     onSpeechToggle: ((TranslationResultSpeechTarget) -> Unit)?,
 ) {
+    val onDismissRequest = onCollapse ?: onDismiss
     Dialog(
-        onDismissRequest = onDismiss,
+        onDismissRequest = onDismissRequest,
         properties = translationSessionDialogProperties,
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
             AdaptiveSheet(
                 isTabletUi = isTabletUi,
                 enableImplicitDismiss = true,
-                onDismissRequest = onDismiss,
+                onDismissRequest = onDismissRequest,
             ) {
                 TranslationSessionContent(
                     state = state,
@@ -320,6 +327,7 @@ private fun TranslationSessionSheetDialog(
                     onSelectSource = onSelectSource,
                     onSelectEngine = onSelectEngine,
                     onExternalAction = onExternalAction,
+                    onCollapse = onCollapse,
                     speechState = speechState,
                     onSpeechToggle = onSpeechToggle,
                     languageSuggestions = languageSuggestions,

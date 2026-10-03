@@ -18,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import mihon.translation.ui.presentation.language.TranslationSourceLanguageChip
 import mihon.translation.ui.presentation.language.TranslationTargetLanguageChip
@@ -89,7 +90,21 @@ fun TranslationSpeechActionButton(
     target: TranslationResultSpeechTarget,
     speechState: TranslationResultSpeechState,
     onSpeechToggle: (TranslationResultSpeechTarget) -> Unit,
-    compact: Boolean = false,
+) {
+    IconButton(
+        onClick = { onSpeechToggle(target) },
+        modifier = Modifier.size(48.dp),
+    ) {
+        TranslationSpeechIndicator(target, speechState, iconSize = 24.dp)
+    }
+}
+
+/** Whether [target] can be played, is being prepared, or can be stopped, described for accessibility. */
+@Composable
+internal fun TranslationSpeechIndicator(
+    target: TranslationResultSpeechTarget,
+    speechState: TranslationResultSpeechState,
+    iconSize: Dp,
 ) {
     val active = speechState.activeTarget == target
     val contentDescription = stringResource(
@@ -106,28 +121,23 @@ fun TranslationSpeechActionButton(
             }
         },
     )
-    IconButton(
-        onClick = { onSpeechToggle(target) },
-        modifier = Modifier.size(48.dp),
-    ) {
-        if (active && speechState.phase == TranslationResultSpeechPhase.Preparing) {
-            CircularProgressIndicator(
-                modifier = Modifier
-                    .size(if (compact) 18.dp else 22.dp)
-                    .semantics { this.contentDescription = contentDescription },
-                strokeWidth = 2.dp,
-            )
-        } else {
-            Icon(
-                imageVector = if (active) Icons.Outlined.Stop else Icons.AutoMirrored.Outlined.VolumeUp,
-                contentDescription = contentDescription,
-                modifier = Modifier.size(if (compact) 20.dp else 24.dp),
-                tint = if (active) {
-                    MaterialTheme.colorScheme.primary
-                } else {
-                    MaterialTheme.colorScheme.onSurfaceVariant
-                },
-            )
-        }
+    if (active && speechState.phase == TranslationResultSpeechPhase.Preparing) {
+        CircularProgressIndicator(
+            modifier = Modifier
+                .size(iconSize - 2.dp)
+                .semantics { this.contentDescription = contentDescription },
+            strokeWidth = 2.dp,
+        )
+    } else {
+        Icon(
+            imageVector = if (active) Icons.Outlined.Stop else Icons.AutoMirrored.Outlined.VolumeUp,
+            contentDescription = contentDescription,
+            modifier = Modifier.size(iconSize),
+            tint = if (active) {
+                MaterialTheme.colorScheme.primary
+            } else {
+                MaterialTheme.colorScheme.onSurfaceVariant
+            },
+        )
     }
 }
