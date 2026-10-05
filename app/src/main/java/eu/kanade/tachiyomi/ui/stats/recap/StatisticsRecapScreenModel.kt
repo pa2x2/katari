@@ -7,6 +7,7 @@ import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import logcat.LogPriority
+import mihon.entry.interactions.statistics.EntryStatisticsFeature
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.core.common.util.system.logcat
@@ -24,6 +25,7 @@ class StatisticsRecapScreenModel(
     typeName: String?,
     activeProfileProvider: ActiveProfileProvider = Injekt.get(),
     statisticsRepository: StatisticsRepository = Injekt.get(),
+    statisticsFeature: EntryStatisticsFeature = Injekt.get(),
 ) : StateScreenModel<StatisticsRecapScreenModel.State>(State.Loading) {
 
     val type = typeName?.let { name -> EntryType.entries.firstOrNull { it.name == name } }
@@ -34,7 +36,7 @@ class StatisticsRecapScreenModel(
                 val snapshot = statisticsRepository
                     .subscribeActivity(activeProfileProvider.activeProfileId, startLocalDate, endLocalDate)
                     .first()
-                buildStatisticsRecap(snapshot, type, LocalDate.parse(endLocalDate))
+                buildStatisticsRecap(snapshot, type, LocalDate.parse(endLocalDate), statisticsFeature.contributions)
             } catch (error: Exception) {
                 logcat(LogPriority.ERROR, error)
                 null

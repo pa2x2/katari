@@ -11,10 +11,12 @@ import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.notification.Notifications
 import eu.kanade.tachiyomi.ui.stats.recap.StatisticsRecapNavigation
 import eu.kanade.tachiyomi.ui.stats.recap.buildStatisticsRecap
+import eu.kanade.tachiyomi.ui.stats.recap.consumedCountsText
 import eu.kanade.tachiyomi.util.system.notify
 import eu.kanade.tachiyomi.util.system.workManager
 import kotlinx.coroutines.flow.first
 import logcat.LogPriority
+import mihon.entry.interactions.statistics.EntryStatisticsFeature
 import mihon.feature.profiles.core.ProfileStore
 import tachiyomi.core.common.i18n.pluralStringResource
 import tachiyomi.core.common.i18n.stringResource
@@ -62,14 +64,18 @@ class StatisticsRecapNotificationJob(context: Context, workerParams: WorkerParam
         val start = month.atDay(1).toString()
         val end = month.atEndOfMonth().toString()
         val snapshot = Injekt.get<StatisticsRepository>().subscribeActivity(profileId, start, end).first()
-        val recap = buildStatisticsRecap(snapshot, type = null, endDate = month.atEndOfMonth())
+        val recap = buildStatisticsRecap(
+            snapshot = snapshot,
+            type = null,
+            endDate = month.atEndOfMonth(),
+            contributions = Injekt.get<EntryStatisticsFeature>().contributions,
+        )
         if (recap.totalDurationMillis <= 0L) return
 
         val context = applicationContext
         val locale = Locale.getDefault()
         val monthName = month.month.getDisplayName(TextStyle.FULL_STANDALONE, locale)
         val periodLabel = "$monthName ${month.year}"
-        val completions = recap.completionCount.toInt()
         context.notify(Notifications.ID_STATISTICS_RECAP, Notifications.CHANNEL_STATISTICS) {
             setSmallIcon(R.drawable.ic_katari)
             setContentTitle(
@@ -82,12 +88,14 @@ class StatisticsRecapNotificationJob(context: Context, workerParams: WorkerParam
             setContentText(
                 context.stringResource(
                     MR.strings.statistics_recap_notification_text,
-                    context.pluralStringResource(MR.plurals.statistics_completion_count, completions, completions),
-                    context.pluralStringResource(
-                        MR.plurals.statistics_active_day_count,
-                        recap.activeDays,
-                        recap.activeDays,
-                    ),
+                    listOfNotNull(
+                        recap.consumedCountsText(context),
+                        context.pluralStringResource(
+                            MR.plurals.statistics_active_day_count,
+                            recap.activeDays,
+                            recap.activeDays,
+                        ),
+                    ).joinToString(" · "),
                 ),
             )
             setStyle(NotificationCompat.BigTextStyle())

@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -20,15 +21,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.entry.components.EntryCover
 import eu.kanade.presentation.more.stats.components.rememberStatisticsDurationFormatter
 import eu.kanade.tachiyomi.ui.stats.recap.StatisticsRecap
+import eu.kanade.tachiyomi.ui.stats.recap.consumedCountsText
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
+import java.text.NumberFormat
 import java.time.format.TextStyle
 
 /** The image a recap is shared as; drawn at a fixed width so it looks the same on every screen. */
@@ -60,18 +64,13 @@ internal fun StatisticsRecapCard(
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(top = 8.dp),
         )
-        Text(
-            text = listOf(
-                pluralStringResource(
-                    MR.plurals.statistics_completion_count,
-                    recap.completionCount.toInt(),
-                    recap.completionCount.toInt(),
-                ),
-                pluralStringResource(MR.plurals.statistics_active_day_count, recap.activeDays, recap.activeDays),
-            ).joinToString(" · "),
-            style = MaterialTheme.typography.bodyMedium,
-            color = colors.onSurfaceVariant,
-        )
+        recap.consumedCountsText(LocalContext.current)?.let {
+            Text(
+                text = it,
+                style = MaterialTheme.typography.bodyMedium,
+                color = colors.onSurfaceVariant,
+            )
+        }
         if (recap.topTitles.isNotEmpty()) {
             Row(
                 modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
@@ -107,7 +106,14 @@ internal fun StatisticsRecapCard(
             }
         }
         Spacer(Modifier.height(16.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(24.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            RecapFigure(
+                value = NumberFormat.getIntegerInstance(locale).format(recap.activeDays),
+                label = stringResource(MR.strings.statistics_active_days),
+            )
             RecapFigure(
                 value = pluralStringResource(MR.plurals.day, recap.longestStreakDays, recap.longestStreakDays),
                 label = stringResource(MR.strings.statistics_recap_longest_streak),

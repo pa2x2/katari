@@ -1,8 +1,10 @@
 package eu.kanade.tachiyomi.ui.stats.recap
 
 import androidx.compose.runtime.Immutable
+import dev.icerock.moko.resources.PluralsResource
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.ui.stats.longestStreakEndingBy
+import mihon.entry.interactions.statistics.EntryStatisticsContribution
 import tachiyomi.domain.statistics.model.StatisticsActivitySnapshot
 import tachiyomi.domain.statistics.model.StatisticsActivityTimeline
 import tachiyomi.domain.statistics.model.StatisticsTopEntry
@@ -13,7 +15,8 @@ import java.time.LocalDate
 @Immutable
 data class StatisticsRecap(
     val totalDurationMillis: Long,
-    val completionCount: Long,
+    /** Finished items by the types' wording, so types counting the same unit share one count. Never holds zero. */
+    val consumedCounts: List<StatisticsRecapConsumedCount>,
     val activeDays: Int,
     /** Longest streak inside the period, counted as the dashboard counts streaks. */
     val longestStreakDays: Int,
@@ -22,11 +25,18 @@ data class StatisticsRecap(
     val topTitles: List<StatisticsTopEntry>,
 )
 
-/** @param snapshot activity of the period only, so streaks can't reach outside it. */
+@Immutable
+data class StatisticsRecapConsumedCount(val plural: PluralsResource, val count: Long)
+
+/**
+ * @param snapshot activity of the period only, so streaks can't reach outside it.
+ * @param contributions the Statistics types, in the order their counts are listed.
+ */
 internal fun buildStatisticsRecap(
     snapshot: StatisticsActivitySnapshot,
     type: EntryType?,
     endDate: LocalDate,
+    contributions: List<EntryStatisticsContribution>,
 ): StatisticsRecap {
     val durationByDay = snapshot.activity
         .filter { type == null || it.type == type }
@@ -35,7 +45,15 @@ internal fun buildStatisticsRecap(
         .filterValues { it > 0L }
     return StatisticsRecap(
         totalDurationMillis = durationByDay.values.sum(),
-        completionCount = snapshot.completions.filter { type == null || it.type == type }.sumOf { it.count },
+        consumedCounts = contributions
+            .filter { type == null || it.type == type }
+            .groupBy(EntryStatisticsContribution::consumedCountPlural)
+            .mapNotNull { (plural, grouped) ->
+                val types = grouped.map(EntryStatisticsContribution::type).toSet()
+                snapshot.completions.filter { it.type in types }.sumOf { it.count }
+                    .takeIf { it > 0L }
+                    ?.let { StatisticsRecapConsumedCount(plural, it) }
+            },
         activeDays = durationByDay.size,
         longestStreakDays = StatisticsActivityTimeline(snapshot.activity, snapshot.completions)
             .longestStreakEndingBy(endDate, type),

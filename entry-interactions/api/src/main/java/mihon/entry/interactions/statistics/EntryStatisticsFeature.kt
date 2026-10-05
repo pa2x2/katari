@@ -1,5 +1,6 @@
 package mihon.entry.interactions.statistics
 
+import dev.icerock.moko.resources.PluralsResource
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.tachiyomi.source.entry.EntryType
 
@@ -16,6 +17,7 @@ data class EntryStatisticsContribution(
     val type: EntryType,
     val accent: EntryStatisticsAccent,
     val consumedUnitLabel: StringResource,
+    val consumedCountPlural: PluralsResource,
     val itemPaceCarriesAcrossTitles: Boolean,
 )
 

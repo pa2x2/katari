@@ -15,6 +15,7 @@ internal class ProviderBackedEntryStatisticsInteraction(
             type = provider.type,
             accent = provider.accent,
             consumedUnitLabel = provider.consumedUnitLabel,
+            consumedCountPlural = provider.consumedCountPlural,
             itemPaceCarriesAcrossTitles = provider.itemPaceCarriesAcrossTitles,
         )
     }
