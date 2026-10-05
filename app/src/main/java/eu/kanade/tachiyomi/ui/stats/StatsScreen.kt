@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.ui.stats
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -17,6 +18,7 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppBarActions
+import eu.kanade.presentation.more.stats.ActivityState
 import eu.kanade.presentation.more.stats.StatsScreenContent
 import eu.kanade.presentation.more.stats.StatsScreenState
 import eu.kanade.presentation.more.stats.components.formatStatisticsWindow
@@ -24,6 +26,7 @@ import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
 import eu.kanade.tachiyomi.ui.history.activity.HistoryActivityScreen
 import eu.kanade.tachiyomi.ui.stats.earlier.StatisticsEarlierActivityScreen
+import eu.kanade.tachiyomi.ui.stats.recap.StatisticsRecapScreen
 import eu.kanade.tachiyomi.ui.stats.top.StatisticsTopTitlesScreen
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.material.Scaffold
@@ -57,9 +60,31 @@ class StatsScreen : Screen() {
                     title = stringResource(MR.strings.label_stats),
                     navigateUp = navigator::pop,
                     actions = {
-                        if (state is StatsScreenState.Success) {
+                        val success = state as? StatsScreenState.Success
+                        if (success != null) {
+                            val shownWindow = (success.activity as? ActivityState.Available)?.data?.window
                             AppBarActions(
-                                listOf(
+                                listOfNotNull(
+                                    shownWindow?.let { window ->
+                                        AppBar.Action(
+                                            title = stringResource(MR.strings.statistics_share_recap),
+                                            icon = Icons.Outlined.Share,
+                                            onClick = {
+                                                navigator.push(
+                                                    StatisticsRecapScreen(
+                                                        startLocalDate = window.startDate?.toString(),
+                                                        endLocalDate = window.endDate.toString(),
+                                                        typeName = success.selectedType?.name,
+                                                        periodLabel = if (window.startDate == null) {
+                                                            allActivity
+                                                        } else {
+                                                            formatStatisticsWindow(window)
+                                                        },
+                                                    ),
+                                                )
+                                            },
+                                        )
+                                    },
                                     AppBar.Action(
                                         title = stringResource(MR.strings.statistics_customize),
                                         icon = Icons.Outlined.Tune,

@@ -2335,6 +2335,11 @@
     <string name="statistics_goal_to_go">%s to go</string>
     <string name="statistics_goal_met">Goal met</string>
     <string name="statistics_goal_streak">Goal streak</string>
+    <string name="statistics_recap">Recap</string>
+    <string name="statistics_share_recap">Share recap</string>
+    <string name="statistics_recap_longest_streak">Longest streak</string>
+    <string name="statistics_recap_busiest_day">Busiest day</string>
+    <string name="statistics_recap_share_failed">Couldn\'t share the recap</string>
     <string name="entry_catch_up_estimate">%1$s: %2$d · about %3$s</string>
 
     <string name="tristate_not_used">Not used</string>
