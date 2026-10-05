@@ -15,6 +15,7 @@ import tachiyomi.domain.statistics.repository.StatisticsRepository
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.io.File
+import java.time.LocalDate
 
 /** @param startLocalDate first day of the period, or null to start at the first recorded activity. */
 class StatisticsRecapScreenModel(
@@ -33,7 +34,7 @@ class StatisticsRecapScreenModel(
                 val snapshot = statisticsRepository
                     .subscribeActivity(activeProfileProvider.activeProfileId, startLocalDate, endLocalDate)
                     .first()
-                buildStatisticsRecap(snapshot, type)
+                buildStatisticsRecap(snapshot, type, LocalDate.parse(endLocalDate))
             } catch (error: Exception) {
                 logcat(LogPriority.ERROR, error)
                 null

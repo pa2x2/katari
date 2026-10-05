@@ -62,7 +62,7 @@ class StatisticsRecapNotificationJob(context: Context, workerParams: WorkerParam
         val start = month.atDay(1).toString()
         val end = month.atEndOfMonth().toString()
         val snapshot = Injekt.get<StatisticsRepository>().subscribeActivity(profileId, start, end).first()
-        val recap = buildStatisticsRecap(snapshot, type = null)
+        val recap = buildStatisticsRecap(snapshot, type = null, endDate = month.atEndOfMonth())
         if (recap.totalDurationMillis <= 0L) return
 
         val context = applicationContext
