@@ -64,6 +64,7 @@ data class HistoryActivityScreen(
                 type = screenModel.type,
                 types = screenModel.types,
                 showSessionType = screenModel.type == null && !screenModel.isEntryScope,
+                showSessionEntry = !screenModel.isEntryScope,
                 paddingValues = paddingValues,
                 onEntryClick = { navigator.push(EntryScreen(it)) },
                 onRetry = screenModel::retry,

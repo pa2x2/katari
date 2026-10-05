@@ -39,6 +39,7 @@ fun HistoryActivityScreenContent(
     type: EntryType?,
     types: List<StatsType>,
     showSessionType: Boolean,
+    showSessionEntry: Boolean,
     paddingValues: PaddingValues,
     onEntryClick: (Long) -> Unit,
     onRetry: () -> Unit,
@@ -53,6 +54,7 @@ fun HistoryActivityScreenContent(
             type = type,
             types = types,
             showSessionType = showSessionType,
+            showSessionEntry = showSessionEntry,
             paddingValues = paddingValues,
             onEntryClick = onEntryClick,
             onLoadMore = onLoadMore,
@@ -77,6 +79,7 @@ private fun ActivitySessionList(
     type: EntryType?,
     types: List<StatsType>,
     showSessionType: Boolean,
+    showSessionEntry: Boolean,
     paddingValues: PaddingValues,
     onEntryClick: (Long) -> Unit,
     onLoadMore: () -> Unit,
@@ -117,7 +120,12 @@ private fun ActivitySessionList(
                 )
                 Spacer(Modifier.height(8.dp))
             }
-            ActivitySessionCard(session = session, showType = showSessionType, onClick = onEntryClick)
+            ActivitySessionCard(
+                session = session,
+                showType = showSessionType,
+                showEntry = showSessionEntry,
+                onClick = onEntryClick,
+            )
         }
         if (state.hasMore || state.loadMoreFailed) {
             item("load-more") {
