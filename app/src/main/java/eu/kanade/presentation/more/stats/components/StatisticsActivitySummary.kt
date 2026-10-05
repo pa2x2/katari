@@ -185,7 +185,7 @@ private fun TodayGoalTile(goal: StatsDailyGoal, formatDuration: (Long) -> String
                     } else {
                         stringResource(
                             MR.strings.statistics_goal_to_go,
-                            formatDuration(goal.goalMillis - goal.todayMillis),
+                            formatDuration(goal.remainingMillisRoundedUp()),
                             formatDuration(goal.goalMillis),
                         )
                     },
@@ -202,6 +202,17 @@ private fun TodayGoalTile(goal: StatsDailyGoal, formatDuration: (Long) -> String
         }
     }
 }
+
+/**
+ * Durations show whole minutes rounded down, so the time left is rounded up for it and today's time to add up to the
+ * goal.
+ */
+private fun StatsDailyGoal.remainingMillisRoundedUp(): Long {
+    val remaining = goalMillis - todayMillis
+    return (remaining + MINUTE_MILLIS - 1) / MINUTE_MILLIS * MINUTE_MILLIS
+}
+
+private const val MINUTE_MILLIS = 60_000L
 
 @Composable
 private fun PeriodComparison(activity: StatsActivity, formatDuration: (Long) -> String) {
