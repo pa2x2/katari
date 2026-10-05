@@ -2342,6 +2342,10 @@
     <string name="statistics_monthly_recap_summary">A notification after each month with its recap to see and share</string>
     <string name="statistics_recap_notification_title">Your %1$s: %2$s</string>
     <string name="statistics_recap_notification_text">%s. Tap to see and share your recap.</string>
+    <string name="statistics_recap_chapter_number">Chapter %s</string>
+    <string name="statistics_recap_episode_number">Episode %s</string>
+    <string name="statistics_recap_chapter_range">chapters %1$s to %2$s</string>
+    <string name="statistics_recap_episode_range">episodes %1$s to %2$s</string>
     <string name="entry_catch_up_estimate">%1$s: %2$d · about %3$s</string>
 
     <string name="tristate_not_used">Not used</string>

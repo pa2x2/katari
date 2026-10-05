@@ -19,6 +19,8 @@ data class EntryStatisticsContribution(
     val consumedUnitLabel: StringResource,
     val consumedCountPlural: PluralsResource,
     val itemPaceCarriesAcrossTitles: Boolean,
+    val itemNumberLabel: StringResource,
+    val itemRangeLabel: StringResource,
 )
 
 /** Compile-time entry-type contributions used to assemble Statistics without a closed app-level type list. */

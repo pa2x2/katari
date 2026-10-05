@@ -17,6 +17,12 @@ interface EntryStatisticsProvider : EntryInteractionProvider {
      * of its own can be estimated from the type's usual pace. False where item length varies widely between titles.
      */
     val itemPaceCarriesAcrossTitles: Boolean
+
+    /** Names one item by its number, such as "Chapter 98". */
+    val itemNumberLabel: StringResource
+
+    /** Names a run of items by their first and last numbers, such as "chapters 412 to 506". */
+    val itemRangeLabel: StringResource
 }
 
 val EntryStatisticsCapability = entryInteractionCapability<EntryStatisticsProvider>(
