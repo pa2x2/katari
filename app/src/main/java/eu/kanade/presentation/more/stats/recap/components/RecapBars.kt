@@ -1,0 +1,68 @@
+package eu.kanade.presentation.more.stats.recap.components
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+
+/** Vertical bars that grow in with the page, the [highlight] one in full accent and the rest dimmed. */
+@Composable
+internal fun RecapBars(
+    values: List<Long>,
+    labels: List<String>,
+    highlight: Int,
+    height: Dp,
+    modifier: Modifier = Modifier,
+) {
+    val palette = LocalRecapPalette.current
+    val reveal = LocalRecapReveal.current
+    val max = values.maxOrNull()?.coerceAtLeast(1L) ?: 1L
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(5.dp),
+        modifier = modifier.fillMaxWidth().height(height),
+    ) {
+        values.forEachIndexed { index, value ->
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.Bottom),
+                modifier = Modifier.weight(1f).fillMaxHeight(),
+            ) {
+                Box(
+                    contentAlignment = Alignment.BottomCenter,
+                    modifier = Modifier.weight(1f).fillMaxWidth(),
+                ) {
+                    val share = maxOf(MIN_SHARE, value.toFloat() / max) * reveal.value.coerceIn(0f, 1f)
+                    Box(
+                        Modifier
+                            .fillMaxWidth()
+                            .fillMaxHeight(share.coerceIn(0.001f, 1f))
+                            .background(
+                                color = if (index == highlight) palette.accent else palette.accent.copy(alpha = 0.4f),
+                                shape = RoundedCornerShape(4.dp),
+                            ),
+                    )
+                }
+                RecapText(
+                    text = labels[index],
+                    style = RecapTypography.Tiny,
+                    color = palette.muted,
+                    textAlign = TextAlign.Center,
+                    maxLines = 1,
+                )
+            }
+        }
+    }
+}
+
+private const val MIN_SHARE = 0.03f

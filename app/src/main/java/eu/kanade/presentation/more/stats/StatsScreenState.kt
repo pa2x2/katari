@@ -7,6 +7,7 @@ import eu.kanade.presentation.more.stats.data.StatsDailyGoal
 import eu.kanade.presentation.more.stats.data.StatsLibrary
 import eu.kanade.presentation.more.stats.data.StatsRange
 import eu.kanade.presentation.more.stats.data.StatsReadingCalendar
+import eu.kanade.presentation.more.stats.data.StatsRecapNotifications
 import eu.kanade.presentation.more.stats.data.StatsType
 import eu.kanade.tachiyomi.source.entry.EntryType
 import tachiyomi.domain.statistics.model.StatisticsCardLayout
@@ -29,7 +30,7 @@ sealed interface StatsScreenState {
         /** 0 when no daily goal is set. */
         val goalMinutes: Int = 0,
         val goal: StatsDailyGoal? = null,
-        val monthlyRecap: Boolean = false,
+        val recapNotifications: StatsRecapNotifications = StatsRecapNotifications(),
     ) : StatsScreenState
 }
 

@@ -12,14 +12,19 @@ import eu.kanade.presentation.more.stats.data.StatsDailyGoal
 import eu.kanade.presentation.more.stats.data.StatsLibrary
 import eu.kanade.presentation.more.stats.data.StatsRange
 import eu.kanade.presentation.more.stats.data.StatsReadingCalendar
+import eu.kanade.presentation.more.stats.data.StatsRecapNotifications
 import eu.kanade.presentation.more.stats.data.StatsType
 import eu.kanade.presentation.more.stats.layout.statisticsLayoutTab
 import eu.kanade.tachiyomi.data.statistics.StatisticsRecapNotificationJob
 import eu.kanade.tachiyomi.source.entry.EntryType
+import eu.kanade.tachiyomi.ui.stats.recap.delivery.subscribeUnopenedYearRecap
+import eu.kanade.tachiyomi.ui.stats.recap.period.StatisticsRecapPeriod
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -31,6 +36,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.runningFold
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import logcat.LogPriority
 import mihon.entry.interactions.presentation.EntryTypePresentationFeature
@@ -159,7 +165,13 @@ class StatsScreenModel(
                     ) { it.toMap() },
                     combine(
                         subscribeDailyGoal(profileId),
-                        StatisticsPreferences(profileStore.profileStore(profileId)).monthlyRecapNotification.changes(),
+                        StatisticsPreferences(profileStore.profileStore(profileId)).let { preferences ->
+                            combine(
+                                preferences.monthlyRecapNotification.changes(),
+                                preferences.yearlyRecapNotification.changes(),
+                                ::StatsRecapNotifications,
+                            )
+                        },
                         ::Pair,
                     ),
                 ) { library, (range, activity), (selectedTypeName, incognito, calendar), cardLayouts, (goal, recap) ->
@@ -175,7 +187,7 @@ class StatsScreenModel(
                         calendar = calendar,
                         goalMinutes = goal.first,
                         goal = goal.second,
-                        monthlyRecap = recap,
+                        recapNotifications = recap,
                     )
                 }.distinctUntilChanged().flowOn(Dispatchers.IO)
             }.collect { event ->
@@ -229,14 +241,22 @@ class StatsScreenModel(
                 }
             }
 
+    /** The year recap that's new and unopened, shown as a banner until it's opened. */
+    val newYearRecap: StateFlow<StatisticsRecapPeriod.Year?> = subscribeUnopenedYearRecap()
+        .catch { error ->
+            logcat(LogPriority.ERROR, error)
+            emit(null)
+        }
+        .stateIn(screenModelScope, SharingStarted.WhileSubscribed(5_000L), null)
+
     fun setDailyGoal(profileId: Long, minutes: Int) {
         if ((state.value as? StatsScreenState.Success)?.profileId != profileId) return
         StatisticsPreferences(profileStore.profileStore(profileId)).dailyGoalMinutes.set(minutes)
     }
 
-    fun setMonthlyRecap(profileId: Long, enabled: Boolean) {
+    fun setRecapNotifications(profileId: Long, notifications: StatsRecapNotifications) {
         if ((state.value as? StatsScreenState.Success)?.profileId != profileId) return
-        StatisticsRecapNotificationJob.setEnabled(application, profileId, enabled)
+        StatisticsRecapNotificationJob.setEnabled(application, profileId, notifications)
     }
 
     fun setCardLayout(profileId: Long, tab: String, layout: StatisticsCardLayout) {

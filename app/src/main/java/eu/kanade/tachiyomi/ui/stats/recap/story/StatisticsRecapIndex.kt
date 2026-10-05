@@ -81,7 +81,7 @@ internal class StatisticsRecapIndex(
                 val types = grouped.map(EntryStatisticsContribution::type).toSet()
                 completions.filter { it.type in types }.sumOf { it.count }
                     .takeIf { it > 0L }
-                    ?.let { StatisticsRecapConsumedCount(plural, it) }
+                    ?.let { StatisticsRecapConsumedCount(plural, grouped.first().consumedUnitLabel, it) }
             }
     }
 

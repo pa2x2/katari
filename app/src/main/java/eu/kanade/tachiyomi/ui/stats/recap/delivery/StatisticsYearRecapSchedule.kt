@@ -1,5 +1,6 @@
-package eu.kanade.tachiyomi.ui.stats.recap.period
+package eu.kanade.tachiyomi.ui.stats.recap.delivery
 
+import eu.kanade.tachiyomi.ui.stats.recap.period.StatisticsRecapPeriod
 import java.time.LocalDate
 import java.time.Month
 

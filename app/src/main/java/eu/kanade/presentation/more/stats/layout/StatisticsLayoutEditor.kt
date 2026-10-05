@@ -39,6 +39,7 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.more.stats.components.rememberStatisticsDurationFormatter
+import eu.kanade.presentation.more.stats.data.StatsRecapNotifications
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
 import tachiyomi.domain.statistics.model.StatisticsCard
@@ -51,14 +52,14 @@ import tachiyomi.presentation.core.i18n.stringResource
 internal fun StatisticsLayoutEditor(
     initial: StatisticsCardLayout,
     initialGoalMinutes: Int,
-    initialMonthlyRecap: Boolean,
+    initialRecapNotifications: StatsRecapNotifications,
     isOverview: Boolean,
     onDismiss: () -> Unit,
-    onSave: (StatisticsCardLayout, goalMinutes: Int, monthlyRecap: Boolean) -> Unit,
+    onSave: (StatisticsCardLayout, goalMinutes: Int, StatsRecapNotifications) -> Unit,
 ) {
     var draft by remember { mutableStateOf(initial) }
     var goalMinutes by remember { mutableIntStateOf(initialGoalMinutes) }
-    var monthlyRecap by remember { mutableStateOf(initialMonthlyRecap) }
+    var recapNotifications by remember { mutableStateOf(initialRecapNotifications) }
     val cards = statisticsCards(isOverview)
     fun sectionCards(group: StatisticsCardGroup) = draft.order.filter { it in cards && it.group == group }
 
@@ -89,7 +90,7 @@ internal fun StatisticsLayoutEditor(
                     Text(stringResource(MR.strings.statistics_reset_layout))
                 }
                 TextButton(onClick = {
-                    onSave(draft, goalMinutes, monthlyRecap)
+                    onSave(draft, goalMinutes, recapNotifications)
                 }) { Text(stringResource(MR.strings.action_save)) }
             }
             LazyColumn(
@@ -172,7 +173,20 @@ internal fun StatisticsLayoutEditor(
                     DailyGoalSetting(goalMinutes = goalMinutes, onGoalMinutesChange = { goalMinutes = it })
                 }
                 item(key = "monthly-recap") {
-                    MonthlyRecapSetting(enabled = monthlyRecap, onEnabledChange = { monthlyRecap = it })
+                    RecapNotificationSetting(
+                        label = stringResource(MR.strings.statistics_monthly_recap),
+                        summary = stringResource(MR.strings.statistics_monthly_recap_summary),
+                        enabled = recapNotifications.monthly,
+                        onEnabledChange = { recapNotifications = recapNotifications.copy(monthly = it) },
+                    )
+                }
+                item(key = "yearly-recap") {
+                    RecapNotificationSetting(
+                        label = stringResource(MR.strings.statistics_yearly_recap),
+                        summary = stringResource(MR.strings.statistics_yearly_recap_summary),
+                        enabled = recapNotifications.yearly,
+                        onEnabledChange = { recapNotifications = recapNotifications.copy(yearly = it) },
+                    )
                 }
             }
         }
@@ -213,8 +227,12 @@ private fun DailyGoalSetting(goalMinutes: Int, onGoalMinutesChange: (Int) -> Uni
 }
 
 @Composable
-private fun MonthlyRecapSetting(enabled: Boolean, onEnabledChange: (Boolean) -> Unit) {
-    val label = stringResource(MR.strings.statistics_monthly_recap)
+private fun RecapNotificationSetting(
+    label: String,
+    summary: String,
+    enabled: Boolean,
+    onEnabledChange: (Boolean) -> Unit,
+) {
     Row(
         modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -222,7 +240,7 @@ private fun MonthlyRecapSetting(enabled: Boolean, onEnabledChange: (Boolean) -> 
         Column(Modifier.weight(1f).padding(end = 8.dp)) {
             Text(label)
             Text(
-                text = stringResource(MR.strings.statistics_monthly_recap_summary),
+                text = summary,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

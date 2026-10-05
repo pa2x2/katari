@@ -16,9 +16,13 @@ data class StatisticsRecapTitle(
     val durationMillis: Long,
 )
 
-/** Items finished in the period, worded by the types' plural, such as "2,140 chapters read". */
+/**
+ * Items finished in the period, worded by the types' plural, such as "2,140 chapters read".
+ *
+ * @param unitLabel names the items without a count, such as "Chapters read".
+ */
 @Immutable
-data class StatisticsRecapConsumedCount(val plural: PluralsResource, val count: Long)
+data class StatisticsRecapConsumedCount(val plural: PluralsResource, val unitLabel: StringResource, val count: Long)
 
 /** One item, or a run of items, of an entry, worded by its type. */
 @Immutable

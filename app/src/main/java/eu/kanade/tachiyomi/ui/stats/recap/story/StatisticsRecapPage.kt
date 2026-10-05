@@ -15,7 +15,7 @@ sealed interface StatisticsRecapPage {
     /** The cover a page's colours come from; null for pages about no title in particular. */
     val featured: StatisticsRecapTitle?
 
-    data class Opening(val covers: List<StatisticsRecapTitle>) : StatisticsRecapPage {
+    data class Opening(val year: Int, val covers: List<StatisticsRecapTitle>) : StatisticsRecapPage {
         override val featured get() = covers.firstOrNull()
     }
 

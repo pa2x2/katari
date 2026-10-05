@@ -7,7 +7,7 @@ import java.time.LocalDate
 import kotlin.math.roundToInt
 
 internal fun StatisticsRecapIndex.openingPage(): StatisticsRecapPage.Opening =
-    StatisticsRecapPage.Opening(shownTitles.take(OPENING_COVERS))
+    StatisticsRecapPage.Opening(period.end.year, shownTitles.take(OPENING_COVERS))
 
 internal fun StatisticsRecapIndex.topTitlePage(): StatisticsRecapPage.TopTitle? {
     val top = shownTitles.firstOrNull() ?: return null

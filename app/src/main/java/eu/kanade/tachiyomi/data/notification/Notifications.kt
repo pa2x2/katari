@@ -62,6 +62,7 @@ object Notifications {
 
     const val CHANNEL_STATISTICS = "statistics_channel"
     const val ID_STATISTICS_RECAP = -801
+    const val ID_STATISTICS_YEAR_RECAP = -802
 
     /**
      * Notification channel used for Incognito Mode
