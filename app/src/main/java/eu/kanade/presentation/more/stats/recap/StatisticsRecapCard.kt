@@ -82,15 +82,16 @@ internal fun StatisticsRecapCard(
                         Box {
                             EntryCover.Book(data = title.cover, modifier = Modifier.fillMaxWidth())
                             Surface(
-                                color = colors.scrim.copy(alpha = 0.6f),
-                                contentColor = colors.inverseOnSurface,
+                                color = colors.primary,
+                                contentColor = colors.onPrimary,
                                 shape = MaterialTheme.shapes.extraSmall,
                                 modifier = Modifier.align(Alignment.TopStart).padding(4.dp),
                             ) {
                                 Text(
                                     text = "${index + 1}",
                                     style = MaterialTheme.typography.labelMedium,
-                                    modifier = Modifier.padding(horizontal = 6.dp),
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 1.dp),
                                 )
                             }
                         }
