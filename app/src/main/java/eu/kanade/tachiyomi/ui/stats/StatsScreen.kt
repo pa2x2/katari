@@ -111,6 +111,7 @@ class StatsScreen : Screen() {
                 onRangeSelected = screenModel::setRange,
                 onSaveLayout = screenModel::setCardLayout,
                 onSaveDailyGoal = screenModel::setDailyGoal,
+                onSaveMonthlyRecap = screenModel::setMonthlyRecap,
                 onTypeSelected = screenModel::setType,
                 onNavigateActivity = screenModel::navigateActivityByBuckets,
                 onShowToday = screenModel::showToday,

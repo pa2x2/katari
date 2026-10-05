@@ -60,6 +60,9 @@ object Notifications {
     const val ID_BACKUP_COMPLETE = -502
     const val ID_RESTORE_COMPLETE = -504
 
+    const val CHANNEL_STATISTICS = "statistics_channel"
+    const val ID_STATISTICS_RECAP = -801
+
     /**
      * Notification channel used for Incognito Mode
      */
@@ -194,6 +197,9 @@ object Notifications {
                     setGroup(GROUP_BACKUP_RESTORE)
                     setShowBadge(false)
                     setSound(null, null)
+                },
+                buildNotificationChannel(CHANNEL_STATISTICS, IMPORTANCE_LOW) {
+                    setName(context.stringResource(MR.strings.label_stats))
                 },
                 buildNotificationChannel(CHANNEL_INCOGNITO_MODE, IMPORTANCE_LOW) {
                     setName(context.stringResource(MR.strings.pref_incognito_mode))

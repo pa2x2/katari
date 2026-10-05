@@ -8,6 +8,7 @@ import androidx.preference.PreferenceManager
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.tachiyomi.core.security.SecurityPreferences
 import eu.kanade.tachiyomi.data.library.LibraryUpdateJob
+import eu.kanade.tachiyomi.data.statistics.StatisticsRecapNotificationJob
 import eu.kanade.tachiyomi.extension.ExtensionManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -107,6 +108,7 @@ class ProfileManager(
         activateProfile(profile)
         if (rescheduleJobs) {
             LibraryUpdateJob.setupTask(application)
+            StatisticsRecapNotificationJob.setupTask(application)
         }
     }
 

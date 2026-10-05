@@ -29,6 +29,7 @@ sealed interface StatsScreenState {
         /** 0 when no daily goal is set. */
         val goalMinutes: Int = 0,
         val goal: StatsDailyGoal? = null,
+        val monthlyRecap: Boolean = false,
     ) : StatsScreenState
 }
 

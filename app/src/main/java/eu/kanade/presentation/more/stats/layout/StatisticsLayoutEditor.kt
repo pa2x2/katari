@@ -51,12 +51,14 @@ import tachiyomi.presentation.core.i18n.stringResource
 internal fun StatisticsLayoutEditor(
     initial: StatisticsCardLayout,
     initialGoalMinutes: Int,
+    initialMonthlyRecap: Boolean,
     isOverview: Boolean,
     onDismiss: () -> Unit,
-    onSave: (StatisticsCardLayout, goalMinutes: Int) -> Unit,
+    onSave: (StatisticsCardLayout, goalMinutes: Int, monthlyRecap: Boolean) -> Unit,
 ) {
     var draft by remember { mutableStateOf(initial) }
     var goalMinutes by remember { mutableIntStateOf(initialGoalMinutes) }
+    var monthlyRecap by remember { mutableStateOf(initialMonthlyRecap) }
     val cards = statisticsCards(isOverview)
     fun sectionCards(group: StatisticsCardGroup) = draft.order.filter { it in cards && it.group == group }
 
@@ -86,7 +88,9 @@ internal fun StatisticsLayoutEditor(
                 TextButton(onClick = { draft = StatisticsCardLayout() }) {
                     Text(stringResource(MR.strings.statistics_reset_layout))
                 }
-                TextButton(onClick = { onSave(draft, goalMinutes) }) { Text(stringResource(MR.strings.action_save)) }
+                TextButton(onClick = {
+                    onSave(draft, goalMinutes, monthlyRecap)
+                }) { Text(stringResource(MR.strings.action_save)) }
             }
             LazyColumn(
                 state = listState,
@@ -167,6 +171,9 @@ internal fun StatisticsLayoutEditor(
                 item(key = "daily-goal") {
                     DailyGoalSetting(goalMinutes = goalMinutes, onGoalMinutesChange = { goalMinutes = it })
                 }
+                item(key = "monthly-recap") {
+                    MonthlyRecapSetting(enabled = monthlyRecap, onEnabledChange = { monthlyRecap = it })
+                }
             }
         }
     }
@@ -202,6 +209,29 @@ private fun DailyGoalSetting(goalMinutes: Int, onGoalMinutesChange: (Int) -> Uni
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun MonthlyRecapSetting(enabled: Boolean, onEnabledChange: (Boolean) -> Unit) {
+    val label = stringResource(MR.strings.statistics_monthly_recap)
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(Modifier.weight(1f).padding(end = 8.dp)) {
+            Text(label)
+            Text(
+                text = stringResource(MR.strings.statistics_monthly_recap_summary),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        Switch(
+            modifier = Modifier.semantics { contentDescription = label },
+            checked = enabled,
+            onCheckedChange = onEnabledChange,
+        )
     }
 }
 
