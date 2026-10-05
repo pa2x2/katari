@@ -3,9 +3,8 @@ package eu.kanade.tachiyomi.ui.stats.recap
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.Button
@@ -29,6 +28,7 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.presentation.more.stats.recap.StatisticsRecapCard
+import eu.kanade.presentation.more.stats.recap.StatisticsRecapPreview
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.util.storage.cacheImageDir
 import eu.kanade.tachiyomi.util.storage.getUriCompat
@@ -92,21 +92,22 @@ data class StatisticsRecapScreen(
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
-                            .verticalScroll(rememberScrollState())
                             .padding(paddingValues)
                             .padding(16.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(16.dp),
                     ) {
-                        StatisticsRecapCard(
-                            recap = current.recap,
-                            periodLabel = periodLabel,
-                            typeLabel = typeLabel,
-                            modifier = Modifier.drawWithContent {
-                                graphicsLayer.record { this@drawWithContent.drawContent() }
-                                drawLayer(graphicsLayer)
-                            },
-                        )
+                        StatisticsRecapPreview(modifier = Modifier.weight(1f).fillMaxWidth()) {
+                            StatisticsRecapCard(
+                                recap = current.recap,
+                                periodLabel = periodLabel,
+                                typeLabel = typeLabel,
+                                modifier = Modifier.drawWithContent {
+                                    graphicsLayer.record { this@drawWithContent.drawContent() }
+                                    drawLayer(graphicsLayer)
+                                },
+                            )
+                        }
                         Button(
                             onClick = {
                                 scope.launch {
