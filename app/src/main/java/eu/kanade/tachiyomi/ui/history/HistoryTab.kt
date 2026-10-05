@@ -27,6 +27,7 @@ import eu.kanade.presentation.util.Tab
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.ui.category.CategoryScreen
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
+import eu.kanade.tachiyomi.ui.history.activity.HistoryActivityScreen
 import eu.kanade.tachiyomi.ui.main.MainActivity
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.collectLatest
@@ -71,11 +72,16 @@ data object HistoryTab : Tab {
         val entryContinueFeature = remember { Injekt.get<EntryContinueFeature>() }
         val screenModel = rememberScreenModel { HistoryScreenModel() }
         val state by screenModel.state.collectAsState()
+        val dayDurations by screenModel.dayDurations.collectAsState()
 
         HistoryScreen(
             state = state,
+            dayDurations = dayDurations,
             snackbarHostState = snackbarHostState,
             onSearchQueryChange = screenModel::updateSearchQuery,
+            onClickDay = { date ->
+                navigator.push(HistoryActivityScreen(startLocalDate = date.toString(), endLocalDate = date.toString()))
+            },
             onClickCover = { item ->
                 scope.launch {
                     navigator.push(EntryScreen(screenModel.getVisibleEntryId(item.historyItem.entryId)))
