@@ -1,7 +1,7 @@
 package eu.kanade.tachiyomi.ui.security
 
-import androidx.biometric.AuthenticationRequest
-import androidx.biometric.AuthenticationResult
+import androidx.biometric.BiometricManager.Authenticators
+import androidx.biometric.BiometricPrompt
 import androidx.fragment.app.FragmentActivity
 import eu.kanade.tachiyomi.ui.base.activity.BaseActivity
 import eu.kanade.tachiyomi.util.system.isAuthenticationSupported
@@ -20,6 +20,17 @@ object BiometricAuthentication {
     var isAuthenticating = false
         internal set
 
+    internal fun promptInfo(
+        title: String,
+        subtitle: String? = null,
+        confirmationRequired: Boolean = true,
+    ): BiometricPrompt.PromptInfo = BiometricPrompt.PromptInfo.Builder()
+        .setTitle(title)
+        .setSubtitle(subtitle)
+        .setConfirmationRequired(confirmationRequired)
+        .setAllowedAuthenticators(Authenticators.BIOMETRIC_WEAK or Authenticators.DEVICE_CREDENTIAL)
+        .build()
+
     suspend fun FragmentActivity.authenticate(
         title: String,
         subtitle: String? = stringResource(MR.strings.confirm_lock_change),
@@ -27,24 +38,16 @@ object BiometricAuthentication {
         if (!isAuthenticationSupported()) return true
 
         val authenticationActivity = this as? BaseActivity ?: return false
-        val request = AuthenticationRequest.biometricRequest(
-            title = title,
-            authFallbacks = arrayOf(AuthenticationRequest.Biometric.Fallback.DeviceCredential),
-        ) {
-            setSubtitle(subtitle)
-        }
-
         return suspendCancellableCoroutine { continuation ->
-            val launched = authenticationActivity.launchAuthentication(request) { result ->
+            val launched = authenticationActivity.launchAuthentication(promptInfo(title, subtitle)) { result ->
                 if (!continuation.isActive) return@launchAuthentication
 
                 when (result) {
-                    is AuthenticationResult.Success -> continuation.resume(true)
-                    is AuthenticationResult.Error -> {
-                        toast(result.errString.toString())
+                    BiometricAuthenticationResult.Success -> continuation.resume(true)
+                    is BiometricAuthenticationResult.Error -> {
+                        toast(result.message.toString())
                         continuation.resume(false)
                     }
-                    is AuthenticationResult.CustomFallbackSelected -> continuation.resume(false)
                 }
             }
             if (!launched) continuation.resume(false)
