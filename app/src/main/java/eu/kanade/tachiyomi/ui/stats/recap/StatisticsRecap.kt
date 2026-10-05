@@ -22,6 +22,7 @@ data class StatisticsRecap(
     val longestStreakDays: Int,
     /** Null when nothing was timed. */
     val busiestWeekday: DayOfWeek?,
+    val weekdayDurationMillis: Map<DayOfWeek, Long>,
     val topTitles: List<StatisticsTopEntry>,
 )
 
@@ -43,6 +44,9 @@ internal fun buildStatisticsRecap(
         .groupBy { LocalDate.parse(it.localDate) }
         .mapValues { (_, rows) -> rows.sumOf { it.durationMillis } }
         .filterValues { it > 0L }
+    val weekdayDurations = durationByDay.entries
+        .groupBy({ it.key.dayOfWeek }, { it.value })
+        .mapValues { (_, durations) -> durations.sum() }
     return StatisticsRecap(
         totalDurationMillis = durationByDay.values.sum(),
         consumedCounts = contributions
@@ -57,10 +61,8 @@ internal fun buildStatisticsRecap(
         activeDays = durationByDay.size,
         longestStreakDays = StatisticsActivityTimeline(snapshot.activity, snapshot.completions)
             .longestStreakEndingBy(endDate, type),
-        busiestWeekday = durationByDay.entries
-            .groupBy({ it.key.dayOfWeek }, { it.value })
-            .maxByOrNull { (_, durations) -> durations.sum() }
-            ?.key,
+        busiestWeekday = weekdayDurations.maxByOrNull { it.value }?.key,
+        weekdayDurationMillis = weekdayDurations,
         topTitles = snapshot.topEntries
             .filter { type == null || it.type == type }
             .sortedByDescending(StatisticsTopEntry::durationMillis)

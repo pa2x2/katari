@@ -2337,7 +2337,6 @@
     <string name="statistics_recap">Recap</string>
     <string name="statistics_share_recap">Share recap</string>
     <string name="statistics_recap_longest_streak">Longest streak</string>
-    <string name="statistics_recap_busiest_day">Busiest day</string>
     <string name="statistics_recap_share_failed">Couldn\'t share the recap</string>
     <string name="statistics_monthly_recap">Monthly recap</string>
     <string name="statistics_monthly_recap_summary">A notification after each month with its recap to see and share</string>
