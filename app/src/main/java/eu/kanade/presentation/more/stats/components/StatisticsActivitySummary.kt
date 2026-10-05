@@ -162,44 +162,43 @@ private fun TodayGoalTile(goal: StatsDailyGoal, formatDuration: (Long) -> String
     ) {
         Row(
             modifier = Modifier.padding(14.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            CircularProgressIndicator(
-                progress = { fraction },
-                modifier = Modifier.size(40.dp),
-                trackColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-                strokeWidth = 5.dp,
-                gapSize = 0.dp,
-            )
-            Column {
+            Column(Modifier.weight(1f)) {
                 Text(
                     text = stringResource(MR.strings.statistics_today),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+                Spacer(Modifier.height(4.dp))
                 Text(
-                    text = stringResource(
-                        MR.strings.statistics_goal_progress,
-                        formatDuration(goal.todayMillis),
-                        formatDuration(goal.goalMillis),
-                    ),
-                    style = MaterialTheme.typography.titleMedium,
+                    text = formatDuration(goal.todayMillis),
+                    style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
                 )
+                Spacer(Modifier.height(2.dp))
                 TileDetail(
                     if (goal.todayMillis >= goal.goalMillis) {
-                        stringResource(MR.strings.statistics_goal_met)
+                        stringResource(MR.strings.statistics_goal_met, formatDuration(goal.goalMillis))
                     } else {
                         stringResource(
                             MR.strings.statistics_goal_to_go,
                             formatDuration(goal.goalMillis - goal.todayMillis),
+                            formatDuration(goal.goalMillis),
                         )
                     },
                 )
             }
+            CircularProgressIndicator(
+                progress = { fraction },
+                modifier = Modifier.size(40.dp),
+                // The tile's own surface tones are too close to each other in dark themes to show an empty ring.
+                trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.24f),
+                strokeWidth = 5.dp,
+                gapSize = 0.dp,
+            )
         }
     }
 }

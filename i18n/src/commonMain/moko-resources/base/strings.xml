@@ -2331,9 +2331,8 @@
     <string name="statistics_daily_goal">Daily goal</string>
     <string name="statistics_daily_goal_summary">Today\'s progress replaces the daily average in the summary</string>
     <string name="statistics_goal_off">Off</string>
-    <string name="statistics_goal_progress">%1$s / %2$s</string>
-    <string name="statistics_goal_to_go">%s to go</string>
-    <string name="statistics_goal_met">Goal met</string>
+    <string name="statistics_goal_to_go">%1$s to go of %2$s</string>
+    <string name="statistics_goal_met">%s goal met</string>
     <string name="statistics_goal_streak">Goal streak</string>
     <string name="statistics_recap">Recap</string>
     <string name="statistics_share_recap">Share recap</string>
