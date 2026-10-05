@@ -2326,7 +2326,7 @@
     <string name="entry_activity_chapter_pace">typically %s each</string>
     <string name="entry_activity_started">Started</string>
     <string name="entry_activity_finished">Finished %s</string>
-    <string name="entry_activity_last_read">Last read %1$s · %2$s</string>
+    <string name="entry_activity_last_opened">Last opened %1$s · %2$s</string>
     <string name="statistics_goal_section">Goal and recap</string>
     <string name="statistics_daily_goal">Daily goal</string>
     <string name="statistics_daily_goal_summary">Today\'s progress replaces the daily average in the summary</string>

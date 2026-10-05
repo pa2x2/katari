@@ -130,7 +130,7 @@ fun EntryActivitySheet(
             summary.lastRead?.let { lastRead ->
                 Text(
                     text = stringResource(
-                        MR.strings.entry_activity_last_read,
+                        MR.strings.entry_activity_last_opened,
                         relativeTimeSpanString(lastRead.atEpochMillis),
                         lastRead.chapterName,
                     ),
