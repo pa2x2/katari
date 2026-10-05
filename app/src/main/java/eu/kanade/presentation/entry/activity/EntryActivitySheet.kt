@@ -73,7 +73,7 @@ fun EntryActivitySheet(
             Text(
                 text = stringResource(MR.strings.entry_activity_title),
                 style = MaterialTheme.typography.titleLarge,
-                modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp),
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
             )
             TileRow(
                 first = {
@@ -136,7 +136,7 @@ fun EntryActivitySheet(
                     ),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
                 )
             }
             if (summary.monthlyDurations.isNotEmpty()) {
@@ -182,7 +182,7 @@ private fun MonthlyActivity(summary: EntryActivitySummary, formatDuration: (Long
     }
     val monthFormatter = remember(locale) { DateTimeFormatter.ofPattern("MMM yyyy", locale) }
     Column(
-        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Text(
