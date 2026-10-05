@@ -85,6 +85,7 @@ class StatsScreen : Screen() {
                 onCustomizingChange = { customizing = it },
                 onRangeSelected = screenModel::setRange,
                 onSaveLayout = screenModel::setCardLayout,
+                onSaveDailyGoal = screenModel::setDailyGoal,
                 onTypeSelected = screenModel::setType,
                 onNavigateActivity = screenModel::navigateActivityByBuckets,
                 onShowToday = screenModel::showToday,

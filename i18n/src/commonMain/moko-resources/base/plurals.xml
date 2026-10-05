@@ -107,6 +107,10 @@
         <item quantity="other">%d days</item>
     </plurals>
 
+    <plurals name="statistics_goal_met_days">
+        <item quantity="one">Met on %1$d of the last %2$d day</item>
+        <item quantity="other">Met on %1$d of the last %2$d days</item>
+    </plurals>
     <plurals name="statistics_completion_count">
         <item quantity="one">1 completion</item>
         <item quantity="other">%d completions</item>

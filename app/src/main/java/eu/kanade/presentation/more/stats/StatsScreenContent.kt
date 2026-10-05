@@ -52,6 +52,7 @@ fun StatsScreenContent(
     onOpenEarlierActivity: (EntryType?) -> Unit,
     onOpenTopTitles: (EntryType?, StatsActivity) -> Unit,
     onSaveLayout: (Long, String, StatisticsCardLayout) -> Unit,
+    onSaveDailyGoal: (Long, Int) -> Unit,
 ) {
     val pages = remember(state.types) { listOf<EntryType?>(null) + state.types.map(StatsType::type) }
     val selectedPage = pages.indexOf(state.selectedType).coerceAtLeast(0)
@@ -76,10 +77,12 @@ fun StatsScreenContent(
         key(state.profileId, tab) {
             StatisticsLayoutEditor(
                 initial = state.cardLayouts[tab] ?: StatisticsCardLayout(),
+                initialGoalMinutes = state.goalMinutes,
                 isOverview = type == null,
                 onDismiss = { onCustomizingChange(false) },
-                onSave = { layout ->
+                onSave = { layout, goalMinutes ->
                     onSaveLayout(state.profileId, tab, layout)
+                    onSaveDailyGoal(state.profileId, goalMinutes)
                     onCustomizingChange(false)
                 },
             )

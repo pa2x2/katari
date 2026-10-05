@@ -7,6 +7,7 @@ import eu.kanade.domain.base.BasePreferences
 import eu.kanade.presentation.more.stats.ActivityState
 import eu.kanade.presentation.more.stats.StatsScreenState
 import eu.kanade.presentation.more.stats.data.StatsActivityWindow
+import eu.kanade.presentation.more.stats.data.StatsDailyGoal
 import eu.kanade.presentation.more.stats.data.StatsLibrary
 import eu.kanade.presentation.more.stats.data.StatsRange
 import eu.kanade.presentation.more.stats.data.StatsReadingCalendar
@@ -22,6 +23,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
@@ -152,7 +154,8 @@ class StatsScreenModel(
                                 .map { tab to StatisticsCardLayout.decode(it) }
                         },
                     ) { it.toMap() },
-                ) { library, (range, activity), (selectedTypeName, incognito, calendar), cardLayouts ->
+                    subscribeDailyGoal(profileId),
+                ) { library, (range, activity), (selectedTypeName, incognito, calendar), cardLayouts, goal ->
                     StatsScreenState.Success(
                         profileId = profileId,
                         range = range,
@@ -163,6 +166,8 @@ class StatsScreenModel(
                         incognito = incognito,
                         cardLayouts = cardLayouts,
                         calendar = calendar,
+                        goalMinutes = goal.first,
+                        goal = goal.second,
                     )
                 }.distinctUntilChanged().flowOn(Dispatchers.IO)
             }.collect { event ->
@@ -197,6 +202,29 @@ class StatsScreenModel(
                 emit(null)
             }
         }
+
+    /** The goal setting with today's progress toward it; progress is null while no goal is set. */
+    private fun subscribeDailyGoal(profileId: Long): Flow<Pair<Int, StatsDailyGoal?>> =
+        StatisticsPreferences(profileStore.profileStore(profileId)).dailyGoalMinutes.changes()
+            .combine(today, ::Pair)
+            .flatMapLatest { (minutes, day) ->
+                if (minutes <= 0) return@flatMapLatest flowOf(minutes to null)
+                statisticsRepository.subscribeActivityTimeline(
+                    profileId = profileId,
+                    startLocalDate = null,
+                    endLocalDate = day.toString(),
+                ).map<StatisticsActivityTimeline, Pair<Int, StatsDailyGoal?>> { timeline ->
+                    minutes to buildDailyGoal(timeline, minutes * 60_000L, day)
+                }.catch { error ->
+                    logcat(LogPriority.ERROR, error)
+                    emit(minutes to null)
+                }
+            }
+
+    fun setDailyGoal(profileId: Long, minutes: Int) {
+        if ((state.value as? StatsScreenState.Success)?.profileId != profileId) return
+        StatisticsPreferences(profileStore.profileStore(profileId)).dailyGoalMinutes.set(minutes)
+    }
 
     fun setCardLayout(profileId: Long, tab: String, layout: StatisticsCardLayout) {
         if ((state.value as? StatsScreenState.Success)?.profileId != profileId) return
