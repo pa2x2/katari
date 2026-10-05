@@ -9,4 +9,5 @@ internal object BookEntryStatisticsProvider : EntryStatisticsProvider {
     override val type = EntryType.BOOK
     override val accent = EntryStatisticsAccent.SAGE
     override val consumedUnitLabel = MR.strings.statistics_chapters_read
+    override val itemPaceCarriesAcrossTitles = false
 }

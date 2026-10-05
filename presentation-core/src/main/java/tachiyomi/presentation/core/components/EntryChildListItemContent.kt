@@ -21,6 +21,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -41,6 +42,8 @@ fun EntryChildListItemContent(
     bookmark: Boolean,
     unconsumedIndicatorLabel: StringResource = MR.strings.action_filter_unseen,
     modifier: Modifier = Modifier,
+    /** Time recorded for the item, shown after [date]. */
+    duration: String? = null,
     trailingContent: @Composable (() -> Unit)? = null,
 ) {
     Row(modifier = modifier) {
@@ -89,28 +92,20 @@ fun EntryChildListItemContent(
                             .copy(alpha = if (read == true) DISABLED_ALPHA else SECONDARY_ALPHA),
                     )
                 ProvideTextStyle(value = subtitleStyle) {
-                    if (date != null) {
+                    val dimmed = LocalContentColor.current.copy(alpha = DISABLED_ALPHA)
+                    val parts = listOfNotNull(
+                        date?.let { it to Color.Unspecified },
+                        duration?.let { it to Color.Unspecified },
+                        readProgress?.let { it to dimmed },
+                        scanlator?.let { it to Color.Unspecified },
+                    )
+                    parts.forEachIndexed { index, (text, color) ->
+                        if (index > 0) DotSeparatorText()
                         Text(
-                            text = date,
+                            text = text,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
-                        )
-                        if (readProgress != null || scanlator != null) DotSeparatorText()
-                    }
-                    if (readProgress != null) {
-                        Text(
-                            text = readProgress,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            color = LocalContentColor.current.copy(alpha = DISABLED_ALPHA),
-                        )
-                        if (scanlator != null) DotSeparatorText()
-                    }
-                    if (scanlator != null) {
-                        Text(
-                            text = scanlator,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
+                            color = color,
                         )
                     }
                 }

@@ -9,4 +9,5 @@ internal object MangaEntryStatisticsProvider : EntryStatisticsProvider {
     override val type = EntryType.MANGA
     override val accent = EntryStatisticsAccent.ROSE
     override val consumedUnitLabel = MR.strings.statistics_chapters_read
+    override val itemPaceCarriesAcrossTitles = true
 }

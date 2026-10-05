@@ -2380,6 +2380,9 @@ class EntryScreenModel(
             val hasReadChapters: Boolean
                 get() = chapterPresentation.hasReadChapters
 
+            val chapterProgress: EntryChapterProgress
+                get() = chapterPresentation.progress
+
             fun chapterListIndex(chapterId: Long?): Int? =
                 chapterId?.let(chapterPresentation::rowIndexOf)
 

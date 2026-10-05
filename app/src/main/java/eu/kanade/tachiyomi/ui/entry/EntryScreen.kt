@@ -33,6 +33,7 @@ import eu.kanade.presentation.components.NavigatorAdaptiveSheet
 import eu.kanade.presentation.entry.EditCoverAction
 import eu.kanade.presentation.entry.EntryChapterSettingsDialog
 import eu.kanade.presentation.entry.EntryScreen
+import eu.kanade.presentation.entry.activity.EntryActivitySheet
 import eu.kanade.presentation.entry.components.DeleteChaptersDialog
 import eu.kanade.presentation.entry.components.DuplicateEntryDialog
 import eu.kanade.presentation.entry.components.EditDisplayNameDialog
@@ -57,10 +58,12 @@ import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import eu.kanade.tachiyomi.ui.browse.catalog.CatalogScreen
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchScreen
 import eu.kanade.tachiyomi.ui.category.CategoryScreen
+import eu.kanade.tachiyomi.ui.entry.activity.EntryActivityScreenModel
 import eu.kanade.tachiyomi.ui.entry.related.RelatedEntriesDialog
 import eu.kanade.tachiyomi.ui.entry.related.RelatedEntriesScreenModel
 import eu.kanade.tachiyomi.ui.entry.track.TrackInfoDialogHomeScreen
 import eu.kanade.tachiyomi.ui.entry.updates.EntryUpdatesScreenModel
+import eu.kanade.tachiyomi.ui.history.activity.HistoryActivityScreen
 import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.tachiyomi.ui.setting.SettingsScreen
 import eu.kanade.tachiyomi.ui.webview.WebViewScreen
@@ -98,6 +101,7 @@ import tachiyomi.i18n.*
 import tachiyomi.presentation.core.screens.LoadingScreen
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
+import java.time.LocalDate
 
 class EntryScreen(
     private val entryId: Long,
@@ -244,6 +248,37 @@ class EntryScreen(
             )
         }
 
+        val activityScreenModel = rememberScreenModel(
+            tag = "activity-${successState.entry.id}-${successState.memberIds.joinToString(",")}",
+        ) {
+            EntryActivityScreenModel(successState.entry.profileId, successState.entry.type, successState.memberIds)
+        }
+        val activityState by activityScreenModel.state.collectAsStateWithLifecycle()
+        var showActivitySheet by rememberSaveable(successState.entry.id) { mutableStateOf(false) }
+        val activitySummary = activityState.summary
+        if (showActivitySheet && activitySummary != null) {
+            EntryActivitySheet(
+                summary = activitySummary,
+                progress = successState.chapterProgress,
+                consumedUnitLabel = activityScreenModel.consumedUnitLabel,
+                paceMillis = activityState.paceMillis,
+                onOpenActivity = activitySummary.firstActivityLocalDate?.let { firstDate ->
+                    {
+                        showActivitySheet = false
+                        navigator.push(
+                            HistoryActivityScreen(
+                                startLocalDate = firstDate,
+                                endLocalDate = LocalDate.now().toString(),
+                                entryIds = successState.memberIds.toList(),
+                                entryTitle = successState.entry.displayTitle,
+                            ),
+                        )
+                    }
+                },
+                onDismissRequest = { showActivitySheet = false },
+            )
+        }
+
         LaunchedEffect(webView) {
             assistUrl = availableWebView?.url
             if (webView is EntryWebViewResolution.Failed) {
@@ -255,6 +290,8 @@ class EntryScreen(
             state = successState,
             snackbarHostState = screenModel.snackbarHostState,
             updatesLabel = updatesLabel,
+            activity = activityState,
+            onActivityClicked = { showActivitySheet = true },
             isTabletUi = isTabletUi(),
             chapterSwipeStartAction = screenModel.chapterSwipeStartAction.availableFor(
                 downloadsSupported = downloadsAvailable,

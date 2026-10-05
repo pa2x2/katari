@@ -1,14 +1,14 @@
 package tachiyomi.domain.history.repository
 
-import eu.kanade.tachiyomi.source.entry.EntryType
 import tachiyomi.domain.history.model.activity.HistoryActivityPage
+import tachiyomi.domain.history.model.activity.HistoryActivityScope
 
 interface HistoryActivityRepository {
     suspend fun getActivityPage(
         profileId: Long,
         startLocalDate: String,
         endLocalDate: String,
-        type: EntryType?,
+        scope: HistoryActivityScope,
         offset: Long,
         limit: Long,
     ): HistoryActivityPage

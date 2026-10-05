@@ -2318,6 +2318,16 @@
     <string name="statistics_status">Status</string>
     <string name="statistics_sources">Sources</string>
     <string name="statistics_added_in_year">Added in %s</string>
+    <string name="entry_activity_title">Your activity</string>
+    <string name="entry_activity_since">since %s</string>
+    <string name="entry_activity_untracked">incl. %s before tracking</string>
+    <string name="entry_activity_session_average">about %s each</string>
+    <string name="entry_activity_progress">%1$d / %2$d</string>
+    <string name="entry_activity_chapter_pace">typically %s each</string>
+    <string name="entry_activity_started">Started</string>
+    <string name="entry_activity_finished">Finished %s</string>
+    <string name="entry_activity_last_read">Last read %1$s · %2$s</string>
+    <string name="entry_catch_up_estimate">%1$s: %2$d · about %3$s</string>
 
     <string name="tristate_not_used">Not used</string>
     <string name="tristate_included">Included</string>

@@ -16,6 +16,7 @@ data class EntryStatisticsContribution(
     val type: EntryType,
     val accent: EntryStatisticsAccent,
     val consumedUnitLabel: StringResource,
+    val itemPaceCarriesAcrossTitles: Boolean,
 )
 
 /** Compile-time entry-type contributions used to assemble Statistics without a closed app-level type list. */

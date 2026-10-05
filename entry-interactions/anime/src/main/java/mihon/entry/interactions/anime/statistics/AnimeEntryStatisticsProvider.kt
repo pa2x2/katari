@@ -9,4 +9,5 @@ internal object AnimeEntryStatisticsProvider : EntryStatisticsProvider {
     override val type = EntryType.ANIME
     override val accent = EntryStatisticsAccent.SKY
     override val consumedUnitLabel = MR.strings.statistics_episodes_watched
+    override val itemPaceCarriesAcrossTitles = true
 }
