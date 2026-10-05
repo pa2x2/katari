@@ -235,4 +235,4 @@ private fun MonthlyRecapSetting(enabled: Boolean, onEnabledChange: (Boolean) -> 
     }
 }
 
-private val DAILY_GOAL_MINUTES = listOf(0, 15, 30, 45, 60, 90, 120)
+private val DAILY_GOAL_MINUTES = listOf(0, 15, 30, 45, 60, 120)
