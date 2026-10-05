@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ArrowDownward
 import androidx.compose.material.icons.outlined.ArrowUpward
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -29,6 +30,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.more.stats.data.StatsActivity
 import eu.kanade.presentation.more.stats.data.StatsActivityWindow
+import eu.kanade.presentation.more.stats.data.StatsDailyGoal
 import eu.kanade.presentation.more.stats.data.StatsRange
 import eu.kanade.presentation.more.stats.data.StatsType
 import tachiyomi.i18n.*
@@ -43,17 +45,22 @@ import kotlin.math.roundToLong
 /**
  * Time spent with the change since the previous window, daily average, streak and completions. [activity]
  * is already projected to [selectedType]; [types] supplies per-type labels for the Overview breakdown.
+ *
+ * With a daily [goal], the Overview of the latest window shows today's progress in place of the daily average and
+ * adds the goal streak; the goal counts every type, so type tabs and earlier windows keep the plain summary.
  */
 @Composable
 internal fun StatisticsActivitySummaryCards(
     activity: StatsActivity?,
     selectedType: StatsType?,
     types: List<StatsType>,
+    goal: StatsDailyGoal?,
     formatDuration: (Long) -> String,
 ) {
     val numbers = NumberFormat.getIntegerInstance()
     val dash = "—"
     val isLatest = activity?.window?.isLatest != false
+    val shownGoal = goal?.takeIf { selectedType == null && isLatest }
     val completionBreakdown = if (selectedType == null && activity != null) {
         types.mapNotNull { type ->
             activity.completionCountByType[type.type]?.takeIf { it > 0L }?.let { count ->
@@ -71,25 +78,29 @@ internal fun StatisticsActivitySummaryCards(
                 modifier = Modifier.weight(1f),
                 detail = { activity?.let { PeriodComparison(it, formatDuration) } },
             )
-            SummaryTile(
-                label = stringResource(MR.strings.statistics_daily_average),
-                value = activity?.takeIf { it.trackedDayCount > 0 }
-                    ?.let { formatDuration(it.totalDurationMillis / it.trackedDayCount) }
-                    ?: dash,
-                modifier = Modifier.weight(1f),
-                detail = {
-                    activity?.takeIf { it.trackedDayCount > 0 }?.let {
-                        TileDetail(
-                            pluralStringResource(
-                                MR.plurals.statistics_days_active_of,
-                                it.trackedDayCount,
-                                it.activeDays,
-                                it.trackedDayCount,
-                            ),
-                        )
-                    }
-                },
-            )
+            if (shownGoal != null) {
+                TodayGoalTile(goal = shownGoal, formatDuration = formatDuration, modifier = Modifier.weight(1f))
+            } else {
+                SummaryTile(
+                    label = stringResource(MR.strings.statistics_daily_average),
+                    value = activity?.takeIf { it.trackedDayCount > 0 }
+                        ?.let { formatDuration(it.totalDurationMillis / it.trackedDayCount) }
+                        ?: dash,
+                    modifier = Modifier.weight(1f),
+                    detail = {
+                        activity?.takeIf { it.trackedDayCount > 0 }?.let {
+                            TileDetail(
+                                pluralStringResource(
+                                    MR.plurals.statistics_days_active_of,
+                                    it.trackedDayCount,
+                                    it.activeDays,
+                                    it.trackedDayCount,
+                                ),
+                            )
+                        }
+                    },
+                )
+            }
         }
         Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             SummaryTile(
@@ -119,8 +130,89 @@ internal fun StatisticsActivitySummaryCards(
                 detail = { if (completionBreakdown.isNotEmpty()) TileDetail(completionBreakdown) },
             )
         }
+        if (shownGoal != null) {
+            SummaryTile(
+                label = stringResource(MR.strings.statistics_goal_streak),
+                value = pluralStringResource(MR.plurals.day, shownGoal.currentStreakDays, shownGoal.currentStreakDays),
+                modifier = Modifier.fillMaxWidth(),
+                detail = {
+                    if (shownGoal.consideredDays > 0) {
+                        TileDetail(
+                            pluralStringResource(
+                                MR.plurals.statistics_goal_met_days,
+                                shownGoal.consideredDays,
+                                shownGoal.metDays,
+                                shownGoal.consideredDays,
+                            ),
+                        )
+                    }
+                },
+            )
+        }
     }
 }
+
+@Composable
+private fun TodayGoalTile(goal: StatsDailyGoal, formatDuration: (Long) -> String, modifier: Modifier = Modifier) {
+    val fraction = (goal.todayMillis.toFloat() / goal.goalMillis).coerceIn(0f, 1f)
+    Surface(
+        modifier = modifier.fillMaxHeight(),
+        color = MaterialTheme.colorScheme.surfaceVariant,
+        shape = MaterialTheme.shapes.medium,
+    ) {
+        Row(
+            modifier = Modifier.padding(14.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(MR.strings.statistics_today),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = formatDuration(goal.todayMillis),
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                )
+                Spacer(Modifier.height(2.dp))
+                TileDetail(
+                    if (goal.todayMillis >= goal.goalMillis) {
+                        stringResource(MR.strings.statistics_goal_met, formatDuration(goal.goalMillis))
+                    } else {
+                        stringResource(
+                            MR.strings.statistics_goal_to_go,
+                            formatDuration(goal.remainingMillisRoundedUp()),
+                            formatDuration(goal.goalMillis),
+                        )
+                    },
+                )
+            }
+            CircularProgressIndicator(
+                progress = { fraction },
+                modifier = Modifier.size(40.dp),
+                // The tile's own surface tones are too close to each other in dark themes to show an empty ring.
+                trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.24f),
+                strokeWidth = 5.dp,
+                gapSize = 0.dp,
+            )
+        }
+    }
+}
+
+/**
+ * Durations show whole minutes rounded down, so the time left is rounded up for it and today's time to add up to the
+ * goal.
+ */
+private fun StatsDailyGoal.remainingMillisRoundedUp(): Long {
+    val remaining = goalMillis - todayMillis
+    return (remaining + MINUTE_MILLIS - 1) / MINUTE_MILLIS * MINUTE_MILLIS
+}
+
+private const val MINUTE_MILLIS = 60_000L
 
 @Composable
 private fun PeriodComparison(activity: StatsActivity, formatDuration: (Long) -> String) {

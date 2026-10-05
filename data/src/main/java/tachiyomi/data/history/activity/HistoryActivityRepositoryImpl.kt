@@ -4,6 +4,7 @@ import eu.kanade.tachiyomi.source.entry.EntryType
 import tachiyomi.data.DatabaseHandler
 import tachiyomi.domain.entry.model.EntryCover
 import tachiyomi.domain.history.model.activity.HistoryActivityPage
+import tachiyomi.domain.history.model.activity.HistoryActivityScope
 import tachiyomi.domain.history.model.activity.HistoryActivitySegmentDetail
 import tachiyomi.domain.history.model.activity.HistoryActivitySessionDetail
 import tachiyomi.domain.history.repository.HistoryActivityRepository
@@ -17,7 +18,7 @@ class HistoryActivityRepositoryImpl(
         profileId: Long,
         startLocalDate: String,
         endLocalDate: String,
-        type: EntryType?,
+        scope: HistoryActivityScope,
         offset: Long,
         limit: Long,
     ): HistoryActivityPage {
@@ -59,8 +60,8 @@ class HistoryActivityRepositoryImpl(
                     completionCount = completionCount,
                 )
             }
-            if (type == null) {
-                activityQueries.getActivityDetailSessions(
+            when (scope) {
+                HistoryActivityScope.All -> activityQueries.getActivityDetailSessions(
                     startLocalDate = startLocalDate,
                     endLocalDate = endLocalDate,
                     profileId = profileId,
@@ -69,12 +70,21 @@ class HistoryActivityRepositoryImpl(
                     offset = offset,
                     mapper = mapper,
                 )
-            } else {
-                activityQueries.getActivityDetailSessionsByType(
+                is HistoryActivityScope.Type -> activityQueries.getActivityDetailSessionsByType(
                     startLocalDate = startLocalDate,
                     endLocalDate = endLocalDate,
                     profileId = profileId,
-                    type = type.name.lowercase(),
+                    type = scope.type.name.lowercase(),
+                    minimumSessionDurationMillis = StatisticsActivityPolicy.MINIMUM_SESSION_DURATION_MILLIS,
+                    limit = limit + 1L,
+                    offset = offset,
+                    mapper = mapper,
+                )
+                is HistoryActivityScope.Entries -> activityQueries.getActivityDetailSessionsByEntries(
+                    startLocalDate = startLocalDate,
+                    endLocalDate = endLocalDate,
+                    profileId = profileId,
+                    entryIds = scope.entryIds,
                     minimumSessionDurationMillis = StatisticsActivityPolicy.MINIMUM_SESSION_DURATION_MILLIS,
                     limit = limit + 1L,
                     offset = offset,

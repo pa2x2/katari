@@ -135,6 +135,7 @@ internal fun StatisticsDashboardPage(
                             activity = visibleActivity,
                             selectedType = selectedStatsType,
                             types = visibleTypes,
+                            goal = state.goal,
                             formatDuration = formatter,
                         )
                         StatisticsCard.ACTIVITY -> StatisticsActivityCard(

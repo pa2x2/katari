@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -22,6 +23,7 @@ import mihon.entry.interactions.statistics.EntryStatisticsFeature
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.data.ActiveProfileProvider
+import tachiyomi.domain.history.model.activity.HistoryActivityScope
 import tachiyomi.domain.history.model.activity.HistoryActivitySessionDetail
 import tachiyomi.domain.history.repository.HistoryActivityRepository
 import tachiyomi.domain.statistics.repository.StatisticsRepository
@@ -29,10 +31,12 @@ import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.time.LocalDate
 
+/** @param entryIds when set, only sessions of these entries: one title, or every member of a merged title. */
 class HistoryActivityScreenModel(
     private val startLocalDate: String,
     private val endLocalDate: String,
     typeName: String?,
+    entryIds: List<Long>?,
     private val activeProfileProvider: ActiveProfileProvider = Injekt.get(),
     private val activityRepository: HistoryActivityRepository = Injekt.get(),
     statisticsRepository: StatisticsRepository = Injekt.get(),
@@ -41,16 +45,33 @@ class HistoryActivityScreenModel(
 ) : StateScreenModel<HistoryActivityScreenModel.State>(State.Loading) {
 
     val type = typeName?.let { name -> EntryType.entries.firstOrNull { it.name == name } }
+    private val scope = when {
+        entryIds != null -> HistoryActivityScope.Entries(entryIds)
+        type != null -> HistoryActivityScope.Type(type)
+        else -> HistoryActivityScope.All
+    }
+    val isEntryScope = scope is HistoryActivityScope.Entries
     val types: List<StatsType> = buildStatisticsTypes(statisticsFeature, presentationFeature)
     private var activeProfileId: Long? = null
 
-    /** Totals for the whole range, independent of how many session pages are loaded; null until known. */
+    /**
+     * Totals for the whole range, independent of how many session pages are loaded; null until known, and always
+     * null for one title, whose totals the entry screen already shows.
+     */
     val summary: StateFlow<HistoryActivitySummary?> = activeProfileProvider.activeProfileIdFlow
         .flatMapLatest { profileId ->
-            statisticsRepository.subscribeActivity(profileId, startLocalDate, endLocalDate)
-        }
-        .map<_, HistoryActivitySummary?> { snapshot ->
-            summarizeHistoryActivity(snapshot, type, LocalDate.parse(startLocalDate), LocalDate.parse(endLocalDate))
+            if (isEntryScope) {
+                flowOf(null)
+            } else {
+                statisticsRepository.subscribeActivity(profileId, startLocalDate, endLocalDate).map { snapshot ->
+                    summarizeHistoryActivity(
+                        snapshot,
+                        type,
+                        LocalDate.parse(startLocalDate),
+                        LocalDate.parse(endLocalDate),
+                    )
+                }
+            }
         }
         .catch { error ->
             logcat(LogPriority.ERROR, error)
@@ -97,7 +118,7 @@ class HistoryActivityScreenModel(
                 profileId = profileId,
                 startLocalDate = startLocalDate,
                 endLocalDate = endLocalDate,
-                type = type,
+                scope = scope,
                 offset = offset,
                 limit = PAGE_SIZE,
             )

@@ -45,10 +45,15 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 
+/**
+ * @param showEntry false when the list is already scoped to the session's title: the card then leads with what was read
+ * instead of repeating the title, and doesn't link back to it.
+ */
 @Composable
 internal fun ActivitySessionCard(
     session: HistoryActivitySessionDetail,
     showType: Boolean,
+    showEntry: Boolean,
     onClick: (Long) -> Unit,
 ) {
     val formatDuration = rememberStatisticsDurationFormatter(StatisticsDurationPrecision.SECONDS)
@@ -82,24 +87,34 @@ internal fun ActivitySessionCard(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { onClick(session.entryId) }
+                    .then(if (showEntry) Modifier.clickable { onClick(session.entryId) } else Modifier)
                     .padding(12.dp),
                 verticalAlignment = Alignment.Top,
             ) {
-                EntryCover.Book(
-                    data = session.coverData,
-                    contentDescription = "",
-                    modifier = Modifier.width(64.dp),
-                    shape = MaterialTheme.shapes.small,
-                )
-                Spacer(Modifier.width(12.dp))
+                if (showEntry) {
+                    EntryCover.Book(
+                        data = session.coverData,
+                        contentDescription = "",
+                        modifier = Modifier.width(64.dp),
+                        shape = MaterialTheme.shapes.small,
+                    )
+                    Spacer(Modifier.width(12.dp))
+                }
                 Column(Modifier.weight(1f)) {
                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
+                        val isUndetailedHeadline = !showEntry && childDurations.isEmpty()
                         Text(
-                            text = session.entryTitle,
+                            text = when {
+                                showEntry -> session.entryTitle
+                                isUndetailedHeadline -> stringResource(MR.strings.statistics_no_child_activity_details)
+                                else -> listOf(childDurations.first().first, childDurations.last().first)
+                                    .distinct()
+                                    .joinToString(" – ")
+                            },
                             modifier = Modifier.weight(1f),
                             style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.SemiBold,
+                            fontWeight = if (isUndetailedHeadline) FontWeight.Normal else FontWeight.SemiBold,
+                            fontStyle = if (isUndetailedHeadline) FontStyle.Italic else FontStyle.Normal,
                             maxLines = 2,
                             overflow = TextOverflow.Ellipsis,
                         )
@@ -119,6 +134,8 @@ internal fun ActivitySessionCard(
                         }
                     }
                     when {
+                        // Without the title, the headline already names a lone chapter or a missing breakdown.
+                        !showEntry && childDurations.size <= 1 -> Unit
                         childDurations.isEmpty() -> {
                             Spacer(Modifier.height(8.dp))
                             Text(
