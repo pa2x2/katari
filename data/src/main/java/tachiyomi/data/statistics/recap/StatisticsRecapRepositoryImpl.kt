@@ -1,5 +1,7 @@
 package tachiyomi.data.statistics.recap
 
+import app.cash.sqldelight.async.coroutines.awaitAsList
+import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
 import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.coroutines.flow.Flow
 import tachiyomi.data.DatabaseHandler
@@ -39,7 +41,7 @@ class StatisticsRecapRepositoryImpl(
                     durationMillis = duration,
                     timeZoneId = timeZoneId,
                 )
-            }.executeAsList(),
+            }.awaitAsList(),
             entries = queries.recapEntries(
                 profileId,
                 minimum,
@@ -60,7 +62,7 @@ class StatisticsRecapRepositoryImpl(
                     genres = genres.orEmpty(),
                     sourceId = source,
                 )
-            }.executeAsList(),
+            }.awaitAsList(),
             completions = queries.recapCompletions(
                 profileId,
                 startLocalDate,
@@ -72,14 +74,14 @@ class StatisticsRecapRepositoryImpl(
                     localDate = localDate,
                     count = count,
                 )
-            }.executeAsList(),
+            }.awaitAsList(),
             finishedEntryIds = queries.recapFinishedEntries(profileId, startLocalDate, endLocalDate)
-                .executeAsList()
+                .awaitAsList()
                 .toSet(),
             firstActiveDateByEntry = queries.recapFirstActiveDates(profileId, startLocalDate, endLocalDate)
-                .executeAsList()
+                .awaitAsList()
                 .associate { it.entry_id to it.first_date },
-            profileFirstActiveDate = queries.recapProfileFirstActiveDate(profileId).executeAsOneOrNull()?.first_date,
+            profileFirstActiveDate = queries.recapProfileFirstActiveDate(profileId).awaitAsOneOrNull()?.first_date,
         )
     }
 
