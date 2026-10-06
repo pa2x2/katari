@@ -125,7 +125,11 @@ internal fun ColumnScope.RecapLongestRunPage(page: StatisticsRecapPage.LongestRu
             MR.strings.statistics_recap_run_dates,
             formats.dayMonth(page.run.start),
             formats.dayMonth(page.run.endInclusive),
-        ) + " " + pluralStringResource(MR.plurals.statistics_recap_active_days_text, page.activeDays, page.activeDays),
+        ) + " " + pluralStringResource(
+            MR.plurals.statistics_recap_active_days_text,
+            page.activeDates.size,
+            page.activeDates.size,
+        ),
         style = RecapTypography.Body,
         order = 2,
     )

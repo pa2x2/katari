@@ -47,6 +47,11 @@ internal class StatisticsRecapIndex(
     val durationByDay: Map<LocalDate, Long> = segmentsByDay.mapValues { (_, day) -> day.sumOf { it.durationMillis } }
         .filterValues { it > 0L }
 
+    /** Days with any time or anything finished, as the dashboard counts them; every streak day is one. */
+    val activeDates: Set<LocalDate> = durationByDay.keys + activity.completions
+        .filter { it.count > 0L }
+        .map { LocalDate.parse(it.localDate) }
+
     val durationByMonth: Map<YearMonth, Long> = durationByDay.entries
         .groupingBy { YearMonth.from(it.key) }
         .fold(0L) { total, day -> total + day.value }

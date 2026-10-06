@@ -29,15 +29,18 @@ internal fun StatisticsRecapIndex.monthTimePage(): StatisticsRecapPage.MonthTime
 }
 
 internal fun StatisticsRecapIndex.longestRunPage(): StatisticsRecapPage.LongestRun? {
-    val run = timeline.longestStreakRunEndingBy(period.end)?.takeIf { it.days() >= MIN_RUN_DAYS } ?: return null
+    val run = longestRun() ?: return null
     return StatisticsRecapPage.LongestRun(
         run = run,
-        activeDays = durationByDay.size,
-        activeDates = durationByDay.keys,
+        activeDates = activeDates,
         periodStart = period.start,
         periodEnd = period.end,
     )
 }
+
+/** The period's longest streak, when it's long enough to tell; the summary card shows the same one. */
+internal fun StatisticsRecapIndex.longestRun(): ClosedRange<LocalDate>? =
+    timeline.longestStreakRunEndingBy(period.end)?.takeIf { it.days() >= MIN_RUN_DAYS }
 
 internal fun StatisticsRecapIndex.hoursPage(): StatisticsRecapPage.Hours? {
     if (durationByDay.size < MIN_DAYS_FOR_HOURS) return null

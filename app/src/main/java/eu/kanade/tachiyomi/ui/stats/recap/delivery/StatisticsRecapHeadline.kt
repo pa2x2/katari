@@ -14,5 +14,5 @@ data class StatisticsRecapHeadline(
 fun recapHeadline(period: StatisticsRecapPeriod, activity: StatisticsRecapActivity): StatisticsRecapHeadline? {
     val index = StatisticsRecapIndex(period, activity, hiddenEntryIds = emptySet(), contributions = emptyList())
     if (index.durationByDay.isEmpty()) return null
-    return StatisticsRecapHeadline(index.totalMillis, index.durationByDay.size)
+    return StatisticsRecapHeadline(index.totalMillis, index.activeDates.size)
 }

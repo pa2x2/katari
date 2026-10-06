@@ -96,10 +96,9 @@ sealed interface StatisticsRecapPage {
         override val featured: StatisticsRecapTitle? get() = null
     }
 
-    /** @param activeDates every day of the period counted toward streaks. */
+    /** @param activeDates every active day of the period; the run's days are among them. */
     data class LongestRun(
         val run: ClosedRange<LocalDate>,
-        val activeDays: Int,
         val activeDates: Set<LocalDate>,
         val periodStart: LocalDate,
         val periodEnd: LocalDate,
