@@ -2,7 +2,6 @@ package eu.kanade.tachiyomi.ui.stats
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Share
-import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
@@ -91,9 +90,8 @@ class StatsScreen : Screen() {
                                             },
                                         )
                                     },
-                                    AppBar.Action(
+                                    AppBar.OverflowAction(
                                         title = stringResource(MR.strings.statistics_customize),
-                                        icon = Icons.Outlined.Tune,
                                         onClick = { customizing = true },
                                     ),
                                     AppBar.OverflowAction(
