@@ -1,7 +1,6 @@
 package eu.kanade.presentation.more.stats.recap.story
 
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Box
@@ -21,6 +20,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.neverEqualPolicy
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
@@ -29,11 +29,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.withFrameMillis
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.LayoutCoordinates
@@ -49,6 +49,7 @@ import eu.kanade.presentation.more.stats.recap.components.RecapTitleTargets
 import eu.kanade.presentation.more.stats.recap.motion.LocalRecapClock
 import eu.kanade.presentation.more.stats.recap.motion.RecapClock
 import eu.kanade.presentation.more.stats.recap.page.RecapPage
+import eu.kanade.presentation.more.stats.recap.page.drawRecapBackdrop
 import eu.kanade.presentation.more.stats.recap.palette.RecapPalette
 import eu.kanade.tachiyomi.ui.stats.recap.story.StatisticsRecapPage
 import eu.kanade.tachiyomi.ui.stats.recap.story.StatisticsRecapStory
@@ -89,8 +90,7 @@ internal fun RecapStoryPlayer(
     val current = index.coerceIn(0, pages.lastIndex)
     val page = pages[current]
     val palette = paletteOf(page)
-    val background by animateColorAsState(palette.background, label = "recapBackground")
-    val backgroundEnd by animateColorAsState(palette.backgroundEnd, label = "recapBackgroundEnd")
+    val shownPalette = animateRecapPalette(palette)
 
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -104,6 +104,9 @@ internal fun RecapStoryPlayer(
     var hideOffer by remember { mutableStateOf<Pair<Long, Offset>?>(null) }
     var sharing by remember { mutableStateOf(false) }
     var pageArea by remember { mutableStateOf<LayoutCoordinates?>(null) }
+    // Both are written on every move, though the objects stay the same, so the backdrop follows the page.
+    var screenCoordinates by remember { mutableStateOf<LayoutCoordinates?>(null, neverEqualPolicy()) }
+    var pageCoordinates by remember { mutableStateOf<LayoutCoordinates?>(null, neverEqualPolicy()) }
     val lifecycleState by LocalLifecycleOwner.current.lifecycle.currentStateAsState()
     val paused by rememberUpdatedState(
         holding || menuOpen || hiddenDialogOpen || hideOffer != null || sharing ||
@@ -146,7 +149,7 @@ internal fun RecapStoryPlayer(
             sharing = true
             try {
                 clock.skipEntrance()
-                // Let the finished entrance draw into the layer before reading it back.
+                // Let the finished entrance draw into the layer, which records only while sharing, before reading it.
                 withFrameMillis {}
                 withFrameMillis {}
                 onShare(layer.toImageBitmap())
@@ -159,7 +162,17 @@ internal fun RecapStoryPlayer(
     Box(
         Modifier
             .fillMaxSize()
-            .background(Brush.verticalGradient(listOf(background, backgroundEnd))),
+            .onGloballyPositioned { screenCoordinates = it }
+            .drawBehind {
+                val screen = screenCoordinates
+                val shown = pageCoordinates
+                val bounds = if (screen?.isAttached == true && shown?.isAttached == true) {
+                    screen.localBoundingBoxOf(shown)
+                } else {
+                    Rect(Offset.Zero, size)
+                }
+                drawRecapBackdrop(shownPalette, clock.storyMillis, bounds)
+            },
     ) {
         Column(Modifier.fillMaxSize().systemBarsPadding()) {
             if (pages.size > 1) {
@@ -197,7 +210,6 @@ internal fun RecapStoryPlayer(
                 Modifier
                     .weight(1f)
                     .fillMaxWidth()
-                    .padding(horizontal = 12.dp)
                     .onGloballyPositioned { pageArea = it }
                     .pointerInput(onClose) {
                         var dragged = 0f
@@ -235,10 +247,17 @@ internal fun RecapStoryPlayer(
                             palette = palette,
                             periodTitle = title,
                             footer = footer,
-                            modifier = Modifier.drawWithContent {
-                                layer.record { this@drawWithContent.drawContent() }
-                                drawLayer(layer)
-                            },
+                            modifier = Modifier
+                                .onGloballyPositioned { pageCoordinates = it }
+                                .drawWithContent {
+                                    if (sharing) {
+                                        layer.record {
+                                            drawRecapBackdrop(palette, clock.storyMillis, Rect(Offset.Zero, size))
+                                            this@drawWithContent.drawContent()
+                                        }
+                                    }
+                                    drawContent()
+                                },
                         )
                     }
                 }
@@ -269,6 +288,17 @@ internal fun RecapStoryPlayer(
         )
     }
 }
+
+/** [palette] with each colour easing into the next page's, so pages change colour without a cut. */
+@Composable
+private fun animateRecapPalette(palette: RecapPalette): RecapPalette = RecapPalette(
+    background = animateColorAsState(palette.background, label = "recapBackground").value,
+    backgroundEnd = animateColorAsState(palette.backgroundEnd, label = "recapBackgroundEnd").value,
+    ink = animateColorAsState(palette.ink, label = "recapInk").value,
+    accent = animateColorAsState(palette.accent, label = "recapAccent").value,
+    muted = animateColorAsState(palette.muted, label = "recapMuted").value,
+    faint = animateColorAsState(palette.faint, label = "recapFaint").value,
+)
 
 /** The menu offered where a title was held. */
 @Composable

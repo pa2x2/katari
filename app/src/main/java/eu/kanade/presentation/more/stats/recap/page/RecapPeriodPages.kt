@@ -20,6 +20,7 @@ import eu.kanade.presentation.more.stats.recap.components.RecapTypography
 import eu.kanade.presentation.more.stats.recap.components.recapComparedPeriodText
 import eu.kanade.presentation.more.stats.recap.components.rememberRecapFormats
 import eu.kanade.presentation.more.stats.recap.motion.RecapCountUp
+import eu.kanade.presentation.more.stats.recap.motion.recapFloat
 import eu.kanade.presentation.more.stats.recap.motion.recapReveal
 import eu.kanade.tachiyomi.ui.stats.recap.story.StatisticsRecapPage
 import tachiyomi.i18n.*
@@ -69,7 +70,7 @@ internal fun ColumnScope.RecapMonthTotalPage(page: StatisticsRecapPage.MonthTota
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             modifier = Modifier.recapReveal(3),
         ) {
-            RecapCover(top, width = 72.dp)
+            RecapCover(top, width = 72.dp, modifier = Modifier.recapFloat())
             RecapText(
                 text = stringResource(MR.strings.statistics_recap_most_of_it, top.title),
                 style = RecapTypography.Body,

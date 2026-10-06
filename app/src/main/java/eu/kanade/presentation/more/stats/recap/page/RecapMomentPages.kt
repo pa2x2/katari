@@ -17,6 +17,7 @@ import eu.kanade.presentation.more.stats.recap.components.RecapTypography
 import eu.kanade.presentation.more.stats.recap.components.recapItemsText
 import eu.kanade.presentation.more.stats.recap.components.rememberRecapFormats
 import eu.kanade.presentation.more.stats.recap.motion.RecapCountUp
+import eu.kanade.presentation.more.stats.recap.motion.recapFloat
 import eu.kanade.presentation.more.stats.recap.motion.recapReveal
 import eu.kanade.tachiyomi.ui.stats.recap.story.StatisticsRecapPage
 import tachiyomi.i18n.*
@@ -29,7 +30,7 @@ internal fun ColumnScope.RecapBookendPage(page: StatisticsRecapPage.Bookend) {
     val time = formats.time(page.at.toLocalTime())
     RecapKicker(formats.weekdayDayMonth(page.at))
     Spacer(Modifier.weight(0.4f))
-    RecapCover(page.title, width = 176.dp, modifier = Modifier.recapReveal(1))
+    RecapCover(page.title, width = 176.dp, modifier = Modifier.recapReveal(1).recapFloat())
     Spacer(Modifier.weight(1f))
     RecapText(
         text = stringResource(
@@ -68,7 +69,7 @@ internal fun ColumnScope.RecapBiggestDayPage(page: StatisticsRecapPage.BiggestDa
         horizontalArrangement = Arrangement.spacedBy(16.dp),
         modifier = Modifier.recapReveal(3),
     ) {
-        page.title?.let { RecapCover(it, width = 72.dp) }
+        page.title?.let { RecapCover(it, width = 72.dp, modifier = Modifier.recapFloat()) }
         RecapText(biggestDayText(page, formats), RecapTypography.Body, modifier = Modifier.weight(1f))
     }
 }

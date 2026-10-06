@@ -1,21 +1,16 @@
 package eu.kanade.presentation.more.stats.recap.page
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -28,6 +23,8 @@ import eu.kanade.presentation.more.stats.recap.components.RecapTypography
 import eu.kanade.presentation.more.stats.recap.components.recapTitleTarget
 import eu.kanade.presentation.more.stats.recap.components.recapTypeName
 import eu.kanade.presentation.more.stats.recap.components.rememberRecapFormats
+import eu.kanade.presentation.more.stats.recap.motion.recapFloat
+import eu.kanade.presentation.more.stats.recap.motion.recapPulse
 import eu.kanade.presentation.more.stats.recap.motion.recapReveal
 import eu.kanade.tachiyomi.ui.stats.recap.story.StatisticsRecapPage
 import eu.kanade.tachiyomi.ui.stats.recap.story.StatisticsRecapTitle
@@ -37,32 +34,18 @@ import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 import java.time.LocalDate
 
-/** A tilted wall of the period's covers behind the year in large type. */
+/** The year in large type under the period's covers, which the page draws behind it as a drifting wall. */
 @Composable
 internal fun ColumnScope.RecapOpeningPage(page: StatisticsRecapPage.Opening) {
-    Box(Modifier.weight(1f).fillMaxWidth()) {
-        Column(
-            verticalArrangement = Arrangement.spacedBy(10.dp),
-            modifier = Modifier
-                .align(Alignment.TopCenter)
-                .requiredWidth(470.dp)
-                .offset(y = (-24).dp)
-                .rotate(-8f)
-                .alpha(0.6f),
-        ) {
-            page.covers.chunked(WALL_COLUMNS).forEachIndexed { row, covers ->
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                    modifier = Modifier.offset(x = if (row % 2 == 0) 0.dp else (-36).dp),
-                ) {
-                    covers.forEach { RecapCover(it, width = 84.dp, modifier = Modifier.recapReveal(row)) }
-                }
-            }
-        }
-    }
+    Spacer(Modifier.weight(1f))
     RecapKicker(stringResource(MR.strings.statistics_recap_year_title), order = 1)
     RecapText(page.year.toString(), RecapTypography.Huge, order = 2)
-    RecapText(stringResource(MR.strings.statistics_recap_tap_to_start), RecapTypography.Body, order = 3)
+    RecapText(
+        text = stringResource(MR.strings.statistics_recap_tap_to_start),
+        style = RecapTypography.Body,
+        order = 3,
+        modifier = Modifier.recapPulse(),
+    )
 }
 
 @Composable
@@ -75,7 +58,7 @@ internal fun ColumnScope.RecapTopTitlePage(page: StatisticsRecapPage.TopTitle) {
     RecapCover(
         title = page.title,
         width = 156.dp,
-        modifier = Modifier.align(Alignment.CenterHorizontally).recapReveal(1),
+        modifier = Modifier.align(Alignment.CenterHorizontally).recapReveal(1).recapFloat(),
     )
     RecapText(
         text = page.title.title,
@@ -184,5 +167,3 @@ private fun topTitleMomentText(moment: TopTitleMoment, formatDate: (LocalDate) -
         else -> pluralStringResource(MR.plurals.statistics_recap_days_with, moment.activeDays, moment.activeDays)
     }
 }
-
-private const val WALL_COLUMNS = 5

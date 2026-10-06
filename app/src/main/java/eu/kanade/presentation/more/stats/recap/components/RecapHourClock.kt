@@ -8,24 +8,29 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import eu.kanade.presentation.more.stats.recap.motion.LocalRecapClock
 import eu.kanade.presentation.more.stats.recap.motion.RECAP_GROW_MILLIS
+import eu.kanade.presentation.more.stats.recap.motion.ambientWave
 import eu.kanade.presentation.more.stats.recap.motion.rememberRecapEntrance
 import kotlin.math.cos
 import kotlin.math.sin
 
 /**
  * A day as a clock face: one wedge per hour, growing outward with the time spent in it, midnight at the top. The
- * busiest hours are drawn in full accent. The wedges grow out at step [order] of the page's entrance.
+ * busiest hours are drawn in full accent, and [topHour] slowly brightens and dims. The wedges grow out at step [order]
+ * of the page's entrance.
  *
  * @param hourlyDurationMillis 24 values from midnight.
  */
 @Composable
 internal fun RecapHourClock(
     hourlyDurationMillis: List<Long>,
+    topHour: Int,
     centerLabel: String,
     hourLabel: (Int) -> String,
     size: Dp,
@@ -34,6 +39,7 @@ internal fun RecapHourClock(
 ) {
     val palette = LocalRecapPalette.current
     val grow = rememberRecapEntrance(order, RECAP_GROW_MILLIS)
+    val clock = LocalRecapClock.current
     val measurer = rememberTextMeasurer()
     val max = hourlyDurationMillis.max().coerceAtLeast(1L).toFloat()
     Canvas(modifier.size(size)) {
@@ -50,7 +56,16 @@ internal fun RecapHourClock(
                 arcTo(circleBounds(center, inner), start + sweep, -sweep, forceMoveTo = false)
                 close()
             }
-            drawPath(path, color = if (share >= BUSY_SHARE) palette.accent else palette.accent.copy(alpha = 0.45f))
+            val color = when {
+                hour == topHour -> lerp(
+                    palette.accent,
+                    palette.ink,
+                    TOP_BRIGHTEN * ambientWave(clock.storyMillis, TOP_PULSE_MILLIS),
+                )
+                share >= BUSY_SHARE -> palette.accent
+                else -> palette.accent.copy(alpha = 0.45f)
+            }
+            drawPath(path, color = color)
         }
         listOf(0, 6, 12, 18).forEach { hour ->
             val angle = Math.toRadians(hour * WEDGE_DEGREES - 90.0)
@@ -83,3 +98,5 @@ private const val WEDGE_DEGREES = 15f
 private const val GAP_DEGREES = 3f
 private const val MIN_SHARE = 0.06f
 private const val BUSY_SHARE = 0.8f
+private const val TOP_BRIGHTEN = 0.6f
+private const val TOP_PULSE_MILLIS = 2_400L

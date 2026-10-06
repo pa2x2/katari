@@ -144,19 +144,20 @@ internal fun ColumnScope.RecapLongestRunPage(page: StatisticsRecapPage.LongestRu
 @Composable
 internal fun ColumnScope.RecapHoursPage(page: StatisticsRecapPage.Hours) {
     val formats = rememberRecapFormats()
-    val topHour = formats.hour(page.topHour)
+    val topHourText = formats.hour(page.topHour)
     RecapKicker(stringResource(MR.strings.statistics_recap_hours_kicker))
     Spacer(Modifier.weight(1f))
     RecapHourClock(
         hourlyDurationMillis = page.hourlyDurationMillis,
-        centerLabel = topHour,
+        topHour = page.topHour,
+        centerLabel = topHourText,
         hourLabel = formats::hour,
         size = 260.dp,
         order = 1,
         modifier = Modifier.align(Alignment.CenterHorizontally).recapReveal(1),
     )
     Spacer(Modifier.weight(1f))
-    RecapText(stringResource(MR.strings.statistics_recap_your_hour, topHour), RecapTypography.Headline, order = 2)
+    RecapText(stringResource(MR.strings.statistics_recap_your_hour, topHourText), RecapTypography.Headline, order = 2)
     RecapText(
         text = stringResource(
             MR.strings.statistics_recap_hour_window,

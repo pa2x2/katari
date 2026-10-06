@@ -1,5 +1,7 @@
 package eu.kanade.presentation.more.stats.recap.page
 
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import eu.kanade.presentation.more.stats.recap.palette.RecapPalette
@@ -19,7 +21,16 @@ internal fun RecapPage(
     footer: String,
     modifier: Modifier = Modifier,
 ) {
-    RecapPageFrame(palette = palette, footer = footer, modifier = modifier) {
+    RecapPageFrame(
+        palette = palette,
+        footer = footer,
+        modifier = modifier,
+        behind = {
+            if (page is StatisticsRecapPage.Opening) {
+                RecapCoverWall(page.covers, Modifier.fillMaxWidth().fillMaxHeight(OPENING_WALL_HEIGHT))
+            }
+        },
+    ) {
         when (page) {
             is StatisticsRecapPage.Opening -> RecapOpeningPage(page)
             is StatisticsRecapPage.TotalTime -> RecapTotalTimePage(page, periodTitle)
@@ -42,3 +53,6 @@ internal fun RecapPage(
         }
     }
 }
+
+/** How much of the opening page, from the top, its cover wall takes. */
+private const val OPENING_WALL_HEIGHT = 0.56f
