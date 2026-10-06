@@ -23,7 +23,7 @@ data class StatisticsRecapActivity(
 /** One timed segment of an entry, ordered by [startedAtEpochMillis]. */
 data class StatisticsRecapSegment(
     val entryId: Long,
-    /** Null when the item was deleted or the segment wasn't tied to one. */
+    /** Null when the item was deleted, its number wasn't recognised, or the segment wasn't tied to one. */
     val itemNumber: Double?,
     val localDate: String,
     val startedAtEpochMillis: Long,

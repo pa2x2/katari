@@ -34,7 +34,8 @@ class StatisticsRecapRepositoryImpl(
             ) { entryId, itemNumber, localDate, startedAt, endedAt, duration, timeZoneId ->
                 StatisticsRecapSegment(
                     entryId = entryId,
-                    itemNumber = itemNumber,
+                    // Chapters store an unrecognised number as -1.
+                    itemNumber = itemNumber?.takeIf { it >= 0 },
                     localDate = localDate,
                     startedAtEpochMillis = startedAt,
                     endedAtEpochMillis = endedAt,
