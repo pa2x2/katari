@@ -46,7 +46,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppBarActions
@@ -391,7 +390,6 @@ private fun MigrationListItemAction(
                 DropdownMenu(
                     expanded = menuExpanded,
                     onDismissRequest = closeMenu,
-                    offset = DpOffset(8.dp, (-56).dp),
                 ) {
                     DropdownMenuItem(
                         text = { Text(stringResource(MR.strings.migrationListScreen_searchManuallyActionLabel)) },

@@ -26,15 +26,14 @@ import tachiyomi.presentation.core.i18n.stringResource
 import androidx.compose.material3.DropdownMenu as ComposeDropdownMenu
 
 /**
- * DropdownMenu but overlaps anchor and has width constraints to better
- * match non-Compose implementation.
+ * DropdownMenu with the fixed width of the app's menus.
  */
 @Composable
 fun DropdownMenu(
     expanded: Boolean,
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier,
-    offset: DpOffset = DpOffset(8.dp, (-56).dp),
+    offset: DpOffset = DpOffset.Zero,
     scrollState: ScrollState = rememberScrollState(),
     properties: PopupProperties = PopupProperties(focusable = true),
     content: @Composable ColumnScope.() -> Unit,
