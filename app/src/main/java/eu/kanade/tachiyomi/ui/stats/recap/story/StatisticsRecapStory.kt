@@ -36,6 +36,7 @@ data class StatisticsRecapStory(
  * Builds the story of [period]. Every page decides from the activity alone whether it has something to tell, so a
  * quiet or partly tracked period just gets a shorter story.
  *
+ * @param activity [period]'s activity, already narrowed with [StatisticsRecapPeriod.scope].
  * @param previous the same span of the period before with its totals, or null when there is none.
  * @param hiddenEntryIds titles to leave unnamed and unshown; their time still counts.
  */
@@ -46,8 +47,7 @@ fun buildStatisticsRecapStory(
     hiddenEntryIds: Set<Long>,
     contributions: List<EntryStatisticsContribution>,
 ): StatisticsRecapStory {
-    val scoped = (period as? StatisticsRecapPeriod.Window)?.type?.let { activity.onlyType(it) } ?: activity
-    val index = StatisticsRecapIndex(period, scoped, hiddenEntryIds, contributions)
+    val index = StatisticsRecapIndex(period, activity, hiddenEntryIds, contributions)
     val pages = when (period) {
         is StatisticsRecapPeriod.Year -> with(index) {
             listOfNotNull(

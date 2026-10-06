@@ -10,6 +10,7 @@ import eu.kanade.tachiyomi.ui.stats.recap.delivery.editionKey
 import eu.kanade.tachiyomi.ui.stats.recap.delivery.newYearRecap
 import eu.kanade.tachiyomi.ui.stats.recap.period.StatisticsRecapPeriod
 import eu.kanade.tachiyomi.ui.stats.recap.period.previous
+import eu.kanade.tachiyomi.ui.stats.recap.period.scope
 import eu.kanade.tachiyomi.ui.stats.recap.story.StatisticsRecapStory
 import eu.kanade.tachiyomi.ui.stats.recap.story.StatisticsRecapTitle
 import eu.kanade.tachiyomi.ui.stats.recap.story.buildStatisticsRecapStory
@@ -81,7 +82,9 @@ class StatisticsRecapScreenModel(
     }
 
     private suspend fun load() = withIOContext {
-        val activity = recapRepository.getActivity(profileId, period.start.toString(), period.end.toString())
+        val activity = period.scope(
+            recapRepository.getActivity(profileId, period.start.toString(), period.end.toString()),
+        )
         val previous = period.previous()?.let { previous ->
             previous to recapRepository.getPeriodTotals(profileId, previous.start.toString(), previous.end.toString())
         }

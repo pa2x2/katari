@@ -109,15 +109,3 @@ internal class StatisticsRecapIndex(
         }
     }
 }
-
-/** Only [type]'s activity, for a summary card of one type. */
-internal fun StatisticsRecapActivity.onlyType(type: EntryType): StatisticsRecapActivity {
-    val entries = entries.filter { it.type == type }
-    val ids = entries.mapTo(HashSet()) { it.id }
-    return copy(
-        segments = segments.filter { it.entryId in ids },
-        entries = entries,
-        completions = completions.filter { it.type == type },
-        finishedEntryIds = finishedEntryIds.filterTo(HashSet()) { it in ids },
-    )
-}
