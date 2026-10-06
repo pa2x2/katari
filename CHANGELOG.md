@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.40.0] - 2026-10-06
+## [1.14.0] - 2026-10-06
 
 ### ✨ Added
 
@@ -667,7 +667,7 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v1.13.3...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/v1.14.0...HEAD
 [1.14.0]: https://github.com/pa2x2/katari/releases/tag/v1.14.0
 [1.13.3]: https://github.com/pa2x2/katari/releases/tag/v1.13.3
 [1.13.2]: https://github.com/pa2x2/katari/releases/tag/v1.13.2
