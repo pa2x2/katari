@@ -668,6 +668,7 @@ immersive-media loading and more reliable downloads.
 - Cleared selected chapters after they are queued for download.
 
 [Unreleased]: https://github.com/pa2x2/katari/compare/v1.13.3...HEAD
+[1.14.0]: https://github.com/pa2x2/katari/releases/tag/v1.14.0
 [1.13.3]: https://github.com/pa2x2/katari/releases/tag/v1.13.3
 [1.13.2]: https://github.com/pa2x2/katari/releases/tag/v1.13.2
 [1.13.1]: https://github.com/pa2x2/katari/releases/tag/v1.13.1
