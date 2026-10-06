@@ -18,7 +18,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.more.stats.recap.components.LocalRecapPalette
 import eu.kanade.presentation.more.stats.recap.components.RecapBars
-import eu.kanade.presentation.more.stats.recap.components.RecapCountUp
 import eu.kanade.presentation.more.stats.recap.components.RecapCover
 import eu.kanade.presentation.more.stats.recap.components.RecapHourClock
 import eu.kanade.presentation.more.stats.recap.components.RecapKicker
@@ -26,8 +25,9 @@ import eu.kanade.presentation.more.stats.recap.components.RecapText
 import eu.kanade.presentation.more.stats.recap.components.RecapTypography
 import eu.kanade.presentation.more.stats.recap.components.RecapYearCalendar
 import eu.kanade.presentation.more.stats.recap.components.recapDurationText
-import eu.kanade.presentation.more.stats.recap.components.recapReveal
 import eu.kanade.presentation.more.stats.recap.components.rememberRecapFormats
+import eu.kanade.presentation.more.stats.recap.motion.RecapCountUp
+import eu.kanade.presentation.more.stats.recap.motion.recapReveal
 import eu.kanade.tachiyomi.ui.stats.days
 import eu.kanade.tachiyomi.ui.stats.recap.story.StatisticsRecapPage
 import tachiyomi.core.common.i18n.pluralStringResource
@@ -89,6 +89,7 @@ internal fun ColumnScope.RecapMonthTimePage(page: StatisticsRecapPage.MonthTime)
         labels = page.months.map { formats.narrowMonth(it.first) },
         highlight = page.months.indexOfFirst { it.first == page.biggest },
         height = 240.dp,
+        order = 1,
     )
     Spacer(Modifier.weight(1f))
     RecapText(
@@ -151,6 +152,7 @@ internal fun ColumnScope.RecapHoursPage(page: StatisticsRecapPage.Hours) {
         centerLabel = topHour,
         hourLabel = formats::hour,
         size = 260.dp,
+        order = 1,
         modifier = Modifier.align(Alignment.CenterHorizontally).recapReveal(1),
     )
     Spacer(Modifier.weight(1f))

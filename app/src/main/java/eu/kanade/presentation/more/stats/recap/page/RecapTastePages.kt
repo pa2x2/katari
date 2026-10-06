@@ -13,19 +13,21 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.more.stats.components.rememberStatisticsDurationFormatter
 import eu.kanade.presentation.more.stats.recap.components.LocalRecapPalette
-import eu.kanade.presentation.more.stats.recap.components.LocalRecapReveal
 import eu.kanade.presentation.more.stats.recap.components.RecapKicker
 import eu.kanade.presentation.more.stats.recap.components.RecapText
 import eu.kanade.presentation.more.stats.recap.components.RecapTypography
-import eu.kanade.presentation.more.stats.recap.components.recapReveal
 import eu.kanade.presentation.more.stats.recap.components.recapTypeName
 import eu.kanade.presentation.more.stats.recap.components.rememberRecapFormats
+import eu.kanade.presentation.more.stats.recap.motion.RECAP_GROW_MILLIS
+import eu.kanade.presentation.more.stats.recap.motion.recapReveal
+import eu.kanade.presentation.more.stats.recap.motion.rememberRecapEntrance
 import eu.kanade.tachiyomi.ui.stats.recap.story.StatisticsRecapPage
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -87,11 +89,11 @@ internal fun ColumnScope.RecapTypesPage(page: StatisticsRecapPage.Types) {
 @Composable
 internal fun ColumnScope.RecapGenresPage(page: StatisticsRecapPage.Genres) {
     val palette = LocalRecapPalette.current
-    val reveal = LocalRecapReveal.current
     val topPercent = page.genres.first().percent.coerceAtLeast(1)
     RecapKicker(stringResource(MR.strings.statistics_recap_genres_kicker))
     Column(verticalArrangement = Arrangement.spacedBy(14.dp), modifier = Modifier.padding(top = 12.dp)) {
         page.genres.forEachIndexed { index, genre ->
+            val grow by rememberRecapEntrance(index + 1, RECAP_GROW_MILLIS)
             Column(verticalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.recapReveal(index + 1)) {
                 RecapText(
                     text = genre.name,
@@ -100,7 +102,7 @@ internal fun ColumnScope.RecapGenresPage(page: StatisticsRecapPage.Genres) {
                 )
                 Box(
                     Modifier
-                        .fillMaxWidth(genre.percent.toFloat() / topPercent * reveal.value.coerceIn(0.01f, 1f))
+                        .fillMaxWidth(genre.percent.toFloat() / topPercent * grow.coerceAtLeast(0.01f))
                         .height(6.dp)
                         .background(if (index == 0) palette.accent else palette.accent.copy(alpha = 0.5f), BarShape),
                 )

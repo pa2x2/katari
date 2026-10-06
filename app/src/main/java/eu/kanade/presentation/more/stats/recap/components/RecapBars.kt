@@ -10,23 +10,30 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import eu.kanade.presentation.more.stats.recap.motion.RECAP_GROW_MILLIS
+import eu.kanade.presentation.more.stats.recap.motion.rememberRecapEntrance
 
-/** Vertical bars that grow in with the page, the [highlight] one in full accent and the rest dimmed. */
+/**
+ * Vertical bars that grow in at step [order] of the page's entrance, the [highlight] one in full accent and the rest
+ * dimmed.
+ */
 @Composable
 internal fun RecapBars(
     values: List<Long>,
     labels: List<String>,
     highlight: Int,
     height: Dp,
+    order: Int,
     modifier: Modifier = Modifier,
 ) {
     val palette = LocalRecapPalette.current
-    val reveal = LocalRecapReveal.current
+    val grow by rememberRecapEntrance(order, RECAP_GROW_MILLIS)
     val max = values.maxOrNull()?.coerceAtLeast(1L) ?: 1L
     Row(
         horizontalArrangement = Arrangement.spacedBy(5.dp),
@@ -42,7 +49,7 @@ internal fun RecapBars(
                     contentAlignment = Alignment.BottomCenter,
                     modifier = Modifier.weight(1f).fillMaxWidth(),
                 ) {
-                    val share = maxOf(MIN_SHARE, value.toFloat() / max) * reveal.value.coerceIn(0f, 1f)
+                    val share = maxOf(MIN_SHARE, value.toFloat() / max) * grow
                     Box(
                         Modifier
                             .fillMaxWidth()

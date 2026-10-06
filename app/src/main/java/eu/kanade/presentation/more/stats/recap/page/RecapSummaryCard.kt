@@ -18,9 +18,9 @@ import eu.kanade.presentation.more.stats.recap.components.RecapFormats
 import eu.kanade.presentation.more.stats.recap.components.RecapKicker
 import eu.kanade.presentation.more.stats.recap.components.RecapText
 import eu.kanade.presentation.more.stats.recap.components.RecapTypography
-import eu.kanade.presentation.more.stats.recap.components.recapReveal
 import eu.kanade.presentation.more.stats.recap.components.recapTitleTarget
 import eu.kanade.presentation.more.stats.recap.components.rememberRecapFormats
+import eu.kanade.presentation.more.stats.recap.motion.recapReveal
 import eu.kanade.tachiyomi.ui.stats.recap.story.StatisticsRecapSummary
 import eu.kanade.tachiyomi.ui.stats.recap.story.SummaryFigure
 import tachiyomi.i18n.*

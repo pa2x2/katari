@@ -23,31 +23,43 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.more.stats.recap.palette.RecapPalette
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
-/** One bar per page: pages already seen are full, the current one fills as it plays. */
+/**
+ * One bar per page: pages already seen are full, the current one fills as it plays.
+ *
+ * @param progress how far the current page has played, read on every frame while drawing only.
+ */
 @Composable
-internal fun RecapProgressBars(count: Int, index: Int, progress: Float, color: Color, modifier: Modifier = Modifier) {
+internal fun RecapProgressBars(
+    count: Int,
+    index: Int,
+    progress: () -> Float,
+    color: Color,
+    modifier: Modifier = Modifier,
+) {
     Row(horizontalArrangement = Arrangement.spacedBy(3.dp), modifier = modifier.fillMaxWidth().height(3.dp)) {
         repeat(count) { page ->
-            val filled = when {
-                page < index -> 1f
-                page == index -> progress.coerceIn(0f, 1f)
-                else -> 0f
-            }
             Box(
                 Modifier
                     .weight(1f)
                     .fillMaxHeight()
                     .clip(RoundedCornerShape(2.dp))
-                    .background(color.copy(alpha = 0.3f)),
-            ) {
-                Box(Modifier.fillMaxWidth(filled).fillMaxHeight().background(color))
-            }
+                    .background(color.copy(alpha = 0.3f))
+                    .drawBehind {
+                        val filled = when {
+                            page < index -> 1f
+                            page == index -> progress().coerceIn(0f, 1f)
+                            else -> 0f
+                        }
+                        drawRect(color, size = size.copy(width = size.width * filled))
+                    },
+            )
         }
     }
 }

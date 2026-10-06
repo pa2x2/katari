@@ -1,6 +1,5 @@
 package eu.kanade.presentation.more.stats.recap.components
 
-import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
@@ -13,12 +12,14 @@ import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import eu.kanade.presentation.more.stats.recap.motion.RECAP_GROW_MILLIS
+import eu.kanade.presentation.more.stats.recap.motion.rememberRecapEntrance
 import kotlin.math.cos
 import kotlin.math.sin
 
 /**
  * A day as a clock face: one wedge per hour, growing outward with the time spent in it, midnight at the top. The
- * busiest hours are drawn in full accent.
+ * busiest hours are drawn in full accent. The wedges grow out at step [order] of the page's entrance.
  *
  * @param hourlyDurationMillis 24 values from midnight.
  */
@@ -28,20 +29,20 @@ internal fun RecapHourClock(
     centerLabel: String,
     hourLabel: (Int) -> String,
     size: Dp,
+    order: Int,
     modifier: Modifier = Modifier,
 ) {
     val palette = LocalRecapPalette.current
-    val reveal = LocalRecapReveal.current
+    val grow = rememberRecapEntrance(order, RECAP_GROW_MILLIS)
     val measurer = rememberTextMeasurer()
     val max = hourlyDurationMillis.max().coerceAtLeast(1L).toFloat()
     Canvas(modifier.size(size)) {
-        val grow = FastOutSlowInEasing.transform(reveal.value.coerceIn(0f, 1f))
         val center = this.center
         val outer = this.size.minDimension / 2f - LABEL_SPACE.toPx()
         val inner = outer * INNER_RATIO
         hourlyDurationMillis.forEachIndexed { hour, duration ->
             val share = duration / max
-            val radius = inner + (outer - inner) * maxOf(MIN_SHARE, share) * grow
+            val radius = inner + (outer - inner) * maxOf(MIN_SHARE, share) * grow.value
             val start = hour * WEDGE_DEGREES - 90f + GAP_DEGREES / 2f
             val sweep = WEDGE_DEGREES - GAP_DEGREES
             val path = Path().apply {

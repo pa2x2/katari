@@ -1,9 +1,6 @@
 package eu.kanade.presentation.more.stats.recap.story
 
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
@@ -22,7 +19,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -30,6 +26,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.withFrameMillis
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
@@ -41,28 +38,32 @@ import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.currentStateAsState
-import eu.kanade.presentation.more.stats.recap.components.LocalRecapReveal
 import eu.kanade.presentation.more.stats.recap.components.LocalRecapTitleTargets
 import eu.kanade.presentation.more.stats.recap.components.RecapTitleTargets
+import eu.kanade.presentation.more.stats.recap.motion.LocalRecapClock
+import eu.kanade.presentation.more.stats.recap.motion.RecapClock
 import eu.kanade.presentation.more.stats.recap.page.RecapPage
 import eu.kanade.presentation.more.stats.recap.palette.RecapPalette
 import eu.kanade.tachiyomi.ui.stats.recap.story.StatisticsRecapPage
 import eu.kanade.tachiyomi.ui.stats.recap.story.StatisticsRecapStory
 import eu.kanade.tachiyomi.ui.stats.recap.story.StatisticsRecapTitle
+import eu.kanade.tachiyomi.util.system.animatorDurationScale
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import kotlin.math.roundToInt
 
 /**
- * Plays a recap story: each page enters, stays a while and moves on by itself; tapping the left third goes back,
- * elsewhere forward; holding pauses, and holding a title offers to hide it; swiping down closes. The story stops on
- * its last page, the summary card.
+ * Plays a recap story: each page enters, stays a while and moves on by itself, except the year's opening page, which
+ * waits for a tap. Tapping the left third goes back, elsewhere forward; holding pauses, and holding a title offers to
+ * hide it; swiping down closes. The story stops on its last page, the summary card.
  *
  * @param paletteOf the colours of a page.
  * @param title how the period reads above the story and on its pages, such as "2026".
@@ -91,12 +92,12 @@ internal fun RecapStoryPlayer(
     val background by animateColorAsState(palette.background, label = "recapBackground")
     val backgroundEnd by animateColorAsState(palette.backgroundEnd, label = "recapBackgroundEnd")
 
+    val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val layer = rememberGraphicsLayer()
     val targets = remember { RecapTitleTargets() }
-    val reveal = remember { Animatable(0f) }
-    var progress by remember { mutableFloatStateOf(0f) }
-    var replays by remember { mutableIntStateOf(0) }
+    val clock = remember { RecapClock(still = context.animatorDurationScale == 0f) }
+    val waitsForTap = page is StatisticsRecapPage.Opening
     var holding by remember { mutableStateOf(false) }
     var menuOpen by remember { mutableStateOf(false) }
     var hiddenDialogOpen by remember { mutableStateOf(false) }
@@ -109,35 +110,42 @@ internal fun RecapStoryPlayer(
             !lifecycleState.isAtLeast(Lifecycle.State.RESUMED),
     )
 
-    LaunchedEffect(current, replays, pages.size) {
-        progress = 0f
-        reveal.snapTo(0f)
-        launch { reveal.animateTo(1f, tween(REVEAL_MILLIS, easing = LinearEasing)) }
-        var elapsed = 0L
+    LaunchedEffect(clock) {
         var last = withFrameMillis { it }
-        while (elapsed < PAGE_MILLIS) {
+        while (true) {
             val now = withFrameMillis { it }
-            if (!paused) elapsed += now - last
+            if (!paused) clock.advance(now - last)
             last = now
-            progress = elapsed / PAGE_MILLIS.toFloat()
         }
-        if (current < pages.lastIndex) index = current + 1
+    }
+
+    // The page restarts with the index rather than in an effect afterwards, so a new page's first frame doesn't show
+    // it already entered.
+    fun goTo(target: Int) {
+        index = target
+        clock.restartPage()
+    }
+
+    LaunchedEffect(current, waitsForTap) {
+        if (waitsForTap) return@LaunchedEffect
+        snapshotFlow { clock.pageMillis >= PAGE_MILLIS }.first { it }
+        if (current < pages.lastIndex) goTo(current + 1)
     }
 
     // The tap handler outlives compositions, so these read the page index when called rather than capturing it.
     fun previous() {
-        if (index > 0) index-- else replays++
+        if (index > 0) goTo(index - 1)
     }
 
     fun next() {
-        if (index < pages.lastIndex) index++
+        if (index < pages.lastIndex) goTo(index + 1)
     }
 
     fun share() {
         scope.launch {
             sharing = true
             try {
-                reveal.snapTo(1f)
+                clock.skipEntrance()
                 // Let the finished entrance draw into the layer before reading it back.
                 withFrameMillis {}
                 withFrameMillis {}
@@ -158,7 +166,7 @@ internal fun RecapStoryPlayer(
                 RecapProgressBars(
                     count = pages.size,
                     index = current,
-                    progress = progress,
+                    progress = { if (waitsForTap) 0f else clock.pageMillis / PAGE_MILLIS.toFloat() },
                     color = palette.ink,
                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
                 )
@@ -218,7 +226,7 @@ internal fun RecapStoryPlayer(
                     },
             ) {
                 CompositionLocalProvider(
-                    LocalRecapReveal provides reveal.asState(),
+                    LocalRecapClock provides clock,
                     LocalRecapTitleTargets provides targets,
                 ) {
                     RecapPageFit(Modifier.fillMaxSize()) {
@@ -248,10 +256,7 @@ internal fun RecapStoryPlayer(
                 canReplay = pages.size > 1,
                 palette = palette,
                 onShare = ::share,
-                onReplay = {
-                    index = 0
-                    replays++
-                },
+                onReplay = { goTo(0) },
             )
         }
     }
@@ -279,6 +284,5 @@ private fun HideTitleMenu(offer: Pair<Long, Offset>?, onHide: (Long) -> Unit, on
     }
 }
 
-private const val REVEAL_MILLIS = 1_100
 private const val PAGE_MILLIS = 8_000L
 private val CLOSE_DRAG = 120.dp

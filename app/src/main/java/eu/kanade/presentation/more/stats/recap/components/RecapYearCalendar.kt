@@ -11,6 +11,8 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
+import eu.kanade.presentation.more.stats.recap.motion.RECAP_GROW_MILLIS
+import eu.kanade.presentation.more.stats.recap.motion.rememberRecapEntrance
 import java.time.LocalDate
 import java.time.YearMonth
 
@@ -28,7 +30,7 @@ internal fun RecapYearCalendar(
     modifier: Modifier = Modifier,
 ) {
     val palette = LocalRecapPalette.current
-    val reveal = LocalRecapReveal.current
+    val reveal = rememberRecapEntrance(order = 3, RECAP_GROW_MILLIS)
     val measurer = rememberTextMeasurer()
     val months = generateSequence(YearMonth.from(periodStart)) { it.plusMonths(1L) }
         .takeWhile { !it.isAfter(YearMonth.from(periodEnd)) }

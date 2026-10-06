@@ -13,14 +13,14 @@ import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.more.stats.components.rememberStatisticsDurationFormatter
 import eu.kanade.presentation.more.stats.recap.components.HOUR_MILLIS
 import eu.kanade.presentation.more.stats.recap.components.MINUTE_MILLIS
-import eu.kanade.presentation.more.stats.recap.components.RecapCountUp
 import eu.kanade.presentation.more.stats.recap.components.RecapCover
 import eu.kanade.presentation.more.stats.recap.components.RecapKicker
 import eu.kanade.presentation.more.stats.recap.components.RecapText
 import eu.kanade.presentation.more.stats.recap.components.RecapTypography
 import eu.kanade.presentation.more.stats.recap.components.recapComparedPeriodText
-import eu.kanade.presentation.more.stats.recap.components.recapReveal
 import eu.kanade.presentation.more.stats.recap.components.rememberRecapFormats
+import eu.kanade.presentation.more.stats.recap.motion.RecapCountUp
+import eu.kanade.presentation.more.stats.recap.motion.recapReveal
 import eu.kanade.tachiyomi.ui.stats.recap.story.StatisticsRecapPage
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.pluralStringResource
