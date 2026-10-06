@@ -49,6 +49,10 @@ internal fun Modifier.recapReveal(order: Int = 0): Modifier {
     }
 }
 
+/** How far a count-up at step [order] has gone, 0 to 1, for anything that should move in step with the number. */
+@Composable
+internal fun rememberRecapCount(order: Int): State<Float> = rememberRecapEntrance(order, COUNT_MILLIS, CountEasing)
+
 /** A number that counts up from zero at step [order] of the page's entrance, slowing as it lands on [value]. */
 @Composable
 internal fun RecapCountUp(
@@ -60,7 +64,7 @@ internal fun RecapCountUp(
     order: Int = 0,
     autoSize: TextAutoSize? = null,
 ) {
-    val progress by rememberRecapEntrance(order, COUNT_MILLIS, CountEasing)
+    val progress by rememberRecapCount(order)
     Text(
         text = format((value * progress).roundToLong()),
         style = style,

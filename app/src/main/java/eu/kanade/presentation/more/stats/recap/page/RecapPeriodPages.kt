@@ -14,6 +14,7 @@ import eu.kanade.presentation.more.stats.components.rememberStatisticsDurationFo
 import eu.kanade.presentation.more.stats.recap.components.HOUR_MILLIS
 import eu.kanade.presentation.more.stats.recap.components.MINUTE_MILLIS
 import eu.kanade.presentation.more.stats.recap.components.RecapCover
+import eu.kanade.presentation.more.stats.recap.components.RecapDayRings
 import eu.kanade.presentation.more.stats.recap.components.RecapKicker
 import eu.kanade.presentation.more.stats.recap.components.RecapText
 import eu.kanade.presentation.more.stats.recap.components.RecapTypography
@@ -36,6 +37,7 @@ internal fun ColumnScope.RecapTotalTimePage(page: StatisticsRecapPage.TotalTime,
     val days = (page.durationMillis / DAY_MILLIS).toInt()
     val hours = (page.durationMillis % DAY_MILLIS / HOUR_MILLIS).toInt()
     if (days > 0) {
+        RecapDayRings(page.durationMillis, order = 1, modifier = Modifier.recapReveal(1))
         RecapText(
             text = if (hours > 0) {
                 stringResource(
