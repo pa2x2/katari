@@ -50,6 +50,7 @@ import androidx.compose.ui.util.fastMap
 import eu.kanade.presentation.components.AppSnackbarHost
 import eu.kanade.presentation.components.MissingChapterCountListItem
 import eu.kanade.presentation.components.relativeDateText
+import eu.kanade.presentation.entry.activity.EntryActivityLine
 import eu.kanade.presentation.entry.components.ChapterDownloadAction
 import eu.kanade.presentation.entry.components.EntryActionRow
 import eu.kanade.presentation.entry.components.EntryBottomActionMenu
@@ -62,9 +63,11 @@ import eu.kanade.presentation.entry.components.ExpandableEntryDescription
 import eu.kanade.presentation.entry.translation.ChapterTranslateAction
 import eu.kanade.presentation.entry.translation.EntryChapterTranslationUi
 import eu.kanade.presentation.entry.updates.EntryUpdatesLabel
+import eu.kanade.presentation.more.stats.components.rememberStatisticsDurationFormatter
 import eu.kanade.presentation.util.formatChapterNumber
 import eu.kanade.tachiyomi.ui.entry.EntryChapterList
 import eu.kanade.tachiyomi.ui.entry.EntryScreenModel
+import eu.kanade.tachiyomi.ui.entry.activity.EntryActivityScreenModel
 import eu.kanade.tachiyomi.ui.entry.entrySelectionActionLabels
 import eu.kanade.tachiyomi.util.system.copyToClipboard
 import mihon.entry.interactions.child.EntryChildProgressLabel
@@ -87,6 +90,8 @@ fun EntryScreen(
     state: EntryScreenModel.State.Success,
     snackbarHostState: SnackbarHostState,
     updatesLabel: EntryUpdatesLabel,
+    activity: EntryActivityScreenModel.State,
+    onActivityClicked: () -> Unit,
     isTabletUi: Boolean,
     chapterSwipeStartAction: LibraryPreferences.ChapterSwipeAction,
     chapterSwipeEndAction: LibraryPreferences.ChapterSwipeAction,
@@ -158,6 +163,8 @@ fun EntryScreen(
             state = state,
             snackbarHostState = snackbarHostState,
             updatesLabel = updatesLabel,
+            activity = activity,
+            onActivityClicked = onActivityClicked,
             chapterSwipeStartAction = chapterSwipeStartAction,
             chapterSwipeEndAction = chapterSwipeEndAction,
             navigateUp = navigateUp,
@@ -211,6 +218,8 @@ fun EntryScreen(
             chapterSwipeStartAction = chapterSwipeStartAction,
             chapterSwipeEndAction = chapterSwipeEndAction,
             updatesLabel = updatesLabel,
+            activity = activity,
+            onActivityClicked = onActivityClicked,
             navigateUp = navigateUp,
             onChapterClicked = onChapterClicked,
             onDownloadChapter = onDownloadChapter,
@@ -263,6 +272,8 @@ private fun EntryScreenSmallImpl(
     state: EntryScreenModel.State.Success,
     snackbarHostState: SnackbarHostState,
     updatesLabel: EntryUpdatesLabel,
+    activity: EntryActivityScreenModel.State,
+    onActivityClicked: () -> Unit,
     chapterSwipeStartAction: LibraryPreferences.ChapterSwipeAction,
     chapterSwipeEndAction: LibraryPreferences.ChapterSwipeAction,
     navigateUp: () -> Unit,
@@ -470,19 +481,24 @@ private fun EntryScreenSmallImpl(
                         key = EntryScreenItem.ACTION_ROW,
                         contentType = EntryScreenItem.ACTION_ROW,
                     ) {
-                        EntryActionRow(
-                            favorite = state.entry.favorite,
-                            trackingCount = state.trackingCount,
-                            updatesLabel = updatesLabel,
-                            onAddToLibraryClicked = onAddToLibraryClicked,
-                            onAddToMergeClicked = onAddToMergeClicked,
-                            onWebViewClicked = onWebViewClicked,
-                            onWebViewLongClicked = onWebViewLongClicked,
-                            onTrackingClicked = onTrackingClicked,
-                            onDuplicatesClicked = onDuplicatesClicked,
-                            onUpdatesClicked = onUpdatesClicked,
-                            onEditCategory = onEditCategoryClicked,
-                        )
+                        // The activity line shares the action row's item so the continue target's list index, which
+                        // counts the items above the chapters, stays the same whether or not the line is shown.
+                        Column {
+                            EntryActionRow(
+                                favorite = state.entry.favorite,
+                                trackingCount = state.trackingCount,
+                                updatesLabel = updatesLabel,
+                                onAddToLibraryClicked = onAddToLibraryClicked,
+                                onAddToMergeClicked = onAddToMergeClicked,
+                                onWebViewClicked = onWebViewClicked,
+                                onWebViewLongClicked = onWebViewLongClicked,
+                                onTrackingClicked = onTrackingClicked,
+                                onDuplicatesClicked = onDuplicatesClicked,
+                                onUpdatesClicked = onUpdatesClicked,
+                                onEditCategory = onEditCategoryClicked,
+                            )
+                            activity.summary?.let { EntryActivityLine(summary = it, onClick = onActivityClicked) }
+                        }
                     }
 
                     item(
@@ -517,6 +533,8 @@ private fun EntryScreenSmallImpl(
                                 entryType = state.entry.type,
                                 chapterCount = chapters.size,
                                 missingChapterCount = state.missingChildCount,
+                                unreadCount = state.chapterProgress.unreadCount,
+                                catchUpMillis = activity.paceMillis?.let { it * state.chapterProgress.unreadCount },
                                 onClick = onFilterClicked,
                             )
                         }
@@ -527,6 +545,7 @@ private fun EntryScreenSmallImpl(
                             memberTitleById = state.memberTitleById,
                             chapters = listItem,
                             childProgressLabels = state.childProgressLabels,
+                            readChapterDurations = activity.readChapterDurations,
                             highlightedChapterId = highlightedChapterId,
                             chapterHighlightGeneration = chapterHighlightGeneration,
                             isAnyChapterSelected = isAnySelected,
@@ -550,6 +569,8 @@ fun EntryScreenLargeImpl(
     state: EntryScreenModel.State.Success,
     snackbarHostState: SnackbarHostState,
     updatesLabel: EntryUpdatesLabel,
+    activity: EntryActivityScreenModel.State,
+    onActivityClicked: () -> Unit,
     chapterSwipeStartAction: LibraryPreferences.ChapterSwipeAction,
     chapterSwipeEndAction: LibraryPreferences.ChapterSwipeAction,
     navigateUp: () -> Unit,
@@ -747,6 +768,7 @@ fun EntryScreenLargeImpl(
                             onUpdatesClicked = onUpdatesClicked,
                             onEditCategory = onEditCategoryClicked,
                         )
+                        activity.summary?.let { EntryActivityLine(summary = it, onClick = onActivityClicked) }
                         ExpandableEntryDescription(
                             defaultExpandState = false,
                             description = state.entry.description,
@@ -788,6 +810,11 @@ fun EntryScreenLargeImpl(
                                         entryType = state.entry.type,
                                         chapterCount = chapters.size,
                                         missingChapterCount = state.missingChildCount,
+                                        unreadCount = state.chapterProgress.unreadCount,
+                                        catchUpMillis = activity.paceMillis?.let {
+                                            it *
+                                                state.chapterProgress.unreadCount
+                                        },
                                         onClick = onFilterButtonClicked,
                                     )
                                 }
@@ -798,6 +825,7 @@ fun EntryScreenLargeImpl(
                                     memberTitleById = state.memberTitleById,
                                     chapters = listItem,
                                     childProgressLabels = state.childProgressLabels,
+                                    readChapterDurations = activity.readChapterDurations,
                                     highlightedChapterId = highlightedChapterId,
                                     chapterHighlightGeneration = chapterHighlightGeneration,
                                     isAnyChapterSelected = isAnySelected,
@@ -929,6 +957,7 @@ private fun LazyListScope.sharedChapterItems(
     memberTitleById: Map<Long, String>,
     chapters: List<EntryChapterList>,
     childProgressLabels: Map<Long, EntryChildProgressLabel>,
+    readChapterDurations: Map<Long, Long>,
     highlightedChapterId: Long?,
     chapterHighlightGeneration: Int,
     isAnyChapterSelected: Boolean,
@@ -957,6 +986,7 @@ private fun LazyListScope.sharedChapterItems(
         },
     ) { item ->
         val haptic = LocalHapticFeedback.current
+        val formatDuration = rememberStatisticsDurationFormatter()
 
         when (item) {
             is EntryChapterList.MemberHeader -> {
@@ -978,6 +1008,9 @@ private fun LazyListScope.sharedChapterItems(
                     date = relativeDateText(item.chapter.dateUpload),
                     readProgress = childProgressLabels[item.chapter.id]
                         ?.let { stringResource(it.resource, *it.args.toTypedArray()) },
+                    duration = readChapterDurations[item.chapter.id]
+                        ?.takeIf { item.chapter.read }
+                        ?.let(formatDuration),
                     scanlator = item.chapter.scanlator.takeIf { !it.isNullOrBlank() },
                     read = item.chapter.read,
                     bookmark = item.chapter.bookmark,

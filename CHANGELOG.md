@@ -1,5 +1,27 @@
 # Changelog
 
+## [Unreleased]
+
+### ✨ Added
+
+- Statistics has yearly and monthly recaps that play as stories, listed under Recaps in its menu.
+- A yearly recap notification arrives on December 1 with the year so far and on January 1 with the whole year.
+- An optional notification after each month opens that month's recap.
+- Recaps can hide chosen titles, and leave out 18+ titles unless you include them.
+- Statistics can share a recap image of the shown period.
+- Statistics can track a daily goal with today's progress and a goal streak.
+- The entry screen shows your time spent on it, how long the unread chapters should take, and the time spent on each chapter.
+- History day headers show that day's time spent and open its activity.
+
+### 🔄 Changed
+
+- Customize moved from the Statistics toolbar into its menu.
+
+### 🐛 Fixed
+
+- The app unlock prompt no longer closes right away and leaves a blank screen.
+- App bar menus open below their button instead of covering it.
+
 ## [1.13.3] - 2026-10-03
 
 ### ✨ Added

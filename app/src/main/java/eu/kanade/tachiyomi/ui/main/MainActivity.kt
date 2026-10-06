@@ -104,6 +104,8 @@ import eu.kanade.tachiyomi.ui.library.update.report.LibraryUpdateReportScreen
 import eu.kanade.tachiyomi.ui.more.OnboardingScreen
 import eu.kanade.tachiyomi.ui.security.BiometricAuthentication.authenticate
 import eu.kanade.tachiyomi.ui.setting.SettingsScreen
+import eu.kanade.tachiyomi.ui.stats.recap.StatisticsRecapNavigation
+import eu.kanade.tachiyomi.ui.stats.recap.StatisticsRecapScreen
 import eu.kanade.tachiyomi.ui.translator.TranslatorScreen
 import eu.kanade.tachiyomi.util.system.dpToPx
 import eu.kanade.tachiyomi.util.system.isBenchmarkBuildType
@@ -754,6 +756,11 @@ class MainActivity : BaseActivity() {
             LibraryUpdateReportNavigation.ACTION_OPEN_REPORT -> {
                 navigator.popUntilRoot()
                 navigator.push(LibraryUpdateReportScreen())
+                null
+            }
+            StatisticsRecapNavigation.ACTION_OPEN_RECAP -> {
+                navigator.popUntilRoot()
+                navigator.push(StatisticsRecapScreen(StatisticsRecapNavigation.periodOf(intent) ?: return false))
                 null
             }
             TranslationSettingsNavigation.ACTION_OPEN_SETTINGS -> {

@@ -2,6 +2,7 @@ package eu.kanade.presentation.more.stats.layout
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -13,6 +14,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.DragHandle
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -24,6 +26,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -35,6 +38,8 @@ import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import eu.kanade.presentation.more.stats.components.rememberStatisticsDurationFormatter
+import eu.kanade.presentation.more.stats.data.StatsRecapNotifications
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
 import tachiyomi.domain.statistics.model.StatisticsCard
@@ -46,11 +51,15 @@ import tachiyomi.presentation.core.i18n.stringResource
 @Composable
 internal fun StatisticsLayoutEditor(
     initial: StatisticsCardLayout,
+    initialGoalMinutes: Int,
+    initialRecapNotifications: StatsRecapNotifications,
     isOverview: Boolean,
     onDismiss: () -> Unit,
-    onSave: (StatisticsCardLayout) -> Unit,
+    onSave: (StatisticsCardLayout, goalMinutes: Int, StatsRecapNotifications) -> Unit,
 ) {
     var draft by remember { mutableStateOf(initial) }
+    var goalMinutes by remember { mutableIntStateOf(initialGoalMinutes) }
+    var recapNotifications by remember { mutableStateOf(initialRecapNotifications) }
     val cards = statisticsCards(isOverview)
     fun sectionCards(group: StatisticsCardGroup) = draft.order.filter { it in cards && it.group == group }
 
@@ -80,7 +89,9 @@ internal fun StatisticsLayoutEditor(
                 TextButton(onClick = { draft = StatisticsCardLayout() }) {
                     Text(stringResource(MR.strings.statistics_reset_layout))
                 }
-                TextButton(onClick = { onSave(draft) }) { Text(stringResource(MR.strings.action_save)) }
+                TextButton(onClick = {
+                    onSave(draft, goalMinutes, recapNotifications)
+                }) { Text(stringResource(MR.strings.action_save)) }
             }
             LazyColumn(
                 state = listState,
@@ -150,7 +161,96 @@ internal fun StatisticsLayoutEditor(
                         }
                     }
                 }
+                item(key = "section-goal") {
+                    Text(
+                        text = stringResource(MR.strings.statistics_goal_section),
+                        modifier = Modifier.padding(top = 16.dp, bottom = 4.dp).semantics { heading() },
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                }
+                item(key = "daily-goal") {
+                    DailyGoalSetting(goalMinutes = goalMinutes, onGoalMinutesChange = { goalMinutes = it })
+                }
+                item(key = "monthly-recap") {
+                    RecapNotificationSetting(
+                        label = stringResource(MR.strings.statistics_monthly_recap),
+                        summary = stringResource(MR.strings.statistics_monthly_recap_summary),
+                        enabled = recapNotifications.monthly,
+                        onEnabledChange = { recapNotifications = recapNotifications.copy(monthly = it) },
+                    )
+                }
+                item(key = "yearly-recap") {
+                    RecapNotificationSetting(
+                        label = stringResource(MR.strings.statistics_yearly_recap),
+                        summary = stringResource(MR.strings.statistics_yearly_recap_summary),
+                        enabled = recapNotifications.yearly,
+                        onEnabledChange = { recapNotifications = recapNotifications.copy(yearly = it) },
+                    )
+                }
             }
         }
     }
 }
+
+@Composable
+private fun DailyGoalSetting(goalMinutes: Int, onGoalMinutesChange: (Int) -> Unit) {
+    val formatDuration = rememberStatisticsDurationFormatter()
+    Column(Modifier.padding(vertical = 4.dp)) {
+        Text(stringResource(MR.strings.statistics_daily_goal))
+        Text(
+            text = stringResource(MR.strings.statistics_daily_goal_summary),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        FlowRow(
+            modifier = Modifier.padding(top = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            DAILY_GOAL_MINUTES.forEach { minutes ->
+                FilterChip(
+                    selected = minutes == goalMinutes,
+                    onClick = { onGoalMinutesChange(minutes) },
+                    label = {
+                        Text(
+                            if (minutes == 0) {
+                                stringResource(MR.strings.statistics_goal_off)
+                            } else {
+                                formatDuration(minutes * 60_000L)
+                            },
+                        )
+                    },
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun RecapNotificationSetting(
+    label: String,
+    summary: String,
+    enabled: Boolean,
+    onEnabledChange: (Boolean) -> Unit,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(Modifier.weight(1f).padding(end = 8.dp)) {
+            Text(label)
+            Text(
+                text = summary,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        Switch(
+            modifier = Modifier.semantics { contentDescription = label },
+            checked = enabled,
+            onCheckedChange = onEnabledChange,
+        )
+    }
+}
+
+private val DAILY_GOAL_MINUTES = listOf(0, 15, 30, 45, 60, 120)

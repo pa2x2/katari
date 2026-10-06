@@ -35,6 +35,10 @@ class EntryStatisticsContractValidationContributor : FeatureValidationContributo
                         type = statisticsProvider.type,
                         accent = statisticsProvider.accent,
                         consumedUnitLabel = statisticsProvider.consumedUnitLabel,
+                        consumedCountPlural = statisticsProvider.consumedCountPlural,
+                        itemPaceCarriesAcrossTitles = statisticsProvider.itemPaceCarriesAcrossTitles,
+                        itemNumberLabel = statisticsProvider.itemNumberLabel,
+                        itemRangeLabel = statisticsProvider.itemRangeLabel,
                     )
                     val feature = DefaultEntryStatisticsFeature(
                         evaluation = evaluation,

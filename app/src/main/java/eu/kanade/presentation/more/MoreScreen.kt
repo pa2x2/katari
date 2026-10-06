@@ -1,6 +1,7 @@
 package eu.kanade.presentation.more
 
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.material.icons.automirrored.outlined.Label
@@ -13,14 +14,18 @@ import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Storage
 import androidx.compose.material.icons.outlined.Sync
 import androidx.compose.material.icons.outlined.VolunteerActivism
+import androidx.compose.material3.Badge
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.more.settings.widget.SwitchPreferenceWidget
 import eu.kanade.presentation.more.settings.widget.TextPreferenceWidget
@@ -47,6 +52,7 @@ fun MoreScreen(
     onClickTracking: () -> Unit,
     onClickCategories: () -> Unit,
     onClickStats: () -> Unit,
+    hasNewRecap: Boolean,
     onClickDataAndStorage: () -> Unit,
     onClickProfiles: () -> Unit,
     onClickSettings: () -> Unit,
@@ -132,6 +138,18 @@ fun MoreScreen(
                 TextPreferenceWidget(
                     title = stringResource(MR.strings.label_stats),
                     icon = Icons.Outlined.QueryStats,
+                    widget = if (hasNewRecap) {
+                        {
+                            val description = stringResource(MR.strings.statistics_recap_new)
+                            Badge(
+                                modifier = Modifier
+                                    .padding(end = 8.dp)
+                                    .semantics { contentDescription = description },
+                            )
+                        }
+                    } else {
+                        null
+                    },
                     onPreferenceClick = onClickStats,
                 )
             }

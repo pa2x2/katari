@@ -12,7 +12,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.entry.entryTypePresentation
+import eu.kanade.presentation.more.stats.components.rememberStatisticsDurationFormatter
 import eu.kanade.tachiyomi.source.entry.EntryType
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.material.SECONDARY_ALPHA
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.pluralStringResource
@@ -24,6 +26,9 @@ fun EntryChapterHeader(
     entryType: EntryType,
     chapterCount: Int?,
     missingChapterCount: Int,
+    unreadCount: Int,
+    /** Expected time to finish the [unreadCount] chapters; null when there's too little to estimate from. */
+    catchUpMillis: Long?,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -48,6 +53,22 @@ fun EntryChapterHeader(
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.onBackground,
         )
+
+        if (unreadCount > 0 && catchUpMillis != null) {
+            val formatDuration = rememberStatisticsDurationFormatter()
+            Text(
+                text = stringResource(
+                    MR.strings.entry_catch_up_estimate,
+                    stringResource(presentation.filterUnconsumedLabel),
+                    unreadCount,
+                    formatDuration(catchUpMillis),
+                ),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
 
         MissingChaptersWarning(missingChapterCount, entryType)
     }

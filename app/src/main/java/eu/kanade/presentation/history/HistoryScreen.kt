@@ -1,6 +1,8 @@
 package eu.kanade.presentation.history
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -17,6 +19,7 @@ import eu.kanade.presentation.components.AppSnackbarHost
 import eu.kanade.presentation.components.SearchToolbar
 import eu.kanade.presentation.components.relativeDateText
 import eu.kanade.presentation.history.components.HistoryListItem
+import eu.kanade.presentation.more.stats.components.rememberStatisticsDurationFormatter
 import eu.kanade.presentation.theme.TachiyomiPreviewTheme
 import eu.kanade.tachiyomi.ui.history.HistoryScreenModel
 import kotlinx.datetime.LocalDate
@@ -32,8 +35,10 @@ import tachiyomi.presentation.core.screens.LoadingScreen
 @Composable
 fun HistoryScreen(
     state: HistoryScreenModel.State,
+    dayDurations: Map<LocalDate, Long>,
     snackbarHostState: SnackbarHostState,
     onSearchQueryChange: (String?) -> Unit,
+    onClickDay: (LocalDate) -> Unit,
     onClickCover: (HistoryUiItem) -> Unit,
     canResume: (HistoryUiItem) -> Boolean,
     onClickResume: (HistoryUiItem) -> Unit,
@@ -81,7 +86,9 @@ fun HistoryScreen(
             } else {
                 HistoryScreenContent(
                     history = it,
+                    dayDurations = dayDurations,
                     contentPadding = contentPadding,
+                    onClickDay = onClickDay,
                     onClickCover = onClickCover,
                     canResume = canResume,
                     onClickResume = onClickResume,
@@ -96,13 +103,16 @@ fun HistoryScreen(
 @Composable
 private fun HistoryScreenContent(
     history: List<HistoryUiModel>,
+    dayDurations: Map<LocalDate, Long>,
     contentPadding: PaddingValues,
+    onClickDay: (LocalDate) -> Unit,
     onClickCover: (HistoryUiItem) -> Unit,
     canResume: (HistoryUiItem) -> Boolean,
     onClickResume: (HistoryUiItem) -> Unit,
     onClickDelete: (HistoryItem) -> Unit,
     onClickFavorite: (HistoryUiItem) -> Unit,
 ) {
+    val formatDuration = rememberStatisticsDurationFormatter()
     FastScrollLazyColumn(
         contentPadding = contentPadding,
     ) {
@@ -118,9 +128,14 @@ private fun HistoryScreenContent(
         ) { item ->
             when (item) {
                 is HistoryUiModel.Header -> {
+                    val duration = dayDurations[item.date]?.takeIf { it > 0L }
                     ListGroupHeader(
-                        modifier = Modifier.animateItem(),
-                        text = relativeDateText(item.date),
+                        modifier = Modifier
+                            .animateItem()
+                            .fillMaxWidth()
+                            .clickable(enabled = duration != null) { onClickDay(item.date) },
+                        text = listOfNotNull(relativeDateText(item.date), duration?.let(formatDuration))
+                            .joinToString(" · "),
                     )
                 }
                 is HistoryUiModel.Item -> {
@@ -155,8 +170,10 @@ internal fun HistoryScreenPreviews(
     TachiyomiPreviewTheme {
         HistoryScreen(
             state = historyState,
+            dayDurations = emptyMap(),
             snackbarHostState = SnackbarHostState(),
             onSearchQueryChange = {},
+            onClickDay = {},
             onClickCover = {},
             canResume = { true },
             onClickResume = {},

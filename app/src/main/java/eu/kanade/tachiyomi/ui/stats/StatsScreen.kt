@@ -1,7 +1,7 @@
 package eu.kanade.tachiyomi.ui.stats
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Tune
+import androidx.compose.material.icons.outlined.Share
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
@@ -17,6 +17,7 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppBarActions
+import eu.kanade.presentation.more.stats.ActivityState
 import eu.kanade.presentation.more.stats.StatsScreenContent
 import eu.kanade.presentation.more.stats.StatsScreenState
 import eu.kanade.presentation.more.stats.components.formatStatisticsWindow
@@ -24,6 +25,10 @@ import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
 import eu.kanade.tachiyomi.ui.history.activity.HistoryActivityScreen
 import eu.kanade.tachiyomi.ui.stats.earlier.StatisticsEarlierActivityScreen
+import eu.kanade.tachiyomi.ui.stats.recap.StatisticsRecapScreen
+import eu.kanade.tachiyomi.ui.stats.recap.list.StatisticsRecapsScreen
+import eu.kanade.tachiyomi.ui.stats.recap.period.StatisticsRecapPeriod
+import eu.kanade.tachiyomi.ui.stats.recap.recapPeriodTitle
 import eu.kanade.tachiyomi.ui.stats.top.StatisticsTopTitlesScreen
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.material.Scaffold
@@ -38,6 +43,7 @@ class StatsScreen : Screen() {
 
         val screenModel = rememberScreenModel { StatsScreenModel() }
         val state by screenModel.state.collectAsState()
+        val newYearRecap by screenModel.newYearRecap.collectAsState()
         val lifecycleOwner = LocalLifecycleOwner.current
 
         DisposableEffect(lifecycleOwner, screenModel) {
@@ -57,13 +63,40 @@ class StatsScreen : Screen() {
                     title = stringResource(MR.strings.label_stats),
                     navigateUp = navigator::pop,
                     actions = {
-                        if (state is StatsScreenState.Success) {
+                        val success = state as? StatsScreenState.Success
+                        if (success != null) {
+                            val shownWindow = (success.activity as? ActivityState.Available)?.data?.window
                             AppBarActions(
-                                listOf(
-                                    AppBar.Action(
+                                listOfNotNull(
+                                    shownWindow?.let { window ->
+                                        AppBar.Action(
+                                            title = stringResource(MR.strings.statistics_share_recap),
+                                            icon = Icons.Outlined.Share,
+                                            onClick = {
+                                                navigator.push(
+                                                    StatisticsRecapScreen(
+                                                        StatisticsRecapPeriod.Window(
+                                                            startDate = window.startDate,
+                                                            end = window.endDate,
+                                                            type = success.selectedType,
+                                                            label = if (window.startDate == null) {
+                                                                allActivity
+                                                            } else {
+                                                                formatStatisticsWindow(window)
+                                                            },
+                                                        ),
+                                                    ),
+                                                )
+                                            },
+                                        )
+                                    },
+                                    AppBar.OverflowAction(
                                         title = stringResource(MR.strings.statistics_customize),
-                                        icon = Icons.Outlined.Tune,
                                         onClick = { customizing = true },
+                                    ),
+                                    AppBar.OverflowAction(
+                                        title = stringResource(MR.strings.statistics_recaps),
+                                        onClick = { navigator.push(StatisticsRecapsScreen()) },
                                     ),
                                 ),
                             )
@@ -85,6 +118,10 @@ class StatsScreen : Screen() {
                 onCustomizingChange = { customizing = it },
                 onRangeSelected = screenModel::setRange,
                 onSaveLayout = screenModel::setCardLayout,
+                onSaveDailyGoal = screenModel::setDailyGoal,
+                onSaveRecapNotifications = screenModel::setRecapNotifications,
+                newYearRecapTitle = newYearRecap?.let { recapPeriodTitle(it) },
+                onOpenNewYearRecap = { newYearRecap?.let { navigator.push(StatisticsRecapScreen(it)) } },
                 onTypeSelected = screenModel::setType,
                 onNavigateActivity = screenModel::navigateActivityByBuckets,
                 onShowToday = screenModel::showToday,

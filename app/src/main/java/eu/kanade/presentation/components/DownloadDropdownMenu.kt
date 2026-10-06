@@ -4,7 +4,6 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.DpOffset
 import eu.kanade.presentation.entry.DownloadAction
 import eu.kanade.presentation.entry.EntryTypePresentation
 import eu.kanade.presentation.entry.entryTypePresentation
@@ -20,38 +19,20 @@ fun DownloadDropdownMenu(
     onDownloadClicked: (DownloadAction) -> Unit,
     bookmarkedDownloadsSupported: Boolean,
     presentation: EntryTypePresentation = null.entryTypePresentation(),
-    offset: DpOffset? = null,
 ) {
-    if (offset != null) {
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = onDismissRequest,
-            modifier = modifier,
-            offset = offset,
-            content = {
-                DownloadDropdownMenuItems(
-                    onDismissRequest = onDismissRequest,
-                    onDownloadClicked = onDownloadClicked,
-                    bookmarkedDownloadsSupported = bookmarkedDownloadsSupported,
-                    presentation = presentation,
-                )
-            },
-        )
-    } else {
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = onDismissRequest,
-            modifier = modifier,
-            content = {
-                DownloadDropdownMenuItems(
-                    onDismissRequest = onDismissRequest,
-                    onDownloadClicked = onDownloadClicked,
-                    bookmarkedDownloadsSupported = bookmarkedDownloadsSupported,
-                    presentation = presentation,
-                )
-            },
-        )
-    }
+    DropdownMenu(
+        expanded = expanded,
+        onDismissRequest = onDismissRequest,
+        modifier = modifier,
+        content = {
+            DownloadDropdownMenuItems(
+                onDismissRequest = onDismissRequest,
+                onDownloadClicked = onDownloadClicked,
+                bookmarkedDownloadsSupported = bookmarkedDownloadsSupported,
+                presentation = presentation,
+            )
+        },
+    )
 }
 
 @Composable

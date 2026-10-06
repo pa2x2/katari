@@ -1,5 +1,6 @@
 package eu.kanade.presentation.more.stats.components
 
+import android.content.Context
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalConfiguration
@@ -47,14 +48,18 @@ internal fun rememberStatisticsDurationFormatter(
 ): (Long) -> String {
     val context = LocalContext.current
     val locale = LocalConfiguration.current.locales[0]
-    return remember(context, locale, precision) {
-        val units = StatisticsDurationUnits(
-            hours = { context.stringResource(MR.strings.hour_short, it) },
-            minutes = { context.stringResource(MR.strings.minute_short, it) },
-            seconds = { context.stringResource(MR.strings.seconds_short, it) },
-            lessThanMinute = context.stringResource(MR.strings.statistics_less_than_minute),
-        )
-        val formatter: (Long) -> String = { formatStatisticsDuration(it, precision, units) }
-        formatter
-    }
+    return remember(context, locale, precision) { context.statisticsDurationFormatter(precision) }
+}
+
+/** For text built outside composition, such as notifications. */
+internal fun Context.statisticsDurationFormatter(
+    precision: StatisticsDurationPrecision = StatisticsDurationPrecision.MINUTES,
+): (Long) -> String {
+    val units = StatisticsDurationUnits(
+        hours = { stringResource(MR.strings.hour_short, it) },
+        minutes = { stringResource(MR.strings.minute_short, it) },
+        seconds = { stringResource(MR.strings.seconds_short, it) },
+        lessThanMinute = stringResource(MR.strings.statistics_less_than_minute),
+    )
+    return { formatStatisticsDuration(it, precision, units) }
 }

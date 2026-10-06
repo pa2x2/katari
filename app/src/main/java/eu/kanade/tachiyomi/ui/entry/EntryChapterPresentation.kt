@@ -24,6 +24,8 @@ data class EntryChapterPresentation(
     val aggregateMissingCount: Int,
     val hasUnreadChapters: Boolean,
     val hasReadChapters: Boolean,
+    /** Chapters left after excluded scanlators but before the read, download and bookmark filters. */
+    val progress: EntryChapterProgress,
     private val rawIndexByChapterId: Map<Long, Int>,
     private val processedIndexByChapterId: Map<Long, Int>,
     private val rowIndexByChapterId: Map<Long, Int>,
@@ -91,6 +93,11 @@ data class EntryChapterPresentation(
     }
 }
 
+data class EntryChapterProgress(
+    val totalCount: Int,
+    val unreadCount: Int,
+)
+
 private const val SELECTION_INCREMENTAL_UPDATE_LIMIT = 32
 
 internal fun buildChapterPresentation(
@@ -121,6 +128,10 @@ internal fun buildChapterPresentation(
         }
         is EntryChildGroupFilterStateResult.Inapplicable -> chapters
     }
+    val progress = EntryChapterProgress(
+        totalCount = groupFilteredChapters.size,
+        unreadCount = groupFilteredChapters.count { !it.chapter.read },
+    )
     val filteredChapters = groupFilteredChapters.applyFilters(entry)
     val itemByChapterId = filteredChapters.associateBy { it.chapter.id }
     val result = childListFeature.displayList(
@@ -140,6 +151,7 @@ internal fun buildChapterPresentation(
             aggregateMissingCount = 0,
             hasUnreadChapters = false,
             hasReadChapters = chapters.any { it.chapter.read },
+            progress = progress,
             rawIndexByChapterId = chapters.indexByChapterId(),
             processedIndexByChapterId = emptyMap(),
             rowIndexByChapterId = emptyMap(),
@@ -171,6 +183,7 @@ internal fun buildChapterPresentation(
         aggregateMissingCount = display.aggregateMissingCount,
         hasUnreadChapters = processedChapters.any { !it.chapter.read },
         hasReadChapters = chapters.any { it.chapter.read },
+        progress = progress,
         rawIndexByChapterId = chapters.indexByChapterId(),
         processedIndexByChapterId = processedChapters.indexByChapterId(),
         rowIndexByChapterId = rows.mapIndexedNotNull { index, row ->

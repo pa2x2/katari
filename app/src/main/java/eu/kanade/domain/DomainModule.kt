@@ -50,6 +50,8 @@ import tachiyomi.data.library.update.LibraryUpdateRulesRepositoryImpl
 import tachiyomi.data.source.SourceRepositoryImpl
 import tachiyomi.data.source.StubSourceRepositoryImpl
 import tachiyomi.data.statistics.StatisticsRepositoryImpl
+import tachiyomi.data.statistics.entry.EntryActivityRepositoryImpl
+import tachiyomi.data.statistics.recap.StatisticsRecapRepositoryImpl
 import tachiyomi.data.track.TrackRepositoryImpl
 import tachiyomi.data.updates.UpdatesRepositoryImpl
 import tachiyomi.domain.category.interactor.CreateCategoryWithName
@@ -97,6 +99,8 @@ import tachiyomi.domain.source.interactor.GetSourcesWithNonLibraryEntries
 import tachiyomi.domain.source.repository.SourceRepository
 import tachiyomi.domain.source.repository.StubSourceRepository
 import tachiyomi.domain.source.service.HiddenSourceIds
+import tachiyomi.domain.statistics.entry.EntryActivityRepository
+import tachiyomi.domain.statistics.recap.StatisticsRecapRepository
 import tachiyomi.domain.statistics.repository.StatisticsRepository
 import tachiyomi.domain.track.interactor.DeleteTrack
 import tachiyomi.domain.track.interactor.GetTracks
@@ -170,6 +174,8 @@ class DomainModule : InjektModule {
         addSingletonFactory<HistoryActivityBackupRepository> { HistoryActivityBackupRepositoryImpl(get()) }
         addSingletonFactory<HistoryActivityRepository> { HistoryActivityRepositoryImpl(get()) }
         addSingletonFactory<StatisticsRepository> { StatisticsRepositoryImpl(get()) }
+        addSingletonFactory<StatisticsRecapRepository> { StatisticsRecapRepositoryImpl(get()) }
+        addSingletonFactory<EntryActivityRepository> { EntryActivityRepositoryImpl(get()) }
         addFactory { GetHistory(get(), get()) }
         addFactory { UpsertHistory(get()) }
         addFactory { RemoveHistory(get()) }

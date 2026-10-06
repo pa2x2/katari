@@ -11,14 +11,18 @@ import eu.kanade.tachiyomi.ui.collapseByVisibleEntry
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import logcat.LogPriority
@@ -48,6 +52,7 @@ import tachiyomi.domain.history.model.HistoryItem
 import tachiyomi.domain.history.model.HistoryWithRelations
 import tachiyomi.domain.history.model.toHistoryItem
 import tachiyomi.domain.source.service.SourceManager
+import tachiyomi.domain.statistics.repository.StatisticsRepository
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
@@ -59,11 +64,30 @@ class HistoryScreenModel(
     private val removeHistory: RemoveHistory = Injekt.get(),
     private val sourceManager: SourceManager = Injekt.get(),
     private val activeProfileProvider: ActiveProfileProvider = Injekt.get(),
+    statisticsRepository: StatisticsRepository = Injekt.get(),
     val snackbarHostState: SnackbarHostState = SnackbarHostState(),
 ) : StateScreenModel<HistoryScreenModel.State>(State()) {
 
     private val _events: Channel<Event> = Channel(Channel.UNLIMITED)
     val events: Flow<Event> = _events.receiveAsFlow()
+
+    /** Time spent on each day with timed activity, counted as the Activity screen for that day counts it. */
+    val dayDurations: StateFlow<Map<LocalDate, Long>> = activeProfileProvider.activeProfileIdFlow
+        .flatMapLatest { profileId ->
+            // Open-ended, so a day that begins while the screen is open still gets its total.
+            statisticsRepository.subscribeActivityTimeline(profileId, null, LAST_LOCAL_DATE)
+        }
+        .map { timeline ->
+            timeline.activity
+                .groupBy { LocalDate.parse(it.localDate) }
+                .mapValues { (_, buckets) -> buckets.sumOf { it.durationMillis } }
+        }
+        .catch { error ->
+            logcat(LogPriority.ERROR, error)
+            emit(emptyMap())
+        }
+        .flowOn(Dispatchers.IO)
+        .stateIn(screenModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
 
     init {
         screenModelScope.launch {
@@ -258,5 +282,9 @@ class HistoryScreenModel(
     sealed interface Event {
         data object InternalError : Event
         data object HistoryCleared : Event
+    }
+
+    private companion object {
+        const val LAST_LOCAL_DATE = "9999-12-31"
     }
 }

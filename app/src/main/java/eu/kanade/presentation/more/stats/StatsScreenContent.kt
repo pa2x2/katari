@@ -24,10 +24,12 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.more.stats.data.StatsActivity
 import eu.kanade.presentation.more.stats.data.StatsRange
+import eu.kanade.presentation.more.stats.data.StatsRecapNotifications
 import eu.kanade.presentation.more.stats.data.StatsTrendPoint
 import eu.kanade.presentation.more.stats.data.StatsType
 import eu.kanade.presentation.more.stats.layout.StatisticsLayoutEditor
 import eu.kanade.presentation.more.stats.layout.statisticsLayoutTab
+import eu.kanade.presentation.more.stats.recap.StatisticsYearRecapBanner
 import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
@@ -52,6 +54,10 @@ fun StatsScreenContent(
     onOpenEarlierActivity: (EntryType?) -> Unit,
     onOpenTopTitles: (EntryType?, StatsActivity) -> Unit,
     onSaveLayout: (Long, String, StatisticsCardLayout) -> Unit,
+    onSaveDailyGoal: (Long, Int) -> Unit,
+    onSaveRecapNotifications: (Long, StatsRecapNotifications) -> Unit,
+    newYearRecapTitle: String?,
+    onOpenNewYearRecap: () -> Unit,
 ) {
     val pages = remember(state.types) { listOf<EntryType?>(null) + state.types.map(StatsType::type) }
     val selectedPage = pages.indexOf(state.selectedType).coerceAtLeast(0)
@@ -76,10 +82,14 @@ fun StatsScreenContent(
         key(state.profileId, tab) {
             StatisticsLayoutEditor(
                 initial = state.cardLayouts[tab] ?: StatisticsCardLayout(),
+                initialGoalMinutes = state.goalMinutes,
+                initialRecapNotifications = state.recapNotifications,
                 isOverview = type == null,
                 onDismiss = { onCustomizingChange(false) },
-                onSave = { layout ->
+                onSave = { layout, goalMinutes, recapNotifications ->
                     onSaveLayout(state.profileId, tab, layout)
+                    onSaveDailyGoal(state.profileId, goalMinutes)
+                    onSaveRecapNotifications(state.profileId, recapNotifications)
                     onCustomizingChange(false)
                 },
             )
@@ -95,6 +105,7 @@ fun StatsScreenContent(
                 end = paddingValues.calculateEndPadding(layoutDirection),
             ),
     ) {
+        newYearRecapTitle?.let { StatisticsYearRecapBanner(title = it, onOpen = onOpenNewYearRecap) }
         PrimaryScrollableTabRow(
             selectedTabIndex = pagerState.currentPage,
             edgePadding = 0.dp,

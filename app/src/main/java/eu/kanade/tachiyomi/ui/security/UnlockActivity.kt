@@ -1,8 +1,6 @@
 package eu.kanade.tachiyomi.ui.security
 
 import android.os.Bundle
-import androidx.biometric.AuthenticationRequest
-import androidx.biometric.AuthenticationResult
 import eu.kanade.tachiyomi.ui.base.activity.BaseActivity
 import eu.kanade.tachiyomi.ui.base.delegate.SecureActivityDelegate
 import logcat.LogPriority
@@ -22,29 +20,24 @@ class UnlockActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         if (BiometricAuthentication.isAuthenticating) return
 
-        val request = AuthenticationRequest.biometricRequest(
-            title = stringResource(MR.strings.unlock_app_title, stringResource(MR.strings.app_name)),
-            authFallbacks = arrayOf(AuthenticationRequest.Biometric.Fallback.DeviceCredential),
-        ) {
-            setIsConfirmationRequired(false)
-        }
-        launchAuthentication(request)
+        launchAuthentication(
+            BiometricAuthentication.promptInfo(
+                title = stringResource(MR.strings.unlock_app_title, stringResource(MR.strings.app_name)),
+                confirmationRequired = false,
+            ),
+        )
     }
 
-    override fun onUnclaimedAuthenticationResult(result: AuthenticationResult) {
+    override fun onUnclaimedAuthenticationResult(result: BiometricAuthenticationResult) {
         when (result) {
-            is AuthenticationResult.Success -> {
+            BiometricAuthenticationResult.Success -> {
                 val profileManager = Injekt.get<ProfileManager>()
                 profileManager.markProfileAuthenticated(profileManager.activeProfileId)
                 SecureActivityDelegate.unlock()
                 finish()
             }
-            is AuthenticationResult.Error -> {
-                logcat(LogPriority.ERROR) { result.errString.toString() }
-                finishAffinity()
-            }
-            is AuthenticationResult.CustomFallbackSelected -> {
-                logcat(LogPriority.ERROR) { "Unexpected custom fallback selected during app unlock" }
+            is BiometricAuthenticationResult.Error -> {
+                logcat(LogPriority.ERROR) { result.message.toString() }
                 finishAffinity()
             }
         }

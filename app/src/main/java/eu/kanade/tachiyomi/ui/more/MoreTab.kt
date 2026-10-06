@@ -29,6 +29,7 @@ import eu.kanade.tachiyomi.ui.category.CategoryScreen
 import eu.kanade.tachiyomi.ui.download.DownloadQueueScreen
 import eu.kanade.tachiyomi.ui.setting.SettingsScreen
 import eu.kanade.tachiyomi.ui.stats.StatsScreen
+import eu.kanade.tachiyomi.ui.stats.recap.delivery.subscribeUnopenedYearRecap
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
@@ -72,6 +73,7 @@ data object MoreTab : Tab {
         val profileManager = remember { Injekt.get<ProfileManager>() }
         val uiPreferences = remember { Injekt.get<UiPreferences>() }
         val downloadQueueState by screenModel.downloadQueueState.collectAsState()
+        val hasNewRecap by screenModel.hasNewRecap.collectAsState()
         MoreScreen(
             downloadQueueStateProvider = { downloadQueueState },
             downloadedOnly = screenModel.downloadedOnly,
@@ -82,6 +84,7 @@ data object MoreTab : Tab {
             onClickTracking = { navigator.push(SettingsTrackingScreen) },
             onClickCategories = { navigator.push(CategoryScreen()) },
             onClickStats = { navigator.push(StatsScreen()) },
+            hasNewRecap = hasNewRecap,
             onClickDataAndStorage = { navigator.push(SettingsScreen(SettingsScreen.Destination.DataAndStorage)) },
             onClickProfiles = {
                 scope.launch {
@@ -124,6 +127,10 @@ private class MoreScreenModel(
             SharingStarted.WhileSubscribed(5_000),
             DownloadQueueState.Stopped,
         )
+
+    val hasNewRecap: StateFlow<Boolean> = subscribeUnopenedYearRecap()
+        .map { it != null }
+        .stateIn(screenModelScope, SharingStarted.WhileSubscribed(5_000), false)
 }
 
 sealed interface DownloadQueueState {

@@ -3,9 +3,11 @@ package eu.kanade.presentation.more.stats
 import androidx.compose.runtime.Immutable
 import eu.kanade.presentation.more.stats.data.StatsActivity
 import eu.kanade.presentation.more.stats.data.StatsActivityWindow
+import eu.kanade.presentation.more.stats.data.StatsDailyGoal
 import eu.kanade.presentation.more.stats.data.StatsLibrary
 import eu.kanade.presentation.more.stats.data.StatsRange
 import eu.kanade.presentation.more.stats.data.StatsReadingCalendar
+import eu.kanade.presentation.more.stats.data.StatsRecapNotifications
 import eu.kanade.presentation.more.stats.data.StatsType
 import eu.kanade.tachiyomi.source.entry.EntryType
 import tachiyomi.domain.statistics.model.StatisticsCardLayout
@@ -25,6 +27,10 @@ sealed interface StatsScreenState {
         val incognito: Boolean,
         val cardLayouts: Map<String, StatisticsCardLayout> = emptyMap(),
         val calendar: StatsReadingCalendar? = null,
+        /** 0 when no daily goal is set. */
+        val goalMinutes: Int = 0,
+        val goal: StatsDailyGoal? = null,
+        val recapNotifications: StatsRecapNotifications = StatsRecapNotifications(),
     ) : StatsScreenState
 }
 

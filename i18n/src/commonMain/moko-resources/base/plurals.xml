@@ -32,6 +32,42 @@
         <item quantity="one">%d title</item>
         <item quantity="other">%d titles</item>
     </plurals>
+    <plurals name="statistics_recap_hours">
+        <item quantity="one">%d hour</item>
+        <item quantity="other">%d hours</item>
+    </plurals>
+    <plurals name="statistics_recap_minutes">
+        <item quantity="one">%d minute</item>
+        <item quantity="other">%d minutes</item>
+    </plurals>
+    <plurals name="statistics_recap_hours_unit">
+        <item quantity="one">hour</item>
+        <item quantity="other">hours</item>
+    </plurals>
+    <plurals name="statistics_recap_minutes_unit">
+        <item quantity="one">minute</item>
+        <item quantity="other">minutes</item>
+    </plurals>
+    <plurals name="statistics_recap_full_days">
+        <item quantity="one">That\'s %d full day, end to end.</item>
+        <item quantity="other">That\'s %d full days, end to end.</item>
+    </plurals>
+    <plurals name="statistics_recap_started_days_with">
+        <item quantity="one">You started it on %2$s and spent %1$d day with it.</item>
+        <item quantity="other">You started it on %2$s and spent %1$d days with it.</item>
+    </plurals>
+    <plurals name="statistics_recap_days_with">
+        <item quantity="one">You spent %d day with it.</item>
+        <item quantity="other">You spent %d days with it.</item>
+    </plurals>
+    <plurals name="statistics_recap_active_days_text">
+        <item quantity="one">You were active on %d day.</item>
+        <item quantity="other">You were active on %d days.</item>
+    </plurals>
+    <plurals name="statistics_recap_new_titles">
+        <item quantity="one">title you\'d never opened before.</item>
+        <item quantity="other">titles you\'d never opened before.</item>
+    </plurals>
     <plurals name="statistics_active_day_count">
         <item quantity="one">%d active day</item>
         <item quantity="other">%d active days</item>
@@ -107,9 +143,17 @@
         <item quantity="other">%d days</item>
     </plurals>
 
-    <plurals name="statistics_completion_count">
-        <item quantity="one">1 completion</item>
-        <item quantity="other">%d completions</item>
+    <plurals name="statistics_goal_met_days">
+        <item quantity="one">Met on %1$d of the last %2$d day</item>
+        <item quantity="other">Met on %1$d of the last %2$d days</item>
+    </plurals>
+    <plurals name="statistics_chapters_read_count">
+        <item quantity="one">%d chapter read</item>
+        <item quantity="other">%d chapters read</item>
+    </plurals>
+    <plurals name="statistics_episodes_watched_count">
+        <item quantity="one">%d episode watched</item>
+        <item quantity="other">%d episodes watched</item>
     </plurals>
 
     <plurals name="activity_completed_chapters">

@@ -20,17 +20,22 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 
+/**
+ * Sessions within a date range, for every title, one type, or one title ([entryIds] with its [entryTitle]).
+ */
 data class HistoryActivityScreen(
     private val startLocalDate: String,
     private val endLocalDate: String,
-    private val typeName: String?,
+    private val typeName: String? = null,
+    private val entryIds: List<Long>? = null,
+    private val entryTitle: String? = null,
 ) : Screen() {
 
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
         val screenModel = rememberScreenModel {
-            HistoryActivityScreenModel(startLocalDate, endLocalDate, typeName)
+            HistoryActivityScreenModel(startLocalDate, endLocalDate, typeName, entryIds)
         }
         val state by screenModel.state.collectAsState()
         val summary by screenModel.summary.collectAsState()
@@ -46,7 +51,8 @@ data class HistoryActivityScreen(
             topBar = { scrollBehavior ->
                 AppBar(
                     title = title,
-                    subtitle = screenModel.type?.let { stringResource(it.entryTypePresentation().displayNameLabel) },
+                    subtitle = entryTitle
+                        ?: screenModel.type?.let { stringResource(it.entryTypePresentation().displayNameLabel) },
                     navigateUp = navigator::pop,
                     scrollBehavior = scrollBehavior,
                 )
@@ -57,6 +63,8 @@ data class HistoryActivityScreen(
                 summary = summary,
                 type = screenModel.type,
                 types = screenModel.types,
+                showSessionType = screenModel.type == null && !screenModel.isEntryScope,
+                showSessionEntry = !screenModel.isEntryScope,
                 paddingValues = paddingValues,
                 onEntryClick = { navigator.push(EntryScreen(it)) },
                 onRetry = screenModel::retry,
