@@ -2,7 +2,6 @@ package eu.kanade.tachiyomi.ui.stats
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Share
-import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
@@ -27,6 +26,9 @@ import eu.kanade.tachiyomi.ui.entry.EntryScreen
 import eu.kanade.tachiyomi.ui.history.activity.HistoryActivityScreen
 import eu.kanade.tachiyomi.ui.stats.earlier.StatisticsEarlierActivityScreen
 import eu.kanade.tachiyomi.ui.stats.recap.StatisticsRecapScreen
+import eu.kanade.tachiyomi.ui.stats.recap.list.StatisticsRecapsScreen
+import eu.kanade.tachiyomi.ui.stats.recap.period.StatisticsRecapPeriod
+import eu.kanade.tachiyomi.ui.stats.recap.recapPeriodTitle
 import eu.kanade.tachiyomi.ui.stats.top.StatisticsTopTitlesScreen
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.material.Scaffold
@@ -41,6 +43,7 @@ class StatsScreen : Screen() {
 
         val screenModel = rememberScreenModel { StatsScreenModel() }
         val state by screenModel.state.collectAsState()
+        val newYearRecap by screenModel.newYearRecap.collectAsState()
         val lifecycleOwner = LocalLifecycleOwner.current
 
         DisposableEffect(lifecycleOwner, screenModel) {
@@ -72,23 +75,28 @@ class StatsScreen : Screen() {
                                             onClick = {
                                                 navigator.push(
                                                     StatisticsRecapScreen(
-                                                        startLocalDate = window.startDate?.toString(),
-                                                        endLocalDate = window.endDate.toString(),
-                                                        typeName = success.selectedType?.name,
-                                                        periodLabel = if (window.startDate == null) {
-                                                            allActivity
-                                                        } else {
-                                                            formatStatisticsWindow(window)
-                                                        },
+                                                        StatisticsRecapPeriod.Window(
+                                                            startDate = window.startDate,
+                                                            end = window.endDate,
+                                                            type = success.selectedType,
+                                                            label = if (window.startDate == null) {
+                                                                allActivity
+                                                            } else {
+                                                                formatStatisticsWindow(window)
+                                                            },
+                                                        ),
                                                     ),
                                                 )
                                             },
                                         )
                                     },
-                                    AppBar.Action(
+                                    AppBar.OverflowAction(
                                         title = stringResource(MR.strings.statistics_customize),
-                                        icon = Icons.Outlined.Tune,
                                         onClick = { customizing = true },
+                                    ),
+                                    AppBar.OverflowAction(
+                                        title = stringResource(MR.strings.statistics_recaps),
+                                        onClick = { navigator.push(StatisticsRecapsScreen()) },
                                     ),
                                 ),
                             )
@@ -111,7 +119,9 @@ class StatsScreen : Screen() {
                 onRangeSelected = screenModel::setRange,
                 onSaveLayout = screenModel::setCardLayout,
                 onSaveDailyGoal = screenModel::setDailyGoal,
-                onSaveMonthlyRecap = screenModel::setMonthlyRecap,
+                onSaveRecapNotifications = screenModel::setRecapNotifications,
+                newYearRecapTitle = newYearRecap?.let { recapPeriodTitle(it) },
+                onOpenNewYearRecap = { newYearRecap?.let { navigator.push(StatisticsRecapScreen(it)) } },
                 onTypeSelected = screenModel::setType,
                 onNavigateActivity = screenModel::navigateActivityByBuckets,
                 onShowToday = screenModel::showToday,

@@ -108,7 +108,11 @@ private fun RowScope.HomeNavigationOverflowBarItem(
             selected = selectedOverflowTab != null,
             onClick = { onOverflowClick?.invoke() ?: onExpandedChange(true) },
             icon = {
-                HomeNavigationMenuIcon(selectedOverflowTab)
+                if (rememberAnyHomeTabBadged(tabs)) {
+                    BadgedBox(badge = { Badge() }) { HomeNavigationMenuIcon(selectedOverflowTab) }
+                } else {
+                    HomeNavigationMenuIcon(selectedOverflowTab)
+                }
             },
             label = {
                 Text(
@@ -209,20 +213,13 @@ fun HomeNavigationIcon(
     modifier: Modifier = Modifier,
     showBadge: Boolean = true,
 ) {
-    if (!showBadge || (tab != HomeScreenTabs.Updates && tab != HomeScreenTabs.Browse)) {
+    val badge = if (showBadge) rememberHomeTabBadge(tab) else null
+    if (badge == null) {
         HomeNavigationBaseIcon(tab, modifier)
         return
     }
 
-    BadgedBox(
-        badge = {
-            when (tab) {
-                HomeScreenTabs.Updates -> UpdatesBadge()
-                HomeScreenTabs.Browse -> BrowseBadge()
-            }
-        },
-        modifier = modifier,
-    ) {
+    BadgedBox(badge = { HomeTabBadgeContent(badge) }, modifier = modifier) {
         HomeNavigationBaseIcon(tab)
     }
 }

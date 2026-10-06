@@ -17,6 +17,8 @@ internal class ProviderBackedEntryStatisticsInteraction(
             consumedUnitLabel = provider.consumedUnitLabel,
             consumedCountPlural = provider.consumedCountPlural,
             itemPaceCarriesAcrossTitles = provider.itemPaceCarriesAcrossTitles,
+            itemNumberLabel = provider.itemNumberLabel,
+            itemRangeLabel = provider.itemRangeLabel,
         )
     }
 }

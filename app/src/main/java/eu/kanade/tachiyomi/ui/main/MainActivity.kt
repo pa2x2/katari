@@ -760,15 +760,7 @@ class MainActivity : BaseActivity() {
             }
             StatisticsRecapNavigation.ACTION_OPEN_RECAP -> {
                 navigator.popUntilRoot()
-                navigator.push(
-                    StatisticsRecapScreen(
-                        startLocalDate = intent.getStringExtra(StatisticsRecapNavigation.EXTRA_START_DATE)
-                            ?: return false,
-                        endLocalDate = intent.getStringExtra(StatisticsRecapNavigation.EXTRA_END_DATE) ?: return false,
-                        typeName = null,
-                        periodLabel = intent.getStringExtra(StatisticsRecapNavigation.EXTRA_PERIOD_LABEL).orEmpty(),
-                    ),
-                )
+                navigator.push(StatisticsRecapScreen(StatisticsRecapNavigation.periodOf(intent) ?: return false))
                 null
             }
             TranslationSettingsNavigation.ACTION_OPEN_SETTINGS -> {

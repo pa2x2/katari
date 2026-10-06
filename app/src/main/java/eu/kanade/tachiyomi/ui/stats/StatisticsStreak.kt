@@ -3,6 +3,7 @@ package eu.kanade.tachiyomi.ui.stats
 import eu.kanade.tachiyomi.source.entry.EntryType
 import tachiyomi.domain.statistics.model.StatisticsActivityTimeline
 import java.time.LocalDate
+import java.time.temporal.ChronoUnit
 
 internal fun StatisticsActivityTimeline.streakEndingOn(
     endDate: LocalDate,
@@ -23,21 +24,29 @@ internal fun StatisticsActivityTimeline.streakEndingOn(
     return streak
 }
 
-/** Longest run of qualifying days that ends on or before [endDate]. */
+/** Length of the longest run of qualifying days that ends on or before [endDate]. */
 internal fun StatisticsActivityTimeline.longestStreakEndingBy(
     endDate: LocalDate,
     type: EntryType? = null,
-): Int {
-    var longest = 0
-    var current = 0
-    var previous: LocalDate? = null
+): Int = longestStreakRunEndingBy(endDate, type)?.days()?.toInt() ?: 0
+
+/** The earliest of the longest runs of qualifying days that end on or before [endDate]; null without any. */
+internal fun StatisticsActivityTimeline.longestStreakRunEndingBy(
+    endDate: LocalDate,
+    type: EntryType? = null,
+): ClosedRange<LocalDate>? {
+    var longest: ClosedRange<LocalDate>? = null
+    var current: ClosedRange<LocalDate>? = null
     qualifyingDays(type).filterNot(endDate::isBefore).sorted().forEach { day ->
-        current = if (previous?.plusDays(1L) == day) current + 1 else 1
-        longest = maxOf(longest, current)
-        previous = day
+        val run = current?.takeIf { it.endInclusive.plusDays(1L) == day }?.let { it.start..day } ?: day..day
+        if (run.days() > (longest?.days() ?: 0L)) longest = run
+        current = run
     }
     return longest
 }
+
+/** How many days a streak run covers, both ends included. */
+internal fun ClosedRange<LocalDate>.days(): Long = ChronoUnit.DAYS.between(start, endInclusive) + 1L
 
 private fun StatisticsActivityTimeline.qualifyingDays(type: EntryType?): Set<LocalDate> = buildSet {
     activity
