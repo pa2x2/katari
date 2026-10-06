@@ -15,7 +15,8 @@ import java.time.YearMonth
 /**
  * A period's activity indexed for the page builders.
  *
- * Hidden titles still count toward every total; they're only left out wherever a page names or shows a title.
+ * Hidden titles still count toward every total; they're only left out wherever a page names or shows a title, or
+ * tells what it is, as genres do.
  *
  * @param hiddenEntryIds titles the user hid from this recap, or that come from 18+ extensions.
  * @param contributions the Statistics types, in the order their counts are listed.

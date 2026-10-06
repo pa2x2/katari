@@ -18,26 +18,38 @@ import java.time.ZoneOffset
 class StatisticsRecapStoryTest {
 
     @Test
-    fun `a hidden title is never named or shown but its time still counts`() {
+    fun `a hidden title is never named, shown or given away by its genres, but its time still counts`() {
         val activity = activity(
             firstActive = "2026-01-02",
             1L to listOf("2026-01-02" to HOUR * 5, "2026-03-04" to HOUR * 4),
             2L to listOf("2026-01-03" to HOUR * 2),
             3L to listOf("2026-02-01" to HOUR),
+            4L to listOf("2026-01-04" to HOUR),
+            genres = mapOf(
+                1L to listOf("Romance", "Smut"),
+                2L to listOf("Romance"),
+                3L to listOf("Romance"),
+                4L to listOf("Romance"),
+            ),
         )
 
         val story = buildStatisticsRecapStory(YEAR_2026, activity, null, hiddenEntryIds = setOf(1L), CONTRIBUTIONS)
 
-        story.page<StatisticsRecapPage.TotalTime>().durationMillis shouldBe HOUR * 12
+        story.page<StatisticsRecapPage.TotalTime>().durationMillis shouldBe HOUR * 13
         story.page<StatisticsRecapPage.TopTitle>().title.entryId shouldBe 2L
-        story.page<StatisticsRecapPage.Opening>().covers.map { it.entryId } shouldBe listOf(2L, 3L)
+        story.page<StatisticsRecapPage.Opening>().covers.map { it.entryId } shouldBe listOf(2L, 3L, 4L)
         story.pages.filterIsInstance<StatisticsRecapPage.Bookend>().map { it.title.entryId } shouldBe listOf(2L, 3L)
         story.page<StatisticsRecapPage.BiggestDay>().let { day ->
             day.date shouldBe LocalDate.parse("2026-01-02")
             day.title shouldBe null
         }
-        story.summary.durationMillis shouldBe HOUR * 12
-        story.summary.titles.map { it.entryId } shouldBe listOf(2L, 3L)
+        story.page<StatisticsRecapPage.Genres>().let { page ->
+            page.genres.map { it.name } shouldBe listOf("Romance")
+            page.topGenreTitles shouldBe 3
+            page.topTitleCount shouldBe 3
+        }
+        story.summary.durationMillis shouldBe HOUR * 13
+        story.summary.titles.map { it.entryId } shouldBe listOf(2L, 3L, 4L)
     }
 
     @Test
@@ -73,6 +85,7 @@ class StatisticsRecapStoryTest {
     private fun activity(
         firstActive: String,
         vararg days: Pair<Long, List<Pair<String, Long>>>,
+        genres: Map<Long, List<String>> = emptyMap(),
     ): StatisticsRecapActivity {
         val segments = days.flatMap { (entryId, entryDays) ->
             entryDays.map { (date, duration) ->
@@ -88,7 +101,7 @@ class StatisticsRecapStoryTest {
                     type = EntryType.MANGA,
                     title = "Title $entryId",
                     cover = EntryCover(entryId, 0L, true, null, 0L),
-                    genres = emptyList(),
+                    genres = genres[entryId].orEmpty(),
                     sourceId = 0L,
                 )
             },

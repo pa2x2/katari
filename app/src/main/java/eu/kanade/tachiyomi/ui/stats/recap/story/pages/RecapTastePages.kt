@@ -31,14 +31,16 @@ internal fun StatisticsRecapIndex.typesPage(): StatisticsRecapPage.Types? {
 }
 
 /**
- * Genres weighted by the time spent in titles carrying them. Sources spell genres differently, so they're matched
- * ignoring case, spaces and punctuation ("Sci-Fi", "sci fi"), and shown as the most-read title spells them.
+ * Genres weighted by the time spent in shown titles carrying them; a hidden title's genres would give away what it
+ * is. Sources spell genres differently, so they're matched ignoring case, spaces and punctuation ("Sci-Fi",
+ * "sci fi"), and shown as the most-read title spells them.
  */
 internal fun StatisticsRecapIndex.genresPage(): StatisticsRecapPage.Genres? {
-    if (totalMillis <= 0L) return null
+    val shownMillis = shownTitles.sumOf { it.durationMillis }
+    if (shownMillis <= 0L) return null
     val names = mutableMapOf<String, String>()
     val durations = mutableMapOf<String, Long>()
-    titles.forEach { title ->
+    shownTitles.forEach { title ->
         genres(title.entryId).map { it.trim() }.filter { it.isNotEmpty() }.distinctBy(::genreKey).forEach { genre ->
             val key = genreKey(genre)
             names.getOrPut(key) { genre.replaceFirstChar { it.titlecase() } }
@@ -47,11 +49,11 @@ internal fun StatisticsRecapIndex.genresPage(): StatisticsRecapPage.Genres? {
     }
     val ranked = durations.entries.sortedByDescending { it.value }.take(GENRES_SHOWN)
     val topKey = ranked.firstOrNull()?.key ?: return null
-    val topTitles = titles.take(TOP_TITLES_FOR_GENRE)
+    val topTitles = shownTitles.take(TOP_TITLES_FOR_GENRE)
     val withTopGenre = topTitles.count { title -> genres(title.entryId).any { genreKey(it) == topKey } }
     if (withTopGenre < MIN_TITLES_WITH_TOP_GENRE) return null
     return StatisticsRecapPage.Genres(
-        genres = ranked.map { GenreShare(names.getValue(it.key), (it.value * 100.0 / totalMillis).roundToInt()) },
+        genres = ranked.map { GenreShare(names.getValue(it.key), (it.value * 100.0 / shownMillis).roundToInt()) },
         topGenreTitles = withTopGenre,
         topTitleCount = topTitles.size,
     )
