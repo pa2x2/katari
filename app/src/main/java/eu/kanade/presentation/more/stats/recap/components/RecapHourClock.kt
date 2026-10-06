@@ -21,9 +21,10 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 /**
- * A day as a clock face: one wedge per hour, growing outward with the time spent in it, midnight at the top. The
- * busiest hours are drawn in full accent, and [topHour] slowly brightens and dims. The wedges grow out at step [order]
- * of the page's entrance.
+ * A day as a clock face: one wedge per hour, growing outward with the time spent in it; hours without any stay empty.
+ * Noon is at the top, as on the 12-hour faces most people read, so the waking day fills the upper half. The busiest
+ * hours are drawn in full accent, and [topHour] slowly brightens and dims. The wedges grow out at step [order] of the
+ * page's entrance.
  *
  * @param hourlyDurationMillis 24 values from midnight.
  */
@@ -50,7 +51,7 @@ internal fun RecapHourClock(
             if (duration <= 0L) return@forEachIndexed
             val share = duration / max
             val radius = inner + (outer - inner) * maxOf(MIN_SHARE, share) * grow.value
-            val start = hour * WEDGE_DEGREES - 90f + GAP_DEGREES / 2f
+            val start = angleOf(hour) + GAP_DEGREES / 2f
             val sweep = WEDGE_DEGREES - GAP_DEGREES
             val path = Path().apply {
                 arcTo(circleBounds(center, radius), start, sweep, forceMoveTo = true)
@@ -69,7 +70,7 @@ internal fun RecapHourClock(
             drawPath(path, color = color)
         }
         listOf(0, 6, 12, 18).forEach { hour ->
-            val angle = Math.toRadians(hour * WEDGE_DEGREES - 90.0)
+            val angle = Math.toRadians(angleOf(hour).toDouble())
             val layout = measurer.measure(hourLabel(hour), RecapTypography.Tiny.copy(color = palette.muted))
             val distance = outer + LABEL_SPACE.toPx() / 2f
             drawText(
@@ -85,6 +86,9 @@ internal fun RecapHourClock(
     }
 }
 
+/** Where [hour] starts on the dial, in degrees clockwise from 3 o'clock as Canvas measures them. */
+private fun angleOf(hour: Int): Float = (hour - TOP_HOUR) * WEDGE_DEGREES - 90f
+
 private fun circleBounds(center: Offset, radius: Float) = Rect(
     center - Offset(radius, radius),
     Size(
@@ -96,6 +100,7 @@ private fun circleBounds(center: Offset, radius: Float) = Rect(
 private val LABEL_SPACE = 22.dp
 private const val INNER_RATIO = 0.36f
 private const val WEDGE_DEGREES = 15f
+private const val TOP_HOUR = 12
 private const val GAP_DEGREES = 3f
 
 /** The least a wedge shows, so a little time still reads as some; no time shows no wedge. */
