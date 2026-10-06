@@ -19,7 +19,7 @@ data class RecapPalette(
     val faint: Color,
 ) {
     companion object {
-        /** Used for pages about no title and while covers load: a deep violet. */
+        /** The recap's own colours, a deep violet, for what points to a recap outside its story. */
         val Default: RecapPalette = fromSeed(0xFF5B3FC4.toInt())
 
         fun fromSeed(seedArgb: Int): RecapPalette {

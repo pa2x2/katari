@@ -1,12 +1,14 @@
 package eu.kanade.tachiyomi.ui.stats.recap
 
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -50,13 +52,17 @@ data class StatisticsRecapScreen(private val period: StatisticsRecapPeriod) : Sc
             is StatisticsRecapScreenModel.State.Success -> {
                 val story = current.story
                 val palettes = remember(seeds) { mutableMapOf<Int, RecapPalette>() }
-                // Pages about no title in particular take the colours of the story's first featured cover.
+                val themeSeed = MaterialTheme.colorScheme.primary.toArgb()
+                val themePalette = remember(themeSeed) { RecapPalette.fromSeed(themeSeed) }
+                // A page about a title takes its cover's colours, and one about no title in particular the first
+                // usable cover's; without a usable colour, and until covers load, pages take the app theme's.
                 val storySeed = story.pages.firstNotNullOfOrNull { page -> page.featured?.let { seeds[it.entryId] } }
                 RecapStoryPlayer(
                     story = story,
                     paletteOf = { page ->
-                        val seed = page.featured?.let { seeds[it.entryId] } ?: storySeed
-                        seed?.let { palettes.getOrPut(it) { RecapPalette.fromSeed(it) } } ?: RecapPalette.Default
+                        val featured = page.featured
+                        val seed = if (featured != null) seeds[featured.entryId] else storySeed
+                        seed?.let { palettes.getOrPut(it) { RecapPalette.fromSeed(it) } } ?: themePalette
                     },
                     title = title,
                     footer = footer,
