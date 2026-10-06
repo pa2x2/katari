@@ -33,10 +33,19 @@ internal fun ColumnScope.RecapTotalTimePage(page: StatisticsRecapPage.TotalTime,
     RecapKicker(stringResource(MR.strings.statistics_recap_spent_in, periodTitle))
     Spacer(Modifier.weight(1f))
     RecapTotalCountUp(page.durationMillis, order = 1)
-    val fullDays = (page.durationMillis / DAY_MILLIS).toInt()
-    if (fullDays > 0) {
+    val days = (page.durationMillis / DAY_MILLIS).toInt()
+    val hours = (page.durationMillis % DAY_MILLIS / HOUR_MILLIS).toInt()
+    if (days > 0) {
         RecapText(
-            text = pluralStringResource(MR.plurals.statistics_recap_full_days, fullDays, fullDays),
+            text = if (hours > 0) {
+                stringResource(
+                    MR.strings.statistics_recap_days_and_hours,
+                    pluralStringResource(MR.plurals.day, days, days),
+                    pluralStringResource(MR.plurals.statistics_recap_hours, hours, hours),
+                )
+            } else {
+                pluralStringResource(MR.plurals.statistics_recap_full_days, days, days)
+            },
             style = RecapTypography.Body,
             order = 2,
         )
