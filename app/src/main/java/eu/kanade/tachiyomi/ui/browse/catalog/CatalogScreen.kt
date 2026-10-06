@@ -589,6 +589,45 @@ private fun CatalogToolbar(
                                 Icons.Filled.ViewModule
                             },
                             onClick = { selectingDisplayMode = true },
+                            menu = {
+                                DropdownMenu(
+                                    expanded = selectingDisplayMode,
+                                    onDismissRequest = { selectingDisplayMode = false },
+                                ) {
+                                    RadioMenuItem(
+                                        text = {
+                                            Text(text = stringResource(MR.strings.action_display_comfortable_grid))
+                                        },
+                                        isChecked = displayMode == LibraryDisplayMode.ComfortableGrid,
+                                    ) {
+                                        selectingDisplayMode = false
+                                        onDisplayModeChange(LibraryDisplayMode.ComfortableGrid)
+                                    }
+                                    RadioMenuItem(
+                                        text = {
+                                            Text(text = stringResource(MR.strings.action_display_comfortable_list))
+                                        },
+                                        isChecked = displayMode == LibraryDisplayMode.ComfortableList,
+                                    ) {
+                                        selectingDisplayMode = false
+                                        onDisplayModeChange(LibraryDisplayMode.ComfortableList)
+                                    }
+                                    RadioMenuItem(
+                                        text = { Text(text = stringResource(MR.strings.action_display_grid)) },
+                                        isChecked = displayMode == LibraryDisplayMode.CompactGrid,
+                                    ) {
+                                        selectingDisplayMode = false
+                                        onDisplayModeChange(LibraryDisplayMode.CompactGrid)
+                                    }
+                                    RadioMenuItem(
+                                        text = { Text(text = stringResource(MR.strings.action_display_list)) },
+                                        isChecked = displayMode == LibraryDisplayMode.List,
+                                    ) {
+                                        selectingDisplayMode = false
+                                        onDisplayModeChange(LibraryDisplayMode.List)
+                                    }
+                                }
+                            },
                         ),
                     )
                     onWebViewClick?.let {
@@ -615,40 +654,6 @@ private fun CatalogToolbar(
                     )
                 },
             )
-
-            DropdownMenu(
-                expanded = selectingDisplayMode,
-                onDismissRequest = { selectingDisplayMode = false },
-            ) {
-                RadioMenuItem(
-                    text = { Text(text = stringResource(MR.strings.action_display_comfortable_grid)) },
-                    isChecked = displayMode == LibraryDisplayMode.ComfortableGrid,
-                ) {
-                    selectingDisplayMode = false
-                    onDisplayModeChange(LibraryDisplayMode.ComfortableGrid)
-                }
-                RadioMenuItem(
-                    text = { Text(text = stringResource(MR.strings.action_display_comfortable_list)) },
-                    isChecked = displayMode == LibraryDisplayMode.ComfortableList,
-                ) {
-                    selectingDisplayMode = false
-                    onDisplayModeChange(LibraryDisplayMode.ComfortableList)
-                }
-                RadioMenuItem(
-                    text = { Text(text = stringResource(MR.strings.action_display_grid)) },
-                    isChecked = displayMode == LibraryDisplayMode.CompactGrid,
-                ) {
-                    selectingDisplayMode = false
-                    onDisplayModeChange(LibraryDisplayMode.CompactGrid)
-                }
-                RadioMenuItem(
-                    text = { Text(text = stringResource(MR.strings.action_display_list)) },
-                    isChecked = displayMode == LibraryDisplayMode.List,
-                ) {
-                    selectingDisplayMode = false
-                    onDisplayModeChange(LibraryDisplayMode.List)
-                }
-            }
         },
     )
 }

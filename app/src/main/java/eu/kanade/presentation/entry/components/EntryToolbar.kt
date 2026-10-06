@@ -71,17 +71,6 @@ fun EntryToolbar(
         navigateUp = navigateUp,
         actions = {
             var downloadExpanded by remember { mutableStateOf(false) }
-            if (onClickDownload != null) {
-                val onDismissRequest = { downloadExpanded = false }
-                DownloadDropdownMenu(
-                    expanded = downloadExpanded,
-                    onDismissRequest = onDismissRequest,
-                    onDownloadClicked = onClickDownload,
-                    bookmarkedDownloadsSupported = bookmarkedDownloadsSupported,
-                    presentation = entryType.entryTypePresentation(),
-                )
-            }
-
             val filterTint = if (hasFilters) MaterialTheme.colorScheme.active else LocalContentColor.current
             AppBarActions(
                 actions = buildList {
@@ -108,6 +97,15 @@ fun EntryToolbar(
                                 title = stringResource(MR.strings.manga_download),
                                 icon = Icons.Outlined.Download,
                                 onClick = { downloadExpanded = !downloadExpanded },
+                                menu = {
+                                    DownloadDropdownMenu(
+                                        expanded = downloadExpanded,
+                                        onDismissRequest = { downloadExpanded = false },
+                                        onDownloadClicked = onClickDownload,
+                                        bookmarkedDownloadsSupported = bookmarkedDownloadsSupported,
+                                        presentation = entryType.entryTypePresentation(),
+                                    )
+                                },
                             ),
                         )
                     }

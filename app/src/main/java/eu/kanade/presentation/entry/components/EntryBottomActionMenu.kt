@@ -57,7 +57,6 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.presentation.components.DownloadDropdownMenu
@@ -393,7 +392,6 @@ fun LibraryBottomActionMenu(
                             onDownloadClicked = onDownloadClicked,
                             bookmarkedDownloadsSupported = bookmarkedDownloadsSupported,
                             presentation = downloadPresentation,
-                            offset = BottomBarMenuDpOffset,
                         )
                     }
                 }
@@ -409,7 +407,6 @@ fun LibraryBottomActionMenu(
                     DropdownMenu(
                         expanded = overflowMenuOpen,
                         onDismissRequest = { overflowMenuOpen = false },
-                        offset = BottomBarMenuDpOffset,
                     ) {
                         DropdownMenuItem(
                             text = { Text(stringResource(MR.strings.action_check_for_updates)) },
@@ -449,5 +446,3 @@ fun LibraryBottomActionMenu(
         }
     }
 }
-
-private val BottomBarMenuDpOffset = DpOffset(0.dp, 0.dp)

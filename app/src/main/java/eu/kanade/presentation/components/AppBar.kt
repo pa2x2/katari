@@ -209,80 +209,87 @@ fun AppBarActions(
 ) {
     var showMenu by remember { mutableStateOf(false) }
 
+    // A menu anchors to its parent layout, so each one shares a Box with its button rather than
+    // anchoring to the whole actions row.
     actions.filterIsInstance<AppBar.Action>().map {
-        TooltipBox(
-            positionProvider = rememberTooltipPositionProvider(TooltipAnchorPosition.Above),
-            tooltip = {
-                PlainTooltip {
-                    Text(it.title)
-                }
-            },
-            state = rememberTooltipState(),
-            focusable = false,
-        ) {
-            IconButton(
-                onClick = it.onClick,
-                enabled = it.enabled,
+        Box {
+            TooltipBox(
+                positionProvider = rememberTooltipPositionProvider(TooltipAnchorPosition.Above),
+                tooltip = {
+                    PlainTooltip {
+                        Text(it.title)
+                    }
+                },
+                state = rememberTooltipState(),
+                focusable = false,
             ) {
-                if (it.badgeCount != null && it.badgeCount > 0) {
-                    BadgedBox(
-                        badge = {
-                            Badge {
-                                Text(it.badgeCount.toString())
-                            }
-                        },
-                    ) {
+                IconButton(
+                    onClick = it.onClick,
+                    enabled = it.enabled,
+                ) {
+                    if (it.badgeCount != null && it.badgeCount > 0) {
+                        BadgedBox(
+                            badge = {
+                                Badge {
+                                    Text(it.badgeCount.toString())
+                                }
+                            },
+                        ) {
+                            Icon(
+                                imageVector = it.icon,
+                                tint = it.iconTint ?: LocalContentColor.current,
+                                contentDescription = it.title,
+                            )
+                        }
+                    } else {
                         Icon(
                             imageVector = it.icon,
                             tint = it.iconTint ?: LocalContentColor.current,
                             contentDescription = it.title,
                         )
                     }
-                } else {
-                    Icon(
-                        imageVector = it.icon,
-                        tint = it.iconTint ?: LocalContentColor.current,
-                        contentDescription = it.title,
-                    )
                 }
             }
+            it.menu?.invoke()
         }
     }
 
     val overflowActions = actions.filterIsInstance<AppBar.OverflowAction>()
     if (overflowActions.isNotEmpty()) {
-        TooltipBox(
-            positionProvider = rememberTooltipPositionProvider(TooltipAnchorPosition.Above),
-            tooltip = {
-                PlainTooltip {
-                    Text(stringResource(MR.strings.action_menu_overflow_description))
-                }
-            },
-            state = rememberTooltipState(),
-            focusable = false,
-        ) {
-            IconButton(
-                onClick = { showMenu = !showMenu },
+        Box {
+            TooltipBox(
+                positionProvider = rememberTooltipPositionProvider(TooltipAnchorPosition.Above),
+                tooltip = {
+                    PlainTooltip {
+                        Text(stringResource(MR.strings.action_menu_overflow_description))
+                    }
+                },
+                state = rememberTooltipState(),
+                focusable = false,
             ) {
-                Icon(
-                    Icons.Outlined.MoreVert,
-                    contentDescription = stringResource(MR.strings.action_menu_overflow_description),
-                )
+                IconButton(
+                    onClick = { showMenu = !showMenu },
+                ) {
+                    Icon(
+                        Icons.Outlined.MoreVert,
+                        contentDescription = stringResource(MR.strings.action_menu_overflow_description),
+                    )
+                }
             }
-        }
 
-        DropdownMenu(
-            expanded = showMenu,
-            onDismissRequest = { showMenu = false },
-        ) {
-            overflowActions.map {
-                DropdownMenuItem(
-                    onClick = {
-                        it.onClick()
-                        showMenu = false
-                    },
-                    text = { Text(it.title, fontWeight = FontWeight.Normal) },
-                )
+            DropdownMenu(
+                expanded = showMenu,
+                onDismissRequest = { showMenu = false },
+            ) {
+                overflowActions.map {
+                    DropdownMenuItem(
+                        onClick = {
+                            it.onClick()
+                            showMenu = false
+                        },
+                        text = { Text(it.title, fontWeight = FontWeight.Normal) },
+                    )
+                }
             }
         }
     }
@@ -460,6 +467,8 @@ sealed interface AppBar {
         val onClick: () -> Unit,
         val enabled: Boolean = true,
         val badgeCount: Int? = null,
+        /** A dropdown anchored to this action's button; the caller owns its expanded state. */
+        val menu: (@Composable () -> Unit)? = null,
     ) : AppBarAction
 
     data class OverflowAction(
