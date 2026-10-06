@@ -17,6 +17,7 @@ import eu.kanade.presentation.more.stats.recap.components.RecapCover
 import eu.kanade.presentation.more.stats.recap.components.RecapDayRings
 import eu.kanade.presentation.more.stats.recap.components.RecapKicker
 import eu.kanade.presentation.more.stats.recap.components.RecapText
+import eu.kanade.presentation.more.stats.recap.components.RecapTotal
 import eu.kanade.presentation.more.stats.recap.components.RecapTypography
 import eu.kanade.presentation.more.stats.recap.components.recapComparedPeriodText
 import eu.kanade.presentation.more.stats.recap.components.rememberRecapFormats
@@ -148,18 +149,21 @@ internal fun ColumnScope.RecapComparisonPage(page: StatisticsRecapPage.Compariso
 }
 
 /**
- * A period's total counting up: whole hours, or minutes below an hour. The unit sits apart from the number, smaller,
- * so the number keeps its size; on its own line the number shrinks only when it can't fit the page's width.
+ * A period's [RecapTotal] counting up. The unit sits apart from the number, smaller, so the number keeps its size; on
+ * its own line the number shrinks only when it can't fit the page's width.
  *
  * @param compact sets the unit beside the number at a smaller size, for the summary card.
  */
 @Composable
 internal fun RecapTotalCountUp(durationMillis: Long, order: Int, compact: Boolean = false) {
-    val inHours = durationMillis >= HOUR_MILLIS
-    val value = if (inHours) durationMillis / HOUR_MILLIS else durationMillis / MINUTE_MILLIS
+    val total = RecapTotal(durationMillis)
+    val value = total.value
     val formats = rememberRecapFormats()
+    // Under a minute there is nothing to count up to, so the bound shows from the start.
+    val lessThanMinute = stringResource(MR.strings.statistics_recap_less_than, formats.number(value))
+    val format: (Long) -> String = if (total.underMinute) { _ -> lessThanMinute } else formats::number
     val unit = pluralStringResource(
-        if (inHours) MR.plurals.statistics_recap_hours_unit else MR.plurals.statistics_recap_minutes_unit,
+        if (total.inHours) MR.plurals.statistics_recap_hours_unit else MR.plurals.statistics_recap_minutes_unit,
         value.toInt(),
     )
     if (compact) {
@@ -169,7 +173,7 @@ internal fun RecapTotalCountUp(durationMillis: Long, order: Int, compact: Boolea
         ) {
             RecapCountUp(
                 value = value,
-                format = formats::number,
+                format = format,
                 style = RecapTypography.Display,
                 order = order,
                 modifier = Modifier.alignByBaseline(),
@@ -180,7 +184,7 @@ internal fun RecapTotalCountUp(durationMillis: Long, order: Int, compact: Boolea
         Column(Modifier.recapReveal(order)) {
             RecapCountUp(
                 value = value,
-                format = formats::number,
+                format = format,
                 style = RecapTypography.Huge,
                 order = order,
                 autoSize = TextAutoSize.StepBased(

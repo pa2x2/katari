@@ -69,15 +69,28 @@ internal fun rememberRecapFormats(): RecapFormats {
     return remember(locale, is24Hour) { RecapFormats(locale, is24Hour) }
 }
 
-/** A period's large total: whole hours, or minutes below an hour. */
+/**
+ * A period's large total: whole hours, or whole minutes below an hour. Sessions of a few seconds count, so a total can
+ * fall short of a minute; it then reads as less than one minute rather than flooring to zero.
+ */
+internal class RecapTotal(durationMillis: Long) {
+    val inHours = durationMillis >= HOUR_MILLIS
+    val underMinute = durationMillis in 1L..<MINUTE_MILLIS
+    val value = when {
+        inHours -> durationMillis / HOUR_MILLIS
+        underMinute -> 1L
+        else -> durationMillis / MINUTE_MILLIS
+    }
+}
+
 @Composable
 internal fun recapDurationText(durationMillis: Long): String {
-    val hours = (durationMillis / HOUR_MILLIS).toInt()
-    return if (hours > 0) {
-        pluralStringResource(MR.plurals.statistics_recap_hours, hours, hours)
-    } else {
-        val minutes = (durationMillis / MINUTE_MILLIS).toInt()
-        pluralStringResource(MR.plurals.statistics_recap_minutes, minutes, minutes)
+    val total = RecapTotal(durationMillis)
+    val value = total.value.toInt()
+    return when {
+        total.underMinute -> stringResource(MR.strings.statistics_recap_less_than_minute)
+        total.inHours -> pluralStringResource(MR.plurals.statistics_recap_hours, value, value)
+        else -> pluralStringResource(MR.plurals.statistics_recap_minutes, value, value)
     }
 }
 

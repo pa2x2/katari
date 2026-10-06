@@ -2360,6 +2360,8 @@
     <string name="statistics_recap_year_title">Your year in Katari</string>
     <string name="statistics_recap_tap_to_start">Tap to start</string>
     <string name="statistics_recap_spent_in">In %s you spent</string>
+    <string name="statistics_recap_less_than">&lt;%s</string>
+    <string name="statistics_recap_less_than_minute">Less than a minute</string>
     <string name="statistics_recap_days_and_hours">That\'s %1$s and %2$s, end to end.</string>
     <string name="statistics_recap_first_title">It started with %s.</string>
     <string name="statistics_recap_last_title">And it ended with %s.</string>
