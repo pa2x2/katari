@@ -23,7 +23,7 @@ import eu.kanade.presentation.more.stats.recap.components.RecapHourClock
 import eu.kanade.presentation.more.stats.recap.components.RecapKicker
 import eu.kanade.presentation.more.stats.recap.components.RecapText
 import eu.kanade.presentation.more.stats.recap.components.RecapTypography
-import eu.kanade.presentation.more.stats.recap.components.RecapYearCalendar
+import eu.kanade.presentation.more.stats.recap.components.calendar.RecapRunCalendar
 import eu.kanade.presentation.more.stats.recap.components.recapDurationText
 import eu.kanade.presentation.more.stats.recap.components.rememberRecapFormats
 import eu.kanade.presentation.more.stats.recap.motion.RecapCountUp
@@ -129,16 +129,14 @@ internal fun ColumnScope.RecapLongestRunPage(page: StatisticsRecapPage.LongestRu
         style = RecapTypography.Body,
         order = 2,
     )
-    Spacer(Modifier.weight(1f))
-    RecapYearCalendar(
+    RecapRunCalendar(
+        run = page.run,
+        activeDates = page.activeDates,
         periodStart = page.periodStart,
         periodEnd = page.periodEnd,
-        activeDates = page.activeDates,
-        run = page.run,
-        monthLabel = formats::narrowMonth,
-        modifier = Modifier.recapReveal(3),
+        order = 4,
+        modifier = Modifier.weight(1f).fillMaxWidth().recapReveal(3),
     )
-    Spacer(Modifier.weight(1f))
 }
 
 @Composable
