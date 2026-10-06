@@ -4,6 +4,7 @@ import android.text.format.DateFormat
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.presentation.util.formatChapterNumber
 import eu.kanade.tachiyomi.source.entry.EntryType
@@ -22,13 +23,19 @@ import java.time.format.TextStyle
 import java.time.temporal.TemporalAccessor
 import java.util.Locale
 
-/** Locale-aware formats recap pages share, built once per locale. */
-internal class RecapFormats(val locale: Locale) {
+/**
+ * Locale-aware formats recap pages share, built once per locale.
+ *
+ * @param is24Hour the phone's 12- or 24-hour setting, which times follow whatever the locale prefers.
+ */
+internal class RecapFormats(val locale: Locale, is24Hour: Boolean) {
     private val integer = NumberFormat.getIntegerInstance(locale)
     private val dayMonth = pattern("MMMMd")
     private val weekdayDayMonth = pattern("EEEEMMMMd")
-    private val time = pattern("jmm")
-    private val hour = pattern("j")
+    private val time = pattern(if (is24Hour) "Hmm" else "hmma")
+
+    // A bare 24-hour number, as in "between 11 and 15", doesn't read as a time, so whole hours keep their minutes.
+    private val hour = pattern(if (is24Hour) "Hmm" else "ha")
     private val monthYear = pattern("MMMMyyyy")
 
     fun number(value: Long): String = integer.format(value)
@@ -58,7 +65,8 @@ internal class RecapFormats(val locale: Locale) {
 @Composable
 internal fun rememberRecapFormats(): RecapFormats {
     val locale = LocalConfiguration.current.locales[0]
-    return remember(locale) { RecapFormats(locale) }
+    val is24Hour = DateFormat.is24HourFormat(LocalContext.current)
+    return remember(locale, is24Hour) { RecapFormats(locale, is24Hour) }
 }
 
 /** A period's large total: whole hours, or minutes below an hour. */
