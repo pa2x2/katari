@@ -11,16 +11,14 @@ import eu.kanade.presentation.more.stats.data.StatsRecapNotifications
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.notification.Notifications
 import eu.kanade.tachiyomi.ui.stats.recap.StatisticsRecapNavigation
+import eu.kanade.tachiyomi.ui.stats.recap.delivery.StatisticsRecapHeadline
 import eu.kanade.tachiyomi.ui.stats.recap.delivery.editionKey
 import eu.kanade.tachiyomi.ui.stats.recap.delivery.newYearRecap
+import eu.kanade.tachiyomi.ui.stats.recap.delivery.recapHeadline
 import eu.kanade.tachiyomi.ui.stats.recap.period.StatisticsRecapPeriod
-import eu.kanade.tachiyomi.ui.stats.recap.story.StatisticsRecapSummary
-import eu.kanade.tachiyomi.ui.stats.recap.story.SummaryFigure
-import eu.kanade.tachiyomi.ui.stats.recap.story.buildStatisticsRecapStory
 import eu.kanade.tachiyomi.util.system.notify
 import eu.kanade.tachiyomi.util.system.workManager
 import logcat.LogPriority
-import mihon.entry.interactions.statistics.EntryStatisticsFeature
 import mihon.feature.profiles.core.ProfileStore
 import tachiyomi.core.common.i18n.pluralStringResource
 import tachiyomi.core.common.i18n.stringResource
@@ -66,9 +64,8 @@ class StatisticsRecapNotificationJob(context: Context, workerParams: WorkerParam
         val month = YearMonth.now().minusMonths(1L)
         if (preferences.lastRecapNotificationMonth.get() >= month.toString()) return
         val period = StatisticsRecapPeriod.Month(month)
-        summaryOf(profileId, period)?.let { summary ->
+        headlineOf(profileId, period)?.let { headline ->
             val monthName = month.month.getDisplayName(TextStyle.FULL_STANDALONE, Locale.getDefault())
-            val activeDays = summary.figures.filterIsInstance<SummaryFigure.ActiveDays>().firstOrNull()?.days ?: 0
             notify(
                 id = Notifications.ID_STATISTICS_RECAP,
                 channelId = Notifications.CHANNEL_MONTH_RECAP,
@@ -77,14 +74,14 @@ class StatisticsRecapNotificationJob(context: Context, workerParams: WorkerParam
                 title = applicationContext.stringResource(
                     MR.strings.statistics_recap_notification_title,
                     monthName,
-                    applicationContext.statisticsDurationFormatter()(summary.durationMillis),
+                    applicationContext.statisticsDurationFormatter()(headline.durationMillis),
                 ),
                 text = applicationContext.stringResource(
                     MR.strings.statistics_recap_notification_text,
                     applicationContext.pluralStringResource(
                         MR.plurals.statistics_active_day_count,
-                        activeDays,
-                        activeDays,
+                        headline.activeDays,
+                        headline.activeDays,
                     ),
                 ),
             )
@@ -96,7 +93,7 @@ class StatisticsRecapNotificationJob(context: Context, workerParams: WorkerParam
         if (!preferences.yearlyRecapNotification.get()) return
         val period = newYearRecap(LocalDate.now()) ?: return
         if (preferences.lastYearRecapNotification.get() == period.editionKey) return
-        summaryOf(profileId, period)?.let { summary ->
+        headlineOf(profileId, period)?.let { headline ->
             val label = if (period.isSoFar) {
                 applicationContext.stringResource(MR.strings.statistics_recap_year_so_far, period.year.toString())
             } else {
@@ -110,25 +107,17 @@ class StatisticsRecapNotificationJob(context: Context, workerParams: WorkerParam
                 title = applicationContext.stringResource(MR.strings.statistics_year_recap_notification_title, label),
                 text = applicationContext.stringResource(
                     MR.strings.statistics_year_recap_notification_text,
-                    applicationContext.statisticsDurationFormatter()(summary.durationMillis),
+                    applicationContext.statisticsDurationFormatter()(headline.durationMillis),
                 ),
             )
         }
         preferences.lastYearRecapNotification.set(period.editionKey)
     }
 
-    /** The period's summary; null when nothing was timed, so an empty period gets no notification. */
-    private suspend fun summaryOf(profileId: Long, period: StatisticsRecapPeriod): StatisticsRecapSummary? {
+    private suspend fun headlineOf(profileId: Long, period: StatisticsRecapPeriod): StatisticsRecapHeadline? {
         val activity = Injekt.get<StatisticsRecapRepository>()
             .getActivity(profileId, period.start.toString(), period.end.toString())
-        if (activity.segments.isEmpty()) return null
-        return buildStatisticsRecapStory(
-            period = period,
-            activity = activity,
-            previous = null,
-            hiddenEntryIds = emptySet(),
-            contributions = Injekt.get<EntryStatisticsFeature>().contributions,
-        ).summary
+        return recapHeadline(period, activity)
     }
 
     private fun notify(
