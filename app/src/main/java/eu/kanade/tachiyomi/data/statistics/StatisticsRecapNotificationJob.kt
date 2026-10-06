@@ -71,6 +71,7 @@ class StatisticsRecapNotificationJob(context: Context, workerParams: WorkerParam
             val activeDays = summary.figures.filterIsInstance<SummaryFigure.ActiveDays>().firstOrNull()?.days ?: 0
             notify(
                 id = Notifications.ID_STATISTICS_RECAP,
+                channelId = Notifications.CHANNEL_MONTH_RECAP,
                 profileId = profileId,
                 period = period,
                 title = applicationContext.stringResource(
@@ -103,6 +104,7 @@ class StatisticsRecapNotificationJob(context: Context, workerParams: WorkerParam
             }
             notify(
                 id = Notifications.ID_STATISTICS_YEAR_RECAP,
+                channelId = Notifications.CHANNEL_YEAR_RECAP,
                 profileId = profileId,
                 period = period,
                 title = applicationContext.stringResource(MR.strings.statistics_year_recap_notification_title, label),
@@ -129,9 +131,16 @@ class StatisticsRecapNotificationJob(context: Context, workerParams: WorkerParam
         ).summary
     }
 
-    private fun notify(id: Int, profileId: Long, period: StatisticsRecapPeriod, title: String, text: String) {
+    private fun notify(
+        id: Int,
+        channelId: String,
+        profileId: Long,
+        period: StatisticsRecapPeriod,
+        title: String,
+        text: String,
+    ) {
         val context = applicationContext
-        context.notify(id, Notifications.CHANNEL_STATISTICS) {
+        context.notify(id, channelId) {
             setSmallIcon(R.drawable.ic_katari)
             setContentTitle(title)
             setContentText(text)

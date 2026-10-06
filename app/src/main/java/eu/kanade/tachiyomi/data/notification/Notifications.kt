@@ -60,7 +60,10 @@ object Notifications {
     const val ID_BACKUP_COMPLETE = -502
     const val ID_RESTORE_COMPLETE = -504
 
-    const val CHANNEL_STATISTICS = "statistics_channel"
+    /** Notification channels of the Statistics recaps, one per kind, so either can be silenced alone. */
+    private const val GROUP_RECAPS = "group_recaps"
+    const val CHANNEL_YEAR_RECAP = "year_recap_channel"
+    const val CHANNEL_MONTH_RECAP = "month_recap_channel"
     const val ID_STATISTICS_RECAP = -801
     const val ID_STATISTICS_YEAR_RECAP = -802
 
@@ -94,6 +97,8 @@ object Notifications {
         "new_episodes_channel",
         // App updates download in the app since 1.13.0, without a notification.
         "app_apk_update_channel",
+        // Replaced by a channel per recap kind.
+        "statistics_channel",
     )
 
     /** Prefix of the derived per-type library-update channels superseded by the shared route. */
@@ -145,6 +150,9 @@ object Notifications {
                 },
                 buildNotificationChannelGroup(GROUP_APK_UPDATES) {
                     setName(context.stringResource(MR.strings.label_recent_updates))
+                },
+                buildNotificationChannelGroup(GROUP_RECAPS) {
+                    setName(context.stringResource(MR.strings.statistics_recaps))
                 },
             ),
         )
@@ -199,8 +207,13 @@ object Notifications {
                     setShowBadge(false)
                     setSound(null, null)
                 },
-                buildNotificationChannel(CHANNEL_STATISTICS, IMPORTANCE_LOW) {
-                    setName(context.stringResource(MR.strings.label_stats))
+                buildNotificationChannel(CHANNEL_YEAR_RECAP, IMPORTANCE_DEFAULT) {
+                    setName(context.stringResource(MR.strings.statistics_yearly_recap))
+                    setGroup(GROUP_RECAPS)
+                },
+                buildNotificationChannel(CHANNEL_MONTH_RECAP, IMPORTANCE_DEFAULT) {
+                    setName(context.stringResource(MR.strings.statistics_monthly_recap))
+                    setGroup(GROUP_RECAPS)
                 },
                 buildNotificationChannel(CHANNEL_INCOGNITO_MODE, IMPORTANCE_LOW) {
                     setName(context.stringResource(MR.strings.pref_incognito_mode))
