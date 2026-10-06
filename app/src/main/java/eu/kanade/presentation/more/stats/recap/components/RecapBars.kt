@@ -49,16 +49,22 @@ internal fun RecapBars(
                     contentAlignment = Alignment.BottomCenter,
                     modifier = Modifier.weight(1f).fillMaxWidth(),
                 ) {
-                    val share = maxOf(MIN_SHARE, value.toFloat() / max) * grow
-                    Box(
-                        Modifier
-                            .fillMaxWidth()
-                            .fillMaxHeight(share.coerceIn(0.001f, 1f))
-                            .background(
-                                color = if (index == highlight) palette.accent else palette.accent.copy(alpha = 0.4f),
-                                shape = RoundedCornerShape(4.dp),
-                            ),
-                    )
+                    if (value > 0L) {
+                        val share = maxOf(MIN_SHARE, value.toFloat() / max) * grow
+                        Box(
+                            Modifier
+                                .fillMaxWidth()
+                                .fillMaxHeight(share.coerceIn(0.001f, 1f))
+                                .background(
+                                    color = if (index == highlight) {
+                                        palette.accent
+                                    } else {
+                                        palette.accent.copy(alpha = 0.4f)
+                                    },
+                                    shape = RoundedCornerShape(4.dp),
+                                ),
+                        )
+                    }
                 }
                 RecapText(
                     text = labels[index],
@@ -72,4 +78,5 @@ internal fun RecapBars(
     }
 }
 
+/** The least a bar shows, so a little time still reads as some; no time shows no bar. */
 private const val MIN_SHARE = 0.03f

@@ -47,6 +47,7 @@ internal fun RecapHourClock(
         val outer = this.size.minDimension / 2f - LABEL_SPACE.toPx()
         val inner = outer * INNER_RATIO
         hourlyDurationMillis.forEachIndexed { hour, duration ->
+            if (duration <= 0L) return@forEachIndexed
             val share = duration / max
             val radius = inner + (outer - inner) * maxOf(MIN_SHARE, share) * grow.value
             val start = hour * WEDGE_DEGREES - 90f + GAP_DEGREES / 2f
@@ -96,6 +97,8 @@ private val LABEL_SPACE = 22.dp
 private const val INNER_RATIO = 0.36f
 private const val WEDGE_DEGREES = 15f
 private const val GAP_DEGREES = 3f
+
+/** The least a wedge shows, so a little time still reads as some; no time shows no wedge. */
 private const val MIN_SHARE = 0.06f
 private const val BUSY_SHARE = 0.8f
 private const val TOP_BRIGHTEN = 0.6f
