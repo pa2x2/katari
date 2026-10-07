@@ -95,6 +95,7 @@ private fun LibraryUpdateResultSnackbar(
             actionLabel = context.stringResource(MR.strings.library_update_check_skipped).takeIf {
                 summary.skipped > 0
             },
+            withDismissAction = true,
             duration = SnackbarDuration.Long,
         )
         // Clearing the request restarts this effect, so it has to wait until the snackbar is done.
