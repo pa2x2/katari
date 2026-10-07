@@ -83,15 +83,21 @@ class BackupCreator(
 
             val activeProfile = profileManager.activeProfile.value
             val profileBundles = profileManager.getProfileBundles(includeArchived = true)
-            val activeProfileEntries = entriesToBackUp(activeProfile?.id, options)
             val entriesByProfile = profileBundles.associate { it.profile.id to entriesToBackUp(it.profile.id, options) }
+            // Restore reads only backupProfiles when the backup has any, and the schema seeds a default profile, so
+            // repeating the active profile's entries at the top level would only double the work and the file size.
+            val unscopedEntries = if (profileBundles.isEmpty()) {
+                entriesToBackUp(activeProfile?.id, options)
+            } else {
+                emptyList()
+            }
 
-            val totalEntries = activeProfileEntries.size + entriesByProfile.values.sumOf(List<Entry>::size)
+            val totalEntries = unscopedEntries.size + entriesByProfile.values.sumOf(List<Entry>::size)
             var backedUpEntries = 0
             val onEntryBackedUp = { onProgress(BackupCreationProgress.Entries(++backedUpEntries, totalEntries)) }
             if (totalEntries > 0) onProgress(BackupCreationProgress.Entries(0, totalEntries))
 
-            val backupEntries = backupEntries(activeProfile?.id, activeProfileEntries, options, onEntryBackedUp)
+            val backupEntries = backupEntries(activeProfile?.id, unscopedEntries, options, onEntryBackedUp)
             val backupProfiles = backupProfiles(profileBundles, entriesByProfile, options, onEntryBackedUp)
             val backupSources = backupSources(
                 entries = backupEntries + backupProfiles.flatMap(ProfileScopedBackup::entries),
