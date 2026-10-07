@@ -32,21 +32,28 @@ class EntryBackupCreator(
     private val updateRulesRepository: LibraryUpdateRulesRepository = Injekt.get(),
 ) {
 
-    suspend operator fun invoke(entries: List<Entry>, options: BackupOptions): List<BackupEntry> {
-        return invoke(profileProvider.activeProfileId, entries, options)
+    suspend operator fun invoke(
+        entries: List<Entry>,
+        options: BackupOptions,
+        onEntryBackedUp: () -> Unit,
+    ): List<BackupEntry> {
+        return invoke(profileProvider.activeProfileId, entries, options, onEntryBackedUp)
     }
 
     suspend operator fun invoke(
         profileId: Long,
         entries: List<Entry>,
         options: BackupOptions,
+        onEntryBackedUp: () -> Unit,
     ): List<BackupEntry> {
         val statisticsEpoch = if (options.history) {
             activityBackupRepository.getStatisticsEpoch(profileId)
         } else {
             null
         }
-        return entries.map { backupEntry(profileId, it, options, statisticsEpoch) }
+        return entries.map { entry ->
+            backupEntry(profileId, entry, options, statisticsEpoch).also { onEntryBackedUp() }
+        }
     }
 
     private suspend fun backupEntry(

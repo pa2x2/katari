@@ -1,11 +1,14 @@
 package eu.kanade.tachiyomi.data.backup
 
+import android.app.Notification
 import android.content.Context
 import android.graphics.BitmapFactory
+import android.os.SystemClock
 import androidx.core.app.NotificationCompat
 import com.hippo.unifile.UniFile
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.core.security.SecurityPreferences
+import eu.kanade.tachiyomi.data.backup.create.BackupCreationProgress
 import eu.kanade.tachiyomi.data.notification.NotificationReceiver
 import eu.kanade.tachiyomi.data.notification.Notifications
 import eu.kanade.tachiyomi.util.storage.getUriCompat
@@ -46,16 +49,44 @@ class BackupNotifier(private val context: Context) {
         context.notify(id, build())
     }
 
-    fun showBackupProgress(): NotificationCompat.Builder {
-        val builder = with(progressNotificationBuilder) {
+    private var lastEntriesProgressAt = 0L
+
+    fun backupProgressNotification(progress: BackupCreationProgress): Notification {
+        return with(progressNotificationBuilder) {
             setContentTitle(context.stringResource(MR.strings.creating_backup))
-
-            setProgress(0, 0, true)
+            when (progress) {
+                BackupCreationProgress.Preparing -> {
+                    setContentText(null)
+                    setProgress(0, 0, true)
+                }
+                is BackupCreationProgress.Entries -> {
+                    setContentText(
+                        context.stringResource(
+                            MR.strings.creating_backup_entries_progress,
+                            progress.backedUp,
+                            progress.total,
+                        ),
+                    )
+                    setProgress(progress.total, progress.backedUp, false)
+                }
+                BackupCreationProgress.Saving -> {
+                    setContentText(context.stringResource(MR.strings.creating_backup_saving))
+                    setProgress(0, 0, true)
+                }
+            }
+            build()
         }
+    }
 
-        builder.show(Notifications.ID_BACKUP_PROGRESS)
-
-        return builder
+    fun showBackupProgress(progress: BackupCreationProgress) {
+        if (progress is BackupCreationProgress.Entries && progress.backedUp in 1..<progress.total) {
+            // The system drops updates from apps posting more than about 5 per second, which could swallow the
+            // following stage change, so intermediate counts are spaced out.
+            val now = SystemClock.elapsedRealtime()
+            if (now - lastEntriesProgressAt < ENTRIES_PROGRESS_INTERVAL_MS) return
+            lastEntriesProgressAt = now
+        }
+        context.notify(Notifications.ID_BACKUP_PROGRESS, backupProgressNotification(progress))
     }
 
     fun showBackupError(error: String?) {
@@ -182,3 +213,5 @@ class BackupNotifier(private val context: Context) {
         }
     }
 }
+
+private const val ENTRIES_PROGRESS_INTERVAL_MS = 500L

@@ -20,6 +20,7 @@ import eu.kanade.tachiyomi.data.backup.models.BackupSourcePreferences
 import kotlinx.serialization.protobuf.ProtoBuf
 import logcat.LogPriority
 import mihon.feature.profiles.core.ProfileBackup
+import mihon.feature.profiles.core.ProfileBundle
 import mihon.feature.profiles.core.ProfileManager
 import mihon.feature.profiles.core.ProfileScopedBackup
 import okio.buffer
@@ -28,6 +29,7 @@ import okio.sink
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.backup.service.BackupPreferences
+import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.i18n.*
 import uy.kohesive.injekt.Injekt
@@ -41,6 +43,7 @@ import kotlin.time.Clock
 class BackupCreator(
     private val context: Context,
     private val isAutoBackup: Boolean,
+    private val onProgress: (BackupCreationProgress) -> Unit = {},
 
     private val parser: ProtoBuf = Injekt.get(),
     private val backupPreferences: BackupPreferences = Injekt.get(),
@@ -79,8 +82,17 @@ class BackupCreator(
             }
 
             val activeProfile = profileManager.activeProfile.value
-            val backupEntries = backupEntries(activeProfile?.id, options)
-            val backupProfiles = backupProfiles(options)
+            val profileBundles = profileManager.getProfileBundles(includeArchived = true)
+            val activeProfileEntries = entriesToBackUp(activeProfile?.id, options)
+            val entriesByProfile = profileBundles.associate { it.profile.id to entriesToBackUp(it.profile.id, options) }
+
+            val totalEntries = activeProfileEntries.size + entriesByProfile.values.sumOf(List<Entry>::size)
+            var backedUpEntries = 0
+            val onEntryBackedUp = { onProgress(BackupCreationProgress.Entries(++backedUpEntries, totalEntries)) }
+            if (totalEntries > 0) onProgress(BackupCreationProgress.Entries(0, totalEntries))
+
+            val backupEntries = backupEntries(activeProfile?.id, activeProfileEntries, options, onEntryBackedUp)
+            val backupProfiles = backupProfiles(profileBundles, entriesByProfile, options, onEntryBackedUp)
             val backupSources = backupSources(
                 entries = backupEntries + backupProfiles.flatMap(ProfileScopedBackup::entries),
             )
@@ -97,6 +109,7 @@ class BackupCreator(
                 backupEntries = backupEntries,
             )
 
+            onProgress(BackupCreationProgress.Saving)
             val byteArray = parser.encodeToByteArray(Backup.serializer(), backup)
             if (byteArray.isEmpty()) {
                 throw IllegalStateException(context.stringResource(MR.strings.empty_backup_error))
@@ -148,7 +161,7 @@ class BackupCreator(
         }
     }
 
-    private suspend fun backupEntries(profileId: Long?, options: BackupOptions): List<BackupEntry> {
+    private suspend fun entriesToBackUp(profileId: Long?, options: BackupOptions): List<Entry> {
         if (!options.libraryEntries) return emptyList()
 
         val entries = if (profileId != null) {
@@ -158,10 +171,19 @@ class BackupCreator(
             entryRepository.getFavorites() +
                 if (options.readEntries) entryRepository.getReadEntriesNotInLibrary() else emptyList()
         }
+        return entries.distinctBy { it.id }
+    }
+
+    private suspend fun backupEntries(
+        profileId: Long?,
+        entries: List<Entry>,
+        options: BackupOptions,
+        onEntryBackedUp: () -> Unit,
+    ): List<BackupEntry> {
         return if (profileId != null) {
-            entryBackupCreator(profileId, entries.distinctBy { it.id }, options)
+            entryBackupCreator(profileId, entries, options, onEntryBackedUp)
         } else {
-            entryBackupCreator(entries.distinctBy { it.id }, options)
+            entryBackupCreator(entries, options, onEntryBackedUp)
         }
     }
 
@@ -187,17 +209,15 @@ class BackupCreator(
         return preferenceBackupCreator.createSource(includePrivatePreferences = options.privateSettings)
     }
 
-    private suspend fun backupProfiles(options: BackupOptions): List<ProfileScopedBackup> {
-        val bundles = profileManager.getProfileBundles(includeArchived = true)
-        if (bundles.isEmpty()) return emptyList()
-
+    private suspend fun backupProfiles(
+        bundles: List<ProfileBundle>,
+        entriesByProfile: Map<Long, List<Entry>>,
+        options: BackupOptions,
+        onEntryBackedUp: () -> Unit,
+    ): List<ProfileScopedBackup> {
         return bundles.map { bundle ->
             val profileId = bundle.profile.id
-            val entries = if (options.libraryEntries) {
-                backupEntries(profileId, options)
-            } else {
-                emptyList()
-            }
+            val entries = backupEntries(profileId, entriesByProfile.getValue(profileId), options, onEntryBackedUp)
 
             val categories = if (options.categories) {
                 categoriesBackupCreator(profileId)
