@@ -8,6 +8,11 @@ data class EntryFeatureStateEnvelope(
     val participantId: String,
     val schemaVersion: Int,
     val payload: ByteArray,
+    /**
+     * The value [payload] was encoded from, so in-process readers can skip decoding it. Null when the envelope was read
+     * back from a backup file.
+     */
+    val state: Any? = null,
 )
 
 data class EntryBackupSelection(
