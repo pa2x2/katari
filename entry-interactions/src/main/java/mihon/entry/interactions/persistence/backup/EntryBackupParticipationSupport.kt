@@ -12,6 +12,7 @@ internal fun <T> entryBackupStateEnvelope(
         participantId = participantId,
         schemaVersion = schemaVersion,
         payload = EntryBackupStateCodec.encode(serializer, value),
+        state = value,
     )
 }
 

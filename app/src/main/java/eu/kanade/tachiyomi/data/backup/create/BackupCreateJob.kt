@@ -51,7 +51,7 @@ class BackupCreateJob(private val context: Context, workerParams: WorkerParamete
             ?: BackupOptions()
 
         return try {
-            val location = BackupCreator(context, isAutoBackup).backup(uri, options)
+            val location = BackupCreator(context, isAutoBackup, notifier::showBackupProgress).backup(uri, options)
             if (!isAutoBackup) {
                 notifier.showBackupComplete(UniFile.fromUri(context, location.toUri())!!)
             }
@@ -68,7 +68,7 @@ class BackupCreateJob(private val context: Context, workerParams: WorkerParamete
     override suspend fun getForegroundInfo(): ForegroundInfo {
         return ForegroundInfo(
             Notifications.ID_BACKUP_PROGRESS,
-            notifier.showBackupProgress().build(),
+            notifier.backupProgressNotification(BackupCreationProgress.Preparing),
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
             } else {

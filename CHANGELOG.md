@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.14.1] - 2026-10-07
+
+### 🧩 Improved
+
+- The backup notification counts the entries backed up so far and shows when the file is being saved.
+
+### 🐛 Fixed
+
+- Library update results and snackbars on the entry and cover screens have a close button.
+
+### ⚡️ Performance
+
+- Backups are faster to create and smaller.
+
 ## [1.14.0] - 2026-10-06
 
 ### ✨ Added
@@ -667,7 +681,8 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v1.14.0...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/v1.14.1...HEAD
+[1.14.1]: https://github.com/pa2x2/katari/releases/tag/v1.14.1
 [1.14.0]: https://github.com/pa2x2/katari/releases/tag/v1.14.0
 [1.13.3]: https://github.com/pa2x2/katari/releases/tag/v1.13.3
 [1.13.2]: https://github.com/pa2x2/katari/releases/tag/v1.13.2

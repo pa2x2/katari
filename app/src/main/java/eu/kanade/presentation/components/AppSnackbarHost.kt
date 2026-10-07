@@ -34,7 +34,10 @@ fun AppSnackbarHost(
                     }
                 }
             },
-            dismissAction = if (snackbarData.visuals.duration == SnackbarDuration.Indefinite) {
+            dismissAction = if (
+                snackbarData.visuals.withDismissAction ||
+                snackbarData.visuals.duration == SnackbarDuration.Indefinite
+            ) {
                 {
                     IconButton(onClick = snackbarData::dismiss) {
                         Icon(

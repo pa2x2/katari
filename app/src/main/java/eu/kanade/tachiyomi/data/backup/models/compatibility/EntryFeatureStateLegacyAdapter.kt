@@ -142,7 +142,7 @@ internal fun BackupEntry.normalizeLegacyViewerFlags(entry: Entry): Entry {
 }
 
 private inline fun <reified T> EntryFeatureStateEnvelope.decode(): T {
-    return EntryBackupStateCodec.decode(serializer(), payload)
+    return state as? T ?: EntryBackupStateCodec.decode(serializer(), payload)
 }
 
 private inline fun <reified T> T.envelope(participantId: String, schemaVersion: Int): EntryFeatureStateEnvelope {
