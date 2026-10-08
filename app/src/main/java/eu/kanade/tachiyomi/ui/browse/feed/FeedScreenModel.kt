@@ -132,7 +132,6 @@ abstract class FeedScreenModel<T : Any>(
     }
 
     fun showNewItems() {
-        refreshGeneration.incrementAndGet()
         while (true) {
             val currentState = mutableState.value
             val pendingRefresh = currentState.pendingRefresh
@@ -140,6 +139,10 @@ abstract class FeedScreenModel<T : Any>(
                 consumeNewItemsIndicator()
                 return
             }
+            // While more pages remain, the refresh can still reach the current timeline and keep
+            // the reading position. Only a refresh that exhausted the source without reaching it
+            // replaces the timeline.
+            if (pendingRefresh.nextPageKey != null) return
 
             val anchor = SourceFeedAnchor.fromItem(pendingRefresh.itemRefs.firstOrNull(), scrollOffset = 0)
             val activatedState = currentState.copy(
@@ -147,7 +150,6 @@ abstract class FeedScreenModel<T : Any>(
                 nextPageKey = pendingRefresh.nextPageKey,
                 savedAnchor = anchor,
                 pendingRefresh = null,
-                isBridgingRefresh = false,
                 newItemsAvailableCount = 0,
                 newItemsCountIsLowerBound = false,
             )
@@ -307,14 +309,10 @@ abstract class FeedScreenModel<T : Any>(
         val existingRefSet = existingRefs.toHashSet()
         val bridgedRefs = initialRefresh.itemRefs.toMutableList()
         val bridgedRefSet = bridgedRefs.toHashSet()
+        val loadedRefs = bridgedRefs.toHashSet()
         var nextPageKey = initialRefresh.nextPageKey
-        var pagesLoaded = 1
 
-        while (
-            nextPageKey != null &&
-            pagesLoaded < MAX_REFRESH_BRIDGE_PAGES &&
-            refreshGeneration.get() == generation
-        ) {
+        while (nextPageKey != null && refreshGeneration.get() == generation) {
             val page = try {
                 loadPage(pagingSource, nextPageKey)
             } catch (e: Throwable) {
@@ -336,7 +334,6 @@ abstract class FeedScreenModel<T : Any>(
 
             if (refreshGeneration.get() != generation) return
 
-            pagesLoaded++
             val pageRefs = acceptVisibleItems(page.data)
             val overlapIndex = pageRefs.indexOfFirst { it in existingRefSet }
 
@@ -372,7 +369,10 @@ abstract class FeedScreenModel<T : Any>(
             pageRefs.forEach { ref ->
                 if (bridgedRefSet.add(ref)) bridgedRefs += ref
             }
-            nextPageKey = page.nextKey
+            // The bridge has no page limit, so a source that keeps reporting a next page while
+            // repeating items it already returned would otherwise be paged forever.
+            val pageAdvanced = page.data.map(::itemRef).count(loadedRefs::add) > 0
+            nextPageKey = page.nextKey.takeIf { pageAdvanced }
             mutableState.update {
                 if (refreshGeneration.get() != generation || it.pendingRefresh == null) {
                     it
@@ -382,21 +382,11 @@ abstract class FeedScreenModel<T : Any>(
                             itemRefs = bridgedRefs.toList(),
                             nextPageKey = nextPageKey,
                         ),
-                        isBridgingRefresh = nextPageKey != null && pagesLoaded < MAX_REFRESH_BRIDGE_PAGES,
+                        isBridgingRefresh = nextPageKey != null,
                         newItemsAvailableCount = bridgedRefs.size,
                         newItemsCountIsLowerBound = nextPageKey != null,
                         error = null,
                     )
-                }
-            }
-        }
-
-        if (refreshGeneration.get() == generation) {
-            mutableState.update {
-                if (refreshGeneration.get() != generation || it.pendingRefresh == null) {
-                    it
-                } else {
-                    it.copy(isBridgingRefresh = false)
                 }
             }
         }
@@ -438,7 +428,7 @@ abstract class FeedScreenModel<T : Any>(
         bridgePendingRefresh(
             pagingSource = pagingSource,
             generation = generation,
-            existingRefs = currentState.itemRefs.drop(pendingRefresh.itemRefs.size),
+            existingRefs = currentState.itemRefs,
             existingNextPageKey = currentState.nextPageKey,
             initialRefresh = pendingRefresh,
         )
@@ -685,7 +675,6 @@ abstract class FeedScreenModel<T : Any>(
 
     companion object {
         private const val PAGE_SIZE = 25
-        private const val MAX_REFRESH_BRIDGE_PAGES = 10
         private const val MAX_APPEND_PAGE_SCANS = 10
 
         private fun initialState(

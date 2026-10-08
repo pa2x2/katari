@@ -181,6 +181,24 @@ fun CatalogFeedBrowseContent(
             }
     }
 
+    KeepFeedPositionAcrossPrepends(
+        itemRefs = state.itemRefs,
+        leadingItemCount = bridgeItemCount,
+        viewportKey = displayMode,
+        firstVisibleItem = {
+            when (displayMode) {
+                LibraryDisplayMode.List -> listState.firstVisibleItemIndex to listState.firstVisibleItemScrollOffset
+                else -> gridState.firstVisibleItemIndex to gridState.firstVisibleItemScrollOffset
+            }
+        },
+        scrollToItem = { index, scrollOffset ->
+            when (displayMode) {
+                LibraryDisplayMode.List -> listState.scrollToItem(index, scrollOffset)
+                else -> gridState.scrollToItem(index, scrollOffset)
+            }
+        },
+    )
+
     LaunchedEffect(displayMode, state.isRefreshing, state.isAppending, state.nextPageKey, state.itemRefs.size) {
         val lastVisibleFlow = when (displayMode) {
             LibraryDisplayMode.List -> snapshotFlow { listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: -1 }

@@ -239,6 +239,120 @@ class ChronologicalFeedScreenModelTest {
         }
     }
 
+    @Test
+    fun `failed bridge page resumes into the saved timeline instead of replacing it`() = feedTest {
+        val preferences = SourcePreferences(BrowseFeedPreferenceStore(), testJson)
+        val browseFeedService = BrowseFeedService(preferences)
+        val oldRefs = listOf(
+            FeedItemRef(100L, EntryType.MANGA),
+            FeedItemRef(101L, EntryType.MANGA),
+        )
+        browseFeedService.saveTimeline(
+            FEED_ID,
+            SourceFeedTimeline.fromItems(oldRefs, nextPageKey = 10L),
+        )
+        var bridgePageFailures = 0
+        val pagingSource = RecordingPagingSource(
+            pages = mapOf(
+                null to pageResult(
+                    data = listOf(
+                        FakeItem(id = 1L, type = EntryType.MANGA, favorite = false),
+                        FakeItem(id = 2L, type = EntryType.MANGA, favorite = false),
+                    ),
+                    nextKey = 1L,
+                ),
+                1L to pageResult(
+                    data = listOf(
+                        FakeItem(id = 3L, type = EntryType.MANGA, favorite = false),
+                        FakeItem(id = 100L, type = EntryType.MANGA, favorite = false),
+                    ),
+                    nextKey = 2L,
+                ),
+            ),
+            beforeLoad = { key ->
+                if (key == 1L && bridgePageFailures++ == 0) throw NoResultsException()
+            },
+        )
+        val screenModel = FakeFeedScreenModel(
+            feedId = FEED_ID,
+            browseFeedService = browseFeedService,
+            workerDispatcher = Dispatchers.Main,
+            itemsById = listOf(1L, 2L, 3L, 100L, 101L).associateWith {
+                FakeItem(id = it, type = EntryType.MANGA, favorite = false)
+            },
+            pagingSourceFactory = { pagingSource },
+        )
+
+        try {
+            advanceUntilIdle()
+            screenModel.refresh(manual = true)
+            advanceUntilIdle()
+
+            screenModel.state.value.pendingRefresh?.nextPageKey shouldBe 1L
+            screenModel.showNewItems()
+            screenModel.state.value.itemRefs shouldBe oldRefs
+
+            screenModel.refresh(manual = true)
+            advanceUntilIdle()
+
+            val mergedRefs = listOf(1L, 2L, 3L).map { FeedItemRef(it, EntryType.MANGA) } + oldRefs
+            screenModel.state.value.itemRefs shouldBe mergedRefs
+            screenModel.state.value.pendingRefresh shouldBe null
+            screenModel.state.value.newItemsAvailableCount shouldBe 3
+            browseFeedService.timelineSnapshot(FEED_ID) shouldBe
+                SourceFeedTimeline.fromItems(mergedRefs, nextPageKey = 10L)
+        } finally {
+            screenModel.onDispose()
+        }
+    }
+
+    @Test
+    fun `bridge stops when the source repeats a page it already returned`() = feedTest {
+        val preferences = SourcePreferences(BrowseFeedPreferenceStore(), testJson)
+        val browseFeedService = BrowseFeedService(preferences)
+        val oldRef = FeedItemRef(100L, EntryType.MANGA)
+        browseFeedService.saveTimeline(
+            FEED_ID,
+            SourceFeedTimeline.fromItems(listOf(oldRef), nextPageKey = 10L),
+        )
+        val repeatedPage = listOf(FakeItem(id = 2L, type = EntryType.MANGA, favorite = false))
+        val pagingSource = RecordingPagingSource(
+            pages = mapOf(
+                null to pageResult(
+                    data = listOf(FakeItem(id = 1L, type = EntryType.MANGA, favorite = false)),
+                    nextKey = 1L,
+                ),
+                1L to pageResult(data = repeatedPage, nextKey = 2L),
+                2L to pageResult(data = repeatedPage, nextKey = 3L),
+                3L to pageResult(data = repeatedPage, nextKey = 4L),
+            ),
+        )
+        val screenModel = FakeFeedScreenModel(
+            feedId = FEED_ID,
+            browseFeedService = browseFeedService,
+            workerDispatcher = Dispatchers.Main,
+            itemsById = listOf(1L, 2L, 100L).associateWith {
+                FakeItem(id = it, type = EntryType.MANGA, favorite = false)
+            },
+            pagingSourceFactory = { pagingSource },
+        )
+
+        try {
+            advanceUntilIdle()
+            screenModel.refresh(manual = true)
+            advanceUntilIdle()
+
+            pagingSource.loadKeys shouldBe listOf(null, 1L, 2L)
+            screenModel.state.value.pendingRefresh shouldBe FeedScreenModel.PendingRefresh(
+                itemRefs = listOf(1L, 2L).map { FeedItemRef(it, EntryType.MANGA) },
+                nextPageKey = null,
+            )
+            screenModel.state.value.isBridgingRefresh shouldBe false
+        } finally {
+            screenModel.onDispose()
+        }
+    }
+
     companion object {
         private const val FEED_ID = "feed"
 
