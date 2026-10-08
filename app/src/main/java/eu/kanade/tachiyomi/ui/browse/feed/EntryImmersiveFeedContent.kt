@@ -133,7 +133,7 @@ internal fun EntryImmersiveFeedContent(
             leadingItemCount = 0,
             viewportKey = pagerState,
             firstVisibleItem = { pagerState.currentPage to 0 },
-            scrollToItem = { index, _ -> pagerState.scrollToPage(index) },
+            requestScrollToItem = { index, _ -> pagerState.requestScrollToPage(index) },
         )
         FeedNewItemsIndicator(
             state = timelineState,

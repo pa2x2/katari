@@ -185,16 +185,16 @@ fun CatalogFeedBrowseContent(
         itemRefs = state.itemRefs,
         leadingItemCount = bridgeItemCount,
         viewportKey = displayMode,
-        firstVisibleItem = {
+        firstVisibleItem = { leadingItemCount ->
             when (displayMode) {
-                LibraryDisplayMode.List -> listState.firstVisibleItemIndex to listState.firstVisibleItemScrollOffset
-                else -> gridState.firstVisibleItemIndex to gridState.firstVisibleItemScrollOffset
+                LibraryDisplayMode.List -> listState.firstVisibleFeedItem(leadingItemCount)
+                else -> gridState.firstVisibleFeedItem(leadingItemCount)
             }
         },
-        scrollToItem = { index, scrollOffset ->
+        requestScrollToItem = { index, scrollOffset ->
             when (displayMode) {
-                LibraryDisplayMode.List -> listState.scrollToItem(index, scrollOffset)
-                else -> gridState.scrollToItem(index, scrollOffset)
+                LibraryDisplayMode.List -> listState.requestScrollToItem(index, scrollOffset)
+                else -> gridState.requestScrollToItem(index, scrollOffset)
             }
         },
     )
