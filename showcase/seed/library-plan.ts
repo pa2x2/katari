@@ -131,7 +131,16 @@ export const profiles: ProfilePlan[] = [
     name: "Family",
     colorSeed: 330,
     position: 1,
-    library: ["big-buck-bunny", "alice-in-wonderland", "pepper-carrot-en"],
+    library: [
+      "big-buck-bunny",
+      "alice-in-wonderland",
+      "pepper-carrot-en",
+      "treasure-island",
+      "peter-pan",
+      "grimms-fairy-tales",
+      "wizard-of-oz",
+      "huckleberry-finn",
+    ],
     merges: [],
     stints: [
       { work: "big-buck-bunny", from: "2026-10-03", to: "2026-10-03", finishes: true },
