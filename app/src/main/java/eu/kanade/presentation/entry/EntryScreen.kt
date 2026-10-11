@@ -461,6 +461,7 @@ private fun EntryScreenSmallImpl(
                             isStubSource = state.isSourceMissing,
                             mergedMemberTitles = state.mergedMemberTitles,
                             onCoverClick = onCoverClicked,
+                            onSourceClick = sourceClickAction(state, onManageMergeClicked, onSearch),
                             doSearch = onSearch,
                         )
                     }
@@ -747,6 +748,7 @@ fun EntryScreenLargeImpl(
                             isStubSource = state.isSourceMissing,
                             mergedMemberTitles = state.mergedMemberTitles,
                             onCoverClick = onCoverClicked,
+                            onSourceClick = sourceClickAction(state, onManageMergeClicked, onSearch),
                             doSearch = onSearch,
                         )
                         if (state.showMergeNotice) {
@@ -1063,4 +1065,13 @@ private fun onChapterItemClick(
         isAnyChapterSelected -> onToggleSelection(true)
         else -> onChapterClicked?.invoke(chapterItem.chapter)
     }
+}
+
+/** Several sources have no single name to search for, so their line opens Manage merge, which lists each member's. */
+private fun sourceClickAction(
+    state: EntryScreenModel.State.Success,
+    onManageMergeClicked: (() -> Unit)?,
+    onSearch: (query: String, global: Boolean) -> Unit,
+): () -> Unit {
+    return onManageMergeClicked?.takeIf { state.isMultiSource } ?: { onSearch(state.sourceName, false) }
 }

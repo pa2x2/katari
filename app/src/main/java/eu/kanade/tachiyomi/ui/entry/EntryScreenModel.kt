@@ -21,6 +21,7 @@ import eu.kanade.presentation.entry.components.MergeTarget
 import eu.kanade.presentation.entry.components.MergeTargetSearchController
 import eu.kanade.presentation.entry.components.buildMergeTargetQuery
 import eu.kanade.presentation.entry.components.buildMergeTargets
+import eu.kanade.presentation.entry.components.mergedSourceNames
 import eu.kanade.presentation.entry.components.rankMergeTargets
 import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.presentation.util.formattedMessage
@@ -155,6 +156,7 @@ import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.library.service.LibraryPreferences
+import tachiyomi.domain.source.model.SourceDisplayInfo
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.domain.util.applyFilter
 import tachiyomi.i18n.*
@@ -365,6 +367,8 @@ class EntryScreenModel(
                         it.copy(
                             entry = entry,
                             sourceName = mergePresentation.sourceName,
+                            isMultiSource = mergePresentation.isMultiSource,
+                            isSourceMissing = mergePresentation.isSourceMissing,
                             memberIds = mergePresentation.memberIds,
                             memberTitleById = mergePresentation.memberTitleById,
                             mergedMemberTitles = mergePresentation.mergedMemberTitles,
@@ -420,7 +424,8 @@ class EntryScreenModel(
                     entry = entry,
                     source = sourceManager.getOrStub(entry.source),
                     sourceName = mergePresentation.sourceName,
-                    isSourceMissing = sourceManager.getDisplayInfo(entry.source).isMissing,
+                    isMultiSource = mergePresentation.isMultiSource,
+                    isSourceMissing = mergePresentation.isSourceMissing,
                     memberIds = mergePresentation.memberIds,
                     memberTitleById = mergePresentation.memberTitleById,
                     mergedMemberTitles = mergePresentation.mergedMemberTitles,
@@ -2122,8 +2127,14 @@ class EntryScreenModel(
         }
         val membersById = editor?.entries.orEmpty().associateBy { it.entry.id }
         val members = memberIds.mapNotNull { memberId -> membersById[memberId]?.entry ?: getEntryOrNull(memberId) }
+        val sources = members.ifEmpty { listOf(entry) }
+            .map(Entry::source)
+            .distinct()
+            .map(sourceManager::getDisplayInfo)
         return MergePresentation(
-            sourceName = getSourceName(entry, memberIds),
+            sourceName = mergedSourceNames(sources.map { it.getDisplayNameForEntryInfo() }),
+            isMultiSource = sources.size > 1,
+            isSourceMissing = sources.any(SourceDisplayInfo::isMissing),
             memberIds = memberIds,
             memberTitleById = members.associate { it.id to it.displayTitle },
             mergedMemberTitles = members.map { it.displayTitle }.filter { it.isNotBlank() }.toImmutableList(),
@@ -2253,16 +2264,11 @@ class EntryScreenModel(
         }
     }
 
-    private fun getSourceName(entry: Entry, memberIds: List<Long>): String {
-        return if (memberIds.size > 1) {
-            context.stringResource(MR.strings.multi_lang)
-        } else {
-            sourceManager.getDisplayInfo(entry.source).getDisplayNameForEntryInfo()
-        }
-    }
-
     private data class MergePresentation(
         val sourceName: String,
+        val isMultiSource: Boolean,
+        /** Whether any member's source is missing, not just the visible entry's. */
+        val isSourceMissing: Boolean,
         val memberIds: ImmutableList<Long>,
         val memberTitleById: Map<Long, String>,
         val mergedMemberTitles: ImmutableList<String>,
@@ -2300,6 +2306,7 @@ class EntryScreenModel(
             val entry: Entry,
             val source: UnifiedSource?,
             val sourceName: String,
+            val isMultiSource: Boolean,
             val isSourceMissing: Boolean,
             val memberIds: ImmutableList<Long>,
             val memberTitleById: Map<Long, String>,

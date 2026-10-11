@@ -144,6 +144,7 @@ fun EntryInfoBox(
     isStubSource: Boolean,
     mergedMemberTitles: List<String>,
     onCoverClick: () -> Unit,
+    onSourceClick: () -> Unit,
     doSearch: (query: String, global: Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -187,6 +188,7 @@ fun EntryInfoBox(
                     mergedMemberTitles = mergedMemberTitles,
                     coverType = coverType,
                     onCoverClick = onCoverClick,
+                    onSourceClick = onSourceClick,
                     doSearch = doSearch,
                 )
             } else {
@@ -198,6 +200,7 @@ fun EntryInfoBox(
                     mergedMemberTitles = mergedMemberTitles,
                     coverType = coverType,
                     onCoverClick = onCoverClick,
+                    onSourceClick = onSourceClick,
                     doSearch = doSearch,
                 )
             }
@@ -749,6 +752,7 @@ private fun EntryAndSourceTitlesLarge(
     mergedMemberTitles: List<String>,
     coverType: EntryCover,
     onCoverClick: () -> Unit,
+    onSourceClick: () -> Unit,
     doSearch: (query: String, global: Boolean) -> Unit,
 ) {
     Column(
@@ -775,6 +779,7 @@ private fun EntryAndSourceTitlesLarge(
             sourceName = sourceName,
             isStubSource = isStubSource,
             mergedMemberTitles = mergedMemberTitles,
+            onSourceClick = onSourceClick,
             doSearch = doSearch,
             textAlign = TextAlign.Center,
         )
@@ -790,6 +795,7 @@ private fun EntryAndSourceTitlesSmall(
     mergedMemberTitles: List<String>,
     coverType: EntryCover,
     onCoverClick: () -> Unit,
+    onSourceClick: () -> Unit,
     doSearch: (query: String, global: Boolean) -> Unit,
 ) {
     Row(
@@ -821,6 +827,7 @@ private fun EntryAndSourceTitlesSmall(
                 sourceName = sourceName,
                 isStubSource = isStubSource,
                 mergedMemberTitles = mergedMemberTitles,
+                onSourceClick = onSourceClick,
                 doSearch = doSearch,
             )
         }
@@ -836,6 +843,7 @@ private fun ColumnScope.EntryContentInfo(
     sourceName: String,
     isStubSource: Boolean,
     mergedMemberTitles: List<String>,
+    onSourceClick: () -> Unit,
     doSearch: (query: String, global: Boolean) -> Unit,
     textAlign: TextAlign? = LocalTextStyle.current.textAlign,
 ) {
@@ -958,12 +966,7 @@ private fun ColumnScope.EntryContentInfo(
             }
             Text(
                 text = sourceName,
-                modifier = Modifier.clickableNoIndication {
-                    doSearch(
-                        sourceName,
-                        false,
-                    )
-                },
+                modifier = Modifier.clickableNoIndication(onClick = onSourceClick),
                 overflow = TextOverflow.Ellipsis,
                 maxLines = 1,
             )
