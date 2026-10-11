@@ -14,7 +14,8 @@ export async function resolveGutenberg(
   refresh: boolean,
 ): Promise<Omit<LockedWork, "id" | "source" | "cover">> {
   const record = await catalogRecord(work.book);
-  const title = work.title ?? text(record.title).split("\n")[0]!.trim();
+  // Some catalog titles keep the MARC subtitle marker, as in "Peter Pan : $b [Peter and Wendy]".
+  const title = work.title ?? text(record.title).split("\n")[0]!.split(/\s*:?\s*\$b/)[0]!.trim();
   const authors = list(record.creator).map((creator) => displayName(text((creator.agent as Node).name)));
   const genres = list(record.bookshelf)
     .map((shelf) => text((shelf.Description as Node).value))

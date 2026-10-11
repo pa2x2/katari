@@ -930,6 +930,357 @@
       }
     },
     {
+      "id": "treasure-island",
+      "source": "gutenberg",
+      "type": "book",
+      "title": "Treasure Island",
+      "author": "Robert Louis Stevenson",
+      "artist": null,
+      "description": "\"Treasure Island\" by Robert Louis Stevenson is an adventure novel published in 1883. When young Jim Hawkins discovers a mysterious treasure map in a dead pirate's sea chest, he sets sail with a crew to find Captain Flint's legendary buried gold. But aboard the ship Hispaniola lurks danger: the charming one-legged cook Long John Silver leads a band of mutinous pirates with their own deadly plans. On a remote island filled with treachery and violence, Jim must navigate shifting alliances and mortal threats to survive this perilous quest for fortune.",
+      "genres": [
+        "Adventure",
+        "Novels",
+        "Classics of Literature",
+        "British Literature"
+      ],
+      "status": "completed",
+      "language": "en",
+      "license": {
+        "name": "Public domain in the USA",
+        "url": "https://www.gutenberg.org/policy/license.html"
+      },
+      "attribution": "Project Gutenberg eBook #120, www.gutenberg.org",
+      "chapters": [
+        {
+          "number": 1,
+          "name": "Treasure Island",
+          "date": "2006-02-26",
+          "files": [
+            {
+              "url": "https://www.gutenberg.org/cache/epub/120/pg120-images-3.epub",
+              "sha256": "c274f65c8aebe39a1dbda31e632a08face75b5668ef0aefbd07ed484cc422507",
+              "size": 49452703
+            }
+          ]
+        }
+      ],
+      "cover": {
+        "fromEpub": true
+      }
+    },
+    {
+      "id": "peter-pan",
+      "source": "gutenberg",
+      "type": "book",
+      "title": "Peter Pan",
+      "author": "J. M. Barrie",
+      "artist": null,
+      "description": "\"Peter Pan: [Peter and Wendy]\" by J. M. Barrie is a work that began as a play in 1904 and became a novel in 1911. It tells the story of Peter Pan, a mischievous boy who can fly and never grows up. He whisks Wendy Darling and her brothers away to Neverland, a magical island inhabited by mermaids, fairies, and pirates. There, they encounter the Lost Boys and face off against the villainous Captain Hook, all while navigating adventures that blur the line between childhood wonder and danger.",
+      "genres": [
+        "Children & Young Adult Reading",
+        "Adventure",
+        "Novels",
+        "Classics of Literature",
+        "British Literature"
+      ],
+      "status": "completed",
+      "language": "en",
+      "license": {
+        "name": "Public domain in the USA",
+        "url": "https://www.gutenberg.org/policy/license.html"
+      },
+      "attribution": "Project Gutenberg eBook #16, www.gutenberg.org",
+      "chapters": [
+        {
+          "number": 1,
+          "name": "Peter Pan",
+          "date": "2008-06-25",
+          "files": [
+            {
+              "url": "https://www.gutenberg.org/cache/epub/16/pg16-images-3.epub",
+              "sha256": "c8a39c829d858c72d7ac80143a86fa7908d5f8af5dfdd4505bc37fb3fdaec707",
+              "size": 392049
+            }
+          ]
+        }
+      ],
+      "cover": {
+        "fromEpub": true
+      }
+    },
+    {
+      "id": "dorian-gray",
+      "source": "gutenberg",
+      "type": "book",
+      "title": "The Picture of Dorian Gray",
+      "author": "Oscar Wilde",
+      "artist": null,
+      "description": "\"The Picture of Dorian Gray\" by Oscar Wilde is a philosophical fiction and Gothic horror novel published in 1890. When a beautiful young man wishes that his portrait would age instead of himself, his desire becomes terrifyingly real. As Dorian pursues a life of pleasure and moral corruption, he remains eternally youthful while his painted image transforms into a horrifying record of his sins. Wilde explores beauty, morality, and the dangerous influence of hedonistic philosophy in this tale of vanity and its consequences.",
+      "genres": [
+        "Novels",
+        "Classics of Literature",
+        "British Literature"
+      ],
+      "status": "completed",
+      "language": "en",
+      "license": {
+        "name": "Public domain in the USA",
+        "url": "https://www.gutenberg.org/policy/license.html"
+      },
+      "attribution": "Project Gutenberg eBook #174, www.gutenberg.org",
+      "chapters": [
+        {
+          "number": 1,
+          "name": "The Picture of Dorian Gray",
+          "date": "1994-10-01",
+          "files": [
+            {
+              "url": "https://www.gutenberg.org/cache/epub/174/pg174-images-3.epub",
+              "sha256": "a3b36ca499124ae52132ad20a6b8654657dbe3cda0f7a22b8e10c904fa4e8e03",
+              "size": 461435
+            }
+          ]
+        }
+      ],
+      "cover": {
+        "fromEpub": true
+      }
+    },
+    {
+      "id": "grimms-fairy-tales",
+      "source": "gutenberg",
+      "type": "book",
+      "title": "Grimms' Fairy Tales",
+      "author": "Jacob Grimm, Wilhelm Grimm",
+      "artist": null,
+      "description": "\"Grimms' Fairy Tales\" by Jacob Grimm and Wilhelm Grimm is a German collection of fairy tales first published in 1812. Beginning with 86 stories and eventually expanding to 210 tales across seven editions, this seminal work transformed oral folklore into written literature. The brothers collected stories from friends, acquaintances, and old books to preserve German cultural history. What started as a scholarly project evolved through decades of revisions, with tales added and removed, content adjusted for young readers, and illustrations incorporated to become a cornerstone of Western children's literature.",
+      "genres": [
+        "Short Stories",
+        "Children & Young Adult Reading",
+        "Mythology, Legends & Folklore",
+        "German Literature"
+      ],
+      "status": "completed",
+      "language": "en",
+      "license": {
+        "name": "Public domain in the USA",
+        "url": "https://www.gutenberg.org/policy/license.html"
+      },
+      "attribution": "Project Gutenberg eBook #2591, www.gutenberg.org",
+      "chapters": [
+        {
+          "number": 1,
+          "name": "Grimms' Fairy Tales",
+          "date": "2001-04-01",
+          "files": [
+            {
+              "url": "https://www.gutenberg.org/cache/epub/2591/pg2591-images-3.epub",
+              "sha256": "5a735764974c07c57c595aae16dd56c8d295698555705528865c9a7112ef2f6e",
+              "size": 531098
+            }
+          ]
+        }
+      ],
+      "cover": {
+        "fromEpub": true
+      }
+    },
+    {
+      "id": "moby-dick",
+      "source": "gutenberg",
+      "type": "book",
+      "title": "Moby Dick; Or, The Whale",
+      "author": "Herman Melville",
+      "artist": null,
+      "description": "\"Moby Dick; Or, The Whale\" by Herman Melville is an epic novel published in 1851. Sailor Ishmael narrates the obsessive quest of Captain Ahab, who commands the whaling ship Pequod in pursuit of Moby Dick, a giant white sperm whale that destroyed his leg. Ahab's monomaniacal hunt for vengeance drives the ship and its diverse crew across the world's oceans, blending realistic whaling details with profound explorations of good, evil, fate, and human nature in this cornerstone of American literature.",
+      "genres": [
+        "Adventure",
+        "Novels",
+        "Classics of Literature",
+        "American Literature"
+      ],
+      "status": "completed",
+      "language": "en",
+      "license": {
+        "name": "Public domain in the USA",
+        "url": "https://www.gutenberg.org/policy/license.html"
+      },
+      "attribution": "Project Gutenberg eBook #2701, www.gutenberg.org",
+      "chapters": [
+        {
+          "number": 1,
+          "name": "Moby Dick; Or, The Whale",
+          "date": "2001-07-01",
+          "files": [
+            {
+              "url": "https://www.gutenberg.org/cache/epub/2701/pg2701-images-3.epub",
+              "sha256": "e886f7a74985f5cf3606ae44dada8f46d9c8d8e5501c3dffb4db69b0f2f6ae94",
+              "size": 814048
+            }
+          ]
+        }
+      ],
+      "cover": {
+        "fromEpub": true
+      }
+    },
+    {
+      "id": "war-of-the-worlds",
+      "source": "gutenberg",
+      "type": "book",
+      "title": "The War of the Worlds",
+      "author": "H. G. Wells",
+      "artist": null,
+      "description": "\"The War of the Worlds\" by H. G. Wells is a science fiction novel written between 1895 and 1897. When Martians with superior intelligence and advanced weapons invade Earth, humanity faces extinction. The extraterrestrials emerge from metal cylinders, wielding devastating heat rays and toxic chemical weapons as they methodically destroy England's defenses. An unnamed narrator struggles to survive the carnage and reunite with his wife while civilization collapses around him. One of the earliest alien invasion stories, Wells's novel explores humanity's vulnerability against an unstoppable force.",
+      "genres": [
+        "Science-Fiction & Fantasy",
+        "Novels",
+        "Classics of Literature",
+        "British Literature"
+      ],
+      "status": "completed",
+      "language": "en",
+      "license": {
+        "name": "Public domain in the USA",
+        "url": "https://www.gutenberg.org/policy/license.html"
+      },
+      "attribution": "Project Gutenberg eBook #36, www.gutenberg.org",
+      "chapters": [
+        {
+          "number": 1,
+          "name": "The War of the Worlds",
+          "date": "2004-10-01",
+          "files": [
+            {
+              "url": "https://www.gutenberg.org/cache/epub/36/pg36-images-3.epub",
+              "sha256": "2d9d587f10019149e70c0d0270a712d03aae04538b6ba2a58be31e0f54fe8eac",
+              "size": 292374
+            }
+          ]
+        }
+      ],
+      "cover": {
+        "fromEpub": true
+      }
+    },
+    {
+      "id": "jekyll-and-hyde",
+      "source": "gutenberg",
+      "type": "book",
+      "title": "The Strange Case of Dr. Jekyll and Mr. Hyde",
+      "author": "Robert Louis Stevenson",
+      "artist": null,
+      "description": "\"The Strange Case of Dr. Jekyll and Mr. Hyde\" by Robert Louis Stevenson is a Gothic horror novella published in 1886. When London lawyer Gabriel John Utterson investigates strange occurrences involving his old friend Dr. Henry Jekyll and a murderous criminal named Edward Hyde, he uncovers a disturbing mystery. This defining work of Gothic horror explores the duality of human nature and has profoundly influenced popular culture, making \"Jekyll and Hyde\" synonymous with hidden evil beneath respectable appearances.",
+      "genres": [
+        "Crime, Thrillers and Mystery",
+        "Novels",
+        "Classics of Literature",
+        "British Literature"
+      ],
+      "status": "completed",
+      "language": "en",
+      "license": {
+        "name": "Public domain in the USA",
+        "url": "https://www.gutenberg.org/policy/license.html"
+      },
+      "attribution": "Project Gutenberg eBook #43, www.gutenberg.org",
+      "chapters": [
+        {
+          "number": 1,
+          "name": "The Strange Case of Dr. Jekyll and Mr. Hyde",
+          "date": "2008-06-27",
+          "files": [
+            {
+              "url": "https://www.gutenberg.org/cache/epub/43/pg43-images-3.epub",
+              "sha256": "0bf449baafba3d997d97c434de1c2321942d9f719837d4f374784c41b98edce7",
+              "size": 304737
+            }
+          ]
+        }
+      ],
+      "cover": {
+        "fromEpub": true
+      }
+    },
+    {
+      "id": "wizard-of-oz",
+      "source": "gutenberg",
+      "type": "book",
+      "title": "The Wonderful Wizard of Oz",
+      "author": "L. Frank Baum",
+      "artist": null,
+      "description": "\"The Wonderful Wizard of Oz\" by L. Frank Baum is a children's novel written in 1900. When a cyclone sweeps young Dorothy and her dog Toto from Kansas to the magical Land of Oz, she discovers only one way home: she must destroy the Wicked Witch of the West. Joined by a Scarecrow seeking brains, a Tin Woodman wanting a heart, and a Cowardly Lion desiring courage, Dorothy follows the yellow brick road to seek help from the mysterious Wizard of Oz.",
+      "genres": [
+        "Children & Young Adult Reading",
+        "Science-Fiction & Fantasy",
+        "Adventure",
+        "American Literature"
+      ],
+      "status": "completed",
+      "language": "en",
+      "license": {
+        "name": "Public domain in the USA",
+        "url": "https://www.gutenberg.org/policy/license.html"
+      },
+      "attribution": "Project Gutenberg eBook #55, www.gutenberg.org",
+      "chapters": [
+        {
+          "number": 1,
+          "name": "The Wonderful Wizard of Oz",
+          "date": "1993-02-01",
+          "files": [
+            {
+              "url": "https://www.gutenberg.org/cache/epub/55/pg55-images-3.epub",
+              "sha256": "800f7cc528cf22ad7c2424bb3d8ebcffcc8f5f3b3453c4e6a0e70957c0150c71",
+              "size": 350637
+            }
+          ]
+        }
+      ],
+      "cover": {
+        "fromEpub": true
+      }
+    },
+    {
+      "id": "huckleberry-finn",
+      "source": "gutenberg",
+      "type": "book",
+      "title": "Adventures of Huckleberry Finn",
+      "author": "Mark Twain",
+      "artist": null,
+      "description": "\"Adventures of Huckleberry Finn\" by Mark Twain is a picaresque novel published in 1884-1885. Told in vernacular English, it follows young Huck Finn as he escapes his abusive father and flees down the Mississippi River with Jim, an enslaved man seeking freedom. Their journey brings encounters with feuding families, con artists, and moral dilemmas that challenge Huck's conscience. Set in the antebellum South, this sequel to \"Tom Sawyer\" is celebrated for its portrayal of boyhood and its satirical examination of racism and society.",
+      "genres": [
+        "Adventure",
+        "Novels",
+        "Classics of Literature",
+        "American Literature"
+      ],
+      "status": "completed",
+      "language": "en",
+      "license": {
+        "name": "Public domain in the USA",
+        "url": "https://www.gutenberg.org/policy/license.html"
+      },
+      "attribution": "Project Gutenberg eBook #76, www.gutenberg.org",
+      "chapters": [
+        {
+          "number": 1,
+          "name": "Adventures of Huckleberry Finn",
+          "date": "2004-06-29",
+          "files": [
+            {
+              "url": "https://www.gutenberg.org/cache/epub/76/pg76-images-3.epub",
+              "sha256": "dfb3a02e17da641f14d834cb5bb123016c8df44df4dbbef5c0f94ded290d8663",
+              "size": 16021345
+            }
+          ]
+        }
+      ],
+      "cover": {
+        "fromEpub": true
+      }
+    },
+    {
       "id": "rashomon",
       "source": "gutenberg",
       "type": "book",
