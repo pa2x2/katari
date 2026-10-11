@@ -49,7 +49,7 @@ const { title, description } = Astro.props;
             observer.unobserve(entry.target);
           }
         },
-        { rootMargin: "0px 0px -10% 0px" },
+        { rootMargin: "0px 0px -5% 0px" },
       );
       for (const element of marked) observer.observe(element);
     </script>

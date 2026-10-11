@@ -1,0 +1,133 @@
+---
+import bookPaper from "../captures/book-paper.png";
+import library from "../captures/library.png";
+import player from "../captures/player.png";
+import translationAfter from "../captures/translation-after.png";
+import DownloadButtons from "../download/DownloadButtons.astro";
+import Phone from "../media/Phone.astro";
+---
+
+<section class="hero">
+  <div class="pitch">
+    <p class="vertical" lang="ja" aria-hidden="true">語り</p>
+    <div>
+      <p class="kicker">Katari · telling stories</p>
+      <h1>Every kind of story.<br />One library.</h1>
+      <p class="lead">
+        Katari is an Android app for comics, books, and video. Read and watch them side by side, translate what you read
+        on the device, and see where your reading time goes.
+      </p>
+      <DownloadButtons />
+    </div>
+  </div>
+  <div class="fan">
+    <div class="comic">
+      <Phone image={translationAfter} alt="A comic page translated into English" zoomable={false} eager sizes="(min-width: 60rem) 13rem, 34vw" />
+    </div>
+    <div class="book">
+      <Phone image={bookPaper} alt="A book in the paper theme" zoomable={false} eager sizes="(min-width: 60rem) 13rem, 34vw" />
+    </div>
+    <div class="library">
+      <Phone image={library} alt="A library holding comics, books, and films" zoomable={false} eager sizes="(min-width: 60rem) 15rem, 40vw" />
+    </div>
+    <div class="film">
+      <Phone image={player} alt="Sintel playing in the video player" landscape zoomable={false} eager sizes="(min-width: 60rem) 23rem, 60vw" />
+    </div>
+  </div>
+</section>
+
+<style>
+  .hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: center;
+    gap: 3rem;
+    max-width: var(--page-width);
+    margin: 0 auto;
+    padding: 3rem var(--gutter) 2rem;
+  }
+
+  .pitch {
+    display: flex;
+    gap: 2rem;
+  }
+
+  .vertical {
+    margin: 0.4rem 0 0;
+    color: var(--clay);
+    font-family: var(--serif);
+    font-size: 2.2rem;
+    font-weight: 700;
+    letter-spacing: 0.3em;
+    writing-mode: vertical-rl;
+  }
+
+  h1 {
+    margin: 0 0 1.25rem;
+    font-size: clamp(2.6rem, 5.5vw, 4.4rem);
+    letter-spacing: -0.01em;
+  }
+
+  .lead {
+    max-width: 34rem;
+    margin: 0 0 2rem;
+    color: var(--muted);
+    font-size: 1.2rem;
+  }
+
+  .fan {
+    position: relative;
+    width: min(36rem, 100%);
+    aspect-ratio: 36 / 40;
+    margin: 0 auto;
+  }
+
+  .fan > div {
+    position: absolute;
+    --shot-width: 100%;
+  }
+
+  /* Tilting a phone this tall swings its corners out by about 6% of the fan's width, so the tilted ones sit that far in. */
+  .comic,
+  .book {
+    top: 10%;
+    width: 34%;
+  }
+
+  .comic {
+    left: 6%;
+    transform: rotate(-8deg);
+  }
+
+  .book {
+    right: 6%;
+    transform: rotate(8deg);
+  }
+
+  .library {
+    top: 0;
+    left: 29%;
+    z-index: 1;
+    width: 42%;
+  }
+
+  .film {
+    bottom: 0;
+    left: 18%;
+    z-index: 2;
+    width: 64%;
+  }
+
+  @media (max-width: 60rem) {
+    .hero {
+      grid-template-columns: minmax(0, 1fr);
+      padding-top: 2rem;
+    }
+  }
+
+  @media (max-width: 44rem) {
+    .vertical {
+      display: none;
+    }
+  }
+</style>

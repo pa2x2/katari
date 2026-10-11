@@ -1,0 +1,235 @@
+---
+/**
+ * A feature's screenshots. Beside text the upright ones overlap: the first in front, the others tucked behind it to the
+ * side, each caption below where its phone stands. In a band they stand side by side. On a phone either becomes a row to swipe
+ * through. Wherever upright shots stand in a row, they share one height whatever their proportions.
+ *
+ * A landscape shot, such as the player, can't share a height with phones, so it lies across the bottom of the others
+ * beside text and on its own under the row on a phone.
+ */
+import { aspectOf } from "../media/aspect.ts";
+import type { Shot } from "./chapters.ts";
+import ShotView from "./ShotView.astro";
+
+interface Props {
+  shots: Shot[];
+  arrangement: "overlap" | "row";
+}
+
+const { shots, arrangement } = Astro.props;
+
+const isWide = (shot: Shot) => shot.kind === "still" && shot.landscape === true;
+const upright = shots.filter((shot) => !isWide(shot));
+const wide = shots.filter(isWide);
+
+type Place = "front" | "left" | "right";
+// A second upright shot sits behind the front one on the left; a third goes behind on the right.
+const places: Place[] = ["front", "left", "right"];
+const placed = upright.map((shot, index) => ({ shot, place: places[index] ?? "right" }));
+
+const aspect = (shot: Shot) => aspectOf(shot.kind === "still" ? shot.image : shot.kind === "compare" ? shot.after : shot.poster);
+---
+
+<div class:list={["stack", arrangement, `upright-${upright.length}`]} data-zoom-group data-reveal>
+  <div class="shots">
+    {
+      placed.map(({ shot, place }) => (
+        <div class:list={["slot", arrangement === "overlap" && place]} style={`--aspect: ${aspect(shot)}`}>
+          <ShotView shot={shot} />
+        </div>
+      ))
+    }
+  </div>
+  {
+    wide.map((shot) => (
+      <div class="wide">
+        <ShotView shot={shot} />
+      </div>
+    ))
+  }
+  {
+    arrangement === "overlap" && (
+      <ul class="legend" aria-hidden="true">
+        {placed.map(({ shot, place }) => (
+          <li class={place}>
+            <span>{shot.caption}</span>
+          </li>
+        ))}
+      </ul>
+    )
+  }
+</div>
+
+<style>
+  .stack {
+    container-type: inline-size;
+    /* A frame's padding around its screen, both sides together, which a shared height has to leave room for. */
+    --frame: 0.9rem;
+  }
+
+  .slot {
+    /* As wide as a frame of --row-height needs to be for this shot's proportions. */
+    --shot-width: calc((var(--row-height) - var(--frame)) * var(--aspect) + var(--frame));
+  }
+
+  .wide {
+    --shot-width: 100%;
+  }
+
+  .legend {
+    display: none;
+  }
+
+  @media (width > 44rem) {
+    .overlap .shots {
+      display: grid;
+      justify-items: center;
+      padding-bottom: 2.5rem;
+    }
+
+    /* The phones shrink with a narrow column so that the ones behind, which reach about 2.1 phone widths across for
+       three and 1.5 for two, stay inside it. Their captions in the legend take the same widths and offsets, so each
+       sits under its phone. */
+    .overlap .slot,
+    .legend li {
+      grid-area: 1 / 1;
+      --shot-width: min(17rem, 46cqi);
+    }
+
+    .overlap.upright-1 :is(.slot, .legend li),
+    .overlap.upright-2 :is(.slot, .legend li) {
+      --shot-width: min(17rem, 62cqi);
+    }
+
+    /* The phones' own captions would sit under the front one, so the legend shows them; screen readers still read
+       them with their shots. */
+    .overlap .slot :global(figcaption) {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+
+    .overlap .front {
+      z-index: 2;
+    }
+
+    .overlap.upright-2 .front {
+      transform: translateX(22%);
+    }
+
+    .overlap.upright-2 .left {
+      transform: translate(-34%, 2.5rem) scale(0.9);
+    }
+
+    .overlap.upright-3 .left {
+      transform: translate(-62%, 2.5rem) scale(0.86);
+    }
+
+    .overlap.upright-3 .right {
+      transform: translate(62%, 2.5rem) scale(0.86);
+    }
+
+    /* The phones behind are scaled about their centres, so their captions only need the sideways shift. */
+    .overlap.upright-2 .legend .front {
+      transform: translateX(22%);
+    }
+
+    .overlap.upright-2 .legend .left {
+      transform: translateX(-34%);
+    }
+
+    .overlap.upright-3 .legend .left {
+      transform: translateX(-62%);
+    }
+
+    .overlap.upright-3 .legend .right {
+      transform: translateX(62%);
+    }
+
+    /* Lies across the lower third of the phones. */
+    .overlap .wide {
+      position: relative;
+      z-index: 3;
+      width: min(28rem, 90cqi);
+      margin: -11rem auto 0;
+      transform: translateX(-6%);
+    }
+
+    .legend {
+      display: grid;
+      justify-items: center;
+      margin: 1rem 0 0;
+      padding: 0;
+      list-style: none;
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.4;
+      text-align: center;
+    }
+
+    .legend li {
+      display: flex;
+      justify-content: center;
+      width: var(--shot-width);
+    }
+
+    /* Neighbouring phones' centres are at least half a phone apart, so captions this wide never meet. */
+    .legend span {
+      max-width: 52%;
+    }
+
+    .overlap.upright-1 .legend span {
+      max-width: 100%;
+    }
+
+    .overlap .wide :global(figcaption) {
+      margin-top: 0.6rem;
+    }
+
+    .row .shots {
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      gap: clamp(1rem, 3vw, 2.5rem);
+    }
+
+    /* Each starts as wide as the shared height needs, and a narrow page shrinks them all in proportion. */
+    .row .slot {
+      --row-height: 38rem;
+      flex: 0 1 var(--shot-width);
+      min-width: 0;
+    }
+
+    .row .slot > :global(*) {
+      --shot-width: 100%;
+    }
+  }
+
+  @media (width <= 44rem) {
+    .shots {
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      margin: 0 calc(-1 * var(--gutter));
+      padding: 0.5rem var(--gutter) 1rem;
+      overflow-x: auto;
+      overscroll-behavior-x: contain;
+      scroll-snap-type: x mandatory;
+      scrollbar-width: none;
+    }
+
+    /* Tall enough to read, short enough that a phone fits on screen under the header with its caption. */
+    .slot {
+      --row-height: min(100svh - 12rem, 157vw);
+      flex: none;
+      scroll-snap-align: center;
+    }
+
+    .wide {
+      margin-top: 0.5rem;
+    }
+  }
+</style>

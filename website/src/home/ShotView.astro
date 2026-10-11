@@ -1,0 +1,37 @@
+---
+import BeforeAfter from "../media/BeforeAfter.astro";
+import Clip from "../media/Clip.astro";
+import Phone from "../media/Phone.astro";
+import type { Shot } from "./chapters.ts";
+
+interface Props {
+  shot: Shot;
+}
+
+const { shot } = Astro.props;
+---
+
+{
+  shot.kind === "still" && (
+    <Phone
+      image={shot.image}
+      alt={shot.alt}
+      caption={shot.caption}
+      landscape={shot.landscape}
+      sizes={shot.landscape ? "(min-width: 44rem) 28rem, 92vw" : "(min-width: 44rem) 17rem, 75vw"}
+    />
+  )
+}
+{
+  shot.kind === "compare" && (
+    <BeforeAfter
+      before={shot.before}
+      after={shot.after}
+      beforeLabel={shot.beforeLabel}
+      afterLabel={shot.afterLabel}
+      alt={shot.alt}
+      caption={shot.caption}
+    />
+  )
+}
+{shot.kind === "clip" && <Clip src={shot.src} poster={shot.poster} label={shot.label} caption={shot.caption} />}

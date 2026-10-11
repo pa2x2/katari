@@ -59,6 +59,6 @@ export function megabytes(apk: Apk): string {
   return `${Math.round(apk.bytes / 1_000_000)} MB`;
 }
 
-export function releaseDate(release: Release): string {
-  return release.publishedAt.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
+export function releaseDate(date: Date): string {
+  return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
 }

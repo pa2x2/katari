@@ -20,7 +20,7 @@ const release = await latestRelease();
     <a class="button quiet" href={release?.foss.url ?? `${RELEASES}/latest`}>Katari FOSS</a>
   </div>
   <p>
-    {release && <>{release.tag} · {releaseDate(release)} · {megabytes(release.standard)} · </>}Android 10 or newer.
+    {release && <>{release.tag} · {releaseDate(release.publishedAt)} · {megabytes(release.standard)} · </>}Android 10 or newer.
     Katari FOSS leaves out Google services.{explained && <>{" "}<a href={sitePath("start/#which-file")}>Which one?</a></>}
   </p>
 </div>
@@ -30,6 +30,13 @@ const release = await latestRelease();
     display: flex;
     flex-wrap: wrap;
     gap: 0.75rem;
+  }
+
+  /* When the two wrap onto separate lines, they grow to one width instead of leaving a ragged pair. */
+  .buttons .button {
+    flex: 1 1 auto;
+    justify-content: center;
+    max-width: 16rem;
   }
 
   svg {
