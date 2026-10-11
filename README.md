@@ -8,7 +8,7 @@
 
 Comics, books, and video in one Android app, with on-device translation and reading statistics.
 
-[Download](https://github.com/pa2x2/katari/releases/latest) · [See what it does](https://pa2x2.github.io/katari/)
+[Download](https://github.com/pa2x2/katari/releases/latest) · [Website](https://pa2x2.github.io/katari/)
 
 <img src="https://raw.githubusercontent.com/pa2x2/katari/assets/library.png" alt="A Katari library holding comics, books, and films" width="300" />
 
