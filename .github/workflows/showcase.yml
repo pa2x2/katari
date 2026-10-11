@@ -15,28 +15,36 @@ concurrency:
 permissions: {}
 
 env:
-  KATARI_SHOWCASE_CACHE: ${{ github.workspace }}/../showcase-cache
-  # Matches showcase/pipeline/device/emulator.ts.
-  SYSTEM_IMAGE: system-images;android-36.1;google_apis;x86_64
+  RUN_NAME: ${{ github.event.release.tag_name || github.ref_name }}
 
 jobs:
+  # Runs the build's dependencies, downloaded content and a third-party APK, so it holds no write access; the
+  # proposal job below publishes what it found.
   capture:
     name: Capture
     runs-on: ubuntu-24.04
     timeout-minutes: 120
     permissions:
-      contents: write
-      pull-requests: write
+      contents: read
+    outputs:
+      changed: ${{ steps.compare.outputs.changed }}
+    env:
+      KATARI_SHOWCASE_CACHE: ${{ github.workspace }}/../showcase-cache
+      # Matches showcase/pipeline/device/emulator.ts.
+      SYSTEM_IMAGE: system-images;android-36.1;google_apis;x86_64
 
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Checkout published captures
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: assets
           path: published
+          persist-credentials: false
 
       - name: Set up JDK
         uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
@@ -68,12 +76,20 @@ jobs:
           sudo apt-get update
           sudo apt-get install --yes ffmpeg
 
-          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null
-          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install emulator "$SYSTEM_IMAGE" > /dev/null
+          sdkmanager="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          yes | "$sdkmanager" --licenses > /dev/null
+          # The image's command-line tools may predate the device profile the showcase emulator is created from. An
+          # update installed by the running tools lands beside them, as latest-2.
+          "$sdkmanager" --install "cmdline-tools;latest" emulator "$SYSTEM_IMAGE" > /dev/null
+          tools="$(ls -d "$ANDROID_HOME"/cmdline-tools/latest* | sort -V | tail -n 1)"
+          if ! "$tools/bin/avdmanager" list device -c | grep -qx pixel_9a; then
+            echo "::error::The Android command-line tools have no pixel_9a device profile."
+            exit 1
+          fi
           {
             echo "$ANDROID_HOME/emulator"
             echo "$ANDROID_HOME/platform-tools"
-            echo "$ANDROID_HOME/cmdline-tools/latest/bin"
+            echo "$tools/bin"
           } >> "$GITHUB_PATH"
 
       - name: Build
@@ -98,25 +114,60 @@ jobs:
           path: ${{ runner.temp }}/captures
           if-no-files-found: ignore
 
-      - name: Propose the changed captures
-        env:
-          GH_TOKEN: ${{ github.token }}
-          RUN_NAME: ${{ github.event.release.tag_name || github.ref_name }}
+      - name: Compare with the published captures
+        id: compare
         run: |
           set -euo pipefail
 
-          result="$(node showcase/pipeline/compare.ts --published published --captured "$RUNNER_TEMP/captures" --apply)"
-          echo "$result"
-          if [[ "$(jq '.changed | length' <<< "$result")" == 0 ]]; then
-            echo "::notice::Nothing visible changed, so there is nothing to propose."
-            exit 0
-          fi
+          proposal="$RUNNER_TEMP/proposal"
+          mkdir -p "$proposal/files"
+          node showcase/pipeline/compare.ts --published published --captured "$RUNNER_TEMP/captures" > "$proposal/result.json"
+          cat "$proposal/result.json"
+          jq -r '.changed[]' "$proposal/result.json" | while read -r name; do
+            cp "$RUNNER_TEMP/captures/$name" "$proposal/files/"
+          done
+          echo "changed=$(jq '.changed | length' "$proposal/result.json")" >> "$GITHUB_OUTPUT"
 
+      - name: Upload the changed captures
+        if: steps.compare.outputs.changed != '0'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: showcase-proposal
+          path: ${{ runner.temp }}/proposal
+
+  propose:
+    name: Propose the changed captures
+    runs-on: ubuntu-24.04
+    needs: capture
+    if: needs.capture.outputs.changed != '0'
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout published captures
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: assets
+
+      - name: Download the changed captures
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: showcase-proposal
+          path: ${{ runner.temp }}/proposal
+
+      - name: Open the pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          result="$RUNNER_TEMP/proposal/result.json"
           branch="showcase/${RUN_NAME}-${GITHUB_RUN_ID}"
-          cd published
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git switch --create "$branch"
+          cp "$RUNNER_TEMP"/proposal/files/* .
           git add --all
           git commit --message "(docs): refresh the showcase captures for $RUN_NAME"
           git push origin "$branch"
@@ -124,12 +175,12 @@ jobs:
           {
             echo "Captured from \`$RUN_NAME\`. Changed:"
             echo
-            jq -r '.changed[] | "- `\(.)`"' <<< "$result"
-            if [[ "$(jq '.retired | length' <<< "$result")" != 0 ]]; then
+            jq -r '.changed[] | "- `\(.)`"' "$result"
+            if [[ "$(jq '.retired | length' "$result")" != 0 ]]; then
               echo
               echo "No longer captured, left in place for a person to remove:"
               echo
-              jq -r '.retired[] | "- `\(.)`"' <<< "$result"
+              jq -r '.retired[] | "- `\(.)`"' "$result"
             fi
           } > "$RUNNER_TEMP/body.md"
           gh pr create --base assets --head "$branch" --title "(docs): refresh the showcase captures for $RUN_NAME" --body-file "$RUNNER_TEMP/body.md"

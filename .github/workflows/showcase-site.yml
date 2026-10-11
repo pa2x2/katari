@@ -13,7 +13,8 @@ on:
 
 concurrency:
   group: ${{ github.workflow }}
-  cancel-in-progress: true
+  # A Pages deployment cut off midway can leave the site half updated, so a newer run waits instead.
+  cancel-in-progress: false
 
 permissions: {}
 
