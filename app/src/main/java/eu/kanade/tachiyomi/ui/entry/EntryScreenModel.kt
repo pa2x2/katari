@@ -510,7 +510,23 @@ class EntryScreenModel(
 
     fun toggleMemberExpanded(memberId: Long) {
         val successState = successState ?: return
+        // Chapters hidden by collapsing stay out of the selection, so selection actions only reach chapters in sight.
+        if (memberId in successState.expandedMemberIds) deselectMember(memberId)
         memberExpansion.toggle(memberId, successState.currentMemberId)
+    }
+
+    private fun deselectMember(memberId: Long) {
+        updateSuccessState { successState ->
+            val updates = successState.chapters.mapNotNull { item ->
+                if (!item.selected || item.chapter.entryId != memberId) return@mapNotNull null
+                selectedChapterIds.remove(item.id)
+                item.copy(selected = false)
+            }
+            successState.updateChapterItems(updates).also { updated ->
+                selectedPositions[0] = updated.processedChapters.indexOfFirst { it.selected }
+                selectedPositions[1] = updated.processedChapters.indexOfLast { it.selected }
+            }
+        }
     }
 
     private fun observeChildProgressLabels() {
@@ -1578,9 +1594,10 @@ class EntryScreenModel(
                         range = IntRange.EMPTY
                     }
 
+                    val hiddenMemberIds = successState.collapsedMemberIds
                     range.forEach { index ->
                         val inbetweenItem = chapters[index]
-                        if (!inbetweenItem.selected) {
+                        if (!inbetweenItem.selected && inbetweenItem.chapter.entryId !in hiddenMemberIds) {
                             selectedChapterIds.add(inbetweenItem.id)
                             updates += inbetweenItem.copy(selected = true)
                         }
@@ -2444,6 +2461,9 @@ class EntryScreenModel(
 
             val expandedMemberIds: Set<Long>
                 get() = memberExpansion.shown(currentMemberId)
+
+            val collapsedMemberIds: Set<Long>
+                get() = if (memberIds.size > 1) memberIds.toSet() - expandedMemberIds else emptySet()
 
             fun rebuildChapterPresentation(): Success {
                 return copy(
