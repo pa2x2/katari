@@ -19,5 +19,6 @@ internal fun buildStatisticsTypes(
         accent = contribution.accent,
         consumedUnitLabel = contribution.consumedUnitLabel,
         consumedUnitName = contribution.consumedUnitName,
+        timePerItemLabel = contribution.timePerItemLabel,
     )
 }

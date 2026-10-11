@@ -121,6 +121,7 @@ class StatisticsRecapStoryTest {
                 accent = EntryStatisticsAccent.ROSE,
                 consumedUnitLabel = MR.strings.statistics_chapters_read,
                 consumedUnitName = MR.strings.statistics_unit_chapters,
+                timePerItemLabel = MR.strings.statistics_time_per_chapter,
                 consumedCountPlural = MR.plurals.statistics_chapters_read_count,
                 itemPaceCarriesAcrossTitles = true,
                 itemNumberLabel = MR.strings.statistics_recap_chapter_number,

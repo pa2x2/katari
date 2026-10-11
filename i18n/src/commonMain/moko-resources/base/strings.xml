@@ -1948,6 +1948,9 @@
     <string name="statistics_episodes_watched">Episodes watched</string>
     <string name="statistics_unit_chapters">chapters</string>
     <string name="statistics_unit_episodes">episodes</string>
+    <string name="statistics_time_per_chapter">~%s per chapter</string>
+    <string name="statistics_time_per_episode">~%s per episode</string>
+    <string name="statistics_last_finished">Last finished %s</string>
     <string name="statistics_by_media">By media</string>
     <string name="statistics_incognito_active">Activity isn’t recorded in incognito mode</string>
     <string name="statistics_activity_patterns">Activity patterns</string>

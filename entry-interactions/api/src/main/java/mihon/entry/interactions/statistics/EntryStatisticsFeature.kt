@@ -18,6 +18,7 @@ data class EntryStatisticsContribution(
     val accent: EntryStatisticsAccent,
     val consumedUnitLabel: StringResource,
     val consumedUnitName: StringResource,
+    val timePerItemLabel: StringResource,
     val consumedCountPlural: PluralsResource,
     val itemPaceCarriesAcrossTitles: Boolean,
     val itemNumberLabel: StringResource,

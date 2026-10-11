@@ -12,4 +12,5 @@ data class StatsType(
     val accent: EntryStatisticsAccent,
     val consumedUnitLabel: StringResource,
     val consumedUnitName: StringResource,
+    val timePerItemLabel: StringResource,
 )

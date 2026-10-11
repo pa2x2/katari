@@ -11,6 +11,8 @@ data class StatsActivity(
     val currentStreakDaysByType: Map<EntryType, Int>,
     val completionCount: Long,
     val completionCountByType: Map<EntryType, Long>,
+    /** Latest day on or before the window's end that each type finished an item; types that never did are absent. */
+    val lastCompletionDateByType: Map<EntryType, LocalDate> = emptyMap(),
     val sessionCount: Long,
     val sessionCountByType: Map<EntryType, Long>,
     val averageSessionDurationMillis: Long,
