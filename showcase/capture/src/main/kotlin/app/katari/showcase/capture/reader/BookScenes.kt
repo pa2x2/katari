@@ -12,6 +12,7 @@ import app.katari.showcase.capture.openEntry
 import app.katari.showcase.capture.openProfile
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.util.regex.Pattern
 
 /** The book reader at the seeded position in Sherlock Holmes, in its reading themes. */
 @RunWith(AndroidJUnit4::class)
@@ -21,7 +22,8 @@ class BookScenes {
         openProfile("Personal")
         openEntry("The Adventures of Sherlock Holmes")
         tap(By.textContains("% read"))
-        find(By.textContains("%"))
+        // The reader's footer shows the bare percentage; the entry screen's button that opened it says "% read".
+        find(By.text(READER_PROGRESS))
         for (theme in listOf("Paper", "Dusk")) {
             chooseTheme(theme)
             capture("book-${theme.lowercase()}")
@@ -38,5 +40,9 @@ class BookScenes {
         settle()
         // Closing the settings leaves the reader's bars showing.
         if (device.hasObject(By.desc("Settings"))) tapAt(0.5f, 0.5f)
+    }
+
+    private companion object {
+        val READER_PROGRESS: Pattern = Pattern.compile("""\d+%""")
     }
 }
