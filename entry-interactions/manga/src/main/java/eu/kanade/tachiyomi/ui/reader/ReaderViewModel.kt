@@ -168,8 +168,14 @@ internal class ReaderViewModel @JvmOverloads constructor(
     private val translationHostActions: TranslationHostActions = Injekt.get()
     private val textRecognitionHostActions: TextRecognitionHostActions = Injekt.get()
 
-    /** The opened series, once it is loaded. */
-    private val series: StateFlow<Entry?> = state.map { it.manga }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
+    /**
+     * The series the current chapter belongs to, once it is loaded. In a merged entry that is the chapter's member, not
+     * the opened entry: page language and translation settings are kept per member, as downloads and background
+     * translations of its chapters read them, and the member's source declares the language its pages are in.
+     */
+    private val series: StateFlow<Entry?> = state
+        .map { it.currentChapter?.manga ?: it.manga }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     /** Translates text recognized on pages. */
     val textTranslation = MangaTextTranslationController(
