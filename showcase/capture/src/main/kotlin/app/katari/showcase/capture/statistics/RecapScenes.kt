@@ -50,8 +50,8 @@ class RecapScenes {
             openRecap()
             advanceTo(By.text(Pattern.compile("your #1", Pattern.CASE_INSENSITIVE)))
             whileHolding { capture("recap-top") }
+            // The summary is shown as the picture it shares rather than as a screenshot.
             advanceTo(By.text("Watch again"))
-            whileHolding { capture("recap-summary") }
 
             tap(By.text("Share"))
             // The image is written before the share sheet opens, and the test ending earlier would leave it half
