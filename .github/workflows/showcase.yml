@@ -1,0 +1,135 @@
+name: Showcase
+
+# Recaptures every showcase screenshot and clip from a published release on a freshly wiped emulator, and proposes
+# the ones that visibly changed as a pull request against the `assets` branch, which the showcase site is built from.
+# It runs apart from the release workflow and never holds a release up.
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+permissions: {}
+
+env:
+  KATARI_SHOWCASE_CACHE: ${{ github.workspace }}/../showcase-cache
+  # Matches showcase/pipeline/device/emulator.ts.
+  SYSTEM_IMAGE: system-images;android-36.1;google_apis;x86_64
+
+jobs:
+  capture:
+    name: Capture
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Checkout published captures
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: assets
+          path: published
+
+      - name: Set up JDK
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          java-version-file: .github/.java-version
+          distribution: temurin
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+        with:
+          cache-read-only: true
+
+      - name: Set up Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: showcase/package-lock.json
+
+      - name: Set up the emulator
+        run: |
+          set -euo pipefail
+
+          # Hardware acceleration, without which the emulator is too slow to boot.
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+          sudo apt-get update
+          sudo apt-get install --yes ffmpeg
+
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install emulator "$SYSTEM_IMAGE" > /dev/null
+          {
+            echo "$ANDROID_HOME/emulator"
+            echo "$ANDROID_HOME/platform-tools"
+            echo "$ANDROID_HOME/cmdline-tools/latest/bin"
+          } >> "$GITHUB_PATH"
+
+      - name: Build
+        run: ./gradlew :app:assembleBenchmark :showcase:extension:assembleDebug :showcase:capture:assembleBenchmark
+
+      - name: Fetch the showcase content
+        working-directory: showcase
+        run: |
+          npm ci
+          npm run fetch
+          npm run seed
+
+      - name: Capture
+        working-directory: showcase
+        run: npm run capture -- --out "$RUNNER_TEMP/captures"
+
+      - name: Upload what the failed capture left
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: showcase-failure
+          path: ${{ runner.temp }}/captures
+          if-no-files-found: ignore
+
+      - name: Propose the changed captures
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_NAME: ${{ github.event.release.tag_name || github.ref_name }}
+        run: |
+          set -euo pipefail
+
+          result="$(node showcase/pipeline/compare.ts --published published --captured "$RUNNER_TEMP/captures" --apply)"
+          echo "$result"
+          if [[ "$(jq '.changed | length' <<< "$result")" == 0 ]]; then
+            echo "::notice::Nothing visible changed, so there is nothing to propose."
+            exit 0
+          fi
+
+          branch="showcase/${RUN_NAME}-${GITHUB_RUN_ID}"
+          cd published
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch --create "$branch"
+          git add --all
+          git commit --message "(docs): refresh the showcase captures for $RUN_NAME"
+          git push origin "$branch"
+
+          {
+            echo "Captured from \`$RUN_NAME\`. Changed:"
+            echo
+            jq -r '.changed[] | "- `\(.)`"' <<< "$result"
+            if [[ "$(jq '.retired | length' <<< "$result")" != 0 ]]; then
+              echo
+              echo "No longer captured, left in place for a person to remove:"
+              echo
+              jq -r '.retired[] | "- `\(.)`"' <<< "$result"
+            fi
+          } > "$RUNNER_TEMP/body.md"
+          gh pr create --base assets --head "$branch" --title "(docs): refresh the showcase captures for $RUN_NAME" --body-file "$RUNNER_TEMP/body.md"
