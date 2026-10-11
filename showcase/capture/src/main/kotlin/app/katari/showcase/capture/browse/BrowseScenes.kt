@@ -3,10 +3,11 @@ package app.katari.showcase.capture.browse
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.Direction
-import androidx.test.uiautomator.Until
 import app.katari.showcase.capture.ShowcaseDevice.capture
 import app.katari.showcase.capture.ShowcaseDevice.device
 import app.katari.showcase.capture.ShowcaseDevice.find
+import app.katari.showcase.capture.ShowcaseDevice.scrollTo
+import app.katari.showcase.capture.ShowcaseDevice.settle
 import app.katari.showcase.capture.ShowcaseDevice.tap
 import app.katari.showcase.capture.openProfile
 import org.junit.Test
@@ -27,9 +28,8 @@ class BrowseScenes {
         tap(By.text("All"))
         // Sources move to the top as their results arrive, so the list settles once the slowest ones are in.
         find(By.text("Sintel"))
-        find(
-            By.scrollable(true),
-        ).scrollUntil(Direction.DOWN, Until.findObject(By.textStartsWith("The War of the Worlds")))
+        scrollTo(By.textStartsWith("The War of the Worlds"))
+        settle()
         repeat(2) { find(By.scrollable(true)).fling(Direction.UP) }
         capture("global-search")
     }

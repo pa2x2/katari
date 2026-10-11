@@ -1,11 +1,12 @@
 package app.katari.showcase.capture
 
 import android.content.Intent
-import android.graphics.BitmapFactory
 import android.os.SystemClock
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.BySelector
+import androidx.test.uiautomator.Direction
+import androidx.test.uiautomator.StaleObjectException
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiObject2
 import androidx.test.uiautomator.Until
@@ -45,8 +46,31 @@ internal object ShowcaseDevice {
     fun find(selector: BySelector, timeoutMs: Long = TIMEOUT_MS): UiObject2 =
         device.wait(Until.findObject(selector), timeoutMs) ?: fail("Nothing on screen matches $selector")
 
+    /**
+     * Scrolls the screen's list down until [selector] is on screen. The list is looked up again for every step, since
+     * a list that reorders while it loads replaces the view a step began with.
+     */
+    fun scrollTo(selector: BySelector, timeoutMs: Long = TIMEOUT_MS): UiObject2 {
+        val deadline = SystemClock.uptimeMillis() + timeoutMs
+        while (SystemClock.uptimeMillis() < deadline) {
+            device.findObject(selector)?.let { return it }
+            try {
+                device.findObject(By.scrollable(true))?.scroll(Direction.DOWN, 0.5f)
+            } catch (_: StaleObjectException) {
+                // Replaced between finding and scrolling it; the next step finds the new one.
+            }
+            settle(extraMs = 300)
+        }
+        fail("Scrolling never reached $selector")
+    }
+
     fun tap(selector: BySelector, timeoutMs: Long = TIMEOUT_MS) {
-        find(selector, timeoutMs).click()
+        try {
+            find(selector, timeoutMs).click()
+        } catch (_: StaleObjectException) {
+            // Redrawn between finding and tapping it, as controls that follow playback are.
+            find(selector, timeoutMs).click()
+        }
     }
 
     /** Waits until the UI is idle and covers loaded over the network have had time to fade in. */
@@ -60,53 +84,15 @@ internal object ShowcaseDevice {
         device.click((device.displayWidth * x).toInt(), (device.displayHeight * y).toInt())
     }
 
-    /**
-     * Runs [action], then waits until the middle of the screen, between the top and bottom bars, differs from how it
-     * looked before and holds still, for changes the app draws without exposing them to accessibility. The screen is
-     * sampled before [action] because the change may already be drawn by the time it returns.
-     */
-    fun awaitScreenChange(timeoutMs: Long = CHANGE_TIMEOUT_MS, action: () -> Unit) {
-        val baseline = screenSample()
-        action()
-        val deadline = SystemClock.uptimeMillis() + timeoutMs
-        var previous = baseline
-        var changed = false
-        while (SystemClock.uptimeMillis() < deadline) {
-            SystemClock.sleep(POLL_MS)
-            val current = screenSample()
-            if (!changed) {
-                changed = !current.contentEquals(baseline)
-            } else if (current.contentEquals(previous)) {
-                return
-            }
-            previous = current
-        }
-        fail(if (changed) "The screen never held still" else "The screen never changed")
+    fun awaitGone(selector: BySelector, timeoutMs: Long = TIMEOUT_MS) {
+        if (!device.wait(Until.gone(selector), timeoutMs)) fail("$selector stayed on screen")
     }
 
-    private fun fail(message: String): Nothing {
+    fun fail(message: String): Nothing {
         // Kept apart from the captures so a failed run never publishes it.
         shell("mkdir -p $FAILURE_DIRECTORY")
         shell("screencap -p $FAILURE_DIRECTORY/${System.currentTimeMillis()}.png")
         error(message)
-    }
-
-    /** The screen at a sixteenth of its size, from 15% of its height down to two thirds of it. */
-    private fun screenSample(): IntArray {
-        // UiAutomation screenshots stop following the screen once apps draw through Vulkan; screencap reads what
-        // SurfaceFlinger composes, like the captures themselves.
-        shell("screencap -p $SAMPLE_FILE")
-        val options = BitmapFactory.Options().apply { inSampleSize = 16 }
-        val screenshot = BitmapFactory.decodeFile(SAMPLE_FILE, options) ?: error("The screen could not be captured")
-        try {
-            val top = screenshot.height * 15 / 100
-            val rows = screenshot.height * 2 / 3 - top
-            return IntArray(screenshot.width * rows).also {
-                screenshot.getPixels(it, 0, screenshot.width, 0, top, screenshot.width, rows)
-            }
-        } finally {
-            screenshot.recycle()
-        }
     }
 
     fun capture(name: String) {
@@ -134,7 +120,4 @@ internal object ShowcaseDevice {
 
     private const val TIMEOUT_MS = 30_000L
     private const val RECORDER_START_MS = 1_000L
-    private const val CHANGE_TIMEOUT_MS = 180_000L
-    private const val POLL_MS = 1_500L
-    private const val SAMPLE_FILE = "/data/local/tmp/showcase-sample.png"
 }

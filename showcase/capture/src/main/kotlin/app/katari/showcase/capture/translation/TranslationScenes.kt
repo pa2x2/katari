@@ -1,13 +1,15 @@
 package app.katari.showcase.capture.translation
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import app.katari.showcase.capture.ShowcaseDevice.awaitScreenChange
+import androidx.test.uiautomator.By
+import app.katari.showcase.capture.ShowcaseDevice.awaitGone
 import app.katari.showcase.capture.ShowcaseDevice.capture
 import app.katari.showcase.capture.ShowcaseDevice.settle
 import app.katari.showcase.capture.ShowcaseDevice.tapAt
 import app.katari.showcase.capture.openProfile
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.util.regex.Pattern
 
 /** The Japanese episode translated on the page, read on-device by text recognition and Offline Translator. */
 @RunWith(AndroidJUnit4::class)
@@ -34,13 +36,22 @@ class TranslationScenes {
     }
 
     /**
-     * Translation starts with the reader's translation controls and runs once per visit to the chapter. Its progress
-     * isn't exposed to accessibility, so the page itself is watched until the translated text is drawn. Closing the
-     * controls turns translation off, so they stay on screen below the page while the reader's bars are hidden.
+     * Translation starts with the reader's translation controls and runs once per visit to the chapter. Until the
+     * page's bubbles are recognized, translated and drawn, the controls say what they are doing. Closing the controls
+     * turns translation off, so they stay on screen below the page while the reader's bars are hidden.
      */
     private fun translatePage() {
-        awaitScreenChange { openTranslationBar() }
+        openTranslationBar()
         toggleReaderBars()
-        settle()
+        // The controls may not have started on the page yet when first looked at.
+        repeat(2) {
+            awaitGone(By.text(WORKING), TRANSLATION_TIMEOUT_MS)
+            settle(extraMs = 3_000)
+        }
+    }
+
+    private companion object {
+        const val TRANSLATION_TIMEOUT_MS = 120_000L
+        val WORKING: Pattern = Pattern.compile("Waiting for the page to load|Recognizing text…|Translating…")
     }
 }

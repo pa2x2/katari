@@ -1,10 +1,9 @@
 package app.katari.showcase.capture.translation
 
 import androidx.test.uiautomator.By
-import androidx.test.uiautomator.Direction
-import androidx.test.uiautomator.Until
 import app.katari.showcase.capture.ShowcaseDevice.device
 import app.katari.showcase.capture.ShowcaseDevice.find
+import app.katari.showcase.capture.ShowcaseDevice.scrollTo
 import app.katari.showcase.capture.ShowcaseDevice.settle
 import app.katari.showcase.capture.ShowcaseDevice.tap
 import app.katari.showcase.capture.ShowcaseDevice.tapAt
@@ -16,7 +15,7 @@ import app.katari.showcase.capture.openEntry
  */
 internal fun openJapaneseEpisode() {
     openEntry("Pepper&Carrot")
-    find(By.scrollable(true)).scrollUntil(Direction.DOWN, Until.findObject(By.text(EPISODE)))
+    scrollTo(By.text(EPISODE))
     tap(By.text(EPISODE))
     find(By.textContains("/ 10"))
     settle(extraMs = 3_000)

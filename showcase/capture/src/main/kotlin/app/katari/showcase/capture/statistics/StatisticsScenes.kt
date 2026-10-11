@@ -20,8 +20,13 @@ class StatisticsScenes {
         capture("statistics")
 
         tap(By.text("1Y"))
-        find(By.scrollable(true)).scroll(Direction.DOWN, 0.4f)
+        // Released slower than a fling, the list stops where the finger does instead of a little further each run.
+        find(By.scrollable(true)).scroll(Direction.DOWN, 0.4f, SCROLL_PX_PER_SECOND)
         capture("statistics-year")
+    }
+
+    private companion object {
+        const val SCROLL_PX_PER_SECOND = 100
     }
 }
 
