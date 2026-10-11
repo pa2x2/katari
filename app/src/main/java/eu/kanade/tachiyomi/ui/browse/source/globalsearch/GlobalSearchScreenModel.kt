@@ -16,7 +16,6 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import mihon.entry.interactions.catalogue.EntryCatalogueFeature
@@ -29,6 +28,7 @@ import tachiyomi.domain.entry.interactor.NetworkToLocalEntry
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicLong
 
 class GlobalSearchScreenModel(
     initialQuery: String = "",
@@ -43,6 +43,10 @@ class GlobalSearchScreenModel(
 
     private val coroutineDispatcher = Executors.newFixedThreadPool(5).asCoroutineDispatcher()
     private var searchJob: Job? = null
+
+    // Bumped by every search. A source answering an earlier one can finish just as the next search starts, after its
+    // job was cancelled, so its result is dropped by comparing generations where the state is updated.
+    private val searchGeneration = AtomicLong()
     private val itemStore = ObservedItemStore<Long, GlobalSearchItem>(
         scope = ioCoroutineScope,
         keyOf = GlobalSearchItem::id,
@@ -151,6 +155,7 @@ class GlobalSearchScreenModel(
         this.lastSourceFilter = sourceFilter
 
         searchJob?.cancel()
+        val generation = searchGeneration.incrementAndGet()
 
         val sources = getSelectedSources()
             .let {
@@ -184,13 +189,9 @@ class GlobalSearchScreenModel(
                             searchSource(source, query)
                         }
 
-                        if (isActive) {
-                            updateItem(source, GlobalSearchItemResult.Success(items))
-                        }
+                        updateItem(source, GlobalSearchItemResult.Success(items), generation)
                     } catch (e: Exception) {
-                        if (isActive) {
-                            updateItem(source, GlobalSearchItemResult.Error(e))
-                        }
+                        updateItem(source, GlobalSearchItemResult.Error(e), generation)
                     }
                 }
             }
@@ -218,8 +219,9 @@ class GlobalSearchScreenModel(
     }
 
     // Sources finish concurrently, so each result is merged into the state it updates rather than into a snapshot.
-    private fun updateItem(source: EntryCatalogueSourceInfo, result: GlobalSearchItemResult) {
+    private fun updateItem(source: EntryCatalogueSourceInfo, result: GlobalSearchItemResult, generation: Long) {
         mutableState.update {
+            if (generation != searchGeneration.get()) return@update it
             val items = it.items + (source to result)
             it.copy(items = items.toSortedMap(sortComparator(items)))
         }
