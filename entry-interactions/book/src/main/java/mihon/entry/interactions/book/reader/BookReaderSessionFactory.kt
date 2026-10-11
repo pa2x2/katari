@@ -6,6 +6,8 @@ import eu.kanade.tachiyomi.source.entry.EntryHttpSource
 import eu.kanade.tachiyomi.source.entry.EntryMedia
 import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import mihon.book.api.BookFailure
 import mihon.book.api.BookFailureReason
 import mihon.entry.interactions.book.content.AndroidBookExternalResourceResolver
@@ -95,7 +97,8 @@ internal class BookReaderSessionFactory(
                 canRetry = true,
             )
         val media = try {
-            source.getMedia(chapter.toSEntryChapter()) as? EntryMedia.Book
+            // Sources read responses on the thread they resume on, and the reader prepares from the main thread.
+            withContext(Dispatchers.IO) { source.getMedia(chapter.toSEntryChapter()) } as? EntryMedia.Book
         } catch (error: CancellationException) {
             throw error
         } catch (error: Exception) {
