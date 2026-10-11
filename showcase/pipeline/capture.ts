@@ -17,9 +17,9 @@ import { cacheDir } from "../content/download-cache.ts";
 import { profiles } from "../seed/library-plan.ts";
 import { LIBRARY_UPDATED_AT } from "../seed/showcase-clock.ts";
 import { writeCredits } from "./credits.ts";
-import type { Device } from "./device/adb.ts";
+import { attachedSerials, Device } from "./device/adb.ts";
 import { pinShowcaseClock, useRealClock } from "./device/device-clock.ts";
-import { bootShowcaseEmulator, shutDown } from "./device/emulator.ts";
+import { bootShowcaseEmulator, SHOWCASE_SERIAL, shutDown } from "./device/emulator.ts";
 import { installOfflineTranslator, startOfflineTranslator } from "./device/offline-translator.ts";
 import { writePreferences } from "./device/shared-preferences.ts";
 import { freezeStatusBar } from "./device/status-bar.ts";
@@ -48,27 +48,35 @@ const { values } = parseArgs({
       default: join(repository, "showcase/capture/build/outputs/apk/benchmark/capture-benchmark.apk"),
     },
     "keep-emulator": { type: "boolean", default: false },
+    // For working on scenes: runs these, by the class names in scenes.ts and in that order, instead of all of them.
+    scenes: { type: "string" },
+    // For working on scenes: uses the emulator a run with --keep-emulator left, already set up, and keeps it again.
+    // Reader scenes it ran have added reading history, so history-dependent stills drift from a fresh run's.
+    "reuse-emulator": { type: "boolean", default: false },
   },
 });
 const out = resolve(values.out);
+const scenes = values.scenes === undefined ? SCENES : SCENES.filter((scene) => values.scenes!.split(",").includes(scene));
+if (scenes.length === 0) throw new Error(`No scene in scenes.ts matches ${values.scenes}`);
+const keepEmulator = values["keep-emulator"] || values["reuse-emulator"];
 for (const input of [values.seed, values.served, values["app-apk"], values["extension-apk"], values["capture-apk"]]) {
   if (!existsSync(input)) throw new Error(`${input} is missing; see the top of pipeline/capture.ts for how to build it.`);
 }
 
 rmSync(out, { recursive: true, force: true });
 mkdirSync(out, { recursive: true });
-const device = await bootShowcaseEmulator();
+const device = values["reuse-emulator"] ? reusedEmulator() : await timed("booting the emulator", bootShowcaseEmulator);
 let server: ChildProcess | undefined;
 try {
   server = await startContentServer(values.served);
-  await prepare(device);
-  for (const scene of SCENES) {
-    console.error(`capturing ${scene}`);
-    runScene(device, APP_ID, scene);
-  }
+  if (!values["reuse-emulator"]) await prepare(device);
+  device.shell(`rm -rf ${CAPTURE_DIRECTORY} ${FAILURE_DIRECTORY}`);
+  for (const scene of scenes) await timed(`capturing ${scene}`, () => runScene(device, APP_ID, scene));
   device.pull(`${CAPTURE_DIRECTORY}/.`, out);
-  device.pull(RECAP_SHARE_IMAGE, join(out, "recap-share.png"));
-  encodeForWeb(join(out, "recap.mp4"));
+  if (scenes.includes("statistics.RecapScenes")) {
+    device.pull(RECAP_SHARE_IMAGE, join(out, "recap-share.png"));
+    encodeForWeb(join(out, "recap.mp4"));
+  }
   writeCredits(join(values.served, "catalog.json"), join(out, "credits.json"));
   console.log(out);
 } catch (error) {
@@ -77,7 +85,7 @@ try {
 } finally {
   server?.kill();
   // A failure to shut down is reported without replacing the error that ended the run.
-  if (!values["keep-emulator"]) {
+  if (!keepEmulator) {
     await shutDown(device).catch((error) => console.error(`the emulator did not shut down: ${error}`));
   }
 }
@@ -99,20 +107,21 @@ function saveDiagnostics(device: Device): void {
 
 async function prepare(device: Device): Promise<void> {
   useRealClock(device);
-  device.adb("install", "-r", values["app-apk"]);
-  // The seed restore scene waits for the notification the app posts once the restore is done.
-  device.shell(`pm grant ${APP_ID} android.permission.POST_NOTIFICATIONS`);
-  device.adb("install", "-r", values["extension-apk"]);
-  device.adb("install", "-r", "-t", values["capture-apk"]);
-  await installOfflineTranslator(device);
-  startOfflineTranslator(device);
+  await timed("installing the apps", async () => {
+    device.adb("install", "-r", values["app-apk"]);
+    // The seed restore scene waits for the notification the app posts once the restore is done.
+    device.shell(`pm grant ${APP_ID} android.permission.POST_NOTIFICATIONS`);
+    device.adb("install", "-r", values["extension-apk"]);
+    device.adb("install", "-r", "-t", values["capture-apk"]);
+    await installOfflineTranslator(device);
+    startOfflineTranslator(device);
+  });
 
-  console.error("restoring the seed");
-  runScene(device, APP_ID, "SeedRestore", { seedUri: await pushSeed(device) });
+  const seedUri = await pushSeed(device);
+  await timed("restoring the seed", () => runScene(device, APP_ID, "SeedRestore", { seedUri }));
   // Reading during setup happens at the real time and must stay out of the showcase history.
   writePreferences(device, APP_ID, APP_PREFERENCES, { __APP_STATE_incognito_mode: true });
-  console.error("readying on-page translation");
-  runScene(device, APP_ID, "translation.TranslationSetup");
+  await timed("readying on-page translation", () => runScene(device, APP_ID, "translation.TranslationSetup"));
   writePreferences(device, APP_ID, APP_PREFERENCES, {
     __APP_STATE_incognito_mode: false,
     // Library state is kept per profile; the restore creates the seed's profiles with ids from 1 in plan order.
@@ -123,6 +132,22 @@ async function prepare(device: Device): Promise<void> {
 
   pinShowcaseClock(device);
   freezeStatusBar(device);
+}
+
+function reusedEmulator(): Device {
+  if (!attachedSerials().includes(SHOWCASE_SERIAL)) throw new Error("--reuse-emulator needs a run's --keep-emulator first");
+  return new Device(SHOWCASE_SERIAL);
+}
+
+/** Runs [step], reporting how long it took, so slow steps stand out in a run's output. */
+async function timed<T>(label: string, step: () => T | Promise<T>): Promise<T> {
+  console.error(label);
+  const start = Date.now();
+  try {
+    return await step();
+  } finally {
+    console.error(`  ${label}: ${Math.round((Date.now() - start) / 1000)} s`);
+  }
 }
 
 /**
