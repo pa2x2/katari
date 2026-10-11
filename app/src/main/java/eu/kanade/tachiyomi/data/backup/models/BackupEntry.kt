@@ -57,6 +57,8 @@ class BackupEntry(
     @ProtoNumber(42) var statisticsEpoch: Long? = null,
     /** Lowercase [tachiyomi.domain.library.update.model.EntryUpdateMode] name; null follows the library rules. */
     @ProtoNumber(43) var updateMode: String? = null,
+    /** Whether this entry, as a member of a merged entry, shows its chapters in the merged chapter list. */
+    @ProtoNumber(44) var mergeMemberExpanded: Boolean = false,
     @ProtoNumber(100) var type: EntryType = EntryType.MANGA,
 ) {
     fun toEntry(): Entry {

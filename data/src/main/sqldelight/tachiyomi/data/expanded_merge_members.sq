@@ -1,0 +1,26 @@
+-- A member of a merged entry with a row here shows its chapters in the merged chapter list; members without one are collapsed.
+-- Keyed by the member entry rather than its merge group so the choice survives reordering and re-rooting the merge.
+CREATE TABLE expanded_merge_members(
+    entry_id INTEGER NOT NULL PRIMARY KEY,
+    FOREIGN KEY(entry_id) REFERENCES entries(_id) ON DELETE CASCADE
+);
+
+getByEntryIds:
+SELECT entry_id
+FROM expanded_merge_members
+WHERE entry_id IN :entryIds;
+
+isExpanded:
+SELECT EXISTS(
+    SELECT 1
+    FROM expanded_merge_members
+    WHERE entry_id = :entryId
+);
+
+insert:
+INSERT OR IGNORE INTO expanded_merge_members(entry_id)
+VALUES (:entryId);
+
+delete:
+DELETE FROM expanded_merge_members
+WHERE entry_id = :entryId;

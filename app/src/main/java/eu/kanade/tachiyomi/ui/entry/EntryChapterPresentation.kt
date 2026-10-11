@@ -105,6 +105,9 @@ internal fun buildChapterPresentation(
     chapters: List<EntryChapterList.Item>,
     memberIds: List<Long>,
     memberTitleById: Map<Long, String>,
+    /** Only filled for a merge spanning several sources; a single source would repeat on every member header. */
+    memberSourceNameById: Map<Long, String>,
+    expandedMemberIds: Set<Long>,
     childListFeature: EntryChildListFeature,
     childGroupFilterFeature: EntryChildGroupFilterFeature,
     childGroupFilterState: EntryChildGroupFilterStateResult,
@@ -160,17 +163,29 @@ internal fun buildChapterPresentation(
         )
     }
     val display = (result as EntryChildListResult.Available).display
+    val chaptersByMember = filteredChapters.groupBy { it.chapter.entryId }
+    // Rows after a collapsed member's header belong to that member until the next header.
+    var inCollapsedMember = false
     val rows = display.rows.mapNotNull { row ->
         when (row) {
-            is EntryChildListRow.Child -> itemByChapterId[row.chapter.id]
-            is EntryChildListRow.MemberHeader -> EntryChapterList.MemberHeader(
-                entryId = row.entryId,
-                title = row.title,
-            )
+            is EntryChildListRow.Child -> itemByChapterId[row.chapter.id]?.takeUnless { inCollapsedMember }
+            is EntryChildListRow.MemberHeader -> {
+                val memberChapters = chaptersByMember[row.entryId].orEmpty()
+                val expanded = row.entryId in expandedMemberIds
+                inCollapsedMember = !expanded
+                EntryChapterList.MemberHeader(
+                    entryId = row.entryId,
+                    title = row.title,
+                    sourceName = memberSourceNameById[row.entryId],
+                    childCount = memberChapters.size,
+                    unreadCount = memberChapters.count { !it.chapter.read },
+                    expanded = expanded,
+                )
+            }
             is EntryChildListRow.MissingCount -> EntryChapterList.MissingCount(
                 id = row.id,
                 count = row.count,
-            )
+            ).takeUnless { inCollapsedMember }
         }
     }.toPersistentList()
     val processedChapters = display.rows.mapNotNull { row ->
