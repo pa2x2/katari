@@ -246,31 +246,27 @@ class GetLibraryEntries(
         val collapsedItems = groups.mapNotNull { group ->
             val members = group.orderedEntryIds.mapNotNull(itemsById::get)
             when {
-                members.size > 1 -> mergeEntryItem(group.visibleEntryId, members)
+                members.size > 1 -> mergeEntryItem(group.visibleEntryId, members, hiddenSources)
                 members.size == 1 -> members.single()
                 else -> null
             }
         }
 
-        return collapsedItems.filterNot { item ->
-            val visibleSources = item.sourceIds - hiddenSources
-            visibleSources.isEmpty()
-        }
+        return collapsedItems.filter { item -> item.sources.any { it.id !in hiddenSources } }
     }
 
+    /** A merged item lists only its members' visible sources; it stays in the library while any member's is visible. */
     private fun mergeEntryItem(
         targetId: Long,
         members: List<LibraryItem>,
+        hiddenSources: Set<Long>,
     ): LibraryItem {
         val target = members.firstOrNull { it.entry.id == targetId } ?: members.first()
-        val sources = members.flatMap(LibraryItem::sources).distinctBy(LibraryItemSource::id)
-        val sourceItemOrientation = if (sources.size ==
-            1
-        ) {
-            target.sourceItemOrientation
-        } else {
-            EntryItemOrientation.VERTICAL
-        }
+        val sources = members.flatMap(LibraryItem::sources)
+            .distinctBy(LibraryItemSource::id)
+            .filterNot { it.id in hiddenSources }
+        val singleSourceMember = sources.singleOrNull()?.let { source -> members.first { it.sourceId == source.id } }
+        val sourceItemOrientation = singleSourceMember?.sourceItemOrientation ?: EntryItemOrientation.VERTICAL
 
         val memberSummaries = members.mapNotNull { it.availableProgressSummary }
         val libraryState = if (memberSummaries.size == members.size) {
