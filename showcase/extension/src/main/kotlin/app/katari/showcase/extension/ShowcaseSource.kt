@@ -43,7 +43,9 @@ internal class ShowcaseSource(
     override suspend fun getSearchContent(page: Int, query: String, filters: EntryFilterList): EntryPageResult<SEntry> =
         EntryPageResult(
             works()
-                .filter { it.title.contains(query, ignoreCase = true) || it.author.contains(query, ignoreCase = true) }
+                .filter { work ->
+                    (listOf(work.title, work.author) + work.genres).any { it.contains(query, ignoreCase = true) }
+                }
                 .map { it.toEntry() },
             hasNextPage = false,
         )
