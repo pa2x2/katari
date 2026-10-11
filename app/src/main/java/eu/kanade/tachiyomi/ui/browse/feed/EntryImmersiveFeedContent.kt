@@ -40,7 +40,7 @@ import tachiyomi.presentation.core.screens.LoadingScreen
 
 @Composable
 internal fun EntryImmersiveFeedContent(
-    timelineModel: CatalogChronologicalFeedScreenModel,
+    timelineModel: FeedScreenModel<CatalogListItem>,
     immersiveModel: EntryImmersiveScreenModel,
     snackbarHostState: SnackbarHostState,
     activeSource: Source,
@@ -162,7 +162,7 @@ internal fun EntryImmersiveFeedContent(
 @Composable
 private fun rememberFeedEntry(
     itemRef: FeedItemRef,
-    timelineModel: CatalogChronologicalFeedScreenModel,
+    timelineModel: FeedScreenModel<CatalogListItem>,
 ): Entry? {
     val item by remember(itemRef, timelineModel) { timelineModel.itemState(itemRef) }.collectAsState()
     return (item as? CatalogListItem.EntryItem)?.entry
