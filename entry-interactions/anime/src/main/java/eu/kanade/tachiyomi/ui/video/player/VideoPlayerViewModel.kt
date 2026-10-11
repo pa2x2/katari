@@ -59,7 +59,7 @@ import tachiyomi.domain.entry.repository.PlaybackPreferencesRepository
 import tachiyomi.domain.entry.service.MergedMemberExpansion
 import tachiyomi.domain.entry.service.MergedMemberExpansionSession
 import tachiyomi.domain.entry.service.sortedForReading
-import tachiyomi.domain.source.service.SourceManager
+import tachiyomi.domain.source.service.SourceInfoNames
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
@@ -74,7 +74,7 @@ internal class VideoPlayerViewModel @JvmOverloads constructor(
         Injekt.get<GetEntryWithChapters>()
     }.getOrNull(),
     private val entryRepository: EntryRepository? = runCatching { Injekt.get<EntryRepository>() }.getOrNull(),
-    private val sourceManager: SourceManager? = runCatching { Injekt.get<SourceManager>() }.getOrNull(),
+    private val sourceNames: SourceInfoNames? = runCatching { Injekt.get<SourceInfoNames>() }.getOrNull(),
     private val mergedMemberExpansionRepository: MergedMemberExpansionRepository? = runCatching {
         Injekt.get<MergedMemberExpansionRepository>()
     }.getOrNull(),
@@ -629,7 +629,7 @@ internal class VideoPlayerViewModel @JvmOverloads constructor(
         val memberSourceIds = memberEntries.mapNotNull { (memberId, member) -> member?.let { memberId to it.source } }
         val memberSourceNameById = if (memberSourceIds.map { it.second }.distinct().size > 1) {
             memberSourceIds.associate { (memberId, sourceId) ->
-                memberId to sourceManager?.getDisplayInfo(sourceId)?.name.orEmpty()
+                memberId to sourceNames?.of(sourceId).orEmpty()
             }
         } else {
             emptyMap()

@@ -23,6 +23,7 @@ import eu.kanade.tachiyomi.network.JavaScriptEngine
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.source.AndroidSourceManager
 import eu.kanade.tachiyomi.source.entry.EntryPreferenceProvider
+import eu.kanade.tachiyomi.source.getDisplayNameForEntryInfo
 import eu.kanade.tachiyomi.ui.base.delegate.ThemingDelegateImpl
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.protobuf.ProtoBuf
@@ -92,6 +93,7 @@ import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.service.EntryMetadataChangeNotifier
 import tachiyomi.domain.library.service.DuplicatePreferences
 import tachiyomi.domain.library.service.LibraryPreferences
+import tachiyomi.domain.source.service.SourceInfoNames
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.domain.storage.service.StorageManager
 import tachiyomi.source.local.image.LocalCoverManager
@@ -201,6 +203,10 @@ class AppModule(val app: Application) : InjektModule {
         addSingletonFactory { StorageManager(app, get()) }
 
         addSingletonFactory<SourceManager> { AndroidSourceManager(app, get(), get()) }
+        addSingletonFactory<SourceInfoNames> {
+            val sourceManager = get<SourceManager>()
+            SourceInfoNames { sourceId -> sourceManager.getDisplayInfo(sourceId).getDisplayNameForEntryInfo() }
+        }
         addSingletonFactory { ExtensionManager(app) }
         addSingletonFactory { TrackerManager(get(), get()) }
         addSingletonFactory { DelayedTrackingStore(app) }
