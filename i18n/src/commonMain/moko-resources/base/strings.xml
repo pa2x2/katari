@@ -1946,6 +1946,8 @@
     <string name="statistics_see_activity">See activity</string>
     <string name="statistics_chapters_read">Chapters read</string>
     <string name="statistics_episodes_watched">Episodes watched</string>
+    <string name="statistics_unit_chapters">chapters</string>
+    <string name="statistics_unit_episodes">episodes</string>
     <string name="statistics_by_media">By media</string>
     <string name="statistics_incognito_active">Activity isn’t recorded in incognito mode</string>
     <string name="statistics_activity_patterns">Activity patterns</string>
@@ -2295,7 +2297,6 @@
     <string name="statistics_daily_average">Daily average</string>
     <string name="statistics_streak">Streak</string>
     <string name="statistics_best_streak">Best: %s</string>
-    <string name="statistics_completed">Completed</string>
     <string name="statistics_change_vs_period">%1$s vs %2$s</string>
     <string name="statistics_no_earlier_period">No tracked period before this one</string>
     <string name="statistics_per_day">%s a day</string>

@@ -66,7 +66,7 @@ internal fun StatisticsActivitySummaryCards(
             activity.completionCountByType[type.type]?.takeIf { it > 0L }?.let { count ->
                 "${stringResource(type.displayName)} ${numbers.format(count)}"
             }
-        }.joinToString(" · ")
+        }.takeIf { it.size > 1 }.orEmpty().joinToString(" · ")
     } else {
         ""
     }
@@ -123,8 +123,10 @@ internal fun StatisticsActivitySummaryCards(
                 },
             )
             SummaryTile(
-                label = selectedType?.let { stringResource(it.consumedUnitLabel) }
-                    ?: stringResource(MR.strings.statistics_completed),
+                label = statisticsCompletionLabel(
+                    types = selectedType?.let(::listOf) ?: types,
+                    completionCountByType = activity?.completionCountByType.orEmpty(),
+                ),
                 value = activity?.completionCount?.let(numbers::format) ?: dash,
                 modifier = Modifier.weight(1f),
                 detail = { if (completionBreakdown.isNotEmpty()) TileDetail(completionBreakdown) },

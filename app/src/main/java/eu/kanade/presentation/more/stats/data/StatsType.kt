@@ -11,4 +11,5 @@ data class StatsType(
     val icon: ImageVector,
     val accent: EntryStatisticsAccent,
     val consumedUnitLabel: StringResource,
+    val consumedUnitName: StringResource,
 )

@@ -120,6 +120,7 @@ class StatisticsRecapStoryTest {
                 type = EntryType.MANGA,
                 accent = EntryStatisticsAccent.ROSE,
                 consumedUnitLabel = MR.strings.statistics_chapters_read,
+                consumedUnitName = MR.strings.statistics_unit_chapters,
                 consumedCountPlural = MR.plurals.statistics_chapters_read_count,
                 itemPaceCarriesAcrossTitles = true,
                 itemNumberLabel = MR.strings.statistics_recap_chapter_number,

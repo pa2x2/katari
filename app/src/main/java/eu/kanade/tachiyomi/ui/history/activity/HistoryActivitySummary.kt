@@ -17,11 +17,13 @@ data class HistoryActivitySummary(
     val totalDurationMillis: Long,
     val durationByType: Map<EntryType, Long>,
     val sessionCount: Long,
-    val completionCount: Long,
+    val completionCountByType: Map<EntryType, Long>,
     val hourlyDurationMillis: List<Long>?,
     val buckets: List<HistoryActivitySummaryBucket>,
     val bucketsAreMonths: Boolean,
-)
+) {
+    val completionCount: Long = completionCountByType.values.sum()
+}
 
 @Immutable
 data class HistoryActivitySummaryBucket(
@@ -62,7 +64,9 @@ internal fun summarizeHistoryActivity(
         totalDurationMillis = activity.sumOf { it.durationMillis },
         durationByType = activity.groupBy { it.type }.mapValues { (_, rows) -> rows.sumOf { it.durationMillis } },
         sessionCount = snapshot.sessions.filter { type == null || it.type == type }.sumOf { it.sessionCount },
-        completionCount = snapshot.completions.filter { type == null || it.type == type }.sumOf { it.count },
+        completionCountByType = snapshot.completions.filter { type == null || it.type == type }
+            .groupBy { it.type }
+            .mapValues { (_, rows) -> rows.sumOf { it.count } },
         hourlyDurationMillis = if (startDate == endDate) {
             buildActivityRhythm(snapshot.segments.filter { type == null || it.type == type }, activity)
                 .hourlyDurationMillis

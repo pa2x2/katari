@@ -35,6 +35,7 @@ class EntryStatisticsContractValidationContributor : FeatureValidationContributo
                         type = statisticsProvider.type,
                         accent = statisticsProvider.accent,
                         consumedUnitLabel = statisticsProvider.consumedUnitLabel,
+                        consumedUnitName = statisticsProvider.consumedUnitName,
                         consumedCountPlural = statisticsProvider.consumedCountPlural,
                         itemPaceCarriesAcrossTitles = statisticsProvider.itemPaceCarriesAcrossTitles,
                         itemNumberLabel = statisticsProvider.itemNumberLabel,
