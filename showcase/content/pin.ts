@@ -1,5 +1,5 @@
 /**
- * Resolves sources.ts into content.lock.json.
+ * Resolves sources.ts into pinned/content.lock.json.
  *
  * Run it after editing sources.ts, or with --refresh to check every upstream file again; a changed upstream file then
  * shows up as a changed sha256 in the lock's diff.
@@ -26,7 +26,7 @@ for (const work of works) {
 }
 
 const lock: Lock = { sources, works: locked };
-writeFileSync(new URL("content.lock.json", import.meta.url), `${JSON.stringify(lock, null, 2)}\n`);
+writeFileSync(new URL("pinned/content.lock.json", import.meta.url), `${JSON.stringify(lock, null, 2)}\n`);
 
 function resolve(work: WorkDefinition) {
   switch (work.kind) {

@@ -1,5 +1,5 @@
 /**
- * Builds the folder the showcase content server serves, from the files pinned in content.lock.json.
+ * Builds the folder the showcase content server serves, from the files pinned in pinned/content.lock.json.
  *
  * The folder holds `catalog.json` (see catalog.ts) and `files/`, with every page, book, video, and cover under the path
  * the catalog gives for it. Every download is checked against its pinned sha256 first, so the folder is the same on
@@ -18,7 +18,7 @@ import { extractMember } from "./zip-archive.ts";
 const { values } = parseArgs({ options: { out: { type: "string", default: join(cacheDir(), "served") } } });
 const out = resolve(values.out);
 
-const lock: Lock = JSON.parse(readFileSync(new URL("content.lock.json", import.meta.url), "utf8"));
+const lock: Lock = JSON.parse(readFileSync(new URL("pinned/content.lock.json", import.meta.url), "utf8"));
 rmSync(join(out, "files"), { recursive: true, force: true });
 mkdirSync(join(out, "files"), { recursive: true });
 

@@ -1,0 +1,40 @@
+plugins {
+    alias(mihonx.plugins.android.application)
+    alias(mihonx.plugins.spotless)
+
+    alias(libs.plugins.kotlin.serialization)
+}
+
+android {
+    namespace = "app.katari.showcase.extension"
+
+    defaultConfig {
+        applicationId = "app.katari.showcase.extension"
+        versionCode = 1
+        // The extension loader reads the source API version from versionName's major.minor.
+        versionName = "2.6.1"
+
+        // The emulator reaches the host's loopback interface through 10.0.2.2, where the content server listens.
+        buildConfigField("String", "CONTENT_SERVER", "\"http://10.0.2.2:8571\"")
+    }
+
+    buildFeatures {
+        buildConfig = true
+    }
+
+    sourceSets {
+        // The factory lists its sources from the pinned lock before any network request is possible.
+        getByName("main").resources.directories.add("../content/pinned")
+    }
+}
+
+// Katari provides the source API and the Kotlin runtime to every extension it loads; bundled copies would shadow them.
+configurations.configureEach {
+    if (name.endsWith("RuntimeClasspath")) {
+        exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib")
+    }
+}
+
+dependencies {
+    compileOnly(projects.entrySourceApi)
+}

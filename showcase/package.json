@@ -8,6 +8,7 @@
   "scripts": {
     "pin": "node content/pin.ts",
     "fetch": "node content/fetch.ts",
+    "serve": "node content/serve.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

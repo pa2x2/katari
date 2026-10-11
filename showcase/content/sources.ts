@@ -1,7 +1,7 @@
 /**
  * Openly licensed works the showcase library is built from.
  *
- * `pin.ts` resolves these into `content.lock.json`: every file with its URL, size, and sha256, plus the metadata and
+ * `pin.ts` resolves these into `pinned/content.lock.json`: every file with its URL, size, and sha256, plus the metadata and
  * attribution each work needs. `fetch.ts` only ever reads the lock, so what the showcase shows changes only when this
  * file changes and the lock is pinned again.
  *
