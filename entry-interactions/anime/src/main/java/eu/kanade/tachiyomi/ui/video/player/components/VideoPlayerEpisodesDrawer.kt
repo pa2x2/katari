@@ -16,12 +16,15 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ViewList
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.outlined.ExpandLess
+import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -36,6 +39,7 @@ import tachiyomi.domain.entry.model.EntryProgressState
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.OverlayActionButton
 import tachiyomi.presentation.core.components.reader.OverlayListDrawer
+import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable
@@ -43,15 +47,20 @@ internal fun VideoPlayerEpisodesDrawer(
     visible: Boolean,
     anime: Entry,
     episodeListItems: List<VideoPlayerEpisodeListEntry>,
+    expandedMemberIds: Set<Long>,
     currentEpisodeId: Long,
     playbackStateByEpisodeId: Map<Long, EntryProgressState>,
     sourceAvailable: Boolean,
     onEpisodeClick: (EntryChapter) -> Unit,
+    onMemberClick: (Long) -> Unit,
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val listState = rememberLazyListState()
-    val currentEpisodeIndex = episodeListItems.indexOfFirst { entry ->
+    val shownItems = remember(episodeListItems, expandedMemberIds) {
+        episodeListItems.withoutCollapsedMembers(expandedMemberIds)
+    }
+    val currentEpisodeIndex = shownItems.indexOfFirst { entry ->
         (entry as? VideoPlayerEpisodeListEntry.Item)?.episode?.id == currentEpisodeId
     }
 
@@ -76,11 +85,13 @@ internal fun VideoPlayerEpisodesDrawer(
         ) {
             videoPlayerEpisodeItems(
                 anime = anime,
-                episodeListItems = episodeListItems,
+                episodeListItems = shownItems,
+                expandedMemberIds = expandedMemberIds,
                 currentEpisodeId = currentEpisodeId,
                 playbackStateByEpisodeId = playbackStateByEpisodeId,
                 sourceAvailable = sourceAvailable,
                 onEpisodeClick = onEpisodeClick,
+                onMemberClick = onMemberClick,
             )
         }
     }
@@ -89,10 +100,12 @@ internal fun VideoPlayerEpisodesDrawer(
 private fun androidx.compose.foundation.lazy.LazyListScope.videoPlayerEpisodeItems(
     anime: Entry,
     episodeListItems: List<VideoPlayerEpisodeListEntry>,
+    expandedMemberIds: Set<Long>,
     currentEpisodeId: Long,
     playbackStateByEpisodeId: Map<Long, EntryProgressState>,
     sourceAvailable: Boolean,
     onEpisodeClick: (EntryChapter) -> Unit,
+    onMemberClick: (Long) -> Unit,
 ) {
     if (episodeListItems.isEmpty()) {
         item {
@@ -105,6 +118,8 @@ private fun androidx.compose.foundation.lazy.LazyListScope.videoPlayerEpisodeIte
         }
         return
     }
+    // A merged list names each member in its header, so rows don't repeat the merged entry's title.
+    val showsEntryTitle = episodeListItems.none { it is VideoPlayerEpisodeListEntry.MemberHeader }
 
     items(
         items = episodeListItems,
@@ -117,7 +132,11 @@ private fun androidx.compose.foundation.lazy.LazyListScope.videoPlayerEpisodeIte
     ) { entry ->
         when (entry) {
             is VideoPlayerEpisodeListEntry.MemberHeader -> {
-                VideoPlayerEpisodeMemberHeader(title = entry.title)
+                VideoPlayerEpisodeMemberHeader(
+                    header = entry,
+                    expanded = entry.animeId in expandedMemberIds,
+                    onClick = { onMemberClick(entry.animeId) },
+                )
             }
             is VideoPlayerEpisodeListEntry.Item -> {
                 val episode = entry.episode
@@ -126,6 +145,7 @@ private fun androidx.compose.foundation.lazy.LazyListScope.videoPlayerEpisodeIte
                     episode = episode,
                     selected = episode.id == currentEpisodeId,
                     playbackState = playbackStateByEpisodeId[episode.id],
+                    showsEntryTitle = showsEntryTitle,
                     enabled = true,
                     onClick = { onEpisodeClick(episode) },
                 )
@@ -136,16 +156,65 @@ private fun androidx.compose.foundation.lazy.LazyListScope.videoPlayerEpisodeIte
 
 @Composable
 private fun VideoPlayerEpisodeMemberHeader(
-    title: String,
+    header: VideoPlayerEpisodeListEntry.MemberHeader,
+    expanded: Boolean,
+    onClick: () -> Unit,
 ) {
-    Text(
-        text = title,
-        style = MaterialTheme.typography.labelLarge,
-        color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
-        maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
-    )
+    val summary = listOfNotNull(
+        header.sourceName,
+        pluralStringResource(MR.plurals.anime_num_episodes, header.episodeCount, header.episodeCount),
+        header.unwatchedCount.takeIf { it > 0 }?.let {
+            stringResource(
+                MR.strings.entry_member_unconsumed_count,
+                stringResource(MR.strings.action_filter_unwatched),
+                it,
+            )
+        },
+    ).joinToString(" · ")
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(start = 16.dp, top = 10.dp, end = 12.dp, bottom = 10.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = header.title,
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.primary,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                text = summary,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        Icon(
+            imageVector = if (expanded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+/** Drops the episodes listed under collapsed member headers. */
+private fun List<VideoPlayerEpisodeListEntry>.withoutCollapsedMembers(
+    expandedMemberIds: Set<Long>,
+): List<VideoPlayerEpisodeListEntry> {
+    var inCollapsedMember = false
+    return filter { entry ->
+        when (entry) {
+            is VideoPlayerEpisodeListEntry.MemberHeader -> {
+                inCollapsedMember = entry.animeId !in expandedMemberIds
+                true
+            }
+            is VideoPlayerEpisodeListEntry.Item -> !inCollapsedMember
+        }
+    }
 }
 
 @Composable
@@ -154,6 +223,7 @@ private fun VideoPlayerEpisodeRow(
     episode: EntryChapter,
     selected: Boolean,
     playbackState: EntryProgressState?,
+    showsEntryTitle: Boolean,
     enabled: Boolean,
     onClick: () -> Unit,
 ) {
@@ -199,13 +269,15 @@ private fun VideoPlayerEpisodeRow(
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
-                Text(
-                    text = anime.displayTitle,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = contentColor.copy(alpha = 0.72f),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
+                if (showsEntryTitle) {
+                    Text(
+                        text = anime.displayTitle,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = contentColor.copy(alpha = 0.72f),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
                 if (progress != null) {
                     Box(
                         modifier = Modifier

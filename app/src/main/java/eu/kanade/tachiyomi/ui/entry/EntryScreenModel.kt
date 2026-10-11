@@ -156,6 +156,7 @@ import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.entry.repository.MergedMemberExpansionRepository
+import tachiyomi.domain.entry.service.shownExpandedMembers
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.source.model.SourceDisplayInfo
 import tachiyomi.domain.source.service.SourceManager
@@ -2377,7 +2378,7 @@ class EntryScreenModel(
                 expandedMemberIds = shownExpandedMembers(
                     saved = savedExpandedMemberIds,
                     toggledThisSession = toggledMemberIds,
-                    continueMemberId = chapters.memberOf(continueTargetChapterId),
+                    currentMemberId = chapters.memberOf(continueTargetChapterId),
                 ),
                 childListFeature = childListFeature,
                 childGroupFilterFeature = childGroupFilterFeature,
@@ -2455,7 +2456,7 @@ class EntryScreenModel(
                 get() = shownExpandedMembers(
                     saved = savedExpandedMemberIds,
                     toggledThisSession = toggledMemberIds,
-                    continueMemberId = chapters.memberOf(continueTargetChapterId),
+                    currentMemberId = chapters.memberOf(continueTargetChapterId),
                 )
 
             fun rebuildChapterPresentation(): Success {
@@ -2665,4 +2666,8 @@ private fun computeDefaultChapterFlags(libraryPreferences: LibraryPreferences): 
         libraryPreferences.sortChapterBySourceOrNumber.get() or
         libraryPreferences.displayChapterByNameOrNumber.get() or
         libraryPreferences.sortChapterByAscendingOrDescending.get()
+}
+
+private fun List<EntryChapterList.Item>.memberOf(chapterId: Long?): Long? {
+    return chapterId?.let { id -> firstOrNull { it.id == id }?.chapter?.entryId }
 }

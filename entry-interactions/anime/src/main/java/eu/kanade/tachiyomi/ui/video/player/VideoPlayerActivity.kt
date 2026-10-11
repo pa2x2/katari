@@ -1323,6 +1323,7 @@ class VideoPlayerActivity : AppCompatActivity() {
                             anime = current.entry,
                             currentEpisodeId = current.chapterId,
                             episodeListItems = current.chapterListItems,
+                            expandedMemberIds = viewModel.expandedMemberIds.collectAsState().value,
                             playbackStateByEpisodeId = current.playbackStateByChapterId,
                             sourceAvailable = current.sourceAvailable,
                             hasPreviousEpisode = current.previousChapterId != null,
@@ -1376,6 +1377,7 @@ class VideoPlayerActivity : AppCompatActivity() {
                                 episodesDrawerVisible = false
                                 registerControllerInteraction(true)
                             },
+                            onMemberToggled = viewModel::toggleMemberExpanded,
                             onEpisodeSelected = { episode: EntryChapter ->
                                 if (episode.id != current.chapterId) {
                                     temporarySpeedBoostActive = false
