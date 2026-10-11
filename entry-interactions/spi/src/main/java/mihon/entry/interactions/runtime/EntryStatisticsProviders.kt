@@ -9,6 +9,12 @@ interface EntryStatisticsProvider : EntryInteractionProvider {
     val accent: EntryStatisticsAccent
     val consumedUnitLabel: StringResource
 
+    /** [consumedUnitLabel]'s items as a lowercase plural noun, such as "chapters", for compact labels and lists. */
+    val consumedUnitName: StringResource
+
+    /** The average time spent per finished item, such as "~40m per chapter". */
+    val timePerItemLabel: StringResource
+
     /** A count of [consumedUnitLabel]'s items, such as "3 chapters read". */
     val consumedCountPlural: PluralsResource
 

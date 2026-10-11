@@ -18,5 +18,7 @@ internal fun buildStatisticsTypes(
         icon = presentation.badgeIcon,
         accent = contribution.accent,
         consumedUnitLabel = contribution.consumedUnitLabel,
+        consumedUnitName = contribution.consumedUnitName,
+        timePerItemLabel = contribution.timePerItemLabel,
     )
 }

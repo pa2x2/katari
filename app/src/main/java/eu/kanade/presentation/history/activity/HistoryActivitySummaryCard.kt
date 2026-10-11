@@ -23,6 +23,7 @@ import eu.kanade.presentation.more.stats.components.StatisticsTypeBreakdown
 import eu.kanade.presentation.more.stats.components.color
 import eu.kanade.presentation.more.stats.components.peakHour
 import eu.kanade.presentation.more.stats.components.rememberStatisticsDurationFormatter
+import eu.kanade.presentation.more.stats.components.statisticsCompletionLabel
 import eu.kanade.presentation.more.stats.components.statisticsTypeShares
 import eu.kanade.presentation.more.stats.data.StatsType
 import eu.kanade.tachiyomi.source.entry.EntryType
@@ -74,8 +75,10 @@ internal fun HistoryActivitySummaryCard(
             )
             StatisticsInsightTile(
                 value = numbers.format(summary.completionCount),
-                label = selectedType?.let { stringResource(it.consumedUnitLabel) }
-                    ?: stringResource(MR.strings.statistics_completed),
+                label = statisticsCompletionLabel(
+                    types = selectedType?.let(::listOf) ?: types,
+                    completionCountByType = summary.completionCountByType,
+                ),
                 modifier = Modifier.weight(1f).fillMaxHeight(),
             )
         }

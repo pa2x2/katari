@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.14.2] - 2026-10-11
+
+### 🧩 Improved
+
+- The completion tile in Statistics and activity history names what it counts, such as chapters or episodes, instead of "Completed".
+- In Statistics, that tile also shows the average time per chapter or episode, or the date you last finished one.
+
+### 🐛 Fixed
+
+- Refreshing a feed with many new items keeps your place instead of jumping to the newest ones.
+
 ## [1.14.1] - 2026-10-07
 
 ### 🧩 Improved
@@ -681,7 +692,8 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v1.14.1...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/v1.14.2...HEAD
+[1.14.2]: https://github.com/pa2x2/katari/releases/tag/v1.14.2
 [1.14.1]: https://github.com/pa2x2/katari/releases/tag/v1.14.1
 [1.14.0]: https://github.com/pa2x2/katari/releases/tag/v1.14.0
 [1.13.3]: https://github.com/pa2x2/katari/releases/tag/v1.13.3

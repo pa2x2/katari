@@ -128,6 +128,13 @@ internal fun EntryImmersiveFeedContent(
         onNearEnd = { timelineModel.loadMore() },
         modifier = modifier,
     ) { pagerState ->
+        KeepFeedPositionAcrossPrepends(
+            itemRefs = timelineState.itemRefs,
+            leadingItemCount = 0,
+            viewportKey = pagerState,
+            firstVisibleItem = { pagerState.currentPage to 0 },
+            requestScrollToItem = { index, _ -> pagerState.requestScrollToPage(index) },
+        )
         FeedNewItemsIndicator(
             state = timelineState,
             screenModel = timelineModel,

@@ -44,7 +44,7 @@ import kotlin.math.roundToLong
 
 /**
  * Time spent with the change since the previous window, daily average, streak and completions. [activity]
- * is already projected to [selectedType]; [types] supplies per-type labels for the Overview breakdown.
+ * is already projected to [selectedType]; [types] are the Overview's types, which the completion tile names.
  *
  * With a daily [goal], the Overview of the latest window shows today's progress in place of the daily average and
  * adds the goal streak; the goal counts every type, so type tabs and earlier windows keep the plain summary.
@@ -61,15 +61,7 @@ internal fun StatisticsActivitySummaryCards(
     val dash = "—"
     val isLatest = activity?.window?.isLatest != false
     val shownGoal = goal?.takeIf { selectedType == null && isLatest }
-    val completionBreakdown = if (selectedType == null && activity != null) {
-        types.mapNotNull { type ->
-            activity.completionCountByType[type.type]?.takeIf { it > 0L }?.let { count ->
-                "${stringResource(type.displayName)} ${numbers.format(count)}"
-            }
-        }.joinToString(" · ")
-    } else {
-        ""
-    }
+    val completionTypes = selectedType?.let(::listOf) ?: types
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             SummaryTile(
@@ -123,11 +115,17 @@ internal fun StatisticsActivitySummaryCards(
                 },
             )
             SummaryTile(
-                label = selectedType?.let { stringResource(it.consumedUnitLabel) }
-                    ?: stringResource(MR.strings.statistics_completed),
+                label = statisticsCompletionLabel(
+                    types = completionTypes,
+                    completionCountByType = activity?.completionCountByType.orEmpty(),
+                ),
                 value = activity?.completionCount?.let(numbers::format) ?: dash,
                 modifier = Modifier.weight(1f),
-                detail = { if (completionBreakdown.isNotEmpty()) TileDetail(completionBreakdown) },
+                detail = {
+                    activity?.let {
+                        statisticsCompletionDetail(it, completionTypes, formatDuration)
+                    }?.let { TileDetail(it) }
+                },
             )
         }
         if (shownGoal != null) {

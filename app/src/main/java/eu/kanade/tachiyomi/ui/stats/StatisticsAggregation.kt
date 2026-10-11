@@ -156,6 +156,10 @@ internal fun buildWindowActivity(
         completionCountByType = types.associateWith { type ->
             snapshot.completions.filter { it.type == type }.sumOf { it.count }
         },
+        lastCompletionDateByType = streakTimeline.completions
+            .filter { it.type in types && it.count > 0L }
+            .groupBy { it.type }
+            .mapValues { (_, rows) -> rows.maxOf { LocalDate.parse(it.localDate) } },
         sessionCount = snapshot.sessions.sumOf { it.sessionCount },
         sessionCountByType = types.associateWith { type ->
             snapshot.sessions.firstOrNull { it.type == type }?.sessionCount ?: 0L

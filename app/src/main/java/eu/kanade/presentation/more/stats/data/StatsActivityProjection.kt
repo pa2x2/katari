@@ -9,6 +9,7 @@ internal fun StatsActivity.forType(type: EntryType?): StatsActivity {
         totalDurationByType = mapOf(type to (totalDurationByType[type] ?: 0L)),
         completionCount = completionCountByType[type] ?: 0L,
         completionCountByType = mapOf(type to (completionCountByType[type] ?: 0L)),
+        lastCompletionDateByType = lastCompletionDateByType.filterKeys { it == type },
         sessionCount = sessionCountByType[type] ?: 0L,
         sessionCountByType = mapOf(type to (sessionCountByType[type] ?: 0L)),
         averageSessionDurationMillis = averageSessionDurationByType[type] ?: 0L,
