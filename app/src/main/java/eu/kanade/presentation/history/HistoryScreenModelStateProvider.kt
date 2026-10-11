@@ -130,6 +130,7 @@ class HistoryScreenModelStateProvider : PreviewParameterProvider<HistoryScreenMo
                 historyItem = historyItem,
                 visibleEntryId = historyItem.entryId,
                 visibleTitle = historyItem.entryTitle,
+                memberTitle = null,
                 visibleCoverData = historyItem.coverData,
             )
             return HistoryUiModel.Item(historyBuilder(uiItem))

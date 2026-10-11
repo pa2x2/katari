@@ -48,6 +48,7 @@ internal class HistoryItemProvider : PreviewParameterProvider<HistoryUiItem> {
         historyItem = HistoryItem.EntryHistory(mangaHistory),
         visibleEntryId = mangaHistory.entryId,
         visibleTitle = mangaHistory.title,
+        memberTitle = null,
         visibleCoverData = mangaHistory.coverData,
     )
 
@@ -55,6 +56,7 @@ internal class HistoryItemProvider : PreviewParameterProvider<HistoryUiItem> {
         historyItem = HistoryItem.EntryHistory(animeHistory),
         visibleEntryId = animeHistory.entryId,
         visibleTitle = animeHistory.title,
+        memberTitle = "Season 2",
         visibleCoverData = animeHistory.coverData,
     )
 

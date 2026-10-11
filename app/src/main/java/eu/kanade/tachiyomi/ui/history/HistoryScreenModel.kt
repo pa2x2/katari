@@ -144,6 +144,9 @@ class HistoryScreenModel(
                     historyItem = historyItem,
                     visibleEntryId = visibleEntryId,
                     visibleTitle = visibleTitle,
+                    memberTitle = ownerEntry?.displayTitle?.takeIf {
+                        visibleEntryId != historyItem.entryId && it != visibleTitle
+                    },
                     visibleCoverData = visibleCoverData,
                 ),
             )

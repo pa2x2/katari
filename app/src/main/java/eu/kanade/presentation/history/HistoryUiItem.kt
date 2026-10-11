@@ -11,5 +11,7 @@ data class HistoryUiItem(
     val historyItem: HistoryItem,
     val visibleEntryId: Long,
     val visibleTitle: String,
+    /** The merged member's own title; null unless it differs from [visibleTitle]. */
+    val memberTitle: String?,
     val visibleCoverData: EntryCover,
 )
