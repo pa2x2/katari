@@ -1,0 +1,48 @@
+---
+import { RELEASES, sitePath } from "../site/links.ts";
+import { latestRelease, megabytes, releaseDate } from "./latest-release.ts";
+
+interface Props {
+  /** Whether to link the answer that compares the two builds; that answer itself leaves the link out. */
+  explained?: boolean;
+}
+
+const { explained = true } = Astro.props;
+const release = await latestRelease();
+---
+
+<div class="download" data-download-buttons>
+  <div class="buttons">
+    <a class="button" href={release?.standard.url ?? `${RELEASES}/latest`}>
+      <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 4v12m-5-5 5 5 5-5M5 20h14" /></svg>
+      Download Katari
+    </a>
+    <a class="button quiet" href={release?.foss.url ?? `${RELEASES}/latest`}>Katari FOSS</a>
+  </div>
+  <p>
+    {release && <>{release.tag} · {releaseDate(release)} · {megabytes(release.standard)} · </>}Android 10 or newer.
+    Katari FOSS leaves out Google services.{explained && <>{" "}<a href={sitePath("start/#which-file")}>Which one?</a></>}
+  </p>
+</div>
+
+<style>
+  .buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  svg {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  p {
+    margin: 0.9rem 0 0;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+</style>

@@ -1,7 +1,8 @@
 name: Website
 
 # Builds the website from website/ on main and the captures on the `assets` branch, and deploys it to GitHub
-# Pages. The `assets` branch starts this workflow whenever a capture pull request is merged into it.
+# Pages. The `assets` branch starts this workflow whenever a capture pull request is merged into it, and
+# website-release.yml whenever a release is published.
 on:
   push:
     branches:
@@ -42,12 +43,18 @@ jobs:
           cache: npm
           cache-dependency-path: website/package-lock.json
 
-      - name: Build
+      - name: Install
         working-directory: website
         run: |
           npm ci
           npm run sync -- --from ../assets
-          npm run build
+
+      # The download buttons link the newest release's APKs, which the build reads from GitHub.
+      - name: Build
+        working-directory: website
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: npm run build
 
       - name: Upload
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0

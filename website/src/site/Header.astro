@@ -47,13 +47,17 @@ const links = [
     menu.focus();
   });
 
-  // While the hero's own download buttons are on screen, the header's would only repeat them.
-  const heroDownload = document.querySelector("[data-hero-download]");
-  if (heroDownload) {
-    new IntersectionObserver(([entry]) => header.classList.toggle("hero-download-visible", entry!.isIntersecting)).observe(
-      heroDownload,
-    );
-  }
+  // While a page's own download buttons are on screen, the header's would only repeat them.
+  const visible = new Set<Element>();
+  const observer = new IntersectionObserver((entries) => {
+    for (const entry of entries) {
+      if (entry.isIntersecting) visible.add(entry.target);
+      else visible.delete(entry.target);
+    }
+    header.classList.toggle("download-visible", visible.size > 0);
+    header.classList.add("settled");
+  });
+  for (const buttons of document.querySelectorAll("[data-download-buttons]")) observer.observe(buttons);
 </script>
 
 <style>
@@ -125,19 +129,35 @@ const links = [
 
   .download {
     padding: 0.45rem 1rem;
+  }
+
+  /* A page with its own download buttons usually opens on them, so the header's stays hidden until the script has
+     looked rather than showing for a moment and fading away. It only fades in or out once the visitor scrolls. */
+  :global(body:has([data-download-buttons])) .header:not(.settled) .download,
+  .download-visible .download {
+    visibility: hidden;
+    opacity: 0;
+  }
+
+  .settled .download {
     transition:
       opacity 0.2s,
       visibility 0.2s;
   }
 
-  .hero-download-visible .download {
-    visibility: hidden;
-    opacity: 0;
-  }
-
   @media (max-width: 44rem) {
     .menu {
       display: block;
+    }
+
+    /* Download stays beside the brand; the menu button takes the far end. */
+    nav {
+      order: 1;
+      margin-left: 0;
+    }
+
+    .download {
+      margin-left: auto;
     }
 
     ul {
