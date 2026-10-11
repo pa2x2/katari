@@ -29,7 +29,14 @@ const { values } = parseArgs({
 const root = resolve(values.root);
 
 const server = createServer((request, response) => {
-  const path = normalize(join(root, decodeURIComponent(new URL(request.url ?? "/", "http://showcase").pathname)));
+  let pathname: string;
+  try {
+    pathname = decodeURIComponent(new URL(request.url ?? "/", "http://showcase").pathname);
+  } catch {
+    response.writeHead(400).end();
+    return;
+  }
+  const path = normalize(join(root, pathname));
   const size = path.startsWith(root + sep) ? fileSize(path) : undefined;
   if (size === undefined || (request.method !== "GET" && request.method !== "HEAD")) {
     response.writeHead(404).end();
