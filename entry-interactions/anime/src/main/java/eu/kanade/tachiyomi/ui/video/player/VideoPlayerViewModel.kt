@@ -56,7 +56,8 @@ import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.entry.repository.MergedMemberExpansionRepository
 import tachiyomi.domain.entry.repository.PlaybackPreferencesRepository
-import tachiyomi.domain.entry.service.shownExpandedMembers
+import tachiyomi.domain.entry.service.MergedMemberExpansion
+import tachiyomi.domain.entry.service.MergedMemberExpansionSession
 import tachiyomi.domain.entry.service.sortedForReading
 import tachiyomi.domain.source.service.SourceManager
 import uy.kohesive.injekt.Injekt
@@ -90,31 +91,24 @@ internal class VideoPlayerViewModel @JvmOverloads constructor(
     private val mutableEvents = MutableSharedFlow<Event>(extraBufferCapacity = 1)
     val events = mutableEvents.asSharedFlow()
 
-    private val toggledMemberIds = MutableStateFlow(emptySet<Long>())
+    private val memberExpansion = mergedMemberExpansionRepository?.let { repository ->
+        MergedMemberExpansionSession(
+            repository = repository,
+            scope = viewModelScope,
+            memberIds = mutableState.filterIsInstance<State.Ready>().map { it.memberIds },
+        )
+    }
 
     /** Merged members whose episodes the drawer lists; the playing member opens until it is toggled. */
-    @OptIn(ExperimentalCoroutinesApi::class)
-    val expandedMemberIds: StateFlow<Set<Long>> = mutableState
-        .filterIsInstance<State.Ready>()
-        .map { ready -> ready.memberIds.takeIf { it.size > 1 }.orEmpty() to ready.ownerEntryId }
-        .distinctUntilChanged()
-        .flatMapLatest { (memberIds, playingMemberId) ->
-            val saved = mergedMemberExpansionRepository
-                ?.takeIf { memberIds.isNotEmpty() }
-                ?.subscribeExpanded(memberIds)
-                ?: flowOf(emptySet())
-            combine(saved, toggledMemberIds) { savedIds, toggled ->
-                shownExpandedMembers(savedIds, toggled, playingMemberId)
-            }
-        }
+    val expandedMemberIds: StateFlow<Set<Long>> = combine(
+        memberExpansion?.state ?: flowOf(MergedMemberExpansion()),
+        mutableState.filterIsInstance<State.Ready>().map { it.ownerEntryId },
+    ) { expansion, playingMemberId -> expansion.shown(playingMemberId) }
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptySet())
 
     fun toggleMemberExpanded(memberId: Long) {
-        val expanded = memberId in expandedMemberIds.value
-        toggledMemberIds.update { it + memberId }
-        viewModelScope.launch(persistenceDispatcher) {
-            mergedMemberExpansionRepository?.setExpanded(memberId, !expanded)
-        }
+        val ready = mutableState.value as? State.Ready ?: return
+        memberExpansion?.toggle(memberId, ready.ownerEntryId)
     }
 
     private var initialized = false

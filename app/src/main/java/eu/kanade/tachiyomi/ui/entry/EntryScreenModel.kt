@@ -156,7 +156,8 @@ import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.entry.repository.MergedMemberExpansionRepository
-import tachiyomi.domain.entry.service.shownExpandedMembers
+import tachiyomi.domain.entry.service.MergedMemberExpansion
+import tachiyomi.domain.entry.service.MergedMemberExpansionSession
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.source.model.SourceDisplayInfo
 import tachiyomi.domain.source.service.SourceManager
@@ -227,6 +228,12 @@ class EntryScreenModel(
 
     private val successState: State.Success?
         get() = state.value as? State.Success
+
+    private val memberExpansion = MergedMemberExpansionSession(
+        repository = mergedMemberExpansionRepository,
+        scope = screenModelScope,
+        memberIds = state.filterIsInstance<State.Success>().map { it.memberIds },
+    )
 
     val entry: Entry?
         get() = successState?.entry
@@ -493,33 +500,17 @@ class EntryScreenModel(
 
     private fun observeExpandedMembers() {
         screenModelScope.launchIO {
-            state
-                .filterIsInstance<State.Success>()
-                .map { it.memberIds.takeIf { ids -> ids.size > 1 }.orEmpty() }
-                .distinctUntilChanged()
-                .flatMapLatest { memberIds ->
-                    if (memberIds.isEmpty()) {
-                        flowOf(emptySet())
-                    } else {
-                        mergedMemberExpansionRepository.subscribeExpanded(memberIds)
-                    }
-                }
+            memberExpansion.state
                 .flowWithLifecycle(lifecycle)
-                .collectLatest { saved ->
-                    updateSuccessState { it.copy(savedExpandedMemberIds = saved).rebuildChapterPresentation() }
+                .collectLatest { expansion ->
+                    updateSuccessState { it.copy(memberExpansion = expansion).rebuildChapterPresentation() }
                 }
         }
     }
 
     fun toggleMemberExpanded(memberId: Long) {
         val successState = successState ?: return
-        val expanded = memberId in successState.expandedMemberIds
-        updateSuccessState {
-            it.copy(toggledMemberIds = it.toggledMemberIds + memberId).rebuildChapterPresentation()
-        }
-        screenModelScope.launchIO {
-            mergedMemberExpansionRepository.setExpanded(memberId, !expanded)
-        }
+        memberExpansion.toggle(memberId, successState.currentMemberId)
     }
 
     private fun observeChildProgressLabels() {
@@ -2367,19 +2358,14 @@ class EntryScreenModel(
             val dialog: Dialog? = null,
             val hasPromptedToAddBefore: Boolean = false,
             val hideMissingChapters: Boolean = false,
-            val savedExpandedMemberIds: Set<Long> = emptySet(),
-            val toggledMemberIds: Set<Long> = emptySet(),
+            val memberExpansion: MergedMemberExpansion = MergedMemberExpansion(),
             private val chapterPresentation: EntryChapterPresentation = buildChapterPresentation(
                 entry = entry,
                 chapters = chapters,
                 memberIds = memberIds,
                 memberTitleById = memberTitleById,
                 memberSourceNameById = memberSourceNameById,
-                expandedMemberIds = shownExpandedMembers(
-                    saved = savedExpandedMemberIds,
-                    toggledThisSession = toggledMemberIds,
-                    currentMemberId = chapters.memberOf(continueTargetChapterId),
-                ),
+                expandedMemberIds = memberExpansion.shown(chapters.memberOf(continueTargetChapterId)),
                 childListFeature = childListFeature,
                 childGroupFilterFeature = childGroupFilterFeature,
                 childGroupFilterState = childGroupFilterState,
@@ -2452,12 +2438,12 @@ class EntryScreenModel(
             val downloadSourceIds: Set<Long>
                 get() = chapterPresentation.sourceIds
 
+            /** The merged member holding the chapter to continue with, which opens expanded. */
+            val currentMemberId: Long?
+                get() = chapters.memberOf(continueTargetChapterId)
+
             val expandedMemberIds: Set<Long>
-                get() = shownExpandedMembers(
-                    saved = savedExpandedMemberIds,
-                    toggledThisSession = toggledMemberIds,
-                    currentMemberId = chapters.memberOf(continueTargetChapterId),
-                )
+                get() = memberExpansion.shown(currentMemberId)
 
             fun rebuildChapterPresentation(): Success {
                 return copy(
