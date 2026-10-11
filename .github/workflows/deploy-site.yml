@@ -1,6 +1,6 @@
-name: Deploy the showcase site
+name: Deploy the website
 
-# The site is built from main, where its workflow lives; a push here only asks that workflow to run with the new captures.
+# The website is built from main, where its workflow lives; a push here only asks that workflow to run with the new captures.
 on:
   push:
     branches:
@@ -19,4 +19,4 @@ jobs:
       - name: Start
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh workflow run showcase-site.yml --repo "$GITHUB_REPOSITORY" --ref main
+        run: gh workflow run website.yml --repo "$GITHUB_REPOSITORY" --ref main
