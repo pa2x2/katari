@@ -4,8 +4,6 @@ import androidx.paging.PagingSource
 import eu.kanade.domain.source.model.FeedItemRef
 import eu.kanade.domain.source.model.applySnapshot
 import eu.kanade.domain.source.model.catalogueListing
-import eu.kanade.domain.source.service.BrowseFeedService
-import eu.kanade.domain.source.service.ProfileSourcePreferences
 import eu.kanade.tachiyomi.source.entry.EntryFilterList
 import eu.kanade.tachiyomi.ui.browse.catalog.CatalogFilterLoader
 import kotlinx.coroutines.flow.Flow
@@ -18,25 +16,13 @@ import tachiyomi.domain.source.model.CatalogListItem
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
-class CatalogChronologicalFeedScreenModel(
-    profileId: Long,
-    feedId: String,
+class CatalogFeedItemSource(
     private val sourceId: Long,
-    listingQuery: String?,
-    initialFilterSnapshot: List<eu.kanade.domain.source.model.FilterStateNode>,
-    chronological: Boolean = true,
-    browseFeedService: BrowseFeedService = Injekt.get(),
-    profileSourcePreferences: ProfileSourcePreferences = Injekt.get(),
+    private val listingQuery: String?,
+    private val initialFilterSnapshot: List<eu.kanade.domain.source.model.FilterStateNode>,
     private val getEntry: GetEntry = Injekt.get(),
     private val catalogueFeature: EntryCatalogueFeature = Injekt.get(),
-) : FeedScreenModel<CatalogListItem>(
-    feedId = feedId,
-    listingQuery = listingQuery,
-    initialFilterSnapshot = initialFilterSnapshot,
-    chronological = chronological,
-    browseFeedService = browseFeedService.forProfile(profileId),
-    hideInLibraryItems = profileSourcePreferences.forProfile(profileId).hideInLibraryItems.get(),
-) {
+) : FeedItemSource<CatalogListItem> {
 
     private val filterLoader = CatalogFilterLoader(catalogueFeature)
 

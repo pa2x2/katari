@@ -1,0 +1,6 @@
+[
+  { "id": "pepper-carrot-en", "name": "Pepper&Carrot", "language": "en", "type": "manga" },
+  { "id": "pepper-carrot-ja", "name": "Pepper&Carrot", "language": "ja", "type": "manga" },
+  { "id": "gutenberg", "name": "Project Gutenberg", "language": "all", "type": "book" },
+  { "id": "blender-studio", "name": "Blender Studio", "language": "en", "type": "anime" }
+]

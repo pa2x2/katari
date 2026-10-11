@@ -50,7 +50,6 @@ import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -534,20 +533,21 @@ class EntryScreenModel(
             state
                 .filterIsInstance<State.Success>()
                 .map { successState ->
-                    val displayedChapters = successState.processedChapters.map { it.chapter }
+                    // Every chapter, not only those the filters show: whether reading has started counts hidden ones.
                     EntryChildProgressRequest(
                         entry = successState.entry,
-                        chapters = displayedChapters,
+                        chapters = successState.chapters.map { it.chapter },
                         memberIds = successState.memberIds,
                     )
                 }
                 .distinctUntilChanged()
                 .flatMapLatest { request ->
+                    // Labels of the previous request stay until these arrive; clearing them would flash every
+                    // chapter as unstarted.
                     when (val result = entryChildListFeature.progressLabels(request)) {
                         is EntryChildProgressResult.Available -> result.labels
                         is EntryChildProgressResult.Inapplicable -> flowOf(emptyMap())
                     }
-                        .onStart { emit(emptyMap()) }
                         .catch { error ->
                             logcat(LogPriority.ERROR, error)
                             emit(emptyMap())
@@ -556,7 +556,7 @@ class EntryScreenModel(
                 .flowWithLifecycle(lifecycle)
                 .collectLatest { labels ->
                     updateSuccessState {
-                        it.copy(childProgressLabels = labels)
+                        it.copy(childProgressLabels = labels, childProgressLoaded = true)
                     }
                 }
         }
@@ -2366,6 +2366,8 @@ class EntryScreenModel(
             val chapters: List<EntryChapterList.Item>,
             val continueTargetChapterId: Long? = null,
             val childProgressLabels: Map<Long, EntryChildProgressLabel> = emptyMap(),
+            /** Until the labels first load, whether reading has started is unknown. */
+            val childProgressLoaded: Boolean = false,
             val childListFeature: EntryChildListFeature,
             val childGroupFilterFeature: EntryChildGroupFilterFeature,
             val childGroupFilterState: EntryChildGroupFilterStateResult,
@@ -2437,6 +2439,10 @@ class EntryScreenModel(
 
             val hasReadChapters: Boolean
                 get() = chapterPresentation.hasReadChapters
+
+            /** A chapter is finished or holds a position partway through, like a single-file book being read. */
+            val hasStartedReading: Boolean
+                get() = hasReadChapters || childProgressLabels.isNotEmpty()
 
             val chapterProgress: EntryChapterProgress
                 get() = chapterPresentation.progress

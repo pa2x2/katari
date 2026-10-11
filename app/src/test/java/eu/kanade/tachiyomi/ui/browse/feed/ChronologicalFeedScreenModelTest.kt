@@ -50,7 +50,7 @@ class ChronologicalFeedScreenModelTest {
             anchor = SourceFeedAnchor.fromItem(FeedItemRef(2L, EntryType.ANIME), scrollOffset = 24),
         )
 
-        val screenModel = FakeFeedScreenModel(
+        val screenModel = fakeFeedScreenModel(
             feedId = FEED_ID,
             browseFeedService = browseFeedService,
             workerDispatcher = Dispatchers.Main,
@@ -115,7 +115,7 @@ class ChronologicalFeedScreenModelTest {
                 if (key == 1L) continueBridge.await()
             },
         )
-        val screenModel = FakeFeedScreenModel(
+        val screenModel = fakeFeedScreenModel(
             feedId = FEED_ID,
             browseFeedService = browseFeedService,
             workerDispatcher = Dispatchers.Main,
@@ -192,7 +192,7 @@ class ChronologicalFeedScreenModelTest {
                 ),
             ),
         )
-        val screenModel = FakeFeedScreenModel(
+        val screenModel = fakeFeedScreenModel(
             feedId = FEED_ID,
             browseFeedService = browseFeedService,
             workerDispatcher = Dispatchers.Main,
@@ -273,7 +273,7 @@ class ChronologicalFeedScreenModelTest {
                 if (key == 1L && bridgePageFailures++ == 0) throw NoResultsException()
             },
         )
-        val screenModel = FakeFeedScreenModel(
+        val screenModel = fakeFeedScreenModel(
             feedId = FEED_ID,
             browseFeedService = browseFeedService,
             workerDispatcher = Dispatchers.Main,
@@ -327,7 +327,7 @@ class ChronologicalFeedScreenModelTest {
                 3L to pageResult(data = repeatedPage, nextKey = 4L),
             ),
         )
-        val screenModel = FakeFeedScreenModel(
+        val screenModel = fakeFeedScreenModel(
             feedId = FEED_ID,
             browseFeedService = browseFeedService,
             workerDispatcher = Dispatchers.Main,
@@ -380,21 +380,26 @@ private data class FakeItem(
     val favorite: Boolean,
 )
 
-private class FakeFeedScreenModel(
+private fun fakeFeedScreenModel(
     feedId: String,
     browseFeedService: BrowseFeedService,
     workerDispatcher: CoroutineDispatcher,
-    private val itemsById: Map<Long, FakeItem> = emptyMap(),
-    private val pagingSourceFactory: () -> RecordingPagingSource<FakeItem> = { RecordingPagingSource(emptyMap()) },
-) : FeedScreenModel<FakeItem>(
+    itemsById: Map<Long, FakeItem> = emptyMap(),
+    pagingSourceFactory: () -> RecordingPagingSource<FakeItem> = { RecordingPagingSource(emptyMap()) },
+) = FeedScreenModel(
     feedId = feedId,
-    listingQuery = null,
     initialFilterSnapshot = emptyList(),
     chronological = true,
     browseFeedService = browseFeedService,
     hideInLibraryItems = true,
-    workerDispatcher = Dispatchers.Main,
-) {
+    source = FakeFeedItemSource(itemsById, pagingSourceFactory),
+    workerDispatcher = workerDispatcher,
+)
+
+private class FakeFeedItemSource(
+    private val itemsById: Map<Long, FakeItem>,
+    private val pagingSourceFactory: () -> RecordingPagingSource<FakeItem>,
+) : FeedItemSource<FakeItem> {
 
     override suspend fun observeItems(refs: List<FeedItemRef>): Flow<List<FakeItem>> {
         return flowOf(refs.mapNotNull { itemsById[it.id] })

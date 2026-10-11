@@ -15,7 +15,6 @@ import eu.kanade.tachiyomi.ui.base.observation.ObservedItemStore
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
@@ -23,13 +22,13 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
 import java.util.concurrent.atomic.AtomicLong
 
-abstract class FeedScreenModel<T : Any>(
+class FeedScreenModel<T : Any>(
     private val feedId: String,
-    protected val listingQuery: String?,
-    protected val initialFilterSnapshot: List<eu.kanade.domain.source.model.FilterStateNode>,
+    private val initialFilterSnapshot: List<eu.kanade.domain.source.model.FilterStateNode>,
     private val chronological: Boolean = true,
     private val browseFeedService: BrowseFeedService,
     private val hideInLibraryItems: Boolean,
+    private val source: FeedItemSource<T>,
     private val workerDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : StateScreenModel<FeedScreenModel.State>(initialState(browseFeedService, feedId)) {
 
@@ -39,9 +38,9 @@ abstract class FeedScreenModel<T : Any>(
     private val refreshGeneration = AtomicLong()
     private val itemStore = ObservedItemStore(
         scope = screenModelScope + workerDispatcher,
-        keyOf = ::itemRef,
-        supersedes = ::supersedes,
-        observeItems = ::observeItems,
+        keyOf = source::itemRef,
+        supersedes = source::supersedes,
+        observeItems = source::observeItems,
     )
 
     init {
@@ -169,20 +168,6 @@ abstract class FeedScreenModel<T : Any>(
     fun itemState(ref: FeedItemRef): StateFlow<T?> {
         return itemStore.stateOf(ref)
     }
-
-    protected abstract suspend fun observeItems(refs: List<FeedItemRef>): Flow<List<T>>
-
-    protected abstract fun supersedes(candidate: T, current: T): Boolean
-
-    protected abstract suspend fun resolveFilters(): EntryFilterList
-
-    protected abstract fun createPagingSource(filters: EntryFilterList): PagingSource<Long, T>
-
-    protected abstract fun itemRef(item: T): FeedItemRef
-
-    protected abstract fun isItemInLibrary(item: T): Boolean
-
-    protected abstract suspend fun filterNonLibraryRefs(refs: List<FeedItemRef>): List<FeedItemRef>
 
     private suspend fun refreshInternal(manual: Boolean) {
         if (!chronological) {
@@ -371,7 +356,7 @@ abstract class FeedScreenModel<T : Any>(
             }
             // The bridge has no page limit, so a source that keeps reporting a next page while
             // repeating items it already returned would otherwise be paged forever.
-            val pageAdvanced = page.data.map(::itemRef).count(loadedRefs::add) > 0
+            val pageAdvanced = page.data.map(source::itemRef).count(loadedRefs::add) > 0
             nextPageKey = page.nextKey.takeIf { pageAdvanced }
             mutableState.update {
                 if (refreshGeneration.get() != generation || it.pendingRefresh == null) {
@@ -561,7 +546,7 @@ abstract class FeedScreenModel<T : Any>(
     }
 
     private suspend fun newPagingSource(): PagingSource<Long, T> {
-        return createPagingSource(ensureFiltersLoaded())
+        return source.createPagingSource(ensureFiltersLoaded())
     }
 
     private suspend fun loadPage(
@@ -591,7 +576,7 @@ abstract class FeedScreenModel<T : Any>(
 
     private suspend fun ensureFiltersLoaded(): EntryFilterList {
         resolvedFilters?.let { return it }
-        val filters = resolveFilters()
+        val filters = source.resolveFilters()
         filters.requireValidFilters()
         val savedState = browseFeedService.stateSnapshot()
         val presetId = savedState.feeds.firstOrNull { it.id == feedId }?.presetId
@@ -604,9 +589,9 @@ abstract class FeedScreenModel<T : Any>(
     }
 
     private fun acceptVisibleItems(items: List<T>): List<FeedItemRef> {
-        val visibleItems = if (hideInLibraryItems) items.filterNot(::isItemInLibrary) else items
+        val visibleItems = if (hideInLibraryItems) items.filterNot(source::isItemInLibrary) else items
         itemStore.seedAll(visibleItems)
-        return visibleItems.map(::itemRef)
+        return visibleItems.map(source::itemRef)
     }
 
     private suspend fun normalizeTimeline() {
@@ -615,7 +600,7 @@ abstract class FeedScreenModel<T : Any>(
         if (refs.isEmpty()) return
 
         val anchor = browseFeedService.anchorSnapshot(feedId).resolvedAnchor()
-        val normalizedRefs = filterNonLibraryRefs(refs)
+        val normalizedRefs = source.filterNonLibraryRefs(refs)
 
         val normalizedAnchor = anchor.takeIf {
             it.resolvedItem() == null || it.resolvedItem() in normalizedRefs

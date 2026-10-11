@@ -46,6 +46,7 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.domain.source.model.FeedItemRef
 import eu.kanade.domain.source.model.SourceFeedContentMode
 import eu.kanade.domain.source.model.toListing
+import eu.kanade.domain.source.service.ProfileSourcePreferences
 import eu.kanade.presentation.browse.components.SourceIcon
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.TabContent
@@ -289,13 +290,19 @@ private fun Screen.FeedsTabContent(
                 val timelineModel = rememberScreenModel(
                     tag = "feed-timeline-$activeProfileId-${activeFeed.id}-${activePreset.hashCode()}",
                 ) {
-                    CatalogChronologicalFeedScreenModel(
-                        profileId = activeProfileId,
+                    FeedScreenModel(
                         feedId = activeFeed.id,
-                        sourceId = activeSource.id,
-                        listingQuery = activePreset.toListing().requestQuery,
                         initialFilterSnapshot = activePreset.filters,
                         chronological = activePreset.chronological,
+                        browseFeedService = Injekt.get<eu.kanade.domain.source.service.BrowseFeedService>()
+                            .forProfile(activeProfileId),
+                        hideInLibraryItems = Injekt.get<ProfileSourcePreferences>()
+                            .forProfile(activeProfileId).hideInLibraryItems.get(),
+                        source = CatalogFeedItemSource(
+                            sourceId = activeSource.id,
+                            listingQuery = activePreset.toListing().requestQuery,
+                            initialFilterSnapshot = activePreset.filters,
+                        ),
                     )
                 }
                 val timelineState by timelineModel.state.collectAsState()

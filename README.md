@@ -6,9 +6,11 @@
 
 ### Every kind of story. One library.
 
-Read, watch, and explore in one familiar Android app—built to welcome new ways of enjoying stories.
+Comics, books, and video in one Android app, with on-device translation and reading statistics.
 
-[Download](https://github.com/pa2x2/katari/releases/latest)
+[Download](https://github.com/pa2x2/katari/releases/latest) · [See what it does](https://pa2x2.github.io/katari/)
+
+<img src="https://raw.githubusercontent.com/pa2x2/katari/assets/library.png" alt="A Katari library holding comics, books, and films" width="300" />
 
 [![Latest release](https://img.shields.io/github/v/release/pa2x2/katari?display_name=tag&sort=semver&label=release)](https://github.com/pa2x2/katari/releases/latest)
 ![Android 10+](https://img.shields.io/badge/Android-10%2B-3DDC84?logo=android&logoColor=white)
@@ -16,23 +18,9 @@ Read, watch, and explore in one familiar Android app—built to welcome new ways
 
 </div>
 
-Stories do not all fit the same format. Katari gives them the same home, with an experience designed to feel coherent as the library grows.
-
 ## Built on Mihon
 
 Katari would not exist without [Mihon](https://github.com/mihonapp/mihon) and the many people who contribute to it. This is an independent, preference-driven fork—not an official Mihon project.
-
-## One experience, however stories are told
-
-**Everything belongs together.** Different content types share one library, discovery space, updates feed, and history—without feeling like separate apps joined at the menu.
-
-**A space that feels like yours.** Profiles can separate libraries, categories, appearance, tracking, and personal preferences, whether the app is shared or you simply organize different collections differently.
-
-**Discover, then dive in.** Search across sources, build custom feeds, preview a title, and choose an immersive view when you want discovery to feel less like browsing a list.
-
-**Enjoy each format on its own terms.** A configurable reader, a capable video player, offline downloads, and format-aware controls give every kind of content the treatment it deserves.
-
-**One title, even across sources.** Combine versions of the same title into one library entry, keeping alternatives close without filling your library, updates, and history with duplicates.
 
 ## Disclaimer
 

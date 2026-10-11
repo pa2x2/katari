@@ -1,0 +1,63 @@
+---
+import Page from "../layouts/Page.astro";
+import type { Credit } from "../../../pipeline/credits.ts";
+import credits from "../captures/credits.json";
+
+// Sorted by title by the capture run.
+const works: Credit[] = credits;
+---
+
+<Page title="Credits — Katari" description="The openly licensed works shown in Katari's screenshots, and who made them.">
+  <main>
+    <h1>Credits</h1>
+    <p>
+      Every screenshot and clip on this site shows works that are free to share. They are listed here with the license
+      they are shared under and the credit their makers ask for.
+    </p>
+    <ul class="works">
+      {
+        works.map((work) => (
+          <li>
+            <strong>{work.title}</strong> by {work.author}
+            <br />
+            {work.attribution}.{" "}
+            <a href={work.license.url}>{work.license.name}</a>.
+            {work.coverCredit && <span> Cover: {work.coverCredit}.</span>}
+          </li>
+        ))
+      }
+    </ul>
+    <h2>Translation</h2>
+    <p>
+      The translations are made on the device by <a href="https://github.com/davidventura/offline-translator">Offline
+      Translator</a> by David Ventura, with its Japanese to English model.
+    </p>
+  </main>
+</Page>
+
+<style>
+  main {
+    max-width: 48rem;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 0;
+  }
+
+  main > p {
+    color: var(--muted);
+  }
+
+  .works {
+    padding: 0;
+    list-style: none;
+  }
+
+  .works li {
+    padding: 0.9rem 0;
+    border-bottom: 1px solid var(--indigo-light);
+    color: var(--muted);
+  }
+
+  .works strong {
+    color: var(--cream);
+  }
+</style>

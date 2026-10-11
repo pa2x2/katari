@@ -412,14 +412,15 @@ private fun EntryScreenSmallImpl(
         snackbarHost = { AppSnackbarHost(hostState = snackbarHostState) },
         floatingActionButton = {
             onContinueReading?.let { continueAction ->
-                val isFABVisible = state.hasUnreadChapters && !isAnySelected
+                // Shown once progress is known, so it doesn't offer to start what is already being read.
+                val isFABVisible = state.hasUnreadChapters && !isAnySelected && state.childProgressLoaded
                 val targetListIndex = state.chapterListIndex(state.continueTargetChapterId)
                     ?.plus(if (state.showMergeNotice) 5 else 4)
                 EntryContinueActions(
                     listState = chapterListState,
                     continueTargetListIndex = targetListIndex,
                     topOcclusionPx = topBarHeight,
-                    isReading = state.hasReadChapters,
+                    isReading = state.hasStartedReading,
                     visible = isFABVisible,
                     onTargetReached = {
                         highlightedChapterId = state.continueTargetChapterId
@@ -707,13 +708,14 @@ fun EntryScreenLargeImpl(
         snackbarHost = { AppSnackbarHost(hostState = snackbarHostState) },
         floatingActionButton = {
             onContinueReading?.let { continueAction ->
-                val isFABVisible = state.hasUnreadChapters && !isAnySelected
+                // Shown once progress is known, so it doesn't offer to start what is already being read.
+                val isFABVisible = state.hasUnreadChapters && !isAnySelected && state.childProgressLoaded
                 val targetListIndex = state.chapterListIndex(state.continueTargetChapterId)?.plus(1)
                 EntryContinueActions(
                     listState = chapterListState,
                     continueTargetListIndex = targetListIndex,
                     topOcclusionPx = topBarHeight,
-                    isReading = state.hasReadChapters,
+                    isReading = state.hasStartedReading,
                     visible = isFABVisible,
                     onTargetReached = {
                         highlightedChapterId = state.continueTargetChapterId

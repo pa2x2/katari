@@ -1,0 +1,71 @@
+name: Showcase site
+
+# Builds the showcase site from showcase/site on main and the captures on the `assets` branch, and deploys it to GitHub
+# Pages. The `assets` branch starts this workflow whenever a capture pull request is merged into it.
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - showcase/site/**
+      - .github/workflows/showcase-site.yml
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}
+  # A Pages deployment cut off midway can leave the site half updated, so a newer run waits instead.
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Checkout captures
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: assets
+          path: assets
+
+      - name: Set up Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: showcase/site/package-lock.json
+
+      - name: Build
+        working-directory: showcase/site
+        run: |
+          npm ci
+          npm run sync -- --from ../../assets
+          npm run build
+
+      - name: Upload
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: showcase/site/dist
+
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-24.04
+    needs: build
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+
+    steps:
+      - name: Deploy
+        id: deploy
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
