@@ -1,0 +1,168 @@
+---
+import type { ImageMetadata } from "astro";
+import { getImage } from "astro:assets";
+import { aspectOf } from "./aspect.ts";
+
+interface Props {
+  before: ImageMetadata;
+  after: ImageMetadata;
+  beforeLabel: string;
+  afterLabel: string;
+  alt: string;
+  caption: string;
+}
+
+const { before, after, beforeLabel, afterLabel, alt, caption } = Astro.props;
+// Both layers must be the same size to line up, so each gets one image rather than a responsive set.
+const [beforeImage, afterImage] = await Promise.all(
+  [before, after].map((src) => getImage({ src, width: 720, format: "webp" })),
+);
+const height = Math.round(720 / aspectOf(after));
+---
+
+<figure class="shot compare">
+  <div class="frame">
+    <div class="stack">
+      <img src={afterImage!.src} alt={alt} width="720" height={height} loading="lazy" draggable="false" />
+      <img class="before" src={beforeImage!.src} alt="" width="720" height={height} loading="lazy" draggable="false" />
+      <span class="handle" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="20" height="20"><path d="M9 6l-6 6 6 6M15 6l6 6-6 6" /></svg>
+      </span>
+    </div>
+    <input
+      class="visually-hidden"
+      type="range"
+      min="0"
+      max="100"
+      value="50"
+      aria-label={`Show more of the ${beforeLabel} or the ${afterLabel} page`}
+    />
+  </div>
+  <figcaption>
+    <span aria-hidden="true">← {beforeLabel}</span>
+    <span class="visually-hidden">{caption}</span>
+    <span aria-hidden="true">{afterLabel} →</span>
+  </figcaption>
+</figure>
+
+<script>
+  for (const figure of document.querySelectorAll<HTMLElement>(".compare")) {
+    const stack = figure.querySelector<HTMLElement>(".stack")!;
+    const slider = figure.querySelector("input")!;
+    const show = () => figure.style.setProperty("--split", `${slider.value}%`);
+    const moveTo = (event: PointerEvent) => {
+      const box = stack.getBoundingClientRect();
+      slider.value = String(Math.round(((event.clientX - box.left) / box.width) * 100));
+      show();
+    };
+    // With a mouse, pressing anywhere on the page moves the line. On a touch screen only the handle does, so that a
+    // swipe across the page still scrolls a row of screenshots. The hidden slider keeps it usable from the keyboard.
+    stack.addEventListener("pointerdown", (event) => {
+      if (event.pointerType === "touch" && !(event.target as Element).closest(".handle")) return;
+      stack.setPointerCapture(event.pointerId);
+      moveTo(event);
+    });
+    stack.addEventListener("pointermove", (event) => {
+      if (stack.hasPointerCapture(event.pointerId)) moveTo(event);
+    });
+    slider.addEventListener("input", show);
+    show();
+  }
+</script>
+
+<style>
+  .compare {
+    --split: 50%;
+    /* Keeps the hidden slider and caption inside the shot, so a row that scrolls sideways clips them. */
+    position: relative;
+    margin: 0;
+    width: var(--shot-width, 17rem);
+  }
+
+  .frame {
+    padding: 0.45rem;
+    border-radius: 1.6rem;
+    background: #05080f;
+    box-shadow:
+      0 0 0 1px #2a3550,
+      0 1.5rem 3rem -1rem #000c;
+  }
+
+  .frame:has(input:focus-visible) {
+    box-shadow:
+      0 0 0 2px var(--clay),
+      0 1.5rem 3rem -1rem #000c;
+  }
+
+  .stack {
+    position: relative;
+    overflow: hidden;
+    border-radius: 1.2rem;
+    cursor: ew-resize;
+    user-select: none;
+  }
+
+  .stack img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .before {
+    position: absolute;
+    inset: 0;
+    clip-path: inset(0 calc(100% - var(--split)) 0 0);
+  }
+
+  .stack::after {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 var(--split);
+    width: 2px;
+    margin-left: -1px;
+    background: var(--clay);
+  }
+
+  .handle {
+    position: absolute;
+    top: 50%;
+    left: var(--split);
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    width: 2.6rem;
+    height: 2.6rem;
+    border-radius: 50%;
+    background: var(--clay);
+    color: var(--night);
+    box-shadow: 0 0.3rem 1rem #0009;
+    transform: translate(-50%, -50%);
+    /* The browser leaves a drag that starts on the handle to the script instead of scrolling. */
+    touch-action: none;
+  }
+
+  /* A fingertip is wider than the handle, so it reaches a little beyond it. */
+  .handle::before {
+    content: "";
+    position: absolute;
+    inset: -0.75rem;
+  }
+
+  .handle svg {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* The labels stand at the sides the two pages show on, in place of a caption. */
+  figcaption {
+    display: flex;
+    justify-content: space-between;
+    margin: 0.8rem 0.6rem 0;
+    color: var(--muted);
+    font-size: 0.9rem;
+    line-height: 1.4;
+  }
+</style>

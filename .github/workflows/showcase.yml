@@ -1,7 +1,7 @@
 name: Showcase
 
 # Recaptures every showcase screenshot and clip from a published release on a freshly wiped emulator, and proposes
-# the ones that visibly changed as a pull request against the `assets` branch, which the showcase site is built from.
+# the ones that visibly changed as a pull request against the `assets` branch, which the website is built from.
 # It runs apart from the release workflow and never holds a release up.
 on:
   release:

@@ -1,0 +1,182 @@
+---
+// Opens a zoomable shot (Phone.astro) at the full height of the window. The arrows step through the shots of the same
+// [data-zoom-group], such as one feature's screenshots.
+---
+
+<dialog class="viewer" aria-label="Screenshot">
+  <figure>
+    <img alt="" />
+    <figcaption></figcaption>
+  </figure>
+  <button class="step previous" type="button" aria-label="Previous screenshot">‹</button>
+  <button class="step next" type="button" aria-label="Next screenshot">›</button>
+  <button class="close" type="button" aria-label="Close">✕</button>
+</dialog>
+
+<script>
+  const viewer = document.querySelector<HTMLDialogElement>("dialog.viewer")!;
+  const image = viewer.querySelector("img")!;
+  const caption = viewer.querySelector("figcaption")!;
+  const previous = viewer.querySelector<HTMLButtonElement>(".previous")!;
+  const next = viewer.querySelector<HTMLButtonElement>(".next")!;
+  let shots: HTMLElement[] = [];
+  let index = 0;
+  let opener: HTMLElement | undefined;
+  let openedWithPointer = false;
+
+  // The browser keeps painting the previous picture until the next one has loaded, so the picture stays hidden
+  // until then instead of flashing the last shot.
+  image.addEventListener("load", () => image.classList.remove("loading"));
+  image.addEventListener("error", () => {
+    caption.textContent = `${shots[index]?.dataset.caption}: this screenshot couldn't be loaded.`;
+  });
+
+  const show = (at: number) => {
+    index = (at + shots.length) % shots.length;
+    const shot = shots[index]!;
+    image.classList.add("loading");
+    image.src = shot.dataset.zoom!;
+    if (image.complete) image.classList.remove("loading");
+    image.alt = shot.querySelector("img")?.alt ?? "";
+    caption.textContent = shots.length > 1 ? `${shot.dataset.caption} · ${index + 1} / ${shots.length}` : shot.dataset.caption!;
+  };
+
+  for (const shot of document.querySelectorAll<HTMLElement>("[data-zoom]")) {
+    shot.addEventListener("click", (event) => {
+      opener = shot;
+      // A click from a pointer counts its presses; one from the keyboard (Enter or Space) counts none.
+      openedWithPointer = event.detail > 0;
+      const group = shot.closest("[data-zoom-group]");
+      shots = group ? [...group.querySelectorAll<HTMLElement>("[data-zoom]")] : [shot];
+      previous.hidden = next.hidden = shots.length < 2;
+      show(shots.indexOf(shot));
+      viewer.showModal();
+    });
+  }
+
+  // Closing returns focus to the shot that opened the viewer, which then shows its focus ring. A keyboard user needs
+  // it to know where they are; after a click it only leaves a second shot looking selected.
+  viewer.addEventListener("close", () => {
+    if (openedWithPointer) opener?.blur();
+  });
+
+  previous.addEventListener("click", () => show(index - 1));
+  next.addEventListener("click", () => show(index + 1));
+  viewer.querySelector(".close")!.addEventListener("click", () => viewer.close());
+  // A click on the dimmed backdrop lands on the dialog itself.
+  viewer.addEventListener("click", (event) => {
+    if (event.target === viewer) viewer.close();
+  });
+  viewer.addEventListener("keydown", (event) => {
+    if (shots.length < 2) return;
+    if (event.key === "ArrowLeft") show(index - 1);
+    if (event.key === "ArrowRight") show(index + 1);
+  });
+</script>
+
+<style>
+  .viewer {
+    width: 100vw;
+    max-width: none;
+    height: 100dvh;
+    max-height: none;
+    margin: 0;
+    padding: 1.5rem;
+    border: 0;
+    background: transparent;
+    color: var(--cream);
+  }
+
+  .viewer[open] {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .viewer::backdrop {
+    background: #05080ff2;
+    backdrop-filter: blur(6px);
+  }
+
+  figure {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-height: 100%;
+    margin: 0;
+  }
+
+  img {
+    min-height: 0;
+    max-width: calc(100vw - 9rem);
+    max-height: calc(100dvh - 6rem);
+    border-radius: 1.2rem;
+    box-shadow: 0 0 0 1px #2a3550;
+  }
+
+  img.loading {
+    visibility: hidden;
+  }
+
+  figcaption {
+    margin-top: 0.9rem;
+    font-size: 0.95rem;
+    text-align: center;
+  }
+
+  button {
+    position: absolute;
+    border: 0;
+    border-radius: 50%;
+    background: #ffffff1a;
+    color: var(--cream);
+    font-size: 1.6rem;
+    line-height: 1;
+    cursor: pointer;
+  }
+
+  button:hover {
+    background: #ffffff33;
+  }
+
+  .step {
+    top: 50%;
+    width: 3rem;
+    height: 3rem;
+    transform: translateY(-50%);
+  }
+
+  .previous {
+    left: 1.5rem;
+  }
+
+  .next {
+    right: 1.5rem;
+  }
+
+  .close {
+    top: 1.25rem;
+    right: 1.5rem;
+    width: 2.6rem;
+    height: 2.6rem;
+    font-size: 1.1rem;
+  }
+
+  @media (max-width: 44rem) {
+    /* The close button gets the strip above the picture and the arrows the one below, beside the caption. */
+    .viewer {
+      padding: 4.5rem 1rem 5.5rem;
+    }
+
+    img {
+      max-width: calc(100vw - 2rem);
+      max-height: calc(100dvh - 12rem);
+    }
+
+    .step {
+      top: auto;
+      bottom: 1.25rem;
+      transform: none;
+    }
+  }
+</style>

@@ -8,6 +8,8 @@ import type { License } from "../content/source-definitions.ts";
 
 export interface Credit {
   title: string;
+  /** The title's language as a BCP 47 tag, so the page can mark a Japanese title as Japanese. */
+  language: string;
   author: string;
   license: License;
   attribution: string;
@@ -17,7 +19,14 @@ export interface Credit {
 export function writeCredits(catalogPath: string, creditsPath: string): void {
   const catalog: Catalog = JSON.parse(readFileSync(catalogPath, "utf8"));
   const credits: Credit[] = catalog.works
-    .map(({ title, author, license, attribution, coverCredit }) => ({ title, author, license, attribution, coverCredit }))
+    .map(({ title, language, author, license, attribution, coverCredit }) => ({
+      title,
+      language,
+      author,
+      license,
+      attribution,
+      coverCredit,
+    }))
     // A fixed locale, so every machine writes the same file and an unchanged run proposes nothing.
     .toSorted((a, b) => a.title.localeCompare(b.title, "en"));
   writeFileSync(creditsPath, `${JSON.stringify(credits, null, 2)}\n`);

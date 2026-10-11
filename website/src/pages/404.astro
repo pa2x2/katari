@@ -1,0 +1,31 @@
+---
+import Page from "../site/Page.astro";
+import { sitePath } from "../site/links.ts";
+---
+
+<Page title="Page not found — Katari" description="This page of the Katari site doesn't exist.">
+  <main>
+    <p class="kicker">404</p>
+    <h1>Lost the thread</h1>
+    <p>There is no page at this address. It may have moved, or the link has a typo.</p>
+    <a class="button" href={sitePath()}>Back to Katari</a>
+  </main>
+</Page>
+
+<style>
+  main {
+    max-width: 40rem;
+    margin: 0 auto;
+    padding: 6rem var(--gutter) 0;
+  }
+
+  h1 {
+    margin: 0 0 1rem;
+    font-size: clamp(2.4rem, 6vw, 3.6rem);
+  }
+
+  p {
+    color: var(--muted);
+    font-size: 1.15rem;
+  }
+</style>

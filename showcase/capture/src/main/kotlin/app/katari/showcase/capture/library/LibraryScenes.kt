@@ -14,6 +14,8 @@ import org.junit.runner.RunWith
 class LibraryScenes {
     @Test
     fun profiles() {
+        // The picker marks the profile used last, and scenes run in no set order.
+        openProfile("Personal")
         restart()
         find(By.text("Select profile"))
         capture("profiles")
@@ -23,6 +25,12 @@ class LibraryScenes {
     fun library() {
         openProfile("Personal")
         capture("library")
+    }
+
+    @Test
+    fun familyLibrary() {
+        openProfile("Family")
+        capture("library-family")
     }
 
     @Test

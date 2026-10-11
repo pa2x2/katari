@@ -1,0 +1,77 @@
+---
+import type { Feature } from "./chapters.ts";
+import Highlights from "./Highlights.astro";
+import ShotStack from "./ShotStack.astro";
+
+interface Props {
+  feature: Feature & { band: "indigo" | "recap" };
+}
+
+const { feature } = Astro.props;
+---
+
+<section id={feature.id} class:list={["band", feature.band]}>
+  <div class="inner">
+    <div class="text">
+      <div>
+        <h3>{feature.title}</h3>
+        <p>{feature.text}</p>
+      </div>
+      <Highlights items={feature.highlights} />
+    </div>
+    <ShotStack shots={feature.shots} arrangement="row" />
+  </div>
+</section>
+
+<style>
+  .band {
+    margin: 3rem 0;
+    padding: 5rem 0;
+  }
+
+  .indigo {
+    background: var(--indigo);
+  }
+
+  /* The recap's own blue, so the band reads as a page of it. */
+  .recap {
+    background: linear-gradient(160deg, #1d3d66, #0f1f38 70%);
+  }
+
+  .inner {
+    max-width: var(--page-width);
+    margin: 0 auto;
+    padding: 0 var(--gutter);
+  }
+
+  .text {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    align-items: end;
+    gap: 3rem;
+    margin-bottom: 3.5rem;
+  }
+
+  h3 {
+    margin: 0 0 0.8rem;
+    font-size: clamp(1.9rem, 3.6vw, 2.8rem);
+  }
+
+  p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 1.15rem;
+  }
+
+  @media (max-width: 44rem) {
+    .band {
+      padding: 3.5rem 0;
+    }
+
+    .text {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+  }
+</style>

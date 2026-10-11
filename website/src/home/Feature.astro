@@ -1,0 +1,68 @@
+---
+import type { Feature } from "./chapters.ts";
+import Highlights from "./Highlights.astro";
+import ShotStack from "./ShotStack.astro";
+
+interface Props {
+  feature: Feature;
+  /** Puts the screenshots on the left, so that consecutive features alternate sides. */
+  flip: boolean;
+}
+
+const { feature, flip } = Astro.props;
+---
+
+<section id={feature.id} class:list={["feature", { flip }]}>
+  <div class="text">
+    <h3>{feature.title}</h3>
+    <p>{feature.text}</p>
+    <Highlights items={feature.highlights} />
+  </div>
+  <div class="shots">
+    <ShotStack shots={feature.shots} arrangement="overlap" />
+  </div>
+</section>
+
+<style>
+  .feature {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+    align-items: center;
+    gap: 4rem;
+    max-width: var(--page-width);
+    margin: 0 auto;
+    padding: 4rem var(--gutter);
+  }
+
+  .flip .text {
+    order: 2;
+  }
+
+  h3 {
+    margin: 0 0 0.8rem;
+    font-size: clamp(1.7rem, 3.2vw, 2.4rem);
+  }
+
+  p {
+    margin: 0 0 1.4rem;
+    color: var(--muted);
+    font-size: 1.15rem;
+  }
+
+  /* Beside the text, a narrow column squeezes three overlapping phones below a readable size, so the text goes on top. */
+  @media (max-width: 60rem) {
+    .feature {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 2.5rem;
+      padding: 3rem var(--gutter);
+    }
+
+    .text {
+      max-width: 40rem;
+    }
+
+    .flip .text {
+      order: 0;
+    }
+  }
+</style>

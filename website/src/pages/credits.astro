@@ -1,6 +1,7 @@
 ---
-import Page from "../layouts/Page.astro";
-import type { Credit } from "../../../pipeline/credits.ts";
+import Page from "../site/Page.astro";
+import { leavesSite } from "../site/links.ts";
+import type { Credit } from "../../../showcase/pipeline/credits.ts";
 import credits from "../captures/credits.json";
 
 // Sorted by title by the capture run.
@@ -18,10 +19,10 @@ const works: Credit[] = credits;
       {
         works.map((work) => (
           <li>
-            <strong>{work.title}</strong> by {work.author}
+            <strong lang={work.language}>{work.title}</strong> by {work.author}
             <br />
             {work.attribution}.{" "}
-            <a href={work.license.url}>{work.license.name}</a>.
+            <a href={work.license.url} {...leavesSite()}>{work.license.name}</a>.
             {work.coverCredit && <span> Cover: {work.coverCredit}.</span>}
           </li>
         ))
@@ -29,7 +30,7 @@ const works: Credit[] = credits;
     </ul>
     <h2>Translation</h2>
     <p>
-      The translations are made on the device by <a href="https://github.com/davidventura/offline-translator">Offline
+      The translations are made on the device by <a href="https://github.com/davidventura/offline-translator" {...leavesSite()}>Offline
       Translator</a> by David Ventura, with its Japanese to English model.
     </p>
   </main>
@@ -39,7 +40,12 @@ const works: Credit[] = credits;
   main {
     max-width: 48rem;
     margin: 0 auto;
-    padding: 2rem 1.5rem 0;
+    padding: 3rem var(--gutter) 0;
+  }
+
+  h1 {
+    margin: 0 0 0.75rem;
+    font-size: clamp(2.4rem, 6vw, 3.6rem);
   }
 
   main > p {

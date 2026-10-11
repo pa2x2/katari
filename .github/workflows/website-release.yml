@@ -1,0 +1,23 @@
+name: Website after a release
+
+# The website's download buttons link the newest release's APKs, so a published release deploys it again. The
+# github-pages environment only takes deployments from main, and a release run's ref is its tag, so this asks the
+# Website workflow to run on main instead of deploying itself.
+on:
+  release:
+    types: [published]
+
+permissions: {}
+
+jobs:
+  deploy:
+    name: Start the website deployment
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: write
+
+    steps:
+      - name: Start
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run website.yml --repo "$GITHUB_REPOSITORY" --ref main
