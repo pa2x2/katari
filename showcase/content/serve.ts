@@ -16,7 +16,7 @@ const MEDIA_TYPES: Record<string, string> = {
   ".jpg": "image/jpeg",
   ".png": "image/png",
   ".epub": "application/epub+zip",
-  ".mkv": "video/x-matroska",
+  ".webm": "video/webm",
   ".mp4": "video/mp4",
 };
 

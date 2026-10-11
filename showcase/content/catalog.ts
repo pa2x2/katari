@@ -2,7 +2,7 @@
  * `catalog.json`, the contract between `fetch.ts` and the showcase extension: the extension lists sources, entries,
  * and chapters from it and requests every file by the path given here, relative to the content server's root.
  */
-import type { LockedWork } from "./lock.ts";
+import type { ResolvedWork } from "./resolved-work.ts";
 import type { SourceDefinition } from "./source-definitions.ts";
 
 export interface CatalogChapter {
@@ -13,7 +13,7 @@ export interface CatalogChapter {
   files: string[];
 }
 
-export interface CatalogWork extends Omit<LockedWork, "cover" | "chapters"> {
+export interface CatalogWork extends Omit<ResolvedWork, "cover" | "chapters"> {
   cover: string;
   coverCredit: string | null;
   chapters: CatalogChapter[];

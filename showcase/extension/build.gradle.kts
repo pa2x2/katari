@@ -23,8 +23,8 @@ android {
     }
 
     sourceSets {
-        // The factory lists its sources from the pinned lock before any network request is possible.
-        getByName("main").resources.directories.add("../content/pinned")
+        // The factory lists its sources from the content's source list before any network request is possible.
+        getByName("main").resources.directories.add("../content/source-list")
     }
 }
 

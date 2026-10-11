@@ -3,12 +3,12 @@
  *
  * A still counts as changed when enough of its pixels moved by more than rendering noise. A clip can't be compared
  * that way, since its frames land at slightly different moments each run, so it follows the stills of the same feature:
- * the recap clip is replaced when a recap still changed.
+ * the recap clip is replaced when a recap still changed. Credits change when their text does.
  *
  * With --apply, changed and new files are copied over the published folder; files no capture produces any more are
  * listed but left alone.
  */
-import { copyFileSync, existsSync, readdirSync } from "node:fs";
+import { copyFileSync, existsSync, readdirSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { parseArgs } from "node:util";
 import sharp from "sharp";
@@ -17,6 +17,8 @@ import sharp from "sharp";
 const CHANNEL_TOLERANCE = 24;
 /** The share of changed pixels below which a still is the same picture. */
 const CHANGED_SHARE = 0.001;
+/** The files a capture run publishes: stills, clips, and credits. */
+const PUBLISHED = /\.(png|mp4|json)$/;
 /** Each clip and the prefix of the stills it follows. */
 const CLIP_STILLS: Record<string, string> = { "recap.mp4": "recap-" };
 
@@ -33,19 +35,21 @@ if (values.published === undefined || values.captured === undefined) {
 const published = resolve(values.published);
 const captured = resolve(values.captured);
 
-const files = readdirSync(captured).filter((name) => name.endsWith(".png") || name.endsWith(".mp4"));
-const stills = files.filter((name) => name.endsWith(".png"));
+const files = readdirSync(captured).filter((name) => PUBLISHED.test(name));
 const changed: string[] = [];
-for (const still of stills) {
-  if (!existsSync(join(published, still)) || (await differs(join(published, still), join(captured, still)))) {
-    changed.push(still);
+for (const name of files.filter((name) => !name.endsWith(".mp4"))) {
+  const before = join(published, name);
+  const after = join(captured, name);
+  if (!existsSync(before)) changed.push(name);
+  else if (name.endsWith(".png") ? await differs(before, after) : !readFileSync(before).equals(readFileSync(after))) {
+    changed.push(name);
   }
 }
 for (const [clip, prefix] of Object.entries(CLIP_STILLS)) {
   if (!files.includes(clip)) continue;
   if (!existsSync(join(published, clip)) || changed.some((still) => still.startsWith(prefix))) changed.push(clip);
 }
-const retired = existsSync(published) ? readdirSync(published).filter((name) => /\.(png|mp4)$/.test(name) && !files.includes(name)) : [];
+const retired = existsSync(published) ? readdirSync(published).filter((name) => PUBLISHED.test(name) && !files.includes(name)) : [];
 
 if (values.apply) for (const name of changed) copyFileSync(join(captured, name), join(published, name));
 console.log(JSON.stringify({ changed, retired }, null, 2));

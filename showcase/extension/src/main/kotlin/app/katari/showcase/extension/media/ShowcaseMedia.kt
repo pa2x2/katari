@@ -49,7 +49,7 @@ private fun ShowcaseWork.epub(url: String): EntryMedia.Book {
 
 private fun video(path: String, baseUrl: String): EntryMedia.Playback {
     val mimeType = when (path.substringAfterLast('.')) {
-        "mkv" -> "video/x-matroska"
+        "webm" -> "video/webm"
         "mp4" -> "video/mp4"
         else -> error("Unknown video container: $path")
     }

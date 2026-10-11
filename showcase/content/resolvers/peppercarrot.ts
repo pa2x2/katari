@@ -1,8 +1,7 @@
 /** Pepper&Carrot episodes, read from the sources tree peppercarrot.com publishes for every episode and language. */
 import { readText } from "../download-cache.ts";
-import type { LockedChapter, LockedWork } from "../lock.ts";
+import type { ResolvedChapter, ResolvedContent } from "../resolved-work.ts";
 import type { PepperCarrotWork } from "../source-definitions.ts";
-import { pinFile } from "./pinned-file.ts";
 
 const ROOT = "https://www.peppercarrot.com/0_sources/";
 
@@ -10,12 +9,9 @@ interface Credits {
   translation?: string[];
 }
 
-export async function resolvePepperCarrot(
-  work: PepperCarrotWork,
-  refresh: boolean,
-): Promise<Omit<LockedWork, "id" | "source" | "cover">> {
+export async function resolvePepperCarrot(work: PepperCarrotWork): Promise<ResolvedContent> {
   const folders = await episodeFolders();
-  const chapters: LockedChapter[] = [];
+  const chapters: ResolvedChapter[] = [];
   const translators = new Set<string>();
   for (let number = work.episodes.first; number <= work.episodes.last; number++) {
     const folder = folders.get(number);
@@ -27,8 +23,7 @@ export async function resolvePepperCarrot(
       // Episodes credit their original-language text as a translation called "original version".
       .filter((name) => name !== "original version")
       .forEach((name) => translators.add(name));
-    const files = [];
-    for (const url of await pageUrls(folder, work.language, number)) files.push(await pinFile(url, refresh));
+    const files = (await pageUrls(folder, work.language, number)).map((url) => ({ url }));
     chapters.push({ number, name: chapterName(work.language, number, folder), date: info.published, files });
   }
   const translation = translators.size > 0 ? `, translated by ${[...translators].join(", ")}` : "";

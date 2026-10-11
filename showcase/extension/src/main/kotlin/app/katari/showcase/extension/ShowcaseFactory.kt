@@ -1,7 +1,7 @@
 package app.katari.showcase.extension
 
 import app.katari.showcase.extension.catalog.ShowcaseCatalogClient
-import app.katari.showcase.extension.catalog.pinnedSources
+import app.katari.showcase.extension.catalog.declaredSources
 import eu.kanade.tachiyomi.source.entry.EntrySourceFactory
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 
@@ -14,6 +14,6 @@ import eu.kanade.tachiyomi.source.entry.UnifiedSource
 class ShowcaseFactory : EntrySourceFactory {
     override fun createSources(): List<UnifiedSource> {
         val catalog = ShowcaseCatalogClient(BuildConfig.CONTENT_SERVER)
-        return pinnedSources().map { ShowcaseSource(it, catalog) }
+        return declaredSources().map { ShowcaseSource(it, catalog) }
     }
 }

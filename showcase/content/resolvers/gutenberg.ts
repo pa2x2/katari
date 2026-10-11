@@ -1,18 +1,14 @@
 /** Project Gutenberg books, described by the RDF catalog record Gutenberg publishes beside every book. */
 import { XMLParser } from "fast-xml-parser";
 import { readText } from "../download-cache.ts";
-import type { LockedWork } from "../lock.ts";
+import type { ResolvedContent } from "../resolved-work.ts";
 import type { GutenbergWork } from "../source-definitions.ts";
-import { pinFile } from "./pinned-file.ts";
 
 const GENERATED_SUMMARY_NOTE = "(This is an automatically generated summary.)";
 
 type Node = Record<string, unknown>;
 
-export async function resolveGutenberg(
-  work: GutenbergWork,
-  refresh: boolean,
-): Promise<Omit<LockedWork, "id" | "source" | "cover">> {
+export async function resolveGutenberg(work: GutenbergWork): Promise<ResolvedContent> {
   const record = await catalogRecord(work.book);
   // Some catalog titles keep the MARC subtitle marker, as in "Peter Pan : $b [Peter and Wendy]".
   const title = work.title ?? text(record.title).split("\n")[0]!.split(/\s*:?\s*\$b/)[0]!.trim();
@@ -37,7 +33,7 @@ export async function resolveGutenberg(
         number: 1,
         name: title,
         date: text(record.issued),
-        files: [await pinFile(`https://www.gutenberg.org/cache/epub/${work.book}/pg${work.book}-images-3.epub`, refresh)],
+        files: [{ url: `https://www.gutenberg.org/cache/epub/${work.book}/pg${work.book}-images-3.epub` }],
       },
     ],
   };

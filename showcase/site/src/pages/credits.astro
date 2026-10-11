@@ -1,18 +1,10 @@
 ---
 import Page from "../layouts/Page.astro";
-import lock from "../../../content/pinned/content.lock.json";
+import type { Credit } from "../../../pipeline/credits.ts";
+import credits from "../captures/credits.json";
 
-// The fields of showcase/content/lock.ts that credit a work.
-interface CreditedWork {
-  id: string;
-  title: string;
-  author: string;
-  license: { name: string; url?: string };
-  attribution: string;
-  cover: { credit?: string };
-}
-
-const works = (lock.works as CreditedWork[]).toSorted((a, b) => a.title.localeCompare(b.title));
+// Sorted by title by the capture run.
+const works: Credit[] = credits;
 ---
 
 <Page title="Credits — Katari" description="The openly licensed works shown in Katari's screenshots, and who made them.">
@@ -29,8 +21,8 @@ const works = (lock.works as CreditedWork[]).toSorted((a, b) => a.title.localeCo
             <strong>{work.title}</strong> by {work.author}
             <br />
             {work.attribution}.{" "}
-            {work.license.url ? <a href={work.license.url}>{work.license.name}</a> : work.license.name}.
-            {work.cover.credit && <span> Cover: {work.cover.credit}.</span>}
+            <a href={work.license.url}>{work.license.name}</a>.
+            {work.coverCredit && <span> Cover: {work.coverCredit}.</span>}
           </li>
         ))
       }

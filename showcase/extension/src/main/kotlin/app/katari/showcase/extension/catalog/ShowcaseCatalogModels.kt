@@ -5,7 +5,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
-// Mirrors showcase/content/catalog.ts and lock.ts; fields the extension does not use are ignored.
+// Mirrors showcase/content/catalog.ts and resolved-work.ts; fields the extension does not use are ignored.
 
 internal val showcaseJson = Json { ignoreUnknownKeys = true }
 

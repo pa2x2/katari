@@ -16,6 +16,7 @@ import { EMULATOR_CONTENT_SERVER } from "../content/content-server.ts";
 import { cacheDir } from "../content/download-cache.ts";
 import { profiles } from "../seed/library-plan.ts";
 import { LIBRARY_UPDATED_AT } from "../seed/showcase-clock.ts";
+import { writeCredits } from "./credits.ts";
 import type { Device } from "./device/adb.ts";
 import { pinShowcaseClock, useRealClock } from "./device/device-clock.ts";
 import { bootShowcaseEmulator, shutDown } from "./device/emulator.ts";
@@ -68,6 +69,7 @@ try {
   device.pull(`${CAPTURE_DIRECTORY}/.`, out);
   device.pull(RECAP_SHARE_IMAGE, join(out, "recap-share.png"));
   encodeForWeb(join(out, "recap.mp4"));
+  writeCredits(join(values.served, "catalog.json"), join(out, "credits.json"));
   console.log(out);
 } catch (error) {
   writeFileSync(join(out, "logcat.txt"), device.adb("logcat", "-d"));

@@ -1,21 +1,18 @@
 /**
  * Openly licensed works the showcase library is built from.
  *
- * `pin.ts` resolves these into `pinned/content.lock.json`: every file with its URL, size, and sha256, plus the metadata and
- * attribution each work needs. `fetch.ts` only ever reads the lock, so what the showcase shows changes only when this
- * file changes and the lock is pinned again.
+ * `fetch.ts` resolves these against their upstream sites on every run and downloads what they name. What the showcase
+ * shows changes when this file changes, or when an upstream site changes a file; the capture run's screenshots then
+ * show the difference for review.
  *
  * A work's `kind` picks its resolver: `peppercarrot` lists episode pages on peppercarrot.com, `gutenberg` reads a
  * Project Gutenberg book's catalog record, and `film` takes its metadata as written here.
  */
 import type { CoverDefinition, SourceDefinition, WorkDefinition } from "./source-definitions.ts";
+import sourceList from "./source-list/sources.json" with { type: "json" };
 
-export const sources: SourceDefinition[] = [
-  { id: "pepper-carrot-en", name: "Pepper&Carrot", language: "en", type: "manga" },
-  { id: "pepper-carrot-ja", name: "Pepper&Carrot", language: "ja", type: "manga" },
-  { id: "gutenberg", name: "Project Gutenberg", language: "all", type: "book" },
-  { id: "blender-studio", name: "Blender Studio", language: "en", type: "anime" },
-];
+// A file of its own, because the showcase extension lists the same sources before it can reach the content server.
+export const sources = sourceList as SourceDefinition[];
 
 // The right half of the printed Book 1 wraparound cover is a portrait front cover.
 const pepperCarrotCover: CoverDefinition = {
@@ -93,7 +90,10 @@ export const works: WorkDefinition[] = [
     genres: ["Fantasy", "Adventure", "Drama"],
     license: { name: "CC BY 3.0", url: "https://creativecommons.org/licenses/by/3.0/" },
     attribution: "© copyright Blender Foundation | durian.blender.org",
-    video: { url: "https://download.blender.org/demo/movies/Sintel.2010.1080p.mkv" },
+    // Wikimedia's 1080p transcode is a fifth the size of Blender's own 1080p file, for the same frames on a phone.
+    video: {
+      url: "https://upload.wikimedia.org/wikipedia/commons/transcoded/f/f1/Sintel_movie_4K.webm/Sintel_movie_4K.webm.1080p.vp9.webm",
+    },
     cover: { url: "https://upload.wikimedia.org/wikipedia/commons/8/8f/Sintel_poster.jpg" },
   },
   {
@@ -108,9 +108,10 @@ export const works: WorkDefinition[] = [
     genres: ["Comedy", "Family"],
     license: { name: "CC BY 3.0", url: "https://creativecommons.org/licenses/by/3.0/" },
     attribution: "© copyright Blender Foundation | www.bigbuckbunny.org",
+    // Only its cover is shown, so the smallest encode will do.
     video: {
-      url: "https://download.blender.org/demo/movies/BBB/bbb_sunflower_1080p_30fps_normal.mp4.zip",
-      member: "bbb_sunflower_1080p_30fps_normal.mp4",
+      url: "https://download.blender.org/peach/bigbuckbunny_movies/BigBuckBunny_320x180.mp4.zip",
+      member: "BigBuckBunny_320x180.mp4",
     },
     cover: { url: "https://upload.wikimedia.org/wikipedia/commons/c/c5/Big_buck_bunny_poster_big.jpg" },
   },
