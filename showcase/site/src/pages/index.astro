@@ -121,11 +121,27 @@ const preview = await getImage({ src: library, width: 600, format: "png" });
       </p>
       <Fragment slot="shots">
         <figure class="clip">
-          <video src={recapClip} poster={recapPoster.src} autoplay muted loop playsinline preload="none"></video>
+          <video
+            src={recapClip}
+            poster={recapPoster.src}
+            aria-label="The year's recap playing as a story, page by page"
+            controls
+            muted
+            loop
+            playsinline
+            preload="none"
+          ></video>
         </figure>
         <Phone src={recapShare} alt="The year's recap as a picture to share" />
       </Fragment>
     </Feature>
+
+    <script>
+      // Plays by itself only for visitors who haven't asked for less motion; the controls pause it either way.
+      if (matchMedia("(prefers-reduced-motion: no-preference)").matches) {
+        for (const video of document.querySelectorAll<HTMLVideoElement>(".clip video")) video.play().catch(() => {});
+      }
+    </script>
 
     <Feature id="profiles" title="Everyone gets their own library">
       <p>
