@@ -1,0 +1,166 @@
+---
+import { REPOSITORY, sitePath } from "./links.ts";
+
+const links = [
+  { label: "Features", href: sitePath("#features") },
+  { label: "Get started", href: sitePath("start/") },
+  { label: "Credits", href: sitePath("credits/") },
+  { label: "GitHub", href: REPOSITORY },
+];
+---
+
+<header class="header">
+  <div class="inner">
+    <a class="brand" href={sitePath()}>
+      <img src={sitePath("katari.svg")} alt="" width="32" height="32" />
+      Katari
+    </a>
+    <nav aria-label="Site">
+      <button class="menu" type="button" aria-expanded="false" aria-controls="site-links">
+        <span class="visually-hidden">Menu</span>
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18" /></svg>
+      </button>
+      <ul id="site-links">
+        {links.map((link) => <li><a href={link.href}>{link.label}</a></li>)}
+      </ul>
+    </nav>
+    <a class="button download" href={sitePath("start/#which-file")}>Download</a>
+  </div>
+</header>
+
+<script>
+  const header = document.querySelector<HTMLElement>(".header")!;
+  const menu = header.querySelector<HTMLButtonElement>(".menu")!;
+  const isOpen = () => menu.getAttribute("aria-expanded") === "true";
+  const setOpen = (open: boolean) => menu.setAttribute("aria-expanded", String(open));
+  menu.addEventListener("click", () => setOpen(!isOpen()));
+  // A link in the menu may only scroll this page, which would leave the menu open over what it scrolled to.
+  header.querySelector("#site-links")!.addEventListener("click", (event) => {
+    if ((event.target as Element).closest("a")) setOpen(false);
+  });
+  document.addEventListener("click", (event) => {
+    if (isOpen() && !header.contains(event.target as Node)) setOpen(false);
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape" || !isOpen()) return;
+    setOpen(false);
+    menu.focus();
+  });
+
+  // While the hero's own download buttons are on screen, the header's would only repeat them.
+  const heroDownload = document.querySelector("[data-hero-download]");
+  if (heroDownload) {
+    new IntersectionObserver(([entry]) => header.classList.toggle("hero-download-visible", entry!.isIntersecting)).observe(
+      heroDownload,
+    );
+  }
+</script>
+
+<style>
+  .header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    border-bottom: 1px solid transparent;
+    background: color-mix(in srgb, var(--night) 88%, transparent);
+    backdrop-filter: blur(8px);
+  }
+
+  .inner {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    max-width: var(--page-width);
+    height: var(--header-height);
+    margin: 0 auto;
+    padding: 0 var(--gutter);
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    color: var(--cream);
+    font-family: var(--serif);
+    font-size: 1.2rem;
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  nav {
+    margin-left: auto;
+  }
+
+  ul {
+    display: flex;
+    gap: 1.5rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  ul a {
+    color: var(--muted);
+    text-decoration: none;
+  }
+
+  ul a:hover {
+    color: var(--cream);
+  }
+
+  .menu {
+    display: none;
+    padding: 0.4rem;
+    border: 0;
+    background: none;
+    color: var(--cream);
+    cursor: pointer;
+  }
+
+  .menu svg {
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+  }
+
+  .download {
+    padding: 0.45rem 1rem;
+    transition:
+      opacity 0.2s,
+      visibility 0.2s;
+  }
+
+  .hero-download-visible .download {
+    visibility: hidden;
+    opacity: 0;
+  }
+
+  @media (max-width: 44rem) {
+    .menu {
+      display: block;
+    }
+
+    ul {
+      display: none;
+      position: absolute;
+      top: var(--header-height);
+      right: 0;
+      left: 0;
+      flex-direction: column;
+      gap: 0;
+      padding: 0.5rem var(--gutter) 1rem;
+      border-bottom: 1px solid var(--indigo-light);
+      background: var(--night);
+    }
+
+    .menu[aria-expanded="true"] + ul {
+      display: flex;
+    }
+
+    ul a {
+      display: block;
+      padding: 0.6rem 0;
+      font-size: 1.1rem;
+    }
+  }
+</style>

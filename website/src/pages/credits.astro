@@ -1,5 +1,5 @@
 ---
-import Page from "../layouts/Page.astro";
+import Page from "../site/Page.astro";
 import type { Credit } from "../../../showcase/pipeline/credits.ts";
 import credits from "../captures/credits.json";
 
@@ -39,7 +39,12 @@ const works: Credit[] = credits;
   main {
     max-width: 48rem;
     margin: 0 auto;
-    padding: 2rem 1.5rem 0;
+    padding: 3rem var(--gutter) 0;
+  }
+
+  h1 {
+    margin: 0 0 0.75rem;
+    font-size: clamp(2.4rem, 6vw, 3.6rem);
   }
 
   main > p {
