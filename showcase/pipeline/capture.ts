@@ -88,6 +88,8 @@ try {
 async function prepare(device: Device): Promise<void> {
   useRealClock(device);
   device.adb("install", "-r", values["app-apk"]);
+  // The seed restore scene waits for the notification the app posts once the restore is done.
+  device.shell(`pm grant ${APP_ID} android.permission.POST_NOTIFICATIONS`);
   device.adb("install", "-r", values["extension-apk"]);
   device.adb("install", "-r", "-t", values["capture-apk"]);
   await installOfflineTranslator(device);

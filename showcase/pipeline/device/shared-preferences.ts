@@ -16,6 +16,8 @@ export function writePreferences(
   entries: Record<string, PreferenceValue>,
 ): void {
   const remote = `/data/data/${appId}/shared_prefs/${file}`;
+  // Stopped before reading, so nothing the app saves in between is overwritten with the older copy.
+  device.forceStop(appId);
   const exists = device.shell(`[ -f ${remote} ] && echo yes || true`).trim() === "yes";
   let xml = exists ? device.shell(`cat ${remote}`) : "<?xml version='1.0' encoding='utf-8' standalone='yes' ?>\n<map>\n</map>\n";
   for (const [name, value] of Object.entries(entries)) {
@@ -29,7 +31,6 @@ export function writePreferences(
     const local = join(directory, file);
     writeFileSync(local, xml);
     const staged = `/data/local/tmp/${file}`;
-    device.forceStop(appId);
     device.push(local, staged);
     // Writing through the existing file keeps the app's ownership and SELinux label on it.
     if (exists) {
