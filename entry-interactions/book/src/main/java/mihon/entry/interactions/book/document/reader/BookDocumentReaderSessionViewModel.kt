@@ -1,9 +1,13 @@
 package mihon.entry.interactions.book.document.reader
 
 import androidx.lifecycle.ViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import mihon.book.api.BookLocator
 import mihon.entry.interactions.book.document.reader.navigation.BookDocumentJumpHistory
 import mihon.entry.interactions.book.reader.OpenedBookReaderSession
+import tachiyomi.domain.entry.model.Entry
 
 /** Retains the bounded document-reader session window across configuration changes. */
 internal class BookDocumentReaderSessionViewModel : ViewModel() {
@@ -15,11 +19,17 @@ internal class BookDocumentReaderSessionViewModel : ViewModel() {
     var currentChapterId: Long? = null
         private set
 
+    private val mutableCurrentOwner = MutableStateFlow<Entry?>(null)
+
+    /** The entry the current chapter belongs to: in a merged book, the chapter's member rather than the opened entry. */
+    val currentOwner: StateFlow<Entry?> = mutableCurrentOwner.asStateFlow()
+
     fun attachInitial(session: OpenedBookReaderSession) {
         check(sessions.isEmpty()) { "An initial document reader session is already attached" }
         sessions[session.chapter.id] = session
         session.initialLocator?.let { locators[session.chapter.id] = it }
         currentChapterId = session.chapter.id
+        mutableCurrentOwner.value = session.owner
     }
 
     fun cache(session: OpenedBookReaderSession): Boolean {
@@ -37,6 +47,7 @@ internal class BookDocumentReaderSessionViewModel : ViewModel() {
     fun activate(chapterId: Long): OpenedBookReaderSession? {
         val session = sessions[chapterId] ?: return null
         currentChapterId = chapterId
+        mutableCurrentOwner.value = session.owner
         return session
     }
 
@@ -60,6 +71,7 @@ internal class BookDocumentReaderSessionViewModel : ViewModel() {
         sessions.clear()
         locators.clear()
         currentChapterId = null
+        mutableCurrentOwner.value = null
     }
 
     override fun onCleared() = release()
