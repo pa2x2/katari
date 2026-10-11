@@ -60,6 +60,7 @@ import eu.kanade.presentation.entry.components.EntryContinueActions
 import eu.kanade.presentation.entry.components.EntryInfoBox
 import eu.kanade.presentation.entry.components.EntryToolbar
 import eu.kanade.presentation.entry.components.ExpandableEntryDescription
+import eu.kanade.presentation.entry.components.MergedMemberHeader
 import eu.kanade.presentation.entry.translation.ChapterTranslateAction
 import eu.kanade.presentation.entry.translation.EntryChapterTranslationUi
 import eu.kanade.presentation.entry.updates.EntryUpdatesLabel
@@ -77,7 +78,6 @@ import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.ListGroupHeader
 import tachiyomi.presentation.core.components.TwoPanelBox
 import tachiyomi.presentation.core.components.VerticalFastScroller
 import tachiyomi.presentation.core.components.material.PullRefresh
@@ -138,6 +138,7 @@ fun EntryScreen(
 
     // For chapter swipe
     onChapterSwipe: (EntryChapterList.Item, LibraryPreferences.ChapterSwipeAction) -> Unit,
+    onMemberHeaderClicked: (Long) -> Unit,
 
     // Chapter selection
     onChapterSelected: (EntryChapterList.Item, Boolean, Boolean) -> Unit,
@@ -200,6 +201,7 @@ fun EntryScreen(
             onMarkPreviousAsReadClicked = onMarkPreviousAsReadClicked,
             onMultiDeleteClicked = onMultiDeleteClicked,
             onChapterSwipe = onChapterSwipe,
+            onMemberHeaderClicked = onMemberHeaderClicked,
             onChapterSelected = onChapterSelected,
             onAllChapterSelected = onAllChapterSelected,
             onInvertSelection = onInvertSelection,
@@ -253,6 +255,7 @@ fun EntryScreen(
             onMarkPreviousAsReadClicked = onMarkPreviousAsReadClicked,
             onMultiDeleteClicked = onMultiDeleteClicked,
             onChapterSwipe = onChapterSwipe,
+            onMemberHeaderClicked = onMemberHeaderClicked,
             onChapterSelected = onChapterSelected,
             onAllChapterSelected = onAllChapterSelected,
             onInvertSelection = onInvertSelection,
@@ -320,6 +323,7 @@ private fun EntryScreenSmallImpl(
 
     // For chapter swipe
     onChapterSwipe: (EntryChapterList.Item, LibraryPreferences.ChapterSwipeAction) -> Unit,
+    onMemberHeaderClicked: (Long) -> Unit,
 
     // Chapter selection
     onChapterSelected: (EntryChapterList.Item, Boolean, Boolean) -> Unit,
@@ -459,8 +463,10 @@ private fun EntryScreenSmallImpl(
                             entry = state.entry,
                             sourceName = state.sourceName,
                             isStubSource = state.isSourceMissing,
-                            mergedMemberTitles = state.mergedMemberTitles,
+                            mergedEntryCount = state.memberIds.size,
                             onCoverClick = onCoverClicked,
+                            onSourceClick = sourceClickAction(state, onManageMergeClicked, onSearch),
+                            onMergedEntriesClick = onManageMergeClicked,
                             doSearch = onSearch,
                         )
                     }
@@ -541,8 +547,6 @@ private fun EntryScreenSmallImpl(
 
                         sharedChapterItems(
                             entry = state.entry,
-                            mergedMemberIds = state.memberIds,
-                            memberTitleById = state.memberTitleById,
                             chapters = listItem,
                             childProgressLabels = state.childProgressLabels,
                             readChapterDurations = activity.readChapterDurations,
@@ -556,6 +560,7 @@ private fun EntryScreenSmallImpl(
                             translation = translation,
                             onChapterSelected = onChapterSelected,
                             onChapterSwipe = onChapterSwipe,
+                            onMemberHeaderClicked = onMemberHeaderClicked,
                         )
                     }
                 }
@@ -617,6 +622,7 @@ fun EntryScreenLargeImpl(
 
     // For swipe actions
     onChapterSwipe: (EntryChapterList.Item, LibraryPreferences.ChapterSwipeAction) -> Unit,
+    onMemberHeaderClicked: (Long) -> Unit,
 
     // Chapter selection
     onChapterSelected: (EntryChapterList.Item, Boolean, Boolean) -> Unit,
@@ -745,8 +751,10 @@ fun EntryScreenLargeImpl(
                             entry = state.entry,
                             sourceName = state.sourceName,
                             isStubSource = state.isSourceMissing,
-                            mergedMemberTitles = state.mergedMemberTitles,
+                            mergedEntryCount = state.memberIds.size,
                             onCoverClick = onCoverClicked,
+                            onSourceClick = sourceClickAction(state, onManageMergeClicked, onSearch),
+                            onMergedEntriesClick = onManageMergeClicked,
                             doSearch = onSearch,
                         )
                         if (state.showMergeNotice) {
@@ -821,8 +829,6 @@ fun EntryScreenLargeImpl(
 
                                 sharedChapterItems(
                                     entry = state.entry,
-                                    mergedMemberIds = state.memberIds,
-                                    memberTitleById = state.memberTitleById,
                                     chapters = listItem,
                                     childProgressLabels = state.childProgressLabels,
                                     readChapterDurations = activity.readChapterDurations,
@@ -836,6 +842,7 @@ fun EntryScreenLargeImpl(
                                     translation = translation,
                                     onChapterSelected = onChapterSelected,
                                     onChapterSwipe = onChapterSwipe,
+                                    onMemberHeaderClicked = onMemberHeaderClicked,
                                 )
                             }
                         }
@@ -953,8 +960,6 @@ private fun SharedEntryBottomActionMenu(
 
 private fun LazyListScope.sharedChapterItems(
     entry: Entry,
-    mergedMemberIds: List<Long>,
-    memberTitleById: Map<Long, String>,
     chapters: List<EntryChapterList>,
     childProgressLabels: Map<Long, EntryChildProgressLabel>,
     readChapterDurations: Map<Long, Long>,
@@ -968,6 +973,7 @@ private fun LazyListScope.sharedChapterItems(
     translation: EntryChapterTranslationUi?,
     onChapterSelected: (EntryChapterList.Item, Boolean, Boolean) -> Unit,
     onChapterSwipe: (EntryChapterList.Item, LibraryPreferences.ChapterSwipeAction) -> Unit,
+    onMemberHeaderClicked: (Long) -> Unit,
 ) {
     items(
         items = chapters,
@@ -990,7 +996,15 @@ private fun LazyListScope.sharedChapterItems(
 
         when (item) {
             is EntryChapterList.MemberHeader -> {
-                ListGroupHeader(text = item.title)
+                MergedMemberHeader(
+                    title = item.title,
+                    sourceName = item.sourceName,
+                    childCount = item.childCount,
+                    unreadCount = item.unreadCount,
+                    expanded = item.expanded,
+                    entryType = entry.type,
+                    onClick = { onMemberHeaderClicked(item.entryId) },
+                )
             }
             is EntryChapterList.MissingCount -> {
                 MissingChapterCountListItem(count = item.count, entryType = entry.type)
@@ -1063,4 +1077,13 @@ private fun onChapterItemClick(
         isAnyChapterSelected -> onToggleSelection(true)
         else -> onChapterClicked?.invoke(chapterItem.chapter)
     }
+}
+
+/** Several sources have no single name to search for, so their line opens Manage merge, which lists each member's. */
+private fun sourceClickAction(
+    state: EntryScreenModel.State.Success,
+    onManageMergeClicked: (() -> Unit)?,
+    onSearch: (query: String, global: Boolean) -> Unit,
+): () -> Unit {
+    return onManageMergeClicked?.takeIf { state.isMultiSource } ?: { onSearch(state.sourceName, false) }
 }

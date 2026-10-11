@@ -10,12 +10,23 @@ import eu.kanade.tachiyomi.source.entry.VideoStream
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterIsInstance
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -43,8 +54,12 @@ import tachiyomi.domain.entry.model.progressResourceKey
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.entry.repository.EntryRepository
+import tachiyomi.domain.entry.repository.MergedMemberExpansionRepository
 import tachiyomi.domain.entry.repository.PlaybackPreferencesRepository
+import tachiyomi.domain.entry.service.MergedMemberExpansion
+import tachiyomi.domain.entry.service.MergedMemberExpansionSession
 import tachiyomi.domain.entry.service.sortedForReading
+import tachiyomi.domain.source.service.SourceInfoNames
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
@@ -59,6 +74,10 @@ internal class VideoPlayerViewModel @JvmOverloads constructor(
         Injekt.get<GetEntryWithChapters>()
     }.getOrNull(),
     private val entryRepository: EntryRepository? = runCatching { Injekt.get<EntryRepository>() }.getOrNull(),
+    private val sourceNames: SourceInfoNames? = runCatching { Injekt.get<SourceInfoNames>() }.getOrNull(),
+    private val mergedMemberExpansionRepository: MergedMemberExpansionRepository? = runCatching {
+        Injekt.get<MergedMemberExpansionRepository>()
+    }.getOrNull(),
     private val entryProgressRepository: EntryProgressRepository = Injekt.get(),
     private val mediaSession: AnimeMediaSessionProcessor = Injekt.get(),
     private val webViewFeature: EntryWebViewFeature = Injekt.get(),
@@ -71,6 +90,26 @@ internal class VideoPlayerViewModel @JvmOverloads constructor(
     val state = mutableState.asStateFlow()
     private val mutableEvents = MutableSharedFlow<Event>(extraBufferCapacity = 1)
     val events = mutableEvents.asSharedFlow()
+
+    private val memberExpansion = mergedMemberExpansionRepository?.let { repository ->
+        MergedMemberExpansionSession(
+            repository = repository,
+            scope = viewModelScope,
+            memberIds = mutableState.filterIsInstance<State.Ready>().map { it.memberIds },
+        )
+    }
+
+    /** Merged members whose episodes the drawer lists; the playing member opens until it is toggled. */
+    val expandedMemberIds: StateFlow<Set<Long>> = combine(
+        memberExpansion?.state ?: flowOf(MergedMemberExpansion()),
+        mutableState.filterIsInstance<State.Ready>().map { it.ownerEntryId },
+    ) { expansion, playingMemberId -> expansion.shown(playingMemberId) }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptySet())
+
+    fun toggleMemberExpanded(memberId: Long) {
+        val ready = mutableState.value as? State.Ready ?: return
+        memberExpansion?.toggle(memberId, ready.ownerEntryId)
+    }
 
     private var initialized = false
     private var playbackSession: VideoPlaybackSession? = null
@@ -582,13 +621,18 @@ internal class VideoPlayerViewModel @JvmOverloads constructor(
                 effectiveEntry.id,
             )
         val memberIds = episodes.map(EntryChapter::entryId).distinct()
-        val fallbackTitles = buildMap {
-            put(entry.id, entry.displayTitle)
-            put(this@VideoPlayerViewModel.ownerEntryId, ownerEntry.displayTitle)
+        val fallbackEntries = mapOf(entry.id to entry, ownerEntry.id to ownerEntry)
+        val memberEntries = memberIds.associateWith { memberId ->
+            runCatching { entryRepository?.getEntryById(memberId) }.getOrNull() ?: fallbackEntries[memberId]
         }
-        val memberTitleById = memberIds.associateWith { memberId ->
-            runCatching { entryRepository?.getEntryById(memberId)?.displayTitle }.getOrNull()
-                ?: fallbackTitles[memberId].orEmpty()
+        val memberTitleById = memberEntries.mapValues { (_, member) -> member?.displayTitle.orEmpty() }
+        val memberSourceIds = memberEntries.mapNotNull { (memberId, member) -> member?.let { memberId to it.source } }
+        val memberSourceNameById = if (memberSourceIds.map { it.second }.distinct().size > 1) {
+            memberSourceIds.associate { (memberId, sourceId) ->
+                memberId to sourceNames?.of(sourceId).orEmpty()
+            }
+        } else {
+            emptyMap()
         }
         val playbackStateByEpisodeId = memberIds
             .flatMap { memberId -> entryProgressRepository.getByEntryId(memberId) }
@@ -600,6 +644,7 @@ internal class VideoPlayerViewModel @JvmOverloads constructor(
             chapters = episodes,
             memberIds = memberIds,
             memberTitleById = memberTitleById,
+            memberSourceNameById = memberSourceNameById,
             playbackStateByChapterId = playbackStateByEpisodeId,
         )
     }
@@ -648,6 +693,7 @@ internal class VideoPlayerViewModel @JvmOverloads constructor(
             chapters = episodeDrawerData.chapters,
             memberIds = episodeDrawerData.memberIds,
             memberTitleById = episodeDrawerData.memberTitleById,
+            memberSourceNameById = episodeDrawerData.memberSourceNameById,
             playbackStates = episodeDrawerData.playbackStateByChapterId.values.toList(),
         ).chapterListItems
         val playback = buildPlaybackUiState(result.playbackData, result.stream, result.savedPreferences)
@@ -910,6 +956,7 @@ private data class EpisodeDrawerData(
     val chapters: List<EntryChapter>,
     val memberIds: List<Long>,
     val memberTitleById: Map<Long, String>,
+    val memberSourceNameById: Map<Long, String>,
     val playbackStateByChapterId: Map<Long, EntryProgressState>,
 )
 

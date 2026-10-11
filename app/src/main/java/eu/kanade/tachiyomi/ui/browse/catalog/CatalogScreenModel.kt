@@ -680,7 +680,7 @@ class CatalogScreenModel(
         screenModelScope.launchIO {
             val targets = buildMergeTargets(
                 libraryItems = getLibraryEntries.await(),
-                sourceManager = sourceManager,
+                sourceNames = Injekt.get(),
                 entryType = entry.type,
             )
             if (targets.isEmpty()) return@launchIO

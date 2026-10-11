@@ -20,6 +20,7 @@ import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryIdentity
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryRepository
+import tachiyomi.domain.entry.repository.MergedMemberExpansionRepository
 import tachiyomi.domain.entry.service.FetchInterval
 import tachiyomi.domain.history.interactor.UpsertHistory
 import tachiyomi.domain.history.model.History
@@ -52,6 +53,7 @@ class EntryRestorer(
     private val activityBackupRepository: HistoryActivityBackupRepository = Injekt.get(),
     private val fetchInterval: FetchInterval = Injekt.get(),
     private val updateRulesRepository: LibraryUpdateRulesRepository = Injekt.get(),
+    private val mergedMemberExpansionRepository: MergedMemberExpansionRepository = Injekt.get(),
 ) {
 
     private val timeZone = TimeZone.currentSystemDefault()
@@ -168,6 +170,9 @@ class EntryRestorer(
         restoreActivity(entry, backupEntry)
         backupEntry.updateMode?.let { mode ->
             updateRulesRepository.setEntryMode(listOf(entry.id), EntryUpdateMode.valueOf(mode.uppercase()))
+        }
+        if (backupEntry.mergeMemberExpanded) {
+            mergedMemberExpansionRepository.setExpanded(entry.id, expanded = true)
         }
         entryBackupFeature.restore(
             session = restoreSession,

@@ -8,6 +8,10 @@
         <item quantity="one">%d feed</item>
         <item quantity="other">%d feeds</item>
     </plurals>
+    <plurals name="entry_merged_entries_count">
+        <item quantity="one">%d merged entry</item>
+        <item quantity="other">%d merged entries</item>
+    </plurals>
     <plurals name="chapter_translation_queued">
         <item quantity="one">%d chapter queued for translation</item>
         <item quantity="other">%d chapters queued for translation</item>

@@ -175,6 +175,7 @@ internal fun LazyListScope.unifiedUpdatesUiItems(
 @Composable
 fun UpdatesBaseUiItem(
     title: String,
+    memberTitle: String?,
     coverData: EntryCoverData,
     selected: Boolean,
     read: Boolean,
@@ -198,7 +199,7 @@ fun UpdatesBaseUiItem(
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                 },
             )
-            .height(56.dp)
+            .height(if (memberTitle != null) 72.dp else 56.dp)
             .padding(horizontal = MaterialTheme.padding.medium),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -222,6 +223,16 @@ fun UpdatesBaseUiItem(
                 color = LocalContentColor.current.copy(alpha = textAlpha),
                 overflow = TextOverflow.Ellipsis,
             )
+
+            memberTitle?.let {
+                Text(
+                    text = it,
+                    maxLines = 1,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = LocalContentColor.current.copy(alpha = textAlpha),
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
 
             Row(verticalAlignment = Alignment.CenterVertically) {
                 subtitle(textAlpha)
@@ -249,6 +260,7 @@ internal fun UnifiedUpdatesUiItem(
     val update = item.update
     UpdatesBaseUiItem(
         title = item.visibleEntryTitle,
+        memberTitle = item.memberTitle,
         coverData = item.visibleCoverData,
         selected = item.selected,
         read = update.consumed,

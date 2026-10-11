@@ -200,10 +200,6 @@ class LibraryScreenModel(
                         LibrarySearchMatcher(
                             query = query,
                             categoryNamesById = categoryNamesById,
-                            sourceDisplayName = { item -> item.getSourceDisplayName(sourceManager) },
-                            sourceNames = { item ->
-                                item.sourceIds.map { sourceId -> sourceManager.getDisplayInfo(sourceId).name }
-                            },
                         )
                     }
                     val filterResult = favorites.applyFilters(tracking.entries, trackingFilters, itemPreferences)
@@ -474,27 +470,19 @@ class LibraryScreenModel(
     }
 
     private fun List<LibraryItem>.enrichEntryItems(): List<LibraryItem> {
-        val multiSourceName = context.stringResource(MR.strings.multi_lang)
         return map { item ->
-            val isMulti = item.displaySourceId == LibraryItem.MULTI_SOURCE_ID
-            val displayUnifiedSource = if (isMulti) null else sourceManager.getOrStub(item.displaySourceId)
-            val sourceDisplayInfo = if (isMulti) null else sourceManager.getDisplayInfo(item.displaySourceId)
-            val sourceName = if (isMulti) multiSourceName else sourceDisplayInfo?.name.orEmpty()
-            val sourceLanguage = if (isMulti) {
-                LibraryItem.MULTI_SOURCE_ID.toString()
-            } else {
-                sourceDisplayInfo?.lang.orEmpty()
-            }
-            val downloadCount = item.calculateDownloadCount(downloadRuntime)
-
+            val singleSourceId = item.sources.singleOrNull()?.id
             item.copy(
-                sourceName = sourceName,
-                sourceLanguage = sourceLanguage,
-                sourceItemOrientation = displayUnifiedSource?.let { entryCatalogueFeature.description(it.id) }
+                sources = item.sources.map { source ->
+                    val displayInfo = sourceManager.getDisplayInfo(source.id)
+                    source.copy(name = displayInfo.name, language = displayInfo.lang)
+                },
+                sourceItemOrientation = singleSourceId
+                    ?.let(entryCatalogueFeature::description)
                     ?.itemOrientation
                     ?: EntryItemOrientation.VERTICAL,
-                isLocal = item.sourceIds.size == 1 && item.entry.source == LocalSource.ID,
-                downloadCount = downloadCount,
+                isLocal = singleSourceId == LocalSource.ID,
+                downloadCount = item.calculateDownloadCount(downloadRuntime),
             )
         }
     }
@@ -1354,13 +1342,5 @@ private fun DownloadAction.toEntryBulkDownloadAction(): EntryBulkDownloadAction 
         DownloadAction.NEXT_25_CHAPTERS -> EntryBulkDownloadAction.next(25)
         DownloadAction.UNREAD_CHAPTERS -> EntryBulkDownloadAction.unread
         DownloadAction.BOOKMARKED_CHAPTERS -> EntryBulkDownloadAction.bookmarked
-    }
-}
-
-private fun LibraryItem.getSourceDisplayName(sourceManager: SourceManager): String {
-    return when {
-        sourceName.isNotBlank() -> sourceName
-        displaySourceId == LibraryItem.MULTI_SOURCE_ID -> ""
-        else -> sourceManager.getDisplayInfo(displaySourceId).name
     }
 }

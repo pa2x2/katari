@@ -269,10 +269,14 @@ class UpdatesScreenModel(
                 is UpdateItem.EntryUpdate -> {
                     val chapterUpdate = update.update
                     val downloadStatus = downloadStatus(chapterUpdate)
+                    val visibleEntryTitle = entry?.displayTitle ?: chapterUpdate.entryTitle
                     UpdatesItem(
                         update = update,
                         visibleEntryId = visibleEntryId,
-                        visibleEntryTitle = entry?.displayTitle ?: chapterUpdate.entryTitle,
+                        visibleEntryTitle = visibleEntryTitle,
+                        memberTitle = ownerEntry?.displayTitle?.takeIf {
+                            visibleEntryId != update.entryId && it != visibleEntryTitle
+                        },
                         visibleCoverData = entry?.asEntryCover() ?: chapterUpdate.coverData,
                         downloadStateProvider = { downloadStatus.state },
                         downloadProgressProvider = { downloadStatus.progress },
@@ -652,6 +656,8 @@ data class UpdatesItem(
     val update: UpdateItem,
     val visibleEntryId: Long,
     val visibleEntryTitle: String,
+    /** The merged member's own title; null unless it differs from [visibleEntryTitle]. */
+    val memberTitle: String?,
     val visibleCoverData: EntryCover,
     val downloadStateProvider: () -> EntryDownloadState,
     val downloadProgressProvider: () -> Int,

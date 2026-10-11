@@ -51,7 +51,7 @@ fun HistoryListItem(
                     Modifier
                 },
             )
-            .height(56.dp)
+            .height(if (item.memberTitle != null) 72.dp else 56.dp)
             .padding(horizontal = MaterialTheme.padding.medium, vertical = MaterialTheme.padding.small),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -73,6 +73,15 @@ fun HistoryListItem(
                 overflow = TextOverflow.Ellipsis,
                 style = MaterialTheme.typography.bodyMedium,
             )
+
+            item.memberTitle?.let { memberTitle ->
+                Text(
+                    text = memberTitle,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
 
             Row(
                 verticalAlignment = Alignment.CenterVertically,

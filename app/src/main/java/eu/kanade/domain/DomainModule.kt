@@ -40,6 +40,7 @@ import tachiyomi.data.entry.EntryRepositoryImpl
 import tachiyomi.data.entry.EntrySyncRepositoryImpl
 import tachiyomi.data.entry.EntryTranslationLanguagesRepositoryImpl
 import tachiyomi.data.entry.EntryTranslationQueueRepositoryImpl
+import tachiyomi.data.entry.MergedMemberExpansionRepositoryImpl
 import tachiyomi.data.entry.PlaybackPreferencesRepositoryImpl
 import tachiyomi.data.entry.ViewerSettingOverrideRepositoryImpl
 import tachiyomi.data.history.HistoryRepositoryImpl
@@ -83,6 +84,7 @@ import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.entry.repository.EntrySyncRepository
 import tachiyomi.domain.entry.repository.EntryTranslationLanguagesRepository
 import tachiyomi.domain.entry.repository.EntryTranslationQueueRepository
+import tachiyomi.domain.entry.repository.MergedMemberExpansionRepository
 import tachiyomi.domain.entry.repository.PlaybackPreferencesRepository
 import tachiyomi.domain.entry.service.FetchInterval
 import tachiyomi.domain.history.interactor.GetHistory
@@ -141,6 +143,7 @@ class DomainModule : InjektModule {
         addSingletonFactory<DownloadPreferencesRepository> { DownloadPreferencesRepositoryImpl(get()) }
         addSingletonFactory<EntrySyncRepository> { EntrySyncRepositoryImpl(get(), get()) }
         addSingletonFactory<EntryCoverHashesRepository> { EntryCoverHashesRepositoryImpl(get(), get()) }
+        addSingletonFactory<MergedMemberExpansionRepository> { MergedMemberExpansionRepositoryImpl(get()) }
 
         addFactory { GetEntry(get()) }
         addFactory { GetEntryById(get()) }

@@ -47,6 +47,8 @@ internal fun UpdatesGroupUiItem(
     val selected = items.all { it.selected }
     UpdatesBaseUiItem(
         title = first.visibleEntryTitle,
+        // A merged entry's group can span members; name one only when all the updates belong to it.
+        memberTitle = items.map { it.memberTitle }.distinct().singleOrNull(),
         coverData = first.visibleCoverData,
         selected = selected,
         read = items.all { it.update.consumed },

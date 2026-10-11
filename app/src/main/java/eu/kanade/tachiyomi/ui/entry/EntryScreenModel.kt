@@ -21,6 +21,7 @@ import eu.kanade.presentation.entry.components.MergeTarget
 import eu.kanade.presentation.entry.components.MergeTargetSearchController
 import eu.kanade.presentation.entry.components.buildMergeTargetQuery
 import eu.kanade.presentation.entry.components.buildMergeTargets
+import eu.kanade.presentation.entry.components.mergedSourceNames
 import eu.kanade.presentation.entry.components.rankMergeTargets
 import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.presentation.util.formattedMessage
@@ -154,7 +155,11 @@ import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryRepository
+import tachiyomi.domain.entry.repository.MergedMemberExpansionRepository
+import tachiyomi.domain.entry.service.MergedMemberExpansion
+import tachiyomi.domain.entry.service.MergedMemberExpansionSession
 import tachiyomi.domain.library.service.LibraryPreferences
+import tachiyomi.domain.source.model.SourceDisplayInfo
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.domain.util.applyFilter
 import tachiyomi.i18n.*
@@ -195,6 +200,7 @@ class EntryScreenModel(
     private val updateEntry: UpdateEntry = Injekt.get(),
     private val entryChapterRepository: EntryChapterRepository = Injekt.get(),
     private val entryRepository: EntryRepository = Injekt.get(),
+    private val mergedMemberExpansionRepository: MergedMemberExpansionRepository = Injekt.get(),
     private val categoryRepository: CategoryRepository = Injekt.get(),
     private val sourceRefreshFeature: EntrySourceRefreshFeature = Injekt.get(),
     private val entryTrackingFeature: EntryTrackingFeature = Injekt.get(),
@@ -222,6 +228,12 @@ class EntryScreenModel(
 
     private val successState: State.Success?
         get() = state.value as? State.Success
+
+    private val memberExpansion = MergedMemberExpansionSession(
+        repository = mergedMemberExpansionRepository,
+        scope = screenModelScope,
+        memberIds = state.filterIsInstance<State.Success>().map { it.memberIds },
+    )
 
     val entry: Entry?
         get() = successState?.entry
@@ -351,6 +363,7 @@ class EntryScreenModel(
         observeChildProgressLabels()
         observeChildGroupFilter()
         observeContinueTarget()
+        observeExpandedMembers()
 
         screenModelScope.launchIO {
             mergeAwareEntryAndChaptersFlow(
@@ -365,9 +378,11 @@ class EntryScreenModel(
                         it.copy(
                             entry = entry,
                             sourceName = mergePresentation.sourceName,
+                            isMultiSource = mergePresentation.isMultiSource,
+                            isSourceMissing = mergePresentation.isSourceMissing,
                             memberIds = mergePresentation.memberIds,
                             memberTitleById = mergePresentation.memberTitleById,
-                            mergedMemberTitles = mergePresentation.mergedMemberTitles,
+                            memberSourceNameById = mergePresentation.memberSourceNameById,
                             mergeTargetId = mergePresentation.mergeTargetId,
                             mergeGroupMemberIds = mergePresentation.mergeGroupMemberIds,
                             chapters = chapters.toChapterListItems(entry),
@@ -420,10 +435,11 @@ class EntryScreenModel(
                     entry = entry,
                     source = sourceManager.getOrStub(entry.source),
                     sourceName = mergePresentation.sourceName,
-                    isSourceMissing = sourceManager.getDisplayInfo(entry.source).isMissing,
+                    isMultiSource = mergePresentation.isMultiSource,
+                    isSourceMissing = mergePresentation.isSourceMissing,
                     memberIds = mergePresentation.memberIds,
                     memberTitleById = mergePresentation.memberTitleById,
-                    mergedMemberTitles = mergePresentation.mergedMemberTitles,
+                    memberSourceNameById = mergePresentation.memberSourceNameById,
                     mergeTargetId = mergePresentation.mergeTargetId,
                     mergeGroupMemberIds = mergePresentation.mergeGroupMemberIds,
                     isFromSource = isFromSource,
@@ -477,8 +493,39 @@ class EntryScreenModel(
                 }
                 .flowWithLifecycle(lifecycle)
                 .collectLatest { chapterId ->
-                    updateSuccessState { it.copy(continueTargetChapterId = chapterId) }
+                    updateSuccessState { it.copy(continueTargetChapterId = chapterId).rebuildChapterPresentation() }
                 }
+        }
+    }
+
+    private fun observeExpandedMembers() {
+        screenModelScope.launchIO {
+            memberExpansion.state
+                .flowWithLifecycle(lifecycle)
+                .collectLatest { expansion ->
+                    updateSuccessState { it.copy(memberExpansion = expansion).rebuildChapterPresentation() }
+                }
+        }
+    }
+
+    fun toggleMemberExpanded(memberId: Long) {
+        val successState = successState ?: return
+        // Chapters hidden by collapsing stay out of the selection, so selection actions only reach chapters in sight.
+        if (memberId in successState.expandedMemberIds) deselectMember(memberId)
+        memberExpansion.toggle(memberId, successState.currentMemberId)
+    }
+
+    private fun deselectMember(memberId: Long) {
+        updateSuccessState { successState ->
+            val updates = successState.chapters.mapNotNull { item ->
+                if (!item.selected || item.chapter.entryId != memberId) return@mapNotNull null
+                selectedChapterIds.remove(item.id)
+                item.copy(selected = false)
+            }
+            successState.updateChapterItems(updates).also { updated ->
+                selectedPositions[0] = updated.processedChapters.indexOfFirst { it.selected }
+                selectedPositions[1] = updated.processedChapters.indexOfLast { it.selected }
+            }
         }
     }
 
@@ -1547,9 +1594,10 @@ class EntryScreenModel(
                         range = IntRange.EMPTY
                     }
 
+                    val hiddenMemberIds = successState.collapsedMemberIds
                     range.forEach { index ->
                         val inbetweenItem = chapters[index]
-                        if (!inbetweenItem.selected) {
+                        if (!inbetweenItem.selected && inbetweenItem.chapter.entryId !in hiddenMemberIds) {
                             selectedChapterIds.add(inbetweenItem.id)
                             updates += inbetweenItem.copy(selected = true)
                         }
@@ -1727,7 +1775,7 @@ class EntryScreenModel(
             val excludedIds = state.mergeGroupMemberIds.toSet()
             val targets = buildMergeTargets(
                 libraryItems = getLibraryEntries.await(),
-                sourceManager = sourceManager,
+                sourceNames = Injekt.get(),
                 entryType = state.entry.type,
                 excludedEntryIds = excludedIds,
             )
@@ -2123,11 +2171,22 @@ class EntryScreenModel(
         }
         val membersById = editor?.entries.orEmpty().associateBy { it.entry.id }
         val members = memberIds.mapNotNull { memberId -> membersById[memberId]?.entry ?: getEntryOrNull(memberId) }
+        val sources = members.ifEmpty { listOf(entry) }
+            .map(Entry::source)
+            .distinct()
+            .map(sourceManager::getDisplayInfo)
+        val sourceNameById = sources.associate { it.id to it.getDisplayNameForEntryInfo() }
         return MergePresentation(
-            sourceName = getSourceName(entry, memberIds),
+            sourceName = mergedSourceNames(sourceNameById.values.toList()),
+            isMultiSource = sources.size > 1,
+            isSourceMissing = sources.any(SourceDisplayInfo::isMissing),
             memberIds = memberIds,
             memberTitleById = members.associate { it.id to it.displayTitle },
-            mergedMemberTitles = members.map { it.displayTitle }.filter { it.isNotBlank() }.toImmutableList(),
+            memberSourceNameById = if (sources.size > 1) {
+                members.associate { it.id to sourceNameById.getValue(it.source) }
+            } else {
+                emptyMap()
+            },
             mergeTargetId = editor?.entries?.firstOrNull { it.reference == editor.target }?.entry?.id
                 ?: entryMergeNavigationFeature.resolveNavigation(
                     EntryMergeSubject(entry.profileId, entry.id),
@@ -2254,19 +2313,14 @@ class EntryScreenModel(
         }
     }
 
-    private fun getSourceName(entry: Entry, memberIds: List<Long>): String {
-        return if (memberIds.size > 1) {
-            context.stringResource(MR.strings.multi_lang)
-        } else {
-            sourceManager.getDisplayInfo(entry.source).getDisplayNameForEntryInfo()
-        }
-    }
-
     private data class MergePresentation(
         val sourceName: String,
+        val isMultiSource: Boolean,
+        /** Whether any member's source is missing, not just the visible entry's. */
+        val isSourceMissing: Boolean,
         val memberIds: ImmutableList<Long>,
         val memberTitleById: Map<Long, String>,
-        val mergedMemberTitles: ImmutableList<String>,
+        val memberSourceNameById: Map<Long, String>,
         val mergeTargetId: Long,
         val mergeGroupMemberIds: ImmutableList<Long>,
     )
@@ -2301,10 +2355,11 @@ class EntryScreenModel(
             val entry: Entry,
             val source: UnifiedSource?,
             val sourceName: String,
+            val isMultiSource: Boolean,
             val isSourceMissing: Boolean,
             val memberIds: ImmutableList<Long>,
             val memberTitleById: Map<Long, String>,
-            val mergedMemberTitles: ImmutableList<String>,
+            val memberSourceNameById: Map<Long, String>,
             val mergeTargetId: Long,
             val mergeGroupMemberIds: ImmutableList<Long>,
             val isFromSource: Boolean,
@@ -2321,11 +2376,14 @@ class EntryScreenModel(
             val dialog: Dialog? = null,
             val hasPromptedToAddBefore: Boolean = false,
             val hideMissingChapters: Boolean = false,
+            val memberExpansion: MergedMemberExpansion = MergedMemberExpansion(),
             private val chapterPresentation: EntryChapterPresentation = buildChapterPresentation(
                 entry = entry,
                 chapters = chapters,
                 memberIds = memberIds,
                 memberTitleById = memberTitleById,
+                memberSourceNameById = memberSourceNameById,
+                expandedMemberIds = memberExpansion.shown(chapters.memberOf(continueTargetChapterId)),
                 childListFeature = childListFeature,
                 childGroupFilterFeature = childGroupFilterFeature,
                 childGroupFilterState = childGroupFilterState,
@@ -2398,6 +2456,16 @@ class EntryScreenModel(
             val downloadSourceIds: Set<Long>
                 get() = chapterPresentation.sourceIds
 
+            /** The merged member holding the chapter to continue with, which opens expanded. */
+            val currentMemberId: Long?
+                get() = chapters.memberOf(continueTargetChapterId)
+
+            val expandedMemberIds: Set<Long>
+                get() = memberExpansion.shown(currentMemberId)
+
+            val collapsedMemberIds: Set<Long>
+                get() = if (memberIds.size > 1) memberIds.toSet() - expandedMemberIds else emptySet()
+
             fun rebuildChapterPresentation(): Success {
                 return copy(
                     chapterPresentation = buildChapterPresentation(
@@ -2405,6 +2473,8 @@ class EntryScreenModel(
                         chapters = chapters,
                         memberIds = memberIds,
                         memberTitleById = memberTitleById,
+                        memberSourceNameById = memberSourceNameById,
+                        expandedMemberIds = expandedMemberIds,
                         childListFeature = childListFeature,
                         childGroupFilterFeature = childGroupFilterFeature,
                         childGroupFilterState = childGroupFilterState,
@@ -2462,6 +2532,11 @@ sealed class EntryChapterList {
     data class MemberHeader(
         val entryId: Long,
         val title: String,
+        /** Null when every member comes from one source. */
+        val sourceName: String?,
+        val childCount: Int,
+        val unreadCount: Int,
+        val expanded: Boolean,
     ) : EntryChapterList()
 
     @Immutable
@@ -2598,4 +2673,8 @@ private fun computeDefaultChapterFlags(libraryPreferences: LibraryPreferences): 
         libraryPreferences.sortChapterBySourceOrNumber.get() or
         libraryPreferences.displayChapterByNameOrNumber.get() or
         libraryPreferences.sortChapterByAscendingOrDescending.get()
+}
+
+private fun List<EntryChapterList.Item>.memberOf(chapterId: Long?): Long? {
+    return chapterId?.let { id -> firstOrNull { it.id == id }?.chapter?.entryId }
 }

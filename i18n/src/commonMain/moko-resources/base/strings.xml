@@ -169,6 +169,7 @@
     <string name="action_display_local_badge">Local source</string>
     <string name="action_display_language_badge">Language</string>
     <string name="action_display_entry_type_badge">Entry type</string>
+    <string name="action_display_merged_badge">Merged entries</string>
     <string name="action_display_show_tabs">Show category tabs</string>
     <string name="action_display_show_type_tabs">Show type tabs</string>
     <string name="action_display_show_extension_tabs">Show extension tabs</string>
@@ -254,7 +255,7 @@
     <string name="merge_members_count">%d members</string>
     <string name="merge_existing_target_locked">Existing merged entry will stay as the root</string>
     <string name="merge_member_notice">This entry is part of a merged entry.</string>
-    <string name="merge_editor_summary">Top to bottom = merged entry order. Uncheck members to replace them.</string>
+    <string name="merge_editor_summary">Top to bottom = merged entry order. Remove members from their ⋮ menu.</string>
     <string name="merge_target_picker_merged_summary">%1$s • %2$d members</string>
     <string name="remove_merged_manga_warning">Merged entries are removed from the library as whole groups.</string>
 
@@ -2424,6 +2425,7 @@
     <string name="statistics_recap_no_hidden_titles">No titles are hidden from this recap</string>
     <string name="statistics_recap_show_again">Show again</string>
     <string name="entry_catch_up_estimate">%1$s: %2$d · about %3$s</string>
+    <string name="entry_member_unconsumed_count">%1$s: %2$d</string>
 
     <string name="tristate_not_used">Not used</string>
     <string name="tristate_included">Included</string>

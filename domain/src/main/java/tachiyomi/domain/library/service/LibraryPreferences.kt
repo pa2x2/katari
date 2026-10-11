@@ -154,6 +154,8 @@ class LibraryPreferences(
 
     val entryTypeBadge: Preference<Boolean> = preferenceStore.getBoolean("display_entry_type_badge", true)
 
+    val mergedBadge: Preference<Boolean> = preferenceStore.getBoolean("display_merged_badge", true)
+
     val newShowUpdatesCount: Preference<Boolean> = preferenceStore.getBoolean("library_show_updates_count", true)
     val newUpdatesCount: Preference<Int> = preferenceStore.getInt(
         Preference.appStateKey("library_unseen_updates_count"),

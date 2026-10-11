@@ -18,6 +18,7 @@ import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.service.EntryLibraryProgressResolution
 import tachiyomi.domain.library.model.LibraryItem
 import tachiyomi.domain.library.model.LibraryItemKey
+import tachiyomi.domain.library.model.LibraryItemSource
 
 class LibraryDownloadCountUpdatesTest {
 
@@ -80,11 +81,8 @@ class LibraryDownloadCountUpdatesTest {
     private fun libraryItem(vararg entries: Entry): LibraryItem = LibraryItem(
         entry = entries.first(),
         categories = emptyList(),
-        sourceName = "",
-        sourceLanguage = "",
+        sources = entries.map(Entry::source).distinct().map { LibraryItemSource(it, "", "") },
         sourceItemOrientation = EntryItemOrientation.VERTICAL,
-        displaySourceId = entries.singleOrNull()?.source ?: LibraryItem.MULTI_SOURCE_ID,
-        sourceIds = entries.mapTo(mutableSetOf(), Entry::source),
         isLocal = false,
         isMerged = entries.size > 1,
         memberEntryIds = entries.map { LibraryItemKey(it.type, it.id) },

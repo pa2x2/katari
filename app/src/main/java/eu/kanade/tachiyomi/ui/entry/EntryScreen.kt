@@ -377,6 +377,7 @@ class EntryScreen(
             onMarkPreviousAsReadClicked = screenModel::markPreviousChapterRead.takeIf { consumptionApplicable },
             onMultiDeleteClicked = screenModel::showDeleteChapterDialog,
             onChapterSwipe = screenModel::chapterSwipe,
+            onMemberHeaderClicked = screenModel::toggleMemberExpanded,
             onChapterSelected = screenModel::toggleSelection,
             onAllChapterSelected = screenModel::toggleAllSelection,
             onInvertSelection = screenModel::invertSelection,
