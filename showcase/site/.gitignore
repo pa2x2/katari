@@ -1,0 +1,5 @@
+node_modules/
+dist/
+.astro/
+# Filled by scripts/sync-captures.ts from a capture run or the assets branch.
+src/captures/

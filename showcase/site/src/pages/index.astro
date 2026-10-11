@@ -1,0 +1,207 @@
+---
+import BeforeAfter from "../components/BeforeAfter.astro";
+import Feature from "../components/Feature.astro";
+import Phone from "../components/Phone.astro";
+import Page from "../layouts/Page.astro";
+import bookDusk from "../captures/book-dusk.png";
+import bookPaper from "../captures/book-paper.png";
+import entryActivity from "../captures/entry-activity.png";
+import feed from "../captures/feed.png";
+import globalSearch from "../captures/global-search.png";
+import library from "../captures/library.png";
+import mergedEntry from "../captures/merged-entry.png";
+import player from "../captures/player.png";
+import profiles from "../captures/profiles.png";
+import recapClip from "../captures/recap.mp4?url";
+import recapShare from "../captures/recap-share.png";
+import recapTop from "../captures/recap-top.png";
+import statistics from "../captures/statistics.png";
+import statisticsYear from "../captures/statistics-year.png";
+import translationAfter from "../captures/translation-after.png";
+import translationBefore from "../captures/translation-before.png";
+import translationPopup from "../captures/translation-popup.png";
+import translator from "../captures/translator.png";
+import updates from "../captures/updates.png";
+import { getImage } from "astro:assets";
+
+const recapPoster = await getImage({ src: recapTop, width: 540, format: "webp" });
+const preview = await getImage({ src: library, width: 600, format: "png" });
+---
+
+<Page
+  title="Katari — Every kind of story. One library."
+  description="An Android app for reading comics and books and watching video in one library, with on-device translation and reading statistics."
+  image={preview.src}
+>
+  <main>
+    <section class="hero">
+      <div class="pitch">
+        <h1>Every kind of story.<br />One library.</h1>
+        <p>
+          Katari is an Android app for comics, books, and video. Read and watch them side by side, translate what you
+          read on the device, and see where your reading time goes.
+        </p>
+        <div class="actions">
+          <a class="download" href="https://github.com/pa2x2/katari/releases/latest">Download for Android</a>
+          <a href="https://github.com/pa2x2/katari">Source on GitHub</a>
+        </div>
+        <p class="note">Android 10 or newer. Free and open source.</p>
+      </div>
+      <Phone src={library} alt="A library holding comics, books, and films" hero />
+    </section>
+
+    <Feature id="library" title="Comics, books, and films on one shelf">
+      <p>
+        Everything you follow shares one library, one updates feed, and one history. A title published in several
+        places, or in several languages, becomes one entry with every version inside.
+      </p>
+      <Fragment slot="shots">
+        <Phone src={mergedEntry} alt="Pepper&Carrot as one entry holding its English and Japanese editions" />
+        <Phone src={updates} alt="New episodes listed in the updates feed" />
+      </Fragment>
+    </Feature>
+
+    <Feature id="translation" title="Read the original, understand every line">
+      <p>
+        Katari finds the text on a comic page and translates it in place, with text recognition and translation
+        running on the phone. Tap a speech bubble to see it side by side with the original and hear either one read
+        aloud, or translate anything you type in the Translator.
+      </p>
+      <Fragment slot="shots">
+        <BeforeAfter
+          before={translationBefore}
+          after={translationAfter}
+          beforeLabel="Japanese"
+          afterLabel="English"
+          alt="A Japanese comic page with its speech bubbles translated into English"
+        />
+        <Phone src={translationPopup} alt="One speech bubble's translation, with buttons to hear it read aloud" />
+        <Phone src={translator} alt="The Translator turning a line of Japanese into English" />
+      </Fragment>
+    </Feature>
+
+    <Feature id="readers" title="A reader made for each format">
+      <p>
+        Books flow like books, with themes for day and night. Comics turn page by page, and films play in a player
+        with the controls you expect.
+      </p>
+      <Fragment slot="shots">
+        <Phone src={bookPaper} alt="A book in the paper theme" />
+        <Phone src={bookDusk} alt="The same page in the dusk theme" />
+        <Phone src={player} alt="Sintel playing in the video player" landscape />
+      </Fragment>
+    </Feature>
+
+    <Feature id="discover" title="Find the next story">
+      <p>
+        Search every source at once, or follow a source's popular and latest titles as a feed.
+      </p>
+      <Fragment slot="shots">
+        <Phone src={globalSearch} alt="One search finding comics in two languages, books, and a film" />
+        <Phone src={feed} alt="A feed of popular books" />
+      </Fragment>
+    </Feature>
+
+    <Feature id="statistics" title="See where your time goes">
+      <p>
+        Katari keeps track of how long you read and watch, so you can set a daily goal, keep a streak, see how long a
+        title took you, and look back on your year.
+      </p>
+      <Fragment slot="shots">
+        <Phone src={statistics} alt="Reading statistics for the last 30 days, with the daily goal" />
+        <Phone src={statisticsYear} alt="A year of reading, month by month" />
+        <Phone src={entryActivity} alt="Time spent on one book" />
+      </Fragment>
+    </Feature>
+
+    <Feature id="recap" title="Your year, as a story">
+      <p>
+        Every month and every year gets a recap: the titles you spent the most time with, your longest streak, and the
+        hour you read most. Share it as a picture when you are done.
+      </p>
+      <Fragment slot="shots">
+        <figure class="clip">
+          <video src={recapClip} poster={recapPoster.src} autoplay muted loop playsinline preload="none"></video>
+        </figure>
+        <Phone src={recapShare} alt="The year's recap as a picture to share" />
+      </Fragment>
+    </Feature>
+
+    <Feature id="profiles" title="Everyone gets their own library">
+      <p>
+        Profiles keep separate libraries, history, statistics, and settings, for a shared tablet or for keeping
+        different collections apart.
+      </p>
+      <Fragment slot="shots">
+        <Phone src={profiles} alt="Choosing between two profiles" />
+      </Fragment>
+    </Feature>
+  </main>
+</Page>
+
+<style>
+  .hero {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 3rem;
+    max-width: 72rem;
+    margin: 0 auto;
+    padding: 3rem 1.5rem 1rem;
+  }
+
+  .pitch {
+    flex: 1 1 24rem;
+  }
+
+  h1 {
+    font-size: clamp(2.4rem, 6vw, 4rem);
+    margin: 0 0 1.25rem;
+  }
+
+  .pitch p {
+    color: var(--muted);
+    font-size: 1.2rem;
+    max-width: 34rem;
+  }
+
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1.5rem;
+    margin: 2rem 0 0.75rem;
+  }
+
+  .download {
+    padding: 0.8rem 1.4rem;
+    border-radius: 2rem;
+    background: var(--clay);
+    color: var(--night);
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  .pitch .note {
+    font-size: 0.9rem;
+  }
+
+  .clip {
+    margin: 0;
+    width: 17rem;
+    max-width: calc(50vw - 2.25rem);
+    padding: 0.45rem;
+    border-radius: 1.6rem;
+    background: #05080f;
+    box-shadow:
+      0 0 0 1px #2a3550,
+      0 1.5rem 3rem -1rem #000c;
+  }
+
+  .clip video {
+    display: block;
+    width: 100%;
+    border-radius: 1.2rem;
+  }
+</style>

@@ -1,0 +1,17 @@
+{
+  "name": "katari-site",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "sync": "node scripts/sync-captures.ts"
+  },
+  "dependencies": {
+    "astro": "^7.3.8"
+  }
+}
