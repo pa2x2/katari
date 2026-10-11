@@ -19,7 +19,7 @@ const works: Credit[] = credits;
       {
         works.map((work) => (
           <li>
-            <strong>{work.title}</strong> by {work.author}
+            <strong lang={work.language}>{work.title}</strong> by {work.author}
             <br />
             {work.attribution}.{" "}
             <a href={work.license.url} {...leavesSite()}>{work.license.name}</a>.
