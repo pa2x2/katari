@@ -217,8 +217,12 @@ class GlobalSearchScreenModel(
         }
     }
 
+    // Sources finish concurrently, so each result is merged into the state it updates rather than into a snapshot.
     private fun updateItem(source: EntryCatalogueSourceInfo, result: GlobalSearchItemResult) {
-        updateItems(state.value.items + (source to result))
+        mutableState.update {
+            val items = it.items + (source to result)
+            it.copy(items = items.toSortedMap(sortComparator(items)))
+        }
     }
 
     @Immutable
