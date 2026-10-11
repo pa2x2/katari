@@ -1,0 +1,22 @@
+name: Deploy the showcase site
+
+# The site is built from main, where its workflow lives; a push here only asks that workflow to run with the new captures.
+on:
+  push:
+    branches:
+      - assets
+
+permissions: {}
+
+jobs:
+  deploy:
+    name: Start the site deployment
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: write
+
+    steps:
+      - name: Start
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run showcase-site.yml --repo "$GITHUB_REPOSITORY" --ref main
