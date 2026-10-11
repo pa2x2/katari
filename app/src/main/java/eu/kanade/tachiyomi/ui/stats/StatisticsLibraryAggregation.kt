@@ -5,6 +5,7 @@ import eu.kanade.presentation.more.stats.data.StatsLibraryInsights
 import eu.kanade.presentation.more.stats.data.StatsProgress
 import tachiyomi.domain.entry.model.EntryStatus
 import tachiyomi.domain.library.model.LibraryItem
+import tachiyomi.domain.library.model.LibraryItemSource
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -56,9 +57,10 @@ internal fun buildLibraryInsights(
                 it.count
             }.thenBy(String.CASE_INSENSITIVE_ORDER) { it.label },
         )
-    // A cross-source merge counts under each of its sources, so the counts can add up to more than the titles.
+    // A cross-source merge counts under each of its sources, so the counts can add up to more than the titles. Sources
+    // that share a name, like one extension's language variants, count it once.
     val itemsBySource = items
-        .flatMap { item -> item.sources.map { source -> source.name to item } }
+        .flatMap { item -> item.sources.map(LibraryItemSource::name).distinct().map { name -> name to item } }
         .groupBy(keySelector = { it.first }, valueTransform = { it.second })
         .entries
         .sortedWith(

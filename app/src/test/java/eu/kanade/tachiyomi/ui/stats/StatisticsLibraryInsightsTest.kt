@@ -30,10 +30,10 @@ class StatisticsLibraryInsightsTest {
     }
 
     @Test
-    fun `a cross-source merge counts under each source but once among the other sources`() {
+    fun `a cross-source merge counts once under each source name but once among the other sources`() {
         val items = listOf(
             item(id = 1L, sources = listOf("A")),
-            item(id = 2L, sources = listOf("A")),
+            item(id = 2L, sources = listOf("A", "A")),
             item(id = 3L, sources = listOf("B")),
             item(id = 4L, sources = listOf("B")),
             item(id = 5L, sources = listOf("C")),
