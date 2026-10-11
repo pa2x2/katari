@@ -15,8 +15,11 @@ import sharp from "sharp";
 
 /** A channel may differ by this much from antialiasing and gradient dithering without the pixel counting as changed. */
 const CHANNEL_TOLERANCE = 24;
-/** The share of changed pixels below which a still is the same picture. */
-const CHANGED_SHARE = 0.001;
+/**
+ * The share of changed pixels below which a still is the same picture: about 100 pixels of a phone screen. Repeated
+ * runs differ by a few dozen at most, while a changed digit or word moves several hundred.
+ */
+const CHANGED_SHARE = 0.00004;
 /** The files a capture run publishes: stills, clips, and credits. */
 const PUBLISHED = /\.(png|mp4|json)$/;
 /** Each clip and the prefix of the stills it follows. */
