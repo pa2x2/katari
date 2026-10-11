@@ -13,7 +13,7 @@ import { attachedSerials, Device } from "./adb.ts";
 const AVD = "Katari_Showcase";
 const SYSTEM_IMAGE = "system-images;android-36.1;google_apis;x86_64";
 const DEVICE_PROFILE = "pixel_9a";
-const SERIAL = "emulator-5554";
+export const SHOWCASE_SERIAL = "emulator-5554";
 const BOOT_TIMEOUT_MS = 10 * 60_000;
 const SHUTDOWN_TIMEOUT_MS = 60_000;
 
@@ -38,10 +38,16 @@ export async function bootShowcaseEmulator(): Promise<Device> {
   );
   emulator.unref();
 
-  const device = new Device(SERIAL);
-  await awaitBoot(device);
-  device.adb("root");
-  await awaitBoot(device);
+  const device = new Device(SHOWCASE_SERIAL);
+  try {
+    await awaitBoot(device);
+    device.adb("root");
+    await awaitBoot(device);
+  } catch (error) {
+    // Left running, it would stop every later run from starting.
+    emulator.kill();
+    throw error;
+  }
   // Downloads that wait for an unmetered network treat Wi-Fi as unmetered and mobile data as metered.
   device.shell("svc wifi enable; svc data disable");
   // The emulator's software GLES translator crashes the whole emulator on the recap's drifting gradients; apps started

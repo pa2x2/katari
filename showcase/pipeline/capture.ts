@@ -72,17 +72,29 @@ try {
   writeCredits(join(values.served, "catalog.json"), join(out, "credits.json"));
   console.log(out);
 } catch (error) {
-  writeFileSync(join(out, "logcat.txt"), device.adb("logcat", "-d"));
+  saveDiagnostics(device);
+  throw error;
+} finally {
+  server?.kill();
+  // A failure to shut down is reported without replacing the error that ended the run.
+  if (!values["keep-emulator"]) {
+    await shutDown(device).catch((error) => console.error(`the emulator did not shut down: ${error}`));
+  }
+}
+
+/** Keeps what explains a failed run beside its captures. The device may be gone by now, so each part is optional. */
+function saveDiagnostics(device: Device): void {
+  try {
+    writeFileSync(join(out, "logcat.txt"), device.adb("logcat", "-d"));
+  } catch (error) {
+    console.error(`the device log could not be saved: ${error}`);
+  }
   try {
     device.pull(`${FAILURE_DIRECTORY}/.`, out);
   } catch {
     // The failure happened before any scene could leave a screenshot.
   }
   console.error(`the device log and any screenshots of the failure are in ${out}`);
-  throw error;
-} finally {
-  server?.kill();
-  if (!values["keep-emulator"]) await shutDown(device);
 }
 
 async function prepare(device: Device): Promise<void> {
