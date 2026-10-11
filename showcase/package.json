@@ -9,6 +9,7 @@
     "pin": "node content/pin.ts",
     "fetch": "node content/fetch.ts",
     "serve": "node content/serve.ts",
+    "seed": "node seed/generate.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

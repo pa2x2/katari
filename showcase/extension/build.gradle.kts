@@ -14,7 +14,7 @@ android {
         // The extension loader reads the source API version from versionName's major.minor.
         versionName = "2.6.1"
 
-        // The emulator reaches the host's loopback interface through 10.0.2.2, where the content server listens.
+        // showcase/content/content-server.ts: the content server on the host, as the emulator reaches it.
         buildConfigField("String", "CONTENT_SERVER", "\"http://10.0.2.2:8571\"")
     }
 

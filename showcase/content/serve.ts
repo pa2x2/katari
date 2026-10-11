@@ -8,10 +8,8 @@ import { createReadStream, statSync } from "node:fs";
 import { createServer } from "node:http";
 import { extname, join, normalize, resolve, sep } from "node:path";
 import { parseArgs } from "node:util";
+import { CONTENT_SERVER_PORT } from "./content-server.ts";
 import { cacheDir } from "./download-cache.ts";
-
-// The showcase extension's CONTENT_SERVER points at this port.
-const DEFAULT_PORT = 8571;
 
 const MEDIA_TYPES: Record<string, string> = {
   ".json": "application/json; charset=utf-8",
@@ -25,7 +23,7 @@ const MEDIA_TYPES: Record<string, string> = {
 const { values } = parseArgs({
   options: {
     root: { type: "string", default: join(cacheDir(), "served") },
-    port: { type: "string", default: String(DEFAULT_PORT) },
+    port: { type: "string", default: String(CONTENT_SERVER_PORT) },
   },
 });
 const root = resolve(values.root);
