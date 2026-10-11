@@ -13,5 +13,5 @@
     "noUnusedParameters": true,
     "types": ["node"]
   },
-  "include": ["content/**/*.ts", "seed/**/*.ts"]
+  "include": ["content/**/*.ts", "seed/**/*.ts", "pipeline/**/*.ts"]
 }
