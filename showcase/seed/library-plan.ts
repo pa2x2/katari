@@ -40,6 +40,8 @@ export interface ProfilePlan {
   dailyGoalMinutes: number;
   /** Minutes already spent today when the screenshots are taken. */
   minutesToday: number;
+  /** Tabs of the bottom bar in order, when they differ from the app's default. */
+  homeTabs?: string[];
 }
 
 /**
@@ -120,6 +122,9 @@ export const profiles: ProfilePlan[] = [
     goalStreakDays: 16,
     dailyGoalMinutes: 30,
     minutesToday: 22,
+    // The language learner swaps History, which the showcase doesn't feature, for the Translator. A sixth tab would fold
+    // More into an overflow menu.
+    homeTabs: ["Library", "Updates", "Browse", "Translator", "More"],
   },
   {
     uuid: "4d2f6b1e-8c3a-4f7e-9b5d-2a1c7e9f3b60",

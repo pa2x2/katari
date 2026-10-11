@@ -11,7 +11,7 @@ import type {
 import { bookPosition } from "./book-position.ts";
 import { newChapters, type ProfilePlan } from "./library-plan.ts";
 import { chapterUrl, readingHistory, type WorkHistory } from "./reading-history.ts";
-import { SHOWCASE_NOW, STATISTICS_EPOCH } from "./showcase-clock.ts";
+import { LIBRARY_UPDATED_AT, SHOWCASE_NOW, STATISTICS_EPOCH } from "./showcase-clock.ts";
 
 const ENTRY_TYPES: Record<CatalogWork["type"], EntryType> = { manga: "MANGA", book: "BOOK", anime: "ANIME" };
 
@@ -77,7 +77,7 @@ export function profileBackup(
       merge,
       playbackStates: history?.playbackStates ?? [],
       progressStates: history?.bookProgress ? [bookProgress(catalogWork, history.bookProgress)] : [],
-      lastUpdate: SHOWCASE_NOW - 3 * 3_600_000,
+      lastUpdate: LIBRARY_UPDATED_AT,
       activitySessions: history?.sessions ?? [],
       activityCompletions: history?.completions ?? [],
       statisticsEpoch: STATISTICS_EPOCH,
@@ -128,6 +128,7 @@ function mergeOf(
 }
 
 function preferences(plan: ProfilePlan): BackupPreference[] {
+  const tabs = plan.homeTabs;
   return [
     { key: "pref_theme_mode_key", value: { type: "String", value: "DARK" } },
     // Japanese sources are hidden until their language is enabled.
@@ -137,6 +138,13 @@ function preferences(plan: ProfilePlan): BackupPreference[] {
     // The reader otherwise covers the first page it opens with its tap zones.
     { key: "reader_navigation_overlay_new_user", value: { type: "Boolean", value: false } },
     { key: "statistics_daily_goal_minutes", value: { type: "Int", value: plan.dailyGoalMinutes } },
+    ...(tabs === undefined
+      ? []
+      : ([
+          { key: "home_screen_tabs", value: { type: "StringSet", value: tabs } },
+          // The app appends the tabs left out, so naming the shown ones is enough to order them.
+          { key: "home_screen_tab_order", value: { type: "String", value: tabs.join(",") } },
+        ] satisfies BackupPreference[])),
   ];
 }
 
