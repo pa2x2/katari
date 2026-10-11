@@ -1,0 +1,21 @@
+{
+  "name": "katari-showcase",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "pin": "node content/pin.ts",
+    "fetch": "node content/fetch.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "fast-xml-parser": "^5.11.2",
+    "sharp": "^0.35.5"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.2",
+    "typescript": "^7.0.2"
+  }
+}
