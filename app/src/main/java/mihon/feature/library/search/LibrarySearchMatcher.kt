@@ -16,6 +16,7 @@ import mihon.domain.library.model.search.NotNode
 import mihon.domain.library.model.search.OrNode
 import mihon.domain.library.model.search.QueryNode
 import tachiyomi.domain.library.model.LibraryItem
+import tachiyomi.domain.library.model.LibraryItemSource
 import tachiyomi.source.local.LocalSource
 import kotlin.math.abs
 import kotlin.time.Instant
@@ -23,8 +24,6 @@ import kotlin.time.Instant
 internal class LibrarySearchMatcher(
     query: String,
     private val categoryNamesById: Map<Long, String>,
-    private val sourceDisplayName: (LibraryItem) -> String = LibraryItem::sourceName,
-    private val sourceNames: (LibraryItem) -> List<String> = { listOf(it.sourceName) },
 ) {
     private val root = QueryNode.from(query)
 
@@ -53,7 +52,7 @@ internal class LibrarySearchMatcher(
             entry.author,
             entry.artist,
             entry.description,
-            sourceDisplayName(item),
+            *item.sources.map(LibraryItemSource::name).toTypedArray(),
             *entry.genre.orEmpty().toTypedArray(),
             *categoryNames.toTypedArray(),
         ).any { it.contains(value, ignoreCase = true) } ||
@@ -63,9 +62,8 @@ internal class LibrarySearchMatcher(
 
     private fun ExactSourceQueryNode.matchesExactSource(item: LibraryItem): Boolean {
         return when {
-            value.equals(LOCAL_SOURCE_ID_ALIAS, ignoreCase = true) -> item.displaySourceId == LocalSource.ID
-            value.equals(MULTI_SOURCE_ID_ALIAS, ignoreCase = true) ->
-                item.displaySourceId == LibraryItem.MULTI_SOURCE_ID
+            value.equals(LOCAL_SOURCE_ID_ALIAS, ignoreCase = true) -> item.sources.singleOrNull()?.id == LocalSource.ID
+            value.equals(MULTI_SOURCE_ID_ALIAS, ignoreCase = true) -> item.isMultiSource
             else -> value.toLongOrNull() in item.sourceIds
         }
     }
@@ -79,13 +77,12 @@ internal class LibrarySearchMatcher(
             EntryField.DESCRIPTION -> matchText(listOf(entry.description))
             EntryField.GENRE -> matchText(entry.genre.orEmpty())
             EntryField.NOTES -> matchText(listOf(entry.notes))
-            EntryField.LANGUAGE -> matchText(listOf(item.sourceLanguage))
+            EntryField.LANGUAGE -> matchText(item.languages)
             EntryField.SOURCE -> {
-                matchText(sourceNames(item)) ||
+                matchText(item.sources.map(LibraryItemSource::name)) ||
                     (value.equals(LOCAL_SOURCE_ID_ALIAS, ignoreCase = true) && LocalSource.ID in item.sourceIds) ||
                     (
-                        value.equals(MULTI_SOURCE_ID_ALIAS, ignoreCase = true) &&
-                            item.displaySourceId == LibraryItem.MULTI_SOURCE_ID
+                        value.equals(MULTI_SOURCE_ID_ALIAS, ignoreCase = true) && item.isMultiSource
                         )
             }
             EntryField.SOURCE_ID -> value.toLongOrNull() in item.sourceIds

@@ -13,11 +13,9 @@ import tachiyomi.domain.entry.service.EntryLibraryProgressSummary
 data class LibraryItem(
     val entry: Entry,
     val categories: List<Long>,
-    val sourceName: String,
-    val sourceLanguage: String,
+    /** Distinct sources of the members, in member order; one entry for an unmerged item. */
+    val sources: List<LibraryItemSource>,
     val sourceItemOrientation: EntryItemOrientation,
-    val displaySourceId: Long,
-    val sourceIds: Set<Long>,
     val isLocal: Boolean,
     val isMerged: Boolean,
     val memberEntryIds: List<LibraryItemKey>,
@@ -31,6 +29,16 @@ data class LibraryItem(
 
     val sourceId: Long
         get() = entry.source
+
+    val sourceIds: Set<Long>
+        get() = sources.mapTo(mutableSetOf(), LibraryItemSource::id)
+
+    val isMultiSource: Boolean
+        get() = sources.size > 1
+
+    /** Distinct non-blank source languages, in member order. */
+    val languages: List<String>
+        get() = sources.map(LibraryItemSource::language).filter(String::isNotBlank).distinct()
 
     val title: String
         get() = entry.displayTitle
@@ -82,8 +90,10 @@ data class LibraryItem(
 
     val canContinue: Boolean
         get() = availableProgressSummary?.continueTarget is EntryLibraryContinueTarget.Available
-
-    companion object {
-        const val MULTI_SOURCE_ID = Long.MIN_VALUE
-    }
 }
+
+data class LibraryItemSource(
+    val id: Long,
+    val name: String,
+    val language: String,
+)

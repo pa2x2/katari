@@ -34,6 +34,7 @@ import tachiyomi.domain.entry.service.EntryLibraryProgressResolution
 import tachiyomi.domain.entry.service.EntryLibraryProgressResolutionPort
 import tachiyomi.domain.library.model.LibraryItem
 import tachiyomi.domain.library.model.LibraryItemKey
+import tachiyomi.domain.library.model.LibraryItemSource
 import tachiyomi.domain.source.service.EntrySourceDescriptionResolutionPort
 import tachiyomi.domain.source.service.HiddenSourceIds
 import tachiyomi.domain.source.service.SourceManager
@@ -237,8 +238,6 @@ class GetLibraryEntries(
                 memberEntries = listOf(entry),
                 chapters = entryChapters,
                 categories = categoryIdsByEntryId[entry.id].orDefaultCategory(),
-                displaySourceId = entry.source,
-                sourceIds = setOf(entry.source),
                 isMerged = false,
                 libraryState = libraryState,
             )
@@ -264,24 +263,13 @@ class GetLibraryEntries(
         members: List<LibraryItem>,
     ): LibraryItem {
         val target = members.firstOrNull { it.entry.id == targetId } ?: members.first()
-        val sourceIds = members.flatMap { it.sourceIds }.toSet()
-        val displaySourceId = if (sourceIds.size > 1) MULTI_SOURCE_ID else sourceIds.first()
-
-        val sourceName = if (displaySourceId == MULTI_SOURCE_ID) {
-            ""
+        val sources = members.flatMap(LibraryItem::sources).distinctBy(LibraryItemSource::id)
+        val sourceItemOrientation = if (sources.size ==
+            1
+        ) {
+            target.sourceItemOrientation
         } else {
-            members.firstOrNull { displaySourceId in it.sourceIds }?.sourceName.orEmpty()
-        }
-        val sourceLanguage = if (displaySourceId == MULTI_SOURCE_ID) {
-            MULTI_SOURCE_ID.toString()
-        } else {
-            members.firstOrNull { displaySourceId in it.sourceIds }?.sourceLanguage.orEmpty()
-        }
-        val sourceItemOrientation = if (displaySourceId == MULTI_SOURCE_ID) {
             EntryItemOrientation.VERTICAL
-        } else {
-            members.firstOrNull { displaySourceId in it.sourceIds }?.sourceItemOrientation
-                ?: EntryItemOrientation.VERTICAL
         }
 
         val memberSummaries = members.mapNotNull { it.availableProgressSummary }
@@ -293,11 +281,8 @@ class GetLibraryEntries(
 
         return target.copy(
             categories = members.flatMap { it.categories }.distinct(),
-            sourceName = sourceName,
-            sourceLanguage = sourceLanguage,
+            sources = sources,
             sourceItemOrientation = sourceItemOrientation,
-            displaySourceId = displaySourceId,
-            sourceIds = sourceIds,
             isMerged = true,
             memberEntryIds = members.flatMap { it.memberEntryIds },
             memberEntries = members.flatMap { it.memberEntries },
@@ -311,25 +296,18 @@ class GetLibraryEntries(
         memberEntries: List<Entry>,
         chapters: List<EntryChapter>,
         categories: List<Long>,
-        displaySourceId: Long,
-        sourceIds: Set<Long>,
         isMerged: Boolean,
         libraryState: EntryLibraryProgressResolution,
     ): LibraryItem {
         val source = sourceManager.getOrStub(entry.source)
         val sourceDisplayInfo = sourceManager.getDisplayInfo(entry.source)
-        val sourceName = sourceDisplayInfo.name
-        val sourceLanguage = sourceDisplayInfo.lang
         val sourceItemOrientation = sourceDescription.describe(source).itemOrientation
 
         return LibraryItem(
             entry = entry,
             categories = categories,
-            sourceName = sourceName,
-            sourceLanguage = sourceLanguage,
+            sources = listOf(LibraryItemSource(entry.source, sourceDisplayInfo.name, sourceDisplayInfo.lang)),
             sourceItemOrientation = sourceItemOrientation,
-            displaySourceId = displaySourceId,
-            sourceIds = sourceIds,
             isLocal = false,
             isMerged = isMerged,
             memberEntryIds = memberEntries.map { LibraryItemKey(entry.type, it.id) },
@@ -347,7 +325,6 @@ class GetLibraryEntries(
 
     companion object {
         private val LIBRARY_INVALIDATION_DEBOUNCE = 50.milliseconds
-        private const val MULTI_SOURCE_ID = Long.MIN_VALUE
     }
 }
 

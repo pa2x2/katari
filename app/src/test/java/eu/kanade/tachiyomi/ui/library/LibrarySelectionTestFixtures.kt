@@ -6,6 +6,7 @@ import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.service.EntryLibraryProgressResolution
 import tachiyomi.domain.library.model.LibraryItem
 import tachiyomi.domain.library.model.LibraryItemKey
+import tachiyomi.domain.library.model.LibraryItemSource
 
 internal fun libraryItem(
     id: Long,
@@ -23,16 +24,11 @@ internal fun libraryItem(
         )
     }
     val entry = memberEntries.first { it.id == id }
-    val displaySourceId = sourceIds.singleOrNull() ?: LibraryItem.MULTI_SOURCE_ID
-    val isMultiSource = displaySourceId == LibraryItem.MULTI_SOURCE_ID
     return LibraryItem(
         entry = entry,
         categories = listOf(0L),
-        sourceName = if (isMultiSource) "" else "Source",
-        sourceLanguage = if (isMultiSource) LibraryItem.MULTI_SOURCE_ID.toString() else "en",
+        sources = orderedSourceIds.map { LibraryItemSource(it, "Source $it", "en") },
         sourceItemOrientation = EntryItemOrientation.VERTICAL,
-        displaySourceId = displaySourceId,
-        sourceIds = sourceIds,
         isLocal = false,
         isMerged = memberIds.size > 1,
         memberEntryIds = memberEntries.map { LibraryItemKey(EntryType.ANIME, it.id) },

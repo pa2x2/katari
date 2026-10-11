@@ -6,7 +6,7 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.library.model.LibraryItem
-import tachiyomi.domain.source.service.SourceManager
+import tachiyomi.domain.library.model.LibraryItemSource
 
 @Immutable
 data class MergeTarget(
@@ -26,7 +26,6 @@ data class MergeTarget(
 
 internal fun buildMergeTargets(
     libraryItems: List<LibraryItem>,
-    sourceManager: SourceManager,
     entryType: EntryType? = null,
     excludedEntryIds: Set<Long> = emptySet(),
 ): ImmutableList<MergeTarget> {
@@ -54,7 +53,7 @@ internal fun buildMergeTargets(
                 id = item.entry.id,
                 entry = item.entry,
                 subtitle = buildString {
-                    append(sourceManager.getDisplayInfo(item.displaySourceId).name)
+                    append(mergedSourceNames(item.sources.map(LibraryItemSource::name)))
                     if (item.isMerged) {
                         append(" • ")
                         append(item.memberEntries.size)

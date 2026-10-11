@@ -1727,7 +1727,6 @@ class EntryScreenModel(
             val excludedIds = state.mergeGroupMemberIds.toSet()
             val targets = buildMergeTargets(
                 libraryItems = getLibraryEntries.await(),
-                sourceManager = sourceManager,
                 entryType = state.entry.type,
                 excludedEntryIds = excludedIds,
             )

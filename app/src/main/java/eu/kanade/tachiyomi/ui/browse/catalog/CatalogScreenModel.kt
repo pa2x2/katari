@@ -680,7 +680,6 @@ class CatalogScreenModel(
         screenModelScope.launchIO {
             val targets = buildMergeTargets(
                 libraryItems = getLibraryEntries.await(),
-                sourceManager = sourceManager,
                 entryType = entry.type,
             )
             if (targets.isEmpty()) return@launchIO

@@ -13,6 +13,7 @@ import tachiyomi.domain.entry.model.EntryStatus
 import tachiyomi.domain.entry.service.EntryLibraryProgressResolution
 import tachiyomi.domain.library.model.LibraryItem
 import tachiyomi.domain.library.model.LibraryItemKey
+import tachiyomi.domain.library.model.LibraryItemSource
 import tachiyomi.domain.library.update.model.CategoryUpdateOverrides
 import tachiyomi.domain.library.update.model.CategoryUpdateRules
 import tachiyomi.domain.library.update.model.EntryUpdateDecisionReason
@@ -144,11 +145,8 @@ class LibraryUpdatePlannerTest {
         return LibraryItem(
             entry = entry,
             categories = categories,
-            sourceName = "Source",
-            sourceLanguage = "en",
+            sources = listOf(LibraryItemSource(1L, "Source", "en")),
             sourceItemOrientation = EntryItemOrientation.VERTICAL,
-            displaySourceId = 1L,
-            sourceIds = setOf(1L),
             isLocal = false,
             isMerged = false,
             memberEntryIds = listOf(LibraryItemKey(EntryType.MANGA, id)),
