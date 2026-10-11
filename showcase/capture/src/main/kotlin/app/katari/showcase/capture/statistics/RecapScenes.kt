@@ -1,7 +1,10 @@
 package app.katari.showcase.capture.statistics
 
 import android.os.SystemClock
+import android.view.InputDevice
+import android.view.MotionEvent
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.BySelector
 import androidx.test.uiautomator.Until
@@ -37,7 +40,8 @@ class RecapScenes {
 
     /**
      * Pages keep moving after their entrance, so a still would catch them somewhere different on every run. With
-     * animations removed, the recap opens with its entrances finished and its motion at rest.
+     * animations removed, the recap opens with its entrances finished and its motion at rest, and holding a finger on
+     * the page stops the progress bar above it.
      */
     @Test
     fun pages() {
@@ -45,9 +49,9 @@ class RecapScenes {
         try {
             openRecap()
             advanceTo(By.text(Pattern.compile("your #1", Pattern.CASE_INSENSITIVE)))
-            capture("recap-top")
+            whileHolding { capture("recap-top") }
             advanceTo(By.text("Watch again"))
-            capture("recap-summary")
+            whileHolding { capture("recap-summary") }
 
             tap(By.text("Share"))
             // The image is written before the share sheet opens, and the test ending earlier would leave it half
@@ -68,6 +72,34 @@ class RecapScenes {
         find(By.text("Tap to start"))
     }
 
+    /**
+     * Holds a finger on the page's footer while [block] runs, which pauses the story. A long press elsewhere could
+     * land on a title, which offers to hide it, and releasing after one never counts as a tap.
+     */
+    private fun whileHolding(block: () -> Unit) {
+        val x = device.displayWidth * 0.3f
+        val y = device.displayHeight * FOOTER_Y
+        val downTime = SystemClock.uptimeMillis()
+        touch(MotionEvent.ACTION_DOWN, downTime, x, y)
+        try {
+            block()
+        } finally {
+            touch(MotionEvent.ACTION_UP, downTime, x, y)
+        }
+    }
+
+    private fun touch(action: Int, downTime: Long, x: Float, y: Float) {
+        val event = MotionEvent.obtain(downTime, SystemClock.uptimeMillis(), action, x, y, 0)
+        event.source = InputDevice.SOURCE_TOUCHSCREEN
+        try {
+            check(InstrumentationRegistry.getInstrumentation().uiAutomation.injectInputEvent(event, true)) {
+                "The touch could not be injected"
+            }
+        } finally {
+            event.recycle()
+        }
+    }
+
     /** Each page is given time to appear in the accessibility tree before moving on, or a tap could skip past it. */
     private fun advanceTo(page: BySelector) {
         repeat(MAX_PAGES) {
@@ -81,6 +113,9 @@ class RecapScenes {
         const val CLIP_PAGES = 5
         const val MAX_PAGES = 20
         const val PAGE_WAIT_MS = 2_000L
+
+        // The footer every page ends with, as a fraction of the screen's height.
+        const val FOOTER_Y = 0.87f
         const val SHARE_SHEET = "com.android.intentresolver"
     }
 }

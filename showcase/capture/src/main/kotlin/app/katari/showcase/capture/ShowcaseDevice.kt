@@ -10,6 +10,7 @@ import androidx.test.uiautomator.StaleObjectException
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiObject2
 import androidx.test.uiautomator.Until
+import java.io.File
 
 /**
  * The app under capture and the device it runs on. Scenes drive it through the UI only, record stills to
@@ -95,10 +96,23 @@ internal object ShowcaseDevice {
         error(message)
     }
 
+    /**
+     * Saves the screen once two screenshots in a row are the same. Idle as the app may be, the system can still be
+     * moving its bars into place after a window change, which would shift the whole still by a few pixels.
+     */
     fun capture(name: String) {
         settle()
         shell("mkdir -p $CAPTURE_DIRECTORY")
-        shell("screencap -p $CAPTURE_DIRECTORY/$name.png")
+        val still = File("$CAPTURE_DIRECTORY/$name.png")
+        var previous: ByteArray? = null
+        repeat(STILL_ATTEMPTS) {
+            shell("screencap -p ${still.path}")
+            val current = still.readBytes()
+            if (current.contentEquals(previous)) return
+            previous = current
+            SystemClock.sleep(STILL_INTERVAL_MS)
+        }
+        fail("The screen never held still for $name")
     }
 
     /** Records the screen to `[name].mp4` in [CAPTURE_DIRECTORY] while [block] runs. */
@@ -120,4 +134,6 @@ internal object ShowcaseDevice {
 
     private const val TIMEOUT_MS = 30_000L
     private const val RECORDER_START_MS = 1_000L
+    private const val STILL_ATTEMPTS = 20
+    private const val STILL_INTERVAL_MS = 500L
 }
