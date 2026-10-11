@@ -459,9 +459,10 @@ private fun EntryScreenSmallImpl(
                             entry = state.entry,
                             sourceName = state.sourceName,
                             isStubSource = state.isSourceMissing,
-                            mergedMemberTitles = state.mergedMemberTitles,
+                            mergedEntryCount = state.memberIds.size,
                             onCoverClick = onCoverClicked,
                             onSourceClick = sourceClickAction(state, onManageMergeClicked, onSearch),
+                            onMergedEntriesClick = onManageMergeClicked,
                             doSearch = onSearch,
                         )
                     }
@@ -746,9 +747,10 @@ fun EntryScreenLargeImpl(
                             entry = state.entry,
                             sourceName = state.sourceName,
                             isStubSource = state.isSourceMissing,
-                            mergedMemberTitles = state.mergedMemberTitles,
+                            mergedEntryCount = state.memberIds.size,
                             onCoverClick = onCoverClicked,
                             onSourceClick = sourceClickAction(state, onManageMergeClicked, onSearch),
+                            onMergedEntriesClick = onManageMergeClicked,
                             doSearch = onSearch,
                         )
                         if (state.showMergeNotice) {

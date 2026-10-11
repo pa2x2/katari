@@ -371,7 +371,6 @@ class EntryScreenModel(
                             isSourceMissing = mergePresentation.isSourceMissing,
                             memberIds = mergePresentation.memberIds,
                             memberTitleById = mergePresentation.memberTitleById,
-                            mergedMemberTitles = mergePresentation.mergedMemberTitles,
                             mergeTargetId = mergePresentation.mergeTargetId,
                             mergeGroupMemberIds = mergePresentation.mergeGroupMemberIds,
                             chapters = chapters.toChapterListItems(entry),
@@ -428,7 +427,6 @@ class EntryScreenModel(
                     isSourceMissing = mergePresentation.isSourceMissing,
                     memberIds = mergePresentation.memberIds,
                     memberTitleById = mergePresentation.memberTitleById,
-                    mergedMemberTitles = mergePresentation.mergedMemberTitles,
                     mergeTargetId = mergePresentation.mergeTargetId,
                     mergeGroupMemberIds = mergePresentation.mergeGroupMemberIds,
                     isFromSource = isFromSource,
@@ -2137,7 +2135,6 @@ class EntryScreenModel(
             isSourceMissing = sources.any(SourceDisplayInfo::isMissing),
             memberIds = memberIds,
             memberTitleById = members.associate { it.id to it.displayTitle },
-            mergedMemberTitles = members.map { it.displayTitle }.filter { it.isNotBlank() }.toImmutableList(),
             mergeTargetId = editor?.entries?.firstOrNull { it.reference == editor.target }?.entry?.id
                 ?: entryMergeNavigationFeature.resolveNavigation(
                     EntryMergeSubject(entry.profileId, entry.id),
@@ -2271,7 +2268,6 @@ class EntryScreenModel(
         val isSourceMissing: Boolean,
         val memberIds: ImmutableList<Long>,
         val memberTitleById: Map<Long, String>,
-        val mergedMemberTitles: ImmutableList<String>,
         val mergeTargetId: Long,
         val mergeGroupMemberIds: ImmutableList<Long>,
     )
@@ -2310,7 +2306,6 @@ class EntryScreenModel(
             val isSourceMissing: Boolean,
             val memberIds: ImmutableList<Long>,
             val memberTitleById: Map<Long, String>,
-            val mergedMemberTitles: ImmutableList<String>,
             val mergeTargetId: Long,
             val mergeGroupMemberIds: ImmutableList<Long>,
             val isFromSource: Boolean,
