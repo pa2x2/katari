@@ -1,5 +1,6 @@
 ---
 import Page from "../site/Page.astro";
+import { leavesSite } from "../site/links.ts";
 import type { Credit } from "../../../showcase/pipeline/credits.ts";
 import credits from "../captures/credits.json";
 
@@ -21,7 +22,7 @@ const works: Credit[] = credits;
             <strong>{work.title}</strong> by {work.author}
             <br />
             {work.attribution}.{" "}
-            <a href={work.license.url}>{work.license.name}</a>.
+            <a href={work.license.url} {...leavesSite()}>{work.license.name}</a>.
             {work.coverCredit && <span> Cover: {work.coverCredit}.</span>}
           </li>
         ))
@@ -29,7 +30,7 @@ const works: Credit[] = credits;
     </ul>
     <h2>Translation</h2>
     <p>
-      The translations are made on the device by <a href="https://github.com/davidventura/offline-translator">Offline
+      The translations are made on the device by <a href="https://github.com/davidventura/offline-translator" {...leavesSite()}>Offline
       Translator</a> by David Ventura, with its Japanese to English model.
     </p>
   </main>

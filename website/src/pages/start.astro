@@ -1,7 +1,7 @@
 ---
 import DownloadButtons from "../download/DownloadButtons.astro";
 import Page from "../site/Page.astro";
-import { RELEASES } from "../site/links.ts";
+import { leavesSite, RELEASES } from "../site/links.ts";
 ---
 
 <Page title="Get started — Katari" description="Which Katari to download, how it updates, and how to bring your library over.">
@@ -19,7 +19,7 @@ import { RELEASES } from "../site/links.ts";
         <DownloadButtons explained={false} />
         <p>
           Both come as smaller builds for one kind of processor too: arm64-v8a for most phones of recent years, and
-          armeabi-v7a for older ones. They are on the <a href={`${RELEASES}/latest`}>release page</a>.
+          armeabi-v7a for older ones. They are on the <a href={`${RELEASES}/latest`} {...leavesSite()}>release page</a>.
         </p>
       </div>
     </details>

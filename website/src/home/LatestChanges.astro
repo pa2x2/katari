@@ -1,7 +1,7 @@
 ---
 import { releaseNotes } from "../changelog/release-notes.ts";
 import { latestRelease, releaseDate } from "../download/latest-release.ts";
-import { RELEASES } from "../site/links.ts";
+import { leavesSite, RELEASES } from "../site/links.ts";
 import Highlights from "./Highlights.astro";
 
 /** The card stays short; the rest is a click away on the release page. */
@@ -37,7 +37,7 @@ const shown = latest.sections.flatMap((section) => {
         </div>
       ))
     }
-    <a href={`${RELEASES}/tag/v${latest.version}`}>Release notes for {latest.version} →</a>
+    <a href={`${RELEASES}/tag/v${latest.version}`} {...leavesSite()}>Release notes for {latest.version} →</a>
   </div>
 </section>
 

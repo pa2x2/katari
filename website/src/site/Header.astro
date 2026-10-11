@@ -1,11 +1,11 @@
 ---
-import { REPOSITORY, sitePath } from "./links.ts";
+import { leavesSite, REPOSITORY, sitePath } from "./links.ts";
 
 const links = [
   { label: "Features", href: sitePath("#features") },
   { label: "Get started", href: sitePath("start/") },
   { label: "Credits", href: sitePath("credits/") },
-  { label: "GitHub", href: REPOSITORY },
+  { label: "GitHub", href: REPOSITORY, external: true },
 ];
 ---
 
@@ -21,7 +21,7 @@ const links = [
         <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18" /></svg>
       </button>
       <ul id="site-links">
-        {links.map((link) => <li><a href={link.href}>{link.label}</a></li>)}
+        {links.map((link) => <li><a href={link.href} {...(link.external ? leavesSite() : {})}>{link.label}</a></li>)}
       </ul>
     </nav>
     <a class="button download" href={sitePath("start/#which-file")}>Download</a>

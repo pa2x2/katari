@@ -1,13 +1,13 @@
 ---
-import { RELEASES, REPOSITORY, sitePath } from "./links.ts";
+import { leavesSite, RELEASES, REPOSITORY, sitePath } from "./links.ts";
 
 const columns = [
   {
     title: "Project",
     links: [
-      { label: "Source code", href: REPOSITORY },
-      { label: "Releases", href: RELEASES },
-      { label: "Report a problem", href: `${REPOSITORY}/issues` },
+      { label: "Source code", href: REPOSITORY, external: true },
+      { label: "Releases", href: RELEASES, external: true },
+      { label: "Report a problem", href: `${REPOSITORY}/issues`, external: true },
     ],
   },
   {
@@ -33,7 +33,7 @@ const columns = [
           <ul>
             {column.links.map((link) => (
               <li>
-                <a href={link.href}>{link.label}</a>
+                <a href={link.href} {...(link.external ? leavesSite() : {})}>{link.label}</a>
               </li>
             ))}
           </ul>
@@ -43,14 +43,14 @@ const columns = [
   </div>
   <div class="legal">
     <p>
-      Katari is an independent fork of <a href="https://github.com/mihonapp/mihon">Mihon</a> and would not exist without
+      Katari is an independent fork of <a href="https://github.com/mihonapp/mihon" {...leavesSite()}>Mihon</a> and would not exist without
       the people who build it. It is not an official Mihon project.
     </p>
     <p>
       Katari hosts no content and has no affiliation with the content providers it can reach. The screenshots show openly
       licensed works; see the <a href={sitePath("credits/")}>credits</a>.
     </p>
-    <p>Licensed under the <a href={`${REPOSITORY}/blob/main/LICENSE`}>Apache License 2.0</a>.</p>
+    <p>Licensed under the <a href={`${REPOSITORY}/blob/main/LICENSE`} {...leavesSite()}>Apache License 2.0</a>.</p>
   </div>
 </footer>
 
