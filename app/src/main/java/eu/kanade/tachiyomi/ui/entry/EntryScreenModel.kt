@@ -2380,6 +2380,10 @@ class EntryScreenModel(
             val hasReadChapters: Boolean
                 get() = chapterPresentation.hasReadChapters
 
+            /** A chapter is finished or holds a position partway through, like a single-file book being read. */
+            val hasStartedReading: Boolean
+                get() = hasReadChapters || childProgressLabels.isNotEmpty()
+
             val chapterProgress: EntryChapterProgress
                 get() = chapterPresentation.progress
 

@@ -415,7 +415,7 @@ private fun EntryScreenSmallImpl(
                     listState = chapterListState,
                     continueTargetListIndex = targetListIndex,
                     topOcclusionPx = topBarHeight,
-                    isReading = state.hasReadChapters,
+                    isReading = state.hasStartedReading,
                     visible = isFABVisible,
                     onTargetReached = {
                         highlightedChapterId = state.continueTargetChapterId
@@ -707,7 +707,7 @@ fun EntryScreenLargeImpl(
                     listState = chapterListState,
                     continueTargetListIndex = targetListIndex,
                     topOcclusionPx = topBarHeight,
-                    isReading = state.hasReadChapters,
+                    isReading = state.hasStartedReading,
                     visible = isFABVisible,
                     onTargetReached = {
                         highlightedChapterId = state.continueTargetChapterId
