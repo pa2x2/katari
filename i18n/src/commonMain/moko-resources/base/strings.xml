@@ -169,6 +169,7 @@
     <string name="action_display_local_badge">Local source</string>
     <string name="action_display_language_badge">Language</string>
     <string name="action_display_entry_type_badge">Entry type</string>
+    <string name="action_display_merged_badge">Merged entries</string>
     <string name="action_display_show_tabs">Show category tabs</string>
     <string name="action_display_show_type_tabs">Show type tabs</string>
     <string name="action_display_show_extension_tabs">Show extension tabs</string>

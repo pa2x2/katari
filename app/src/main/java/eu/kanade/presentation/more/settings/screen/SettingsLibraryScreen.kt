@@ -279,6 +279,10 @@ object SettingsLibraryScreen : SearchableSettings {
                     title = stringResource(MR.strings.action_display_entry_type_badge),
                 ),
                 Preference.PreferenceItem.SwitchPreference(
+                    preference = libraryPreferences.mergedBadge,
+                    title = stringResource(MR.strings.action_display_merged_badge),
+                ),
+                Preference.PreferenceItem.SwitchPreference(
                     preference = libraryPreferences.showContinueReadingButton,
                     title = stringResource(continueButtonTitle),
                 ),

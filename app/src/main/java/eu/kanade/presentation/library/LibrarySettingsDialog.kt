@@ -318,6 +318,10 @@ private fun DisplayPage(
         label = stringResource(MR.strings.action_display_entry_type_badge),
         pref = screenModel.libraryPreferences.entryTypeBadge,
     )
+    CheckboxItem(
+        label = stringResource(MR.strings.action_display_merged_badge),
+        pref = screenModel.libraryPreferences.mergedBadge,
+    )
 
     HeadingItem(MR.strings.library_cover_actions_header)
     CheckboxItem(

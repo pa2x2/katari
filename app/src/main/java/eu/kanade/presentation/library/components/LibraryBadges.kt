@@ -8,6 +8,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import eu.kanade.presentation.browse.components.CatalogTypeBadge
+import eu.kanade.presentation.entry.components.EntryActionIcons
 import eu.kanade.presentation.theme.TachiyomiPreviewTheme
 import eu.kanade.tachiyomi.source.entry.EntryType
 import tachiyomi.domain.library.model.LibraryItem
@@ -68,6 +69,14 @@ internal fun languageBadgeText(languages: List<String>): String {
 private const val MAX_BADGE_LANGUAGES = 2
 
 @Composable
+internal fun MergedBadge(memberCount: Int) {
+    Badge(
+        text = "$memberCount",
+        icon = EntryActionIcons.merge,
+    )
+}
+
+@Composable
 internal fun EntryTypeBadge(entryType: EntryType) {
     CatalogTypeBadge(entryType = entryType)
 }
@@ -83,11 +92,14 @@ internal fun LibraryItemProgressBadges(item: LibraryItem, settings: LibraryDispl
     }
 }
 
-/** Origin badges: entry type, local source and language. */
+/** Origin badges: entry type, merge, local source and language. */
 @Composable
 internal fun LibraryItemOriginBadges(item: LibraryItem, settings: LibraryDisplaySettings) {
     if (settings.entryTypeBadge) {
         EntryTypeBadge(entryType = item.entry.type)
+    }
+    if (settings.mergedBadge && item.isMerged) {
+        MergedBadge(memberCount = item.memberEntries.size)
     }
     if (settings.localBadge) {
         LocalBadge(isLocal = item.isLocal)
@@ -106,6 +118,7 @@ private fun BadgePreview() {
             UnreadBadge(count = 10)
             LocalBadge(isLocal = true)
             LanguageBadge(languages = listOf("en"))
+            MergedBadge(memberCount = 6)
             EntryTypeBadge(entryType = EntryType.MANGA)
         }
     }
