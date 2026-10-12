@@ -16,6 +16,7 @@ import eu.kanade.tachiyomi.BuildConfig
 import eu.kanade.tachiyomi.extension.model.InstallStep
 import eu.kanade.tachiyomi.extension.util.ExtensionInstaller.UserActionBehavior
 import eu.kanade.tachiyomi.util.system.toast
+import kotlinx.coroutines.launch
 import logcat.LogPriority
 import mihon.app.shizuku.IShellInterface
 import mihon.app.shizuku.ShellInterface
@@ -119,15 +120,17 @@ internal class ShizukuInstaller(
 
     override fun processEntry(entry: Entry) {
         super.processEntry(entry)
-        try {
-            service.contentResolver.openAssetFileDescriptor(entry.uri, "r").use {
-                shellInterface?.install(it, statusIntent.intentSender)
+        installScope.launch {
+            try {
+                service.contentResolver.openAssetFileDescriptor(entry.uri, "r").use {
+                    shellInterface?.install(it, statusIntent.intentSender)
+                }
+                service.contentResolver.delete(entry.uri, null, null)
+            } catch (e: Exception) {
+                logcat(LogPriority.ERROR, e) { "Failed to install extension ${entry.downloadId} ${entry.uri}" }
+                service.contentResolver.delete(entry.uri, null, null)
+                continueQueue(InstallStep.Error.from(e))
             }
-            service.contentResolver.delete(entry.uri, null, null)
-        } catch (e: Exception) {
-            logcat(LogPriority.ERROR, e) { "Failed to install extension ${entry.downloadId} ${entry.uri}" }
-            service.contentResolver.delete(entry.uri, null, null)
-            continueQueue(InstallStep.Error.from(e))
         }
     }
 

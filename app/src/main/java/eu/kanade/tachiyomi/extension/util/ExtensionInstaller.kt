@@ -11,16 +11,20 @@ import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.extension.model.InstallStep
 import eu.kanade.tachiyomi.extension.store.requireSignedByStore
 import eu.kanade.tachiyomi.network.NetworkHelper
+import eu.kanade.tachiyomi.network.await
 import eu.kanade.tachiyomi.util.storage.getUriCompat
 import eu.kanade.tachiyomi.util.system.isPackageInstalled
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runInterruptible
 import logcat.LogPriority
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -56,7 +60,7 @@ internal class ExtensionInstaller(
     private val packageInstallSteps = MutableStateFlow<Map<String, InstallStep>>(emptyMap())
     private val extensionInstaller = Injekt.get<BasePreferences>().extensionInstaller
 
-    private val httpClient: OkHttpClient = Injekt.get<NetworkHelper>().client
+    private val httpClient: OkHttpClient by lazy { Injekt.get<NetworkHelper>().client }
 
     val installSteps = packageInstallSteps.asStateFlow()
 
@@ -85,14 +89,17 @@ internal class ExtensionInstaller(
             try {
                 updateInstallStep(downloadId, InstallStep.Downloading)
                 val request = Request.Builder().url(extension.apkUrl).build()
-                val response = httpClient.newCall(request).execute()
-
-                if (!response.isSuccessful) {
-                    throw Exception("Failed to download extension (HTTP ${response.code})")
-                }
-                response.body.byteStream().use { input ->
-                    tmpFile.outputStream().use { output ->
-                        input.copyTo(output)
+                httpClient.newCall(request).await().use { response ->
+                    if (!response.isSuccessful) {
+                        throw Exception("Failed to download extension (HTTP ${response.code})")
+                    }
+                    // Interruptible so cancelInstall stops the body read too
+                    runInterruptible {
+                        response.body.byteStream().use { input ->
+                            tmpFile.outputStream().use { output ->
+                                input.copyTo(output)
+                            }
+                        }
                     }
                 }
 
@@ -100,15 +107,16 @@ internal class ExtensionInstaller(
                     .onFailure { tmpFile.delete() }
                     .getOrThrow()
 
+                ensureActive()
                 updateInstallStep(downloadId, InstallStep.Installing)
                 installApk(downloadId, tmpFile, packageInfo, userActionBehavior, installRoute)
+            } catch (e: CancellationException) {
+                // Ends this install's flow, which a newer install of the same package no longer shares
+                step.value = InstallStep.Idle
+                throw e
             } catch (e: Exception) {
-                if (e is InterruptedException) {
-                    // Canceled
-                } else {
-                    logcat(LogPriority.ERROR, e)
-                    updateInstallStep(downloadId, InstallStep.Error.from(e))
-                }
+                logcat(LogPriority.ERROR, e)
+                updateInstallStep(downloadId, InstallStep.Error.from(e))
             }
         }
 
@@ -116,14 +124,16 @@ internal class ExtensionInstaller(
 
         return step.asStateFlow()
             .onCompletion {
-                activeJobs.remove(extension.pkgName)
-                activeSteps.remove(downloadId)
-                downloadPackageNames.remove(downloadId)
-                // A failure or an install left to the user stays listed until it's retried, cancelled or the
-                // package changes some other way
-                val lastStep = packageInstallSteps.value[extension.pkgName]
-                if (lastStep != InstallStep.RequiresUserAction && lastStep !is InstallStep.Error) {
-                    packageInstallSteps.update { it - extension.pkgName }
+                activeJobs.remove(extension.pkgName, job)
+                // A newer install of the same package reuses the download id and owns the entries from then on
+                if (activeSteps.remove(downloadId, step)) {
+                    downloadPackageNames.remove(downloadId)
+                    // A failure or an install left to the user stays listed until it's retried, cancelled or the
+                    // package changes some other way
+                    val lastStep = packageInstallSteps.value[extension.pkgName]
+                    if (lastStep != InstallStep.RequiresUserAction && lastStep !is InstallStep.Error) {
+                        packageInstallSteps.update { it - extension.pkgName }
+                    }
                 }
                 job.cancel()
             }

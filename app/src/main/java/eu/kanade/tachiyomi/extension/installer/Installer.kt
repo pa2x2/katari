@@ -32,6 +32,9 @@ internal abstract class Installer(private val service: Service) {
     private val queue = Collections.synchronizedList(mutableListOf<Entry>())
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
+    // Copying an apk into the system installer blocks, and the queue advances from the main thread
+    protected val installScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
     /**
      * Installer readiness. If false, queue check will not run.
      *
@@ -118,6 +121,7 @@ internal abstract class Installer(private val service: Service) {
     @CallSuper
     open fun onDestroy() {
         scope.cancel()
+        installScope.cancel()
         queue.forEach {
             extensionManager.updateInstallStep(
                 it.downloadId,
@@ -137,7 +141,10 @@ internal abstract class Installer(private val service: Service) {
      */
     private fun cancelQueue(downloadId: Long) {
         val waitingInstall = this.waitingInstall.load()
-        val toCancel = queue.find { it.downloadId == downloadId } ?: waitingInstall ?: return
+        // Every new install cancels its own package first, which must leave another package's active entry alone
+        val toCancel = queue.find { it.downloadId == downloadId }
+            ?: waitingInstall?.takeIf { it.downloadId == downloadId }
+            ?: return
         if (cancelEntry(toCancel)) {
             queue.remove(toCancel)
             if (waitingInstall == toCancel) {
