@@ -49,7 +49,8 @@ FROM categories C
 JOIN entries_categories EC
 ON C._id = EC.category_id
 WHERE EC.profile_id = :profileId
-AND EC.entry_id = :entryId;
+AND EC.entry_id = :entryId
+ORDER BY C.sort;
 
 getEntryCategoryMappings:
 SELECT
