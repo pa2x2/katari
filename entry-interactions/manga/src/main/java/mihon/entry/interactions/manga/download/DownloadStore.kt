@@ -4,7 +4,8 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
 import eu.kanade.tachiyomi.source.entry.EntryType
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import mihon.entry.interactions.manga.download.model.MangaDownload
@@ -14,6 +15,7 @@ import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.source.service.SourceManager
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * This class is used to persist active downloads across application restarts.
@@ -89,10 +91,12 @@ internal class DownloadStore(
         return "${download.entry.profileId}:${download.entry.id}:${download.chapter.id}"
     }
 
-    /**
-     * Returns the list of downloads to restore. It should be called in a background thread.
-     */
-    fun restore(): List<MangaDownload> {
+    suspend fun restore(): List<MangaDownload> {
+        // Extensions load in the background, and a download whose source isn't registered yet would be dropped. The
+        // timeout keeps a source manager that never finishes loading from holding the queue back for good.
+        withTimeoutOrNull(30.seconds) {
+            sourceManager.isInitialized.first { it }
+        }
         val objs = backend.values()
             .mapNotNull { (_, value) -> value as? String }
             .mapNotNull { deserialize(it) }
@@ -102,7 +106,7 @@ internal class DownloadStore(
             .mapNotNull(DownloadObject::profileId)
             .distinct()
             .associateWith { profileId ->
-                runBlocking { entryRepository.getAllEntriesByProfile(profileId) }.associateBy(Entry::id)
+                entryRepository.getAllEntriesByProfile(profileId).associateBy(Entry::id)
             }
         val legacyEntries = mutableMapOf<Long, Entry?>()
         val downloads = objs.mapNotNull { stored ->
@@ -110,7 +114,7 @@ internal class DownloadStore(
                 entriesByProfile[stored.profileId]?.get(stored.mangaId)
             } else {
                 legacyEntries.getOrPut(stored.mangaId) {
-                    runBlocking { entryRepository.getEntryById(stored.mangaId) }
+                    entryRepository.getEntryById(stored.mangaId)
                 }
             }?.takeIf {
                 it.type == EntryType.MANGA &&
@@ -118,7 +122,7 @@ internal class DownloadStore(
                     (stored.sourceId == null || it.source == stored.sourceId)
             } ?: return@mapNotNull null
             val source = sourceManager.get(entry.source) ?: return@mapNotNull null
-            val chapter = runBlocking { entryChapterRepository.getChapterById(stored.chapterId) }
+            val chapter = entryChapterRepository.getChapterById(stored.chapterId)
                 ?.takeIf { it.entryId == entry.id }
                 ?: return@mapNotNull null
             MangaDownload(source, entry, chapter)

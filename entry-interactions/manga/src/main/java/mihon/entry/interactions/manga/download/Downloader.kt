@@ -23,7 +23,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -61,7 +60,6 @@ import okio.buffer
 import okio.sink
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.lang.launchIO
-import tachiyomi.core.common.util.lang.launchNow
 import tachiyomi.core.common.util.system.ImageUtil
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.core.metadata.comicinfo.COMIC_INFO_FILE
@@ -140,10 +138,9 @@ internal class Downloader(
     var isPaused: Boolean = false
 
     init {
-        launchNow {
+        scope.launch {
             try {
-                val chapters = async { store.restore() }
-                addAllToQueue(chapters.await())
+                addAllToQueue(store.restore())
             } finally {
                 initialized.complete(Unit)
             }
