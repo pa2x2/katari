@@ -780,6 +780,7 @@
     <string name="pref_allowed_content_warnings">Pinayagan ang mga babala sa nilalaman</string>
     <string name="pref_apply_content_warnings_to_installed">Ilapat rin ito sa mga na-install na extension</string>
     <string name="pref_apply_content_warnings_to_installed_summary">Kapag naka-off, ang mga extension na naka-install ay magpatuloy mag-load at mag-update kahit ano pa ang kanilang babala</string>
+    <string name="content_warnings_info">Ang mga naka-install na extension na hindi na-load ay mananatiling nakalista nang walang mga source; ang mga hindi mo pa na-install ay nakatago. Hindi nito pinipigilan ang mga hindi opisyal o posibleng maling na-flag na extension na lumabas ang 18+ na nilalaman na nasa loob ng app.</string>
     <string name="onboarding_permission_analytics_description">Magpadala ng hindi nakikilalang data ng paggamit para mapahusay ang mga feature ng app.</string>
     <string name="non_library_settings">Lahat ng nabasang entry</string>
     <string name="action_sort_random">Random</string>

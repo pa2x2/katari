@@ -786,6 +786,7 @@
     <string name="pref_allowed_content_warnings">Avisos de conteúdo habilitados</string>
     <string name="pref_apply_content_warnings_to_installed">Aplicar também às extensões instaladas</string>
     <string name="pref_apply_content_warnings_to_installed_summary">Quando desligado, extensões que você já instalou continuarão a carregar e atualizar apesar do aviso</string>
+    <string name="content_warnings_info">As extensões instaladas que não forem carregadas continuarão listadas sem suas fontes; as que você não instalou serão ocultadas. Isso não impede que extensões não oficiais ou rotuladas incorretamente exibam conteúdo adulto (18+) no aplicativo.</string>
     <string name="pref_behavior">Comportamento</string>
     <string name="pref_mark_duplicate_read_chapter_read">Marcar capítulo lido duplicado como lido</string>
     <string name="pref_auto_update_manga_on_mark_read">Atualizar progresso quando marcado como lido</string>

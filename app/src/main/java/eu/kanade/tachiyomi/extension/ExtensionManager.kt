@@ -27,13 +27,20 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted.Companion.WhileSubscribed
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import logcat.LogPriority
 import mihon.domain.extension.model.ExtensionStore
 import mihon.domain.extension.repository.ExtensionStoreRepository
@@ -48,6 +55,7 @@ import tachiyomi.i18n.*
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.util.Locale
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
@@ -70,6 +78,12 @@ class ExtensionManager(
     val scope = CoroutineScope(SupervisorJob())
 
     private val isInitialized = MutableStateFlow(false)
+
+    // A full load replaces both maps, so install events wait for it and apply on top instead of being overwritten
+    private val loadMutex = Mutex()
+
+    // Trusting an extension is when its sources first show up, so they're hidden in the other profiles then
+    private val trustedPkgNames = ConcurrentHashMap.newKeySet<String>()
 
     /**
      * API where all the available extensions can be found.
@@ -109,8 +123,23 @@ class ExtensionManager(
 
     init {
         scope.launch(Dispatchers.IO) {
-            initExtensions()
+            loadExtensions()
             ExtensionInstallReceiver(InstallationListener()).register(context)
+
+            // Everything the load decision rests on can change while running, so decide again. Content warnings
+            // belong to the active profile, so switching to a profile that allows different ones reloads too.
+            merge(
+                trustExtension.changes(),
+                combine(
+                    preferences.enabledContentWarnings.changes(),
+                    preferences.applyContentWarningsToInstalled.changes(),
+                    ::Pair,
+                )
+                    .distinctUntilChanged()
+                    .drop(1)
+                    .map {},
+            )
+                .collectLatest { loadExtensions() }
         }
 
         // Store listings are only fetched now and then, so a store renamed or removed in between would stay on the
@@ -170,20 +199,34 @@ class ExtensionManager(
     fun getSourceData(id: Long) = availableExtensionsSourcesData[id]
 
     /**
-     * Loads and registers the installed extensions.
+     * Loads and registers the installed extensions. Safe to call again: every extension is judged
+     * again, so one can move between loaded and not loaded in either direction, while extensions
+     * that still pass keep the instances they already had.
      */
-    private suspend fun initExtensions() {
+    private suspend fun loadExtensions() = loadMutex.withLock {
         try {
-            val extensions = ExtensionLoader.loadExtensions(context)
+            val extensions = ExtensionLoader.loadExtensions(context, loadedExtensionMapFlow.value)
             val loadedExtensions = extensions
                 .filterIsInstance<Extension.Loaded>()
                 .associateBy { it.pkgName }
 
-            // Store listings fetched while the extensions were loading found none of them installed
+            loadedExtensions.values
+                .filter { it.pkgName in trustedPkgNames }
+                .forEach { extension ->
+                    trustedPkgNames -= extension.pkgName
+                    initializeExtensionVisibility(
+                        key = SourcePreferences.HIDDEN_SOURCES_KEY,
+                        sourceIds = extension.sources.mapTo(HashSet()) { it.id.toString() },
+                    )
+                }
+
+            // Newly loaded extensions have no status derived from the store listings yet
             loadedExtensionMapFlow.update {
                 val availableExtensions = availableExtensionListFlow.value
                 if (availableExtensions.isEmpty()) {
-                    loadedExtensions
+                    loadedExtensions.mapValues { (_, extension) ->
+                        extension.withStore(extension.currentStore(availableExtensions, fallback = extension.store))
+                    }
                 } else {
                     reconcileLoadedExtensions(loadedExtensions, availableExtensions)
                 }
@@ -380,19 +423,13 @@ class ExtensionManager(
      *
      * @param extension the extension to trust
      */
-    suspend fun trust(extension: Extension.NotLoaded) {
+    fun trust(extension: Extension.NotLoaded) {
         val reason = extension.reason as? Extension.NotLoaded.Reason.Untrusted ?: return
         notLoadedExtensionMapFlow.value[extension.pkgName] ?: return
 
+        // Loading it again is left to the reload triggered by the trust change
+        trustedPkgNames += extension.pkgName
         trustExtension.trust(extension.pkgName, extension.versionCode, reason.signatureHash)
-
-        notLoadedExtensionMapFlow.value -= extension.pkgName
-
-        when (val reloaded = ExtensionLoader.loadExtensionFromPkgName(context, extension.pkgName)) {
-            is Extension.Loaded -> registerNewExtension(reloaded)
-            is Extension.NotLoaded -> notLoadedExtensionMapFlow.value += reloaded
-            null -> {}
-        }
     }
 
     /**
@@ -471,23 +508,23 @@ class ExtensionManager(
      */
     private inner class InstallationListener : ExtensionInstallReceiver.Listener {
 
-        override fun onExtensionInstalled(extension: Extension.Loaded) {
+        override suspend fun onExtensionInstalled(extension: Extension.Loaded) = loadMutex.withLock {
             registerNewExtension(extension.withListingStatus())
             updatePendingUpdatesCount()
         }
 
-        override fun onExtensionUpdated(extension: Extension.Loaded) {
+        override suspend fun onExtensionUpdated(extension: Extension.Loaded) = loadMutex.withLock {
             registerUpdatedExtension(extension.withListingStatus())
             updatePendingUpdatesCount()
         }
 
-        override fun onExtensionNotLoaded(extension: Extension.NotLoaded) {
+        override suspend fun onExtensionNotLoaded(extension: Extension.NotLoaded) = loadMutex.withLock {
             loadedExtensionMapFlow.value -= extension.pkgName
             notLoadedExtensionMapFlow.value += extension
             updatePendingUpdatesCount()
         }
 
-        override fun onPackageUninstalled(pkgName: String) {
+        override suspend fun onPackageUninstalled(pkgName: String) = loadMutex.withLock {
             ExtensionLoader.uninstallPrivateExtension(context, pkgName)
             unregisterExtension(pkgName)
             updatePendingUpdatesCount()

@@ -779,6 +779,7 @@
     <string name="pref_allowed_content_warnings">Разрешенное предупреждение об контенте</string>
     <string name="pref_apply_content_warnings_to_installed">Также применять на установленные расширения</string>
     <string name="pref_apply_content_warnings_to_installed_summary">Когда выключенно, расширения которые вы уже установили будут загружаться и обновляться независимо от предупреждения</string>
+    <string name="content_warnings_info">Перезапустите приложение для применения изменений. Установленные расширения, которые не загружены, остаются в списке без указания источников. Расширения, которые вы не устанавливали, скрываются. Это не предотвращает появления в приложении контента категории «18+» со стороны неофициальных или потенциально неправильно помеченных расширений.</string>
     <string name="onboarding_permission_analytics_description">Отправить анонимно данные об использовании для улучшения функций приложения.</string>
     <string name="pref_security">Безопасность</string>
     <string name="action_sort_random">Случайно</string>

@@ -6,7 +6,6 @@ import eu.kanade.tachiyomi.extension.filterCompatibleWithApp
 import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.extension.model.InstallStep
 import eu.kanade.tachiyomi.extension.store.findUpdate
-import eu.kanade.tachiyomi.extension.util.ExtensionLoader
 import kotlinx.coroutines.flow.first
 import mihon.core.common.GlobalCustomPreferences
 import mihon.domain.extension.interactor.UpdateExtensionStores
@@ -45,10 +44,8 @@ internal class ExtensionApi {
             findExtensions().filterCompatibleWithApp()
         }
 
-        extensionManager.loadedExtensionsFlow.first()
-
-        val installedExtensions = ExtensionLoader.loadExtensions(context)
-            .filterIsInstance<Extension.Loaded>()
+        // Only versions and signatures are read, so the extensions already loaded serve as they are
+        val installedExtensions = extensionManager.getLoadedExtensions()
 
         val updateCandidates = installedExtensions.mapNotNull { installed ->
             installed.findUpdate(extensions)?.let { UpdateCandidate(installed, it) }

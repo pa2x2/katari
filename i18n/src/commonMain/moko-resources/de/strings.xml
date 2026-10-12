@@ -777,6 +777,7 @@
     <string name="pref_allowed_content_warnings">Erlaubte Inhaltswarnungen</string>
     <string name="pref_apply_content_warnings_to_installed">Auch auf installierte Erweiterungen anwenden</string>
     <string name="pref_apply_content_warnings_to_installed_summary">Wenn deaktiviert, werden bereits installierte Erweiterungen unabhängig von ihren Warnungen weiterhin geladen und aktualisiert</string>
+    <string name="content_warnings_info">Installierte Erweiterungen, die nicht geladen sind, bleiben ohne ihre Quellen gelistet; nicht installierte Erweiterungen bleiben versteckt. Dies verhindert nicht, dass inoffizielle oder potentiell falsch markierte Erweiterungen Ü18-Inhalte in der App anzeigen.</string>
     <string name="ext_remove">Entfernen</string>
     <string name="ext_confirm_remove">Erweiterung entfernen?</string>
     <string name="remove_private_extension_message">Möchtest du die Erweiterung „%s“ wirklich entfernen?</string>

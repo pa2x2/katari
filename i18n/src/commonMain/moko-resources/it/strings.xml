@@ -769,6 +769,7 @@
     <string name="firebase_summary">L\'invio dei registri dei crash e delle analitiche ci consentirà di identificare e risolvere i problemi, migliorare le prestazioni e rendere gli aggiornamenti futuri più pertinenti alle tue esigenze</string>
     <string name="pref_category_extensions">Estensioni</string>
     <string name="pref_allowed_content_warnings">Avvisi sui contenuti consentiti</string>
+    <string name="content_warnings_info">Per rendere effettive le modifiche è necessario riavviare l\'app. Le estensioni che non sono caricate non forniranno le loro fonti in nessuna parte dell\'app. Ciò non impedisce alle estensioni non ufficiali o potenzialmente contrassegnate in modo errato di mostrare contenuti 18+ all\'interno dell\'app.</string>
     <string name="ext_remove">Rimuovi</string>
     <string name="ext_confirm_remove">Rimuovere l\'estensione?</string>
     <string name="remove_private_extension_message">Vuoi davvero rimuovere l\'estensione \"%s\"?</string>

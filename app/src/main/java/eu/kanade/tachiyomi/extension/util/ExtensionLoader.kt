@@ -134,8 +134,14 @@ internal object ExtensionLoader {
      * Return a list of all the available extensions initialized concurrently.
      *
      * @param context The application context.
+     * @param alreadyLoaded Extensions loaded by an earlier call. Any of these whose apk is unchanged
+     * and which still passes every check is returned as is, so its sources keep working and its
+     * update status survives. Pass nothing to load every extension from scratch.
      */
-    suspend fun loadExtensions(context: Context): List<Extension.Installed> = withContext(Dispatchers.IO) {
+    suspend fun loadExtensions(
+        context: Context,
+        alreadyLoaded: Map<String, Extension.Loaded> = emptyMap(),
+    ): List<Extension.Installed> = withContext(Dispatchers.IO) {
         val policy = loadPolicy(stores = extensionStoreRepository.getAllAsFlow().first())
         val pkgManager = context.packageManager
 
@@ -181,7 +187,7 @@ internal object ExtensionLoader {
 
         // Load each extension concurrently and wait for completion
         extPkgs
-            .map { async { loadExtensionCatching(context, it, policy) } }
+            .map { async { loadExtensionCatching(context, it, policy, alreadyLoaded[it.packageInfo.packageName]) } }
             .awaitAll()
     }
 
@@ -249,9 +255,10 @@ internal object ExtensionLoader {
         context: Context,
         extensionInfo: ExtensionInfo,
         policy: LoadPolicy,
+        alreadyLoaded: Extension.Loaded? = null,
     ): Extension.Installed {
         return try {
-            loadExtension(context, extensionInfo, policy)
+            loadExtension(context, extensionInfo, policy, alreadyLoaded)
         } catch (e: Throwable) {
             val pkgInfo = extensionInfo.packageInfo
             logcat(LogPriority.ERROR, e) { "Extension load error: ${pkgInfo.packageName}" }
@@ -278,6 +285,7 @@ internal object ExtensionLoader {
         context: Context,
         extensionInfo: ExtensionInfo,
         policy: LoadPolicy,
+        alreadyLoaded: Extension.Loaded?,
     ): Extension.Installed {
         val pkgManager = context.packageManager
         val pkgInfo = extensionInfo.packageInfo
@@ -358,6 +366,15 @@ internal object ExtensionLoader {
         if (policy.applyContentWarningsToInstalled && contentWarning !in policy.enabledContentWarnings) {
             logcat(LogPriority.WARN) { "Extension $pkgName with $contentWarning not allowed" }
             return notLoaded(Extension.NotLoaded.Reason.Filtered, libVersion.toDouble())
+        }
+
+        // Everything above is cheap to check again, everything below isn't. Nothing about this apk
+        // changed and it still passes, so keep the sources that are already registered for it.
+        if (alreadyLoaded != null &&
+            alreadyLoaded.versionCode == versionCode &&
+            alreadyLoaded.isShared == extensionInfo.isShared
+        ) {
+            return alreadyLoaded
         }
 
         val classLoader = try {

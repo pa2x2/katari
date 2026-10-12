@@ -783,6 +783,7 @@
     <string name="pref_allowed_content_warnings">Advertències de contingut permeses</string>
     <string name="pref_apply_content_warnings_to_installed">Aplica-ho també a les extensions instal·lades</string>
     <string name="pref_apply_content_warnings_to_installed_summary">Quan està desactivat, les extensions que ja havíeu instal·lat es continuaran carregant i actualitzant independentment de les advertències</string>
+    <string name="content_warnings_info">Les extensions instal·lades que no s’han carregat continuaran llistades sense les fonts; les que no hàgiu instal·lat s’amagaran. Això no evita que les extensions no oficials o potencialment mal etiquetades mostrin contingut +18 a l’aplicació.</string>
     <string name="label_auto">Automàtic</string>
     <string name="pref_incognito_mode_extension_summary">Pausa l’historial de lectura per a aquesta extensió</string>
     <string name="trackers_updated_summary">Els serveis de seguiment s’han actualitzat al capítol %d</string>

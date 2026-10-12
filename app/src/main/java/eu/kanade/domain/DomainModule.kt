@@ -205,7 +205,7 @@ class DomainModule : InjektModule {
         addFactory { ToggleLanguage(get()) }
         addFactory { ToggleSource(get()) }
         addFactory { ToggleSourcePin(get()) }
-        addFactory { TrustExtension(get()) }
+        addFactory { TrustExtension(get(), get()) }
 
         addSingletonFactory { ExtensionStoreService(get(), get(), get()) }
         addSingletonFactory<ExtensionStoreRepository> { ExtensionStoreRepositoryImpl(get(), get()) }

@@ -71,7 +71,7 @@ internal class ExtensionInstallReceiver(private val listener: Listener) : Broadc
 
                 val pkgName = getPackageNameFromIntent(intent)
                 if (pkgName != null) {
-                    listener.onPackageUninstalled(pkgName)
+                    scope.launch { listener.onPackageUninstalled(pkgName) }
                 }
             }
         }
@@ -112,10 +112,10 @@ internal class ExtensionInstallReceiver(private val listener: Listener) : Broadc
      * Listener that receives extension installation events.
      */
     interface Listener {
-        fun onExtensionInstalled(extension: Extension.Loaded)
-        fun onExtensionUpdated(extension: Extension.Loaded)
-        fun onExtensionNotLoaded(extension: Extension.NotLoaded)
-        fun onPackageUninstalled(pkgName: String)
+        suspend fun onExtensionInstalled(extension: Extension.Loaded)
+        suspend fun onExtensionUpdated(extension: Extension.Loaded)
+        suspend fun onExtensionNotLoaded(extension: Extension.NotLoaded)
+        suspend fun onPackageUninstalled(pkgName: String)
     }
 
     companion object {

@@ -781,6 +781,7 @@
     <string name="pref_allowed_content_warnings">已允许内容警告</string>
     <string name="pref_apply_content_warnings_to_installed">还适用于已安装的插件</string>
     <string name="pref_apply_content_warnings_to_installed_summary">关闭后，已安装的插件仍会继续加载和更新，无论其是否显示警告</string>
+    <string name="content_warnings_info">已安装但未加载的插件仍会显示在列表中，但不会显示其来源；未安装的插件则会被隐藏。这并不能阻止非官方或可能被错误标记的插件显示 18+ 内容。</string>
     <string name="action_sort_random">随机</string>
     <string name="ext_remove">删除</string>
     <string name="ext_confirm_remove">确定删除？</string>
