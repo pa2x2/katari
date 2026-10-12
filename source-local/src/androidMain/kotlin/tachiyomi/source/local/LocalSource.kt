@@ -15,6 +15,7 @@ import eu.kanade.tachiyomi.source.entry.SEntryChapter
 import eu.kanade.tachiyomi.source.entry.SourceMetadata
 import eu.kanade.tachiyomi.source.entry.UnmeteredSource
 import eu.kanade.tachiyomi.util.lang.compareToCaseInsensitiveNaturalOrder
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.serialization.json.Json
@@ -298,15 +299,21 @@ actual class LocalSource(
                     chapterNumber = ChapterRecognition
                         .parseChapterNumber(entry.title, name, chapterNumber)
 
-                    val format = Format.valueOf(chapterFile)
-                    if (format is Format.Epub) {
-                        format.file.epubReader(context).use { epub ->
-                            epub.fillMetadata(entry, this)
+                    try {
+                        val format = Format.valueOf(chapterFile)
+                        if (format is Format.Epub) {
+                            format.file.epubReader(context).use { epub ->
+                                epub.fillMetadata(entry, this)
+                            }
+                        } else {
+                            getComicInfoForChapter(chapterFile) { stream ->
+                                setChapterDetailsFromComicInfoFile(stream, this)
+                            }
                         }
-                    } else {
-                        getComicInfoForChapter(chapterFile) { stream ->
-                            setChapterDetailsFromComicInfoFile(stream, this)
-                        }
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        logcat(LogPriority.ERROR, e) { "Failed to read metadata for ${chapterFile.name}" }
                     }
                 }
             }
