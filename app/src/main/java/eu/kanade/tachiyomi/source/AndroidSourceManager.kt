@@ -5,6 +5,7 @@ import eu.kanade.tachiyomi.extension.ExtensionManager
 import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.source.entry.EntryCatalogueSource
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -13,8 +14,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import mihon.entry.interactions.download.EntryDownloadMaintenanceFeature
 import tachiyomi.domain.source.model.SourceDisplayInfo
 import tachiyomi.domain.source.model.StubSource
@@ -42,6 +43,7 @@ class AndroidSourceManager(
 
     private val sourcesMap = ConcurrentHashMap<Long, UnifiedSource>()
     private val stubSourcesMap = ConcurrentHashMap<Long, StubSource>()
+    private val storedStubsLoaded = CompletableDeferred<Unit>()
 
     private val _sources = MutableStateFlow<List<UnifiedSource>>(emptyList())
     override val sources: Flow<List<UnifiedSource>> = _sources.asStateFlow()
@@ -67,16 +69,20 @@ class AndroidSourceManager(
                         registerStubSource(source)
                     }
 
+                    // Callers waiting for the sources also expect a missing source to come with its stored name
+                    storedStubsLoaded.await()
                     _isInitialized.value = true
                 }
         }
 
         scope.launch {
             sourceRepository.subscribeAll()
+                .onCompletion { storedStubsLoaded.complete(Unit) }
                 .collectLatest { sources ->
                     sources.forEach {
                         stubSourcesMap[it.id] = it
                     }
+                    storedStubsLoaded.complete(Unit)
                 }
         }
 
@@ -97,11 +103,7 @@ class AndroidSourceManager(
     }
 
     override fun getOrStub(sourceKey: Long): UnifiedSource {
-        return sourcesMap[sourceKey] ?: UnifiedStubSource(
-            stubSourcesMap.getOrPut(sourceKey) {
-                runBlocking { createStubSource(sourceKey) }
-            },
-        )
+        return sourcesMap[sourceKey] ?: UnifiedStubSource(stubSource(sourceKey))
     }
 
     override fun getAll(): List<UnifiedSource> {
@@ -127,9 +129,7 @@ class AndroidSourceManager(
             )
         }
 
-        val stub = stubSourcesMap.getOrPut(sourceKey) {
-            runBlocking { createStubSource(sourceKey) }
-        }
+        val stub = stubSource(sourceKey)
         return SourceDisplayInfo(
             id = stub.id,
             name = stub.name.ifBlank { stub.id.toString() },
@@ -153,6 +153,21 @@ class AndroidSourceManager(
                 downloadMaintenance.renameSource(UnifiedStubSource(dbSource), UnifiedStubSource(stub))
             }
         }
+    }
+
+    /**
+     * Stored stubs are loaded as soon as the manager starts, so this misses only for a source never seen before or a
+     * lookup in the first moments after startup. Those get a nameless stub right away and the stored or listed name
+     * once it's found, rather than blocking the caller on the database.
+     */
+    private fun stubSource(id: Long): StubSource {
+        stubSourcesMap[id]?.let { return it }
+        val nameless = StubSource(id = id, lang = "", name = "")
+        stubSourcesMap.putIfAbsent(id, nameless)?.let { return it }
+        scope.launch {
+            stubSourcesMap.replace(id, nameless, createStubSource(id))
+        }
+        return nameless
     }
 
     private suspend fun createStubSource(id: Long): StubSource {
