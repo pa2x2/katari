@@ -7,9 +7,6 @@ import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.ui.util.fastAny
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.flowWithLifecycle
-import cafe.adriel.voyager.core.model.StateScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import eu.kanade.core.util.addOrRemove
 import eu.kanade.domain.entry.model.chaptersFiltered
@@ -29,6 +26,7 @@ import eu.kanade.presentation.util.formattedMessage
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import eu.kanade.tachiyomi.source.getDisplayNameForEntryInfo
+import eu.kanade.tachiyomi.ui.base.screenmodel.GatedStateScreenModel
 import eu.kanade.tachiyomi.ui.entry.translation.ChapterTranslationModel
 import eu.kanade.tachiyomi.util.lang.toStoredDisplayName
 import eu.kanade.tachiyomi.util.system.toast
@@ -141,6 +139,7 @@ import tachiyomi.core.common.preference.TriState
 import tachiyomi.core.common.preference.mapAsCheckboxState
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.launchNonCancellable
+import tachiyomi.core.common.util.lang.pausedWhileUnsubscribed
 import tachiyomi.core.common.util.lang.withUIContext
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.category.model.Category
@@ -170,7 +169,6 @@ import uy.kohesive.injekt.api.get
 
 class EntryScreenModel(
     private val context: Context,
-    private val lifecycle: Lifecycle,
     private val entryId: Long,
     private val isFromSource: Boolean,
     private val bypassMerge: Boolean = false,
@@ -207,7 +205,7 @@ class EntryScreenModel(
     private val entryTrackingFeature: EntryTrackingFeature = Injekt.get(),
     private val sourceManager: SourceManager = Injekt.get(),
     val snackbarHostState: SnackbarHostState = SnackbarHostState(),
-) : StateScreenModel<EntryScreenModel.State>(State.Loading) {
+) : GatedStateScreenModel<EntryScreenModel.State>(State.Loading) {
 
     private val mergeTargetSearchController = MergeTargetSearchController<MergeTarget>(screenModelScope)
 
@@ -228,12 +226,12 @@ class EntryScreenModel(
     )
 
     private val successState: State.Success?
-        get() = state.value as? State.Success
+        get() = mutableState.value as? State.Success
 
     private val memberExpansion = MergedMemberExpansionSession(
         repository = mergedMemberExpansionRepository,
         scope = screenModelScope,
-        memberIds = state.filterIsInstance<State.Success>().map { it.memberIds },
+        memberIds = mutableState.filterIsInstance<State.Success>().map { it.memberIds },
     )
 
     val entry: Entry?
@@ -311,9 +309,8 @@ class EntryScreenModel(
             availability = entryPreviewFeature.availability(previewContext(entry)),
             reloadExpanded = false,
         )
-        previewConfigJob = screenModelScope.launchIO {
+        previewConfigJob = gatedScope.launchIO {
             entryPreviewFeature.availabilityChanges(previewContext(entry))
-                .flowWithLifecycle(lifecycle)
                 .collectLatest { availability ->
                     applyPreviewAvailability(
                         availability = availability,
@@ -370,12 +367,11 @@ class EntryScreenModel(
         observeContinueTarget()
         observeExpandedMembers()
 
-        screenModelScope.launchIO {
+        gatedScope.launchIO {
             mergeAwareEntryAndChaptersFlow(
                 entryAndChaptersFlow = entryAndChaptersFlow(),
-                downloadChangesFlow = downloadRuntime.changes,
+                downloadChangesFlow = downloadRuntime.changes.pausedWhileUnsubscribed(),
             )
-                .flowWithLifecycle(lifecycle)
                 .collectLatest { (entry, chapters) ->
                     observePreviewConfig(entry)
                     val mergePresentation = getMergePresentation(entry)
@@ -478,8 +474,8 @@ class EntryScreenModel(
     }
 
     private fun observeContinueTarget() {
-        screenModelScope.launchIO {
-            state
+        gatedScope.launchIO {
+            mutableState
                 .filterIsInstance<State.Success>()
                 .map { successState ->
                     ContinueTargetRequest(
@@ -498,7 +494,6 @@ class EntryScreenModel(
                         -> null
                     }
                 }
-                .flowWithLifecycle(lifecycle)
                 .collectLatest { chapterId ->
                     updateSuccessState { it.copy(continueTargetChapterId = chapterId).rebuildChapterPresentation() }
                 }
@@ -506,9 +501,8 @@ class EntryScreenModel(
     }
 
     private fun observeExpandedMembers() {
-        screenModelScope.launchIO {
+        gatedScope.launchIO {
             memberExpansion.state
-                .flowWithLifecycle(lifecycle)
                 .collectLatest { expansion ->
                     updateSuccessState { it.copy(memberExpansion = expansion).rebuildChapterPresentation() }
                 }
@@ -537,8 +531,8 @@ class EntryScreenModel(
     }
 
     private fun observeChildProgressLabels() {
-        screenModelScope.launchIO {
-            state
+        gatedScope.launchIO {
+            mutableState
                 .filterIsInstance<State.Success>()
                 .map { successState ->
                     // Every chapter, not only those the filters show: whether reading has started counts hidden ones.
@@ -561,7 +555,6 @@ class EntryScreenModel(
                             emit(emptyMap())
                         }
                 }
-                .flowWithLifecycle(lifecycle)
                 .collectLatest { labels ->
                     updateSuccessState {
                         it.copy(childProgressLabels = labels, childProgressLoaded = true)
@@ -571,7 +564,7 @@ class EntryScreenModel(
     }
 
     private fun observeChildGroupFilter() {
-        screenModelScope.launchIO {
+        gatedScope.launchIO {
             getEntry.subscribe(entryId)
                 .flatMapLatest { entry ->
                     entryMergeFeature.observeExisting(entry).map { editor ->
@@ -593,7 +586,6 @@ class EntryScreenModel(
                         )
                     }
                 }
-                .flowWithLifecycle(lifecycle)
                 .collectLatest { childGroupFilterState ->
                     updateSuccessState {
                         it.copy(childGroupFilterState = childGroupFilterState).rebuildChapterPresentation()
@@ -1066,7 +1058,6 @@ class EntryScreenModel(
                     successState?.containsChapter(download) == true
                 }
                 .catch { error -> logcat(LogPriority.ERROR, error) }
-                .flowWithLifecycle(lifecycle)
                 .collect(::updateDownloadState)
         }
     }
@@ -1680,9 +1671,8 @@ class EntryScreenModel(
     private fun observeTrackers() {
         val entry = successState?.entry ?: return
 
-        screenModelScope.launchIO {
+        gatedScope.launchIO {
             entryTrackingFeature.observeSession(entry)
-                .flowWithLifecycle(lifecycle)
                 .distinctUntilChanged()
                 .collectLatest { session ->
                     val services = (session as? EntryTrackingSession.Available)?.services.orEmpty()
@@ -1701,14 +1691,13 @@ class EntryScreenModel(
         if (!state.isFromSource || state.entry.favorite) return
 
         duplicateObservationJob?.cancel()
-        duplicateObservationJob = screenModelScope.launchIO {
+        duplicateObservationJob = gatedScope.launchIO {
             entryMergeCandidateFeature.observeCandidates(
-                this@EntryScreenModel.state
+                mutableState
                     .filter { it is State.Success }
                     .map { (it as State.Success).entry }
                     .distinctUntilChanged(),
             )
-                .flowWithLifecycle(lifecycle)
                 .collectLatest { duplicates ->
                     updateSuccessState {
                         if (!it.isFromSource || it.entry.favorite) {

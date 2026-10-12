@@ -17,7 +17,6 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.core.net.toUri
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -124,7 +123,6 @@ class EntryScreen(
         val context = LocalContext.current
         val haptic = LocalHapticFeedback.current
         val scope = rememberCoroutineScope()
-        val lifecycleOwner = LocalLifecycleOwner.current
         val entryOpenFeature = remember { Injekt.get<EntryOpenFeature>() }
         val entryConsumptionFeature = remember { Injekt.get<EntryConsumptionFeature>() }
         val entryDownloadActionFeature = remember { Injekt.get<EntryDownloadActionFeature>() }
@@ -134,7 +132,6 @@ class EntryScreen(
         val screenModel = rememberScreenModel {
             EntryScreenModel(
                 context = context,
-                lifecycle = lifecycleOwner.lifecycle,
                 entryId = entryId,
                 isFromSource = fromSource,
                 bypassMerge = bypassMerge ?: false,

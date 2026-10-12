@@ -41,7 +41,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
@@ -79,7 +78,6 @@ fun BrowseEntryPreviewSheet(
     onDismissRequest: () -> Unit,
 ) {
     val context = LocalContext.current
-    val lifecycleOwner = LocalLifecycleOwner.current
     val scope = rememberCoroutineScope()
     val profileManager = remember { Injekt.get<ProfileManager>() }
     val entryOpenFeature = remember { Injekt.get<EntryOpenFeature>() }
@@ -96,7 +94,6 @@ fun BrowseEntryPreviewSheet(
     }.rememberScreenModel(tag = entryId.toString()) {
         EntryScreenModel(
             context = context,
-            lifecycle = lifecycleOwner.lifecycle,
             entryId = entryId,
             isFromSource = true,
         )
