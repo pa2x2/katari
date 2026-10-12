@@ -71,7 +71,7 @@ class TrackRepositoryImpl(
     private suspend fun insertValues(profileId: Long, vararg tracks: EntryTrack) {
         handler.await(inTransaction = true) {
             tracks.forEach { track ->
-                entry_syncQueries.insert(
+                entry_syncQueries.upsert(
                     profileId = profileId,
                     entryId = track.entryId,
                     syncId = track.trackerId,

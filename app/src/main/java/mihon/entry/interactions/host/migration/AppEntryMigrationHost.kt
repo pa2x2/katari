@@ -449,7 +449,7 @@ private suspend fun Database.updateChild(child: EntryChapter) {
 }
 
 private suspend fun Database.insertTrack(profileId: Long, track: EntryTrack) {
-    entry_syncQueries.insert(
+    entry_syncQueries.upsert(
         profileId = profileId,
         entryId = track.entryId,
         syncId = track.trackerId,

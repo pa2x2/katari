@@ -87,7 +87,7 @@ internal class AppEntryTrackingBackupHost(
             records.forEach { incoming ->
                 val existing = existingByService[incoming.serviceId]
                 if (existing == null) {
-                    entry_syncQueries.insert(
+                    entry_syncQueries.upsert(
                         profileId = profileId,
                         entryId = entryId,
                         syncId = incoming.serviceId,
