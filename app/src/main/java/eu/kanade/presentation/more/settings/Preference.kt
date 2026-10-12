@@ -57,17 +57,18 @@ sealed class Preference {
          * A [PreferenceItem] that provides a slider to select an integer number.
          */
         data class SliderPreference(
-            val value: Int,
+            val preference: PreferenceData<Int>,
             override val title: String,
             override val subtitle: String? = null,
-            val valueString: String? = null,
-            val preference: PreferenceData<Int>? = null,
+            val valueText: @Composable (Int) -> String = { it.toString() },
             val valueRange: IntProgression = 0..1,
-            @AndroidXIntRange(from = 0) val steps: Int = with(valueRange) { ((last - first) - 1).coerceAtLeast(0) },
+            @AndroidXIntRange(from = 0) val steps: Int = with(valueRange) {
+                ((last - first) / step - 1).coerceAtLeast(0)
+            },
             override val enabled: Boolean = true,
-            override val isProfileSpecific: Boolean = preference?.isProfileSpecificKey() ?: false,
-            override val onValueChanged: suspend (value: Int) -> Unit = {},
-        ) : PreferenceItem<Int, Unit>() {
+            override val isProfileSpecific: Boolean = preference.isProfileSpecificKey(),
+            override val onValueChanged: suspend (value: Int) -> Boolean = { true },
+        ) : PreferenceItem<Int, Boolean>() {
             override val icon: ImageVector? = null
         }
 

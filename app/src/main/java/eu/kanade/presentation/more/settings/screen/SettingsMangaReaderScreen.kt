@@ -142,10 +142,7 @@ object SettingsMangaReaderScreen : AppEntryViewerSettingsScreenProjection() {
         val flashPageState by flashPageStatePreference.collectAsState()
 
         val flashMillisPref = settings.profilePreference(settingBinder, settings.eInk.flashDurationMillis)
-        val flashMillis by flashMillisPref.collectAsState()
-
         val flashIntervalPref = settings.profilePreference(settingBinder, settings.eInk.flashPageInterval)
-        val flashInterval by flashIntervalPref.collectAsState()
 
         val flashColorPref = settings.profilePreference(settingBinder, settings.eInk.flashColor)
 
@@ -158,23 +155,19 @@ object SettingsMangaReaderScreen : AppEntryViewerSettingsScreenProjection() {
                     subtitle = stringResource(MR.strings.pref_flash_page_summ),
                 ),
                 Preference.PreferenceItem.SliderPreference(
-                    value = flashMillis / MangaReaderSettings.MILLI_CONVERSION,
                     preference = flashMillisPref,
-                    valueRange = 1..15,
+                    valueRange = MangaReaderSettings.MILLI_CONVERSION.let { it..it * 15 step it },
                     title = stringResource(MR.strings.pref_flash_duration),
-                    valueString = stringResource(MR.strings.pref_flash_duration_summary, flashMillis),
+                    valueText = { stringResource(MR.strings.pref_flash_duration_summary, it) },
                     isProfileSpecific = false,
                     enabled = flashPageState,
-                    onValueChanged = { flashMillisPref.set(it * MangaReaderSettings.MILLI_CONVERSION) },
                 ),
                 Preference.PreferenceItem.SliderPreference(
-                    value = flashInterval,
                     preference = flashIntervalPref,
                     valueRange = 1..10,
                     title = stringResource(MR.strings.pref_flash_page_interval),
-                    valueString = pluralStringResource(MR.plurals.pref_pages, flashInterval, flashInterval),
+                    valueText = { pluralStringResource(MR.plurals.pref_pages, it, it) },
                     enabled = flashPageState,
-                    onValueChanged = { flashIntervalPref.set(it) },
                 ),
                 Preference.PreferenceItem.ListPreference(
                     preference = flashColorPref,
@@ -333,7 +326,6 @@ object SettingsMangaReaderScreen : AppEntryViewerSettingsScreenProjection() {
         val navMode by navModePref.collectAsState()
         val dualPageSplit by dualPageSplitPref.collectAsState()
         val rotateToFit by rotateToFitPref.collectAsState()
-        val webtoonSidePadding by webtoonSidePaddingPref.collectAsState()
 
         return Preference.PreferenceGroup(
             title = stringResource(MR.strings.webtoon_viewer),
@@ -353,12 +345,10 @@ object SettingsMangaReaderScreen : AppEntryViewerSettingsScreenProjection() {
                     enabled = navMode != 5,
                 ),
                 Preference.PreferenceItem.SliderPreference(
-                    value = webtoonSidePadding,
                     preference = webtoonSidePaddingPref,
                     valueRange = MangaReaderSettings.WEBTOON_PADDING_MIN..MangaReaderSettings.WEBTOON_PADDING_MAX,
                     title = stringResource(MR.strings.pref_webtoon_side_padding),
-                    valueString = numberFormat.format(webtoonSidePadding / 100f),
-                    onValueChanged = { webtoonSidePaddingPref.set(it) },
+                    valueText = { numberFormat.format(it / 100f) },
                 ),
                 Preference.PreferenceItem.ListPreference(
                     preference = settings.profilePreference(settingBinder, settings.webtoon.hideThreshold),
@@ -431,7 +421,6 @@ object SettingsMangaReaderScreen : AppEntryViewerSettingsScreenProjection() {
             .collectAsState()
         val verticalNavigatorHeightPref =
             settings.profilePreference(settingBinder, settings.navigation.verticalNavigatorHeight)
-        val verticalNavigatorHeight by verticalNavigatorHeightPref.collectAsState()
 
         return Preference.PreferenceGroup(
             title = stringResource(MR.strings.pref_reader_navigation),
@@ -460,11 +449,10 @@ object SettingsMangaReaderScreen : AppEntryViewerSettingsScreenProjection() {
                     enabled = verticalNavigator.isNotEmpty(),
                 ),
                 Preference.PreferenceItem.SliderPreference(
-                    value = verticalNavigatorHeight,
+                    preference = verticalNavigatorHeightPref,
                     valueRange = 65..100,
                     steps = 6,
                     title = stringResource(MR.strings.pref_vertical_navigator_height),
-                    onValueChanged = { verticalNavigatorHeightPref.set(it) },
                     enabled = verticalNavigator.isNotEmpty(),
                 ),
             ),
@@ -479,7 +467,6 @@ object SettingsMangaReaderScreen : AppEntryViewerSettingsScreenProjection() {
         val autoScrollEnabledPref = settings.profilePreference(settingBinder, settings.navigation.autoScrollEnabled)
         val autoScrollEnabled by autoScrollEnabledPref.collectAsState()
         val autoScrollSpeedPref = settings.profilePreference(settingBinder, settings.navigation.autoScrollSpeed)
-        val autoScrollSpeed by autoScrollSpeedPref.collectAsState()
 
         return Preference.PreferenceGroup(
             title = stringResource(MR.strings.pref_auto_scroll),
@@ -490,13 +477,11 @@ object SettingsMangaReaderScreen : AppEntryViewerSettingsScreenProjection() {
                     subtitle = stringResource(MR.strings.pref_auto_scroll_summary),
                 ),
                 Preference.PreferenceItem.SliderPreference(
-                    value = autoScrollSpeed,
                     preference = autoScrollSpeedPref,
                     valueRange = MangaReaderSettings.AUTO_SCROLL_SPEED_RANGE,
                     title = stringResource(MR.strings.pref_auto_scroll_speed),
-                    valueString = stringResource(MangaReaderSettings.AutoScrollLevelLabels[autoScrollSpeed]),
+                    valueText = { stringResource(MangaReaderSettings.AutoScrollLevelLabels[it]) },
                     enabled = autoScrollEnabled,
-                    onValueChanged = { autoScrollSpeedPref.set(it) },
                 ),
             ),
         )

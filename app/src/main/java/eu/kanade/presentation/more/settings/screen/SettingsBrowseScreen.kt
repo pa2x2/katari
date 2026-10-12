@@ -136,7 +136,6 @@ object SettingsBrowseScreen : SearchableSettings {
         val items = buildList {
             settings.forEach { previewSettings ->
                 val enabled by previewSettings.enabled.collectAsState()
-                val pageCount by previewSettings.pageCount.collectAsState()
                 val typeName = stringResource(previewSettings.type.entryTypePresentation().displayNameLabel)
 
                 add(
@@ -154,15 +153,10 @@ object SettingsBrowseScreen : SearchableSettings {
                 }
                 add(
                     Preference.PreferenceItem.SliderPreference(
-                        value = pageCount,
                         preference = previewSettings.pageCount,
                         valueRange = EntryInteractionPreferences.PREVIEW_PAGE_COUNT_RANGE,
                         title = stringResource(MR.strings.pref_manga_preview_page_count),
-                        valueString = pageCount.toString(),
                         enabled = enabled,
-                        onValueChanged = {
-                            previewSettings.pageCount.set(it)
-                        },
                     ),
                 )
                 add(
