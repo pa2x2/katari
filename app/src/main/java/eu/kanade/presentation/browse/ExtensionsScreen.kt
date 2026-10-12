@@ -40,7 +40,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -49,6 +48,8 @@ import dev.icerock.moko.resources.StringResource
 import eu.kanade.presentation.browse.components.BaseBrowseItem
 import eu.kanade.presentation.browse.components.ContentTypeFilterSummary
 import eu.kanade.presentation.browse.components.ExtensionIcon
+import eu.kanade.presentation.browse.components.ExtensionInstallErrorDialog
+import eu.kanade.presentation.browse.components.ExtensionNotLoadedDialog
 import eu.kanade.presentation.browse.components.SourceEntryTypeIndicators
 import eu.kanade.presentation.browse.components.label
 import eu.kanade.presentation.components.WarningBanner
@@ -60,9 +61,7 @@ import eu.kanade.tachiyomi.ui.browse.extension.ExtensionListState
 import eu.kanade.tachiyomi.ui.browse.extension.ExtensionUiModel
 import eu.kanade.tachiyomi.ui.browse.extension.supportedEntryTypesForDisplay
 import eu.kanade.tachiyomi.util.system.LocaleHelper
-import eu.kanade.tachiyomi.util.system.copyToClipboard
 import eu.kanade.tachiyomi.util.system.launchRequestPackageInstallsPermission
-import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.DotSeparatorNoSpaceText
 import tachiyomi.presentation.core.components.FastScrollLazyColumn
@@ -156,6 +155,7 @@ private fun ExtensionContent(
 ) {
     val context = LocalContext.current
     var notLoadedState by remember { mutableStateOf<Extension.NotLoaded?>(null) }
+    var installErrorState by remember { mutableStateOf<InstallStep.Error?>(null) }
     val installGranted = rememberRequestPackageInstallsPermissionState(initialValue = true)
 
     FastScrollLazyColumn(
@@ -249,6 +249,7 @@ private fun ExtensionContent(
                         }
                     },
                     onClickItemCancel = onClickItemCancel,
+                    onClickItemError = { installErrorState = it },
                     onClickItemAction = {
                         when (it) {
                             is Extension.Available -> onInstallExtension(it)
@@ -297,6 +298,12 @@ private fun ExtensionContent(
             )
         }
     }
+    installErrorState?.let { error ->
+        ExtensionInstallErrorDialog(
+            error = error,
+            onDismissRequest = { installErrorState = null },
+        )
+    }
 }
 
 @Composable
@@ -333,6 +340,7 @@ private fun ExtensionItem(
     onClickItem: (Extension) -> Unit,
     onLongClickItem: (Extension) -> Unit,
     onClickItemCancel: (Extension) -> Unit,
+    onClickItemError: (InstallStep.Error) -> Unit,
     onClickItemAction: (Extension) -> Unit,
     onClickItemSecondaryAction: (Extension) -> Unit,
     modifier: Modifier = Modifier,
@@ -377,6 +385,7 @@ private fun ExtensionItem(
                 extension = extension,
                 installStep = installStep,
                 onClickItemCancel = onClickItemCancel,
+                onClickItemError = onClickItemError,
                 onClickItemAction = onClickItemAction,
                 onClickItemSecondaryAction = onClickItemSecondaryAction,
             )
@@ -405,6 +414,19 @@ private fun ExtensionItemContent(
             overflow = TextOverflow.Ellipsis,
             style = MaterialTheme.typography.bodyMedium,
         )
+        val store = when (extension) {
+            is Extension.Available -> extension.store
+            is Extension.Installed -> extension.store
+        }
+        if (store != null) {
+            Text(
+                text = store.name,
+                modifier = Modifier.secondaryItemAlpha(),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                style = MaterialTheme.typography.bodySmall,
+            )
+        }
         // Won't look good but it's not like we can ellipsize overflowing content
         FlowRow(
             modifier = Modifier.secondaryItemAlpha(),
@@ -428,6 +450,10 @@ private fun ExtensionItemContent(
                 }
 
                 val warnings = listOfNotNull(
+                    (installStep as? InstallStep.Error)?.let {
+                        MR.strings.ext_install_error to
+                            MaterialTheme.colorScheme.error
+                    },
                     when {
                         extension is Extension.NotLoaded ->
                             extension.reason.labelRes?.let { it to MaterialTheme.colorScheme.error }
@@ -481,6 +507,7 @@ private fun ExtensionItemActions(
     installStep: InstallStep,
     modifier: Modifier = Modifier,
     onClickItemCancel: (Extension) -> Unit = {},
+    onClickItemError: (InstallStep.Error) -> Unit = {},
     onClickItemAction: (Extension) -> Unit = {},
     onClickItemSecondaryAction: (Extension) -> Unit = {},
 ) {
@@ -501,7 +528,13 @@ private fun ExtensionItemActions(
                     )
                 }
             }
-            installStep == InstallStep.Error -> {
+            installStep is InstallStep.Error -> {
+                IconButton(onClick = { onClickItemError(installStep) }) {
+                    Icon(
+                        imageVector = Icons.Outlined.Info,
+                        contentDescription = stringResource(MR.strings.ext_install_error_details),
+                    )
+                }
                 IconButton(onClick = { onClickItemAction(extension) }) {
                     Icon(
                         imageVector = Icons.Outlined.Refresh,
@@ -544,7 +577,7 @@ private fun ExtensionItemActions(
                                 contentDescription = if (isUntrusted) {
                                     stringResource(MR.strings.ext_trust)
                                 } else {
-                                    stringResource(MR.strings.ext_not_loaded)
+                                    stringResource(MR.strings.ext_not_loaded_details)
                                 },
                             )
                         }
@@ -632,67 +665,6 @@ private val Extension.NotLoaded.Reason.labelRes: StringResource?
         is Extension.NotLoaded.Reason.Failed,
         -> null
     }
-
-private val Extension.NotLoaded.Reason.descriptionRes: StringResource
-    get() = when (this) {
-        is Extension.NotLoaded.Reason.Untrusted -> MR.strings.untrusted_extension_message
-        Extension.NotLoaded.Reason.Filtered -> MR.strings.ext_filtered_message
-        Extension.NotLoaded.Reason.Unsigned -> MR.strings.ext_unsigned_message
-        Extension.NotLoaded.Reason.UnsupportedLibVersion -> MR.strings.ext_unsupported_message
-        Extension.NotLoaded.Reason.Malformed -> MR.strings.ext_malformed_message
-        is Extension.NotLoaded.Reason.Failed -> MR.strings.ext_load_failed_message
-    }
-
-@Composable
-private fun ExtensionNotLoadedDialog(
-    reason: Extension.NotLoaded.Reason,
-    onClickUninstall: () -> Unit,
-    onDismissRequest: () -> Unit,
-) {
-    AlertDialog(
-        title = {
-            Text(text = stringResource(MR.strings.ext_not_loaded_dialog))
-        },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small)) {
-                Text(text = stringResource(reason.descriptionRes))
-
-                if (reason is Extension.NotLoaded.Reason.Failed) {
-                    Text(
-                        text = reason.message,
-                        style = MaterialTheme.typography.bodySmall,
-                        fontFamily = FontFamily.Monospace,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-
-                    val context = LocalContext.current
-                    TextButton(
-                        onClick = {
-                            context.copyToClipboard(
-                                label = context.stringResource(MR.strings.ext_copy_stacktrace),
-                                content = reason.stackTrace,
-                            )
-                        },
-                        contentPadding = PaddingValues(0.dp),
-                    ) {
-                        Text(text = stringResource(MR.strings.ext_copy_stacktrace))
-                    }
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = onDismissRequest) {
-                Text(text = stringResource(MR.strings.action_ok))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onClickUninstall) {
-                Text(text = stringResource(MR.strings.ext_uninstall))
-            }
-        },
-        onDismissRequest = onDismissRequest,
-    )
-}
 
 @Composable
 private fun ExtensionTrustDialog(

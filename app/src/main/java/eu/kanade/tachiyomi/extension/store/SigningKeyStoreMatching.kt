@@ -21,6 +21,14 @@ internal fun Extension.Installed.findListing(available: Collection<Extension.Ava
         .maxWithOrNull(byVersion)
 }
 
+/**
+ * Stores sharing a signing key serve the same apks, so only the newest of their listings is worth offering. Stores
+ * with different keys offer different apks, each installable where that key's apk isn't already installed.
+ */
+internal fun Collection<Extension.Available>.newestListingPerSigningKey(): List<Extension.Available> {
+    return groupBy { it.pkgName to it.store.signingKey }.values.map { listings -> listings.maxWith(byVersion) }
+}
+
 internal fun Extension.Installed.findUpdate(available: Collection<Extension.Available>): Extension.Available? {
     return findListing(available)?.takeIf { listing ->
         val hasNewerLib = ExtensionLoader.compareLibVersions(listing.versionName, versionName)?.let { it > 0 } == true

@@ -689,7 +689,6 @@
     <string name="firebase_summary">क्रैश लॉग्स और एनालिटिक्स भेजने से हम समस्याएँ पहचानकर ठीक कर पाएँगे, प्रदर्शन सुधार पाएँगे, और भविष्य के अपडेट आपकी ज़रूरतों के अनुसार बना पाएँगे</string>
     <string name="pref_hide_missing_chapter_indicators">गुम हुए अध्याय के संकेत छुपाएँ</string>
     <string name="ext_revoke_trust">विश्वसनीय अज्ञात एक्सटेंशन्स रद्द करें</string>
-    <string name="action_open_repo">ओपन सोर्स रिपॉ</string>
     <string name="pref_page_rotate_invert">घुमाए गए चौड़े पृष्ठों की ओरिएंटेशन उलटें</string>
     <string name="pref_double_tap_zoom">दुबारा टैप करके ज़ूम करें</string>
     <string name="pref_flash_page">पृष्ठ बदलने पर फ्लैश करें</string>

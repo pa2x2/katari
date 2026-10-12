@@ -731,7 +731,6 @@
     <string name="onboarding_permission_action_grant">Consenti</string>
     <string name="exclude_scanlators">Escludi scanlator</string>
     <string name="onboarding_storage_help_action">Guida all\'archiviazione</string>
-    <string name="action_open_repo">Repository open source</string>
     <string name="manga_interval_expected_update_soon">Presto</string>
     <string name="manga_interval_custom_amount">Frequenza di aggiornamento personalizzata:</string>
     <string name="onboarding_storage_help_info">Sti aggiornando da una vecchia versione e non sai cosa selezionare? Consulta la guida all\'archiviazione per info.</string>

@@ -6,6 +6,7 @@ import eu.kanade.tachiyomi.extension.ExtensionManager
 import eu.kanade.tachiyomi.extension.model.Extension
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import mihon.domain.extension.model.ExtensionStore
 
 class GetExtensionsByType(
     private val preferences: SourcePreferences,
@@ -27,10 +28,15 @@ class GetExtensionsByType(
 
             val updates = (loadedUpdates + notLoadedUpdates).sortedWith(byName)
 
-            val installedPkgNames = (_loaded + _notLoaded).mapTo(HashSet()) { it.pkgName }
+            // A listing from a store with another signing key is a different apk, which stays on offer. One whose
+            // store's key isn't known yet can't be told apart from the installed apk, so it's taken for it.
+            val installed = (_loaded + _notLoaded).groupBy { it.pkgName }
             val available = _available
                 .filter { extension ->
-                    extension.pkgName !in installedPkgNames &&
+                    val signingKey = extension.store.signingKey
+                    installed[extension.pkgName].orEmpty().none {
+                        signingKey == ExtensionStore.NO_SIGNING_KEY || signingKey in it.signatures
+                    } &&
                         extension.contentWarning in enabledContentWarnings
                 }
                 .flatMap { ext ->
@@ -44,7 +50,10 @@ class GetExtensionsByType(
                             )
                         }
                 }
-                .sortedWith(byName)
+                .sortedWith(
+                    compareBy<Extension.Available, String>(String.CASE_INSENSITIVE_ORDER) { it.name }
+                        .thenBy { it.store.signingKey },
+                )
 
             Extensions(
                 updates = updates,

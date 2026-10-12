@@ -76,7 +76,7 @@ internal class ExtensionInstaller(
         val downloadId = extension.pkgName.hashCode().toLong()
         cancelInstall(extension.pkgName)
 
-        val step = MutableStateFlow(InstallStep.Pending)
+        val step = MutableStateFlow<InstallStep>(InstallStep.Pending)
         activeSteps[downloadId] = step
         downloadPackageNames[downloadId] = extension.pkgName
         packageInstallSteps.update { it + (extension.pkgName to InstallStep.Pending) }
@@ -89,7 +89,7 @@ internal class ExtensionInstaller(
                 val response = httpClient.newCall(request).execute()
 
                 if (!response.isSuccessful) {
-                    throw Exception("Failed to download extension")
+                    throw Exception("Failed to download extension (HTTP ${response.code})")
                 }
                 response.body.byteStream().use { input ->
                     tmpFile.outputStream().use { output ->
@@ -108,7 +108,7 @@ internal class ExtensionInstaller(
                     // Canceled
                 } else {
                     logcat(LogPriority.ERROR, e)
-                    updateInstallStep(downloadId, InstallStep.Error)
+                    updateInstallStep(downloadId, InstallStep.Error.from(e))
                 }
             }
         }
@@ -120,7 +120,10 @@ internal class ExtensionInstaller(
                 activeJobs.remove(extension.pkgName)
                 activeSteps.remove(downloadId)
                 downloadPackageNames.remove(downloadId)
-                if (packageInstallSteps.value[extension.pkgName] != InstallStep.RequiresUserAction) {
+                // A failure or an install left to the user stays listed until it's retried, cancelled or the
+                // package changes some other way
+                val lastStep = packageInstallSteps.value[extension.pkgName]
+                if (lastStep != InstallStep.RequiresUserAction && lastStep !is InstallStep.Error) {
                     packageInstallSteps.update { it - extension.pkgName }
                 }
                 job.cancel()
@@ -188,14 +191,11 @@ internal class ExtensionInstaller(
 
     private fun installApkPrivately(downloadId: Long, tempFile: File, packageInfo: PackageInfo) {
         try {
-            if (ExtensionLoader.installPrivateExtensionFile(context, tempFile, packageInfo)) {
-                updateInstallStep(downloadId, InstallStep.Installed)
-            } else {
-                updateInstallStep(downloadId, InstallStep.Error)
-            }
+            ExtensionLoader.installPrivateExtensionFile(context, tempFile, packageInfo)
+            updateInstallStep(downloadId, InstallStep.Installed)
         } catch (e: Exception) {
-            logcat(LogPriority.ERROR, e) { "Failed to read downloaded extension file." }
-            updateInstallStep(downloadId, InstallStep.Error)
+            logcat(LogPriority.ERROR, e) { "Failed to install extension privately" }
+            updateInstallStep(downloadId, InstallStep.Error.from(e))
         }
 
         tempFile.delete()
@@ -233,14 +233,21 @@ internal class ExtensionInstaller(
      * @param step New install step.
      */
     fun updateInstallStep(downloadId: Long, step: InstallStep) {
-        activeSteps[downloadId]?.let { it.value = step }
+        // Published before the install flow sees it, which completes on a final step and drops the download
         downloadPackageNames[downloadId]?.let { pkgName ->
             packageInstallSteps.update { it + (pkgName to step) }
         }
+        activeSteps[downloadId]?.let { it.value = step }
     }
 
     fun clearInstallStep(pkgName: String) {
         packageInstallSteps.update { it - pkgName }
+    }
+
+    fun clearFailedInstallStep(pkgName: String) {
+        packageInstallSteps.update { steps ->
+            if (steps[pkgName] is InstallStep.Error) steps - pkgName else steps
+        }
     }
 
     companion object {

@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.OpenInNew
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -35,6 +34,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
@@ -79,15 +79,6 @@ fun ExtensionDetailsScreen(
     onClickIncognito: (Boolean) -> Unit,
 ) {
     val uriHandler = LocalUriHandler.current
-    val url = remember(state.extension) {
-        val regex = """https://raw.githubusercontent.com/(.+?)/(.+?)/.+""".toRegex()
-        regex.find(state.extension?.store?.indexUrl.orEmpty())
-            ?.let {
-                val (user, repo) = it.destructured
-                "https://github.com/$user/$repo"
-            }
-            ?: state.extension?.store?.indexUrl
-    }
 
     Scaffold(
         topBar = { scrollBehavior ->
@@ -96,35 +87,20 @@ fun ExtensionDetailsScreen(
                 navigateUp = navigateUp,
                 actions = {
                     AppBarActions(
-                        actions = buildList {
-                            if (url != null) {
-                                add(
-                                    AppBar.Action(
-                                        title = stringResource(MR.strings.action_open_repo),
-                                        icon = Icons.AutoMirrored.Outlined.OpenInNew,
-                                        onClick = {
-                                            uriHandler.openUri(url)
-                                        },
-                                    ),
-                                )
-                            }
-                            addAll(
-                                listOf(
-                                    AppBar.OverflowAction(
-                                        title = stringResource(MR.strings.action_enable_all),
-                                        onClick = onClickEnableAll,
-                                    ),
-                                    AppBar.OverflowAction(
-                                        title = stringResource(MR.strings.action_disable_all),
-                                        onClick = onClickDisableAll,
-                                    ),
-                                    AppBar.OverflowAction(
-                                        title = stringResource(MR.strings.pref_clear_cookies),
-                                        onClick = onClickClearCookies,
-                                    ),
-                                ),
-                            )
-                        },
+                        actions = listOf(
+                            AppBar.OverflowAction(
+                                title = stringResource(MR.strings.action_enable_all),
+                                onClick = onClickEnableAll,
+                            ),
+                            AppBar.OverflowAction(
+                                title = stringResource(MR.strings.action_disable_all),
+                                onClick = onClickDisableAll,
+                            ),
+                            AppBar.OverflowAction(
+                                title = stringResource(MR.strings.pref_clear_cookies),
+                                onClick = onClickClearCookies,
+                            ),
+                        ),
                     )
                 },
                 scrollBehavior = scrollBehavior,
@@ -142,6 +118,11 @@ fun ExtensionDetailsScreen(
         ExtensionDetails(
             contentPadding = paddingValues,
             extension = state.extension,
+            onClickStore = state.extension.store
+                ?.contact
+                ?.website
+                ?.takeIf { it.isNotBlank() }
+                ?.let { website -> { uriHandler.openUri(website) } },
             sources = state.sources,
             incognitoMode = state.isIncognito,
             onClickSourcePreferences = onClickSourcePreferences,
@@ -156,6 +137,7 @@ fun ExtensionDetailsScreen(
 private fun ExtensionDetails(
     contentPadding: PaddingValues,
     extension: Extension.Loaded,
+    onClickStore: (() -> Unit)?,
     sources: ImmutableList<ExtensionDetailsSourceUiModel>,
     incognitoMode: Boolean,
     onClickSourcePreferences: (sourceId: Long) -> Unit,
@@ -188,6 +170,7 @@ private fun ExtensionDetails(
                     }
                     Unit
                 }.takeIf { extension.isShared },
+                onClickStore = onClickStore,
                 onClickContentWarning = {
                     showContentWarning = true
                 },
@@ -220,8 +203,9 @@ private fun ExtensionDetails(
 
 @Composable
 private fun DetailsHeader(
-    extension: Extension,
+    extension: Extension.Installed,
     extIncognitoMode: Boolean,
+    onClickStore: (() -> Unit)?,
     onClickContentWarning: () -> Unit,
     onClickUninstall: () -> Unit,
     onClickAppInfo: (() -> Unit)?,
@@ -287,6 +271,22 @@ private fun DetailsHeader(
                 text = strippedPkgName,
                 style = MaterialTheme.typography.bodySmall,
             )
+
+            extension.store?.let { store ->
+                Text(
+                    text = store.name,
+                    modifier = Modifier
+                        .clip(MaterialTheme.shapes.small)
+                        .clickable(enabled = onClickStore != null) { onClickStore?.invoke() }
+                        .padding(
+                            horizontal = MaterialTheme.padding.extraSmall,
+                            vertical = MaterialTheme.padding.extraSmall / 2,
+                        ),
+                    textAlign = TextAlign.Center,
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+            }
         }
 
         Row(

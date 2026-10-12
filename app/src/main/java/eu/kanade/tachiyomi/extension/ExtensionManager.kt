@@ -12,6 +12,7 @@ import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.extension.model.InstallStep
 import eu.kanade.tachiyomi.extension.store.findListing
 import eu.kanade.tachiyomi.extension.store.findUpdate
+import eu.kanade.tachiyomi.extension.store.newestListingPerSigningKey
 import eu.kanade.tachiyomi.extension.store.pickStore
 import eu.kanade.tachiyomi.extension.update.ExtensionAutoUpdater
 import eu.kanade.tachiyomi.extension.update.ExtensionUpdateNotifier
@@ -111,7 +112,7 @@ class ExtensionManager(
     // Every store's listing, since stores with different signing keys can list the same extension
     private val availableExtensionListFlow = MutableStateFlow(emptyList<Extension.Available>())
     val availableExtensionsFlow = availableExtensionListFlow
-        .map { it.associateBy(Extension.Available::pkgName).values.toList() }
+        .map { it.newestListingPerSigningKey() }
         .stateIn(scope, WhileSubscribed(5_000), emptyList())
 
     @Volatile
@@ -500,16 +501,19 @@ class ExtensionManager(
     private inner class InstallationListener : ExtensionInstallReceiver.Listener {
 
         override suspend fun onExtensionInstalled(extension: Extension.Loaded) = loadMutex.withLock {
+            installer.clearFailedInstallStep(extension.pkgName)
             registerNewExtension(extension.withStatus(availableExtensionListFlow.value))
             updatePendingUpdatesCount()
         }
 
         override suspend fun onExtensionUpdated(extension: Extension.Loaded) = loadMutex.withLock {
+            installer.clearFailedInstallStep(extension.pkgName)
             registerUpdatedExtension(extension.withStatus(availableExtensionListFlow.value))
             updatePendingUpdatesCount()
         }
 
         override suspend fun onExtensionNotLoaded(extension: Extension.NotLoaded) = loadMutex.withLock {
+            installer.clearFailedInstallStep(extension.pkgName)
             loadedExtensionMapFlow.value -= extension.pkgName
             notLoadedExtensionMapFlow.value += extension.withStatus(availableExtensionListFlow.value)
             updatePendingUpdatesCount()

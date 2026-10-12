@@ -747,7 +747,6 @@
     <string name="ext_revoke_trust">Revoca les extensions de confiança desconegudes</string>
     <string name="manga_interval_expected_update_soon">Aviat</string>
     <string name="manga_interval_custom_amount">Freqüència d’actualització personalitzada:</string>
-    <string name="action_open_repo">Obre el repositori d’origen</string>
     <string name="file_picker_uri_permission_unsupported">No s’ha pogut obtenir accés persistent a la carpeta. És possible que l’aplicació es comporti de manera inesperada.</string>
     <string name="label_upcoming">Pròxim</string>
     <string name="upcoming_guide">Guia de pròximes actualitzacions</string>

@@ -67,7 +67,7 @@ internal class ExtensionAutoUpdater(
             throw e
         } catch (e: Exception) {
             logcat(LogPriority.ERROR, e) { "Failed to update ${candidate.installed.pkgName}" }
-            InstallStep.Error
+            InstallStep.Error.from(e)
         }
     }
 }

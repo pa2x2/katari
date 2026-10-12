@@ -732,7 +732,6 @@
     <string name="theme_nord">Nord</string>
     <string name="ext_revoke_trust">Güvenilmiş bilinmeyen uzantıları geri al</string>
     <string name="manga_interval_expected_update_soon">Yakında</string>
-    <string name="action_open_repo">Açık kaynaklı depo</string>
     <string name="action_copy_link">Bağlantıyı kopyala</string>
     <string name="pref_flash_with">Işık rengi</string>
     <string name="pref_flash_style_black">Siyah</string>
