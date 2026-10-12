@@ -353,7 +353,9 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
                                             val result = refreshSession.refresh(
                                                 EntryLibraryUpdateRefreshRequest(
                                                     entry = entry,
-                                                    fetchMetadata = libraryPreferences.autoUpdateMetadata.get(),
+                                                    // Entries added without opening them have no details yet
+                                                    fetchMetadata = !entry.initialized ||
+                                                        libraryPreferences.autoUpdateMetadata.get(),
                                                     fetchWindowLowerBound = currentFetchWindow.first,
                                                     fetchWindowUpperBound = currentFetchWindow.second,
                                                 ),

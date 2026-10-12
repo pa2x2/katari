@@ -17,7 +17,8 @@ import kotlin.time.Duration.Companion.hours
  * A rule-following update walks each entry down a ladder and stops at the first step that decides: the entry's Never
  * mode, its Always mode, a switched-off category, a paused source, a switched-off entry type, the skip rules, and for
  * automatic updates the check interval of its categories. An entry in several categories is skipped when any of them
- * would skip it.
+ * would skip it. The skip rules pass entries whose details were never fetched, such as ones added without opening
+ * them, since they judge an entry by those details.
  */
 class LibraryUpdatePlanner(
     private val eligibility: EntryUpdateEligibilityFeature,
@@ -89,7 +90,12 @@ class LibraryUpdatePlanner(
             hasStarted = item.hasStarted,
             fetchWindowUpperBound = context.fetchWindowUpperBound,
         )
-        val skipped = eligibility.evaluate(eligibilityRequest) as? EntryUpdateEligibility.Skipped
+        val neverFetched = !item.entry.initialized || item.memberEntries.any { !it.initialized }
+        val skipped = if (neverFetched) {
+            null
+        } else {
+            eligibility.evaluate(eligibilityRequest) as? EntryUpdateEligibility.Skipped
+        }
         if (skipped != null) {
             val reason = skipped.reason.toDecisionReason()
             return LibraryUpdateDecision.Leave(item, reason, categoryRules.decidingCategory(reason))

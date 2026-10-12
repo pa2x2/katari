@@ -113,6 +113,28 @@ class LibraryUpdatePlannerTest {
         manual shouldBe items.map { LibraryUpdateDecision.Check(it) }
     }
 
+    @Test
+    fun `entries added without opening them are checked even when the skip rules would leave them`() {
+        val settings = settings(
+            categoryRules = listOf(
+                CategoryUpdateRules(
+                    STRICT,
+                    overrides = CategoryUpdateOverrides(skipCompletedRules, intervalHours = null),
+                ),
+                CategoryUpdateRules(OFF, autoUpdate = false),
+            ),
+        )
+        val items = listOf(
+            item(1, categories = listOf(STRICT), completed = true, initialized = false),
+            item(2, categories = listOf(OFF), initialized = false),
+        )
+
+        planner.plan(LibraryUpdateRequest.FollowRules(automatic = false), items, settings, context()) shouldBe listOf(
+            LibraryUpdateDecision.Check(items[0]),
+            LibraryUpdateDecision.Leave(items[1], EntryUpdateDecisionReason.CATEGORY_OFF, OFF),
+        )
+    }
+
     private val skipCompletedRules = LibraryUpdateSkipRules.None.copy(skipCompleted = true)
 
     private fun settings(
@@ -133,7 +155,12 @@ class LibraryUpdatePlannerTest {
         lastCheckedAt = lastCheckedAt,
     )
 
-    private fun item(id: Long, categories: List<Long>, completed: Boolean = false): LibraryItem {
+    private fun item(
+        id: Long,
+        categories: List<Long>,
+        completed: Boolean = false,
+        initialized: Boolean = true,
+    ): LibraryItem {
         val entry = Entry.create().copy(
             id = id,
             source = 1L,
@@ -141,6 +168,7 @@ class LibraryUpdatePlannerTest {
             title = "Entry $id",
             type = EntryType.MANGA,
             status = if (completed) EntryStatus.COMPLETED else EntryStatus.ONGOING,
+            initialized = initialized,
         )
         return LibraryItem(
             entry = entry,
