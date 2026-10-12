@@ -87,8 +87,7 @@ internal class MangaDownloadProcessor(
     }
 
     override fun reorderSeries(entryId: Long, moveToTop: Boolean) {
-        val (series, others) = downloadManager.queueState.value.partition { it.entry.id == entryId }
-        downloadManager.reorderQueue(if (moveToTop) series + others else others + series)
+        downloadManager.reorderSeries(entryId, moveToTop)
     }
 
     override fun cancelQueuedDownloads(items: List<EntryDownloadQueueItem>) {

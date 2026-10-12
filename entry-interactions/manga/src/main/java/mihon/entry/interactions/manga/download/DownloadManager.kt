@@ -123,24 +123,36 @@ internal class DownloadManager(
     }
 
     fun startDownloadsNow(chapterIds: Collection<Long>) {
-        reorderQueue(
+        downloader.updateQueue { queue ->
             EntryDownloadQueuePolicy.promote(
-                queue = queueState.value,
+                queue = queue,
                 keys = chapterIds,
                 keyOf = { it.chapter.id },
                 isActive = { it.status == DownloadState.DOWNLOADING },
-            ),
-        )
+            )
+        }
         startDownloads()
     }
 
     /**
      * Reorders the download queue.
      *
-     * @param downloads value to set the download queue to
+     * @param downloads the queue in its new order. Downloads that left the queue since are dropped, and ones
+     * that joined it are kept at the end.
      */
     fun reorderQueue(downloads: List<MangaDownload>) {
-        downloader.updateQueue(downloads)
+        downloader.updateQueue { queue ->
+            val queueById = queue.associateBy { it.chapter.id }
+            val orderedIds = downloads.mapTo(HashSet()) { it.chapter.id }
+            downloads.mapNotNull { queueById[it.chapter.id] } + queue.filter { it.chapter.id !in orderedIds }
+        }
+    }
+
+    fun reorderSeries(entryId: Long, moveToTop: Boolean) {
+        downloader.updateQueue { queue ->
+            val (series, others) = queue.partition { it.entry.id == entryId }
+            if (moveToTop) series + others else others + series
+        }
     }
 
     /**
@@ -164,9 +176,11 @@ internal class DownloadManager(
      */
     fun addDownloadsToStartOfQueue(downloads: List<MangaDownload>) {
         if (downloads.isEmpty()) return
-        queueState.value.toMutableList().apply {
-            addAll(0, downloads)
-            reorderQueue(this)
+        downloader.updateQueue { queue ->
+            // A chapter already queued keeps its download, which may be running
+            val queueById = queue.associateBy { it.chapter.id }
+            val chapterIds = downloads.mapTo(HashSet()) { it.chapter.id }
+            downloads.map { queueById[it.chapter.id] ?: it } + queue.filter { it.chapter.id !in chapterIds }
         }
         startDownloads()
     }

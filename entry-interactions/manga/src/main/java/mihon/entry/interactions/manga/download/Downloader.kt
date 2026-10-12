@@ -17,6 +17,7 @@ import eu.kanade.tachiyomi.util.storage.DiskUtil.NOMEDIA_FILE
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -39,6 +40,7 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.retryWhen
 import kotlinx.coroutines.flow.transformLatest
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
 import logcat.LogPriority
@@ -108,6 +110,12 @@ internal class Downloader(
     val events = _events.asSharedFlow()
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+    // Held by every start and stop, which come from the main thread, the download worker and the download jobs, so
+    // a download job's check of the current run can't interleave with another caller's start or stop
+    private val runLock = Any()
+
+    @Volatile
     private var downloaderJob: Job? = null
     private val _isRunningFlow = MutableStateFlow(false)
     val isRunningFlow = _isRunningFlow.asStateFlow()
@@ -143,56 +151,71 @@ internal class Downloader(
      * @return true if the downloader is started, false otherwise.
      */
     fun start(): Boolean {
-        if (isRunning || queueState.value.isEmpty()) {
-            return false
+        synchronized(runLock) {
+            if (isRunning || queueState.value.isEmpty()) {
+                return false
+            }
+
+            val pending = queueState.value.filter { it.status == DownloadState.QUEUE }
+            if (pending.isEmpty()) return false
+
+            isPaused = false
+
+            _isRunningFlow.value = true
+            launchDownloaderJob()
+
+            return pending.isNotEmpty()
         }
-
-        val pending = queueState.value.filter { it.status == DownloadState.QUEUE }
-        if (pending.isEmpty()) return false
-
-        isPaused = false
-
-        _isRunningFlow.value = true
-        launchDownloaderJob()
-
-        return pending.isNotEmpty()
     }
 
     /**
      * Stops the downloader.
      */
     fun stop(reason: EntryDownloadMessage? = null) {
-        cancelDownloaderJob()
-        queueState.value
-            .filter { it.status == DownloadState.DOWNLOADING }
-            .forEach { it.status = DownloadState.ERROR }
+        synchronized(runLock) {
+            cancelDownloaderJob()
+            queueState.value
+                .filter { it.status == DownloadState.DOWNLOADING }
+                .forEach { it.status = DownloadState.ERROR }
 
-        if (reason != null) {
-            reportWarning(reason)
-            return
+            if (reason != null) {
+                reportWarning(reason)
+                return
+            }
+
+            isPaused = false
         }
+    }
 
-        isPaused = false
+    // A canceled run's download jobs can still finish or fail after a newer run started, and must not stop that run
+    private fun stopIfCurrent(owner: Job) {
+        synchronized(runLock) {
+            if (downloaderJob === owner && owner.isActive) stop()
+        }
     }
 
     /**
      * Pauses the downloader
      */
     fun pause() {
-        cancelDownloaderJob()
-        queueState.value
-            .filter { it.status == DownloadState.DOWNLOADING }
-            .forEach { it.status = DownloadState.QUEUE }
-        isPaused = true
+        synchronized(runLock) {
+            cancelDownloaderJob()
+            queueState.value
+                .filter { it.status == DownloadState.DOWNLOADING }
+                .forEach { it.status = DownloadState.QUEUE }
+            isPaused = true
+        }
     }
 
     /**
      * Removes everything from the queue.
      */
     fun clearQueue() {
-        cancelDownloaderJob()
+        synchronized(runLock) {
+            cancelDownloaderJob()
 
-        internalClearQueue()
+            internalClearQueue()
+        }
     }
 
     /**
@@ -201,7 +224,9 @@ internal class Downloader(
     private fun launchDownloaderJob() {
         if (isRunning) return
 
-        val job = scope.launch {
+        // Started only once it is the current run, so its download jobs can tell they still own it
+        val job = scope.launch(start = CoroutineStart.LAZY) {
+            val owner = coroutineContext.job
             val activeDownloadsFlow = combine(
                 queueState,
                 downloadPreferences.parallelSourceLimit.changes(),
@@ -240,19 +265,24 @@ internal class Downloader(
 
                     val downloadsToStart = activeDownloads.filter { it !in downloadJobs }
                     downloadsToStart.forEach { download ->
-                        downloadJobs[download] = launchDownloadJob(download)
+                        downloadJobs[download] = launchDownloadJob(download, owner)
                     }
                 }
             }
         }
         downloaderJob = job
         job.invokeOnCompletion {
-            _isRunningFlow.value = false
-            if (downloaderJob === job) downloaderJob = null
+            synchronized(runLock) {
+                if (downloaderJob === job) {
+                    downloaderJob = null
+                    _isRunningFlow.value = false
+                }
+            }
         }
+        job.start()
     }
 
-    private fun CoroutineScope.launchDownloadJob(download: MangaDownload) = launchIO {
+    private fun CoroutineScope.launchDownloadJob(download: MangaDownload, owner: Job) = launchIO {
         try {
             downloadChapter(download)
 
@@ -261,13 +291,13 @@ internal class Downloader(
                 removeFromQueue(download)
             }
             if (areAllDownloadsFinished()) {
-                stop()
+                stopIfCurrent(owner)
             }
         } catch (e: Throwable) {
             if (e is CancellationException) throw e
             logcat(LogPriority.ERROR, e)
             reportError()
-            stop()
+            stopIfCurrent(owner)
         }
     }
 
@@ -778,12 +808,15 @@ internal class Downloader(
     }
 
     private fun addAllToQueue(downloads: List<MangaDownload>) {
-        _queueState.update {
-            downloads.forEach { download ->
+        _queueState.update { queue ->
+            // Callers filter against an earlier queue, so a chapter may have been queued in the meantime
+            val queuedIds = queue.mapTo(HashSet()) { it.chapter.id }
+            val toAdd = downloads.filter { it.chapter.id !in queuedIds }.distinctBy { it.chapter.id }
+            toAdd.forEach { download ->
                 download.status = DownloadState.QUEUE
             }
-            store.addAll(downloads)
-            it + downloads
+            store.addAll(toAdd)
+            queue + toAdd
         }
     }
 
@@ -831,17 +864,31 @@ internal class Downloader(
         }
     }
 
-    fun updateQueue(downloads: List<MangaDownload>) {
-        _queueState.update { current ->
-            val reordered = EntryDownloadQueuePolicy.reorderPending(
-                queue = current,
-                requested = downloads,
+    /**
+     * Replaces the queue with [transform] applied to the current queue, so downloads queued or removed meanwhile
+     * aren't lost to a stale copy of it. Active downloads stay ahead of the result and can't be removed by it.
+     */
+    fun updateQueue(transform: (List<MangaDownload>) -> List<MangaDownload>) {
+        _queueState.update { queue ->
+            val downloads = EntryDownloadQueuePolicy.reorderPending(
+                queue = queue,
+                requested = transform(queue).distinctBy { it.chapter.id },
                 keyOf = { it.chapter.id },
                 isActive = { it.status == DownloadState.DOWNLOADING },
             )
+            val keptIds = downloads.mapTo(HashSet()) { it.chapter.id }
+            queue.forEach { download ->
+                if (download.chapter.id !in keptIds && download.status == DownloadState.QUEUE) {
+                    download.status = DownloadState.NOT_DOWNLOADED
+                }
+            }
+            val queuedIds = queue.mapTo(HashSet()) { it.chapter.id }
+            downloads.forEach { download ->
+                if (download.chapter.id !in queuedIds) download.status = DownloadState.QUEUE
+            }
             store.clear()
-            store.addAll(reordered)
-            reordered
+            store.addAll(downloads)
+            downloads
         }
         if (queueState.value.isEmpty()) stop()
     }
