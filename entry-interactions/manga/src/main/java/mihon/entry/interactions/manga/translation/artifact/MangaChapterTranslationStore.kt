@@ -91,7 +91,7 @@ internal class MangaChapterTranslationStore(
     }
 
     /** The entry's download folder and the chapter's folder or archive in it, if the chapter is downloaded. */
-    private fun locate(chapter: EntryChapter, entry: Entry, source: UnifiedSource): Pair<UniFile, UniFile>? {
+    private suspend fun locate(chapter: EntryChapter, entry: Entry, source: UnifiedSource): Pair<UniFile, UniFile>? {
         val (entryDir, artifacts) = provider.findChapterDirs(listOf(chapter), entry, source)
         val artifact = artifacts.firstOrNull() ?: return null
         return entryDir?.let { it to artifact }

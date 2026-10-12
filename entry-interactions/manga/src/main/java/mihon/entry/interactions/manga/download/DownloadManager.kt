@@ -162,7 +162,7 @@ internal class DownloadManager(
      * @param chapters the list of chapters to enqueue.
      * @param autoStart whether to start the downloader after enqueing the chapters.
      */
-    fun downloadChapters(manga: Entry, chapters: List<EntryChapter>, autoStart: Boolean = true) {
+    suspend fun downloadChapters(manga: Entry, chapters: List<EntryChapter>, autoStart: Boolean = true) {
         downloader.queueChapters(manga, chapters, autoStart)
         if (autoStart && queueState.value.isNotEmpty()) {
             if (downloader.isRunning) workController.start() else startDownloads()

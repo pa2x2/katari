@@ -1,13 +1,19 @@
 package mihon.entry.interactions.manga.download
 
+import android.content.ContentResolver
 import android.content.Context
 import com.hippo.unifile.UniFile
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import eu.kanade.tachiyomi.util.lang.Hash.md5
 import eu.kanade.tachiyomi.util.storage.DiskUtil
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import logcat.LogPriority
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.storage.displayablePath
+import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
@@ -118,15 +124,59 @@ internal class DownloadProvider(
      * @param entry the manga of the chapter.
      * @param source the source of the chapter.
      */
-    fun findChapterDirs(
+    suspend fun findChapterDirs(
         chapters: List<EntryChapter>,
         entry: Entry,
         source: UnifiedSource,
-    ): Pair<UniFile?, List<UniFile>> {
-        val entryDir = findEntryDir(entry.title, source) ?: return null to emptyList()
-        return entryDir to chapters.mapNotNull { chapter ->
-            getValidChapterDirNames(chapter.name, chapter.scanlator, chapter.url)
-                .firstNotNullOfOrNull { entryDir.findFile(it) }
+    ): Pair<UniFile?, List<UniFile>> = withIOContext {
+        val entryDir = findEntryDir(entry.title, source) ?: return@withIOContext null to emptyList()
+        entryDir to findChapterDirs(chapters, entryDir).values.toList()
+    }
+
+    /** Returns the ids of the chapters whose download exists on disk. */
+    suspend fun findDownloadedChapterIds(
+        chapters: List<EntryChapter>,
+        entry: Entry,
+        source: UnifiedSource,
+    ): Set<Long> = withIOContext {
+        val entryDir = findEntryDir(entry.title, source) ?: return@withIOContext emptySet()
+        findChapterDirs(chapters, entryDir).keys
+    }
+
+    /**
+     * Returns the download of each chapter that has one, keyed by chapter id.
+     *
+     * A chapter is looked for under every name it may have been downloaded with, with the chapters looked up in
+     * parallel. On a storage access framework directory each lookup is a content resolver query, so from
+     * [LIST_CHAPTER_DIRS_MIN_CHAPTERS] chapters on the directory is listed once instead and the names are matched
+     * against the listing, ignoring case as the lookups do. Plain file directories are always looked up by name, as
+     * their listing can leave out files another app created.
+     */
+    private suspend fun findChapterDirs(chapters: List<EntryChapter>, entryDir: UniFile): Map<Long, UniFile> {
+        val disallowNonAscii = libraryPreferences.disallowNonAsciiFilenames.get()
+        val appendHash = libraryPreferences.enableChapterNameHash.get()
+        fun EntryChapter.findDir(find: (String) -> UniFile?): UniFile? {
+            return ChapterDirNames(name, scanlator, url).validDirNames(disallowNonAscii, appendHash)
+                .firstNotNullOfOrNull(find)
+        }
+
+        val isDocumentTree = entryDir.uri.scheme == ContentResolver.SCHEME_CONTENT
+        if (isDocumentTree && chapters.size >= LIST_CHAPTER_DIRS_MIN_CHAPTERS) {
+            val chapterDirs = entryDir.listFiles().orEmpty()
+                .filter { it.name != null }
+                .associateByTo(sortedMapOf(String.CASE_INSENSITIVE_ORDER)) { it.name!! }
+            return chapters
+                .mapNotNull { chapter -> chapter.findDir { chapterDirs[it] }?.let { chapter.id to it } }
+                .toMap()
+        }
+        return coroutineScope {
+            chapters
+                .map { chapter ->
+                    async(chapterDirLookupDispatcher) { chapter.findDir(entryDir::findFile)?.let { chapter.id to it } }
+                }
+                .awaitAll()
+                .filterNotNull()
+                .toMap()
         }
     }
 
@@ -188,3 +238,9 @@ internal class DownloadProvider(
         )
     }
 }
+
+private const val LIST_CHAPTER_DIRS_MIN_CHAPTERS = 50
+
+private const val CHAPTER_DIR_LOOKUP_PARALLELISM = 8
+
+private val chapterDirLookupDispatcher = Dispatchers.IO.limitedParallelism(CHAPTER_DIR_LOOKUP_PARALLELISM)

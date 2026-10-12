@@ -388,18 +388,20 @@ internal class Downloader(
      * @param chapters the list of chapters to download.
      * @param autoStart whether to start the downloader after enqueing the chapters.
      */
-    fun queueChapters(entry: Entry, chapters: List<EntryChapter>, autoStart: Boolean) {
+    suspend fun queueChapters(entry: Entry, chapters: List<EntryChapter>, autoStart: Boolean) {
         if (chapters.isEmpty()) return
 
         val source = sourceManager.get(entry.source) ?: return
         val wasEmpty = queueState.value.isEmpty()
+        val downloadedChapterIds = provider.findDownloadedChapterIds(chapters, entry, source)
+        val queuedChapterIds = queueState.value.mapTo(HashSet()) { it.chapter.id }
         val chaptersToQueue = chapters.asSequence()
             // Filter out those already downloaded.
-            .filter { provider.findChapterDir(it.name, it.scanlator, it.url, entry.title, source) == null }
+            .filter { it.id !in downloadedChapterIds }
             // Add chapters to queue from the start.
             .sortedByDescending { it.sourceOrder }
             // Filter out those already enqueued.
-            .filter { chapter -> queueState.value.none { it.chapter.id == chapter.id } }
+            .filter { it.id !in queuedChapterIds }
             // Create a download for each one.
             .map { MangaDownload(source, entry, it) }
             .toList()
