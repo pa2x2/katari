@@ -98,6 +98,7 @@ import tachiyomi.data.MemoColumnAdapter
 import tachiyomi.data.StringListColumnAdapter
 import tachiyomi.data.UpdateStrategyColumnAdapter
 import tachiyomi.domain.entry.model.Entry
+import tachiyomi.domain.entry.service.EntryCustomCoverWriter
 import tachiyomi.domain.entry.service.EntryMetadataChangeNotifier
 import tachiyomi.domain.library.service.DuplicatePreferences
 import tachiyomi.domain.library.service.LibraryPreferences
@@ -215,7 +216,8 @@ class AppModule(val app: Application) : InjektModule {
             CoroutineScope(SupervisorJob() + Dispatchers.IO + handler)
         }
 
-        addSingletonFactory { CoverCache(app) }
+        addSingletonFactory { CoverCache(get(), app) }
+        addSingletonFactory<EntryCustomCoverWriter> { get<CoverCache>() }
         addSingletonFactory<EntryMetadataChangeNotifier> { AppEntryMetadataChangeNotifier(get()) }
         addSingletonFactory { NetworkHelper(app, get()) }
         addSingletonFactory { JavaScriptEngine(app) }
@@ -247,7 +249,7 @@ class AppModule(val app: Application) : InjektModule {
         )
         val migrationHost = AppEntryMigrationHost(
             handler = get(),
-            hasCustomCover = { entryId -> get<CoverCache>().getCustomCoverFile(entryId).exists() },
+            hasCustomCover = { entryId -> get<CoverCache>().hasCustomCover(entryId) },
         )
         val migrationCustomCoverHost = AppEntryMigrationCustomCoverHost(app, get())
         val libraryMembershipHost = AppEntryLibraryMembershipHost(get(), get<ProfileStore>())

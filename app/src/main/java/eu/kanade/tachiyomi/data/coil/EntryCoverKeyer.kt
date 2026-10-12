@@ -23,7 +23,7 @@ class EntryCoverKeyer(
     private val coverCache: CoverCache = Injekt.get(),
 ) : Keyer<EntryCover> {
     override fun key(data: EntryCover, options: Options): String {
-        return if (coverCache.getCustomCoverFile(data.entryId).exists()) {
+        return if (coverCache.hasCustomCover(data.entryId)) {
             "${data.entryId};${data.lastModified}"
         } else {
             "${data.url};${data.lastModified}"

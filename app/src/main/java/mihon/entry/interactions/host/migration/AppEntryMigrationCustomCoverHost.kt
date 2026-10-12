@@ -1,7 +1,6 @@
 package mihon.entry.interactions.host.migration
 
 import android.content.Context
-import android.system.Os
 import eu.kanade.tachiyomi.data.cache.CoverCache
 import mihon.entry.interactions.migration.host.EntryMigrationCustomCoverHost
 import mihon.entry.interactions.migration.host.EntryMigrationCustomCoverPayload
@@ -37,13 +36,8 @@ internal class AppEntryMigrationCustomCoverHost(
     override suspend fun promote(payload: EntryMigrationCustomCoverPayload) {
         val staged = stagedFile(payload.stageId.requireSafeStageId())
         check(staged.exists()) { "Staged Migration cover is missing" }
-        val target = coverCache.getCustomCoverFile(payload.targetEntryId)
-        val temporary = File(target.parentFile, "${target.name}.${payload.stageId}.tmp")
-        try {
-            staged.inputStream().use { input -> temporary.outputStream().use(input::copyTo) }
-            Os.rename(temporary.absolutePath, target.absolutePath)
-        } finally {
-            temporary.delete()
+        staged.inputStream().use { input ->
+            coverCache.replaceCustomCover(payload.targetEntryId, input, temporarySuffix = payload.stageId)
         }
     }
 

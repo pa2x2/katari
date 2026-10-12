@@ -115,6 +115,7 @@ import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.progressResourceKey
 import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.entry.repository.EntryRepository
+import tachiyomi.domain.entry.service.EntryCustomCoverWriter
 import tachiyomi.domain.entry.service.sortedForReading
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.source.service.SourceManager
@@ -1263,12 +1264,7 @@ internal class ReaderViewModel @JvmOverloads constructor(
         }
 
         if (manga.favorite) {
-            val context = Injekt.get<Application>()
-            val coverDir = context.getExternalFilesDir("covers/custom")
-                ?: File(context.filesDir, "covers/custom").also { it.mkdirs() }
-            File(coverDir, DiskUtil.hashKeyForDisk(manga.id.toString())).outputStream().use {
-                inputStream.copyTo(it)
-            }
+            Injekt.get<EntryCustomCoverWriter>().write(manga.id, inputStream)
             updateCoverLastModified(manga.id)
         }
     }
