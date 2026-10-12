@@ -29,6 +29,7 @@ import eu.kanade.tachiyomi.core.security.PrivacyPreferences
 import eu.kanade.tachiyomi.crash.CrashActivity
 import eu.kanade.tachiyomi.crash.GlobalExceptionHandler
 import eu.kanade.tachiyomi.data.coil.BufferedSourceFetcher
+import eu.kanade.tachiyomi.data.coil.CoverRequestInterceptor
 import eu.kanade.tachiyomi.data.coil.EntryCoverFetcher
 import eu.kanade.tachiyomi.data.coil.EntryCoverKeyer
 import eu.kanade.tachiyomi.data.coil.EntryKeyer
@@ -201,6 +202,8 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
                 add(EntryKeyer())
                 add(InstalledExtensionIconKeyer())
                 add(InstalledSourceIconKeyer())
+                // Interceptor
+                add(CoverRequestInterceptor())
             }
 
             memoryCache(
