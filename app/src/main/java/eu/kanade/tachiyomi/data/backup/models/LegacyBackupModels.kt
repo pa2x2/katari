@@ -146,7 +146,7 @@ internal fun LegacyBackupManga.toBackupEntry(): BackupEntry {
 private val LegacyBackupManga.mergeTargetSource: Long?
     get() = mergeTargetSourceOrNextUpdate?.takeIf { mergeTargetUrl != null }
 
-private val LegacyBackupManga.nextUpdate: Long
+internal val LegacyBackupManga.nextUpdate: Long
     get() = mergeTargetSourceOrNextUpdate?.takeIf { mergeTargetUrl == null } ?: 0L
 
 private fun LegacyBackupManga.resolveDisplayNameAndMemo(): Pair<String?, ByteArray> {

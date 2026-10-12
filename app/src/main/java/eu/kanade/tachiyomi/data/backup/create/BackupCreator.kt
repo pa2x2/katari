@@ -113,6 +113,7 @@ class BackupCreator(
                 backupProfiles = backupProfiles,
                 activeProfileUuid = activeProfile?.uuid,
                 backupEntries = backupEntries,
+                kitsuScoresNative = true,
             )
 
             onProgress(BackupCreationProgress.Saving)

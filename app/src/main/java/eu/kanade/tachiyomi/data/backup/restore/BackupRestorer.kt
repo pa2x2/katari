@@ -12,6 +12,8 @@ import eu.kanade.tachiyomi.data.backup.models.BackupEntry
 import eu.kanade.tachiyomi.data.backup.models.BackupExtensionStore
 import eu.kanade.tachiyomi.data.backup.models.BackupPreference
 import eu.kanade.tachiyomi.data.backup.models.BackupSourcePreferences
+import eu.kanade.tachiyomi.data.backup.models.compatibility.doubleKitsuScores
+import eu.kanade.tachiyomi.data.backup.models.compatibility.hasHalvedKitsuScores
 import eu.kanade.tachiyomi.data.backup.restore.entries.EntryRestoreCoordinator
 import eu.kanade.tachiyomi.data.backup.restore.restorers.CategoriesRestorer
 import eu.kanade.tachiyomi.data.backup.restore.restorers.EntryRestorer
@@ -74,6 +76,8 @@ class BackupRestorer(
      */
     private var sourceMapping: Map<Long, String> = emptyMap()
 
+    private var kitsuScoresHalved = false
+
     suspend fun restore(uri: Uri, options: RestoreOptions) {
         val startTime = System.currentTimeMillis()
 
@@ -107,6 +111,7 @@ class BackupRestorer(
         // Store source mapping for error messages
         val backupMaps = backup.backupSources
         sourceMapping = backupMaps.associate { it.sourceId to it.name }
+        kitsuScoresHalved = backup.hasHalvedKitsuScores()
 
         if (backup.backupProfiles.isNotEmpty()) {
             coroutineScope {
@@ -342,6 +347,7 @@ class BackupRestorer(
         backupEntries: List<BackupEntry>,
         backupCategories: List<BackupCategory>,
     ) = launch {
+        if (kitsuScoresHalved) backupEntries.forEach(BackupEntry::doubleKitsuScores)
         val finalization = entryRestoreCoordinator.restoreEntries(
             destinationProfileId = destinationProfileId,
             backupEntries = backupEntries,
