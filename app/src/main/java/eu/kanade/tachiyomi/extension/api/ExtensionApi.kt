@@ -46,7 +46,7 @@ internal class ExtensionApi {
             findExtensions().filterCompatibleWithApp()
         }
 
-        extensionManager.isInitialized.first { it }
+        extensionManager.installedExtensionsFlow.first()
 
         val installedExtensions = ExtensionLoader.loadExtensions(context)
             .filterIsInstance<LoadResult.Success>()

@@ -14,6 +14,7 @@ import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -101,7 +102,7 @@ abstract class SearchScreenModel(
             )
     }
 
-    private fun getSelectedSources(): List<EntryCatalogueSourceInfo> {
+    private suspend fun getSelectedSources(): List<EntryCatalogueSourceInfo> {
         val enabledSources = getEnabledSources()
 
         val filter = extensionFilter
@@ -109,7 +110,7 @@ abstract class SearchScreenModel(
             return enabledSources
         }
 
-        val extensionSourceIds = extensionManager.installedExtensionsFlow.value
+        val extensionSourceIds = extensionManager.installedExtensionsFlow.first()
             .filter { it.pkgName == filter }
             .filterIsInstance<eu.kanade.tachiyomi.extension.model.Extension.Installed>()
             .flatMap { extension -> extension.sources }
@@ -146,23 +147,23 @@ abstract class SearchScreenModel(
         searchJob?.cancel()
         val generation = searchGeneration.incrementAndGet()
 
-        val sources = getSelectedSources()
-
-        // Reuse previous results if possible
-        if (sameQuery) {
-            val existingResults = state.value.items
-            updateItems(
-                sources
-                    .associateWith { existingResults[it] ?: SearchItemResult.Loading },
-            )
-        } else {
-            updateItems(
-                sources
-                    .associateWith { SearchItemResult.Loading },
-            )
-        }
-
         searchJob = ioCoroutineScope.launch {
+            val sources = getSelectedSources()
+
+            // Reuse previous results if possible
+            if (sameQuery) {
+                val existingResults = state.value.items
+                updateItems(
+                    sources
+                        .associateWith { existingResults[it] ?: SearchItemResult.Loading },
+                )
+            } else {
+                updateItems(
+                    sources
+                        .associateWith { SearchItemResult.Loading },
+                )
+            }
+
             sources.map { source ->
                 async {
                     if (state.value.items[source] !is SearchItemResult.Loading) {

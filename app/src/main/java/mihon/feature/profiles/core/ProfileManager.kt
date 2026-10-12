@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import logcat.LogPriority
@@ -136,7 +137,7 @@ class ProfileManager(
             isArchived = false,
         )
         profileStore.deleteProfileState(id)
-        val hiddenSourceIds = extensionManager.installedExtensionsFlow.value
+        val hiddenSourceIds = extensionManager.installedExtensionsFlow.first()
             .filterIsInstance<eu.kanade.tachiyomi.extension.model.Extension.Installed>()
             .flatMap { extension -> extension.sources.map { source -> source.id.toString() } }
             .toSet()

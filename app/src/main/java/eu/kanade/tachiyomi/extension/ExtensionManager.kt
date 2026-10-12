@@ -21,6 +21,7 @@ import eu.kanade.tachiyomi.extension.util.ExtensionInstaller
 import eu.kanade.tachiyomi.extension.util.ExtensionLoader
 import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,7 +29,9 @@ import kotlinx.coroutines.flow.SharingStarted.Companion.WhileSubscribed
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -67,8 +70,7 @@ class ExtensionManager(
 
     val scope = CoroutineScope(SupervisorJob())
 
-    private val _isInitialized = MutableStateFlow(false)
-    val isInitialized: StateFlow<Boolean> = _isInitialized.asStateFlow()
+    private val isInitialized = MutableStateFlow(false)
 
     /**
      * API where all the available extensions can be found.
@@ -87,7 +89,7 @@ class ExtensionManager(
     private var stores: List<ExtensionStore>? = null
 
     private val installedExtensionMapFlow = MutableStateFlow(emptyMap<String, Extension.Installed>())
-    val installedExtensionsFlow = installedExtensionMapFlow.mapExtensions(scope)
+    val installedExtensionsFlow = installedExtensionMapFlow.mapExtensionsOnceInitialized()
 
     // Every store's listing, since stores with different signing keys can list the same extension
     private val availableExtensionListFlow = MutableStateFlow(emptyList<Extension.Available>())
@@ -98,7 +100,7 @@ class ExtensionManager(
         .stateIn(scope, WhileSubscribed(5_000), emptyList())
 
     private val untrustedExtensionMapFlow = MutableStateFlow(emptyMap<String, Extension.Untrusted>())
-    val untrustedExtensionsFlow = untrustedExtensionMapFlow.mapExtensions(scope)
+    val untrustedExtensionsFlow = untrustedExtensionMapFlow.mapExtensionsOnceInitialized()
 
     private val _isAutoUpdateInProgress = MutableStateFlow(false)
     val isAutoUpdateInProgress: StateFlow<Boolean> = _isAutoUpdateInProgress.asStateFlow()
@@ -107,12 +109,15 @@ class ExtensionManager(
     val pendingUpdatesCount: StateFlow<Int> = _pendingUpdatesCount.asStateFlow()
 
     init {
-        initExtensions()
-        ExtensionInstallReceiver(InstallationListener()).register(context)
+        scope.launch(Dispatchers.IO) {
+            initExtensions()
+            ExtensionInstallReceiver(InstallationListener()).register(context)
+        }
 
         // Store listings are only fetched now and then, so a store renamed or removed in between would stay on the
-        // extensions that came from it
+        // extensions that came from it. Assigned stores would be lost to the initial load if it finished later.
         scope.launch {
+            isInitialized.first { it }
             extensionStoreRepository.getAllAsFlow().collect(::assignStores)
         }
     }
@@ -120,7 +125,7 @@ class ExtensionManager(
     private var subLanguagesEnabledOnFirstRun = preferences.enabledLanguages.isSet()
 
     fun getExtensionPackage(sourceId: Long): String? {
-        return installedExtensionsFlow.value.find { extension ->
+        return installedExtensionMapFlow.value.values.find { extension ->
             extension.sources.any { it.id == sourceId }
         }
             ?.pkgName
@@ -158,18 +163,35 @@ class ExtensionManager(
     /**
      * Loads and registers the installed extensions.
      */
-    private fun initExtensions() {
-        val extensions = ExtensionLoader.loadExtensions(context)
+    private suspend fun initExtensions() {
+        try {
+            val extensions = ExtensionLoader.loadExtensions(context)
+            val installedExtensions = extensions
+                .filterIsInstance<LoadResult.Success>()
+                .associate { it.extension.pkgName to it.extension }
 
-        installedExtensionMapFlow.value = extensions
-            .filterIsInstance<LoadResult.Success>()
-            .associate { it.extension.pkgName to it.extension }
+            // Store listings fetched while the extensions were loading found none of them installed
+            installedExtensionMapFlow.update {
+                val availableExtensions = availableExtensionListFlow.value
+                if (availableExtensions.isEmpty()) {
+                    installedExtensions
+                } else {
+                    reconcileInstalledExtensions(installedExtensions, availableExtensions)
+                }
+            }
 
-        untrustedExtensionMapFlow.value = extensions
-            .filterIsInstance<LoadResult.Untrusted>()
-            .associate { it.extension.pkgName to it.extension }
-
-        _isInitialized.value = true
+            untrustedExtensionMapFlow.value = extensions
+                .filterIsInstance<LoadResult.Untrusted>()
+                .associate { it.extension.pkgName to it.extension }
+        } catch (e: Exception) {
+            logcat(LogPriority.ERROR, e) { "Failed to load extensions" }
+        } finally {
+            // Anything waiting on the extensions would otherwise wait forever after a failed load
+            isInitialized.value = true
+        }
+        if (availableExtensionListFlow.value.isNotEmpty()) {
+            updatePendingUpdatesCount()
+        }
     }
 
     /**
@@ -265,14 +287,11 @@ class ExtensionManager(
             return
         }
 
-        val installedExtensionsMap = reconcileInstalledExtensions(
-            installedExtensionsMap = installedExtensionMapFlow.value,
-            availableExtensions = availableExtensions,
-        )
-        if (installedExtensionsMap != installedExtensionMapFlow.value) {
-            installedExtensionMapFlow.value = installedExtensionsMap
+        installedExtensionMapFlow.update { reconcileInstalledExtensions(it, availableExtensions) }
+        // Until the initial load finishes there's nothing to count, and it counts once it does
+        if (isInitialized.value) {
+            updatePendingUpdatesCount()
         }
-        updatePendingUpdatesCount()
     }
 
     /**
@@ -554,11 +573,12 @@ class ExtensionManager(
 
     private operator fun <T : Extension> Map<String, T>.plus(extension: T) = plus(extension.pkgName to extension)
 
-    private fun <T : Extension> StateFlow<Map<String, T>>.mapExtensions(
-        scope: CoroutineScope,
-        transform: (Collection<T>) -> List<T> = { it.toList() },
-    ): StateFlow<List<T>> {
-        return map { transform(it.values) }.stateIn(scope, WhileSubscribed(5_000), transform(value.values))
+    /**
+     * Extensions are loaded in the background, and a state seeded at construction would hand out the empty
+     * list from before that finished, so this only starts emitting once it did.
+     */
+    private fun <T : Extension> StateFlow<Map<String, T>>.mapExtensionsOnceInitialized(): Flow<List<T>> {
+        return onStart { isInitialized.first { it } }.map { it.values.toList() }
     }
 }
 

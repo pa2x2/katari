@@ -21,6 +21,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
@@ -220,7 +221,7 @@ class ExtensionsScreenModel(
 
     fun updateAllExtensions() {
         screenModelScope.launchIO {
-            extensionManager.installedExtensionsFlow.value
+            extensionManager.installedExtensionsFlow.first()
                 .filter { it.hasUpdate }
                 .forEach(::updateExtension)
         }
