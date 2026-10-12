@@ -3,9 +3,8 @@ package mihon.feature.upcoming
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.util.fastMap
 import androidx.compose.ui.util.fastMapIndexedNotNull
-import cafe.adriel.voyager.core.model.StateScreenModel
-import cafe.adriel.voyager.core.model.screenModelScope
 import eu.kanade.core.util.insertSeparatorsReversed
+import eu.kanade.tachiyomi.ui.base.screenmodel.GatedStateScreenModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
@@ -59,7 +58,7 @@ class UpcomingScreenModel(
     reportRepository: LibraryUpdateReportRepository = Injekt.get(),
     fetchInterval: FetchInterval = Injekt.get(),
     eligibility: EntryUpdateEligibilityFeature = Injekt.get(),
-) : StateScreenModel<UpcomingScreenModel.State>(State()) {
+) : GatedStateScreenModel<UpcomingScreenModel.State>(State()) {
 
     private val planner = LibraryUpdatePlanner(eligibility)
     private val settingsReader = LibraryUpdateSettings.Reader(libraryPreferences, rulesRepository)
@@ -69,7 +68,7 @@ class UpcomingScreenModel(
     val includedCategories = upcomingPreferences.filterIncludedCategories
 
     init {
-        screenModelScope.launch {
+        gatedScope.launch {
             observeProfileScopedState(activeProfileProvider.activeProfileIdFlow) { profileId ->
                 combine(
                     getUpcomingItemPreferenceFlow(profileId)

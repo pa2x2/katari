@@ -2,15 +2,16 @@ package eu.kanade.tachiyomi.ui.history
 
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Immutable
-import cafe.adriel.voyager.core.model.StateScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import eu.kanade.core.util.insertSeparators
 import eu.kanade.presentation.history.HistoryUiItem
 import eu.kanade.presentation.history.HistoryUiModel
+import eu.kanade.tachiyomi.ui.base.screenmodel.GatedStateScreenModel
 import eu.kanade.tachiyomi.ui.collapseByVisibleEntry
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
@@ -66,10 +67,12 @@ class HistoryScreenModel(
     private val activeProfileProvider: ActiveProfileProvider = Injekt.get(),
     statisticsRepository: StatisticsRepository = Injekt.get(),
     val snackbarHostState: SnackbarHostState = SnackbarHostState(),
-) : StateScreenModel<HistoryScreenModel.State>(State()) {
+) : GatedStateScreenModel<HistoryScreenModel.State>(State()) {
 
     private val _events: Channel<Event> = Channel(Channel.UNLIMITED)
     val events: Flow<Event> = _events.receiveAsFlow()
+
+    private val searchQuery = MutableStateFlow<String?>(null)
 
     /** Time spent on each day with timed activity, counted as the Activity screen for that day counts it. */
     val dayDurations: StateFlow<Map<LocalDate, Long>> = activeProfileProvider.activeProfileIdFlow
@@ -90,10 +93,9 @@ class HistoryScreenModel(
         .stateIn(screenModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
 
     init {
-        screenModelScope.launch {
+        gatedScope.launch {
             observeProfileScopedState(activeProfileProvider.activeProfileIdFlow) { profileId ->
-                state.map { it.searchQuery }
-                    .distinctUntilChanged()
+                searchQuery
                     .flatMapLatest { query ->
                         getHistory.subscribe(query ?: "", profileId)
                             .distinctUntilChanged()
@@ -167,7 +169,7 @@ class HistoryScreenModel(
 
     suspend fun getMostRecentItem(): HistoryUiItem? {
         return withIOContext {
-            state.value.list
+            mutableState.value.list
                 ?.filterIsInstance<HistoryUiModel.Item>()
                 ?.firstOrNull()
                 ?.item
@@ -197,6 +199,7 @@ class HistoryScreenModel(
     }
 
     fun updateSearchQuery(query: String?) {
+        searchQuery.value = query
         mutableState.update { it.copy(searchQuery = query) }
     }
 

@@ -16,6 +16,7 @@ import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEachIndexed
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import eu.kanade.presentation.category.visualName
 import eu.kanade.presentation.components.TabbedDialog
 import eu.kanade.presentation.components.TabbedDialogPaddings
@@ -45,7 +46,7 @@ private fun ColumnScope.CategoryFilterSheet(
 
     HorizontalDivider(modifier = Modifier.padding(MaterialTheme.padding.extraSmall))
 
-    val screenState by screenModel.state.collectFlowAsState()
+    val screenState by screenModel.state.collectAsStateWithLifecycle()
     val profileId = screenState.profileId
     if (profileId == null) {
         LoadingScreen(modifier = Modifier.padding(16.dp))

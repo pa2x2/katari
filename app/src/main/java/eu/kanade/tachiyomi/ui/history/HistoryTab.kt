@@ -6,11 +6,11 @@ import androidx.compose.animation.graphics.vector.AnimatedImageVector
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
@@ -71,8 +71,8 @@ data object HistoryTab : Tab {
         val scope = rememberCoroutineScope()
         val entryContinueFeature = remember { Injekt.get<EntryContinueFeature>() }
         val screenModel = rememberScreenModel { HistoryScreenModel() }
-        val state by screenModel.state.collectAsState()
-        val dayDurations by screenModel.dayDurations.collectAsState()
+        val state by screenModel.state.collectAsStateWithLifecycle()
+        val dayDurations by screenModel.dayDurations.collectAsStateWithLifecycle()
 
         HistoryScreen(
             state = state,
