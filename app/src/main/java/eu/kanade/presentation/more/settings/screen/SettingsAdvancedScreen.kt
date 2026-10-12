@@ -252,6 +252,7 @@ object SettingsAdvancedScreen : SearchableSettings {
         networkPreferences: NetworkPreferences,
     ): Preference.PreferenceGroup {
         val context = LocalContext.current
+        val scope = rememberCoroutineScope()
         val networkHelper = remember { Injekt.get<NetworkHelper>() }
 
         val userAgentPref = networkPreferences.defaultUserAgent
@@ -279,8 +280,10 @@ object SettingsAdvancedScreen : SearchableSettings {
                                 clearSslPreferences()
                             }
                             WebStorage.getInstance().deleteAllData()
-                            context.applicationInfo?.dataDir?.let { File("$it/app_webview/").deleteRecursively() }
-                            context.toast(MR.strings.webview_data_deleted)
+                            scope.launchNonCancellable {
+                                context.applicationInfo?.dataDir?.let { File("$it/app_webview/").deleteRecursively() }
+                                withUIContext { context.toast(MR.strings.webview_data_deleted) }
+                            }
                         } catch (e: Throwable) {
                             logcat(LogPriority.ERROR, e)
                             context.toast(MR.strings.cache_delete_error)

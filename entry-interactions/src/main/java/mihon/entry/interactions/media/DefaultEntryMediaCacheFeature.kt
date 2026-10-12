@@ -74,11 +74,12 @@ internal class DefaultEntryMediaCacheFeature(
                 id = artifact.id,
                 clearLabel = artifact.clearLabel,
                 autoClearLabel = artifact.autoClearLabel,
-                readableSize = artifact.readableSize,
                 autoClearOnLaunch = preferencesById.getValue(artifact.id),
             )
         }
     }
+
+    override fun readableSize(id: EntryMediaCacheId): String? = artifactsById[id]?.readableSize
 
     override fun clear(id: EntryMediaCacheId): EntryMediaCacheClearResult {
         val artifact = artifactsById[id] ?: return EntryMediaCacheClearResult.Inapplicable(id)

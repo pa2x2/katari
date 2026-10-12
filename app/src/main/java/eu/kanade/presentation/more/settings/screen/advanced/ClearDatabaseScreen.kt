@@ -40,13 +40,15 @@ import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppBarActions
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.util.system.toast
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.withContext
 import mihon.entry.interactions.lifecycle.removal.EntryDestructiveRemovalFeature
 import mihon.entry.interactions.lifecycle.removal.EntryDestructiveRemovalResult
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.launchUI
-import tachiyomi.core.common.util.lang.withNonCancellableContext
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.source.interactor.GetSourcesWithNonLibraryEntries
 import tachiyomi.domain.source.model.Source
@@ -241,8 +243,9 @@ private class ClearDatabaseScreenModel : StateScreenModel<ClearDatabaseScreenMod
         }
     }
 
-    suspend fun removeMangaBySourceId(keepReadManga: Boolean) = withNonCancellableContext {
-        val state = state.value as? State.Ready ?: return@withNonCancellableContext
+    // Removal deletes each entry's cover files on the calling thread
+    suspend fun removeMangaBySourceId(keepReadManga: Boolean) = withContext(NonCancellable + Dispatchers.IO) {
+        val state = state.value as? State.Ready ?: return@withContext
         val entries = entryRepository.getNonLibraryEntriesBySources(
             sourceIds = state.selection,
             keepReadEntries = keepReadManga,
