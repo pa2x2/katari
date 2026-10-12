@@ -7,6 +7,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
 import eu.kanade.domain.base.BasePreferences
 import kotlinx.coroutines.flow.first
 import mihon.feature.appupdate.AppUpdateBuild
@@ -15,8 +18,8 @@ import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
 /**
- * Hosts the update prompt in MainActivity and starts the launch check once onboarding is done, so a found update
- * never lands on top of the first-run setup.
+ * Hosts the update prompt in MainActivity and starts the automatic checks once onboarding is done, so a found update
+ * never lands on top of the first-run setup. Rechecks run only while MainActivity is visible to show their prompt.
  */
 @Composable
 fun AppUpdatePrompt() {
@@ -25,10 +28,14 @@ fun AppUpdatePrompt() {
     val basePreferences = remember { Injekt.get<BasePreferences>() }
     val context = LocalContext.current
     val uriHandler = LocalUriHandler.current
+    val lifecycleOwner = LocalLifecycleOwner.current
 
     LaunchedEffect(Unit) {
         basePreferences.shownOnboardingFlow.changes().first { it }
         controller.onLaunch()
+        lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            controller.recheckPeriodically()
+        }
     }
 
     val state by controller.state.collectAsState()

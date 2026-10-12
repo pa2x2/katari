@@ -2,6 +2,7 @@ package mihon.feature.appupdate
 
 import android.content.Intent
 import android.os.Build
+import android.os.SystemClock
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.lifecycle.eventFlow
@@ -10,6 +11,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -30,6 +32,7 @@ import mihon.feature.appupdate.install.UpdateApkVerifier
 import tachiyomi.core.common.util.system.logcat
 import java.io.File
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.time.Duration.Companion.hours
 
 /**
  * The app's one update flow: finds a newer GitHub release, downloads its APK and installs it. The prompt in
@@ -49,6 +52,10 @@ internal class AppUpdateController(
     val state: StateFlow<AppUpdateState> = mutableState.asStateFlow()
 
     private val launchHandled = AtomicBoolean(false)
+
+    /** [SystemClock.elapsedRealtime] of the last automatic check, which keeps counting while the device sleeps. */
+    @Volatile
+    private var lastAutomaticCheckAt = 0L
     private var checkJob: Job? = null
     private var updateJob: Job? = null
 
@@ -66,9 +73,22 @@ internal class AppUpdateController(
     /** Runs once per process when the app is first ready for a prompt. */
     fun onLaunch() {
         if (!launchHandled.compareAndSet(false, true)) return
+        lastAutomaticCheckAt = SystemClock.elapsedRealtime()
         scope.launch {
             ReleaseVersion.parse(AppUpdateBuild.versionName)?.let(downloader::removeInstalled)
-            if (preferences.checkOnLaunch.get()) check(CheckMode.Launch)
+            if (preferences.checkOnLaunch.get()) check(CheckMode.Automatic)
+        }
+    }
+
+    /**
+     * Repeats the automatic check every [AUTOMATIC_CHECK_INTERVAL] until cancelled, because Katari can stay open for
+     * days and the launch check alone would rarely run. Callers keep it running only while the app is visible.
+     */
+    suspend fun recheckPeriodically() {
+        while (true) {
+            delay(lastAutomaticCheckAt + AUTOMATIC_CHECK_INTERVAL.inWholeMilliseconds - SystemClock.elapsedRealtime())
+            lastAutomaticCheckAt = SystemClock.elapsedRealtime()
+            if (preferences.checkOnLaunch.get()) check(CheckMode.Automatic)
         }
     }
 
@@ -119,7 +139,7 @@ internal class AppUpdateController(
         if (state.value.update != null) mutableState.update { it.copy(sheetOpen = true) }
     }
 
-    /** "Not now": the launch check asks again next time. A download under way keeps going. */
+    /** "Not now": the next automatic check asks again. A download under way keeps going. */
     fun closeSheet() {
         mutableState.update {
             it.copy(
@@ -157,7 +177,7 @@ internal class AppUpdateController(
                 preferences.lastCheckedAt.set(System.currentTimeMillis())
                 if (update == null) downloader.clear()
                 val openSheet = update != null && when (mode) {
-                    CheckMode.Launch -> update.version != preferences.skippedVersion.get()
+                    CheckMode.Automatic -> update.version != preferences.skippedVersion.get()
                     CheckMode.User -> true
                     CheckMode.Refresh -> false
                 }
@@ -174,8 +194,8 @@ internal class AppUpdateController(
                 logcat(LogPriority.WARN, e) { "App update check failed" }
                 val error = (e as? AppUpdateException)?.error ?: AppUpdateError.GithubUnexpected
                 mutableState.update {
-                    if (mode == CheckMode.Launch) {
-                        // Nobody asked for the launch check, so its failure stays quiet.
+                    if (mode == CheckMode.Automatic) {
+                        // Nobody asked for an automatic check, so its failure stays quiet.
                         it.copy(status = if (it.update != null) AppUpdateStatus.Available else AppUpdateStatus.Idle)
                     } else {
                         it.copy(status = AppUpdateStatus.Failed(error))
@@ -230,8 +250,10 @@ internal class AppUpdateController(
         mutableState.update { it.copy(status = AppUpdateStatus.Failed(error)) }
     }
 
-    private enum class CheckMode { Launch, User, Refresh }
+    private enum class CheckMode { Automatic, User, Refresh }
 }
+
+private val AUTOMATIC_CHECK_INTERVAL = 6.hours
 
 /** A download or install is under way, which a check must not interrupt. */
 private val AppUpdateStatus.isBusy: Boolean

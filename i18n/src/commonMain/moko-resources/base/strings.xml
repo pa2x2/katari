@@ -2035,7 +2035,7 @@
     <string name="app_update_version_available">Version %1$s is available</string>
     <string name="app_update_waiting_permission">Waiting for permission to install</string>
     <string name="app_update_check_on_launch">Check for updates on launch</string>
-    <string name="app_update_check_on_launch_summary">Look for a new version on GitHub when Katari opens</string>
+    <string name="app_update_check_on_launch_summary">Look for a new version on GitHub when Katari opens and every 6 hours while it stays open</string>
     <string name="app_update_channel">Update channel</string>
     <string name="app_update_channel_stable">Stable</string>
     <string name="app_update_channel_prerelease">Pre-release</string>

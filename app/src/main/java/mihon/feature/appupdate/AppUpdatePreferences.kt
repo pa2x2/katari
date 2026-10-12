@@ -12,7 +12,7 @@ internal class AppUpdatePreferences(preferenceStore: PreferenceStore) {
 
     val channel: Preference<AppUpdateChannel> = preferenceStore.getEnum("app_update_channel", AppUpdateChannel.STABLE)
 
-    /** The version whose prompt the user skipped; the launch check doesn't offer it again. Empty for none. */
+    /** The version whose prompt the user skipped; automatic checks don't offer it again. Empty for none. */
     val skippedVersion: Preference<String> = preferenceStore.getString(Preference.appStateKey("app_update_skipped"), "")
 
     /** Epoch milliseconds of the last check that reached GitHub; 0 for never. */
