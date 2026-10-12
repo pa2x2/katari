@@ -12,6 +12,8 @@ import eu.kanade.tachiyomi.source.entry.EntryCatalogueSource
 import eu.kanade.tachiyomi.source.model.Page
 import eu.kanade.tachiyomi.ui.reader.loader.ChapterLoader
 import eu.kanade.tachiyomi.ui.reader.loader.ReaderLoadException
+import eu.kanade.tachiyomi.ui.reader.loader.scheduling.LoadAheadNetworkPolicy
+import eu.kanade.tachiyomi.ui.reader.loader.scheduling.ReaderReadAhead
 import eu.kanade.tachiyomi.ui.reader.model.InsertPage
 import eu.kanade.tachiyomi.ui.reader.model.ReaderChapter
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
@@ -166,6 +168,8 @@ internal class ReaderViewModel @JvmOverloads constructor(
         }
 
     val jumpHistory = MangaReaderJumpHistory()
+
+    private val readAhead = ReaderReadAhead(LoadAheadNetworkPolicy(Injekt.get<Application>()))
 
     private val translationHostActions: TranslationHostActions = Injekt.get()
     private val textRecognitionHostActions: TextRecognitionHostActions = Injekt.get()
@@ -701,6 +705,7 @@ internal class ReaderViewModel @JvmOverloads constructor(
         val selectedChapter = page.chapter
         val pages = selectedChapter.pages ?: return
         selectedChapter.chapter.id?.let { jumpHistory.observe(it, page.index) }
+        readAhead.moveTo(page, onlyOverWifi = readerSettings.loadAheadOnlyOverWifi.effectiveValue)
 
         showChapterPage(selectedChapter, page)
         // Save last page read and mark as read if needed. The mutex is taken before the first thread switch and is

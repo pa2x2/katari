@@ -58,6 +58,15 @@ internal abstract class PageLoader {
     }
 
     /**
+     * Moves the reading position to [page], so a loader that downloads pages loads the rest of the chapter around
+     * it. Without [wholeChapter] only the pages right around [page] load ahead.
+     */
+    open fun readAhead(page: ReaderPage, wholeChapter: Boolean) {}
+
+    /** Stops loading ahead once the reading position has moved to another chapter. */
+    open fun stopReadingAhead() {}
+
+    /**
      * Retries the given [page] in case it failed to load. This method only makes sense when an
      * online source is used.
      */

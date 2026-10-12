@@ -27,6 +27,8 @@ internal class MangaReaderSettingsBindings private constructor(
         get() = binding(definitions.reading.chapterTransition)
     val prepareNextChapter: ViewerSettingBinding<Boolean> get() = binding(definitions.reading.prepareNextChapter)
     val pageTransitions: ViewerSettingBinding<Boolean> get() = binding(definitions.reading.pageTransitions)
+    val loadAheadOnlyOverWifi: ViewerSettingBinding<Boolean>
+        get() = binding(definitions.reading.loadAheadOnlyOverWifi)
     val readWithLongTap: ViewerSettingBinding<Boolean> get() = binding(definitions.reading.readWithLongTap)
     val skipRead: ViewerSettingBinding<Boolean> get() = binding(definitions.reading.skipRead)
     val skipFiltered: ViewerSettingBinding<Boolean> get() = binding(definitions.reading.skipFiltered)

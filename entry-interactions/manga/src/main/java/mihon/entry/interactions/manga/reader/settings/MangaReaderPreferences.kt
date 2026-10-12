@@ -23,6 +23,11 @@ internal class MangaReaderPreferences(
 
     val pageTransitions: Preference<Boolean> = preferenceStore.getBoolean("pref_enable_transitions_key", true)
 
+    val loadAheadOnlyOverWifi: Preference<Boolean> = preferenceStore.getBoolean(
+        "pref_reader_load_ahead_only_over_wifi",
+        true,
+    )
+
     val flashOnPageChange: Preference<Boolean> = preferenceStore.getBoolean("pref_reader_flash", false)
 
     val flashDurationMillis: Preference<Int> = preferenceStore.getInt(

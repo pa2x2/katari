@@ -33,6 +33,7 @@ internal fun mangaReaderReadingDefinitions(
             preference = chapterPreparationPreferences.prepareNextChapter(MangaReaderSettings.PROVIDER_ID),
         ),
         pageTransitions = entryBoolean("page_transitions", preferences.pageTransitions),
+        loadAheadOnlyOverWifi = profileBoolean("load_ahead_only_over_wifi", preferences.loadAheadOnlyOverWifi),
         readWithLongTap = entryBoolean("read_with_long_tap", preferences.readWithLongTap),
         skipRead = profileBoolean("skip_read", preferences.skipRead),
         skipFiltered = profileBoolean("skip_filtered", preferences.skipFiltered),

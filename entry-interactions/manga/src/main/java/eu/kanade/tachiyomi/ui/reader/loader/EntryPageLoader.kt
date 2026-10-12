@@ -6,24 +6,23 @@ import eu.kanade.tachiyomi.source.entry.EntryImageSource
 import eu.kanade.tachiyomi.source.entry.EntryMedia
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import eu.kanade.tachiyomi.source.model.Page
+import eu.kanade.tachiyomi.ui.reader.loader.scheduling.readAheadOrder
+import eu.kanade.tachiyomi.ui.reader.loader.scheduling.schedulePageLoads
 import eu.kanade.tachiyomi.ui.reader.model.ReaderChapter
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
 import eu.kanade.tachiyomi.ui.reader.model.toEntryChapter
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runInterruptible
-import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import mihon.entry.interactions.manga.page.MangaPageStore
 import mihon.entry.interactions.manga.page.acquisition.MangaPageAcquirer
 import mihon.entry.interactions.manga.page.acquisition.MangaPageAcquisitionCoordinator
@@ -35,10 +34,6 @@ import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.domain.entry.adapter.toSEntryChapter
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
-import java.util.concurrent.PriorityBlockingQueue
-import kotlin.concurrent.atomics.AtomicInt
-import kotlin.concurrent.atomics.ExperimentalAtomicApi
-import kotlin.concurrent.atomics.incrementAndFetch
 import kotlin.math.min
 
 /**
@@ -76,30 +71,29 @@ internal class EntryPageLoader private constructor(
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
-    /**
-     * A queue used to manage requests one by one while allowing priorities.
-     */
-    private val queue = PriorityBlockingQueue<PriorityPage>()
-    private val activeLoadLock = Any()
-    private val preloadPreemptionMutex = Mutex()
-    private var activeLoad: ActivePageLoad? = null
-
-    @Volatile
+    // Guards the fields below. Callers only record which pages they want; scheduleLoads then starts and cancels
+    // downloads on one coroutine, so two decisions never interleave.
+    private val lock = Any()
     private var selectedPage: ReaderPage? = null
+    private val retriedPages = LinkedHashSet<ReaderPage>()
+    private val requests = mutableListOf<PageRequest>()
 
-    private val preloadSize = 4
+    // Null until a surface reports a reading position; until then pages load only when asked for
+    private var readAheadPages: List<ReaderPage>? = null
+    private val preloadedPages = LinkedHashSet<ReaderPage>()
+    private val loads = HashMap<ReaderPage, PageLoad>()
+
+    // Cancelled loads that haven't finished yet. A new load of the same page waits for them, otherwise their reset
+    // to Queue could land after the new load has moved the page on.
+    private val stoppingLoads = HashMap<ReaderPage, Job>()
+    private val scheduleRequests = Channel<Unit>(Channel.CONFLATED)
 
     init {
-        scope.launchIO {
-            flow {
-                while (true) {
-                    emit(runInterruptible { queue.take() })
-                }
+        scope.launch {
+            while (true) {
+                scheduleRequests.receive()
+                synchronized(lock) { scheduleLoads() }
             }
-                .filter { it.page.status == Page.State.Queue }
-                .collect {
-                    executeQueuedLoad(it)
-                }
         }
     }
 
@@ -127,113 +121,94 @@ internal class EntryPageLoader private constructor(
         }
     }
 
-    /**
-     * Loads a page through the queue. Handles re-enqueueing pages if they were evicted from the cache.
-     */
     override suspend fun loadPage(page: ReaderPage) {
-        loadPage(page, preloadSize)
+        loadPage(page, PRELOAD_SIZE)
     }
 
-    override suspend fun loadPage(page: ReaderPage, preloadCount: Int) = withIOContext {
-        val imageUrl = page.imageUrl
-
-        // Check if the image has been deleted
-        if (page.status == Page.State.Ready && imageUrl != null && !chapterCache.isImageInCache(imageUrl)) {
-            page.setProgressiveImageSession(null)
-            page.status = Page.State.Queue
-        }
-
-        // Automatically retry failed pages when subscribed to this page
-        if (page.status is Page.State.Error) {
-            page.setProgressiveImageSession(null)
-            page.status = Page.State.Queue
-        }
-
-        val priority = if (selectedPage === page) PriorityPage.DEFAULT else PriorityPage.ADJACENT
-        val queuedPages = enqueuePageAndNextPages(page, priority, preloadCount)
-
-        suspendCancellableCoroutine<Nothing> { continuation ->
-            continuation.invokeOnCancellation {
-                queuedPages.forEach {
-                    if (it.page.status == Page.State.Queue) {
-                        queue.remove(it)
-                    }
-                }
+    /**
+     * Loads [page] for as long as the caller waits. Re-enqueues the page if its image was evicted from the cache.
+     */
+    override suspend fun loadPage(page: ReaderPage, preloadCount: Int) {
+        withIOContext {
+            val imageUrl = page.imageUrl
+            if (page.status == Page.State.Ready && imageUrl != null && !chapterCache.isImageInCache(imageUrl)) {
+                page.setProgressiveImageSession(null)
+                page.status = Page.State.Queue
             }
+        }
+        // Automatically retry failed pages when subscribed to this page
+        page.requeueIfFailed()
+
+        val nextPages = pagesAfter(page, preloadCount)
+        val request = updateWantedPages {
+            PageRequest(page, nextPages, selected = page === selectedPage).also { requests += it }
+        }
+        try {
+            awaitCancellation()
+        } finally {
+            updateWantedPages { requests.remove(request) }
         }
     }
 
     override fun selectPage(page: ReaderPage) {
-        selectedPage = page
-        scope.launchIO {
-            val preemptedPreload = if (pageAcquirer.prioritizesVisiblePages && page.status != Page.State.Ready) {
-                preemptActivePreload()
-            } else {
-                null
-            }
-            if (page.status == Page.State.Queue) {
-                queue.offer(PriorityPage(page, PriorityPage.DEFAULT))
-            }
-            requeuePreemptedPreload(preemptedPreload, except = page)
-        }
+        updateWantedPages { selectedPage = page }
     }
 
     override fun preloadPage(page: ReaderPage) {
-        if (page.status is Page.State.Error) {
-            page.setProgressiveImageSession(null)
-            page.status = Page.State.Queue
+        page.requeueIfFailed()
+        updateWantedPages {
+            preloadedPages += page
+            preloadedPages += pagesAfter(page, PRELOAD_SIZE)
         }
-        enqueuePageAndNextPages(page, PriorityPage.ADJACENT)
     }
 
     override fun preloadPages(pages: List<ReaderPage>) {
-        enqueuePages(pages)
+        pages.forEach { it.requeueIfFailed() }
+        updateWantedPages { preloadedPages += pages }
     }
 
     override fun setPreloadPages(pages: List<ReaderPage>) {
-        val requestedPages = pages.toSet()
-        queue.removeAll { it.priority == PriorityPage.ADJACENT && it.page !in requestedPages }
-        val alreadyQueued = queue.mapTo(mutableSetOf(), PriorityPage::page)
-        enqueuePages(pages.filterNot(alreadyQueued::contains))
+        pages.forEach { it.requeueIfFailed() }
+        updateWantedPages {
+            preloadedPages.clear()
+            preloadedPages += pages
+        }
     }
 
-    private fun enqueuePages(pages: List<ReaderPage>) {
-        pages.forEach { page ->
-            if (page.status is Page.State.Error) {
-                page.setProgressiveImageSession(null)
-                page.status = Page.State.Queue
-            }
-            if (page.status == Page.State.Queue) queue.offer(PriorityPage(page, PriorityPage.ADJACENT))
-        }
+    override fun readAhead(page: ReaderPage, wholeChapter: Boolean) {
+        val pages = chapter.pages ?: return
+        val order = readAheadOrder(page.index, pages.size, wholeChapter).map(pages::get)
+        // Each new reading position retries the pages that failed ahead of it, so a dropped connection doesn't
+        // leave every page loaded ahead waiting for a manual retry
+        order.forEach { it.requeueIfFailed() }
+        updateWantedPages { readAheadPages = order }
+    }
+
+    override fun stopReadingAhead() {
+        updateWantedPages { readAheadPages = null }
     }
 
     /**
      * Retries a page. This method is only called from user interaction on the viewer.
      */
     override fun retryPage(page: ReaderPage) {
-        scope.launchIO {
-            val preemptedPreload = if (pageAcquirer.prioritizesVisiblePages) {
-                preemptActivePreload()
-            } else {
-                null
-            }
-            if (page.status is Page.State.Error) {
-                page.setProgressiveImageSession(null)
-                page.status = Page.State.Queue
-            }
-            if (page.status == Page.State.Queue) {
-                queue.offer(PriorityPage(page, PriorityPage.RETRY))
-            }
-            requeuePreemptedPreload(preemptedPreload, except = page)
-        }
+        page.requeueIfFailed()
+        updateWantedPages { retriedPages += page }
     }
 
     @OptIn(DelicateCoroutinesApi::class)
     override fun recycle() {
         super.recycle()
         scope.cancel()
-        queue.clear()
-        selectedPage = null
+        synchronized(lock) {
+            selectedPage = null
+            retriedPages.clear()
+            requests.clear()
+            readAheadPages = null
+            preloadedPages.clear()
+            loads.clear()
+            stoppingLoads.clear()
+        }
         chapter.pages?.forEach { it.setProgressiveImageSession(null) }
 
         // Cache current page list progress for online chapters to allow a faster reopen
@@ -252,72 +227,102 @@ internal class EntryPageLoader private constructor(
         }
     }
 
-    /**
-     * Preloads the given [amount] of pages after the [currentPage] with a lower priority.
-     *
-     * @return a list of [PriorityPage] that were added to the [queue]
-     */
-    private fun preloadNextPages(currentPage: ReaderPage, amount: Int): List<PriorityPage> {
-        if (amount <= 0) return emptyList()
-        val pageIndex = currentPage.index
-        val pages = currentPage.chapter.pages ?: return emptyList()
-        if (pageIndex == pages.lastIndex) return emptyList()
-
-        return pages
-            .subList(pageIndex + 1, min(pageIndex + 1 + amount, pages.size))
-            .mapNotNull {
-                if (it.status == Page.State.Queue) {
-                    PriorityPage(it, PriorityPage.ADJACENT).apply { queue.offer(this) }
-                } else {
-                    null
-                }
-            }
+    private fun <R> updateWantedPages(update: () -> R): R {
+        return synchronized(lock, update).also { scheduleRequests.trySend(Unit) }
     }
 
-    private fun enqueuePageAndNextPages(
-        page: ReaderPage,
-        priority: Int,
-        preloadCount: Int = preloadSize,
-    ): List<PriorityPage> {
-        val queuedPages = mutableListOf<PriorityPage>()
-        if (page.status == Page.State.Queue) {
-            queuedPages += PriorityPage(page, priority).also(queue::offer)
+    /**
+     * Makes the running downloads the [MAX_CONCURRENT_LOADS] most important pages still to load. The page being read
+     * comes first, then retried pages, the pages surfaces wait for, the pages read ahead and the preloaded pages.
+     */
+    private fun scheduleLoads() {
+        preloadedPages.removeAll { it !in loads && it.status != Page.State.Queue }
+        retriedPages.removeAll { it !in loads && it.status != Page.State.Queue }
+
+        val wanted = buildList {
+            selectedPage?.let(::add)
+            addAll(retriedPages)
+            requests.forEach { add(it.page) }
+            // Read ahead replaces the pages each request preloads after itself, so it alone decides how far ahead
+            // pages load once there is a reading position
+            readAheadPages?.let(::addAll) ?: requests.forEach { addAll(it.nextPages) }
+            addAll(preloadedPages)
         }
-        queuedPages += preloadNextPages(page, preloadCount)
-        return queuedPages
+        val changes = schedulePageLoads(
+            wanted = wanted,
+            loading = loads.keys.toSet(),
+            missing = { it.status == Page.State.Queue },
+            slots = MAX_CONCURRENT_LOADS,
+        )
+        changes.cancel.forEach { stopLoad(it, cause = null) }
+
+        // Only a visible acquisition decodes progressively, so a preload of a page that became visible restarts
+        if (pageAcquirer.prioritizesVisiblePages) {
+            loads.entries
+                .filter { (page, load) ->
+                    load.intent == MangaPageAcquisitionIntent.Preload &&
+                        intentOf(page) == MangaPageAcquisitionIntent.Visible
+                }
+                .map { it.key }
+                .forEach { page ->
+                    stopLoad(page, PreemptedMangaPagePreload())
+                    startLoad(page)
+                }
+        }
+        changes.start.forEach(::startLoad)
+    }
+
+    private fun intentOf(page: ReaderPage): MangaPageAcquisitionIntent {
+        val visible = page === selectedPage ||
+            page in retriedPages ||
+            requests.any { it.page === page && it.selected }
+        return if (visible) {
+            MangaPageAcquisitionIntent.Visible
+        } else {
+            MangaPageAcquisitionIntent.Preload
+        }
+    }
+
+    private fun startLoad(page: ReaderPage) {
+        val previous = stoppingLoads[page]
+        val intent = intentOf(page)
+        val force = page in retriedPages
+        val job = scope.launch {
+            previous?.join()
+            internalLoadPage(page, force, intent)
+        }
+        loads[page] = PageLoad(job, intent)
+        job.invokeOnCompletion {
+            synchronized(lock) {
+                if (loads[page]?.job === job) loads.remove(page)
+                if (stoppingLoads[page] === job) stoppingLoads.remove(page)
+            }
+            scheduleRequests.trySend(Unit)
+        }
+    }
+
+    private fun stopLoad(page: ReaderPage, cause: CancellationException?) {
+        val load = loads.remove(page) ?: return
+        stoppingLoads[page] = load.job
+        load.job.cancel(cause)
+    }
+
+    private fun pagesAfter(page: ReaderPage, count: Int): List<ReaderPage> {
+        val pages = page.chapter.pages ?: return emptyList()
+        return pages.subList(min(page.index + 1, pages.size), min(page.index + 1 + count, pages.size))
+    }
+
+    private fun ReaderPage.requeueIfFailed() {
+        if (status is Page.State.Error) {
+            setProgressiveImageSession(null)
+            status = Page.State.Queue
+        }
     }
 
     /**
      * Loads the page, retrieving the image URL and downloading the image if necessary.
      * Downloaded images are stored in the chapter cache.
-     *
-     * @param page the page whose source image has to be downloaded.
      */
-    private suspend fun executeQueuedLoad(priorityPage: PriorityPage) {
-        val job = scope.launch(start = CoroutineStart.LAZY) {
-            internalLoadPage(
-                page = priorityPage.page,
-                force = priorityPage.priority == PriorityPage.RETRY,
-                intent = if (priorityPage.priority == PriorityPage.ADJACENT) {
-                    MangaPageAcquisitionIntent.Preload
-                } else {
-                    MangaPageAcquisitionIntent.Visible
-                },
-            )
-        }
-        synchronized(activeLoadLock) {
-            activeLoad = ActivePageLoad(priorityPage, job)
-        }
-        job.start()
-        try {
-            job.join()
-        } finally {
-            synchronized(activeLoadLock) {
-                if (activeLoad?.job == job) activeLoad = null
-            }
-        }
-    }
-
     private suspend fun internalLoadPage(
         page: ReaderPage,
         force: Boolean,
@@ -341,61 +346,40 @@ internal class EntryPageLoader private constructor(
             page.stream = imageFile::inputStream
             page.status = Page.State.Ready
         } catch (e: Throwable) {
-            if (e is PreemptedMangaPagePreload) {
+            if (e is CancellationException || !currentCoroutineContext().isActive) {
+                // Page turns cancel downloads that are no longer wanted. Back in the queue, the page loads again
+                // once it is wanted; as an error it would wait for a surface to retry it.
+                page.setProgressiveImageSession(null)
                 page.status = Page.State.Queue
-                return
-            }
-            page.status = Page.State.Error(e)
-            if (e is CancellationException) {
+                // Another loader's visible acquisition of the same image preempted this preload
+                if (e is PreemptedMangaPagePreload) return
                 throw e
             }
-        }
-    }
-
-    private suspend fun preemptActivePreload(): ReaderPage? = preloadPreemptionMutex.withLock {
-        val active = synchronized(activeLoadLock) {
-            activeLoad?.takeIf { it.priorityPage.priority == PriorityPage.ADJACENT }
-        } ?: return@withLock null
-        active.job.cancel(PreemptedMangaPagePreload())
-        active.job.join()
-        active.priorityPage.page.takeIf { it.status == Page.State.Queue }
-    }
-
-    private fun requeuePreemptedPreload(preempted: ReaderPage?, except: ReaderPage) {
-        if (preempted != null && preempted !== except) {
-            queue.offer(PriorityPage(preempted, PriorityPage.ADJACENT))
+            page.status = Page.State.Error(e)
         }
     }
 }
 
-private class ActivePageLoad(
-    val priorityPage: PriorityPage,
+/**
+ * A surface waiting for [page]. [selected] records whether the surface had selected the page when it asked, which
+ * keeps a page loading as visible when a surface showing several pages selects each of them in turn.
+ */
+private class PageRequest(
+    val page: ReaderPage,
+    val nextPages: List<ReaderPage>,
+    val selected: Boolean,
+)
+
+private class PageLoad(
     val job: Job,
+    val intent: MangaPageAcquisitionIntent,
 )
 
 private fun ReaderPage.toEntryImagePage(): EntryImagePage =
     EntryImagePage(index, url, imageUrl)
 
-/**
- * Data class used to keep ordering of pages in order to maintain priority.
- */
-@OptIn(ExperimentalAtomicApi::class)
-private class PriorityPage(
-    val page: ReaderPage,
-    val priority: Int,
-) : Comparable<PriorityPage> {
-    companion object {
-        private val idGenerator = AtomicInt(0)
+private const val PRELOAD_SIZE = 4
 
-        const val RETRY = 2
-        const val DEFAULT = 1
-        const val ADJACENT = 0
-    }
-
-    private val identifier = idGenerator.incrementAndFetch()
-
-    override fun compareTo(other: PriorityPage): Int {
-        val p = other.priority.compareTo(priority)
-        return if (p != 0) p else identifier.compareTo(other.identifier)
-    }
-}
+// Each load holds a request to the source. OkHttp runs five requests per host at once by default; staying below
+// that leaves room for the source's other requests, and more loads would only split the bandwidth further.
+private const val MAX_CONCURRENT_LOADS = 4
