@@ -62,6 +62,7 @@ class EntrySourceRefreshFeatureTest {
             executions = composition.featureExecutions,
             sourceManager = sourceManager,
             syncEntryWithSource = sync,
+            downloadRuntime = { mockk(relaxed = true) },
             updateLibraryTitles = updateTitles,
         )
     }

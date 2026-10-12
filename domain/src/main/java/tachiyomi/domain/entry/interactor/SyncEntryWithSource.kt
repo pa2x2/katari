@@ -136,7 +136,7 @@ class SyncEntryWithSource(
             return SyncResult(
                 insertedChapters = emptyList(),
                 updatedChapters = 0,
-                removedChapters = 0,
+                removedChapterIds = emptyList(),
                 hasMetadataChanges = hasMetadataChanges,
             )
         }
@@ -355,7 +355,7 @@ class SyncEntryWithSource(
             insertedChapters = reportableInsertedChapters,
             insertedChaptersTotal = insertedChapters.size,
             updatedChapters = chaptersToUpdate.size,
-            removedChapters = chaptersToRemove.size,
+            removedChapterIds = chaptersToRemove,
             hasMetadataChanges = hasMetadataChanges,
         )
     }
@@ -400,9 +400,12 @@ class SyncEntryWithSource(
         val insertedChapters: List<EntryChapter>,
         val insertedChaptersTotal: Int = insertedChapters.size,
         val updatedChapters: Int,
-        val removedChapters: Int,
+        val removedChapterIds: List<Long>,
         val hasMetadataChanges: Boolean,
     ) {
+        val removedChapters: Int
+            get() = removedChapterIds.size
+
         val hasChanges: Boolean
             get() = insertedChaptersTotal > 0 || updatedChapters > 0 || removedChapters > 0
     }

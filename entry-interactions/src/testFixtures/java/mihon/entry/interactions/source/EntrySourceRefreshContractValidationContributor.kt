@@ -37,7 +37,7 @@ class EntrySourceRefreshContractValidationContributor : FeatureValidationContrib
                     val child = EntryChapter.create().copy(id = 12L, entryId = entry.id)
                     val sync = mockk<SyncEntryWithSource> {
                         coEvery { syncStrictly(any(), any(), any(), any(), any(), any(), any()) } returns
-                            SyncEntryWithSource.SyncResult(listOf(child), 1, 0, 0, false)
+                            SyncEntryWithSource.SyncResult(listOf(child), 1, 0, emptyList(), false)
                     }
                     val composition = refreshFeatureTestComposition(type)
                     val feature = DefaultEntrySourceRefreshFeature(
@@ -45,6 +45,7 @@ class EntrySourceRefreshContractValidationContributor : FeatureValidationContrib
                         executions = composition.featureExecutions,
                         sourceManager = mockk { every { get(entry.source) } returns mockk<UnifiedSource>() },
                         syncEntryWithSource = sync,
+                        downloadRuntime = { mockk(relaxed = true) },
                         updateLibraryTitles = { false },
                     )
                     contractExpectation(

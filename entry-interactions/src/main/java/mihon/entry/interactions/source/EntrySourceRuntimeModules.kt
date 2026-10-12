@@ -1,5 +1,6 @@
 package mihon.entry.interactions.source
 
+import mihon.entry.interactions.download.EntryDownloadRuntimeFeature
 import mihon.entry.interactions.lifecycle.profile.stateRequest
 import mihon.entry.interactions.runtime.production.EntryFeatureRuntimeArtifacts
 import mihon.entry.interactions.runtime.production.EntryFeatureRuntimeModule
@@ -76,6 +77,7 @@ internal val EntrySourceRefreshFeatureRuntimeModule = EntryFeatureRuntimeModule(
             executions = get<FeatureRuntimeComposition>().executions,
             sourceManager = get(),
             syncEntryWithSource = get(),
+            downloadRuntime = { get<EntryDownloadRuntimeFeature>() },
             updateLibraryTitles = context.dependencies.sourceRefreshUpdateLibraryTitles,
         )
     }
