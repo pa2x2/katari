@@ -327,6 +327,14 @@ internal class ReaderViewModel @JvmOverloads constructor(
         val entry = runBlocking { getEntry.await(manga.id) }
             ?: throw ReaderLoadException("Entry ${manga.id} not found", canRetry = false)
         val chapters = runBlocking { getAllEntryChapters(manga, applyScanlatorFilter = true) }
+            .let { filtered ->
+                // A chapter opened directly, like from a notification, is shown even if its scanlator is excluded
+                if (filtered.any { it.id == chapterId }) {
+                    filtered
+                } else {
+                    filtered + unfilteredChapterList.filter { it.id == chapterId }
+                }
+            }
         val mergedEntryIds = chapters.map { it.entryId }.distinct()
         val progressByChapterId = mergedEntryIds
             .flatMap { entryId -> runBlocking { entryProgressRepository.getByEntryId(entryId) } }
