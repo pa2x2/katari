@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test
 class AppEntryTrackingBackupHostTest {
 
     @Test
-    fun `restore preserves local tracker state while merging backup identity and progress`() {
+    fun `restore keeps the stored track's remote entry and only moves progress forward`() {
         val existing = trackingRecord(
             remoteId = 1,
             libraryId = 2,
@@ -31,15 +31,8 @@ class AppEntryTrackingBackupHostTest {
             private = false,
         )
 
-        incoming.mergeForRestore(existing) shouldBe existing.copy(
-            remoteId = incoming.remoteId,
-            libraryId = incoming.libraryId,
-        )
-        incoming.copy(progress = 12.0).mergeForRestore(existing) shouldBe existing.copy(
-            remoteId = incoming.remoteId,
-            libraryId = incoming.libraryId,
-            progress = 12.0,
-        )
+        incoming.mergeForRestore(existing) shouldBe null
+        incoming.copy(progress = 12.0).mergeForRestore(existing) shouldBe existing.copy(progress = 12.0)
     }
 }
 

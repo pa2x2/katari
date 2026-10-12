@@ -4,7 +4,6 @@ import app.cash.sqldelight.async.coroutines.awaitAsList
 import mihon.entry.interactions.tracking.backup.EntryTrackingBackupRecord
 import mihon.entry.interactions.tracking.host.EntryTrackingBackupHost
 import tachiyomi.data.DatabaseHandler
-import kotlin.math.max
 
 internal class AppEntryTrackingBackupHost(
     private val handler: DatabaseHandler,
@@ -104,8 +103,8 @@ internal class AppEntryTrackingBackupHost(
                         finishDate = incoming.finishDate,
                         private = incoming.private,
                     )
-                } else if (incoming != existing.value) {
-                    val merged = incoming.mergeForRestore(existing.value)
+                } else {
+                    val merged = incoming.mergeForRestore(existing.value) ?: return@forEach
                     entry_syncQueries.update(
                         entryId = entryId,
                         syncId = merged.serviceId,
@@ -129,14 +128,15 @@ internal class AppEntryTrackingBackupHost(
     }
 }
 
+/**
+ * The stored track wins like the rest of an entry's stored data; taking only the backup's remote ids would pair one
+ * remote entry's ids with another's url and title. The backup can only move progress forward; null means no change.
+ */
 internal fun EntryTrackingBackupRecord.mergeForRestore(
     existing: EntryTrackingBackupRecord,
-): EntryTrackingBackupRecord {
-    return existing.copy(
-        remoteId = remoteId,
-        libraryId = libraryId,
-        progress = max(existing.progress, progress),
-    )
+): EntryTrackingBackupRecord? {
+    if (progress <= existing.progress) return null
+    return existing.copy(progress = progress)
 }
 
 private data class ExistingRecord(
