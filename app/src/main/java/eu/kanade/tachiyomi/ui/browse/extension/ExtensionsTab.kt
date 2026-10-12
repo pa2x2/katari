@@ -36,7 +36,7 @@ fun extensionsTab(
     val context = LocalContext.current
 
     val state by extensionsScreenModel.state.collectAsState()
-    var privateExtensionToUninstall by remember { mutableStateOf<Extension?>(null) }
+    var privateExtensionToUninstall by remember { mutableStateOf<Extension.Installed?>(null) }
     var showFilters by rememberSaveable { mutableStateOf(false) }
 
     return TabContent(
@@ -67,7 +67,7 @@ fun extensionsTab(
                 onLongClickItem = { extension ->
                     when (extension) {
                         is Extension.Available -> extensionsScreenModel.installExtension(extension)
-                        else -> {
+                        is Extension.Installed -> {
                             if (context.isPackageInstalled(extension.pkgName)) {
                                 extensionsScreenModel.uninstallExtension(extension)
                             } else {

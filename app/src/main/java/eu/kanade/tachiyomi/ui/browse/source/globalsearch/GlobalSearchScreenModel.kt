@@ -14,7 +14,6 @@ import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -122,7 +121,7 @@ class GlobalSearchScreenModel(
         }
 
         val enabledIds = enabledSources.map { it.id }.toSet()
-        val extensionSourceIds = extensionManager.installedExtensionsFlow.first()
+        val extensionSourceIds = extensionManager.getLoadedExtensions()
             .filter { it.pkgName == filter }
             .flatMap { it.sources }
             .map { it.id }

@@ -228,6 +228,15 @@
     <string name="ext_installing">Устанавливается</string>
     <string name="ext_installed">Установлено</string>
     <string name="ext_untrusted">Ненадёжное</string>
+    <string name="ext_filtered">Отфильтровано</string>
+    <string name="ext_not_loaded">Не загружено</string>
+    <string name="ext_not_loaded_dialog">Не удалось загрузить</string>
+    <string name="ext_copy_stacktrace">Скопировать трассировку стека</string>
+    <string name="ext_filtered_message">Предупреждение об контенте этого расширения не было загружено из-за вашего выбора, поэтому его источники недоступны.</string>
+    <string name="ext_unsigned_message">Это расширение не подписано, из-за этого проверить подлинность невозможно.</string>
+    <string name="ext_unsupported_message">Это расширение было собрано для версии библиотеки расширений, которую эта версия приложения не может загрузить. Обновление приложения или расширения может это исправить.</string>
+    <string name="ext_malformed_message">Это расширение не имеет необходимой информации, чтобы приложение его загрузило.</string>
+    <string name="ext_load_failed_message">При загрузке этого расширения возникла ошибка, поэтому его содержимое недоступно.</string>
     <string name="ext_uninstall">Удалить</string>
     <string name="untrusted_extension">Ненадёжное расширение</string>
     <string name="untrusted_extension_message">Вредоносные расширения могут считывать любые хранящиеся учётные данные для входа или выполнять произвольный код. \n \nДоверяя этому расширению, вы принимаете эти риски.</string>

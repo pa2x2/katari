@@ -48,7 +48,7 @@ class AndroidSourceManager(
 
     init {
         scope.launch {
-            extensionManager.installedExtensionsFlow
+            extensionManager.loadedExtensionsFlow
                 .collectLatest { extensions ->
                     val extensionSources = mapUnifiedSources(extensions)
                     val localSource = LocalSource(
@@ -167,7 +167,7 @@ class AndroidSourceManager(
 }
 
 private fun mapUnifiedSources(
-    extensions: List<Extension.Installed>,
+    extensions: List<Extension.Loaded>,
 ): Map<Long, UnifiedSource> {
     val map = ConcurrentHashMap<Long, UnifiedSource>()
 

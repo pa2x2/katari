@@ -14,7 +14,6 @@ import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -110,9 +109,8 @@ abstract class SearchScreenModel(
             return enabledSources
         }
 
-        val extensionSourceIds = extensionManager.installedExtensionsFlow.first()
+        val extensionSourceIds = extensionManager.getLoadedExtensions()
             .filter { it.pkgName == filter }
-            .filterIsInstance<eu.kanade.tachiyomi.extension.model.Extension.Installed>()
             .flatMap { extension -> extension.sources }
             .map { it.id }
             .toSet()

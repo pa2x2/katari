@@ -239,6 +239,14 @@
     <string name="copy">Kopieren</string>
     <string name="ext_trust">Vertrauen</string>
     <string name="ext_untrusted">Nicht vertrauenswürdig</string>
+    <string name="ext_filtered">Gefiltert</string>
+    <string name="ext_not_loaded">Nicht geladen</string>
+    <string name="ext_not_loaded_dialog">Konnte nicht geladen werden</string>
+    <string name="ext_copy_stacktrace">Stacktrace kopieren</string>
+    <string name="ext_unsigned_message">Diese Erweiterung ist nicht signiert, wodurch keine Signatur überprüft werden kann.</string>
+    <string name="ext_unsupported_message">Diese Erweiterung wurde mit einer Version der Erweiterungsbibliothek erstellt, welche diese App-Version nicht laden kann. Es kann helfen, die App oder Erweiterung zu aktualisieren.</string>
+    <string name="ext_malformed_message">Dieser Erweiterung fehlen Daten, welche die App benötigt, um sie zu laden.</string>
+    <string name="ext_load_failed_message">Diese Erweiterung konnte wegen eines Fehlers nicht geladen werden, weswegen keine ihrer Quellen zur Verfügung stehen.</string>
     <string name="untrusted_extension">Nicht vertrauenswürdige Erweiterung</string>
     <string name="pref_double_tap_anim_speed">Animationsgeschwindigkeit beim Doppeltippen</string>
     <string name="migration_dialog_what_to_include">Wähle zu beinhaltende Daten</string>

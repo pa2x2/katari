@@ -19,7 +19,7 @@ class SigningKeyStoreMatchingTest {
         installed.findUpdate(listOf(newestForeign)) shouldBe null
     }
 
-    private fun installed(versionCode: Long, signatures: List<String>) = Extension.Installed(
+    private fun installed(versionCode: Long, signatures: List<String>) = Extension.Loaded(
         name = "Example",
         pkgName = PKG_NAME,
         versionName = "1.4.$versionCode",

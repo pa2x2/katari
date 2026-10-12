@@ -16,25 +16,24 @@ class GetExtensionsByType(
         return combine(
             preferences.enabledLanguages.changes(),
             preferences.enabledContentWarnings.changes(),
-            extensionManager.installedExtensionsFlow,
-            extensionManager.untrustedExtensionsFlow,
+            extensionManager.loadedExtensionsFlow,
+            extensionManager.notLoadedExtensionsFlow,
             extensionManager.availableExtensionsFlow,
-        ) { enabledLanguages, enabledContentWarnings, _installed, _untrusted, _available ->
-            val (updates, installed) = _installed
+        ) { enabledLanguages, enabledContentWarnings, _loaded, _notLoaded, _available ->
+            val (updates, loaded) = _loaded
                 .sortedWith(
-                    compareBy<Extension.Installed> { !it.isObsolete }
+                    compareBy<Extension.Loaded> { !it.isObsolete }
                         .thenBy(String.CASE_INSENSITIVE_ORDER) { it.name },
                 )
                 .partition { it.hasUpdate }
 
-            val untrusted = _untrusted
+            val notLoaded = _notLoaded
                 .sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.name })
 
-            val installedByPkg = _installed.associateBy { it.pkgName }
+            val installedPkgNames = (_loaded + _notLoaded).mapTo(HashSet()) { it.pkgName }
             val available = _available
                 .filter { extension ->
-                    installedByPkg[extension.pkgName] == null &&
-                        _untrusted.none { it.pkgName == extension.pkgName } &&
+                    extension.pkgName !in installedPkgNames &&
                         extension.contentWarning in enabledContentWarnings
                 }
                 .flatMap { ext ->
@@ -50,7 +49,7 @@ class GetExtensionsByType(
                 }
                 .sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.name })
 
-            Extensions(updates, installed, available, untrusted)
+            Extensions(updates, loaded, available, notLoaded)
         }
     }
 }

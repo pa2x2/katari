@@ -5,7 +5,6 @@ import eu.kanade.tachiyomi.extension.ExtensionManager
 import eu.kanade.tachiyomi.extension.filterCompatibleWithApp
 import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.extension.model.InstallStep
-import eu.kanade.tachiyomi.extension.model.LoadResult
 import eu.kanade.tachiyomi.extension.store.findUpdate
 import eu.kanade.tachiyomi.extension.util.ExtensionLoader
 import kotlinx.coroutines.flow.first
@@ -23,7 +22,7 @@ internal class ExtensionApi {
     private val customPreferences: GlobalCustomPreferences by injectLazy()
 
     private data class UpdateCandidate(
-        val installed: Extension.Installed,
+        val installed: Extension.Loaded,
         val available: Extension.Available,
     )
 
@@ -37,7 +36,7 @@ internal class ExtensionApi {
     suspend fun checkForUpdates(
         context: Context,
         fromAvailableExtensionList: Boolean = false,
-    ): List<Extension.Installed>? {
+    ): List<Extension.Loaded>? {
         updateExtensionStores()
 
         val extensions = if (fromAvailableExtensionList) {
@@ -46,11 +45,10 @@ internal class ExtensionApi {
             findExtensions().filterCompatibleWithApp()
         }
 
-        extensionManager.installedExtensionsFlow.first()
+        extensionManager.loadedExtensionsFlow.first()
 
         val installedExtensions = ExtensionLoader.loadExtensions(context)
-            .filterIsInstance<LoadResult.Success>()
-            .map { it.extension }
+            .filterIsInstance<Extension.Loaded>()
 
         val updateCandidates = installedExtensions.mapNotNull { installed ->
             installed.findUpdate(extensions)?.let { UpdateCandidate(installed, it) }
@@ -75,9 +73,9 @@ internal class ExtensionApi {
     private suspend fun autoUpdateExtensions(
         context: Context,
         updateCandidates: List<UpdateCandidate>,
-    ): List<Extension.Installed> {
-        val updatedExtensions = mutableListOf<Extension.Installed>()
-        val leftoverExtensions = mutableListOf<Extension.Installed>()
+    ): List<Extension.Loaded> {
+        val updatedExtensions = mutableListOf<Extension.Loaded>()
+        val leftoverExtensions = mutableListOf<Extension.Loaded>()
 
         extensionManager.runAutoUpdateSession {
             updateCandidates.forEach { candidate ->

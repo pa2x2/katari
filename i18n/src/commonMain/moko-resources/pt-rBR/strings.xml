@@ -229,6 +229,15 @@
     <string name="ext_installed">Instalada</string>
     <string name="ext_trust">Confiar</string>
     <string name="ext_untrusted">Não confiável</string>
+    <string name="ext_filtered">Filtrado</string>
+    <string name="ext_not_loaded">Não carregado</string>
+    <string name="ext_not_loaded_dialog">Não foi possivel carregar</string>
+    <string name="ext_copy_stacktrace">Copiar rastreamento de pilha</string>
+    <string name="ext_filtered_message">O aviso de conteúdo desta extensão não foi carregado devido às suas preferências, portanto suas fontes não estão disponíveis.</string>
+    <string name="ext_unsigned_message">Essa extensão não foi assinada, portanto não há como verificar a assinatura.</string>
+    <string name="ext_unsupported_message">Essa extensão foi criada por uma versão da biblioteca de extensões que esse aplicativo não consegue carregar. Atualizar o aplicativo ou a extensão pode ajudar.</string>
+    <string name="ext_malformed_message">Faltam informações nesta extensão para que o aplicativo consiga carregá-la.</string>
+    <string name="ext_load_failed_message">Essa extensão gerou um erro ao carregar, portanto nenhuma de suas fontes estão disponíveis.</string>
     <string name="ext_uninstall">Desinstalar</string>
     <string name="untrusted_extension">Extensão não confiável</string>
     <string name="untrusted_extension_message">Extensões maliciosas podem ler quaisquer credenciais de login armazenadas ou executar códigos arbitrários. \n \nAo confiar nessa extensão, você estará aceitando estes riscos.</string>

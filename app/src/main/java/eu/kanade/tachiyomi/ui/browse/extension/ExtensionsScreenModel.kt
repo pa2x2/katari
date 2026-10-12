@@ -21,7 +21,6 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
@@ -72,7 +71,7 @@ class ExtensionsScreenModel(
                 extensionManager.installSteps(),
                 getExtensions.subscribe(),
             ) { searchPredicate, contentTypeFilter, storeFilter, downloads, extensions ->
-                val (_updates, _installed, _available, _untrusted) = extensions
+                val (_updates, _loaded, _available, _notLoaded) = extensions
                 val predicate: (Extension) -> Boolean = {
                     searchPredicate(it) && contentTypeFilter.matches(it) && storeFilter.matches(it)
                 }
@@ -82,10 +81,14 @@ class ExtensionsScreenModel(
                         put(ExtensionUiModel.Header.Resource(MR.strings.ext_updates_pending), updates)
                     }
 
-                    val installed = _installed.filter(predicate).map(extensionMapper(downloads))
-                    val untrusted = _untrusted.filter(predicate).map(extensionMapper(downloads))
-                    if (installed.isNotEmpty() || untrusted.isNotEmpty()) {
-                        put(ExtensionUiModel.Header.Resource(MR.strings.ext_installed), installed + untrusted)
+                    val notLoaded = _notLoaded.filter(predicate).map(extensionMapper(downloads))
+                    if (notLoaded.isNotEmpty()) {
+                        put(ExtensionUiModel.Header.Resource(MR.strings.ext_not_loaded), notLoaded)
+                    }
+
+                    val loaded = _loaded.filter(predicate).map(extensionMapper(downloads))
+                    if (loaded.isNotEmpty()) {
+                        put(ExtensionUiModel.Header.Resource(MR.strings.ext_installed), loaded)
                     }
 
                     val languagesWithExtensions = _available
@@ -159,7 +162,7 @@ class ExtensionsScreenModel(
                 if (extension.name.contains(subquery, ignoreCase = true)) return@any true
 
                 when (extension) {
-                    is Extension.Installed -> extension.sources.any { source ->
+                    is Extension.Loaded -> extension.sources.any { source ->
                         source.name.contains(subquery, ignoreCase = true) ||
                             (
                                 sourceHomeFeature.resolve(
@@ -221,7 +224,7 @@ class ExtensionsScreenModel(
 
     fun updateAllExtensions() {
         screenModelScope.launchIO {
-            extensionManager.installedExtensionsFlow.first()
+            extensionManager.getLoadedExtensions()
                 .filter { it.hasUpdate }
                 .forEach(::updateExtension)
         }
@@ -233,7 +236,7 @@ class ExtensionsScreenModel(
         }
     }
 
-    fun updateExtension(extension: Extension.Installed) {
+    fun updateExtension(extension: Extension.Loaded) {
         screenModelScope.launchIO {
             extensionManager.updateExtension(extension).collectToInstallUpdate(extension)
         }
@@ -247,7 +250,7 @@ class ExtensionsScreenModel(
         this
             .firstOrNull { it.isCompleted() }
 
-    fun uninstallExtension(extension: Extension) {
+    fun uninstallExtension(extension: Extension.Installed) {
         extensionManager.uninstallExtension(extension)
     }
 
@@ -264,7 +267,7 @@ class ExtensionsScreenModel(
         }
     }
 
-    fun trustExtension(extension: Extension.Untrusted) {
+    fun trustExtension(extension: Extension.NotLoaded) {
         screenModelScope.launch {
             extensionManager.trust(extension)
         }

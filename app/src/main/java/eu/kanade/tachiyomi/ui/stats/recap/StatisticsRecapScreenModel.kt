@@ -96,7 +96,7 @@ class StatisticsRecapScreenModel(
         activity: StatisticsRecapActivity,
         previous: Pair<StatisticsRecapPeriod, StatisticsRecapPeriodTotals>?,
     ) {
-        val nsfwSources = extensionManager.installedExtensionsFlow
+        val nsfwSources = extensionManager.loadedExtensionsFlow
             .map { extensions ->
                 extensions
                     .filter { it.contentWarning != ContentWarning.SAFE }

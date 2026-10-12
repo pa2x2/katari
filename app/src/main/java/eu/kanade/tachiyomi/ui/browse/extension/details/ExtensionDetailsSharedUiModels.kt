@@ -20,7 +20,7 @@ data class ExtensionDetailsSourceUiModel(
 
 @Immutable
 data class ExtensionDetailsState(
-    val extension: Extension.Installed? = null,
+    val extension: Extension.Loaded? = null,
     val isIncognito: Boolean = false,
     private val _sources: ImmutableList<ExtensionDetailsSourceUiModel>? = null,
 ) {

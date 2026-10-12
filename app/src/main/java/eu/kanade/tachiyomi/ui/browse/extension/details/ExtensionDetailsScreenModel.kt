@@ -53,7 +53,7 @@ class ExtensionDetailsScreenModel(
     init {
         screenModelScope.launch {
             launch {
-                extensionManager.installedExtensionsFlow
+                extensionManager.loadedExtensionsFlow
                     .map { extensions ->
                         extensions.firstOrNull { extension -> extension.pkgName == pkgName }
                     }

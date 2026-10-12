@@ -24,8 +24,8 @@ data class ExtensionStoreFilter(
 
         val store = when (extension) {
             is Extension.Available -> extension.store
-            is Extension.Installed -> extension.store
-            is Extension.Untrusted -> null
+            is Extension.Loaded -> extension.store
+            is Extension.NotLoaded -> null
         }
         return store != null && isEnabled(store)
     }

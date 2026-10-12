@@ -93,6 +93,15 @@
     <string name="ext_installed">已安装</string>
     <string name="ext_trust">信任</string>
     <string name="ext_untrusted">未信任</string>
+    <string name="ext_filtered">已过滤</string>
+    <string name="ext_not_loaded">未加载</string>
+    <string name="ext_not_loaded_dialog">无法加载</string>
+    <string name="ext_copy_stacktrace">复制堆栈跟踪</string>
+    <string name="ext_filtered_message">此插件的内容警告并非您主动加载的，因此无法查看其来源。</string>
+    <string name="ext_unsigned_message">此插件未签名，因此没有签名可供检查。</string>
+    <string name="ext_unsupported_message">此插件是为此应用程序版本无法加载的插件库版本构建的。更新应用程序或插件可能会有所帮助。</string>
+    <string name="ext_malformed_message">此插件缺少加载它所需的信息。</string>
+    <string name="ext_load_failed_message">此插件在加载时引发错误，因此其来源均不可用。</string>
     <string name="ext_uninstall">卸载</string>
     <string name="untrusted_extension">插件未受信任</string>
     <string name="untrusted_extension_message">恶意插件可能会读取所有登录的账号或执行任意代码。 \n \n信任此插件即代表你愿意承担上述风险。</string>
