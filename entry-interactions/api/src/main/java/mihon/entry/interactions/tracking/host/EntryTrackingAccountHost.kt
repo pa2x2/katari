@@ -16,6 +16,8 @@ interface EntryTrackingAccountHost {
     suspend fun loginPassively(serviceId: Long)
 
     suspend fun logout(serviceId: Long)
+
+    suspend fun refreshAccount(serviceId: Long)
 }
 
 data class EntryTrackingHostAccount(

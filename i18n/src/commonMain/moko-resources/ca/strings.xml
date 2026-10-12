@@ -888,4 +888,7 @@
     <string name="pref_hardware_bitmap_threshold_summary">Si el lector carrega una imatge buida, reduïu-ne el llindar a poc a poc.\nActual: %s</string>
     <string name="pref_hardware_bitmap_threshold">Llindar personalitzat dels mapes de bits per maquinari</string>
     <string name="pref_always_decode_long_strip_with_ssiv_2">Utilitza el decodificador antic per al lector de tira llarga</string>
+    <string name="refresh_tracker_profile">Actualitza el perfil del servei de seguiment</string>
+    <string name="refresh_tracker_success">S’ha actualitzat el perfil de %s</string>
+    <string name="refresh_tracker_error">S’ha produït un error en actualitzar %1$s: %2$s</string>
 </resources>

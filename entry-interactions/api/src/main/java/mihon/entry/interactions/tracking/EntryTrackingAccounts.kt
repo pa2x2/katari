@@ -19,6 +19,12 @@ interface EntryTrackingAccounts {
 
     suspend fun logout(serviceId: EntryTrackingServiceId): EntryTrackingAccountOperationResult
 
+    /**
+     * Re-reads the active profile's logged-in account from the service, so remote changes such as a new display name
+     * or score format apply. Passively logged-in services have no remote profile and report a login method mismatch.
+     */
+    suspend fun refreshAccount(serviceId: EntryTrackingServiceId): EntryTrackingAccountOperationResult
+
     fun missingLoginNames(serviceIds: Set<EntryTrackingServiceId>): List<String>
 }
 

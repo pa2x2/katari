@@ -6,8 +6,6 @@ import dev.icerock.moko.resources.StringResource
 import eu.kanade.tachiyomi.data.database.models.Track
 import eu.kanade.tachiyomi.data.track.model.TrackSearch
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.StateFlow
 import okhttp3.OkHttpClient
 import tachiyomi.domain.track.model.EntryTrack
 
@@ -69,15 +67,14 @@ interface Tracker : TrackerCapabilities {
     @CallSuper
     fun logout()
 
+    /** Re-reads the logged-in account's profile (display name, score format) from the service. Throws on failure. */
     suspend fun refreshUser()
 
     val isLoggedIn: Boolean
 
     val isLoggedInFlow: Flow<Boolean>
 
-    val isRefreshingFlow: StateFlow<Boolean>
-
-    val refreshResultFlow: SharedFlow<RefreshResult>
+    val displayUsernameFlow: Flow<String>
 
     fun getUsername(): String
 

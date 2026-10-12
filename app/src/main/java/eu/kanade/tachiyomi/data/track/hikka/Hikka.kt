@@ -158,8 +158,7 @@ class Hikka(
     }
 
     override suspend fun updateUserConfig() {
-        val oauth = loadOAuth() ?: throw Exception("Hikka: You are not authorized")
-        val currentUser = api.getCurrentUser(oauth.accessToken)
+        val currentUser = api.getCurrentUser()
         saveDisplayUsername(currentUser.username)
     }
 

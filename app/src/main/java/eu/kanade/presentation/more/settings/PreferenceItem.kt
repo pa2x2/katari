@@ -213,6 +213,8 @@ internal fun PreferenceItem(
                     service = item.account.service,
                     isLoggedIn = item.account.isLoggedIn,
                     displayUsername = item.account.displayUsername,
+                    isRefreshing = item.isRefreshing,
+                    onRefresh = item.refresh,
                     onClick = { if (item.account.isLoggedIn) item.logout() else item.login() },
                 )
             }

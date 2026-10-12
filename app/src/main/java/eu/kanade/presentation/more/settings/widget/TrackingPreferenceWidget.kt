@@ -9,7 +9,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Done
+import androidx.compose.material.icons.outlined.Refresh
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -32,6 +35,8 @@ fun TrackingPreferenceWidget(
     service: EntryTrackingServiceDescriptor,
     isLoggedIn: Boolean,
     displayUsername: String,
+    isRefreshing: Boolean = false,
+    onRefresh: (() -> Unit)? = null,
     onClick: (() -> Unit)? = null,
 ) {
     val highlighted = LocalPreferenceHighlighted.current
@@ -63,6 +68,24 @@ fun TrackingPreferenceWidget(
                         style = MaterialTheme.typography.bodyMedium,
                         overflow = TextOverflow.Ellipsis,
                     )
+                }
+            }
+            if (isLoggedIn && onRefresh != null) {
+                IconButton(
+                    enabled = !isRefreshing,
+                    onClick = onRefresh,
+                ) {
+                    if (isRefreshing) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            strokeWidth = 2.dp,
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Outlined.Refresh,
+                            contentDescription = stringResource(MR.strings.refresh_tracker_profile),
+                        )
+                    }
                 }
             }
             if (isLoggedIn) {

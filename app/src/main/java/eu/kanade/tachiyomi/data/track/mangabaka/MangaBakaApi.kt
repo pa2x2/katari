@@ -236,11 +236,23 @@ class MangaBakaApi(
         }
     }
 
+    // Goes through the interceptor, which refreshes an expired stored token first.
+    suspend fun getCurrentUser(): MangaBakaUserProfile {
+        return withIOContext {
+            with(json) {
+                authClient.newCall(GET(PROFILE_URL))
+                    .awaitSuccess()
+                    .parseAs<MangaBakaUserProfileResponse>()
+                    .data
+            }
+        }
+    }
+
     suspend fun getCurrentUser(accessToken: String): MangaBakaUserProfile {
         return withIOContext {
             with(json) {
                 val headers = Headers.Builder().add("Authorization", "Bearer $accessToken").build()
-                client.newCall(GET("$API_BASE_URL/v1/my/profile", headers = headers))
+                client.newCall(GET(PROFILE_URL, headers = headers))
                     .awaitSuccess()
                     .parseAs<MangaBakaUserProfileResponse>()
                     .data
@@ -273,6 +285,7 @@ class MangaBakaApi(
         private const val BASE_URL = "https://mangabaka.org"
         private const val API_BASE_URL = "https://api.mangabaka.org"
         private const val LIBRARY_API_URL = "$API_BASE_URL/v1/my/library"
+        private const val PROFILE_URL = "$API_BASE_URL/v1/my/profile"
         private const val OAUTH_URL = "$BASE_URL/auth/oauth2"
         private const val SCOPES = "library.read library.write offline_access openid"
 

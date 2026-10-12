@@ -8,14 +8,7 @@ import eu.kanade.domain.track.service.TrackPreferences
 import eu.kanade.tachiyomi.data.database.models.Track
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.util.system.toast
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import logcat.LogPriority
 import okhttp3.OkHttpClient
@@ -74,27 +67,12 @@ abstract class BaseTracker(
         }
     }
 
-    private val mutableIsRefreshingFlow = MutableStateFlow(false)
-    final override val isRefreshingFlow: StateFlow<Boolean> = mutableIsRefreshingFlow.asStateFlow()
-
-    private val mutableRefreshResultFlow = MutableSharedFlow<RefreshResult>(extraBufferCapacity = 1)
-    final override val refreshResultFlow: SharedFlow<RefreshResult> = mutableRefreshResultFlow.asSharedFlow()
-
-    final override suspend fun refreshUser() {
-        mutableIsRefreshingFlow.value = true
-        try {
-            updateUserConfig()
-            mutableRefreshResultFlow.emit(RefreshResult.Success)
-        } catch (e: Exception) {
-            if (e is CancellationException) throw e
-            logcat(LogPriority.ERROR, e) { "Failed to update user config id=$id" }
-            mutableRefreshResultFlow.emit(RefreshResult.Error(e.message ?: "Failed with unknown error"))
-        } finally {
-            mutableIsRefreshingFlow.value = false
-        }
+    override val displayUsernameFlow: Flow<String> by lazy {
+        trackPreferences.trackDisplayUsername(this).changes()
     }
 
-    // Performs the remote calls behind refreshUser, which owns the refresh state and result flows.
+    final override suspend fun refreshUser() = withIOContext { updateUserConfig() }
+
     protected abstract suspend fun updateUserConfig()
 
     override fun getUsername() = trackPreferences.trackUsername(this).get()

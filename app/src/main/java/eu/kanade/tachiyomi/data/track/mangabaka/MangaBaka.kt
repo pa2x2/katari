@@ -163,8 +163,7 @@ class MangaBaka(
     }
 
     override suspend fun updateUserConfig() {
-        val oauth = restoreToken() ?: throw Exception("Not authenticated with MangaBaka")
-        val currentUser = api.getCurrentUser(oauth.accessToken)
+        val currentUser = api.getCurrentUser()
         scorePreference.set(scoreType(currentUser.ratingSteps))
         saveDisplayUsername(currentUser.nickname ?: currentUser.preferredUsername ?: currentUser.id)
     }

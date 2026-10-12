@@ -48,13 +48,17 @@ import eu.kanade.domain.track.service.TrackPreferences
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.tachiyomi.util.system.openInBrowser
 import eu.kanade.tachiyomi.util.system.toast
+import logcat.LogPriority
 import mihon.entry.interactions.tracking.EntryTrackingAccount
 import mihon.entry.interactions.tracking.EntryTrackingAccountOperationResult
 import mihon.entry.interactions.tracking.EntryTrackingCredentialIdentity
 import mihon.entry.interactions.tracking.EntryTrackingFeature
 import mihon.entry.interactions.tracking.EntryTrackingLoginMethod
+import mihon.entry.interactions.tracking.EntryTrackingServiceId
+import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.withUIContext
+import tachiyomi.core.common.util.system.logcat
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
@@ -87,6 +91,7 @@ object SettingsTrackingScreen : SearchableSettings {
         val accountSnapshot by trackingFeature.observeAccounts().collectAsState(trackingFeature.currentAccounts())
 
         var dialog by remember { mutableStateOf<Any?>(null) }
+        var refreshingServices by remember { mutableStateOf(emptySet<EntryTrackingServiceId>()) }
         dialog?.run {
             when (this) {
                 is LoginDialog -> {
@@ -145,6 +150,36 @@ object SettingsTrackingScreen : SearchableSettings {
             }
         }
 
+        fun refreshAccount(account: EntryTrackingAccount) {
+            val serviceId = account.service.id
+            if (serviceId in refreshingServices) return
+            refreshingServices += serviceId
+            scope.launchIO {
+                val result = trackingFeature.refreshAccount(serviceId)
+                if (result is EntryTrackingAccountOperationResult.Failed) {
+                    logcat(LogPriority.ERROR, result.cause) { "Failed to refresh ${account.service.name} profile" }
+                }
+                withUIContext {
+                    refreshingServices -= serviceId
+                    when (result) {
+                        EntryTrackingAccountOperationResult.Completed -> context.toast(
+                            context.stringResource(MR.strings.refresh_tracker_success, account.service.name),
+                        )
+                        is EntryTrackingAccountOperationResult.Failed -> context.toast(
+                            context.stringResource(
+                                MR.strings.refresh_tracker_error,
+                                account.service.name,
+                                result.cause.message.toString(),
+                            ),
+                        )
+                        is EntryTrackingAccountOperationResult.ExternalAuthorization,
+                        is EntryTrackingAccountOperationResult.Unavailable,
+                        -> Unit
+                    }
+                }
+            }
+        }
+
         return listOf(
             Preference.PreferenceItem.SwitchPreference(
                 preference = trackPreferences.autoUpdateTrack,
@@ -164,6 +199,8 @@ object SettingsTrackingScreen : SearchableSettings {
                         isProfileSpecific = true,
                         login = { beginLogin(account) },
                         logout = { dialog = LogoutDialog(account) },
+                        refresh = { refreshAccount(account) },
+                        isRefreshing = account.service.id in refreshingServices,
                     )
                 } + Preference.PreferenceItem.InfoPreference(stringResource(MR.strings.tracking_info)),
             ),

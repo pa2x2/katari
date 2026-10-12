@@ -196,6 +196,9 @@ sealed class Preference {
             val account: EntryTrackingAccount,
             val login: () -> Unit,
             val logout: () -> Unit,
+            /** Null when the account has no remote profile to refresh. */
+            val refresh: (() -> Unit)? = null,
+            val isRefreshing: Boolean = false,
             override val isProfileSpecific: Boolean = false,
         ) : PreferenceItem<String, Unit>() {
             override val title: String = ""

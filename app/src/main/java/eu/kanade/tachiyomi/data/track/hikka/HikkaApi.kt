@@ -36,6 +36,17 @@ class HikkaApi(
     private val client: OkHttpClient,
     interceptor: HikkaInterceptor,
 ) {
+    // Goes through the interceptor, which revalidates an expired stored token first.
+    suspend fun getCurrentUser(): HKUser {
+        return withIOContext {
+            with(json) {
+                authClient.newCall(GET("${BASE_API_URL}/user/me"))
+                    .awaitSuccess()
+                    .parseAs<HKUser>()
+            }
+        }
+    }
+
     suspend fun getCurrentUser(accessToken: String): HKUser {
         return withIOContext {
             val request = Request.Builder()

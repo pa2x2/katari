@@ -888,4 +888,7 @@
     <string name="pref_hardware_bitmap_threshold">自定义硬件位图阈值</string>
     <string name="pref_always_decode_long_strip_with_ssiv_summary">会影响性能。仅当降低位图阈值无法解决空白图像问题时才启用</string>
     <string name="pref_always_decode_long_strip_with_ssiv_2">在长条阅读模式中使用旧版解码器</string>
+    <string name="refresh_tracker_profile">刷新跟踪器配置</string>
+    <string name="refresh_tracker_success">刷新 %s 配置</string>
+    <string name="refresh_tracker_error">%1$s 刷新错误： %2$s</string>
 </resources>
