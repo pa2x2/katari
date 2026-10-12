@@ -178,7 +178,7 @@ class Anilist(id: Long) : BaseTracker(id, "AniList"), DeletableTracker, External
     override suspend fun delete(track: DomainTrack) {
         if (track.libraryId == null || track.libraryId == 0L) {
             val libManga = api.findLibManga(track.toDbTrack(), getUsername().toInt()) ?: return
-            return api.deleteLibManga(track.copy(id = libManga.library_id!!))
+            return api.deleteLibManga(track.copy(libraryId = libManga.library_id))
         }
 
         api.deleteLibManga(track)
