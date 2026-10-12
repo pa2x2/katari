@@ -240,7 +240,7 @@ object SettingsLibraryScreen : SearchableSettings {
                     title = stringResource(MR.strings.portrait),
                     subtitle = stringResource(MR.strings.pref_library_columns),
                     valueText = { if (it > 0) it.toString() else stringResource(MR.strings.label_auto) },
-                    enabled = displayMode != LibraryDisplayMode.List &&
+                    visible = displayMode != LibraryDisplayMode.List &&
                         displayMode != LibraryDisplayMode.ComfortableList,
                 ),
                 Preference.PreferenceItem.SliderPreference(
@@ -249,7 +249,7 @@ object SettingsLibraryScreen : SearchableSettings {
                     title = stringResource(MR.strings.landscape),
                     subtitle = stringResource(MR.strings.pref_library_columns),
                     valueText = { if (it > 0) it.toString() else stringResource(MR.strings.label_auto) },
-                    enabled = displayMode != LibraryDisplayMode.List &&
+                    visible = displayMode != LibraryDisplayMode.List &&
                         displayMode != LibraryDisplayMode.ComfortableList,
                 ),
                 Preference.PreferenceItem.SwitchPreference(

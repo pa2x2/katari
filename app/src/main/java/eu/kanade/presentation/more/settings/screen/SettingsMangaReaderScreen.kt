@@ -124,7 +124,7 @@ object SettingsMangaReaderScreen : AppEntryViewerSettingsScreenProjection() {
                 Preference.PreferenceItem.SwitchPreference(
                     preference = settings.profilePreference(settingBinder, settings.display.drawUnderCutout),
                     title = stringResource(MR.strings.pref_cutout_short),
-                    enabled = LocalView.current.hasDisplayCutout(),
+                    visible = LocalView.current.hasDisplayCutout(),
                 ),
                 Preference.PreferenceItem.SwitchPreference(
                     preference = settings.profilePreference(settingBinder, settings.display.keepScreenOn),
@@ -165,14 +165,14 @@ object SettingsMangaReaderScreen : AppEntryViewerSettingsScreenProjection() {
                     title = stringResource(MR.strings.pref_flash_duration),
                     valueText = { stringResource(MR.strings.pref_flash_duration_summary, it) },
                     isProfileSpecific = false,
-                    enabled = flashPageState,
+                    visible = flashPageState,
                 ),
                 Preference.PreferenceItem.SliderPreference(
                     preference = flashIntervalPref,
                     valueRange = 1..10,
                     title = stringResource(MR.strings.pref_flash_page_interval),
                     valueText = { pluralStringResource(MR.plurals.pref_pages, it, it) },
-                    enabled = flashPageState,
+                    visible = flashPageState,
                 ),
                 Preference.PreferenceItem.ListPreference(
                     preference = flashColorPref,
@@ -185,7 +185,7 @@ object SettingsMangaReaderScreen : AppEntryViewerSettingsScreenProjection() {
                             to stringResource(MR.strings.pref_flash_style_white_black),
                     ),
                     title = stringResource(MR.strings.pref_flash_with),
-                    enabled = flashPageState,
+                    visible = flashPageState,
                 ),
             ),
         )
@@ -251,7 +251,7 @@ object SettingsMangaReaderScreen : AppEntryViewerSettingsScreenProjection() {
                     entries = MangaReaderSettings.TappingInvertMode.entries
                         .associateWith { stringResource(it.titleRes) },
                     title = stringResource(MR.strings.pref_read_with_tapping_inverted),
-                    enabled = navMode != 5,
+                    visible = navMode != 5,
                 ),
                 Preference.PreferenceItem.ListPreference(
                     preference = imageScaleTypePref,
@@ -274,12 +274,12 @@ object SettingsMangaReaderScreen : AppEntryViewerSettingsScreenProjection() {
                 Preference.PreferenceItem.SwitchPreference(
                     preference = settings.profilePreference(settingBinder, settings.pager.landscapeZoom),
                     title = stringResource(MR.strings.pref_landscape_zoom),
-                    enabled = imageScaleType == 1,
+                    visible = imageScaleType == 1,
                 ),
                 Preference.PreferenceItem.SwitchPreference(
                     preference = settings.profilePreference(settingBinder, settings.pager.navigateToPan),
                     title = stringResource(MR.strings.pref_navigate_pan),
-                    enabled = navMode != 5,
+                    visible = navMode != 5,
                 ),
                 Preference.PreferenceItem.SwitchPreference(
                     preference = dualPageSplitPref,
@@ -293,7 +293,7 @@ object SettingsMangaReaderScreen : AppEntryViewerSettingsScreenProjection() {
                     preference = settings.profilePreference(settingBinder, settings.pager.dualPageInvert),
                     title = stringResource(MR.strings.pref_dual_page_invert),
                     subtitle = stringResource(MR.strings.pref_dual_page_invert_summary),
-                    enabled = dualPageSplit,
+                    visible = dualPageSplit,
                 ),
                 Preference.PreferenceItem.SwitchPreference(
                     preference = rotateToFitPref,
@@ -309,7 +309,7 @@ object SettingsMangaReaderScreen : AppEntryViewerSettingsScreenProjection() {
                         settings.pager.dualPageRotateToFitInvert,
                     ),
                     title = stringResource(MR.strings.pref_page_rotate_invert),
-                    enabled = rotateToFit,
+                    visible = rotateToFit,
                 ),
             ),
         )
@@ -347,7 +347,7 @@ object SettingsMangaReaderScreen : AppEntryViewerSettingsScreenProjection() {
                     entries = MangaReaderSettings.TappingInvertMode.entries
                         .associateWith { stringResource(it.titleRes) },
                     title = stringResource(MR.strings.pref_read_with_tapping_inverted),
-                    enabled = navMode != 5,
+                    visible = navMode != 5,
                 ),
                 Preference.PreferenceItem.SliderPreference(
                     preference = webtoonSidePaddingPref,
@@ -384,7 +384,7 @@ object SettingsMangaReaderScreen : AppEntryViewerSettingsScreenProjection() {
                     preference = settings.profilePreference(settingBinder, settings.webtoon.dualPageInvert),
                     title = stringResource(MR.strings.pref_dual_page_invert),
                     subtitle = stringResource(MR.strings.pref_dual_page_invert_summary),
-                    enabled = dualPageSplit,
+                    visible = dualPageSplit,
                 ),
                 Preference.PreferenceItem.SwitchPreference(
                     preference = rotateToFitPref,
@@ -400,7 +400,7 @@ object SettingsMangaReaderScreen : AppEntryViewerSettingsScreenProjection() {
                         settings.webtoon.dualPageRotateToFitInvert,
                     ),
                     title = stringResource(MR.strings.pref_page_rotate_invert),
-                    enabled = rotateToFit,
+                    visible = rotateToFit,
                 ),
                 Preference.PreferenceItem.SwitchPreference(
                     preference = settings.profilePreference(settingBinder, settings.webtoon.doubleTapZoom),
@@ -437,7 +437,7 @@ object SettingsMangaReaderScreen : AppEntryViewerSettingsScreenProjection() {
                 Preference.PreferenceItem.SwitchPreference(
                     preference = settings.profilePreference(settingBinder, settings.navigation.volumeKeysInverted),
                     title = stringResource(MR.strings.pref_read_with_volume_keys_inverted),
-                    enabled = readWithVolumeKeys,
+                    visible = readWithVolumeKeys,
                 ),
                 Preference.PreferenceItem.MultiSelectListPreference(
                     preference = settings.profilePreference(settingBinder, settings.navigation.verticalNavigator),
@@ -451,14 +451,14 @@ object SettingsMangaReaderScreen : AppEntryViewerSettingsScreenProjection() {
                         settings.navigation.verticalNavigatorOnLeft,
                     ),
                     title = stringResource(MR.strings.pref_webtoon_vertical_navigator_on_left),
-                    enabled = verticalNavigator.isNotEmpty(),
+                    visible = verticalNavigator.isNotEmpty(),
                 ),
                 Preference.PreferenceItem.SliderPreference(
                     preference = verticalNavigatorHeightPref,
                     valueRange = 65..100,
                     steps = 6,
                     title = stringResource(MR.strings.pref_vertical_navigator_height),
-                    enabled = verticalNavigator.isNotEmpty(),
+                    visible = verticalNavigator.isNotEmpty(),
                 ),
             ),
         )
@@ -486,7 +486,7 @@ object SettingsMangaReaderScreen : AppEntryViewerSettingsScreenProjection() {
                     valueRange = MangaReaderSettings.AUTO_SCROLL_SPEED_RANGE,
                     title = stringResource(MR.strings.pref_auto_scroll_speed),
                     valueText = { stringResource(MangaReaderSettings.AutoScrollLevelLabels[it]) },
-                    enabled = autoScrollEnabled,
+                    visible = autoScrollEnabled,
                 ),
             ),
         )

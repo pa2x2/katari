@@ -62,7 +62,7 @@ class CategoryUpdateRulesScreen(private val categoryId: Long) : Screen() {
                     overrides?.let {
                         Preference.PreferenceGroup(
                             title = stringResource(MR.strings.library_updates_skip_when),
-                            enabled = state.rules.autoUpdate,
+                            visible = state.rules.autoUpdate,
                             preferenceItems = LibraryUpdateSkipRule.entries.map { rule ->
                                 val on = rule.isOn(overrides.skipRules)
                                 switchItem(
@@ -88,14 +88,14 @@ class CategoryUpdateRulesScreen(private val categoryId: Long) : Screen() {
                         )
                         Preference.PreferenceGroup(
                             title = stringResource(MR.strings.library_updates_schedule),
-                            enabled = state.rules.autoUpdate,
+                            visible = state.rules.autoUpdate,
                             preferenceItems = listOf(
                                 Preference.PreferenceItem.BasicListPreference(
                                     value = overrides.intervalHours?.toString() ?: LIBRARY_INTERVAL,
                                     entries = mapOf(LIBRARY_INTERVAL to libraryEntry) +
                                         libraryUpdateIntervals().mapKeys { (hours, _) -> hours.toString() },
                                     title = stringResource(MR.strings.library_updates_check_every),
-                                    enabled = state.rules.autoUpdate,
+                                    visible = state.rules.autoUpdate,
                                     isProfileSpecific = true,
                                     onValueChanged = { screenModel.setIntervalHours(it.toIntOrNull()) },
                                 ),
@@ -116,7 +116,7 @@ class CategoryUpdateRulesScreen(private val categoryId: Long) : Screen() {
     ) = Preference.PreferenceItem.TextPreference(
         title = title,
         subtitle = subtitle,
-        enabled = enabled,
+        visible = enabled,
         isProfileSpecific = true,
         widget = { Switch(checked = checked, onCheckedChange = null, enabled = enabled) },
         onClick = onClick.takeIf { enabled },

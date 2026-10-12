@@ -79,13 +79,13 @@ object DuplicateDetectionSettingsScreen : SearchableSettings {
                         preference = duplicatePreferences.minimumMatchScore,
                         title = stringResource(MR.strings.pref_duplicate_detection_minimum_score),
                         subtitle = stringResource(MR.strings.pref_duplicate_detection_minimum_score_summary),
-                        enabled = extendedEnabled,
+                        visible = extendedEnabled,
                         valueRange = 0..DuplicatePreferences.TOTAL_SCORE_BUDGET,
                     ),
                     Preference.PreferenceItem.TextPreference(
                         title = stringResource(MR.strings.pref_duplicate_detection_reset_settings),
                         subtitle = stringResource(MR.strings.pref_duplicate_detection_reset_settings_summary),
-                        enabled = extendedEnabled,
+                        visible = extendedEnabled,
                         isProfileSpecific = true,
                         onClick = duplicatePreferences::resetDetectionSettings,
                     ),
@@ -96,7 +96,7 @@ object DuplicateDetectionSettingsScreen : SearchableSettings {
                             titleExclusionPatterns.size,
                             titleExclusionPatterns.size,
                         ),
-                        enabled = extendedEnabled,
+                        visible = extendedEnabled,
                         isProfileSpecific = true,
                         onClick = {
                             navigator.push(DuplicateTitleExclusionsScreen())
@@ -126,7 +126,7 @@ object DuplicateDetectionSettingsScreen : SearchableSettings {
                                     budget.description,
                                     budget.description + budget.remainingBudget,
                                 ),
-                                enabled = true,
+                                visible = true,
                                 valueRange = 0..(budget.description + budget.remainingBudget),
                             ),
                             Preference.PreferenceItem.SliderPreference(
@@ -137,7 +137,7 @@ object DuplicateDetectionSettingsScreen : SearchableSettings {
                                     budget.author,
                                     budget.author + budget.remainingBudget,
                                 ),
-                                enabled = true,
+                                visible = true,
                                 valueRange = 0..(budget.author + budget.remainingBudget),
                             ),
                             Preference.PreferenceItem.SliderPreference(
@@ -148,7 +148,7 @@ object DuplicateDetectionSettingsScreen : SearchableSettings {
                                     budget.artist,
                                     budget.artist + budget.remainingBudget,
                                 ),
-                                enabled = true,
+                                visible = true,
                                 valueRange = 0..(budget.artist + budget.remainingBudget),
                             ),
                             Preference.PreferenceItem.SliderPreference(
@@ -159,7 +159,7 @@ object DuplicateDetectionSettingsScreen : SearchableSettings {
                                     budget.cover,
                                     budget.cover + budget.remainingBudget,
                                 ),
-                                enabled = true,
+                                visible = true,
                                 valueRange = 0..(budget.cover + budget.remainingBudget),
                             ),
                             Preference.PreferenceItem.SliderPreference(
@@ -170,7 +170,7 @@ object DuplicateDetectionSettingsScreen : SearchableSettings {
                                     budget.genre,
                                     budget.genre + budget.remainingBudget,
                                 ),
-                                enabled = true,
+                                visible = true,
                                 valueRange = 0..(budget.genre + budget.remainingBudget),
                             ),
                             Preference.PreferenceItem.SliderPreference(
@@ -181,7 +181,7 @@ object DuplicateDetectionSettingsScreen : SearchableSettings {
                                     budget.status,
                                     budget.status + budget.remainingBudget,
                                 ),
-                                enabled = true,
+                                visible = true,
                                 valueRange = 0..(budget.status + budget.remainingBudget),
                             ),
                             Preference.PreferenceItem.SliderPreference(
@@ -192,7 +192,7 @@ object DuplicateDetectionSettingsScreen : SearchableSettings {
                                     budget.chapterCount,
                                     budget.chapterCount + budget.remainingBudget,
                                 ),
-                                enabled = true,
+                                visible = true,
                                 valueRange = 0..(budget.chapterCount + budget.remainingBudget),
                             ),
                             Preference.PreferenceItem.SliderPreference(
@@ -203,7 +203,7 @@ object DuplicateDetectionSettingsScreen : SearchableSettings {
                                     budget.title,
                                     budget.title + budget.remainingBudget,
                                 ),
-                                enabled = true,
+                                visible = true,
                                 valueRange = 0..(budget.title + budget.remainingBudget),
                             ),
                         ),

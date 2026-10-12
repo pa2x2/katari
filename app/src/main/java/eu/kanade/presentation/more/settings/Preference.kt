@@ -13,7 +13,7 @@ import tachiyomi.core.common.preference.Preference as PreferenceData
 
 sealed class Preference {
     abstract val title: String
-    abstract val enabled: Boolean
+    abstract val visible: Boolean
 
     sealed class PreferenceItem<T, R> : Preference() {
         abstract val subtitle: String?
@@ -27,7 +27,7 @@ sealed class Preference {
         data class TextPreference(
             override val title: String,
             override val subtitle: String? = null,
-            override val enabled: Boolean = true,
+            override val visible: Boolean = true,
             override val isProfileSpecific: Boolean = false,
             val widget: @Composable (() -> Unit)? = null,
             val onClick: (() -> Unit)? = null,
@@ -43,7 +43,7 @@ sealed class Preference {
             val preference: PreferenceData<Boolean>,
             override val title: String,
             override val subtitle: String? = null,
-            override val enabled: Boolean = true,
+            override val visible: Boolean = true,
             /** Whether the visible switch can change its value. */
             val isInteractive: Boolean = true,
             val onDisabledClick: (() -> Unit)? = null,
@@ -65,7 +65,7 @@ sealed class Preference {
             @AndroidXIntRange(from = 0) val steps: Int = with(valueRange) {
                 ((last - first) / step - 1).coerceAtLeast(0)
             },
-            override val enabled: Boolean = true,
+            override val visible: Boolean = true,
             override val isProfileSpecific: Boolean = preference.isProfileSpecificKey(),
             override val onValueChanged: suspend (value: Int) -> Boolean = { true },
         ) : PreferenceItem<Int, Boolean>() {
@@ -86,7 +86,7 @@ sealed class Preference {
             val editContentDescription: String,
             override val title: String,
             override val subtitle: String? = null,
-            override val enabled: Boolean = true,
+            override val visible: Boolean = true,
             override val onValueChanged: suspend (value: Int) -> Boolean = { true },
         ) : PreferenceItem<Int, Boolean>() {
             init {
@@ -110,7 +110,7 @@ sealed class Preference {
                 { v, e -> subtitle?.format(e[v]) },
             val entryEnabledProvider: (value: T) -> Boolean = { true },
             override val icon: ImageVector? = null,
-            override val enabled: Boolean = true,
+            override val visible: Boolean = true,
             override val onValueChanged: suspend (value: T) -> Boolean = { true },
         ) : PreferenceItem<T, Boolean>() {
             override val isProfileSpecific: Boolean = preference.isProfileSpecificKey()
@@ -136,7 +136,7 @@ sealed class Preference {
                 { v, e -> subtitle?.format(e[v]) },
             val entryEnabledProvider: (value: String) -> Boolean = { true },
             override val icon: ImageVector? = null,
-            override val enabled: Boolean = true,
+            override val visible: Boolean = true,
             override val isProfileSpecific: Boolean = false,
             override val onValueChanged: suspend (value: String) -> Unit = {},
         ) : PreferenceItem<String, Unit>()
@@ -162,7 +162,7 @@ sealed class Preference {
                     subtitle?.format(combined)
                 },
             override val icon: ImageVector? = null,
-            override val enabled: Boolean = true,
+            override val visible: Boolean = true,
             override val onValueChanged: suspend (value: Set<T>) -> Boolean = { true },
         ) : PreferenceItem<Set<T>, Boolean>() {
             override val isProfileSpecific: Boolean = preference.isProfileSpecificKey()
@@ -182,7 +182,7 @@ sealed class Preference {
             val preference: PreferenceData<String>,
             override val title: String,
             override val subtitle: String? = "%s",
-            override val enabled: Boolean = true,
+            override val visible: Boolean = true,
             override val onValueChanged: suspend (value: String) -> Boolean = { true },
         ) : PreferenceItem<String, Boolean>() {
             override val icon: ImageVector? = null
@@ -202,7 +202,7 @@ sealed class Preference {
             override val isProfileSpecific: Boolean = false,
         ) : PreferenceItem<String, Unit>() {
             override val title: String = ""
-            override val enabled: Boolean = true
+            override val visible: Boolean = true
             override val subtitle: String? = null
             override val icon: ImageVector? = null
             override val onValueChanged: suspend (value: String) -> Unit = {}
@@ -212,7 +212,7 @@ sealed class Preference {
             override val title: String,
             val showIcon: Boolean = true,
         ) : PreferenceItem<String, Unit>() {
-            override val enabled: Boolean = true
+            override val visible: Boolean = true
             override val subtitle: String? = null
             override val icon: ImageVector? = null
             override val isProfileSpecific: Boolean = false
@@ -224,7 +224,7 @@ sealed class Preference {
             override val isProfileSpecific: Boolean = false,
             val content: @Composable () -> Unit,
         ) : PreferenceItem<Unit, Unit>() {
-            override val enabled: Boolean = true
+            override val visible: Boolean = true
             override val subtitle: String? = null
             override val icon: ImageVector? = null
             override val onValueChanged: suspend (value: Unit) -> Unit = {}
@@ -233,7 +233,7 @@ sealed class Preference {
 
     data class PreferenceGroup(
         override val title: String,
-        override val enabled: Boolean = true,
+        override val visible: Boolean = true,
 
         val preferenceItems: List<PreferenceItem<out Any, out Any>>,
     ) : Preference()

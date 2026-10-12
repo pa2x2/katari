@@ -193,8 +193,8 @@ private fun SearchResult(
                 }
 
                 settingsData.contents.asSequence()
-                    // Only search from enabled prefs and one with valid title
-                    .filter { it.enabled && it.title.isNotBlank() }
+                    // Only search from visible prefs and one with valid title
+                    .filter { it.visible && it.title.isNotBlank() }
                     .flatMap { p ->
                         when (p) {
                             is Preference.PreferenceGroup -> {
@@ -205,7 +205,7 @@ private fun SearchResult(
                                     emptySequence()
                                 }
                                 val items = p.preferenceItems.asSequence()
-                                    .filter { it.enabled && it.title.isNotBlank() && it.matches() }
+                                    .filter { it.visible && it.title.isNotBlank() && it.matches() }
                                     .map { result(it.title, p.title) }
                                 heading + items
                             }

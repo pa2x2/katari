@@ -173,7 +173,7 @@ object SettingsBookDocumentReaderScreen : AppEntryViewerSettingsScreenProjection
                                 stringResource(MR.strings.book_document_reader_progress_percentage),
                         ),
                         title = stringResource(MR.strings.pref_book_document_reader_reading_progress_style),
-                        enabled = readingProgressVisible,
+                        visible = readingProgressVisible,
                     ),
                 ),
             ),

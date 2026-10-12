@@ -192,7 +192,7 @@ object SettingsBrowseScreen : SearchableSettings {
                         preference = previewSettings.pageCount,
                         valueRange = EntryInteractionPreferences.PREVIEW_PAGE_COUNT_RANGE,
                         title = stringResource(MR.strings.pref_manga_preview_page_count),
-                        enabled = enabled,
+                        visible = enabled,
                     ),
                 )
                 add(
@@ -202,7 +202,7 @@ object SettingsBrowseScreen : SearchableSettings {
                             .associateWith { stringResource(it.previewSizeTitleRes) }
                             .toImmutableMap(),
                         title = stringResource(MR.strings.pref_manga_preview_size),
-                        enabled = enabled,
+                        visible = enabled,
                     ),
                 )
             }

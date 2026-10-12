@@ -194,7 +194,7 @@ object SettingsDownloadScreen : SearchableSettings {
                 Preference.PreferenceItem.SwitchPreference(
                     preference = downloadNewUnreadEntryChaptersOnlyPref,
                     title = stringResource(MR.strings.pref_download_new_unread_chapters_only),
-                    enabled = downloadNewEntryChapters,
+                    visible = downloadNewEntryChapters,
                 ),
                 Preference.PreferenceItem.TextPreference(
                     title = stringResource(MR.strings.categories),
@@ -203,7 +203,7 @@ object SettingsDownloadScreen : SearchableSettings {
                         included = included,
                         excluded = excluded,
                     ),
-                    enabled = downloadNewEntryChapters,
+                    visible = downloadNewEntryChapters,
                     onClick = { showDialog = true },
                 ),
             ),
@@ -246,7 +246,7 @@ object SettingsDownloadScreen : SearchableSettings {
                     preference = translatePreferences.translateNewChapters,
                     title = stringResource(MR.strings.pref_translate_new),
                     subtitle = stringResource(MR.strings.pref_translate_new_summary),
-                    enabled = downloadNewItems,
+                    visible = downloadNewItems,
                 ),
                 Preference.PreferenceItem.ListPreference(
                     preference = translatePreferences.translateAheadWhileReading,

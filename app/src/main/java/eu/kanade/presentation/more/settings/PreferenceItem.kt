@@ -40,10 +40,10 @@ fun StatusWrapper(
     highlightKey: String?,
     content: @Composable () -> Unit,
 ) {
-    val enabled = item.enabled
+    val visible = item.visible
     val highlighted = item.title == highlightKey
     AnimatedVisibility(
-        visible = enabled,
+        visible = visible,
         enter = expandVertically() + fadeIn(),
         exit = shrinkVertically() + fadeOut(),
         content = {
