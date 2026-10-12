@@ -469,6 +469,7 @@ class ReaderActivity : EntryInteractionActivity() {
         stopAutoScroll(showToast = false)
         activityCheckpointJob?.cancel()
         activityCheckpointJob = null
+        viewModel.saveChapterProgress()
         lifecycleScope.launchNonCancellable {
             viewModel.updateHistory()
         }

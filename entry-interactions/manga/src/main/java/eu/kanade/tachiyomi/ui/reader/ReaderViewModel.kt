@@ -31,12 +31,13 @@ import eu.kanade.tachiyomi.ui.reader.viewer.Viewer
 import eu.kanade.tachiyomi.util.lang.byteSize
 import eu.kanade.tachiyomi.util.storage.DiskUtil
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -127,6 +128,7 @@ import java.io.InputStream
 import java.time.Instant
 import kotlin.getValue
 import kotlin.time.Clock
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Presenter used by the activity to perform background operations.
@@ -146,6 +148,7 @@ internal class ReaderViewModel @JvmOverloads constructor(
     private val libraryPreferences: LibraryPreferences = Injekt.get(),
     private val localCoverManager: LocalCoverManager = Injekt.get(),
     private val mediaSession: MangaMediaSessionProcessor = Injekt.get(),
+    private val appScope: CoroutineScope = Injekt.get(),
     private val navigationPresenter: EntryReaderNavigationPresenter = EntryReaderNavigationPresenter(
         getEntryWithChapters = Injekt.get(),
         childListFeature = Injekt.get(),
@@ -275,6 +278,10 @@ internal class ReaderViewModel @JvmOverloads constructor(
 
     // Serializes the progress writes, which outlive the reader, so they are applied in the order the pages were shown
     private val progressWrites = Mutex()
+
+    // Main thread only
+    private var pendingProgress: PendingChapterProgress? = null
+    private var pendingProgressSave: Job? = null
 
     /**
      * The manga loaded in the reader. It can be null when instantiated for a short time.
@@ -460,6 +467,7 @@ internal class ReaderViewModel @JvmOverloads constructor(
     }
 
     override fun onCleared() {
+        saveChapterProgress()
         textTranslationSpeech.close()
         textTranslation.close()
         val currentChapters = state.value.viewerChapters
@@ -704,15 +712,7 @@ internal class ReaderViewModel @JvmOverloads constructor(
         readAhead.moveTo(page, onlyOverWifi = readerSettings.loadAheadOnlyOverWifi.effectiveValue)
 
         showChapterPage(selectedChapter, page)
-        // Save last page read and mark as read if needed. The mutex is taken before the first thread switch and is
-        // fair, so the writes land in the order the pages were selected even when one of them suspends longer.
-        viewModelScope.launch(start = CoroutineStart.UNDISPATCHED) {
-            withContext(NonCancellable) {
-                progressWrites.withLock {
-                    withIOContext { updateChapterProgress(selectedChapter, page) }
-                }
-            }
-        }
+        recordChapterProgress(selectedChapter, page)
 
         if (selectedChapter == getCurrentChapter()) {
             prepareNextChapterIfNeeded((page.index + 1).toDouble() / pages.size)
@@ -782,11 +782,54 @@ internal class ReaderViewModel @JvmOverloads constructor(
     }
 
     /**
+     * Saves the last page read, and marks the chapter read on its last page.
+     *
+     * Completing a chapter is saved right away. Other page changes are saved once the reader settles on a page, or
+     * when [saveChapterProgress] is called, so flipping through pages doesn't report progress on every page.
+     */
+    private fun recordChapterProgress(readerChapter: ReaderChapter, page: Page) {
+        if (page.status is Page.State.Error) return
+        val progress = PendingChapterProgress(readerChapter, page, observedAt = System.currentTimeMillis())
+        // A page change in another chapter would replace that chapter's pending save
+        if (pendingProgress?.chapter != readerChapter) saveChapterProgress()
+        pendingProgressSave?.cancel()
+
+        if (readerChapter.pages?.lastIndex == page.index) {
+            pendingProgress = null
+            writeChapterProgress(progress)
+        } else {
+            pendingProgress = progress
+            pendingProgressSave = viewModelScope.launch {
+                delay(PROGRESS_SAVE_DELAY)
+                saveChapterProgress()
+            }
+        }
+    }
+
+    /**
+     * Writes the page change that hasn't been saved yet. Must be called on the main thread.
+     */
+    fun saveChapterProgress() {
+        val progress = pendingProgress ?: return
+        pendingProgress = null
+        writeChapterProgress(progress)
+    }
+
+    private fun writeChapterProgress(progress: PendingChapterProgress) {
+        // On the app scope so it's saved even when the reader is closing. Immediate, and the mutex is fair, so the
+        // writes land in the order they were made even when one of them suspends longer.
+        appScope.launch(Dispatchers.Main.immediate) {
+            progressWrites.withLock {
+                withIOContext { updateChapterProgress(progress.chapter, progress.page, progress.observedAt) }
+            }
+        }
+    }
+
+    /**
      * Reports the observed chapter progress. Shared Feature participants decide which consequences are allowed.
      */
-    private suspend fun updateChapterProgress(readerChapter: ReaderChapter, page: Page) {
+    private suspend fun updateChapterProgress(readerChapter: ReaderChapter, page: Page, timestamp: Long) {
         val pageIndex = page.index
-        if (page.status is Page.State.Error) return
         val entryChapter = readerChapter.chapter.toDomainChapter()?.toEntryChapter() ?: return
         val visibleEntry = manga?.let { getEntry.await(it.id) } ?: return
         val completed = readerChapter.pages?.lastIndex == pageIndex
@@ -794,7 +837,6 @@ internal class ReaderViewModel @JvmOverloads constructor(
             readerChapter.chapter.read = true
             chapterToDownload = null
         }
-        val timestamp = System.currentTimeMillis()
         val pageCount = readerChapter.pages?.size ?: return
         mediaSession.onEvent(
             EntryMediaSessionEvent.Progressed(
@@ -1372,7 +1414,12 @@ internal class ReaderViewModel @JvmOverloads constructor(
         data class ShareImage(val uri: Uri, val page: ReaderPage) : Event
         data class CopyImage(val uri: Uri) : Event
     }
+
+    /** A page change waiting to be saved. [observedAt] is when the page was shown, in epoch milliseconds. */
+    private class PendingChapterProgress(val chapter: ReaderChapter, val page: Page, val observedAt: Long)
 }
+
+private val PROGRESS_SAVE_DELAY = 2.seconds
 
 private val <T> ViewerSettingBinding<T>.effectiveValue: T
     get() = state.value.effectiveValue
