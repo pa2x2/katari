@@ -157,7 +157,6 @@
     <string name="confirm_set_image_as_cover">Deze afbeelding als omslagfoto gebruiken?</string>
     <string name="notification_first_add_to_library">Voeg het item eerst aan je bibliotheek toe voordat je dit doet</string>
     <string name="file_select_cover">Selecteer omslagfoto</string>
-    <string name="file_select_backup">Selecteer back-upbestand</string>
     <string name="information_no_downloads">Geen downloads</string>
     <string name="information_no_recent">Geen recente updates</string>
     <string name="information_empty_library">Je bibliotheek is leeg</string>

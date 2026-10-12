@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="file_select_backup">فایل پشتیبان را انتخاب کنید</string>
     <string name="file_select_cover">عکس روی جلد را انتخاب کنید</string>
     <string name="notification_first_add_to_library">لطفا قبل این کار مانگای موردنظر را به کتابخانه اضافه کنید</string>
     <string name="notification_cover_update_failed">آپدیت عکس روی جلد با خطا مواجه شد</string>

@@ -243,7 +243,6 @@
     <string name="notification_cover_update_failed">Actualizarea copertei a eșuat</string>
     <string name="notification_first_add_to_library">Vă rugăm să adăugați intrarea în biblioteca dumneavoastră înainte de a face acest lucru</string>
     <string name="file_select_cover">Selectează imagine de copertă</string>
-    <string name="file_select_backup">Selectează fișierul de rezervă</string>
     <string name="information_no_downloads">Fără descărcări</string>
     <string name="information_no_recent">Nu există actualizări recente</string>
     <string name="information_no_recent_manga">Nimic citit recent</string>

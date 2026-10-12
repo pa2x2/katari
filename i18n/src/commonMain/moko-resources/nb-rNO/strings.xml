@@ -249,7 +249,6 @@
     <string name="download_queue_error">Kunne ikke laste ned kapitler. Du kan prøve igjen i nedlastingsdelen</string>
     <string name="notification_first_add_to_library">Legg til oppføringen i biblioteket ditt før du gjør dette</string>
     <string name="file_select_cover">Velg omslagsbilde</string>
-    <string name="file_select_backup">Velg sikkerhetskopifil</string>
     <string name="information_no_downloads">Ingen nedlastinger</string>
     <string name="information_no_recent">Ingen nylige oppdateringer</string>
     <string name="information_no_recent_manga">Ingenting lest nylig</string>

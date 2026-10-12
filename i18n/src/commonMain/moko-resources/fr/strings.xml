@@ -164,7 +164,6 @@
     <string name="notification_cover_update_failed">La mise à jour de la couverture a échoué</string>
     <string name="notification_first_add_to_library">Veuillez ajouter cette série à votre bibliothèque avant de faire cela</string>
     <string name="file_select_cover">Sélectionner l\'image de couverture</string>
-    <string name="file_select_backup">Sélectionner fichier de sauvegarde</string>
     <string name="information_no_downloads">Aucun téléchargement en cours</string>
     <string name="information_no_recent">Pas de mises à jour récentes</string>
     <string name="information_no_recent_manga">Rien de lu récemment</string>

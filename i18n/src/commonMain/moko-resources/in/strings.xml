@@ -198,7 +198,6 @@
     <string name="notification_cover_update_failed">Gagal memperbarui sampul</string>
     <string name="notification_first_add_to_library">Tolong tambahkan entri ke pustaka Anda sebelum melakukan ini</string>
     <string name="file_select_cover">Pilih gambar sampul</string>
-    <string name="file_select_backup">Pilih berkas cadangan</string>
     <string name="information_no_downloads">Tidak ada unduhan</string>
     <string name="information_no_recent">Tidak ada pembaruan terkini</string>
     <string name="information_no_recent_manga">Tidak ada yang dibaca baru-baru ini</string>

@@ -717,7 +717,6 @@
     <string name="notification_cover_update_failed">কভাৰ আপডেট কৰিবলৈ বিফল</string>
     <string name="notification_first_add_to_library">এইটো কৰাৰ আগতে অনুগ্ৰহ কৰি প্ৰৱিষ্টিটো আপোনাৰ পুথিভঁৰাললৈ যোগ কৰক</string>
     <string name="file_select_cover">কভাৰ ছবি বাছনি কৰক</string>
-    <string name="file_select_backup">বেকআপ ফাইল বাছনি কৰক</string>
     <string name="file_picker_error">কোনো ফাইল পিকাৰ এপ পোৱা নগ\'ল</string>
     <string name="file_picker_uri_permission_unsupported">স্থায়ী ফোল্ডাৰ প্ৰৱেশ লাভ কৰিবলৈ বিফল। এপটো অনপেক্ষিতভাৱে আচৰণ কৰিব পাৰে।</string>
     <string name="file_null_uri_error">কোনো ফাইল বাছনি কৰা হোৱা নাই</string>

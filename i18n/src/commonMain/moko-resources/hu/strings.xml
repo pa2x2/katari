@@ -571,7 +571,6 @@
     <string name="download_notifier_split_page_not_found">%d oldal nem található felosztás közben</string>
     <string name="download_notifier_split_page_path_not_found">Nem található az útvonal a %d-ik oldalhoz</string>
     <string name="confirm_set_image_as_cover">Ez a kép legyen a fedlap?</string>
-    <string name="file_select_backup">Biztonsági mentési fájl kiválasztása</string>
     <string name="pref_user_agent_string">Alap hálózati kliens szöveg</string>
     <string name="pref_reset_user_agent_string">Alap hálózati kliens szöveg visszaállítása</string>
     <string name="action_remove_everything">Minden Eltávolitása</string>

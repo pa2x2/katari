@@ -330,7 +330,6 @@
     <string name="manga_info_collapse">Gutxiago</string>
     <string name="source_not_installed">Iturria ez dago instalatuta: %1$s</string>
     <string name="snack_add_to_library">Manga liburutegira gehitu?</string>
-    <string name="file_select_backup">Hautatu babeskopia fitxategia</string>
     <string name="notification_cover_update_failed">Ezin izan da azala eguneratu</string>
     <string name="action_sort_date_added">Gehiketa data</string>
     <string name="action_search">Bilatu</string>

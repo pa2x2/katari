@@ -232,7 +232,6 @@
     <string name="notification_cover_update_failed">表紙を更新できませんでした</string>
     <string name="notification_first_add_to_library">まずは項目をライブラリに追加してください</string>
     <string name="file_select_cover">表紙画像を選択</string>
-    <string name="file_select_backup">バックアップファイルを選択</string>
     <string name="information_no_downloads">ダウンロードがありません</string>
     <string name="information_no_recent">最近の更新はありません</string>
     <string name="information_no_recent_manga">最近は何も読んでいません</string>

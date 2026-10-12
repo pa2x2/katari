@@ -775,7 +775,6 @@
     <string name="notification_cover_update_failed">Не ўдалося абнавіць вокладку</string>
     <string name="notification_first_add_to_library">Калі ласка, дадайце твор у бібліятэку перад гэтым дзеяннем</string>
     <string name="file_select_cover">Абраць вокладку</string>
-    <string name="file_select_backup">Абраць файл рэзервоўкі</string>
     <string name="file_picker_error">Праграма для выбару файлаў не знойдзена</string>
     <string name="file_picker_uri_permission_unsupported">Не ўдалося атрымаць пастаянны доступ да тэчкі. Праграма можа паводзіць сябе непрадбачана.</string>
     <string name="file_null_uri_error">Файл не выбраны</string>

@@ -243,7 +243,6 @@
     <string name="notification_cover_update_failed">Не вдалось оновити обкладинку</string>
     <string name="notification_first_add_to_library">Будь ласка, додайте запис до своєї бібліотеки перед тим як робити це</string>
     <string name="file_select_cover">Вибрати обкладинку</string>
-    <string name="file_select_backup">Виберіть файл резервної копії</string>
     <string name="information_no_downloads">Завантажень немає</string>
     <string name="information_no_recent">Без оновлень</string>
     <string name="information_no_recent_manga">Останнім часом нічого не прочитано</string>

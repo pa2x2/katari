@@ -206,7 +206,6 @@
     <string name="notification_cover_update_failed">প্রচ্ছদ হালনাগাদ করতে ব্যর্থ</string>
     <string name="notification_first_add_to_library">এটা করার আগে দয়া করে মাংগাটি আপনার সংগ্রহশালায় যোগ করুন</string>
     <string name="file_select_cover">প্রচ্ছদ চিত্র নির্বাচন করুন</string>
-    <string name="file_select_backup">ব্যাকআপ ফাইল নির্বাচন করুন</string>
     <string name="information_no_downloads">ডাউনলোড নেই</string>
     <string name="information_no_recent">কোন নতুন হালনাগাদ নেই</string>
     <string name="information_no_recent_manga">সম্প্রতি কিছু পড়া হয়নি</string>

@@ -328,7 +328,6 @@
     <string name="information_webview_outdated">Ажурирајте WebView за бољу компатибилност</string>
     <string name="information_webview_required">WebView је потребан како би апликација функционисала</string>
     <string name="information_cloudflare_bypass_failure">Неуспешно заобилажење Cloudflare-а</string>
-    <string name="file_select_backup">Изаберите датотеку резервне копије</string>
     <string name="file_select_cover">Изаберите слику за омот</string>
     <string name="notification_first_add_to_library">Морате прво додати наслов у колекцију</string>
     <string name="notification_cover_update_failed">Ажурирање омота није успјело</string>

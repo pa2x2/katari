@@ -47,7 +47,6 @@
     <string name="notification_cover_update_failed">Kansikuvan päivitys epäonnistui</string>
     <string name="notification_first_add_to_library">Lisää sarja kirjastoosi ensin</string>
     <string name="file_select_cover">Valitse kansikuva</string>
-    <string name="file_select_backup">Valitse varmuuskopio-tiedosto</string>
     <string name="information_no_downloads">Ei latauksia</string>
     <string name="information_no_recent">Ei viimeisimpiä päivityksiä</string>
     <string name="information_no_recent_manga">Ei mitään luettu viime aikoina</string>

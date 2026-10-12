@@ -206,7 +206,6 @@
     <string name="notification_cover_update_failed">कवर को अपडेट करने में विफल</string>
     <string name="notification_first_add_to_library">कृपया यह करने से पहले प्रविष्टि को पुस्तकालय में जोड़ें</string>
     <string name="file_select_cover">कवर छवि का चयन करें</string>
-    <string name="file_select_backup">बैकअप फ़ाइल का चयन करें</string>
     <string name="information_no_downloads">कोई डाउनलोड नहीं है</string>
     <string name="information_no_recent">कोई हालिया अपडेट नहीं</string>
     <string name="information_no_recent_manga">हाल ही में कुछ भी नहीं पढ़ा</string>

@@ -75,7 +75,6 @@
     <string name="dropped">Брошено</string>
     <string name="error_category_exists">Категория с таким названием уже существует!</string>
     <string name="fifth_to_last">Пятая от прочитанной главы</string>
-    <string name="file_select_backup">Выбрать файл резервной копии</string>
     <string name="file_select_cover">Выбрать обложку</string>
     <string name="fourth_to_last">Четвёртая от прочитанной главы</string>
     <string name="information_empty_library">Ваша библиотека пуста</string>

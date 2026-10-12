@@ -166,7 +166,6 @@
     <string name="notification_cover_update_failed">Impossibile aggiornare la copertina</string>
     <string name="notification_first_add_to_library">Prima di compiere questa azione per favore aggiungi la voce alla libreria</string>
     <string name="file_select_cover">Seleziona immagine di copertina</string>
-    <string name="file_select_backup">Seleziona file di backup</string>
     <string name="information_no_downloads">Nessun download</string>
     <string name="information_no_recent">Nessuna novità recente</string>
     <string name="information_no_recent_manga">Nessuna lettura recente</string>

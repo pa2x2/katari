@@ -235,7 +235,6 @@
     <string name="notification_cover_update_failed">Kapak güncellenemedi</string>
     <string name="notification_first_add_to_library">Lütfen bunu yapmadan önce girdiyi kitaplığınıza ekleyin</string>
     <string name="file_select_cover">Kapak görselini seç</string>
-    <string name="file_select_backup">Yedek dosyasını seç</string>
     <string name="information_no_downloads">İndirme yok</string>
     <string name="information_no_recent">Yeni güncelleme yok</string>
     <string name="information_no_recent_manga">Yakında okunan yok</string>

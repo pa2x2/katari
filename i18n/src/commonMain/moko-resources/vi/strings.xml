@@ -175,7 +175,6 @@
     <string name="notification_cover_update_failed">Cập nhật ảnh bìa thất bại</string>
     <string name="notification_first_add_to_library">Hãy thêm truyện vào thư viện trước khi thực hiện</string>
     <string name="file_select_cover">Chọn ảnh bìa</string>
-    <string name="file_select_backup">Chọn file sao lưu</string>
     <string name="information_no_downloads">Không có tải xuống</string>
     <string name="information_no_recent">Không có cập nhật mới</string>
     <string name="information_no_recent_manga">Không có truyện đã đọc gần đây</string>

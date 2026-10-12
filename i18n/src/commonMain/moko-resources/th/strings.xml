@@ -252,7 +252,6 @@
     <string name="notification_cover_update_failed">อัปเดตหน้าปกล้มเหลว</string>
     <string name="notification_first_add_to_library">เพิ่มรายการไปยังในคลังก่อนที่จะดำเนินการนี้</string>
     <string name="file_select_cover">เลือกภาพหน้าปก</string>
-    <string name="file_select_backup">เลือกแฟ้มข้อมูลสำรอง</string>
     <string name="information_no_downloads">ไม่มีการดาวน์โหลด</string>
     <string name="information_no_recent">ไม่มีอัปเดตล่าสุด</string>
     <string name="information_no_recent_manga">ไม่มีอะไรที่อ่านเมื่อเร็ว ๆ นี้</string>

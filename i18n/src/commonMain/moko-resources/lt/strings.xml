@@ -311,7 +311,6 @@
     <string name="last_read_chapter">Paskiausiai skaitytas skyrius</string>
     <string name="pref_download_new_categories_details">Įrašai neįtrauktose kategorijose nebus atsisiųsti, net jei jie taip pat yra įtraukti į kategorijas.</string>
     <string name="learn_more">Palieskite, kad sužinotumėte daugiau</string>
-    <string name="file_select_backup">Pasirinkti atsarginės kopijos failą</string>
     <string name="transition_pages_loading">Įkeliami puslapiai…</string>
     <string name="transition_no_next">Kito skyriaus nėra</string>
     <string name="notification_size_warning">Dideli atnaujinimai kenkia šaltiniams ir gali lemti lėtesnius atnaujinimus bei didesnį akumuliatoriaus naudojimą. Bakstelėkite , jei norite sužinoti daugiau.</string>

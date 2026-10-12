@@ -530,7 +530,6 @@
     <string name="action_move_to_top_all_for_series">श्रृङ्खलालाई शीर्षमा सर्नुहोस्</string>
     <string name="rotation_reverse_portrait">पोर्ट्रेट उल्ट्याउनु</string>
     <string name="file_select_cover">आवरण छवि चयन गर्नुहोस्</string>
-    <string name="file_select_backup">ब्याकअप फाइल चयन गर्नुहोस्</string>
     <string name="channel_common">साधारण</string>
     <string name="spen_previous_page">अघिल्लो पृष्ठ</string>
     <string name="getting_started_guide">सुरु गर्ने गाइड</string>

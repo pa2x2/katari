@@ -641,7 +641,6 @@
     <string name="notification_chapters_single_and_more">Capítulo %1$s e %2$d máis</string>
     <string name="notification_chapters_multiple">Capítulos %1$s</string>
     <string name="file_select_cover">Elexir a imaxe de portada</string>
-    <string name="file_select_backup">Elexir o ficheiro da copia de seguridade</string>
     <string name="channel_errors">Erros</string>
     <string name="action_global_search_query">Procurar \"%1$s\" globalmente</string>
     <string name="split_tall_images">Dividir as imaxes altas</string>

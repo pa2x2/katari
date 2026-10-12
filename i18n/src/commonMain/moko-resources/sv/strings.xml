@@ -243,7 +243,6 @@
     <string name="notification_cover_update_failed">Misslyckades att uppdatera omslag</string>
     <string name="notification_first_add_to_library">Vänligen lägg till post i ditt bibliotek innan du gör detta</string>
     <string name="file_select_cover">Välj omslagsbild</string>
-    <string name="file_select_backup">Välj säkerhetskopia</string>
     <string name="information_no_downloads">Inga nedladdningar</string>
     <string name="information_no_recent">Inga nya uppdateringar</string>
     <string name="information_no_recent_manga">Inget nyligen läst</string>

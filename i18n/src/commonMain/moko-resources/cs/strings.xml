@@ -126,7 +126,6 @@
     <string name="migrate">Přesunout</string>
     <string name="copy">Kopírovat</string>
     <string name="download_queue_error">Došlo k chybě při stahování kapitol. Zkuste to znovu v sekci stahování</string>
-    <string name="file_select_backup">Vybrat záložní soubor</string>
     <string name="information_no_recent">Žádné nedávné aktualizace</string>
     <string name="information_no_recent_manga">Nic nedávno čtené</string>
     <string name="download_notifier_title_error">Chyba</string>

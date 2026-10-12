@@ -243,7 +243,6 @@
     <string name="notification_cover_update_failed">Δεν ήταν δυνατή η ενημέρωση του εξώφυλλου</string>
     <string name="notification_first_add_to_library">Παρακαλώ προσθέστε την καταχώρηση στη βιβλιοθήκη σας πριν το κάνετε αυτό</string>
     <string name="file_select_cover">Επιλέξτε εικόνα εξωφύλλου</string>
-    <string name="file_select_backup">Επιλέξτε αρχείο αντιγράφου ασφαλείας</string>
     <string name="information_no_downloads">Δεν υπάρχουν λήψεις</string>
     <string name="information_no_recent">Δεν υπάρχουν πρόσφατες ενημερώσεις</string>
     <string name="information_no_recent_manga">Τίποτα δεν διαβάστηκε πρόσφατα</string>

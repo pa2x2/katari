@@ -199,7 +199,6 @@
     <string name="channel_complete">Finitaj</string>
     <string name="channel_progress">Progreso</string>
     <string name="download_notifier_title_error">Eraro</string>
-    <string name="file_select_backup">Elekti savkopian dosieron</string>
     <string name="notification_chapters_multiple">Ĉapitroj %1$s</string>
     <string name="notification_chapters_single_and_more">Ĉapitro %1$s kaj %2$d pli</string>
     <string name="notification_chapters_single">Ĉapitro %1$s</string>

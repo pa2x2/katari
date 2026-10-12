@@ -204,7 +204,6 @@
     <string name="download_queue_error">Nie udało się pobrać rozdziałów. Możesz spróbować ponownie w sekcji pobierania</string>
     <string name="notification_cover_update_failed">Nie udało się zaktualizować okładki</string>
     <string name="notification_first_add_to_library">Zanim to zrobisz, dodaj ten wpis do biblioteki</string>
-    <string name="file_select_backup">Wybierz plik kopii zapasowej</string>
     <string name="information_no_downloads">Brak pobieranych rozdziałów</string>
     <string name="information_no_recent">Brak ostatnio zaktualizowanych</string>
     <string name="information_no_recent_manga">Nic ostatnio nie czytano</string>

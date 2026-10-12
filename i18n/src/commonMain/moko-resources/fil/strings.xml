@@ -243,7 +243,6 @@
     <string name="information_webview_outdated">Paki-update ang WebView app para sa mas mahusay na pagkakatugma</string>
     <string name="information_webview_required">Kinakailangan ng app ang WebView upang gumana ito</string>
     <string name="information_cloudflare_bypass_failure">Bigong ma-bypass ang Cloudflare</string>
-    <string name="file_select_backup">Pumili ng backup</string>
     <string name="file_select_cover">Piliin ang larawan na pabalat</string>
     <string name="notification_first_add_to_library">Maaaring ilagay ang entry sa iyong library bago ito gawin</string>
     <string name="notification_cover_update_failed">Bigong ma-update ang pabalat</string>

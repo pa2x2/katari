@@ -206,7 +206,6 @@
     <string name="notification_cover_update_failed">Gagal untuk kemas kini muka hadapan</string>
     <string name="notification_first_add_to_library">Sila tambahkan entri ke pustaka sebelum melakukan ini</string>
     <string name="file_select_cover">Pilih imej muka hadapan</string>
-    <string name="file_select_backup">Pilih fail sandaran</string>
     <string name="information_no_downloads">Tiada muat turun</string>
     <string name="information_no_recent">Tiada kemas kini terkini</string>
     <string name="information_no_recent_manga">Tiada bacaan setakat ini</string>
