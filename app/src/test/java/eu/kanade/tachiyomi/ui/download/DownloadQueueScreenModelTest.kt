@@ -8,6 +8,7 @@ import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -49,6 +50,8 @@ class DownloadQueueScreenModelTest {
                 every { state } returns runtimeState
             }
             val model = ScreenModelStore.getOrPut("download-queue-test", null) { DownloadQueueScreenModel(runtime) }
+            // The queue is only observed while the screen collects it
+            backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { model.state.collect {} }
             val row = model.state.value.single().subItems.single()
             val transferring = queued.copy(
                 state = EntryDownloadState.DOWNLOADING,

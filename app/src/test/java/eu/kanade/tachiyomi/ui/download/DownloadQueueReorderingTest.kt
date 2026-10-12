@@ -58,17 +58,17 @@ class DownloadQueueReorderingTest {
             }
             val key = "queue-reorder-regression"
             val model = ScreenModelStore.getOrPut(key, null) { DownloadQueueScreenModel(runtime) }
-            val header = model.state.value.single()
-            // FlexibleAdapter retains header references but separately stores its flattened rows.
-            model.adapter = mockk {
-                every { headerItems } returns listOf(header)
-                every { getItem(3) } returns header.subItems[2]
-            }
             var renderedOrder = emptyList<Long>()
             val rendering = backgroundScope.launch(dispatcher) {
                 model.state.collect { headers ->
                     renderedOrder = headers.flatMap { it.subItems }.map { it.payload.childId }
                 }
+            }
+            val header = model.state.value.single()
+            // FlexibleAdapter retains header references but separately stores its flattened rows.
+            model.adapter = mockk {
+                every { headerItems } returns listOf(header)
+                every { getItem(3) } returns header.subItems[2]
             }
             assertEquals(listOf(1L, 2L, 3L), renderedOrder)
             action(model)

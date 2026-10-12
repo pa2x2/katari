@@ -5,25 +5,68 @@ import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.databinding.DownloadListBinding
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.WhileSubscribed
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 import mihon.entry.interactions.download.EntryDownloadQueueItem
 import mihon.entry.interactions.download.EntryDownloadRuntimeFeature
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
+import kotlin.time.Duration.Companion.seconds
 
 class DownloadQueueScreenModel(
     private val downloadRuntime: EntryDownloadRuntimeFeature = Injekt.get(),
 ) : ScreenModel {
 
-    private val _state = MutableStateFlow(emptyList<DownloadQueueHeaderItem>())
-    val state = _state.asStateFlow()
+    // The rows last handed to the adapter; transfer ticks update them in place instead of emitting a new list
+    private var rows = emptyList<DownloadQueueHeaderItem>()
+
+    val state: StateFlow<List<DownloadQueueHeaderItem>> = downloadRuntime.state
+        .map { it.queue }
+        .distinctUntilChanged()
+        .mapNotNull { groups ->
+            val current = rows
+            val sameStructure = current.size == groups.size && groups.withIndex().all { (index, group) ->
+                val header = current[index]
+                header.model.id == group.sourceId && header.model.entryType == group.entryType &&
+                    header.model.title == group.sourceName &&
+                    header.subItems.map { it.payload.identity } == group.items.map { it.identity }
+            }
+            if (sameStructure) {
+                groups.forEachIndexed { index, group ->
+                    current[index].subItems.zip(group.items).forEach { (row, download) ->
+                        updateDownload(row, download)
+                    }
+                }
+                return@mapNotNull null
+            }
+            groups.map { group ->
+                DownloadQueueHeaderItem(
+                    DownloadQueueHeaderModel(
+                        id = group.sourceId,
+                        entryType = group.entryType,
+                        title = group.sourceName,
+                        count = group.items.size,
+                    ),
+                ).apply {
+                    addSubItems(
+                        0,
+                        group.items.map { download ->
+                            DownloadQueueItem(
+                                payload = download,
+                                header = this,
+                            )
+                        },
+                    )
+                }
+            }
+                .also { rows = it }
+        }
+        .stateIn(screenModelScope, SharingStarted.WhileSubscribed(5.seconds), emptyList())
 
     lateinit var controllerBinding: DownloadListBinding
     var adapter: DownloadQueueAdapter? = null
@@ -53,56 +96,12 @@ class DownloadQueueScreenModel(
         }
     }
 
-    init {
-        screenModelScope.launch {
-            downloadRuntime.state.map { it.queue }.distinctUntilChanged().collect { groups ->
-                val current = state.value
-                val sameStructure = current.size == groups.size && groups.withIndex().all { (index, group) ->
-                    val header = current[index]
-                    header.model.id == group.sourceId && header.model.entryType == group.entryType &&
-                        header.model.title == group.sourceName &&
-                        header.subItems.map { it.payload.identity } == group.items.map { it.identity }
-                }
-                if (sameStructure) {
-                    // Update existing rows without rebuilding the adapter for every transfer tick.
-                    groups.forEachIndexed { index, group ->
-                        current[index].subItems.zip(group.items).forEach { (row, download) ->
-                            updateDownload(row, download)
-                        }
-                    }
-                    return@collect
-                }
-                val newList = groups.map { group ->
-                    DownloadQueueHeaderItem(
-                        DownloadQueueHeaderModel(
-                            id = group.sourceId,
-                            entryType = group.entryType,
-                            title = group.sourceName,
-                            count = group.items.size,
-                        ),
-                    ).apply {
-                        addSubItems(
-                            0,
-                            group.items.map { download ->
-                                DownloadQueueItem(
-                                    payload = download,
-                                    header = this,
-                                )
-                            },
-                        )
-                    }
-                }
-                _state.update { newList }
-            }
-        }
-    }
-
     override fun onDispose() {
         adapter = null
     }
 
     val isDownloaderRunning = downloadRuntime.state.map { it.isRunning }
-        .stateIn(screenModelScope, SharingStarted.WhileSubscribed(5000), false)
+        .stateIn(screenModelScope, SharingStarted.WhileSubscribed(5.seconds), false)
 
     fun startDownloads() {
         downloadRuntime.start()

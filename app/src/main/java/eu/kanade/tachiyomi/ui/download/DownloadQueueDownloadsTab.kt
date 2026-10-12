@@ -15,7 +15,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.SmallExtendedFloatingActionButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -28,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.view.ViewCompat
 import androidx.core.view.updatePadding
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.DropdownMenu
@@ -42,7 +42,7 @@ import kotlin.math.roundToInt
 /** The download queue as a tab of the queue screen, with its sorting, Cancel all and Pause. */
 @Composable
 internal fun downloadQueueDownloadsTab(screenModel: DownloadQueueScreenModel): TabContent {
-    val downloadList by screenModel.state.collectAsState()
+    val downloadList by screenModel.state.collectAsStateWithLifecycle()
     var sortExpanded by remember { mutableStateOf(false) }
     return TabContent(
         titleRes = MR.strings.label_downloads_tab,
@@ -171,7 +171,7 @@ private fun SortMenu(
 
 @Composable
 private fun PauseButton(screenModel: DownloadQueueScreenModel, modifier: Modifier) {
-    val isRunning by screenModel.isDownloaderRunning.collectAsState()
+    val isRunning by screenModel.isDownloaderRunning.collectAsStateWithLifecycle()
     SmallExtendedFloatingActionButton(
         text = { Text(text = stringResource(if (isRunning) MR.strings.action_pause else MR.strings.action_resume)) },
         icon = {
