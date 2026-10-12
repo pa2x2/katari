@@ -5,6 +5,7 @@ import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.flow.MutableStateFlow
 import mihon.entry.interactions.entryContentType
 import mihon.entry.interactions.refresh.refreshFeatureTestComposition
 import mihon.entry.interactions.runtime.toContentTypeId
@@ -43,7 +44,10 @@ class EntrySourceRefreshContractValidationContributor : FeatureValidationContrib
                     val feature = DefaultEntrySourceRefreshFeature(
                         evaluation = composition.featureGraphEvaluation,
                         executions = composition.featureExecutions,
-                        sourceManager = mockk { every { get(entry.source) } returns mockk<UnifiedSource>() },
+                        sourceManager = mockk {
+                            every { isInitialized } returns MutableStateFlow(true)
+                            every { get(entry.source) } returns mockk<UnifiedSource>()
+                        },
                         syncEntryWithSource = sync,
                         downloadRuntime = { mockk(relaxed = true) },
                         updateLibraryTitles = { false },

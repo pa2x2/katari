@@ -30,6 +30,7 @@ import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.source.model.SourceNotInstalledException
 import tachiyomi.domain.source.service.SourceManager
+import tachiyomi.domain.source.service.awaitInitialized
 
 internal val ENTRY_DEEP_LINK_FEATURE_ID = FeatureId("entry.deep-link")
 private val ENTRY_DEEP_LINK_OWNER = ContributionOwner("entry-deep-link")
@@ -115,6 +116,8 @@ internal class DefaultEntryDeepLinkFeature(
 ) : EntryDeepLinkFeature {
 
     override suspend fun resolve(uri: String): EntryDeepLinkResolution {
+        // A link that starts the app would otherwise find no source to open it
+        sourceManager.awaitInitialized()
         val resolvers = sourceManager.getAll().filterIsInstance<ResolvableSource>()
         if (resolvers.isEmpty()) {
             requireState(

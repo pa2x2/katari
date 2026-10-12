@@ -10,6 +10,7 @@ import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.flow.MutableStateFlow
 import mihon.book.api.BookContentDescriptor
 import mihon.book.api.BookLocator
 import mihon.book.api.BookPublication
@@ -91,6 +92,7 @@ internal abstract class BookDownloaderFixture {
             provider = provider,
             cache = cache,
             sourceManager = mockk {
+                every { isInitialized } returns MutableStateFlow(true)
                 every { get(entry.source) } returns source
             },
             networkHelper = mockk {

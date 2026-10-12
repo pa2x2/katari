@@ -7,6 +7,7 @@ import eu.kanade.tachiyomi.source.visualName
 import mihon.entry.interactions.tracking.EntryTrackingFeature
 import mihon.entry.interactions.tracking.EntryTrackingServiceId
 import tachiyomi.domain.source.service.SourceManager
+import tachiyomi.domain.source.service.awaitInitialized
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
@@ -22,7 +23,7 @@ class BackupFileValidator(
      *
      * @return List of missing sources or missing trackers.
      */
-    fun validate(uri: Uri): Results {
+    suspend fun validate(uri: Uri): Results {
         val backup = try {
             BackupDecoder(context).decode(uri)
         } catch (e: Exception) {
@@ -30,6 +31,8 @@ class BackupFileValidator(
         }
 
         val sources = backup.backupSources.associate { it.sourceId to it.name }
+        // Opened right after a cold start, every source would otherwise be listed as missing
+        sourceManager.awaitInitialized()
         val missingSources = sources
             .filterKeys { sourceManager.get(it) == null }
             .map { (id, name) ->

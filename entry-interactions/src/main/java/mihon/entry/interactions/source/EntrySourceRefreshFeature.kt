@@ -28,6 +28,7 @@ import mihon.feature.graph.featureContextRule
 import tachiyomi.domain.chapter.model.NoChaptersException
 import tachiyomi.domain.entry.interactor.SyncEntryWithSource
 import tachiyomi.domain.source.service.SourceManager
+import tachiyomi.domain.source.service.awaitInitialized
 
 internal val ENTRY_SOURCE_REFRESH_FEATURE_ID = FeatureId("entry.source-refresh")
 internal val ENTRY_SOURCE_REFRESH_OWNER = ContributionOwner("entry-source-refresh")
@@ -100,6 +101,8 @@ internal class DefaultEntrySourceRefreshFeature(
             "Source refresh must request details, children, or both"
         }
 
+        // A library update starting with the process would otherwise fail every entry as having no source
+        sourceManager.awaitInitialized()
         val sourceInstalled = sourceManager.get(request.entry.source) != null
         requireState(request, sourceInstalled)
         if (!sourceInstalled) return EntrySourceRefreshResult.SourceUnavailable(request.entry.source)

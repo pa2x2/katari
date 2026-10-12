@@ -70,7 +70,7 @@ internal class DefaultEntryDownloadActionFeature(
         chapters: List<EntryChapter>,
         startNow: Boolean,
     ): EntryDownloadActionResult {
-        val target = resolveTarget(EntryDownloadActionRequest.forEntry(entry))
+        val target = resolveLoadedTarget(EntryDownloadActionRequest.forEntry(entry))
         return when (val availability = individualOperationAvailability(target, chapters)) {
             EntryDownloadActionAvailability.Available -> {
                 interaction.download(entry, chapters, startNow)
@@ -85,7 +85,7 @@ internal class DefaultEntryDownloadActionFeature(
         entry: Entry,
         chapters: List<EntryChapter>,
     ): EntryDownloadActionResult {
-        val target = resolveTarget(EntryDownloadActionRequest.forEntry(entry))
+        val target = resolveLoadedTarget(EntryDownloadActionRequest.forEntry(entry))
         return when (val availability = individualOperationAvailability(target, chapters)) {
             EntryDownloadActionAvailability.Available -> {
                 interaction.delete(entry, chapters)
@@ -134,7 +134,7 @@ internal class DefaultEntryDownloadActionFeature(
     override suspend fun resolveBulkDownloadCandidates(
         request: EntryBulkDownloadRequest,
     ): EntryBulkDownloadResolutionResult {
-        val target = resolveTarget(EntryDownloadActionRequest(request.entry.type, request.sourceIds))
+        val target = resolveLoadedTarget(EntryDownloadActionRequest(request.entry.type, request.sourceIds))
         return when (val availability = bulkAvailabilityResolved(listOf(target), request.action)) {
             EntryDownloadActionAvailability.Available -> {
                 val pool = interaction.resolveBulkDownloadCandidatePool(request.entry, request.visibleCandidates)
@@ -217,6 +217,10 @@ internal class DefaultEntryDownloadActionFeature(
 
     private fun resolveTarget(request: EntryDownloadActionRequest): EntryDownloadActionTarget {
         return EntryDownloadActionTarget(request.type, sourceAccessResolver.resolve(request.sourceIds))
+    }
+
+    private suspend fun resolveLoadedTarget(request: EntryDownloadActionRequest): EntryDownloadActionTarget {
+        return EntryDownloadActionTarget(request.type, sourceAccessResolver.resolveLoaded(request.sourceIds))
     }
 }
 

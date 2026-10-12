@@ -3,10 +3,14 @@ package mihon.entry.interactions.download.host
 import mihon.entry.interactions.download.runtime.EntryDownloadSourceAccess
 import tachiyomi.domain.source.model.UnifiedStubSource
 import tachiyomi.domain.source.service.SourceManager
+import tachiyomi.domain.source.service.awaitInitialized
 import tachiyomi.source.local.LocalSource
 
 internal fun interface EntryDownloadSourceAccessResolver {
     fun resolve(sourceIds: Set<Long>): EntryDownloadSourceAccess
+
+    /** [resolve] for an operation that acts on the answer, which mustn't mistake a source still loading for a stub. */
+    suspend fun resolveLoaded(sourceIds: Set<Long>): EntryDownloadSourceAccess = resolve(sourceIds)
 }
 
 internal class SourceManagerEntryDownloadSourceAccessResolver(
@@ -21,5 +25,11 @@ internal class SourceManagerEntryDownloadSourceAccessResolver(
         } else {
             EntryDownloadSourceAccess.REMOTE
         }
+    }
+
+    // A download from a library update notification can start the process, before the sources have loaded
+    override suspend fun resolveLoaded(sourceIds: Set<Long>): EntryDownloadSourceAccess {
+        sourceManager.awaitInitialized()
+        return resolve(sourceIds)
     }
 }

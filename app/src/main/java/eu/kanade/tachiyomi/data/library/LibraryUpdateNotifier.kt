@@ -137,7 +137,7 @@ class LibraryUpdateNotifier(
      * @param rulesProfileId the profile whose library update rules decided what is checked, so tapping the warning
      * opens them; null for updates the rules don't shape, whose warning links to the explanation instead.
      */
-    fun showQueueSizeWarningNotificationIfNeeded(entriesToUpdate: List<LibraryItem>, rulesProfileId: Long?) {
+    suspend fun showQueueSizeWarningNotificationIfNeeded(entriesToUpdate: List<LibraryItem>, rulesProfileId: Long?) {
         if (
             notificationFeature.queueWarning(entriesToUpdate.map(LibraryItem::entry)) ==
             EntryLibraryUpdateQueueWarning.NotRequired

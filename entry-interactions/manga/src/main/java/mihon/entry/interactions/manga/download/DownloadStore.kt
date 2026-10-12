@@ -4,8 +4,6 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
 import eu.kanade.tachiyomi.source.entry.EntryType
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import mihon.entry.interactions.manga.download.model.MangaDownload
@@ -13,9 +11,9 @@ import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.source.service.SourceManager
+import tachiyomi.domain.source.service.awaitInitialized
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
-import kotlin.time.Duration.Companion.seconds
 
 /**
  * This class is used to persist active downloads across application restarts.
@@ -92,11 +90,8 @@ internal class DownloadStore(
     }
 
     suspend fun restore(): List<MangaDownload> {
-        // Extensions load in the background, and a download whose source isn't registered yet would be dropped. The
-        // timeout keeps a source manager that never finishes loading from holding the queue back for good.
-        withTimeoutOrNull(30.seconds) {
-            sourceManager.isInitialized.first { it }
-        }
+        // A download whose source isn't registered yet would be dropped
+        sourceManager.awaitInitialized()
         val objs = backend.values()
             .mapNotNull { (_, value) -> value as? String }
             .mapNotNull { deserialize(it) }
