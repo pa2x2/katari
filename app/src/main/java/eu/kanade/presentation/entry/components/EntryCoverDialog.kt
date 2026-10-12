@@ -57,6 +57,8 @@ import tachiyomi.presentation.core.util.clickableNoIndication
 fun EntryCoverDialog(
     coverData: Any?,
     isCustomCover: Boolean,
+    /** False while a non-local entry is outside the library, which its cover can't be edited from. */
+    isCoverEditable: Boolean,
     snackbarHostState: SnackbarHostState,
     onShareClick: () -> Unit,
     onSaveClick: () -> Unit,
@@ -109,10 +111,10 @@ fun EntryCoverDialog(
                                 var expanded by remember { mutableStateOf(false) }
                                 IconButton(
                                     onClick = {
-                                        if (isCustomCover) {
-                                            expanded = true
-                                        } else {
-                                            onEditClick(EditCoverAction.EDIT)
+                                        when {
+                                            !isCoverEditable -> onEditClick(EditCoverAction.ADD_TO_LIBRARY)
+                                            isCustomCover -> expanded = true
+                                            else -> onEditClick(EditCoverAction.EDIT)
                                         }
                                     },
                                 ) {

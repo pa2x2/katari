@@ -149,6 +149,15 @@ class EntryCoverScreenModel(
         }
     }
 
+    fun showAddToLibraryFirst(context: Context) {
+        screenModelScope.launch {
+            snackbarHostState.showSnackbar(
+                context.stringResource(MR.strings.notification_first_add_to_library),
+                withDismissAction = true,
+            )
+        }
+    }
+
     private fun notifyCoverUpdated(context: Context) {
         screenModelScope.launch {
             snackbarHostState.showSnackbar(

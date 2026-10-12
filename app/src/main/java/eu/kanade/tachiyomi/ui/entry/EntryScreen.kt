@@ -582,12 +582,14 @@ class EntryScreen(
                         coverData = entry!!,
                         snackbarHostState = sm.snackbarHostState,
                         isCustomCover = remember(entry) { entry!!.hasCustomCover() },
+                        isCoverEditable = entry!!.favorite || entry!!.isLocal(),
                         onShareClick = { sm.shareCover(context) },
                         onSaveClick = { sm.saveCover(context) },
                         onEditClick = {
                             when (it) {
                                 EditCoverAction.EDIT -> getContent.launch("image/*")
                                 EditCoverAction.DELETE -> sm.deleteCustomCover(context)
+                                EditCoverAction.ADD_TO_LIBRARY -> sm.showAddToLibraryFirst(context)
                             }
                         },
                         onDismissRequest = onDismissRequest,
