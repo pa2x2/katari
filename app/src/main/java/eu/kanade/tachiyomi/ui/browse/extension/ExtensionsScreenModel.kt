@@ -1,7 +1,7 @@
 package eu.kanade.tachiyomi.ui.browse.extension
 
 import android.app.Application
-import cafe.adriel.voyager.core.model.StateScreenModel
+import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.domain.extension.interactor.GetExtensionLanguages
@@ -14,17 +14,21 @@ import eu.kanade.tachiyomi.extension.model.InstallStep
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.ui.browse.BrowseContentTypeFilterController
 import eu.kanade.tachiyomi.util.system.LocaleHelper
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.WhileSubscribed
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import logcat.LogPriority
 import mihon.entry.interactions.source.EntrySourceHomeFeature
@@ -49,104 +53,111 @@ class ExtensionsScreenModel(
         BrowseContentTypeFilterController(preferences),
     private val storeFilterController: ExtensionStoreFilterController =
         ExtensionStoreFilterController(preferences),
-) : StateScreenModel<ExtensionListState>(ExtensionListState()) {
+) : ScreenModel {
+
+    private val context = Injekt.get<Application>()
+
+    private val _searchQuery = MutableStateFlow<String?>(null)
+
+    // Separate from [state] so BrowseTab's search bar and the tab's badges don't subscribe to the extension list
+    val searchQuery: StateFlow<String?> = _searchQuery.asStateFlow()
+
+    val updatesCount: StateFlow<Int> = combine(
+        extensionManager.pendingUpdatesCount,
+        extensionManager.isAutoUpdateInProgress,
+    ) { updates, inProgress ->
+        if (inProgress) 0 else updates
+    }
+        .stateIn(screenModelScope, SharingStarted.WhileSubscribed(5.seconds), 0)
+
+    val filter: StateFlow<ExtensionFilterState> = combine(
+        getExtensionLanguages.subscribe(),
+        preferences.enabledLanguages.changes(),
+        contentTypeFilterController.changes(),
+        storeFilterController.changes(),
+    ) { languages, enabledLanguages, contentTypes, stores ->
+        ExtensionFilterState(
+            languages = languages,
+            enabledLanguages = enabledLanguages,
+            contentTypes = contentTypes,
+            stores = stores,
+        )
+    }
+        .catch { throwable -> logcat(LogPriority.ERROR, throwable) }
+        .flowOn(Dispatchers.IO)
+        .stateIn(screenModelScope, SharingStarted.WhileSubscribed(5.seconds), ExtensionFilterState())
+
+    private val isRefreshing = MutableStateFlow(false)
+
+    private fun extensionMapper(map: Map<String, InstallStep>): (Extension) -> ExtensionUiModel.Item = {
+        ExtensionUiModel.Item(it, map[it.pkgName] ?: InstallStep.Idle)
+    }
+
+    private val items = combine(
+        _searchQuery
+            .debounce(0.25.seconds)
+            .map { searchQueryPredicate(it ?: "") },
+        contentTypeFilterController.changes(),
+        storeFilterController.changes(),
+        extensionManager.installSteps(),
+        getExtensions.subscribe(),
+    ) { searchPredicate, contentTypeFilter, storeFilter, downloads, extensions ->
+        val (_updates, _loaded, _available, _notLoaded) = extensions
+        val predicate: (Extension) -> Boolean = {
+            searchPredicate(it) && contentTypeFilter.matches(it) && storeFilter.matches(it)
+        }
+        buildMap {
+            val updates = _updates.filter(predicate).map(extensionMapper(downloads))
+            if (updates.isNotEmpty()) {
+                put(ExtensionUiModel.Header.Resource(MR.strings.ext_updates_pending), updates)
+            }
+
+            val notLoaded = _notLoaded.filter(predicate).map(extensionMapper(downloads))
+            if (notLoaded.isNotEmpty()) {
+                put(ExtensionUiModel.Header.Resource(MR.strings.ext_not_loaded), notLoaded)
+            }
+
+            val loaded = _loaded.filter(predicate).map(extensionMapper(downloads))
+            if (loaded.isNotEmpty()) {
+                put(ExtensionUiModel.Header.Resource(MR.strings.ext_installed), loaded)
+            }
+
+            val languagesWithExtensions = _available
+                .filter(predicate)
+                .groupBy { it.lang }
+                .toSortedMap(LocaleHelper.comparator)
+                .map { (lang, exts) ->
+                    ExtensionUiModel.Header.Text(LocaleHelper.getSourceDisplayName(lang, context)) to
+                        exts.map(extensionMapper(downloads))
+                }
+            if (languagesWithExtensions.isNotEmpty()) {
+                putAll(languagesWithExtensions)
+            }
+        }
+    }
+        .flowOn(Dispatchers.IO)
+        .stateIn(screenModelScope, SharingStarted.WhileSubscribed(5.seconds), null)
+
+    val state: StateFlow<ExtensionListState> = combine(
+        items,
+        _searchQuery,
+        filter,
+        combine(isRefreshing, updatesCount, basePreferences.extensionInstaller.changes(), ::Triple),
+    ) { items, searchQuery, filter, (isRefreshing, updates, installer) ->
+        ExtensionListState(
+            isLoading = items == null,
+            isRefreshing = isRefreshing,
+            items = items.orEmpty(),
+            updates = updates,
+            installer = installer,
+            searchQuery = searchQuery,
+            filter = filter,
+        )
+    }
+        .stateIn(screenModelScope, SharingStarted.WhileSubscribed(5.seconds), ExtensionListState())
 
     init {
-        val context = Injekt.get<Application>()
-        val extensionMapper: (Map<String, InstallStep>) -> ((Extension) -> ExtensionUiModel.Item) = { map ->
-            {
-                ExtensionUiModel.Item(it, map[it.pkgName] ?: InstallStep.Idle)
-            }
-        }
-
-        screenModelScope.launchIO {
-            combine(
-                state.map { it.searchQuery }
-                    .distinctUntilChanged()
-                    .debounce(0.25.seconds)
-                    .map { searchQueryPredicate(it ?: "") },
-                contentTypeFilterController.changes(),
-                storeFilterController.changes(),
-                extensionManager.installSteps(),
-                getExtensions.subscribe(),
-            ) { searchPredicate, contentTypeFilter, storeFilter, downloads, extensions ->
-                val (_updates, _loaded, _available, _notLoaded) = extensions
-                val predicate: (Extension) -> Boolean = {
-                    searchPredicate(it) && contentTypeFilter.matches(it) && storeFilter.matches(it)
-                }
-                buildMap {
-                    val updates = _updates.filter(predicate).map(extensionMapper(downloads))
-                    if (updates.isNotEmpty()) {
-                        put(ExtensionUiModel.Header.Resource(MR.strings.ext_updates_pending), updates)
-                    }
-
-                    val notLoaded = _notLoaded.filter(predicate).map(extensionMapper(downloads))
-                    if (notLoaded.isNotEmpty()) {
-                        put(ExtensionUiModel.Header.Resource(MR.strings.ext_not_loaded), notLoaded)
-                    }
-
-                    val loaded = _loaded.filter(predicate).map(extensionMapper(downloads))
-                    if (loaded.isNotEmpty()) {
-                        put(ExtensionUiModel.Header.Resource(MR.strings.ext_installed), loaded)
-                    }
-
-                    val languagesWithExtensions = _available
-                        .filter(predicate)
-                        .groupBy { it.lang }
-                        .toSortedMap(LocaleHelper.comparator)
-                        .map { (lang, exts) ->
-                            ExtensionUiModel.Header.Text(LocaleHelper.getSourceDisplayName(lang, context)) to
-                                exts.map(extensionMapper(downloads))
-                        }
-                    if (languagesWithExtensions.isNotEmpty()) {
-                        putAll(languagesWithExtensions)
-                    }
-                }
-            }
-                .collectLatest { items ->
-                    mutableState.update { state ->
-                        state.copy(
-                            isLoading = false,
-                            items = items,
-                        )
-                    }
-                }
-        }
-
-        screenModelScope.launchIO {
-            combine(
-                getExtensionLanguages.subscribe(),
-                preferences.enabledLanguages.changes(),
-                contentTypeFilterController.changes(),
-                storeFilterController.changes(),
-            ) { languages, enabledLanguages, contentTypes, stores ->
-                ExtensionFilterState(
-                    languages = languages,
-                    enabledLanguages = enabledLanguages,
-                    contentTypes = contentTypes,
-                    stores = stores,
-                )
-            }
-                .catch { throwable -> logcat(LogPriority.ERROR, throwable) }
-                .collectLatest { filter ->
-                    mutableState.update { it.copy(filter = filter) }
-                }
-        }
-
         screenModelScope.launchIO { findAvailableExtensions() }
-
-        combine(
-            extensionManager.pendingUpdatesCount,
-            extensionManager.isAutoUpdateInProgress,
-        ) { updates, inProgress ->
-            if (inProgress) 0 else updates
-        }
-            .onEach { mutableState.update { state -> state.copy(updates = it) } }
-            .launchIn(screenModelScope)
-
-        basePreferences.extensionInstaller.changes()
-            .onEach { mutableState.update { state -> state.copy(installer = it) } }
-            .launchIn(screenModelScope)
     }
 
     fun searchQueryPredicate(query: String): (Extension) -> Boolean {
@@ -188,9 +199,7 @@ class ExtensionsScreenModel(
     }
 
     fun search(query: String?) {
-        mutableState.update {
-            it.copy(searchQuery = query)
-        }
+        _searchQuery.update { query }
     }
 
     fun toggleContentType(entryType: EntryType) {
@@ -217,7 +226,7 @@ class ExtensionsScreenModel(
         showAllContentTypes()
         storeFilterController.showAll()
         preferences.enabledLanguages.getAndSet { enabledLanguages ->
-            enabledLanguages + state.value.filter.languages
+            enabledLanguages + filter.value.languages
         }
     }
 
@@ -255,14 +264,14 @@ class ExtensionsScreenModel(
 
     fun findAvailableExtensions() {
         screenModelScope.launchIO {
-            mutableState.update { it.copy(isRefreshing = true) }
+            isRefreshing.update { true }
 
             extensionManager.findAvailableExtensions(forceRefresh = true)
 
             // Fake slower refresh so it doesn't seem like it's not doing anything
             delay(1.seconds)
 
-            mutableState.update { it.copy(isRefreshing = false) }
+            isRefreshing.update { false }
         }
     }
 
