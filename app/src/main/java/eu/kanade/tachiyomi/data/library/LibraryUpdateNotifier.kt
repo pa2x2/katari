@@ -28,8 +28,6 @@ import eu.kanade.tachiyomi.util.system.cancelNotification
 import eu.kanade.tachiyomi.util.system.getBitmapOrNull
 import eu.kanade.tachiyomi.util.system.notificationBuilder
 import eu.kanade.tachiyomi.util.system.notify
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.runBlocking
 import mihon.entry.interactions.library.EntryLibraryUpdateNotificationAction
 import mihon.entry.interactions.library.EntryLibraryUpdateNotificationDestination
 import mihon.entry.interactions.library.EntryLibraryUpdateNotificationFeature
@@ -42,7 +40,6 @@ import mihon.entry.interactions.library.EntryLibraryUpdateQueueWarning
 import tachiyomi.core.common.Constants
 import tachiyomi.core.common.i18n.pluralStringResource
 import tachiyomi.core.common.i18n.stringResource
-import tachiyomi.core.common.util.lang.launchUI
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
@@ -57,7 +54,6 @@ class LibraryUpdateNotifier(
     private val context: Context,
     private val securityPreferences: SecurityPreferences = Injekt.get(),
     private val notificationFeature: EntryLibraryUpdateNotificationFeature = Injekt.get(),
-    private val scope: CoroutineScope = Injekt.get(),
 ) {
 
     private val percentFormatter = NumberFormat.getPercentInstance().apply {
@@ -211,27 +207,25 @@ class LibraryUpdateNotifier(
      *
      * @param updates a list of entries with new updates.
      */
-    fun showUpdateNotifications(updates: List<Pair<Entry, Array<EntryChapter>>>) {
-        val projection = runBlocking {
-            notificationFeature.project(
-                updates.map { (entry, children) ->
-                    EntryLibraryUpdateNotificationInput(
-                        entry = entry,
-                        children = children.toList(),
-                    )
-                },
-            )
-        }
+    suspend fun showUpdateNotifications(updates: List<Pair<Entry, Array<EntryChapter>>>) {
+        val projection = notificationFeature.project(
+            updates.map { (entry, children) ->
+                EntryLibraryUpdateNotificationInput(
+                    entry = entry,
+                    children = children.toList(),
+                )
+            },
+        )
         projection.omissions.forEach { omission ->
             logcat {
                 "Library-update notifications omitted ${omission.updateCount} ${omission.type} updates: " +
                     omission.reason
             }
         }
-        projection.groups.forEach(::showUpdateNotifications)
+        projection.groups.forEach { showUpdateNotifications(it) }
     }
 
-    private fun showUpdateNotifications(
+    private suspend fun showUpdateNotifications(
         group: EntryLibraryUpdateNotificationGroup,
     ) {
         val route = group.route
@@ -274,19 +268,17 @@ class LibraryUpdateNotifier(
 
         // Per-entry notification
         if (!securityPreferences.hideNotificationContent.get()) {
-            scope.launchUI {
-                context.notify(
-                    childUpdates.map { update ->
-                        NotificationManagerCompat.NotificationWithIdAndTag(
-                            update.originEntry.id.hashCode(),
-                            createNewEntryNotification(
-                                update = update,
-                                route = route,
-                            ),
-                        )
-                    },
-                )
-            }
+            context.notify(
+                childUpdates.map { update ->
+                    NotificationManagerCompat.NotificationWithIdAndTag(
+                        update.originEntry.id.hashCode(),
+                        createNewEntryNotification(
+                            update = update,
+                            route = route,
+                        ),
+                    )
+                },
+            )
         }
     }
 

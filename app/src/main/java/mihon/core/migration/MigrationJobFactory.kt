@@ -2,7 +2,6 @@ package mihon.core.migration
 
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import tachiyomi.core.common.util.system.logcat
@@ -19,7 +18,9 @@ class MigrationJobFactory(
                     logcat {
                         "Running migration: { name = ${migration::class.simpleName}, version = ${migration.version} }"
                     }
-                    async(start = CoroutineStart.UNDISPATCHED) {
+                    // Dispatched, since an undispatched start ran each migration on the caller's thread, the main
+                    // thread at startup, until its first suspension
+                    async {
                         val prev = acc.await()
                         migration(migrationContext) || prev
                     }
