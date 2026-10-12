@@ -11,6 +11,7 @@ import tachiyomi.data.ActiveProfileProvider
 import tachiyomi.data.DatabaseHandler
 import tachiyomi.data.query.chunkedForSqlQuery
 import tachiyomi.domain.category.model.Category
+import tachiyomi.domain.category.model.NewCategory
 import tachiyomi.domain.category.repository.CategoryRepository
 import tachiyomi.domain.category.repository.LibraryCategoryMappingObserver
 
@@ -120,12 +121,11 @@ class CategoryRepositoryImpl(
             }
     }
 
-    override suspend fun insert(category: Category) {
+    override suspend fun insert(category: NewCategory) {
         handler.await {
             categoriesQueries.insert(
                 profileId = profileProvider.activeProfileId,
                 name = category.name,
-                order = category.order,
                 flags = category.flags,
             )
         }
@@ -161,12 +161,18 @@ class CategoryRepositoryImpl(
     }
 
     override suspend fun updateAllOrders(orderedIds: List<Long>) {
+        val profileId = profileProvider.activeProfileId
         handler.await(inTransaction = true) {
-            orderedIds.forEachIndexed { index, categoryId ->
+            val current = categoriesQueries.getUserCategoryIds(profileId).awaitAsList()
+            val currentIds = current.toSet()
+            val requestedIds = orderedIds.toSet()
+            // A category created after the caller read the list keeps a position after the given order
+            val ids = orderedIds.filter { it in currentIds } + current.filterNot { it in requestedIds }
+            ids.forEachIndexed { index, categoryId ->
                 categoriesQueries.updateOrder(
                     order = index.toLong(),
                     categoryId = categoryId,
-                    profileId = profileProvider.activeProfileId,
+                    profileId = profileId,
                 )
             }
         }

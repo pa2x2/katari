@@ -27,37 +27,33 @@ class CategoriesRestorer(
         defaultCategoryUpdateRules?.let {
             updateRulesRepository.setCategoryRules(it.toCategoryUpdateRules(Category.UNCATEGORIZED_ID))
         }
-        if (backupCategories.isNotEmpty()) {
-            val dbCategories = getCategories.await()
-            val dbCategoriesByName = dbCategories.associateBy { it.name }
-            var nextOrder = dbCategories.maxOfOrNull { it.order }?.plus(1) ?: 0
+        if (backupCategories.isEmpty()) return
 
-            val categories = handler.await(inTransaction = true) {
-                backupCategories
-                    .sortedBy { it.order }
-                    .map {
-                        val dbCategory = dbCategoriesByName[it.name]
-                        if (dbCategory != null) return@map dbCategory
-                        val order = nextOrder++
-                        categoriesQueries
-                            .insert(profileProvider.activeProfileId, it.name, order, it.flags)
-                        categoriesQueries.selectLastInsertedRowId()
-                            .awaitAsOne()
-                            .let { id -> it.toCategory(id).copy(order = order) }
-                    }
+        val dbCategories = getCategories.await()
+        val dbCategoryNames = dbCategories.mapTo(HashSet()) { it.name }
+        val newCategories = backupCategories
+            .filter { it.name !in dbCategoryNames }
+            .sortedBy { it.order }
+
+        val profileId = profileProvider.activeProfileId
+        val newCategoryIds = handler.await(inTransaction = true) {
+            newCategories.associate {
+                categoriesQueries.insert(profileId = profileId, name = it.name, flags = it.flags)
+                it.name to categoriesQueries.selectLastInsertedRowId().awaitAsOne()
             }
-
-            backupCategories.forEach { backupCategory ->
-                val rules = backupCategory.updateRules ?: return@forEach
-                val category = categories.firstOrNull { it.name == backupCategory.name } ?: return@forEach
-                updateRulesRepository.setCategoryRules(rules.toCategoryUpdateRules(category.id))
-            }
-
-            libraryPreferences.categorizedDisplaySettings.set(
-                (dbCategories + categories)
-                    .distinctBy { it.flags }
-                    .size > 1,
-            )
         }
+        val categoryIds = dbCategories.associate { it.name to it.id } + newCategoryIds
+
+        backupCategories.forEach { backupCategory ->
+            val rules = backupCategory.updateRules ?: return@forEach
+            val categoryId = categoryIds[backupCategory.name] ?: return@forEach
+            updateRulesRepository.setCategoryRules(rules.toCategoryUpdateRules(categoryId))
+        }
+
+        val flags = buildSet {
+            dbCategories.mapTo(this) { it.flags }
+            newCategories.mapTo(this) { it.flags }
+        }
+        libraryPreferences.categorizedDisplaySettings.set(flags.size > 1)
     }
 }
