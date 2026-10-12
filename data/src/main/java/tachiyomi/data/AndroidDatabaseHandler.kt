@@ -15,6 +15,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
+import tachiyomi.core.common.util.lang.pausedWhileUnsubscribed
 
 class AndroidDatabaseHandler(
     val db: Database,
@@ -65,15 +66,15 @@ class AndroidDatabaseHandler(
     }
 
     override fun <T : Any> subscribeToList(block: Database.() -> Query<T>): Flow<List<T>> {
-        return block(db).asFlow().mapToList(queryDispatcher)
+        return block(db).asFlow().pausedWhileUnsubscribed().mapToList(queryDispatcher)
     }
 
     override fun <T : Any> subscribeToOne(block: Database.() -> Query<T>): Flow<T> {
-        return block(db).asFlow().mapToOne(queryDispatcher)
+        return block(db).asFlow().pausedWhileUnsubscribed().mapToOne(queryDispatcher)
     }
 
     override fun <T : Any> subscribeToOneOrNull(block: Database.() -> Query<T>): Flow<T?> {
-        return block(db).asFlow().mapToOneOrNull(queryDispatcher)
+        return block(db).asFlow().pausedWhileUnsubscribed().mapToOneOrNull(queryDispatcher)
     }
 
     override fun <T : Any> subscribeToPagingSource(
