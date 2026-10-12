@@ -7,6 +7,7 @@ import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
@@ -192,7 +193,11 @@ class ProductionEntryInteractionValidationEnvironment(
         Injekt.addSingletonFactory<XML> { XML.v1 {} }
         Injekt.addSingletonFactory<GlobalLibraryPreferences> { mockk(relaxed = true) }
         Injekt.addSingletonFactory<LibraryPreferences> { mockk(relaxed = true) }
-        Injekt.addSingletonFactory<SourceManager> { mockk(relaxed = true) }
+        Injekt.addSingletonFactory<SourceManager> {
+            mockk(relaxed = true) {
+                every { isInitialized } returns MutableStateFlow(true)
+            }
+        }
         Injekt.addSingletonFactory<EntryDownloadWorkController> { mockk(relaxed = true) }
         Injekt.addSingletonFactory<EntryMediaSessionIncognitoState> { mockk(relaxed = true) }
         Injekt.addSingletonFactory<EntryDownloadLifecycleEventSink> { mockk(relaxed = true) }
