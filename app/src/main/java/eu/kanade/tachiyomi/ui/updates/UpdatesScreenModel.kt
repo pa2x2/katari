@@ -5,7 +5,6 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
-import cafe.adriel.voyager.core.model.StateScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import eu.kanade.core.preference.asState
 import eu.kanade.core.util.addOrRemove
@@ -18,6 +17,7 @@ import eu.kanade.presentation.updates.toUpdatesUiModels
 import eu.kanade.tachiyomi.data.library.LibraryUpdateJob
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.visualName
+import eu.kanade.tachiyomi.ui.base.screenmodel.GatedStateScreenModel
 import eu.kanade.tachiyomi.ui.collapseByVisibleEntry
 import eu.kanade.tachiyomi.ui.entry.translation.ChapterTranslationModel
 import eu.kanade.tachiyomi.util.lang.toLocalDate
@@ -67,6 +67,7 @@ import mihon.feature.profiles.core.observeProfileScopedState
 import tachiyomi.core.common.preference.TriState
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.launchNonCancellable
+import tachiyomi.core.common.util.lang.pausedWhileUnsubscribed
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.data.ActiveProfileProvider
 import tachiyomi.domain.entry.interactor.GetEntry
@@ -106,7 +107,7 @@ class UpdatesScreenModel(
     private val application: Application = Injekt.get(),
     reportRepository: LibraryUpdateReportRepository = Injekt.get(),
     val snackbarHostState: SnackbarHostState = SnackbarHostState(),
-) : StateScreenModel<UpdatesScreenModel.State>(State()) {
+) : GatedStateScreenModel<UpdatesScreenModel.State>(State()) {
 
     /** Translation of listed chapters; chapters to translate that are not downloaded yet are downloaded. */
     val translation = ChapterTranslationModel(
@@ -132,7 +133,7 @@ class UpdatesScreenModel(
      * so only their entries are looked at for stored translations.
      */
     @OptIn(ExperimentalCoroutinesApi::class)
-    val translationStatuses: StateFlow<Map<Long, EntryTranslateStatus>> = state
+    val translationStatuses: StateFlow<Map<Long, EntryTranslateStatus>> = mutableState
         .map { state ->
             state.items
                 .filter {
@@ -172,7 +173,7 @@ class UpdatesScreenModel(
     private val downloadProgress = mutableStateMapOf<Long, Int>()
 
     init {
-        screenModelScope.launchIO {
+        gatedScope.launchIO {
             // Set date limit for recent chapters/episodes
             val limit = Clock.System.now().minus(3, DateTimeUnit.MONTH, TimeZone.currentSystemDefault())
 
@@ -191,7 +192,8 @@ class UpdatesScreenModel(
                     }
                 combine(
                     getUpdates.subscribeFeed(profileId, limit).distinctUntilChanged(),
-                    merge(downloadRuntime.changes, durableDownloadChanges),
+                    // Only signals a recheck, so holding it back while hidden loses nothing
+                    merge(downloadRuntime.changes, durableDownloadChanges).pausedWhileUnsubscribed(),
                     filters,
                 ) { feed, _, filter ->
                     UpdatesData(feed, filter)

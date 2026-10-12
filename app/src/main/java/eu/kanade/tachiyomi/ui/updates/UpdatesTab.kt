@@ -82,7 +82,7 @@ data object UpdatesTab : Tab {
         val entryOpenFeature = remember { Injekt.get<EntryOpenFeature>() }
         val screenModel = rememberScreenModel { UpdatesScreenModel() }
         val settingsScreenModel = rememberScreenModel { UpdatesSettingsScreenModel() }
-        val state by screenModel.state.collectAsState()
+        val state by screenModel.state.collectAsStateWithLifecycle()
         val translationStatuses by screenModel.translationStatuses.collectAsStateWithLifecycle()
         val translationSetup by screenModel.translation.sheet.collectAsStateWithLifecycle()
 
