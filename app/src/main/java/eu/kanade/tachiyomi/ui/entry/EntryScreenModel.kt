@@ -879,25 +879,34 @@ class EntryScreenModel(
 
     fun toggleFavorite() {
         val state = successState ?: return
-        if (state.isMerged && isFavorited) {
-            showRemoveMergedEntryDialog()
+        if (isFavorited) {
+            if (state.isMerged) {
+                showRemoveMergedEntryDialog()
+            } else {
+                updateSuccessState { it.copy(dialog = Dialog.RemoveFromLibrary) }
+            }
             return
         }
-        toggleFavorite(
-            onRemoved = { downloadEntries ->
-                screenModelScope.launch {
-                    if (downloadEntries.isEmpty()) return@launch
-                    val result = snackbarHostState.showSnackbar(
-                        message = context.stringResource(MR.strings.delete_downloads_for_manga),
-                        actionLabel = context.stringResource(MR.strings.action_delete),
-                        withDismissAction = true,
-                    )
-                    if (result == SnackbarResult.ActionPerformed) {
-                        deleteDownloads(downloadEntries)
-                    }
-                }
-            },
-        )
+        toggleFavorite(onRemoved = ::offerDownloadDeletion)
+    }
+
+    fun removeFromLibrary() {
+        if (!isFavorited) return
+        toggleFavorite(onRemoved = ::offerDownloadDeletion)
+    }
+
+    private fun offerDownloadDeletion(downloadEntries: List<Entry>) {
+        screenModelScope.launch {
+            if (downloadEntries.isEmpty()) return@launch
+            val result = snackbarHostState.showSnackbar(
+                message = context.stringResource(MR.strings.delete_downloads_for_manga),
+                actionLabel = context.stringResource(MR.strings.action_delete),
+                withDismissAction = true,
+            )
+            if (result == SnackbarResult.ActionPerformed) {
+                deleteDownloads(downloadEntries)
+            }
+        }
     }
 
     /**
@@ -1758,6 +1767,7 @@ class EntryScreenModel(
             val visibleTargets: ImmutableList<MergeTarget>,
         ) : Dialog
         data class SetFetchInterval(val entry: Entry) : Dialog
+        data object RemoveFromLibrary : Dialog
         data object SettingsSheet : Dialog
         data object TrackSheet : Dialog
         data object FullCover : Dialog

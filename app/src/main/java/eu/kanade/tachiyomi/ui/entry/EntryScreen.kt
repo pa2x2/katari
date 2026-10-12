@@ -28,6 +28,7 @@ import eu.kanade.core.util.ifSourcesLoaded
 import eu.kanade.domain.entry.model.hasCustomCover
 import eu.kanade.presentation.browse.components.BrowseMergeEditorDialog
 import eu.kanade.presentation.browse.components.MergeTargetPickerDialog
+import eu.kanade.presentation.browse.components.RemoveMangaDialog
 import eu.kanade.presentation.category.components.ChangeCategoryDialog
 import eu.kanade.presentation.components.NavigatorAdaptiveSheet
 import eu.kanade.presentation.entry.EditCoverAction
@@ -514,6 +515,13 @@ class EntryScreen(
                     onToggleRemoveMemberFromLibrary = screenModel::toggleMergedMemberLibraryRemoval,
                     onRemoveMembers = screenModel::removeMergedMembers,
                     onUnmergeAll = screenModel::unmergeAll,
+                )
+            }
+            EntryScreenModel.Dialog.RemoveFromLibrary -> {
+                RemoveMangaDialog(
+                    onDismissRequest = onDismissRequest,
+                    onConfirm = screenModel::removeFromLibrary,
+                    mangaToRemove = successState.entry,
                 )
             }
             is EntryScreenModel.Dialog.RemoveMergedEntry -> {
