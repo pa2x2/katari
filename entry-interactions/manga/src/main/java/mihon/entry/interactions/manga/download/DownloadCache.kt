@@ -2,6 +2,7 @@ package mihon.entry.interactions.manga.download
 import android.app.Application
 import android.content.Context
 import androidx.core.net.toUri
+import androidx.core.util.AtomicFile
 import com.hippo.unifile.UniFile
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import kotlinx.coroutines.CancellationException
@@ -85,27 +86,31 @@ internal class DownloadCache(
     /**
      * The last time the cache was refreshed.
      */
+    @Volatile
     private var lastRenew = 0L
     private var renewalJob: Job? = null
+    private val initJob: Job
 
     private val _isInitializing = MutableStateFlow(false)
     val isInitializing = _isInitializing
         .debounce(1.seconds) // Don't notify if it finishes quickly enough
         .stateIn(scope, SharingStarted.WhileSubscribed(), false)
 
-    private val diskCacheFile: File
-        get() = File(context.cacheDir, "dl_index_cache_v3")
+    private val diskCacheFile: AtomicFile
+        get() = AtomicFile(File(context.cacheDir, "dl_index_cache_v3"))
 
     private val rootDownloadsDirMutex = Mutex()
+
+    @Volatile
     private var rootDownloadsDir = RootDirectory(storageManager.getDownloadsDirectory())
 
     init {
         // Attempt to read cache file
-        scope.launch {
+        initJob = scope.launch {
             rootDownloadsDirMutex.withLock {
                 try {
-                    if (diskCacheFile.exists()) {
-                        val diskCache = diskCacheFile.inputStream().use {
+                    if (diskCacheFile.baseFile.exists()) {
+                        val diskCache = diskCacheFile.openRead().use {
                             ProtoBuf.decodeFromByteArray<RootDirectory>(it.readBytes())
                         }
                         rootDownloadsDir = diskCache
@@ -236,13 +241,9 @@ internal class DownloadCache(
         rootDownloadsDirMutex.withLock {
             val sourceDir = rootDownloadsDir.sourceDirs[manga.source] ?: return
             val mangaDir = sourceDir.mangaDirs[provider.getEntryDirName(manga.title)] ?: return
-            chapters.forEach { chapter ->
-                provider.getValidChapterDirNames(chapter.name, chapter.scanlator, chapter.url).forEach {
-                    if (it in mangaDir.chapterDirs) {
-                        mangaDir.chapterDirs -= it
-                    }
-                }
-            }
+            mangaDir.chapterDirs -= chapters
+                .flatMap { provider.getValidChapterDirNames(it.name, it.scanlator, it.url) }
+                .toSet()
         }
 
         notifyChanges()
@@ -276,7 +277,7 @@ internal class DownloadCache(
         rootDownloadsDirMutex.withLock {
             val sourceDir = rootDownloadsDir.sourceDirs[manga.source] ?: return
             val oldMangaDirName = provider.getEntryDirName(manga.title)
-            var oldChapterDirs: MutableSet<String>? = null
+            var oldChapterDirs: Set<String>? = null
             // Save the old name's cached chapter dirs
             if (sourceDir.mangaDirs.containsKey(oldMangaDirName)) {
                 oldChapterDirs = sourceDir.mangaDirs[oldMangaDirName]?.chapterDirs
@@ -311,20 +312,23 @@ internal class DownloadCache(
     fun invalidateCache() {
         lastRenew = 0L
         renewalJob?.cancel()
-        diskCacheFile.delete()
-        renewCache()
+        renewCache(deleteDiskCache = true)
     }
 
     /**
      * Renews the downloads cache.
      */
-    private fun renewCache() {
+    private fun renewCache(deleteDiskCache: Boolean = false) {
         // Avoid renewing cache if in the process nor too often
         if (lastRenew + renewInterval >= System.currentTimeMillis() || renewalJob?.isActive == true) {
             return
         }
 
         renewalJob = scope.launchIO {
+            // The disk index is older than this scan and would replace it if read afterwards
+            initJob.join()
+            if (deleteDiskCache) diskCacheFile.delete()
+
             if (lastRenew == 0L) {
                 _isInitializing.emit(true)
             }
@@ -371,7 +375,7 @@ internal class DownloadCache(
                                         else -> null
                                     }
                                 }
-                                .toMutableSet()
+                                .toSet()
 
                             mangaDir.chapterDirs = chapterDirs
                         }
@@ -388,7 +392,8 @@ internal class DownloadCache(
                 if (exception != null && exception !is CancellationException) {
                     logcat(LogPriority.ERROR, exception) { "DownloadCache: failed to create cache" }
                 }
-                lastRenew = System.currentTimeMillis()
+                // A cancelled renewal (e.g. from invalidateCache) must not hold off the one replacing it
+                if (exception !is CancellationException) lastRenew = System.currentTimeMillis()
                 notifyChanges()
             }
         }
@@ -413,8 +418,9 @@ internal class DownloadCache(
         updateDiskCacheJob?.cancel()
         updateDiskCacheJob = scope.launchIO {
             delay(1.seconds)
-            ensureActive()
-            val bytes = ProtoBuf.encodeToByteArray(rootDownloadsDir)
+            val bytes = rootDownloadsDirMutex.withLock {
+                ProtoBuf.encodeToByteArray(rootDownloadsDir)
+            }
             ensureActive()
             try {
                 diskCacheFile.writeBytes(bytes)
@@ -436,6 +442,7 @@ internal class DownloadCache(
 private class RootDirectory(
     @Serializable(with = UniFileAsStringSerializer::class)
     val dir: UniFile?,
+    @Volatile
     var sourceDirs: Map<Long, SourceDirectory> = mapOf(),
 )
 
@@ -446,6 +453,7 @@ private class RootDirectory(
 private class SourceDirectory(
     @Serializable(with = UniFileAsStringSerializer::class)
     val dir: UniFile?,
+    @Volatile
     var mangaDirs: Map<String, MangaDirectory> = mapOf(),
 )
 
@@ -456,7 +464,9 @@ private class SourceDirectory(
 private class MangaDirectory(
     @Serializable(with = UniFileAsStringSerializer::class)
     val dir: UniFile?,
-    var chapterDirs: MutableSet<String> = mutableSetOf(),
+    // Replaced rather than changed in place, so the lock-free lookups always read a consistent set
+    @Volatile
+    var chapterDirs: Set<String> = emptySet(),
 )
 
 @OptIn(ExperimentalSerializationApi::class)
@@ -477,5 +487,18 @@ private object UniFileAsStringSerializer : KSerializer<UniFile?> {
         } else {
             decoder.decodeNull()
         }
+    }
+}
+
+// Like androidx.core.util.writeBytes, which only takes the platform AtomicFile: the previous index stays whole if the
+// write fails
+private fun AtomicFile.writeBytes(bytes: ByteArray) {
+    val stream = startWrite()
+    try {
+        stream.write(bytes)
+        finishWrite(stream)
+    } catch (e: Throwable) {
+        failWrite(stream)
+        throw e
     }
 }

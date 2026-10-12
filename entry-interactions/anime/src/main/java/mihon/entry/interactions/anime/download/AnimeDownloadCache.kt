@@ -2,6 +2,7 @@ package mihon.entry.interactions.anime.download
 import android.app.Application
 import android.content.Context
 import androidx.core.net.toUri
+import androidx.core.util.AtomicFile
 import com.hippo.unifile.UniFile
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -70,26 +71,31 @@ internal class AnimeDownloadCache(
         .shareIn(scope, SharingStarted.Lazily, 1)
 
     private val renewInterval = 1.hours.inWholeMilliseconds
+
+    @Volatile
     private var lastRenew = 0L
     private var renewalJob: Job? = null
+    private val initJob: Job
 
     private val _isInitializing = MutableStateFlow(false)
     val isInitializing = _isInitializing
         .debounce(1000L)
         .stateIn(scope, SharingStarted.WhileSubscribed(), false)
 
-    private val diskCacheFile: File
-        get() = File(context.cacheDir, "anime_dl_index_cache_v1")
+    private val diskCacheFile: AtomicFile
+        get() = AtomicFile(File(context.cacheDir, "anime_dl_index_cache_v1"))
 
     private val rootDownloadsDirMutex = Mutex()
+
+    @Volatile
     private var rootDownloadsDir = AnimeRootDirectory(storageManager.getDownloadsDirectory())
 
     init {
-        scope.launch {
+        initJob = scope.launch {
             rootDownloadsDirMutex.withLock {
                 try {
-                    if (diskCacheFile.exists()) {
-                        rootDownloadsDir = ProtoBuf.decodeFromByteArray(diskCacheFile.readBytes())
+                    if (diskCacheFile.baseFile.exists()) {
+                        rootDownloadsDir = ProtoBuf.decodeFromByteArray(diskCacheFile.readFully())
                         lastRenew = System.currentTimeMillis()
                     }
                 } catch (e: Throwable) {
@@ -164,11 +170,9 @@ internal class AnimeDownloadCache(
         rootDownloadsDirMutex.withLock {
             val sourceDir = rootDownloadsDir.sourceDirs[anime.source] ?: return
             val animeDir = sourceDir.animeDirs[provider.getAnimeDirName(anime.title)] ?: return
-            episodes.forEach { episode ->
-                provider.getValidEpisodeDirNames(episode.name, episode.url).forEach {
-                    animeDir.episodeDirs -= it
-                }
-            }
+            animeDir.episodeDirs -= episodes
+                .flatMap { provider.getValidEpisodeDirNames(it.name, it.url) }
+                .toSet()
         }
 
         notifyChanges()
@@ -186,16 +190,19 @@ internal class AnimeDownloadCache(
     fun invalidateCache() {
         lastRenew = 0L
         renewalJob?.cancel()
-        diskCacheFile.delete()
-        renewCache()
+        renewCache(deleteDiskCache = true)
     }
 
-    private fun renewCache() {
+    private fun renewCache(deleteDiskCache: Boolean = false) {
         if (lastRenew + renewInterval >= System.currentTimeMillis() || renewalJob?.isActive == true) {
             return
         }
 
         renewalJob = scope.launchIO {
+            // The disk index is older than this scan and would replace it if read afterwards
+            initJob.join()
+            if (deleteDiskCache) diskCacheFile.delete()
+
             if (lastRenew == 0L) {
                 _isInitializing.emit(true)
             }
@@ -241,7 +248,7 @@ internal class AnimeDownloadCache(
                                         else -> null
                                     }
                                 }
-                                .toMutableSet()
+                                .toSet()
                         }
                     }
                 }.awaitAll()
@@ -255,7 +262,8 @@ internal class AnimeDownloadCache(
                 if (exception != null && exception !is CancellationException) {
                     logcat(LogPriority.ERROR, exception) { "AnimeDownloadCache: failed to create cache" }
                 }
-                lastRenew = System.currentTimeMillis()
+                // A cancelled renewal (e.g. from invalidateCache) must not hold off the one replacing it
+                if (exception !is CancellationException) lastRenew = System.currentTimeMillis()
                 notifyChanges()
             }
         }
@@ -276,8 +284,9 @@ internal class AnimeDownloadCache(
         updateDiskCacheJob?.cancel()
         updateDiskCacheJob = scope.launchIO {
             delay(1000)
-            ensureActive()
-            val bytes = ProtoBuf.encodeToByteArray(rootDownloadsDir)
+            val bytes = rootDownloadsDirMutex.withLock {
+                ProtoBuf.encodeToByteArray(rootDownloadsDir)
+            }
             ensureActive()
             try {
                 diskCacheFile.writeBytes(bytes)
@@ -292,6 +301,7 @@ internal class AnimeDownloadCache(
 private class AnimeRootDirectory(
     @Serializable(with = AnimeUniFileAsStringSerializer::class)
     val dir: UniFile?,
+    @Volatile
     var sourceDirs: Map<Long, AnimeSourceDirectory> = mapOf(),
 )
 
@@ -299,6 +309,7 @@ private class AnimeRootDirectory(
 private class AnimeSourceDirectory(
     @Serializable(with = AnimeUniFileAsStringSerializer::class)
     val dir: UniFile?,
+    @Volatile
     var animeDirs: Map<String, AnimeTitleDirectory> = mapOf(),
 )
 
@@ -306,7 +317,9 @@ private class AnimeSourceDirectory(
 private class AnimeTitleDirectory(
     @Serializable(with = AnimeUniFileAsStringSerializer::class)
     val dir: UniFile?,
-    var episodeDirs: MutableSet<String> = mutableSetOf(),
+    // Replaced rather than changed in place, so the lock-free lookups always read a consistent set
+    @Volatile
+    var episodeDirs: Set<String> = emptySet(),
 )
 
 @OptIn(ExperimentalSerializationApi::class)
@@ -327,5 +340,18 @@ private object AnimeUniFileAsStringSerializer : KSerializer<UniFile?> {
         } else {
             decoder.decodeNull()
         }
+    }
+}
+
+// Like androidx.core.util.writeBytes, which only takes the platform AtomicFile: the previous index stays whole if the
+// write fails
+private fun AtomicFile.writeBytes(bytes: ByteArray) {
+    val stream = startWrite()
+    try {
+        stream.write(bytes)
+        finishWrite(stream)
+    } catch (e: Throwable) {
+        failWrite(stream)
+        throw e
     }
 }
