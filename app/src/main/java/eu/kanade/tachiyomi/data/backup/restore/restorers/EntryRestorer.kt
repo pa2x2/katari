@@ -260,9 +260,16 @@ class EntryRestorer(
         if (backupHistory.isEmpty()) return
         val existingHistoryByChapterId = historyRepository.getHistoryByEntryId(entry.id)
             .associateBy { it.chapterId }
-        backupHistory.forEach { history ->
-            val chapter = entryChapterRepository.getChapterByUrlAndEntryId(history.url, entry.id)
+        // A duplicated chapter is backed up once per copy, so merging each copy against the stored row separately
+        // would add its reading time more than once.
+        backupHistory.groupBy { it.url }.forEach { (url, copies) ->
+            val chapter = entryChapterRepository.getChapterByUrlAndEntryId(url, entry.id)
                 ?: return@forEach
+            val history = BackupHistory(
+                url = url,
+                lastRead = copies.maxOf { it.lastRead },
+                readDuration = copies.sumOf { it.readDuration },
+            )
             upsertHistory.await(history.mergeWith(chapter.id, existingHistoryByChapterId[chapter.id]))
         }
     }
