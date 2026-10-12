@@ -29,6 +29,19 @@ internal fun Extension.Installed.findUpdate(available: Collection<Extension.Avai
 }
 
 /**
+ * The store this extension comes from among those whose signing key it's signed with. Several stores can share a key,
+ * so one that lists the extension names where it comes from better than whichever of them was added first.
+ */
+internal fun Extension.Installed.pickStore(
+    stores: List<ExtensionStore>,
+    available: Collection<Extension.Available>,
+): ExtensionStore? {
+    val signingStores = stores.filter { it.signingKey in signatures }
+    val listedBy = available.filter { it.pkgName == pkgName }.mapTo(HashSet()) { it.store.indexUrl }
+    return signingStores.firstOrNull { it.indexUrl in listedBy } ?: signingStores.firstOrNull()
+}
+
+/**
  * Fails unless [apkSignatures], those of the apk downloaded for this listing, include its store's key. The store's
  * index names the apk, but nothing else ties what's served there to the store's key.
  */

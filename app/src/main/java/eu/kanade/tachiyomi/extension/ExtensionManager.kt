@@ -15,6 +15,7 @@ import eu.kanade.tachiyomi.extension.model.InstallStep
 import eu.kanade.tachiyomi.extension.model.LoadResult
 import eu.kanade.tachiyomi.extension.store.findListing
 import eu.kanade.tachiyomi.extension.store.findUpdate
+import eu.kanade.tachiyomi.extension.store.pickStore
 import eu.kanade.tachiyomi.extension.util.ExtensionInstallReceiver
 import eu.kanade.tachiyomi.extension.util.ExtensionInstaller
 import eu.kanade.tachiyomi.extension.util.ExtensionLoader
@@ -29,9 +30,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import logcat.LogPriority
 import mihon.domain.extension.model.ExtensionStore
+import mihon.domain.extension.repository.ExtensionStoreRepository
 import mihon.feature.profiles.core.ProfileAwareStore
 import mihon.feature.profiles.core.ProfileConstants
 import mihon.feature.profiles.core.ProfileDatabase
@@ -59,6 +62,7 @@ class ExtensionManager(
     private val trustExtension: TrustExtension = Injekt.get(),
     private val profileDatabase: ProfileDatabase = Injekt.get(),
     private val profileStore: ProfileAwareStore = Injekt.get(),
+    private val extensionStoreRepository: ExtensionStoreRepository = Injekt.get(),
 ) {
 
     val scope = CoroutineScope(SupervisorJob())
@@ -77,6 +81,10 @@ class ExtensionManager(
     private val installer by lazy { ExtensionInstaller(context) }
 
     private val iconMap = mutableMapOf<String, Drawable>()
+
+    // Null until the stores first load
+    @Volatile
+    private var stores: List<ExtensionStore>? = null
 
     private val installedExtensionMapFlow = MutableStateFlow(emptyMap<String, Extension.Installed>())
     val installedExtensionsFlow = installedExtensionMapFlow.mapExtensions(scope)
@@ -101,6 +109,12 @@ class ExtensionManager(
     init {
         initExtensions()
         ExtensionInstallReceiver(InstallationListener()).register(context)
+
+        // Store listings are only fetched now and then, so a store renamed or removed in between would stay on the
+        // extensions that came from it
+        scope.launch {
+            extensionStoreRepository.getAllAsFlow().collect(::assignStores)
+        }
     }
 
     private var subLanguagesEnabledOnFirstRun = preferences.enabledLanguages.isSet()
@@ -425,12 +439,12 @@ class ExtensionManager(
     private inner class InstallationListener : ExtensionInstallReceiver.Listener {
 
         override fun onExtensionInstalled(extension: Extension.Installed) {
-            registerNewExtension(extension.withUpdateCheck())
+            registerNewExtension(extension.withListingStatus())
             updatePendingUpdatesCount()
         }
 
         override fun onExtensionUpdated(extension: Extension.Installed) {
-            registerUpdatedExtension(extension.withUpdateCheck())
+            registerUpdatedExtension(extension.withListingStatus())
             updatePendingUpdatesCount()
         }
 
@@ -447,15 +461,32 @@ class ExtensionManager(
         }
     }
 
-    /**
-     * Extension method to set the update field of an installed extension.
-     */
-    private fun Extension.Installed.withUpdateCheck(): Extension.Installed {
-        return if (findUpdate(availableExtensionListFlow.value) != null) {
-            withUpdate(hasUpdate = true)
-        } else {
-            this
+    private fun Extension.Installed.withListingStatus(): Extension.Installed {
+        val availableExtensions = availableExtensionListFlow.value
+        return this
+            .withUpdate(hasUpdate = findUpdate(availableExtensions) != null)
+            .withStore(store = currentStore(availableExtensions, fallback = store))
+    }
+
+    private fun assignStores(stores: List<ExtensionStore>) {
+        this.stores = stores
+        val availableExtensions = availableExtensionListFlow.value
+        installedExtensionMapFlow.update { extensions ->
+            extensions.mapValues { (_, extension) ->
+                extension.withStore(store = extension.pickStore(stores, availableExtensions))
+            }
         }
+    }
+
+    /**
+     * Before the stores first load, [fallback] is the best guess.
+     */
+    private fun Extension.Installed.currentStore(
+        availableExtensions: Collection<Extension.Available>,
+        fallback: ExtensionStore?,
+    ): ExtensionStore? {
+        val stores = stores ?: return fallback
+        return pickStore(stores, availableExtensions)
     }
 
     private fun updatePendingUpdatesCount() {
@@ -471,18 +502,19 @@ class ExtensionManager(
 
     private suspend fun refreshInstalledExtensionsUpdateStatus() {
         val currentInstalledExtensions = installedExtensionMapFlow.value
+        val availableExtensions = availableExtensionListFlow.value
         val reloadedInstalledExtensions = ExtensionLoader.loadExtensions(context)
             .filterIsInstance<LoadResult.Success>()
             .map { result ->
                 val current = currentInstalledExtensions[result.extension.pkgName]
+                val store = result.extension.currentStore(availableExtensions, fallback = current?.store)
                 result.extension
                     .withUpdate(hasUpdate = current?.hasUpdate ?: false)
                     .withObsolete(isObsolete = current?.isObsolete ?: false)
-                    .withStore(store = current?.store)
+                    .withStore(store = store)
             }
             .associateBy { it.pkgName }
 
-        val availableExtensions = availableExtensionListFlow.value
         installedExtensionMapFlow.value = if (availableExtensions.isEmpty()) {
             reloadedInstalledExtensions
         } else {
@@ -500,10 +532,11 @@ class ExtensionManager(
     ): Map<String, Extension.Installed> {
         return installedExtensionsMap.mapValues { (_, extension) ->
             val listing = extension.findListing(availableExtensions)
+            val store = extension.currentStore(availableExtensions, fallback = listing?.store ?: extension.store)
             extension
                 .withUpdate(hasUpdate = extension.findUpdate(availableExtensions) != null)
                 .withObsolete(isObsolete = listing == null)
-                .withStore(store = listing?.store ?: extension.store)
+                .withStore(store = store)
         }
     }
 
