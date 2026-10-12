@@ -1,4 +1,4 @@
-package eu.kanade.tachiyomi.extension.api
+package eu.kanade.tachiyomi.extension.update
 
 import android.content.Context
 import androidx.core.app.NotificationCompat

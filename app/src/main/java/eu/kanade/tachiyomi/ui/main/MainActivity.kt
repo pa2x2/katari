@@ -909,7 +909,7 @@ class MainActivity : BaseActivity() {
 
             lifecycleScope.launchIO {
                 try {
-                    extensionManager.checkForUpdates(applicationContext)
+                    extensionManager.checkForUpdates()
                 } catch (e: Exception) {
                     logcat(LogPriority.ERROR, e)
                 }
