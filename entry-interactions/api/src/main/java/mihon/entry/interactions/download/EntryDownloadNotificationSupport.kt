@@ -23,4 +23,8 @@ object EntryDownloadNotifications {
     const val CHANNEL_ERROR = "downloader_error_channel"
     const val ID_PROGRESS = -201
     const val ID_ERROR = -202
+
+    // Kept apart from ID_PROGRESS: that is the download worker's foreground id, so the system removes its
+    // notification when the worker stops
+    const val ID_PAUSED = -203
 }
