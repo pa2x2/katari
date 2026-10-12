@@ -245,7 +245,7 @@ class LibraryScreenModel(
                                 pageItemsById = emptyMap(),
                             )
                         }
-                        lastSelectionPageId = null
+                        lastSelection = null
                     }
                     is ProfileScopedStateEvent.Value -> {
                         mutableState.update { state ->
@@ -645,10 +645,12 @@ class LibraryScreenModel(
         mutableState.update { it.copy(dialog = Dialog.SettingsSheet) }
     }
 
-    private var lastSelectionPageId: String? = null
+    private data class LastSelection(val pageId: String, val itemKey: LibraryItemKey)
+
+    private var lastSelection: LastSelection? = null
 
     fun clearSelection() {
-        lastSelectionPageId = null
+        lastSelection = null
         mutableState.update { it.copy(selection = setOf()) }
     }
 
@@ -657,7 +659,7 @@ class LibraryScreenModel(
             val newSelection = state.selection.mutate { set ->
                 if (!set.remove(item.key)) set.add(item.key)
             }
-            lastSelectionPageId = page.id.takeIf { newSelection.isNotEmpty() }
+            lastSelection = LastSelection(page.id, item.key).takeIf { item.key in newSelection }
             state.copy(selection = newSelection)
         }
     }
@@ -669,31 +671,32 @@ class LibraryScreenModel(
     fun toggleRangeSelection(page: LibraryPage, item: LibraryItem) {
         mutableState.update { state ->
             val newSelection = state.selection.mutate { list ->
-                val lastSelected = list.lastOrNull()
-                if (lastSelectionPageId != page.id) {
+                val items = state.getItemsForPageId(page.id).fastMap { it.key }
+                // The last item of the selection may belong to another page or have been deselected since
+                val lastItemIndex = lastSelection
+                    ?.takeIf { it.pageId == page.id && it.itemKey in list }
+                    ?.let { items.indexOf(it.itemKey) }
+                    ?: -1
+                val currentItemIndex = items.indexOf(item.key)
+                if (lastItemIndex == -1 || currentItemIndex == -1) {
                     list.add(item.key)
                     return@mutate
                 }
 
-                val items = state.getItemsForPageId(page.id).fastMap { it.key }
-                val lastItemIndex = items.indexOf(lastSelected)
-                val currentItemIndex = items.indexOf(item.key)
-
-                val selectionRange = when {
-                    lastItemIndex < currentItemIndex -> lastItemIndex..currentItemIndex
-                    currentItemIndex < lastItemIndex -> currentItemIndex..lastItemIndex
-                    // We shouldn't reach this point
-                    else -> return@mutate
+                val selectionRange = if (lastItemIndex < currentItemIndex) {
+                    lastItemIndex..currentItemIndex
+                } else {
+                    currentItemIndex..lastItemIndex
                 }
-                selectionRange.mapNotNull { items[it] }.let(list::addAll)
+                list.addAll(items.subList(selectionRange.first, selectionRange.last + 1))
             }
-            lastSelectionPageId = page.id
+            lastSelection = LastSelection(page.id, item.key)
             state.copy(selection = newSelection)
         }
     }
 
     fun selectAll() {
-        lastSelectionPageId = null
+        lastSelection = null
         mutableState.update { state ->
             val newSelection = state.selection.mutate { list ->
                 state.getItemsForPageId(state.activePage?.id).map { it.key }.let(list::addAll)
@@ -703,7 +706,7 @@ class LibraryScreenModel(
     }
 
     fun invertSelection() {
-        lastSelectionPageId = null
+        lastSelection = null
         mutableState.update { state ->
             val newSelection = state.selection.mutate { list ->
                 val itemIds = state.getItemsForPageId(state.activePage?.id).fastMap { it.key }
