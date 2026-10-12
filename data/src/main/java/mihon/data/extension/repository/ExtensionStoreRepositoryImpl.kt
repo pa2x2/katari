@@ -29,7 +29,7 @@ class ExtensionStoreRepositoryImpl(
             indexUrl = indexUrl,
             name = name,
             badgeLabel = name,
-            signingKey = "NO_SIGNING_KEY",
+            signingKey = ExtensionStore.NO_SIGNING_KEY,
             contactWebsite = indexUrl,
             contactDiscord = null,
             isLegacy = false,

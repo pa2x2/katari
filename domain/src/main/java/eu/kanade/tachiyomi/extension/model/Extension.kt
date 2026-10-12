@@ -30,6 +30,8 @@ sealed class Extension {
         val hasUpdate: Boolean = false,
         val isObsolete: Boolean = false,
         val isShared: Boolean,
+        // SHA-256 digests of the certificates its apk is signed with
+        val signatures: List<String>,
         val store: ExtensionStore? = null,
     ) : Extension()
 
@@ -71,8 +73,13 @@ sealed class Extension {
         override val versionName: String,
         override val versionCode: Long,
         override val libVersion: Double,
-        val signatureHash: String,
+        // SHA-256 digests of the certificates its apk is signed with
+        val signatures: List<String>,
         override val lang: String? = null,
         override val isNsfw: Boolean = false,
-    ) : Extension()
+    ) : Extension() {
+
+        val signatureHash: String
+            get() = signatures.last()
+    }
 }

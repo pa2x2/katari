@@ -2,9 +2,11 @@ package eu.kanade.tachiyomi.extension.api
 
 import android.content.Context
 import eu.kanade.tachiyomi.extension.ExtensionManager
+import eu.kanade.tachiyomi.extension.filterCompatibleWithApp
 import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.extension.model.InstallStep
 import eu.kanade.tachiyomi.extension.model.LoadResult
+import eu.kanade.tachiyomi.extension.store.findUpdate
 import eu.kanade.tachiyomi.extension.util.ExtensionLoader
 import kotlinx.coroutines.flow.first
 import mihon.core.common.GlobalCustomPreferences
@@ -39,32 +41,19 @@ internal class ExtensionApi {
         updateExtensionStores()
 
         val extensions = if (fromAvailableExtensionList) {
-            extensionManager.availableExtensionsFlow.value
+            extensionManager.availableExtensionListings
         } else {
-            findExtensions()
+            findExtensions().filterCompatibleWithApp()
         }
 
         extensionManager.isInitialized.first { it }
-
-        val extensionsByPkg = extensions.associateBy(Extension.Available::pkgName)
 
         val installedExtensions = ExtensionLoader.loadExtensions(context)
             .filterIsInstance<LoadResult.Success>()
             .map { it.extension }
 
-        val updateCandidates = buildList {
-            installedExtensions.forEach { installedExt ->
-                val availableExt = extensionsByPkg[installedExt.pkgName] ?: return@forEach
-                val hasUpdatedVer = availableExt.versionCode > installedExt.versionCode
-                val hasUpdatedLib = ExtensionLoader.compareLibVersions(
-                    availableExt.versionName,
-                    installedExt.versionName,
-                )?.let { it > 0 } == true
-                val hasUpdate = hasUpdatedVer || hasUpdatedLib
-                if (hasUpdate) {
-                    add(UpdateCandidate(installedExt, availableExt))
-                }
-            }
+        val updateCandidates = installedExtensions.mapNotNull { installed ->
+            installed.findUpdate(extensions)?.let { UpdateCandidate(installed, it) }
         }
 
         if (updateCandidates.isEmpty()) {

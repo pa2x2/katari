@@ -13,4 +13,9 @@ data class ExtensionStore(
         val website: String,
         val discord: String?,
     )
+
+    companion object {
+        // Stores migrated from the old repository preference carry this until a refresh fetches their real key.
+        const val NO_SIGNING_KEY = "NO_SIGNING_KEY"
+    }
 }

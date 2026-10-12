@@ -13,6 +13,8 @@ import eu.kanade.tachiyomi.extension.installer.routing
 import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.extension.model.InstallStep
 import eu.kanade.tachiyomi.extension.model.LoadResult
+import eu.kanade.tachiyomi.extension.store.findListing
+import eu.kanade.tachiyomi.extension.store.findUpdate
 import eu.kanade.tachiyomi.extension.util.ExtensionInstallReceiver
 import eu.kanade.tachiyomi.extension.util.ExtensionInstaller
 import eu.kanade.tachiyomi.extension.util.ExtensionLoader
@@ -79,8 +81,13 @@ class ExtensionManager(
     private val installedExtensionMapFlow = MutableStateFlow(emptyMap<String, Extension.Installed>())
     val installedExtensionsFlow = installedExtensionMapFlow.mapExtensions(scope)
 
-    private val availableExtensionMapFlow = MutableStateFlow(emptyMap<String, Extension.Available>())
-    val availableExtensionsFlow = availableExtensionMapFlow.mapExtensions(scope)
+    // Every store's listing, since stores with different signing keys can list the same extension
+    private val availableExtensionListFlow = MutableStateFlow(emptyList<Extension.Available>())
+    internal val availableExtensionListings: List<Extension.Available>
+        get() = availableExtensionListFlow.value
+    val availableExtensionsFlow = availableExtensionListFlow
+        .map { it.associateBy(Extension.Available::pkgName).values.toList() }
+        .stateIn(scope, WhileSubscribed(5_000), emptyList())
 
     private val untrustedExtensionMapFlow = MutableStateFlow(emptyMap<String, Extension.Untrusted>())
     val untrustedExtensionsFlow = untrustedExtensionMapFlow.mapExtensions(scope)
@@ -152,7 +159,7 @@ class ExtensionManager(
     }
 
     /**
-     * Finds the available extensions in the [api] and updates [availableExtensionMapFlow].
+     * Finds the available extensions in the [api] and updates [availableExtensionListFlow].
      */
     suspend fun findAvailableExtensions(forceRefresh: Boolean = false) {
         val extensions: List<Extension.Available> = try {
@@ -169,7 +176,7 @@ class ExtensionManager(
     fun setAvailableExtensions(extensions: List<Extension.Available>) {
         val compatibleExtensions = extensions.filterCompatibleWithApp()
         enableAdditionalSubLanguages(compatibleExtensions)
-        availableExtensionMapFlow.value = compatibleExtensions.associateBy { it.pkgName }
+        availableExtensionListFlow.value = compatibleExtensions
         updatedInstalledExtensionsStatuses(compatibleExtensions)
         setupAvailableExtensionsSourcesDataMap(compatibleExtensions)
     }
@@ -280,8 +287,8 @@ class ExtensionManager(
      * @param extension The extension to be updated.
      */
     fun updateExtension(extension: Extension.Installed): Flow<InstallStep> {
-        val availableExt = availableExtensionMapFlow.value[extension.pkgName] ?: return emptyFlow()
-        return installExtension(availableExt, ExtensionInstallOperation.ManualUpdate(extension).routing())
+        val update = extension.findUpdate(availableExtensionListFlow.value) ?: return emptyFlow()
+        return installExtension(update, ExtensionInstallOperation.ManualUpdate(extension).routing())
     }
 
     private fun installExtension(
@@ -289,7 +296,6 @@ class ExtensionManager(
         routing: ExtensionInstallRouting,
     ): Flow<InstallStep> {
         return installer.downloadAndInstall(
-            extension.apkUrl,
             extension,
             routing.userActionBehavior,
             routing.installRoute,
@@ -445,23 +451,11 @@ class ExtensionManager(
      * Extension method to set the update field of an installed extension.
      */
     private fun Extension.Installed.withUpdateCheck(): Extension.Installed {
-        return if (updateExists()) {
+        return if (findUpdate(availableExtensionListFlow.value) != null) {
             withUpdate(hasUpdate = true)
         } else {
             this
         }
-    }
-
-    private fun Extension.Installed.updateExists(availableExtension: Extension.Available? = null): Boolean {
-        val availableExt = availableExtension
-            ?: availableExtensionMapFlow.value[pkgName]
-            ?: return false
-
-        val hasUpdatedLib = ExtensionLoader.compareLibVersions(
-            availableExt.versionName,
-            versionName,
-        )?.let { it > 0 } == true
-        return availableExt.versionCode > versionCode || hasUpdatedLib
     }
 
     private fun updatePendingUpdatesCount() {
@@ -488,7 +482,7 @@ class ExtensionManager(
             }
             .associateBy { it.pkgName }
 
-        val availableExtensions = availableExtensionMapFlow.value.values.toList()
+        val availableExtensions = availableExtensionListFlow.value
         installedExtensionMapFlow.value = if (availableExtensions.isEmpty()) {
             reloadedInstalledExtensions
         } else {
@@ -504,21 +498,12 @@ class ExtensionManager(
         installedExtensionsMap: Map<String, Extension.Installed>,
         availableExtensions: List<Extension.Available>,
     ): Map<String, Extension.Installed> {
-        val availableExtensionsMap = availableExtensions.associateBy(Extension.Available::pkgName)
-
-        return installedExtensionsMap.mapValues { (pkgName, extension) ->
-            val availableExtension = availableExtensionsMap[pkgName]
-
-            if (availableExtension == null) {
-                extension
-                    .withUpdate(hasUpdate = false)
-                    .withObsolete(isObsolete = true)
-            } else {
-                extension
-                    .withUpdate(hasUpdate = extension.updateExists(availableExtension))
-                    .withObsolete(isObsolete = false)
-                    .withStore(store = availableExtension.store)
-            }
+        return installedExtensionsMap.mapValues { (_, extension) ->
+            val listing = extension.findListing(availableExtensions)
+            extension
+                .withUpdate(hasUpdate = extension.findUpdate(availableExtensions) != null)
+                .withObsolete(isObsolete = listing == null)
+                .withStore(store = listing?.store ?: extension.store)
         }
     }
 

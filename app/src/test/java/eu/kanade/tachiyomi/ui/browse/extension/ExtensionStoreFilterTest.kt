@@ -25,7 +25,7 @@ class ExtensionStoreFilterTest {
         versionName = "1.0",
         versionCode = 1L,
         libVersion = 2.0,
-        signatureHash = "signature",
+        signatures = listOf("signature"),
     )
 
     private fun extensionStore(name: String) = ExtensionStore(

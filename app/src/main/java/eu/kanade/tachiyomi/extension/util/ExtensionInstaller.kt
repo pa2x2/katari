@@ -2,12 +2,14 @@ package eu.kanade.tachiyomi.extension.util
 
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageInfo
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.tachiyomi.extension.installer.Installer
 import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.extension.model.InstallStep
+import eu.kanade.tachiyomi.extension.store.requireSignedByStore
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.util.storage.getUriCompat
 import eu.kanade.tachiyomi.util.system.isPackageInstalled
@@ -63,13 +65,11 @@ internal class ExtensionInstaller(
      * Adds the given extension to the downloads queue and returns an observable containing its
      * step in the installation process.
      *
-     * @param url The url of the apk.
-     * @param extension The extension to install.
+     * @param extension The listing to install, whose apk must be signed with its store's key.
      * @param installRoute Installer route for this operation.
      */
     fun downloadAndInstall(
-        url: String,
-        extension: Extension,
+        extension: Extension.Available,
         userActionBehavior: UserActionBehavior = UserActionBehavior.LaunchPrompt,
         installRoute: InstallRoute = InstallRoute.Configured,
     ): Flow<InstallStep> {
@@ -85,7 +85,7 @@ internal class ExtensionInstaller(
             val tmpFile = File(context.cacheDir, "extension_${extension.pkgName}.apk")
             try {
                 updateInstallStep(downloadId, InstallStep.Downloading)
-                val request = Request.Builder().url(url).build()
+                val request = Request.Builder().url(extension.apkUrl).build()
                 val response = httpClient.newCall(request).execute()
 
                 if (!response.isSuccessful) {
@@ -97,8 +97,12 @@ internal class ExtensionInstaller(
                     }
                 }
 
+                val packageInfo = runCatching { readStoreSignedApk(extension, tmpFile) }
+                    .onFailure { tmpFile.delete() }
+                    .getOrThrow()
+
                 updateInstallStep(downloadId, InstallStep.Installing)
-                installApk(downloadId, tmpFile, userActionBehavior, installRoute)
+                installApk(downloadId, tmpFile, packageInfo, userActionBehavior, installRoute)
             } catch (e: Exception) {
                 if (e is InterruptedException) {
                     // Canceled
@@ -123,20 +127,30 @@ internal class ExtensionInstaller(
             }
     }
 
+    private fun readStoreSignedApk(extension: Extension.Available, apk: File): PackageInfo {
+        val packageInfo = checkNotNull(ExtensionLoader.getArchivePackageInfo(context, apk)) {
+            "The downloaded file isn't an apk"
+        }
+        extension.requireSignedByStore(ExtensionLoader.getSignatures(packageInfo).orEmpty())
+        return packageInfo
+    }
+
     /**
      * Starts an intent to install the extension at the given uri.
      *
      * @param tempFile The file of the extension to install. Delete after use.
+     * @param packageInfo The package info already read from [tempFile].
      * @param installRoute Installer route for this operation.
      */
     private fun installApk(
         downloadId: Long,
         tempFile: File,
+        packageInfo: PackageInfo,
         userActionBehavior: UserActionBehavior,
         installRoute: InstallRoute,
     ) {
         if (installRoute == InstallRoute.Private) {
-            installApkPrivately(downloadId, tempFile)
+            installApkPrivately(downloadId, tempFile, packageInfo)
             return
         }
 
@@ -156,7 +170,7 @@ internal class ExtensionInstaller(
             }
 
             BasePreferences.ExtensionInstaller.PRIVATE -> {
-                installApkPrivately(downloadId, tempFile)
+                installApkPrivately(downloadId, tempFile, packageInfo)
             }
 
             else -> {
@@ -172,9 +186,9 @@ internal class ExtensionInstaller(
         }
     }
 
-    private fun installApkPrivately(downloadId: Long, tempFile: File) {
+    private fun installApkPrivately(downloadId: Long, tempFile: File, packageInfo: PackageInfo) {
         try {
-            if (ExtensionLoader.installPrivateExtensionFile(context, tempFile)) {
+            if (ExtensionLoader.installPrivateExtensionFile(context, tempFile, packageInfo)) {
                 updateInstallStep(downloadId, InstallStep.Installed)
             } else {
                 updateInstallStep(downloadId, InstallStep.Error)
