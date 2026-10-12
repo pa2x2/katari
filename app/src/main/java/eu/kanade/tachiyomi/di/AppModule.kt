@@ -25,8 +25,14 @@ import eu.kanade.tachiyomi.source.AndroidSourceManager
 import eu.kanade.tachiyomi.source.entry.EntryPreferenceProvider
 import eu.kanade.tachiyomi.source.getDisplayNameForEntryInfo
 import eu.kanade.tachiyomi.ui.base.delegate.ThemingDelegateImpl
+import eu.kanade.tachiyomi.util.system.isDebugBuildType
+import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.protobuf.ProtoBuf
+import logcat.LogPriority
 import mihon.entry.interactions.download.markEntryDownloadRuntimeDependenciesRegistered
 import mihon.entry.interactions.host.AppEntryMergeDuplicateCandidateHost
 import mihon.entry.interactions.host.AppEntryMergeHost
@@ -74,11 +80,13 @@ import mihon.feature.runtime.application.validateInstalledApplicationFeatureRunt
 import mihon.feature.runtime.createFeatureRuntimeComposition
 import mihon.feature.runtime.productionApplicationFeatureRuntimeComponents
 import mihon.feature.runtime.productionApplicationFeatureRuntimeModules
+import mihon.telemetry.TelemetryConfig
 import nl.adaptivity.xmlutil.XmlDeclMode
 import nl.adaptivity.xmlutil.core.XmlVersion
 import nl.adaptivity.xmlutil.serialization.XML
 import tachiyomi.core.common.preference.ProfilePreferenceOwnerInstaller
 import tachiyomi.core.common.storage.AndroidStorageFolderProvider
+import tachiyomi.core.common.util.system.logcat
 import tachiyomi.data.AndroidDatabaseHandler
 import tachiyomi.data.Chapters
 import tachiyomi.data.Database
@@ -190,6 +198,20 @@ class AppModule(val app: Application) : InjektModule {
         }
         addSingletonFactory<ProtoBuf> {
             ProtoBuf
+        }
+        addSingletonFactory<CoroutineScope> {
+            // Work here outlives the screen that started it, so a failure would crash the app on whatever screen is
+            // open by then. Debug builds still crash so the bug gets noticed.
+            val handler = CoroutineExceptionHandler { _, throwable ->
+                if (isDebugBuildType) {
+                    val thread = Thread.currentThread()
+                    thread.uncaughtExceptionHandler?.uncaughtException(thread, throwable)
+                } else {
+                    logcat(LogPriority.ERROR, throwable) { "Uncaught exception in the app scope" }
+                    TelemetryConfig.recordException(throwable)
+                }
+            }
+            CoroutineScope(SupervisorJob() + Dispatchers.IO + handler)
         }
 
         addSingletonFactory { CoverCache(app) }
