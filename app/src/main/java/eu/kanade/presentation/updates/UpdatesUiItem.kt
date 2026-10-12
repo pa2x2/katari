@@ -56,11 +56,6 @@ import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.selectedBackground
 import tachiyomi.domain.entry.model.EntryCover as EntryCoverData
 
-/**
- * @param failed entries the latest update failed to check, named so a failure is noticed without opening the report.
- * @param pausedSources the sources library updates leave out, named so a pause isn't forgotten.
- * @param onClick opens the latest update's report; null while there is none.
- */
 internal fun LazyListScope.updatesLastUpdatedItem(
     lastUpdated: Long,
     failed: Int,
@@ -68,33 +63,54 @@ internal fun LazyListScope.updatesLastUpdatedItem(
     onClick: (() -> Unit)?,
 ) {
     item(key = "updates-lastUpdated") {
-        Column(
-            modifier = Modifier
-                .animateItem(fadeInSpec = null, fadeOutSpec = null)
-                .fillMaxWidth()
-                .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
-                .padding(horizontal = MaterialTheme.padding.medium, vertical = MaterialTheme.padding.small),
-        ) {
-            Row {
+        UpdatesLastUpdatedHeader(
+            lastUpdated = lastUpdated,
+            failed = failed,
+            pausedSources = pausedSources,
+            onClick = onClick,
+            modifier = Modifier.animateItem(fadeInSpec = null, fadeOutSpec = null),
+        )
+    }
+}
+
+/**
+ * @param failed entries the latest update failed to check, named so a failure is noticed without opening the report.
+ * @param pausedSources the sources library updates leave out, named so a pause isn't forgotten.
+ * @param onClick opens the latest update's report; null while there is none.
+ */
+@Composable
+internal fun UpdatesLastUpdatedHeader(
+    lastUpdated: Long,
+    failed: Int,
+    pausedSources: List<String>,
+    onClick: (() -> Unit)?,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
+            .padding(horizontal = MaterialTheme.padding.medium, vertical = MaterialTheme.padding.small),
+    ) {
+        Row {
+            Text(
+                text = stringResource(MR.strings.updates_last_update_info, relativeTimeSpanString(lastUpdated)),
+                fontStyle = FontStyle.Italic,
+            )
+            if (failed > 0) {
                 Text(
-                    text = stringResource(MR.strings.updates_last_update_info, relativeTimeSpanString(lastUpdated)),
+                    text = " · " + pluralStringResource(MR.plurals.library_updates_failed, failed, failed),
                     fontStyle = FontStyle.Italic,
-                )
-                if (failed > 0) {
-                    Text(
-                        text = " · " + pluralStringResource(MR.plurals.library_updates_failed, failed, failed),
-                        fontStyle = FontStyle.Italic,
-                        color = MaterialTheme.colorScheme.error,
-                    )
-                }
-            }
-            if (pausedSources.isNotEmpty()) {
-                Text(
-                    text = pausedSourcesText(pausedSources),
-                    fontStyle = FontStyle.Italic,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = MaterialTheme.colorScheme.error,
                 )
             }
+        }
+        if (pausedSources.isNotEmpty()) {
+            Text(
+                text = pausedSourcesText(pausedSources),
+                fontStyle = FontStyle.Italic,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
     }
 }

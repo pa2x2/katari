@@ -3,12 +3,15 @@ package eu.kanade.tachiyomi.ui.updates
 import androidx.compose.animation.graphics.res.animatedVectorResource
 import androidx.compose.animation.graphics.res.rememberAnimatedVectorPainter
 import androidx.compose.animation.graphics.vector.AnimatedImageVector
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.model.rememberScreenModel
@@ -25,6 +28,7 @@ import eu.kanade.presentation.updates.UpdatesDeleteConfirmationDialog
 import eu.kanade.presentation.updates.UpdatesFilterDialog
 import eu.kanade.presentation.updates.UpdatesFilterSummaryBar
 import eu.kanade.presentation.updates.UpdatesFilteredEmptyScreen
+import eu.kanade.presentation.updates.UpdatesLastUpdatedHeader
 import eu.kanade.presentation.updates.UpdatesScreen
 import eu.kanade.presentation.updates.UpdatesScreenState
 import eu.kanade.presentation.updates.unifiedUpdatesUiItems
@@ -93,6 +97,7 @@ data object UpdatesTab : Tab {
             startSkippedOfLatest = screenModel::updateSkippedOfLatest,
         )
 
+        val openUpdateReport = { navigator.push(LibraryUpdateReportScreen()) }.takeIf { latestUpdateSummary != null }
         val selected = state.selected
         val actionLabels = selected.map { it.update.entryType }.entrySelectionActionLabels()
 
@@ -165,14 +170,23 @@ data object UpdatesTab : Tab {
                 null
             },
             emptyContent = { modifier ->
-                if (feed.hiddenByFilters > 0) {
-                    UpdatesFilteredEmptyScreen(
-                        summary = filterSummary,
-                        onClearFilters = settingsScreenModel::clearFilters,
-                        modifier = modifier,
+                // An update that found nothing still says when it ran and what it couldn't check
+                Column(modifier = modifier.fillMaxSize()) {
+                    UpdatesLastUpdatedHeader(
+                        lastUpdated = screenModel.lastUpdated,
+                        failed = latestUpdateSummary?.failed ?: 0,
+                        pausedSources = pausedSourceNames,
+                        onClick = openUpdateReport,
                     )
-                } else {
-                    EmptyScreen(stringRes = MR.strings.information_no_recent, modifier = modifier)
+                    if (feed.hiddenByFilters > 0) {
+                        UpdatesFilteredEmptyScreen(
+                            summary = filterSummary,
+                            onClearFilters = settingsScreenModel::clearFilters,
+                            modifier = Modifier.weight(1f),
+                        )
+                    } else {
+                        EmptyScreen(stringRes = MR.strings.information_no_recent, modifier = Modifier.weight(1f))
+                    }
                 }
             },
         ) {
@@ -180,7 +194,7 @@ data object UpdatesTab : Tab {
                 lastUpdated = screenModel.lastUpdated,
                 failed = latestUpdateSummary?.failed ?: 0,
                 pausedSources = pausedSourceNames,
-                onClick = { navigator.push(LibraryUpdateReportScreen()) }.takeIf { latestUpdateSummary != null },
+                onClick = openUpdateReport,
             )
             unifiedUpdatesUiItems(
                 uiModels = state.getUiModel(),
