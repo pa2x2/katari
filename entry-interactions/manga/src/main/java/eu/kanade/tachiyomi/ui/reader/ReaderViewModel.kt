@@ -60,7 +60,6 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -318,35 +317,30 @@ internal class ReaderViewModel @JvmOverloads constructor(
     private var nextChapterPreparationId: Long? = null
     private var startupJob: Job? = null
 
-    private val unfilteredChapterList by lazy {
-        val manga = manga!!
-        runBlocking { getAllEntryChapters(manga, applyScanlatorFilter = false) }
-    }
-
     /**
-     * Chapter list for the active manga. It's retrieved lazily and should be accessed for the first
-     * time in a background thread to avoid blocking the UI.
+     * Chapter list for the active manga. Empty until [loadInitialChapter] loads it, which happens before any chapter
+     * is shown.
      */
-    private val chapterList by lazy {
-        val manga = manga!!
-        val entry = runBlocking { getEntry.await(manga.id) }
+    @Volatile
+    private var chapterList: List<ReaderChapter> = emptyList()
+
+    private suspend fun loadChapterList(manga: Entry): List<ReaderChapter> {
+        val entry = getEntry.await(manga.id)
             ?: throw ReaderLoadException("Entry ${manga.id} not found", canRetry = false)
-        val chapters = runBlocking { getAllEntryChapters(manga, applyScanlatorFilter = true) }
+        val chapters = getAllEntryChapters(manga, applyScanlatorFilter = true)
             .let { filtered ->
                 // A chapter opened directly, like from a notification, is shown even if its scanlator is excluded
                 if (filtered.any { it.id == chapterId }) {
                     filtered
                 } else {
-                    filtered + unfilteredChapterList.filter { it.id == chapterId }
+                    filtered + getAllEntryChapters(manga, applyScanlatorFilter = false).filter { it.id == chapterId }
                 }
             }
         val mergedEntryIds = chapters.map { it.entryId }.distinct()
         val progressByChapterId = mergedEntryIds
-            .flatMap { entryId -> runBlocking { entryProgressRepository.getByEntryId(entryId) } }
+            .flatMap { entryId -> entryProgressRepository.getByEntryId(entryId) }
             .associateBy { it.chapterId }
-        val mangaById = mergedEntryIds.associateWith { entryId ->
-            runBlocking { getEntry.await(entryId) }
-        }
+        val mangaById = mergedEntryIds.associateWith { entryId -> getEntry.await(entryId) }
 
         val selectedChapter = chapters.find { it.id == chapterId }
             ?: throw ReaderLoadException(
@@ -399,7 +393,7 @@ internal class ReaderViewModel @JvmOverloads constructor(
             else -> chapters
         }
 
-        chaptersForReader
+        return chaptersForReader
             .sortedForReading(entry, mergedEntryIds)
             .run {
                 val domainChapters = map { it.toReaderChapter() }
@@ -520,6 +514,7 @@ internal class ReaderViewModel @JvmOverloads constructor(
                         sourceManager = sourceManager,
                     ).also { loader = it }
                 }
+                if (chapterList.isEmpty()) chapterList = loadChapterList(checkNotNull(manga))
                 val requestedChapter = chapterList.firstOrNull { chapterId == it.chapter.id }
                     ?: throw ReaderLoadException(
                         message = "Requested chapter of id $chapterId not found in chapter list",
