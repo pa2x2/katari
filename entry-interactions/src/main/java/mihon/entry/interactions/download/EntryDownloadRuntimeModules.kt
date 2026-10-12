@@ -154,6 +154,7 @@ internal val EntryDownloadLifecycleFeatureRuntimeModule = EntryFeatureRuntimeMod
             getEntryWithChapters = get(),
             entryRepository = get(),
             downloads = get<EntryInteractions>().download,
+            globalLibraryPreferences = get(),
         )
     }
     EntryFeatureRuntimeArtifacts(
@@ -187,6 +188,7 @@ internal fun entryDownloadMediaSessionBinding(
                     visibleEntry = event.visibleEntry,
                     child = event.child,
                     deduplicateByNumber = event.deduplicateDownloadByNumber,
+                    completeEquivalentChildrenByNumber = event.completeEquivalentChildrenByNumber,
                 ),
             )
         }

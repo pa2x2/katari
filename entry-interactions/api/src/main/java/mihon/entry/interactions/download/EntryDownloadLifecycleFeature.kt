@@ -37,9 +37,14 @@ sealed interface EntryDownloadLifecycleEvent {
         val deduplicateByNumber: Boolean = false,
     ) : EntryDownloadLifecycleEvent
 
+    /**
+     * [completeEquivalentChildrenByNumber] tells that the media runtime completes children sharing a chapter number
+     * together, so the downloads of those completed duplicates are cleaned up along with a child.
+     */
     data class Completed(
         override val visibleEntry: Entry,
         val child: EntryChapter,
         val deduplicateByNumber: Boolean = false,
+        val completeEquivalentChildrenByNumber: Boolean = false,
     ) : EntryDownloadLifecycleEvent
 }

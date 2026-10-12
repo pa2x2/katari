@@ -10,6 +10,8 @@ import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.entry.service.sortedForReading
+import tachiyomi.domain.library.service.GlobalLibraryPreferences
+import tachiyomi.domain.library.service.LibraryPreferences
 
 /** Interprets media-neutral lifecycle events as shared cleanup and download-ahead policy. */
 internal class DefaultEntryDownloadLifecycleFeature(
@@ -19,6 +21,7 @@ internal class DefaultEntryDownloadLifecycleFeature(
     private val getEntryWithChapters: GetEntryWithChapters,
     entryRepository: EntryRepository,
     private val downloads: EntryDownloadInteraction,
+    private val globalLibraryPreferences: GlobalLibraryPreferences,
 ) : EntryDownloadLifecycleFeature {
     private val downloadTypes = evaluation.downloadLifecycleTypes()
     private val bookmarkProtectedTypes = evaluation.downloadLifecycleBookmarkProtectionTypes()
@@ -114,7 +117,12 @@ internal class DefaultEntryDownloadLifecycleFeature(
             val readingOrder = readingOrder(event.visibleEntry, event.child, event.deduplicateByNumber)
             val currentIndex = readingOrder.indexOfFirst { it.id == event.child.id }
             readingOrder.getOrNull(currentIndex - removeAfterReadSlots)?.let { child ->
-                deleteEligible(event.visibleEntry, listOf(child), deferUntilViewerCloses = true)
+                val duplicates = if (event.completeEquivalentChildrenByNumber) {
+                    completedDuplicates(event.visibleEntry, child)
+                } else {
+                    emptyList()
+                }
+                deleteEligible(event.visibleEntry, listOf(child) + duplicates, deferUntilViewerCloses = true)
             }
         }
         val currentOwner = ownerResolver.resolve(event.visibleEntry, listOf(event.child)).singleOrNull()
@@ -150,6 +158,17 @@ internal class DefaultEntryDownloadLifecycleFeature(
                     downloads.delete(owner.entry, eligible)
                 }
             }
+        }
+    }
+
+    // Completing a chapter also completes its duplicates when the user asked for that, which leaves their downloads
+    // as read as the chapter's own
+    private suspend fun completedDuplicates(visibleEntry: Entry, child: EntryChapter): List<EntryChapter> {
+        val duplicateCompletion = LibraryPreferences.MARK_DUPLICATE_CHAPTER_READ_EXISTING in
+            globalLibraryPreferences.markDuplicateReadChapterAsRead.get()
+        if (!duplicateCompletion || !child.read || !child.isRecognizedNumber) return emptyList()
+        return getEntryWithChapters.awaitChapters(visibleEntry).filter {
+            it.id != child.id && it.read && it.isRecognizedNumber && it.chapterNumber == child.chapterNumber
         }
     }
 
