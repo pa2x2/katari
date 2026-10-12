@@ -187,12 +187,19 @@ class LibraryScreenModel(
             .launchIn(screenModelScope)
         screenModelScope.launchIO {
             observeProfileScopedState(profileStore.currentProfileIdFlow) { profileId ->
+                val scopedLibraryPreferences = LibraryPreferences(profileStore.profileStore(profileId))
+                val tracking = observeLibraryTrackingCollection(
+                    trackingFilters = getTrackingFiltersFlow(),
+                    categories = getCategories.subscribeForProfile(profileId),
+                    globalSort = scopedLibraryPreferences.sortingMode.changes(),
+                    collection = trackingFeature::observeCollection,
+                )
                 combine(
                     state.map { it.searchQuery }.distinctUntilChanged().debounce(0.25.seconds),
                     getCategories.subscribeForProfile(profileId),
                     getLibraryItemsFlow(profileId),
-                    combine(trackingFeature.observeCollection(), getTrackingFiltersFlow(), ::Pair),
-                    observeLibraryFilterPreferences(LibraryPreferences(profileStore.profileStore(profileId))),
+                    combine(tracking, getTrackingFiltersFlow(), ::Pair),
+                    observeLibraryFilterPreferences(scopedLibraryPreferences),
                 ) { searchQuery, categories, favorites, (tracking, trackingFilters), itemPreferences ->
                     val showSystemCategory = favorites.any { it.categories.contains(0L) }
                     val categoryNamesById = categories.associate { it.id to it.name }
