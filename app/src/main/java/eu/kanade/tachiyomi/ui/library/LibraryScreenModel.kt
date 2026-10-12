@@ -3,7 +3,6 @@ package eu.kanade.tachiyomi.ui.library
 import android.content.Context
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.util.fastMap
-import cafe.adriel.voyager.core.model.StateScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import eu.kanade.core.preference.PreferenceMutableState
 import eu.kanade.core.preference.asState
@@ -16,6 +15,7 @@ import eu.kanade.tachiyomi.data.library.LibraryUpdateProgress
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.getDisplayNameForEntryInfo
+import eu.kanade.tachiyomi.ui.base.screenmodel.GatedStateScreenModel
 import eu.kanade.tachiyomi.ui.library.grouping.resolveLibraryPages
 import eu.kanade.tachiyomi.util.system.isReleaseBuildType
 import kotlinx.collections.immutable.ImmutableList
@@ -89,6 +89,7 @@ import tachiyomi.core.common.preference.CheckboxState
 import tachiyomi.core.common.preference.TriState
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.launchNonCancellable
+import tachiyomi.core.common.util.lang.pausedWhileUnsubscribed
 import tachiyomi.domain.category.interactor.GetCategories
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.entry.interactor.GetEntry
@@ -142,7 +143,7 @@ class LibraryScreenModel(
     private val profileDatabase: ProfileDatabase = Injekt.get(),
     private val profileManager: ProfileManager = Injekt.get(),
     private val entryProfileMoveFeature: EntryProfileMoveFeature = Injekt.get(),
-) : StateScreenModel<LibraryScreenModel.State>(State()) {
+) : GatedStateScreenModel<LibraryScreenModel.State>(State()) {
 
     val moveEvents = Channel<MoveEvent>(Channel.BUFFERED)
     private var moveInProgress = false
@@ -177,7 +178,7 @@ class LibraryScreenModel(
         mutableState.update { state ->
             state.copy(activePageIndex = libraryPreferences.lastUsedCategory.get())
         }
-        state.map(::mergeSelectionActionInput)
+        mutableState.map(::mergeSelectionActionInput)
             .distinctUntilChanged()
             .mapLatest(::resolveMergeSelectionAvailability)
             .flowOn(Dispatchers.IO)
@@ -185,7 +186,7 @@ class LibraryScreenModel(
                 mutableState.update { state -> state.copy(mergeSelectionAvailable = available) }
             }
             .launchIn(screenModelScope)
-        screenModelScope.launchIO {
+        gatedScope.launchIO {
             observeProfileScopedState(profileStore.currentProfileIdFlow) { profileId ->
                 val scopedLibraryPreferences = LibraryPreferences(profileStore.profileStore(profileId))
                 val tracking = observeLibraryTrackingCollection(
@@ -195,7 +196,7 @@ class LibraryScreenModel(
                     collection = trackingFeature::observeCollection,
                 )
                 combine(
-                    state.map { it.searchQuery }.distinctUntilChanged().debounce(0.25.seconds),
+                    mutableState.map { it.searchQuery }.distinctUntilChanged().debounce(0.25.seconds),
                     getCategories.subscribeForProfile(profileId),
                     getLibraryItemsFlow(profileId),
                     combine(tracking, getTrackingFiltersFlow(), ::Pair),
@@ -266,13 +267,13 @@ class LibraryScreenModel(
             }
         }
 
-        screenModelScope.launchIO {
+        gatedScope.launchIO {
             profileStore.currentProfileIdFlow
                 .distinctUntilChanged()
                 .flatMapLatest { profileId ->
                     val scopedLibraryPreferences = LibraryPreferences(profileStore.profileStore(profileId))
                     observeGroupedLibraryPages(
-                        libraryData = state
+                        libraryData = mutableState
                             .map { it.libraryData }
                             .filter { it.isInitialized && it.profileId == profileId }
                             .distinctUntilChanged(),
@@ -464,7 +465,7 @@ class LibraryScreenModel(
     private fun getLibraryItemsFlow(profileId: Long): Flow<List<LibraryItem>> {
         val enrichedItems = combine(
             getLibraryEntries.subscribe(profileId),
-            downloadRuntime.changes,
+            downloadRuntime.changes.pausedWhileUnsubscribed(),
         ) { items, _ -> items }
             .reuseEnrichmentForPinUpdates { items -> items.enrichEntryItems() }
         return enrichedItems.flatMapLatest { initialItems ->
@@ -518,7 +519,7 @@ class LibraryScreenModel(
      * Queues the amount specified of unread chapters from the list of selected entries.
      */
     fun performDownloadAction(action: DownloadAction) {
-        downloadBulkDownloadCandidates(action, state.value.selectedLibraryItems)
+        downloadBulkDownloadCandidates(action, mutableState.value.selectedLibraryItems)
         clearSelection()
     }
 
@@ -541,7 +542,7 @@ class LibraryScreenModel(
     }
 
     fun canDownloadSelection(action: DownloadAction = DownloadAction.UNREAD_CHAPTERS): Boolean {
-        val state = state.value
+        val state = mutableState.value
         val requests = state.selectedLibraryItems.map { item ->
             EntryDownloadActionRequest(item.entry.type, item.sourceIds)
         }
@@ -555,7 +556,7 @@ class LibraryScreenModel(
      * Marks selected entries' chapters/episodes read/watch status.
      */
     fun markReadSelection(read: Boolean) {
-        val entryIds = selectedActionEntryIds(state.value.selectedLibraryItems)
+        val entryIds = selectedActionEntryIds(mutableState.value.selectedLibraryItems)
         screenModelScope.launchNonCancellable {
             val entries = getActionEntries(entryIds)
             entries.forEach { entry ->
@@ -569,7 +570,7 @@ class LibraryScreenModel(
     }
 
     fun setSelectionPinned() {
-        val state = state.value
+        val state = mutableState.value
         val profileId = state.libraryData.profileId ?: return
         val selectedItems = state.selectedLibraryItems
         val entryIds = selectedActionEntryIds(selectedItems)
@@ -582,7 +583,7 @@ class LibraryScreenModel(
     }
 
     fun canSetConsumedSelection(): Boolean {
-        return state.value.selectedEntryTypes.any(entryConsumptionFeature::isApplicable)
+        return mutableState.value.selectedEntryTypes.any(entryConsumptionFeature::isApplicable)
     }
 
     /**
@@ -640,7 +641,7 @@ class LibraryScreenModel(
     }
 
     fun getRandomLibraryItemForCurrentPage(): LibraryItem? {
-        val state = state.value
+        val state = mutableState.value
         return state.getItemsForPageId(state.activePage?.id).randomOrNull()
     }
 
@@ -751,7 +752,7 @@ class LibraryScreenModel(
     }
 
     fun openChangeCategoryDialog() {
-        val state = state.value
+        val state = mutableState.value
         val items = state.selection.mapNotNull { state.libraryData.favoritesById[it] }
         // Hide the default category because it has a different behavior than the ones from db.
         val categories = state.libraryData.categories.filter { it.id != 0L }
@@ -773,7 +774,7 @@ class LibraryScreenModel(
     }
 
     fun openDeleteEntriesDialog() {
-        val selectedItems = state.value.selectedLibraryItems
+        val selectedItems = mutableState.value.selectedLibraryItems
         val entryIds = selectedActionEntryIds(selectedItems)
         val containsMergedEntries = selectedItems.any(LibraryItem::isMerged)
         screenModelScope.launchIO {
@@ -792,7 +793,7 @@ class LibraryScreenModel(
     }
 
     fun openUpdateModeDialog() {
-        val entryIds = state.value.selectedLibraryItems.map { it.entry.id }.distinct()
+        val entryIds = mutableState.value.selectedLibraryItems.map { it.entry.id }.distinct()
         screenModelScope.launchIO {
             val modes = updateRulesRepository.getEntryModes()
             val currentMode = entryIds
@@ -810,7 +811,7 @@ class LibraryScreenModel(
 
     /** The selected entries to check for updates, clearing the selection as the check takes over. */
     fun takeSelectionForUpdate(): List<Long> {
-        val entryIds = state.value.selectedLibraryItems.map { it.entry.id }.distinct()
+        val entryIds = mutableState.value.selectedLibraryItems.map { it.entry.id }.distinct()
         clearSelection()
         return entryIds
     }
@@ -839,7 +840,7 @@ class LibraryScreenModel(
     fun prepareMoveToProfile(profile: Profile, destinationCategoryId: Long?) {
         if (moveInProgress) return
         val sourceProfileId = profileStore.currentProfileId
-        val selectedIds = state.value.selectedLibraryItems.map { it.entry.id }.distinct()
+        val selectedIds = mutableState.value.selectedLibraryItems.map { it.entry.id }.distinct()
         if (selectedIds.isEmpty()) return
         moveInProgress = true
         screenModelScope.launchNonCancellable {
@@ -875,7 +876,7 @@ class LibraryScreenModel(
     }
 
     fun resolveMoveConflict(resolution: EntryProfileMoveConflictResolution) {
-        val dialog = state.value.dialog as? Dialog.MoveConflict ?: return
+        val dialog = mutableState.value.dialog as? Dialog.MoveConflict ?: return
         if (moveInProgress) return
         val conflict = dialog.preview.conflicts[dialog.conflictIndex]
         val resolutions = dialog.resolutions + (conflict.sourceEntry.id to resolution)
@@ -910,19 +911,19 @@ class LibraryScreenModel(
     }
 
     fun isMergeSelectionAvailable(): Boolean {
-        return state.value.mergeSelectionAvailable
+        return mutableState.value.mergeSelectionAvailable
     }
 
     fun canMigrateSelection(): Boolean {
-        return migrationSubjects(state.value) != null
+        return migrationSubjects(mutableState.value) != null
     }
 
     fun selectedMigrationSubjects(): List<EntryMigrationSubject> {
-        return migrationSubjects(state.value).orEmpty()
+        return migrationSubjects(mutableState.value).orEmpty()
     }
 
     fun openMergeDialog() {
-        val selectedItems = state.value.selectedLibraryItems
+        val selectedItems = mutableState.value.selectedLibraryItems
         screenModelScope.launchIO {
             val entries = selectedItems.flatMap(LibraryItem::memberEntries).distinctBy(Entry::id)
             val editor = when (val result = entryMergeFeature.prepare(EntryMergePrepareIntent(entries))) {
@@ -982,7 +983,7 @@ class LibraryScreenModel(
     }
 
     fun confirmMergeSelection() {
-        when (val dialog = state.value.dialog) {
+        when (val dialog = mutableState.value.dialog) {
             is Dialog.MergeEntry -> {
                 screenModelScope.launchNonCancellable {
                     val result = entryMergeFeature.execute(
