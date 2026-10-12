@@ -211,6 +211,19 @@ internal class DownloadCache(
         return 0
     }
 
+    /** Returns the amount of downloaded chapters of each of [mangas], by entry id. */
+    fun getDownloadCounts(mangas: List<Entry>): Map<Long, Int> {
+        renewCache()
+
+        val sourceDirs = rootDownloadsDir.sourceDirs
+        return mangas.associate { manga ->
+            val mangaDirs = sourceDirs[manga.source]?.mangaDirs
+            // Building the directory name is the costly part, so it's skipped for sources without downloads
+            val mangaDir = if (mangaDirs.isNullOrEmpty()) null else mangaDirs[provider.getEntryDirName(manga.title)]
+            manga.id to (mangaDir?.chapterDirs?.size ?: 0)
+        }
+    }
+
     /**
      * Adds a chapter that has just been download to this cache.
      *

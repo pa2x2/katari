@@ -64,6 +64,12 @@ interface EntryDownloadProcessor : EntryInteractionProvider {
 
     fun hasDownloads(entry: Entry): Boolean
     fun getDownloadCount(entry: Entry): Int
+
+    /** Returns the download count of each of [entries] by entry id, looking up the downloads once. */
+    fun getDownloadCounts(entries: List<Entry>): Map<Long, Int> {
+        return entries.associate { it.id to getDownloadCount(it) }
+    }
+
     fun getTotalDownloadCount(): Int
     fun isDownloaded(entry: Entry, chapter: EntryChapter, skipCache: Boolean = false): Boolean
     fun getStatus(

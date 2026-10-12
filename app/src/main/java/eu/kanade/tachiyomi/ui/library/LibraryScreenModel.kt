@@ -478,6 +478,7 @@ class LibraryScreenModel(
     }
 
     private fun List<LibraryItem>.enrichEntryItems(): List<LibraryItem> {
+        val downloadCounts = downloadRuntime.downloadCounts(flatMap(LibraryItem::memberEntries))
         return map { item ->
             val singleSourceId = item.sources.singleOrNull()?.id
             item.copy(
@@ -490,7 +491,7 @@ class LibraryScreenModel(
                     ?.itemOrientation
                     ?: EntryItemOrientation.VERTICAL,
                 isLocal = singleSourceId == LocalSource.ID,
-                downloadCount = item.calculateDownloadCount(downloadRuntime),
+                downloadCount = item.memberEntries.sumOf { downloadCounts[it.id] ?: 0 },
             )
         }
     }

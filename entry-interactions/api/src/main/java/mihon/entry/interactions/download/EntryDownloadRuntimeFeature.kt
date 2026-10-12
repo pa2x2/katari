@@ -29,6 +29,9 @@ interface EntryDownloadRuntimeFeature {
     fun cancelQueued(type: EntryType, childId: Long): EntryDownloadStatus?
 
     fun downloadCount(entry: Entry): Int
+
+    /** Returns the download count of each of [entries] by entry id. An entry missing from the result has none. */
+    fun downloadCounts(entries: List<Entry>): Map<Long, Int>
     fun totalDownloadCount(): Int
     fun isDownloaded(entry: Entry, chapter: EntryChapter, skipCache: Boolean = false): Boolean
 

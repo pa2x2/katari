@@ -153,6 +153,11 @@ internal class MangaDownloadProcessor(
         return downloadManager.getDownloadCount(entry)
     }
 
+    override fun getDownloadCounts(entries: List<Entry>): Map<Long, Int> {
+        entries.forEach { it.requireManga() }
+        return downloadManager.getDownloadCounts(entries)
+    }
+
     override fun getTotalDownloadCount(): Int {
         return downloadManager.getDownloadCount()
     }

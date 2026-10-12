@@ -100,6 +100,10 @@ internal class DefaultEntryDownloadRuntimeFeature(
         return interaction.getDownloadCount(entry)
     }
 
+    override fun downloadCounts(entries: List<Entry>): Map<Long, Int> {
+        return interaction.getDownloadCounts(entries.filter { isApplicable(it.type) })
+    }
+
     override fun totalDownloadCount(): Int = interaction.getTotalDownloadCount()
 
     override fun isDownloaded(entry: Entry, chapter: EntryChapter, skipCache: Boolean): Boolean {

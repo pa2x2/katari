@@ -164,6 +164,16 @@ internal class EntryDownloadInteractionDispatch(
         return processor.getDownloadCount(entry)
     }
 
+    override fun getDownloadCounts(entries: List<Entry>): Map<Long, Int> {
+        return buildMap {
+            entries.groupBy(Entry::type).forEach { (type, typeEntries) ->
+                val processor = processors[type] ?: return@forEach
+                processor.requireMatchingEntryType("download", typeEntries.first(), processors.keys)
+                putAll(processor.getDownloadCounts(typeEntries))
+            }
+        }
+    }
+
     override fun getTotalDownloadCount(): Int {
         return processors.values.sumOf { it.getTotalDownloadCount() }
     }

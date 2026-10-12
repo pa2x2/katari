@@ -232,6 +232,11 @@ internal class AnimeDownloadProcessor(
         return animeDownloadManager.getDownloadCount(entry)
     }
 
+    override fun getDownloadCounts(entries: List<Entry>): Map<Long, Int> {
+        entries.forEach { it.requireAnime() }
+        return animeDownloadManager.getDownloadCounts(entries)
+    }
+
     override fun getTotalDownloadCount(): Int {
         return animeDownloadManager.getTotalDownloadCount()
     }

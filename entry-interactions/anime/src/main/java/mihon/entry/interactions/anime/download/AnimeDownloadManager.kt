@@ -284,6 +284,10 @@ internal class AnimeDownloadManager(
         return cache.getDownloadCount(anime)
     }
 
+    fun getDownloadCounts(animes: List<Entry>): Map<Long, Int> {
+        return cache.getDownloadCounts(animes)
+    }
+
     fun getTotalDownloadCount(): Int {
         return cache.getTotalDownloadCount()
     }

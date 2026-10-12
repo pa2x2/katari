@@ -154,6 +154,17 @@ internal class AnimeDownloadCache(
         return animeDir.episodeDirs.size
     }
 
+    fun getDownloadCounts(animes: List<Entry>): Map<Long, Int> {
+        renewCache()
+        val sourceDirs = rootDownloadsDir.sourceDirs
+        return animes.associate { anime ->
+            val animeDirs = sourceDirs[anime.source]?.animeDirs
+            // Building the directory name is the costly part, so it's skipped for sources without downloads
+            val animeDir = if (animeDirs.isNullOrEmpty()) null else animeDirs[provider.getAnimeDirName(anime.title)]
+            anime.id to (animeDir?.episodeDirs?.size ?: 0)
+        }
+    }
+
     suspend fun addEpisode(episodeDirName: String, animeUniFile: UniFile, anime: Entry) {
         rootDownloadsDirMutex.withLock {
             var sourceDir = rootDownloadsDir.sourceDirs[anime.source]
