@@ -958,6 +958,8 @@
     <string name="pref_hide_missing_chapter_indicators">Hide missing item indicators</string>
     <string name="pref_disallow_non_ascii_filenames">Disallow non-ASCII filenames</string>
     <string name="pref_disallow_non_ascii_filenames_details">Ensures compatibility with certain storage media that don't support Unicode. When this is enabled, you'll need to manually rename source and entry folders by replacing non-ASCII characters with their lowercase UTF-8 hexadecimal representations. Downloaded files don't need to be renamed.</string>
+    <string name="pref_download_name_hash">Add a unique code to download names</string>
+    <string name="pref_download_name_hash_summary">Keeps downloaded chapters and episodes with identical names apart. When disabled, one named like an existing download can\'t be downloaded.</string>
     <string name="action_group">Group</string>
     <string name="action_group_type">Type</string>
     <string name="action_group_type_category">Type -> Category</string>

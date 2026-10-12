@@ -3,7 +3,6 @@ package mihon.entry.interactions.anime.download
 import android.content.Context
 import com.hippo.unifile.UniFile
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
-import eu.kanade.tachiyomi.util.lang.Hash.md5
 import eu.kanade.tachiyomi.util.storage.DiskUtil
 import kotlinx.serialization.json.Json
 import logcat.LogPriority
@@ -116,45 +115,19 @@ internal class AnimeDownloadProvider(
         )
     }
 
-    fun getEpisodeDirName(
-        episodeName: String,
-        episodeUrl: String,
-        disallowNonAsciiFilenames: Boolean = libraryPreferences.disallowNonAsciiFilenames.get(),
-    ): String {
-        var dirName = sanitizeEpisodeName(episodeName)
-        dirName = DiskUtil.buildValidFilename(dirName, DiskUtil.MAX_FILE_NAME_BYTES - 8, disallowNonAsciiFilenames)
-        dirName += "_" + md5(episodeUrl).take(6)
-        return dirName
-    }
-
-    private fun getLegacyEpisodeDirNames(
-        episodeName: String,
-        episodeUrl: String,
-    ): List<String> {
-        val episodeNameV1 = DiskUtil.buildValidFilename(sanitizeEpisodeName(episodeName))
-        val otherEpisodeDirName = getEpisodeDirName(
-            episodeName = episodeName,
-            episodeUrl = episodeUrl,
-            disallowNonAsciiFilenames = !libraryPreferences.disallowNonAsciiFilenames.get(),
+    fun getEpisodeDirName(episodeName: String, episodeUrl: String): String {
+        return EpisodeDirNames(episodeName, episodeUrl).dirName(
+            disallowNonAscii = libraryPreferences.disallowNonAsciiFilenames.get(),
+            appendHash = libraryPreferences.enableChapterNameHash.get(),
         )
-
-        return buildList(2) {
-            add(episodeNameV1)
-            add(otherEpisodeDirName)
-        }
     }
 
-    private fun sanitizeEpisodeName(episodeName: String): String {
-        return episodeName.ifBlank { "Episode" }
-    }
-
+    /** Returns every name the episode's download may have on disk, the one [getEpisodeDirName] returns first. */
     fun getValidEpisodeDirNames(episodeName: String, episodeUrl: String): List<String> {
-        val episodeDirName = getEpisodeDirName(episodeName, episodeUrl)
-        val legacyEpisodeDirNames = getLegacyEpisodeDirNames(episodeName, episodeUrl)
-        return buildList {
-            add(episodeDirName)
-            legacyEpisodeDirNames.forEach(::add)
-        }
+        return EpisodeDirNames(episodeName, episodeUrl).validDirNames(
+            disallowNonAscii = libraryPreferences.disallowNonAsciiFilenames.get(),
+            appendHash = libraryPreferences.enableChapterNameHash.get(),
+        )
     }
 
     fun createArtifactRecords(directory: UniFile): List<DownloadedArtifact> {

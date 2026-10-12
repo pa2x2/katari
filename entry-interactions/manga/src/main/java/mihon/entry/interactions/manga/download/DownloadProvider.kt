@@ -172,100 +172,19 @@ internal class DownloadProvider(
         )
     }
 
-    /**
-     * Returns the chapter directory name for a chapter.
-     *
-     * @param chapterName the name of the chapter to query.
-     * @param chapterScanlator scanlator of the chapter to query.
-     * @param chapterUrl url of the chapter to query.
-     */
-    fun getChapterDirName(
-        chapterName: String,
-        chapterScanlator: String?,
-        chapterUrl: String,
-        disallowNonAsciiFilenames: Boolean = libraryPreferences.disallowNonAsciiFilenames.get(),
-    ): String {
-        var dirName = sanitizeChapterName(chapterName)
-        if (!chapterScanlator.isNullOrBlank()) {
-            dirName = chapterScanlator + "_" + dirName
-        }
-        // Subtract 7 bytes for hash and underscore, 4 bytes for .cbz
-        dirName = DiskUtil.buildValidFilename(dirName, DiskUtil.MAX_FILE_NAME_BYTES - 11, disallowNonAsciiFilenames)
-        dirName += "_" + md5(chapterUrl).take(6)
-        return dirName
-    }
-
-    /**
-     * Returns list of names that might have been previously used as
-     * the directory name for a chapter.
-     * Add to this list if naming pattern ever changes.
-     *
-     * @param chapterName the name of the chapter to query.
-     * @param chapterScanlator scanlator of the chapter to query.
-     * @param chapterUrl url of the chapter to query.
-     */
-    private fun getLegacyChapterDirNames(
-        chapterName: String,
-        chapterScanlator: String?,
-        chapterUrl: String,
-    ): List<String> {
-        val sanitizedChapterName = sanitizeChapterName(chapterName)
-        val chapterNameV1 = DiskUtil.buildValidFilename(
-            when {
-                !chapterScanlator.isNullOrBlank() -> "${chapterScanlator}_$sanitizedChapterName"
-                else -> sanitizedChapterName
-            },
+    /** Returns the name a new download of the chapter is written under. */
+    fun getChapterDirName(chapterName: String, chapterScanlator: String?, chapterUrl: String): String {
+        return ChapterDirNames(chapterName, chapterScanlator, chapterUrl).dirName(
+            disallowNonAscii = libraryPreferences.disallowNonAsciiFilenames.get(),
+            appendHash = libraryPreferences.enableChapterNameHash.get(),
         )
-
-        // Get the filename that would be generated if the user were
-        // using the other value for the disallow non-ASCII
-        // filenames setting. This ensures that chapters downloaded
-        // before the user changed the setting can still be found.
-        val otherChapterDirName =
-            getChapterDirName(
-                chapterName,
-                chapterScanlator,
-                chapterUrl,
-                !libraryPreferences.disallowNonAsciiFilenames.get(),
-            )
-
-        return buildList(2) {
-            // Chapter name without hash (unable to handle duplicate
-            // chapter names)
-            add(chapterNameV1)
-            add(otherChapterDirName)
-        }
     }
 
-    /**
-     * Return the new name for the chapter (in case it's empty or blank)
-     *
-     * @param chapterName the name of the chapter
-     */
-    private fun sanitizeChapterName(chapterName: String): String {
-        return chapterName.ifBlank {
-            "Chapter"
-        }
-    }
-
-    /**
-     * Returns valid downloaded chapter directory names.
-     */
+    /** Returns every name the chapter's download may have on disk, the one [getChapterDirName] returns first. */
     fun getValidChapterDirNames(chapterName: String, chapterScanlator: String?, chapterUrl: String): List<String> {
-        val chapterDirName = getChapterDirName(chapterName, chapterScanlator, chapterUrl)
-        val legacyChapterDirNames = getLegacyChapterDirNames(chapterName, chapterScanlator, chapterUrl)
-
-        return buildList {
-            // Folder of images
-            add(chapterDirName)
-            // Archived chapters
-            add("$chapterDirName.cbz")
-
-            // any legacy names
-            legacyChapterDirNames.forEach {
-                add(it)
-                add("$it.cbz")
-            }
-        }
+        return ChapterDirNames(chapterName, chapterScanlator, chapterUrl).validDirNames(
+            disallowNonAscii = libraryPreferences.disallowNonAsciiFilenames.get(),
+            appendHash = libraryPreferences.enableChapterNameHash.get(),
+        )
     }
 }

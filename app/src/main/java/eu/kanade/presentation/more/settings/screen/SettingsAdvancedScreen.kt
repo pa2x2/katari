@@ -385,6 +385,11 @@ object SettingsAdvancedScreen : SearchableSettings {
                     title = stringResource(MR.strings.pref_disallow_non_ascii_filenames),
                     subtitle = stringResource(MR.strings.pref_disallow_non_ascii_filenames_details),
                 ),
+                Preference.PreferenceItem.SwitchPreference(
+                    preference = globalLibraryPreferences.enableChapterNameHash,
+                    title = stringResource(MR.strings.pref_download_name_hash),
+                    subtitle = stringResource(MR.strings.pref_download_name_hash_summary),
+                ),
             ),
         )
     }
