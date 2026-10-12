@@ -1087,5 +1087,5 @@ private fun sourceClickAction(
     onManageMergeClicked: (() -> Unit)?,
     onSearch: (query: String, global: Boolean) -> Unit,
 ): () -> Unit {
-    return onManageMergeClicked?.takeIf { state.isMultiSource } ?: { onSearch(state.sourceName, false) }
+    return onManageMergeClicked?.takeIf { state.isMultiSource } ?: { onSearch(state.sourceSearchQuery, false) }
 }

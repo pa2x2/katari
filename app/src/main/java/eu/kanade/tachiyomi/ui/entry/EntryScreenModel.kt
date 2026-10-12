@@ -133,6 +133,7 @@ import mihon.entry.interactions.tracking.EntryTrackingProgressInspection
 import mihon.entry.interactions.tracking.EntryTrackingProgressSynchronizationResult
 import mihon.entry.interactions.tracking.EntryTrackingRefreshResult
 import mihon.entry.interactions.tracking.EntryTrackingSession
+import mihon.feature.library.search.librarySearchQuery
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.preference.CheckboxState
 import tachiyomi.core.common.preference.TriState
@@ -377,6 +378,7 @@ class EntryScreenModel(
                         it.copy(
                             entry = entry,
                             sourceName = mergePresentation.sourceName,
+                            sourceSearchQuery = mergePresentation.sourceSearchQuery,
                             isMultiSource = mergePresentation.isMultiSource,
                             isSourceMissing = mergePresentation.isSourceMissing,
                             memberIds = mergePresentation.memberIds,
@@ -434,6 +436,7 @@ class EntryScreenModel(
                     entry = entry,
                     source = sourceManager.getOrStub(entry.source),
                     sourceName = mergePresentation.sourceName,
+                    sourceSearchQuery = mergePresentation.sourceSearchQuery,
                     isMultiSource = mergePresentation.isMultiSource,
                     isSourceMissing = mergePresentation.isSourceMissing,
                     memberIds = mergePresentation.memberIds,
@@ -2176,8 +2179,10 @@ class EntryScreenModel(
             .distinct()
             .map(sourceManager::getDisplayInfo)
         val sourceNameById = sources.associate { it.id to it.getDisplayNameForEntryInfo() }
+        val sourceName = mergedSourceNames(sourceNameById.values.toList())
         return MergePresentation(
-            sourceName = mergedSourceNames(sourceNameById.values.toList()),
+            sourceName = sourceName,
+            sourceSearchQuery = sources.singleOrNull()?.librarySearchQuery() ?: sourceName,
             isMultiSource = sources.size > 1,
             isSourceMissing = sources.any(SourceDisplayInfo::isMissing),
             memberIds = memberIds,
@@ -2315,6 +2320,7 @@ class EntryScreenModel(
 
     private data class MergePresentation(
         val sourceName: String,
+        val sourceSearchQuery: String,
         val isMultiSource: Boolean,
         /** Whether any member's source is missing, not just the visible entry's. */
         val isSourceMissing: Boolean,
@@ -2355,6 +2361,8 @@ class EntryScreenModel(
             val entry: Entry,
             val source: UnifiedSource?,
             val sourceName: String,
+            /** What tapping the source line searches the library for. */
+            val sourceSearchQuery: String,
             val isMultiSource: Boolean,
             val isSourceMissing: Boolean,
             val memberIds: ImmutableList<Long>,
