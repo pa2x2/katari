@@ -23,8 +23,11 @@ import eu.kanade.tachiyomi.util.storage.copyAndSetReadOnlyTo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import logcat.LogPriority
+import mihon.domain.extension.model.ExtensionStore
+import mihon.domain.extension.repository.ExtensionStoreRepository
 import tachiyomi.core.common.util.system.logcat
 import uy.kohesive.injekt.injectLazy
 import java.io.File
@@ -47,6 +50,7 @@ internal object ExtensionLoader {
 
     private val preferences: SourcePreferences by injectLazy()
     private val trustExtension: TrustExtension by injectLazy()
+    private val extensionStoreRepository: ExtensionStoreRepository by injectLazy()
     private val loadNsfwSource by lazy {
         preferences.showNsfwSource.get()
     }
@@ -135,6 +139,7 @@ internal object ExtensionLoader {
      * @param context The application context.
      */
     suspend fun loadExtensions(context: Context): List<LoadResult> = withContext(Dispatchers.IO) {
+        val stores = extensionStoreRepository.getAllAsFlow().first()
         val pkgManager = context.packageManager
 
         val installedPkgs = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -179,7 +184,7 @@ internal object ExtensionLoader {
 
         // Load each extension concurrently and wait for completion
         extPkgs
-            .map { async { loadExtension(context, it) } }
+            .map { async { loadExtension(context, it, stores) } }
             .awaitAll()
     }
 
@@ -193,7 +198,7 @@ internal object ExtensionLoader {
             logcat(LogPriority.ERROR) { "Extension package is not found ($pkgName)" }
             return LoadResult.Error
         }
-        return loadExtension(context, extensionPackage)
+        return loadExtension(context, extensionPackage, extensionStoreRepository.getAll())
     }
 
     fun getExtensionPackageInfoFromPkgName(context: Context, pkgName: String): PackageInfo? {
@@ -238,7 +243,11 @@ internal object ExtensionLoader {
      * @param context The application context.
      * @param extensionInfo The extension to load.
      */
-    private suspend fun loadExtension(context: Context, extensionInfo: ExtensionInfo): LoadResult {
+    private fun loadExtension(
+        context: Context,
+        extensionInfo: ExtensionInfo,
+        stores: List<ExtensionStore>,
+    ): LoadResult {
         val pkgManager = context.packageManager
         val pkgInfo = extensionInfo.packageInfo
         val appInfo = pkgInfo.applicationInfo!!
@@ -273,7 +282,7 @@ internal object ExtensionLoader {
         if (signatures.isNullOrEmpty()) {
             logcat(LogPriority.WARN) { "Package $pkgName isn't signed" }
             return LoadResult.Error
-        } else if (!trustExtension.isTrusted(pkgInfo, signatures)) {
+        } else if (!trustExtension.isTrusted(pkgInfo, signatures, stores)) {
             val extension = Extension.Untrusted(
                 name = extName,
                 pkgName = pkgName,
