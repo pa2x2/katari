@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.data.track.shikimori
 
 import dev.icerock.moko.resources.StringResource
+import eu.kanade.domain.track.model.toDbTrack
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.database.models.Track
 import eu.kanade.tachiyomi.data.track.BaseTracker
@@ -60,10 +61,21 @@ class Shikimori(id: Long) : BaseTracker(id, "Shikimori"), DeletableTracker, Exte
             }
         }
 
+        // Updates address the user rate by id, which tracks linked by older versions may not have stored
+        if (track.library_id == null || track.library_id == 0L) {
+            val remoteTrack = api.findLibManga(track) ?: return add(track)
+            track.library_id = remoteTrack.library_id
+        }
+
         return api.updateLibManga(track)
     }
 
     override suspend fun delete(track: DomainTrack) {
+        if (track.libraryId == null || track.libraryId == 0L) {
+            val remoteTrack = api.findLibManga(track.toDbTrack()) ?: return
+            return api.deleteLibManga(track.copy(libraryId = remoteTrack.library_id))
+        }
+
         api.deleteLibManga(track)
     }
 
