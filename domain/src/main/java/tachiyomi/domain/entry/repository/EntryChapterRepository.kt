@@ -32,7 +32,19 @@ interface EntryChapterRepository {
 
     suspend fun deleteByEntryId(entryId: Long): Boolean
 
-    suspend fun removeChaptersWithIds(chapterIds: List<Long>)
+    /**
+     * Writes a source sync's chapter changes in one transaction, so a failed sync leaves the chapters as they were.
+     * [afterUpdates] runs inside that transaction once [updated] is written, and repository writes made from it join
+     * the transaction.
+     *
+     * @return [inserted] with their database ids.
+     */
+    suspend fun applySourceSync(
+        removedIds: List<Long>,
+        updated: List<EntryChapter>,
+        inserted: List<EntryChapter>,
+        afterUpdates: suspend () -> Unit = {},
+    ): List<EntryChapter>
 
     suspend fun getScanlatorsByEntryId(entryId: Long): List<String>
 

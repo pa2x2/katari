@@ -11,6 +11,7 @@ import logcat.LogPriority
 import tachiyomi.core.common.util.lang.toLong
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.data.ActiveProfileProvider
+import tachiyomi.data.Database
 import tachiyomi.data.DatabaseHandler
 import tachiyomi.data.query.chunkedForSqlQuery
 import tachiyomi.domain.entry.model.EntryChapter
@@ -100,48 +101,7 @@ class EntryChapterRepositoryImpl(
     override suspend fun insertOrUpdate(chapters: List<EntryChapter>): List<EntryChapter> {
         return try {
             handler.await(inTransaction = true) {
-                chapters.map { chapter ->
-                    val existing = chapter.id.takeIf { it > 0 }
-                        ?.let { chaptersQueries.getChapterById(it, EntryMapper::mapChapter).awaitAsOneOrNull() }
-                        ?: chaptersQueries.getChapterByUrlAndEntryId(chapter.url, chapter.entryId)
-                            .awaitAsOneOrNull()
-                            ?.let(EntryMapper::mapChapter)
-                    if (existing == null) {
-                        val id = chaptersQueries.insertReturningId(
-                            entryId = chapter.entryId,
-                            url = chapter.url,
-                            name = chapter.name,
-                            scanlator = chapter.scanlator,
-                            read = chapter.read,
-                            bookmark = chapter.bookmark,
-                            chapterNumber = chapter.chapterNumber,
-                            sourceOrder = chapter.sourceOrder,
-                            dateFetch = chapter.dateFetch,
-                            dateUpload = chapter.dateUpload,
-                            version = chapter.version,
-                            memo = chapter.memo,
-                        ).awaitAsOne()
-                        chapter.copy(id = id)
-                    } else {
-                        chaptersQueries.update(
-                            entryId = chapter.entryId,
-                            url = chapter.url,
-                            name = chapter.name,
-                            scanlator = chapter.scanlator,
-                            read = chapter.read,
-                            bookmark = chapter.bookmark,
-                            chapterNumber = chapter.chapterNumber,
-                            sourceOrder = chapter.sourceOrder,
-                            dateFetch = chapter.dateFetch,
-                            dateUpload = chapter.dateUpload,
-                            version = chapter.version,
-                            isSyncing = chapter.isSyncing,
-                            memo = chapter.memo,
-                            chapterId = existing.id,
-                        )
-                        chapter.copy(id = existing.id)
-                    }
-                }
+                chapters.map { insertOrUpdateChapter(it) }
             }
         } catch (e: Exception) {
             logcat(LogPriority.ERROR, e)
@@ -156,24 +116,7 @@ class EntryChapterRepositoryImpl(
     override suspend fun updateAll(chapters: List<EntryChapter>): Boolean {
         return try {
             handler.await(inTransaction = true) {
-                chapters.forEach { chapter ->
-                    chaptersQueries.update(
-                        entryId = chapter.entryId,
-                        url = chapter.url,
-                        name = chapter.name,
-                        scanlator = chapter.scanlator,
-                        read = chapter.read,
-                        bookmark = chapter.bookmark,
-                        chapterNumber = chapter.chapterNumber,
-                        sourceOrder = chapter.sourceOrder,
-                        dateFetch = chapter.dateFetch,
-                        dateUpload = chapter.dateUpload,
-                        version = chapter.version,
-                        isSyncing = chapter.isSyncing,
-                        memo = chapter.memo,
-                        chapterId = chapter.id,
-                    )
-                }
+                chapters.forEach { updateChapter(it, chapterId = it.id) }
             }
             true
         } catch (e: Exception) {
@@ -206,12 +149,64 @@ class EntryChapterRepositoryImpl(
         }
     }
 
-    override suspend fun removeChaptersWithIds(chapterIds: List<Long>) {
-        try {
-            handler.await { chaptersQueries.removeChaptersWithIds(chapterIds) }
-        } catch (e: Exception) {
-            logcat(LogPriority.ERROR, e)
+    override suspend fun applySourceSync(
+        removedIds: List<Long>,
+        updated: List<EntryChapter>,
+        inserted: List<EntryChapter>,
+        afterUpdates: suspend () -> Unit,
+    ): List<EntryChapter> {
+        return handler.await(inTransaction = true) {
+            removedIds.chunkedForSqlQuery().forEach { chaptersQueries.removeChaptersWithIds(it) }
+            updated.forEach { updateChapter(it, chapterId = it.id) }
+            afterUpdates()
+            inserted.map { insertOrUpdateChapter(it) }
         }
+    }
+
+    private suspend fun Database.insertOrUpdateChapter(chapter: EntryChapter): EntryChapter {
+        val existing = chapter.id.takeIf { it > 0 }
+            ?.let { chaptersQueries.getChapterById(it, EntryMapper::mapChapter).awaitAsOneOrNull() }
+            ?: chaptersQueries.getChapterByUrlAndEntryId(chapter.url, chapter.entryId)
+                .awaitAsOneOrNull()
+                ?.let(EntryMapper::mapChapter)
+        if (existing != null) {
+            updateChapter(chapter, chapterId = existing.id)
+            return chapter.copy(id = existing.id)
+        }
+        val id = chaptersQueries.insertReturningId(
+            entryId = chapter.entryId,
+            url = chapter.url,
+            name = chapter.name,
+            scanlator = chapter.scanlator,
+            read = chapter.read,
+            bookmark = chapter.bookmark,
+            chapterNumber = chapter.chapterNumber,
+            sourceOrder = chapter.sourceOrder,
+            dateFetch = chapter.dateFetch,
+            dateUpload = chapter.dateUpload,
+            version = chapter.version,
+            memo = chapter.memo,
+        ).awaitAsOne()
+        return chapter.copy(id = id)
+    }
+
+    private suspend fun Database.updateChapter(chapter: EntryChapter, chapterId: Long) {
+        chaptersQueries.update(
+            entryId = chapter.entryId,
+            url = chapter.url,
+            name = chapter.name,
+            scanlator = chapter.scanlator,
+            read = chapter.read,
+            bookmark = chapter.bookmark,
+            chapterNumber = chapter.chapterNumber,
+            sourceOrder = chapter.sourceOrder,
+            dateFetch = chapter.dateFetch,
+            dateUpload = chapter.dateUpload,
+            version = chapter.version,
+            isSyncing = chapter.isSyncing,
+            memo = chapter.memo,
+            chapterId = chapterId,
+        )
     }
 
     override suspend fun getScanlatorsByEntryId(entryId: Long): List<String> {

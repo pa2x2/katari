@@ -52,7 +52,6 @@ class SyncEntryWithSource(
         fetchWindow = fetchWindow,
         explicitProfileId = null,
         updateLibraryTitles = libraryPreferences.updateMangaTitles.get(),
-        verifyPersistence = false,
     )
 
     suspend fun syncStrictly(
@@ -73,7 +72,6 @@ class SyncEntryWithSource(
             fetchWindow = fetchWindow,
             explicitProfileId = profileId,
             updateLibraryTitles = updateLibraryTitles,
-            verifyPersistence = true,
         )
     }
 
@@ -85,7 +83,6 @@ class SyncEntryWithSource(
         fetchWindow: Pair<Long, Long>,
         explicitProfileId: Long?,
         updateLibraryTitles: Boolean,
-        verifyPersistence: Boolean,
     ): SyncResult {
         val source = sourceManager.get(entry.source) ?: throw SourceNotInstalledException()
 
@@ -280,36 +277,26 @@ class SyncEntryWithSource(
             .filterNot { it.id in matchedChapterIds }
             .map(EntryChapter::id)
 
-        if (chaptersToRemove.isNotEmpty()) {
-            entryChapterRepository.removeChaptersWithIds(chaptersToRemove)
-            if (verifyPersistence && chaptersToRemove.any { entryChapterRepository.getChapterById(it) != null }) {
-                error("Failed to remove chapters for entry ${entry.id}")
-            }
-        }
-
-        if (chaptersToUpdate.isNotEmpty()) {
-            if (!entryChapterRepository.updateAll(chaptersToUpdate)) {
-                error("Failed to update chapters for entry ${entry.id}")
-            }
-            progressResourcesToRekey.forEach { rekey ->
-                entryProgressRepository.rekey(
-                    entryId = rekey.entryId,
-                    chapterId = rekey.chapterId,
-                    oldContentKey = "",
-                    oldResourceKey = rekey.oldResourceKey,
-                    newContentKey = "",
-                    newResourceKey = rekey.newResourceKey,
-                )
-            }
-        }
-
         val insertedChapters =
-            if (chaptersToInsert.isNotEmpty()) {
-                entryChapterRepository.insertOrUpdate(chaptersToInsert).also { inserted ->
-                    if (verifyPersistence && inserted.size != chaptersToInsert.size) {
-                        error("Failed to insert chapters for entry ${entry.id}")
-                    }
-                }
+            if (chaptersToRemove.isNotEmpty() || chaptersToUpdate.isNotEmpty() || chaptersToInsert.isNotEmpty()) {
+                // One transaction, so a failure part way can't leave some of the changes written and others missing
+                entryChapterRepository.applySourceSync(
+                    removedIds = chaptersToRemove,
+                    updated = chaptersToUpdate,
+                    inserted = chaptersToInsert,
+                    afterUpdates = {
+                        progressResourcesToRekey.forEach { rekey ->
+                            entryProgressRepository.rekey(
+                                entryId = rekey.entryId,
+                                chapterId = rekey.chapterId,
+                                oldContentKey = "",
+                                oldResourceKey = rekey.oldResourceKey,
+                                newContentKey = "",
+                                newResourceKey = rekey.newResourceKey,
+                            )
+                        }
+                    },
+                )
             } else {
                 emptyList()
             }
