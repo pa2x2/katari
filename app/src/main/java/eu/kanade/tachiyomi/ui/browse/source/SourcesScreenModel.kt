@@ -1,7 +1,7 @@
 package eu.kanade.tachiyomi.ui.browse.source
 
 import androidx.compose.runtime.Immutable
-import cafe.adriel.voyager.core.model.StateScreenModel
+import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import eu.kanade.domain.source.interactor.GetEnabledCatalogSources
 import eu.kanade.domain.source.interactor.GetLanguagesWithCatalogSources
@@ -14,19 +14,26 @@ import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.ui.browse.BrowseContentTypeFilterController
 import eu.kanade.tachiyomi.ui.browse.ContentTypeFilter
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.WhileSubscribed
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import logcat.LogPriority
-import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.source.model.Source
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.util.SortedMap
+import kotlin.time.Duration.Companion.seconds
 
 class SourcesScreenModel(
     private val getEnabledCatalogSources: GetEnabledCatalogSources = Injekt.get(),
@@ -37,63 +44,61 @@ class SourcesScreenModel(
     private val preferences: SourcePreferences = Injekt.get(),
     private val contentTypeFilterController: BrowseContentTypeFilterController =
         BrowseContentTypeFilterController(preferences),
-) : StateScreenModel<SourcesScreenModel.State>(State()) {
+) : ScreenModel {
 
     private val _events = Channel<Event>(Int.MAX_VALUE)
     val events = _events.receiveAsFlow()
 
-    init {
-        screenModelScope.launchIO {
-            combine(
-                getEnabledCatalogSources.subscribe(),
-                contentTypeFilterController.changes(),
-            ) { sources, contentTypeFilter ->
-                sources.filter { contentTypeFilter.matches(it.supportedEntryTypes) } to contentTypeFilter
-            }
-                .catch {
-                    logcat(LogPriority.ERROR, it)
-                    _events.send(Event.FailedFetchingSources)
-                }
-                .collectLatest { (sources, contentTypeFilter) ->
-                    collectLatestSources(sources, contentTypeFilter)
-                }
+    private val dialog = MutableStateFlow<Dialog?>(null)
+
+    private val sources = combine(
+        getEnabledCatalogSources.subscribe(),
+        contentTypeFilterController.changes(),
+    ) { sources, contentTypeFilter ->
+        val listState = SourceListUiMapper.map(
+            sources.filter { contentTypeFilter.matches(it.supportedEntryTypes) },
+        )
+        listState to contentTypeFilter
+    }
+        .catch {
+            logcat(LogPriority.ERROR, it)
+            _events.send(Event.FailedFetchingSources)
         }
 
-        screenModelScope.launchIO {
-            combine(
-                getLanguagesWithCatalogSources.subscribe(),
-                preferences.enabledLanguages.changes(),
-                preferences.disabledSources.changes(),
-                contentTypeFilterController.changes(),
-            ) { items, enabledLanguages, disabledSources, contentTypeFilter ->
-                SourcesFilterState(
-                    items = items,
-                    enabledLanguages = enabledLanguages,
-                    disabledSources = disabledSources,
-                    contentTypeFilter = contentTypeFilter,
-                )
-            }
-                .catch {
-                    logcat(LogPriority.ERROR, it)
-                    _events.send(Event.FailedFetchingSources)
-                }
-                .collectLatest { filter ->
-                    mutableState.update { it.copy(filter = filter) }
-                }
-        }
+    private val filter = combine(
+        getLanguagesWithCatalogSources.subscribe(),
+        preferences.enabledLanguages.changes(),
+        preferences.disabledSources.changes(),
+        contentTypeFilterController.changes(),
+    ) { items, enabledLanguages, disabledSources, contentTypeFilter ->
+        SourcesFilterState(
+            items = items,
+            enabledLanguages = enabledLanguages,
+            disabledSources = disabledSources,
+            contentTypeFilter = contentTypeFilter,
+        )
     }
+        .catch {
+            logcat(LogPriority.ERROR, it)
+            _events.send(Event.FailedFetchingSources)
+        }
+        // The source list must not wait for the filter sheet's data
+        .onStart { emit(SourcesFilterState()) }
 
-    private fun collectLatestSources(
-        sources: List<Source>,
-        contentTypeFilter: ContentTypeFilter,
-    ) {
-        mutableState.update { state ->
-            state.copy(
-                listState = SourceListUiMapper.map(sources),
-                contentTypeFilter = contentTypeFilter,
-            )
-        }
+    val state: StateFlow<State> = combine(
+        sources,
+        filter,
+        dialog,
+    ) { (listState, contentTypeFilter), filter, dialog ->
+        State(
+            dialog = dialog,
+            listState = listState,
+            contentTypeFilter = contentTypeFilter,
+            filter = filter,
+        )
     }
+        .flowOn(Dispatchers.IO)
+        .stateIn(screenModelScope, SharingStarted.WhileSubscribed(5.seconds), State())
 
     fun toggleSource(source: Source) {
         toggleSource.await(source)
@@ -120,11 +125,11 @@ class SourcesScreenModel(
     }
 
     fun showSourceDialog(source: Source) {
-        mutableState.update { it.copy(dialog = Dialog(source)) }
+        dialog.update { Dialog(source) }
     }
 
     fun closeDialog() {
-        mutableState.update { it.copy(dialog = null) }
+        dialog.update { null }
     }
 
     sealed interface Event {
