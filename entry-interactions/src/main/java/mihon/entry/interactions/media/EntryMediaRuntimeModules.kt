@@ -2,7 +2,7 @@ package mihon.entry.interactions.media
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.plus
 import mihon.entry.interactions.media.backup.ENTRY_PLAYBACK_PREFERENCES_BACKUP_RESTORE_PARTICIPANT
 import mihon.entry.interactions.media.backup.ENTRY_PLAYBACK_PREFERENCES_BACKUP_SCHEMA_VERSION
 import mihon.entry.interactions.media.backup.ENTRY_PLAYBACK_PREFERENCES_BACKUP_SNAPSHOT_PARTICIPANT
@@ -141,7 +141,7 @@ internal val EntryViewerSettingsFeatureRuntimeModule = EntryFeatureRuntimeModule
     addSingletonFactory<ViewerSettingBinder> {
         DefaultViewerSettingBinder(
             overrideRepository = get<ViewerSettingOverrideRepository>(),
-            scope = CoroutineScope(SupervisorJob() + Dispatchers.Default),
+            scope = get<CoroutineScope>() + Dispatchers.Default,
         )
     }
     addSingletonFactory<EntryViewerSettingsFeature> {

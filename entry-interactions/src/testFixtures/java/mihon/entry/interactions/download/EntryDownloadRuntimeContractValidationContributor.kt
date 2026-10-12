@@ -2,6 +2,10 @@ package mihon.entry.interactions.download
 
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
 import mihon.entry.interactions.validation.contractExpectation
@@ -38,15 +42,23 @@ class EntryDownloadRuntimeContractValidationContributor : FeatureValidationContr
                         every { getDownloadCount(entry) } returns 3
                         every { startDownloads() } answers { started = true }
                     }
-                    val feature = DefaultEntryDownloadRuntimeFeature(evaluation, interaction)
+                    val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+                    try {
+                        val feature = DefaultEntryDownloadRuntimeFeature(evaluation, interaction, scope)
 
-                    contractExpectation(feature.isApplicable(provider.type), "Download Runtime must be applicable")
-                    contractExpectation(
-                        feature.downloadCount(entry) == 3,
-                        "Download Runtime must project provider state",
-                    )
-                    feature.start()
-                    contractExpectation(started, "Download Runtime must dispatch start through its shared boundary")
+                        contractExpectation(feature.isApplicable(provider.type), "Download Runtime must be applicable")
+                        contractExpectation(
+                            feature.downloadCount(entry) == 3,
+                            "Download Runtime must project provider state",
+                        )
+                        feature.start()
+                        contractExpectation(
+                            started,
+                            "Download Runtime must dispatch start through its shared boundary",
+                        )
+                    } finally {
+                        scope.cancel()
+                    }
                 }
             },
         )

@@ -13,7 +13,6 @@ import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
 import eu.kanade.tachiyomi.ui.reader.model.toEntryChapter
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
@@ -29,7 +28,6 @@ import mihon.entry.interactions.manga.page.acquisition.MangaPageAcquisitionCoord
 import mihon.entry.interactions.manga.page.acquisition.MangaPageAcquisitionIntent
 import mihon.entry.interactions.manga.page.acquisition.PreemptedMangaPagePreload
 import mihon.entry.interactions.manga.page.acquisition.StoredMangaPageAcquirer
-import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.domain.entry.adapter.toSEntryChapter
 import uy.kohesive.injekt.Injekt
@@ -196,7 +194,6 @@ internal class EntryPageLoader private constructor(
         updateWantedPages { retriedPages += page }
     }
 
-    @OptIn(DelicateCoroutinesApi::class)
     override fun recycle() {
         super.recycle()
         scope.cancel()
@@ -211,9 +208,10 @@ internal class EntryPageLoader private constructor(
         }
         chapter.pages?.forEach { it.setProgressiveImageSession(null) }
 
-        // Cache current page list progress for online chapters to allow a faster reopen
+        // Cache current page list progress for online chapters to allow a faster reopen. The loader's own scope is
+        // cancelled by now.
         chapter.pages?.let { pages ->
-            launchIO {
+            Injekt.get<CoroutineScope>().launch {
                 try {
                     // Convert to pages without reader information
                     val pagesToSave = pages.map { Page(it.index, it.url, it.imageUrl) }

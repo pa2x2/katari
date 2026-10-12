@@ -4,8 +4,11 @@ import android.app.Application
 import eu.kanade.tachiyomi.network.NetworkHelper
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -90,6 +93,7 @@ class ProductionEntryInteractionValidationEnvironment(
         },
 ) : AutoCloseable {
     private val previousInjekt: InjektScope = Injekt
+    private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     init {
         Injekt = InjektScope(DefaultRegistrar())
@@ -164,6 +168,7 @@ class ProductionEntryInteractionValidationEnvironment(
     }
 
     override fun close() {
+        appScope.cancel()
         Dispatchers.resetMain()
         Injekt = previousInjekt
     }
@@ -187,6 +192,7 @@ class ProductionEntryInteractionValidationEnvironment(
             every { client } returns mockk<OkHttpClient>(relaxed = true)
         }
         Injekt.addSingletonFactory<Application> { application }
+        Injekt.addSingletonFactory<CoroutineScope> { appScope }
         Injekt.addSingletonFactory<StorageManager> { storageManager }
         Injekt.addSingletonFactory<NetworkHelper> { networkHelper }
         Injekt.addSingletonFactory<Json> { Json }

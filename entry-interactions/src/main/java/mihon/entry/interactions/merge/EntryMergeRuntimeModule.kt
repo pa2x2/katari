@@ -1,8 +1,6 @@
 package mihon.entry.interactions.merge
 
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import mihon.entry.interactions.merge.backup.ENTRY_MERGE_BACKUP_FINALIZE_PARTICIPANT
 import mihon.entry.interactions.merge.backup.ENTRY_MERGE_BACKUP_RESTORE_PARTICIPANT
@@ -233,7 +231,7 @@ internal val EntryMergeFeatureRuntimeModule = EntryFeatureRuntimeModule(
             entryFeatureRuntimeBoundary { get<EntryLibraryGroupingResolutionPort>() },
         ),
         warmups = listOf {
-            CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
+            get<CoroutineScope>().launch {
                 get<EntryMergeConsequenceDelivery>().runRetryLoop()
             }
         },

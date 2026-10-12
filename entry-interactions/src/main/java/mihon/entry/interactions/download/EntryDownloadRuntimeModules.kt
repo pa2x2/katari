@@ -1,5 +1,8 @@
 package mihon.entry.interactions.download
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.plus
 import mihon.entry.interactions.download.configuration.backup.DefaultEntryDownloadConfigurationBackupFeature
 import mihon.entry.interactions.download.configuration.backup.ENTRY_DOWNLOAD_CONFIGURATION_BACKUP_RESTORE_PARTICIPANT
 import mihon.entry.interactions.download.configuration.backup.ENTRY_DOWNLOAD_CONFIGURATION_BACKUP_SCHEMA_VERSION
@@ -50,6 +53,7 @@ internal val EntryDownloadRuntimeFeatureRuntimeModule = EntryFeatureRuntimeModul
         DefaultEntryDownloadRuntimeFeature(
             evaluation = composition.evaluation,
             interaction = get<EntryInteractions>().download,
+            scope = get<CoroutineScope>() + Dispatchers.Default,
         )
     }
     addSingletonFactory<EntryDownloadRuntimeFeature> { get<EntryDownloadRuntimeCoordinator>() }
@@ -79,6 +83,7 @@ internal val EntryDownloadActionFeatureRuntimeModule = EntryFeatureRuntimeModule
             downloads = get<EntryDownloadRuntimeCoordinator>(),
             actions = context.dependencies.notificationActions,
             ownership = get(),
+            scope = get(),
         )
     }
     addSingletonFactory<EntryDownloadForegroundNotificationProvider> { get<EntryDownloadNotificationManager>() }

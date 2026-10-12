@@ -18,11 +18,9 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
-import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -84,7 +82,6 @@ import kotlin.time.Duration.Companion.seconds
  *
  * Its queue contains the list of chapters to download.
  */
-@OptIn(DelicateCoroutinesApi::class)
 internal class Downloader(
     private val context: Context,
     private val provider: DownloadProvider,
@@ -95,6 +92,7 @@ internal class Downloader(
     private val xml: XML = Injekt.get(),
     private val getCategories: GetCategories = Injekt.get(),
     private val getTracks: GetTracks = Injekt.get(),
+    private val scope: CoroutineScope = Injekt.get(),
 ) {
 
     /**
@@ -109,8 +107,6 @@ internal class Downloader(
     val queueState = _queueState.asStateFlow()
     private val _events = MutableSharedFlow<EntryDownloadEvent>(replay = 16, extraBufferCapacity = 16)
     val events = _events.asSharedFlow()
-
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     // Held by every start and stop, which come from the main thread, the download worker and the download jobs, so
     // a download job's check of the current run can't interleave with another caller's start or stop

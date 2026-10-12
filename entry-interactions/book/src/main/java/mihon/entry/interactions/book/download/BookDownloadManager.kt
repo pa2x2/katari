@@ -7,9 +7,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.BufferOverflow
@@ -50,8 +48,8 @@ internal class BookDownloadManager(
     private val sourceManager: SourceManager = Injekt.get(),
     private val store: BookDownloadStore = BookDownloadStore(context),
     private val workController: EntryDownloadWorkController = Injekt.get(),
+    private val scope: CoroutineScope = Injekt.get(),
 ) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val queueMutationLock = Any()
     private val processorMutex = Mutex()
     private val initialized = CompletableDeferred<Unit>()

@@ -7,7 +7,6 @@ import com.hippo.unifile.UniFile
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -68,9 +67,8 @@ internal class DownloadCache(
     private val provider: DownloadProvider = Injekt.get(),
     private val sourceManager: SourceManager = Injekt.get(),
     private val storageManager: StorageManager = Injekt.get(),
+    private val scope: CoroutineScope = Injekt.get(),
 ) {
-
-    private val scope = CoroutineScope(Dispatchers.IO)
 
     private val _changes: Channel<Unit> = Channel(Channel.UNLIMITED)
     val changes = _changes.receiveAsFlow()

@@ -2,8 +2,6 @@ package mihon.entry.interactions.download
 
 import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
@@ -25,7 +23,7 @@ internal interface EntryDownloadRuntimeCoordinator : EntryDownloadRuntimeFeature
 internal class DefaultEntryDownloadRuntimeFeature(
     evaluation: FeatureGraphEvaluation,
     private val interaction: EntryDownloadInteraction,
-    private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default),
+    private val scope: CoroutineScope,
 ) : EntryDownloadRuntimeCoordinator {
     private val applicableTypes = EntryDownloadRuntimeBehavior.entries
         .map { behavior ->

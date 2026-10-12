@@ -5,8 +5,6 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import mihon.entry.interactions.translate.EntryTranslateFeature
 import mihon.entry.interactions.translate.EntryTranslateRuntimeAvailability
@@ -19,7 +17,7 @@ class EntryTranslateNotificationReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val action = Action.entries.firstOrNull { it.intentAction == intent.action } ?: return
         val result = goAsync()
-        scope.launch {
+        Injekt.get<CoroutineScope>().launch {
             try {
                 EntryTranslateRuntimeAvailability.awaitInstalled()
                 val feature = Injekt.get<EntryTranslateFeature>()
@@ -46,9 +44,5 @@ class EntryTranslateNotificationReceiver : BroadcastReceiver() {
             Intent(context, EntryTranslateNotificationReceiver::class.java).setAction(intentAction),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
-    }
-
-    private companion object {
-        val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     }
 }

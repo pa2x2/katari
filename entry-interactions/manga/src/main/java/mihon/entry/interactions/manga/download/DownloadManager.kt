@@ -3,7 +3,7 @@ package mihon.entry.interactions.manga.download
 import android.content.Context
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import eu.kanade.tachiyomi.source.model.Page
-import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.Flow
@@ -23,7 +23,6 @@ import mihon.entry.interactions.manga.download.model.DownloadState
 import mihon.entry.interactions.manga.download.model.MangaDownload
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.storage.extension
-import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.core.common.util.system.ImageUtil
 import tachiyomi.core.common.util.system.logcat
@@ -40,7 +39,6 @@ import java.util.concurrent.ConcurrentHashMap
  * and retrieved through dependency injection. You can use this class to queue new chapters or query
  * downloaded chapters.
  */
-@OptIn(DelicateCoroutinesApi::class)
 internal class DownloadManager(
     private val context: Context,
     private val provider: DownloadProvider = Injekt.get(),
@@ -49,10 +47,11 @@ internal class DownloadManager(
     private val downloader: Downloader = Downloader(context, provider, cache),
     private val pendingDeleter: DownloadPendingDeleter = DownloadPendingDeleter(context),
     private val workController: EntryDownloadWorkController = Injekt.get(),
+    private val scope: CoroutineScope = Injekt.get(),
 ) {
 
     init {
-        launchIO {
+        scope.launch {
             downloader.awaitInitialized()
             if (queueState.value.isNotEmpty()) workController.resumeIfRequested()
         }
@@ -347,7 +346,7 @@ internal class DownloadManager(
      * Triggers the execution of the deletion of pending chapters.
      */
     fun deletePendingChapters() {
-        launchIO {
+        scope.launch {
             val pendingChapters = pendingDeleter.getPendingChapters()
             for ((manga, chapters) in pendingChapters) {
                 val source = sourceManager.get(manga.source) ?: continue

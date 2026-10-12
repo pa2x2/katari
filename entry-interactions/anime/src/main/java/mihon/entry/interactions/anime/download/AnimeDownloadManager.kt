@@ -5,9 +5,7 @@ import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.currentCoroutineContext
@@ -50,8 +48,8 @@ internal class AnimeDownloadManager(
     private val sourceManager: SourceManager = Injekt.get(),
     private val store: AnimeDownloadStore = AnimeDownloadStore(context),
     private val workController: EntryDownloadWorkController = Injekt.get(),
+    private val scope: CoroutineScope = Injekt.get(),
 ) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     private val _queueState = MutableStateFlow<List<AnimeDownload>>(emptyList())
     val queueState = _queueState.asStateFlow()

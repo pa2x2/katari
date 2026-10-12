@@ -6,7 +6,6 @@ import androidx.core.util.AtomicFile
 import com.hippo.unifile.UniFile
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -61,9 +60,8 @@ internal class AnimeDownloadCache(
     private val sourceManager: SourceManager = Injekt.get(),
     private val catalogueFeature: () -> EntryCatalogueFeature = { Injekt.get() },
     private val storageManager: StorageManager = Injekt.get(),
+    private val scope: CoroutineScope = Injekt.get(),
 ) {
-
-    private val scope = CoroutineScope(Dispatchers.IO)
 
     private val _changes: Channel<Unit> = Channel(Channel.UNLIMITED)
     val changes = _changes.receiveAsFlow()
