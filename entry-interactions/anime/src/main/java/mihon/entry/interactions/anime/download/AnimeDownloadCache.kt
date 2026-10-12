@@ -129,6 +129,19 @@ internal class AnimeDownloadCache(
         return provider.getValidEpisodeDirNames(episodeName, episodeUrl).any { it in animeDir.episodeDirs }
     }
 
+    /** Returns the ids of the downloaded episodes among [episodes], all of the anime titled [animeTitle]. */
+    fun getDownloadedEpisodeIds(episodes: List<EntryChapter>, animeTitle: String, sourceId: Long): Set<Long> {
+        renewCache()
+
+        val animeDir = rootDownloadsDir.sourceDirs[sourceId]?.animeDirs?.get(provider.getAnimeDirName(animeTitle))
+        val episodeDirs = animeDir?.episodeDirs
+        if (episodeDirs.isNullOrEmpty()) return emptySet()
+
+        return episodes
+            .filter { episode -> provider.getValidEpisodeDirNames(episode.name, episode.url).any { it in episodeDirs } }
+            .mapTo(HashSet()) { it.id }
+    }
+
     fun getTotalDownloadCount(): Int {
         renewCache()
         return rootDownloadsDir.sourceDirs.values.sumOf { sourceDir ->

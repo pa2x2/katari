@@ -74,6 +74,14 @@ interface EntryDownloadProcessor : EntryInteractionProvider {
         entryTitle: String,
         sourceId: Long,
     ): EntryDownloadStatus
+
+    /** Returns the status of each of [chapters] of [entry] by chapter id, looking up the queue and downloads once. */
+    fun getStatuses(entry: Entry, chapters: List<EntryChapter>): Map<Long, EntryDownloadStatus> {
+        return chapters.associate { chapter ->
+            chapter.id to getStatus(chapter.id, chapter.name, chapter.scanlator, chapter.url, entry.title, entry.source)
+        }
+    }
+
     fun cancelQueuedDownload(chapterId: Long): EntryDownloadStatus?
 }
 

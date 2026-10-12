@@ -203,9 +203,13 @@ internal class AnimeDownloadProcessor(
         candidates: List<EntryChapter>?,
     ): List<EntryChapter> {
         entry.requireAnime()
-        return candidates ?: dependencies.entryChapterRepository
-            .getChaptersByEntryIdAwait(entry.id, applyScanlatorFilter = true)
-            .filterNot { isDownloaded(entry, it) }
+        if (candidates != null) return candidates
+        val episodes = dependencies.entryChapterRepository.getChaptersByEntryIdAwait(
+            entry.id,
+            applyScanlatorFilter = true,
+        )
+        val downloadedEpisodeIds = animeDownloadManager.getDownloadedEpisodeIds(episodes, entry)
+        return episodes.filterNot { it.id in downloadedEpisodeIds }
     }
 
     override suspend fun delete(entry: Entry, chapters: List<EntryChapter>) {
@@ -251,8 +255,7 @@ internal class AnimeDownloadProcessor(
         entryTitle: String,
         sourceId: Long,
     ): EntryDownloadStatus {
-        return animeDownloadManager.queueState.value
-            .firstOrNull { it.episode.id == chapterId }
+        return animeDownloadManager.getQueuedDownloadsByEpisodeId()[chapterId]
             ?.toEntryDownloadStatus()
             ?: EntryDownloadStatus(
                 entryType = EntryType.ANIME,
@@ -270,6 +273,26 @@ internal class AnimeDownloadProcessor(
                     EntryDownloadState.NOT_DOWNLOADED
                 },
             )
+    }
+
+    override fun getStatuses(entry: Entry, chapters: List<EntryChapter>): Map<Long, EntryDownloadStatus> {
+        entry.requireAnime()
+        val queuedDownloads = animeDownloadManager.getQueuedDownloadsByEpisodeId()
+        val downloadedEpisodeIds = animeDownloadManager.getDownloadedEpisodeIds(chapters, entry)
+        return chapters.associate { episode ->
+            episode.id to (
+                queuedDownloads[episode.id]?.toEntryDownloadStatus()
+                    ?: EntryDownloadStatus(
+                        entryType = EntryType.ANIME,
+                        chapterId = episode.id,
+                        state = if (episode.id in downloadedEpisodeIds) {
+                            EntryDownloadState.DOWNLOADED
+                        } else {
+                            EntryDownloadState.NOT_DOWNLOADED
+                        },
+                    )
+                )
+        }
     }
 
     override fun cancelQueuedDownload(chapterId: Long): EntryDownloadStatus? {

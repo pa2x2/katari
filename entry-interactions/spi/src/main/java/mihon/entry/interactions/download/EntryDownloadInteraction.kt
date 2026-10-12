@@ -62,5 +62,6 @@ interface EntryDownloadInteraction {
         entryTitle: String,
         sourceId: Long,
     ): EntryDownloadStatus
+    fun getStatuses(entry: Entry, chapters: List<EntryChapter>): Map<Long, EntryDownloadStatus>
     fun cancelQueuedDownload(entryType: EntryType, chapterId: Long): EntryDownloadStatus?
 }

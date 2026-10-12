@@ -42,6 +42,12 @@ interface EntryDownloadRuntimeFeature {
         entryTitle: String,
         sourceId: Long,
     ): EntryDownloadStatus?
+
+    /**
+     * Returns the status of each of [chapters] of [entry] by chapter id, looking up the queue and downloads once.
+     * Returns null when the Entry type does not contribute the download runtime.
+     */
+    fun statuses(entry: Entry, chapters: List<EntryChapter>): Map<Long, EntryDownloadStatus>?
 }
 
 data class EntryDownloadRuntimeState(

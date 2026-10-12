@@ -195,6 +195,15 @@ internal class EntryDownloadInteractionDispatch(
         )
     }
 
+    override fun getStatuses(entry: Entry, chapters: List<EntryChapter>): Map<Long, EntryDownloadStatus> {
+        val processor = processors[entry.type]
+            ?: return chapters.associate {
+                it.id to EntryDownloadStatus(entry.type, it.id, EntryDownloadState.NOT_DOWNLOADED)
+            }
+        processor.requireMatchingEntryType("download", entry, processors.keys)
+        return processor.getStatuses(entry, chapters)
+    }
+
     override fun cancelQueuedDownload(entryType: EntryType, chapterId: Long): EntryDownloadStatus? {
         return processors[entryType]?.cancelQueuedDownload(chapterId)
     }

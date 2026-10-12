@@ -1071,24 +1071,22 @@ class EntryScreenModel(
 
     private suspend fun List<EntryChapter>.toChapterListItems(entry: Entry): List<EntryChapterList.Item> {
         val entriesById = mutableMapOf(entry.id to entry)
+        val downloadStatuses = mutableMapOf<Long, EntryDownloadStatus>()
+        groupBy { it.entryId }.forEach { (entryId, chapters) ->
+            val chapterEntry = entriesById[entryId]
+                ?: (entryRepository.getEntryById(entryId) ?: entry).also { entriesById[entryId] = it }
+            if (!chapterEntry.isLocal()) {
+                downloadRuntime.statuses(chapterEntry, chapters)?.let(downloadStatuses::putAll)
+            }
+        }
         return map { chapter ->
-            val chapterEntry = entriesById[chapter.entryId]
-                ?: (entryRepository.getEntryById(chapter.entryId) ?: entry).also {
-                    entriesById[chapter.entryId] = it
-                }
+            val chapterEntry = entriesById.getValue(chapter.entryId)
             val isLocal = chapterEntry.isLocal()
             val activeDownload = if (isLocal) {
                 null
             } else {
-                downloadRuntime.status(
-                    type = chapterEntry.type,
-                    childId = chapter.id,
-                    childName = chapter.name,
-                    childScanlator = chapter.scanlator,
-                    childUrl = chapter.url,
-                    entryTitle = chapterEntry.title,
-                    sourceId = chapterEntry.source,
-                ) ?: EntryDownloadStatus(chapterEntry.type, chapter.id, EntryDownloadState.NOT_DOWNLOADED)
+                downloadStatuses[chapter.id]
+                    ?: EntryDownloadStatus(chapterEntry.type, chapter.id, EntryDownloadState.NOT_DOWNLOADED)
             }
             val downloadState = when {
                 isLocal -> EntryDownloadState.DOWNLOADED

@@ -119,7 +119,20 @@ internal class DownloadManager(
      * @param chapterId the chapter to check.
      */
     fun getQueuedDownloadOrNull(chapterId: Long): MangaDownload? {
-        return queueState.value.find { it.chapter.id == chapterId }
+        return getQueuedDownloadsByChapterId()[chapterId]
+    }
+
+    // Chapter lists look each of their chapters up in the same queue
+    @Volatile
+    private var queueIndex: QueueIndex? = null
+
+    private class QueueIndex(val queue: List<MangaDownload>, val byChapterId: Map<Long, MangaDownload>)
+
+    /** Returns the queued downloads by chapter id, built once per queue change. */
+    fun getQueuedDownloadsByChapterId(): Map<Long, MangaDownload> {
+        val queue = queueState.value
+        queueIndex?.takeIf { it.queue === queue }?.let { return it.byChapterId }
+        return queue.associateBy { it.chapter.id }.also { queueIndex = QueueIndex(queue, it) }
     }
 
     fun startDownloadsNow(chapterIds: Collection<Long>) {
@@ -226,6 +239,11 @@ internal class DownloadManager(
         skipCache: Boolean = false,
     ): Boolean {
         return cache.isChapterDownloaded(chapterName, chapterScanlator, chapterUrl, mangaTitle, sourceId, skipCache)
+    }
+
+    /** Returns the ids of the downloaded chapters among [chapters], all of [manga]. */
+    fun getDownloadedChapterIds(chapters: List<EntryChapter>, manga: Entry): Set<Long> {
+        return cache.getDownloadedChapterIds(chapters, manga.title, manga.source)
     }
 
     /**

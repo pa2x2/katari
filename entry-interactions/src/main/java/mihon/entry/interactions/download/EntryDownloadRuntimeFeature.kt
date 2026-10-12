@@ -130,6 +130,11 @@ internal class DefaultEntryDownloadRuntimeFeature(
         )
     }
 
+    override fun statuses(entry: Entry, chapters: List<EntryChapter>): Map<Long, EntryDownloadStatus>? {
+        if (!isApplicable(entry.type)) return null
+        return interaction.getStatuses(entry, chapters)
+    }
+
     override fun events(): Flow<EntryDownloadEvent> = interaction.events()
         .filter { event -> event.entryTypeOrNull()?.let(::isApplicable) != false }
 

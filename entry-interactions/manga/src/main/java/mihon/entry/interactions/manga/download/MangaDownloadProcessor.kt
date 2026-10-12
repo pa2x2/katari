@@ -119,10 +119,13 @@ internal class MangaDownloadProcessor(
         candidates: List<EntryChapter>?,
     ): List<EntryChapter> {
         entry.requireManga()
-        return candidates ?: dependencies.entryChapterRepository.getChaptersByEntryIdAwait(
+        if (candidates != null) return candidates
+        val chapters = dependencies.entryChapterRepository.getChaptersByEntryIdAwait(
             entry.id,
             applyScanlatorFilter = true,
-        ).filterNot { isDownloaded(entry, it) }
+        )
+        val downloadedChapterIds = downloadManager.getDownloadedChapterIds(chapters, entry)
+        return chapters.filterNot { it.id in downloadedChapterIds }
     }
 
     override suspend fun delete(entry: Entry, chapters: List<EntryChapter>) {
@@ -192,6 +195,26 @@ internal class MangaDownloadProcessor(
                     EntryDownloadState.NOT_DOWNLOADED
                 },
             )
+    }
+
+    override fun getStatuses(entry: Entry, chapters: List<EntryChapter>): Map<Long, EntryDownloadStatus> {
+        entry.requireManga()
+        val queuedDownloads = downloadManager.getQueuedDownloadsByChapterId()
+        val downloadedChapterIds = downloadManager.getDownloadedChapterIds(chapters, entry)
+        return chapters.associate { chapter ->
+            chapter.id to (
+                queuedDownloads[chapter.id]?.toEntryDownloadStatus()
+                    ?: EntryDownloadStatus(
+                        entryType = EntryType.MANGA,
+                        chapterId = chapter.id,
+                        state = if (chapter.id in downloadedChapterIds) {
+                            EntryDownloadState.DOWNLOADED
+                        } else {
+                            EntryDownloadState.NOT_DOWNLOADED
+                        },
+                    )
+                )
+        }
     }
 
     override fun cancelQueuedDownload(chapterId: Long): EntryDownloadStatus? {
