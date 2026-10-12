@@ -49,6 +49,7 @@ import mihon.entry.interactions.download.EntryDownloadCancellationResult
 import mihon.entry.interactions.download.EntryDownloadRuntimeFeature
 import mihon.entry.interactions.download.EntryDownloadState
 import mihon.entry.interactions.download.EntryDownloadStatus
+import mihon.entry.interactions.download.sampleProgress
 import mihon.entry.interactions.merge.EntryMergeNavigationFeature
 import mihon.entry.interactions.merge.EntryMergeSubject
 import mihon.entry.interactions.state.EntryBookmarkAvailability
@@ -90,6 +91,7 @@ import tachiyomi.domain.updates.service.UpdatesPreferences
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import kotlin.time.Clock
+import kotlin.time.Duration.Companion.milliseconds
 
 class UpdatesScreenModel(
     private val downloadRuntime: EntryDownloadRuntimeFeature = Injekt.get(),
@@ -249,6 +251,8 @@ class UpdatesScreenModel(
 
         screenModelScope.launchIO {
             downloadRuntime.statusUpdates()
+                // Each tick scans the list for its row, and the progress shown needn't move more often than this
+                .sampleProgress(200.milliseconds)
                 .catch { logcat(LogPriority.ERROR, it) }
                 .collect(this@UpdatesScreenModel::updateDownloadState)
         }

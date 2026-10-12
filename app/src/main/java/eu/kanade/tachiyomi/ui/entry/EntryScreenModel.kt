@@ -80,6 +80,7 @@ import mihon.entry.interactions.download.EntryDownloadOptionsResolution
 import mihon.entry.interactions.download.EntryDownloadRuntimeFeature
 import mihon.entry.interactions.download.EntryDownloadState
 import mihon.entry.interactions.download.EntryDownloadStatus
+import mihon.entry.interactions.download.sampleProgress
 import mihon.entry.interactions.library.membership.EntryLibraryAddRequest
 import mihon.entry.interactions.library.membership.EntryLibraryAddResult
 import mihon.entry.interactions.library.membership.EntryLibraryCategorySelection
@@ -166,6 +167,7 @@ import tachiyomi.i18n.*
 import tachiyomi.source.local.LocalSource
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
+import kotlin.time.Duration.Companion.milliseconds
 
 class EntryScreenModel(
     private val context: Context,
@@ -1057,6 +1059,8 @@ class EntryScreenModel(
                 .filter { download ->
                     successState?.containsChapter(download) == true
                 }
+                // Each tick looks up its chapter row, and the progress shown needn't move more often than this
+                .sampleProgress(200.milliseconds)
                 .catch { error -> logcat(LogPriority.ERROR, error) }
                 .collect(::updateDownloadState)
         }
