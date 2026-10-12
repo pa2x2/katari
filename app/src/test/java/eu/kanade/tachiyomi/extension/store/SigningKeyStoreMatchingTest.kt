@@ -29,7 +29,6 @@ class SigningKeyStoreMatchingTest {
         contentWarning = ContentWarning.SAFE,
         pkgFactory = null,
         sources = emptyList(),
-        icon = null,
         isShared = true,
         signatures = signatures,
     )

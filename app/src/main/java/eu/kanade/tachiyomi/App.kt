@@ -32,9 +32,13 @@ import eu.kanade.tachiyomi.data.coil.BufferedSourceFetcher
 import eu.kanade.tachiyomi.data.coil.EntryCoverFetcher
 import eu.kanade.tachiyomi.data.coil.EntryCoverKeyer
 import eu.kanade.tachiyomi.data.coil.EntryKeyer
+import eu.kanade.tachiyomi.data.coil.ExtensionIconFetcher
+import eu.kanade.tachiyomi.data.coil.InstalledExtensionIconKeyer
+import eu.kanade.tachiyomi.data.coil.InstalledSourceIconKeyer
 import eu.kanade.tachiyomi.data.notification.Notifications
 import eu.kanade.tachiyomi.di.AppModule
 import eu.kanade.tachiyomi.di.PreferenceModule
+import eu.kanade.tachiyomi.extension.ExtensionManager
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.network.NetworkPreferences
 import eu.kanade.tachiyomi.ui.base.delegate.SecureActivityDelegate
@@ -189,10 +193,14 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
                 add(BufferedSourceFetcher.Factory())
                 add(EntryCoverFetcher.EntryCoverFactory(callFactoryLazy))
                 add(EntryCoverFetcher.EntryFactory(callFactoryLazy))
+                add(ExtensionIconFetcher.ExtensionFactory(context))
+                add(ExtensionIconFetcher.SourceFactory(context, lazy { Injekt.get<ExtensionManager>() }))
                 addEntryInteractionImageComponents()
                 // Keyer
                 add(EntryCoverKeyer())
                 add(EntryKeyer())
+                add(InstalledExtensionIconKeyer())
+                add(InstalledSourceIconKeyer())
             }
 
             memoryCache(

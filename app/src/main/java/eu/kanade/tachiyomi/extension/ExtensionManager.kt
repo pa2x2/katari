@@ -1,7 +1,6 @@
 package eu.kanade.tachiyomi.extension
 
 import android.content.Context
-import android.graphics.drawable.Drawable
 import eu.kanade.domain.extension.interactor.TrustExtension
 import eu.kanade.domain.source.service.GlobalSourcePreferences
 import eu.kanade.domain.source.service.SourcePreferences
@@ -100,8 +99,6 @@ class ExtensionManager(
 
     private val autoUpdater by lazy { ExtensionAutoUpdater(installer, updateNotifier) }
 
-    private val iconMap = mutableMapOf<String, Drawable>()
-
     // Null until the stores first load
     @Volatile
     private var stores: List<ExtensionStore>? = null
@@ -181,15 +178,6 @@ class ExtensionManager(
                 extension.sources.any { it.id == sourceId }
             }
                 ?.pkgName
-        }
-    }
-
-    fun getAppIconForSource(sourceId: Long): Drawable? {
-        val pkgName = getExtensionPackage(sourceId) ?: return null
-
-        return iconMap[pkgName] ?: iconMap.getOrPut(pkgName) {
-            ExtensionLoader.getExtensionPackageInfoFromPkgName(context, pkgName)!!.applicationInfo!!
-                .loadIcon(context.packageManager)
         }
     }
 

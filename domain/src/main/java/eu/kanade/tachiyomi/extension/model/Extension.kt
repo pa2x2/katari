@@ -1,6 +1,5 @@
 package eu.kanade.tachiyomi.extension.model
 
-import android.graphics.drawable.Drawable
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import mihon.domain.extension.model.ContentWarning
@@ -81,7 +80,6 @@ sealed interface Extension {
         override val signatures: List<String>,
         val pkgFactory: String?,
         val sources: List<UnifiedSource>,
-        val icon: Drawable?,
         override val hasUpdate: Boolean = false,
         val isObsolete: Boolean = false,
         override val store: ExtensionStore? = null,

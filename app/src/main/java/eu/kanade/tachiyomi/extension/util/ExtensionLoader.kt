@@ -443,7 +443,6 @@ internal object ExtensionLoader {
             contentWarning = contentWarning,
             pkgFactory = metaData.getString(METADATA_SOURCE_FACTORY),
             sources = sources,
-            icon = runCatching { appInfo.loadIcon(pkgManager) }.getOrNull(),
             isShared = extensionInfo.isShared,
             signatures = signatures,
         )
