@@ -59,6 +59,8 @@ class BackupEntry(
     @ProtoNumber(43) var updateMode: String? = null,
     /** Whether this entry, as a member of a merged entry, shows its chapters in the merged chapter list. */
     @ProtoNumber(44) var mergeMemberExpanded: Boolean = false,
+    /** Epoch millis of the next expected source update; 0 when the backup carries none. */
+    @ProtoNumber(45) var nextUpdate: Long = 0,
     @ProtoNumber(100) var type: EntryType = EntryType.MANGA,
 ) {
     fun toEntry(): Entry {
@@ -87,6 +89,7 @@ class BackupEntry(
             memo = MemoColumnAdapter.decode(memo),
             coverLastModified = coverLastModified,
             lastUpdate = lastUpdate,
+            nextUpdate = nextUpdate,
             type = type,
         )
     }

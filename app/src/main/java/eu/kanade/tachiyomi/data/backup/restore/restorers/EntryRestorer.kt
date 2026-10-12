@@ -180,7 +180,12 @@ class EntryRestorer(
             entry = entry,
             states = backupEntry.featureStatesWithLegacyFallback(entry),
         )
-        val withInterval = fetchInterval.update(entry, now, timeZone, currentFetchWindow)
+        val withInterval = fetchInterval.update(entry, now, timeZone, currentFetchWindow).let { updated ->
+            // A next update still ahead was worked out from the chapters the backup came from.
+            backupEntry.nextUpdate.takeIf { it >= currentFetchWindow.first }
+                ?.let { updated.copy(nextUpdate = it) }
+                ?: updated
+        }
         entryRepository.update(withInterval)
     }
 
