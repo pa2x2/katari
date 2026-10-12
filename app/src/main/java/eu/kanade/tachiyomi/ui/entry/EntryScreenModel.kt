@@ -5,6 +5,7 @@ import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.ui.util.fastAny
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.flowWithLifecycle
@@ -270,6 +271,10 @@ class EntryScreenModel(
 
     private val selectedPositions: Array<Int> = arrayOf(-1, -1) // first and last selected index in list
     private val selectedChapterIds: HashSet<Long> = HashSet()
+
+    // Progress ticks often, so only the download indicators that read it recompose instead of every tick rebuilding
+    // the chapter list
+    private val downloadProgress = mutableStateMapOf<Long, Int>()
 
     /**
      * Helper function to update the UI state only if it's currently in success state
@@ -1057,10 +1062,22 @@ class EntryScreenModel(
         }
     }
 
+    fun getDownloadProgress(chapterId: Long): Int = downloadProgress[chapterId] ?: 0
+
+    private fun updateDownloadProgress(download: EntryDownloadStatus) {
+        if (download.state == EntryDownloadState.DOWNLOADING) {
+            downloadProgress[download.chapterId] = download.progress
+        } else {
+            downloadProgress.remove(download.chapterId)
+        }
+    }
+
     private fun updateDownloadState(download: EntryDownloadStatus) {
+        updateDownloadProgress(download)
         updateSuccessState { successState ->
             val item = successState.chapter(download) ?: return@updateSuccessState successState
-            val updatedItem = item.copy(downloadState = download.state, downloadProgress = download.progress)
+            if (item.downloadState == download.state) return@updateSuccessState successState
+            val updatedItem = item.copy(downloadState = download.state)
             successState.updateChapterItems(
                 items = listOf(updatedItem),
                 rebuildPresentation = successState.entry.downloadedFilter != TriState.DISABLED &&
@@ -1093,12 +1110,12 @@ class EntryScreenModel(
                 activeDownload != null -> activeDownload.state
                 else -> EntryDownloadState.NOT_DOWNLOADED
             }
+            activeDownload?.let(::updateDownloadProgress)
 
             EntryChapterList.Item(
                 chapter = chapter,
                 entry = chapterEntry,
                 downloadState = downloadState,
-                downloadProgress = activeDownload?.progress ?: 0,
                 selected = chapter.id in selectedChapterIds,
             )
         }.toPersistentList()
@@ -2562,7 +2579,6 @@ sealed class EntryChapterList {
         val chapter: EntryChapter,
         val entry: Entry,
         val downloadState: EntryDownloadState,
-        val downloadProgress: Int,
         val selected: Boolean = false,
     ) : EntryChapterList() {
         val id = chapter.id

@@ -311,6 +311,7 @@ class EntryScreen(
                 Unit
             }.takeIf { openApplicable },
             onDownloadChapter = screenModel::runChapterDownloadActions.takeIf { downloadsAvailable },
+            downloadProgressProvider = screenModel::getDownloadProgress,
             translation = translationUi,
             onAddToLibraryClicked = {
                 screenModel.toggleFavorite()

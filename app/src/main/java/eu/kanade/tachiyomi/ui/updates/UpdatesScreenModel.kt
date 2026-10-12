@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import cafe.adriel.voyager.core.model.StateScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import eu.kanade.core.preference.asState
@@ -166,6 +167,10 @@ class UpdatesScreenModel(
     private val selectionState = UpdatesSelectionState()
     private val selectedKeys: HashSet<LibraryItemKey> = HashSet()
 
+    // Progress ticks often, so only the download indicators that read it recompose instead of every tick rebuilding
+    // the list
+    private val downloadProgress = mutableStateMapOf<Long, Int>()
+
     init {
         screenModelScope.launchIO {
             // Set date limit for recent chapters/episodes
@@ -269,6 +274,7 @@ class UpdatesScreenModel(
                 is UpdateItem.EntryUpdate -> {
                     val chapterUpdate = update.update
                     val downloadStatus = downloadStatus(chapterUpdate)
+                    updateDownloadProgress(downloadStatus)
                     val visibleEntryTitle = entry?.displayTitle ?: chapterUpdate.entryTitle
                     UpdatesItem(
                         update = update,
@@ -279,7 +285,7 @@ class UpdatesScreenModel(
                         },
                         visibleCoverData = entry?.asEntryCover() ?: chapterUpdate.coverData,
                         downloadStateProvider = { downloadStatus.state },
-                        downloadProgressProvider = { downloadStatus.progress },
+                        downloadProgressProvider = { downloadProgress[chapterUpdate.chapterId] ?: 0 },
                         downloadAvailable = entryDownloadActionFeature.individualAvailability(
                             downloadActionRequest(update.entryType, update.sourceId),
                         ) == EntryDownloadActionAvailability.Available,
@@ -312,22 +318,28 @@ class UpdatesScreenModel(
      * @param download download object containing progress.
      */
     private fun updateDownloadState(download: EntryDownloadStatus) {
+        updateDownloadProgress(download)
         mutableState.update { state ->
-            val newItems = state.items.toMutableList().also { list ->
-                val modifiedIndex = list.indexOfFirst {
-                    it.update is UpdateItem.EntryUpdate &&
-                        it.update.entryType == download.entryType &&
-                        it.update.update.chapterId == download.chapterId
-                }
-                if (modifiedIndex < 0) return@also
-
-                val item = list[modifiedIndex]
-                list[modifiedIndex] = item.copy(
-                    downloadStateProvider = { download.state },
-                    downloadProgressProvider = { download.progress },
-                )
+            val modifiedIndex = state.items.indexOfFirst {
+                it.update is UpdateItem.EntryUpdate &&
+                    it.update.entryType == download.entryType &&
+                    it.update.update.chapterId == download.chapterId
             }
+            if (modifiedIndex < 0) return@update state
+            val item = state.items[modifiedIndex]
+            if (item.downloadStateProvider() == download.state) return@update state
+
+            val newItems = state.items.toMutableList()
+            newItems[modifiedIndex] = item.copy(downloadStateProvider = { download.state })
             state.copy(items = newItems)
+        }
+    }
+
+    private fun updateDownloadProgress(download: EntryDownloadStatus) {
+        if (download.state == EntryDownloadState.DOWNLOADING) {
+            downloadProgress[download.chapterId] = download.progress
+        } else {
+            downloadProgress.remove(download.chapterId)
         }
     }
 
