@@ -12,6 +12,7 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.track.TrackerSearch
 import eu.kanade.presentation.util.Screen
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import mihon.entry.interactions.tracking.EntryTrackingFeature
@@ -61,12 +62,16 @@ data class TrackerSearchScreen(
         private val trackingFeature: EntryTrackingFeature = Injekt.get(),
     ) : StateScreenModel<Model.State>(State()) {
 
+        private var searchJob: Job? = null
+
         init {
             if (initialQuery.isNotBlank()) trackingSearch(initialQuery)
         }
 
         fun trackingSearch(query: String) {
-            screenModelScope.launch {
+            // A slower earlier search must not overwrite the results of a newer one
+            searchJob?.cancel()
+            searchJob = screenModelScope.launch {
                 mutableState.update { it.copy(queryResult = null, selected = null) }
                 val result = withIOContext { trackingFeature.search(entry, service.id, query) }
                 val presentationResult = when (result) {
