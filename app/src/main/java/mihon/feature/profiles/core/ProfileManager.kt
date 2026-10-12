@@ -279,14 +279,13 @@ class ProfileManager(
         if (currentVersion < 11) {
             migrateViewerSettingsToProfileKeys(sharedPreferences)
         }
+        if (currentVersion < 12) {
+            migrateAnilistScoreTypeToProfiles(sharedPreferences)
+        }
 
         migrateKeyBackToGlobal(
             sharedPreferences = sharedPreferences,
             baseKey = "mark_duplicate_read_chapter_read",
-        )
-        migrateKeyBackToGlobal(
-            sharedPreferences = sharedPreferences,
-            baseKey = "anilist_score_type",
         )
         migrateKeyBackToGlobal(
             sharedPreferences = sharedPreferences,
@@ -313,6 +312,21 @@ class ProfileManager(
         ProfilePreferenceMigration(sharedPreferences).copyLegacyPreferenceKeysToProfiles(
             profileIds = profileIds,
             profileKeys = DuplicatePreferences.profileKeys,
+        )
+    }
+
+    // The global value came from whichever profile logged into AniList last; every profile starts from it until its own
+    // login or account refresh reads its account's score format.
+    private suspend fun migrateAnilistScoreTypeToProfiles(
+        sharedPreferences: android.content.SharedPreferences,
+    ) {
+        val profileIds = profileDatabase.getProfiles(includeArchived = true)
+            .map(Profile::id)
+            .ifEmpty { listOf(ProfileConstants.DEFAULT_PROFILE_ID) }
+
+        ProfilePreferenceMigration(sharedPreferences).copyLegacyPreferenceKeysToProfiles(
+            profileIds = profileIds,
+            profileKeys = setOf("anilist_score_type"),
         )
     }
 
@@ -623,6 +637,6 @@ class ProfileManager(
     }
 
     companion object {
-        private const val LEGACY_PROFILE_MIGRATION_VERSION = 11
+        private const val LEGACY_PROFILE_MIGRATION_VERSION = 12
     }
 }

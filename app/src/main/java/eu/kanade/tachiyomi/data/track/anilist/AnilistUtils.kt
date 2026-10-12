@@ -1,6 +1,6 @@
 package eu.kanade.tachiyomi.data.track.anilist
 
-import eu.kanade.domain.track.service.GlobalTrackPreferences
+import eu.kanade.domain.track.service.TrackPreferences
 import eu.kanade.tachiyomi.data.database.models.Track
 import eu.kanade.tachiyomi.data.track.anilist.dto.ALUser
 import eu.kanade.tachiyomi.data.track.model.TrackSearch
@@ -129,7 +129,7 @@ internal fun Track.toApiStatus(): MediaListStatus = when (status) {
     else -> throw NotImplementedError("Unknown status: $status")
 }
 
-internal fun DomainTrack.toApiScore(preferences: GlobalTrackPreferences): String {
+internal fun DomainTrack.toApiScore(preferences: TrackPreferences): String {
     return when (preferences.anilistScoreType.get()) {
         // 10 point
         "POINT_10" -> (score.toInt() / 10).toString()

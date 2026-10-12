@@ -2,7 +2,6 @@ package eu.kanade.tachiyomi.data.track.anilist
 
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.domain.track.model.toDbTrack
-import eu.kanade.domain.track.service.GlobalTrackPreferences
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.database.models.Track
 import eu.kanade.tachiyomi.data.track.BaseTracker
@@ -46,8 +45,7 @@ class Anilist(id: Long) : BaseTracker(id, "AniList"), DeletableTracker, External
 
     override val supportsPrivateTracking: Boolean = true
 
-    private val globalTrackPreferences: GlobalTrackPreferences by injectLazy()
-    private val scorePreference = globalTrackPreferences.anilistScoreType
+    private val scorePreference by lazy { trackPreferences.anilistScoreType }
 
     override fun authorizationUri() = AnilistApi.authUrl()
 
@@ -142,7 +140,7 @@ class Anilist(id: Long) : BaseTracker(id, "AniList"), DeletableTracker, External
                 else -> "😊"
             }
 
-            else -> track.toApiScore(globalTrackPreferences)
+            else -> track.toApiScore(trackPreferences)
         }
     }
 
