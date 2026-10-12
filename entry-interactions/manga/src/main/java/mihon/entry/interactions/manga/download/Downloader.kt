@@ -467,6 +467,20 @@ internal class Downloader(
             download.chapter.scanlator,
             download.chapter.url,
         )
+
+        // Being stopped after the download is published but before it's indexed leaves a finished download on disk
+        // that is still queued, and downloading it again would replace it for nothing or, when the archive setting
+        // changed meanwhile, save a second copy next to it
+        val isPublished = listOf("$chapterDirname.cbz", chapterDirname).any { name ->
+            mangaDir.findFile(name)?.isValidMangaChapterArtifact() == true
+        }
+        if (isPublished) {
+            mangaDir.findFile(chapterDirname + TMP_DIR_SUFFIX)?.delete()
+            cache.addChapter(chapterDirname, mangaDir, download.entry)
+            download.status = DownloadState.DOWNLOADED
+            return
+        }
+
         val tmpDir = mangaDir.createDirectory(chapterDirname + TMP_DIR_SUFFIX)!!
 
         try {
