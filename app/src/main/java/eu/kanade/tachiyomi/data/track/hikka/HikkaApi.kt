@@ -110,6 +110,7 @@ class HikkaApi(
                     .await()
 
                 if (response.code == 404) {
+                    response.close()
                     null
                 } else {
                     response

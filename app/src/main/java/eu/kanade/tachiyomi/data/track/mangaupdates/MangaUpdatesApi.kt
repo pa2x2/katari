@@ -190,6 +190,7 @@ class MangaUpdatesApi(
                     .await()
 
                 if (response.code == 404) {
+                    response.close()
                     null
                 } else {
                     response.parseAs<MURecord>()
