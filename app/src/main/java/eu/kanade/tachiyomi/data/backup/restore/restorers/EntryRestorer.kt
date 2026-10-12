@@ -227,8 +227,17 @@ class EntryRestorer(
         val dbChaptersByUrl = entryChapterRepository.getChaptersByEntryIdAwait(entry.id)
             .associateBy { it.url }
 
-        val chaptersToUpsert = backupChapters.mapNotNull { backupChapter ->
-            val chapter = backupChapter.toEntryChapter(entry.id)
+        // A duplicated chapter is backed up once per copy; writing each copy would let the last one decide its state.
+        val restoredChapters = backupChapters
+            .map { it.toEntryChapter(entry.id) }
+            .groupBy { it.url }
+            .map { (_, copies) ->
+                copies.reduce { kept, other ->
+                    kept.copy(read = kept.read || other.read, bookmark = kept.bookmark || other.bookmark)
+                }
+            }
+
+        val chaptersToUpsert = restoredChapters.mapNotNull { chapter ->
             val dbChapter = dbChaptersByUrl[chapter.url]
                 ?: return@mapNotNull chapter
 
