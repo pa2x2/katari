@@ -29,9 +29,11 @@ import eu.kanade.tachiyomi.ui.reader.viewer.Viewer
 import eu.kanade.tachiyomi.util.lang.byteSize
 import eu.kanade.tachiyomi.util.storage.DiskUtil
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -266,6 +268,9 @@ internal class ReaderViewModel @JvmOverloads constructor(
     val eventFlow = eventChannel.receiveAsFlow()
     private val activitySession = EntryMediaSessionActivitySession()
     private val activityMutex = Mutex()
+
+    // Serializes the progress writes, which outlive the reader, so they are applied in the order the pages were shown
+    private val progressWrites = Mutex()
 
     /**
      * The manga loaded in the reader. It can be null when instantiated for a short time.
@@ -689,9 +694,15 @@ internal class ReaderViewModel @JvmOverloads constructor(
         val pages = selectedChapter.pages ?: return
         selectedChapter.chapter.id?.let { jumpHistory.observe(it, page.index) }
 
-        // Save last page read and mark as read if needed
-        viewModelScope.launchNonCancellable {
-            updateChapterProgress(selectedChapter, page)
+        showChapterPage(selectedChapter, page)
+        // Save last page read and mark as read if needed. The mutex is taken before the first thread switch and is
+        // fair, so the writes land in the order the pages were selected even when one of them suspends longer.
+        viewModelScope.launch(start = CoroutineStart.UNDISPATCHED) {
+            withContext(NonCancellable) {
+                progressWrites.withLock {
+                    withIOContext { updateChapterProgress(selectedChapter, page) }
+                }
+            }
         }
 
         if (selectedChapter == getCurrentChapter()) {
@@ -751,10 +762,7 @@ internal class ReaderViewModel @JvmOverloads constructor(
         }
     }
 
-    /**
-     * Reports the observed chapter progress. Shared Feature participants decide which consequences are allowed.
-     */
-    private suspend fun updateChapterProgress(readerChapter: ReaderChapter, page: Page) {
+    private fun showChapterPage(readerChapter: ReaderChapter, page: Page) {
         val pageIndex = page.index
 
         mutableState.update {
@@ -762,7 +770,13 @@ internal class ReaderViewModel @JvmOverloads constructor(
         }
         readerChapter.requestedPage = pageIndex
         chapterPageIndex = pageIndex
+    }
 
+    /**
+     * Reports the observed chapter progress. Shared Feature participants decide which consequences are allowed.
+     */
+    private suspend fun updateChapterProgress(readerChapter: ReaderChapter, page: Page) {
+        val pageIndex = page.index
         if (page.status is Page.State.Error) return
         val entryChapter = readerChapter.chapter.toDomainChapter()?.toEntryChapter() ?: return
         val visibleEntry = manga?.let { getEntry.await(it.id) } ?: return
@@ -918,12 +932,17 @@ internal class ReaderViewModel @JvmOverloads constructor(
         return if (resolveDefault) state.effectiveReadingMode else state.readingModeOverride
     }
 
+    private var readingModeJob: Job? = null
+
     /**
      * Updates the viewer position for the open manga.
      */
     fun setMangaReadingMode(readingMode: ReadingMode) {
         val manga = manga ?: return
-        viewModelScope.launchIO {
+        // Only the latest pick matters, and letting an older one finish last would restore its choice
+        val previousJob = readingModeJob
+        readingModeJob = viewModelScope.launchIO {
+            previousJob?.cancelAndJoin()
             val binding = readerSettings.readingMode
             if (readingMode == ReadingMode.DEFAULT) {
                 binding.clearEntryOverride()
@@ -949,12 +968,17 @@ internal class ReaderViewModel @JvmOverloads constructor(
         return if (resolveDefault) state.effectiveOrientation else state.orientationOverride
     }
 
+    private var orientationJob: Job? = null
+
     /**
      * Updates the orientation type for the open manga.
      */
     fun setMangaOrientationType(orientation: ReaderOrientation) {
         val manga = manga ?: return
-        viewModelScope.launchIO {
+        // Only the latest pick matters, and letting an older one finish last would restore its choice
+        val previousJob = orientationJob
+        orientationJob = viewModelScope.launchIO {
+            previousJob?.cancelAndJoin()
             val binding = readerSettings.orientation
             if (orientation == ReaderOrientation.DEFAULT) {
                 binding.clearEntryOverride()
@@ -1258,6 +1282,8 @@ internal class ReaderViewModel @JvmOverloads constructor(
      */
     private fun deletePendingChapters() {
         viewModelScope.launchNonCancellable {
+            // Progress writes started before leaving may still enqueue the chapter just finished
+            progressWrites.withLock {}
             downloadManager.deletePendingChapters()
         }
     }
