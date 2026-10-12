@@ -3,9 +3,7 @@
     <string name="lock_never">Nikada</string>
     <string name="lock_always">Uvijek</string>
     <string name="obsolete_extension_message">Ovo proširenje više nije dostupno. Možda neće ispravno funkcionirati i može izazvati probleme s aplikacijom. Preporučuje se deinstalirati proširenje.</string>
-    <string name="untrusted_extension_message">Zlonamjerno proširenje može pročitati sve spremljene podatke za prijavu ili izvršiti proizvoljni kod.
-\n
-\nVjerujući ovom certifikatu, prihvaćaš te rizike.</string>
+    <string name="untrusted_extension_message">Zlonamjerno proširenje može pročitati sve spremljene podatke za prijavu ili izvršiti proizvoljni kod. \n \nVjerujući ovom certifikatu, prihvaćaš te rizike.</string>
     <string name="untrusted_extension">Nepovjerljivo proširenje</string>
     <string name="ext_uninstall">Deinstaliraj</string>
     <string name="ext_untrusted">Nepovjerljivo</string>
@@ -276,8 +274,7 @@
     <string name="display_mode_chapter">Poglavlje %1$s</string>
     <string name="snack_add_to_library">Dodati u biblioteku?</string>
     <string name="source_not_installed">Izvor nije instaliran: %1$s</string>
-    <string name="copied_to_clipboard">Kopirano u međuspremnik:
-\n%1$s</string>
+    <string name="copied_to_clipboard">Kopirano u međuspremnik: \n%1$s</string>
     <string name="delete_downloads_for_manga">Izbrisati preuzeta poglavlja?</string>
     <string name="manga_info_collapse">Manje</string>
     <string name="manga_info_expand">Više</string>
@@ -392,10 +389,7 @@
     <string name="channel_errors">Greške</string>
     <string name="pref_remove_bookmarked_chapters">Dozvoli brisanje zabilježenih poglavlja</string>
     <string name="pref_category_delete_chapters">Izbriši poglavlja</string>
-    <string name="ext_nsfw_warning">Izvori ovog proširenja mogu sadržavati neprikladan sadržaj (18+)</string>
-    <string name="ext_nsfw_short">18+</string>
     <string name="backup_restore_missing_trackers">Usluge praćenja bez prijave:</string>
-    <string name="parental_controls_info">To ne sprečava neslužbene ili potencijalno krivo označena proširenja prikazati neprikladan sadržaj (18+) unutar aplikacije.</string>
     <string name="no_chapters_error">Nema poglavlja</string>
     <string name="chapter_settings_updated">Standardne postavke poglavlja su aktualizirane</string>
     <string name="share_page_info">%1$s: %2$s, %3$d. stranica</string>
@@ -414,10 +408,8 @@
     <string name="spen_next_page">Sljedeća stranica</string>
     <string name="spen_previous_page">Prethodna stranica</string>
     <string name="migration_help_guide">Vodič za migraciju izvora</string>
-    <string name="pref_category_nsfw_content">Izvori neprikladnog sadržaja (18+)</string>
     <string name="file_picker_error">Nije pronađena nijedna aplikacija za biranje datoteka</string>
     <string name="myanimelist_relogin">Ponovo se prijavi na MAL</string>
-    <string name="pref_show_nsfw_source">Prikaži u popisu izvora i proširenja</string>
     <string name="track_finished_reading_date">Datum kraja</string>
     <string name="track_started_reading_date">Datum početka</string>
     <string name="pref_dump_crash_logs_summary">Sprema zapise grešaka u datoteku za dijeljenje podataka s programerima</string>
@@ -570,7 +562,6 @@
     <string name="ext_info_language">Jezik</string>
     <string name="ext_info_version">Verzija</string>
     <string name="popular">Popularni</string>
-    <string name="ext_info_age_rating">Dobna granica</string>
     <string name="download_ahead">Preuzmi unaprijed</string>
     <string name="multi_lang">Višejezičnost</string>
     <string name="missing_storage_permission">Dozvole za spremište nisu odobrena</string>
@@ -637,8 +628,7 @@
     <string name="crash_screen_title">Ups!</string>
     <string name="not_installed">Nije instalirano</string>
     <string name="updates_last_update_info_just_now">Upravo sada</string>
-    <string name="fdroid_warning">F-Droid verzije nisu službeno podržane.
-\nDodirnite da biste saznali više.</string>
+    <string name="fdroid_warning">F-Droid verzije nisu službeno podržane. \nDodirnite da biste saznali više.</string>
     <string name="download_notifier_cache_renewal">Provjeravanje preuzimanja</string>
     <string name="update_check_open">Otvori na GitHubu</string>
     <string name="appwidget_updates_description">Pogledaj nedavno aktualizirane unose u biblioteci</string>
@@ -731,11 +721,7 @@
     <string name="onboarding_permission_ignore_battery_opts">Upotreba baterije u pozadini</string>
     <string name="onboarding_description">Hajdemo najprije postaviti neke stvari. Ako želiš možeš ih kasnije promijeniti u postavkama.</string>
     <string name="no_location_set">Nije postavljeno mjesto spremišta</string>
-    <string name="onboarding_storage_info">Odaberi mapu u koju će %1$s spremati preuzimanja poglavlja, sigurnosne kopije i drugo.
-\n
-\nPreporučujemo koristiti zasebnu mapu.
-\n
-\nOdabrana mapa: %2$s</string>
+    <string name="onboarding_storage_info">Odaberi mapu u koju će %1$s spremati preuzimanja poglavlja, sigurnosne kopije i drugo. \n \nPreporučujemo koristiti zasebnu mapu. \n \nOdabrana mapa: %2$s</string>
     <string name="theme_nord">Nord</string>
     <string name="ext_permission_install_apps_warning">Za instaliranje proširenja su potrebne dozvole. Dodirni ovdje za odobrenje.</string>
     <string name="invalid_backup_file_error">Potpuna greška:</string>
@@ -784,10 +770,6 @@
     <string name="ext_remove">Ukloni</string>
     <string name="ext_confirm_remove">Ukloniti proširenje?</string>
     <string name="remove_private_extension_message">Stvarno želiš ukloniti proširenje „%s”?</string>
-    <string name="pref_hardware_bitmap_threshold_summary">Ako čitač učita praznu sliku, postupno smanji prag.\nOdabrano: %s</string>
-    <string name="pref_hardware_bitmap_threshold">Prilagođeni hardverski prag bitmapa</string>
-    <string name="pref_hardware_bitmap_threshold_default">Standardno (%d)</string>
-    <string name="pref_always_decode_long_strip_with_ssiv_summary">Utječe na performansu. Aktiviraj samo ako smanjenje praga bitmapa ne riješi probleme s praznim slikama</string>
     <string name="label_auto">Automatski</string>
     <string name="action_display_unread_badge">Nepročitana poglavlja</string>
     <string name="action_notes">Bilješke</string>
@@ -804,7 +786,6 @@
     <string name="pref_mark_duplicate_read_chapter_read_existing">Nakon čitanja poglavlja</string>
     <string name="pref_mark_duplicate_read_chapter_read_new">Nakon dohvaćanja novog poglavlja</string>
     <string name="pref_hide_missing_chapter_indicators">Sakrij indikatore nedostajućih poglavlja</string>
-    <string name="pref_always_decode_long_strip_with_ssiv_2">Koristi zastarjeli dekoder za čitač kontinuiranog listanja</string>
     <string name="clear_database_text">Uklonit ćeš unose iz baze podataka</string>
     <string name="clear_database_history_warning">Izgubit će se pročitana poglavlja i napredak unosa koji se ne nalaze u biblioteci</string>
     <string name="clear_db_exclude_read">Zadrži unose s pročitanim poglavljima</string>
@@ -879,4 +860,15 @@
     <string name="donationCampaign.paragraph1">Pozdrav! Ja sam glavni programer Mihona i želim te zamoliti da razmisliš o financijskoj potpori njegovom razvoju. Uz dovoljno podrške, moći ću raditi na Mihonu puno radno vrijeme i usredotočiti se na dugogodišnje probleme, kao i na vrlo tražene funkcije.</string>
     <string name="donationCampaign.paragraph2">Možeš donirati putem Patreona (preferiran način) ili putem OpenCollective-a. Ako imaš pitanja ili želiš podržati korištenje alternativnih načina, slobodno me kontaktiraj putem Mihonovog Discord servera.</string>
     <string name="donationCampaign.paragraph3">Bez obzira na to, volonteri i ja ćemo i dalje održavati Mihon, i ostat će otvorenog koda.</string>
+    <string name="ext_nsfw_warning">Izvori ovog proširenja mogu sadržavati neprikladan sadržaj (18+)</string>
+    <string name="ext_nsfw_short">18+</string>
+    <string name="parental_controls_info">To ne sprečava neslužbene ili potencijalno krivo označena proširenja prikazati neprikladan sadržaj (18+) unutar aplikacije.</string>
+    <string name="pref_category_nsfw_content">Izvori neprikladnog sadržaja (18+)</string>
+    <string name="pref_show_nsfw_source">Prikaži u popisu izvora i proširenja</string>
+    <string name="ext_info_age_rating">Dobna granica</string>
+    <string name="pref_hardware_bitmap_threshold_summary">Ako čitač učita praznu sliku, postupno smanji prag.\nOdabrano: %s</string>
+    <string name="pref_hardware_bitmap_threshold">Prilagođeni hardverski prag bitmapa</string>
+    <string name="pref_hardware_bitmap_threshold_default">Standardno (%d)</string>
+    <string name="pref_always_decode_long_strip_with_ssiv_summary">Utječe na performansu. Aktiviraj samo ako smanjenje praga bitmapa ne riješi probleme s praznim slikama</string>
+    <string name="pref_always_decode_long_strip_with_ssiv_2">Koristi zastarjeli dekoder za čitač kontinuiranog listanja</string>
 </resources>

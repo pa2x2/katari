@@ -5,6 +5,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFontFamilyResolver
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.LocalLocaleList
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import mihon.book.api.document.BookDocumentBlock
@@ -26,18 +27,19 @@ internal fun rememberBookDocumentTableGeometry(
     val fonts = rememberBookDocumentFonts(block.style.fontFamily, inlineStyles)
     val fontFamilyResolver = LocalFontFamilyResolver.current
     val layoutDirection = LocalLayoutDirection.current
+    val localeList = LocalLocaleList.current
     val width = with(density) { viewportWidth.roundToPx().coerceAtLeast(1) }
     val cache = LocalBookDocumentTableCache.current
     cache?.get(block, width, fonts)?.let { return it }
     val texts = remember(cells, block.style, block.role, fonts, textScale, density) {
         bookDocumentTableTexts(cells, block, fonts, textScale, density)
     }
-    return remember(grid, texts, fontFamilyResolver, layoutDirection, viewportWidth, density) {
+    return remember(grid, texts, fontFamilyResolver, layoutDirection, localeList, viewportWidth, density) {
         with(density) {
             measureBookDocumentTable(
                 grid,
                 texts,
-                BookDocumentTableTextMeasurer(density, layoutDirection, fontFamilyResolver),
+                BookDocumentTableTextMeasurer(density, layoutDirection, localeList, fontFamilyResolver),
                 width,
                 8.dp.roundToPx(),
             )

@@ -3,6 +3,7 @@ package mihon.entry.interactions.book.document.reader.table
 import androidx.compose.ui.text.MultiParagraph
 import androidx.compose.ui.text.MultiParagraphIntrinsics
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.intl.LocaleList
 import androidx.compose.ui.text.resolveDefaults
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Density
@@ -13,6 +14,7 @@ import kotlin.math.ceil
 internal class BookDocumentTableTextMeasurer(
     private val density: Density,
     private val layoutDirection: LayoutDirection,
+    private val localeList: LocaleList,
     private val fontFamilyResolver: FontFamily.Resolver,
 ) {
     // Discard these caches after calculating geometry; retain no offscreen text layouts.
@@ -27,6 +29,7 @@ internal class BookDocumentTableTextMeasurer(
             density = density,
             fontFamilyResolver = fontFamilyResolver,
             softWrap = true,
+            defaultLocaleList = localeList,
         )
     }
 

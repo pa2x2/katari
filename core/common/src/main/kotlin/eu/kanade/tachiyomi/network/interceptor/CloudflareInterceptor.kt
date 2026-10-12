@@ -3,6 +3,7 @@ package eu.kanade.tachiyomi.network.interceptor
 import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Looper
+import android.webkit.JavascriptInterface
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebView
@@ -111,6 +112,18 @@ class CloudflareInterceptor(
         executor.execute {
             webview = createWebView(originalRequest)
 
+            webview.addJavascriptInterface(
+                object {
+                    @Suppress("unused")
+                    @JavascriptInterface
+                    fun interactiveDetected() {
+                        // The challenge cannot be solved non-interactively, abort.
+                        latch.countDown()
+                    }
+                },
+                "mihon",
+            )
+
             webview.webViewClient = object : WebViewClient() {
                 override fun onPageFinished(view: WebView, url: String) {
                     fun isCloudFlareBypassed(): Boolean {
@@ -122,6 +135,19 @@ class CloudflareInterceptor(
                     if (isCloudFlareBypassed()) {
                         cloudflareBypassed = true
                         latch.countDown()
+                    }
+
+                    if (url == origRequestUrl) {
+                        view.evaluateJavascript(
+                            """
+                                addEventListener("message", ({data}) => {
+                                    if (data?.source === "cloudflare-challenge" && data?.event === "interactiveBegin") {
+                                        mihon.interactiveDetected();
+                                    }
+                                })
+                            """.trimIndent(),
+                            null,
+                        )
                     }
                 }
 

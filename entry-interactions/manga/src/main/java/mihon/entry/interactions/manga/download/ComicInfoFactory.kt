@@ -37,4 +37,7 @@ internal fun createComicInfo(
     letterer = null,
     coverArtist = null,
     tags = null,
+    year = null,
+    month = null,
+    day = null,
 )

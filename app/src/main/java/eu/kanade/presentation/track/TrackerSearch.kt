@@ -61,10 +61,10 @@ import androidx.compose.ui.platform.Clipboard
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.platform.toClipEntry
 import androidx.compose.ui.text.capitalize
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.toLowerCase
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -245,8 +245,9 @@ private fun SearchResultItem(
     val context = LocalContext.current
     val clipboard: Clipboard = LocalClipboard.current
     val focusManager = LocalFocusManager.current
-    val type = trackSearch.publishingType.toLowerCase(Locale.current).capitalize(Locale.current)
-    val status = trackSearch.publishingStatus.toLowerCase(Locale.current).capitalize(Locale.current)
+    val locale = LocalLocale.current
+    val type = trackSearch.publishingType.toLowerCase(locale).capitalize(locale)
+    val status = trackSearch.publishingStatus.toLowerCase(locale).capitalize(locale)
     val description = trackSearch.summary.trim()
     val shape = RoundedCornerShape(16.dp)
     val borderColor = if (selected) MaterialTheme.colorScheme.outline else Color.Transparent

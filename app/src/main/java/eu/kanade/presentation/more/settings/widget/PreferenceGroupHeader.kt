@@ -11,16 +11,19 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import tachiyomi.presentation.core.components.pulsingHighlightBackground
 
 @Composable
 fun PreferenceGroupHeader(
     title: String,
     isProfileSpecific: Boolean = false,
+    highlighted: Boolean = false,
 ) {
     Box(
         contentAlignment = Alignment.CenterStart,
         modifier = Modifier
             .fillMaxWidth()
+            .pulsingHighlightBackground(Unit.takeIf { highlighted })
             .padding(bottom = 8.dp, top = 14.dp),
     ) {
         Row(

@@ -93,7 +93,7 @@ class Komga(id: Long) : BaseTracker(id, "Komga"), EnhancedTracker {
     override suspend fun match(entry: Entry): TrackSearch? =
         try {
             api.getTrackSearch(entry.url)
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             null
         }
 
@@ -106,4 +106,6 @@ class Komga(id: Long) : BaseTracker(id, "Komga"), EnhancedTracker {
         } else {
             null
         }
+
+    override suspend fun updateUserConfig() = Unit
 }

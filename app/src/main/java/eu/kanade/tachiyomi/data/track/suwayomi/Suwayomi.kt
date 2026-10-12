@@ -56,7 +56,7 @@ class Suwayomi(id: Long) : BaseTracker(id, "Suwayomi"), EnhancedTracker {
             }
         }
 
-        return api.updateProgress(track, getPrefTrackerDelete())
+        return api.updateProgress(track, getPrefTrackerDelete()) ?: throw Exception("Could not update manga")
     }
 
     override suspend fun bind(track: Track, hasReadChapters: Boolean): Track {
@@ -68,7 +68,7 @@ class Suwayomi(id: Long) : BaseTracker(id, "Suwayomi"), EnhancedTracker {
     }
 
     override suspend fun refresh(track: Track): Track {
-        val remoteTrack = api.getTrackSearch(track.remote_id)
+        val remoteTrack = api.getTrackSearch(track.remote_id) ?: throw Exception("Could not find manga")
         track.copyPersonalFrom(remoteTrack)
         track.total_chapters = remoteTrack.total_chapters
         return track
@@ -87,7 +87,7 @@ class Suwayomi(id: Long) : BaseTracker(id, "Suwayomi"), EnhancedTracker {
     override suspend fun match(entry: Entry): TrackSearch? =
         try {
             api.getTrackSearch(entry.url.getEntryId())
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             null
         }
 
@@ -108,4 +108,6 @@ class Suwayomi(id: Long) : BaseTracker(id, "Suwayomi"), EnhancedTracker {
         val preferences = api.sourcePreferences()
         return preferences.getBoolean(TRACKER_DELETE_KEY, TRACKER_DELETE_DEFAULT)
     }
+
+    override suspend fun updateUserConfig() = Unit
 }

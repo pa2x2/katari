@@ -1,8 +1,11 @@
+import com.android.build.api.variant.ApplicationVariant
+import com.android.build.api.variant.BuildConfigField
 import com.android.build.api.variant.FilterConfiguration
 import mihon.gradle.Config
-import mihon.gradle.getBuildTime
+import mihon.gradle.getCurrentTime
 import mihon.gradle.getLatestCommitCount
 import mihon.gradle.getLatestCommitSha
+import mihon.gradle.getLatestCommitTime
 import mihon.gradle.tasks.GenerateApplicationFeatureTopologyTask
 import mihon.gradle.tasks.ReplaceShortcutsPlaceholderTask
 import org.gradle.api.tasks.testing.Test
@@ -19,6 +22,7 @@ plugins {
     alias(libs.plugins.aboutLibraries)
     alias(libs.plugins.androidx.baselineProfile)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.apollo)
 }
 
 if (Config.includeTelemetry) {
@@ -46,9 +50,6 @@ android {
         versionCode = 75
         versionName = "1.15.0"
 
-        buildConfigField("String", "COMMIT_COUNT", "\"${getLatestCommitCount()}\"")
-        buildConfigField("String", "COMMIT_SHA", "\"${getLatestCommitSha()}\"")
-        buildConfigField("String", "BUILD_TIME", "\"${getBuildTime(useLatestCommitTime = false)}\"")
         buildConfigField("boolean", "TELEMETRY_INCLUDED", "${Config.includeTelemetry}")
         buildConfigField("boolean", "UPDATER_ENABLED", "${Config.enableUpdater}")
     }
@@ -85,7 +86,6 @@ android {
     buildTypes {
         val debug = getByName("debug") {
             applicationIdSuffix = ".dev"
-            versionNameSuffix = "-${getLatestCommitCount()}"
             isPseudoLocalesEnabled = true
         }
         val release = getByName("release") {
@@ -97,8 +97,6 @@ android {
             isProfileable = true
 
             proguardFiles("proguard-android-optimize.txt", "proguard-rules.pro")
-
-            buildConfigField("String", "BUILD_TIME", "\"${getBuildTime(useLatestCommitTime = true)}\"")
         }
 
         val commonMatchingFallbacks = listOf(release.name)
@@ -115,11 +113,7 @@ android {
 
             applicationIdSuffix = ".debug"
 
-            versionNameSuffix = debug.versionNameSuffix
-
             matchingFallbacks.addAll(commonMatchingFallbacks)
-
-            buildConfigField("String", "BUILD_TIME", "\"${getBuildTime(useLatestCommitTime = false)}\"")
         }
         create("benchmark") {
             initWith(release)
@@ -366,6 +360,10 @@ dependencies {
     // String similarity
     implementation(libs.stringSimilarity)
 
+    // GraphQL generation
+    implementation(libs.apollo)
+    implementation(libs.apollo.adapters)
+
     // Tests
     testImplementation(libs.bundles.test)
     testImplementation(projects.featureValidation)
@@ -405,6 +403,84 @@ val generateFeatureReport = tasks.register<Test>("generateFeatureReport") {
     testLogging.showStandardStreams = true
 }
 
+apollo {
+    val schemaBasePath = "src/main/graphql/mihon/graphql"
+    service("anilist") {
+        packageName.set("mihon.graphql.anilist")
+        val srcDir = "$schemaBasePath/anilist"
+        srcDir(file(srcDir))
+
+        introspection {
+            endpointUrl.set("https://graphql.anilist.co")
+            schemaFile.set(file("$srcDir/anilist.graphqls"))
+        }
+
+        // ISO 3166-1 alpha-2 country code
+        mapScalarToKotlinString("CountryCode")
+    }
+
+    service("kitsu") {
+        packageName.set("mihon.graphql.kitsu")
+        val srcDir = "$schemaBasePath/kitsu"
+        srcDir(file(srcDir))
+
+        introspection {
+            // Kitsu doesn't like requests without a UA
+            headers.put(
+                "User-Agent",
+                "Katari v${android.defaultConfig.versionName} (${android.defaultConfig.applicationId})",
+            )
+            endpointUrl.set("https://kitsu.app/api/graphql")
+            schemaFile.set(file("$srcDir/kitsu.graphqls"))
+        }
+
+        // A date, expressed as an ISO8601 string
+        mapScalarToKotlinString("Date")
+        // An ISO 8601-encoded datetime
+        mapScalar("ISO8601DateTime", "kotlin.time.Instant", "com.apollographql.adapter.core.KotlinInstantAdapter")
+        // A loose key-value map in GraphQL
+        mapScalar(
+            "Map",
+            "kotlin.collections.Map<String, Any?>",
+            "mihon.graphql.kitsu.adapter.KitsuMapAdapter",
+        )
+    }
+
+    service("shikimori") {
+        packageName.set("mihon.graphql.shikimori")
+        val srcDir = "$schemaBasePath/shikimori"
+        srcDir(file(srcDir))
+
+        introspection {
+            endpointUrl.set("https://shikimori.io/api/graphql")
+            schemaFile.set(file("$srcDir/shikimori.graphqls"))
+        }
+
+        // An ISO 8601-encoded date
+        mapScalarToKotlinString("ISO8601Date")
+    }
+
+    service("suwayomi") {
+        packageName.set("mihon.graphql.suwayomi")
+        val srcDir = "$schemaBasePath/suwayomi"
+        srcDir(file(srcDir))
+
+        introspection {
+            endpointUrl.set("http://localhost:4567/api/graphql")
+            schemaFile.set(file("$srcDir/suwayomi.graphqls"))
+        }
+    }
+}
+
+val latestCommitCount = getLatestCommitCount()
+val latestCommitSha = getLatestCommitSha()
+val latestCommitTime = getLatestCommitTime()
+val currentTime = getCurrentTime()
+
+fun ApplicationVariant.buildConfigField(type: String, name: String, value: Provider<String>) {
+    buildConfigFields?.put(name, value.map { BuildConfigField(type, it, null) })
+}
+
 androidComponents {
     onVariants { variant ->
         if (variant.buildType !in releasedBuildTypes) return@onVariants
@@ -419,6 +495,20 @@ androidComponents {
     }
 
     onVariants { variant ->
+        val isUnstableBuild = variant.buildType == "debug" || variant.buildType == "preview"
+        val buildTime = if (isUnstableBuild) currentTime else latestCommitTime
+
+        variant.buildConfigField("String", "COMMIT_COUNT", latestCommitCount.map { "\"$it\"" })
+        variant.buildConfigField("String", "COMMIT_SHA", latestCommitSha.map { "\"$it\"" })
+        variant.buildConfigField("String", "BUILD_TIME", buildTime.map { "\"$it\"" })
+
+        if (isUnstableBuild) {
+            variant.outputs.forEach { output ->
+                val versionName = output.versionName.get()
+                output.versionName.set(latestCommitCount.map { "$versionName-$it" })
+            }
+        }
+
         val javaSources = variant.sources.java
         if (javaSources != null) {
             val variantName = variant.name.replaceFirstChar { it.uppercase() }

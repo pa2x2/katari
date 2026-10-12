@@ -26,7 +26,7 @@ class Kavita(id: Long) : BaseTracker(id, "Kavita"), EnhancedTracker {
     var authentications: OAuth? = null
 
     private val interceptor by lazy { KavitaInterceptor(this) }
-    val api by lazy { KavitaApi(client, interceptor) }
+    val api by lazy { KavitaApi(id, client, interceptor) }
 
     private val sourceSettingsFeature: EntrySourceSettingsFeature by injectLazy()
 
@@ -94,7 +94,7 @@ class Kavita(id: Long) : BaseTracker(id, "Kavita"), EnhancedTracker {
     override suspend fun match(entry: Entry): TrackSearch? =
         try {
             api.getTrackSearch(entry.url)
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             null
         }
 
@@ -140,4 +140,6 @@ class Kavita(id: Long) : BaseTracker(id, "Kavita"), EnhancedTracker {
         }
         authentications = oauth
     }
+
+    override suspend fun updateUserConfig() = Unit
 }

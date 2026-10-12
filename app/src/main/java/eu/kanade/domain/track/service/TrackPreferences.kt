@@ -2,6 +2,7 @@ package eu.kanade.domain.track.service
 
 import eu.kanade.domain.track.model.AutoTrackState
 import eu.kanade.tachiyomi.data.track.Tracker
+import eu.kanade.tachiyomi.data.track.kitsu.Kitsu
 import eu.kanade.tachiyomi.data.track.mangabaka.MangaBaka
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.PreferenceStore
@@ -87,6 +88,8 @@ class TrackPreferences(
         OAUTH_CODE_VERIFIER_KEY_FAMILY.key(trackerId),
         "",
     )
+
+    val kitsuScoreType: Preference<String> = preferenceStore.getString("kitsu_score_type", Kitsu.RATING_ADVANCED)
 
     val mangabakaScoreType: Preference<String> = preferenceStore.getString("mangabaka_score_type", MangaBaka.STEP_1)
 

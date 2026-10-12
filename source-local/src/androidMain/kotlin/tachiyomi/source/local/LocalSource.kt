@@ -430,6 +430,9 @@ actual class LocalSource(
         letterer = null,
         coverArtist = null,
         tags = null,
+        year = null,
+        month = null,
+        day = null,
         categories = null,
         source = null,
     )

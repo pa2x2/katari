@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFontFamilyResolver
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.LocalLocaleList
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
@@ -32,6 +33,7 @@ internal fun <T> BookDocumentTablePreparation(
 ) {
     val density = LocalDensity.current
     val layoutDirection = LocalLayoutDirection.current
+    val localeList = LocalLocaleList.current
     val fontFamilyResolver = LocalFontFamilyResolver.current
     val textScale = LocalBookDocumentTextScale.current
     val tables = remember(sections) {
@@ -40,9 +42,10 @@ internal fun <T> BookDocumentTablePreparation(
         }
     }
     BoxWithConstraints(modifier) {
-        val cache = remember(constraints.maxWidth, density, layoutDirection, fontFamilyResolver, textScale) {
-            BookDocumentTableCache()
-        }
+        val cache =
+            remember(constraints.maxWidth, density, layoutDirection, localeList, fontFamilyResolver, textScale) {
+                BookDocumentTableCache()
+            }
         LaunchedEffect(cache, tables) { cache.retain(tables.map { it.second }) }
         tables.forEach { (section, block) ->
             key(section.key, block.id) {
@@ -70,6 +73,7 @@ private fun PrepareTable(block: BookDocumentBlock, width: Int, cache: BookDocume
     val fonts = rememberBookDocumentFonts(block.style.fontFamily, inlineStyles)
     val density = LocalDensity.current
     val layoutDirection = LocalLayoutDirection.current
+    val localeList = LocalLocaleList.current
     val fontFamilyResolver = LocalFontFamilyResolver.current
     val textScale = LocalBookDocumentTextScale.current
     LaunchedEffect(cache, block, width, fonts) {
@@ -79,7 +83,7 @@ private fun PrepareTable(block: BookDocumentBlock, width: Int, cache: BookDocume
             val geometry = measureBookDocumentTable(
                 grid,
                 texts,
-                BookDocumentTableTextMeasurer(density, layoutDirection, fontFamilyResolver),
+                BookDocumentTableTextMeasurer(density, layoutDirection, localeList, fontFamilyResolver),
                 width,
                 with(density) { 8.dp.roundToPx() },
             )
