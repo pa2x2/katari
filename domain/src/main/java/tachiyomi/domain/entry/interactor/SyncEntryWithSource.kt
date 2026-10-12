@@ -3,6 +3,7 @@ package tachiyomi.domain.entry.interactor
 import eu.kanade.tachiyomi.source.entry.ChapterNumberRecognitionSource
 import eu.kanade.tachiyomi.source.entry.EmptyChapterListSource
 import eu.kanade.tachiyomi.source.entry.IncrementalChapterSource
+import eu.kanade.tachiyomi.source.entry.SEntryChapter
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -152,24 +153,20 @@ class SyncEntryWithSource(
         if (rawSourceChapters.isEmpty() && source !is EmptyChapterListSource) {
             throw NoChaptersException()
         }
-        val sourceChapters = rawSourceChapters
-            .distinctBy { it.url }
-            .mapIndexed { index, sourceChapter ->
-                IndexedSourceChapter(
-                    chapter = sourceChapter,
-                    sourceOrder = index.toLong(),
-                    resolvedName = sourceChapter.name.ifBlank { sourceChapter.url },
-                    chapterNumber = if (source is ChapterNumberRecognitionSource) {
-                        ChapterRecognition.parseChapterNumber(
-                            entryAfterMetadataSync.title,
-                            sourceChapter.name,
-                            sourceChapter.chapterNumber,
-                        )
-                    } else {
-                        sourceChapter.chapterNumber
-                    },
-                )
-            }
+        val distinctSourceChapters = rawSourceChapters.distinctBy { it.url }
+        val chapterNumbers = if (source is ChapterNumberRecognitionSource) {
+            recognizeChapterNumbers(entryAfterMetadataSync.title, distinctSourceChapters)
+        } else {
+            distinctSourceChapters.map { it.chapterNumber }
+        }
+        val sourceChapters = distinctSourceChapters.mapIndexed { index, sourceChapter ->
+            IndexedSourceChapter(
+                chapter = sourceChapter,
+                sourceOrder = index.toLong(),
+                resolvedName = sourceChapter.name.ifBlank { sourceChapter.url },
+                chapterNumber = chapterNumbers[index],
+            )
+        }
         val currentSourceUrls = sourceChapters
             .asSequence()
             .map { it.chapter.url }
@@ -365,12 +362,28 @@ class SyncEntryWithSource(
         return entry.takeIf { updated }
     }
 
+    /**
+     * Recognizes the chapter numbers from the whole list, since names alone don't always tell. A number the source
+     * gave is kept as it is, so chapters aren't rewritten only because recognition formats it.
+     */
+    private fun recognizeChapterNumbers(entryTitle: String, chapters: List<SEntryChapter>): List<Double> {
+        val numberings = ChapterRecognition.parseChapterNumbers(
+            entryTitle,
+            chapters.map { ChapterRecognition.SourceChapter(it.name, it.chapterNumber) },
+        )
+        return chapters.zip(numberings) { chapter, numbering ->
+            chapter.chapterNumber.takeIf(ChapterRecognition::isKnown)
+                ?: numbering.chapter?.let(ChapterRecognition::toDouble)
+                ?: -1.0
+        }
+    }
+
     private fun stateRank(chapter: EntryChapter, progressRank: Int): Int {
         return maxOf(if (chapter.read) 2 else 0, progressRank)
     }
 
     private data class IndexedSourceChapter(
-        val chapter: eu.kanade.tachiyomi.source.entry.SEntryChapter,
+        val chapter: SEntryChapter,
         val sourceOrder: Long,
         val resolvedName: String,
         val chapterNumber: Double,
