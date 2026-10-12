@@ -120,12 +120,12 @@ class MigrationListScreenModel(
         }
     }
 
-    private suspend fun getChapterInfo(id: Long) = entryChapterRepository.getChaptersByEntryIdAwait(
+    private suspend fun getChapterInfo(id: Long) = entryChapterRepository.getChapterSummaryByEntryId(
         id,
-    ).let { chapters ->
+    ).let { summary ->
         ChapterInfo(
-            latestChapter = chapters.maxOfOrNull { it.chapterNumber },
-            chapterCount = chapters.size,
+            latestChapter = summary.latestChapterNumber,
+            chapterCount = summary.chapterCount.toInt(),
         )
     }
 

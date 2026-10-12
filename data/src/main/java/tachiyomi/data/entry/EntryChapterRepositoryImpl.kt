@@ -15,6 +15,7 @@ import tachiyomi.data.Database
 import tachiyomi.data.DatabaseHandler
 import tachiyomi.data.query.chunkedForSqlQuery
 import tachiyomi.domain.entry.model.EntryChapter
+import tachiyomi.domain.entry.model.EntryChapterSummary
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -62,6 +63,14 @@ class EntryChapterRepositoryImpl(
                 applyScanlatorFilter.toLong(),
                 EntryMapper::mapChapter,
             )
+        }
+    }
+
+    override suspend fun getChapterSummaryByEntryId(entryId: Long): EntryChapterSummary {
+        return handler.awaitOne {
+            chaptersQueries.getChapterSummaryByEntryId(entryId) { total, latestChapterNumber ->
+                EntryChapterSummary(chapterCount = total, latestChapterNumber = latestChapterNumber)
+            }
         }
     }
 

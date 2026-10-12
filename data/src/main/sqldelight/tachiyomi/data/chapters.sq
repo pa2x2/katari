@@ -81,6 +81,11 @@ FROM chapters
 ORDER BY _id
 LIMIT 1;
 
+getChapterSummaryByEntryId:
+SELECT count(*) AS total, max(chapter_number) AS latestChapterNumber
+FROM chapters
+WHERE entry_id = :entryId;
+
 getCountsByEntryIds:
 SELECT entry_id, count(*) AS child_count
 FROM chapters

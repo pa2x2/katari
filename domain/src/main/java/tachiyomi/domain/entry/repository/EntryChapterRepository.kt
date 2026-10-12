@@ -2,6 +2,7 @@ package tachiyomi.domain.entry.repository
 
 import kotlinx.coroutines.flow.Flow
 import tachiyomi.domain.entry.model.EntryChapter
+import tachiyomi.domain.entry.model.EntryChapterSummary
 
 interface EntryChapterRepository {
 
@@ -12,6 +13,8 @@ interface EntryChapterRepository {
     fun getChaptersByEntryIds(entryIds: List<Long>): Flow<List<EntryChapter>>
 
     suspend fun getChaptersByEntryIdAwait(entryId: Long, applyScanlatorFilter: Boolean = false): List<EntryChapter>
+
+    suspend fun getChapterSummaryByEntryId(entryId: Long): EntryChapterSummary
 
     suspend fun getRecentRead(
         offset: Int = 0,
