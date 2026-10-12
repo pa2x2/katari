@@ -49,6 +49,7 @@ import eu.kanade.tachiyomi.util.system.WebViewUtil
 import eu.kanade.tachiyomi.util.system.animatorDurationScale
 import eu.kanade.tachiyomi.util.system.cancelNotification
 import eu.kanade.tachiyomi.util.system.notify
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -100,7 +101,7 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
 
         ProcessLifecycleOwner.get().lifecycle.addObserver(this)
 
-        val scope = ProcessLifecycleOwner.get().lifecycleScope
+        val scope = Injekt.get<CoroutineScope>()
 
         LocalNetworkPermissionPrompter(this).install(scope)
 
@@ -154,7 +155,7 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
         setAppCompatDelegateThemeMode(Injekt.get<UiPreferences>().themeMode.get())
 
         // Updates widget update
-        WidgetManager(Injekt.get(), Injekt.get()).apply { init(scope) }
+        WidgetManager(Injekt.get(), Injekt.get()).apply { init(ProcessLifecycleOwner.get().lifecycleScope) }
 
         if (!LogcatLogger.isInstalled) {
             val minLogPriority = when {

@@ -28,7 +28,7 @@ import eu.kanade.tachiyomi.util.system.cancelNotification
 import eu.kanade.tachiyomi.util.system.getBitmapOrNull
 import eu.kanade.tachiyomi.util.system.notificationBuilder
 import eu.kanade.tachiyomi.util.system.notify
-import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.runBlocking
 import mihon.entry.interactions.library.EntryLibraryUpdateNotificationAction
 import mihon.entry.interactions.library.EntryLibraryUpdateNotificationDestination
@@ -57,6 +57,7 @@ class LibraryUpdateNotifier(
     private val context: Context,
     private val securityPreferences: SecurityPreferences = Injekt.get(),
     private val notificationFeature: EntryLibraryUpdateNotificationFeature = Injekt.get(),
+    private val scope: CoroutineScope = Injekt.get(),
 ) {
 
     private val percentFormatter = NumberFormat.getPercentInstance().apply {
@@ -230,7 +231,6 @@ class LibraryUpdateNotifier(
         projection.groups.forEach(::showUpdateNotifications)
     }
 
-    @OptIn(DelicateCoroutinesApi::class)
     private fun showUpdateNotifications(
         group: EntryLibraryUpdateNotificationGroup,
     ) {
@@ -274,7 +274,7 @@ class LibraryUpdateNotifier(
 
         // Per-entry notification
         if (!securityPreferences.hideNotificationContent.get()) {
-            launchUI {
+            scope.launchUI {
                 context.notify(
                     childUpdates.map { update ->
                         NotificationManagerCompat.NotificationWithIdAndTag(

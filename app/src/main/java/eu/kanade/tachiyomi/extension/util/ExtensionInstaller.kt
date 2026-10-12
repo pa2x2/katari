@@ -14,7 +14,6 @@ import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.util.storage.getUriCompat
 import eu.kanade.tachiyomi.util.system.isPackageInstalled
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -38,6 +37,7 @@ import java.util.concurrent.ConcurrentHashMap
  */
 internal class ExtensionInstaller(
     private val context: Context,
+    private val scope: CoroutineScope,
 ) {
 
     enum class UserActionBehavior {
@@ -50,7 +50,6 @@ internal class ExtensionInstaller(
         Private,
     }
 
-    private val scope = CoroutineScope(Dispatchers.IO)
     private val activeJobs = ConcurrentHashMap<String, Job>()
     private val activeSteps = ConcurrentHashMap<Long, MutableStateFlow<InstallStep>>()
     private val downloadPackageNames = ConcurrentHashMap<Long, String>()

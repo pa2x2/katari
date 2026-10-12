@@ -8,6 +8,7 @@ import io.mockk.mockk
 import io.mockk.runs
 import io.mockk.verify
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import mihon.entry.interactions.lifecycle.removal.EntryDestructiveRemovalFeature
 import mihon.entry.interactions.lifecycle.removal.EntryDestructiveRemovalResult
@@ -56,7 +57,7 @@ class ProfileManagerTest {
     }
     private val destructiveRemoval = mockk<EntryDestructiveRemovalFeature>()
 
-    private fun manager() = ProfileManager(
+    private fun TestScope.manager() = ProfileManager(
         application = mockk(relaxed = true),
         profileDatabase = profileDatabase,
         profileStore = profileStore,
@@ -65,6 +66,7 @@ class ProfileManagerTest {
         preferenceOwnership = ProfilePreferenceOwnership(ProfilePreferenceOwnerRegistry()),
         entryRepository = entryRepository,
         destructiveRemoval = destructiveRemoval,
+        appScope = backgroundScope,
     )
 
     @Test

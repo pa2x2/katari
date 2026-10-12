@@ -175,6 +175,7 @@ class AppModule(val app: Application) : InjektModule {
                 preferenceOwnership = get(),
                 entryRepository = get(),
                 destructiveRemoval = get(),
+                appScope = get(),
             )
         }
         addSingletonFactory<EntryPreferenceProvider> { ProfileSourcePreferenceProvider(app, get()) }
@@ -222,9 +223,9 @@ class AppModule(val app: Application) : InjektModule {
         addSingletonFactory { AndroidStorageFolderProvider(app) }
         addSingletonFactory { LocalSourceFileSystem(get()) }
         addSingletonFactory { LocalCoverManager(app, get()) }
-        addSingletonFactory { StorageManager(app, get()) }
+        addSingletonFactory { StorageManager(app, get(), get()) }
 
-        addSingletonFactory<SourceManager> { AndroidSourceManager(app, get(), get()) }
+        addSingletonFactory<SourceManager> { AndroidSourceManager(app, get(), get(), get()) }
         addSingletonFactory<SourceInfoNames> {
             val sourceManager = get<SourceManager>()
             SourceInfoNames { sourceId -> sourceManager.getDisplayInfo(sourceId).getDisplayNameForEntryInfo() }
@@ -352,6 +353,7 @@ class AppModule(val app: Application) : InjektModule {
                 downloader = UpdateApkDownloader(app, get()),
                 verifier = UpdateApkVerifier(app),
                 installer = AppUpdateInstaller(app),
+                scope = get(),
             )
         }
 

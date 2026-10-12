@@ -20,8 +20,6 @@ import eu.kanade.tachiyomi.extension.util.ExtensionInstaller
 import eu.kanade.tachiyomi.extension.util.ExtensionLoader
 import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted.Companion.WhileSubscribed
@@ -77,9 +75,8 @@ class ExtensionManager(
     private val extensionStoreRepository: ExtensionStoreRepository = Injekt.get(),
     private val updateExtensionStores: UpdateExtensionStores = Injekt.get(),
     private val customPreferences: GlobalCustomPreferences = Injekt.get(),
+    private val scope: CoroutineScope = Injekt.get(),
 ) {
-
-    val scope = CoroutineScope(SupervisorJob())
 
     private val isInitialized = MutableStateFlow(false)
 
@@ -93,7 +90,7 @@ class ExtensionManager(
     /**
      * The installer which installs, updates and uninstalls the extensions.
      */
-    private val installer by lazy { ExtensionInstaller(context) }
+    private val installer by lazy { ExtensionInstaller(context, scope) }
 
     private val updateNotifier by lazy { ExtensionUpdateNotifier(context) }
 
@@ -125,9 +122,9 @@ class ExtensionManager(
     val pendingUpdatesCount: StateFlow<Int> = _pendingUpdatesCount.asStateFlow()
 
     init {
-        scope.launch(Dispatchers.IO) {
+        scope.launch {
             loadExtensions()
-            ExtensionInstallReceiver(InstallationListener()).register(context)
+            ExtensionInstallReceiver(InstallationListener(), scope).register(context)
 
             // Everything the load decision rests on can change while running, so decide again. Content warnings
             // belong to the active profile, so switching to a profile that allows different ones reloads too.

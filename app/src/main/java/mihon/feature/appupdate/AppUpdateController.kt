@@ -10,7 +10,6 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -45,9 +44,8 @@ internal class AppUpdateController(
     private val downloader: UpdateApkDownloader,
     private val verifier: UpdateApkVerifier,
     private val installer: AppUpdateInstaller,
+    private val scope: CoroutineScope,
 ) {
-
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val mutableState = MutableStateFlow(AppUpdateState())
     val state: StateFlow<AppUpdateState> = mutableState.asStateFlow()
 

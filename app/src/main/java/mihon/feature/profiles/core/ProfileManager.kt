@@ -12,13 +12,13 @@ import eu.kanade.tachiyomi.data.statistics.StatisticsRecapNotificationJob
 import eu.kanade.tachiyomi.extension.ExtensionManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.plus
 import logcat.LogPriority
 import mihon.core.common.CustomPreferences
 import mihon.core.common.HomeScreenTabs
@@ -50,8 +50,9 @@ class ProfileManager(
     private val preferenceOwnership: ProfilePreferenceOwnership,
     private val entryRepository: EntryRepository = Injekt.get(),
     private val destructiveRemoval: EntryDestructiveRemovalFeature = Injekt.get(),
+    appScope: CoroutineScope = Injekt.get(),
 ) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    private val scope = appScope + Dispatchers.Default
     private val switchRequests = MutableStateFlow(profilesPreferences.activeProfileId.get())
     private val lockGate = ProfileLockGate(profileStore)
 

@@ -7,8 +7,6 @@ import eu.kanade.tachiyomi.source.entry.EntryCatalogueSource
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -32,14 +30,13 @@ class AndroidSourceManager(
     private val context: Context,
     private val extensionManager: ExtensionManager,
     private val sourceRepository: StubSourceRepository,
+    private val scope: CoroutineScope,
 ) : SourceManager {
 
     private val _isInitialized = MutableStateFlow(false)
     override val isInitialized: StateFlow<Boolean> = _isInitialized.asStateFlow()
 
     private val downloadMaintenance: EntryDownloadMaintenanceFeature by injectLazy()
-
-    private val scope = CoroutineScope(Job() + Dispatchers.IO)
 
     private val sourcesMap = ConcurrentHashMap<Long, UnifiedSource>()
     private val stubSourcesMap = ConcurrentHashMap<Long, StubSource>()
