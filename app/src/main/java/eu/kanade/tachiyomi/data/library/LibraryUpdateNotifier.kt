@@ -7,6 +7,7 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
+import android.os.SystemClock
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import coil3.asDrawable
@@ -91,14 +92,24 @@ class LibraryUpdateNotifier(
         }
     }
 
+    private var lastProgressNotificationTime = 0L
+
     /**
      * Shows the notification containing the currently updating entries and the progress.
+     *
+     * Called from several update coroutines at once, so it shares the builder under a lock and skips updates that
+     * come faster than the system would show them anyway.
      *
      * @param entries the entries that are being updated.
      * @param current the current progress.
      * @param total the total progress.
      */
+    @Synchronized
     fun showProgressNotification(entries: List<Entry>, current: Int, total: Int) {
+        val now = SystemClock.elapsedRealtime()
+        if (current < total && now - lastProgressNotificationTime < NOTIF_PROGRESS_INTERVAL_MS) return
+        lastProgressNotificationTime = now
+
         progressNotificationBuilder
             .setContentTitle(
                 context.stringResource(
@@ -427,3 +438,4 @@ private fun EntryLibraryUpdateNotificationItem.downloadChildrenIntent(
 private const val NOTIF_TITLE_MAX_LEN = 45
 private const val NOTIF_ICON_SIZE = 192
 private const val WARNING_NOTIF_TIMEOUT_MS = 30_000L
+private const val NOTIF_PROGRESS_INTERVAL_MS = 500L

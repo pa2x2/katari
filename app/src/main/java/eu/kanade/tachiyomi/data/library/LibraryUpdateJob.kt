@@ -90,6 +90,9 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
 
     private val sourceManager: SourceManager = Injekt.get()
     private val libraryPreferences: LibraryPreferences = Injekt.get()
+
+    // Sources update concurrently, and getAndSet is a separate read and write
+    private val newUpdatesCountLock = Any()
     private val settingsReader = LibraryUpdateSettings.Reader(Injekt.get(), Injekt.get())
     private val sourcePauses = LibrarySourcePauses(libraryPreferences)
     private val planner = LibraryUpdatePlanner(Injekt.get())
@@ -365,8 +368,10 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
                                                     newChapters = newChapters.size,
                                                 )
                                                 if (newChapters.isNotEmpty()) {
-                                                    libraryPreferences.newUpdatesCount.getAndSet {
-                                                        it + newChapters.size
+                                                    synchronized(newUpdatesCountLock) {
+                                                        libraryPreferences.newUpdatesCount.getAndSet {
+                                                            it + newChapters.size
+                                                        }
                                                     }
 
                                                     // Keep the queued entry that contains the new EntryChapters
