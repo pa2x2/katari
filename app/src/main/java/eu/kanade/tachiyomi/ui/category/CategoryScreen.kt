@@ -2,10 +2,10 @@ package eu.kanade.tachiyomi.ui.category
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.util.fastMap
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -26,7 +26,7 @@ class CategoryScreen : Screen() {
         val navigator = LocalNavigator.currentOrThrow
         val screenModel = rememberScreenModel { CategoryScreenModel() }
 
-        val state by screenModel.state.collectAsState()
+        val state by screenModel.state.collectAsStateWithLifecycle()
 
         if (state is CategoryScreenState.Loading) {
             LoadingScreen()
