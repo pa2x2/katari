@@ -71,7 +71,11 @@ internal class MangaChildListProcessor(
         }
         return EntryChildListDisplay(
             rows = rows,
-            aggregateMissingCount = request.chapters.map(EntryChapter::chapterNumber).missingChaptersCount(),
+            aggregateMissingCount = if (request.includeMissingCounts) {
+                request.chapters.map(EntryChapter::chapterNumber).missingChaptersCount()
+            } else {
+                0
+            },
         )
     }
 
