@@ -232,9 +232,12 @@ class ExtensionManager(
                 }
             }
 
-            notLoadedExtensionMapFlow.value = extensions
-                .filterIsInstance<Extension.NotLoaded>()
-                .associateBy { it.pkgName }
+            notLoadedExtensionMapFlow.update {
+                val availableExtensions = availableExtensionListFlow.value
+                extensions
+                    .filterIsInstance<Extension.NotLoaded>()
+                    .associate { it.pkgName to it.withStatus(availableExtensions) }
+            }
         } catch (e: Exception) {
             logcat(LogPriority.ERROR, e) { "Failed to load extensions" }
         } finally {
@@ -340,6 +343,9 @@ class ExtensionManager(
         }
 
         loadedExtensionMapFlow.update { reconcileLoadedExtensions(it, availableExtensions) }
+        notLoadedExtensionMapFlow.update { extensions ->
+            extensions.mapValues { (_, extension) -> extension.withStatus(availableExtensions) }
+        }
         // Until the initial load finishes there's nothing to count, and it counts once it does
         if (isInitialized.value) {
             updatePendingUpdatesCount()
@@ -358,7 +364,7 @@ class ExtensionManager(
     }
 
     internal fun installExtensionForAutoUpdate(
-        installed: Extension.Loaded,
+        installed: Extension.Installed,
         available: Extension.Available,
     ): Flow<InstallStep> {
         return installExtension(available, ExtensionInstallOperation.AutomaticUpdate(installed).routing())
@@ -371,7 +377,7 @@ class ExtensionManager(
      *
      * @param extension The extension to be updated.
      */
-    fun updateExtension(extension: Extension.Loaded): Flow<InstallStep> {
+    fun updateExtension(extension: Extension.Installed): Flow<InstallStep> {
         val update = extension.findUpdate(availableExtensionListFlow.value) ?: return emptyFlow()
         return installExtension(update, ExtensionInstallOperation.ManualUpdate(extension).routing())
     }
@@ -520,7 +526,7 @@ class ExtensionManager(
 
         override suspend fun onExtensionNotLoaded(extension: Extension.NotLoaded) = loadMutex.withLock {
             loadedExtensionMapFlow.value -= extension.pkgName
-            notLoadedExtensionMapFlow.value += extension
+            notLoadedExtensionMapFlow.value += extension.withStatus(availableExtensionListFlow.value)
             updatePendingUpdatesCount()
         }
 
@@ -538,6 +544,15 @@ class ExtensionManager(
             .withStore(store = currentStore(availableExtensions, fallback = store))
     }
 
+    /**
+     * An extension that isn't loaded can still be updated, which is often what gets it loaded again.
+     */
+    private fun Extension.NotLoaded.withStatus(availableExtensions: List<Extension.Available>): Extension.NotLoaded {
+        val store = currentStore(availableExtensions, fallback = findListing(availableExtensions)?.store ?: store)
+        if (availableExtensions.isEmpty()) return copy(store = store)
+        return copy(hasUpdate = findUpdate(availableExtensions) != null, store = store)
+    }
+
     private fun assignStores(stores: List<ExtensionStore>) {
         this.stores = stores
         val availableExtensions = availableExtensionListFlow.value
@@ -546,12 +561,17 @@ class ExtensionManager(
                 extension.withStore(store = extension.pickStore(stores, availableExtensions))
             }
         }
+        notLoadedExtensionMapFlow.update { extensions ->
+            extensions.mapValues { (_, extension) ->
+                extension.copy(store = extension.pickStore(stores, availableExtensions))
+            }
+        }
     }
 
     /**
      * Before the stores first load, [fallback] is the best guess.
      */
-    private fun Extension.Loaded.currentStore(
+    private fun Extension.Installed.currentStore(
         availableExtensions: Collection<Extension.Available>,
         fallback: ExtensionStore?,
     ): ExtensionStore? {
@@ -560,7 +580,8 @@ class ExtensionManager(
     }
 
     private fun updatePendingUpdatesCount() {
-        val pendingUpdateCount = loadedExtensionMapFlow.value.values.count { it.hasUpdate }
+        val pendingUpdateCount = loadedExtensionMapFlow.value.values.count { it.hasUpdate } +
+            notLoadedExtensionMapFlow.value.values.count { it.hasUpdate }
         _pendingUpdatesCount.value = pendingUpdateCount
         globalPreferences.extensionUpdatesCount.set(pendingUpdateCount)
 
@@ -596,7 +617,7 @@ class ExtensionManager(
         }
         notLoadedExtensionMapFlow.value = reloadedExtensions
             .filterIsInstance<Extension.NotLoaded>()
-            .associateBy { it.pkgName }
+            .associate { it.pkgName to it.withStatus(availableExtensions) }
         updatePendingUpdatesCount()
     }
 

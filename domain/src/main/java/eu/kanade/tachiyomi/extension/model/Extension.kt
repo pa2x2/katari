@@ -25,6 +25,10 @@ sealed interface Extension {
 
         // SHA-256 digests of the certificates its apk is signed with
         val signatures: List<String>
+
+        val hasUpdate: Boolean
+
+        val store: ExtensionStore?
     }
 
     /**
@@ -78,9 +82,9 @@ sealed interface Extension {
         val pkgFactory: String?,
         val sources: List<UnifiedSource>,
         val icon: Drawable?,
-        val hasUpdate: Boolean = false,
+        override val hasUpdate: Boolean = false,
         val isObsolete: Boolean = false,
-        val store: ExtensionStore? = null,
+        override val store: ExtensionStore? = null,
     ) : Installed
 
     /**
@@ -97,6 +101,8 @@ sealed interface Extension {
         override val signatures: List<String>,
         override val libVersion: Double? = null,
         override val lang: String? = null,
+        override val hasUpdate: Boolean = false,
+        override val store: ExtensionStore? = null,
         val reason: Reason,
     ) : Installed {
 

@@ -21,7 +21,7 @@ internal class ExtensionApi {
     private val customPreferences: GlobalCustomPreferences by injectLazy()
 
     private data class UpdateCandidate(
-        val installed: Extension.Loaded,
+        val installed: Extension.Installed,
         val available: Extension.Available,
     )
 
@@ -35,7 +35,7 @@ internal class ExtensionApi {
     suspend fun checkForUpdates(
         context: Context,
         fromAvailableExtensionList: Boolean = false,
-    ): List<Extension.Loaded>? {
+    ): List<Extension.Installed> {
         updateExtensionStores()
 
         val extensions = if (fromAvailableExtensionList) {
@@ -44,8 +44,9 @@ internal class ExtensionApi {
             findExtensions().filterCompatibleWithApp()
         }
 
-        // Only versions and signatures are read, so the extensions already loaded serve as they are
-        val installedExtensions = extensionManager.getLoadedExtensions()
+        // Only versions and signatures are read, so the extensions the manager already read serve as they are.
+        // Ones that aren't loaded are included, as an update is often what gets them loaded again.
+        val installedExtensions = extensionManager.getLoadedExtensions() + extensionManager.getNotLoadedExtensions()
 
         val updateCandidates = installedExtensions.mapNotNull { installed ->
             installed.findUpdate(extensions)?.let { UpdateCandidate(installed, it) }
@@ -70,9 +71,9 @@ internal class ExtensionApi {
     private suspend fun autoUpdateExtensions(
         context: Context,
         updateCandidates: List<UpdateCandidate>,
-    ): List<Extension.Loaded> {
-        val updatedExtensions = mutableListOf<Extension.Loaded>()
-        val leftoverExtensions = mutableListOf<Extension.Loaded>()
+    ): List<Extension.Installed> {
+        val updatedExtensions = mutableListOf<Extension.Installed>()
+        val leftoverExtensions = mutableListOf<Extension.Installed>()
 
         extensionManager.runAutoUpdateSession {
             updateCandidates.forEach { candidate ->

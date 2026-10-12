@@ -223,7 +223,7 @@ class ExtensionsScreenModel(
 
     fun updateAllExtensions() {
         screenModelScope.launchIO {
-            extensionManager.getLoadedExtensions()
+            (extensionManager.getLoadedExtensions() + extensionManager.getNotLoadedExtensions())
                 .filter { it.hasUpdate }
                 .forEach(::updateExtension)
         }
@@ -235,7 +235,7 @@ class ExtensionsScreenModel(
         }
     }
 
-    fun updateExtension(extension: Extension.Loaded) {
+    fun updateExtension(extension: Extension.Installed) {
         screenModelScope.launchIO {
             extensionManager.updateExtension(extension).collectToInstallUpdate(extension)
         }
