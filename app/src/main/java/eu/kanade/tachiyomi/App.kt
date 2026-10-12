@@ -13,6 +13,7 @@ import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.lifecycle.lifecycleScope
+import androidx.preference.PreferenceManager
 import coil3.ImageLoader
 import coil3.SingletonImageLoader
 import coil3.memory.MemoryCache
@@ -72,6 +73,7 @@ import tachiyomi.presentation.widget.WidgetManager
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import uy.kohesive.injekt.injectLazy
+import kotlin.concurrent.thread
 
 class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factory {
 
@@ -92,6 +94,12 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
         // Avoid potential crashes
         val process = getProcessName()
         if (packageName != process) WebView.setDataDirectorySuffix(process)
+
+        // The modules and the code after them read the default preferences straight away. Loading them takes a disk
+        // read, so start it on another thread while the modules are set up; the first read then waits less or not at all
+        thread(name = "PreferencesPreload") { PreferenceManager.getDefaultSharedPreferences(this) }
+        // The first use of Dispatchers.Main finds its factory with a ServiceLoader, which reads the APK
+        thread(name = "MainDispatcherPreload") { Dispatchers.Main }
 
         Injekt.importModule(PreferenceModule(this))
         Injekt.importModule(DomainModule())
