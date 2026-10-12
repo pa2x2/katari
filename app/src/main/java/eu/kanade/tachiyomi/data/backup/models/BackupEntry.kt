@@ -261,6 +261,7 @@ fun Entry.toBackupEntry(): BackupEntry {
         memo = MemoColumnAdapter.encode(memo),
         coverLastModified = coverLastModified,
         lastUpdate = lastUpdate,
+        nextUpdate = nextUpdate,
         type = type,
     )
 }

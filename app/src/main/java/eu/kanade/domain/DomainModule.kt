@@ -86,7 +86,7 @@ import tachiyomi.domain.entry.repository.EntryTranslationLanguagesRepository
 import tachiyomi.domain.entry.repository.EntryTranslationQueueRepository
 import tachiyomi.domain.entry.repository.MergedMemberExpansionRepository
 import tachiyomi.domain.entry.repository.PlaybackPreferencesRepository
-import tachiyomi.domain.entry.service.FetchInterval
+import tachiyomi.domain.entry.service.nextupdate.FetchInterval
 import tachiyomi.domain.history.interactor.GetHistory
 import tachiyomi.domain.history.interactor.GetNextChapters
 import tachiyomi.domain.history.interactor.GetTotalReadDuration

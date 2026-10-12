@@ -21,7 +21,7 @@ import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.entry.repository.EntrySourceSyncRepository
 import tachiyomi.domain.entry.service.ChapterRecognition
 import tachiyomi.domain.entry.service.EntryMetadataChangeNotifier
-import tachiyomi.domain.entry.service.FetchInterval
+import tachiyomi.domain.entry.service.nextupdate.FetchInterval
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.source.model.SourceNotInstalledException
 import tachiyomi.domain.source.service.SourceManager
@@ -298,6 +298,14 @@ class SyncEntryWithSource(
                 emptyList()
             }
 
+        val visibleChapterIds = if (insertedChapters.isEmpty()) {
+            emptySet()
+        } else {
+            entryChapterRepository.getChaptersByEntryIdAwait(entry.id, applyScanlatorFilter = true)
+                .mapTo(mutableSetOf(), EntryChapter::id)
+        }
+        val reportableInsertedChapters = insertedChapters.filter { it.id in visibleChapterIds }
+
         val hasChapterChanges =
             insertedChapters.isNotEmpty() || chaptersToUpdate.isNotEmpty() || chaptersToRemove.isNotEmpty()
         var entryAfterChapterSync = if (hasChapterChanges) {
@@ -311,12 +319,25 @@ class SyncEntryWithSource(
         val shouldUpdateFetchInterval = hasChapterChanges || manualFetch || entryAfterMetadataSync.fetchInterval == 0 ||
             (fetchWindow.first != 0L && entryAfterMetadataSync.nextUpdate < fetchWindow.first)
         if (shouldUpdateFetchInterval) {
+            val removedChapterIds = chaptersToRemove.toSet()
+            val removedChapterNumbers = existingChapters
+                .filter { it.id in removedChapterIds && it.isRecognizedNumber }
+                .mapTo(mutableSetOf(), EntryChapter::chapterNumber)
+            // A first fetch lists the back catalogue, and chapters coming back under a removed number were out already
+            val foundRelease = existingChapters.isNotEmpty() &&
+                reportableInsertedChapters.any { !(it.isRecognizedNumber && it.chapterNumber in removedChapterNumbers) }
             val timeZone = TimeZone.currentSystemDefault()
-            entryAfterChapterSync = fetchInterval.update(
-                entry = entryAfterChapterSync,
+            val withInterval = fetchInterval.update(
+                // Only a found release counts as the last update a custom interval is counted from
+                entry = entryAfterMetadataSync,
                 dateTime = Instant.fromEpochMilliseconds(now).toLocalDateTime(timeZone),
                 timeZone = timeZone,
                 window = fetchWindow,
+                foundRelease = foundRelease,
+            )
+            entryAfterChapterSync = entryAfterChapterSync.copy(
+                nextUpdate = withInterval.nextUpdate,
+                fetchInterval = withInterval.fetchInterval,
             )
         }
         if (entryAfterChapterSync != entryAfterMetadataSync) {
@@ -326,14 +347,6 @@ class SyncEntryWithSource(
                 updateDateAdded = isInitialLibraryChapterSync,
             ) ?: error("Failed to update entry ${entry.id}")
         }
-
-        val visibleChapterIds = if (insertedChapters.isEmpty()) {
-            emptySet()
-        } else {
-            entryChapterRepository.getChaptersByEntryIdAwait(entry.id, applyScanlatorFilter = true)
-                .mapTo(mutableSetOf(), EntryChapter::id)
-        }
-        val reportableInsertedChapters = insertedChapters.filter { it.id in visibleChapterIds }
 
         return SyncResult(
             insertedChapters = reportableInsertedChapters,

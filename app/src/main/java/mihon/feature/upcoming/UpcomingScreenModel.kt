@@ -36,7 +36,7 @@ import tachiyomi.domain.category.interactor.GetCategories
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.entry.interactor.GetLibraryEntries
 import tachiyomi.domain.entry.model.Entry
-import tachiyomi.domain.entry.service.FetchInterval
+import tachiyomi.domain.entry.service.nextupdate.FetchInterval
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.library.update.model.EntryUpdateDecisionReason
 import tachiyomi.domain.library.update.repository.LibraryUpdateReportRepository

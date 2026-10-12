@@ -27,7 +27,7 @@ import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.entry.service.EntryMetadataChangeNotifier
-import tachiyomi.domain.entry.service.FetchInterval
+import tachiyomi.domain.entry.service.nextupdate.FetchInterval
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.source.service.SourceManager
 
@@ -177,7 +177,7 @@ class SyncEntryWithSourceTest {
     }
 
     private fun mockFetchInterval(): FetchInterval = mockk {
-        coEvery { update(any(), any(), any(), any()) } answers { firstArg() }
+        coEvery { update(any(), any(), any(), any(), any()) } answers { firstArg() }
     }
 
     // Runs the sync's in-transaction writes and gives inserted chapters ids, like the real repository

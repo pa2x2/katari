@@ -21,7 +21,7 @@ import tachiyomi.domain.entry.model.EntryIdentity
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.entry.repository.MergedMemberExpansionRepository
-import tachiyomi.domain.entry.service.FetchInterval
+import tachiyomi.domain.entry.service.nextupdate.FetchInterval
 import tachiyomi.domain.history.interactor.UpsertHistory
 import tachiyomi.domain.history.model.History
 import tachiyomi.domain.history.model.HistoryUpdate

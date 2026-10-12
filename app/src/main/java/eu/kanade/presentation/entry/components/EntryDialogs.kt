@@ -45,7 +45,7 @@ import kotlinx.collections.immutable.toPersistentList
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.daysUntil
 import tachiyomi.domain.entry.model.Entry
-import tachiyomi.domain.entry.service.FetchInterval
+import tachiyomi.domain.entry.service.nextupdate.FetchInterval
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.WheelTextPicker
 import tachiyomi.presentation.core.components.material.padding
