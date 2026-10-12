@@ -33,6 +33,7 @@ import tachiyomi.core.common.util.system.ImageUtil
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.core.metadata.comicinfo.COMIC_INFO_FILE
 import tachiyomi.core.metadata.comicinfo.ComicInfo
+import tachiyomi.core.metadata.comicinfo.uploadDateMillis
 import tachiyomi.core.metadata.tachiyomi.MangaDetails
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.service.ChapterRecognition
@@ -276,6 +277,7 @@ actual class LocalSource(
         comicInfo.title?.let { chapter.name = it.value }
         comicInfo.number?.value?.toDoubleOrNull()?.let { chapter.chapterNumber = it }
         comicInfo.translator?.let { chapter.scanlator = it.value }
+        comicInfo.uploadDateMillis()?.let { chapter.dateUpload = it }
     }
 
     // Chapters
