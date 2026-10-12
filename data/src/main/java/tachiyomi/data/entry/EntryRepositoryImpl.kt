@@ -61,7 +61,7 @@ class EntryRepositoryImpl(
         }
     }
 
-    override suspend fun getEntryByIdAsFlow(id: Long): Flow<Entry> {
+    override fun getEntryByIdAsFlow(id: Long): Flow<Entry> {
         return profileProvider.activeProfileIdFlow.flatMapLatest { profileId ->
             handler.subscribeToOneOrNull {
                 entriesQueries.getEntryById(id, profileId, EntryMapper::mapEntry)
@@ -69,7 +69,7 @@ class EntryRepositoryImpl(
         }
     }
 
-    override suspend fun getEntriesByIdsAsFlow(entryIds: List<Long>): Flow<List<Entry>> {
+    override fun getEntriesByIdsAsFlow(entryIds: List<Long>): Flow<List<Entry>> {
         val sortedEntryIds = entryIds.distinct().sorted()
         if (sortedEntryIds.isEmpty()) return kotlinx.coroutines.flow.flowOf(emptyList())
         return profileProvider.activeProfileIdFlow.flatMapLatest { profileId ->

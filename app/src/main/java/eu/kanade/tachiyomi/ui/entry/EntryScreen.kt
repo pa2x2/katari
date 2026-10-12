@@ -6,7 +6,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -580,7 +579,7 @@ class EntryScreen(
             }
             EntryScreenModel.Dialog.FullCover -> {
                 val sm = rememberScreenModel { EntryCoverScreenModel(successState.entry.id) }
-                val entry by sm.state.collectAsState()
+                val entry by sm.state.collectAsStateWithLifecycle()
                 if (entry != null) {
                     val getContent = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) {
                         if (it == null) return@rememberLauncherForActivityResult

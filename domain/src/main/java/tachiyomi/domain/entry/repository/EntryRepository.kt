@@ -17,9 +17,9 @@ interface EntryRepository {
         return entryIds.distinct().sorted().mapNotNull { getEntryById(it) }
     }
 
-    suspend fun getEntryByIdAsFlow(id: Long): Flow<Entry>
+    fun getEntryByIdAsFlow(id: Long): Flow<Entry>
 
-    suspend fun getEntriesByIdsAsFlow(entryIds: List<Long>): Flow<List<Entry>> {
+    fun getEntriesByIdsAsFlow(entryIds: List<Long>): Flow<List<Entry>> {
         val entryFlows = entryIds.distinct().sorted().map { getEntryByIdAsFlow(it) }
         return if (entryFlows.isEmpty()) {
             flowOf(emptyList())
