@@ -21,6 +21,7 @@ import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
@@ -43,6 +44,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
+import kotlinx.coroutines.withContext
 import logcat.LogPriority
 import mihon.core.archive.ZipWriter
 import mihon.entry.interactions.download.EntryDownloadEntryIdentity
@@ -117,6 +119,9 @@ internal class Downloader(
 
     @Volatile
     private var downloaderJob: Job? = null
+
+    // The last canceled run, kept so the next run can wait for it to finish
+    private var canceledJob: Job? = null
     private val _isRunningFlow = MutableStateFlow(false)
     val isRunningFlow = _isRunningFlow.asStateFlow()
     private val initialized = CompletableDeferred<Unit>()
@@ -224,8 +229,12 @@ internal class Downloader(
     private fun launchDownloaderJob() {
         if (isRunning) return
 
+        val previousJob = canceledJob
         // Started only once it is the current run, so its download jobs can tell they still own it
         val job = scope.launch(start = CoroutineStart.LAZY) {
+            // Page writes block, so a canceled run can still be writing the pages this one would start on. Not
+            // cancelable, so a run canceled while waiting still finishes after the one before it.
+            withContext(NonCancellable) { previousJob?.join() }
             val owner = coroutineContext.job
             val activeDownloadsFlow = combine(
                 queueState,
@@ -305,7 +314,10 @@ internal class Downloader(
      * Destroys the downloader subscriptions.
      */
     private fun cancelDownloaderJob() {
-        downloaderJob?.cancel()
+        downloaderJob?.let { job ->
+            job.cancel()
+            canceledJob = job
+        }
         downloaderJob = null
         _isRunningFlow.value = false
     }
