@@ -2,14 +2,13 @@ package mihon.entry.interactions.manga.download.model
 
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import eu.kanade.tachiyomi.source.model.Page
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.emitAll
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import mihon.entry.interactions.download.EntryDownloadMessage
 import tachiyomi.domain.entry.interactor.GetEntry
 import tachiyomi.domain.entry.model.Entry
@@ -25,7 +24,13 @@ internal data class MangaDownload(
     val entry: Entry,
     val chapter: EntryChapter,
 ) {
-    var pages: List<Page>? = null
+    @Transient
+    private val pagesFlow = MutableStateFlow<List<Page>?>(null)
+    var pages: List<Page>?
+        get() = pagesFlow.value
+        set(pages) {
+            pagesFlow.value = pages
+        }
     var failure: EntryDownloadMessage? = null
 
     val totalProgress: Int
@@ -46,17 +51,14 @@ internal data class MangaDownload(
         }
 
     @Transient
-    val progressFlow = flow {
-        if (pages == null) {
-            emit(0)
-            while (pages == null) {
-                delay(50.milliseconds)
+    val progressFlow = pagesFlow
+        .flatMapLatest { pages ->
+            if (pages == null) {
+                flowOf(0)
+            } else {
+                combine(pages.map(Page::progressFlow)) { it.average().toInt() }
             }
         }
-
-        val progressFlows = pages!!.map(Page::progressFlow)
-        emitAll(combine(progressFlows) { it.average().toInt() })
-    }
         .distinctUntilChanged()
         .debounce(50.milliseconds)
 
