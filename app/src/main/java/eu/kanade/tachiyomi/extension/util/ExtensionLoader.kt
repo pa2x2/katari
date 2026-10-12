@@ -5,7 +5,6 @@ import android.content.pm.ApplicationInfo
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.core.content.pm.PackageInfoCompat
 import dalvik.system.DelegateLastClassLoader
 import eu.kanade.domain.extension.interactor.TrustExtension
@@ -21,7 +20,6 @@ import eu.kanade.tachiyomi.source.entry.EntrySourceFactory
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import eu.kanade.tachiyomi.util.lang.Hash
 import eu.kanade.tachiyomi.util.storage.copyAndSetReadOnlyTo
-import eu.kanade.tachiyomi.util.system.ChildFirstPathClassLoader
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.runBlocking
@@ -66,6 +64,10 @@ internal object ExtensionLoader {
         libVersionRange("1.6", "1.6"),
     )
     private val ENTRY_SOURCE_API_VERSION_FAMILY_RANGE = libVersionRange("2.0", "2.7")
+
+    // Entry source API extensions exchange Kotlin types with the app; a bundled Kotlin runtime would load as distinct
+    // classes and fail across that boundary with LinkageError or ClassCastException.
+    private val ENTRY_SOURCE_API_PARENT_FIRST_PACKAGES = listOf("kotlin.")
 
     @Suppress("DEPRECATION")
     private val PACKAGE_FLAGS = PackageManager.GET_CONFIGURATIONS or
@@ -293,7 +295,7 @@ internal object ExtensionLoader {
         }
 
         val classLoader = try {
-            createExtensionClassLoader(appInfo, context, libVersionName)
+            createExtensionClassLoader(appInfo, context, libVersion)
         } catch (e: Exception) {
             logcat(LogPriority.ERROR, e) { "Extension load error: $extName ($pkgName)" }
             return LoadResult.Error
@@ -456,12 +458,20 @@ internal object ExtensionLoader {
     private fun createExtensionClassLoader(
         appInfo: ApplicationInfo,
         context: Context,
-        libVersionName: String,
+        libVersion: LibVersion,
     ): ClassLoader {
-        if (
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1 &&
-            shouldUseDelegateLastClassLoader(libVersionName, Build.VERSION.SDK_INT)
-        ) {
+        if (supportedLibVersionRanges().none { libVersion in it }) {
+            return DelegateLastPathClassLoader(
+                dexPath = appInfo.sourceDir,
+                librarySearchPath = null,
+                parent = context.classLoader,
+                parentFirstPackagePrefixes = ENTRY_SOURCE_API_PARENT_FIRST_PACKAGES,
+            )
+        }
+
+        // ART maps app images compiled for the built-in loader's class loader chain, and before Android 17 a damaged
+        // one crashes every launch until the app is updated.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.CINNAMON_BUN) {
             try {
                 // Installed APKs are optimized for PathClassLoader. Loading a private cache copy
                 // prevents ART from reusing that incompatible context with DelegateLastClassLoader.
@@ -470,7 +480,7 @@ internal object ExtensionLoader {
                     cacheDir = File(context.codeCacheDir, "extension_apks"),
                     packageName = appInfo.packageName,
                 )
-                return createDelegateLastClassLoader(cachedExtension, context.classLoader)
+                return DelegateLastClassLoader(cachedExtension.absolutePath, null, context.classLoader)
             } catch (e: Exception) {
                 logcat(LogPriority.WARN, e) {
                     "Failed to prepare the optimized extension class loader for ${appInfo.packageName}"
@@ -478,12 +488,7 @@ internal object ExtensionLoader {
             }
         }
 
-        return ChildFirstPathClassLoader(appInfo.sourceDir, null, context.classLoader)
-    }
-
-    @RequiresApi(Build.VERSION_CODES.O_MR1)
-    private fun createDelegateLastClassLoader(extensionApk: File, parent: ClassLoader): ClassLoader {
-        return DelegateLastClassLoader(extensionApk.absolutePath, null, parent)
+        return DelegateLastPathClassLoader(appInfo.sourceDir, null, context.classLoader)
     }
 
     internal fun cacheExtensionApk(source: File, cacheDir: File, packageName: String): File {
@@ -498,13 +503,6 @@ internal object ExtensionLoader {
         }
 
         return target
-    }
-
-    internal fun shouldUseDelegateLastClassLoader(libVersionName: String, sdkInt: Int): Boolean {
-        if (sdkInt < Build.VERSION_CODES.O_MR1) return false
-
-        val libVersion = parseVersionNameAsLibVersion(libVersionName) ?: return false
-        return supportedLibVersionRanges().any { libVersion in it }
     }
 
     private data class LibVersion(
