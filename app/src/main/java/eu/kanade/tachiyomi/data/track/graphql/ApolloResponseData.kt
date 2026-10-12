@@ -12,23 +12,23 @@ import tachiyomi.core.common.util.system.logcat
  * Returns the result of calling [transform] with [data] if the GraphQL response had data present without errors,
  * otherwise logs the failure under [errorLog] and falls back to [default].
  *
- * Any [ApolloHttpException] is re-thrown as [HttpException] after logging the response body.
- * This behavior can be replaced with a custom handler by providing a non-null value to [onException]. Such a lambda
- * MUST close the [ApolloHttpException.body] properly to avoid sockets and other resources leaking.
+ * Any [ApolloHttpException] is re-thrown as [HttpException] after logging and closing the response body.
+ * This behavior can be replaced with a custom handler by providing a non-null value to [onException], which receives
+ * the body already read, since it can only be read once.
  *
  * Other failures are logged and the result of calling [default] is returned.
  *
  * @param errorLog    A log message which will be included with any exceptions or errors being logged.
  * @param default     A lambda which provides a default value to be returned in place of the expected value when an
  *                    exception or error is found.
- * @param onException A handler for [ApolloHttpException]s. It MUST handle closing the response body to avoid resource
- *                    leaks. Defaults to throwing a [HttpException] with the same status code.
+ * @param onException A handler for [ApolloHttpException]s and their response body. Returning normally falls back to
+ *                    [default]. Defaults to throwing a [HttpException] with the same status code.
  * @param transform   A transforming lambda for the GraphQL data received.
  */
 internal fun <D : Operation.Data, R> ApolloResponse<D>.dataOrElse(
     errorLog: String,
     default: () -> R,
-    onException: ((ApolloHttpException) -> Unit)? = null,
+    onException: ((ApolloHttpException, body: String?) -> Unit)? = null,
     transform: (D) -> R,
 ): R {
     if (exception != null) {
@@ -37,7 +37,7 @@ internal fun <D : Operation.Data, R> ApolloResponse<D>.dataOrElse(
             val body = e.body?.use { it.readUtf8() }
             logcat(LogPriority.ERROR, throwable = e) { "$errorLog: $body" }
             if (onException != null) {
-                onException(e)
+                onException(e, body)
             } else {
                 throw HttpException(e.statusCode).apply { stackTrace = e.stackTrace }
             }
