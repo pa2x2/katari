@@ -398,7 +398,4 @@
     <string name="label_default">ნაგულისხმევი</string>
     <string name="action_show_errors">დააჭირე დეტალების სანახავად</string>
     <string name="unread">წაუკითხავი</string>
-    <string name="ext_nsfw_warning">შეიძლება შეიჩაცდეს უცენზურო(18+) კონტენტს</string>
-    <string name="ext_nsfw_short">18+</string>
-    <string name="parental_controls_info">ეს არ აღმოფხვრავს პროგრამაში NSFW (18+) შიგთავსის არაოფიციალურ, ან შესაძლო არასწორად მონიშნული გაფართოებებოიდან გამოჩენას.</string>
 </resources>

@@ -539,6 +539,7 @@
     <string name="pref_reader_summary">Legada reĝimo, montrado, navigado</string>
     <string name="pref_firebase">Analitikoj kaj protokoloj</string>
     <string name="firebase_summary">Sendado de prikolapsaj protokoloj kaj analitikoj eblos al ni identigi kaj ripari problemojn, plibonigi rendimenton kaj igi estontajn ĝisdatigojn pli rilataj al viaj bezonoj</string>
+    <string name="pref_category_extensions">Etendaĵoj</string>
     <string name="update_72hour">Ĉiun 3-an tagon</string>
     <string name="pref_chapter_swipe_end">Ĉapitro je ŝovumo dekstren</string>
     <string name="ext_remove">Forigi</string>
@@ -877,12 +878,6 @@
     <string name="considering">Konsiderataj</string>
     <string name="pref_filter_update_categories_details">Ĝisdatigoj en ekskluzivitaj kategorioj ne estos montrotaj, eĉ se ili estas ankaŭ en inkluzivitaj kategorioj.</string>
     <string name="pref_filter_upcoming_categories_details">Titoloj en ekskluzivitaj kategorioj ne estos montrotaj, eĉ se ili estas ankaŭ en inkluzivitaj kategorioj.</string>
-    <string name="ext_nsfw_short">18+</string>
-    <string name="pref_show_nsfw_source">Montri en fontaj kaj etendaĵaj listoj</string>
-    <string name="pref_category_nsfw_content">NSFW-fontoj (18+)</string>
-    <string name="ext_nsfw_warning">Fontoj de ĉi tiu etendaĵo eble enhavas NSFW-enhavon (18+)</string>
-    <string name="parental_controls_info">Tio ne preventas neoficialajn aŭ eventuale malĝuste markitajn etendaĵojn montri NSFW-enhavon (18+) ene de la apo.</string>
-    <string name="ext_info_age_rating">Aĝa takso</string>
     <string name="pref_hardware_bitmap_threshold_default">Defaŭlta (%d)</string>
     <string name="pref_hardware_bitmap_threshold_summary">Se legilo ŝargas malplenan bildon alkremente redukti la sojlon.\nElektita: %s</string>
     <string name="pref_hardware_bitmap_threshold">Propra rastruma sojlo de aparataro</string>

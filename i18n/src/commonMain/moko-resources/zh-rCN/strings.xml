@@ -556,6 +556,12 @@
     <string name="empty_screen">呃…尴尬了</string>
     <string name="ext_info_version">版本</string>
     <string name="ext_info_language">语言</string>
+    <string name="ext_info_warning">警告</string>
+    <string name="ext_content_warning_safe">安全</string>
+    <string name="ext_content_warning_mixed">混合</string>
+    <string name="ext_content_warning_nsfw">18+</string>
+    <string name="ext_content_warning_mixed_description">此插件的来源可能包含安全内容和 18+ 内容。</string>
+    <string name="ext_content_warning_nsfw_description">此扩展的来源主要包含 18+ 内容。</string>
     <string name="reading_list">在读</string>
     <string name="wish_list">想读</string>
     <string name="complete_list">读过</string>
@@ -762,6 +768,10 @@
     <string name="onboarding_permission_analytics_description">发送匿名的应用数据以提升用户体验。</string>
     <string name="pref_firebase">数据分析与崩溃日志</string>
     <string name="firebase_summary">允许发送崩溃日志和数据分析帮助开发者辨别并修复问题，提高应用体验，以期更新符合你需要的功能</string>
+    <string name="pref_category_extensions">插件</string>
+    <string name="pref_allowed_content_warnings">已允许内容警告</string>
+    <string name="pref_apply_content_warnings_to_installed">还适用于已安装的插件</string>
+    <string name="pref_apply_content_warnings_to_installed_summary">关闭后，已安装的插件仍会继续加载和更新，无论其是否显示警告</string>
     <string name="action_sort_random">随机</string>
     <string name="ext_remove">删除</string>
     <string name="ext_confirm_remove">确定删除？</string>
@@ -877,12 +887,6 @@
     <string name="downloading_with_progress">正在下载… (%d%%)</string>
     <string name="pref_filter_update_categories_details">同时属于包含和排除分类的作品更新将不予显示。</string>
     <string name="pref_filter_upcoming_categories_details">同时属于包含和排除分类的标题将不予显示。</string>
-    <string name="ext_nsfw_warning">来自此插件的图源可能包含 NSFW (18+) 内容</string>
-    <string name="ext_nsfw_short">18+</string>
-    <string name="parental_controls_info">如果有插件标记错误，这项设置无法阻止它们展示 NSFW (18+) 内容。</string>
-    <string name="pref_category_nsfw_content">NSFW (18+) 图源</string>
-    <string name="pref_show_nsfw_source">在图源和插件列表中显示</string>
-    <string name="ext_info_age_rating">分级</string>
     <string name="pref_hardware_bitmap_threshold_default">默认 (%d)</string>
     <string name="pref_hardware_bitmap_threshold_summary">如果阅读器加载空白图像，请逐步降低阈值。\n已选择： %s</string>
     <string name="pref_hardware_bitmap_threshold">自定义硬件位图阈值</string>

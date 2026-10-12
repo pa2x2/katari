@@ -838,12 +838,6 @@
     <string name="migrationListScreen.exitDialog.cancelLabel">रद्द गर्नुहोस्</string>
     <string name="migrationListScreen.migrateDialog.copyLabel">प्रतिलिपि गर्नुहोस्</string>
     <string name="migrationListScreen.matchWithoutChapterToast">कुनै अध्यायहरू फेला परेनन्, यो इन्ट्री स्थानान्तरणका लागि प्रयोग गर्न सकिँदैन</string>
-    <string name="pref_show_nsfw_source">स्रोत र एक्सटेन्शन सूची मा देखाउनुहोस्</string>
-    <string name="pref_category_nsfw_content">NSFW (18+) स्रोतहरू</string>
-    <string name="ext_nsfw_warning">यस एक्सटेन्शनको स्रोतहरूमा NSFW (१८+) सामग्री समावेश हुन सक्छ</string>
-    <string name="ext_nsfw_short">१८+</string>
-    <string name="parental_controls_info">यसले अनौपचारिक वा सम्भावित रूपमा गलत रूपमा फ्ल्याग गरिएका एक्सटेन्शनहरूलाई एप भित्र NSFW (१८+) सामग्री आउन बाट रोक्दैन।</string>
-    <string name="ext_info_age_rating">उमेर मूल्याङ्कन</string>
     <string name="pref_hardware_bitmap_threshold_default">पूर्वनिर्धारित (%d)</string>
     <string name="pref_hardware_bitmap_threshold_summary">यदि पाठकले खाली छवि लोड गर्छ भने क्रमशः threshold घटाउनुहोस्।\nचयन गरिएको: %s</string>
     <string name="pref_hardware_bitmap_threshold">Custom hardware bitmap threshold</string>

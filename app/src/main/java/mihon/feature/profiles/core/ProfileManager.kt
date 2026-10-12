@@ -249,7 +249,7 @@ class ProfileManager(
         if (currentVersion < 2) {
             migrateProfileOwnedKeyToNamespaced(
                 sharedPreferences = sharedPreferences,
-                baseKey = "show_nsfw_source",
+                baseKey = SourcePreferences.LEGACY_SHOW_NSFW_SOURCE_KEY,
             )
             migrateProfileOwnedKeyToNamespaced(
                 sharedPreferences = sharedPreferences,

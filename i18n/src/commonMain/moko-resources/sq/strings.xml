@@ -655,10 +655,4 @@
     <string name="track_activity_name">Gjurmuesi i identifikimit</string>
     <string name="pref_relative_format">Koha relative</string>
     <string name="pref_relative_format_summary">\"%1$s\" në vend të \"%2$s\"</string>
-    <string name="pref_category_nsfw_content">Burimet NSFW (18+)</string>
-    <string name="pref_show_nsfw_source">Shfaq në listat e burimeve dhe shtesave</string>
-    <string name="parental_controls_info">Kjo nuk parandalon shtesat jozyrtare ose potencialisht të shënuara gabimisht që të shfaqin përmbajtjen NSFW (18+) brenda aplikacionit.</string>
-    <string name="ext_info_age_rating">Vlerësimi i moshës</string>
-    <string name="ext_nsfw_short">18+</string>
-    <string name="ext_nsfw_warning">Burimet nga kjo shtesë mund të përmbajnë përmbajtje NSFW (18+)</string>
 </resources>

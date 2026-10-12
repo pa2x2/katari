@@ -322,10 +322,4 @@
     <string name="onboarding_action_finish">Rampung</string>
     <string name="onboarding_action_skip">Nglangkungi</string>
     <string name="onboarding_storage_info">Milih direktori kanggo nyimpen isi saka %1$s, kalebu unduhan bab, data backup, lan liya-liyane. \n \nApike kudu nganggo direktori kapisah. \n \ndirektori ingkang dipunpilih: %2$s</string>
-    <string name="parental_controls_info">Iki ora nyegah ekstensi kang ora resmi utawa salah dilabeli kanggo nampilake konten NSFW (18+) ing aplikasi.</string>
-    <string name="pref_category_nsfw_content">Sumber NSFW (18+)</string>
-    <string name="pref_show_nsfw_source">Tampilaken ing sumber lan dhaptar ekstensi</string>
-    <string name="ext_nsfw_short">18+</string>
-    <string name="ext_nsfw_warning">Sumber saka ekstensi iki bisa ngemot konten NSFW (18+)</string>
-    <string name="ext_info_age_rating">Rating umur</string>
 </resources>

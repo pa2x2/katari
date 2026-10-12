@@ -338,10 +338,4 @@
     <string name="pref_webtoon_side_padding">Yon bo\'shliq</string>
     <string name="pref_remove_bookmarked_chapters">Xatchopli boblarni o\'chirish</string>
     <string name="third_to_last">O\'qilgan bobdan uchinchisi</string>
-    <string name="pref_show_nsfw_source">Manbaa va kengaytmalar ro\'yhatida ko\'rsatish</string>
-    <string name="parental_controls_info">Bu, ilovada norasmiy yoki noto\'g\'ri belgilangan kengaytmalardan NSFW (18+) kontent paydo bo\'lishini oldini olmaydi.</string>
-    <string name="pref_category_nsfw_content">NSFW (18+) manbaalari</string>
-    <string name="ext_nsfw_short">18+</string>
-    <string name="ext_nsfw_warning">Ushbu kengaytma manbaalarida NSFW (18+) bo\'lishi mumkin</string>
-    <string name="ext_info_age_rating">Yosh cheklovi</string>
 </resources>

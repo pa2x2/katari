@@ -9,12 +9,14 @@ import eu.kanade.tachiyomi.util.system.LocaleHelper
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import mihon.domain.extension.model.ContentWarning
 import mihon.domain.migration.models.MigrationFlag
 import mihon.feature.profiles.core.ProfileStore
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.core.common.preference.ProfilePreferenceKeyPattern
 import tachiyomi.core.common.preference.getEnum
+import tachiyomi.core.common.preference.getEnumSet
 import tachiyomi.core.common.preference.getLongArray
 import tachiyomi.domain.library.model.LibraryDisplayMode
 
@@ -33,6 +35,7 @@ class SourcePreferences(
         const val LAST_USED_SOURCE_KEY = "last_source"
         const val MANGA_LAST_USED_SOURCE_KEY = "last_catalogue_source"
         const val ANIME_LAST_USED_SOURCE_KEY = "last_anime_catalogue_source"
+        const val LEGACY_SHOW_NSFW_SOURCE_KEY = "show_nsfw_source"
 
         val SOURCE_DISPLAY_MODE_KEY_FAMILY = ProfilePreferenceKeyPattern.Prefix("pref_display_mode_catalogue_")
         val FEED_TIMELINE_KEY_FAMILY = ProfilePreferenceKeyPattern.Prefix(
@@ -47,6 +50,10 @@ class SourcePreferences(
             FEED_TIMELINE_KEY_FAMILY,
             FEED_ANCHOR_KEY_FAMILY,
         )
+
+        fun enabledContentWarnings(preferenceStore: PreferenceStore): Preference<Set<ContentWarning>> {
+            return preferenceStore.getEnumSet("enabled_content_warnings", ContentWarning.entries.toSet())
+        }
     }
 
     val sourceDisplayMode: Preference<LibraryDisplayMode> = preferenceStore.getObjectFromString(
@@ -92,7 +99,12 @@ class SourcePreferences(
         -1,
     )
 
-    val showNsfwSource: Preference<Boolean> = preferenceStore.getBoolean("show_nsfw_source", true)
+    val enabledContentWarnings: Preference<Set<ContentWarning>> = enabledContentWarnings(preferenceStore)
+
+    val applyContentWarningsToInstalled: Preference<Boolean> = preferenceStore.getBoolean(
+        "apply_content_warnings_to_installed",
+        true,
+    )
 
     val migrationSortingMode: Preference<SetMigrateSorting.Mode> = preferenceStore.getEnum(
         "pref_migration_sorting",

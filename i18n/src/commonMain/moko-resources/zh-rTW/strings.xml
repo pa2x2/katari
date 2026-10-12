@@ -877,12 +877,6 @@
     <string name="pref_vertical_navigator_height">垂直導航器高度</string>
     <string name="pref_filter_update_categories_details">類別同時屬於「排除」及「包含」的更新將不會顯示。</string>
     <string name="pref_filter_upcoming_categories_details">類別同時屬於「排除」及「包含」的作品將不會顯示。</string>
-    <string name="ext_nsfw_short">18+</string>
-    <string name="parental_controls_info">即使啟用監護限制，還是可能有漏網之魚，使用者仍可藉由第三方或未正確標幟的擴充套件在本應用程式中瀏覽 NSFW(18+) 內容</string>
-    <string name="ext_nsfw_warning">來自此擴充套件的來源可能包含未滿十八歲之人不宜觀賞的內容</string>
-    <string name="pref_category_nsfw_content">未滿十八歲之人不宜瀏覽的來源</string>
-    <string name="pref_show_nsfw_source">在來源和擴充套件清單中顯示</string>
-    <string name="ext_info_age_rating">分級</string>
     <string name="pref_hardware_bitmap_threshold">自訂硬體點陣圖的閾值設定</string>
     <string name="pref_hardware_bitmap_threshold_summary">如果閱讀時載入的是空白影像，請逐步降低閾值\n已選擇：%s</string>
     <string name="pref_hardware_bitmap_threshold_default">%d (預設)</string>

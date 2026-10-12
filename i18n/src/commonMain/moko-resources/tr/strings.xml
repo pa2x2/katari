@@ -877,12 +877,6 @@
     <string name="downloading_with_progress">İndiriliyor… (%d%%)</string>
     <string name="pref_filter_update_categories_details">Hariç tutulan kategorilerdeki güncellemeler, dahil edilen kategorilerde olsalar bile gösterilmeyecektir.</string>
     <string name="pref_filter_upcoming_categories_details">Hariç tutulan kategorilerdeki girdiler gizlendi. Bu girdiler dahil edilen kategorilerde olsalar bile gösterilmez.</string>
-    <string name="ext_nsfw_warning">Bu uzantıdaki kaynaklar yetişkin içerik (18+) içerebilir</string>
-    <string name="ext_nsfw_short">18+</string>
-    <string name="parental_controls_info">Bu, resmî olmayan veya yanlış işaretlenmiş uzantıların uygulama içinde yetişkin içeriği (18+) göstermesini engellemez.</string>
-    <string name="pref_category_nsfw_content">Yetişkin içerik (18+) kaynakları</string>
-    <string name="pref_show_nsfw_source">Kaynaklar ve uzantılar listelerinde göster</string>
-    <string name="ext_info_age_rating">Yaş derecelendirmesi</string>
     <string name="pref_hardware_bitmap_threshold">Özel bitmap donanım sınırı</string>
     <string name="pref_hardware_bitmap_threshold_default">Varsayılan (%d)</string>
     <string name="pref_hardware_bitmap_threshold_summary">Eğer okuyucu boş bir görsel yüklerse bu sınırı kademeli olarak azaltın.\nSeçili: %s</string>

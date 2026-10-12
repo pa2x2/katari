@@ -609,11 +609,5 @@
     <string name="source_settings">Ҫӑл куҫ ӗнерӗвӗ</string>
     <string name="non_library_settings">Пур вуланӑ серилӗх</string>
     <string name="library_list">Вулавӑш йат-йышӗ</string>
-    <string name="ext_nsfw_warning">NSFW (18+) шалаш пулма пултарать</string>
-    <string name="ext_nsfw_short">18+</string>
-    <string name="parental_controls_info">Ҫакӑ апра чӑнлавлӑ мар йе тӗрӗс мар палӑртнӑ хушмасен NSFW (18+) шалашне кӑтартма чӑрмантармасть.</string>
-    <string name="pref_category_nsfw_content">NSFW (18+) ҫӑл куҫсем</string>
-    <string name="pref_show_nsfw_source">Ҫӑл куҫсен тата хушмасен йат-йышӗнче кӑтартни</string>
-    <string name="ext_info_age_rating">Ҫул-ӳсӗм чаравӗ</string>
     <string name="pref_hardware_bitmap_threshold_default">Йаланхилле (%d)</string>
 </resources>

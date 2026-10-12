@@ -798,12 +798,6 @@
     <string name="clear_database_text">Estás a piques de borrar elementos da túa base de datos</string>
     <string name="clear_database_history_warning">Perderás os capítulos lidos e o progreso de lectura das obras que non estén na biblioteca</string>
     <string name="clear_db_exclude_read">Conservar as obras con capítulos lidos</string>
-    <string name="ext_nsfw_warning">As fontes desta extensión poden ter contido NSFW (+18)</string>
-    <string name="ext_nsfw_short">+18</string>
-    <string name="parental_controls_info">Isto non evita que as extensións non oficiais ou mal clasificadas mostren contido NSFW (+18) dentro da aplicación.</string>
-    <string name="pref_show_nsfw_source">Amosar na lista de fontes e extensións</string>
-    <string name="pref_category_nsfw_content">Fontes NSFW (+18)</string>
-    <string name="ext_info_age_rating">Clasificación por idades</string>
     <string name="pref_hardware_bitmap_threshold">Elixir un tamaño máximo co que decodificar imáxenes por hardware</string>
     <string name="pref_hardware_bitmap_threshold_default">Por defecto (%d)</string>
     <string name="pref_hardware_bitmap_threshold_summary">Se o lector carga unha páxina en branco, recomendámoste reducilo pouco a pouco.\nLímite actual: %s</string>

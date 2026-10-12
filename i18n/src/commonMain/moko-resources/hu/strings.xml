@@ -789,12 +789,6 @@
     <string name="action_toggle_private_on">Privát nyilvántartás</string>
     <string name="action_toggle_private_off">Nyilvános nyilvántartás</string>
     <string name="notes_placeholder">Élveztem azt a részt, ahol…</string>
-    <string name="pref_category_nsfw_content">NSFW (18+) források</string>
-    <string name="parental_controls_info">Ez nem akadályozza meg a nem hivatalos vagy az esetlegesen helytelenül megjelölt bővítményeket a 18+-os tartalmak megjelenítésétől az alkalmazáson belül.</string>
-    <string name="pref_show_nsfw_source">Megjelenítés a forrás- és kiterjesztéseklistában</string>
-    <string name="ext_nsfw_warning">Tartalmazhat felnőtt (18+) tartalmat</string>
-    <string name="ext_nsfw_short">18+</string>
-    <string name="ext_info_age_rating">Korhatár</string>
     <string name="pref_hardware_bitmap_threshold_summary">Ha az olvasó üres képet tölt be, fokozatosan csökkentse a küszöbértéket.\nKijelölt: %s</string>
     <string name="pref_always_decode_long_strip_with_ssiv_2">Hosszú szalagolvasóhoz régi dekóder használata</string>
     <string name="pref_always_decode_long_strip_with_ssiv_summary">Befolyásolja a teljesítményt. Csak akkor engedélyezze, ha a bitkép küszöbértékének csökkentése nem oldja meg az üres kép problémákat</string>

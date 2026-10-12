@@ -556,6 +556,12 @@
     <string name="empty_screen">Beh, questo è imbarazzante</string>
     <string name="ext_info_version">Versione</string>
     <string name="ext_info_language">Lingua</string>
+    <string name="ext_info_warning">Avviso</string>
+    <string name="ext_content_warning_safe">Sicuro</string>
+    <string name="ext_content_warning_mixed">Misto</string>
+    <string name="ext_content_warning_nsfw">Per maggiorenni</string>
+    <string name="ext_content_warning_mixed_description">La fonte per questa estensione potebbe contenere contenuto non sicuro o 18+.</string>
+    <string name="ext_content_warning_nsfw_description">Le fonti per questa estensione sono dirette principalmente a contenuti 18+.</string>
     <string name="on_hold_list">In Pausa</string>
     <string name="reading_list">Lista di lettura</string>
     <string name="wish_list">Lista dei desideri</string>
@@ -761,6 +767,8 @@
     <string name="confirm_tracker_update">Aggiornare i tracker al capitolo %d?</string>
     <string name="pref_download_new_unread_chapters_only">Salta il download dei capitoli letti duplicati</string>
     <string name="firebase_summary">L\'invio dei registri dei crash e delle analitiche ci consentirà di identificare e risolvere i problemi, migliorare le prestazioni e rendere gli aggiornamenti futuri più pertinenti alle tue esigenze</string>
+    <string name="pref_category_extensions">Estensioni</string>
+    <string name="pref_allowed_content_warnings">Avvisi sui contenuti consentiti</string>
     <string name="ext_remove">Rimuovi</string>
     <string name="ext_confirm_remove">Rimuovere l\'estensione?</string>
     <string name="remove_private_extension_message">Vuoi davvero rimuovere l\'estensione \"%s\"?</string>
@@ -850,12 +858,6 @@
     <string name="downloading_with_progress">Scaricamento… (%d%%)</string>
     <string name="label_support_us">Supportaci</string>
     <string name="theme_tokyonight">Tokyo Notte</string>
-    <string name="ext_nsfw_warning">Fonti di questa estensione potrebbero contenere materiale NSFW (18+)</string>
-    <string name="ext_nsfw_short">18+</string>
-    <string name="parental_controls_info">Questo non impedisce a estensioni non ufficiali oppure incorrettamente segnalate di mostrare contenuti 18+ all\'interno dell\'applicazione.</string>
-    <string name="pref_category_nsfw_content">Fonti NSFW (18+)</string>
-    <string name="pref_show_nsfw_source">Mostra nelle liste delle fonti e delle estensioni</string>
-    <string name="ext_info_age_rating">Classificazione per età</string>
     <string name="pref_hardware_bitmap_threshold_default">Predefinito (%d)</string>
     <string name="pref_hardware_bitmap_threshold_summary">Se il lettore carica un\'immagine vuota, riduci progressivamente il limite.\nSelezionato: %s</string>
     <string name="pref_hardware_bitmap_threshold">Limite di elaborazione immagini hardware personalizzato</string>

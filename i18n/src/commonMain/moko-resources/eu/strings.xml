@@ -584,9 +584,4 @@
     <string name="label_upcoming">Etorkizunean</string>
     <string name="unlock_app_title">%s desblokeatu</string>
     <string name="action_copy_link">Esteka kopiatu</string>
-    <string name="ext_nsfw_warning">NSFW (18+) edukia izan dezake</string>
-    <string name="ext_nsfw_short">18+</string>
-    <string name="pref_category_nsfw_content">NSFW (18+) iturriak</string>
-    <string name="pref_show_nsfw_source">Erakutsi iturrien eta luzapenen zerrendetan</string>
-    <string name="parental_controls_info">Honek ez du eragozten ofizialak ez diren edo oker markatutako luzapenek NSFW (18+) edukia aplikazioan erakustea.</string>
 </resources>

@@ -877,10 +877,4 @@
     <string name="migrationListScreen.progressDialog.cancelLabel">لغو</string>
     <string name="supportUsScreen.contactForDetailsMessage">برای گزینه‌های جایگزین یا هرگونه سؤال مرتبط، به سرور دیسکورد ما بپیوندید.</string>
     <string name="theme_nord">نورد</string>
-    <string name="ext_nsfw_short">18+</string>
-    <string name="pref_category_nsfw_content">منابع محتوای جنسی (+18)</string>
-    <string name="parental_controls_info">این کار از نمایش محتوای 18+ (محتوای نامناسب) توسط افزونه‌های غیررسمی یا اشتباه برچسب‌خورده جلوگیری نمی‌کند.</string>
-    <string name="ext_nsfw_warning">منابع این افزونه ممکن است شامل محتوای نامناسب (+18) باشند</string>
-    <string name="pref_show_nsfw_source">نمایش در لیست منابع و افزونه‌ها</string>
-    <string name="ext_info_age_rating">رده‌بندی سنی</string>
 </resources>

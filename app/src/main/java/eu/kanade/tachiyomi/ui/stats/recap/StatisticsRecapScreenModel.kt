@@ -22,6 +22,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import logcat.LogPriority
+import mihon.domain.extension.model.ContentWarning
 import mihon.entry.interactions.statistics.EntryStatisticsFeature
 import mihon.feature.profiles.core.ProfileStore
 import tachiyomi.core.common.util.lang.launchIO
@@ -97,7 +98,9 @@ class StatisticsRecapScreenModel(
     ) {
         val nsfwSources = extensionManager.installedExtensionsFlow
             .map { extensions ->
-                extensions.filter { it.isNsfw }.flatMapTo(HashSet()) { ext -> ext.sources.map { it.id } }
+                extensions
+                    .filter { it.contentWarning != ContentWarning.SAFE }
+                    .flatMapTo(HashSet()) { ext -> ext.sources.map { it.id } }
             }
             .distinctUntilChanged()
         combine(

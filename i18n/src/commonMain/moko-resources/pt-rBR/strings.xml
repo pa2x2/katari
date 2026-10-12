@@ -556,6 +556,12 @@
     <string name="empty_screen">Bem, isso é esquisito</string>
     <string name="ext_info_version">Versão</string>
     <string name="ext_info_language">Idioma</string>
+    <string name="ext_info_warning">Aviso</string>
+    <string name="ext_content_warning_safe">Seguro</string>
+    <string name="ext_content_warning_mixed">Misto</string>
+    <string name="ext_content_warning_nsfw">18+</string>
+    <string name="ext_content_warning_mixed_description">Fontes dessa extensão pode conter conteúdos tanto seguros quanto 18+.</string>
+    <string name="ext_content_warning_nsfw_description">Fontes dessa extensão tem foco principal em conteúdos 18+.</string>
     <string name="reading_list">Lista de Leitura</string>
     <string name="wish_list">Lista de Desejos</string>
     <string name="complete_list">Lista de Completos</string>
@@ -767,6 +773,10 @@
     <string name="pref_mark_duplicate_read_chapter_read_existing">Depois de ler um capítulo</string>
     <string name="ext_confirm_remove">Remover extensão?</string>
     <string name="firebase_summary">O envio de logs de falhas e análises nos permitirá identificar e corrigir problemas, melhorar o desempenho e tornar as atualizações futuras mais relevantes para suas necessidades</string>
+    <string name="pref_category_extensions">Extensões</string>
+    <string name="pref_allowed_content_warnings">Avisos de conteúdo habilitados</string>
+    <string name="pref_apply_content_warnings_to_installed">Aplicar também às extensões instaladas</string>
+    <string name="pref_apply_content_warnings_to_installed_summary">Quando desligado, extensões que você já instalou continuarão a carregar e atualizar apesar do aviso</string>
     <string name="pref_behavior">Comportamento</string>
     <string name="pref_mark_duplicate_read_chapter_read">Marcar capítulo lido duplicado como lido</string>
     <string name="pref_auto_update_manga_on_mark_read">Atualizar progresso quando marcado como lido</string>
@@ -877,12 +887,6 @@
     <string name="downloading_with_progress">Fazendo download…(%d%%)</string>
     <string name="pref_filter_update_categories_details">Atualizações nas categorias excluídas não serão exibidas mesmo que eles também estejam nas categorias incluídas.</string>
     <string name="pref_filter_upcoming_categories_details">Títulos nas categorias excluídas não serão exibidas, mesmo que eles também estejam nas categorias incluídas.</string>
-    <string name="ext_nsfw_warning">As fontes desta extensão podem ter conteúdo NSFW (+18)</string>
-    <string name="ext_nsfw_short">+18</string>
-    <string name="parental_controls_info">Isso não impede que extensões não oficiais ou potencialmente sinalizadas de maneira incorreta apresentem conteúdo NSFW (+18) no aplicativo.</string>
-    <string name="pref_category_nsfw_content">Fontes NSFW (+18)</string>
-    <string name="pref_show_nsfw_source">Mostrar na lista de fontes e extensões</string>
-    <string name="ext_info_age_rating">Classificação</string>
     <string name="pref_hardware_bitmap_threshold_default">Padrão (%d)</string>
     <string name="pref_always_decode_long_strip_with_ssiv_summary">Afeta o desempenho. Habilite somente se a redução do limite de bitmap não corrigir problemas de imagem em branco</string>
     <string name="pref_always_decode_long_strip_with_ssiv_2">Use o decodificador legado para leitor de tira longa</string>

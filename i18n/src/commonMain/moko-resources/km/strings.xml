@@ -200,7 +200,4 @@
     <string name="action_sort_last_manga_update">ពិនិត្យបច្ចុប្បន្នភាពចុងក្រោយ</string>
     <string name="delete_category">លុបថ្នាក់ក្រម</string>
     <string name="action_sort_next_updated">ភាគថ្មីរំពឹងទុកនៅ</string>
-    <string name="pref_category_nsfw_content">ប្រភពមិនល្អ(១៨+)</string>
-    <string name="pref_show_nsfw_source">បង្ហាញនៅក្នុងបញ្ចីប្រភព</string>
-    <string name="parental_controls_info">ការសម្រេចចិត្តនេះមិនបិទការflagនៃប្រភពទៅលើរឿង(១៨+)នៅក្នុងកម្មវិធីឡើយ។</string>
 </resources>

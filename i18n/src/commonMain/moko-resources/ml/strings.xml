@@ -236,8 +236,4 @@
     <string name="pref_category_delete_chapters">അദ്ധ്യായം മായ്ച്ചുകളയുക</string>
     <string name="pref_remove_after_marked_as_read">സ്വന്തമായി വായിച്ചെൻ അടയാളപ്പെടുത്തിയതിൻ ശേഷം</string>
     <string name="pref_remove_after_read">യാന്ത്രികമായി വായിച്ചെതിനു ശേഷം മായ്ച്ചുകളയുക</string>
-    <string name="ext_info_age_rating">വയസ്സ് റേറ്റിംഗ്</string>
-    <string name="ext_nsfw_short">18+</string>
-    <string name="pref_show_nsfw_source">ഉറവിടങ്ങളിലും വിപുലീകരണ പട്ടികയിലും കാണിക്കുക</string>
-    <string name="parental_controls_info">ഇത് അനൗദ്യോഗികമായോ തെറ്റായി അടയാളപ്പെടുത്തിയോ ഉള്ള വിപുലീകരണങ്ങൾ ആപ്പിനുള്ളിൽ NSFW (18+) ഉള്ളടക്കം പ്രദർശിപ്പിക്കുന്നത് തടയില്ല.</string>
 </resources>

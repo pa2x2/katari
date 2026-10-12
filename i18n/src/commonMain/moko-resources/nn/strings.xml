@@ -258,7 +258,4 @@
     <string name="sort_by_source">Etter kjelde</string>
     <string name="manga_cover">Omslag</string>
     <string name="manga_download">Last ned</string>
-    <string name="pref_category_nsfw_content">NSFW (18+) kjeder</string>
-    <string name="ext_nsfw_short">18+</string>
-    <string name="ext_nsfw_warning">Kan innehalda NSFW (18+) innhald</string>
 </resources>

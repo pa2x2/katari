@@ -877,12 +877,6 @@
     <string name="downloading_with_progress">Đang tải xuống… (%d%%)</string>
     <string name="pref_filter_update_categories_details">Các cập nhật trong các danh mục bị loại trừ sẽ không được hiển thị ngay cả khi chúng cũng nằm trong bất kỳ danh mục nào được bao gồm.</string>
     <string name="pref_filter_upcoming_categories_details">Các tựa sách thuộc các danh mục bị loại trừ sẽ không được hiển thị, ngay cả khi chúng cũng nằm trong bất kỳ danh mục nào được bao gồm.</string>
-    <string name="ext_nsfw_warning">Nguồn truyền từ tiện ích mở rộng này có thể chứa nội dung NSFW 18+</string>
-    <string name="ext_nsfw_short">18+</string>
-    <string name="parental_controls_info">Điều này không ngăn các tiện ích mở rộng không chính thức hoặc có khả năng bị gắn cờ không chính xác hiển thị nội dung NSFW (18+) trong ứng dụng.</string>
-    <string name="pref_category_nsfw_content">Nguồn NSFW (18+)</string>
-    <string name="pref_show_nsfw_source">Hiển thị trong các danh sách nguồn và tiện ích mở rộng</string>
-    <string name="ext_info_age_rating">Phân loại độ tuổi</string>
     <string name="pref_hardware_bitmap_threshold">Tùy chỉnh ngưỡng bitmap phần cứng</string>
     <string name="pref_hardware_bitmap_threshold_default">Mặc định (%d)</string>
     <string name="pref_hardware_bitmap_threshold_summary">Nếu trình đọc tải một hình ảnh trống thì giảm dần ngưỡng\nĐã chọn: %s</string>

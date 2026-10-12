@@ -870,12 +870,6 @@
     <string name="donationCampaign.paragraph3">Quoi qu\'il en soit, Mihon continuera d\'être maintenu par les contributeurs et moi-même, et restera open-source.</string>
     <string name="donationCampaign.contactPlatform">Discord</string>
     <string name="donationCampaign.dismiss">Faire disparaitre</string>
-    <string name="ext_nsfw_warning">Les sources de cette extension peuvent contenir du contenu NSFW (18+)</string>
-    <string name="ext_nsfw_short">18+</string>
-    <string name="parental_controls_info">Ceci n\'empêche pas les extensions de diffuser du contenu +18 dans l\'application.</string>
-    <string name="pref_category_nsfw_content">Contenu +18</string>
-    <string name="pref_show_nsfw_source">Afficher dans les listes de sources et d\'extensions</string>
-    <string name="ext_info_age_rating">Classification par âge</string>
     <string name="pref_hardware_bitmap_threshold_default">Par défaut (%d)</string>
     <string name="pref_always_decode_long_strip_with_ssiv_summary">Affecte les performances. Ne l\'activer que si la réduction du seuil de bitmap ne résout pas les problèmes d\'images vierges</string>
     <string name="pref_hardware_bitmap_threshold_summary">Si le lecteur charge une image vierge, réduire progressivement le seuil.\nSélectionné : %s</string>

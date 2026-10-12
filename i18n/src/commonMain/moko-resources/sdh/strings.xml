@@ -229,7 +229,4 @@
     <string name="action_remove_everything">لادانی هەمووشتێك</string>
     <string name="action_search_hint">گەڕان…</string>
     <string name="delete_category_confirmation">\?ڕەشبکەیتەوە \"%s\"ئایا ئەتەوێ کە بەشی</string>
-    <string name="pref_category_nsfw_content">سەرچاوەی سەروو (18) ساڵ</string>
-    <string name="pref_show_nsfw_source">پیشاندان لە لیستی سەرچاوە و زیادکراوەکان</string>
-    <string name="parental_controls_info">ئەمە ڕێگری ناکات لە دەرکەوتنی بابەتی سەروو 18 ی نا فەرمی لە بەرنامەکە.</string>
 </resources>

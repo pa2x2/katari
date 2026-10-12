@@ -556,6 +556,8 @@
     <string name="empty_screen">Tja, das ist jetzt etwas peinlich</string>
     <string name="ext_info_version">Version</string>
     <string name="ext_info_language">Sprache</string>
+    <string name="ext_info_warning">Warnung</string>
+    <string name="ext_content_warning_mixed">Gemischt</string>
     <string name="wish_list">Wunschliste</string>
     <string name="complete_list">Abgeschlossen-Liste</string>
     <string name="on_hold_list">Warteliste</string>
@@ -763,6 +765,10 @@
     <string name="onboarding_permission_crashlytics_description">Anonymisierte Absturzprotokolle an das Entwicklerteam senden.</string>
     <string name="pref_security">Sicherheit</string>
     <string name="firebase_summary">Das Übermitteln von Absturzprotokollen und erhobenen Daten ermöglicht es uns, Probleme zu erkennen und zu beheben, die Leistung zu verbessern und künftige Updates besser auf deine Bedürfnisse abzustimmen</string>
+    <string name="pref_category_extensions">Erweiterungen</string>
+    <string name="pref_allowed_content_warnings">Erlaubte Inhaltswarnungen</string>
+    <string name="pref_apply_content_warnings_to_installed">Auch auf installierte Erweiterungen anwenden</string>
+    <string name="pref_apply_content_warnings_to_installed_summary">Wenn deaktiviert, werden bereits installierte Erweiterungen unabhängig von ihren Warnungen weiterhin geladen und aktualisiert</string>
     <string name="ext_remove">Entfernen</string>
     <string name="ext_confirm_remove">Erweiterung entfernen?</string>
     <string name="remove_private_extension_message">Möchtest du die Erweiterung „%s“ wirklich entfernen?</string>
@@ -877,12 +883,6 @@
     <string name="downloading_with_progress">Wird heruntergeladen… (%d%%)</string>
     <string name="pref_filter_update_categories_details">Aktualisierungen in ausgeschlossen Kategorien werden nicht angezeigt, selbst wenn sie in eingeschlossenen Kategorien vorkommen.</string>
     <string name="pref_filter_upcoming_categories_details">Titel in ausgeschlossen Kategorien werden nicht angezeigt, selbst wenn sie in eingeschlossenen Kategorien vorkommen.</string>
-    <string name="ext_nsfw_warning">Quellen dieser Erweiterung könnten NSFW/Ü18-Inhalte enthalten</string>
-    <string name="ext_nsfw_short">Ü18</string>
-    <string name="parental_controls_info">Dies verhindert nicht, dass inoffizielle oder möglicherweise falsch gekennzeichnete Erweiterungen NSFW/Ü18-Inhalte in der App anzeigen.</string>
-    <string name="pref_category_nsfw_content">NSFW/Ü18-Quellen</string>
-    <string name="pref_show_nsfw_source">In Quellen- und Erweiterungslisten anzeigen</string>
-    <string name="ext_info_age_rating">Altersfreigabe</string>
     <string name="pref_hardware_bitmap_threshold_summary">Reduziert stufenweise den Grenzwert, wenn der Leser nur ein leeres Bild lädt.\nAusgewählt: %s</string>
     <string name="pref_hardware_bitmap_threshold">Benutzerdefinierter Hardware-Bitmap-Grenzwert</string>
     <string name="pref_hardware_bitmap_threshold_default">Standard (%d)</string>

@@ -870,12 +870,6 @@
     <string name="donationCampaign.paragraph3">Ανεξάρτητα από αυτό, το Mihon θα συνεχίσει να συντηρείται από εμένα και τους εθελοντές και θα παραμείνει ανοιχτού κώδικα.</string>
     <string name="donationCampaign.contactPlatform">Discord</string>
     <string name="donationCampaign.dismiss">Απόρριψη</string>
-    <string name="ext_nsfw_warning">Πηγές από αυτήν την επέκταση ενδέχεται να περιέχουν περιεχόμενο NSFW (18+)</string>
-    <string name="ext_nsfw_short">18+</string>
-    <string name="parental_controls_info">Αυτό δεν εμποδίζει τις ανεπίσημες ή ενδεχομένως εσφαλμένα επισημασμένες επεκτάσεις να εμφανίζουν περιεχόμενο NSFW (18+) μέσα στην εφαρμογή.</string>
-    <string name="pref_category_nsfw_content">Πηγές NSFW (18+)</string>
-    <string name="pref_show_nsfw_source">Εμφάνιση στις λίστες πηγών και επεκτάσεων</string>
-    <string name="ext_info_age_rating">Ηλικιακή βαθμολογία</string>
     <string name="pref_hardware_bitmap_threshold_default">Προεπιλογή (%d)</string>
     <string name="pref_hardware_bitmap_threshold_summary">Εάν ο αναγνώστης φορτώσει μια κενή εικόνα, μειώστε σταδιακά το όριο.\nΕπιλεγμένο: %s</string>
     <string name="pref_always_decode_long_strip_with_ssiv_summary">Επηρεάζει την απόδοση. Ενεργοποιήστε το μόνο αν η μείωση του ορίου bitmap δε διορθώνει τα προβλήματα κενών εικόνων</string>

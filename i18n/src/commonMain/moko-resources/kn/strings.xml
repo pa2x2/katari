@@ -472,9 +472,4 @@
     <string name="categorized_display_settings">ಪ್ರತಿ ವರ್ಗದ ವಿಂಗಡಣೆ ಮತ್ತು ಪ್ರದರ್ಶನಕ್ಕಾಗಿ ಸೆಟ್ಟಿಂಗ್‌ಗಳು</string>
     <string name="restrictions">ನಿರ್ಬಂಧಗಳು: %s</string>
     <string name="action_start_downloading_now">ಈಗಲೇ ಡೌನ್‌ಲೋಡ್ ಪ್ರಾರಂಭಿಸಿ</string>
-    <string name="parental_controls_info">ಇದು ಅನಧಿಕೃತ ಮತ್ತು ತಪ್ಪಾಗಿ ಚಿಹ್ನಿಸಿದ ವಿಸ್ತರಣೆಗಳಿಂದ 18+ ಮೂಲಗಳನ್ನು ಮರೆಮಾಚಲಾಗುವುದಿಲ್ಲ.</string>
-    <string name="ext_nsfw_warning">NSFW (18+) ವಿಷಯವನ್ನು ಹೊಂದಿರಬಹುದು</string>
-    <string name="ext_nsfw_short">18+</string>
-    <string name="pref_show_nsfw_source">ಮೂಲಗಳ ಪಟ್ಟಿಯಲ್ಲಿ ತೋರಿಸಿ</string>
-    <string name="pref_category_nsfw_content">ವಯಸ್ಕ (18+) ಮೂಲಗಳು</string>
 </resources>

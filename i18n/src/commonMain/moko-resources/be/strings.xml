@@ -877,12 +877,6 @@
     <string name="donationCampaign.contactPlatform">Discord</string>
     <string name="extensionStoresScreen.emptyLabel">Вы яшчэ не дадавалі крам пашырэнняў</string>
     <string name="supportUsScreen.contactForDetailsMessage">Каб даведацца пра іншыя спосабы падтрымкі ці задаць пытанні, заглядайце ў наш Discord-сервер.</string>
-    <string name="parental_controls_info">Гэта не перашкаджае неафіцыйным або патэнцыйна няправільна пазначаным пашырэнням паказваць кантэнт 18+ (NSFW) у праграме.</string>
-    <string name="pref_show_nsfw_source">Паказваць у спісе крыніц і пашырэнняў</string>
-    <string name="pref_category_nsfw_content">Крыніцы 18+ (NSFW)</string>
-    <string name="ext_nsfw_warning">Крыніцы з гэтага пашырэння могуць утрымліваць 18+ кантэнт (NSFW)</string>
-    <string name="ext_nsfw_short">18+</string>
-    <string name="ext_info_age_rating">Узроставы цэнз</string>
     <string name="pref_hardware_bitmap_threshold">Уласная мяжа апаратнага растравання</string>
     <string name="pref_hardware_bitmap_threshold_default">Па змаўчанні (%d)</string>
     <string name="pref_hardware_bitmap_threshold_summary">Калі чытанка загружае пустую выяву, паступова змяншаць парог.\nВыбрана: %s</string>

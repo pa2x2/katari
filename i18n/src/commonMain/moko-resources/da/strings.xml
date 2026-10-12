@@ -298,8 +298,4 @@
     <string name="second_to_last">Næstsidst læste kapitel</string>
     <string name="creating_backup">Opretter sikkerhedskopi</string>
     <string name="exception_unknown_host">Kunne ikke nå %s</string>
-    <string name="pref_category_nsfw_content">NSFW (18+) kilder</string>
-    <string name="pref_show_nsfw_source">Vis i kilder og udvidelsesliste</string>
-    <string name="parental_controls_info">Dette forhindrer ikke uofficielle eller potentielt ukorrekt markerede udvidelser fra at vise NSFW (18+) indhold i appen.</string>
-    <string name="ext_nsfw_short">18+</string>
 </resources>

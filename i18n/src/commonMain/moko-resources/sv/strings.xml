@@ -870,12 +870,6 @@
     <string name="extensionStoresScreen.deleteStore.title">Ta bort tilläggsdepå</string>
     <string name="extensionStoresScreen.deleteStore.body">Vill du ta bort följande tilläggsdepå: \"%1$s\" (%2$s)?</string>
     <string name="pref_webtoon_vertical_navigator_on_left">Placera navigatorn på vänster sida</string>
-    <string name="ext_nsfw_warning">Källor från detta tillägg kan innehålla NSFW(18+) innehåll</string>
-    <string name="ext_nsfw_short">18+</string>
-    <string name="parental_controls_info">Detta förhindrar inte inofficiella eller potentiellt felaktigt flaggade tillägg från att visa NSFW(18+) innehåll i appen.</string>
-    <string name="pref_category_nsfw_content">NSFW (18+) källor</string>
-    <string name="pref_show_nsfw_source">Visa i källor och tilläggslistor</string>
-    <string name="ext_info_age_rating">Åldersklassificering</string>
     <string name="pref_hardware_bitmap_threshold_summary">Om läsaren laddar en tom bild, minska stegvis tröskelvärdet.\nVal: %s</string>
     <string name="pref_always_decode_long_strip_with_ssiv_summary">Påverkar prestandan. Aktivera endast om minskning av bitmapströskeln inte fixar problem gällande tomma bilder</string>
     <string name="pref_hardware_bitmap_threshold_default">Standard (%d)</string>

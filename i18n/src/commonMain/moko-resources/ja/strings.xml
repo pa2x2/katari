@@ -877,12 +877,6 @@
     <string name="downloading_with_progress">ダウンロード中… (%d%%)</string>
     <string name="pref_filter_update_categories_details">除外対象カテゴリーに含まれる更新情報は、たとえそれらが対象カテゴリーにも含まれている場合でも表示されません。</string>
     <string name="pref_filter_upcoming_categories_details">除外対象カテゴリーに含まれるタイトルは、たとえそれらが対象カテゴリーにも含まれている場合でも表示されません。</string>
-    <string name="ext_nsfw_warning">この拡張機能のソースには成人向けのコンテンツが含まれる可能性があります</string>
-    <string name="ext_nsfw_short">成人向け</string>
-    <string name="parental_controls_info">これは、非公式の拡張機能や誤ってフラグ付けされた可能性のある拡張機能が、アプリ内で NSFW（18 歳以上向け）コンテンツを表示することを防ぐものではありません。</string>
-    <string name="pref_category_nsfw_content">成人向けのソース</string>
-    <string name="pref_show_nsfw_source">ソース・拡張機能リストに表示</string>
-    <string name="ext_info_age_rating">年齢制限</string>
     <string name="pref_always_decode_long_strip_with_ssiv_summary">パフォーマンスに影響します。ビットマップのしきい値を下げても空白画像の問題が解決しない場合にのみ有効にしてください</string>
     <string name="pref_hardware_bitmap_threshold_default">デフォルト (%d)</string>
     <string name="pref_hardware_bitmap_threshold">カスタムハードウェアビットマップのしきい値</string>

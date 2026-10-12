@@ -555,6 +555,12 @@
     <string name="pref_reset_viewer_flags_error">No s’ha pogut restablir la configuració del lector</string>
     <string name="empty_screen">Ostres, que estrany</string>
     <string name="ext_info_language">Llengua</string>
+    <string name="ext_info_warning">Advertència</string>
+    <string name="ext_content_warning_safe">Segura</string>
+    <string name="ext_content_warning_mixed">Mixta</string>
+    <string name="ext_content_warning_nsfw">+18</string>
+    <string name="ext_content_warning_mixed_description">Les fonts d’aquesta extensió poden contenir tant contingut segur com contingut +18.</string>
+    <string name="ext_content_warning_nsfw_description">Les fonts d’aquesta extensió contenen principalment contingut +18.</string>
     <string name="ext_info_version">Versió</string>
     <string name="reading_list">Llista de lectura</string>
     <string name="wish_list">Llista de desitjos</string>
@@ -764,6 +770,10 @@
     <string name="pref_firebase">Registres d’errors i analítiques</string>
     <string name="pref_security">Seguretat</string>
     <string name="firebase_summary">Si envieu registres d’errors i analítiques, ens permetreu identificar i solucionar problemes, millorar el rendiment i fer que les futures actualitzacions siguin més adequades a les vostres necessitats</string>
+    <string name="pref_category_extensions">Extensions</string>
+    <string name="pref_allowed_content_warnings">Advertències de contingut permeses</string>
+    <string name="pref_apply_content_warnings_to_installed">Aplica-ho també a les extensions instal·lades</string>
+    <string name="pref_apply_content_warnings_to_installed_summary">Quan està desactivat, les extensions que ja havíeu instal·lat es continuaran carregant i actualitzant independentment de les advertències</string>
     <string name="label_auto">Automàtic</string>
     <string name="pref_incognito_mode_extension_summary">Pausa l’historial de lectura per a aquesta extensió</string>
     <string name="trackers_updated_summary">Els serveis de seguiment s’han actualitzat al capítol %d</string>
@@ -877,12 +887,6 @@
     <string name="donationCampaign.paragraph3">Sigui com sigui, els voluntaris i jo continuarem mantenint el Mihon i continuarà sent de codi obert.</string>
     <string name="donationCampaign.contactPlatform">Discord</string>
     <string name="donationCampaign.dismiss">Ignora</string>
-    <string name="ext_nsfw_warning">Les fonts d’aquesta extensió poden contenir contingut NSFW (+18)</string>
-    <string name="ext_nsfw_short">+18</string>
-    <string name="parental_controls_info">Això no evita que les extensions no oficials o possiblement mal etiquetades puguin mostrar contingut NSFW (+18) a l’aplicació.</string>
-    <string name="pref_category_nsfw_content">Fonts NSFW (+18)</string>
-    <string name="pref_show_nsfw_source">Mostra a la llista de fonts i extensions</string>
-    <string name="ext_info_age_rating">Valoració d’edat</string>
     <string name="pref_hardware_bitmap_threshold_default">Per defecte (%d)</string>
     <string name="pref_always_decode_long_strip_with_ssiv_summary">Afecta el rendiment. Activeu-ho només si en reduir el llindar de mapes de bits no se solucionen els problemes d’imatges buides</string>
     <string name="pref_hardware_bitmap_threshold_summary">Si el lector carrega una imatge buida, reduïu-ne el llindar a poc a poc.\nActual: %s</string>

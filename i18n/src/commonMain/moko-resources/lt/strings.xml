@@ -641,10 +641,4 @@
     <string name="enhanced_services_not_installed">Turima, bet šaltinis nėra įdiegtas: %s</string>
     <string name="pref_library_update_show_tab_badge">Rodyti neperskaitytų skaičių ant Naujienų piktogramos</string>
     <string name="pref_skip_dupe_chapters">Praleisti pasikartojančius skyrius</string>
-    <string name="parental_controls_info">Tai nesustabdo neoficialių ar potencialiai neteisingai pažymėtų plėtinių nuo N18+ turinio rodymo programoje.</string>
-    <string name="pref_show_nsfw_source">Rodyti šaltiniuose ir plėtinių sąrašuose</string>
-    <string name="pref_category_nsfw_content">N18+ šaltiniai</string>
-    <string name="ext_nsfw_warning">Šaltiniuose gali būti N18 turinio</string>
-    <string name="ext_nsfw_short">18+</string>
-    <string name="ext_info_age_rating">Amžiaus reitingas</string>
 </resources>

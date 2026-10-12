@@ -537,9 +537,4 @@
     <string name="action_set_interval">अवधिं स्थापयतु</string>
     <string name="delete_downloaded">अवारोपितं नाशयतु</string>
     <string name="label_downloaded">अवारोपितम्</string>
-    <string name="pref_category_nsfw_content">प्रौढानां कृते एव (१८+) वस्तुमूलानि</string>
-    <string name="pref_show_nsfw_source">मूलानां विस्ताराणां च सूचीषु दर्शयतु</string>
-    <string name="ext_nsfw_short">१८+</string>
-    <string name="ext_nsfw_warning">प्रौढानां कृते एव (१८+) वस्तु अन्तः स्यात्</string>
-    <string name="parental_controls_info">एतत् अनधिकारैः उत वस्तुतः अशुद्धचिह्नितैः विस्तारेभ्यः ॰प्रौढानां कृते एव (१८+)॰ इति चिह्नितवस्तूनाम् अनुप्रयोगे दर्शनं न निवारयति।</string>
 </resources>

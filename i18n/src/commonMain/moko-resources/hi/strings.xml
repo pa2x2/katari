@@ -877,12 +877,6 @@
     <string name="donationCampaign.contactPlatform">डिस्कॉर्ड</string>
     <string name="extensionStoresScreen.emptyLabel">आपने अभी तक कोई एक्सटेंशन स्टोर नहीं जोड़ा है</string>
     <string name="supportUsScreen.contactForDetailsMessage">वैकल्पिक विकल्पों या किसी भी संबंधित प्रश्न के लिए, हमारे Discord सर्वर से जुड़ें।</string>
-    <string name="ext_nsfw_warning">इसमें NSFW (18+) सामग्री हो सकती है</string>
-    <string name="ext_nsfw_short">18+</string>
-    <string name="parental_controls_info">यह अनौपचारिक या संभावित रूप से फ़्लैग किए गए एक्सटेंशन को ऐप के भीतर NSFW (18+) सामग्री के सामने आने से नहीं रोकता है।</string>
-    <string name="pref_show_nsfw_source">स्रोतों और एक्सटेंशन सूचियों में दिखाएं</string>
-    <string name="pref_category_nsfw_content">NSFW (18+) स्रोत</string>
-    <string name="ext_info_age_rating">आयु रेटिंग</string>
     <string name="pref_hardware_bitmap_threshold">कस्टम हार्डवेयर बिटमैप सीमा</string>
     <string name="pref_hardware_bitmap_threshold_default">डिफ़ॉल्ट (%d)</string>
     <string name="pref_hardware_bitmap_threshold_summary">यदि रीडर खाली छवि लोड करता है तो सीमा धीरे-धीरे कम करें।\nचयनित: %s</string>

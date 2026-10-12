@@ -697,12 +697,6 @@
     <string name="pref_flash_style_black">Čiernou</string>
     <string name="pref_flash_style_white">Bielou</string>
     <string name="pref_flash_style_white_black">Čiernou aj Bielou</string>
-    <string name="pref_show_nsfw_source">Zobraziť v zoznamoch zdrojov a rozšírení</string>
-    <string name="pref_category_nsfw_content">NSFW (18+) zdroje</string>
-    <string name="parental_controls_info">Toto nastavenie avšak nebráni tomu, aby sa v aplikácii objavil neoficiálny alebo potenciálne nesprávne označený obsah NSFW (18+).</string>
-    <string name="ext_info_age_rating">Vekové hodnotenie</string>
-    <string name="ext_nsfw_short">18+</string>
-    <string name="ext_nsfw_warning">Zdroje z tohto rozšírenia môžu obsahovať obsah pre dospleých (18+)</string>
     <string name="pref_hardware_bitmap_threshold">Vlastný prah pre hardvérové bitmapy</string>
     <string name="pref_hardware_bitmap_threshold_default">Predvolený (%d)</string>
     <string name="pref_hardware_bitmap_threshold_summary">Ak čítacie rozhranie načítava prázdne obrázky, postupne znížte prah.\nVybrané: %s</string>

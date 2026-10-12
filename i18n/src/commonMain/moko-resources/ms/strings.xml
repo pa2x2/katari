@@ -877,12 +877,6 @@
     <string name="donationCampaign.dismiss">Tutup</string>
     <string name="donationCampaign.contactPlatform">Discord</string>
     <string name="supportUsScreen.contactPlatform">Discord</string>
-    <string name="ext_nsfw_warning">Sumber daripada sambungan ini mungkin mengandungi kandungan 18+ tahun keatas</string>
-    <string name="ext_nsfw_short">18+</string>
-    <string name="parental_controls_info">Ini tidak menghalang sambungan yang tidak rasmi atau yang tidak ditandakan dengan betul daripada menayangkan kandungan 18+ tahun keatas dalam aplikasi.</string>
-    <string name="pref_category_nsfw_content">Sumber NSFW (18+)</string>
-    <string name="pref_show_nsfw_source">Tunjuk dalam senarai sumber dan sambungan</string>
-    <string name="ext_info_age_rating">Peringkat umur</string>
     <string name="pref_hardware_bitmap_threshold">Ambang bitmap perkakasan tersuai</string>
     <string name="pref_hardware_bitmap_threshold_default">Lalai (%d)</string>
     <string name="pref_hardware_bitmap_threshold_summary">Sekiranya pembaca memuatkan imej kosong kurangkan ambang secara bertokok.\nDipilih: %s</string>

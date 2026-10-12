@@ -262,7 +262,4 @@
     <string name="backup_restore_missing_trackers">መከታተያዎች አልገቡም:</string>
     <string name="backup_restore_missing_sources">የጠፋ ምንጮች:</string>
     <string name="invalid_backup_file_missing_manga">ምትኬ ማንኛውንም ማንጋ አልያዘም ፡፡</string>
-    <string name="parental_controls_info">ይህ በይፋዊ ወይም በስህተት የተጠቆሙ ሊሆኑ የሚችሉ ቅጥያዎች በመተግበሪያው ውስጥ 18+ ይዘትን እንዳያሳዩ አያግደውም ፡፡</string>
-    <string name="ext_nsfw_warning">18+ ይዘትን ይያዝ</string>
-    <string name="ext_nsfw_short">18+</string>
 </resources>

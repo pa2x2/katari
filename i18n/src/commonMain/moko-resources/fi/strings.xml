@@ -626,10 +626,4 @@
     <string name="pref_tracking_summary">Yksisuuntainen synkronointi, paranneltu synkronointi</string>
     <string name="pref_library_summary">Kategoriat, globaalit päivitykset, luvun pyyhkäisy</string>
     <string name="action_bar_up_description">Navigoi ylös</string>
-    <string name="ext_nsfw_warning">Tämän laajennoksen lähteet voivat sisältää NSFW (18+) -sisältöä</string>
-    <string name="ext_nsfw_short">18+</string>
-    <string name="parental_controls_info">Tämä ei estä epävirallisia tai mahdollisesti väärin merkittyjä laajennuksia näyttämästä NSFW 18+ sisältöä sovelluksessa.</string>
-    <string name="pref_category_nsfw_content">NSFW (18+) lähteet</string>
-    <string name="pref_show_nsfw_source">Näytä lähde- ja lisäosaluettelossa</string>
-    <string name="ext_info_age_rating">Ikäluokitus</string>
 </resources>

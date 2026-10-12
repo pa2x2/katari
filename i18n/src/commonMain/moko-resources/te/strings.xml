@@ -189,6 +189,4 @@
     <string name="portrait">చిత్తరువు</string>
     <string name="landscape">ప్రకృతి దృశ్యం</string>
     <string name="paused">నిలిపివేయబడింది</string>
-    <string name="pref_category_nsfw_content">పెద్దలకు మాత్రమే (+18) మూలాలు</string>
-    <string name="pref_show_nsfw_source">మూలాలు మరియు పొడిగింపుల జాబితాలలో చూపుము</string>
 </resources>

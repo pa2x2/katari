@@ -269,10 +269,4 @@
     <string name="ext_uninstall">သင့်ဖုန်းမှ ဖယ်ရှားရန်</string>
     <string name="theme_monet">Dynamic</string>
     <string name="label_auto">အလိုအလျောက်</string>
-    <string name="parental_controls_info">ဒါက တရားမဝင်တဲ့ ဒါမှမဟုတ် မှားယွင်းစွာ သတ်မှတ်ထားတဲ့ တိုးချဲ့ပလပ်အင်တွေက အက်ပ်ထဲမှာ လိင်ပိုင်းဆိုင်ရာ အကြောင်းအရာတွေ ပေါ်လာတာကို တားမရနိုင်ပါဘူး။</string>
-    <string name="pref_category_nsfw_content">NSFW (18+) ရင်းမြစ်များ</string>
-    <string name="pref_show_nsfw_source">ရင်းမြစ်များနှင့် တိုးချဲ့မှုများ စာရင်းတွင် ပြသရန်</string>
-    <string name="ext_info_age_rating">အသက်အကန့်အသတ်</string>
-    <string name="ext_nsfw_short">၁၈+</string>
-    <string name="ext_nsfw_warning">ဤတွင် လိင်ပိုင်းဆိုင်ရာ အကြောင်းအရာများ (၁၈+နှစ်အထက်သာ သင့်လျော်သော) ပါဝင်နိုင်ပါသည်။</string>
 </resources>

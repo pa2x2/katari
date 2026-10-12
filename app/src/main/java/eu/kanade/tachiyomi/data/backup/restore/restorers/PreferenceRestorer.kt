@@ -2,6 +2,7 @@ package eu.kanade.tachiyomi.data.backup.restore.restorers
 
 import android.content.Context
 import android.util.Log
+import eu.kanade.domain.source.service.LegacyNsfwSourceConversion
 import eu.kanade.tachiyomi.data.backup.create.BackupCreateJob
 import eu.kanade.tachiyomi.data.backup.models.BackupCategory
 import eu.kanade.tachiyomi.data.backup.models.BackupPreference
@@ -80,6 +81,7 @@ class PreferenceRestorer(
         )
         legacyUpdateCategoriesConversion.convert(profileId, store)
         LegacyExcludedSourcesConversion.convert(store)
+        LegacyNsfwSourceConversion.convert(store)
 
         if (includeGlobalRestore) {
             restorePreferences(

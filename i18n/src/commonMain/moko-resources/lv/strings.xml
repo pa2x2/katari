@@ -702,10 +702,4 @@
     <string name="pref_relative_format">Relatīviās laika stampas</string>
     <string name="pref_relative_format_summary">\"%1$s\", nevis \"%2$s\"</string>
     <string name="exclude_scanlators">Izslēgt skanlatorus</string>
-    <string name="ext_nsfw_short">18+</string>
-    <string name="ext_info_age_rating">Vecuma grupa</string>
-    <string name="ext_nsfw_warning">Šī paplašinājuma avoti var saturēt NSFW (18+) saturu</string>
-    <string name="pref_category_nsfw_content">NSFW (18+) avoti</string>
-    <string name="pref_show_nsfw_source">Rādīt avotos un paplašinājumu sarakstos</string>
-    <string name="parental_controls_info">Šis neliedz neoficiāliem vai, iespējams, nepareizi atzīmētiem paplašinājumiem parādīties NSFW (18+) saturu lietotnē.</string>
 </resources>

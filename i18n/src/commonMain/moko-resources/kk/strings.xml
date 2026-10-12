@@ -662,10 +662,4 @@
     <string name="unlock_app_title">%s шешу</string>
     <string name="action_filter_interval_custom">Өзгермелі жаңарту жиілігі</string>
     <string name="label_upcoming">Келешек</string>
-    <string name="pref_category_nsfw_content">NSFW (18+) дереккөздері</string>
-    <string name="pref_show_nsfw_source">Дереккөздер мен кеңейтулер тізімінде көрсету</string>
-    <string name="parental_controls_info">Бұл қолданбадағы NSFW (18+) мазмұнын көрсетуге бейресми немесе ықтимал қате белгіленген кеңейтулерге кедергі жасамайды.</string>
-    <string name="ext_info_age_rating">Жас рейтингі</string>
-    <string name="ext_nsfw_short">18+</string>
-    <string name="ext_nsfw_warning">Бұл кеңейту дереккөзінде NSFW (18+) мазмұны болуы мүмкін</string>
 </resources>

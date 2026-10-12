@@ -794,12 +794,6 @@
     <string name="artist">Artysta</string>
     <string name="author">Autor</string>
     <string name="downloading_with_progress">Pobieranie... (%d%%)</string>
-    <string name="ext_nsfw_warning">Źródła z tej wtyczki mogą zawierać treści NSFW (18+)</string>
-    <string name="ext_nsfw_short">18+</string>
-    <string name="parental_controls_info">Nie zapobiega to nieoficjalnym lub potencjalnie niepoprawnie oflagowanym rozszerzeniom przed pokazywaniem zwartości NSFW(18+) w aplikacji.</string>
-    <string name="pref_category_nsfw_content">NFSW Materiały 18+</string>
-    <string name="pref_show_nsfw_source">Pokazuj na liście źródeł i rozszerzeń</string>
-    <string name="ext_info_age_rating">Oznaczenie wiekowe</string>
     <string name="pref_hardware_bitmap_threshold_default">Domyślne (%d)</string>
     <string name="pref_hardware_bitmap_threshold_summary">Jeżeli czytnik załaduje pusty obraz, stopniowo zmniejszaj zakres graniczny.\nWybrany: %s</string>
     <string name="pref_hardware_bitmap_threshold">Niestandardowy zakres graniczny bitmapy dla urządzenia</string>

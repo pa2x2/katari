@@ -806,12 +806,6 @@
     <string name="migrationConfigScreen.selectAllLabel">Seletziona totu</string>
     <string name="migrationConfigScreen.selectEnabledLabel">Seletziona fontes abilitadas</string>
     <string name="migrationConfigScreen.continueButtonText">Sighi</string>
-    <string name="ext_nsfw_warning">Sas fontes de custa estensione diant pòdere cuntènnere cuntenutos NSFW (18+)</string>
-    <string name="ext_nsfw_short">18+</string>
-    <string name="parental_controls_info">Custu no impedit a estensiones no ufitziales o potentzialmente non curretas de ammustrare cuntenutos NSFW (18+) in s\'aplicatzione.</string>
-    <string name="pref_category_nsfw_content">Cuntenutu NSFW (18+)</string>
-    <string name="pref_show_nsfw_source">Ammustra in sa lista de sas fontes e de sas estensiones</string>
-    <string name="ext_info_age_rating">Classificatzione pro edade</string>
     <string name="pref_hardware_bitmap_threshold_default">Predefinidu (%d)</string>
     <string name="pref_hardware_bitmap_threshold_summary">Si su leghidore càrrigat un\'immàgine bianca, mìnima de pagu a pagu su lìmite.\nSeletzionadu: %s</string>
     <string name="pref_hardware_bitmap_threshold">Mannària màssima pro sa decodìfica hardware (bitmap) de sas immàgines</string>

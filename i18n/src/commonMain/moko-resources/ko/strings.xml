@@ -751,6 +751,10 @@
     <string name="pref_security">보안</string>
     <string name="pref_firebase">분석 및 크래시 로그</string>
     <string name="firebase_summary">크래시 로그와 분석 데이터를 전송하면, 문제를 식별 및 해결하며, 성능을 개선하고, 향후 업데이트를 사용자 요구사항에 더 적합하게 만들 수 있습니다</string>
+    <string name="pref_category_extensions">확장 앱</string>
+    <string name="pref_allowed_content_warnings">허용 컨텐츠 등급</string>
+    <string name="pref_apply_content_warnings_to_installed">설치된 확장 앱에도 적용</string>
+    <string name="pref_apply_content_warnings_to_installed_summary">비활성화하면 이미 설치한 확장 앱은 등급과 무관하게 컨텐츠를 불러오고 업데이트합니다</string>
     <string name="pref_behavior">행동</string>
     <string name="pref_mark_duplicate_read_chapter_read">중복된 읽은 챕터를 읽은 것으로 표시</string>
     <string name="pref_mark_duplicate_read_chapter_read_existing">챕터를 읽은 후</string>
@@ -877,12 +881,6 @@
     <string name="downloading_with_progress">다운로드 중… (%d%%)</string>
     <string name="pref_filter_update_categories_details">제외된 카테고리 업데이트는 포함되는 카테고리가 있어도 표시되지 않습니다.</string>
     <string name="pref_filter_upcoming_categories_details">제외 범주에 속한 작품은 포함 범주에 속해 있더라도 표시되지 않습니다.</string>
-    <string name="ext_nsfw_warning">이 확장 앱의 소스는 성인 컨텐츠가 포함될 수 있습니다</string>
-    <string name="ext_nsfw_short">성인 컨텐츠</string>
-    <string name="pref_category_nsfw_content">성인 콘텐츠 소스</string>
-    <string name="pref_show_nsfw_source">소스 및 확장 기능 목록에 보이기</string>
-    <string name="parental_controls_info">이 옵션을 끄더라도 비공식 또는 분류가 잘못된 확장 기능으로 인하여 성인 컨텐츠가 표시될 수 있습니다.</string>
-    <string name="ext_info_age_rating">연령 등급</string>
     <string name="pref_hardware_bitmap_threshold">커스텀 하드웨어 비트맵 임계값</string>
     <string name="pref_hardware_bitmap_threshold_default">기본값 (%d)</string>
     <string name="pref_hardware_bitmap_threshold_summary">리더가 빈 이미지를 불러올 경우 임계값을 점진적으로 줄입니다.\n선택: %s</string>

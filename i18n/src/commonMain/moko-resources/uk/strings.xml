@@ -795,12 +795,6 @@
     <string name="action_webview_close_tab">Закрити вкладку</string>
     <string name="theme_catppuccin">Catppuccin</string>
     <string name="pref_display_images_description">Рендерити зображення в описах манґи</string>
-    <string name="ext_nsfw_warning">Джерела з цього розширення можуть містити контент NSFW (18+)</string>
-    <string name="ext_nsfw_short">18+</string>
-    <string name="parental_controls_info">Це не заважає неофіційним або потенційно невірним розширенням розміщувати вміст NSFW (18+) у застосунку.</string>
-    <string name="pref_show_nsfw_source">Показувати в списку джерел та розширень</string>
-    <string name="pref_category_nsfw_content">NSFW (18+) джерела</string>
-    <string name="ext_info_age_rating">Вікові обмеження</string>
     <string name="pref_always_decode_long_strip_with_ssiv_2">Використовуйте застарілий декодер для читалки довгих сторінок</string>
     <string name="pref_always_decode_long_strip_with_ssiv_summary">Впливає на продуктивність. Увімкніть, якщо зменшення порогу растрового зображення не розв\'язує проблему з порожніми зображеннями</string>
     <string name="pref_hardware_bitmap_threshold">Користувацький поріг апаратного растра</string>

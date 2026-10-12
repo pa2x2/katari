@@ -10,7 +10,7 @@ import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.PreferenceStore
 
 /**
- * Preference-store fixtures shared by the profile-scoped migration tests in this package.
+ * Preference-store fixtures shared by tests of profile-scoped preference migrations and their restore conversions.
  */
 internal class MigrationTestProfileStore(
     private val stores: Map<Long, PreferenceStore>,

@@ -15,4 +15,5 @@ val migrations: List<Migration>
         MangaReaderSystemBarsMigration(),
         LibraryUpdateRulesMigration(),
         SourceUpdatePausesMigration(),
+        ContentWarningMigration(),
     )

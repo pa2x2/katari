@@ -859,12 +859,6 @@
     <string name="donationCampaign.paragraph3">عمومًا، سأستمر في صيانة ميهون بواسطتي أنا والمتطوعين، وسيظل مفتوح المصدر.</string>
     <string name="donationCampaign.contactPlatform">ديسكورد</string>
     <string name="donationCampaign.dismiss">إغلاق</string>
-    <string name="ext_nsfw_warning">بعض المصادر من هذا الامتداد قد تحتوى على محتوى للبالغين (+18)</string>
-    <string name="ext_nsfw_short">محتوى غير لائق</string>
-    <string name="parental_controls_info">هذا لا يمنع الإضافات غير الرسمية أو التي تم وضع علامة عليها بشكل غير صحيح من إظهار محتوى غير لائق داخل التطبيق.</string>
-    <string name="pref_category_nsfw_content">محتوى +18</string>
-    <string name="pref_show_nsfw_source">اعرض في قوائم المصادر والامتدادات</string>
-    <string name="ext_info_age_rating">التقييم العمري</string>
     <string name="pref_always_decode_long_strip_with_ssiv_2">استخدم فك التشفير القديم لقارئ الشرائط الطويلة</string>
     <string name="pref_hardware_bitmap_threshold_summary">ادا تم تحميل صورة فارغة قلل الحد تدريجيا لحل المشكلة.\nتم تحديد:%s</string>
     <string name="pref_hardware_bitmap_threshold">عتبة خريطة الصورة النقطية للأجهزة المخصصة</string>

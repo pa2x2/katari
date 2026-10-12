@@ -2,6 +2,7 @@ package eu.kanade.tachiyomi.extension.store
 
 import eu.kanade.tachiyomi.extension.model.Extension
 import io.kotest.matchers.shouldBe
+import mihon.domain.extension.model.ContentWarning
 import mihon.domain.extension.model.ExtensionStore
 import org.junit.jupiter.api.Test
 
@@ -25,7 +26,7 @@ class SigningKeyStoreMatchingTest {
         versionCode = versionCode,
         libVersion = 1.4,
         lang = "en",
-        isNsfw = false,
+        contentWarning = ContentWarning.SAFE,
         pkgFactory = null,
         sources = emptyList(),
         icon = null,
@@ -40,7 +41,7 @@ class SigningKeyStoreMatchingTest {
         versionCode = versionCode,
         libVersion = 1.4,
         lang = "en",
-        isNsfw = false,
+        contentWarning = ContentWarning.SAFE,
         sources = emptyList(),
         apkUrl = "https://${store.name}.invalid/example.apk",
         iconUrl = "",

@@ -26,6 +26,7 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import logcat.LogPriority
+import mihon.domain.extension.model.ContentWarning
 import mihon.domain.extension.model.ExtensionStore
 import mihon.domain.extension.repository.ExtensionStoreRepository
 import tachiyomi.core.common.util.system.logcat
@@ -51,9 +52,6 @@ internal object ExtensionLoader {
     private val preferences: SourcePreferences by injectLazy()
     private val trustExtension: TrustExtension by injectLazy()
     private val extensionStoreRepository: ExtensionStoreRepository by injectLazy()
-    private val loadNsfwSource by lazy {
-        preferences.showNsfwSource.get()
-    }
 
     private const val EXTENSION_FEATURE = "tachiyomi.extension"
     private const val METADATA_SOURCE_CLASS = "tachiyomi.extension.class"
@@ -139,7 +137,7 @@ internal object ExtensionLoader {
      * @param context The application context.
      */
     suspend fun loadExtensions(context: Context): List<LoadResult> = withContext(Dispatchers.IO) {
-        val stores = extensionStoreRepository.getAllAsFlow().first()
+        val policy = loadPolicy(stores = extensionStoreRepository.getAllAsFlow().first())
         val pkgManager = context.packageManager
 
         val installedPkgs = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -184,7 +182,7 @@ internal object ExtensionLoader {
 
         // Load each extension concurrently and wait for completion
         extPkgs
-            .map { async { loadExtension(context, it, stores) } }
+            .map { async { loadExtension(context, it, policy) } }
             .awaitAll()
     }
 
@@ -198,8 +196,14 @@ internal object ExtensionLoader {
             logcat(LogPriority.ERROR) { "Extension package is not found ($pkgName)" }
             return LoadResult.Error
         }
-        return loadExtension(context, extensionPackage, extensionStoreRepository.getAll())
+        return loadExtension(context, extensionPackage, loadPolicy(stores = extensionStoreRepository.getAll()))
     }
+
+    private fun loadPolicy(stores: List<ExtensionStore>) = LoadPolicy(
+        stores = stores,
+        enabledContentWarnings = preferences.enabledContentWarnings.get(),
+        applyContentWarningsToInstalled = preferences.applyContentWarningsToInstalled.get(),
+    )
 
     fun getExtensionPackageInfoFromPkgName(context: Context, pkgName: String): PackageInfo? {
         return getExtensionInfoFromPkgName(context, pkgName)?.packageInfo
@@ -246,7 +250,7 @@ internal object ExtensionLoader {
     private fun loadExtension(
         context: Context,
         extensionInfo: ExtensionInfo,
-        stores: List<ExtensionStore>,
+        policy: LoadPolicy,
     ): LoadResult {
         val pkgManager = context.packageManager
         val pkgInfo = extensionInfo.packageInfo
@@ -282,7 +286,7 @@ internal object ExtensionLoader {
         if (signatures.isNullOrEmpty()) {
             logcat(LogPriority.WARN) { "Package $pkgName isn't signed" }
             return LoadResult.Error
-        } else if (!trustExtension.isTrusted(pkgInfo, signatures, stores)) {
+        } else if (!trustExtension.isTrusted(pkgInfo, signatures, policy.stores)) {
             val extension = Extension.Untrusted(
                 name = extName,
                 pkgName = pkgName,
@@ -295,10 +299,19 @@ internal object ExtensionLoader {
             return LoadResult.Untrusted(extension)
         }
 
-        val isNsfw = appInfo.metaData.getInt(METADATA_CONTENT_WARNING) > 0 ||
-            appInfo.metaData.getInt(METADATA_NSFW) == 1
-        if (!loadNsfwSource && isNsfw) {
-            logcat(LogPriority.WARN) { "NSFW extension $pkgName not allowed" }
+        val contentWarning = when {
+            appInfo.metaData.containsKey(METADATA_CONTENT_WARNING) -> {
+                when (appInfo.metaData.getInt(METADATA_CONTENT_WARNING)) {
+                    1 -> ContentWarning.MIXED
+                    2 -> ContentWarning.NSFW
+                    else -> ContentWarning.SAFE
+                }
+            }
+            appInfo.metaData.getInt(METADATA_NSFW) == 1 -> ContentWarning.NSFW
+            else -> ContentWarning.SAFE
+        }
+        if (policy.applyContentWarningsToInstalled && contentWarning !in policy.enabledContentWarnings) {
+            logcat(LogPriority.WARN) { "Extension $pkgName with $contentWarning not allowed" }
             return LoadResult.Error
         }
 
@@ -357,7 +370,7 @@ internal object ExtensionLoader {
             versionCode = versionCode,
             libVersion = libVersion.toDouble(),
             lang = lang,
-            isNsfw = isNsfw,
+            contentWarning = contentWarning,
             pkgFactory = appInfo.metaData.getString(METADATA_SOURCE_FACTORY),
             sources = sources,
             icon = appInfo.loadIcon(pkgManager),
@@ -590,5 +603,14 @@ internal object ExtensionLoader {
     private data class ExtensionInfo(
         val packageInfo: PackageInfo,
         val isShared: Boolean,
+    )
+
+    /**
+     * What decides whether an extension may load, read once for every extension loaded together.
+     */
+    private data class LoadPolicy(
+        val stores: List<ExtensionStore>,
+        val enabledContentWarnings: Set<ContentWarning>,
+        val applyContentWarningsToInstalled: Boolean,
     )
 }

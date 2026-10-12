@@ -859,12 +859,6 @@
     <string name="donationCampaign.paragraph3">যিকি নহওক, Mihon মই আৰু স্বেচ্ছাসেৱকসকলৰ দ্বাৰা পৰিচালিত হৈ থাকিব, আৰু ই মুক্ত উৎস হৈ থাকিব।</string>
     <string name="donationCampaign.contactPlatform">Discord</string>
     <string name="donationCampaign.dismiss">খাৰিজ কৰক</string>
-    <string name="ext_info_age_rating">বয়স মূল্যায়ন</string>
-    <string name="pref_category_nsfw_content">NSFW (১৮+) উৎস</string>
-    <string name="pref_show_nsfw_source">উৎস আৰু এক্সটেনশ্বন তালিকাত দেখুৱাওক</string>
-    <string name="parental_controls_info">এইটোৱে অনানুষ্ঠানিক বা সম্ভাৱ্যভাৱে ভুল পতাকা লগোৱা এক্সটেনশ্বনসমূহক এপৰ ভিতৰত NSFW (১৮+) বিষয়বস্তু দেখুওৱাত বাধা নিদিয়ে।</string>
-    <string name="ext_nsfw_warning">এই এক্সটেনশ্বনৰ উৎসসমূহত NSFW (১৮+) বিষয়বস্তু থাকিব পাৰে</string>
-    <string name="ext_nsfw_short">১৮+</string>
     <string name="pref_hardware_bitmap_threshold">কাষ্টম হাৰ্ডৱেৰ বিটমেপ থ্ৰেছহ\'ল্ড</string>
     <string name="pref_hardware_bitmap_threshold_summary">যদি পাঠকে খালী ছবি ল\'ড কৰে তেন্তে ক্ৰমে থ্ৰেছহ\'ল্ড হ্ৰাস কৰক।\nনিৰ্বাচিত: %s</string>
     <string name="pref_hardware_bitmap_threshold_default">ডিফল্ট (%d)</string>
