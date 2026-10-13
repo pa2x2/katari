@@ -78,7 +78,9 @@ jobs:
           sudo apt-get install --yes ffmpeg
 
           sdkmanager="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
-          yes | "$sdkmanager" --licenses > /dev/null
+          # Fed from a process substitution rather than a pipe: the runner ignores SIGPIPE, so once sdkmanager stops
+          # reading, `yes` fails with a broken pipe, which pipefail would turn into the step's failure.
+          "$sdkmanager" --licenses < <(yes 2> /dev/null) > /dev/null
           # The image's command-line tools may predate the device profile the showcase emulator is created from. An
           # update installed by the running tools lands beside them, as latest-2.
           "$sdkmanager" --install "cmdline-tools;latest" emulator "$SYSTEM_IMAGE" > /dev/null
