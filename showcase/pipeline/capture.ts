@@ -18,6 +18,7 @@ import { profiles } from "../seed/library-plan.ts";
 import { LIBRARY_UPDATED_AT } from "../seed/showcase-clock.ts";
 import { writeCredits } from "./credits.ts";
 import { attachedSerials, Device } from "./device/adb.ts";
+import { awaitIdle } from "./device/device-idle.ts";
 import { pinShowcaseClock, useRealClock } from "./device/device-clock.ts";
 import { bootShowcaseEmulator, SHOWCASE_SERIAL, shutDown } from "./device/emulator.ts";
 import { installOfflineTranslator, startOfflineTranslator } from "./device/offline-translator.ts";
@@ -71,6 +72,7 @@ try {
   server = await startContentServer(values.served);
   if (!values["reuse-emulator"]) await prepare(device);
   device.shell(`rm -rf ${CAPTURE_DIRECTORY} ${FAILURE_DIRECTORY}`);
+  await timed("waiting for the device to settle", () => awaitIdle(device));
   for (const scene of scenes) await timed(`capturing ${scene}`, () => runScene(device, APP_ID, scene));
   device.pull(`${CAPTURE_DIRECTORY}/.`, out);
   if (scenes.includes("statistics.RecapScenes")) {
@@ -121,6 +123,8 @@ async function prepare(device: Device): Promise<void> {
   await timed("restoring the seed", () => runScene(device, APP_ID, "SeedRestore", { seedUri }));
   // Reading during setup happens at the real time and must stay out of the showcase history.
   writePreferences(device, APP_ID, APP_PREFERENCES, { __APP_STATE_incognito_mode: true });
+  // Text recognition is the slowest work a scene waits for, and the apps just installed keep the system busy for minutes.
+  await timed("waiting for the device to settle", () => awaitIdle(device));
   await timed("readying on-page translation", () => runScene(device, APP_ID, "translation.TranslationSetup"));
   writePreferences(device, APP_ID, APP_PREFERENCES, {
     __APP_STATE_incognito_mode: false,
