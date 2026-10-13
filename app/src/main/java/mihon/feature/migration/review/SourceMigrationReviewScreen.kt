@@ -37,7 +37,7 @@ import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import cafe.adriel.voyager.core.model.rememberScreenModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.components.AppBar
@@ -77,8 +77,8 @@ class SourceMigrationReviewScreen(
         val navigator = LocalNavigator.currentOrThrow
         val context = LocalContext.current
         val lifecycleOwner = LocalLifecycleOwner.current
-        val screenModel = rememberScreenModel { SourceMigrationReviewScreenModel(sessionId) }
-        val state by screenModel.state.collectAsState()
+        val viewModel = viewModel { SourceMigrationReviewViewModel(sessionId) }
+        val state by viewModel.state.collectAsState()
         val session = state.session
         val discoveryActive = session?.stage in DISCOVERY_STAGES
         val preparationActive = session?.stage in PREPARATION_STAGES
@@ -118,7 +118,7 @@ class SourceMigrationReviewScreen(
 
         LaunchedEffect(session?.stage) {
             when (session?.stage) {
-                SourceMigrationSessionStage.DRAFT -> screenModel.startDiscovery()
+                SourceMigrationSessionStage.DRAFT -> viewModel.startDiscovery()
                 SourceMigrationSessionStage.COMPLETED -> navigator.pop()
                 else -> Unit
             }
@@ -151,14 +151,14 @@ class SourceMigrationReviewScreen(
                                     AppBar.Action(
                                         title = stringResource(MR.strings.action_pause),
                                         icon = MaterialSymbols.RoundedFilled.Pause,
-                                        onClick = screenModel::pauseDiscovery,
+                                        onClick = viewModel::pauseDiscovery,
                                     ),
                                 )
                                 SourceMigrationSessionStage.DISCOVERY_PAUSED -> add(
                                     AppBar.Action(
                                         title = stringResource(MR.strings.action_resume),
                                         icon = MaterialSymbols.Rounded.PlayArrow,
-                                        onClick = screenModel::resumeDiscovery,
+                                        onClick = viewModel::resumeDiscovery,
                                     ),
                                 )
                                 SourceMigrationSessionStage.EXECUTION_QUEUED,
@@ -167,14 +167,14 @@ class SourceMigrationReviewScreen(
                                     AppBar.Action(
                                         title = stringResource(MR.strings.action_pause),
                                         icon = MaterialSymbols.RoundedFilled.Pause,
-                                        onClick = screenModel::pauseExecution,
+                                        onClick = viewModel::pauseExecution,
                                     ),
                                 )
                                 SourceMigrationSessionStage.EXECUTION_PAUSED -> add(
                                     AppBar.Action(
                                         title = stringResource(MR.strings.action_resume),
                                         icon = MaterialSymbols.Rounded.PlayArrow,
-                                        onClick = screenModel::resumeExecution,
+                                        onClick = viewModel::resumeExecution,
                                     ),
                                 )
                                 else -> Unit
@@ -186,7 +186,7 @@ class SourceMigrationReviewScreen(
                                 add(
                                     AppBar.OverflowAction(
                                         title = stringResource(MR.strings.sourceMigrationReview_searchUnresolved),
-                                        onClick = screenModel::retryUnresolved,
+                                        onClick = viewModel::retryUnresolved,
                                     ),
                                 )
                             }
@@ -220,7 +220,7 @@ class SourceMigrationReviewScreen(
                             contentDescription = null,
                         )
                     },
-                    onClick = screenModel::startExecution,
+                    onClick = viewModel::startExecution,
                     expanded = lazyListState.shouldExpandFAB(),
                     modifier = Modifier.animateFloatingActionButton(
                         visible = session?.stage == SourceMigrationSessionStage.REVIEW_REQUIRED &&
@@ -237,9 +237,9 @@ class SourceMigrationReviewScreen(
                     state = state,
                     lazyListState = lazyListState,
                     contentPadding = contentPadding,
-                    onFilterChange = screenModel::setFilter,
-                    onIncludedChange = screenModel::setIncluded,
-                    onToggleGroup = screenModel::toggleGroup,
+                    onFilterChange = viewModel::setFilter,
+                    onIncludedChange = viewModel::setIncluded,
+                    onToggleGroup = viewModel::toggleGroup,
                     onTargetClick = { sourceEntryId -> candidateItemId = sourceEntryId },
                     onSourceDetailsClick = { entryId ->
                         navigator.push(EntryScreen(entryId, bypassMerge = true))
@@ -265,7 +265,7 @@ class SourceMigrationReviewScreen(
                 onDismissRequest = { showDiscardDialog = false },
                 onConfirm = {
                     showDiscardDialog = false
-                    screenModel.discardPreparation()
+                    viewModel.discardPreparation()
                 },
             )
         }

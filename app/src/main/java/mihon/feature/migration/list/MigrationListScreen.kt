@@ -8,7 +8,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
-import cafe.adriel.voyager.core.model.rememberScreenModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.util.Screen
@@ -37,16 +37,16 @@ class MigrationListScreen(
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val screenModel = rememberScreenModel {
-            MigrationListScreenModel(subjects, extraSearchQuery, selectedOptions)
+        val viewModel = viewModel {
+            MigrationListViewModel(subjects, extraSearchQuery, selectedOptions)
         }
-        val state by screenModel.state.collectAsState()
+        val state by viewModel.state.collectAsState()
         val context = LocalContext.current
         val scope = rememberCoroutineScope()
 
         LaunchedEffect(matchOverride) {
             val (current, target) = matchOverride ?: return@LaunchedEffect
-            screenModel.useEntryForMigration(
+            viewModel.useEntryForMigration(
                 current = current,
                 target = target,
                 onMissingChapters = {
@@ -56,13 +56,13 @@ class MigrationListScreen(
             matchOverride = null
         }
 
-        LaunchedEffect(screenModel) {
-            screenModel.navigateBackEvent.collect {
+        LaunchedEffect(viewModel) {
+            viewModel.navigateBackEvent.collect {
                 navigator.pop()
             }
         }
-        LaunchedEffect(screenModel) {
-            screenModel.migrationFailureEvent.collect {
+        LaunchedEffect(viewModel) {
+            viewModel.migrationFailureEvent.collect {
                 context.toast(MR.strings.internal_error)
             }
         }
@@ -82,32 +82,32 @@ class MigrationListScreen(
             onSearchManually = { migrationItem ->
                 navigator push MigrateSearchScreen(migrationItem.subject)
             },
-            onSkip = { screenModel.removeEntry(it) },
-            onMigrate = { screenModel.showMigrateDialog(entryId = it, copy = false) },
-            onCopy = { screenModel.showMigrateDialog(entryId = it, copy = true) },
-            openMigrationDialog = screenModel::showMigrateDialog,
+            onSkip = { viewModel.removeEntry(it) },
+            onMigrate = { viewModel.showMigrateDialog(entryId = it, copy = false) },
+            onCopy = { viewModel.showMigrateDialog(entryId = it, copy = true) },
+            openMigrationDialog = viewModel::showMigrateDialog,
         )
 
         when (val dialog = state.dialog) {
-            is MigrationListScreenModel.Dialog.Migrate -> {
+            is MigrationListViewModel.Dialog.Migrate -> {
                 MigrationEntryDialog(
-                    onDismissRequest = screenModel::dismissDialog,
+                    onDismissRequest = viewModel::dismissDialog,
                     copy = dialog.copy,
                     totalCount = dialog.totalCount,
                     skippedCount = dialog.skippedCount,
                     mergeImpact = dialog.mergeImpact,
-                    onMigrate = { screenModel.confirmMigration(dialog) },
+                    onMigrate = { viewModel.confirmMigration(dialog) },
                 )
             }
-            is MigrationListScreenModel.Dialog.Progress -> {
+            is MigrationListViewModel.Dialog.Progress -> {
                 MigrationProgressDialog(
                     progress = dialog.progress,
-                    exitMigration = screenModel::cancelMigrate,
+                    exitMigration = viewModel::cancelMigrate,
                 )
             }
-            MigrationListScreenModel.Dialog.Exit -> {
+            MigrationListViewModel.Dialog.Exit -> {
                 MigrationExitDialog(
-                    onDismissRequest = screenModel::dismissDialog,
+                    onDismissRequest = viewModel::dismissDialog,
                     exitMigration = navigator::pop,
                 )
             }
@@ -115,7 +115,7 @@ class MigrationListScreen(
         }
 
         BackHandler(true) {
-            screenModel.showExitDialog()
+            viewModel.showExitDialog()
         }
     }
 }

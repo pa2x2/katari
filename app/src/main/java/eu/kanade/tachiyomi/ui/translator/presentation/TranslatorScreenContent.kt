@@ -126,7 +126,7 @@ internal fun TranslatorScreenContent(
             TranslationLanguagePairSelector(
                 source = sourceLanguageLabel(state),
                 target = targetLanguageLabel(state),
-                // The swap control stays enabled; TranslatorScreenModel answers every click either
+                // The swap control stays enabled; TranslatorViewModel answers every click either
                 // by exchanging the languages or with a SwapUnavailable event.
                 canSwap = true,
                 onChooseSource = { onShowPicker(TranslatorPicker.SourceLanguage) },

@@ -1,8 +1,8 @@
 package mihon.feature.migration.list
 
 import androidx.annotation.FloatRange
-import cafe.adriel.voyager.core.model.StateScreenModel
-import cafe.adriel.voyager.core.model.screenModelScope
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import eu.kanade.domain.source.service.SourcePreferences
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
@@ -12,6 +12,8 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
@@ -49,7 +51,7 @@ import tachiyomi.domain.source.service.SourceManager
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
-class MigrationListScreenModel(
+class MigrationListViewModel(
     subjects: Collection<EntryMigrationSubject>,
     extraSearchQuery: String?,
     private val selectedOptions: Set<EntryMigrationOption>,
@@ -64,7 +66,10 @@ class MigrationListScreenModel(
         Injekt.get(),
         entryRepository,
     ),
-) : StateScreenModel<MigrationListScreenModel.State>(State()) {
+) : ViewModel() {
+
+    val state: StateFlow<MigrationListViewModel.State>
+        field = MutableStateFlow<MigrationListViewModel.State>(State())
 
     private val smartSearchEngine = SmartSourceSearchEngine(extraSearchQuery, catalogueFeature)
 
@@ -84,7 +89,7 @@ class MigrationListScreenModel(
     private var mergeContextsByEntryId: Map<Long, MigrationMergeContext> = emptyMap()
 
     init {
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             subjects.firstOrNull()?.profileId?.let { profileId ->
                 mergeContextsByEntryId = mergeContextResolver.resolve(profileId)
             }
@@ -101,7 +106,7 @@ class MigrationListScreenModel(
                             latestChapter = chapterInfo.latestChapter,
                             source = sourceManager.getDisplayInfo(entry.source).name,
                             mergeContext = mergeContextsByEntryId[entry.id],
-                            parentContext = screenModelScope.coroutineContext,
+                            parentContext = viewModelScope.coroutineContext,
                         )
                     }
                 }
@@ -109,7 +114,7 @@ class MigrationListScreenModel(
                 .filterNotNull()
             when (migration.prepareSelection(entries.map(MigratingEntry::entry))) {
                 is EntryMigrationSelectionResult.Ready -> {
-                    mutableState.update { it.copy(items = entries) }
+                    state.update { it.copy(items = entries) }
                     runMigrations(entries)
                 }
                 is EntryMigrationSelectionResult.Rejected -> {
@@ -260,7 +265,7 @@ class MigrationListScreenModel(
     }
 
     private suspend fun updateMigrationProgress() {
-        mutableState.update { state ->
+        state.update { state ->
             state.copy(
                 finishedCount = items.count { it.searchResult.value != SearchResult.Searching },
                 migrationComplete = migrationComplete(),
@@ -277,7 +282,7 @@ class MigrationListScreenModel(
     fun useEntryForMigration(current: Long, target: Long, onMissingChapters: () -> Unit) {
         val migratingEntry = items.find { it.entry.id == current } ?: return
         migratingEntry.searchResult.value = SearchResult.Searching
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             val result = migratingEntry.migrationScope.async {
                 val entry = entryRepository.getEntryById(target, migratingEntry.entry.profileId) ?: return@async null
                 try {
@@ -326,8 +331,8 @@ class MigrationListScreenModel(
     }
 
     private fun migrateEntries(replace: Boolean) {
-        migrateJob = screenModelScope.launchIO {
-            mutableState.update { it.copy(dialog = Dialog.Progress(0f)) }
+        migrateJob = viewModelScope.launchIO {
+            state.update { it.copy(dialog = Dialog.Progress(0f)) }
             val items = items
             var failed = false
             try {
@@ -349,7 +354,7 @@ class MigrationListScreenModel(
                         failed = true
                         logcat(LogPriority.WARN, throwable = e)
                     }
-                    mutableState.update {
+                    state.update {
                         it.copy(dialog = Dialog.Progress(((index + 1).toFloat() / items.size).coerceAtMost(1f)))
                     }
                 }
@@ -359,7 +364,7 @@ class MigrationListScreenModel(
                 }
                 navigateBack()
             } finally {
-                mutableState.update { it.copy(dialog = null) }
+                state.update { it.copy(dialog = null) }
                 migrateJob = null
             }
         }
@@ -375,7 +380,7 @@ class MigrationListScreenModel(
     }
 
     private fun migrateNow(entryId: Long, replace: Boolean) {
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             val entry = items.find { it.entry.id == entryId } ?: return@launchIO
             val target = (entry.searchResult.value as? SearchResult.Success)?.entry ?: return@launchIO
             if (executeMigration(entry.entry, target, replace, selectedOptions)) {
@@ -405,7 +410,7 @@ class MigrationListScreenModel(
     }
 
     fun removeEntry(entryId: Long) {
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             val item = items.find { it.entry.id == entryId } ?: return@launchIO
             removeEntry(item)
             item.migrationScope.cancel()
@@ -414,11 +419,11 @@ class MigrationListScreenModel(
     }
 
     private fun removeEntry(item: MigratingEntry) {
-        mutableState.update { it.copy(items = items.toMutableList().apply { remove(item) }) }
+        state.update { it.copy(items = items.toMutableList().apply { remove(item) }) }
     }
 
-    override fun onDispose() {
-        super.onDispose()
+    override fun onCleared() {
+        super.onCleared()
         items.forEach {
             it.migrationScope.cancel()
         }
@@ -438,7 +443,7 @@ class MigrationListScreenModel(
         selectedItems: List<MigratingEntry>,
         entryId: Long? = null,
     ) {
-        mutableState.update { state ->
+        state.update { state ->
             state.copy(
                 dialog = Dialog.Migrate(
                     copy = copy,
@@ -462,13 +467,13 @@ class MigrationListScreenModel(
     }
 
     fun showExitDialog() {
-        mutableState.update {
+        state.update {
             it.copy(dialog = Dialog.Exit)
         }
     }
 
     fun dismissDialog() {
-        mutableState.update { it.copy(dialog = null) }
+        state.update { it.copy(dialog = null) }
     }
 
     data class ChapterInfo(

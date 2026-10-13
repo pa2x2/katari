@@ -1,5 +1,7 @@
 package eu.kanade.tachiyomi.ui.translator.session
 
+import androidx.lifecycle.ViewModelStore
+import eu.kanade.tachiyomi.ui.base.viewmodel.createViewModel
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -56,18 +58,21 @@ import org.junit.jupiter.api.Test
 import tachiyomi.core.common.preference.InMemoryPreferenceStore
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class TranslatorScreenModelTest {
+class TranslatorViewModelTest {
     @Test
     fun `live translation waits 200 milliseconds and only translates the latest text`() = runTest {
         val dispatcher = StandardTestDispatcher(testScheduler)
         Dispatchers.setMain(dispatcher)
         val feature = FakeTranslationFeature()
-        val model = TranslatorScreenModel(
-            feature = feature,
-            hostActions = FakeHostActions(),
-            ttsFeature = FakeTtsFeature,
-            languagePreferences = TranslatorLanguagePreferences(InMemoryPreferenceStore()),
-        )
+        val viewModels = ViewModelStore()
+        val model = viewModels.createViewModel {
+            TranslatorViewModel(
+                feature = feature,
+                hostActions = FakeHostActions(),
+                ttsFeature = FakeTtsFeature,
+                languagePreferences = TranslatorLanguagePreferences(InMemoryPreferenceStore()),
+            )
+        }
 
         try {
             runCurrent()
@@ -82,7 +87,7 @@ class TranslatorScreenModelTest {
             runCurrent()
             feature.requests.map { it.text } shouldBe listOf("hello")
         } finally {
-            model.onDispose()
+            viewModels.clear()
             Dispatchers.resetMain()
         }
     }
@@ -93,12 +98,16 @@ class TranslatorScreenModelTest {
         Dispatchers.setMain(dispatcher)
         val hostActions = FakeHostActions()
         val languagePreferences = TranslatorLanguagePreferences(InMemoryPreferenceStore())
-        fun open() = TranslatorScreenModel(
-            feature = FakeTranslationFeature(),
-            hostActions = hostActions,
-            ttsFeature = FakeTtsFeature,
-            languagePreferences = languagePreferences,
-        )
+        // One screen at a time: clearing the store closes the tab before the next one opens.
+        val viewModels = ViewModelStore()
+        fun open() = viewModels.createViewModel {
+            TranslatorViewModel(
+                feature = FakeTranslationFeature(),
+                hostActions = hostActions,
+                ttsFeature = FakeTtsFeature,
+                languagePreferences = languagePreferences,
+            )
+        }
 
         try {
             val first = open()
@@ -106,7 +115,7 @@ class TranslatorScreenModelTest {
             first.selectSource(FRENCH)
             first.selectTarget(ENGLISH)
             advanceUntilIdle()
-            first.onDispose()
+            viewModels.clear()
 
             val reopened = open()
             advanceUntilIdle()
@@ -119,14 +128,14 @@ class TranslatorScreenModelTest {
             reopened.selectAutomaticSource()
             reopened.selectDefaultTarget()
             advanceUntilIdle()
-            reopened.onDispose()
+            viewModels.clear()
 
             val followingDefaults = open()
             with(followingDefaults.state.value) {
                 sourceLanguage shouldBe TranslationSourceLanguageSelection.Automatic
                 targetLanguage shouldBe TranslationTargetLanguageSelection.Default
             }
-            followingDefaults.onDispose()
+            viewModels.clear()
         } finally {
             Dispatchers.resetMain()
         }

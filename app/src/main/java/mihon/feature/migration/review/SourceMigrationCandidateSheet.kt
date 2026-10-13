@@ -24,7 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import cafe.adriel.voyager.core.model.rememberScreenModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -54,20 +54,20 @@ internal fun Screen.SourceMigrationCandidateSheet(
     onDismissRequest: () -> Unit,
 ) {
     val navigator = LocalNavigator.currentOrThrow
-    val screenModel = rememberScreenModel(tag = item.sourceEntryId.toString()) {
-        SourceMigrationCandidateSheetModel(sessionId, item.sourceEntryId)
+    val viewModel = viewModel(key = item.sourceEntryId.toString()) {
+        SourceMigrationCandidateSheetViewModel(sessionId, item.sourceEntryId)
     }
-    val state by screenModel.state.collectAsState()
+    val state by viewModel.state.collectAsState()
 
     LaunchedEffect(Unit) {
-        screenModel.events.collect {
+        viewModel.events.collect {
             onDismissRequest()
         }
     }
 
     LaunchedEffect(state.detailsEntryId) {
         state.detailsEntryId?.let { entryId ->
-            screenModel.consumeDetailsEntry()
+            viewModel.consumeDetailsEntry()
             navigator.push(EntryScreen(entryId, fromSource = true))
         }
     }
@@ -107,8 +107,8 @@ internal fun Screen.SourceMigrationCandidateSheet(
                                 selected = candidate.candidate.targetSourceId == item.targetSourceId &&
                                     candidate.candidate.targetUrl == item.targetUrl,
                                 enabled = !state.isWorking,
-                                onClick = { screenModel.select(candidate.candidate) },
-                                onDetailsClick = { screenModel.openDetails(candidate.candidate) },
+                                onClick = { viewModel.select(candidate.candidate) },
+                                onDetailsClick = { viewModel.openDetails(candidate.candidate) },
                             )
                             if (index < state.candidates.lastIndex) HorizontalDivider()
                         }
@@ -126,7 +126,7 @@ internal fun Screen.SourceMigrationCandidateSheet(
             HorizontalDivider()
             if (item.selectedTargetEntryId != null) {
                 TextButton(
-                    onClick = screenModel::clearSelection,
+                    onClick = viewModel::clearSelection,
                     enabled = !state.isWorking,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -136,7 +136,7 @@ internal fun Screen.SourceMigrationCandidateSheet(
                 }
             }
             Button(
-                onClick = screenModel::searchAgain,
+                onClick = viewModel::searchAgain,
                 enabled = !state.isWorking,
                 modifier = Modifier
                     .fillMaxWidth()

@@ -1,8 +1,10 @@
 package mihon.feature.migration.review
 
-import cafe.adriel.voyager.core.model.StateScreenModel
-import cafe.adriel.voyager.core.model.screenModelScope
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
@@ -17,17 +19,20 @@ import tachiyomi.domain.source.service.SourceManager
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
-internal class SourceMigrationReviewScreenModel(
+internal class SourceMigrationReviewViewModel(
     private val sessionId: SourceMigrationSessionId,
     private val sessionStore: SourceMigrationSessionStore = Injekt.get(),
     private val workScheduler: SourceMigrationWorkScheduler = Injekt.get(),
     private val sourceManager: SourceManager = Injekt.get(),
-) : StateScreenModel<SourceMigrationReviewState>(SourceMigrationReviewState()) {
+) : ViewModel() {
+
+    val state: StateFlow<SourceMigrationReviewState>
+        field = MutableStateFlow<SourceMigrationReviewState>(SourceMigrationReviewState())
 
     init {
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             sessionStore.observe(sessionId).collectLatest { session ->
-                mutableState.update { state ->
+                state.update { state ->
                     val discoveryActive = session?.stage in DISCOVERY_STAGES
                     val filter = when {
                         discoveryActive && state.filter !in DISCOVERY_FILTERS -> SourceMigrationReviewFilter.ALL
@@ -47,11 +52,11 @@ internal class SourceMigrationReviewScreenModel(
     }
 
     fun setFilter(filter: SourceMigrationReviewFilter) {
-        mutableState.update { it.copy(filter = filter) }
+        state.update { it.copy(filter = filter) }
     }
 
     fun setIncluded(sourceEntryId: Long, included: Boolean) {
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             sessionStore.setItemIncluded(sessionId, sourceEntryId, included)
         }
     }
@@ -59,7 +64,7 @@ internal class SourceMigrationReviewScreenModel(
     fun toggleGroup(groupId: Long) {
         val group = state.value.groups.firstOrNull { it.id == groupId } ?: return
         val included = !group.allReadyMappingsIncluded
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             group.readyMappings.forEach { mapping ->
                 sessionStore.setItemIncluded(sessionId, mapping.item.sourceEntryId, included)
             }
@@ -68,33 +73,33 @@ internal class SourceMigrationReviewScreenModel(
 
     fun startExecution() {
         if (state.value.actionInProgress) return
-        mutableState.update { it.copy(actionInProgress = true) }
-        screenModelScope.launchIO {
+        state.update { it.copy(actionInProgress = true) }
+        viewModelScope.launchIO {
             workScheduler.startExecution(sessionId)
-            mutableState.update { it.copy(actionInProgress = false) }
+            state.update { it.copy(actionInProgress = false) }
         }
     }
 
     fun pauseDiscovery() {
-        screenModelScope.launchIO { workScheduler.pauseDiscovery(sessionId) }
+        viewModelScope.launchIO { workScheduler.pauseDiscovery(sessionId) }
     }
 
     fun startDiscovery() {
-        screenModelScope.launchIO { workScheduler.startDiscovery(sessionId) }
+        viewModelScope.launchIO { workScheduler.startDiscovery(sessionId) }
     }
 
     fun resumeDiscovery() {
-        screenModelScope.launchIO { workScheduler.startDiscovery(sessionId) }
+        viewModelScope.launchIO { workScheduler.startDiscovery(sessionId) }
     }
 
     fun discardPreparation() {
         if (state.value.actionInProgress) return
-        mutableState.update { it.copy(actionInProgress = true) }
-        screenModelScope.launchIO {
+        state.update { it.copy(actionInProgress = true) }
+        viewModelScope.launchIO {
             val discarded = withContext(NonCancellable) {
                 runCatching { workScheduler.discardPreparation(sessionId) }.getOrDefault(false)
             }
-            mutableState.update {
+            state.update {
                 it.copy(
                     actionInProgress = false,
                     discardCompleted = discarded,
@@ -105,22 +110,22 @@ internal class SourceMigrationReviewScreenModel(
 
     fun retryUnresolved() {
         if (state.value.actionInProgress || state.value.unresolvedCount == 0) return
-        mutableState.update { it.copy(actionInProgress = true) }
-        screenModelScope.launchIO {
+        state.update { it.copy(actionInProgress = true) }
+        viewModelScope.launchIO {
             workScheduler.restartUnresolvedDiscovery(
                 sessionId = sessionId,
                 depth = SourceMigrationDiscoveryDepth.BROAD,
             )
-            mutableState.update { it.copy(actionInProgress = false) }
+            state.update { it.copy(actionInProgress = false) }
         }
     }
 
     fun pauseExecution() {
-        screenModelScope.launchIO { workScheduler.pauseExecution(sessionId) }
+        viewModelScope.launchIO { workScheduler.pauseExecution(sessionId) }
     }
 
     fun resumeExecution() {
-        screenModelScope.launchIO { workScheduler.startExecution(sessionId) }
+        viewModelScope.launchIO { workScheduler.startExecution(sessionId) }
     }
 
     private fun SourceMigrationSession.toReviewGroups(): List<SourceMigrationReviewGroup> {

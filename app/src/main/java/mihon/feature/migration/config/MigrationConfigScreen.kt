@@ -32,9 +32,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEachIndexed
-import cafe.adriel.voyager.core.model.StateScreenModel
-import cafe.adriel.voyager.core.model.rememberScreenModel
-import cafe.adriel.voyager.core.model.screenModelScope
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.domain.source.service.SourcePreferences
@@ -44,6 +44,8 @@ import eu.kanade.presentation.components.AppBarActions
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.ui.browse.migration.search.MigrateSearchScreen
 import eu.kanade.tachiyomi.util.system.LocaleHelper
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import mihon.entry.interactions.catalogue.EntryCatalogueFeature
 import mihon.entry.interactions.migration.EntryMigrationOption
@@ -96,8 +98,8 @@ class MigrationConfigScreen private constructor(
         val navigator = LocalNavigator.currentOrThrow
 
         val isSourceSession = sessionGroups != null && originSourceId != null
-        val screenModel = rememberScreenModel {
-            ScreenModel(
+        val viewModel = viewModel {
+            Model(
                 requiredEntryTypes = sessionGroups.orEmpty()
                     .flatMap(SourceMigrationSessionGroupDraft::members)
                     .filter { entry -> sessionGroups.orEmpty().any { entry.id in it.selectedEntryIds } }
@@ -106,7 +108,7 @@ class MigrationConfigScreen private constructor(
                 persistSourceSelection = !isSourceSession,
             )
         }
-        val state by screenModel.state.collectAsState()
+        val state by viewModel.state.collectAsState()
 
         LaunchedEffect(state.createdSessionId) {
             state.createdSessionId?.let { sessionId ->
@@ -127,7 +129,7 @@ class MigrationConfigScreen private constructor(
                 if (openSheet) {
                     migrationSheetOpen = true
                 } else {
-                    screenModel.startSession(
+                    viewModel.startSession(
                         groups = requireNotNull(sessionGroups),
                         originSourceId = requireNotNull(originSourceId),
                         selectedOptions = selectedOptions,
@@ -174,20 +176,20 @@ class MigrationConfigScreen private constructor(
                                 AppBar.Action(
                                     title = stringResource(MR.strings.migrationConfigScreen_selectAllLabel),
                                     icon = MaterialSymbols.Rounded.SelectAll,
-                                    onClick = { screenModel.toggleSelection(ScreenModel.SelectionConfig.All) },
+                                    onClick = { viewModel.toggleSelection(Model.SelectionConfig.All) },
                                 ),
                                 AppBar.Action(
                                     title = stringResource(MR.strings.migrationConfigScreen_selectNoneLabel),
                                     icon = MaterialSymbols.Rounded.Deselect,
-                                    onClick = { screenModel.toggleSelection(ScreenModel.SelectionConfig.None) },
+                                    onClick = { viewModel.toggleSelection(Model.SelectionConfig.None) },
                                 ),
                                 AppBar.OverflowAction(
                                     title = stringResource(MR.strings.migrationConfigScreen_selectEnabledLabel),
-                                    onClick = { screenModel.toggleSelection(ScreenModel.SelectionConfig.Enabled) },
+                                    onClick = { viewModel.toggleSelection(Model.SelectionConfig.Enabled) },
                                 ),
                                 AppBar.OverflowAction(
                                     title = stringResource(MR.strings.migrationConfigScreen_selectPinnedLabel),
-                                    onClick = { screenModel.toggleSelection(ScreenModel.SelectionConfig.Pinned) },
+                                    onClick = { viewModel.toggleSelection(Model.SelectionConfig.Pinned) },
                                 ),
                             ),
                         )
@@ -202,7 +204,7 @@ class MigrationConfigScreen private constructor(
                     },
                     onClick = {
                         if (state.selectedSourceIds.isNotEmpty()) {
-                            screenModel.saveSources()
+                            viewModel.saveSources()
                             continueMigration(openSheet = true, extraSearchQuery = null)
                         }
                     },
@@ -214,7 +216,7 @@ class MigrationConfigScreen private constructor(
                 val fromIndex = selectedSources.indexOfFirst { it.id == from.key }
                 val toIndex = selectedSources.indexOfFirst { it.id == to.key }
                 if (fromIndex == -1 || toIndex == -1) return@rememberReorderableLazyListState
-                screenModel.orderSource(fromIndex, toIndex)
+                viewModel.orderSource(fromIndex, toIndex)
             }
 
             FastScrollLazyColumn(
@@ -254,7 +256,7 @@ class MigrationConfigScreen private constructor(
                             dragEnabled = selectedSourceList && sources.size > 1,
                             state = reorderableState,
                             key = { if (selectedSourceList) it.id else "available-${it.id}" },
-                            onClick = { screenModel.toggleSelection(item.id) },
+                            onClick = { viewModel.toggleSelection(item.id) },
                         )
                     }
                 }
@@ -263,7 +265,7 @@ class MigrationConfigScreen private constructor(
 
         if (migrationSheetOpen) {
             MigrationConfigScreenSheet(
-                preferences = screenModel.sourcePreferences,
+                preferences = viewModel.sourcePreferences,
                 showSearchOptions = !isSourceSession,
                 showInitialAdvancedSearchOption = isSourceSession,
                 onDismissRequest = { migrationSheetOpen = false },
@@ -370,7 +372,7 @@ class MigrationConfigScreen private constructor(
         }
     }
 
-    private class ScreenModel(
+    private class Model(
         private val requiredEntryTypes: Set<eu.kanade.tachiyomi.source.entry.EntryType>,
         private val excludedSourceId: Long?,
         private val persistSourceSelection: Boolean,
@@ -378,7 +380,10 @@ class MigrationConfigScreen private constructor(
         private val sourceManager: SourceManager = Injekt.get(),
         private val catalogueFeature: EntryCatalogueFeature = Injekt.get(),
         private val sessionStore: SourceMigrationSessionStore = Injekt.get(),
-    ) : StateScreenModel<ScreenModel.State>(State()) {
+    ) : ViewModel() {
+
+        val state: StateFlow<Model.State>
+            field = MutableStateFlow<Model.State>(State())
 
         private val sourcesComparator = { includedSources: List<Long> ->
             compareBy<MigrationSource>(
@@ -389,14 +394,14 @@ class MigrationConfigScreen private constructor(
         }
 
         init {
-            screenModelScope.launchIO {
+            viewModelScope.launchIO {
                 initSources()
-                mutableState.update { it.copy(isLoading = false) }
+                state.update { it.copy(isLoading = false) }
             }
         }
 
         private fun updateSources(action: (List<MigrationSource>) -> List<MigrationSource>) {
-            mutableState.update { state ->
+            state.update { state ->
                 val updatedSources = action(state.sources)
                 val includedSources = updatedSources.mapNotNull { if (!it.isSelected) null else it.id }
                 state.copy(sources = updatedSources.sortedWith(sourcesComparator(includedSources)))
@@ -437,7 +442,7 @@ class MigrationConfigScreen private constructor(
                 }
                 .toList()
 
-            mutableState.update { state ->
+            state.update { state ->
                 state.copy(sources = sources.sortedWith(sourcesComparator(includedSources)))
             }
         }
@@ -496,8 +501,8 @@ class MigrationConfigScreen private constructor(
             val profileId = groups.first().members.first().profileId
             val targetSourceIds = state.value.selectedSourceIds
             if (targetSourceIds.isEmpty()) return
-            mutableState.update { it.copy(isStarting = true) }
-            screenModelScope.launchIO {
+            state.update { it.copy(isStarting = true) }
+            viewModelScope.launchIO {
                 val sessionId = sessionStore.create(
                     SourceMigrationSessionDraft(
                         profileId = profileId,
@@ -508,7 +513,7 @@ class MigrationConfigScreen private constructor(
                         initialDiscoveryDepth = initialDiscoveryDepth,
                     ),
                 )
-                mutableState.update { it.copy(createdSessionId = sessionId) }
+                state.update { it.copy(createdSessionId = sessionId) }
             }
         }
 

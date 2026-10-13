@@ -1,7 +1,7 @@
 package eu.kanade.tachiyomi.ui.translator.session
 
-import cafe.adriel.voyager.core.model.ScreenModel
-import cafe.adriel.voyager.core.model.screenModelScope
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -37,17 +37,17 @@ import mihon.tts.ui.playback.ShortFormSpeechRequest
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
-internal class TranslatorScreenModel(
+internal class TranslatorViewModel(
     initialText: String = "",
     feature: TranslationFeature = Injekt.get(),
     private val hostActions: TranslationHostActions = Injekt.get(),
     ttsFeature: TtsFeature = Injekt.get(),
     private val languagePreferences: TranslatorLanguagePreferences = Injekt.get(),
-) : ScreenModel {
+) : ViewModel() {
     private val coordinator = TranslationSessionHostCoordinator(
         feature = feature,
         hostActions = hostActions,
-        scope = screenModelScope,
+        scope = viewModelScope,
         executionMode = TranslationSessionExecutionMode.FollowProviderPolicy,
         selectionSettleDelayMillis = TRANSLATION_DEBOUNCE_MILLIS,
     )
@@ -68,7 +68,7 @@ internal class TranslatorScreenModel(
     val controller = coordinator.controller
     private val speechController = ShortFormSpeechController<TranslationResultSpeechTarget>(
         feature = ttsFeature,
-        scope = screenModelScope,
+        scope = viewModelScope,
         onFailure = { eventChannel.trySend(TranslatorEvent.SpeechFailed) },
     )
     init {
@@ -194,14 +194,14 @@ internal class TranslatorScreenModel(
         ),
     )
 
-    override fun onDispose() {
+    override fun onCleared() {
         speechController.close()
         coordinator.close()
         eventChannel.close()
     }
 
     private fun observeEnvironment() {
-        screenModelScope.launch {
+        viewModelScope.launch {
             coordinator.engineInspection.collect { inspection ->
                 mutableState.update {
                     it.copy(
@@ -213,12 +213,12 @@ internal class TranslatorScreenModel(
                 if (inspection.selectionResolved) loadActiveEngineAndSubmit()
             }
         }
-        screenModelScope.launch {
+        viewModelScope.launch {
             coordinator.languageSupport.collect { support ->
                 mutableState.update { it.copy(languageSupport = support) }
             }
         }
-        screenModelScope.launch {
+        viewModelScope.launch {
             coordinator.recentLanguages.collect { recents ->
                 mutableState.update { it.copy(recentLanguages = recents) }
             }
@@ -226,7 +226,7 @@ internal class TranslatorScreenModel(
     }
 
     private fun observeSession() {
-        screenModelScope.launch {
+        viewModelScope.launch {
             controller.state.collect { session ->
                 mutableState.update { it.copy(session = session) }
                 session.displayedSessionResult()?.let {
@@ -237,7 +237,7 @@ internal class TranslatorScreenModel(
     }
 
     private fun observeSpeech() {
-        screenModelScope.launch {
+        viewModelScope.launch {
             speechController.state.collect { speech ->
                 mutableState.update {
                     it.copy(

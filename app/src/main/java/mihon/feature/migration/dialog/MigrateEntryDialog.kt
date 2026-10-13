@@ -18,11 +18,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.util.fastForEach
-import cafe.adriel.voyager.core.model.StateScreenModel
-import cafe.adriel.voyager.core.model.rememberScreenModel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.core.screen.Screen
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.presentation.entry.entryTypePresentation
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import mihon.entry.interactions.migration.EntryMigrationExecuteIntent
 import mihon.entry.interactions.migration.EntryMigrationExecutionResult
@@ -57,11 +59,11 @@ internal fun Screen.MigrateEntryDialog(
 ) {
     val scope = rememberCoroutineScope()
 
-    val screenModel = rememberScreenModel { MigrateEntryDialogScreenModel() }
+    val viewModel = viewModel { MigrateEntryDialogViewModel() }
     LaunchedEffect(current, target) {
-        screenModel.init(current, target)
+        viewModel.init(current, target)
     }
-    val state by screenModel.state.collectAsState()
+    val state by viewModel.state.collectAsState()
 
     if (state.isMigrated) return
 
@@ -93,7 +95,7 @@ internal fun Screen.MigrateEntryDialog(
                             },
                         ),
                         checked = option in state.selectedOptions,
-                        onCheckedChange = { screenModel.toggleSelection(option) },
+                        onCheckedChange = { viewModel.toggleSelection(option) },
                     )
                 }
                 if (state.hasFailure) {
@@ -122,7 +124,7 @@ internal fun Screen.MigrateEntryDialog(
                 TextButton(
                     onClick = {
                         scope.launchIO {
-                            if (screenModel.migrateEntry(EntryMigrationMode.COPY)) {
+                            if (viewModel.migrateEntry(EntryMigrationMode.COPY)) {
                                 withUIContext { onComplete() }
                             }
                         }
@@ -134,7 +136,7 @@ internal fun Screen.MigrateEntryDialog(
                 TextButton(
                     onClick = {
                         scope.launchIO {
-                            if (screenModel.migrateEntry(EntryMigrationMode.REPLACE)) {
+                            if (viewModel.migrateEntry(EntryMigrationMode.REPLACE)) {
                                 withUIContext { onComplete() }
                             }
                         }
@@ -148,22 +150,26 @@ internal fun Screen.MigrateEntryDialog(
     )
 }
 
-internal class MigrateEntryDialogScreenModel(
+internal class MigrateEntryDialogViewModel(
     private val sourcePreference: SourcePreferences = Injekt.get(),
     private val migration: EntryMigrationFeature = Injekt.get(),
-) : StateScreenModel<MigrateEntryDialogScreenModel.State>(State()) {
+) : ViewModel() {
+
+    val state: StateFlow<MigrateEntryDialogViewModel.State>
+        field = MutableStateFlow<MigrateEntryDialogViewModel.State>(State())
+
     private var source: Entry? = null
     private var target: Entry? = null
 
     suspend fun init(current: Entry, target: Entry) {
         source = current
         this.target = target
-        mutableState.update { State(isLoading = true) }
+        state.update { State(isLoading = true) }
         when (val result = migration.prepare(EntryMigrationPrepareIntent(current, target))) {
             is EntryMigrationPreparationResult.Ready -> {
                 val defaults = sourcePreference.migrationFlags.get().toEntryMigrationOptions()
                 val selectedOptions = defaults.intersect(result.availableOptions)
-                mutableState.update {
+                state.update {
                     State(
                         reference = result.reference,
                         availableOptions = result.availableOptions.toList(),
@@ -175,12 +181,12 @@ internal class MigrateEntryDialogScreenModel(
             }
             is EntryMigrationPreparationResult.OperationalFailure,
             is EntryMigrationPreparationResult.Rejected,
-            -> mutableState.update { State(isLoading = false, hasFailure = true) }
+            -> state.update { State(isLoading = false, hasFailure = true) }
         }
     }
 
     fun toggleSelection(option: EntryMigrationOption) {
-        mutableState.update {
+        state.update {
             val selectedOptions = it.selectedOptions.toMutableSet()
                 .apply { if (contains(option)) remove(option) else add(option) }
                 .toSet()
@@ -189,21 +195,21 @@ internal class MigrateEntryDialogScreenModel(
     }
 
     suspend fun migrateEntry(mode: EntryMigrationMode): Boolean {
-        val state = state.value
-        val reference = state.reference ?: return false
-        sourcePreference.migrationFlags.set((state.selectedOptions + state.preservedDefaults).toMigrationFlags())
-        mutableState.update { it.copy(isMigrating = true, hasFailure = false) }
+        val current = state.value
+        val reference = current.reference ?: return false
+        sourcePreference.migrationFlags.set((current.selectedOptions + current.preservedDefaults).toMigrationFlags())
+        state.update { it.copy(isMigrating = true, hasFailure = false) }
         return when (
             migration.execute(
                 EntryMigrationExecuteIntent(
                     reference = reference,
                     mode = mode,
-                    selectedOptions = state.selectedOptions,
+                    selectedOptions = current.selectedOptions,
                 ),
             )
         ) {
             is EntryMigrationExecutionResult.Applied -> {
-                mutableState.update { it.copy(isMigrating = false, isMigrated = true) }
+                state.update { it.copy(isMigrating = false, isMigrated = true) }
                 true
             }
             EntryMigrationExecutionResult.Conflict -> {
@@ -212,14 +218,14 @@ internal class MigrateEntryDialogScreenModel(
                 if (source != null && target != null) {
                     init(source, target)
                 } else {
-                    mutableState.update { it.copy(isMigrating = false, hasFailure = true) }
+                    state.update { it.copy(isMigrating = false, hasFailure = true) }
                 }
                 false
             }
             is EntryMigrationExecutionResult.OperationalFailure,
             is EntryMigrationExecutionResult.Rejected,
             -> {
-                mutableState.update { it.copy(isMigrating = false, hasFailure = true) }
+                state.update { it.copy(isMigrating = false, hasFailure = true) }
                 false
             }
         }

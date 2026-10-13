@@ -1,8 +1,10 @@
 package mihon.feature.migration.review
 
-import cafe.adriel.voyager.core.model.StateScreenModel
-import cafe.adriel.voyager.core.model.screenModelScope
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
@@ -16,7 +18,7 @@ import tachiyomi.domain.source.service.SourceManager
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
-internal class SourceMigrationCandidateSheetModel(
+internal class SourceMigrationCandidateSheetViewModel(
     private val sessionId: SourceMigrationSessionId,
     private val sourceEntryId: Long,
     private val sessionStore: SourceMigrationSessionStore = Injekt.get(),
@@ -24,15 +26,18 @@ internal class SourceMigrationCandidateSheetModel(
     private val candidateEntryResolver: SourceMigrationCandidateEntryResolver = Injekt.get(),
     private val workScheduler: SourceMigrationWorkScheduler = Injekt.get(),
     private val sourceManager: SourceManager = Injekt.get(),
-) : StateScreenModel<SourceMigrationCandidateSheetState>(SourceMigrationCandidateSheetState()) {
+) : ViewModel() {
+
+    val state: StateFlow<SourceMigrationCandidateSheetState>
+        field = MutableStateFlow<SourceMigrationCandidateSheetState>(SourceMigrationCandidateSheetState())
 
     private val eventFlow = MutableSharedFlow<SourceMigrationCandidateSheetEvent>(extraBufferCapacity = 1)
     val events = eventFlow.asSharedFlow()
 
     init {
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             sessionStore.observeCandidates(sessionId, sourceEntryId).collectLatest { candidates ->
-                mutableState.update { state ->
+                state.update { state ->
                     state.copy(
                         isLoaded = true,
                         candidates = candidates.map { candidate ->
@@ -49,11 +54,11 @@ internal class SourceMigrationCandidateSheetModel(
 
     fun select(candidate: SourceMigrationCandidate) {
         if (state.value.isWorking) return
-        mutableState.update { it.copy(isWorking = true, failed = false) }
-        screenModelScope.launchIO {
+        state.update { it.copy(isWorking = true, failed = false) }
+        viewModelScope.launchIO {
             val result = targetSelector.select(sessionId, sourceEntryId, candidate)
             val selected = result == SourceMigrationTargetSelectionResult.Selected
-            mutableState.update {
+            state.update {
                 it.copy(
                     isWorking = false,
                     failed = !selected,
@@ -65,11 +70,11 @@ internal class SourceMigrationCandidateSheetModel(
 
     fun clearSelection() {
         if (state.value.isWorking) return
-        mutableState.update { it.copy(isWorking = true, failed = false) }
-        screenModelScope.launchIO {
+        state.update { it.copy(isWorking = true, failed = false) }
+        viewModelScope.launchIO {
             val result = targetSelector.clear(sessionId, sourceEntryId)
             val cleared = result == SourceMigrationTargetSelectionResult.Cleared
-            mutableState.update {
+            state.update {
                 it.copy(
                     isWorking = false,
                     failed = !cleared,
@@ -81,14 +86,14 @@ internal class SourceMigrationCandidateSheetModel(
 
     fun openDetails(candidate: SourceMigrationCandidate) {
         if (state.value.isWorking) return
-        mutableState.update { it.copy(isWorking = true, failed = false) }
-        screenModelScope.launchIO {
+        state.update { it.copy(isWorking = true, failed = false) }
+        viewModelScope.launchIO {
             val session = sessionStore.get(sessionId)
             val entryId = session
                 ?.let { candidateEntryResolver.resolve(it, sourceEntryId, candidate) }
                 ?.target
                 ?.id
-            mutableState.update {
+            state.update {
                 it.copy(
                     isWorking = false,
                     detailsEntryId = entryId,
@@ -99,19 +104,19 @@ internal class SourceMigrationCandidateSheetModel(
     }
 
     fun consumeDetailsEntry() {
-        mutableState.update { it.copy(detailsEntryId = null) }
+        state.update { it.copy(detailsEntryId = null) }
     }
 
     fun searchAgain() {
         if (state.value.isWorking) return
-        mutableState.update { it.copy(isWorking = true, failed = false) }
-        screenModelScope.launchIO {
+        state.update { it.copy(isWorking = true, failed = false) }
+        viewModelScope.launchIO {
             val started = workScheduler.restartItemDiscovery(
                 sessionId = sessionId,
                 sourceEntryId = sourceEntryId,
                 depth = SourceMigrationDiscoveryDepth.BROAD,
             )
-            mutableState.update {
+            state.update {
                 it.copy(
                     isWorking = false,
                     failed = !started,
