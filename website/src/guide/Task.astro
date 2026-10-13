@@ -22,7 +22,7 @@ const { id, title, shot } = Astro.props;
   </h2>
   <div class="body">
     <div class="text"><slot /></div>
-    {shot && <Phone image={shot.image} alt={shot.alt} caption={shot.caption} sizes="(min-width: 44rem) 12rem, 60vw" />}
+    {shot && <Phone image={shot.image} alt={shot.alt} caption={shot.caption} sizes="(min-width: 44rem) 15rem, 60vw" />}
   </div>
 </section>
 
@@ -71,13 +71,13 @@ const { id, title, shot } = Astro.props;
 
   .with-shot .body {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 12rem;
+    grid-template-columns: minmax(0, 1fr) 15rem;
     align-items: start;
-    gap: 2rem;
+    gap: 3rem;
   }
 
   .body :global(.shot) {
-    --shot-width: 12rem;
+    --shot-width: 15rem;
   }
 
   @media (max-width: 44rem) {

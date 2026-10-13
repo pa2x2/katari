@@ -20,7 +20,7 @@ const body = await Astro.slots.render("default");
 const sections = Astro.locals.guideSections;
 ---
 
-<Page title={`${entry.title} — Katari guide`} description={entry.summary}>
+<Page title={`${entry.title} — Katari guide`} description={entry.summary} wide>
   <div class="guide">
     <aside>
       <PageSections sections={sections} />
@@ -62,9 +62,8 @@ const sections = Astro.locals.guideSections;
 <style>
   .guide {
     display: grid;
-    grid-template-columns: 13rem minmax(0, 46rem);
-    justify-content: center;
-    gap: 3.5rem;
+    grid-template-columns: 15rem minmax(0, 1fr);
+    gap: 4rem;
     max-width: var(--page-width);
     margin: 0 auto;
     padding: 3rem var(--gutter) 0;
@@ -139,7 +138,7 @@ const sections = Astro.locals.guideSections;
 
   @media (max-width: 60rem) {
     .guide {
-      grid-template-columns: minmax(0, 46rem);
+      grid-template-columns: minmax(0, 1fr);
       gap: 0;
       padding-top: 1.5rem;
     }

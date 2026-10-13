@@ -29,6 +29,10 @@ body {
   margin: 0;
 }
 
+body.wide {
+  --page-width: 84rem;
+}
+
 a {
   color: var(--clay);
 }
