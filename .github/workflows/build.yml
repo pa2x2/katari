@@ -1,6 +1,9 @@
 name: Build & Test
 on:
   workflow_call:
+    secrets:
+      GRADLE_ENCRYPTION_KEY:
+        required: false
   push:
     branches:
       - upcoming
@@ -21,9 +24,11 @@ permissions:
   contents: read
 
 jobs:
-  build:
-    name: Build & Test App
-    runs-on: 'ubuntu-24.04'
+  # The jobs share nothing but the Gradle cache, so they run side by side: the release build's R8
+  # pass alone takes about as long as the checks and tests together.
+  checks:
+    name: Checks
+    runs-on: 'ubuntu-26.04'
 
     steps:
       - name: Checkout
@@ -33,14 +38,10 @@ jobs:
         if: github.event_name == 'pull_request'
         uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
 
-      - name: Set up JDK
-        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
-        with:
-          java-version-file: .github/.java-version
-          distribution: temurin
-
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+        uses: ./.github/actions/setup-gradle
+        with:
+          cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
 
       - name: Check code format
         run: ./gradlew spotlessCheck
@@ -48,31 +49,57 @@ jobs:
       - name: Verify legacy source ABI
         run: ./gradlew verifyLegacySourceAbi
 
+      - name: Verify SQLDelight migrations
+        run: ./gradlew verifySqlDelightMigration
+
+  tests:
+    name: Tests
+    runs-on: 'ubuntu-26.04'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Gradle
+        uses: ./.github/actions/setup-gradle
+        with:
+          cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+
       - name: Verify Entry Feature architecture and every module's tests
         id: unit_tests
         run: ./gradlew verifyEntryFeatureArchitecture verifyTests
 
-      - name: Verify SQLDelight migrations
-        run: ./gradlew verifySqlDelightMigration
-
       - name: Upload test report
-        if: steps.unit_tests.outcome == 'failure'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: failure() && steps.unit_tests.outcome == 'failure'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: test-report-${{ github.sha }}
           path: '**/build/reports/tests/'
+
+  release:
+    name: Release build
+    runs-on: 'ubuntu-26.04'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Gradle
+        uses: ./.github/actions/setup-gradle
+        with:
+          cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
 
       - name: Build app and verify extension runtime ABI
         run: ./gradlew assembleRelease verifyExtensionRuntimeAbi -Pinclude-telemetry -Penable-updater
 
       - name: Upload APK
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: universal-release-${{ github.sha }}
           path: app/build/outputs/apk/release/app-universal-release.apk
 
       - name: Upload mapping
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: mapping-${{ github.sha }}
           path: app/build/outputs/mapping/release

@@ -56,7 +56,7 @@ fun PreferenceScreen(
             when (preference) {
                 // Create Preference Group
                 is Preference.PreferenceGroup -> {
-                    if (!preference.enabled) return@fastForEachIndexed
+                    if (!preference.visible) return@fastForEachIndexed
                     val showGroupChip = !allItemsProfileSpecific && preference.isFullyProfileSpecific()
 
                     item {
@@ -64,6 +64,7 @@ fun PreferenceScreen(
                             PreferenceGroupHeader(
                                 title = preference.title,
                                 isProfileSpecific = showGroupChip,
+                                highlighted = preference.title == highlightKey,
                             )
                         }
                     }
@@ -98,7 +99,7 @@ private fun List<Preference>.findHighlightedIndex(highlightKey: String): Int {
     return flatMap {
         if (it is Preference.PreferenceGroup) {
             buildList<String?> {
-                add(null) // Header
+                add(it.title) // Header
                 addAll(it.preferenceItems.map { groupItem -> groupItem.title })
                 add(null) // Spacer
             }

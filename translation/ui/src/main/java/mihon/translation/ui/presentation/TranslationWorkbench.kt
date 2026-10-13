@@ -13,10 +13,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material.icons.outlined.ContentCopy
-import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -33,6 +29,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.unit.dp
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Close
+import mihon.icons.materialsymbols.rounded.ContentCopy
+import mihon.icons.materialsymbols.rounded.Share
 import mihon.language.api.tag.LanguageTag
 import mihon.translation.api.engine.TranslationEngineSelection
 import mihon.translation.ui.session.TranslationSessionState
@@ -173,7 +173,7 @@ private fun TranslationSourcePane(
             if (text.isNotEmpty()) {
                 IconButton(onClick = onClear) {
                     Icon(
-                        imageVector = Icons.Outlined.Close,
+                        imageVector = MaterialSymbols.Rounded.Close,
                         contentDescription = stringResource(MR.strings.translator_clear_input),
                     )
                 }
@@ -253,7 +253,7 @@ private fun TranslationOutputPane(
             if (resultText != null && onCopy != null) {
                 IconButton(onClick = { onCopy(resultText) }) {
                     Icon(
-                        imageVector = Icons.Outlined.ContentCopy,
+                        imageVector = MaterialSymbols.Rounded.ContentCopy,
                         contentDescription = stringResource(MR.strings.copy),
                     )
                 }
@@ -261,7 +261,7 @@ private fun TranslationOutputPane(
             if (resultText != null && onShare != null) {
                 IconButton(onClick = { onShare(resultText) }) {
                     Icon(
-                        imageVector = Icons.Outlined.Share,
+                        imageVector = MaterialSymbols.Rounded.Share,
                         contentDescription = stringResource(MR.strings.action_share),
                     )
                 }

@@ -30,6 +30,7 @@ import okio.sink
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.VideoDownloadQualityMode
 import tachiyomi.domain.source.service.SourceManager
+import tachiyomi.domain.source.service.awaitInitialized
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.io.File
@@ -51,6 +52,8 @@ internal class AnimeDownloader(
     private val fileTransferClient = createFileTransferClient(networkHelper.client)
 
     suspend fun download(download: AnimeDownload): AnimeDownloadFailure? {
+        // The restored queue resumes as the process starts, before the sources have loaded
+        sourceManager.awaitInitialized()
         val source = sourceManager.get(download.anime.source)
             ?: return AnimeDownloadFailure(AnimeDownloadFailure.Reason.SOURCE_NOT_FOUND)
 

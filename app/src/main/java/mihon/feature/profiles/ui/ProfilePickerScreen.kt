@@ -23,9 +23,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Lock
-import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -64,6 +61,9 @@ import eu.kanade.tachiyomi.R
 import kotlinx.coroutines.launch
 import mihon.feature.profiles.core.Profile
 import mihon.feature.profiles.core.ProfileManager
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Lock
+import mihon.icons.materialsymbols.rounded.Settings
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import uy.kohesive.injekt.Injekt
@@ -229,7 +229,7 @@ private fun ProfilePickerHeader(
                     .padding(if (compactLayout) 4.dp else 8.dp),
             ) {
                 Icon(
-                    imageVector = Icons.Outlined.Settings,
+                    imageVector = MaterialSymbols.Rounded.Settings,
                     contentDescription = stringResource(MR.strings.profiles_manage_title),
                     tint = MaterialTheme.colorScheme.onSurface,
                 )
@@ -328,7 +328,7 @@ private fun ProfilePickerTile(
                         contentColor = MaterialTheme.colorScheme.onSurface,
                     ) {
                         Icon(
-                            imageVector = Icons.Outlined.Lock,
+                            imageVector = MaterialSymbols.Rounded.Lock,
                             contentDescription = null,
                             modifier = Modifier.padding(6.dp).size(14.dp),
                         )

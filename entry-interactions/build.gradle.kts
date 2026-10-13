@@ -31,7 +31,7 @@ androidComponents {
                 },
             )
             typeModuleDescriptors.from(
-                rootProject.fileTree("entry-interactions") {
+                fileTree(layout.projectDirectory) {
                     include("*/src/main/**/*.entry-type-module")
                     include("*/src/${variant.name}/**/*.entry-type-module")
                 },

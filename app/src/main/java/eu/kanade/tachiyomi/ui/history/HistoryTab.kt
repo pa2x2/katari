@@ -6,12 +6,12 @@ import androidx.compose.animation.graphics.vector.AnimatedImageVector
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
-import cafe.adriel.voyager.core.model.rememberScreenModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -52,7 +52,7 @@ data object HistoryTab : Tab {
         @Composable
         get() {
             val isSelected = LocalTabNavigator.current.current.key == key
-            val image = AnimatedImageVector.animatedVectorResource(R.drawable.anim_history_enter)
+            val image = AnimatedImageVector.animatedVectorResource(R.drawable.animated_history)
             return TabOptions(
                 index = 2u,
                 title = stringResource(MR.strings.history),
@@ -70,80 +70,80 @@ data object HistoryTab : Tab {
         val context = LocalContext.current
         val scope = rememberCoroutineScope()
         val entryContinueFeature = remember { Injekt.get<EntryContinueFeature>() }
-        val screenModel = rememberScreenModel { HistoryScreenModel() }
-        val state by screenModel.state.collectAsState()
-        val dayDurations by screenModel.dayDurations.collectAsState()
+        val viewModel = viewModel { HistoryViewModel() }
+        val state by viewModel.state.collectAsStateWithLifecycle()
+        val dayDurations by viewModel.dayDurations.collectAsStateWithLifecycle()
 
         HistoryScreen(
             state = state,
             dayDurations = dayDurations,
             snackbarHostState = snackbarHostState,
-            onSearchQueryChange = screenModel::updateSearchQuery,
+            onSearchQueryChange = viewModel::updateSearchQuery,
             onClickDay = { date ->
                 navigator.push(HistoryActivityScreen(startLocalDate = date.toString(), endLocalDate = date.toString()))
             },
             onClickCover = { item ->
                 scope.launch {
-                    navigator.push(EntryScreen(screenModel.getVisibleEntryId(item.historyItem.entryId)))
+                    navigator.push(EntryScreen(viewModel.getVisibleEntryId(item.historyItem.entryId)))
                 }
             },
             canResume = { item -> entryContinueFeature.isApplicable(item.historyItem.entryType) },
             onClickResume = { item ->
                 scope.launch {
-                    val entry = screenModel.getEntryById(item.historyItem.entryId) ?: return@launch
+                    val entry = viewModel.getEntryById(item.historyItem.entryId) ?: return@launch
                     entryContinueFeature.continueEntry(context, entry)
                 }
             },
-            onClickDelete = { history -> screenModel.setDialog(HistoryScreenModel.Dialog.Delete(history)) },
-            onClickFavorite = { item -> screenModel.addFavorite(item.historyItem.entryId) },
-            onDialogChange = screenModel::setDialog,
+            onClickDelete = { history -> viewModel.setDialog(HistoryViewModel.Dialog.Delete(history)) },
+            onClickFavorite = { item -> viewModel.addFavorite(item.historyItem.entryId) },
+            onDialogChange = viewModel::setDialog,
         )
 
-        val onDismissRequest = { screenModel.setDialog(null) }
+        val onDismissRequest = { viewModel.setDialog(null) }
         when (val dialog = state.dialog) {
-            is HistoryScreenModel.Dialog.Delete -> {
+            is HistoryViewModel.Dialog.Delete -> {
                 HistoryDeleteDialog(
                     onDismissRequest = onDismissRequest,
-                    onDelete = { all -> screenModel.removeFromHistory(dialog.history, all) },
+                    onDelete = { all -> viewModel.removeFromHistory(dialog.history, all) },
                 )
             }
-            is HistoryScreenModel.Dialog.DeleteAll -> {
+            is HistoryViewModel.Dialog.DeleteAll -> {
                 HistoryDeleteAllDialog(
                     onDismissRequest = onDismissRequest,
-                    onDelete = screenModel::removeAllHistory,
+                    onDelete = viewModel::removeAllHistory,
                 )
             }
-            is HistoryScreenModel.Dialog.DuplicateEntry -> {
+            is HistoryViewModel.Dialog.DuplicateEntry -> {
                 DuplicateEntryDialog(
                     duplicates = dialog.duplicates,
                     onDismissRequest = onDismissRequest,
-                    onConfirm = { screenModel.addFavorite(dialog.entry) },
+                    onConfirm = { viewModel.addFavorite(dialog.entry) },
                     onOpenEntry = {
                         scope.launch {
-                            navigator.push(EntryScreen(screenModel.getVisibleEntryId(it.id)))
+                            navigator.push(EntryScreen(viewModel.getVisibleEntryId(it.id)))
                         }
                     },
-                    onMigrate = { screenModel.showMigrateDialog(dialog.entry, it) },
+                    onMigrate = { viewModel.showMigrateDialog(dialog.entry, it) },
                 )
             }
-            is HistoryScreenModel.Dialog.ChangeCategory -> {
+            is HistoryViewModel.Dialog.ChangeCategory -> {
                 ChangeCategoryDialog(
                     initialSelection = dialog.initialSelection,
                     onDismissRequest = onDismissRequest,
                     onEditCategories = { navigator.push(CategoryScreen()) },
                     onConfirm = { include, _ ->
-                        screenModel.moveEntryToCategoriesAndAddToLibrary(dialog.entry, include)
+                        viewModel.moveEntryToCategoriesAndAddToLibrary(dialog.entry, include)
                     },
                 )
             }
-            is HistoryScreenModel.Dialog.Migrate -> {
+            is HistoryViewModel.Dialog.Migrate -> {
                 MigrateEntryDialog(
                     current = dialog.current,
                     target = dialog.target,
                     // Initiated from the context of [dialog.target] so we show [dialog.current].
                     onClickTitle = {
                         scope.launch {
-                            navigator.push(EntryScreen(screenModel.getVisibleEntryId(dialog.current.id)))
+                            navigator.push(EntryScreen(viewModel.getVisibleEntryId(dialog.current.id)))
                         }
                     },
                     onDismissRequest = onDismissRequest,
@@ -159,11 +159,11 @@ data object HistoryTab : Tab {
         }
 
         LaunchedEffect(Unit) {
-            screenModel.events.collectLatest { e ->
+            viewModel.events.collectLatest { e ->
                 when (e) {
-                    HistoryScreenModel.Event.InternalError ->
+                    HistoryViewModel.Event.InternalError ->
                         snackbarHostState.showSnackbar(context.stringResource(MR.strings.internal_error))
-                    HistoryScreenModel.Event.HistoryCleared ->
+                    HistoryViewModel.Event.HistoryCleared ->
                         snackbarHostState.showSnackbar(context.stringResource(MR.strings.clear_history_completed))
                 }
             }
@@ -171,13 +171,13 @@ data object HistoryTab : Tab {
 
         LaunchedEffect(Unit) {
             resumeLastReadEvent.receiveAsFlow().collectLatest {
-                val history = screenModel.getMostRecentItem()?.historyItem
+                val history = viewModel.getMostRecentItem()?.historyItem
                 if (history == null) {
                     snackbarHostState.showSnackbar(context.stringResource(MR.strings.no_next_item))
                     return@collectLatest
                 }
 
-                val entry = screenModel.getEntryById(history.entryId)
+                val entry = viewModel.getEntryById(history.entryId)
                 if (entry == null) {
                     snackbarHostState.showSnackbar(
                         context.stringResource(history.entryType.entryTypePresentation().noNextChildLabel),

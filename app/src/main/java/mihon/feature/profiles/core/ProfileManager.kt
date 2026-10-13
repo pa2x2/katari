@@ -12,13 +12,13 @@ import eu.kanade.tachiyomi.data.statistics.StatisticsRecapNotificationJob
 import eu.kanade.tachiyomi.extension.ExtensionManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.plus
 import logcat.LogPriority
 import mihon.core.common.CustomPreferences
 import mihon.core.common.HomeScreenTabs
@@ -50,8 +50,9 @@ class ProfileManager(
     private val preferenceOwnership: ProfilePreferenceOwnership,
     private val entryRepository: EntryRepository = Injekt.get(),
     private val destructiveRemoval: EntryDestructiveRemovalFeature = Injekt.get(),
+    appScope: CoroutineScope = Injekt.get(),
 ) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    private val scope = appScope + Dispatchers.Default
     private val switchRequests = MutableStateFlow(profilesPreferences.activeProfileId.get())
     private val lockGate = ProfileLockGate(profileStore)
 
@@ -136,8 +137,7 @@ class ProfileManager(
             isArchived = false,
         )
         profileStore.deleteProfileState(id)
-        val hiddenSourceIds = extensionManager.installedExtensionsFlow.value
-            .filterIsInstance<eu.kanade.tachiyomi.extension.model.Extension.Installed>()
+        val hiddenSourceIds = extensionManager.getLoadedExtensions()
             .flatMap { extension -> extension.sources.map { source -> source.id.toString() } }
             .toSet()
         profileStore.profileStore(id)
@@ -248,7 +248,7 @@ class ProfileManager(
         if (currentVersion < 2) {
             migrateProfileOwnedKeyToNamespaced(
                 sharedPreferences = sharedPreferences,
-                baseKey = "show_nsfw_source",
+                baseKey = SourcePreferences.LEGACY_SHOW_NSFW_SOURCE_KEY,
             )
             migrateProfileOwnedKeyToNamespaced(
                 sharedPreferences = sharedPreferences,
@@ -279,14 +279,13 @@ class ProfileManager(
         if (currentVersion < 11) {
             migrateViewerSettingsToProfileKeys(sharedPreferences)
         }
+        if (currentVersion < 12) {
+            migrateAnilistScoreTypeToProfiles(sharedPreferences)
+        }
 
         migrateKeyBackToGlobal(
             sharedPreferences = sharedPreferences,
             baseKey = "mark_duplicate_read_chapter_read",
-        )
-        migrateKeyBackToGlobal(
-            sharedPreferences = sharedPreferences,
-            baseKey = "anilist_score_type",
         )
         migrateKeyBackToGlobal(
             sharedPreferences = sharedPreferences,
@@ -313,6 +312,21 @@ class ProfileManager(
         ProfilePreferenceMigration(sharedPreferences).copyLegacyPreferenceKeysToProfiles(
             profileIds = profileIds,
             profileKeys = DuplicatePreferences.profileKeys,
+        )
+    }
+
+    // The global value came from whichever profile logged into AniList last; every profile starts from it until its own
+    // login or account refresh reads its account's score format.
+    private suspend fun migrateAnilistScoreTypeToProfiles(
+        sharedPreferences: android.content.SharedPreferences,
+    ) {
+        val profileIds = profileDatabase.getProfiles(includeArchived = true)
+            .map(Profile::id)
+            .ifEmpty { listOf(ProfileConstants.DEFAULT_PROFILE_ID) }
+
+        ProfilePreferenceMigration(sharedPreferences).copyLegacyPreferenceKeysToProfiles(
+            profileIds = profileIds,
+            profileKeys = setOf("anilist_score_type"),
         )
     }
 
@@ -623,6 +637,6 @@ class ProfileManager(
     }
 
     companion object {
-        private const val LEGACY_PROFILE_MIGRATION_VERSION = 11
+        private const val LEGACY_PROFILE_MIGRATION_VERSION = 12
     }
 }

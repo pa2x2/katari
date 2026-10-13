@@ -2,8 +2,6 @@ package mihon.entry.interactions.download
 
 import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
@@ -25,7 +23,7 @@ internal interface EntryDownloadRuntimeCoordinator : EntryDownloadRuntimeFeature
 internal class DefaultEntryDownloadRuntimeFeature(
     evaluation: FeatureGraphEvaluation,
     private val interaction: EntryDownloadInteraction,
-    private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default),
+    private val scope: CoroutineScope,
 ) : EntryDownloadRuntimeCoordinator {
     private val applicableTypes = EntryDownloadRuntimeBehavior.entries
         .map { behavior ->
@@ -102,6 +100,10 @@ internal class DefaultEntryDownloadRuntimeFeature(
         return interaction.getDownloadCount(entry)
     }
 
+    override fun downloadCounts(entries: List<Entry>): Map<Long, Int> {
+        return interaction.getDownloadCounts(entries.filter { isApplicable(it.type) })
+    }
+
     override fun totalDownloadCount(): Int = interaction.getTotalDownloadCount()
 
     override fun isDownloaded(entry: Entry, chapter: EntryChapter, skipCache: Boolean): Boolean {
@@ -128,6 +130,11 @@ internal class DefaultEntryDownloadRuntimeFeature(
             entryTitle = entryTitle,
             sourceId = sourceId,
         )
+    }
+
+    override fun statuses(entry: Entry, chapters: List<EntryChapter>): Map<Long, EntryDownloadStatus>? {
+        if (!isApplicable(entry.type)) return null
+        return interaction.getStatuses(entry, chapters)
     }
 
     override fun events(): Flow<EntryDownloadEvent> = interaction.events()

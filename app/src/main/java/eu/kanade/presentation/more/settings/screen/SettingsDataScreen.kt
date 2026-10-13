@@ -14,8 +14,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
@@ -30,6 +28,7 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -54,9 +53,13 @@ import eu.kanade.tachiyomi.data.export.LibraryExporter.ExportOptions
 import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import logcat.LogPriority
 import mihon.entry.interactions.media.EntryMediaCacheClearResult
 import mihon.entry.interactions.media.EntryMediaCacheFeature
+import mihon.entry.interactions.media.EntryMediaCacheId
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.automirroredrounded.Help
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.storage.displayablePath
 import tachiyomi.core.common.util.lang.launchNonCancellable
@@ -87,7 +90,7 @@ object SettingsDataScreen : SearchableSettings {
         val uriHandler = LocalUriHandler.current
         IconButton(onClick = { uriHandler.openUri(HELP_URL) }) {
             Icon(
-                imageVector = Icons.AutoMirrored.Outlined.HelpOutline,
+                imageVector = MaterialSymbols.AutoMirroredRounded.Help,
                 contentDescription = stringResource(MR.strings.tracking_guide),
             )
         }
@@ -151,10 +154,14 @@ object SettingsDataScreen : SearchableSettings {
             return stringResource(MR.strings.no_location_set)
         }
 
-        return remember(storageDir) {
-            val file = UniFile.fromUri(context, storageDir.toUri())
-            file?.displayablePath
-        } ?: stringResource(MR.strings.invalid_location, storageDir)
+        val invalidLocation = stringResource(MR.strings.invalid_location, storageDir)
+        // Resolving a document provider's path can query the provider
+        val location by produceState("", storageDir, invalidLocation) {
+            value = withContext(Dispatchers.IO) {
+                UniFile.fromUri(context, storageDir.toUri())?.displayablePath
+            } ?: invalidLocation
+        }
+        return location
     }
 
     @Composable
@@ -252,9 +259,14 @@ object SettingsDataScreen : SearchableSettings {
         val context = LocalContext.current
         val scope = rememberCoroutineScope()
         val mediaCacheFeature = remember { Injekt.get<EntryMediaCacheFeature>() }
+        val mediaCacheSettings = remember(mediaCacheFeature) { mediaCacheFeature.settings() }
         var cacheSizeSema by remember { mutableIntStateOf(0) }
-        val mediaCacheSettings = remember(cacheSizeSema) {
-            mediaCacheFeature.settings()
+        val cacheSizes by produceState(emptyMap<EntryMediaCacheId, String>(), mediaCacheSettings, cacheSizeSema) {
+            value = withContext(Dispatchers.IO) {
+                mediaCacheSettings.mapNotNull { setting ->
+                    mediaCacheFeature.readableSize(setting.id)?.let { setting.id to it }
+                }.toMap()
+            }
         }
 
         return Preference.PreferenceGroup(
@@ -278,7 +290,7 @@ object SettingsDataScreen : SearchableSettings {
                     add(
                         Preference.PreferenceItem.TextPreference(
                             title = stringResource(setting.clearLabel),
-                            subtitle = stringResource(MR.strings.used_cache, setting.readableSize),
+                            subtitle = stringResource(MR.strings.used_cache, cacheSizes[setting.id].orEmpty()),
                             onClick = {
                                 scope.launchNonCancellable {
                                     when (val result = mediaCacheFeature.clear(setting.id)) {

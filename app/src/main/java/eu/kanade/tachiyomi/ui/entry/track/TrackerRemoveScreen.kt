@@ -7,8 +7,6 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
@@ -23,14 +21,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
-import cafe.adriel.voyager.core.model.ScreenModel
-import cafe.adriel.voyager.core.model.rememberScreenModel
-import cafe.adriel.voyager.core.model.screenModelScope
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.util.Screen
 import mihon.entry.interactions.tracking.EntryTrackingFeature
 import mihon.entry.interactions.tracking.EntryTrackingServiceDescriptor
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Delete
 import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.i18n.*
@@ -49,11 +49,11 @@ internal data class TrackerRemoveScreen(
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val screenModel = rememberScreenModel { Model(entry, service) }
+        val viewModel = viewModel { Model(entry, service) }
         var removeRemoteTrack by remember { mutableStateOf(false) }
         AlertDialogContent(
             modifier = Modifier.windowInsetsPadding(WindowInsets.systemBars),
-            icon = { Icon(Icons.Outlined.Delete, contentDescription = null) },
+            icon = { Icon(MaterialSymbols.Rounded.Delete, contentDescription = null) },
             title = {
                 Text(
                     text = stringResource(MR.strings.track_delete_title, service.name),
@@ -82,7 +82,7 @@ internal data class TrackerRemoveScreen(
                     }
                     FilledTonalButton(
                         onClick = {
-                            screenModel.remove(removeRemoteTrack)
+                            viewModel.remove(removeRemoteTrack)
                             navigator.pop()
                         },
                         colors = ButtonDefaults.filledTonalButtonColors(
@@ -101,10 +101,10 @@ internal data class TrackerRemoveScreen(
         private val entry: Entry,
         private val service: EntryTrackingServiceDescriptor,
         private val trackingFeature: EntryTrackingFeature = Injekt.get(),
-    ) : ScreenModel {
+    ) : ViewModel() {
 
         fun remove(removeRemote: Boolean) {
-            screenModelScope.launchNonCancellable {
+            viewModelScope.launchNonCancellable {
                 trackingFeature.remove(entry, service.id, removeRemote).logFailure()
             }
         }

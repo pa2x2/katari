@@ -16,9 +16,9 @@ import coil3.imageLoader
 import coil3.request.CachePolicy
 import coil3.request.ImageRequest
 import coil3.size.ScaleDrawable
-import mihon.entry.interactions.manga.R
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.*
+import mihon.icons.materialsymbols.R as MaterialSymbolsR
 
 /**
  * Class used to show BigPictureStyle notifications
@@ -70,7 +70,7 @@ internal class SaveImageNotifier(private val context: Context) {
     private fun showCompleteNotification(uri: Uri, image: Bitmap?) {
         with(notificationBuilder) {
             setContentTitle(context.stringResource(MR.strings.picture_saved))
-            setSmallIcon(R.drawable.ic_photo_24dp)
+            setSmallIcon(MaterialSymbolsR.drawable.rounded_filled_photo)
             image?.let { setStyle(NotificationCompat.BigPictureStyle().bigPicture(it)) }
             setLargeIcon(image)
             setAutoCancel(true)
@@ -81,7 +81,7 @@ internal class SaveImageNotifier(private val context: Context) {
             setContentIntent(openImagePendingActivity(context, uri))
             // Share action
             addAction(
-                R.drawable.ic_share_24dp,
+                MaterialSymbolsR.drawable.rounded_share,
                 context.stringResource(MR.strings.action_share),
                 shareImagePendingActivity(context, uri),
             )

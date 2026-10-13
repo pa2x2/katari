@@ -27,10 +27,6 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -65,6 +61,9 @@ import eu.kanade.tachiyomi.ui.video.player.MIN_SUBTITLE_OFFSET_Y
 import eu.kanade.tachiyomi.ui.video.player.MIN_SUBTITLE_TEXT_SIZE
 import eu.kanade.tachiyomi.ui.video.player.VideoSubtitleAppearance
 import eu.kanade.tachiyomi.ui.video.player.applyAppearance
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.automirroredrounded.KeyboardArrowLeft
+import mihon.icons.materialsymbols.automirroredrounded.KeyboardArrowRight
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -321,9 +320,9 @@ private fun SubtitleEditorDrawerHandle(
         ) {
             Icon(
                 imageVector = if (expanded) {
-                    Icons.AutoMirrored.Filled.KeyboardArrowRight
+                    MaterialSymbols.AutoMirroredRounded.KeyboardArrowRight
                 } else {
-                    Icons.AutoMirrored.Filled.KeyboardArrowLeft
+                    MaterialSymbols.AutoMirroredRounded.KeyboardArrowLeft
                 },
                 contentDescription = stringResource(MR.strings.anime_playback_subtitle_settings),
             )

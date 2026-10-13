@@ -5,6 +5,7 @@ import eu.kanade.presentation.more.stats.data.StatsLibraryInsights
 import eu.kanade.presentation.more.stats.data.StatsProgress
 import tachiyomi.domain.entry.model.EntryStatus
 import tachiyomi.domain.library.model.LibraryItem
+import tachiyomi.domain.library.model.LibraryItemSource
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -56,14 +57,18 @@ internal fun buildLibraryInsights(
                 it.count
             }.thenBy(String.CASE_INSENSITIVE_ORDER) { it.label },
         )
-    val sources = items
-        .groupBy { it.sourceName }
-        .map { (name, sourceItems) -> StatsLabelCount(name, sourceItems.size) }
+    // A cross-source merge counts under each of its sources, so the counts can add up to more than the titles. Sources
+    // that share a name, like one extension's language variants, count it once.
+    val itemsBySource = items
+        .flatMap { item -> item.sources.map(LibraryItemSource::name).distinct().map { name -> name to item } }
+        .groupBy(keySelector = { it.first }, valueTransform = { it.second })
+        .entries
         .sortedWith(
-            compareByDescending<StatsLabelCount> {
-                it.count
-            }.thenBy(String.CASE_INSENSITIVE_ORDER) { it.label },
+            compareByDescending<Map.Entry<String, List<LibraryItem>>> {
+                it.value.size
+            }.thenBy(String.CASE_INSENSITIVE_ORDER) { it.key },
         )
+    val sources = itemsBySource.map { (name, sourceItems) -> StatsLabelCount(name, sourceItems.size) }
     val topSources = sources.take(TOP_SOURCE_COUNT)
     val addedByMonth = IntArray(today.monthValue)
     items.forEach { item ->
@@ -81,7 +86,7 @@ internal fun buildLibraryInsights(
         downloadedCount = items.sumOf { it.downloadCount.toLong() },
         statusCounts = items.groupingBy { it.entry.status }.eachCount(),
         topSources = topSources,
-        otherSourcesTitleCount = sources.drop(TOP_SOURCE_COUNT).sumOf { it.count },
+        otherSourcesTitleCount = itemsBySource.drop(TOP_SOURCE_COUNT).flatMap { it.value }.distinctBy { it.key }.size,
         otherSourceCount = (sources.size - TOP_SOURCE_COUNT).coerceAtLeast(0),
         addedByMonth = addedByMonth.toList(),
         addedYear = today.year,

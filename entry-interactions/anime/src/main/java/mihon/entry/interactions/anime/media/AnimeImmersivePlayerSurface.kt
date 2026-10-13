@@ -10,11 +10,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.VolumeOff
-import androidx.compose.material.icons.automirrored.outlined.VolumeUp
-import androidx.compose.material.icons.filled.Pause
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -52,6 +47,11 @@ import eu.kanade.tachiyomi.ui.video.player.resolveVideoPlayerSeekPosition
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.automirroredrounded.VolumeOff
+import mihon.icons.materialsymbols.automirroredrounded.VolumeUp
+import mihon.icons.materialsymbols.roundedfilled.Pause
+import mihon.icons.materialsymbols.roundedfilled.PlayArrow
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.reader.ReaderMediaLoadOverlay
 import tachiyomi.presentation.core.components.reader.ReaderMediaLoadState
@@ -273,9 +273,9 @@ internal fun AnimeImmersivePlayerSurface(
                     } else {
                         Icon(
                             imageVector = if (playbackSnapshot.isPlaying) {
-                                Icons.Filled.Pause
+                                MaterialSymbols.RoundedFilled.Pause
                             } else {
-                                Icons.Filled.PlayArrow
+                                MaterialSymbols.RoundedFilled.PlayArrow
                             },
                             contentDescription = stringResource(
                                 if (playbackSnapshot.isPlaying) {
@@ -311,9 +311,9 @@ internal fun AnimeImmersivePlayerSurface(
                 ) {
                     Icon(
                         imageVector = if (muted) {
-                            Icons.AutoMirrored.Outlined.VolumeOff
+                            MaterialSymbols.AutoMirroredRounded.VolumeOff
                         } else {
-                            Icons.AutoMirrored.Outlined.VolumeUp
+                            MaterialSymbols.AutoMirroredRounded.VolumeUp
                         },
                         contentDescription = stringResource(
                             if (muted) MR.strings.action_unmute else MR.strings.action_mute,

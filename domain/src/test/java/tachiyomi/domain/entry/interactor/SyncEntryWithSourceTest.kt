@@ -9,7 +9,7 @@ import eu.kanade.tachiyomi.source.entry.SEntry
 import eu.kanade.tachiyomi.source.entry.SEntryChapter
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.types.shouldBeInstanceOf
+import io.mockk.CapturingSlot
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -27,7 +27,7 @@ import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.entry.service.EntryMetadataChangeNotifier
-import tachiyomi.domain.entry.service.FetchInterval
+import tachiyomi.domain.entry.service.nextupdate.FetchInterval
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.source.service.SourceManager
 
@@ -42,7 +42,7 @@ class SyncEntryWithSourceTest {
         val error = runCatching { sync(entry, fetchDetails = false) }.exceptionOrNull()
 
         (error is NoChaptersException) shouldBe true
-        coVerify(exactly = 0) { repository.removeChaptersWithIds(any()) }
+        coVerify(exactly = 0) { repository.applySourceSync(any(), any(), any(), any()) }
     }
 
     @Test
@@ -52,9 +52,8 @@ class SyncEntryWithSourceTest {
             chapter(id = 2L, url = "/current", sourceOrder = 0L),
         )
         val source = TestSource(chapters = listOf(sourceChapter(url = "/current")))
-        val repository = chapterRepository(existing)
         val removed = slot<List<Long>>()
-        coEvery { repository.removeChaptersWithIds(capture(removed)) } returns Unit
+        val repository = chapterRepository(existing, removed = removed)
         val progressRepository = mockk<EntryProgressRepository>(relaxed = true) {
             coEvery { getByEntryId(1L) } returns listOf(
                 EntryProgressState(
@@ -106,13 +105,9 @@ class SyncEntryWithSourceTest {
                 sourceChapter(url = "/episode-3", name = "Episode 3", chapterNumber = 3.0),
             ),
         )
-        val repository = chapterRepository(existing)
         val updates = slot<List<EntryChapter>>()
         val inserts = slot<List<EntryChapter>>()
-        coEvery { repository.updateAll(capture(updates)) } returns true
-        coEvery { repository.insertOrUpdate(capture(inserts)) } answers {
-            inserts.captured.mapIndexed { index, chapter -> chapter.copy(id = 10L + index) }
-        }
+        val repository = chapterRepository(existing, updated = updates, inserted = inserts)
 
         sync(source, repository = repository)(entry(), fetchDetails = false)
 
@@ -129,11 +124,8 @@ class SyncEntryWithSourceTest {
 
     @Test
     fun `first chapter sync after library addition establishes updates baseline`() = runTest {
-        val chapterRepository = chapterRepository(emptyList())
         val insertedChapters = slot<List<EntryChapter>>()
-        coEvery { chapterRepository.insertOrUpdate(capture(insertedChapters)) } answers {
-            insertedChapters.captured.map { it.copy(id = 10L) }
-        }
+        val chapterRepository = chapterRepository(emptyList(), inserted = insertedChapters)
         coEvery { chapterRepository.getChaptersByEntryIdAwait(1L, true) } answers {
             insertedChapters.captured.map { it.copy(id = 10L) }
         }
@@ -153,26 +145,6 @@ class SyncEntryWithSourceTest {
 
         insertedChapters.captured.single().dateFetch shouldBe 1000L
         updatedEntries.last().dateAdded shouldBe 1000L
-    }
-
-    @Test
-    fun `strict synchronization rejects swallowed chapter insertion failure`() = runTest {
-        val chapters = chapterRepository(emptyList())
-        coEvery { chapters.insertOrUpdate(any()) } returns emptyList()
-
-        val error = runCatching {
-            sync(
-                source = TestSource(chapters = listOf(sourceChapter())),
-                repository = chapters,
-            ).syncStrictly(
-                entry = entry().copy(profileId = 8L),
-                profileId = 8L,
-                updateLibraryTitles = false,
-                fetchDetails = false,
-            )
-        }.exceptionOrNull()
-
-        error.shouldBeInstanceOf<IllegalStateException>()
     }
 
     private fun sync(
@@ -205,14 +177,22 @@ class SyncEntryWithSourceTest {
     }
 
     private fun mockFetchInterval(): FetchInterval = mockk {
-        coEvery { update(any(), any(), any(), any()) } answers { firstArg() }
+        coEvery { update(any(), any(), any(), any(), any()) } answers { firstArg() }
     }
 
-    private fun chapterRepository(chapters: List<EntryChapter>): EntryChapterRepository = mockk(relaxed = true) {
+    // Runs the sync's in-transaction writes and gives inserted chapters ids, like the real repository
+    private fun chapterRepository(
+        chapters: List<EntryChapter>,
+        removed: CapturingSlot<List<Long>> = slot(),
+        updated: CapturingSlot<List<EntryChapter>> = slot(),
+        inserted: CapturingSlot<List<EntryChapter>> = slot(),
+    ): EntryChapterRepository = mockk(relaxed = true) {
         coEvery { getChaptersByEntryIdAwait(1L, false) } returns chapters
         coEvery { getChaptersByEntryIdAwait(1L, true) } returns chapters
-        coEvery { updateAll(any()) } returns true
-        coEvery { insertOrUpdate(any()) } returns emptyList()
+        coEvery { applySourceSync(capture(removed), capture(updated), capture(inserted), any()) } coAnswers {
+            arg<suspend () -> Unit>(3).invoke()
+            inserted.captured.mapIndexed { index, chapter -> chapter.copy(id = 10L + index) }
+        }
     }
 
     private fun entry(): Entry = Entry.create().copy(

@@ -5,7 +5,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import eu.kanade.presentation.more.settings.screen.rememberTranslationSettingsScreenModel
+import eu.kanade.presentation.more.settings.screen.rememberTranslationSettingsViewModel
 import eu.kanade.presentation.util.Screen
 import mihon.translation.ui.picker.language.TranslationLanguageRole
 import tachiyomi.i18n.*
@@ -18,7 +18,7 @@ internal class TranslationLanguagePickerScreen(
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val model = rememberTranslationSettingsScreenModel()
+        val model = rememberTranslationSettingsViewModel()
         val playground by model.playground.collectAsState()
         val support by model.languageSupport.collectAsState()
         val engines by model.engines.collectAsState()

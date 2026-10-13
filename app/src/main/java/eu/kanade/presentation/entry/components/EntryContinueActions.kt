@@ -3,10 +3,6 @@ package eu.kanade.presentation.entry.components
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.outlined.KeyboardArrowDown
-import androidx.compose.material.icons.outlined.KeyboardArrowUp
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PlainTooltip
@@ -26,6 +22,10 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import kotlinx.coroutines.launch
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.KeyboardArrowDown
+import mihon.icons.materialsymbols.rounded.KeyboardArrowUp
+import mihon.icons.materialsymbols.roundedfilled.PlayArrow
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
@@ -99,8 +99,8 @@ fun EntryContinueActions(
                 ) {
                     Icon(
                         imageVector = when (targetPosition) {
-                            EntryContinueTargetPosition.Above -> Icons.Outlined.KeyboardArrowUp
-                            EntryContinueTargetPosition.Below, null -> Icons.Outlined.KeyboardArrowDown
+                            EntryContinueTargetPosition.Above -> MaterialSymbols.Rounded.KeyboardArrowUp
+                            EntryContinueTargetPosition.Below, null -> MaterialSymbols.Rounded.KeyboardArrowDown
                         },
                         contentDescription = label,
                     )
@@ -112,7 +112,7 @@ fun EntryContinueActions(
             text = {
                 Text(stringResource(if (isReading) MR.strings.action_resume else MR.strings.action_start))
             },
-            icon = { Icon(imageVector = Icons.Filled.PlayArrow, contentDescription = null) },
+            icon = { Icon(imageVector = MaterialSymbols.RoundedFilled.PlayArrow, contentDescription = null) },
             onClick = onContinueReading,
             expanded = listState.shouldExpandFAB(),
             modifier = Modifier.animateFloatingActionButton(

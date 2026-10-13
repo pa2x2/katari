@@ -1,0 +1,1278 @@
+package eu.kanade.tachiyomi.ui.browse.catalog
+
+import android.app.Application
+import android.content.res.Configuration
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.PagingSource
+import androidx.paging.cachedIn
+import androidx.paging.filter
+import androidx.paging.map
+import eu.kanade.core.preference.asState
+import eu.kanade.domain.source.interactor.GetIncognitoState
+import eu.kanade.domain.source.model.CATALOGUE_LATEST_QUERY
+import eu.kanade.domain.source.model.CATALOGUE_POPULAR_QUERY
+import eu.kanade.domain.source.model.FeedListingMode
+import eu.kanade.domain.source.model.FilterRestoreIssue
+import eu.kanade.domain.source.model.FilterStateNode
+import eu.kanade.domain.source.model.SourceFeedPreset
+import eu.kanade.domain.source.model.applySnapshot
+import eu.kanade.domain.source.model.restoreSnapshot
+import eu.kanade.domain.source.model.snapshot
+import eu.kanade.domain.source.service.BrowseFeedService
+import eu.kanade.domain.source.service.SourcePreferences
+import eu.kanade.presentation.entry.components.MergeEditorEntry
+import eu.kanade.presentation.entry.components.MergeTarget
+import eu.kanade.presentation.entry.components.MergeTargetSearchController
+import eu.kanade.presentation.entry.components.buildMergeTargetQuery
+import eu.kanade.presentation.entry.components.buildMergeTargets
+import eu.kanade.presentation.entry.components.rankMergeTargets
+import eu.kanade.tachiyomi.source.entry.EntryFilterList
+import eu.kanade.tachiyomi.source.entry.EntryFilterNavigationRequest
+import eu.kanade.tachiyomi.source.entry.EntryFilterPageItem
+import eu.kanade.tachiyomi.source.entry.EntryFilterPageLoadReason
+import eu.kanade.tachiyomi.source.entry.EntryFilterPageScope
+import eu.kanade.tachiyomi.source.entry.EntryFilterTextInput
+import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
+import eu.kanade.tachiyomi.source.entry.EntryType
+import eu.kanade.tachiyomi.source.entry.filter.validationIssues
+import eu.kanade.tachiyomi.source.filter.detachedCopy
+import eu.kanade.tachiyomi.ui.base.observation.ObservedItemStore
+import eu.kanade.tachiyomi.ui.browse.source.browse.filter.paged.PagedFilterBrowseSession
+import eu.kanade.tachiyomi.ui.browse.source.browse.filter.paged.PagedFilterBrowseSessionStore
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.updateAndGet
+import kotlinx.coroutines.plus
+import logcat.LogPriority
+import mihon.core.common.CustomPreferences
+import mihon.core.common.browseLongPressActionPriorityForSource
+import mihon.core.common.sanitizeBrowseLongPressActionPriority
+import mihon.entry.interactions.catalogue.EntryCatalogueBrowseRequest
+import mihon.entry.interactions.catalogue.EntryCatalogueFeature
+import mihon.entry.interactions.catalogue.EntryCatalogueFilterNavigationResult
+import mihon.entry.interactions.catalogue.EntryCatalogueFilterSuggestionsResult
+import mihon.entry.interactions.catalogue.EntryCatalogueListing
+import mihon.entry.interactions.catalogue.EntryCataloguePagedFilterRequest
+import mihon.entry.interactions.catalogue.EntryCatalogueSourceResolution
+import mihon.entry.interactions.library.membership.EntryLibraryAddRequest
+import mihon.entry.interactions.library.membership.EntryLibraryAddResult
+import mihon.entry.interactions.library.membership.EntryLibraryCategorySelection
+import mihon.entry.interactions.library.membership.EntryLibraryDuplicatePolicy
+import mihon.entry.interactions.library.membership.EntryLibraryMembershipFeature
+import mihon.entry.interactions.library.membership.EntryLibraryRemovalResult
+import mihon.entry.interactions.media.EntryImmersiveAvailability
+import mihon.entry.interactions.media.EntryImmersiveContext
+import mihon.entry.interactions.media.EntryImmersiveFeature
+import mihon.entry.interactions.media.EntryImmersiveSourceAvailability
+import mihon.entry.interactions.media.EntryPreviewAvailability
+import mihon.entry.interactions.media.EntryPreviewContext
+import mihon.entry.interactions.media.EntryPreviewFeature
+import mihon.entry.interactions.merge.EntryMergeCommitIntent
+import mihon.entry.interactions.merge.EntryMergeEditReference
+import mihon.entry.interactions.merge.EntryMergeEditorEntry
+import mihon.entry.interactions.merge.EntryMergeEditorEntryOrigin
+import mihon.entry.interactions.merge.EntryMergeEditorEntryReference
+import mihon.entry.interactions.merge.EntryMergeExecutionResult
+import mihon.entry.interactions.merge.EntryMergeFeature
+import mihon.entry.interactions.merge.EntryMergeMemberPreparationIntent
+import mihon.entry.interactions.merge.EntryMergePreparationResult
+import mihon.entry.interactions.merge.EntryMergePrepareIntent
+import mihon.entry.interactions.source.EntrySourceHomeFeature
+import mihon.entry.interactions.source.EntrySourceHomeResolution
+import mihon.entry.interactions.source.EntrySourceSettingsFeature
+import mihon.entry.interactions.source.EntrySourceSettingsResolution
+import tachiyomi.core.common.i18n.stringResource
+import tachiyomi.core.common.preference.CheckboxState
+import tachiyomi.core.common.preference.mapAsCheckboxState
+import tachiyomi.core.common.util.lang.launchIO
+import tachiyomi.core.common.util.lang.withIOContext
+import tachiyomi.core.common.util.system.logcat
+import tachiyomi.domain.category.model.Category
+import tachiyomi.domain.category.repository.CategoryRepository
+import tachiyomi.domain.entry.interactor.GetEntry
+import tachiyomi.domain.entry.interactor.GetLibraryEntries
+import tachiyomi.domain.entry.model.DuplicateEntryCandidate
+import tachiyomi.domain.entry.model.Entry
+import tachiyomi.domain.library.service.DuplicatePreferences
+import tachiyomi.domain.library.service.LibraryPreferences
+import tachiyomi.domain.source.model.CatalogListItem
+import tachiyomi.domain.source.model.SourceDisplayInfo
+import tachiyomi.domain.source.service.SourceManager
+import tachiyomi.i18n.*
+import uy.kohesive.injekt.Injekt
+import uy.kohesive.injekt.api.get
+import java.util.UUID
+import eu.kanade.tachiyomi.source.entry.EntryFilter as SourceModelFilter
+
+private val CatalogListItem.entry: Entry
+    get() = (this as CatalogListItem.EntryItem).entry
+
+class CatalogViewModel(
+    private val sourceId: Long,
+    listingQuery: String?,
+    private val migrationEntryType: EntryType? = null,
+    private val initialFilterSnapshot: List<FilterStateNode> = emptyList(),
+    private val initialPresetId: String? = null,
+    openFilterSheetOnStart: Boolean = false,
+    private val sourceManager: SourceManager = Injekt.get(),
+    sourcePreferences: SourcePreferences = Injekt.get(),
+    customPreferences: CustomPreferences = Injekt.get(),
+    private val browseFeedService: BrowseFeedService = Injekt.get(),
+    private val libraryPreferences: LibraryPreferences = Injekt.get(),
+    private val getEntry: GetEntry = Injekt.get(),
+    private val entryLibraryMembershipFeature: EntryLibraryMembershipFeature = Injekt.get(),
+    private val entryMergeFeature: EntryMergeFeature = Injekt.get(),
+    private val categoryRepository: CategoryRepository = Injekt.get(),
+    private val getLibraryEntries: GetLibraryEntries = Injekt.get(),
+    private val duplicatePreferences: DuplicatePreferences = Injekt.get(),
+    private val entryPreviewFeature: EntryPreviewFeature = Injekt.get(),
+    private val entryImmersiveFeature: EntryImmersiveFeature = Injekt.get(),
+    private val entryCatalogueFeature: EntryCatalogueFeature = Injekt.get(),
+    private val entrySourceHomeFeature: EntrySourceHomeFeature = Injekt.get(),
+    private val entrySourceSettingsFeature: EntrySourceSettingsFeature = Injekt.get(),
+    private val getIncognitoState: GetIncognitoState = Injekt.get(),
+    private val application: Application = Injekt.get(),
+) : ViewModel() {
+
+    val state: StateFlow<CatalogViewModel.State>
+        field = MutableStateFlow<CatalogViewModel.State>(initialCatalogState(listingQuery))
+
+    var displayMode by sourcePreferences.sourceDisplayMode(sourceId).asState(viewModelScope)
+    var feedsEnabled by customPreferences.enableFeeds.asState(viewModelScope)
+    private val defaultBrowseLongPressActionPriority by
+        customPreferences.browseLongPressActionPriority.asState(viewModelScope)
+    private val browseLongPressActionOverrides by
+        customPreferences.browseLongPressActionOverrides.asState(viewModelScope)
+    val browseLongPressActionPriority: List<CustomPreferences.BrowseLongPressAction>
+        get() = browseLongPressActionPriorityForSource(
+            sourceId = sourceId,
+            defaultPriority = defaultBrowseLongPressActionPriority,
+            overrides = browseLongPressActionOverrides,
+        )
+
+    private val filterLoader = CatalogFilterLoader(entryCatalogueFeature)
+    private val presetHelper = CatalogPresetHelper(sourceId, browseFeedService, entryCatalogueFeature)
+    private val pagedFilterBrowseSessions = PagedFilterBrowseSessionStore(viewModelScope)
+    private val pagedFilterEdits = CatalogPagedFilterEdits(viewModelScope) { pending ->
+        state.update { it.copy(pendingFilterEdits = pending) }
+    }
+    private val filterReset = CatalogFilterReset(
+        state = state,
+        loadFilters = { filterLoader.load(sourceId) },
+        discardEdits = { pagedFilterEdits.discard() },
+        retainSessions = pagedFilterBrowseSessions::retain,
+    )
+    private val mergeTargetSearchController = MergeTargetSearchController<MergeTarget>(viewModelScope)
+
+    private val _events = Channel<Event>(Channel.UNLIMITED)
+    val events: Flow<Event> = _events.receiveAsFlow()
+
+    val catalogSource =
+        (entryCatalogueFeature.source(sourceId) as? EntryCatalogueSourceResolution.Available)?.source
+    val isImmersiveSourceAvailable: Boolean
+        get() = entryImmersiveFeature.sourceAvailability(sourceManager.get(sourceId)) is
+            EntryImmersiveSourceAvailability.Available
+
+    init {
+        if (catalogSource == null) {
+            state.update { it.copy(filterState = FilterUiState.Unavailable) }
+        } else {
+            viewModelScope.launchIO {
+                loadFilters(initialFilterSnapshot = initialFilterSnapshot)
+            }
+            if (openFilterSheetOnStart) {
+                state.update { it.copy(dialog = Dialog.Filter) }
+            }
+
+            if (!getIncognitoState.await(sourceId)) {
+                sourcePreferences.lastUsedSource.set(sourceId)
+            }
+        }
+    }
+
+    private val hideInLibraryItems = sourcePreferences.hideInLibraryItems.get()
+    private val catalogItemStore = ObservedItemStore<Long, CatalogListItem.EntryItem>(
+        scope = viewModelScope + Dispatchers.IO,
+        keyOf = { it.entry.id },
+        supersedes = { candidate, current -> candidate.entry.version >= current.entry.version },
+    ) { entryIds ->
+        getEntry.subscribe(entryIds).map { entries ->
+            entries.map { CatalogListItem.EntryItem(it, sourceItemOrientation) }
+        }
+    }
+
+    val catalogPagerFlowFlow = state.map { it.pageableListing }
+        .distinctUntilChanged()
+        .map { listing ->
+            if (catalogSource == null || listing == null) {
+                emptyFlow()
+            } else {
+                Pager(PagingConfig(pageSize = 25)) {
+                    entryCatalogueFeature.paging(
+                        EntryCatalogueBrowseRequest(sourceId, listing.toFeatureListing()),
+                    )
+                }.flow.map { pagingData ->
+                    pagingData.map<CatalogListItem, StateFlow<CatalogListItem?>> { item ->
+                        val entryItem = item as CatalogListItem.EntryItem
+                        catalogItemStore.seed(entryItem)
+                    }
+                        .filter { migrationEntryType == null || it.value?.entryType == migrationEntryType }
+                        .filter { !hideInLibraryItems || it.value?.favorite != true }
+                }
+                    .cachedIn(viewModelScope + Dispatchers.IO)
+            }
+        }
+        .stateIn(viewModelScope + Dispatchers.IO, SharingStarted.Lazily, emptyFlow())
+
+    val sourceName: String
+        get() = catalogSource?.name ?: ""
+
+    val sourceDisplayInfo: SourceDisplayInfo
+        get() = sourceManager.getDisplayInfo(sourceId)
+
+    val supportsLatest: Boolean
+        get() = presetHelper.supportsLatest
+
+    val hasFilterCapability: Boolean
+        get() = state.value.filterState !is FilterUiState.Unavailable
+
+    val sourceItemOrientation: EntryItemOrientation
+        get() = catalogSource?.itemOrientation ?: EntryItemOrientation.VERTICAL
+
+    val homeUrl: String?
+        get() = (entrySourceHomeFeature.resolve(sourceId) as? EntrySourceHomeResolution.Available)?.url
+
+    val isConfigurable: Boolean
+        get() = entrySourceSettingsFeature.resolve(sourceId) is EntrySourceSettingsResolution.Available
+
+    fun getColumnsPreference(
+        orientation: Int,
+        sourceItemOrientation: EntryItemOrientation = EntryItemOrientation.VERTICAL,
+    ): GridCells {
+        val isLandscape = orientation == Configuration.ORIENTATION_LANDSCAPE
+        val columns = if (isLandscape) {
+            libraryPreferences.landscapeColumns
+        } else {
+            libraryPreferences.portraitColumns
+        }.get()
+        val isHorizontal = sourceItemOrientation == EntryItemOrientation.HORIZONTAL
+        return if (columns == 0) {
+            GridCells.Adaptive(if (isHorizontal) 180.dp else 128.dp)
+        } else {
+            GridCells.Fixed(if (isHorizontal) (columns - 1).coerceAtLeast(1) else columns)
+        }
+    }
+
+    fun resetFilters() {
+        if (catalogSource == null) return
+        viewModelScope.launchIO {
+            filterReset.reset()
+        }
+    }
+
+    fun resetFilterGroup(filter: SourceModelFilter<*>) {
+        pagedFilterEdits.discard(filter)
+        eu.kanade.tachiyomi.ui.browse.source.browse.filter.resetFilterToDefault(
+            filter,
+            state.value.filters,
+            state.value.defaultFilters,
+        )
+        setFilters(state.value.filters)
+    }
+
+    fun editPagedFilterItem(
+        group: SourceModelFilter.PagedGroup<*>,
+        item: EntryFilterPageItem,
+        updated: SourceModelFilter<*>,
+        onComplete: (Boolean) -> Unit,
+    ) {
+        pagedFilterEdits.submit(group, item, updated) { success ->
+            setFilters(state.value.filters)
+            onComplete(success)
+        }
+    }
+
+    fun applyDraftFilters(): Boolean {
+        val applied = state.value.applyFilterDraft() ?: return false
+        state.value = applied
+        return true
+    }
+
+    fun resolvePresetIssue(issue: FilterRestoreIssue, remove: Boolean) {
+        if (remove && issue.target != null) {
+            eu.kanade.tachiyomi.ui.browse.source.browse.filter.resetFilterToDefault(
+                issue.target,
+                state.value.filters,
+                state.value.defaultFilters,
+            )
+        }
+        state.update {
+            val withDraft = if (remove && issue.target != null) {
+                it.withRepublishedDraftFilters(it.filters)
+            } else {
+                it
+            }
+            withDraft.copy(
+                repairIssues = withDraft.repairIssues.filterNot { candidate -> candidate === issue },
+            )
+        }
+    }
+
+    fun saveRepairedPreset() {
+        val current = state.value
+        if (!current.canSaveFilterDraft) return
+        val preset = presetHelper.customPreset(current.draftPresetId) ?: return
+        val saved = current.toSavedPresetState(current.defaultFilters)
+        presetHelper.savePreset(
+            preset.copy(filters = saved.filters, listingMode = saved.listingMode, query = saved.query),
+        )
+        state.update { it.copy(repairNeedsSave = false) }
+    }
+
+    fun setListing(listing: Listing) {
+        state.update { it.switchListing(listing) }
+    }
+
+    /** Resets one applied filter value to its default and re-runs the search. */
+    fun removeAppliedFilter(path: List<Int>) {
+        state.update { it.withoutAppliedFilter(path) }
+    }
+
+    /** Returns to the parked search when another listing is shown, otherwise edits the filters. */
+    fun onFilterChipClick() {
+        val parked = state.value.restorableSearch
+        if (parked != null) setListing(parked) else openFilterSheet()
+    }
+
+    fun setFilters(filters: EntryFilterList) {
+        pagedFilterBrowseSessions.retain(filters)
+        state.update { it.withRepublishedDraftFilters(filters) }
+    }
+
+    suspend fun filterSuggestions(
+        filter: SourceModelFilter.Autocomplete,
+        input: EntryFilterTextInput,
+    ): EntryCatalogueFilterSuggestionsResult {
+        return withIOContext {
+            entryCatalogueFeature.filterSuggestions(
+                sourceId = sourceId,
+                filter = filter,
+                input = input,
+            )
+        }
+    }
+
+    fun pagedFilterItems(
+        filter: SourceModelFilter.PagedGroup<*>,
+        scope: EntryFilterPageScope,
+        query: String?,
+        initialLoadReason: EntryFilterPageLoadReason,
+        initialAnchor: String?,
+    ): PagingSource<String, EntryFilterPageItem> {
+        return entryCatalogueFeature.filterItems(
+            EntryCataloguePagedFilterRequest(
+                sourceId = sourceId,
+                filter = filter,
+                scope = scope,
+                query = query,
+                initialLoadReason = initialLoadReason,
+                initialAnchor = initialAnchor,
+            ),
+        )
+    }
+
+    suspend fun pagedFilterNavigation(
+        filter: SourceModelFilter.PagedGroup<*>,
+        scope: EntryFilterPageScope,
+        query: String?,
+    ): EntryCatalogueFilterNavigationResult {
+        return withIOContext {
+            entryCatalogueFeature.filterNavigation(
+                sourceId = sourceId,
+                filter = filter,
+                request = EntryFilterNavigationRequest(scope, query),
+            )
+        }
+    }
+
+    fun pagedFilterBrowseSession(filter: SourceModelFilter.PagedGroup<*>): PagedFilterBrowseSession {
+        return pagedFilterBrowseSessions.session(filter)
+    }
+
+    fun search(query: String) {
+        val searched = state.updateAndGet { it.searchWithAppliedFilters(query) }
+        if (searched.hasUnappliedFilterChanges) {
+            _events.trySend(Event.SearchKeptUnappliedFilters)
+        }
+    }
+
+    fun searchGenre(genreName: String) {
+        if (catalogSource == null) return
+
+        viewModelScope.launchIO {
+            val defaultFilters = freshResolvedFilters() ?: return@launchIO
+            pagedFilterBrowseSessions.retain(defaultFilters)
+            var genreExists = false
+
+            filter@ for (sourceFilter in defaultFilters) {
+                if (sourceFilter is SourceModelFilter.Group<*>) {
+                    for (filter in sourceFilter.state) {
+                        if (filter is SourceModelFilter<*> && filter.name.equals(genreName, true)) {
+                            when (filter) {
+                                is SourceModelFilter.TriState -> filter.state = 1
+                                is SourceModelFilter.CheckBox -> filter.state = true
+                                else -> {}
+                            }
+                            genreExists = true
+                            break@filter
+                        }
+                    }
+                } else if (sourceFilter is SourceModelFilter.Select<*>) {
+                    val index = sourceFilter.values.filterIsInstance<String>()
+                        .indexOfFirst { it.equals(genreName, true) }
+
+                    if (index != -1) {
+                        sourceFilter.state = index
+                        genreExists = true
+                        break
+                    }
+                }
+            }
+
+            state.update {
+                val listing = if (genreExists) {
+                    Listing.Search(query = null, filters = defaultFilters.detachedCopy())
+                } else {
+                    Listing.Search(query = genreName, filters = defaultFilters.detachedCopy())
+                }
+                it.withRepublishedDraftFilters(defaultFilters).copy(
+                    listing = listing,
+                    parkedSearch = null,
+                    toolbarQuery = listing.query,
+                    filterState = FilterUiState.Ready,
+                    appliedFiltersReady = true,
+                )
+            }
+        }
+    }
+
+    fun openFilterSheet() {
+        if (catalogSource == null) return
+        state.update { it.copy(dialog = Dialog.Filter) }
+        if (state.value.filterState is FilterUiState.Uninitialized) {
+            viewModelScope.launchIO {
+                loadFilters()
+            }
+        }
+    }
+
+    fun retryFilterLoad() {
+        if (catalogSource == null) return
+        viewModelScope.launchIO {
+            if (state.value.filterResetPending) {
+                filterReset.reset()
+            } else {
+                loadFilters(initialFilterSnapshot)
+            }
+        }
+    }
+
+    private suspend fun loadFilters(initialFilterSnapshot: List<FilterStateNode> = emptyList()) {
+        pagedFilterEdits.discard()
+        state.update { it.copy(filterState = FilterUiState.Loading) }
+
+        runCatching {
+            filterLoader.load(sourceId)
+        }.onSuccess { sourceFilters ->
+            pagedFilterBrowseSessions.retain(sourceFilters)
+            state.update {
+                it.initializeForSource(
+                    sourceFilters = sourceFilters,
+                    initialFilterSnapshot = initialFilterSnapshot,
+                ).copy(
+                    filterState = FilterUiState.Ready,
+                    draftPresetId = initialPresetId,
+                    appliedCustomPresetId = initialPresetId,
+                )
+            }
+            val original = presetHelper.customPreset(initialPresetId)
+            if (original != null && original.filters == initialFilterSnapshot && state.value.canSaveFilterDraft) {
+                browseFeedService.migratePresetFilters(original, state.value.filters.snapshot())
+            }
+        }.onFailure { throwable ->
+            state.update {
+                it.copy(
+                    filterState = FilterUiState.Error(throwable),
+                )
+            }
+        }
+    }
+
+    private suspend fun freshResolvedFilters(): EntryFilterList? {
+        return runCatching {
+            filterLoader.load(sourceId)
+        }.onFailure { throwable ->
+            state.update {
+                it.copy(
+                    filterState = FilterUiState.Error(throwable),
+                )
+            }
+        }.getOrNull()
+    }
+
+    // region Library actions
+
+    fun changeFavorite(item: CatalogListItem) {
+        changeFavorite(item.entry)
+    }
+
+    fun addFavorite(item: CatalogListItem) {
+        addFavorite(item.entry)
+    }
+
+    fun addFavorite(entry: Entry) {
+        viewModelScope.launchIO {
+            applyLibraryAdd(
+                EntryLibraryAddRequest(entry, duplicatePolicy = EntryLibraryDuplicatePolicy.ALLOW),
+            )
+        }
+    }
+
+    fun addFavorite(entry: Entry, categoryIds: List<Long>) {
+        viewModelScope.launchIO {
+            applyLibraryAdd(
+                EntryLibraryAddRequest(
+                    entry = entry,
+                    duplicatePolicy = EntryLibraryDuplicatePolicy.ALLOW,
+                    categorySelection = EntryLibraryCategorySelection.Selected(categoryIds),
+                ),
+            )
+        }
+    }
+
+    fun confirmBrowseLibraryAction(item: CatalogListItem) {
+        confirmBrowseLibraryAction(item.entry)
+    }
+
+    fun confirmBrowseLibraryAction(entry: Entry) {
+        viewModelScope.launchIO {
+            handleLibraryAction(entry)
+        }
+    }
+
+    internal suspend fun onItemLongClick(
+        item: CatalogListItem,
+    ): BrowseLongPressOutcome {
+        val immersiveAvailable = entryImmersiveFeature.availability(
+            EntryImmersiveContext(
+                entry = item.entry,
+                source = sourceManager.get(item.entry.source),
+            ),
+        ) is EntryImmersiveAvailability.Available
+        return when (
+            resolveBrowseLongPressAction(
+                priority = browseLongPressActionPriority,
+                immersiveAvailable = immersiveAvailable,
+                previewEnabled = entryPreviewFeature.availability(
+                    EntryPreviewContext(
+                        entry = item.entry,
+                        source = sourceManager.getOrStub(item.entry.source),
+                    ),
+                ) is EntryPreviewAvailability.Available,
+            )
+        ) {
+            CustomPreferences.BrowseLongPressAction.LIBRARY_ACTION -> {
+                showLibraryActionChooserOrHandle(item.entry)
+                BrowseLongPressOutcome.Handled
+            }
+            CustomPreferences.BrowseLongPressAction.PREVIEW -> {
+                setDialog(Dialog.EntryPreview(item.entry.id))
+                BrowseLongPressOutcome.Handled
+            }
+            CustomPreferences.BrowseLongPressAction.IMMERSIVE -> BrowseLongPressOutcome.StartImmersive
+        }
+    }
+
+    private suspend fun handleLibraryAction(entry: Entry) {
+        if (entry.favorite) {
+            setDialog(Dialog.RemoveEntry(entry))
+            return
+        }
+
+        setDialog(Dialog.CheckingDuplicates)
+        applyLibraryAdd(EntryLibraryAddRequest(entry))
+    }
+
+    fun changeFavorite(entry: Entry) {
+        viewModelScope.launchIO {
+            if (entry.favorite) {
+                when (val result = entryLibraryMembershipFeature.remove(listOf(entry))) {
+                    is EntryLibraryRemovalResult.Failed -> logcat(LogPriority.ERROR, result.cause)
+                    is EntryLibraryRemovalResult.Removed,
+                    EntryLibraryRemovalResult.NoChange,
+                    -> Unit
+                }
+            } else {
+                applyLibraryAdd(
+                    EntryLibraryAddRequest(entry, duplicatePolicy = EntryLibraryDuplicatePolicy.ALLOW),
+                )
+            }
+        }
+    }
+
+    private suspend fun applyLibraryAdd(request: EntryLibraryAddRequest) {
+        when (val result = entryLibraryMembershipFeature.add(request)) {
+            is EntryLibraryAddResult.DuplicateCandidates -> setDialog(
+                Dialog.DuplicateEntry(result.entry, result.candidates),
+            )
+            is EntryLibraryAddResult.CategorySelectionRequired -> setDialog(
+                Dialog.ChangeEntryCategory(
+                    result.entry,
+                    result.categories.mapAsCheckboxState { it.id in result.selectedCategoryIds },
+                ),
+            )
+            is EntryLibraryAddResult.Failed -> {
+                setDialog(null)
+                logcat(LogPriority.ERROR, result.cause)
+            }
+            is EntryLibraryAddResult.Added,
+            is EntryLibraryAddResult.AlreadyInLibrary,
+            -> setDialog(null)
+        }
+    }
+
+    fun showMigrateEntryDialog(current: Entry, target: Entry) {
+        setDialog(Dialog.MigrateEntry(current = current, target = target))
+    }
+
+    // endregion
+
+    // region Merge
+
+    fun showMergeTargetPicker(item: CatalogListItem) {
+        showEntryMergeTargetPicker(item.entry)
+    }
+
+    fun showMergeTargetPicker(entry: Entry) {
+        showEntryMergeTargetPicker(entry)
+    }
+
+    private fun showEntryMergeTargetPicker(entry: Entry) {
+        mergeTargetSearchController.cancelPending()
+        viewModelScope.launchIO {
+            val targets = buildMergeTargets(
+                libraryItems = getLibraryEntries.await(),
+                sourceNames = Injekt.get(),
+                entryType = entry.type,
+            )
+            if (targets.isEmpty()) return@launchIO
+            val query = buildMergeTargetQuery(entry.displayTitle, duplicatePreferences)
+            val visibleTargets = rankMergeTargets(targets, query).toImmutableList()
+            setDialog(
+                Dialog.SelectEntryMergeTarget(
+                    entry = entry,
+                    query = query,
+                    targets = targets,
+                    visibleTargets = visibleTargets,
+                ),
+            )
+        }
+    }
+
+    fun updateMergeTargetQuery(query: String) {
+        when (val dialog = state.value.dialog) {
+            is Dialog.SelectEntryMergeTarget -> {
+                if (dialog.query == query) return
+                state.update { currentState ->
+                    val current = currentState.dialog as? Dialog.SelectEntryMergeTarget ?: return@update currentState
+                    if (current.targets !== dialog.targets) return@update currentState
+                    currentState.copy(
+                        dialog = current.copy(
+                            query = query,
+                            visibleTargets = persistentListOf(),
+                        ),
+                    )
+                }
+                mergeTargetSearchController.submit(dialog.targets, query) { visibleTargets ->
+                    state.update { currentState ->
+                        val current = currentState.dialog as? Dialog.SelectEntryMergeTarget
+                            ?: return@update currentState
+                        if (current.targets !== dialog.targets || current.query != query) return@update currentState
+                        currentState.copy(
+                            dialog = current.copy(visibleTargets = visibleTargets),
+                        )
+                    }
+                }
+            }
+            else -> {}
+        }
+    }
+
+    fun openMergeEditor(targetId: Long) {
+        when (val dialog = state.value.dialog) {
+            is Dialog.SelectEntryMergeTarget -> {
+                viewModelScope.launchIO {
+                    val target = dialog.visibleTargets.firstOrNull { it.id == targetId } ?: return@launchIO
+                    val editor = createEntryMergeEditorDialog(dialog.entry, target) ?: return@launchIO
+                    state.update { currentState ->
+                        val current = currentState.dialog as? Dialog.SelectEntryMergeTarget
+                            ?: return@update currentState
+                        if (current.targets !== dialog.targets) return@update currentState
+                        currentState.copy(dialog = editor)
+                    }
+                }
+            }
+            else -> {}
+        }
+    }
+
+    fun moveMergeEntry(fromIndex: Int, toIndex: Int) {
+        state.update { currentState ->
+            when (val dialog = currentState.dialog) {
+                is Dialog.EditEntryMerge -> {
+                    val entries = dialog.entries.toMutableList()
+                    if (fromIndex !in entries.indices || toIndex !in entries.indices) return@update currentState
+                    val entry = entries.removeAt(fromIndex)
+                    entries.add(toIndex, entry)
+                    currentState.copy(dialog = dialog.copy(entries = entries.toImmutableList()))
+                }
+                else -> currentState
+            }
+        }
+    }
+
+    fun setMergeTarget(itemId: Long) {
+        state.update { currentState ->
+            when (val dialog = currentState.dialog) {
+                is Dialog.EditEntryMerge -> {
+                    val entry = dialog.entries.firstOrNull { it.id == itemId } ?: return@update currentState
+                    val reference = dialog.referencesById[itemId] ?: return@update currentState
+                    if (dialog.targetLocked) return@update currentState
+                    currentState.copy(
+                        dialog = dialog.copy(
+                            targetId = itemId,
+                            targetReference = reference,
+                            removedIds = dialog.removedIds - itemId,
+                            libraryRemovalIds = dialog.libraryRemovalIds - itemId,
+                        ),
+                    )
+                }
+                else -> currentState
+            }
+        }
+    }
+
+    fun toggleMergeEntryRemoval(itemId: Long) {
+        state.update { currentState ->
+            when (val dialog = currentState.dialog) {
+                is Dialog.EditEntryMerge -> {
+                    val entry = dialog.entries.firstOrNull { it.id == itemId } ?: return@update currentState
+                    if (!entry.isRemovable || itemId == dialog.targetId) return@update currentState
+                    val removedIds = dialog.removedIds.toMutableSet().apply {
+                        if (!add(itemId)) remove(itemId)
+                    }
+                    currentState.copy(dialog = dialog.copy(removedIds = removedIds))
+                }
+                else -> currentState
+            }
+        }
+    }
+
+    fun toggleMergeEntryLibraryRemoval(itemId: Long) {
+        state.update { currentState ->
+            when (val dialog = currentState.dialog) {
+                is Dialog.EditEntryMerge -> {
+                    val entry = dialog.entries.firstOrNull { it.id == itemId } ?: return@update currentState
+                    if (!entry.isRemovable || itemId == dialog.targetId) return@update currentState
+                    val libraryRemovalIds = dialog.libraryRemovalIds.toMutableSet().apply {
+                        if (!add(itemId)) remove(itemId)
+                    }
+                    currentState.copy(dialog = dialog.copy(libraryRemovalIds = libraryRemovalIds))
+                }
+                else -> currentState
+            }
+        }
+    }
+
+    fun confirmBrowseMerge() {
+        when (val dialog = state.value.dialog) {
+            is Dialog.EditEntryMerge -> {
+                viewModelScope.launchIO {
+                    val result = entryMergeFeature.execute(
+                        EntryMergeCommitIntent(
+                            editReference = dialog.editReference,
+                            target = dialog.targetReference,
+                            orderedEntries = dialog.entries.mapNotNull { dialog.referencesById[it.id] },
+                            removedEntries = dialog.referencesById.referencesFor(dialog.removedIds),
+                            libraryRemovalEntries = dialog.referencesById.referencesFor(dialog.libraryRemovalIds),
+                        ),
+                    )
+                    if (result is EntryMergeExecutionResult.Applied) {
+                        dismissDialog()
+                    }
+                }
+            }
+            else -> {}
+        }
+    }
+
+    private suspend fun createEntryMergeEditorDialog(
+        entry: Entry,
+        target: MergeTarget,
+    ): Dialog.EditEntryMerge? {
+        val targetEntry = target.memberEntries.firstOrNull { it.id == target.id }
+            ?: target.memberEntries.firstOrNull()
+            ?: return null
+        val categoryIds = target.categoryIds.ifEmpty {
+            categoryRepository.getCategoriesByEntryId(targetEntry.id).map(Category::id)
+        }
+        val preparations = if (entry.favorite) {
+            emptyList()
+        } else {
+            listOf(EntryMergeMemberPreparationIntent(entry, categoryIds))
+        }
+        val editor = when (
+            val result = entryMergeFeature.prepare(
+                EntryMergePrepareIntent(
+                    selectedEntries = if (target.isMerged) {
+                        listOf(entry, targetEntry)
+                    } else {
+                        listOf(targetEntry, entry)
+                    },
+                    preparations = preparations,
+                ),
+            )
+        ) {
+            is EntryMergePreparationResult.Ready -> result.editor
+            is EntryMergePreparationResult.Rejected -> return null
+        }
+        val targetEditorEntry = editor.entries.firstOrNull { it.reference == editor.target } ?: return null
+        return Dialog.EditEntryMerge(
+            entry = entry,
+            editReference = editor.editReference,
+            targetId = targetEditorEntry.entry.id,
+            targetReference = targetEditorEntry.reference,
+            targetLocked = editor.targetLocked,
+            entries = editor.entries.map(::toMergeEditorEntry).toImmutableList(),
+            referencesById = editor.entries.associate { it.entry.id to it.reference },
+            removedIds = emptySet(),
+            libraryRemovalIds = emptySet(),
+        )
+    }
+
+    private fun toMergeEditorEntry(item: EntryMergeEditorEntry): MergeEditorEntry {
+        val existing = item.origin == EntryMergeEditorEntryOrigin.EXISTING_MEMBER
+        return MergeEditorEntry(
+            id = item.entry.id,
+            entry = item.entry,
+            subtitle = getEntrySourceSubtitle(item.entry) + if (existing) "" else " • New",
+            isRemovable = item.removable,
+            isMember = existing,
+        )
+    }
+
+    private fun getEntrySourceSubtitle(entry: Entry): String {
+        val sourceName = sourceManager.getDisplayInfo(entry.source).name
+        val creator = entry.author?.takeIf { it.isNotBlank() }
+            ?: entry.artist?.takeIf { it.isNotBlank() }
+        return buildString {
+            append(sourceName)
+            if (creator != null && !creator.equals(sourceName, ignoreCase = true)) {
+                append(" • ")
+                append(creator)
+            }
+        }
+    }
+
+    // endregion
+
+    // region Presets
+
+    fun showSavePresetDialog() {
+        if (!feedsEnabled || !state.value.canSaveFilterDraft) return
+        setDialog(
+            Dialog.SavePreset(
+                mode = Dialog.SavePreset.Mode.Create,
+                name = "",
+                chronological = state.value.listing != Listing.Popular,
+            ),
+        )
+    }
+
+    fun showUpdateCurrentPresetDialog() {
+        if (!feedsEnabled || !state.value.canSaveFilterDraft) return
+
+        val preset = draftCustomPreset() ?: return
+
+        setDialog(
+            Dialog.SavePreset(
+                mode = Dialog.SavePreset.Mode.UpdateFromCurrentState,
+                presetId = preset.id,
+                name = preset.name,
+                chronological = preset.chronological,
+            ),
+        )
+    }
+
+    fun showEditPresetDialog(presetId: String) {
+        if (!feedsEnabled) return
+
+        val preset = presetHelper.customPreset(presetId) ?: return
+
+        setDialog(
+            Dialog.SavePreset(
+                mode = Dialog.SavePreset.Mode.EditMetadata,
+                presetId = preset.id,
+                name = preset.name,
+                chronological = preset.chronological,
+            ),
+        )
+    }
+
+    fun draftCustomPreset(): SourceFeedPreset? {
+        if (!feedsEnabled) return null
+        return presetHelper.customPreset(state.value.draftPresetId)
+    }
+
+    /** The preset the draft stands for: the custom preset it was loaded from, or the built-in listing it equals. */
+    fun draftPreset(): SourceFeedPreset? {
+        if (!feedsEnabled) return null
+        val current = state.value
+        return presetHelper.customPreset(current.draftPresetId)
+            ?: presetHelper.builtInPreset(current.toSavedPresetState(current.defaultFilters).listingMode)
+    }
+
+    fun feedPresets(): List<SourceFeedPreset> {
+        if (!feedsEnabled) return emptyList()
+        return presetHelper.feedPresets()
+    }
+
+    fun applyPreset(presetId: String) {
+        if (!feedsEnabled || catalogSource == null) return
+        val preset = feedPresets().firstOrNull { it.id == presetId } ?: return
+        pagedFilterEdits.discard()
+        viewModelScope.launchIO {
+            val filters = freshResolvedFilters() ?: return@launchIO
+            val defaults = filters.detachedCopy()
+            val restoration = filters.restoreSnapshot(preset.filters)
+            if (restoration.isCompatible && filters.validationIssues().isEmpty()) {
+                browseFeedService.migratePresetFilters(preset, filters.snapshot())
+            }
+            pagedFilterBrowseSessions.retain(filters)
+            state.update {
+                it.withRepublishedDraftFilters(filters).copy(
+                    defaultFilters = defaults,
+                    draftMode = preset.listingMode,
+                    draftQuery = preset.query,
+                    draftPresetId = preset.id.takeIf(presetHelper::canDeletePreset),
+                    filterResetPending = false,
+                    repairIssues = restoration.issues,
+                    repairNeedsSave = preset.filters.isNotEmpty() &&
+                        (restoration.issues.isNotEmpty() || filters.validationIssues().isNotEmpty()),
+                    filterState = FilterUiState.Ready,
+                )
+            }
+        }
+    }
+
+    fun canDeletePreset(presetId: String): Boolean {
+        return presetHelper.canDeletePreset(presetId)
+    }
+
+    fun removePreset(presetId: String) {
+        if (!feedsEnabled) return
+        if (!presetHelper.canDeletePreset(presetId)) return
+
+        presetHelper.removePreset(presetId)
+        state.update {
+            if (it.appliedCustomPresetId == presetId) {
+                it.copy(appliedCustomPresetId = null)
+            } else {
+                it
+            }
+        }
+    }
+
+    fun hasPresetName(name: String, excludingPresetId: String? = null): Boolean {
+        if (!feedsEnabled) return false
+        return presetHelper.hasPresetName(name, excludingPresetId)
+    }
+
+    fun savePreset(name: String, chronological: Boolean) {
+        if (!feedsEnabled) return
+
+        val trimmed = name.trim()
+        if (trimmed.isBlank()) return
+
+        val dialog = state.value.dialog as? Dialog.SavePreset ?: return
+        if (dialog.mode != Dialog.SavePreset.Mode.EditMetadata && !state.value.canSaveFilterDraft) return
+        val presetState = state.value.toSavedPresetState(state.value.defaultFilters)
+        when (dialog.mode) {
+            Dialog.SavePreset.Mode.Create -> {
+                if (catalogSource == null) return
+
+                viewModelScope.launchIO {
+                    val preset = SourceFeedPreset(
+                        id = UUID.randomUUID().toString(),
+                        sourceId = sourceId,
+                        name = trimmed,
+                        listingMode = presetState.listingMode,
+                        chronological = chronological,
+                        query = presetState.query,
+                        filters = presetState.filters,
+                    )
+                    presetHelper.savePreset(preset)
+                    state.update {
+                        it.copy(
+                            draftPresetId = preset.id,
+                            repairNeedsSave = false,
+                            dialog = Dialog.Filter,
+                            filterState = FilterUiState.Ready,
+                        )
+                    }
+                }
+                return
+            }
+            Dialog.SavePreset.Mode.EditMetadata -> {
+                val preset = presetHelper.customPreset(dialog.presetId) ?: return
+                presetHelper.savePreset(
+                    preset.copy(
+                        name = trimmed,
+                        chronological = chronological,
+                    ),
+                )
+                setDialog(null)
+            }
+            Dialog.SavePreset.Mode.UpdateFromCurrentState -> {
+                if (catalogSource == null) return
+
+                val preset = presetHelper.customPreset(dialog.presetId) ?: return
+                viewModelScope.launchIO {
+                    presetHelper.savePreset(
+                        preset.copy(
+                            name = trimmed,
+                            chronological = chronological,
+                            listingMode = presetState.listingMode,
+                            query = presetState.query,
+                            filters = presetState.filters,
+                        ),
+                    )
+                    state.update {
+                        it.copy(
+                            draftPresetId = preset.id,
+                            repairNeedsSave = false,
+                            dialog = Dialog.Filter,
+                            filterState = FilterUiState.Ready,
+                        )
+                    }
+                }
+                return
+            }
+        }
+    }
+
+    // endregion
+
+    fun dismissDialog() {
+        setDialog(null)
+    }
+
+    fun setToolbarQuery(query: String?) {
+        state.update { it.copy(toolbarQuery = query) }
+    }
+
+    private fun setDialog(dialog: Dialog?) {
+        if (state.value.dialog is Dialog.SelectEntryMergeTarget && dialog !is Dialog.SelectEntryMergeTarget) {
+            mergeTargetSearchController.cancelPending()
+        }
+        state.update { it.copy(dialog = dialog) }
+    }
+
+    private suspend fun showLibraryActionChooserOrHandle(entry: Entry) {
+        if (getLibraryEntries.await().isEmpty()) {
+            handleLibraryAction(entry)
+        } else {
+            setDialog(Dialog.LibraryActionChooser(entry))
+        }
+    }
+
+    sealed class Listing(open val query: String?, open val filters: EntryFilterList) {
+        data object Popular : Listing(query = CATALOGUE_POPULAR_QUERY, filters = EntryFilterList())
+        data object Latest : Listing(query = CATALOGUE_LATEST_QUERY, filters = EntryFilterList())
+        data class Search(
+            override val query: String?,
+            override val filters: EntryFilterList,
+        ) : Listing(query = query, filters = filters)
+
+        companion object {
+            fun valueOf(query: String?): Listing {
+                return when (query) {
+                    CATALOGUE_POPULAR_QUERY -> Popular
+                    CATALOGUE_LATEST_QUERY -> Latest
+                    else -> Search(query = query, filters = EntryFilterList())
+                }
+            }
+        }
+    }
+
+    sealed interface Event {
+        /** A toolbar search ran with the applied filters while the editor still held other changes. */
+        data object SearchKeptUnappliedFilters : Event
+    }
+
+    sealed interface Dialog {
+        data object Filter : Dialog
+
+        data class SavePreset(
+            val mode: Mode,
+            val presetId: String? = null,
+            val name: String = "",
+            val chronological: Boolean,
+        ) : Dialog {
+            enum class Mode {
+                Create,
+                EditMetadata,
+                UpdateFromCurrentState,
+            }
+        }
+
+        data class EntryPreview(val entryId: Long) : Dialog
+
+        data class LibraryActionChooser(val entry: Entry) : Dialog
+
+        data object CheckingDuplicates : Dialog
+
+        data class RemoveEntry(val entry: Entry) : Dialog
+
+        data class DuplicateEntry(
+            val entry: Entry,
+            val duplicates: List<DuplicateEntryCandidate>,
+        ) : Dialog
+
+        data class MigrateEntry(val target: Entry, val current: Entry) : Dialog
+
+        data class SelectEntryMergeTarget(
+            val entry: Entry,
+            val query: String = "",
+            val targets: ImmutableList<MergeTarget>,
+            val visibleTargets: ImmutableList<MergeTarget>,
+        ) : Dialog
+
+        data class EditEntryMerge(
+            val entry: Entry,
+            val editReference: EntryMergeEditReference,
+            val targetId: Long,
+            val targetReference: EntryMergeEditorEntryReference,
+            val targetLocked: Boolean,
+            val entries: ImmutableList<MergeEditorEntry>,
+            val referencesById: Map<Long, EntryMergeEditorEntryReference>,
+            val removedIds: Set<Long>,
+            val libraryRemovalIds: Set<Long>,
+        ) : Dialog {
+            val enabled: Boolean
+                get() = entries.count { it.id !in (removedIds + libraryRemovalIds) } > 1
+        }
+
+        data class ChangeEntryCategory(
+            val entry: Entry,
+            val initialSelection: List<CheckboxState.State<Category>>,
+        ) : Dialog
+    }
+
+    @Immutable
+    data class State(
+        val listing: Listing,
+        val parkedSearch: Listing.Search? = null,
+        val filters: EntryFilterList = EntryFilterList(),
+        val filterRevision: Int = 0,
+        val filterState: FilterUiState = FilterUiState.Uninitialized,
+        val filterResetPending: Boolean = false,
+        val appliedFiltersReady: Boolean = false,
+        val defaultFilters: EntryFilterList = EntryFilterList(),
+        val draftMode: FeedListingMode? = null,
+        val draftQuery: String? = null,
+        val draftPresetId: String? = null,
+        val repairIssues: List<FilterRestoreIssue> = emptyList(),
+        val repairNeedsSave: Boolean = false,
+        val pendingFilterEdits: Int = 0,
+        val toolbarQuery: String? = null,
+        val appliedCustomPresetId: String? = null,
+        val dialog: Dialog? = null,
+    ) {
+        val draftSearchQuery get() = if (draftMode != null) draftQuery else (listing as? Listing.Search)?.query
+        val canSaveFilterDraft get() = filterState is FilterUiState.Ready &&
+            pendingFilterEdits == 0 && repairIssues.isEmpty() &&
+            filters.validationIssues().isEmpty()
+        val isUserQuery get() = listing is Listing.Search && !listing.query.isNullOrEmpty()
+        val hasFilterCapability get() = filterState !is FilterUiState.Unavailable
+    }
+}
+
+private fun CatalogViewModel.Listing.toFeatureListing(): EntryCatalogueListing {
+    return when (this) {
+        CatalogViewModel.Listing.Popular -> EntryCatalogueListing.Popular
+        CatalogViewModel.Listing.Latest -> EntryCatalogueListing.Latest
+        is CatalogViewModel.Listing.Search -> EntryCatalogueListing.Search(query.orEmpty(), filters)
+    }
+}
+
+private fun Map<Long, EntryMergeEditorEntryReference>.referencesFor(
+    entryIds: Collection<Long>,
+): Set<EntryMergeEditorEntryReference> {
+    val ids = entryIds.toSet()
+    return filterKeys { it in ids }.values.toSet()
+}
+
+sealed interface FilterUiState {
+    data object Uninitialized : FilterUiState
+    data object Loading : FilterUiState
+    data object Ready : FilterUiState
+    data class Error(val throwable: Throwable) : FilterUiState
+    data object Unavailable : FilterUiState
+}
+
+internal fun initialCatalogState(listingQuery: String?): CatalogViewModel.State {
+    return CatalogViewModel.State(
+        listing = CatalogViewModel.Listing.valueOf(listingQuery),
+    )
+}
+
+internal enum class BrowseLongPressOutcome {
+    Handled,
+    StartImmersive,
+}
+
+internal fun resolveBrowseLongPressAction(
+    priority: Collection<CustomPreferences.BrowseLongPressAction>,
+    immersiveAvailable: Boolean,
+    previewEnabled: Boolean,
+): CustomPreferences.BrowseLongPressAction {
+    return sanitizeBrowseLongPressActionPriority(priority).first { action ->
+        when (action) {
+            CustomPreferences.BrowseLongPressAction.LIBRARY_ACTION -> true
+            CustomPreferences.BrowseLongPressAction.PREVIEW -> previewEnabled
+            CustomPreferences.BrowseLongPressAction.IMMERSIVE -> immersiveAvailable
+        }
+    }
+}

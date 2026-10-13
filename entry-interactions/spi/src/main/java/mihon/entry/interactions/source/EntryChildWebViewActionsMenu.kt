@@ -1,7 +1,5 @@
 package mihon.entry.interactions.source
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -14,6 +12,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.MoreVert
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -41,7 +41,7 @@ fun EntryChildWebViewActionsMenu(
 
     IconButton(onClick = { expanded = true }) {
         Icon(
-            imageVector = Icons.Outlined.MoreVert,
+            imageVector = MaterialSymbols.Rounded.MoreVert,
             contentDescription = stringResource(MR.strings.label_more),
             tint = contentColor,
         )

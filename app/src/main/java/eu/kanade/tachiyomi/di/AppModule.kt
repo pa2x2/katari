@@ -3,12 +3,7 @@ package eu.kanade.tachiyomi.di
 import android.app.Application
 import android.content.Context
 import androidx.core.content.ContextCompat
-import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import app.cash.sqldelight.db.SqlDriver
-import com.eygraber.sqldelight.androidx.driver.AndroidxSqliteConfiguration
-import com.eygraber.sqldelight.androidx.driver.AndroidxSqliteDatabaseType
-import com.eygraber.sqldelight.androidx.driver.AndroidxSqliteDriver
-import com.eygraber.sqldelight.androidx.driver.FileProvider
 import eu.kanade.domain.track.store.DelayedTrackingStore
 import eu.kanade.presentation.more.settings.screen.productionEntryViewerSettingsScreenProjectionResolver
 import eu.kanade.tachiyomi.data.cache.CoverCache
@@ -23,9 +18,19 @@ import eu.kanade.tachiyomi.network.JavaScriptEngine
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.source.AndroidSourceManager
 import eu.kanade.tachiyomi.source.entry.EntryPreferenceProvider
+import eu.kanade.tachiyomi.source.getDisplayNameForEntryInfo
 import eu.kanade.tachiyomi.ui.base.delegate.ThemingDelegateImpl
+import eu.kanade.tachiyomi.util.system.isDebugBuildType
+import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.protobuf.ProtoBuf
+import logcat.LogPriority
+import mihon.data.database.DatabaseRepositoryImpl
+import mihon.data.database.createSqlDriver
+import mihon.domain.database.repository.DatabaseRepository
 import mihon.entry.interactions.download.markEntryDownloadRuntimeDependenciesRegistered
 import mihon.entry.interactions.host.AppEntryMergeDuplicateCandidateHost
 import mihon.entry.interactions.host.AppEntryMergeHost
@@ -73,11 +78,13 @@ import mihon.feature.runtime.application.validateInstalledApplicationFeatureRunt
 import mihon.feature.runtime.createFeatureRuntimeComposition
 import mihon.feature.runtime.productionApplicationFeatureRuntimeComponents
 import mihon.feature.runtime.productionApplicationFeatureRuntimeModules
+import mihon.telemetry.TelemetryConfig
 import nl.adaptivity.xmlutil.XmlDeclMode
 import nl.adaptivity.xmlutil.core.XmlVersion
 import nl.adaptivity.xmlutil.serialization.XML
 import tachiyomi.core.common.preference.ProfilePreferenceOwnerInstaller
 import tachiyomi.core.common.storage.AndroidStorageFolderProvider
+import tachiyomi.core.common.util.system.logcat
 import tachiyomi.data.AndroidDatabaseHandler
 import tachiyomi.data.Chapters
 import tachiyomi.data.Database
@@ -89,9 +96,11 @@ import tachiyomi.data.MemoColumnAdapter
 import tachiyomi.data.StringListColumnAdapter
 import tachiyomi.data.UpdateStrategyColumnAdapter
 import tachiyomi.domain.entry.model.Entry
+import tachiyomi.domain.entry.service.EntryCustomCoverWriter
 import tachiyomi.domain.entry.service.EntryMetadataChangeNotifier
 import tachiyomi.domain.library.service.DuplicatePreferences
 import tachiyomi.domain.library.service.LibraryPreferences
+import tachiyomi.domain.source.service.SourceInfoNames
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.domain.storage.service.StorageManager
 import tachiyomi.source.local.image.LocalCoverManager
@@ -113,19 +122,13 @@ class AppModule(val app: Application) : InjektModule {
         addSingleton(app)
         addSingleton<Context>(app)
 
+        addSingletonFactory { DatabaseRepositoryImpl(lazy { get<SqlDriver>() }) }
+        addSingletonFactory<DatabaseRepository> { get<DatabaseRepositoryImpl>() }
         addSingletonFactory<SqlDriver> {
             synchronized(lock) {
                 sqlDriverRef?.get()?.let { return@synchronized it }
 
-                AndroidxSqliteDriver(
-                    driver = BundledSQLiteDriver(),
-                    databaseType = AndroidxSqliteDatabaseType.FileProvider(app, "tachiyomi.db"),
-                    schema = Database.Schema,
-                    configuration = AndroidxSqliteConfiguration(
-                        isForeignKeyConstraintsEnabled = true,
-                    ),
-                )
-                    .also { sqlDriverRef = WeakReference(it) }
+                createSqlDriver(app, get()).also { sqlDriverRef = WeakReference(it) }
             }
         }
         addSingletonFactory {
@@ -165,6 +168,7 @@ class AppModule(val app: Application) : InjektModule {
                 preferenceOwnership = get(),
                 entryRepository = get(),
                 destructiveRemoval = get(),
+                appScope = get(),
             )
         }
         addSingletonFactory<EntryPreferenceProvider> { ProfileSourcePreferenceProvider(app, get()) }
@@ -189,8 +193,23 @@ class AppModule(val app: Application) : InjektModule {
         addSingletonFactory<ProtoBuf> {
             ProtoBuf
         }
+        addSingletonFactory<CoroutineScope> {
+            // Work here outlives the screen that started it, so a failure would crash the app on whatever screen is
+            // open by then. Debug builds still crash so the bug gets noticed.
+            val handler = CoroutineExceptionHandler { _, throwable ->
+                if (isDebugBuildType) {
+                    val thread = Thread.currentThread()
+                    thread.uncaughtExceptionHandler?.uncaughtException(thread, throwable)
+                } else {
+                    logcat(LogPriority.ERROR, throwable) { "Uncaught exception in the app scope" }
+                    TelemetryConfig.recordException(throwable)
+                }
+            }
+            CoroutineScope(SupervisorJob() + Dispatchers.IO + handler)
+        }
 
-        addSingletonFactory { CoverCache(app) }
+        addSingletonFactory { CoverCache(get(), app) }
+        addSingletonFactory<EntryCustomCoverWriter> { get<CoverCache>() }
         addSingletonFactory<EntryMetadataChangeNotifier> { AppEntryMetadataChangeNotifier(get()) }
         addSingletonFactory { NetworkHelper(app, get()) }
         addSingletonFactory { JavaScriptEngine(app) }
@@ -198,9 +217,13 @@ class AppModule(val app: Application) : InjektModule {
         addSingletonFactory { AndroidStorageFolderProvider(app) }
         addSingletonFactory { LocalSourceFileSystem(get()) }
         addSingletonFactory { LocalCoverManager(app, get()) }
-        addSingletonFactory { StorageManager(app, get()) }
+        addSingletonFactory { StorageManager(app, get(), get()) }
 
-        addSingletonFactory<SourceManager> { AndroidSourceManager(app, get(), get()) }
+        addSingletonFactory<SourceManager> { AndroidSourceManager(app, get(), get(), get()) }
+        addSingletonFactory<SourceInfoNames> {
+            val sourceManager = get<SourceManager>()
+            SourceInfoNames { sourceId -> sourceManager.getDisplayInfo(sourceId).getDisplayNameForEntryInfo() }
+        }
         addSingletonFactory { ExtensionManager(app) }
         addSingletonFactory { TrackerManager(get(), get()) }
         addSingletonFactory { DelayedTrackingStore(app) }
@@ -218,7 +241,7 @@ class AppModule(val app: Application) : InjektModule {
         )
         val migrationHost = AppEntryMigrationHost(
             handler = get(),
-            hasCustomCover = { entryId -> get<CoverCache>().getCustomCoverFile(entryId).exists() },
+            hasCustomCover = { entryId -> get<CoverCache>().hasCustomCover(entryId) },
         )
         val migrationCustomCoverHost = AppEntryMigrationCustomCoverHost(app, get())
         val libraryMembershipHost = AppEntryLibraryMembershipHost(get(), get<ProfileStore>())
@@ -324,6 +347,7 @@ class AppModule(val app: Application) : InjektModule {
                 downloader = UpdateApkDownloader(app, get()),
                 verifier = UpdateApkVerifier(app),
                 installer = AppUpdateInstaller(app),
+                scope = get(),
             )
         }
 

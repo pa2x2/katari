@@ -21,15 +21,19 @@ internal class MangaPageStore(
     private val context: Context,
     json: Json,
 ) : EntryPageImageCache {
-    private val diskCache = DiskLruCache.open(
-        File(context.cacheDir, "chapter_disk_cache"),
-        PARAMETER_APP_VERSION,
-        PARAMETER_VALUE_COUNT,
-        PARAMETER_CACHE_SIZE,
-    )
+    // Opening reads the journal from disk, and the store is built at startup long before a reader needs it
+    private val diskCacheLazy = lazy {
+        DiskLruCache.open(
+            File(context.cacheDir, "chapter_disk_cache"),
+            PARAMETER_APP_VERSION,
+            PARAMETER_VALUE_COUNT,
+            PARAMETER_CACHE_SIZE,
+        )
+    }
+    private val diskCache by diskCacheLazy
     private val entryLocks = MangaPageCacheEntryLocks()
-    private val pageLists = MangaPageListStore(diskCache, json, entryLocks)
-    private val images = MangaPageImageStore(diskCache, entryLocks)
+    private val pageLists by lazy { MangaPageListStore(diskCache, json, entryLocks) }
+    private val images by lazy { MangaPageImageStore(diskCache, entryLocks) }
 
     override val readableSize: String
         get() = Formatter.formatFileSize(context, DiskUtil.getDirectorySize(diskCache.directory))
@@ -74,7 +78,7 @@ internal class MangaPageStore(
     }
 
     internal fun close() {
-        diskCache.close()
+        if (diskCacheLazy.isInitialized()) diskCache.close()
     }
 }
 

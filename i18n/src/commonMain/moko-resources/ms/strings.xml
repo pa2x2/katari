@@ -11,7 +11,7 @@
     <string name="label_library">Pustaka</string>
     <string name="label_recent_manga">Sejarah</string>
     <string name="label_recent_updates">Kemas kini</string>
-    <string name="label_backup">Sandaran dan memulih</string>
+    <string name="label_backup">Sandaran dan pemulihan</string>
     <string name="action_settings">Tetapan</string>
     <string name="action_filter">Tapis</string>
     <string name="action_filter_bookmarked">Ditanda</string>
@@ -31,13 +31,13 @@
     <string name="action_remove_bookmark">Buang penanda bab</string>
     <string name="action_delete">Padam</string>
     <string name="action_update_library">Kemas kini pustaka</string>
-    <string name="action_edit">Ubah</string>
+    <string name="action_edit">Sunting</string>
     <string name="action_add">Tambah</string>
     <string name="action_add_category">Tambah kategori</string>
-    <string name="action_edit_categories">Edit kategori</string>
+    <string name="action_edit_categories">Sunting kategori</string>
     <string name="action_move_category">Tetapkan kategori</string>
     <string name="action_edit_cover">Ubah muka hadapan</string>
-    <string name="action_pause">Henti sebentar</string>
+    <string name="action_pause">Jeda</string>
     <string name="action_previous_chapter">Bab sebelumnya</string>
     <string name="action_next_chapter">Bab seterusnya</string>
     <string name="action_retry">Cuba semula</string>
@@ -206,7 +206,6 @@
     <string name="notification_cover_update_failed">Gagal untuk kemas kini muka hadapan</string>
     <string name="notification_first_add_to_library">Sila tambahkan entri ke pustaka sebelum melakukan ini</string>
     <string name="file_select_cover">Pilih imej muka hadapan</string>
-    <string name="file_select_backup">Pilih fail sandaran</string>
     <string name="information_no_downloads">Tiada muat turun</string>
     <string name="information_no_recent">Tiada kemas kini terkini</string>
     <string name="information_no_recent_manga">Tiada bacaan setakat ini</string>
@@ -242,8 +241,7 @@
     <string name="double_tap_anim_speed_fast">Laju</string>
     <string name="manga_added_library">Ditambah ke pustaka</string>
     <string name="manga_removed_library">Dibuang dari pustaka</string>
-    <string name="copied_to_clipboard">Disalin ke papan keratan:
-\n%1$s</string>
+    <string name="copied_to_clipboard">Disalin ke papan keratan: \n%1$s</string>
     <string name="source_not_installed">Sumber tidak dipasang: %1$s</string>
     <string name="repeating">Membaca semula</string>
     <string name="track_status">Status</string>
@@ -336,8 +334,8 @@
     <string name="restore_in_progress">Pemulihan sudah pun berjalan</string>
     <string name="creating_backup_error">Sandaran gagal</string>
     <string name="backup_in_progress">Sandaran sedang dijalankan</string>
-    <string name="action_unpin">Buang sematkan</string>
-    <string name="action_pin">Sematkan</string>
+    <string name="action_unpin">Buang semat</string>
+    <string name="action_pin">Semat</string>
     <string name="label_downloaded_only">Dimuat turun sahaja</string>
     <string name="last_used_source">Terakhir digunakan</string>
     <string name="check_for_updates">Semak untuk kemas kini</string>
@@ -391,9 +389,6 @@
     <string name="backup_restore_missing_trackers">Penjejak yang tidak dilog masuk:</string>
     <string name="pref_remove_bookmarked_chapters">Benarkan memadam bab yang ditanda</string>
     <string name="pref_category_delete_chapters">Padam bab</string>
-    <string name="ext_nsfw_warning">Sumber daripada sambungan ini mungkin mengandungi kandungan 18+ tahun keatas</string>
-    <string name="ext_nsfw_short">18+</string>
-    <string name="parental_controls_info">Ini tidak menghalang sambungan yang tidak rasmi atau yang tidak ditandakan dengan betul daripada menayangkan kandungan 18+ tahun keatas dalam aplikasi.</string>
     <string name="no_chapters_error">Tiada bab dijumpai</string>
     <string name="chapter_settings_updated">Tetapan bab lalai dikemas kini</string>
     <string name="set_chapter_settings_as_default">Tetapkan sebagai lalai</string>
@@ -412,8 +407,6 @@
     <string name="spen_next_page">Muka surat seterusnya</string>
     <string name="spen_previous_page">Muka surat terdahulu</string>
     <string name="migration_help_guide">Panduan memindahkan sumber</string>
-    <string name="pref_category_nsfw_content">Sumber NSFW (18+)</string>
-    <string name="pref_show_nsfw_source">Tunjuk dalam senarai sumber dan sambungan</string>
     <string name="file_picker_error">Tiada aplikasi memilih fail</string>
     <string name="myanimelist_relogin">Sila log masuk ke MAL sekali lagi</string>
     <string name="pref_viewer_nav">Zon ketik</string>
@@ -562,7 +555,6 @@
     <string name="empty_screen">Hmm, ini agak menjanggalkan</string>
     <string name="pref_reset_viewer_flags_error">Tidak dapat set semula tetapan pembaca</string>
     <string name="ext_info_version">Versi</string>
-    <string name="ext_info_age_rating">Peringkat umur</string>
     <string name="ext_info_language">Bahasa</string>
     <string name="wish_list">Senarai Hajat</string>
     <string name="complete_list">Senarai Selesai</string>
@@ -616,8 +608,7 @@
     <string name="action_open_random_manga">Buka entri rawak</string>
     <string name="information_no_entries_found">Tiada entri dijumpai di kategori ini</string>
     <string name="download_notifier_cache_renewal">Menyemak muat turun</string>
-    <string name="fdroid_warning">Binaan F-Droid tidak disokong secara rasmi.
-\nKetik untuk mengetahui lebih lanjut.</string>
+    <string name="fdroid_warning">Binaan F-Droid tidak disokong secara rasmi. \nKetik untuk mengetahui lebih lanjut.</string>
     <string name="action_display_show_continue_reading_button">Butang sambung membaca</string>
     <string name="pref_invalidate_download_cache">Indeks semula muat turun</string>
     <string name="track_remove_date_conf_title">Buang tarikh?</string>
@@ -728,9 +719,8 @@
     <string name="ext_permission_install_apps_warning">Kebenaran diperlukan untuk memasang sambungan. Ketik di sini untuk membenarkan.</string>
     <string name="action_sort_tracker_score">Skor penjejak</string>
     <string name="ext_revoke_trust">Batalkan sambungan dipercayakan yang tidak diketahui</string>
-    <string name="action_open_repo">Buka repositori sumber</string>
     <string name="manga_interval_expected_update_soon">Tidak lama lagi</string>
-    <string name="scanlator">Pemindai</string>
+    <string name="scanlator">Scanlator</string>
     <string name="exclude_scanlators">Kecualikan scanlator</string>
     <string name="action_bar_up_description">Navigasi ke atas</string>
     <string name="pref_storage_location_info">Digunakan untuk sandaran automatik, muat turun bab, dan sumber lokal.</string>
@@ -748,7 +738,7 @@
     <string name="upcoming_guide">Panduan yang akan datang</string>
     <string name="upcoming_calendar_next">Bulan seterusnya</string>
     <string name="upcoming_calendar_prev">Bulan sebelumnya</string>
-    <string name="label_auto">Otomatis</string>
+    <string name="label_auto">Automatik</string>
     <string name="action_sort_random">Rawak</string>
     <string name="action_copy_link">Pautan salin</string>
     <string name="action_display_unread_badge">Bab yang belum dibaca</string>
@@ -781,11 +771,6 @@
     <string name="pref_flash_style_black">Hitam</string>
     <string name="pref_flash_style_white">Putih</string>
     <string name="pref_flash_style_white_black">Putih dan Hitam</string>
-    <string name="pref_hardware_bitmap_threshold">Ambang bitmap perkakasan tersuai</string>
-    <string name="pref_hardware_bitmap_threshold_default">Lalai (%d)</string>
-    <string name="pref_hardware_bitmap_threshold_summary">Sekiranya pembaca memuatkan imej kosong kurangkan ambang secara bertokok.\nDipilih: %s</string>
-    <string name="pref_always_decode_long_strip_with_ssiv_2">Gunakan penyahkod warisan untuk pembaca jalur panjang</string>
-    <string name="pref_always_decode_long_strip_with_ssiv_summary">Mempengaruhi prestasi. Hanya bolehkan sekiranya mengurangkan ambang bitmap tidak membetulkan masalah imej kosong</string>
     <string name="storage_failed_to_create_download_directory">Gagal membuat direktori muat turun</string>
     <string name="storage_failed_to_create_directory">Gagal membuat direktori: %s</string>
     <string name="pref_download_new_unread_chapters_only">Langkau memuat turun bab dibaca pendua</string>
@@ -842,8 +827,8 @@
     <string name="migrationListScreen.latestChapterLabel">Terkini: %1$s</string>
     <string name="migrationListScreen.unknownLatestChapter">Tidak diketahui</string>
     <string name="migrationListScreen.searchManuallyActionLabel">Cari secara manual</string>
-    <string name="migrationListScreen.skipActionLabel">Jangan berhijrah</string>
-    <string name="migrationListScreen.migrateNowActionLabel">Berhijrah sekarang</string>
+    <string name="migrationListScreen.skipActionLabel">Jangan hijrah</string>
+    <string name="migrationListScreen.migrateNowActionLabel">Hijrah sekarang</string>
     <string name="migrationListScreen.copyNowActionLabel">Salin sekarang</string>
     <string name="migrationListScreen.exitDialogTitle">Berhenti berhijrah?</string>
     <string name="migrationListScreen.exitDialog.stopLabel">Berhenti</string>
@@ -884,11 +869,16 @@
     <string name="supportUsScreen.donationPlatform.opencollective">OpenCollective</string>
     <string name="supportUsScreen.currentlySupportedBy">Mihon sedang disokong oleh %d+ penaung. Kami mahu berterima kasih kepada setiap anda semua. Marilah kita membuat Mihon lebih bagus bersama-sama.</string>
     <string name="supportUsScreen.contactForDetailsMessage">Untuk pilihan alternatif ataupun soalan berkaitan, sertai pelayan Discord kami.</string>
-    <string name="donationCampaign.title">Suka apl ini?</string>
+    <string name="donationCampaign.title">Suka app ini?</string>
     <string name="donationCampaign.paragraph1">Hai! Saya ialah pembangun utama di sebalik Mihon, dan saya ingin meminta anda untuk membuat pertimbangan dalam menyokong pembangunan Mihon dari segi kewangan. Dengan sumbangan yang cukup, saya boleh bekerja membangunkan Mihon secara sepenuh masa dan fokus sepenuhnya kepada isu-isu yang sudah lama berlarutan serta ciri-ciri yang amat diminta.</string>
     <string name="donationCampaign.paragraph2">Anda boleh menyumbang sama ada melalui Patreon (diutamakan) atau OpenCollective. Sekiranya anda mempunyai pertanyaan atau ingin menyokong menggunakan kaedah alternatif, anda amat dialu-alukan untuk menghubungi saya melalui pelayan Discord Mihon.</string>
     <string name="donationCampaign.paragraph3">Walau bagaimana sekalipun, Mihon akan tetap diselenggara oleh saya dan sukarelawan lain, dan ia akan kekal sebagai sumber terbuka.</string>
     <string name="donationCampaign.dismiss">Tutup</string>
     <string name="donationCampaign.contactPlatform">Discord</string>
     <string name="supportUsScreen.contactPlatform">Discord</string>
+    <string name="pref_hardware_bitmap_threshold">Ambang bitmap perkakasan tersuai</string>
+    <string name="pref_hardware_bitmap_threshold_default">Lalai (%d)</string>
+    <string name="pref_hardware_bitmap_threshold_summary">Sekiranya pembaca memuatkan imej kosong kurangkan ambang secara bertokok.\nDipilih: %s</string>
+    <string name="pref_always_decode_long_strip_with_ssiv_2">Gunakan penyahkod warisan untuk pembaca jalur panjang</string>
+    <string name="pref_always_decode_long_strip_with_ssiv_summary">Mempengaruhi prestasi. Hanya bolehkan sekiranya mengurangkan ambang bitmap tidak membetulkan masalah imej kosong</string>
 </resources>

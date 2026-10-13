@@ -41,8 +41,6 @@ object SettingsDownloadScreen : SearchableSettings {
         val downloadPreferences = remember { Injekt.get<DownloadPreferences>() }
         val downloadSettingsFeature = remember { Injekt.get<EntryDownloadSettingsFeature>() }
         val specializedSettings = downloadSettingsFeature.availableSettings
-        val parallelSourceLimit by downloadPreferences.parallelSourceLimit.collectAsState()
-        val parallelPageLimit by downloadPreferences.parallelPageLimit.collectAsState()
         val translatePreferences = remember { Injekt.get<EntryTranslatePreferences>() }
         val translateAvailable = remember {
             Injekt.get<EntryTranslateFeature>().let { feature -> EntryType.entries.any(feature::isApplicable) }
@@ -56,8 +54,6 @@ object SettingsDownloadScreen : SearchableSettings {
             getSpecializedDownloadGroup(
                 downloadPreferences = downloadPreferences,
                 settings = specializedSettings,
-                parallelSourceLimit = parallelSourceLimit,
-                parallelPageLimit = parallelPageLimit,
             ).takeIf { specializedSettings.isNotEmpty() },
             getDeleteChaptersGroup(
                 downloadPreferences = downloadPreferences,
@@ -79,8 +75,6 @@ object SettingsDownloadScreen : SearchableSettings {
     private fun getSpecializedDownloadGroup(
         downloadPreferences: DownloadPreferences,
         settings: Set<EntryDownloadSetting>,
-        parallelSourceLimit: Int,
-        parallelPageLimit: Int,
     ): Preference.PreferenceGroup {
         return Preference.PreferenceGroup(
             title = stringResource(MR.strings.pref_category_download_behavior),
@@ -95,17 +89,15 @@ object SettingsDownloadScreen : SearchableSettings {
                     subtitle = stringResource(MR.strings.split_tall_images_summary),
                 ).takeIf { EntryDownloadSetting.TALL_IMAGE_SPLITTING in settings },
                 Preference.PreferenceItem.SliderPreference(
-                    value = parallelSourceLimit,
+                    preference = downloadPreferences.parallelSourceLimit,
                     valueRange = 1..10,
                     title = stringResource(MR.strings.pref_download_concurrent_sources),
-                    onValueChanged = { downloadPreferences.parallelSourceLimit.set(it) },
                 ).takeIf { EntryDownloadSetting.PARALLEL_SOURCE_TRANSFERS in settings },
                 Preference.PreferenceItem.SliderPreference(
-                    value = parallelPageLimit,
+                    preference = downloadPreferences.parallelPageLimit,
                     valueRange = 1..15,
                     title = stringResource(MR.strings.pref_download_concurrent_pages),
                     subtitle = stringResource(MR.strings.pref_download_concurrent_pages_summary),
-                    onValueChanged = { downloadPreferences.parallelPageLimit.set(it) },
                 ).takeIf { EntryDownloadSetting.PARALLEL_ITEM_TRANSFERS in settings },
             ),
         )
@@ -202,7 +194,7 @@ object SettingsDownloadScreen : SearchableSettings {
                 Preference.PreferenceItem.SwitchPreference(
                     preference = downloadNewUnreadEntryChaptersOnlyPref,
                     title = stringResource(MR.strings.pref_download_new_unread_chapters_only),
-                    enabled = downloadNewEntryChapters,
+                    visible = downloadNewEntryChapters,
                 ),
                 Preference.PreferenceItem.TextPreference(
                     title = stringResource(MR.strings.categories),
@@ -211,7 +203,7 @@ object SettingsDownloadScreen : SearchableSettings {
                         included = included,
                         excluded = excluded,
                     ),
-                    enabled = downloadNewEntryChapters,
+                    visible = downloadNewEntryChapters,
                     onClick = { showDialog = true },
                 ),
             ),
@@ -254,7 +246,7 @@ object SettingsDownloadScreen : SearchableSettings {
                     preference = translatePreferences.translateNewChapters,
                     title = stringResource(MR.strings.pref_translate_new),
                     subtitle = stringResource(MR.strings.pref_translate_new_summary),
-                    enabled = downloadNewItems,
+                    visible = downloadNewItems,
                 ),
                 Preference.PreferenceItem.ListPreference(
                     preference = translatePreferences.translateAheadWhileReading,

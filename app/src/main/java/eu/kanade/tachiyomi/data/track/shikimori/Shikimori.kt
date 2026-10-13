@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.data.track.shikimori
 
 import dev.icerock.moko.resources.StringResource
+import eu.kanade.domain.track.model.toDbTrack
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.database.models.Track
 import eu.kanade.tachiyomi.data.track.BaseTracker
@@ -27,6 +28,8 @@ class Shikimori(id: Long) : BaseTracker(id, "Shikimori"), DeletableTracker, Exte
 
         private val SCORE_LIST = IntRange(0, 10)
             .map(Int::toString)
+
+        private const val SEARCH_ID_PREFIX = "id:"
     }
 
     private val json: Json by injectLazy()
@@ -58,10 +61,21 @@ class Shikimori(id: Long) : BaseTracker(id, "Shikimori"), DeletableTracker, Exte
             }
         }
 
-        return api.updateLibManga(track, getUsername())
+        // Updates address the user rate by id, which tracks linked by older versions may not have stored
+        if (track.library_id == null || track.library_id == 0L) {
+            val remoteTrack = api.findLibManga(track) ?: return add(track)
+            track.library_id = remoteTrack.library_id
+        }
+
+        return api.updateLibManga(track)
     }
 
     override suspend fun delete(track: DomainTrack) {
+        if (track.libraryId == null || track.libraryId == 0L) {
+            val remoteTrack = api.findLibManga(track.toDbTrack()) ?: return
+            return api.deleteLibManga(track.copy(libraryId = remoteTrack.library_id))
+        }
+
         api.deleteLibManga(track)
     }
 
@@ -86,15 +100,20 @@ class Shikimori(id: Long) : BaseTracker(id, "Shikimori"), DeletableTracker, Exte
     }
 
     override suspend fun search(query: String): List<TrackSearch> {
+        if (query.startsWith(SEARCH_ID_PREFIX)) {
+            query.substringAfter(SEARCH_ID_PREFIX).trim().toIntOrNull()?.let { id ->
+                return api.getMangaDetails(id)?.let { listOf(it) } ?: emptyList()
+            }
+        }
+
         return api.search(query)
     }
 
     override suspend fun refresh(track: Track): Track {
-        api.findLibManga(track, isRefresh = true)?.let { remoteTrack ->
-            track.library_id = remoteTrack.library_id
-            track.copyPersonalFrom(remoteTrack)
-            track.total_chapters = remoteTrack.total_chapters
-        } ?: throw Exception("Could not find manga")
+        val remoteTrack = api.findLibManga(track) ?: throw Exception("Could not find manga")
+        track.library_id = remoteTrack.library_id
+        track.copyPersonalFrom(remoteTrack)
+        track.total_chapters = remoteTrack.total_chapters
         return track
     }
 
@@ -129,9 +148,14 @@ class Shikimori(id: Long) : BaseTracker(id, "Shikimori"), DeletableTracker, Exte
             val user = api.getCurrentUser()
             saveDisplayUsername(user.nickname)
             saveCredentials(user.id, oauth.accessToken)
-        } catch (e: Throwable) {
+        } catch (_: Throwable) {
             logout()
         }
+    }
+
+    override suspend fun updateUserConfig() {
+        val currentUser = api.getCurrentUser()
+        saveDisplayUsername(currentUser.nickname)
     }
 
     fun saveToken(oauth: SMOAuth?) {
@@ -141,7 +165,7 @@ class Shikimori(id: Long) : BaseTracker(id, "Shikimori"), DeletableTracker, Exte
     fun restoreToken(): SMOAuth? {
         return try {
             json.decodeFromString<SMOAuth>(trackPreferences.trackToken(this).get())
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             null
         }
     }

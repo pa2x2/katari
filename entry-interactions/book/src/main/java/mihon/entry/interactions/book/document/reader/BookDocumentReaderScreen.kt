@@ -10,9 +10,6 @@ import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.ViewList
-import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -70,6 +67,9 @@ import mihon.entry.interactions.source.EntryChildWebViewAction
 import mihon.entry.interactions.source.EntryChildWebViewActionsMenu
 import mihon.entry.interactions.source.EntryChildWebViewResolution
 import mihon.entry.viewer.settings.ui.ReaderSettingsDialogHost
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.automirroredrounded.ViewList
+import mihon.icons.materialsymbols.rounded.Settings
 import mihon.translation.ui.presentation.TranslationResultSpeechPhase
 import mihon.translation.ui.presentation.TranslationResultSpeechState
 import tachiyomi.domain.entry.model.EntryChapter
@@ -314,12 +314,15 @@ internal fun BookDocumentReaderScreen(
                                     BookDocumentReadingModeShortcut(settingBindings.readingMode)
                                     ReaderChromeBottomBarAction(onClick = { onNavigationVisibilityChange(true) }) {
                                         Icon(
-                                            Icons.AutoMirrored.Outlined.ViewList,
+                                            MaterialSymbols.AutoMirroredRounded.ViewList,
                                             stringResource(MR.strings.reader_table_of_contents),
                                         )
                                     }
                                     ReaderChromeBottomBarAction(onClick = { onSettingsVisibilityChange(true) }) {
-                                        Icon(Icons.Outlined.Settings, stringResource(MR.strings.action_settings))
+                                        Icon(
+                                            MaterialSymbols.Rounded.Settings,
+                                            stringResource(MR.strings.action_settings),
+                                        )
                                     }
                                 }
                             }

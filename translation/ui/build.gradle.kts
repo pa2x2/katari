@@ -11,11 +11,11 @@ android {
 dependencies {
     api(projects.translation.api)
 
+    implementation(projects.icons.materialSymbols)
     implementation(projects.presentationCore)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.foundation)
     implementation(libs.androidx.compose.material3)
-    implementation(libs.androidx.compose.materialIcons)
     implementation(libs.androidx.compose.uiToolingPreview)
     implementation(libs.androidx.core)
     implementation(libs.kotlinx.coroutines.core)

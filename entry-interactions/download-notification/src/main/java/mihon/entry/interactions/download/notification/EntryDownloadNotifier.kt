@@ -70,7 +70,16 @@ class AndroidEntryDownloadNotifier(
     private val labels: EntryDownloadNotificationLabels = context.entryDownloadNotificationLabels(),
     private val publisher: EntryDownloadNotificationPublisher = AndroidEntryDownloadNotificationPublisher(context),
 ) : EntryDownloadNotificationPresenter {
+    // False until the first progress after a pause or completion, which also clears a paused notification that may
+    // have outlived an earlier process
+    @Volatile
+    private var showingProgress = false
+
     override fun showProgress(content: EntryDownloadProgressNotification) {
+        if (!showingProgress) {
+            publisher.cancel(EntryDownloadNotifications.ID_PAUSED)
+            showingProgress = true
+        }
         val hideContent = hideNotificationContent()
         notificationBuilder(EntryDownloadNotifications.CHANNEL_PROGRESS) {
             setSmallIcon(android.R.drawable.stat_sys_download)
@@ -96,6 +105,7 @@ class AndroidEntryDownloadNotifier(
     }
 
     override fun showPaused() {
+        showingProgress = false
         notificationBuilder(EntryDownloadNotifications.CHANNEL_PROGRESS) {
             setContentTitle(labels.paused)
             setContentText(labels.downloadsPaused)
@@ -115,11 +125,13 @@ class AndroidEntryDownloadNotifier(
                 labels.cancelAll,
                 actions.clearDownloads(context),
             )
-        }.show(EntryDownloadNotifications.ID_PROGRESS)
+        }.show(EntryDownloadNotifications.ID_PAUSED)
     }
 
     override fun onComplete() {
+        showingProgress = false
         publisher.cancel(EntryDownloadNotifications.ID_PROGRESS)
+        publisher.cancel(EntryDownloadNotifications.ID_PAUSED)
     }
 
     override fun showError(content: EntryDownloadErrorNotification) {

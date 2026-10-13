@@ -8,7 +8,7 @@ import eu.kanade.tachiyomi.source.model.SChapter
 import eu.kanade.tachiyomi.source.model.SManga
 import eu.kanade.tachiyomi.source.model.SMangaUpdate
 
-class StubSource(
+data class StubSource(
     override val id: Long,
     override val lang: String,
     override val name: String,
@@ -37,19 +37,6 @@ class StubSource(
 
     override fun toString(): String =
         if (!isInvalid) "$name (${lang.uppercase()})" else id.toString()
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other !is StubSource) return false
-        return id == other.id && lang == other.lang && name == other.name
-    }
-
-    override fun hashCode(): Int {
-        var result = id.hashCode()
-        result = 31 * result + lang.hashCode()
-        result = 31 * result + name.hashCode()
-        return result
-    }
 
     companion object {
         fun from(source: Source): StubSource {

@@ -5,7 +5,6 @@ import androidx.core.net.toUri
 import com.hippo.unifile.UniFile
 import eu.kanade.tachiyomi.util.storage.DiskUtil
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -18,9 +17,8 @@ import kotlinx.coroutines.flow.shareIn
 class StorageManager(
     private val context: Context,
     storagePreferences: StoragePreferences,
+    private val scope: CoroutineScope,
 ) {
-
-    private val scope = CoroutineScope(Dispatchers.IO)
 
     private var baseDir: UniFile? = getBaseDir(storagePreferences.baseStorageDirectory.get())
 

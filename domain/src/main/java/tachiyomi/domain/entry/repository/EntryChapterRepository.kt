@@ -2,6 +2,7 @@ package tachiyomi.domain.entry.repository
 
 import kotlinx.coroutines.flow.Flow
 import tachiyomi.domain.entry.model.EntryChapter
+import tachiyomi.domain.entry.model.EntryChapterSummary
 
 interface EntryChapterRepository {
 
@@ -12,6 +13,8 @@ interface EntryChapterRepository {
     fun getChaptersByEntryIds(entryIds: List<Long>): Flow<List<EntryChapter>>
 
     suspend fun getChaptersByEntryIdAwait(entryId: Long, applyScanlatorFilter: Boolean = false): List<EntryChapter>
+
+    suspend fun getChapterSummaryByEntryId(entryId: Long): EntryChapterSummary
 
     suspend fun getRecentRead(
         offset: Int = 0,
@@ -32,7 +35,19 @@ interface EntryChapterRepository {
 
     suspend fun deleteByEntryId(entryId: Long): Boolean
 
-    suspend fun removeChaptersWithIds(chapterIds: List<Long>)
+    /**
+     * Writes a source sync's chapter changes in one transaction, so a failed sync leaves the chapters as they were.
+     * [afterUpdates] runs inside that transaction once [updated] is written, and repository writes made from it join
+     * the transaction.
+     *
+     * @return [inserted] with their database ids.
+     */
+    suspend fun applySourceSync(
+        removedIds: List<Long>,
+        updated: List<EntryChapter>,
+        inserted: List<EntryChapter>,
+        afterUpdates: suspend () -> Unit = {},
+    ): List<EntryChapter>
 
     suspend fun getScanlatorsByEntryId(entryId: Long): List<String>
 

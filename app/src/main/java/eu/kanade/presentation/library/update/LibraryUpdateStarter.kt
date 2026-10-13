@@ -28,8 +28,9 @@ import uy.kohesive.injekt.api.get
 import kotlin.time.Clock
 
 /**
- * Starts library updates from a screen. A started update sums itself up in a snackbar once it finishes, offering to
- * check what the rules skipped; a refused start says an update is already running.
+ * Starts library updates from a screen, saying in a snackbar when one is already running. Screens without their own
+ * summary of the latest update use [rememberReportingLibraryUpdateStarter], which also sums a started update up once it
+ * finishes and offers to check what the rules skipped.
  */
 class LibraryUpdateStarter internal constructor(
     private val onStarted: (requestedAt: Long) -> Unit,
@@ -44,26 +45,20 @@ class LibraryUpdateStarter internal constructor(
     }
 }
 
+@Composable
+fun rememberLibraryUpdateStarter(snackbarHostState: SnackbarHostState): LibraryUpdateStarter =
+    rememberStarter(snackbarHostState, onStarted = {})
+
 /** @param startSkippedOfLatest starts an update of the entries the latest one skipped. */
 @Composable
-fun rememberLibraryUpdateStarter(
+fun rememberReportingLibraryUpdateStarter(
     snackbarHostState: SnackbarHostState,
     startSkippedOfLatest: suspend () -> Boolean,
 ): LibraryUpdateStarter {
-    val context = LocalContext.current
     val scope = rememberCoroutineScope()
     // Only an update that began after the request counts, so an earlier run's result is never reported as this one's.
     var awaitedRequestedAt by rememberSaveable { mutableStateOf<Long?>(null) }
-    val starter = remember(snackbarHostState) {
-        LibraryUpdateStarter(
-            onStarted = { awaitedRequestedAt = it },
-            onRefused = {
-                scope.launch {
-                    snackbarHostState.showSnackbar(context.stringResource(MR.strings.update_already_running))
-                }
-            },
-        )
-    }
+    val starter = rememberStarter(snackbarHostState, onStarted = { awaitedRequestedAt = it })
     val currentStartSkippedOfLatest by rememberUpdatedState(startSkippedOfLatest)
     LibraryUpdateResultSnackbar(
         requestedAt = awaitedRequestedAt,
@@ -72,6 +67,26 @@ fun rememberLibraryUpdateStarter(
         onCheckSkipped = { scope.launch { starter.start(currentStartSkippedOfLatest) } },
     )
     return starter
+}
+
+@Composable
+private fun rememberStarter(
+    snackbarHostState: SnackbarHostState,
+    onStarted: (requestedAt: Long) -> Unit,
+): LibraryUpdateStarter {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val currentOnStarted by rememberUpdatedState(onStarted)
+    return remember(snackbarHostState) {
+        LibraryUpdateStarter(
+            onStarted = { currentOnStarted(it) },
+            onRefused = {
+                scope.launch {
+                    snackbarHostState.showSnackbar(context.stringResource(MR.strings.update_already_running))
+                }
+            },
+        )
+    }
 }
 
 @Composable

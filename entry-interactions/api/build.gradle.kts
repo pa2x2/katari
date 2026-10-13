@@ -20,9 +20,11 @@ dependencies {
     api(projects.translation.api)
     api(libs.kotlinx.coroutines.core)
 
-    implementation(libs.androidx.compose.materialIcons)
+    implementation(projects.icons.customMaterialSymbols)
+    implementation(projects.icons.materialSymbols)
     implementation(libs.androidx.core)
 
     testImplementation(libs.bundles.test)
+    testImplementation(libs.kotlinx.coroutines.test)
     testRuntimeOnly(libs.junit.platform.launcher)
 }

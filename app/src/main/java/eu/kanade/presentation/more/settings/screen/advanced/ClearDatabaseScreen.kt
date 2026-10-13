@@ -8,9 +8,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Deselect
-import androidx.compose.material.icons.outlined.SelectAll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
@@ -30,9 +27,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastMap
-import cafe.adriel.voyager.core.model.StateScreenModel
-import cafe.adriel.voyager.core.model.rememberScreenModel
-import cafe.adriel.voyager.core.model.screenModelScope
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.browse.components.SourceIcon
@@ -40,13 +37,20 @@ import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppBarActions
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.util.system.toast
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.withContext
 import mihon.entry.interactions.lifecycle.removal.EntryDestructiveRemovalFeature
 import mihon.entry.interactions.lifecycle.removal.EntryDestructiveRemovalResult
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Deselect
+import mihon.icons.materialsymbols.rounded.SelectAll
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.launchUI
-import tachiyomi.core.common.util.lang.withNonCancellableContext
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.source.interactor.GetSourcesWithNonLibraryEntries
 import tachiyomi.domain.source.model.Source
@@ -68,13 +72,13 @@ class ClearDatabaseScreen : Screen() {
     override fun Content() {
         val context = LocalContext.current
         val navigator = LocalNavigator.currentOrThrow
-        val model = rememberScreenModel { ClearDatabaseScreenModel() }
+        val model = viewModel { ClearDatabaseViewModel() }
         val state by model.state.collectAsState()
         val scope = rememberCoroutineScope()
 
         when (val s = state) {
-            is ClearDatabaseScreenModel.State.Loading -> LoadingScreen()
-            is ClearDatabaseScreenModel.State.Ready -> {
+            is ClearDatabaseViewModel.State.Loading -> LoadingScreen()
+            is ClearDatabaseViewModel.State.Ready -> {
                 if (s.showConfirmation) {
                     var keepReadManga by remember { mutableStateOf(true) }
                     AlertDialog(
@@ -143,12 +147,12 @@ class ClearDatabaseScreen : Screen() {
                                         actions = listOf(
                                             AppBar.Action(
                                                 title = stringResource(MR.strings.action_select_all),
-                                                icon = Icons.Outlined.SelectAll,
+                                                icon = MaterialSymbols.Rounded.SelectAll,
                                                 onClick = model::selectAll,
                                             ),
                                             AppBar.Action(
                                                 title = stringResource(MR.strings.action_select_inverse),
-                                                icon = Icons.Outlined.Deselect,
+                                                icon = MaterialSymbols.Rounded.Deselect,
                                                 onClick = model::invertSelection,
                                             ),
                                         ),
@@ -221,16 +225,20 @@ class ClearDatabaseScreen : Screen() {
     }
 }
 
-private class ClearDatabaseScreenModel : StateScreenModel<ClearDatabaseScreenModel.State>(State.Loading) {
+private class ClearDatabaseViewModel : ViewModel() {
+
+    val state: StateFlow<ClearDatabaseViewModel.State>
+        field = MutableStateFlow<ClearDatabaseViewModel.State>(State.Loading)
+
     private val getSourcesWithNonLibraryEntries: GetSourcesWithNonLibraryEntries = Injekt.get()
     private val entryRepository: EntryRepository = Injekt.get()
     private val destructiveRemoval: EntryDestructiveRemovalFeature = Injekt.get()
 
     init {
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             getSourcesWithNonLibraryEntries.subscribe()
                 .collectLatest { list ->
-                    mutableState.update { old ->
+                    state.update { old ->
                         val items = list.sortedBy { it.name }
                         when (old) {
                             State.Loading -> State.Ready(items)
@@ -241,8 +249,9 @@ private class ClearDatabaseScreenModel : StateScreenModel<ClearDatabaseScreenMod
         }
     }
 
-    suspend fun removeMangaBySourceId(keepReadManga: Boolean) = withNonCancellableContext {
-        val state = state.value as? State.Ready ?: return@withNonCancellableContext
+    // Removal deletes each entry's cover files on the calling thread
+    suspend fun removeMangaBySourceId(keepReadManga: Boolean) = withContext(NonCancellable + Dispatchers.IO) {
+        val state = state.value as? State.Ready ?: return@withContext
         val entries = entryRepository.getNonLibraryEntriesBySources(
             sourceIds = state.selection,
             keepReadEntries = keepReadManga,
@@ -255,7 +264,7 @@ private class ClearDatabaseScreenModel : StateScreenModel<ClearDatabaseScreenMod
         }
     }
 
-    fun toggleSelection(source: Source) = mutableState.update { state ->
+    fun toggleSelection(source: Source) = state.update { state ->
         if (state !is State.Ready) return@update state
         val mutableList = state.selection.toMutableList()
         if (mutableList.contains(source.id)) {
@@ -266,17 +275,17 @@ private class ClearDatabaseScreenModel : StateScreenModel<ClearDatabaseScreenMod
         state.copy(selection = mutableList)
     }
 
-    fun clearSelection() = mutableState.update { state ->
+    fun clearSelection() = state.update { state ->
         if (state !is State.Ready) return@update state
         state.copy(selection = emptyList())
     }
 
-    fun selectAll() = mutableState.update { state ->
+    fun selectAll() = state.update { state ->
         if (state !is State.Ready) return@update state
         state.copy(selection = state.items.fastMap { it.id })
     }
 
-    fun invertSelection() = mutableState.update { state ->
+    fun invertSelection() = state.update { state ->
         if (state !is State.Ready) return@update state
         state.copy(
             selection = state.items
@@ -285,12 +294,12 @@ private class ClearDatabaseScreenModel : StateScreenModel<ClearDatabaseScreenMod
         )
     }
 
-    fun showConfirmation() = mutableState.update { state ->
+    fun showConfirmation() = state.update { state ->
         if (state !is State.Ready) return@update state
         state.copy(showConfirmation = true)
     }
 
-    fun hideConfirmation() = mutableState.update { state ->
+    fun hideConfirmation() = state.update { state ->
         if (state !is State.Ready) return@update state
         state.copy(showConfirmation = false)
     }

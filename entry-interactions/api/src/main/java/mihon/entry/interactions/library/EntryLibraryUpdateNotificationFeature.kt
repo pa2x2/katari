@@ -12,7 +12,7 @@ interface EntryLibraryUpdateNotificationFeature {
     fun routes(): List<EntryLibraryUpdateNotificationRoute>
 
     /** Resolves whether metered-source queue concentration requires the shared warning. */
-    fun queueWarning(entries: List<Entry>): EntryLibraryUpdateQueueWarning
+    suspend fun queueWarning(entries: List<Entry>): EntryLibraryUpdateQueueWarning
 
     /** Converts actual library-update participation into the complete shared notification render plan. */
     suspend fun project(

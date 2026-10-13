@@ -21,6 +21,7 @@ import mihon.translation.api.request.ResolvedTranslationRoute
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.source.service.SourceManager
+import tachiyomi.domain.source.service.awaitInitialized
 
 /** Translates downloaded manga chapters into stored translations the reader opens with. */
 internal class MangaEntryTranslateProcessor(
@@ -58,6 +59,8 @@ internal class MangaEntryTranslateProcessor(
     ): EntryTranslateResult {
         val chapterSetup = setup.toChapterSetup()
             ?: return EntryTranslateResult.Failed(EntryTranslateFailure.SetupRequired)
+        // The queue resumes in the background, possibly as the process starts and before the sources have loaded
+        sourceManager.awaitInitialized()
         val source = sourceManager.get(entry.source)
             ?: return EntryTranslateResult.Failed(EntryTranslateFailure.DownloadMissing)
         val outcome = pages().use(chapter, entry, source) { chapterPages ->

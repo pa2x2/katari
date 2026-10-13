@@ -18,6 +18,7 @@ import mihon.feature.migration.discovery.model.SourceMigrationDiscoveryResult
 import mihon.feature.migration.discovery.model.SourceMigrationSourceFailure
 import mihon.feature.migration.session.model.SourceMigrationDiscoveryFailureReason
 import tachiyomi.domain.entry.model.Entry
+import tachiyomi.domain.source.service.awaitSourcesInitialized
 import java.util.concurrent.ConcurrentHashMap
 
 class SourceMigrationCandidateDiscovery internal constructor(
@@ -34,6 +35,9 @@ class SourceMigrationCandidateDiscovery internal constructor(
     }
 
     suspend fun discover(request: SourceMigrationDiscoveryRequest): SourceMigrationDiscoveryResult {
+        // The discovery worker can start with the process, and a target source that hasn't loaded yet would be
+        // reported as missing for good
+        awaitSourcesInitialized(catalogue.isInitialized)
         val sourceResults = supervisorScope {
             request.targetSourceIds.mapIndexed { sourcePriority, sourceId ->
                 async {

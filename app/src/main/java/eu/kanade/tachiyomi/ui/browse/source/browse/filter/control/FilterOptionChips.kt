@@ -7,9 +7,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Check
-import androidx.compose.material.icons.outlined.Remove
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -28,6 +25,9 @@ import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import eu.kanade.tachiyomi.source.entry.EntryFilter
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Check
+import mihon.icons.materialsymbols.rounded.Remove
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -113,12 +113,12 @@ private fun FilterOptionChip(
             when (state) {
                 FilterOptionState.NotUsed -> Unit
                 FilterOptionState.Included -> Icon(
-                    Icons.Outlined.Check,
+                    MaterialSymbols.Rounded.Check,
                     null,
                     Modifier.size(FilterChipDefaults.IconSize),
                 )
                 FilterOptionState.Excluded -> Icon(
-                    Icons.Outlined.Remove,
+                    MaterialSymbols.Rounded.Remove,
                     null,
                     Modifier.size(FilterChipDefaults.IconSize),
                 )

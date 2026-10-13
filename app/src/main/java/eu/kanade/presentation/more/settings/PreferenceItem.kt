@@ -40,10 +40,10 @@ fun StatusWrapper(
     highlightKey: String?,
     content: @Composable () -> Unit,
 ) {
-    val enabled = item.enabled
+    val visible = item.visible
     val highlighted = item.title == highlightKey
     AnimatedVisibility(
-        visible = enabled,
+        visible = visible,
         enter = expandVertically() + fadeIn(),
         exit = shrinkVertically() + fadeOut(),
         content = {
@@ -87,16 +87,19 @@ internal fun PreferenceItem(
                 )
             }
             is Preference.PreferenceItem.SliderPreference -> {
+                val value by item.preference.collectAsState()
                 BaseSliderItem(
-                    value = item.value,
+                    value = value,
                     valueRange = item.valueRange,
                     steps = item.steps,
                     title = item.title,
                     subtitle = item.subtitle,
-                    valueString = item.valueString.takeUnless { it.isNullOrEmpty() } ?: item.value.toString(),
-                    onChange = {
+                    valueString = item.valueText(value),
+                    onChange = { newValue ->
                         scope.launch {
-                            item.onValueChanged(it)
+                            if (item.onValueChanged(newValue)) {
+                                item.preference.set(newValue)
+                            }
                         }
                     },
                     titleStyle = MaterialTheme.typography.titleLarge.copy(fontSize = TitleFontSize),
@@ -210,6 +213,8 @@ internal fun PreferenceItem(
                     service = item.account.service,
                     isLoggedIn = item.account.isLoggedIn,
                     displayUsername = item.account.displayUsername,
+                    isRefreshing = item.isRefreshing,
+                    onRefresh = item.refresh,
                     onClick = { if (item.account.isLoggedIn) item.logout() else item.login() },
                 )
             }

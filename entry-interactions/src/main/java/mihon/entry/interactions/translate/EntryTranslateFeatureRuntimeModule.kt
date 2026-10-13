@@ -2,8 +2,6 @@ package mihon.entry.interactions.translate
 
 import eu.kanade.tachiyomi.core.security.SecurityPreferences
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import mihon.entry.interactions.runtime.EntryInteractions
 import mihon.entry.interactions.runtime.production.EntryFeatureRuntimeArtifacts
@@ -108,7 +106,7 @@ internal val EntryTranslateFeatureRuntimeModule = EntryFeatureRuntimeModule(
         executionBindings = listOf(entryTranslateAheadMediaSessionBinding { get<EntryTranslateAhead>() }),
         runtimeBoundaries = listOf(entryFeatureRuntimeBoundary { get<EntryTranslateFeature>() }),
         warmups = listOf {
-            val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+            val scope = get<CoroutineScope>()
             scope.launch { get<EntryTranslateDownloadChaining>().run() }
             scope.launch { get<EntryTranslateDownloadRules>().run() }
             scope.launch { get<EntryTranslatePausedNotification>().run() }

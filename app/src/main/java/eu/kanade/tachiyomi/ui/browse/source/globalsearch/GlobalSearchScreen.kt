@@ -8,7 +8,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import cafe.adriel.voyager.core.model.rememberScreenModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.core.util.ifCatalogSourcesLoaded
@@ -34,13 +34,13 @@ class GlobalSearchScreen(
         val navigator = LocalNavigator.currentOrThrow
         val scope = rememberCoroutineScope()
 
-        val screenModel = rememberScreenModel {
-            GlobalSearchScreenModel(
+        val viewModel = viewModel {
+            GlobalSearchViewModel(
                 initialQuery = searchQuery,
                 initialExtensionFilter = extensionFilter,
             )
         }
-        val state by screenModel.state.collectAsState()
+        val state by viewModel.state.collectAsState()
         var showSingleLoadingScreen by remember {
             mutableStateOf(searchQuery.isNotEmpty() && !extensionFilter.isNullOrEmpty() && state.total == 1)
         }
@@ -66,11 +66,11 @@ class GlobalSearchScreen(
             GlobalSearchScreen(
                 state = state,
                 navigateUp = navigator::pop,
-                onChangeSearchQuery = screenModel::updateSearchQuery,
-                onSearch = { screenModel.search() },
-                getItem = { screenModel.getItem(it) },
-                onChangeSearchFilter = screenModel::setSourceFilter,
-                onToggleResults = screenModel::toggleFilterResults,
+                onChangeSearchQuery = viewModel::updateSearchQuery,
+                onSearch = { viewModel.search() },
+                getItem = { viewModel.getItem(it) },
+                onChangeSearchFilter = viewModel::setSourceFilter,
+                onToggleResults = viewModel::toggleFilterResults,
                 onClickSource = {
                     navigator.push(CatalogScreen(it.id, state.searchQuery))
                 },

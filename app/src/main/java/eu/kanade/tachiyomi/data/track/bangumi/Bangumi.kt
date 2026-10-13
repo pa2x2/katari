@@ -72,6 +72,12 @@ class Bangumi(id: Long) : BaseTracker(id, "Bangumi"), ExternalLoginTracker {
     }
 
     override suspend fun search(query: String): List<TrackSearch> {
+        if (query.startsWith(SEARCH_ID_PREFIX)) {
+            query.substringAfter(SEARCH_ID_PREFIX).trim().toIntOrNull()?.let { id ->
+                return api.getMangaDetails(id)?.let { listOf(it) } ?: emptyList()
+            }
+        }
+
         return api.search(query)
     }
 
@@ -119,6 +125,11 @@ class Bangumi(id: Long) : BaseTracker(id, "Bangumi"), ExternalLoginTracker {
         }
     }
 
+    override suspend fun updateUserConfig() {
+        val currentUser = api.getCurrentUser()
+        saveDisplayUsername(currentUser.nickname?.takeIf { it.isNotBlank() } ?: currentUser.username)
+    }
+
     fun saveToken(oauth: BGMOAuth?) {
         trackPreferences.trackToken(this).set(json.encodeToString(oauth))
     }
@@ -146,5 +157,7 @@ class Bangumi(id: Long) : BaseTracker(id, "Bangumi"), ExternalLoginTracker {
 
         private val SCORE_LIST = IntRange(0, 10)
             .map(Int::toString)
+
+        private const val SEARCH_ID_PREFIX = "id:"
     }
 }

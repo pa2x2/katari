@@ -8,7 +8,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import cafe.adriel.voyager.core.model.rememberScreenModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.components.AppBar
@@ -34,10 +34,10 @@ class DeepLinkScreen(
         val navigator = LocalNavigator.currentOrThrow
         val entryOpenFeature = remember { Injekt.get<EntryOpenFeature>() }
 
-        val screenModel = rememberScreenModel {
-            DeepLinkScreenModel(query = query)
+        val viewModel = viewModel {
+            DeepLinkViewModel(query = query)
         }
-        val state by screenModel.state.collectAsState()
+        val state by viewModel.state.collectAsState()
         Scaffold(
             topBar = { scrollBehavior ->
                 AppBar(
@@ -48,14 +48,14 @@ class DeepLinkScreen(
             },
         ) { contentPadding ->
             when (state) {
-                is DeepLinkScreenModel.State.Loading -> {
+                is DeepLinkViewModel.State.Loading -> {
                     LoadingScreen(Modifier.padding(contentPadding))
                 }
-                is DeepLinkScreenModel.State.NoResults -> {
+                is DeepLinkViewModel.State.NoResults -> {
                     navigator.replace(GlobalSearchScreen(query))
                 }
-                is DeepLinkScreenModel.State.Result -> {
-                    val resultState = state as DeepLinkScreenModel.State.Result
+                is DeepLinkViewModel.State.Result -> {
+                    val resultState = state as DeepLinkViewModel.State.Result
                     val entry = resultState.entry
                     if (resultState.chapterId == null) {
                         navigator.replace(

@@ -7,9 +7,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.AddCircleOutline
-import androidx.compose.material.icons.outlined.ArrowDownward
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.HorizontalDivider
@@ -32,6 +29,9 @@ import mihon.feature.migration.review.SourceMigrationReviewGroup
 import mihon.feature.migration.review.SourceMigrationReviewMapping
 import mihon.feature.migration.review.SourceMigrationReviewMember
 import mihon.feature.migration.session.model.SourceMigrationItemState
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.AddCircle
+import mihon.icons.materialsymbols.rounded.ArrowDownward
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.Badge
 import tachiyomi.presentation.core.components.BadgeGroup
@@ -206,7 +206,7 @@ private fun SourceMigrationMapping(
         )
 
         Icon(
-            imageVector = Icons.Outlined.ArrowDownward,
+            imageVector = MaterialSymbols.Rounded.ArrowDownward,
             contentDescription = null,
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier
@@ -251,7 +251,7 @@ private fun SourceMigrationMapping(
                     } ?: Modifier,
                     leadingContent = {
                         Icon(
-                            imageVector = Icons.Outlined.AddCircleOutline,
+                            imageVector = MaterialSymbols.Rounded.AddCircle,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.primary,
                         )

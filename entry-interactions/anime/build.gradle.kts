@@ -30,6 +30,7 @@ dependencies {
 
     implementation(projects.core.common)
     implementation(projects.i18n)
+    implementation(projects.icons.materialSymbols)
     implementation(projects.presentationCore)
     implementation(projects.sourceApi)
 
@@ -39,7 +40,6 @@ dependencies {
     implementation(libs.androidx.compose.animation)
     implementation(libs.androidx.compose.foundation)
     implementation(libs.androidx.compose.material3)
-    implementation(libs.androidx.compose.materialIcons)
     implementation(libs.androidx.compose.uiToolingPreview)
     implementation(libs.androidx.core)
     implementation(libs.androidx.media3.datasourceOkhttp)

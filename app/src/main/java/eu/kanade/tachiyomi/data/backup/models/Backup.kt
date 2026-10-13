@@ -18,6 +18,8 @@ data class Backup(
     @ProtoNumber(201) var activeProfileUuid: String? = null,
     @ProtoNumber(202) internal val backupAnime: List<LegacyBackupAnime> = emptyList(),
     @ProtoNumber(203) var backupEntries: List<BackupEntry> = emptyList(),
+    /** Written since Kitsu scores moved to the native 2–20 scale; backups without it hold them halved. */
+    @ProtoNumber(204) var kitsuScoresNative: Boolean = false,
 ) {
     fun allEntries(): List<BackupEntry> {
         return backupEntries +

@@ -2,6 +2,7 @@ package eu.kanade.tachiyomi.extension
 
 import eu.kanade.tachiyomi.extension.model.Extension
 import io.kotest.matchers.collections.shouldContainExactly
+import mihon.domain.extension.model.ContentWarning
 import mihon.domain.extension.model.ExtensionStore
 import org.junit.jupiter.api.Test
 
@@ -44,7 +45,7 @@ class ExtensionManagerTest {
         versionCode = 1L,
         libVersion = libVersionName.toLibVersionDouble(),
         lang = "en",
-        isNsfw = false,
+        contentWarning = ContentWarning.SAFE,
         sources = emptyList(),
         apkUrl = "",
         iconUrl = "",

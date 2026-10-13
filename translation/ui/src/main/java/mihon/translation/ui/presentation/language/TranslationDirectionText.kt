@@ -3,8 +3,6 @@ package mihon.translation.ui.presentation.language
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.foundation.text.appendInlineContent
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.ArrowForward
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalTextStyle
@@ -20,6 +18,8 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.em
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.automirroredrounded.ArrowForward
 
 /**
  * [text] with each translation-direction arrow drawn as an icon centred on the line.
@@ -56,7 +56,7 @@ fun TranslationDirectionText(
                 ),
             ) {
                 Icon(
-                    imageVector = Icons.AutoMirrored.Outlined.ArrowForward,
+                    imageVector = MaterialSymbols.AutoMirroredRounded.ArrowForward,
                     contentDescription = null,
                     modifier = Modifier.fillMaxSize(),
                     tint = arrowColor,

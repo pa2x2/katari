@@ -17,20 +17,22 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import cafe.adriel.voyager.core.model.ScreenModel
-import cafe.adriel.voyager.core.model.rememberScreenModel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.more.settings.widget.TextPreferenceWidget
 import eu.kanade.presentation.util.Screen
-import eu.kanade.presentation.util.ioCoroutineScope
 import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.plus
 import mihon.entry.interactions.navigation.EntryOpenFeature
 import mihon.feature.profiles.core.ProfileManager
 import tachiyomi.domain.entry.repository.EntryChapterRepository
@@ -50,9 +52,9 @@ class AnimePlayerLauncherScreen : Screen() {
     override fun Content() {
         val context = LocalContext.current
         val navigator = LocalNavigator.currentOrThrow
-        val screenModel = rememberScreenModel { Model() }
+        val viewModel = viewModel { Model() }
         val entryOpenFeature = remember { Injekt.get<EntryOpenFeature>() }
-        val state by screenModel.state.collectAsState()
+        val state by viewModel.state.collectAsState()
 
         Scaffold(
             topBar = {
@@ -125,7 +127,7 @@ class AnimePlayerLauncherScreen : Screen() {
         private val profileManager: ProfileManager = Injekt.get(),
         private val entryRepository: EntryRepository = Injekt.get(),
         private val entryChapterRepository: EntryChapterRepository = Injekt.get(),
-    ) : ScreenModel {
+    ) : ViewModel() {
 
         val state = profileManager.activeProfile
             .flatMapLatest { activeProfile ->
@@ -159,7 +161,7 @@ class AnimePlayerLauncherScreen : Screen() {
                     )
                 }
             }
-            .stateIn(ioCoroutineScope, SharingStarted.WhileSubscribed(5_000), State.Loading)
+            .stateIn(viewModelScope + Dispatchers.IO, SharingStarted.WhileSubscribed(5_000), State.Loading)
     }
 
     private sealed interface State {

@@ -3,7 +3,6 @@ package eu.kanade.presentation.entry
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
@@ -16,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
@@ -60,14 +60,15 @@ import eu.kanade.presentation.entry.components.EntryContinueActions
 import eu.kanade.presentation.entry.components.EntryInfoBox
 import eu.kanade.presentation.entry.components.EntryToolbar
 import eu.kanade.presentation.entry.components.ExpandableEntryDescription
+import eu.kanade.presentation.entry.components.MergedMemberHeader
 import eu.kanade.presentation.entry.translation.ChapterTranslateAction
 import eu.kanade.presentation.entry.translation.EntryChapterTranslationUi
 import eu.kanade.presentation.entry.updates.EntryUpdatesLabel
 import eu.kanade.presentation.more.stats.components.rememberStatisticsDurationFormatter
 import eu.kanade.presentation.util.formatChapterNumber
 import eu.kanade.tachiyomi.ui.entry.EntryChapterList
-import eu.kanade.tachiyomi.ui.entry.EntryScreenModel
-import eu.kanade.tachiyomi.ui.entry.activity.EntryActivityScreenModel
+import eu.kanade.tachiyomi.ui.entry.EntryViewModel
+import eu.kanade.tachiyomi.ui.entry.activity.EntryActivityViewModel
 import eu.kanade.tachiyomi.ui.entry.entrySelectionActionLabels
 import eu.kanade.tachiyomi.util.system.copyToClipboard
 import mihon.entry.interactions.child.EntryChildProgressLabel
@@ -77,7 +78,6 @@ import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.ListGroupHeader
 import tachiyomi.presentation.core.components.TwoPanelBox
 import tachiyomi.presentation.core.components.VerticalFastScroller
 import tachiyomi.presentation.core.components.material.PullRefresh
@@ -87,10 +87,10 @@ import kotlin.time.Instant
 
 @Composable
 fun EntryScreen(
-    state: EntryScreenModel.State.Success,
+    state: EntryViewModel.State.Success,
     snackbarHostState: SnackbarHostState,
     updatesLabel: EntryUpdatesLabel,
-    activity: EntryActivityScreenModel.State,
+    activity: EntryActivityViewModel.State,
     onActivityClicked: () -> Unit,
     isTabletUi: Boolean,
     chapterSwipeStartAction: LibraryPreferences.ChapterSwipeAction,
@@ -98,6 +98,7 @@ fun EntryScreen(
     navigateUp: () -> Unit,
     onChapterClicked: ((EntryChapter) -> Unit)?,
     onDownloadChapter: ((List<EntryChapterList.Item>, ChapterDownloadAction) -> Unit)?,
+    downloadProgressProvider: (chapterId: Long) -> Int,
     translation: EntryChapterTranslationUi?,
     onAddToLibraryClicked: () -> Unit,
     onAddToMergeClicked: (() -> Unit)?,
@@ -138,6 +139,7 @@ fun EntryScreen(
 
     // For chapter swipe
     onChapterSwipe: (EntryChapterList.Item, LibraryPreferences.ChapterSwipeAction) -> Unit,
+    onMemberHeaderClicked: (Long) -> Unit,
 
     // Chapter selection
     onChapterSelected: (EntryChapterList.Item, Boolean, Boolean) -> Unit,
@@ -145,7 +147,7 @@ fun EntryScreen(
     onInvertSelection: () -> Unit,
     entryPreviewEnabled: Boolean,
     entryPreviewSize: eu.kanade.presentation.entry.components.PreviewSizeUi,
-    entryPreviewState: EntryScreenModel.EntryPreviewState,
+    entryPreviewState: EntryViewModel.EntryPreviewState,
     onPreviewExpandedChange: (Boolean) -> Unit,
     onPreviewRetry: () -> Unit,
     onPreviewPageLoad: (Int) -> Unit,
@@ -170,6 +172,7 @@ fun EntryScreen(
             navigateUp = navigateUp,
             onChapterClicked = onChapterClicked,
             onDownloadChapter = onDownloadChapter,
+            downloadProgressProvider = downloadProgressProvider,
             translation = translation,
             onAddToLibraryClicked = onAddToLibraryClicked,
             onAddToMergeClicked = onAddToMergeClicked,
@@ -200,6 +203,7 @@ fun EntryScreen(
             onMarkPreviousAsReadClicked = onMarkPreviousAsReadClicked,
             onMultiDeleteClicked = onMultiDeleteClicked,
             onChapterSwipe = onChapterSwipe,
+            onMemberHeaderClicked = onMemberHeaderClicked,
             onChapterSelected = onChapterSelected,
             onAllChapterSelected = onAllChapterSelected,
             onInvertSelection = onInvertSelection,
@@ -223,6 +227,7 @@ fun EntryScreen(
             navigateUp = navigateUp,
             onChapterClicked = onChapterClicked,
             onDownloadChapter = onDownloadChapter,
+            downloadProgressProvider = downloadProgressProvider,
             translation = translation,
             onAddToLibraryClicked = onAddToLibraryClicked,
             onAddToMergeClicked = onAddToMergeClicked,
@@ -253,6 +258,7 @@ fun EntryScreen(
             onMarkPreviousAsReadClicked = onMarkPreviousAsReadClicked,
             onMultiDeleteClicked = onMultiDeleteClicked,
             onChapterSwipe = onChapterSwipe,
+            onMemberHeaderClicked = onMemberHeaderClicked,
             onChapterSelected = onChapterSelected,
             onAllChapterSelected = onAllChapterSelected,
             onInvertSelection = onInvertSelection,
@@ -269,16 +275,17 @@ fun EntryScreen(
 
 @Composable
 private fun EntryScreenSmallImpl(
-    state: EntryScreenModel.State.Success,
+    state: EntryViewModel.State.Success,
     snackbarHostState: SnackbarHostState,
     updatesLabel: EntryUpdatesLabel,
-    activity: EntryActivityScreenModel.State,
+    activity: EntryActivityViewModel.State,
     onActivityClicked: () -> Unit,
     chapterSwipeStartAction: LibraryPreferences.ChapterSwipeAction,
     chapterSwipeEndAction: LibraryPreferences.ChapterSwipeAction,
     navigateUp: () -> Unit,
     onChapterClicked: ((EntryChapter) -> Unit)?,
     onDownloadChapter: ((List<EntryChapterList.Item>, ChapterDownloadAction) -> Unit)?,
+    downloadProgressProvider: (chapterId: Long) -> Int,
     translation: EntryChapterTranslationUi?,
     onAddToLibraryClicked: () -> Unit,
     onAddToMergeClicked: (() -> Unit)?,
@@ -320,6 +327,7 @@ private fun EntryScreenSmallImpl(
 
     // For chapter swipe
     onChapterSwipe: (EntryChapterList.Item, LibraryPreferences.ChapterSwipeAction) -> Unit,
+    onMemberHeaderClicked: (Long) -> Unit,
 
     // Chapter selection
     onChapterSelected: (EntryChapterList.Item, Boolean, Boolean) -> Unit,
@@ -327,7 +335,7 @@ private fun EntryScreenSmallImpl(
     onInvertSelection: () -> Unit,
     entryPreviewEnabled: Boolean,
     entryPreviewSize: eu.kanade.presentation.entry.components.PreviewSizeUi,
-    entryPreviewState: EntryScreenModel.EntryPreviewState,
+    entryPreviewState: EntryViewModel.EntryPreviewState,
     onPreviewExpandedChange: (Boolean) -> Unit,
     onPreviewRetry: () -> Unit,
     onPreviewPageLoad: (Int) -> Unit,
@@ -408,14 +416,15 @@ private fun EntryScreenSmallImpl(
         snackbarHost = { AppSnackbarHost(hostState = snackbarHostState) },
         floatingActionButton = {
             onContinueReading?.let { continueAction ->
-                val isFABVisible = state.hasUnreadChapters && !isAnySelected
+                // Shown once progress is known, so it doesn't offer to start what is already being read.
+                val isFABVisible = state.hasUnreadChapters && !isAnySelected && state.childProgressLoaded
                 val targetListIndex = state.chapterListIndex(state.continueTargetChapterId)
                     ?.plus(if (state.showMergeNotice) 5 else 4)
                 EntryContinueActions(
                     listState = chapterListState,
                     continueTargetListIndex = targetListIndex,
                     topOcclusionPx = topBarHeight,
-                    isReading = state.hasReadChapters,
+                    isReading = state.hasStartedReading,
                     visible = isFABVisible,
                     onTargetReached = {
                         highlightedChapterId = state.continueTargetChapterId
@@ -459,8 +468,10 @@ private fun EntryScreenSmallImpl(
                             entry = state.entry,
                             sourceName = state.sourceName,
                             isStubSource = state.isSourceMissing,
-                            mergedMemberTitles = state.mergedMemberTitles,
+                            mergedEntryCount = state.memberIds.size,
                             onCoverClick = onCoverClicked,
+                            onSourceClick = sourceClickAction(state, onManageMergeClicked, onSearch),
+                            onMergedEntriesClick = onManageMergeClicked,
                             doSearch = onSearch,
                         )
                     }
@@ -541,8 +552,6 @@ private fun EntryScreenSmallImpl(
 
                         sharedChapterItems(
                             entry = state.entry,
-                            mergedMemberIds = state.memberIds,
-                            memberTitleById = state.memberTitleById,
                             chapters = listItem,
                             childProgressLabels = state.childProgressLabels,
                             readChapterDurations = activity.readChapterDurations,
@@ -553,9 +562,11 @@ private fun EntryScreenSmallImpl(
                             chapterSwipeEndAction = chapterSwipeEndAction,
                             onChapterClicked = onChapterClicked,
                             onDownloadChapter = onDownloadChapter,
+                            downloadProgressProvider = downloadProgressProvider,
                             translation = translation,
                             onChapterSelected = onChapterSelected,
                             onChapterSwipe = onChapterSwipe,
+                            onMemberHeaderClicked = onMemberHeaderClicked,
                         )
                     }
                 }
@@ -566,16 +577,17 @@ private fun EntryScreenSmallImpl(
 
 @Composable
 fun EntryScreenLargeImpl(
-    state: EntryScreenModel.State.Success,
+    state: EntryViewModel.State.Success,
     snackbarHostState: SnackbarHostState,
     updatesLabel: EntryUpdatesLabel,
-    activity: EntryActivityScreenModel.State,
+    activity: EntryActivityViewModel.State,
     onActivityClicked: () -> Unit,
     chapterSwipeStartAction: LibraryPreferences.ChapterSwipeAction,
     chapterSwipeEndAction: LibraryPreferences.ChapterSwipeAction,
     navigateUp: () -> Unit,
     onChapterClicked: ((EntryChapter) -> Unit)?,
     onDownloadChapter: ((List<EntryChapterList.Item>, ChapterDownloadAction) -> Unit)?,
+    downloadProgressProvider: (chapterId: Long) -> Int,
     translation: EntryChapterTranslationUi?,
     onAddToLibraryClicked: () -> Unit,
     onAddToMergeClicked: (() -> Unit)?,
@@ -617,6 +629,7 @@ fun EntryScreenLargeImpl(
 
     // For swipe actions
     onChapterSwipe: (EntryChapterList.Item, LibraryPreferences.ChapterSwipeAction) -> Unit,
+    onMemberHeaderClicked: (Long) -> Unit,
 
     // Chapter selection
     onChapterSelected: (EntryChapterList.Item, Boolean, Boolean) -> Unit,
@@ -624,7 +637,7 @@ fun EntryScreenLargeImpl(
     onInvertSelection: () -> Unit,
     entryPreviewEnabled: Boolean,
     entryPreviewSize: eu.kanade.presentation.entry.components.PreviewSizeUi,
-    entryPreviewState: EntryScreenModel.EntryPreviewState,
+    entryPreviewState: EntryViewModel.EntryPreviewState,
     onPreviewExpandedChange: (Boolean) -> Unit,
     onPreviewRetry: () -> Unit,
     onPreviewPageLoad: (Int) -> Unit,
@@ -681,33 +694,34 @@ fun EntryScreenLargeImpl(
             )
         },
         bottomBar = {
-            Box(
-                modifier = Modifier.fillMaxWidth(),
-                contentAlignment = Alignment.BottomEnd,
-            ) {
-                SharedEntryBottomActionMenu(
-                    selected = state.selectedChapters,
-                    childProgressLabels = state.childProgressLabels,
-                    onMultiBookmarkClicked = onMultiBookmarkClicked,
-                    onMultiMarkAsReadClicked = onMultiMarkAsReadClicked,
-                    onMarkPreviousAsReadClicked = onMarkPreviousAsReadClicked,
-                    onDownloadChapter = onDownloadChapter,
-                    translation = translation,
-                    onMultiDeleteClicked = onMultiDeleteClicked,
-                    fillFraction = 0.5f,
-                )
-            }
+            // Aligned by its own modifier: a wrapper would always be laid out, and the scaffold then drops the
+            // navigation bar inset under the FAB
+            SharedEntryBottomActionMenu(
+                selected = state.selectedChapters,
+                childProgressLabels = state.childProgressLabels,
+                onMultiBookmarkClicked = onMultiBookmarkClicked,
+                onMultiMarkAsReadClicked = onMultiMarkAsReadClicked,
+                onMarkPreviousAsReadClicked = onMarkPreviousAsReadClicked,
+                onDownloadChapter = onDownloadChapter,
+                translation = translation,
+                onMultiDeleteClicked = onMultiDeleteClicked,
+                fillFraction = 0.5f,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .wrapContentWidth(Alignment.End),
+            )
         },
         snackbarHost = { AppSnackbarHost(hostState = snackbarHostState) },
         floatingActionButton = {
             onContinueReading?.let { continueAction ->
-                val isFABVisible = state.hasUnreadChapters && !isAnySelected
+                // Shown once progress is known, so it doesn't offer to start what is already being read.
+                val isFABVisible = state.hasUnreadChapters && !isAnySelected && state.childProgressLoaded
                 val targetListIndex = state.chapterListIndex(state.continueTargetChapterId)?.plus(1)
                 EntryContinueActions(
                     listState = chapterListState,
                     continueTargetListIndex = targetListIndex,
                     topOcclusionPx = topBarHeight,
-                    isReading = state.hasReadChapters,
+                    isReading = state.hasStartedReading,
                     visible = isFABVisible,
                     onTargetReached = {
                         highlightedChapterId = state.continueTargetChapterId
@@ -745,8 +759,10 @@ fun EntryScreenLargeImpl(
                             entry = state.entry,
                             sourceName = state.sourceName,
                             isStubSource = state.isSourceMissing,
-                            mergedMemberTitles = state.mergedMemberTitles,
+                            mergedEntryCount = state.memberIds.size,
                             onCoverClick = onCoverClicked,
+                            onSourceClick = sourceClickAction(state, onManageMergeClicked, onSearch),
+                            onMergedEntriesClick = onManageMergeClicked,
                             doSearch = onSearch,
                         )
                         if (state.showMergeNotice) {
@@ -821,8 +837,6 @@ fun EntryScreenLargeImpl(
 
                                 sharedChapterItems(
                                     entry = state.entry,
-                                    mergedMemberIds = state.memberIds,
-                                    memberTitleById = state.memberTitleById,
                                     chapters = listItem,
                                     childProgressLabels = state.childProgressLabels,
                                     readChapterDurations = activity.readChapterDurations,
@@ -833,9 +847,11 @@ fun EntryScreenLargeImpl(
                                     chapterSwipeEndAction = chapterSwipeEndAction,
                                     onChapterClicked = onChapterClicked,
                                     onDownloadChapter = onDownloadChapter,
+                                    downloadProgressProvider = downloadProgressProvider,
                                     translation = translation,
                                     onChapterSelected = onChapterSelected,
                                     onChapterSwipe = onChapterSwipe,
+                                    onMemberHeaderClicked = onMemberHeaderClicked,
                                 )
                             }
                         }
@@ -953,8 +969,6 @@ private fun SharedEntryBottomActionMenu(
 
 private fun LazyListScope.sharedChapterItems(
     entry: Entry,
-    mergedMemberIds: List<Long>,
-    memberTitleById: Map<Long, String>,
     chapters: List<EntryChapterList>,
     childProgressLabels: Map<Long, EntryChildProgressLabel>,
     readChapterDurations: Map<Long, Long>,
@@ -965,9 +979,11 @@ private fun LazyListScope.sharedChapterItems(
     chapterSwipeEndAction: LibraryPreferences.ChapterSwipeAction,
     onChapterClicked: ((EntryChapter) -> Unit)?,
     onDownloadChapter: ((List<EntryChapterList.Item>, ChapterDownloadAction) -> Unit)?,
+    downloadProgressProvider: (chapterId: Long) -> Int,
     translation: EntryChapterTranslationUi?,
     onChapterSelected: (EntryChapterList.Item, Boolean, Boolean) -> Unit,
     onChapterSwipe: (EntryChapterList.Item, LibraryPreferences.ChapterSwipeAction) -> Unit,
+    onMemberHeaderClicked: (Long) -> Unit,
 ) {
     items(
         items = chapters,
@@ -990,7 +1006,15 @@ private fun LazyListScope.sharedChapterItems(
 
         when (item) {
             is EntryChapterList.MemberHeader -> {
-                ListGroupHeader(text = item.title)
+                MergedMemberHeader(
+                    title = item.title,
+                    sourceName = item.sourceName,
+                    childCount = item.childCount,
+                    unreadCount = item.unreadCount,
+                    expanded = item.expanded,
+                    entryType = entry.type,
+                    onClick = { onMemberHeaderClicked(item.entryId) },
+                )
             }
             is EntryChapterList.MissingCount -> {
                 MissingChapterCountListItem(count = item.count, entryType = entry.type)
@@ -1017,7 +1041,7 @@ private fun LazyListScope.sharedChapterItems(
                     selected = item.selected,
                     downloadIndicatorEnabled = !isAnyChapterSelected && onDownloadChapter != null,
                     downloadStateProvider = { item.downloadState },
-                    downloadProgressProvider = { item.downloadProgress },
+                    downloadProgressProvider = { downloadProgressProvider(item.id) },
                     highlightTrigger = chapterHighlightGeneration.takeIf {
                         item.chapter.id == highlightedChapterId
                     },
@@ -1063,4 +1087,13 @@ private fun onChapterItemClick(
         isAnyChapterSelected -> onToggleSelection(true)
         else -> onChapterClicked?.invoke(chapterItem.chapter)
     }
+}
+
+/** Several sources have no single name to search for, so their line opens Manage merge, which lists each member's. */
+private fun sourceClickAction(
+    state: EntryViewModel.State.Success,
+    onManageMergeClicked: (() -> Unit)?,
+    onSearch: (query: String, global: Boolean) -> Unit,
+): () -> Unit {
+    return onManageMergeClicked?.takeIf { state.isMultiSource } ?: { onSearch(state.sourceSearchQuery, false) }
 }

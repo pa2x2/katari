@@ -10,10 +10,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ViewList
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -29,6 +25,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import mihon.entry.interactions.child.EntryChildProgressLabel
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.automirroredroundedfilled.ViewList
+import mihon.icons.materialsymbols.rounded.Close
+import mihon.icons.materialsymbols.roundedfilled.PlayArrow
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.AdaptiveSheet
 import tachiyomi.presentation.core.components.EntryChildListItemContent
@@ -79,7 +79,7 @@ fun <T> EntryReaderNavigationSheet(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ViewList,
+                            imageVector = MaterialSymbols.AutoMirroredRoundedFilled.ViewList,
                             contentDescription = null,
                         )
                         Text(
@@ -91,7 +91,7 @@ fun <T> EntryReaderNavigationSheet(
                         )
                         IconButton(onClick = onDismissRequest) {
                             Icon(
-                                imageVector = Icons.Outlined.Close,
+                                imageVector = MaterialSymbols.Rounded.Close,
                                 contentDescription = stringResource(MR.strings.action_close),
                             )
                         }
@@ -131,7 +131,7 @@ fun <T> EntryReaderNavigationSheet(
                                 trailingContent = if (selected) {
                                     {
                                         Icon(
-                                            imageVector = Icons.Filled.PlayArrow,
+                                            imageVector = MaterialSymbols.RoundedFilled.PlayArrow,
                                             contentDescription = null,
                                             modifier = Modifier.padding(start = 12.dp),
                                             tint = MaterialTheme.colorScheme.primary,

@@ -7,8 +7,7 @@ import mihon.text.recognition.api.image.ImageSize
 
 /*
  * Mapping between recognized-image pixels and a subsampling view. The view's source may be a scaled bitmap of the
- * same displayed image (the webtoon viewer decodes long strips at view width), so image pixels are first scaled to
- * the view's source size.
+ * same displayed image, so image pixels are first scaled to the view's source size.
  */
 
 /** Writes where [rect] of an image of [imageSize] appears in this view's coordinates into [target]. */

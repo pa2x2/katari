@@ -19,10 +19,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsIgnoringVisibility
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.FullscreenExit
-import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material.icons.outlined.KeyboardArrowUp
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -39,6 +35,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.entry.components.EntryActionIcons
 import eu.kanade.presentation.entry.entryTypePresentation
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.FullscreenExit
+import mihon.icons.materialsymbols.rounded.Info
+import mihon.icons.materialsymbols.rounded.KeyboardArrowUp
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -150,13 +150,13 @@ internal fun ImmersiveOverlay(
                     if (showBackToTop) {
                         ImmersiveActionButton(
                             label = stringResource(MR.strings.action_move_to_top),
-                            icon = Icons.Outlined.KeyboardArrowUp,
+                            icon = MaterialSymbols.Rounded.KeyboardArrowUp,
                             onClick = onBackToTop,
                         )
                     }
                     ImmersiveActionButton(
                         label = stringResource(MR.strings.browse_exit_immersive),
-                        icon = Icons.Outlined.FullscreenExit,
+                        icon = MaterialSymbols.Rounded.FullscreenExit,
                         onClick = onExitImmersive,
                     )
                     ImmersiveActionButton(
@@ -168,7 +168,7 @@ internal fun ImmersiveOverlay(
                     )
                     ImmersiveActionButton(
                         label = stringResource(MR.strings.action_details),
-                        icon = Icons.Outlined.Info,
+                        icon = MaterialSymbols.Rounded.Info,
                         onClick = onEntryClick,
                     )
                     val presentation = entry.type.entryTypePresentation()

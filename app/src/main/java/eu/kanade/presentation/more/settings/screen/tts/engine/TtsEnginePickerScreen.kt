@@ -10,7 +10,7 @@ import androidx.compose.ui.platform.LocalContext
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.components.AppBar
-import eu.kanade.presentation.more.settings.screen.rememberTtsSettingsScreenModel
+import eu.kanade.presentation.more.settings.screen.rememberTtsSettingsViewModel
 import eu.kanade.presentation.more.settings.screen.tts.RefreshTtsSettingsOnResume
 import eu.kanade.presentation.more.settings.screen.tts.presentTtsHostActionResult
 import eu.kanade.presentation.util.Screen
@@ -26,7 +26,7 @@ internal class TtsEnginePickerScreen : Screen() {
     override fun Content() {
         val context = LocalContext.current
         val navigator = LocalNavigator.currentOrThrow
-        val model = rememberTtsSettingsScreenModel()
+        val model = rememberTtsSettingsViewModel()
         val state by model.state.collectAsState()
 
         RefreshTtsSettingsOnResume(model)

@@ -1,0 +1,22 @@
+---
+import Chapter from "../home/Chapter.astro";
+import { chapters } from "../home/chapters.ts";
+import Hero from "../home/Hero.astro";
+import LatestChanges from "../home/LatestChanges.astro";
+import Viewer from "../media/Viewer.astro";
+import Page from "../site/Page.astro";
+---
+
+<Page
+  title="Katari — Every kind of story. One library."
+  description="An Android app for reading comics and books and watching video in one library, with on-device translation and reading statistics."
+>
+  <main>
+    <Hero />
+    <LatestChanges />
+    <div id="features">
+      {chapters.map((chapter) => <Chapter chapter={chapter} />)}
+    </div>
+  </main>
+  <Viewer />
+</Page>

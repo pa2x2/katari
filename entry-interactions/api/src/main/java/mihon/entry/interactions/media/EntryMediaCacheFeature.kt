@@ -14,7 +14,6 @@ data class EntryMediaCacheSetting(
     val id: EntryMediaCacheId,
     val clearLabel: StringResource,
     val autoClearLabel: StringResource,
-    val readableSize: String,
     val autoClearOnLaunch: Preference<Boolean>,
 )
 
@@ -40,6 +39,12 @@ sealed interface EntryMediaCacheClearResult {
 interface EntryMediaCacheFeature {
     /** Current settings projection for every cache contributed by an applicable type provider. */
     fun settings(): List<EntryMediaCacheSetting>
+
+    /**
+     * Measures the cache on disk, so call it off the main thread. Null when [id] is not a currently applicable
+     * cache.
+     */
+    fun readableSize(id: EntryMediaCacheId): String?
 
     /** Clears one currently applicable cache without exposing its provider to application code. */
     fun clear(id: EntryMediaCacheId): EntryMediaCacheClearResult

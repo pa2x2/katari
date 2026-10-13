@@ -14,6 +14,7 @@ import eu.kanade.tachiyomi.network.GET
 import eu.kanade.tachiyomi.network.HttpException
 import eu.kanade.tachiyomi.network.POST
 import eu.kanade.tachiyomi.network.PUT
+import eu.kanade.tachiyomi.network.await
 import eu.kanade.tachiyomi.network.awaitSuccess
 import eu.kanade.tachiyomi.network.jsonMime
 import eu.kanade.tachiyomi.network.parseAs
@@ -31,10 +32,21 @@ import uy.kohesive.injekt.injectLazy
 import tachiyomi.domain.track.model.EntryTrack as DomainTrack
 
 class HikkaApi(
-    private val trackId: Long,
+    private val trackerId: Long,
     private val client: OkHttpClient,
     interceptor: HikkaInterceptor,
 ) {
+    // Goes through the interceptor, which revalidates an expired stored token first.
+    suspend fun getCurrentUser(): HKUser {
+        return withIOContext {
+            with(json) {
+                authClient.newCall(GET("${BASE_API_URL}/user/me"))
+                    .awaitSuccess()
+                    .parseAs<HKUser>()
+            }
+        }
+    }
+
     suspend fun getCurrentUser(accessToken: String): HKUser {
         return withIOContext {
             val request = Request.Builder()
@@ -95,7 +107,27 @@ class HikkaApi(
                     .awaitSuccess()
                     .parseAs<HKMangaPagination>()
                     .list
-                    .map { it.toTrack(trackId) }
+                    .map { it.toTrack(trackerId) }
+            }
+        }
+    }
+
+    suspend fun getMangaDetails(slug: String): TrackSearch? {
+        return withIOContext {
+            val url = "$BASE_API_URL/manga/$slug"
+
+            with(json) {
+                val response = authClient.newCall(GET(url))
+                    .await()
+
+                if (response.code == 404) {
+                    response.close()
+                    null
+                } else {
+                    response
+                        .parseAs<HKManga>()
+                        .toTrack(trackerId)
+                }
             }
         }
     }
@@ -130,7 +162,7 @@ class HikkaApi(
                 authClient.newCall(GET(url.toString()))
                     .awaitSuccess()
                     .parseAs<HKManga>()
-                    .toTrack(trackId)
+                    .toTrack(trackerId)
             }
         }
     }
@@ -175,7 +207,7 @@ class HikkaApi(
                 authClient.newCall(PUT(url.toString(), body = payload.toString().toRequestBody(jsonMime)))
                     .awaitSuccess()
                     .parseAs<HKRead>()
-                    .toTrack(trackId)
+                    .toTrack(trackerId)
             }
         }
     }

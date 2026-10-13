@@ -16,6 +16,7 @@ import tachiyomi.data.DatabaseHandler
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.repository.EntryChapterRepository
+import tachiyomi.domain.entry.repository.MergedMemberExpansionRepository
 import tachiyomi.domain.history.model.History
 import tachiyomi.domain.history.repository.HistoryActivityBackupRepository
 import tachiyomi.domain.library.update.model.EntryUpdateMode
@@ -30,6 +31,7 @@ class EntryBackupCreator(
     private val entryChapterRepository: EntryChapterRepository = Injekt.get(),
     private val activityBackupRepository: HistoryActivityBackupRepository = Injekt.get(),
     private val updateRulesRepository: LibraryUpdateRulesRepository = Injekt.get(),
+    private val mergedMemberExpansionRepository: MergedMemberExpansionRepository = Injekt.get(),
 ) {
 
     suspend operator fun invoke(
@@ -67,6 +69,7 @@ class EntryBackupCreator(
             .takeIf { it != EntryUpdateMode.FOLLOW_RULES }
             ?.name
             ?.lowercase()
+        entryObject.mergeMemberExpanded = mergedMemberExpansionRepository.isExpanded(entry.id)
         val featureStates = entryBackupFeature.snapshot(
             profileId = profileId,
             entry = entry,

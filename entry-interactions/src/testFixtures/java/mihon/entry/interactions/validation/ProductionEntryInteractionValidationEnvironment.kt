@@ -4,9 +4,13 @@ import android.app.Application
 import eu.kanade.tachiyomi.network.NetworkHelper
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
@@ -89,6 +93,7 @@ class ProductionEntryInteractionValidationEnvironment(
         },
 ) : AutoCloseable {
     private val previousInjekt: InjektScope = Injekt
+    private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     init {
         Injekt = InjektScope(DefaultRegistrar())
@@ -163,6 +168,7 @@ class ProductionEntryInteractionValidationEnvironment(
     }
 
     override fun close() {
+        appScope.cancel()
         Dispatchers.resetMain()
         Injekt = previousInjekt
     }
@@ -186,13 +192,18 @@ class ProductionEntryInteractionValidationEnvironment(
             every { client } returns mockk<OkHttpClient>(relaxed = true)
         }
         Injekt.addSingletonFactory<Application> { application }
+        Injekt.addSingletonFactory<CoroutineScope> { appScope }
         Injekt.addSingletonFactory<StorageManager> { storageManager }
         Injekt.addSingletonFactory<NetworkHelper> { networkHelper }
         Injekt.addSingletonFactory<Json> { Json }
         Injekt.addSingletonFactory<XML> { XML.v1 {} }
         Injekt.addSingletonFactory<GlobalLibraryPreferences> { mockk(relaxed = true) }
         Injekt.addSingletonFactory<LibraryPreferences> { mockk(relaxed = true) }
-        Injekt.addSingletonFactory<SourceManager> { mockk(relaxed = true) }
+        Injekt.addSingletonFactory<SourceManager> {
+            mockk(relaxed = true) {
+                every { isInitialized } returns MutableStateFlow(true)
+            }
+        }
         Injekt.addSingletonFactory<EntryDownloadWorkController> { mockk(relaxed = true) }
         Injekt.addSingletonFactory<EntryMediaSessionIncognitoState> { mockk(relaxed = true) }
         Injekt.addSingletonFactory<EntryDownloadLifecycleEventSink> { mockk(relaxed = true) }

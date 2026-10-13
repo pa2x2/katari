@@ -2,9 +2,6 @@ package eu.kanade.presentation.library.update.report.components
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ExpandLess
-import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -18,6 +15,9 @@ import androidx.compose.ui.Modifier
 import eu.kanade.presentation.library.update.report.LibraryUpdateReportActions
 import eu.kanade.presentation.library.update.sourcePauseStateText
 import mihon.feature.library.update.report.LibraryUpdateReport
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.KeyboardArrowDown
+import mihon.icons.materialsymbols.rounded.KeyboardArrowUp
 import tachiyomi.domain.library.update.model.EntryUpdateOutcome
 import tachiyomi.domain.library.update.model.SourceUpdatePause
 import tachiyomi.i18n.*
@@ -63,7 +63,11 @@ internal fun PausedSourceGroup(
             onClick = { expanded = !expanded },
             trailing = {
                 Icon(
-                    imageVector = if (expanded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
+                    imageVector = if (expanded) {
+                        MaterialSymbols.Rounded.KeyboardArrowUp
+                    } else {
+                        MaterialSymbols.Rounded.KeyboardArrowDown
+                    },
                     contentDescription = null,
                 )
             },

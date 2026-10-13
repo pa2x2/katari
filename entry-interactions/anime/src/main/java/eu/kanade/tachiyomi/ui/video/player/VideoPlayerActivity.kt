@@ -38,8 +38,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -98,6 +96,8 @@ import mihon.entry.interactions.source.EntryChildWebViewAction
 import mihon.entry.interactions.source.EntryChildWebViewResolution
 import mihon.entry.interactions.source.launchEntryChildWebViewAction
 import mihon.entry.viewer.settings.ViewerSettingBinder
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.automirroredrounded.ArrowBack
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.EntryChapter
@@ -108,6 +108,7 @@ import java.util.IdentityHashMap
 import kotlin.math.abs
 import kotlin.math.pow
 import kotlin.math.roundToInt
+import mihon.icons.materialsymbols.R as MaterialSymbolsR
 
 private const val SIDE_GESTURE_VERTICAL_RATIO = 1.35f
 private const val SIDE_GESTURE_ZONE_HORIZONTAL_INSET_FRACTION = 0.1f
@@ -1323,6 +1324,7 @@ class VideoPlayerActivity : AppCompatActivity() {
                             anime = current.entry,
                             currentEpisodeId = current.chapterId,
                             episodeListItems = current.chapterListItems,
+                            expandedMemberIds = viewModel.expandedMemberIds.collectAsState().value,
                             playbackStateByEpisodeId = current.playbackStateByChapterId,
                             sourceAvailable = current.sourceAvailable,
                             hasPreviousEpisode = current.previousChapterId != null,
@@ -1376,6 +1378,7 @@ class VideoPlayerActivity : AppCompatActivity() {
                                 episodesDrawerVisible = false
                                 registerControllerInteraction(true)
                             },
+                            onMemberToggled = viewModel::toggleMemberExpanded,
                             onEpisodeSelected = { episode: EntryChapter ->
                                 if (episode.id != current.chapterId) {
                                     temporarySpeedBoostActive = false
@@ -1603,7 +1606,7 @@ class VideoPlayerActivity : AppCompatActivity() {
                             modifier = Modifier.padding(top = 16.dp),
                         ) {
                             Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                imageVector = MaterialSymbols.AutoMirroredRounded.ArrowBack,
                                 contentDescription = "Back",
                                 tint = Color.White,
                             )
@@ -1950,7 +1953,11 @@ class VideoPlayerActivity : AppCompatActivity() {
         } else {
             stringResource(MR.strings.action_play)
         }
-        val iconRes = if (isPlaying) R.drawable.ic_pause_24dp else R.drawable.ic_play_arrow_24dp
+        val iconRes = if (isPlaying) {
+            MaterialSymbolsR.drawable.rounded_filled_pause
+        } else {
+            MaterialSymbolsR.drawable.rounded_filled_play_arrow
+        }
         val pendingIntent = PendingIntent.getBroadcast(
             this,
             0,

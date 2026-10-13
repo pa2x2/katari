@@ -2,24 +2,29 @@ package eu.kanade.tachiyomi.extension.util
 
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageInfo
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.tachiyomi.extension.installer.Installer
 import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.extension.model.InstallStep
+import eu.kanade.tachiyomi.extension.store.requireSignedByStore
 import eu.kanade.tachiyomi.network.NetworkHelper
+import eu.kanade.tachiyomi.network.await
 import eu.kanade.tachiyomi.util.storage.getUriCompat
 import eu.kanade.tachiyomi.util.system.isPackageInstalled
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runInterruptible
 import logcat.LogPriority
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -36,6 +41,7 @@ import java.util.concurrent.ConcurrentHashMap
  */
 internal class ExtensionInstaller(
     private val context: Context,
+    private val scope: CoroutineScope,
 ) {
 
     enum class UserActionBehavior {
@@ -48,14 +54,13 @@ internal class ExtensionInstaller(
         Private,
     }
 
-    private val scope = CoroutineScope(Dispatchers.IO)
     private val activeJobs = ConcurrentHashMap<String, Job>()
     private val activeSteps = ConcurrentHashMap<Long, MutableStateFlow<InstallStep>>()
     private val downloadPackageNames = ConcurrentHashMap<Long, String>()
     private val packageInstallSteps = MutableStateFlow<Map<String, InstallStep>>(emptyMap())
     private val extensionInstaller = Injekt.get<BasePreferences>().extensionInstaller
 
-    private val httpClient: OkHttpClient = Injekt.get<NetworkHelper>().client
+    private val httpClient: OkHttpClient by lazy { Injekt.get<NetworkHelper>().client }
 
     val installSteps = packageInstallSteps.asStateFlow()
 
@@ -63,20 +68,18 @@ internal class ExtensionInstaller(
      * Adds the given extension to the downloads queue and returns an observable containing its
      * step in the installation process.
      *
-     * @param url The url of the apk.
-     * @param extension The extension to install.
+     * @param extension The listing to install, whose apk must be signed with its store's key.
      * @param installRoute Installer route for this operation.
      */
     fun downloadAndInstall(
-        url: String,
-        extension: Extension,
+        extension: Extension.Available,
         userActionBehavior: UserActionBehavior = UserActionBehavior.LaunchPrompt,
         installRoute: InstallRoute = InstallRoute.Configured,
     ): Flow<InstallStep> {
         val downloadId = extension.pkgName.hashCode().toLong()
         cancelInstall(extension.pkgName)
 
-        val step = MutableStateFlow(InstallStep.Pending)
+        val step = MutableStateFlow<InstallStep>(InstallStep.Pending)
         activeSteps[downloadId] = step
         downloadPackageNames[downloadId] = extension.pkgName
         packageInstallSteps.update { it + (extension.pkgName to InstallStep.Pending) }
@@ -85,27 +88,35 @@ internal class ExtensionInstaller(
             val tmpFile = File(context.cacheDir, "extension_${extension.pkgName}.apk")
             try {
                 updateInstallStep(downloadId, InstallStep.Downloading)
-                val request = Request.Builder().url(url).build()
-                val response = httpClient.newCall(request).execute()
-
-                if (!response.isSuccessful) {
-                    throw Exception("Failed to download extension")
-                }
-                response.body.byteStream().use { input ->
-                    tmpFile.outputStream().use { output ->
-                        input.copyTo(output)
+                val request = Request.Builder().url(extension.apkUrl).build()
+                httpClient.newCall(request).await().use { response ->
+                    if (!response.isSuccessful) {
+                        throw Exception("Failed to download extension (HTTP ${response.code})")
+                    }
+                    // Interruptible so cancelInstall stops the body read too
+                    runInterruptible {
+                        response.body.byteStream().use { input ->
+                            tmpFile.outputStream().use { output ->
+                                input.copyTo(output)
+                            }
+                        }
                     }
                 }
 
+                val packageInfo = runCatching { readStoreSignedApk(extension, tmpFile) }
+                    .onFailure { tmpFile.delete() }
+                    .getOrThrow()
+
+                ensureActive()
                 updateInstallStep(downloadId, InstallStep.Installing)
-                installApk(downloadId, tmpFile, userActionBehavior, installRoute)
+                installApk(downloadId, tmpFile, packageInfo, userActionBehavior, installRoute)
+            } catch (e: CancellationException) {
+                // Ends this install's flow, which a newer install of the same package no longer shares
+                step.value = InstallStep.Idle
+                throw e
             } catch (e: Exception) {
-                if (e is InterruptedException) {
-                    // Canceled
-                } else {
-                    logcat(LogPriority.ERROR, e)
-                    updateInstallStep(downloadId, InstallStep.Error)
-                }
+                logcat(LogPriority.ERROR, e)
+                updateInstallStep(downloadId, InstallStep.Error.from(e))
             }
         }
 
@@ -113,30 +124,45 @@ internal class ExtensionInstaller(
 
         return step.asStateFlow()
             .onCompletion {
-                activeJobs.remove(extension.pkgName)
-                activeSteps.remove(downloadId)
-                downloadPackageNames.remove(downloadId)
-                if (packageInstallSteps.value[extension.pkgName] != InstallStep.RequiresUserAction) {
-                    packageInstallSteps.update { it - extension.pkgName }
+                activeJobs.remove(extension.pkgName, job)
+                // A newer install of the same package reuses the download id and owns the entries from then on
+                if (activeSteps.remove(downloadId, step)) {
+                    downloadPackageNames.remove(downloadId)
+                    // A failure or an install left to the user stays listed until it's retried, cancelled or the
+                    // package changes some other way
+                    val lastStep = packageInstallSteps.value[extension.pkgName]
+                    if (lastStep != InstallStep.RequiresUserAction && lastStep !is InstallStep.Error) {
+                        packageInstallSteps.update { it - extension.pkgName }
+                    }
                 }
                 job.cancel()
             }
+    }
+
+    private fun readStoreSignedApk(extension: Extension.Available, apk: File): PackageInfo {
+        val packageInfo = checkNotNull(ExtensionLoader.getArchivePackageInfo(context, apk)) {
+            "The downloaded file isn't an apk"
+        }
+        extension.requireSignedByStore(ExtensionLoader.getSignatures(packageInfo).orEmpty())
+        return packageInfo
     }
 
     /**
      * Starts an intent to install the extension at the given uri.
      *
      * @param tempFile The file of the extension to install. Delete after use.
+     * @param packageInfo The package info already read from [tempFile].
      * @param installRoute Installer route for this operation.
      */
     private fun installApk(
         downloadId: Long,
         tempFile: File,
+        packageInfo: PackageInfo,
         userActionBehavior: UserActionBehavior,
         installRoute: InstallRoute,
     ) {
         if (installRoute == InstallRoute.Private) {
-            installApkPrivately(downloadId, tempFile)
+            installApkPrivately(downloadId, tempFile, packageInfo)
             return
         }
 
@@ -156,7 +182,7 @@ internal class ExtensionInstaller(
             }
 
             BasePreferences.ExtensionInstaller.PRIVATE -> {
-                installApkPrivately(downloadId, tempFile)
+                installApkPrivately(downloadId, tempFile, packageInfo)
             }
 
             else -> {
@@ -172,16 +198,13 @@ internal class ExtensionInstaller(
         }
     }
 
-    private fun installApkPrivately(downloadId: Long, tempFile: File) {
+    private fun installApkPrivately(downloadId: Long, tempFile: File, packageInfo: PackageInfo) {
         try {
-            if (ExtensionLoader.installPrivateExtensionFile(context, tempFile)) {
-                updateInstallStep(downloadId, InstallStep.Installed)
-            } else {
-                updateInstallStep(downloadId, InstallStep.Error)
-            }
+            ExtensionLoader.installPrivateExtensionFile(context, tempFile, packageInfo)
+            updateInstallStep(downloadId, InstallStep.Installed)
         } catch (e: Exception) {
-            logcat(LogPriority.ERROR, e) { "Failed to read downloaded extension file." }
-            updateInstallStep(downloadId, InstallStep.Error)
+            logcat(LogPriority.ERROR, e) { "Failed to install extension privately" }
+            updateInstallStep(downloadId, InstallStep.Error.from(e))
         }
 
         tempFile.delete()
@@ -219,14 +242,21 @@ internal class ExtensionInstaller(
      * @param step New install step.
      */
     fun updateInstallStep(downloadId: Long, step: InstallStep) {
-        activeSteps[downloadId]?.let { it.value = step }
+        // Published before the install flow sees it, which completes on a final step and drops the download
         downloadPackageNames[downloadId]?.let { pkgName ->
             packageInstallSteps.update { it + (pkgName to step) }
         }
+        activeSteps[downloadId]?.let { it.value = step }
     }
 
     fun clearInstallStep(pkgName: String) {
         packageInstallSteps.update { it - pkgName }
+    }
+
+    fun clearFailedInstallStep(pkgName: String) {
+        packageInstallSteps.update { steps ->
+            if (steps[pkgName] is InstallStep.Error) steps - pkgName else steps
+        }
     }
 
     companion object {

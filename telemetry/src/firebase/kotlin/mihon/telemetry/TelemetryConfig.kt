@@ -46,6 +46,10 @@ object TelemetryConfig {
         crashlytics?.isCrashlyticsCollectionEnabled = enabled
     }
 
+    fun recordException(throwable: Throwable) {
+        crashlytics?.recordException(throwable)
+    }
+
     private fun Context.isKatariProductionApp(): Boolean = packageName == KATARI_PACKAGE
 }
 

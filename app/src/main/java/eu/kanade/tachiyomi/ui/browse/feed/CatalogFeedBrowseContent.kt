@@ -20,11 +20,6 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.HelpOutline
-import androidx.compose.material.icons.outlined.KeyboardArrowUp
-import androidx.compose.material.icons.outlined.OpenInBrowser
-import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -66,6 +61,11 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import mihon.entry.interactions.catalogue.EntryCatalogueSourceInfo
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.automirroredrounded.Help
+import mihon.icons.materialsymbols.rounded.KeyboardArrowUp
+import mihon.icons.materialsymbols.rounded.OpenInBrowser
+import mihon.icons.materialsymbols.rounded.Refresh
 import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.domain.source.model.CatalogListItem
 import tachiyomi.i18n.*
@@ -82,7 +82,7 @@ import tachiyomi.core.common.i18n.stringResource as coreStringResource
 @Composable
 fun CatalogFeedBrowseContent(
     source: EntryCatalogueSourceInfo?,
-    screenModel: FeedScreenModel<CatalogListItem>,
+    viewModel: FeedViewModel<CatalogListItem>,
     columns: GridCells,
     displayMode: LibraryDisplayMode,
     snackbarHostState: SnackbarHostState,
@@ -94,7 +94,7 @@ fun CatalogFeedBrowseContent(
     onItemLongClick: (CatalogListItem) -> Unit,
 ) {
     val context = LocalContext.current
-    val state by screenModel.state.collectAsState()
+    val state by viewModel.state.collectAsState()
     val listState = rememberLazyListState()
     val gridState = rememberLazyGridState()
     val scope = rememberCoroutineScope()
@@ -111,7 +111,7 @@ fun CatalogFeedBrowseContent(
             with(context) { throwable.formattedMessage }
         }
     }
-    val savedAnchor = screenModel.savedAnchorSnapshot()
+    val savedAnchor = viewModel.savedAnchorSnapshot()
 
     LaunchedEffect(state.error) {
         val error = state.error ?: return@LaunchedEffect
@@ -124,7 +124,7 @@ fun CatalogFeedBrowseContent(
         )
         when (result) {
             SnackbarResult.Dismissed -> snackbarHostState.currentSnackbarData?.dismiss()
-            SnackbarResult.ActionPerformed -> screenModel.refresh()
+            SnackbarResult.ActionPerformed -> viewModel.refresh()
         }
     }
 
@@ -158,7 +158,7 @@ fun CatalogFeedBrowseContent(
             .collectLatest { (index, offset) ->
                 val itemIndex = index - bridgeItemCount
                 if (itemIndex < 0) return@collectLatest
-                screenModel.saveAnchor(
+                viewModel.saveAnchor(
                     itemRef = state.itemRefs.getOrNull(itemIndex),
                     scrollOffset = offset,
                 )
@@ -174,7 +174,7 @@ fun CatalogFeedBrowseContent(
             .collectLatest { (index, offset) ->
                 val itemIndex = index - bridgeItemCount
                 if (itemIndex < 0) return@collectLatest
-                screenModel.saveAnchor(
+                viewModel.saveAnchor(
                     itemRef = state.itemRefs.getOrNull(itemIndex),
                     scrollOffset = offset,
                 )
@@ -208,7 +208,7 @@ fun CatalogFeedBrowseContent(
             .distinctUntilChanged()
             .collectLatest { lastVisibleItemIndex ->
                 if (shouldLoadMore(lastVisibleItemIndex, state)) {
-                    screenModel.loadMore()
+                    viewModel.loadMore()
                 }
             }
     }
@@ -228,7 +228,7 @@ fun CatalogFeedBrowseContent(
                 listOf(
                     EmptyScreenAction(
                         stringRes = MR.strings.local_source_help_guide,
-                        icon = Icons.AutoMirrored.Outlined.HelpOutline,
+                        icon = MaterialSymbols.AutoMirroredRounded.Help,
                         onClick = onLocalSourceHelpClick,
                     ),
                 )
@@ -236,17 +236,17 @@ fun CatalogFeedBrowseContent(
                 listOf(
                     EmptyScreenAction(
                         stringRes = MR.strings.action_retry,
-                        icon = Icons.Outlined.Refresh,
-                        onClick = screenModel::refresh,
+                        icon = MaterialSymbols.Rounded.Refresh,
+                        onClick = viewModel::refresh,
                     ),
                     EmptyScreenAction(
                         stringRes = MR.strings.action_open_in_web_view,
-                        icon = Icons.Outlined.OpenInBrowser,
+                        icon = MaterialSymbols.Rounded.OpenInBrowser,
                         onClick = onWebViewClick,
                     ),
                     EmptyScreenAction(
                         stringRes = MR.strings.label_help,
-                        icon = Icons.AutoMirrored.Outlined.HelpOutline,
+                        icon = MaterialSymbols.AutoMirroredRounded.Help,
                         onClick = onHelpClick,
                     ),
                 )
@@ -261,7 +261,7 @@ fun CatalogFeedBrowseContent(
         when (displayMode) {
             LibraryDisplayMode.ComfortableGrid -> {
                 CatalogFeedComfortableGrid(
-                    screenModel = screenModel,
+                    viewModel = viewModel,
                     itemRefs = state.itemRefs,
                     columns = columns,
                     contentPadding = contentPadding,
@@ -275,7 +275,7 @@ fun CatalogFeedBrowseContent(
             }
             LibraryDisplayMode.ComfortableList -> {
                 CatalogFeedComfortableGrid(
-                    screenModel = screenModel,
+                    viewModel = viewModel,
                     itemRefs = state.itemRefs,
                     columns = GridCells.Fixed(1),
                     contentPadding = contentPadding,
@@ -289,7 +289,7 @@ fun CatalogFeedBrowseContent(
             }
             LibraryDisplayMode.List -> {
                 CatalogFeedList(
-                    screenModel = screenModel,
+                    viewModel = viewModel,
                     itemRefs = state.itemRefs,
                     contentPadding = contentPadding,
                     listState = listState,
@@ -302,7 +302,7 @@ fun CatalogFeedBrowseContent(
             }
             LibraryDisplayMode.CompactGrid, LibraryDisplayMode.CoverOnlyGrid -> {
                 CatalogFeedCompactGrid(
-                    screenModel = screenModel,
+                    viewModel = viewModel,
                     itemRefs = state.itemRefs,
                     columns = columns,
                     contentPadding = contentPadding,
@@ -345,7 +345,7 @@ fun CatalogFeedBrowseContent(
 
         FeedNewItemsIndicator(
             state = state,
-            screenModel = screenModel,
+            viewModel = viewModel,
             viewportKey = displayMode,
             viewport = {
                 when (displayMode) {
@@ -380,8 +380,8 @@ fun CatalogFeedBrowseContent(
 
 @Composable
 internal fun FeedNewItemsIndicator(
-    state: FeedScreenModel.State,
-    screenModel: FeedScreenModel<*>,
+    state: FeedViewModel.State,
+    viewModel: FeedViewModel<*>,
     viewportKey: Any?,
     viewport: () -> FeedViewport,
     onScrollToNewest: () -> Unit,
@@ -395,7 +395,7 @@ internal fun FeedNewItemsIndicator(
             .distinctUntilChanged()
             .collectLatest { currentViewport ->
                 if (shouldConsumeNewItemsIndicator(currentViewport, state.itemRefs.size)) {
-                    screenModel.consumeNewItemsIndicator()
+                    viewModel.consumeNewItemsIndicator()
                 }
             }
     }
@@ -410,7 +410,7 @@ internal fun FeedNewItemsIndicator(
         countIsLowerBound = state.newItemsCountIsLowerBound,
         isBridging = state.isBridgingRefresh,
         onClick = {
-            screenModel.showNewItems()
+            viewModel.showNewItems()
             onScrollToNewest()
         },
         modifier = modifier,
@@ -418,7 +418,7 @@ internal fun FeedNewItemsIndicator(
 }
 
 internal fun shouldShowNewItemsChip(
-    state: FeedScreenModel.State,
+    state: FeedViewModel.State,
     canScrollBackward: Boolean,
 ): Boolean {
     return state.newItemsAvailableCount > 0 &&
@@ -471,7 +471,7 @@ internal fun NewItemsChip(
                 )
             } else {
                 Icon(
-                    imageVector = Icons.Outlined.KeyboardArrowUp,
+                    imageVector = MaterialSymbols.Rounded.KeyboardArrowUp,
                     contentDescription = null,
                 )
             }
@@ -510,7 +510,7 @@ private fun FeedBackToTopButton(
             verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
         ) {
             Icon(
-                imageVector = Icons.Outlined.KeyboardArrowUp,
+                imageVector = MaterialSymbols.Rounded.KeyboardArrowUp,
                 contentDescription = null,
             )
             Text(
@@ -523,7 +523,7 @@ private fun FeedBackToTopButton(
 
 @Composable
 private fun CatalogFeedList(
-    screenModel: FeedScreenModel<CatalogListItem>,
+    viewModel: FeedViewModel<CatalogListItem>,
     itemRefs: List<FeedItemRef>,
     contentPadding: PaddingValues,
     listState: androidx.compose.foundation.lazy.LazyListState,
@@ -549,7 +549,7 @@ private fun CatalogFeedList(
         ) { ref ->
             CatalogFeedListItem(
                 ref = ref,
-                screenModel = screenModel,
+                viewModel = viewModel,
                 sourceItemOrientation = sourceItemOrientation,
                 onItemClick = onItemClick,
                 onItemLongClick = onItemLongClick,
@@ -566,7 +566,7 @@ private fun CatalogFeedList(
 
 @Composable
 private fun CatalogFeedCompactGrid(
-    screenModel: FeedScreenModel<CatalogListItem>,
+    viewModel: FeedViewModel<CatalogListItem>,
     itemRefs: List<FeedItemRef>,
     columns: GridCells,
     contentPadding: PaddingValues,
@@ -599,7 +599,7 @@ private fun CatalogFeedCompactGrid(
         ) { ref ->
             CatalogFeedCompactGridItem(
                 ref = ref,
-                screenModel = screenModel,
+                viewModel = viewModel,
                 sourceItemOrientation = sourceItemOrientation,
                 onItemClick = onItemClick,
                 onItemLongClick = onItemLongClick,
@@ -616,7 +616,7 @@ private fun CatalogFeedCompactGrid(
 
 @Composable
 private fun CatalogFeedComfortableGrid(
-    screenModel: FeedScreenModel<CatalogListItem>,
+    viewModel: FeedViewModel<CatalogListItem>,
     itemRefs: List<FeedItemRef>,
     columns: GridCells,
     contentPadding: PaddingValues,
@@ -649,7 +649,7 @@ private fun CatalogFeedComfortableGrid(
         ) { ref ->
             CatalogFeedComfortableGridItem(
                 ref = ref,
-                screenModel = screenModel,
+                viewModel = viewModel,
                 sourceItemOrientation = sourceItemOrientation,
                 onItemClick = onItemClick,
                 onItemLongClick = onItemLongClick,
@@ -693,12 +693,12 @@ private fun FeedItemRef.saveableKey(): String {
 @Composable
 private fun CatalogFeedListItem(
     ref: FeedItemRef,
-    screenModel: FeedScreenModel<CatalogListItem>,
+    viewModel: FeedViewModel<CatalogListItem>,
     sourceItemOrientation: EntryItemOrientation,
     onItemClick: (CatalogListItem) -> Unit,
     onItemLongClick: (CatalogListItem) -> Unit,
 ) {
-    val item = rememberCatalogItem(ref, screenModel)
+    val item = rememberCatalogItem(ref, viewModel)
     if (item == null) {
         CatalogFeedListItemPlaceholder(sourceItemOrientation.toListCoverType())
         return
@@ -720,12 +720,12 @@ private fun CatalogFeedListItem(
 @Composable
 private fun CatalogFeedCompactGridItem(
     ref: FeedItemRef,
-    screenModel: FeedScreenModel<CatalogListItem>,
+    viewModel: FeedViewModel<CatalogListItem>,
     sourceItemOrientation: EntryItemOrientation,
     onItemClick: (CatalogListItem) -> Unit,
     onItemLongClick: (CatalogListItem) -> Unit,
 ) {
-    val item = rememberCatalogItem(ref, screenModel)
+    val item = rememberCatalogItem(ref, viewModel)
     if (item == null) {
         CatalogFeedCompactGridItemPlaceholder(sourceItemOrientation.toGridCoverType())
         return
@@ -747,12 +747,12 @@ private fun CatalogFeedCompactGridItem(
 @Composable
 private fun CatalogFeedComfortableGridItem(
     ref: FeedItemRef,
-    screenModel: FeedScreenModel<CatalogListItem>,
+    viewModel: FeedViewModel<CatalogListItem>,
     sourceItemOrientation: EntryItemOrientation,
     onItemClick: (CatalogListItem) -> Unit,
     onItemLongClick: (CatalogListItem) -> Unit,
 ) {
-    val item = rememberCatalogItem(ref, screenModel)
+    val item = rememberCatalogItem(ref, viewModel)
     if (item == null) {
         CatalogFeedComfortableGridItemPlaceholder(sourceItemOrientation.toGridCoverType())
         return
@@ -774,9 +774,9 @@ private fun CatalogFeedComfortableGridItem(
 @Composable
 private fun rememberCatalogItem(
     ref: FeedItemRef,
-    screenModel: FeedScreenModel<CatalogListItem>,
+    viewModel: FeedViewModel<CatalogListItem>,
 ): CatalogListItem? {
-    return remember(ref, screenModel) { screenModel.itemState(ref) }.collectAsState().value
+    return remember(ref, viewModel) { viewModel.itemState(ref) }.collectAsState().value
 }
 
 @Composable
@@ -834,7 +834,7 @@ private fun browseCoverAlpha(favorite: Boolean): Float {
 
 private fun shouldLoadMore(
     lastVisibleItemIndex: Int,
-    state: FeedScreenModel.State,
+    state: FeedViewModel.State,
 ): Boolean {
     if (lastVisibleItemIndex < 0) return false
     if (state.isRefreshing || state.isAppending || state.nextPageKey == null) return false

@@ -51,6 +51,12 @@ interface EntryDownloadInteraction {
 
     fun hasDownloads(entry: Entry): Boolean
     fun getDownloadCount(entry: Entry): Int
+
+    /**
+     * Returns the download count of each of [entries] by entry id, looking up the downloads once per type. Entries of
+     * a type without downloads are left out.
+     */
+    fun getDownloadCounts(entries: List<Entry>): Map<Long, Int>
     fun getTotalDownloadCount(): Int
     fun isDownloaded(entry: Entry, chapter: EntryChapter, skipCache: Boolean = false): Boolean
     fun getStatus(
@@ -62,5 +68,6 @@ interface EntryDownloadInteraction {
         entryTitle: String,
         sourceId: Long,
     ): EntryDownloadStatus
+    fun getStatuses(entry: Entry, chapters: List<EntryChapter>): Map<Long, EntryDownloadStatus>
     fun cancelQueuedDownload(entryType: EntryType, chapterId: Long): EntryDownloadStatus?
 }

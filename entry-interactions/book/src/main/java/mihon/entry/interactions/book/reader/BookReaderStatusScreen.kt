@@ -1,14 +1,14 @@
 package mihon.entry.interactions.book.reader
 
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Error
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.screens.InfoScreen
@@ -41,7 +41,7 @@ internal fun BookReaderErrorScreen(
         color = MaterialTheme.colorScheme.background,
     ) {
         InfoScreen(
-            icon = Icons.Outlined.ErrorOutline,
+            icon = MaterialSymbols.Rounded.Error,
             headingText = title,
             subtitleText = message,
             acceptText = if (onRetry != null) stringResource(MR.strings.action_retry) else closeLabel,

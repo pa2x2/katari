@@ -13,8 +13,6 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.TravelExplore
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
@@ -45,6 +43,8 @@ import eu.kanade.presentation.library.components.LibraryScrollToTopTarget
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import eu.kanade.tachiyomi.ui.library.LibraryPage
 import eu.kanade.tachiyomi.ui.library.displayTitle
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.TravelExplore
 import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.domain.library.model.LibraryItem
 import tachiyomi.domain.library.model.LibraryItemKey
@@ -201,7 +201,7 @@ private fun LibrarySearchNoResults(
             modifier = Modifier.padding(top = 24.dp),
         ) {
             Icon(
-                imageVector = Icons.Outlined.TravelExplore,
+                imageVector = MaterialSymbols.Rounded.TravelExplore,
                 contentDescription = null,
                 modifier = Modifier
                     .padding(end = ButtonDefaults.IconSpacing)

@@ -26,7 +26,7 @@ import eu.kanade.presentation.more.stats.components.StatisticsRhythmBars
 import eu.kanade.presentation.more.stats.components.rememberStatisticsDurationFormatter
 import eu.kanade.presentation.util.relativeTimeSpanString
 import eu.kanade.tachiyomi.ui.entry.EntryChapterProgress
-import eu.kanade.tachiyomi.ui.entry.activity.EntryActivityScreenModel
+import eu.kanade.tachiyomi.ui.entry.activity.EntryActivityViewModel
 import tachiyomi.domain.statistics.entry.EntryActivitySummary
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -171,7 +171,7 @@ private fun MonthlyActivity(summary: EntryActivitySummary, formatDuration: (Long
     val months = remember(summary.monthlyDurations) {
         val byMonth = summary.monthlyDurations.associate { it.month to it.durationMillis }
         val current = YearMonth.now()
-        (EntryActivityScreenModel.MONTHS - 1 downTo 0).map { offset ->
+        (EntryActivityViewModel.MONTHS - 1 downTo 0).map { offset ->
             val month = current.minusMonths(offset.toLong())
             month to (byMonth[month.toString()] ?: 0L)
         }

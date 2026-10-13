@@ -15,6 +15,7 @@ import eu.kanade.tachiyomi.source.entry.SEntryChapter
 import eu.kanade.tachiyomi.source.entry.SourceMetadata
 import eu.kanade.tachiyomi.source.entry.UnmeteredSource
 import eu.kanade.tachiyomi.util.lang.compareToCaseInsensitiveNaturalOrder
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.serialization.json.Json
@@ -32,6 +33,7 @@ import tachiyomi.core.common.util.system.ImageUtil
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.core.metadata.comicinfo.COMIC_INFO_FILE
 import tachiyomi.core.metadata.comicinfo.ComicInfo
+import tachiyomi.core.metadata.comicinfo.uploadDateMillis
 import tachiyomi.core.metadata.tachiyomi.MangaDetails
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.service.ChapterRecognition
@@ -275,6 +277,7 @@ actual class LocalSource(
         comicInfo.title?.let { chapter.name = it.value }
         comicInfo.number?.value?.toDoubleOrNull()?.let { chapter.chapterNumber = it }
         comicInfo.translator?.let { chapter.scanlator = it.value }
+        comicInfo.uploadDateMillis()?.let { chapter.dateUpload = it }
     }
 
     // Chapters
@@ -298,15 +301,21 @@ actual class LocalSource(
                     chapterNumber = ChapterRecognition
                         .parseChapterNumber(entry.title, name, chapterNumber)
 
-                    val format = Format.valueOf(chapterFile)
-                    if (format is Format.Epub) {
-                        format.file.epubReader(context).use { epub ->
-                            epub.fillMetadata(entry, this)
+                    try {
+                        val format = Format.valueOf(chapterFile)
+                        if (format is Format.Epub) {
+                            format.file.epubReader(context).use { epub ->
+                                epub.fillMetadata(entry, this)
+                            }
+                        } else {
+                            getComicInfoForChapter(chapterFile) { stream ->
+                                setChapterDetailsFromComicInfoFile(stream, this)
+                            }
                         }
-                    } else {
-                        getComicInfoForChapter(chapterFile) { stream ->
-                            setChapterDetailsFromComicInfoFile(stream, this)
-                        }
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        logcat(LogPriority.ERROR, e) { "Failed to read metadata for ${chapterFile.name}" }
                     }
                 }
             }
@@ -430,6 +439,9 @@ actual class LocalSource(
         letterer = null,
         coverArtist = null,
         tags = null,
+        year = null,
+        month = null,
+        day = null,
         categories = null,
         source = null,
     )

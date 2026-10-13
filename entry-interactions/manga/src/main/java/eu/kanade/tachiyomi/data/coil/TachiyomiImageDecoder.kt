@@ -62,7 +62,7 @@ internal class TachiyomiImageDecoder(private val resources: ImageSource, private
     class Factory : Decoder.Factory {
 
         override fun create(result: SourceFetchResult, options: Options, imageLoader: ImageLoader): Decoder? {
-            return if (options.customDecoder || isApplicable(result.source.source())) {
+            return if (isApplicable(result.source.source())) {
                 TachiyomiImageDecoder(result.source, options)
             } else {
                 null

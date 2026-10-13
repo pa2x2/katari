@@ -1,5 +1,32 @@
 # Changelog
 
+## [1.15.0] - 2026-10-13
+
+### ✨ Added
+
+- Merged library entries show their member count on the cover, which can be turned off.
+- History and Updates rows name the merged member a chapter comes from.
+- Members of a merged entry can be collapsed on the entry screen and in the player, and show their chapter counts and sources.
+
+### 🔄 Changed
+
+- Icons throughout the app use the rounded Material Symbols style.
+- A merged entry's header shows its member count and opens Manage merge instead of listing every title.
+- The Updates tab no longer shows a snackbar when an update finishes, since its header already sums it up.
+
+### 🐛 Fixed
+
+- Merged entries from several sources name those sources instead of showing "Multi".
+- Chapters of a merged entry use their own member's page language and translation settings.
+- Each profile keeps its own AniList score format, so logging in on one profile no longer changes another's.
+- The entry screen offers to resume an entry read partway through its first chapter instead of starting it.
+- Global search keeps every source's results when several finish at once, and drops results from a replaced search.
+- Book chapters from some sources no longer fail to open.
+- A newly added feed no longer crashes while loading.
+- Snackbars keep their margin from the screen edges and show their action in the usual color.
+
+## Based on [Mihon 0.21.2](https://github.com/mihonapp/mihon/releases/tag/v0.21.2)
+
 ## [1.14.2] - 2026-10-11
 
 ### 🧩 Improved
@@ -692,7 +719,8 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v1.14.2...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/v1.15.0...HEAD
+[1.15.0]: https://github.com/pa2x2/katari/releases/tag/v1.15.0
 [1.14.2]: https://github.com/pa2x2/katari/releases/tag/v1.14.2
 [1.14.1]: https://github.com/pa2x2/katari/releases/tag/v1.14.1
 [1.14.0]: https://github.com/pa2x2/katari/releases/tag/v1.14.0

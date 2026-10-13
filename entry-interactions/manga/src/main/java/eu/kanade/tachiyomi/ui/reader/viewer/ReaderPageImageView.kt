@@ -20,11 +20,11 @@ import androidx.annotation.StyleRes
 import androidx.appcompat.widget.AppCompatImageView
 import androidx.core.os.postDelayed
 import androidx.core.view.isVisible
-import coil3.BitmapImage
 import coil3.asDrawable
 import coil3.dispose
 import coil3.imageLoader
 import coil3.request.CachePolicy
+import coil3.request.Disposable
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import coil3.size.Precision
@@ -35,12 +35,14 @@ import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView.EASE_IN_OUT
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView.EASE_OUT_QUAD
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView.SCALE_TYPE_CENTER_INSIDE
 import com.github.chrisbanes.photoview.PhotoView
+import eu.kanade.tachiyomi.data.coil.WebtoonStrips
 import eu.kanade.tachiyomi.data.coil.cropBorders
-import eu.kanade.tachiyomi.data.coil.customDecoder
+import eu.kanade.tachiyomi.data.coil.webtoonStrips
 import eu.kanade.tachiyomi.ui.reader.animatorDurationScale
 import eu.kanade.tachiyomi.ui.reader.isVisibleOnScreen
 import eu.kanade.tachiyomi.ui.reader.viewer.progressive.ReaderPageProgressivePreviewConfig
 import eu.kanade.tachiyomi.ui.reader.viewer.progressive.ReaderPageProgressivePreviewView
+import eu.kanade.tachiyomi.ui.reader.viewer.webtoon.WebtoonStripImageView
 import eu.kanade.tachiyomi.ui.reader.viewer.webtoon.WebtoonSubsamplingImageView
 import mihon.core.common.image.progressive.ProgressiveImageState
 import mihon.core.common.image.progressive.ProgressiveImageVisual
@@ -66,8 +68,9 @@ import uy.kohesive.injekt.api.get
  *
  * Animated image will be drawn by [PhotoView] while [SubsamplingScaleImageView] will take non-animated image.
  *
- * @param isWebtoon if true, [WebtoonSubsamplingImageView] will be used instead of [SubsamplingScaleImageView]
- * and [AppCompatImageView] will be used instead of [PhotoView]
+ * @param isWebtoon if true, [WebtoonStripImageView] will be used instead of [SubsamplingScaleImageView], or
+ * [WebtoonSubsamplingImageView] when long strips are always decoded with it, and [AppCompatImageView] will be used
+ * instead of [PhotoView]
  */
 internal open class ReaderPageImageView @JvmOverloads constructor(
     context: Context,
@@ -82,6 +85,7 @@ internal open class ReaderPageImageView @JvmOverloads constructor(
     }
 
     private var pageView: View? = null
+    private var stripRequest: Disposable? = null
     private var progressivePreviewView: ReaderPageProgressivePreviewView? = null
     private var pendingFinalAnimation: (() -> Unit)? = null
     private var finalImageReady = false
@@ -216,6 +220,9 @@ internal open class ReaderPageImageView @JvmOverloads constructor(
             if (isAnimated) {
                 prepareAnimatedImageView()
                 setAnimatedImage(source, config)
+            } else if (isWebtoon && !alwaysDecodeLongStripWithSSIV) {
+                prepareStripImageView()
+                setStripImage(source, config)
             } else {
                 prepareNonAnimatedImageView()
                 setNonAnimatedImage(source, config)
@@ -286,10 +293,13 @@ internal open class ReaderPageImageView @JvmOverloads constructor(
     fun recycleFinalImage() {
         pendingFinalAnimation = null
         finalImageReady = false
+        stripRequest?.dispose()
+        stripRequest = null
         pageView?.let {
             when (it) {
                 is SubsamplingScaleImageView -> it.recycle()
                 is AppCompatImageView -> it.dispose()
+                is WebtoonStripImageView -> it.recycle()
             }
             it.isVisible = false
         }
@@ -307,19 +317,28 @@ internal open class ReaderPageImageView @JvmOverloads constructor(
 
     /** Where [rect] of the displayed image appears in window coordinates, if it is currently laid out. */
     fun imageToWindow(rect: ImageRect, imageSize: ImageSize): RectF? {
-        val view = pageView as? SubsamplingScaleImageView ?: return null
+        val view = pageView ?: return null
         val target = RectF()
-        if (!view.imageToView(rect, imageSize, target)) return null
+        val mapped = when (view) {
+            is SubsamplingScaleImageView -> view.imageToView(rect, imageSize, target)
+            is WebtoonStripImageView -> view.imageToView(rect, imageSize, target)
+            else -> false
+        }
+        if (!mapped) return null
         Matrix().also(view::transformMatrixToGlobal).mapRect(target)
         return target
     }
 
     /** Displayed-image coordinates of window point ([x], [y]), possibly outside the image bounds. */
     fun windowToImage(x: Float, y: Float, imageSize: ImageSize): Pair<Int, Int>? {
-        val view = pageView as? SubsamplingScaleImageView ?: return null
+        val view = pageView ?: return null
         val point = floatArrayOf(x, y)
         Matrix().also(view::transformMatrixToLocal).mapPoints(point)
-        return view.viewToImage(point[0], point[1], imageSize)
+        return when (view) {
+            is SubsamplingScaleImageView -> view.viewToImage(point[0], point[1], imageSize)
+            is WebtoonStripImageView -> view.viewToImage(point[0], point[1], imageSize)
+            else -> null
+        }
     }
 
     fun setTextDecoration(decoration: MangaPageTextDecoration?) {
@@ -429,7 +448,7 @@ internal open class ReaderPageImageView @JvmOverloads constructor(
             ReaderSubsamplingImageView(context)
         }.apply {
             foregroundPainter = { view, canvas ->
-                textDecoration?.let { decoration -> textOverlayPainter.draw(view, canvas, decoration) }
+                textDecoration?.let { decoration -> textOverlayPainter.draw(canvas, decoration, view::imageToView) }
             }
             setMaxTileSize(ImageUtil.hardwareBitmapThreshold)
             setDoubleTapZoomStyle(SubsamplingScaleImageView.ZOOM_FOCUS_CENTER)
@@ -492,41 +511,63 @@ internal open class ReaderPageImageView @JvmOverloads constructor(
                 isVisible = true
             }
             is BufferedSource -> {
-                if (!isWebtoon || alwaysDecodeLongStripWithSSIV) {
-                    setHardwareConfig(ImageUtil.canUseHardwareBitmap(data))
-                    setImage(ImageSource.inputStream(data.inputStream()))
-                    isVisible = true
-                    return@apply
-                }
-
-                ImageRequest.Builder(context)
-                    .data(data)
-                    .memoryCachePolicy(CachePolicy.DISABLED)
-                    .diskCachePolicy(CachePolicy.DISABLED)
-                    .target(
-                        onSuccess = { result ->
-                            val image = result as BitmapImage
-                            setImage(ImageSource.bitmap(image.bitmap))
-                            isVisible = true
-                        },
-                    )
-                    .listener(
-                        onError = { _, result ->
-                            onImageLoadError(result.throwable)
-                        },
-                    )
-                    .size(ViewSizeResolver(this@ReaderPageImageView))
-                    .precision(Precision.INEXACT)
-                    .cropBorders(config.cropBorders)
-                    .customDecoder(true)
-                    .crossfade(false)
-                    .build()
-                    .let(context.imageLoader::enqueue)
+                setHardwareConfig(ImageUtil.canUseHardwareBitmap(data))
+                setImage(ImageSource.inputStream(data.inputStream()))
+                isVisible = true
             }
             else -> {
                 throw IllegalArgumentException("Not implemented for class ${data::class.simpleName}")
             }
         }
+    }
+
+    private fun prepareStripImageView() {
+        if (pageView is WebtoonStripImageView) return
+        removeView(pageView)
+
+        pageView = WebtoonStripImageView(context).apply {
+            foregroundPainter = { canvas ->
+                textDecoration?.let { decoration -> textOverlayPainter.draw(canvas, decoration, this::imageToView) }
+            }
+        }
+        addPageView(pageView, height = WRAP_CONTENT)
+    }
+
+    private fun setStripImage(data: BufferedSource, config: Config) {
+        val view = pageView as? WebtoonStripImageView ?: return
+        view.onReload = { requestStrips(view, data, config, isReload = true) }
+        requestStrips(view, data, config, isReload = false)
+    }
+
+    private fun requestStrips(view: WebtoonStripImageView, data: BufferedSource, config: Config, isReload: Boolean) {
+        // A recycled view is reused for another page, where a request still running for the old one must not land
+        stripRequest?.dispose()
+        stripRequest = ImageRequest.Builder(context)
+            // Peeking leaves the data whole for decoding again after the strips were freed off screen
+            .data(data.peek())
+            .memoryCachePolicy(CachePolicy.DISABLED)
+            .diskCachePolicy(CachePolicy.DISABLED)
+            .target(
+                onSuccess = { result ->
+                    view.setImage(result as WebtoonStrips)
+                    if (!isReload) {
+                        view.isVisible = true
+                        onImageLoaded()
+                    }
+                },
+            )
+            .listener(
+                onError = { _, result ->
+                    onImageLoadError(result.throwable)
+                },
+            )
+            .size(ViewSizeResolver(this))
+            .precision(Precision.INEXACT)
+            .cropBorders(config.cropBorders)
+            .webtoonStrips(true)
+            .crossfade(false)
+            .build()
+            .let(context.imageLoader::enqueue)
     }
 
     private fun prepareAnimatedImageView() {
@@ -568,12 +609,12 @@ internal open class ReaderPageImageView @JvmOverloads constructor(
         addPageView(pageView)
     }
 
-    private fun addPageView(view: View?) {
+    private fun addPageView(view: View?, height: Int = MATCH_PARENT) {
         view ?: return
         addView(
             view,
             if (progressivePreviewView == null) 0 else 1,
-            LayoutParams(MATCH_PARENT, MATCH_PARENT),
+            LayoutParams(MATCH_PARENT, height),
         )
     }
 

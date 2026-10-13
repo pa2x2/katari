@@ -16,6 +16,7 @@ import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEachIndexed
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import eu.kanade.presentation.category.visualName
 import eu.kanade.presentation.components.TabbedDialog
 import eu.kanade.presentation.components.TabbedDialogPaddings
@@ -31,7 +32,7 @@ import androidx.compose.runtime.collectAsState as collectFlowAsState
 
 @Composable
 private fun ColumnScope.CategoryFilterSheet(
-    screenModel: UpcomingScreenModel,
+    viewModel: UpcomingViewModel,
 ) {
     Text(
         stringResource(MR.strings.pref_filter_upcoming_categories_details),
@@ -45,13 +46,13 @@ private fun ColumnScope.CategoryFilterSheet(
 
     HorizontalDivider(modifier = Modifier.padding(MaterialTheme.padding.extraSmall))
 
-    val screenState by screenModel.state.collectFlowAsState()
+    val screenState by viewModel.state.collectAsStateWithLifecycle()
     val profileId = screenState.profileId
     if (profileId == null) {
         LoadingScreen(modifier = Modifier.padding(16.dp))
         return
     }
-    val allCategories by screenModel.getCategories
+    val allCategories by viewModel.getCategories
         .subscribeForProfile(profileId)
         .collectFlowAsState(initial = emptyList())
 
@@ -60,8 +61,8 @@ private fun ColumnScope.CategoryFilterSheet(
         return
     }
 
-    val excluded by screenModel.upcomingPreferences.filterExcludedCategories.collectAsState()
-    val included by screenModel.upcomingPreferences.filterIncludedCategories.collectAsState()
+    val excluded by viewModel.upcomingPreferences.filterExcludedCategories.collectAsState()
+    val included by viewModel.upcomingPreferences.filterIncludedCategories.collectAsState()
     val selected = remember(allCategories, included, excluded) {
         allCategories.map { category ->
             when (category.id) {
@@ -80,7 +81,7 @@ private fun ColumnScope.CategoryFilterSheet(
                 state = state,
                 onClick = {
                     selected[index] = state.next()
-                    screenModel.cycleCategory(category)
+                    viewModel.cycleCategory(category)
                 },
             )
         }
@@ -89,10 +90,10 @@ private fun ColumnScope.CategoryFilterSheet(
 
 @Composable
 fun UpcomingFilterDialog(
-    screenModel: UpcomingScreenModel,
+    viewModel: UpcomingViewModel,
 ) {
     TabbedDialog(
-        onDismissRequest = screenModel::resetDialog,
+        onDismissRequest = viewModel::resetDialog,
         tabTitles = listOf(stringResource(MR.strings.categories)),
     ) {
         Column(
@@ -100,7 +101,7 @@ fun UpcomingFilterDialog(
                 .padding(vertical = TabbedDialogPaddings.Vertical)
                 .verticalScroll(rememberScrollState()),
         ) {
-            CategoryFilterSheet(screenModel = screenModel)
+            CategoryFilterSheet(viewModel = viewModel)
         }
     }
 }

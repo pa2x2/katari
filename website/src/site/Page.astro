@@ -1,0 +1,57 @@
+---
+import "@fontsource-variable/inter";
+import "@fontsource/shippori-mincho/700.css";
+import "./global.css";
+import Footer from "./Footer.astro";
+import Header from "./Header.astro";
+import { sitePath } from "./links.ts";
+
+interface Props {
+  title: string;
+  description: string;
+}
+
+const { title, description } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#0b111e" />
+    <meta name="description" content={description} />
+    <title>{title}</title>
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={new URL(Astro.url.pathname, Astro.site)} />
+    <meta property="og:image" content={new URL(sitePath("social-preview.png"), Astro.site)} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="icon" href={sitePath("katari.svg")} type="image/svg+xml" />
+    <link rel="apple-touch-icon" href={sitePath("apple-touch-icon.png")} />
+  </head>
+  <body>
+    <Header />
+    <slot />
+    <Footer />
+    <script>
+      const marked = document.querySelectorAll("[data-reveal]");
+      document.documentElement.classList.add("reveal-ready");
+      const observer = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            if (!entry.isIntersecting) continue;
+            entry.target.classList.add("revealed");
+            observer.unobserve(entry.target);
+          }
+        },
+        { rootMargin: "0px 0px -5% 0px" },
+      );
+      for (const element of marked) observer.observe(element);
+    </script>
+  </body>
+</html>

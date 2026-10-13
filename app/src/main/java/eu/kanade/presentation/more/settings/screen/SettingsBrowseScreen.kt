@@ -16,6 +16,7 @@ import eu.kanade.tachiyomi.ui.security.BiometricAuthentication.authenticate
 import kotlinx.collections.immutable.toImmutableMap
 import mihon.core.common.CustomPreferences
 import mihon.domain.extension.interactor.GetExtensionStoreCountAsFlow
+import mihon.domain.extension.model.ContentWarning
 import mihon.entry.interactions.media.EntryPreviewFeature
 import mihon.entry.interactions.media.EntryPreviewSettings
 import mihon.entry.interactions.media.EntryPreviewSize
@@ -38,7 +39,6 @@ object SettingsBrowseScreen : SearchableSettings {
 
     @Composable
     override fun getPreferences(): List<Preference> {
-        val context = LocalContext.current
         val navigator = LocalNavigator.currentOrThrow
 
         val sourcePreferences = remember { Injekt.get<SourcePreferences>() }
@@ -65,22 +65,7 @@ object SettingsBrowseScreen : SearchableSettings {
                     ),
                 ),
             ),
-            Preference.PreferenceGroup(
-                title = stringResource(MR.strings.pref_category_nsfw_content),
-                preferenceItems = listOf(
-                    Preference.PreferenceItem.SwitchPreference(
-                        preference = sourcePreferences.showNsfwSource,
-                        title = stringResource(MR.strings.pref_show_nsfw_source),
-                        subtitle = stringResource(MR.strings.requires_app_restart),
-                        onValueChanged = {
-                            (context as FragmentActivity).authenticate(
-                                title = context.stringResource(MR.strings.pref_category_nsfw_content),
-                            )
-                        },
-                    ),
-                    Preference.PreferenceItem.InfoPreference(stringResource(MR.strings.parental_controls_info)),
-                ),
-            ),
+            getContentWarningsGroup(sourcePreferences),
             getBrowseBehaviorGroup(
                 customPreferences = customPreferences,
                 onOpenLongPressActions = { navigator.push(BrowseLongPressActionsScreen()) },
@@ -100,6 +85,57 @@ object SettingsBrowseScreen : SearchableSettings {
                         },
                     ),
                 ),
+            ),
+        )
+    }
+
+    @Composable
+    private fun getContentWarningsGroup(sourcePreferences: SourcePreferences): Preference.PreferenceGroup {
+        val context = LocalContext.current
+        return Preference.PreferenceGroup(
+            title = stringResource(MR.strings.pref_category_extensions),
+            preferenceItems = listOf(
+                Preference.PreferenceItem.MultiSelectListPreference(
+                    preference = sourcePreferences.enabledContentWarnings,
+                    entries = mapOf(
+                        ContentWarning.SAFE to stringResource(MR.strings.ext_content_warning_safe),
+                        ContentWarning.MIXED to stringResource(MR.strings.ext_content_warning_mixed),
+                        ContentWarning.NSFW to stringResource(MR.strings.ext_content_warning_nsfw),
+                    ),
+                    title = stringResource(MR.strings.pref_allowed_content_warnings),
+                    subtitleProvider = { value, entries ->
+                        remember(value, entries) {
+                            entries.filterKeys { it in value }.values.joinToString()
+                        }
+                            .takeUnless { it.isBlank() }
+                            ?: stringResource(MR.strings.none)
+                    },
+                    onValueChanged = { newValue ->
+                        val added = newValue - sourcePreferences.enabledContentWarnings.get()
+                        if (added.any { it != ContentWarning.SAFE }) {
+                            (context as FragmentActivity).authenticate(
+                                title = context.stringResource(MR.strings.pref_allowed_content_warnings),
+                            )
+                        } else {
+                            true
+                        }
+                    },
+                ),
+                Preference.PreferenceItem.SwitchPreference(
+                    preference = sourcePreferences.applyContentWarningsToInstalled,
+                    title = stringResource(MR.strings.pref_apply_content_warnings_to_installed),
+                    subtitle = stringResource(MR.strings.pref_apply_content_warnings_to_installed_summary),
+                    onValueChanged = { newValue ->
+                        if (newValue) {
+                            true
+                        } else {
+                            (context as FragmentActivity).authenticate(
+                                title = context.stringResource(MR.strings.pref_apply_content_warnings_to_installed),
+                            )
+                        }
+                    },
+                ),
+                Preference.PreferenceItem.InfoPreference(stringResource(MR.strings.content_warnings_info)),
             ),
         )
     }
@@ -136,7 +172,6 @@ object SettingsBrowseScreen : SearchableSettings {
         val items = buildList {
             settings.forEach { previewSettings ->
                 val enabled by previewSettings.enabled.collectAsState()
-                val pageCount by previewSettings.pageCount.collectAsState()
                 val typeName = stringResource(previewSettings.type.entryTypePresentation().displayNameLabel)
 
                 add(
@@ -154,15 +189,10 @@ object SettingsBrowseScreen : SearchableSettings {
                 }
                 add(
                     Preference.PreferenceItem.SliderPreference(
-                        value = pageCount,
                         preference = previewSettings.pageCount,
                         valueRange = EntryInteractionPreferences.PREVIEW_PAGE_COUNT_RANGE,
                         title = stringResource(MR.strings.pref_manga_preview_page_count),
-                        valueString = pageCount.toString(),
-                        enabled = enabled,
-                        onValueChanged = {
-                            previewSettings.pageCount.set(it)
-                        },
+                        visible = enabled,
                     ),
                 )
                 add(
@@ -172,7 +202,7 @@ object SettingsBrowseScreen : SearchableSettings {
                             .associateWith { stringResource(it.previewSizeTitleRes) }
                             .toImmutableMap(),
                         title = stringResource(MR.strings.pref_manga_preview_size),
-                        enabled = enabled,
+                        visible = enabled,
                     ),
                 )
             }

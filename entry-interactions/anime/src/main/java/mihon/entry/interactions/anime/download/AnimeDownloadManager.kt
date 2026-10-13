@@ -5,9 +5,7 @@ import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.currentCoroutineContext
@@ -50,8 +48,8 @@ internal class AnimeDownloadManager(
     private val sourceManager: SourceManager = Injekt.get(),
     private val store: AnimeDownloadStore = AnimeDownloadStore(context),
     private val workController: EntryDownloadWorkController = Injekt.get(),
+    private val scope: CoroutineScope = Injekt.get(),
 ) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     private val _queueState = MutableStateFlow<List<AnimeDownload>>(emptyList())
     val queueState = _queueState.asStateFlow()
@@ -264,8 +262,30 @@ internal class AnimeDownloadManager(
         return cache.isEpisodeDownloaded(episodeName, episodeUrl, animeTitle, sourceId, skipCache)
     }
 
+    /** Returns the ids of the downloaded episodes among [episodes], all of [anime]. */
+    fun getDownloadedEpisodeIds(episodes: List<EntryChapter>, anime: Entry): Set<Long> {
+        return cache.getDownloadedEpisodeIds(episodes, anime.title, anime.source)
+    }
+
+    // Episode lists look each of their episodes up in the same queue
+    @Volatile
+    private var queueIndex: QueueIndex? = null
+
+    private class QueueIndex(val queue: List<AnimeDownload>, val byEpisodeId: Map<Long, AnimeDownload>)
+
+    /** Returns the queued downloads by episode id, built once per queue change. */
+    fun getQueuedDownloadsByEpisodeId(): Map<Long, AnimeDownload> {
+        val queue = queueState.value
+        queueIndex?.takeIf { it.queue === queue }?.let { return it.byEpisodeId }
+        return queue.associateBy { it.episode.id }.also { queueIndex = QueueIndex(queue, it) }
+    }
+
     fun getDownloadCount(anime: Entry): Int {
         return cache.getDownloadCount(anime)
+    }
+
+    fun getDownloadCounts(animes: List<Entry>): Map<Long, Int> {
+        return cache.getDownloadCounts(animes)
     }
 
     fun getTotalDownloadCount(): Int {

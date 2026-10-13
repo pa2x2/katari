@@ -12,8 +12,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.OpenInNew
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilledTonalButton
@@ -38,6 +36,8 @@ import mihon.feature.appupdate.AppUpdateStatus
 import mihon.feature.appupdate.check.AvailableUpdate
 import mihon.feature.appupdate.check.UpdateApk
 import mihon.feature.appupdate.check.VersionNotes
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.automirroredrounded.OpenInNew
 import org.intellij.markdown.flavours.gfm.GFMFlavourDescriptor
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.material.padding
@@ -81,7 +81,7 @@ internal fun AppUpdateSheet(
                 }
                 IconButton(onClick = onOpenReleasePage) {
                     Icon(
-                        imageVector = Icons.AutoMirrored.Outlined.OpenInNew,
+                        imageVector = MaterialSymbols.AutoMirroredRounded.OpenInNew,
                         contentDescription = stringResource(MR.strings.update_check_open),
                     )
                 }

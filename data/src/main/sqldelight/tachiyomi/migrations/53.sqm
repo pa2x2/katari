@@ -1,0 +1,5 @@
+-- Kitsu (sync_id 3) scores were stored halved, as 1, 1.5, ..., 10, from Kitsu's 2-20 ratingTwenty.
+-- The tracker now keeps the native 2-20 value, so stored scores move to that scale in every profile.
+UPDATE entry_sync
+SET score = score * 2
+WHERE sync_id = 3;

@@ -4,7 +4,6 @@ import android.app.Notification
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.notification.Notifications
 import eu.kanade.tachiyomi.ui.main.MainActivity
 import eu.kanade.tachiyomi.util.system.cancelNotification
@@ -13,6 +12,7 @@ import eu.kanade.tachiyomi.util.system.notify
 import mihon.feature.migration.session.model.SourceMigrationSessionId
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.*
+import mihon.icons.materialsymbols.R as MaterialSymbolsR
 
 class SourceMigrationNotifier(private val context: Context) {
 
@@ -34,13 +34,13 @@ class SourceMigrationNotifier(private val context: Context) {
                     context.stringResource(MR.strings.sourceMigration_notification_discoveryStarting)
                 },
             )
-            setSmallIcon(R.drawable.ic_refresh_24dp)
+            setSmallIcon(MaterialSymbolsR.drawable.rounded_refresh)
             setOngoing(true)
             setOnlyAlertOnce(true)
             setProgress(total.coerceAtLeast(0), completed.coerceAtLeast(0), total == 0)
             setContentIntent(openSessionIntent(sessionId))
             addAction(
-                R.drawable.ic_pause_24dp,
+                MaterialSymbolsR.drawable.rounded_filled_pause,
                 context.stringResource(MR.strings.action_pause),
                 SourceMigrationActionReceiver.pauseDiscoveryIntent(context, sessionId),
             )
@@ -73,13 +73,13 @@ class SourceMigrationNotifier(private val context: Context) {
                     context.stringResource(MR.strings.sourceMigration_notification_executionStarting)
                 },
             )
-            setSmallIcon(R.drawable.ic_refresh_24dp)
+            setSmallIcon(MaterialSymbolsR.drawable.rounded_refresh)
             setOngoing(true)
             setOnlyAlertOnce(true)
             setProgress(total.coerceAtLeast(0), completed.coerceAtLeast(0), total == 0)
             setContentIntent(openSessionIntent(sessionId))
             addAction(
-                R.drawable.ic_pause_24dp,
+                MaterialSymbolsR.drawable.rounded_filled_pause,
                 context.stringResource(MR.strings.action_pause),
                 SourceMigrationActionReceiver.pauseExecutionIntent(context, sessionId),
             )
@@ -105,7 +105,7 @@ class SourceMigrationNotifier(private val context: Context) {
             setContentText(
                 context.stringResource(MR.strings.sourceMigration_notification_reviewReadyText, completed),
             )
-            setSmallIcon(R.drawable.ic_refresh_24dp)
+            setSmallIcon(MaterialSymbolsR.drawable.rounded_refresh)
             setAutoCancel(true)
             setContentIntent(openSessionIntent(sessionId))
         }
@@ -122,7 +122,7 @@ class SourceMigrationNotifier(private val context: Context) {
             setContentText(
                 context.stringResource(MR.strings.sourceMigration_notification_completeText, migrated, attention),
             )
-            setSmallIcon(R.drawable.ic_refresh_24dp)
+            setSmallIcon(MaterialSymbolsR.drawable.rounded_refresh)
             setAutoCancel(true)
         }
     }

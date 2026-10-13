@@ -3,7 +3,6 @@ package mihon.entry.interactions.book.download
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,10 +24,10 @@ import java.util.concurrent.ConcurrentHashMap
 /** Durable BOOK package metadata with lazy content verification and incremental lookup indexes. */
 internal class BookDownloadCache(
     private val provider: BookDownloadProvider,
+    private val scope: CoroutineScope,
     private val indexStore: BookDownloadIndexStore? = null,
     storageChanges: Flow<Unit> = emptyFlow(),
 ) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val refreshMutex = Mutex()
     private val stateLock = Any()
     private val packageVerificationLocks = ConcurrentHashMap<BookDownloadPackageKey, Mutex>()

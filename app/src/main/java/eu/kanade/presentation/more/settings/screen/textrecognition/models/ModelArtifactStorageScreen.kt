@@ -8,8 +8,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.FilledTonalButton
@@ -27,12 +25,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import cafe.adriel.voyager.core.model.rememberScreenModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.util.Screen
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Delete
 import mihon.model.artifacts.api.state.StoredModelArtifact
 import mihon.model.artifacts.ui.state.formatModelArtifactSize
 import mihon.text.recognition.ui.language.shortDisplayNames
@@ -55,7 +55,7 @@ internal class ModelArtifactStorageScreen : Screen() {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val model = rememberScreenModel { ModelArtifactStorageScreenModel() }
+        val model = viewModel { ModelArtifactStorageViewModel() }
         val stored by model.stored.collectAsState()
         var confirming by remember { mutableStateOf<TextRecognitionStoredModels.InUse?>(null) }
 
@@ -192,7 +192,7 @@ private fun StoredModelRow(artifact: StoredModelArtifact, usage: String?, onDele
         supportingContent = { Text(listOfNotNull(state, usage).joinToString(" · ")) },
         trailingContent = {
             IconButton(onClick = onDelete) {
-                Icon(Icons.Outlined.Delete, contentDescription = stringResource(MR.strings.action_delete))
+                Icon(MaterialSymbols.Rounded.Delete, contentDescription = stringResource(MR.strings.action_delete))
             }
         },
     ) {

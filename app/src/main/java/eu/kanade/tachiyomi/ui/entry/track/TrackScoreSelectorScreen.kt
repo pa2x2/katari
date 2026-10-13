@@ -4,13 +4,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import cafe.adriel.voyager.core.model.StateScreenModel
-import cafe.adriel.voyager.core.model.rememberScreenModel
-import cafe.adriel.voyager.core.model.screenModelScope
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.track.TrackScoreSelector
 import eu.kanade.presentation.util.Screen
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import mihon.entry.interactions.tracking.EntryTrackingFeature
 import mihon.entry.interactions.tracking.EntryTrackingMutation
@@ -29,14 +31,14 @@ internal data class TrackScoreSelectorScreen(
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val screenModel = rememberScreenModel { Model(entry, service, displayScore) }
-        val state by screenModel.state.collectAsState()
+        val viewModel = viewModel { Model(entry, service, displayScore) }
+        val state by viewModel.state.collectAsState()
         TrackScoreSelector(
             selection = state.selection,
-            onSelectionChange = screenModel::setSelection,
+            onSelectionChange = viewModel::setSelection,
             selections = service.capabilities.scores,
             onConfirm = {
-                screenModel.setScore()
+                viewModel.setScore()
                 navigator.pop()
             },
             onDismissRequest = navigator::pop,
@@ -48,15 +50,18 @@ internal data class TrackScoreSelectorScreen(
         private val service: EntryTrackingServiceDescriptor,
         displayScore: String,
         private val trackingFeature: EntryTrackingFeature = Injekt.get(),
-    ) : StateScreenModel<Model.State>(State(displayScore)) {
+    ) : ViewModel() {
+
+        val state: StateFlow<Model.State>
+            field = MutableStateFlow<Model.State>(State(displayScore))
 
         fun setSelection(selection: String) {
-            mutableState.update { it.copy(selection = selection) }
+            state.update { it.copy(selection = selection) }
         }
 
         fun setScore() {
             val selection = state.value.selection
-            screenModelScope.launchNonCancellable {
+            viewModelScope.launchNonCancellable {
                 trackingFeature.mutate(entry, service.id, EntryTrackingMutation.Score(selection))
                     .logFailure("score update")
             }

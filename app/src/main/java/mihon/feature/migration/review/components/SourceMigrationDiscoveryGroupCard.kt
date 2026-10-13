@@ -18,8 +18,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ArrowDownward
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -42,6 +40,8 @@ import mihon.feature.migration.review.SourceMigrationReviewMapping
 import mihon.feature.migration.review.SourceMigrationReviewMember
 import mihon.feature.migration.session.model.SourceMigrationItemState
 import mihon.feature.migration.session.model.SourceMigrationMatchKind
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.ArrowDownward
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.Badge
 import tachiyomi.presentation.core.components.BadgeGroup
@@ -260,7 +260,7 @@ private fun SourceMigrationReplacementConnector() {
             modifier = Modifier.size(24.dp),
         ) {
             Icon(
-                imageVector = Icons.Outlined.ArrowDownward,
+                imageVector = MaterialSymbols.Rounded.ArrowDownward,
                 contentDescription = null,
                 modifier = Modifier.padding(4.dp),
             )

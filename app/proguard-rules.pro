@@ -1,8 +1,17 @@
 -dontobfuscate
 
--keep,allowoptimization class eu.kanade.**
--keep,allowoptimization class tachiyomi.**
--keep,allowoptimization class mihon.**
+# Injekt reads the injected type from the generic superclass of its type tokens
+-keepattributes Signature
+-keep,allowshrinking class * extends uy.kohesive.injekt.api.FullTypeReference
+
+# Injekt keys its registry by those types, Voyager keys screens by class name, and a ViewModel created without an
+# explicit key is stored under its class name. Merging two of these classes gives two registrations, screens or
+# ViewModels the same key, so R8 may remove them but not merge them. Nested classes (lambdas, continuations,
+# queries) stay free to merge, so an injected type must be a top-level class; nested screens and ViewModels are covered
+# by their own rules.
+-keep,allowshrinking class !**$*,eu.kanade.**,tachiyomi.**,mihon.**
+-keep,allowshrinking class * implements cafe.adriel.voyager.core.screen.Screen
+-keep,allowshrinking class * extends androidx.lifecycle.ViewModel
 
 # Keep common dependencies used in extensions
 -keep,allowoptimization class androidx.core.content.ContextCompat { public protected *; }
@@ -18,14 +27,6 @@
 -keep,allowoptimization class app.cash.quickjs.** { public protected *; }
 -keep,allowoptimization class uy.kohesive.injekt.** { public protected *; }
 -keep,allowoptimization class com.squareup.zstd.** { public protected *; }
-
-# From extensions-lib
--keep,allowoptimization class eu.kanade.tachiyomi.network.interceptor.RateLimitInterceptorKt { public protected *; }
--keep,allowoptimization class eu.kanade.tachiyomi.network.interceptor.SpecificHostRateLimitInterceptorKt { public protected *; }
--keep,allowoptimization class eu.kanade.tachiyomi.network.NetworkHelper { public protected *; }
--keep,allowoptimization class eu.kanade.tachiyomi.network.OkHttpExtensionsKt { public protected *; }
--keep,allowoptimization class eu.kanade.tachiyomi.network.RequestsKt { public protected *; }
--keep,allowoptimization class eu.kanade.tachiyomi.AppInfo { public protected *; }
 
 # Preserve the extension runtime ABI from extensions-lib. External extension APKs link
 # against these exact classes and Kotlin synthetic default-arg bridges, so R8 must not

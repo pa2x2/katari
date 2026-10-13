@@ -12,6 +12,8 @@ import eu.kanade.tachiyomi.source.entry.EntryCatalogueSource
 import eu.kanade.tachiyomi.source.model.Page
 import eu.kanade.tachiyomi.ui.reader.loader.ChapterLoader
 import eu.kanade.tachiyomi.ui.reader.loader.ReaderLoadException
+import eu.kanade.tachiyomi.ui.reader.loader.scheduling.LoadAheadNetworkPolicy
+import eu.kanade.tachiyomi.ui.reader.loader.scheduling.ReaderReadAhead
 import eu.kanade.tachiyomi.ui.reader.model.InsertPage
 import eu.kanade.tachiyomi.ui.reader.model.ReaderChapter
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
@@ -29,10 +31,13 @@ import eu.kanade.tachiyomi.ui.reader.viewer.Viewer
 import eu.kanade.tachiyomi.util.lang.byteSize
 import eu.kanade.tachiyomi.util.storage.DiskUtil
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -56,7 +61,6 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -111,6 +115,7 @@ import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.progressResourceKey
 import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.entry.repository.EntryRepository
+import tachiyomi.domain.entry.service.EntryCustomCoverWriter
 import tachiyomi.domain.entry.service.sortedForReading
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.source.service.SourceManager
@@ -123,6 +128,7 @@ import java.io.InputStream
 import java.time.Instant
 import kotlin.getValue
 import kotlin.time.Clock
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Presenter used by the activity to perform background operations.
@@ -142,6 +148,7 @@ internal class ReaderViewModel @JvmOverloads constructor(
     private val libraryPreferences: LibraryPreferences = Injekt.get(),
     private val localCoverManager: LocalCoverManager = Injekt.get(),
     private val mediaSession: MangaMediaSessionProcessor = Injekt.get(),
+    private val appScope: CoroutineScope = Injekt.get(),
     private val navigationPresenter: EntryReaderNavigationPresenter = EntryReaderNavigationPresenter(
         getEntryWithChapters = Injekt.get(),
         childListFeature = Injekt.get(),
@@ -165,11 +172,19 @@ internal class ReaderViewModel @JvmOverloads constructor(
 
     val jumpHistory = MangaReaderJumpHistory()
 
+    private val readAhead = ReaderReadAhead(LoadAheadNetworkPolicy(Injekt.get<Application>()))
+
     private val translationHostActions: TranslationHostActions = Injekt.get()
     private val textRecognitionHostActions: TextRecognitionHostActions = Injekt.get()
 
-    /** The opened series, once it is loaded. */
-    private val series: StateFlow<Entry?> = state.map { it.manga }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
+    /**
+     * The series the current chapter belongs to, once it is loaded. In a merged entry that is the chapter's member, not
+     * the opened entry: page language and translation settings are kept per member, as downloads and background
+     * translations of its chapters read them, and the member's source declares the language its pages are in.
+     */
+    private val series: StateFlow<Entry?> = state
+        .map { it.currentChapter?.manga ?: it.manga }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     /** Translates text recognized on pages. */
     val textTranslation = MangaTextTranslationController(
@@ -261,6 +276,13 @@ internal class ReaderViewModel @JvmOverloads constructor(
     private val activitySession = EntryMediaSessionActivitySession()
     private val activityMutex = Mutex()
 
+    // Serializes the progress writes, which outlive the reader, so they are applied in the order the pages were shown
+    private val progressWrites = Mutex()
+
+    // Main thread only
+    private var pendingProgress: PendingChapterProgress? = null
+    private var pendingProgressSave: Job? = null
+
     /**
      * The manga loaded in the reader. It can be null when instantiated for a short time.
      */
@@ -302,27 +324,30 @@ internal class ReaderViewModel @JvmOverloads constructor(
     private var nextChapterPreparationId: Long? = null
     private var startupJob: Job? = null
 
-    private val unfilteredChapterList by lazy {
-        val manga = manga!!
-        runBlocking { getAllEntryChapters(manga, applyScanlatorFilter = false) }
-    }
-
     /**
-     * Chapter list for the active manga. It's retrieved lazily and should be accessed for the first
-     * time in a background thread to avoid blocking the UI.
+     * Chapter list for the active manga. Empty until [loadInitialChapter] loads it, which happens before any chapter
+     * is shown.
      */
-    private val chapterList by lazy {
-        val manga = manga!!
-        val entry = runBlocking { getEntry.await(manga.id) }
+    @Volatile
+    private var chapterList: List<ReaderChapter> = emptyList()
+
+    private suspend fun loadChapterList(manga: Entry): List<ReaderChapter> {
+        val entry = getEntry.await(manga.id)
             ?: throw ReaderLoadException("Entry ${manga.id} not found", canRetry = false)
-        val chapters = runBlocking { getAllEntryChapters(manga, applyScanlatorFilter = true) }
+        val chapters = getAllEntryChapters(manga, applyScanlatorFilter = true)
+            .let { filtered ->
+                // A chapter opened directly, like from a notification, is shown even if its scanlator is excluded
+                if (filtered.any { it.id == chapterId }) {
+                    filtered
+                } else {
+                    filtered + getAllEntryChapters(manga, applyScanlatorFilter = false).filter { it.id == chapterId }
+                }
+            }
         val mergedEntryIds = chapters.map { it.entryId }.distinct()
         val progressByChapterId = mergedEntryIds
-            .flatMap { entryId -> runBlocking { entryProgressRepository.getByEntryId(entryId) } }
+            .flatMap { entryId -> entryProgressRepository.getByEntryId(entryId) }
             .associateBy { it.chapterId }
-        val mangaById = mergedEntryIds.associateWith { entryId ->
-            runBlocking { getEntry.await(entryId) }
-        }
+        val mangaById = mergedEntryIds.associateWith { entryId -> getEntry.await(entryId) }
 
         val selectedChapter = chapters.find { it.id == chapterId }
             ?: throw ReaderLoadException(
@@ -375,7 +400,7 @@ internal class ReaderViewModel @JvmOverloads constructor(
             else -> chapters
         }
 
-        chaptersForReader
+        return chaptersForReader
             .sortedForReading(entry, mergedEntryIds)
             .run {
                 val domainChapters = map { it.toReaderChapter() }
@@ -442,6 +467,7 @@ internal class ReaderViewModel @JvmOverloads constructor(
     }
 
     override fun onCleared() {
+        saveChapterProgress()
         textTranslationSpeech.close()
         textTranslation.close()
         val currentChapters = state.value.viewerChapters
@@ -496,6 +522,7 @@ internal class ReaderViewModel @JvmOverloads constructor(
                         sourceManager = sourceManager,
                     ).also { loader = it }
                 }
+                if (chapterList.isEmpty()) chapterList = loadChapterList(checkNotNull(manga))
                 val requestedChapter = chapterList.firstOrNull { chapterId == it.chapter.id }
                     ?: throw ReaderLoadException(
                         message = "Requested chapter of id $chapterId not found in chapter list",
@@ -682,11 +709,10 @@ internal class ReaderViewModel @JvmOverloads constructor(
         val selectedChapter = page.chapter
         val pages = selectedChapter.pages ?: return
         selectedChapter.chapter.id?.let { jumpHistory.observe(it, page.index) }
+        readAhead.moveTo(page, onlyOverWifi = readerSettings.loadAheadOnlyOverWifi.effectiveValue)
 
-        // Save last page read and mark as read if needed
-        viewModelScope.launchNonCancellable {
-            updateChapterProgress(selectedChapter, page)
-        }
+        showChapterPage(selectedChapter, page)
+        recordChapterProgress(selectedChapter, page)
 
         if (selectedChapter == getCurrentChapter()) {
             prepareNextChapterIfNeeded((page.index + 1).toDouble() / pages.size)
@@ -745,10 +771,7 @@ internal class ReaderViewModel @JvmOverloads constructor(
         }
     }
 
-    /**
-     * Reports the observed chapter progress. Shared Feature participants decide which consequences are allowed.
-     */
-    private suspend fun updateChapterProgress(readerChapter: ReaderChapter, page: Page) {
+    private fun showChapterPage(readerChapter: ReaderChapter, page: Page) {
         val pageIndex = page.index
 
         mutableState.update {
@@ -756,8 +779,57 @@ internal class ReaderViewModel @JvmOverloads constructor(
         }
         readerChapter.requestedPage = pageIndex
         chapterPageIndex = pageIndex
+    }
 
+    /**
+     * Saves the last page read, and marks the chapter read on its last page.
+     *
+     * Completing a chapter is saved right away. Other page changes are saved once the reader settles on a page, or
+     * when [saveChapterProgress] is called, so flipping through pages doesn't report progress on every page.
+     */
+    private fun recordChapterProgress(readerChapter: ReaderChapter, page: Page) {
         if (page.status is Page.State.Error) return
+        val progress = PendingChapterProgress(readerChapter, page, observedAt = System.currentTimeMillis())
+        // A page change in another chapter would replace that chapter's pending save
+        if (pendingProgress?.chapter != readerChapter) saveChapterProgress()
+        pendingProgressSave?.cancel()
+
+        if (readerChapter.pages?.lastIndex == page.index) {
+            pendingProgress = null
+            writeChapterProgress(progress)
+        } else {
+            pendingProgress = progress
+            pendingProgressSave = viewModelScope.launch {
+                delay(PROGRESS_SAVE_DELAY)
+                saveChapterProgress()
+            }
+        }
+    }
+
+    /**
+     * Writes the page change that hasn't been saved yet. Must be called on the main thread.
+     */
+    fun saveChapterProgress() {
+        val progress = pendingProgress ?: return
+        pendingProgress = null
+        writeChapterProgress(progress)
+    }
+
+    private fun writeChapterProgress(progress: PendingChapterProgress) {
+        // On the app scope so it's saved even when the reader is closing. Immediate, and the mutex is fair, so the
+        // writes land in the order they were made even when one of them suspends longer.
+        appScope.launch(Dispatchers.Main.immediate) {
+            progressWrites.withLock {
+                withIOContext { updateChapterProgress(progress.chapter, progress.page, progress.observedAt) }
+            }
+        }
+    }
+
+    /**
+     * Reports the observed chapter progress. Shared Feature participants decide which consequences are allowed.
+     */
+    private suspend fun updateChapterProgress(readerChapter: ReaderChapter, page: Page, timestamp: Long) {
+        val pageIndex = page.index
         val entryChapter = readerChapter.chapter.toDomainChapter()?.toEntryChapter() ?: return
         val visibleEntry = manga?.let { getEntry.await(it.id) } ?: return
         val completed = readerChapter.pages?.lastIndex == pageIndex
@@ -765,7 +837,6 @@ internal class ReaderViewModel @JvmOverloads constructor(
             readerChapter.chapter.read = true
             chapterToDownload = null
         }
-        val timestamp = System.currentTimeMillis()
         val pageCount = readerChapter.pages?.size ?: return
         mediaSession.onEvent(
             EntryMediaSessionEvent.Progressed(
@@ -912,12 +983,17 @@ internal class ReaderViewModel @JvmOverloads constructor(
         return if (resolveDefault) state.effectiveReadingMode else state.readingModeOverride
     }
 
+    private var readingModeJob: Job? = null
+
     /**
      * Updates the viewer position for the open manga.
      */
     fun setMangaReadingMode(readingMode: ReadingMode) {
         val manga = manga ?: return
-        viewModelScope.launchIO {
+        // Only the latest pick matters, and letting an older one finish last would restore its choice
+        val previousJob = readingModeJob
+        readingModeJob = viewModelScope.launchIO {
+            previousJob?.cancelAndJoin()
             val binding = readerSettings.readingMode
             if (readingMode == ReadingMode.DEFAULT) {
                 binding.clearEntryOverride()
@@ -943,12 +1019,17 @@ internal class ReaderViewModel @JvmOverloads constructor(
         return if (resolveDefault) state.effectiveOrientation else state.orientationOverride
     }
 
+    private var orientationJob: Job? = null
+
     /**
      * Updates the orientation type for the open manga.
      */
     fun setMangaOrientationType(orientation: ReaderOrientation) {
         val manga = manga ?: return
-        viewModelScope.launchIO {
+        // Only the latest pick matters, and letting an older one finish last would restore its choice
+        val previousJob = orientationJob
+        orientationJob = viewModelScope.launchIO {
+            previousJob?.cancelAndJoin()
             val binding = readerSettings.orientation
             if (orientation == ReaderOrientation.DEFAULT) {
                 binding.clearEntryOverride()
@@ -1220,12 +1301,7 @@ internal class ReaderViewModel @JvmOverloads constructor(
         }
 
         if (manga.favorite) {
-            val context = Injekt.get<Application>()
-            val coverDir = context.getExternalFilesDir("covers/custom")
-                ?: File(context.filesDir, "covers/custom").also { it.mkdirs() }
-            File(coverDir, DiskUtil.hashKeyForDisk(manga.id.toString())).outputStream().use {
-                inputStream.copyTo(it)
-            }
+            Injekt.get<EntryCustomCoverWriter>().write(manga.id, inputStream)
             updateCoverLastModified(manga.id)
         }
     }
@@ -1252,6 +1328,8 @@ internal class ReaderViewModel @JvmOverloads constructor(
      */
     private fun deletePendingChapters() {
         viewModelScope.launchNonCancellable {
+            // Progress writes started before leaving may still enqueue the chapter just finished
+            progressWrites.withLock {}
             downloadManager.deletePendingChapters()
         }
     }
@@ -1336,7 +1414,12 @@ internal class ReaderViewModel @JvmOverloads constructor(
         data class ShareImage(val uri: Uri, val page: ReaderPage) : Event
         data class CopyImage(val uri: Uri) : Event
     }
+
+    /** A page change waiting to be saved. [observedAt] is when the page was shown, in epoch milliseconds. */
+    private class PendingChapterProgress(val chapter: ReaderChapter, val page: Page, val observedAt: Long)
 }
+
+private val PROGRESS_SAVE_DELAY = 2.seconds
 
 private val <T> ViewerSettingBinding<T>.effectiveValue: T
     get() = state.value.effectiveValue

@@ -32,6 +32,7 @@ import tachiyomi.domain.entry.interactor.GetEntryWithChapters
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.repository.EntryRepository
+import tachiyomi.domain.library.service.GlobalLibraryPreferences
 
 class EntryDownloadLifecycleContractValidationContributor : FeatureValidationContributor {
     override val owner = EntryDownloadLifecycleFeatureContributor.owner
@@ -164,6 +165,7 @@ private suspend fun verifyDownloadLifecycle(
         getEntryWithChapters = chapters,
         entryRepository = mockk<EntryRepository>(relaxed = true),
         downloads = interaction,
+        globalLibraryPreferences = GlobalLibraryPreferences(InMemoryPreferenceStore()),
     )
 
     contractExpectation(feature.isApplicable(download.type), "Download Lifecycle must be applicable")

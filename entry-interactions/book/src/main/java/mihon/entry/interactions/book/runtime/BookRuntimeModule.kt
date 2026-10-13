@@ -141,6 +141,7 @@ private fun InjektRegistrar.addBookEntryInteractionRuntime(
         val storageManager = get<StorageManager>()
         BookDownloadCache(
             provider = get(),
+            scope = get(),
             indexStore = BookDownloadIndexStore(app),
             storageChanges = storageManager.changes,
         )

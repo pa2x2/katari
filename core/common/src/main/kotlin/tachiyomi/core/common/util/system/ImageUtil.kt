@@ -344,8 +344,17 @@ object ImageUtil {
         val image = decoder?.decode()
         decoder?.recycle()
 
+        if (image == null) return Color.WHITE.toDrawable()
+        // Only sampled for colors, so the decoded page can go as soon as they're picked
+        return try {
+            chooseBackground(context, image)
+        } finally {
+            image.recycle()
+        }
+    }
+
+    private fun chooseBackground(context: Context, image: Bitmap): Drawable {
         val whiteColor = Color.WHITE
-        if (image == null) return whiteColor.toDrawable()
         if (image.width < 50 || image.height < 50) {
             return whiteColor.toDrawable()
         }

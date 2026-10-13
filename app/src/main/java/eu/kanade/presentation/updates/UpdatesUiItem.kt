@@ -14,9 +14,6 @@ import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Bookmark
-import androidx.compose.material.icons.filled.Circle
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
@@ -45,6 +42,9 @@ import eu.kanade.presentation.entry.translation.ChapterTranslateAction
 import eu.kanade.presentation.util.relativeTimeSpanString
 import eu.kanade.tachiyomi.ui.updates.UpdatesItem
 import mihon.entry.interactions.translate.EntryTranslateStatus
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.roundedfilled.Bookmark
+import mihon.icons.materialsymbols.roundedfilled.Circle
 import tachiyomi.domain.updates.model.UpdateItem
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.DotSeparatorText
@@ -56,11 +56,6 @@ import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.selectedBackground
 import tachiyomi.domain.entry.model.EntryCover as EntryCoverData
 
-/**
- * @param failed entries the latest update failed to check, named so a failure is noticed without opening the report.
- * @param pausedSources the sources library updates leave out, named so a pause isn't forgotten.
- * @param onClick opens the latest update's report; null while there is none.
- */
 internal fun LazyListScope.updatesLastUpdatedItem(
     lastUpdated: Long,
     failed: Int,
@@ -68,33 +63,54 @@ internal fun LazyListScope.updatesLastUpdatedItem(
     onClick: (() -> Unit)?,
 ) {
     item(key = "updates-lastUpdated") {
-        Column(
-            modifier = Modifier
-                .animateItem(fadeInSpec = null, fadeOutSpec = null)
-                .fillMaxWidth()
-                .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
-                .padding(horizontal = MaterialTheme.padding.medium, vertical = MaterialTheme.padding.small),
-        ) {
-            Row {
+        UpdatesLastUpdatedHeader(
+            lastUpdated = lastUpdated,
+            failed = failed,
+            pausedSources = pausedSources,
+            onClick = onClick,
+            modifier = Modifier.animateItem(fadeInSpec = null, fadeOutSpec = null),
+        )
+    }
+}
+
+/**
+ * @param failed entries the latest update failed to check, named so a failure is noticed without opening the report.
+ * @param pausedSources the sources library updates leave out, named so a pause isn't forgotten.
+ * @param onClick opens the latest update's report; null while there is none.
+ */
+@Composable
+internal fun UpdatesLastUpdatedHeader(
+    lastUpdated: Long,
+    failed: Int,
+    pausedSources: List<String>,
+    onClick: (() -> Unit)?,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
+            .padding(horizontal = MaterialTheme.padding.medium, vertical = MaterialTheme.padding.small),
+    ) {
+        Row {
+            Text(
+                text = stringResource(MR.strings.updates_last_update_info, relativeTimeSpanString(lastUpdated)),
+                fontStyle = FontStyle.Italic,
+            )
+            if (failed > 0) {
                 Text(
-                    text = stringResource(MR.strings.updates_last_update_info, relativeTimeSpanString(lastUpdated)),
+                    text = " · " + pluralStringResource(MR.plurals.library_updates_failed, failed, failed),
                     fontStyle = FontStyle.Italic,
-                )
-                if (failed > 0) {
-                    Text(
-                        text = " · " + pluralStringResource(MR.plurals.library_updates_failed, failed, failed),
-                        fontStyle = FontStyle.Italic,
-                        color = MaterialTheme.colorScheme.error,
-                    )
-                }
-            }
-            if (pausedSources.isNotEmpty()) {
-                Text(
-                    text = pausedSourcesText(pausedSources),
-                    fontStyle = FontStyle.Italic,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = MaterialTheme.colorScheme.error,
                 )
             }
+        }
+        if (pausedSources.isNotEmpty()) {
+            Text(
+                text = pausedSourcesText(pausedSources),
+                fontStyle = FontStyle.Italic,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
     }
 }
@@ -175,6 +191,7 @@ internal fun LazyListScope.unifiedUpdatesUiItems(
 @Composable
 fun UpdatesBaseUiItem(
     title: String,
+    memberTitle: String?,
     coverData: EntryCoverData,
     selected: Boolean,
     read: Boolean,
@@ -198,7 +215,7 @@ fun UpdatesBaseUiItem(
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                 },
             )
-            .height(56.dp)
+            .height(if (memberTitle != null) 72.dp else 56.dp)
             .padding(horizontal = MaterialTheme.padding.medium),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -222,6 +239,16 @@ fun UpdatesBaseUiItem(
                 color = LocalContentColor.current.copy(alpha = textAlpha),
                 overflow = TextOverflow.Ellipsis,
             )
+
+            memberTitle?.let {
+                Text(
+                    text = it,
+                    maxLines = 1,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = LocalContentColor.current.copy(alpha = textAlpha),
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
 
             Row(verticalAlignment = Alignment.CenterVertically) {
                 subtitle(textAlpha)
@@ -249,6 +276,7 @@ internal fun UnifiedUpdatesUiItem(
     val update = item.update
     UpdatesBaseUiItem(
         title = item.visibleEntryTitle,
+        memberTitle = item.memberTitle,
         coverData = item.visibleCoverData,
         selected = item.selected,
         read = update.consumed,
@@ -273,7 +301,7 @@ internal fun UnifiedUpdatesUiItem(
 
             if (!update.consumed) {
                 Icon(
-                    imageVector = Icons.Filled.Circle,
+                    imageVector = MaterialSymbols.RoundedFilled.Circle,
                     contentDescription = stringResource(
                         update.entryType.entryTypePresentation().unconsumedIndicatorLabel,
                     ),
@@ -286,7 +314,7 @@ internal fun UnifiedUpdatesUiItem(
 
             if (update is UpdateItem.EntryUpdate && update.update.bookmark) {
                 Icon(
-                    imageVector = Icons.Filled.Bookmark,
+                    imageVector = MaterialSymbols.RoundedFilled.Bookmark,
                     contentDescription = stringResource(MR.strings.action_filter_bookmarked),
                     modifier = Modifier
                         .sizeIn(maxHeight = with(LocalDensity.current) { textHeight.toDp() - 2.dp }),

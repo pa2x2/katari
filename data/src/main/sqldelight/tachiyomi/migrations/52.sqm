@@ -1,0 +1,4 @@
+CREATE TABLE expanded_merge_members(
+    entry_id INTEGER NOT NULL PRIMARY KEY,
+    FOREIGN KEY(entry_id) REFERENCES entries(_id) ON DELETE CASCADE
+);

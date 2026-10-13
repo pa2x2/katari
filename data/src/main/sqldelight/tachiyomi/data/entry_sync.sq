@@ -62,9 +62,25 @@ FROM entry_sync
 WHERE profile_id = :profileId
 AND entry_id = :entryId;
 
-insert:
+-- Updates an existing track in place: the table's REPLACE would give it a new _id and orphan anything keyed to the old
+-- one, such as a queued tracking update.
+upsert:
 INSERT INTO entry_sync(profile_id, entry_id, sync_id, remote_id, library_id, title, last_chapter_read, total_chapters, status, score, remote_url, start_date, finish_date, private)
-VALUES (:profileId, :entryId, :syncId, :remoteId, :libraryId, :title, :lastChapterRead, :totalChapters, :status, :score, :remoteUrl, :startDate, :finishDate, :private);
+VALUES (:profileId, :entryId, :syncId, :remoteId, :libraryId, :title, :lastChapterRead, :totalChapters, :status, :score, :remoteUrl, :startDate, :finishDate, :private)
+ON CONFLICT(profile_id, entry_id, sync_id)
+DO UPDATE
+SET
+    remote_id = :remoteId,
+    library_id = :libraryId,
+    title = :title,
+    last_chapter_read = :lastChapterRead,
+    total_chapters = :totalChapters,
+    status = :status,
+    score = :score,
+    remote_url = :remoteUrl,
+    start_date = :startDate,
+    finish_date = :finishDate,
+    private = :private;
 
 update:
 UPDATE entry_sync

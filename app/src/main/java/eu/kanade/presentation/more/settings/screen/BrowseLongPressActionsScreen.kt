@@ -10,10 +10,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.ArrowForward
-import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material.icons.outlined.DragHandle
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
@@ -40,6 +36,10 @@ import mihon.core.common.CustomPreferences
 import mihon.core.common.sanitizeBrowseLongPressActionPriority
 import mihon.entry.interactions.media.EntryImmersiveFeature
 import mihon.entry.interactions.media.EntryImmersiveSourceAvailability
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.automirroredrounded.ArrowForward
+import mihon.icons.materialsymbols.rounded.Add
+import mihon.icons.materialsymbols.rounded.DragHandle
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
 import tachiyomi.domain.source.model.Source
@@ -198,7 +198,7 @@ private fun LongPressActionsOverview(
                         Text(browseLongPressPrioritySummary(overrides.getValue(overriddenSourceId)))
                     },
                     trailingContent = {
-                        Icon(Icons.AutoMirrored.Outlined.ArrowForward, contentDescription = null)
+                        Icon(MaterialSymbols.AutoMirroredRounded.ArrowForward, contentDescription = null)
                     },
                 ) {
                     Text(source?.name ?: displayInfo.name)
@@ -208,7 +208,7 @@ private fun LongPressActionsOverview(
         item {
             ListItem(
                 modifier = Modifier.clickable { showSourcePicker = true },
-                leadingContent = { Icon(Icons.Outlined.Add, contentDescription = null) },
+                leadingContent = { Icon(MaterialSymbols.Rounded.Add, contentDescription = null) },
             ) {
                 Text(stringResource(MR.strings.pref_browse_long_press_action_add_source_override))
             }
@@ -334,7 +334,7 @@ private fun LongPressActionRow(
         trailingContent = {
             if (showDragHandle) {
                 Icon(
-                    imageVector = Icons.Outlined.DragHandle,
+                    imageVector = MaterialSymbols.Rounded.DragHandle,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = modifier.padding(MaterialTheme.padding.small),

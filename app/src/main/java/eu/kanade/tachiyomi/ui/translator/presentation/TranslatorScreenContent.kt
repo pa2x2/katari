@@ -10,8 +10,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -29,6 +27,8 @@ import eu.kanade.presentation.components.AppSnackbarHost
 import eu.kanade.tachiyomi.ui.translator.session.TranslatorPicker
 import eu.kanade.tachiyomi.ui.translator.session.TranslatorState
 import kotlinx.coroutines.launch
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Settings
 import mihon.language.api.tag.LanguageTag
 import mihon.translation.api.engine.TranslationEngineId
 import mihon.translation.api.engine.TranslationEngineSelection
@@ -102,7 +102,7 @@ internal fun TranslatorScreenContent(
                 actions = {
                     IconButton(onClick = onOpenSettings) {
                         Icon(
-                            imageVector = Icons.Outlined.Settings,
+                            imageVector = MaterialSymbols.Rounded.Settings,
                             contentDescription = stringResource(MR.strings.translator_open_settings),
                         )
                     }
@@ -126,7 +126,7 @@ internal fun TranslatorScreenContent(
             TranslationLanguagePairSelector(
                 source = sourceLanguageLabel(state),
                 target = targetLanguageLabel(state),
-                // The swap control stays enabled; TranslatorScreenModel answers every click either
+                // The swap control stays enabled; TranslatorViewModel answers every click either
                 // by exchanging the languages or with a SwapUnavailable event.
                 canSwap = true,
                 onChooseSource = { onShowPicker(TranslatorPicker.SourceLanguage) },

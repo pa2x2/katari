@@ -37,11 +37,11 @@ class GetEntry(
         return distinctEntryIds.mapNotNull(entriesById::get)
     }
 
-    suspend fun subscribe(id: Long): Flow<Entry> {
+    fun subscribe(id: Long): Flow<Entry> {
         return entryRepository.getEntryByIdAsFlow(id)
     }
 
-    suspend fun subscribe(entryIds: List<Long>): Flow<List<Entry>> {
+    fun subscribe(entryIds: List<Long>): Flow<List<Entry>> {
         return entryRepository.getEntriesByIdsAsFlow(entryIds)
     }
 

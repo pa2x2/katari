@@ -1,13 +1,19 @@
 package mihon.entry.interactions.manga.download
 
+import android.content.ContentResolver
 import android.content.Context
 import com.hippo.unifile.UniFile
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import eu.kanade.tachiyomi.util.lang.Hash.md5
 import eu.kanade.tachiyomi.util.storage.DiskUtil
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import logcat.LogPriority
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.storage.displayablePath
+import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
@@ -118,15 +124,59 @@ internal class DownloadProvider(
      * @param entry the manga of the chapter.
      * @param source the source of the chapter.
      */
-    fun findChapterDirs(
+    suspend fun findChapterDirs(
         chapters: List<EntryChapter>,
         entry: Entry,
         source: UnifiedSource,
-    ): Pair<UniFile?, List<UniFile>> {
-        val entryDir = findEntryDir(entry.title, source) ?: return null to emptyList()
-        return entryDir to chapters.mapNotNull { chapter ->
-            getValidChapterDirNames(chapter.name, chapter.scanlator, chapter.url)
-                .firstNotNullOfOrNull { entryDir.findFile(it) }
+    ): Pair<UniFile?, List<UniFile>> = withIOContext {
+        val entryDir = findEntryDir(entry.title, source) ?: return@withIOContext null to emptyList()
+        entryDir to findChapterDirs(chapters, entryDir).values.toList()
+    }
+
+    /** Returns the ids of the chapters whose download exists on disk. */
+    suspend fun findDownloadedChapterIds(
+        chapters: List<EntryChapter>,
+        entry: Entry,
+        source: UnifiedSource,
+    ): Set<Long> = withIOContext {
+        val entryDir = findEntryDir(entry.title, source) ?: return@withIOContext emptySet()
+        findChapterDirs(chapters, entryDir).keys
+    }
+
+    /**
+     * Returns the download of each chapter that has one, keyed by chapter id.
+     *
+     * A chapter is looked for under every name it may have been downloaded with, with the chapters looked up in
+     * parallel. On a storage access framework directory each lookup is a content resolver query, so from
+     * [LIST_CHAPTER_DIRS_MIN_CHAPTERS] chapters on the directory is listed once instead and the names are matched
+     * against the listing, ignoring case as the lookups do. Plain file directories are always looked up by name, as
+     * their listing can leave out files another app created.
+     */
+    private suspend fun findChapterDirs(chapters: List<EntryChapter>, entryDir: UniFile): Map<Long, UniFile> {
+        val disallowNonAscii = libraryPreferences.disallowNonAsciiFilenames.get()
+        val appendHash = libraryPreferences.enableChapterNameHash.get()
+        fun EntryChapter.findDir(find: (String) -> UniFile?): UniFile? {
+            return ChapterDirNames(name, scanlator, url).validDirNames(disallowNonAscii, appendHash)
+                .firstNotNullOfOrNull(find)
+        }
+
+        val isDocumentTree = entryDir.uri.scheme == ContentResolver.SCHEME_CONTENT
+        if (isDocumentTree && chapters.size >= LIST_CHAPTER_DIRS_MIN_CHAPTERS) {
+            val chapterDirs = entryDir.listFiles().orEmpty()
+                .filter { it.name != null }
+                .associateByTo(sortedMapOf(String.CASE_INSENSITIVE_ORDER)) { it.name!! }
+            return chapters
+                .mapNotNull { chapter -> chapter.findDir { chapterDirs[it] }?.let { chapter.id to it } }
+                .toMap()
+        }
+        return coroutineScope {
+            chapters
+                .map { chapter ->
+                    async(chapterDirLookupDispatcher) { chapter.findDir(entryDir::findFile)?.let { chapter.id to it } }
+                }
+                .awaitAll()
+                .filterNotNull()
+                .toMap()
         }
     }
 
@@ -172,100 +222,25 @@ internal class DownloadProvider(
         )
     }
 
-    /**
-     * Returns the chapter directory name for a chapter.
-     *
-     * @param chapterName the name of the chapter to query.
-     * @param chapterScanlator scanlator of the chapter to query.
-     * @param chapterUrl url of the chapter to query.
-     */
-    fun getChapterDirName(
-        chapterName: String,
-        chapterScanlator: String?,
-        chapterUrl: String,
-        disallowNonAsciiFilenames: Boolean = libraryPreferences.disallowNonAsciiFilenames.get(),
-    ): String {
-        var dirName = sanitizeChapterName(chapterName)
-        if (!chapterScanlator.isNullOrBlank()) {
-            dirName = chapterScanlator + "_" + dirName
-        }
-        // Subtract 7 bytes for hash and underscore, 4 bytes for .cbz
-        dirName = DiskUtil.buildValidFilename(dirName, DiskUtil.MAX_FILE_NAME_BYTES - 11, disallowNonAsciiFilenames)
-        dirName += "_" + md5(chapterUrl).take(6)
-        return dirName
-    }
-
-    /**
-     * Returns list of names that might have been previously used as
-     * the directory name for a chapter.
-     * Add to this list if naming pattern ever changes.
-     *
-     * @param chapterName the name of the chapter to query.
-     * @param chapterScanlator scanlator of the chapter to query.
-     * @param chapterUrl url of the chapter to query.
-     */
-    private fun getLegacyChapterDirNames(
-        chapterName: String,
-        chapterScanlator: String?,
-        chapterUrl: String,
-    ): List<String> {
-        val sanitizedChapterName = sanitizeChapterName(chapterName)
-        val chapterNameV1 = DiskUtil.buildValidFilename(
-            when {
-                !chapterScanlator.isNullOrBlank() -> "${chapterScanlator}_$sanitizedChapterName"
-                else -> sanitizedChapterName
-            },
+    /** Returns the name a new download of the chapter is written under. */
+    fun getChapterDirName(chapterName: String, chapterScanlator: String?, chapterUrl: String): String {
+        return ChapterDirNames(chapterName, chapterScanlator, chapterUrl).dirName(
+            disallowNonAscii = libraryPreferences.disallowNonAsciiFilenames.get(),
+            appendHash = libraryPreferences.enableChapterNameHash.get(),
         )
-
-        // Get the filename that would be generated if the user were
-        // using the other value for the disallow non-ASCII
-        // filenames setting. This ensures that chapters downloaded
-        // before the user changed the setting can still be found.
-        val otherChapterDirName =
-            getChapterDirName(
-                chapterName,
-                chapterScanlator,
-                chapterUrl,
-                !libraryPreferences.disallowNonAsciiFilenames.get(),
-            )
-
-        return buildList(2) {
-            // Chapter name without hash (unable to handle duplicate
-            // chapter names)
-            add(chapterNameV1)
-            add(otherChapterDirName)
-        }
     }
 
-    /**
-     * Return the new name for the chapter (in case it's empty or blank)
-     *
-     * @param chapterName the name of the chapter
-     */
-    private fun sanitizeChapterName(chapterName: String): String {
-        return chapterName.ifBlank {
-            "Chapter"
-        }
-    }
-
-    /**
-     * Returns valid downloaded chapter directory names.
-     */
+    /** Returns every name the chapter's download may have on disk, the one [getChapterDirName] returns first. */
     fun getValidChapterDirNames(chapterName: String, chapterScanlator: String?, chapterUrl: String): List<String> {
-        val chapterDirName = getChapterDirName(chapterName, chapterScanlator, chapterUrl)
-        val legacyChapterDirNames = getLegacyChapterDirNames(chapterName, chapterScanlator, chapterUrl)
-
-        return buildList {
-            // Folder of images
-            add(chapterDirName)
-            // Archived chapters
-            add("$chapterDirName.cbz")
-
-            // any legacy names
-            legacyChapterDirNames.forEach {
-                add(it)
-                add("$it.cbz")
-            }
-        }
+        return ChapterDirNames(chapterName, chapterScanlator, chapterUrl).validDirNames(
+            disallowNonAscii = libraryPreferences.disallowNonAsciiFilenames.get(),
+            appendHash = libraryPreferences.enableChapterNameHash.get(),
+        )
     }
 }
+
+private const val LIST_CHAPTER_DIRS_MIN_CHAPTERS = 50
+
+private const val CHAPTER_DIR_LOOKUP_PARALLELISM = 8
+
+private val chapterDirLookupDispatcher = Dispatchers.IO.limitedParallelism(CHAPTER_DIR_LOOKUP_PARALLELISM)

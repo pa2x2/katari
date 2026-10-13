@@ -6,8 +6,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
@@ -27,6 +25,8 @@ import eu.kanade.presentation.entry.components.EntryCover
 import eu.kanade.presentation.entry.historySubtitle
 import eu.kanade.presentation.history.HistoryUiItem
 import eu.kanade.presentation.theme.TachiyomiPreviewTheme
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Delete
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.material.DISABLED_ALPHA
 import tachiyomi.presentation.core.components.material.padding
@@ -51,7 +51,7 @@ fun HistoryListItem(
                     Modifier
                 },
             )
-            .height(56.dp)
+            .height(if (item.memberTitle != null) 72.dp else 56.dp)
             .padding(horizontal = MaterialTheme.padding.medium, vertical = MaterialTheme.padding.small),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -73,6 +73,15 @@ fun HistoryListItem(
                 overflow = TextOverflow.Ellipsis,
                 style = MaterialTheme.typography.bodyMedium,
             )
+
+            item.memberTitle?.let { memberTitle ->
+                Text(
+                    text = memberTitle,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
 
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -100,7 +109,7 @@ fun HistoryListItem(
 
         IconButton(onClick = onClickDelete) {
             Icon(
-                imageVector = Icons.Outlined.Delete,
+                imageVector = MaterialSymbols.Rounded.Delete,
                 contentDescription = stringResource(MR.strings.action_delete),
                 tint = MaterialTheme.colorScheme.onSurface,
             )

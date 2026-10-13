@@ -5,7 +5,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import eu.kanade.presentation.more.settings.screen.rememberTextRecognitionSettingsScreenModel
+import eu.kanade.presentation.more.settings.screen.rememberTextRecognitionSettingsViewModel
 import eu.kanade.presentation.more.settings.screen.textrecognition.language.TextRecognitionLanguagePickerContent
 import eu.kanade.presentation.util.Screen
 import tachiyomi.i18n.*
@@ -21,7 +21,7 @@ internal class TextRecognitionOverrideLanguageScreen(
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val model = rememberTextRecognitionSettingsScreenModel()
+        val model = rememberTextRecognitionSettingsViewModel()
         val state by model.state.collectAsState()
         val suggested by model.suggestedLanguages.collectAsState()
         val overridden = state.draft.overrides.keys.map { it.value.substringBefore('-') }.toSet()

@@ -1,0 +1,277 @@
+package eu.kanade.tachiyomi.ui.browse.source.globalsearch
+
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import eu.kanade.domain.source.service.SourcePreferences
+import eu.kanade.tachiyomi.extension.ExtensionManager
+import eu.kanade.tachiyomi.ui.base.observation.ObservedItemStore
+import eu.kanade.tachiyomi.ui.base.observation.collectAsState
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.plus
+import kotlinx.coroutines.withContext
+import mihon.entry.interactions.catalogue.EntryCatalogueFeature
+import mihon.entry.interactions.catalogue.EntryCatalogueSearchRequest
+import mihon.entry.interactions.catalogue.EntryCatalogueSearchResult
+import mihon.entry.interactions.catalogue.EntryCatalogueSourceInfo
+import tachiyomi.core.common.preference.toggle
+import tachiyomi.core.common.util.lang.launchIO
+import tachiyomi.domain.entry.interactor.GetEntry
+import tachiyomi.domain.entry.interactor.NetworkToLocalEntry
+import tachiyomi.domain.entry.model.Entry
+import uy.kohesive.injekt.Injekt
+import uy.kohesive.injekt.api.get
+import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicLong
+
+abstract class SearchViewModel(
+    initialState: State = State(),
+    sourcePreferences: SourcePreferences = Injekt.get(),
+    private val extensionManager: ExtensionManager = Injekt.get(),
+    private val networkToLocalEntry: NetworkToLocalEntry = Injekt.get(),
+    private val getEntry: GetEntry = Injekt.get(),
+    private val preferences: SourcePreferences = Injekt.get(),
+    private val catalogueFeature: EntryCatalogueFeature = Injekt.get(),
+) : ViewModel() {
+
+    val state: StateFlow<State>
+        field = MutableStateFlow(initialState)
+
+    // Subclasses can't reach the backing field (Kotlin forbids a visibility modifier on one), so their state
+    // writes go through here.
+    protected fun updateState(function: (State) -> State) {
+        state.update(function)
+    }
+
+    private val coroutineDispatcher = Executors.newFixedThreadPool(5).asCoroutineDispatcher()
+    private var searchJob: Job? = null
+
+    // Bumped by every search. A source answering an earlier one can finish just as the next search starts, after its
+    // job was cancelled, so its result is dropped by comparing generations where the state is updated.
+    private val searchGeneration = AtomicLong()
+    private val entryStore = ObservedItemStore<Long, Entry>(
+        scope = viewModelScope + Dispatchers.IO,
+        keyOf = Entry::id,
+        supersedes = { candidate, current -> candidate.version >= current.version },
+        observeItems = getEntry::subscribe,
+    )
+
+    private val enabledLanguages = sourcePreferences.enabledLanguages.get()
+    private val disabledSources = sourcePreferences.disabledSources.get()
+    protected val pinnedSources = sourcePreferences.pinnedSources.get()
+
+    private var lastQuery: String? = null
+    private var lastSourceFilter: SourceFilter? = null
+
+    protected var extensionFilter: String? = null
+
+    open val sortComparator = { map: Map<EntryCatalogueSourceInfo, SearchItemResult> ->
+        compareBy<EntryCatalogueSourceInfo>(
+            { (map[it] as? SearchItemResult.Success)?.isEmpty ?: true },
+            { "${it.id}" !in pinnedSources },
+            { "${it.name.lowercase()} (${it.language})" },
+        )
+    }
+
+    init {
+        viewModelScope.launch {
+            preferences.globalSearchFilterState.changes().collectLatest { onlyShowHasResults ->
+                state.update { it.copy(onlyShowHasResults = onlyShowHasResults) }
+            }
+        }
+    }
+
+    override fun onCleared() {
+        searchJob?.cancel()
+        coroutineDispatcher.close()
+        super.onCleared()
+    }
+
+    @Composable
+    fun getEntryState(initialEntry: Entry): androidx.compose.runtime.State<Entry> {
+        return entryStore.collectAsState(initialEntry)
+    }
+
+    open fun getEnabledSources(): List<EntryCatalogueSourceInfo> {
+        return catalogueFeature.sources()
+            .filter { it.language in enabledLanguages && "${it.id}" !in disabledSources }
+            .sortedWith(
+                compareBy(
+                    { "${it.id}" !in pinnedSources },
+                    { "${it.name.lowercase()} (${it.language})" },
+                ),
+            )
+    }
+
+    private suspend fun getSelectedSources(): List<EntryCatalogueSourceInfo> {
+        val enabledSources = getEnabledSources()
+
+        val filter = extensionFilter
+        if (filter.isNullOrEmpty()) {
+            return enabledSources
+        }
+
+        val extensionSourceIds = extensionManager.getLoadedExtensions()
+            .filter { it.pkgName == filter }
+            .flatMap { extension -> extension.sources }
+            .map { it.id }
+            .toSet()
+        return enabledSources.filter { it.id in extensionSourceIds }
+    }
+
+    fun updateSearchQuery(query: String?) {
+        state.update { it.copy(searchQuery = query) }
+    }
+
+    fun setSourceFilter(filter: SourceFilter) {
+        state.update { it.copy(sourceFilter = filter) }
+        search()
+    }
+
+    fun toggleFilterResults() {
+        preferences.globalSearchFilterState.toggle()
+    }
+
+    fun search() {
+        val query = state.value.searchQuery
+        val sourceFilter = state.value.sourceFilter
+
+        if (query.isNullOrBlank()) return
+
+        val sameQuery = this.lastQuery == query
+        if (sameQuery && this.lastSourceFilter == sourceFilter) return
+
+        this.lastQuery = query
+        this.lastSourceFilter = sourceFilter
+
+        searchJob?.cancel()
+        val generation = searchGeneration.incrementAndGet()
+
+        searchJob = viewModelScope.launchIO {
+            val sources = getSelectedSources()
+
+            // Reuse previous results if possible
+            if (sameQuery) {
+                val existingResults = state.value.items
+                updateItems(
+                    sources
+                        .associateWith { existingResults[it] ?: SearchItemResult.Loading },
+                )
+            } else {
+                updateItems(
+                    sources
+                        .associateWith { SearchItemResult.Loading },
+                )
+            }
+
+            sources.map { source ->
+                async {
+                    if (state.value.items[source] !is SearchItemResult.Loading) {
+                        return@async
+                    }
+
+                    try {
+                        val searchResult = withContext(coroutineDispatcher) {
+                            catalogueFeature.search(EntryCatalogueSearchRequest(source.id, query))
+                        }
+                        val titles = when (searchResult) {
+                            is EntryCatalogueSearchResult.Success -> searchResult.entries
+                            is EntryCatalogueSearchResult.Unavailable -> emptyList()
+                            is EntryCatalogueSearchResult.Failed -> throw searchResult.cause
+                        }
+                            .let(::filterSearchResults)
+                            .let { networkToLocalEntry(it) }
+
+                        updateItem(source, SearchItemResult.Success(titles), generation)
+                    } catch (e: Exception) {
+                        updateItem(source, SearchItemResult.Error(e), generation)
+                    }
+                }
+            }
+                .awaitAll()
+        }
+    }
+
+    private fun updateItems(items: Map<EntryCatalogueSourceInfo, SearchItemResult>) {
+        state.update {
+            it.copy(
+                items = items
+                    .toSortedMap(sortComparator(items)),
+            )
+        }
+    }
+
+    // Sources finish concurrently, so each result is merged into the state it updates rather than into a snapshot.
+    private fun updateItem(source: EntryCatalogueSourceInfo, result: SearchItemResult, generation: Long) {
+        state.update {
+            if (generation != searchGeneration.get()) return@update it
+            val items = it.items + (source to result)
+            it.copy(items = items.toSortedMap(sortComparator(items)))
+        }
+    }
+
+    fun setMigrateDialog(currentId: Long, target: Entry) {
+        viewModelScope.launchIO {
+            val current = getEntry.await(currentId) ?: return@launchIO
+            state.update { it.copy(dialog = Dialog.Migrate(target, current)) }
+        }
+    }
+
+    protected open fun filterSearchResults(entries: List<Entry>): List<Entry> = entries
+
+    fun clearDialog() {
+        state.update { it.copy(dialog = null) }
+    }
+
+    @Immutable
+    data class State(
+        val from: Entry? = null,
+        val searchQuery: String? = null,
+        val sourceFilter: SourceFilter = SourceFilter.PinnedOnly,
+        val onlyShowHasResults: Boolean = false,
+        val items: Map<EntryCatalogueSourceInfo, SearchItemResult> = mapOf(),
+        val dialog: Dialog? = null,
+    ) {
+        val progress: Int = items.count { it.value !is SearchItemResult.Loading }
+        val total: Int = items.size
+        val filteredItems = items.filter { (_, result) -> result.isVisible(onlyShowHasResults) }
+    }
+
+    sealed interface Dialog {
+        data class Migrate(val target: Entry, val current: Entry) : Dialog
+    }
+}
+
+enum class SourceFilter {
+    All,
+    PinnedOnly,
+}
+
+sealed interface SearchItemResult {
+    data object Loading : SearchItemResult
+
+    data class Error(
+        val throwable: Throwable,
+    ) : SearchItemResult
+
+    data class Success(
+        val result: List<Entry>,
+    ) : SearchItemResult {
+        val isEmpty: Boolean
+            get() = result.isEmpty()
+    }
+
+    fun isVisible(onlyShowHasResults: Boolean): Boolean {
+        return !onlyShowHasResults || (this is Success && !this.isEmpty)
+    }
+}

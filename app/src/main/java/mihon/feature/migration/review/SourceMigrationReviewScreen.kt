@@ -13,11 +13,6 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.ArrowForward
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.outlined.Pause
-import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
@@ -42,7 +37,7 @@ import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import cafe.adriel.voyager.core.model.rememberScreenModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.components.AppBar
@@ -57,6 +52,11 @@ import mihon.feature.migration.session.model.SourceMigrationSessionId
 import mihon.feature.migration.session.model.SourceMigrationSessionStage
 import mihon.feature.migration.work.SourceMigrationNotificationVisibility
 import mihon.feature.migration.work.SourceMigrationNotifier
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.automirroredrounded.ArrowForward
+import mihon.icons.materialsymbols.rounded.Check
+import mihon.icons.materialsymbols.rounded.PlayArrow
+import mihon.icons.materialsymbols.roundedfilled.Pause
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.Badge
 import tachiyomi.presentation.core.components.BadgeGroup
@@ -77,8 +77,8 @@ class SourceMigrationReviewScreen(
         val navigator = LocalNavigator.currentOrThrow
         val context = LocalContext.current
         val lifecycleOwner = LocalLifecycleOwner.current
-        val screenModel = rememberScreenModel { SourceMigrationReviewScreenModel(sessionId) }
-        val state by screenModel.state.collectAsState()
+        val viewModel = viewModel { SourceMigrationReviewViewModel(sessionId) }
+        val state by viewModel.state.collectAsState()
         val session = state.session
         val discoveryActive = session?.stage in DISCOVERY_STAGES
         val preparationActive = session?.stage in PREPARATION_STAGES
@@ -118,7 +118,7 @@ class SourceMigrationReviewScreen(
 
         LaunchedEffect(session?.stage) {
             when (session?.stage) {
-                SourceMigrationSessionStage.DRAFT -> screenModel.startDiscovery()
+                SourceMigrationSessionStage.DRAFT -> viewModel.startDiscovery()
                 SourceMigrationSessionStage.COMPLETED -> navigator.pop()
                 else -> Unit
             }
@@ -150,15 +150,15 @@ class SourceMigrationReviewScreen(
                                 -> add(
                                     AppBar.Action(
                                         title = stringResource(MR.strings.action_pause),
-                                        icon = Icons.Outlined.Pause,
-                                        onClick = screenModel::pauseDiscovery,
+                                        icon = MaterialSymbols.RoundedFilled.Pause,
+                                        onClick = viewModel::pauseDiscovery,
                                     ),
                                 )
                                 SourceMigrationSessionStage.DISCOVERY_PAUSED -> add(
                                     AppBar.Action(
                                         title = stringResource(MR.strings.action_resume),
-                                        icon = Icons.Outlined.PlayArrow,
-                                        onClick = screenModel::resumeDiscovery,
+                                        icon = MaterialSymbols.Rounded.PlayArrow,
+                                        onClick = viewModel::resumeDiscovery,
                                     ),
                                 )
                                 SourceMigrationSessionStage.EXECUTION_QUEUED,
@@ -166,15 +166,15 @@ class SourceMigrationReviewScreen(
                                 -> add(
                                     AppBar.Action(
                                         title = stringResource(MR.strings.action_pause),
-                                        icon = Icons.Outlined.Pause,
-                                        onClick = screenModel::pauseExecution,
+                                        icon = MaterialSymbols.RoundedFilled.Pause,
+                                        onClick = viewModel::pauseExecution,
                                     ),
                                 )
                                 SourceMigrationSessionStage.EXECUTION_PAUSED -> add(
                                     AppBar.Action(
                                         title = stringResource(MR.strings.action_resume),
-                                        icon = Icons.Outlined.PlayArrow,
-                                        onClick = screenModel::resumeExecution,
+                                        icon = MaterialSymbols.Rounded.PlayArrow,
+                                        onClick = viewModel::resumeExecution,
                                     ),
                                 )
                                 else -> Unit
@@ -186,7 +186,7 @@ class SourceMigrationReviewScreen(
                                 add(
                                     AppBar.OverflowAction(
                                         title = stringResource(MR.strings.sourceMigrationReview_searchUnresolved),
-                                        onClick = screenModel::retryUnresolved,
+                                        onClick = viewModel::retryUnresolved,
                                     ),
                                 )
                             }
@@ -216,11 +216,11 @@ class SourceMigrationReviewScreen(
                     },
                     icon = {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Outlined.ArrowForward,
+                            imageVector = MaterialSymbols.AutoMirroredRounded.ArrowForward,
                             contentDescription = null,
                         )
                     },
-                    onClick = screenModel::startExecution,
+                    onClick = viewModel::startExecution,
                     expanded = lazyListState.shouldExpandFAB(),
                     modifier = Modifier.animateFloatingActionButton(
                         visible = session?.stage == SourceMigrationSessionStage.REVIEW_REQUIRED &&
@@ -237,9 +237,9 @@ class SourceMigrationReviewScreen(
                     state = state,
                     lazyListState = lazyListState,
                     contentPadding = contentPadding,
-                    onFilterChange = screenModel::setFilter,
-                    onIncludedChange = screenModel::setIncluded,
-                    onToggleGroup = screenModel::toggleGroup,
+                    onFilterChange = viewModel::setFilter,
+                    onIncludedChange = viewModel::setIncluded,
+                    onToggleGroup = viewModel::toggleGroup,
                     onTargetClick = { sourceEntryId -> candidateItemId = sourceEntryId },
                     onSourceDetailsClick = { entryId ->
                         navigator.push(EntryScreen(entryId, bypassMerge = true))
@@ -265,7 +265,7 @@ class SourceMigrationReviewScreen(
                 onDismissRequest = { showDiscardDialog = false },
                 onConfirm = {
                     showDiscardDialog = false
-                    screenModel.discardPreparation()
+                    viewModel.discardPreparation()
                 },
             )
         }
@@ -494,7 +494,7 @@ private fun SourceMigrationFilterChip(
         leadingIcon = if (selected) {
             {
                 Icon(
-                    imageVector = Icons.Filled.Check,
+                    imageVector = MaterialSymbols.Rounded.Check,
                     contentDescription = null,
                 )
             }

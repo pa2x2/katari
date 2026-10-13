@@ -7,11 +7,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Pause
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.outlined.SkipNext
-import androidx.compose.material.icons.outlined.SkipPrevious
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -21,6 +16,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.SkipNext
+import mihon.icons.materialsymbols.rounded.SkipPrevious
+import mihon.icons.materialsymbols.roundedfilled.Pause
+import mihon.icons.materialsymbols.roundedfilled.PlayArrow
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -47,7 +47,7 @@ internal fun VideoPlayerCenterControls(
         VideoPlayerTransportButton(
             icon = {
                 Icon(
-                    imageVector = Icons.Outlined.SkipPrevious,
+                    imageVector = MaterialSymbols.Rounded.SkipPrevious,
                     modifier = Modifier.size(24.dp),
                     contentDescription = stringResource(MR.strings.action_previous_chapter),
                     tint = Color.White,
@@ -66,7 +66,11 @@ internal fun VideoPlayerCenterControls(
                     )
                 } else {
                     Icon(
-                        imageVector = if (isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
+                        imageVector = if (isPlaying) {
+                            MaterialSymbols.RoundedFilled.Pause
+                        } else {
+                            MaterialSymbols.RoundedFilled.PlayArrow
+                        },
                         modifier = Modifier.size(30.dp),
                         contentDescription = if (isPlaying) stringResource(MR.strings.action_pause) else "Play",
                         tint = Color.White,
@@ -79,7 +83,7 @@ internal fun VideoPlayerCenterControls(
         VideoPlayerTransportButton(
             icon = {
                 Icon(
-                    imageVector = Icons.Outlined.SkipNext,
+                    imageVector = MaterialSymbols.Rounded.SkipNext,
                     modifier = Modifier.size(24.dp),
                     contentDescription = stringResource(MR.strings.action_next_chapter),
                     tint = Color.White,

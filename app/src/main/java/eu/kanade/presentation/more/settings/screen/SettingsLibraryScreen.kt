@@ -213,8 +213,6 @@ object SettingsLibraryScreen : SearchableSettings {
         libraryPreferences: LibraryPreferences,
     ): Preference.PreferenceGroup {
         val displayMode by libraryPreferences.displayMode.collectAsState()
-        val portraitColumns by libraryPreferences.portraitColumns.collectAsState()
-        val landscapeColumns by libraryPreferences.landscapeColumns.collectAsState()
         val unreadBadgeTitle = MR.strings.action_display_unseen_badge
         val continueButtonTitle = MR.strings.action_display_show_continue_button
 
@@ -237,34 +235,22 @@ object SettingsLibraryScreen : SearchableSettings {
                     title = stringResource(MR.strings.action_display_mode),
                 ),
                 Preference.PreferenceItem.SliderPreference(
-                    value = portraitColumns,
                     preference = libraryPreferences.portraitColumns,
                     valueRange = 0..10,
                     title = stringResource(MR.strings.portrait),
                     subtitle = stringResource(MR.strings.pref_library_columns),
-                    valueString = if (portraitColumns > 0) {
-                        portraitColumns.toString()
-                    } else {
-                        stringResource(MR.strings.label_auto)
-                    },
-                    enabled = displayMode != LibraryDisplayMode.List &&
+                    valueText = { if (it > 0) it.toString() else stringResource(MR.strings.label_auto) },
+                    visible = displayMode != LibraryDisplayMode.List &&
                         displayMode != LibraryDisplayMode.ComfortableList,
-                    onValueChanged = { libraryPreferences.portraitColumns.set(it) },
                 ),
                 Preference.PreferenceItem.SliderPreference(
-                    value = landscapeColumns,
                     preference = libraryPreferences.landscapeColumns,
                     valueRange = 0..10,
                     title = stringResource(MR.strings.landscape),
                     subtitle = stringResource(MR.strings.pref_library_columns),
-                    valueString = if (landscapeColumns > 0) {
-                        landscapeColumns.toString()
-                    } else {
-                        stringResource(MR.strings.label_auto)
-                    },
-                    enabled = displayMode != LibraryDisplayMode.List &&
+                    valueText = { if (it > 0) it.toString() else stringResource(MR.strings.label_auto) },
+                    visible = displayMode != LibraryDisplayMode.List &&
                         displayMode != LibraryDisplayMode.ComfortableList,
-                    onValueChanged = { libraryPreferences.landscapeColumns.set(it) },
                 ),
                 Preference.PreferenceItem.SwitchPreference(
                     preference = libraryPreferences.unreadBadge,
@@ -277,6 +263,10 @@ object SettingsLibraryScreen : SearchableSettings {
                 Preference.PreferenceItem.SwitchPreference(
                     preference = libraryPreferences.entryTypeBadge,
                     title = stringResource(MR.strings.action_display_entry_type_badge),
+                ),
+                Preference.PreferenceItem.SwitchPreference(
+                    preference = libraryPreferences.mergedBadge,
+                    title = stringResource(MR.strings.action_display_merged_badge),
                 ),
                 Preference.PreferenceItem.SwitchPreference(
                     preference = libraryPreferences.showContinueReadingButton,

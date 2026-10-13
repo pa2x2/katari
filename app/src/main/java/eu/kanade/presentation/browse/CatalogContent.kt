@@ -11,11 +11,6 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.OpenInBrowser
-import androidx.compose.material.icons.outlined.Public
-import androidx.compose.material.icons.outlined.Refresh
-import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
@@ -42,6 +37,10 @@ import eu.kanade.presentation.util.formattedMessage
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.OpenInBrowser
+import mihon.icons.materialsymbols.rounded.Refresh
+import mihon.icons.materialsymbols.rounded.Settings
 import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.domain.source.model.CatalogListItem
 import tachiyomi.i18n.*
@@ -105,7 +104,7 @@ fun CatalogContent(
                 add(
                     EmptyScreenAction(
                         stringRes = MR.strings.action_retry,
-                        icon = Icons.Outlined.Refresh,
+                        icon = MaterialSymbols.Rounded.Refresh,
                         onClick = catalogList::refresh,
                     ),
                 )
@@ -113,7 +112,7 @@ fun CatalogContent(
                     add(
                         EmptyScreenAction(
                             stringRes = MR.strings.action_open_in_web_view,
-                            icon = Icons.Outlined.OpenInBrowser,
+                            icon = MaterialSymbols.Rounded.OpenInBrowser,
                             onClick = it,
                         ),
                     )
@@ -122,7 +121,7 @@ fun CatalogContent(
                     add(
                         EmptyScreenAction(
                             stringRes = MR.strings.action_settings,
-                            icon = Icons.Outlined.Settings,
+                            icon = MaterialSymbols.Rounded.Settings,
                             onClick = it,
                         ),
                     )

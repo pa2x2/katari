@@ -6,8 +6,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.FilterListOff
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -18,6 +16,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import eu.kanade.presentation.category.visualName
 import eu.kanade.presentation.entry.entryTypePresentation
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.FilterListOff
 import tachiyomi.core.common.preference.TriState
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.updates.model.UpdatesFeedFilter
@@ -176,7 +176,7 @@ fun UpdatesFilteredEmptyScreen(
         actions = listOf(
             EmptyScreenAction(
                 stringRes = MR.strings.action_clear_filters,
-                icon = Icons.Outlined.FilterListOff,
+                icon = MaterialSymbols.Rounded.FilterListOff,
                 onClick = onClearFilters,
             ),
         ),

@@ -163,9 +163,12 @@ private fun resolveEntryTypeGroups(
 private fun resolveSourceGroups(items: List<LibraryItem>): List<ResolvedLibraryGroup> {
     val sourceNames = mutableMapOf<Long, String>()
     val buckets = mutableMapOf<Long, MutableList<LibraryItem>>()
+    // A cross-source merge is listed under each of its sources, the way an entry in several categories is.
     items.forEach { item ->
-        sourceNames[item.displaySourceId] = item.sourceName
-        buckets.getOrPut(item.displaySourceId, ::mutableListOf) += item
+        item.sources.forEach { source ->
+            sourceNames[source.id] = source.name
+            buckets.getOrPut(source.id, ::mutableListOf) += item
+        }
     }
 
     return sourceNames.keys

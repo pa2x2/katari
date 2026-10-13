@@ -18,13 +18,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.outlined.VolumeOff
-import androidx.compose.material.icons.automirrored.outlined.VolumeUp
-import androidx.compose.material.icons.outlined.Brightness6
-import androidx.compose.material.icons.outlined.LockOpen
-import androidx.compose.material.icons.outlined.SkipNext
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -48,6 +41,13 @@ import androidx.compose.ui.unit.dp
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerSideGestureFeedbackState
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerSideGestureType
 import kotlinx.coroutines.delay
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.automirroredrounded.ArrowBack
+import mihon.icons.materialsymbols.automirroredrounded.VolumeOff
+import mihon.icons.materialsymbols.automirroredrounded.VolumeUp
+import mihon.icons.materialsymbols.rounded.Brightness6
+import mihon.icons.materialsymbols.rounded.LockOpen
+import mihon.icons.materialsymbols.rounded.SkipNext
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -120,7 +120,7 @@ internal fun VideoPlayerErrorOverlay(
                 modifier = Modifier.padding(top = 16.dp),
             ) {
                 Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    imageVector = MaterialSymbols.AutoMirroredRounded.ArrowBack,
                     contentDescription = "Back",
                     tint = Color.White,
                 )
@@ -231,7 +231,7 @@ internal fun VideoPlayerLockedOverlay(
     ) {
         VideoPlayerUtilityButton(onClick = onUnlock) {
             Icon(
-                imageVector = Icons.Outlined.LockOpen,
+                imageVector = MaterialSymbols.Rounded.LockOpen,
                 contentDescription = stringResource(MR.strings.anime_playback_unlock_controls),
                 tint = Color.White,
             )
@@ -314,7 +314,7 @@ private fun VideoPlayerNextEpisodeCard(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(
-                imageVector = Icons.Outlined.SkipNext,
+                imageVector = MaterialSymbols.Rounded.SkipNext,
                 contentDescription = null,
                 tint = Color.White,
                 modifier = Modifier.size(18.dp),
@@ -348,14 +348,14 @@ private fun VideoPlayerSideGestureFeedbackCard(
         0f
     }.coerceIn(0f, 1f)
     val icon = when (feedbackState.type) {
-        VideoPlayerSideGestureType.Brightness -> Icons.Outlined.Brightness6
+        VideoPlayerSideGestureType.Brightness -> MaterialSymbols.Rounded.Brightness6
         VideoPlayerSideGestureType.Volume -> {
             if (feedbackState.level ==
                 0
             ) {
-                Icons.AutoMirrored.Outlined.VolumeOff
+                MaterialSymbols.AutoMirroredRounded.VolumeOff
             } else {
-                Icons.AutoMirrored.Outlined.VolumeUp
+                MaterialSymbols.AutoMirroredRounded.VolumeUp
             }
         }
     }

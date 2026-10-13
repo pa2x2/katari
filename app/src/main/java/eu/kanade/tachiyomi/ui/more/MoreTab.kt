@@ -10,9 +10,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
-import cafe.adriel.voyager.core.model.ScreenModel
-import cafe.adriel.voyager.core.model.rememberScreenModel
-import cafe.adriel.voyager.core.model.screenModelScope
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -52,7 +52,7 @@ data object MoreTab : Tab {
         @Composable
         get() {
             val isSelected = LocalTabNavigator.current.current.key == key
-            val image = AnimatedImageVector.animatedVectorResource(R.drawable.anim_more_enter)
+            val image = AnimatedImageVector.animatedVectorResource(R.drawable.animated_more)
             return TabOptions(
                 index = 4u,
                 title = stringResource(MR.strings.label_more),
@@ -69,17 +69,17 @@ data object MoreTab : Tab {
         val context = LocalContext.current
         val navigator = LocalNavigator.currentOrThrow
         val scope = rememberCoroutineScope()
-        val screenModel = rememberScreenModel { MoreScreenModel() }
+        val viewModel = viewModel { MoreViewModel() }
         val profileManager = remember { Injekt.get<ProfileManager>() }
         val uiPreferences = remember { Injekt.get<UiPreferences>() }
-        val downloadQueueState by screenModel.downloadQueueState.collectAsState()
-        val hasNewRecap by screenModel.hasNewRecap.collectAsState()
+        val downloadQueueState by viewModel.downloadQueueState.collectAsState()
+        val hasNewRecap by viewModel.hasNewRecap.collectAsState()
         MoreScreen(
             downloadQueueStateProvider = { downloadQueueState },
-            downloadedOnly = screenModel.downloadedOnly,
-            onDownloadedOnlyChange = { screenModel.downloadedOnly = it },
-            incognitoMode = screenModel.incognitoMode,
-            onIncognitoModeChange = { screenModel.incognitoMode = it },
+            downloadedOnly = viewModel.downloadedOnly,
+            onDownloadedOnlyChange = { viewModel.downloadedOnly = it },
+            incognitoMode = viewModel.incognitoMode,
+            onIncognitoModeChange = { viewModel.incognitoMode = it },
             onClickDownloadQueue = { navigator.push(DownloadQueueScreen) },
             onClickTracking = { navigator.push(SettingsTrackingScreen) },
             onClickCategories = { navigator.push(CategoryScreen()) },
@@ -104,14 +104,14 @@ data object MoreTab : Tab {
     }
 }
 
-private class MoreScreenModel(
+private class MoreViewModel(
     downloadRuntime: EntryDownloadRuntimeFeature = Injekt.get(),
     basePreferences: BasePreferences = Injekt.get(),
     libraryPreferences: LibraryPreferences = Injekt.get(),
-) : ScreenModel {
+) : ViewModel() {
 
-    var downloadedOnly by libraryPreferences.downloadedOnly.asState(screenModelScope)
-    var incognitoMode by basePreferences.incognitoMode.asState(screenModelScope)
+    var downloadedOnly by libraryPreferences.downloadedOnly.asState(viewModelScope)
+    var incognitoMode by basePreferences.incognitoMode.asState(viewModelScope)
 
     val downloadQueueState: StateFlow<DownloadQueueState> = downloadRuntime.state
         .map { runtime ->
@@ -123,14 +123,14 @@ private class MoreScreenModel(
             }
         }
         .stateIn(
-            screenModelScope,
+            viewModelScope,
             SharingStarted.WhileSubscribed(5_000),
             DownloadQueueState.Stopped,
         )
 
     val hasNewRecap: StateFlow<Boolean> = subscribeUnopenedYearRecap()
         .map { it != null }
-        .stateIn(screenModelScope, SharingStarted.WhileSubscribed(5_000), false)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
 }
 
 sealed interface DownloadQueueState {

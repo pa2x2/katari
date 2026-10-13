@@ -7,6 +7,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFontFamilyResolver
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.LocalLocaleList
 import androidx.compose.ui.text.TextMeasurer
 import mihon.book.api.document.BookDocumentFontFamily
 import mihon.entry.interactions.book.document.reader.BookDocumentViewerItem
@@ -39,11 +40,12 @@ internal fun rememberBookDocumentPageTextMeasurer(
     }
     val density = LocalDensity.current
     val direction = LocalLayoutDirection.current
+    val localeList = LocalLocaleList.current
     val resolver = LocalFontFamilyResolver.current
     val scale = LocalBookDocumentTextScale.current
-    return remember(density, direction, resolver, scale, sectionFonts) {
+    return remember(density, direction, localeList, resolver, scale, sectionFonts) {
         BookDocumentPageTextMeasurer(
-            TextMeasurer(resolver, density, direction, cacheSize = 0),
+            TextMeasurer(resolver, localeList, density, direction, cacheSize = 0),
             density,
             scale,
             sectionFonts,

@@ -10,6 +10,7 @@ import tachiyomi.domain.entry.service.EntryLibraryProgressResolution
 import tachiyomi.domain.entry.service.EntryLibraryProgressSummary
 import tachiyomi.domain.library.model.LibraryItem
 import tachiyomi.domain.library.model.LibraryItemKey
+import tachiyomi.domain.library.model.LibraryItemSource
 
 class LibrarySearchProgressMatcherTest {
 
@@ -45,11 +46,8 @@ class LibrarySearchProgressMatcherTest {
         return LibraryItem(
             entry = entry,
             categories = emptyList(),
-            sourceName = "Test source",
-            sourceLanguage = "en",
+            sources = listOf(LibraryItemSource(entry.source, "Test source", "en")),
             sourceItemOrientation = EntryItemOrientation.VERTICAL,
-            displaySourceId = entry.source,
-            sourceIds = setOf(entry.source),
             isLocal = false,
             isMerged = false,
             memberEntryIds = listOf(LibraryItemKey(entry.type, entry.id)),

@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.update
 
 /** Reload source defaults into the editor while keeping the applied search and preset intact. */
 internal class CatalogFilterReset(
-    private val state: MutableStateFlow<CatalogScreenModel.State>,
+    private val state: MutableStateFlow<CatalogViewModel.State>,
     private val loadFilters: suspend () -> EntryFilterList,
     private val discardEdits: () -> Unit,
     private val retainSessions: (EntryFilterList) -> Unit,

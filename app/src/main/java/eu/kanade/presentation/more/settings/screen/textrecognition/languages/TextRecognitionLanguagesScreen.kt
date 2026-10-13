@@ -16,7 +16,7 @@ import androidx.compose.ui.platform.LocalContext
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.components.AppBar
-import eu.kanade.presentation.more.settings.screen.rememberTextRecognitionSettingsScreenModel
+import eu.kanade.presentation.more.settings.screen.rememberTextRecognitionSettingsViewModel
 import eu.kanade.presentation.more.settings.screen.textrecognition.presentation.selectionLabel
 import eu.kanade.presentation.util.Screen
 import kotlinx.coroutines.launch
@@ -34,7 +34,7 @@ internal class TextRecognitionLanguagesScreen : Screen() {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val model = rememberTextRecognitionSettingsScreenModel()
+        val model = rememberTextRecognitionSettingsViewModel()
         val state by model.state.collectAsState()
         val hostActions = model.hostActions
         val overview = remember(state.draft) {

@@ -13,6 +13,7 @@ import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import mihon.entry.interactions.anime.download.model.AnimeDownload
 import mihon.entry.interactions.download.EntryDownloadWorkController
@@ -91,7 +92,7 @@ class AnimeDownloadManagerTest {
         every { episode.id } returns episodeId
     }
 
-    private fun manager(
+    private fun TestScope.manager(
         downloader: AnimeDownloader,
         store: AnimeDownloadStore = mockk(relaxed = true) {
             coEvery { restore() } returns emptyList()
@@ -105,6 +106,7 @@ class AnimeDownloadManagerTest {
             sourceManager = mockk(relaxed = true),
             store = store,
             workController = mockk<EntryDownloadWorkController>(relaxed = true),
+            scope = backgroundScope,
         )
     }
 

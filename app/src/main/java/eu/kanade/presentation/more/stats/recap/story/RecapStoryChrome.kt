@@ -9,10 +9,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material.icons.outlined.MoreVert
-import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -27,6 +23,10 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.more.stats.recap.palette.RecapPalette
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Close
+import mihon.icons.materialsymbols.rounded.MoreVert
+import mihon.icons.materialsymbols.rounded.Share
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -80,12 +80,12 @@ internal fun RecapTopBar(
         )
         Box {
             IconButton(onClick = onMore) {
-                Icon(Icons.Outlined.MoreVert, stringResource(MR.strings.action_menu), tint = palette.ink)
+                Icon(MaterialSymbols.Rounded.MoreVert, stringResource(MR.strings.action_menu), tint = palette.ink)
             }
             moreMenu()
         }
         IconButton(onClick = onClose) {
-            Icon(Icons.Outlined.Close, stringResource(MR.strings.action_close), tint = palette.ink)
+            Icon(MaterialSymbols.Rounded.Close, stringResource(MR.strings.action_close), tint = palette.ink)
         }
     }
 }
@@ -112,7 +112,7 @@ internal fun RecapBottomBar(
                 onClick = onShare,
                 colors = ButtonDefaults.buttonColors(containerColor = palette.ink, contentColor = palette.background),
             ) {
-                Icon(Icons.Outlined.Share, contentDescription = null, modifier = Modifier.padding(end = 8.dp))
+                Icon(MaterialSymbols.Rounded.Share, contentDescription = null, modifier = Modifier.padding(end = 8.dp))
                 Text(stringResource(MR.strings.action_share))
             }
             if (canReplay) {
@@ -125,7 +125,7 @@ internal fun RecapBottomBar(
             }
         } else {
             IconButton(onClick = onShare) {
-                Icon(Icons.Outlined.Share, stringResource(MR.strings.action_share), tint = palette.ink)
+                Icon(MaterialSymbols.Rounded.Share, stringResource(MR.strings.action_share), tint = palette.ink)
             }
         }
     }

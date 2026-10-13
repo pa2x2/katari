@@ -20,7 +20,8 @@ import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryIdentity
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryRepository
-import tachiyomi.domain.entry.service.FetchInterval
+import tachiyomi.domain.entry.repository.MergedMemberExpansionRepository
+import tachiyomi.domain.entry.service.nextupdate.FetchInterval
 import tachiyomi.domain.history.interactor.UpsertHistory
 import tachiyomi.domain.history.model.History
 import tachiyomi.domain.history.model.HistoryUpdate
@@ -52,6 +53,7 @@ class EntryRestorer(
     private val activityBackupRepository: HistoryActivityBackupRepository = Injekt.get(),
     private val fetchInterval: FetchInterval = Injekt.get(),
     private val updateRulesRepository: LibraryUpdateRulesRepository = Injekt.get(),
+    private val mergedMemberExpansionRepository: MergedMemberExpansionRepository = Injekt.get(),
 ) {
 
     private val timeZone = TimeZone.currentSystemDefault()
@@ -169,13 +171,21 @@ class EntryRestorer(
         backupEntry.updateMode?.let { mode ->
             updateRulesRepository.setEntryMode(listOf(entry.id), EntryUpdateMode.valueOf(mode.uppercase()))
         }
+        if (backupEntry.mergeMemberExpanded) {
+            mergedMemberExpansionRepository.setExpanded(entry.id, expanded = true)
+        }
         entryBackupFeature.restore(
             session = restoreSession,
             profileId = profileProvider.activeProfileId,
             entry = entry,
             states = backupEntry.featureStatesWithLegacyFallback(entry),
         )
-        val withInterval = fetchInterval.update(entry, now, timeZone, currentFetchWindow)
+        val withInterval = fetchInterval.update(entry, now, timeZone, currentFetchWindow).let { updated ->
+            // A next update still ahead was worked out from the chapters the backup came from.
+            backupEntry.nextUpdate.takeIf { it >= currentFetchWindow.first }
+                ?.let { updated.copy(nextUpdate = it) }
+                ?: updated
+        }
         entryRepository.update(withInterval)
     }
 
@@ -217,8 +227,17 @@ class EntryRestorer(
         val dbChaptersByUrl = entryChapterRepository.getChaptersByEntryIdAwait(entry.id)
             .associateBy { it.url }
 
-        val chaptersToUpsert = backupChapters.mapNotNull { backupChapter ->
-            val chapter = backupChapter.toEntryChapter(entry.id)
+        // A duplicated chapter is backed up once per copy; writing each copy would let the last one decide its state.
+        val restoredChapters = backupChapters
+            .map { it.toEntryChapter(entry.id) }
+            .groupBy { it.url }
+            .map { (_, copies) ->
+                copies.reduce { kept, other ->
+                    kept.copy(read = kept.read || other.read, bookmark = kept.bookmark || other.bookmark)
+                }
+            }
+
+        val chaptersToUpsert = restoredChapters.mapNotNull { chapter ->
             val dbChapter = dbChaptersByUrl[chapter.url]
                 ?: return@mapNotNull chapter
 
@@ -250,9 +269,16 @@ class EntryRestorer(
         if (backupHistory.isEmpty()) return
         val existingHistoryByChapterId = historyRepository.getHistoryByEntryId(entry.id)
             .associateBy { it.chapterId }
-        backupHistory.forEach { history ->
-            val chapter = entryChapterRepository.getChapterByUrlAndEntryId(history.url, entry.id)
+        // A duplicated chapter is backed up once per copy, so merging each copy against the stored row separately
+        // would add its reading time more than once.
+        backupHistory.groupBy { it.url }.forEach { (url, copies) ->
+            val chapter = entryChapterRepository.getChapterByUrlAndEntryId(url, entry.id)
                 ?: return@forEach
+            val history = BackupHistory(
+                url = url,
+                lastRead = copies.maxOf { it.lastRead },
+                readDuration = copies.sumOf { it.readDuration },
+            )
             upsertHistory.await(history.mergeWith(chapter.id, existingHistoryByChapterId[chapter.id]))
         }
     }

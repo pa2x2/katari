@@ -9,10 +9,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Pause
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -40,13 +36,17 @@ import eu.kanade.presentation.entry.translation.entryTranslateStatusText
 import mihon.entry.interactions.translate.EntryTranslateFailure
 import mihon.entry.interactions.translate.EntryTranslateStatus
 import mihon.entry.interactions.translate.EntryTranslateWaiting
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.MoreVert
+import mihon.icons.materialsymbols.roundedfilled.Pause
+import mihon.icons.materialsymbols.roundedfilled.PlayArrow
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.screens.EmptyScreen
 
 /** The translation queue as a tab of the queue screen, with its own Pause and Cancel all. */
 @Composable
-internal fun translationQueueTab(model: TranslationQueueScreenModel): TabContent {
+internal fun translationQueueTab(model: TranslationQueueViewModel): TabContent {
     val rows by model.rows.collectAsStateWithLifecycle()
     val waiting by model.waiting.collectAsStateWithLifecycle()
     val paused by model.paused.collectAsStateWithLifecycle()
@@ -97,7 +97,11 @@ internal fun translationQueueTab(model: TranslationQueueScreenModel): TabContent
                         },
                         icon = {
                             Icon(
-                                imageVector = if (paused) Icons.Filled.PlayArrow else Icons.Filled.Pause,
+                                imageVector = if (paused) {
+                                    MaterialSymbols.RoundedFilled.PlayArrow
+                                } else {
+                                    MaterialSymbols.RoundedFilled.Pause
+                                },
                                 contentDescription = null,
                             )
                         },
@@ -180,7 +184,7 @@ private fun RowActions(
         Box {
             IconButton(onClick = { expanded = true }) {
                 Icon(
-                    imageVector = Icons.Outlined.MoreVert,
+                    imageVector = MaterialSymbols.Rounded.MoreVert,
                     contentDescription = stringResource(MR.strings.action_menu_overflow_description),
                 )
             }

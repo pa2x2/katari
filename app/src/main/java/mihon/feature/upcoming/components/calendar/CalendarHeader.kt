@@ -12,9 +12,6 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowLeft
-import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -30,6 +27,9 @@ import kotlinx.datetime.YearMonth
 import kotlinx.datetime.toJavaYearMonth
 import kotlinx.datetime.toLocalDateTime
 import kotlinx.datetime.yearMonth
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.automirroredrounded.KeyboardArrowLeft
+import mihon.icons.materialsymbols.automirroredrounded.KeyboardArrowRight
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import java.time.format.DateTimeFormatter
@@ -60,13 +60,13 @@ fun CalenderHeader(
         Row {
             IconButton(onClick = onPreviousClick) {
                 Icon(
-                    Icons.AutoMirrored.Outlined.KeyboardArrowLeft,
+                    MaterialSymbols.AutoMirroredRounded.KeyboardArrowLeft,
                     stringResource(MR.strings.upcoming_calendar_prev),
                 )
             }
             IconButton(onClick = onNextClick) {
                 Icon(
-                    Icons.AutoMirrored.Outlined.KeyboardArrowRight,
+                    MaterialSymbols.AutoMirroredRounded.KeyboardArrowRight,
                     stringResource(MR.strings.upcoming_calendar_next),
                 )
             }

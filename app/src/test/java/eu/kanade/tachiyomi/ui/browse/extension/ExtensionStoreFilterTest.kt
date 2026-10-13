@@ -2,6 +2,7 @@ package eu.kanade.tachiyomi.ui.browse.extension
 
 import eu.kanade.tachiyomi.extension.model.Extension
 import io.kotest.matchers.shouldBe
+import mihon.domain.extension.model.ContentWarning
 import mihon.domain.extension.model.ExtensionStore
 import org.junit.jupiter.api.Test
 
@@ -19,13 +20,16 @@ class ExtensionStoreFilterTest {
         filter.matches(untrustedExtension()) shouldBe true
     }
 
-    private fun untrustedExtension() = Extension.Untrusted(
+    private fun untrustedExtension() = Extension.NotLoaded(
         name = "Untrusted",
         pkgName = "untrusted.extension",
         versionName = "1.0",
         versionCode = 1L,
+        isShared = true,
+        contentWarning = ContentWarning.SAFE,
+        signatures = listOf("signature"),
         libVersion = 2.0,
-        signatureHash = "signature",
+        reason = Extension.NotLoaded.Reason.Untrusted("signature"),
     )
 
     private fun extensionStore(name: String) = ExtensionStore(

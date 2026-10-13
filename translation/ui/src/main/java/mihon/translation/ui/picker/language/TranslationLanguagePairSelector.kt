@@ -5,9 +5,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ArrowDropDown
-import androidx.compose.material.icons.outlined.SwapHoriz
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -19,6 +16,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.ArrowDropDown
+import mihon.icons.materialsymbols.rounded.SwapHoriz
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
@@ -62,7 +62,7 @@ fun TranslationLanguagePairSelector(
             enabled = canSwap,
         ) {
             Icon(
-                imageVector = Icons.Outlined.SwapHoriz,
+                imageVector = MaterialSymbols.Rounded.SwapHoriz,
                 contentDescription = stringResource(MR.strings.translation_settings_swap_languages),
             )
         }
@@ -109,7 +109,7 @@ private fun TranslationLanguagePairBar(
                 enabled = canSwap,
             ) {
                 Icon(
-                    imageVector = Icons.Outlined.SwapHoriz,
+                    imageVector = MaterialSymbols.Rounded.SwapHoriz,
                     contentDescription = stringResource(MR.strings.translation_settings_swap_languages),
                 )
             }
@@ -139,7 +139,7 @@ private fun TranslationLanguageBarButton(
             overflow = TextOverflow.Ellipsis,
         )
         Icon(
-            imageVector = Icons.Outlined.ArrowDropDown,
+            imageVector = MaterialSymbols.Rounded.ArrowDropDown,
             contentDescription = null,
         )
     }

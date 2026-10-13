@@ -5,7 +5,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import eu.kanade.presentation.more.settings.screen.rememberTextRecognitionSettingsScreenModel
+import eu.kanade.presentation.more.settings.screen.rememberTextRecognitionSettingsViewModel
 import eu.kanade.presentation.util.Screen
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -16,7 +16,7 @@ internal class TextRecognitionPlaygroundLanguageScreen : Screen() {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val model = rememberTextRecognitionSettingsScreenModel()
+        val model = rememberTextRecognitionSettingsViewModel()
         val state by model.state.collectAsState()
         val suggested by model.suggestedLanguages.collectAsState()
 

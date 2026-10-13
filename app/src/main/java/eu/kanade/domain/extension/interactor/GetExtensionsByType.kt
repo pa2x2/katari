@@ -6,6 +6,7 @@ import eu.kanade.tachiyomi.extension.ExtensionManager
 import eu.kanade.tachiyomi.extension.model.Extension
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import mihon.domain.extension.model.ExtensionStore
 
 class GetExtensionsByType(
     private val preferences: SourcePreferences,
@@ -13,31 +14,30 @@ class GetExtensionsByType(
 ) {
 
     fun subscribe(): Flow<Extensions> {
-        val showNsfwSources = preferences.showNsfwSource.get()
-
         return combine(
             preferences.enabledLanguages.changes(),
-            extensionManager.installedExtensionsFlow,
-            extensionManager.untrustedExtensionsFlow,
+            preferences.enabledContentWarnings.changes(),
+            extensionManager.loadedExtensionsFlow,
+            extensionManager.notLoadedExtensionsFlow,
             extensionManager.availableExtensionsFlow,
-        ) { enabledLanguages, _installed, _untrusted, _available ->
-            val (updates, installed) = _installed
-                .filter { (showNsfwSources || !it.isNsfw) }
-                .sortedWith(
-                    compareBy<Extension.Installed> { !it.isObsolete }
-                        .thenBy(String.CASE_INSENSITIVE_ORDER) { it.name },
-                )
-                .partition { it.hasUpdate }
+        ) { enabledLanguages, enabledContentWarnings, _loaded, _notLoaded, _available ->
+            val byName = compareBy<Extension, String>(String.CASE_INSENSITIVE_ORDER) { it.name }
 
-            val untrusted = _untrusted
-                .sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.name })
+            val (loadedUpdates, loaded) = _loaded.partition { it.hasUpdate }
+            val (notLoadedUpdates, notLoaded) = _notLoaded.partition { it.hasUpdate }
 
-            val installedByPkg = _installed.associateBy { it.pkgName }
+            val updates = (loadedUpdates + notLoadedUpdates).sortedWith(byName)
+
+            // A listing from a store with another signing key is a different apk, which stays on offer. One whose
+            // store's key isn't known yet can't be told apart from the installed apk, so it's taken for it.
+            val installed = (_loaded + _notLoaded).groupBy { it.pkgName }
             val available = _available
                 .filter { extension ->
-                    installedByPkg[extension.pkgName] == null &&
-                        _untrusted.none { it.pkgName == extension.pkgName } &&
-                        (showNsfwSources || !extension.isNsfw)
+                    val signingKey = extension.store.signingKey
+                    installed[extension.pkgName].orEmpty().none {
+                        signingKey == ExtensionStore.NO_SIGNING_KEY || signingKey in it.signatures
+                    } &&
+                        extension.contentWarning in enabledContentWarnings
                 }
                 .flatMap { ext ->
                     ext.sources.filter { it.lang in enabledLanguages }
@@ -50,9 +50,17 @@ class GetExtensionsByType(
                             )
                         }
                 }
-                .sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.name })
+                .sortedWith(
+                    compareBy<Extension.Available, String>(String.CASE_INSENSITIVE_ORDER) { it.name }
+                        .thenBy { it.store.signingKey },
+                )
 
-            Extensions(updates, installed, available, untrusted)
+            Extensions(
+                updates = updates,
+                loaded = loaded.sortedWith(compareBy<Extension.Loaded> { !it.isObsolete }.then(byName)),
+                available = available,
+                notLoaded = notLoaded.sortedWith(byName),
+            )
         }
     }
 }

@@ -1,0 +1,504 @@
+package mihon.feature.migration.list
+
+import androidx.annotation.FloatRange
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import eu.kanade.domain.source.service.SourcePreferences
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
+import logcat.LogPriority
+import mihon.entry.interactions.catalogue.EntryCatalogueFeature
+import mihon.entry.interactions.catalogue.EntryCatalogueSourceInfo
+import mihon.entry.interactions.migration.EntryMigrationExecuteIntent
+import mihon.entry.interactions.migration.EntryMigrationExecutionResult
+import mihon.entry.interactions.migration.EntryMigrationFeature
+import mihon.entry.interactions.migration.EntryMigrationMode
+import mihon.entry.interactions.migration.EntryMigrationOption
+import mihon.entry.interactions.migration.EntryMigrationPreparationResult
+import mihon.entry.interactions.migration.EntryMigrationPrepareIntent
+import mihon.entry.interactions.migration.EntryMigrationSelectionResult
+import mihon.entry.interactions.migration.EntryMigrationSubject
+import mihon.entry.interactions.migration.EntryMigrationTargetRefreshIntent
+import mihon.entry.interactions.migration.EntryMigrationTargetRefreshResult
+import mihon.feature.migration.list.merge.MigrationMergeContextResolver
+import mihon.feature.migration.list.models.MigratingEntry
+import mihon.feature.migration.list.models.MigratingEntry.SearchResult
+import mihon.feature.migration.list.models.MigrationMergeContext
+import mihon.feature.migration.list.models.MigrationMergeImpactSummary
+import mihon.feature.migration.list.models.migrationMergeImpactSummary
+import mihon.feature.migration.list.search.SmartSourceSearchEngine
+import tachiyomi.core.common.util.lang.launchIO
+import tachiyomi.core.common.util.lang.withUIContext
+import tachiyomi.core.common.util.system.logcat
+import tachiyomi.domain.entry.interactor.NetworkToLocalEntry
+import tachiyomi.domain.entry.model.Entry
+import tachiyomi.domain.entry.repository.EntryChapterRepository
+import tachiyomi.domain.entry.repository.EntryRepository
+import tachiyomi.domain.source.service.SourceManager
+import uy.kohesive.injekt.Injekt
+import uy.kohesive.injekt.api.get
+
+class MigrationListViewModel(
+    subjects: Collection<EntryMigrationSubject>,
+    extraSearchQuery: String?,
+    private val selectedOptions: Set<EntryMigrationOption>,
+    private val preferences: SourcePreferences = Injekt.get(),
+    private val sourceManager: SourceManager = Injekt.get(),
+    private val networkToLocalEntry: NetworkToLocalEntry = Injekt.get(),
+    private val entryChapterRepository: EntryChapterRepository = Injekt.get(),
+    private val entryRepository: EntryRepository = Injekt.get(),
+    private val migration: EntryMigrationFeature = Injekt.get(),
+    private val catalogueFeature: EntryCatalogueFeature = Injekt.get(),
+    private val mergeContextResolver: MigrationMergeContextResolver = MigrationMergeContextResolver(
+        Injekt.get(),
+        entryRepository,
+    ),
+) : ViewModel() {
+
+    val state: StateFlow<MigrationListViewModel.State>
+        field = MutableStateFlow<MigrationListViewModel.State>(State())
+
+    private val smartSearchEngine = SmartSourceSearchEngine(extraSearchQuery, catalogueFeature)
+
+    val items
+        inline get() = state.value.items
+
+    private val hideUnmatched = preferences.migrationHideUnmatched.get()
+    private val hideWithoutUpdates = preferences.migrationHideWithoutUpdates.get()
+
+    private val navigateBackChannel = Channel<Unit>()
+    val navigateBackEvent = navigateBackChannel.receiveAsFlow()
+
+    private val migrationFailureChannel = Channel<Unit>(Channel.BUFFERED)
+    val migrationFailureEvent = migrationFailureChannel.receiveAsFlow()
+
+    private var migrateJob: Job? = null
+    private var mergeContextsByEntryId: Map<Long, MigrationMergeContext> = emptyMap()
+
+    init {
+        viewModelScope.launchIO {
+            subjects.firstOrNull()?.profileId?.let { profileId ->
+                mergeContextsByEntryId = mergeContextResolver.resolve(profileId)
+            }
+            val entries = subjects
+                .map { subject ->
+                    async {
+                        val entry =
+                            entryRepository.getEntryById(subject.entryId, subject.profileId) ?: return@async null
+                        val chapterInfo = getChapterInfo(subject.entryId)
+                        MigratingEntry(
+                            subject = subject,
+                            entry = entry,
+                            chapterCount = chapterInfo.chapterCount,
+                            latestChapter = chapterInfo.latestChapter,
+                            source = sourceManager.getDisplayInfo(entry.source).name,
+                            mergeContext = mergeContextsByEntryId[entry.id],
+                            parentContext = viewModelScope.coroutineContext,
+                        )
+                    }
+                }
+                .awaitAll()
+                .filterNotNull()
+            when (migration.prepareSelection(entries.map(MigratingEntry::entry))) {
+                is EntryMigrationSelectionResult.Ready -> {
+                    state.update { it.copy(items = entries) }
+                    runMigrations(entries)
+                }
+                is EntryMigrationSelectionResult.Rejected -> {
+                    migrationFailureChannel.send(Unit)
+                    navigateBack()
+                }
+            }
+        }
+    }
+
+    private suspend fun getChapterInfo(id: Long) = entryChapterRepository.getChapterSummaryByEntryId(
+        id,
+    ).let { summary ->
+        ChapterInfo(
+            latestChapter = summary.latestChapterNumber,
+            chapterCount = summary.chapterCount.toInt(),
+        )
+    }
+
+    private suspend fun Entry.toSuccessSearchResult(): SearchResult.Success {
+        val chapterInfo = getChapterInfo(id)
+        val source = sourceManager.getDisplayInfo(source).name
+        return SearchResult.Success(
+            entry = this,
+            chapterCount = chapterInfo.chapterCount,
+            latestChapter = chapterInfo.latestChapter,
+            source = source,
+            mergeContext = mergeContextsByEntryId[id],
+        )
+    }
+
+    private suspend fun runMigrations(entries: List<MigratingEntry>) {
+        val prioritizeByChapters = preferences.migrationPrioritizeByChapters.get()
+        val deepSearchMode = preferences.migrationDeepSearchMode.get()
+
+        val sourcesById = catalogueFeature.sources().associateBy { it.id }
+        val sources = preferences.migrationSources.get().mapNotNull(sourcesById::get)
+
+        for (entry in entries) {
+            if (!currentCoroutineContext().isActive) break
+            if (entry.entry.id !in state.value.entryIds) continue
+            if (entry.searchResult.value != SearchResult.Searching) continue
+            if (!entry.migrationScope.isActive) continue
+
+            val result = try {
+                entry.migrationScope.async {
+                    if (prioritizeByChapters) {
+                        val sourceSemaphore = Semaphore(5)
+                        sources.map { source ->
+                            async innerAsync@{
+                                sourceSemaphore.withPermit {
+                                    val result = searchSource(entry.entry, source, deepSearchMode)
+                                    if (result == null || result.second.chapterCount == 0) return@innerAsync null
+                                    result
+                                }
+                            }
+                        }
+                            .mapNotNull { it.await() }
+                            .maxByOrNull { it.second.latestChapter ?: 0.0 }
+                    } else {
+                        sources.forEach { source ->
+                            val result = searchSource(entry.entry, source, deepSearchMode)
+                            if (result != null) return@async result
+                        }
+                        null
+                    }
+                }
+                    .await()
+            } catch (_: CancellationException) {
+                continue
+            }
+
+            if (result != null && result.first.thumbnailUrl == null) {
+                try {
+                    migration.refreshTarget(
+                        EntryMigrationTargetRefreshIntent(
+                            source = entry.entry,
+                            target = result.first,
+                            fetchDetails = true,
+                            fetchChildren = false,
+                        ),
+                    )
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (_: Exception) {
+                }
+            }
+
+            val resultEntry = result?.first?.id?.let {
+                entryRepository.getEntryById(it, entry.entry.profileId)
+            } ?: result?.first
+            entry.searchResult.value = resultEntry?.toSuccessSearchResult() ?: SearchResult.NotFound
+
+            if (result == null && hideUnmatched) {
+                removeEntry(entry)
+            }
+            if (result != null &&
+                hideWithoutUpdates &&
+                (result.second.latestChapter ?: 0.0) <= (entry.latestChapter ?: 0.0)
+            ) {
+                removeEntry(entry)
+            }
+
+            updateMigrationProgress()
+        }
+    }
+
+    private suspend fun searchSource(
+        entry: Entry,
+        source: EntryCatalogueSourceInfo,
+        deepSearchMode: Boolean,
+    ): Pair<Entry, ChapterInfo>? {
+        return try {
+            val searchResult = if (deepSearchMode) {
+                smartSearchEngine.deepSearch(source, entry.title, entry.type)
+            } else {
+                smartSearchEngine.regularSearch(source, entry.title, entry.type)
+            }
+
+            if (searchResult == null || (searchResult.url == entry.url && source.id == entry.source)) return null
+
+            val localEntry = networkToLocalEntry(searchResult)
+            when (
+                val refresh = migration.refreshTarget(
+                    EntryMigrationTargetRefreshIntent(
+                        source = entry,
+                        target = localEntry,
+                        fetchDetails = false,
+                        fetchChildren = true,
+                    ),
+                )
+            ) {
+                is EntryMigrationTargetRefreshResult.OperationalFailure -> logcat(LogPriority.ERROR, refresh.error)
+                EntryMigrationTargetRefreshResult.Refreshed,
+                is EntryMigrationTargetRefreshResult.Rejected,
+                EntryMigrationTargetRefreshResult.SourceUnavailable,
+                EntryMigrationTargetRefreshResult.NoChildren,
+                -> Unit
+            }
+            val preparation = migration.prepare(EntryMigrationPrepareIntent(entry, localEntry))
+            if (preparation !is EntryMigrationPreparationResult.Ready) return null
+            localEntry to getChapterInfo(localEntry.id)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    private suspend fun updateMigrationProgress() {
+        state.update { state ->
+            state.copy(
+                finishedCount = items.count { it.searchResult.value != SearchResult.Searching },
+                migrationComplete = migrationComplete(),
+            )
+        }
+        if (items.isEmpty()) {
+            navigateBack()
+        }
+    }
+
+    private fun migrationComplete() = items.all { it.searchResult.value != SearchResult.Searching } &&
+        items.any { it.searchResult.value is SearchResult.Success }
+
+    fun useEntryForMigration(current: Long, target: Long, onMissingChapters: () -> Unit) {
+        val migratingEntry = items.find { it.entry.id == current } ?: return
+        migratingEntry.searchResult.value = SearchResult.Searching
+        viewModelScope.launchIO {
+            val result = migratingEntry.migrationScope.async {
+                val entry = entryRepository.getEntryById(target, migratingEntry.entry.profileId) ?: return@async null
+                try {
+                    val refresh = migration.refreshTarget(
+                        EntryMigrationTargetRefreshIntent(
+                            source = migratingEntry.entry,
+                            target = entry,
+                            fetchDetails = false,
+                            fetchChildren = true,
+                        ),
+                    )
+                    if (refresh != EntryMigrationTargetRefreshResult.Refreshed) return@async null
+                    entryRepository.getEntryById(target, migratingEntry.entry.profileId) ?: entry
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (_: Exception) {
+                    null
+                }
+            }
+                .await()
+
+            if (result == null) {
+                migratingEntry.searchResult.value = SearchResult.NotFound
+                withUIContext { onMissingChapters() }
+                return@launchIO
+            }
+
+            val preparation = migration.prepare(EntryMigrationPrepareIntent(migratingEntry.entry, result))
+            if (preparation !is EntryMigrationPreparationResult.Ready) {
+                migratingEntry.searchResult.value = SearchResult.NotFound
+                migrationFailureChannel.send(Unit)
+                return@launchIO
+            }
+
+            migratingEntry.searchResult.value = result.toSuccessSearchResult()
+            updateMigrationProgress()
+        }
+    }
+
+    fun migrateEntries() {
+        migrateEntries(replace = true)
+    }
+
+    fun copyEntries() {
+        migrateEntries(replace = false)
+    }
+
+    private fun migrateEntries(replace: Boolean) {
+        migrateJob = viewModelScope.launchIO {
+            state.update { it.copy(dialog = Dialog.Progress(0f)) }
+            val items = items
+            var failed = false
+            try {
+                items.forEachIndexed { index, entry ->
+                    try {
+                        ensureActive()
+                        val target = entry.searchResult.value.let {
+                            if (it is SearchResult.Success) {
+                                it.entry
+                            } else {
+                                null
+                            }
+                        }
+                        if (target != null) {
+                            failed = !executeMigration(entry.entry, target, replace, selectedOptions) || failed
+                        }
+                    } catch (e: Exception) {
+                        if (e is CancellationException) throw e
+                        failed = true
+                        logcat(LogPriority.WARN, throwable = e)
+                    }
+                    state.update {
+                        it.copy(dialog = Dialog.Progress(((index + 1).toFloat() / items.size).coerceAtMost(1f)))
+                    }
+                }
+
+                if (failed) {
+                    migrationFailureChannel.send(Unit)
+                }
+                navigateBack()
+            } finally {
+                state.update { it.copy(dialog = null) }
+                migrateJob = null
+            }
+        }
+    }
+
+    fun cancelMigrate() {
+        migrateJob?.cancel()
+        migrateJob = null
+    }
+
+    private suspend fun navigateBack() {
+        navigateBackChannel.send(Unit)
+    }
+
+    private fun migrateNow(entryId: Long, replace: Boolean) {
+        viewModelScope.launchIO {
+            val entry = items.find { it.entry.id == entryId } ?: return@launchIO
+            val target = (entry.searchResult.value as? SearchResult.Success)?.entry ?: return@launchIO
+            if (executeMigration(entry.entry, target, replace, selectedOptions)) {
+                removeEntry(entryId)
+            } else {
+                migrationFailureChannel.send(Unit)
+            }
+        }
+    }
+
+    private suspend fun executeMigration(
+        source: Entry,
+        target: Entry,
+        replace: Boolean,
+        selectedOptions: Set<EntryMigrationOption>,
+    ): Boolean {
+        val preparation = migration.prepare(EntryMigrationPrepareIntent(source, target))
+        if (preparation !is EntryMigrationPreparationResult.Ready) return false
+        val result = migration.execute(
+            EntryMigrationExecuteIntent(
+                reference = preparation.reference,
+                mode = if (replace) EntryMigrationMode.REPLACE else EntryMigrationMode.COPY,
+                selectedOptions = selectedOptions.intersect(preparation.availableOptions),
+            ),
+        )
+        return result is EntryMigrationExecutionResult.Applied
+    }
+
+    fun removeEntry(entryId: Long) {
+        viewModelScope.launchIO {
+            val item = items.find { it.entry.id == entryId } ?: return@launchIO
+            removeEntry(item)
+            item.migrationScope.cancel()
+            updateMigrationProgress()
+        }
+    }
+
+    private fun removeEntry(item: MigratingEntry) {
+        state.update { it.copy(items = items.toMutableList().apply { remove(item) }) }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        items.forEach {
+            it.migrationScope.cancel()
+        }
+    }
+
+    fun showMigrateDialog(copy: Boolean) {
+        showMigrateDialog(copy, items)
+    }
+
+    fun showMigrateDialog(entryId: Long, copy: Boolean) {
+        val item = items.find { it.entry.id == entryId } ?: return
+        showMigrateDialog(copy, listOf(item), entryId)
+    }
+
+    private fun showMigrateDialog(
+        copy: Boolean,
+        selectedItems: List<MigratingEntry>,
+        entryId: Long? = null,
+    ) {
+        state.update { state ->
+            state.copy(
+                dialog = Dialog.Migrate(
+                    copy = copy,
+                    totalCount = selectedItems.size,
+                    skippedCount = selectedItems.count { it.searchResult.value == SearchResult.NotFound },
+                    entryId = entryId,
+                    mergeImpact = selectedItems.migrationMergeImpactSummary(),
+                ),
+            )
+        }
+    }
+
+    fun confirmMigration(dialog: Dialog.Migrate) {
+        dismissDialog()
+        val entryId = dialog.entryId
+        if (entryId == null) {
+            if (dialog.copy) copyEntries() else migrateEntries()
+        } else {
+            migrateNow(entryId, replace = !dialog.copy)
+        }
+    }
+
+    fun showExitDialog() {
+        state.update {
+            it.copy(dialog = Dialog.Exit)
+        }
+    }
+
+    fun dismissDialog() {
+        state.update { it.copy(dialog = null) }
+    }
+
+    data class ChapterInfo(
+        val latestChapter: Double?,
+        val chapterCount: Int,
+    )
+
+    sealed interface Dialog {
+        data class Migrate(
+            val copy: Boolean,
+            val totalCount: Int,
+            val skippedCount: Int,
+            val entryId: Long?,
+            val mergeImpact: MigrationMergeImpactSummary,
+        ) : Dialog
+        data class Progress(@FloatRange(0.0, 1.0) val progress: Float) : Dialog
+        data object Exit : Dialog
+    }
+
+    data class State(
+        val items: List<MigratingEntry> = listOf(),
+        val finishedCount: Int = 0,
+        val migrationComplete: Boolean = false,
+        val dialog: Dialog? = null,
+    ) {
+        val entryIds: List<Long> = items.map { it.entry.id }
+    }
+}

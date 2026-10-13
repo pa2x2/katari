@@ -11,13 +11,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.selection.SelectionContainer
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.OpenInNew
-import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material.icons.outlined.CloseFullscreen
-import androidx.compose.material.icons.outlined.ContentCopy
-import androidx.compose.material.icons.outlined.OpenInFull
-import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -35,6 +28,13 @@ import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.automirroredrounded.OpenInNew
+import mihon.icons.materialsymbols.rounded.Close
+import mihon.icons.materialsymbols.rounded.CloseFullscreen
+import mihon.icons.materialsymbols.rounded.ContentCopy
+import mihon.icons.materialsymbols.rounded.OpenInFull
+import mihon.icons.materialsymbols.rounded.Settings
 import mihon.language.api.tag.LanguageTag
 import mihon.translation.api.engine.KnownTranslationEngine
 import mihon.translation.api.engine.TranslationEngineBuildAvailability
@@ -224,14 +224,14 @@ internal fun TranslationSessionHeader(
         )
         onDocumentation?.let {
             TranslationCompactIconButton(
-                icon = Icons.AutoMirrored.Outlined.OpenInNew,
+                icon = MaterialSymbols.AutoMirroredRounded.OpenInNew,
                 contentDescription = stringResource(MR.strings.action_learn_more),
                 onClick = it,
             )
         }
         onExpand?.let {
             TranslationCompactIconButton(
-                icon = Icons.Outlined.OpenInFull,
+                icon = MaterialSymbols.Rounded.OpenInFull,
                 contentDescription = stringResource(MR.strings.action_expand),
                 onClick = it,
             )
@@ -239,21 +239,21 @@ internal fun TranslationSessionHeader(
         onCollapse?.let {
             IconButton(onClick = it) {
                 Icon(
-                    imageVector = Icons.Outlined.CloseFullscreen,
+                    imageVector = MaterialSymbols.Rounded.CloseFullscreen,
                     contentDescription = stringResource(MR.strings.action_collapse),
                 )
             }
         }
         if (compact) {
             TranslationCompactIconButton(
-                icon = Icons.Outlined.Close,
+                icon = MaterialSymbols.Rounded.Close,
                 contentDescription = stringResource(MR.strings.action_close),
                 onClick = onDismiss,
             )
         } else {
             IconButton(onClick = onDismiss) {
                 Icon(
-                    imageVector = Icons.Outlined.Close,
+                    imageVector = MaterialSymbols.Rounded.Close,
                     contentDescription = stringResource(MR.strings.action_close),
                 )
             }
@@ -410,7 +410,7 @@ private fun SuccessContent(
                 if (showCopy) {
                     IconButton(onClick = { onCopy(result.translatedText) }) {
                         Icon(
-                            imageVector = Icons.Outlined.ContentCopy,
+                            imageVector = MaterialSymbols.Rounded.ContentCopy,
                             contentDescription = stringResource(MR.strings.copy),
                         )
                     }
@@ -418,7 +418,7 @@ private fun SuccessContent(
                 if (showOverflowAction) {
                     IconButton(onClick = onExpand) {
                         Icon(
-                            imageVector = Icons.Outlined.OpenInFull,
+                            imageVector = MaterialSymbols.Rounded.OpenInFull,
                             contentDescription = stringResource(MR.strings.action_expand),
                         )
                     }
@@ -426,7 +426,7 @@ private fun SuccessContent(
                 if (showEngineChange) {
                     IconButton(onClick = changeEngine) {
                         Icon(
-                            imageVector = Icons.Outlined.Settings,
+                            imageVector = MaterialSymbols.Rounded.Settings,
                             contentDescription = stringResource(MR.strings.translation_choose_engine),
                         )
                     }

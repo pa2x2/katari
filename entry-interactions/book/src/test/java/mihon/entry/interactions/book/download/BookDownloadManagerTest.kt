@@ -9,6 +9,7 @@ import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import mihon.entry.interactions.book.document.preparation.BookDocumentPreparedCache
 import mihon.entry.interactions.book.document.resource.BookPublicationResourceGatewayFactory
@@ -82,7 +83,7 @@ class BookDownloadManagerTest {
         name = "Chapter $id",
     )
 
-    private fun manager(
+    private fun TestScope.manager(
         downloader: BookDownloader,
         workController: EntryDownloadWorkController = mockk(relaxed = true),
     ): BookDownloadManager {
@@ -108,6 +109,7 @@ class BookDownloadManagerTest {
             sourceManager = mockk(relaxed = true),
             store = store,
             workController = workController,
+            scope = backgroundScope,
         )
     }
 }

@@ -94,16 +94,31 @@ AND category_summary.entry_id = favorite_entries._id;
 libraryLastRead:
 SELECT
     entries._id AS entryId,
-    coalesce(max(history.last_read), 0) AS lastRead
+    -- Joining history to every chapter is the slowest part of the query, and only entries with excluded
+    -- scanlators need the chapters to leave theirs out
+    coalesce(
+        CASE WHEN EXISTS (
+            SELECT 0 FROM excluded_scanlators
+            WHERE excluded_scanlators.profile_id = entries.profile_id
+            AND excluded_scanlators.entry_id = entries._id
+        )
+        THEN (
+            SELECT max(history.last_read)
+            FROM history
+            JOIN chapters
+            ON chapters._id = history.chapter_id
+            WHERE history.entry_id = entries._id
+            AND NOT EXISTS (
+                SELECT 0 FROM excluded_scanlators
+                WHERE excluded_scanlators.profile_id = entries.profile_id
+                AND excluded_scanlators.entry_id = entries._id
+                AND excluded_scanlators.scanlator = chapters.scanlator
+            )
+        )
+        ELSE (SELECT max(history.last_read) FROM history WHERE history.entry_id = entries._id)
+        END,
+        0
+    ) AS lastRead
 FROM entries
-LEFT JOIN chapters
-ON chapters.entry_id = entries._id
-LEFT JOIN excluded_scanlators
-ON chapters.entry_id = excluded_scanlators.entry_id
-AND chapters.scanlator = excluded_scanlators.scanlator
-LEFT JOIN history
-ON chapters._id = history.chapter_id
 WHERE entries.profile_id = :profileId
-AND entries.favorite = 1
-AND excluded_scanlators.scanlator IS NULL
-GROUP BY entries._id;
+AND entries.favorite = 1;

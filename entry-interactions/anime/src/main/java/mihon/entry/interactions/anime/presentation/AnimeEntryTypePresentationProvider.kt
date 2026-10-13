@@ -1,7 +1,5 @@
 package mihon.entry.interactions.anime.presentation
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.PlayArrow
 import eu.kanade.tachiyomi.source.entry.EntryType
 import mihon.entry.interactions.presentation.EntryHistorySubtitlePresentation
 import mihon.entry.interactions.presentation.EntryNotificationChildNumberPolicy
@@ -9,14 +7,16 @@ import mihon.entry.interactions.presentation.EntryPartialProgressPresentation
 import mihon.entry.interactions.presentation.EntryTypePresentation
 import mihon.entry.interactions.presentation.EntryUpdateNotificationVocabulary
 import mihon.entry.interactions.runtime.EntryTypePresentationProvider
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.roundedfilled.PlayArrow
 import tachiyomi.i18n.*
 
 internal object AnimeEntryTypePresentationProvider : EntryTypePresentationProvider {
     override val type = EntryType.ANIME
     override val presentation = EntryTypePresentation(
         displayNameLabel = MR.strings.entry_type_anime,
-        badgeIcon = Icons.Filled.PlayArrow,
-        coverOverlayIcon = Icons.Filled.PlayArrow,
+        badgeIcon = MaterialSymbols.RoundedFilled.PlayArrow,
+        coverOverlayIcon = MaterialSymbols.RoundedFilled.PlayArrow,
         markAsConsumedLabel = MR.strings.action_mark_as_watched,
         markAsUnconsumedLabel = MR.strings.action_mark_as_unwatched,
         markPreviousAsConsumedLabel = MR.strings.action_mark_previous_as_watched,
@@ -45,7 +45,7 @@ internal object AnimeEntryTypePresentationProvider : EntryTypePresentationProvid
         intervalExpectedUpdateLabel = MR.strings.anime_interval_expected_update,
         intervalExpectedUpdateNullLabel = MR.strings.anime_interval_expected_update_null,
         immersiveOpenLabel = MR.strings.browse_anime_feed_open_in_player,
-        immersiveOpenIcon = Icons.Filled.PlayArrow,
+        immersiveOpenIcon = MaterialSymbols.RoundedFilled.PlayArrow,
         historySubtitle = EntryHistorySubtitlePresentation.NameTimestampAndDuration,
         partialProgress = EntryPartialProgressPresentation.Fixed(MR.strings.label_started),
         updateNotification = EntryUpdateNotificationVocabulary(

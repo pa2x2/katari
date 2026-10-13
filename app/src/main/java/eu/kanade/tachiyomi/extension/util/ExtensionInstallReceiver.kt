@@ -8,9 +8,9 @@ import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import eu.kanade.tachiyomi.BuildConfig
 import eu.kanade.tachiyomi.extension.model.Extension
-import eu.kanade.tachiyomi.extension.model.LoadResult
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import logcat.LogPriority
 import tachiyomi.core.common.util.system.logcat
@@ -21,9 +21,26 @@ import tachiyomi.core.common.util.system.logcat
  *
  * @param listener The listener that should be notified of extension installation events.
  */
-internal class ExtensionInstallReceiver(private val listener: Listener) : BroadcastReceiver() {
+internal class ExtensionInstallReceiver(
+    private val listener: Listener,
+    private val scope: CoroutineScope,
+) : BroadcastReceiver() {
 
-    val scope = CoroutineScope(SupervisorJob())
+    // Handled one at a time in arrival order, so a quick removal can't overtake the load of an earlier install
+    private val events = Channel<Event>(Channel.UNLIMITED)
+
+    init {
+        scope.launch {
+            for (event in events) {
+                try {
+                    handle(event)
+                } catch (e: Exception) {
+                    if (e is CancellationException) throw e
+                    logcat(LogPriority.ERROR, e) { "Failed to handle $event" }
+                }
+            }
+        }
+    }
 
     fun register(context: Context) {
         ContextCompat.registerReceiver(context, this, filter, ContextCompat.RECEIVER_NOT_EXPORTED)
@@ -46,34 +63,23 @@ internal class ExtensionInstallReceiver(private val listener: Listener) : Broadc
     override fun onReceive(context: Context, intent: Intent?) {
         if (intent == null) return
 
+        val pkgName = getPackageNameFromIntent(intent)
+        if (pkgName == null) {
+            logcat(LogPriority.WARN) { "Package name not found" }
+            return
+        }
+
         when (intent.action) {
             Intent.ACTION_PACKAGE_ADDED, ACTION_EXTENSION_ADDED -> {
                 if (isReplacing(intent)) return
-
-                scope.launch {
-                    when (val result = getExtensionFromIntent(context, intent)) {
-                        is LoadResult.Success -> listener.onExtensionInstalled(result.extension)
-                        is LoadResult.Untrusted -> listener.onExtensionUntrusted(result.extension)
-                        else -> {}
-                    }
-                }
+                events.trySend(Event.Added(context, pkgName))
             }
             Intent.ACTION_PACKAGE_REPLACED, ACTION_EXTENSION_REPLACED -> {
-                scope.launch {
-                    when (val result = getExtensionFromIntent(context, intent)) {
-                        is LoadResult.Success -> listener.onExtensionUpdated(result.extension)
-                        is LoadResult.Untrusted -> listener.onExtensionUntrusted(result.extension)
-                        else -> {}
-                    }
-                }
+                events.trySend(Event.Replaced(context, pkgName))
             }
             Intent.ACTION_PACKAGE_REMOVED, ACTION_EXTENSION_REMOVED -> {
                 if (isReplacing(intent)) return
-
-                val pkgName = getPackageNameFromIntent(intent)
-                if (pkgName != null) {
-                    listener.onPackageUninstalled(pkgName)
-                }
+                events.trySend(Event.Removed(pkgName))
             }
         }
     }
@@ -87,19 +93,24 @@ internal class ExtensionInstallReceiver(private val listener: Listener) : Broadc
         return intent.getBooleanExtra(Intent.EXTRA_REPLACING, false)
     }
 
-    /**
-     * Returns the extension triggered by the given intent.
-     *
-     * @param context The application context.
-     * @param intent The intent containing the package name of the extension.
-     */
-    private suspend fun getExtensionFromIntent(context: Context, intent: Intent?): LoadResult {
-        val pkgName = getPackageNameFromIntent(intent)
-        if (pkgName == null) {
-            logcat(LogPriority.WARN) { "Package name not found" }
-            return LoadResult.Error
+    private suspend fun handle(event: Event) {
+        when (event) {
+            is Event.Added -> when (
+                val extension = ExtensionLoader.loadExtensionFromPkgName(event.context, event.pkgName)
+            ) {
+                is Extension.Loaded -> listener.onExtensionInstalled(extension)
+                is Extension.NotLoaded -> listener.onExtensionNotLoaded(extension)
+                null -> {}
+            }
+            is Event.Replaced -> when (
+                val extension = ExtensionLoader.loadExtensionFromPkgName(event.context, event.pkgName)
+            ) {
+                is Extension.Loaded -> listener.onExtensionUpdated(extension)
+                is Extension.NotLoaded -> listener.onExtensionNotLoaded(extension)
+                null -> {}
+            }
+            is Event.Removed -> listener.onPackageUninstalled(event.pkgName)
         }
-        return ExtensionLoader.loadExtensionFromPkgName(context, pkgName)
     }
 
     /**
@@ -113,10 +124,16 @@ internal class ExtensionInstallReceiver(private val listener: Listener) : Broadc
      * Listener that receives extension installation events.
      */
     interface Listener {
-        fun onExtensionInstalled(extension: Extension.Installed)
-        fun onExtensionUpdated(extension: Extension.Installed)
-        fun onExtensionUntrusted(extension: Extension.Untrusted)
-        fun onPackageUninstalled(pkgName: String)
+        suspend fun onExtensionInstalled(extension: Extension.Loaded)
+        suspend fun onExtensionUpdated(extension: Extension.Loaded)
+        suspend fun onExtensionNotLoaded(extension: Extension.NotLoaded)
+        suspend fun onPackageUninstalled(pkgName: String)
+    }
+
+    private sealed interface Event {
+        data class Added(val context: Context, val pkgName: String) : Event
+        data class Replaced(val context: Context, val pkgName: String) : Event
+        data class Removed(val pkgName: String) : Event
     }
 
     companion object {

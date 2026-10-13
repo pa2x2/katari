@@ -7,6 +7,7 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
+import android.os.SystemClock
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import coil3.asDrawable
@@ -27,8 +28,6 @@ import eu.kanade.tachiyomi.util.system.cancelNotification
 import eu.kanade.tachiyomi.util.system.getBitmapOrNull
 import eu.kanade.tachiyomi.util.system.notificationBuilder
 import eu.kanade.tachiyomi.util.system.notify
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.runBlocking
 import mihon.entry.interactions.library.EntryLibraryUpdateNotificationAction
 import mihon.entry.interactions.library.EntryLibraryUpdateNotificationDestination
 import mihon.entry.interactions.library.EntryLibraryUpdateNotificationFeature
@@ -41,7 +40,6 @@ import mihon.entry.interactions.library.EntryLibraryUpdateQueueWarning
 import tachiyomi.core.common.Constants
 import tachiyomi.core.common.i18n.pluralStringResource
 import tachiyomi.core.common.i18n.stringResource
-import tachiyomi.core.common.util.lang.launchUI
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
@@ -51,6 +49,7 @@ import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.math.RoundingMode
 import java.text.NumberFormat
+import mihon.icons.materialsymbols.R as MaterialSymbolsR
 
 class LibraryUpdateNotifier(
     private val context: Context,
@@ -83,22 +82,36 @@ class LibraryUpdateNotifier(
     val progressNotificationBuilder by lazy {
         context.notificationBuilder(Notifications.CHANNEL_LIBRARY_PROGRESS) {
             setContentTitle(context.stringResource(MR.strings.app_name))
-            setSmallIcon(R.drawable.ic_refresh_24dp)
+            setSmallIcon(MaterialSymbolsR.drawable.rounded_refresh)
             setLargeIcon(notificationBitmap)
             setOngoing(true)
             setOnlyAlertOnce(true)
-            addAction(R.drawable.ic_close_24dp, context.stringResource(MR.strings.action_cancel), cancelIntent)
+            addAction(
+                MaterialSymbolsR.drawable.rounded_close,
+                context.stringResource(MR.strings.action_cancel),
+                cancelIntent,
+            )
         }
     }
 
+    private var lastProgressNotificationTime = 0L
+
     /**
      * Shows the notification containing the currently updating entries and the progress.
+     *
+     * Called from several update coroutines at once, so it shares the builder under a lock and skips updates that
+     * come faster than the system would show them anyway.
      *
      * @param entries the entries that are being updated.
      * @param current the current progress.
      * @param total the total progress.
      */
+    @Synchronized
     fun showProgressNotification(entries: List<Entry>, current: Int, total: Int) {
+        val now = SystemClock.elapsedRealtime()
+        if (current < total && now - lastProgressNotificationTime < NOTIF_PROGRESS_INTERVAL_MS) return
+        lastProgressNotificationTime = now
+
         progressNotificationBuilder
             .setContentTitle(
                 context.stringResource(
@@ -126,7 +139,7 @@ class LibraryUpdateNotifier(
      * @param rulesProfileId the profile whose library update rules decided what is checked, so tapping the warning
      * opens them; null for updates the rules don't shape, whose warning links to the explanation instead.
      */
-    fun showQueueSizeWarningNotificationIfNeeded(entriesToUpdate: List<LibraryItem>, rulesProfileId: Long?) {
+    suspend fun showQueueSizeWarningNotificationIfNeeded(entriesToUpdate: List<LibraryItem>, rulesProfileId: Long?) {
         if (
             notificationFeature.queueWarning(entriesToUpdate.map(LibraryItem::entry)) ==
             EntryLibraryUpdateQueueWarning.NotRequired
@@ -140,7 +153,7 @@ class LibraryUpdateNotifier(
             Notifications.CHANNEL_LIBRARY_PROGRESS,
         ) {
             setContentTitle(context.stringResource(MR.strings.label_warning))
-            setSmallIcon(R.drawable.ic_warning_white_24dp)
+            setSmallIcon(MaterialSymbolsR.drawable.rounded_filled_warning)
             setTimeoutAfter(WARNING_NOTIF_TIMEOUT_MS)
             if (rulesProfileId != null) {
                 setStyle(
@@ -156,7 +169,7 @@ class LibraryUpdateNotifier(
                     ),
                 )
                 addAction(
-                    R.drawable.ic_warning_white_24dp,
+                    MaterialSymbolsR.drawable.rounded_filled_warning,
                     context.stringResource(MR.strings.action_learn_more),
                     helpIntent,
                 )
@@ -199,28 +212,25 @@ class LibraryUpdateNotifier(
      *
      * @param updates a list of entries with new updates.
      */
-    fun showUpdateNotifications(updates: List<Pair<Entry, Array<EntryChapter>>>) {
-        val projection = runBlocking {
-            notificationFeature.project(
-                updates.map { (entry, children) ->
-                    EntryLibraryUpdateNotificationInput(
-                        entry = entry,
-                        children = children.toList(),
-                    )
-                },
-            )
-        }
+    suspend fun showUpdateNotifications(updates: List<Pair<Entry, Array<EntryChapter>>>) {
+        val projection = notificationFeature.project(
+            updates.map { (entry, children) ->
+                EntryLibraryUpdateNotificationInput(
+                    entry = entry,
+                    children = children.toList(),
+                )
+            },
+        )
         projection.omissions.forEach { omission ->
             logcat {
                 "Library-update notifications omitted ${omission.updateCount} ${omission.type} updates: " +
                     omission.reason
             }
         }
-        projection.groups.forEach(::showUpdateNotifications)
+        projection.groups.forEach { showUpdateNotifications(it) }
     }
 
-    @OptIn(DelicateCoroutinesApi::class)
-    private fun showUpdateNotifications(
+    private suspend fun showUpdateNotifications(
         group: EntryLibraryUpdateNotificationGroup,
     ) {
         val route = group.route
@@ -263,19 +273,17 @@ class LibraryUpdateNotifier(
 
         // Per-entry notification
         if (!securityPreferences.hideNotificationContent.get()) {
-            launchUI {
-                context.notify(
-                    childUpdates.map { update ->
-                        NotificationManagerCompat.NotificationWithIdAndTag(
-                            update.originEntry.id.hashCode(),
-                            createNewEntryNotification(
-                                update = update,
-                                route = route,
-                            ),
-                        )
-                    },
-                )
-            }
+            context.notify(
+                childUpdates.map { update ->
+                    NotificationManagerCompat.NotificationWithIdAndTag(
+                        update.originEntry.id.hashCode(),
+                        createNewEntryNotification(
+                            update = update,
+                            route = route,
+                        ),
+                    )
+                },
+            )
         }
     }
 
@@ -306,14 +314,14 @@ class LibraryUpdateNotifier(
 
             if (EntryLibraryUpdateNotificationAction.MARK_CONSUMED in update.actions) {
                 addAction(
-                    R.drawable.ic_done_24dp,
+                    MaterialSymbolsR.drawable.rounded_check,
                     context.stringResource(update.markConsumedLabel),
                     update.markConsumedIntent(context, route.summaryNotificationId),
                 )
             }
             if (EntryLibraryUpdateNotificationAction.VIEW_ENTRY in update.actions) {
                 addAction(
-                    R.drawable.ic_book_24dp,
+                    MaterialSymbolsR.drawable.rounded_book,
                     context.stringResource(update.viewChildrenLabel),
                     update.viewEntryIntent(context, route.summaryNotificationId),
                 )
@@ -427,3 +435,4 @@ private fun EntryLibraryUpdateNotificationItem.downloadChildrenIntent(
 private const val NOTIF_TITLE_MAX_LEN = 45
 private const val NOTIF_ICON_SIZE = 192
 private const val WARNING_NOTIF_TIMEOUT_MS = 30_000L
+private const val NOTIF_PROGRESS_INTERVAL_MS = 500L

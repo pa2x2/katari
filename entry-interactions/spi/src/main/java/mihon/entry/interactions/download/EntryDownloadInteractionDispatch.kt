@@ -164,6 +164,16 @@ internal class EntryDownloadInteractionDispatch(
         return processor.getDownloadCount(entry)
     }
 
+    override fun getDownloadCounts(entries: List<Entry>): Map<Long, Int> {
+        return buildMap {
+            entries.groupBy(Entry::type).forEach { (type, typeEntries) ->
+                val processor = processors[type] ?: return@forEach
+                processor.requireMatchingEntryType("download", typeEntries.first(), processors.keys)
+                putAll(processor.getDownloadCounts(typeEntries))
+            }
+        }
+    }
+
     override fun getTotalDownloadCount(): Int {
         return processors.values.sumOf { it.getTotalDownloadCount() }
     }
@@ -193,6 +203,15 @@ internal class EntryDownloadInteractionDispatch(
             entryTitle = entryTitle,
             sourceId = sourceId,
         )
+    }
+
+    override fun getStatuses(entry: Entry, chapters: List<EntryChapter>): Map<Long, EntryDownloadStatus> {
+        val processor = processors[entry.type]
+            ?: return chapters.associate {
+                it.id to EntryDownloadStatus(entry.type, it.id, EntryDownloadState.NOT_DOWNLOADED)
+            }
+        processor.requireMatchingEntryType("download", entry, processors.keys)
+        return processor.getStatuses(entry, chapters)
     }
 
     override fun cancelQueuedDownload(entryType: EntryType, chapterId: Long): EntryDownloadStatus? {

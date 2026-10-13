@@ -1,10 +1,5 @@
 package eu.kanade.presentation.entry.components
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Deselect
-import androidx.compose.material.icons.outlined.Download
-import androidx.compose.material.icons.outlined.FilterList
-import androidx.compose.material.icons.outlined.SelectAll
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.surfaceColorAtElevation
@@ -23,6 +18,11 @@ import eu.kanade.presentation.components.DownloadDropdownMenu
 import eu.kanade.presentation.entry.DownloadAction
 import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.tachiyomi.source.entry.EntryType
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Deselect
+import mihon.icons.materialsymbols.rounded.Download
+import mihon.icons.materialsymbols.rounded.FilterList
+import mihon.icons.materialsymbols.rounded.SelectAll
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.theme.active
@@ -78,14 +78,14 @@ fun EntryToolbar(
                         add(
                             AppBar.Action(
                                 title = stringResource(MR.strings.action_select_all),
-                                icon = Icons.Outlined.SelectAll,
+                                icon = MaterialSymbols.Rounded.SelectAll,
                                 onClick = onSelectAll,
                             ),
                         )
                         add(
                             AppBar.Action(
                                 title = stringResource(MR.strings.action_select_inverse),
-                                icon = Icons.Outlined.Deselect,
+                                icon = MaterialSymbols.Rounded.Deselect,
                                 onClick = onInvertSelection,
                             ),
                         )
@@ -95,7 +95,7 @@ fun EntryToolbar(
                         add(
                             AppBar.Action(
                                 title = stringResource(MR.strings.manga_download),
-                                icon = Icons.Outlined.Download,
+                                icon = MaterialSymbols.Rounded.Download,
                                 onClick = { downloadExpanded = !downloadExpanded },
                                 menu = {
                                     DownloadDropdownMenu(
@@ -112,7 +112,7 @@ fun EntryToolbar(
                     add(
                         AppBar.Action(
                             title = stringResource(MR.strings.action_filter),
-                            icon = Icons.Outlined.FilterList,
+                            icon = MaterialSymbols.Rounded.FilterList,
                             iconTint = filterTint,
                             onClick = onClickFilter,
                         ),

@@ -63,7 +63,7 @@ import tachiyomi.domain.entry.interactor.GetLibraryEntries
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.repository.EntryRepository
-import tachiyomi.domain.entry.service.FetchInterval
+import tachiyomi.domain.entry.service.nextupdate.FetchInterval
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.library.service.LibraryPreferences.Companion.DEVICE_CHARGING
 import tachiyomi.domain.library.service.LibraryPreferences.Companion.DEVICE_NETWORK_NOT_METERED
@@ -90,6 +90,9 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
 
     private val sourceManager: SourceManager = Injekt.get()
     private val libraryPreferences: LibraryPreferences = Injekt.get()
+
+    // Sources update concurrently, and getAndSet is a separate read and write
+    private val newUpdatesCountLock = Any()
     private val settingsReader = LibraryUpdateSettings.Reader(Injekt.get(), Injekt.get())
     private val sourcePauses = LibrarySourcePauses(libraryPreferences)
     private val planner = LibraryUpdatePlanner(Injekt.get())
@@ -350,7 +353,9 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
                                             val result = refreshSession.refresh(
                                                 EntryLibraryUpdateRefreshRequest(
                                                     entry = entry,
-                                                    fetchMetadata = libraryPreferences.autoUpdateMetadata.get(),
+                                                    // Entries added without opening them have no details yet
+                                                    fetchMetadata = !entry.initialized ||
+                                                        libraryPreferences.autoUpdateMetadata.get(),
                                                     fetchWindowLowerBound = currentFetchWindow.first,
                                                     fetchWindowUpperBound = currentFetchWindow.second,
                                                 ),
@@ -365,8 +370,10 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
                                                     newChapters = newChapters.size,
                                                 )
                                                 if (newChapters.isNotEmpty()) {
-                                                    libraryPreferences.newUpdatesCount.getAndSet {
-                                                        it + newChapters.size
+                                                    synchronized(newUpdatesCountLock) {
+                                                        libraryPreferences.newUpdatesCount.getAndSet {
+                                                            it + newChapters.size
+                                                        }
                                                     }
 
                                                     // Keep the queued entry that contains the new EntryChapters

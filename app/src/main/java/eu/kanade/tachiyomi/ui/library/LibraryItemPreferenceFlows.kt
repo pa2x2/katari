@@ -64,8 +64,9 @@ internal fun observeLibraryDisplaySettings(
     }
     return combine(
         badgeSettings,
+        preferences.mergedBadge.changes(),
         preferences.pinnedDisplayStyle.changes(),
-    ) { settings, pinnedDisplayStyle ->
-        settings.copy(pinnedDisplayStyle = pinnedDisplayStyle)
+    ) { settings, mergedBadge, pinnedDisplayStyle ->
+        settings.copy(mergedBadge = mergedBadge, pinnedDisplayStyle = pinnedDisplayStyle)
     }.distinctUntilChanged()
 }

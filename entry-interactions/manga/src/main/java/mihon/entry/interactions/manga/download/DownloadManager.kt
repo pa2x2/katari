@@ -3,7 +3,7 @@ package mihon.entry.interactions.manga.download
 import android.content.Context
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import eu.kanade.tachiyomi.source.model.Page
-import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.Flow
@@ -23,7 +23,6 @@ import mihon.entry.interactions.manga.download.model.DownloadState
 import mihon.entry.interactions.manga.download.model.MangaDownload
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.storage.extension
-import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.core.common.util.system.ImageUtil
 import tachiyomi.core.common.util.system.logcat
@@ -40,7 +39,6 @@ import java.util.concurrent.ConcurrentHashMap
  * and retrieved through dependency injection. You can use this class to queue new chapters or query
  * downloaded chapters.
  */
-@OptIn(DelicateCoroutinesApi::class)
 internal class DownloadManager(
     private val context: Context,
     private val provider: DownloadProvider = Injekt.get(),
@@ -49,10 +47,11 @@ internal class DownloadManager(
     private val downloader: Downloader = Downloader(context, provider, cache),
     private val pendingDeleter: DownloadPendingDeleter = DownloadPendingDeleter(context),
     private val workController: EntryDownloadWorkController = Injekt.get(),
+    private val scope: CoroutineScope = Injekt.get(),
 ) {
 
     init {
-        launchIO {
+        scope.launch {
             downloader.awaitInitialized()
             if (queueState.value.isNotEmpty()) workController.resumeIfRequested()
         }
@@ -119,28 +118,53 @@ internal class DownloadManager(
      * @param chapterId the chapter to check.
      */
     fun getQueuedDownloadOrNull(chapterId: Long): MangaDownload? {
-        return queueState.value.find { it.chapter.id == chapterId }
+        return getQueuedDownloadsByChapterId()[chapterId]
+    }
+
+    // Chapter lists look each of their chapters up in the same queue
+    @Volatile
+    private var queueIndex: QueueIndex? = null
+
+    private class QueueIndex(val queue: List<MangaDownload>, val byChapterId: Map<Long, MangaDownload>)
+
+    /** Returns the queued downloads by chapter id, built once per queue change. */
+    fun getQueuedDownloadsByChapterId(): Map<Long, MangaDownload> {
+        val queue = queueState.value
+        queueIndex?.takeIf { it.queue === queue }?.let { return it.byChapterId }
+        return queue.associateBy { it.chapter.id }.also { queueIndex = QueueIndex(queue, it) }
     }
 
     fun startDownloadsNow(chapterIds: Collection<Long>) {
-        reorderQueue(
+        downloader.updateQueue { queue ->
             EntryDownloadQueuePolicy.promote(
-                queue = queueState.value,
+                queue = queue,
                 keys = chapterIds,
                 keyOf = { it.chapter.id },
                 isActive = { it.status == DownloadState.DOWNLOADING },
-            ),
-        )
+            )
+        }
         startDownloads()
     }
 
     /**
      * Reorders the download queue.
      *
-     * @param downloads value to set the download queue to
+     * @param downloads the queue in its new order. Downloads that left the queue since are dropped, and ones
+     * that joined it are kept at the end.
      */
     fun reorderQueue(downloads: List<MangaDownload>) {
-        downloader.updateQueue(downloads)
+        downloader.updateQueue { queue ->
+            val queueById = queue.associateBy { it.chapter.id }
+            val orderedIds = downloads.mapTo(HashSet()) { it.chapter.id }
+            downloads.mapNotNull { queueById[it.chapter.id] } + queue.filter { it.chapter.id !in orderedIds }
+        }
+    }
+
+    fun reorderSeries(entryId: Long, moveToTop: Boolean) {
+        downloader.updateQueue { queue ->
+            val (series, others) = queue.partition { it.entry.id == entryId }
+            if (moveToTop) series + others else others + series
+        }
     }
 
     /**
@@ -150,7 +174,7 @@ internal class DownloadManager(
      * @param chapters the list of chapters to enqueue.
      * @param autoStart whether to start the downloader after enqueing the chapters.
      */
-    fun downloadChapters(manga: Entry, chapters: List<EntryChapter>, autoStart: Boolean = true) {
+    suspend fun downloadChapters(manga: Entry, chapters: List<EntryChapter>, autoStart: Boolean = true) {
         downloader.queueChapters(manga, chapters, autoStart)
         if (autoStart && queueState.value.isNotEmpty()) {
             if (downloader.isRunning) workController.start() else startDownloads()
@@ -164,9 +188,11 @@ internal class DownloadManager(
      */
     fun addDownloadsToStartOfQueue(downloads: List<MangaDownload>) {
         if (downloads.isEmpty()) return
-        queueState.value.toMutableList().apply {
-            addAll(0, downloads)
-            reorderQueue(this)
+        downloader.updateQueue { queue ->
+            // A chapter already queued keeps its download, which may be running
+            val queueById = queue.associateBy { it.chapter.id }
+            val chapterIds = downloads.mapTo(HashSet()) { it.chapter.id }
+            downloads.map { queueById[it.chapter.id] ?: it } + queue.filter { it.chapter.id !in chapterIds }
         }
         startDownloads()
     }
@@ -214,6 +240,11 @@ internal class DownloadManager(
         return cache.isChapterDownloaded(chapterName, chapterScanlator, chapterUrl, mangaTitle, sourceId, skipCache)
     }
 
+    /** Returns the ids of the downloaded chapters among [chapters], all of [manga]. */
+    fun getDownloadedChapterIds(chapters: List<EntryChapter>, manga: Entry): Set<Long> {
+        return cache.getDownloadedChapterIds(chapters, manga.title, manga.source)
+    }
+
     /**
      * Returns the amount of downloaded chapters.
      */
@@ -228,6 +259,11 @@ internal class DownloadManager(
      */
     fun getDownloadCount(manga: Entry): Int {
         return cache.getDownloadCount(manga)
+    }
+
+    /** Returns the amount of downloaded chapters of each of [mangas], by entry id. */
+    fun getDownloadCounts(mangas: List<Entry>): Map<Long, Int> {
+        return cache.getDownloadCounts(mangas)
     }
 
     fun cancelQueuedDownloads(downloads: List<MangaDownload>) {
@@ -315,7 +351,7 @@ internal class DownloadManager(
      * Triggers the execution of the deletion of pending chapters.
      */
     fun deletePendingChapters() {
-        launchIO {
+        scope.launch {
             val pendingChapters = pendingDeleter.getPendingChapters()
             for ((manga, chapters) in pendingChapters) {
                 val source = sourceManager.get(manga.source) ?: continue

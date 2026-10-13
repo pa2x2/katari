@@ -5,9 +5,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Clear
-import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -20,6 +17,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import eu.kanade.tachiyomi.source.entry.EntryFilter
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.control.FilterSheetInsets
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Close
+import mihon.icons.materialsymbols.rounded.Search
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -43,11 +43,14 @@ internal fun GroupFilterTools(filter: EntryFilter.Group<*>, state: FilterGroupUi
             onValueChange = { state.query = it },
             modifier = Modifier.weight(1f),
             placeholder = { Text(stringResource(MR.strings.filter_search_group, filter.name)) },
-            leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null) },
+            leadingIcon = { Icon(MaterialSymbols.Rounded.Search, contentDescription = null) },
             trailingIcon = {
                 if (state.query.isNotEmpty()) {
                     IconButton(onClick = { state.query = "" }) {
-                        Icon(Icons.Outlined.Clear, contentDescription = stringResource(MR.strings.action_reset))
+                        Icon(
+                            MaterialSymbols.Rounded.Close,
+                            contentDescription = stringResource(MR.strings.action_reset),
+                        )
                     }
                 }
             },

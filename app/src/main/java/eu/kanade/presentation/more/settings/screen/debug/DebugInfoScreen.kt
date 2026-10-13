@@ -1,13 +1,10 @@
 package eu.kanade.presentation.more.settings.screen.debug
 
 import android.os.Build
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Autorenew
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
@@ -24,9 +21,13 @@ import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.util.system.DeviceUtil
 import eu.kanade.tachiyomi.util.system.WebViewUtil
 import eu.kanade.tachiyomi.util.system.copyToClipboard
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.guava.await
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import mihon.core.common.FeatureFlags
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Autorenew
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.util.collectAsState
 import uy.kohesive.injekt.Injekt
@@ -92,7 +93,7 @@ class DebugInfoScreen : Screen() {
                             },
                         ) {
                             Icon(
-                                imageVector = Icons.Outlined.Autorenew,
+                                imageVector = MaterialSymbols.Rounded.Autorenew,
                                 tint = MaterialTheme.colorScheme.primary,
                                 contentDescription = "Regenerate installation ID",
                             )
@@ -112,9 +113,13 @@ class DebugInfoScreen : Screen() {
     }
 
     @Composable
-    @ReadOnlyComposable
     private fun getWebViewVersion(): String {
-        return WebViewUtil.getVersion(LocalContext.current)
+        val context = LocalContext.current
+        // Loads the WebView package's label through the package manager
+        val version by produceState("-") {
+            value = withContext(Dispatchers.IO) { WebViewUtil.getVersion(context) }
+        }
+        return version
     }
 
     @Composable

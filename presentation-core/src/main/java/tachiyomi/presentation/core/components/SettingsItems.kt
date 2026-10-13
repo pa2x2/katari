@@ -12,13 +12,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
-import androidx.compose.material.icons.outlined.ArrowDownward
-import androidx.compose.material.icons.outlined.ArrowUpward
-import androidx.compose.material.icons.rounded.CheckBox
-import androidx.compose.material.icons.rounded.CheckBoxOutlineBlank
-import androidx.compose.material.icons.rounded.DisabledByDefault
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExposedDropdownMenu
@@ -55,6 +48,13 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import dev.icerock.moko.resources.StringResource
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.automirroredrounded.KeyboardArrowRight
+import mihon.icons.materialsymbols.rounded.ArrowDownward
+import mihon.icons.materialsymbols.rounded.ArrowUpward
+import mihon.icons.materialsymbols.rounded.CheckBoxOutlineBlank
+import mihon.icons.materialsymbols.roundedfilled.CheckBox
+import mihon.icons.materialsymbols.roundedfilled.DisabledByDefault
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.TriState
 import tachiyomi.core.common.preference.toggle
@@ -94,8 +94,8 @@ fun HeadingItem(text: String) {
 @Composable
 fun SortItem(label: String, sortDescending: Boolean?, onClick: () -> Unit) {
     val arrowIcon = when (sortDescending) {
-        true -> Icons.Outlined.ArrowDownward
-        false -> Icons.Outlined.ArrowUpward
+        true -> MaterialSymbols.Rounded.ArrowDownward
+        false -> MaterialSymbols.Rounded.ArrowUpward
         null -> null
     }
 
@@ -214,7 +214,7 @@ fun NavigationItem(
             }
         }
         Icon(
-            imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowRight,
+            imageVector = MaterialSymbols.AutoMirroredRounded.KeyboardArrowRight,
             contentDescription = null,
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -348,7 +348,7 @@ fun SelectItem(
                     vertical = SettingsItemsPaddings.Vertical,
                 ),
             label = { Text(text = label) },
-            value = options[selectedIndex].toString(),
+            value = options.getOrNull(selectedIndex)?.toString().orEmpty(),
             onValueChange = {},
             readOnly = true,
             singleLine = true,
@@ -426,9 +426,9 @@ fun TriStateItem(
 
         Icon(
             imageVector = when (state) {
-                TriState.DISABLED -> Icons.Rounded.CheckBoxOutlineBlank
-                TriState.ENABLED_IS -> Icons.Rounded.CheckBox
-                TriState.ENABLED_NOT -> Icons.Rounded.DisabledByDefault
+                TriState.DISABLED -> MaterialSymbols.Rounded.CheckBoxOutlineBlank
+                TriState.ENABLED_IS -> MaterialSymbols.RoundedFilled.CheckBox
+                TriState.ENABLED_NOT -> MaterialSymbols.RoundedFilled.DisabledByDefault
             },
             contentDescription = null,
             tint = if (!enabled || state == TriState.DISABLED) {

@@ -6,9 +6,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.selection.selectable
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.VolumeUp
-import androidx.compose.material.icons.outlined.Stop
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
@@ -18,6 +15,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.automirroredrounded.VolumeUp
+import mihon.icons.materialsymbols.rounded.Stop
 
 @Composable
 internal fun TtsRadioRow(
@@ -51,13 +51,13 @@ internal fun TtsRadioRow(
         }
         if (playing) {
             Icon(
-                imageVector = Icons.Outlined.Stop,
+                imageVector = MaterialSymbols.Rounded.Stop,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.primary,
             )
         } else if (selected) {
             Icon(
-                imageVector = Icons.AutoMirrored.Outlined.VolumeUp,
+                imageVector = MaterialSymbols.AutoMirroredRounded.VolumeUp,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.primary,
             )

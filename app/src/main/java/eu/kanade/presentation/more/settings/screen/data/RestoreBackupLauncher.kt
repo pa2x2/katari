@@ -1,7 +1,8 @@
 package eu.kanade.presentation.more.settings.screen.data
 
-import android.content.Context
+import android.content.ActivityNotFoundException
 import android.content.Intent
+import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
@@ -13,7 +14,8 @@ import eu.kanade.tachiyomi.data.backup.restore.BackupRestoreJob
 import eu.kanade.tachiyomi.util.system.DeviceUtil
 import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.launch
-import tachiyomi.core.common.i18n.stringResource
+import logcat.LogPriority
+import tachiyomi.core.common.util.system.logcat
 import tachiyomi.i18n.*
 
 /**
@@ -26,17 +28,10 @@ fun rememberRestoreBackupLauncher(): () -> Unit {
     val navigator = LocalNavigator.currentOrThrow
     val scope = rememberCoroutineScope()
 
-    val chooseBackup = rememberLauncherForActivityResult(
-        object : ActivityResultContracts.GetContent() {
-            override fun createIntent(context: Context, input: String): Intent {
-                val intent = super.createIntent(context, input)
-                return Intent.createChooser(intent, context.stringResource(MR.strings.file_select_backup))
-            }
-        },
-    ) {
+    val chooseBackup = rememberBackupFilePicker(mimeType = "*/*") {
         if (it == null) {
             context.toast(MR.strings.file_null_uri_error)
-            return@rememberLauncherForActivityResult
+            return@rememberBackupFilePicker
         }
 
         navigator.push(RestoreBackupScreen(it.toString()))
@@ -49,11 +44,38 @@ fun rememberRestoreBackupLauncher(): () -> Unit {
                     context.toast(MR.strings.restore_miui_warning)
                 }
 
-                // no need to catch because it's wrapped with a chooser
-                chooseBackup.launch("*/*")
+                chooseBackup()
             } else {
                 context.toast(MR.strings.restore_in_progress)
             }
+        }
+    }
+}
+
+/**
+ * Asks for a backup file through the system document picker. [onResult] receives null when nothing was picked.
+ */
+@Composable
+fun rememberBackupFilePicker(mimeType: String, onResult: (Uri?) -> Unit): () -> Unit {
+    val context = LocalContext.current
+    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) {
+            // BackupRestoreJob reads the file later, possibly after the picker's temporary grant is gone. Providers
+            // that can't persist grants throw, and the temporary grant still serves an immediate restore.
+            try {
+                context.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            } catch (e: SecurityException) {
+                context.logcat(LogPriority.WARN, e)
+            }
+        }
+        onResult(uri)
+    }
+
+    return {
+        try {
+            launcher.launch(arrayOf(mimeType))
+        } catch (_: ActivityNotFoundException) {
+            context.toast(MR.strings.file_picker_error)
         }
     }
 }

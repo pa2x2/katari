@@ -63,7 +63,7 @@ class EntrySyncRepositoryImpl(
     private suspend fun insertValues(vararg syncs: EntrySync) {
         handler.await(inTransaction = true) {
             syncs.forEach { sync ->
-                entry_syncQueries.insert(
+                entry_syncQueries.upsert(
                     profileId = profileProvider.activeProfileId,
                     entryId = sync.entryId,
                     syncId = sync.syncId,

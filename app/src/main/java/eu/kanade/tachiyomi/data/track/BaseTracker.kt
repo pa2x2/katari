@@ -67,6 +67,14 @@ abstract class BaseTracker(
         }
     }
 
+    override val displayUsernameFlow: Flow<String> by lazy {
+        trackPreferences.trackDisplayUsername(this).changes()
+    }
+
+    final override suspend fun refreshUser() = withIOContext { updateUserConfig() }
+
+    protected abstract suspend fun updateUserConfig()
+
     override fun getUsername() = trackPreferences.trackUsername(this).get()
 
     override fun getDisplayUsername(): String = trackPreferences.trackDisplayUsername(this).get()

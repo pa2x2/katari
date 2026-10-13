@@ -8,16 +8,16 @@ import eu.kanade.tachiyomi.source.entry.EntryFilterList
 import eu.kanade.tachiyomi.source.entry.filter.validationIssues
 import eu.kanade.tachiyomi.source.filter.detachedCopy
 
-internal fun CatalogScreenModel.State.initializeForSource(
+internal fun CatalogViewModel.State.initializeForSource(
     sourceFilters: EntryFilterList,
     initialFilterSnapshot: List<FilterStateNode> = emptyList(),
-): CatalogScreenModel.State {
+): CatalogViewModel.State {
     val defaults = sourceFilters.detachedCopy()
     val filters = sourceFilters
     val restoration = filters.restoreSnapshot(initialFilterSnapshot)
-    val query = (listing as? CatalogScreenModel.Listing.Search)?.query
+    val query = (listing as? CatalogViewModel.Listing.Search)?.query
     val updatedListing = when (listing) {
-        is CatalogScreenModel.Listing.Search -> CatalogScreenModel.Listing.Search(query, filters.detachedCopy())
+        is CatalogViewModel.Listing.Search -> CatalogViewModel.Listing.Search(query, filters.detachedCopy())
         else -> listing
     }
 
@@ -40,14 +40,14 @@ internal data class SavedPresetState(
     val filters: List<FilterStateNode>,
 )
 
-internal fun CatalogScreenModel.State.toSavedPresetState(defaultFilters: EntryFilterList): SavedPresetState {
+internal fun CatalogViewModel.State.toSavedPresetState(defaultFilters: EntryFilterList): SavedPresetState {
     val filterSnapshot = filters.snapshot()
     val hasEditedFilters = filterSnapshot != defaultFilters.snapshot()
     val listingMode = when {
         hasEditedFilters || draftMode == FeedListingMode.Search ||
-            (draftMode == null && listing is CatalogScreenModel.Listing.Search) -> FeedListingMode.Search
+            (draftMode == null && listing is CatalogViewModel.Listing.Search) -> FeedListingMode.Search
         draftMode == FeedListingMode.Popular ||
-            (draftMode == null && listing == CatalogScreenModel.Listing.Popular) -> FeedListingMode.Popular
+            (draftMode == null && listing == CatalogViewModel.Listing.Popular) -> FeedListingMode.Popular
         else -> FeedListingMode.Latest
     }
     val query = draftSearchQuery
@@ -61,21 +61,21 @@ internal fun CatalogScreenModel.State.toSavedPresetState(defaultFilters: EntryFi
     )
 }
 
-internal val CatalogScreenModel.State.hasUnappliedFilterChanges: Boolean
+internal val CatalogViewModel.State.hasUnappliedFilterChanges: Boolean
     get() {
         val draft = toSavedPresetState(defaultFilters)
         val applied = when (val current = listing) {
-            CatalogScreenModel.Listing.Popular -> SavedPresetState(
+            CatalogViewModel.Listing.Popular -> SavedPresetState(
                 FeedListingMode.Popular,
                 null,
                 defaultFilters.snapshot(),
             )
-            CatalogScreenModel.Listing.Latest -> SavedPresetState(
+            CatalogViewModel.Listing.Latest -> SavedPresetState(
                 FeedListingMode.Latest,
                 null,
                 defaultFilters.snapshot(),
             )
-            is CatalogScreenModel.Listing.Search -> SavedPresetState(
+            is CatalogViewModel.Listing.Search -> SavedPresetState(
                 FeedListingMode.Search,
                 current.query?.trim()?.ifEmpty {
                     null
@@ -87,13 +87,13 @@ internal val CatalogScreenModel.State.hasUnappliedFilterChanges: Boolean
     }
 
 /** A validated editor commit is the only filter-sheet action that replaces the result listing. */
-internal fun CatalogScreenModel.State.applyFilterDraft(): CatalogScreenModel.State? {
+internal fun CatalogViewModel.State.applyFilterDraft(): CatalogViewModel.State? {
     if (!canSaveFilterDraft || repairNeedsSave) return null
     val saved = toSavedPresetState(defaultFilters)
     val applied = when (saved.listingMode) {
-        FeedListingMode.Popular -> CatalogScreenModel.Listing.Popular
-        FeedListingMode.Latest -> CatalogScreenModel.Listing.Latest
-        FeedListingMode.Search -> CatalogScreenModel.Listing.Search(saved.query, filters.detachedCopy())
+        FeedListingMode.Popular -> CatalogViewModel.Listing.Popular
+        FeedListingMode.Latest -> CatalogViewModel.Listing.Latest
+        FeedListingMode.Search -> CatalogViewModel.Listing.Search(saved.query, filters.detachedCopy())
     }
     return copy(
         listing = applied,
@@ -107,5 +107,5 @@ internal fun CatalogScreenModel.State.applyFilterDraft(): CatalogScreenModel.Sta
 }
 
 /** Draft loading and validation cannot suspend an already applied search. */
-internal val CatalogScreenModel.State.pageableListing: CatalogScreenModel.Listing?
-    get() = listing.takeUnless { it is CatalogScreenModel.Listing.Search && !appliedFiltersReady }
+internal val CatalogViewModel.State.pageableListing: CatalogViewModel.Listing?
+    get() = listing.takeUnless { it is CatalogViewModel.Listing.Search && !appliedFiltersReady }

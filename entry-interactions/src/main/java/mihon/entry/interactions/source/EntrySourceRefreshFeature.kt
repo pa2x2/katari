@@ -1,6 +1,7 @@
 package mihon.entry.interactions.source
 
 import kotlinx.coroutines.CancellationException
+import mihon.entry.interactions.download.EntryDownloadRuntimeFeature
 import mihon.entry.interactions.execute
 import mihon.entry.interactions.runtime.throwFirstFailure
 import mihon.entry.interactions.runtime.toContentTypeId
@@ -27,6 +28,7 @@ import mihon.feature.graph.featureContextRule
 import tachiyomi.domain.chapter.model.NoChaptersException
 import tachiyomi.domain.entry.interactor.SyncEntryWithSource
 import tachiyomi.domain.source.service.SourceManager
+import tachiyomi.domain.source.service.awaitInitialized
 
 internal val ENTRY_SOURCE_REFRESH_FEATURE_ID = FeatureId("entry.source-refresh")
 internal val ENTRY_SOURCE_REFRESH_OWNER = ContributionOwner("entry-source-refresh")
@@ -90,6 +92,7 @@ internal class DefaultEntrySourceRefreshFeature(
     private val executions: FeatureExecutionRuntime,
     private val sourceManager: SourceManager,
     private val syncEntryWithSource: SyncEntryWithSource,
+    private val downloadRuntime: () -> EntryDownloadRuntimeFeature,
     private val updateLibraryTitles: (profileId: Long) -> Boolean,
 ) : EntrySourceRefreshFeature {
 
@@ -98,12 +101,14 @@ internal class DefaultEntrySourceRefreshFeature(
             "Source refresh must request details, children, or both"
         }
 
+        // A library update starting with the process would otherwise fail every entry as having no source
+        sourceManager.awaitInitialized()
         val sourceInstalled = sourceManager.get(request.entry.source) != null
         requireState(request, sourceInstalled)
         if (!sourceInstalled) return EntrySourceRefreshResult.SourceUnavailable(request.entry.source)
 
         return try {
-            val result = syncEntryWithSource.syncStrictly(
+            val sync = syncEntryWithSource.syncStrictly(
                 entry = request.entry,
                 profileId = request.entry.profileId,
                 updateLibraryTitles = updateLibraryTitles(request.entry.profileId),
@@ -111,7 +116,10 @@ internal class DefaultEntrySourceRefreshFeature(
                 fetchChapters = request.fetchChildren,
                 manualFetch = request.manual,
                 fetchWindow = request.fetchWindow.let { it.lowerBound to it.upperBound },
-            ).toRefreshResult()
+            )
+            // The source no longer lists these, so their queued downloads could only fail
+            sync.removedChapterIds.forEach { downloadRuntime().cancelQueued(request.entry.type, it) }
+            val result = sync.toRefreshResult()
             if (request.manual && result.insertedChildren.isNotEmpty()) {
                 executions.afterFeatureCommitVolatile {
                     execute(

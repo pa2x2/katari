@@ -20,6 +20,7 @@ import mihon.entry.interactions.book.preparation.BookResourceRequirement
 import mihon.entry.interactions.book.state.progressIdentity
 import tachiyomi.domain.entry.adapter.toSEntryChapter
 import tachiyomi.domain.source.service.SourceManager
+import tachiyomi.domain.source.service.awaitInitialized
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
@@ -35,6 +36,8 @@ internal class BookDownloader(
     private val now: () -> Long = System::currentTimeMillis,
 ) {
     suspend fun download(download: BookDownload): BookDownloadFailure? {
+        // The restored queue resumes as the process starts, before the sources have loaded
+        sourceManager.awaitInitialized()
         val source = sourceManager.get(download.entry.source)
             ?: return failure(BookDownloadFailure.Reason.SOURCE_NOT_FOUND)
         download.status = BookDownload.State.RESOLVING

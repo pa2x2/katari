@@ -1,7 +1,5 @@
 package eu.kanade.tachiyomi.ui.browse.migration.search
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.FilterList
 import androidx.compose.material3.Icon
 import androidx.compose.material3.SmallExtendedFloatingActionButton
 import androidx.compose.material3.SnackbarHostState
@@ -16,7 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalUriHandler
-import cafe.adriel.voyager.core.model.rememberScreenModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.core.util.ifSourcesLoaded
@@ -25,7 +23,7 @@ import eu.kanade.presentation.components.AppSnackbarHost
 import eu.kanade.presentation.components.SearchToolbar
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.ui.browse.catalog.CatalogScreenEventsEffect
-import eu.kanade.tachiyomi.ui.browse.catalog.CatalogScreenModel
+import eu.kanade.tachiyomi.ui.browse.catalog.CatalogViewModel
 import eu.kanade.tachiyomi.ui.browse.catalog.FilterUiState
 import eu.kanade.tachiyomi.ui.browse.source.browse.SourceFilterDialog
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
@@ -39,6 +37,8 @@ import mihon.entry.interactions.source.EntrySourceHomeFeature
 import mihon.entry.interactions.source.EntrySourceHomeResolution
 import mihon.feature.migration.dialog.MigrateEntryDialog
 import mihon.feature.migration.list.MigrationListScreen
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.FilterList
 import mihon.presentation.core.util.collectAsLazyPagingItems
 import tachiyomi.core.common.Constants
 import tachiyomi.domain.entry.model.Entry
@@ -67,38 +67,38 @@ data class MigrateSourceSearchScreen(
         val navigator = LocalNavigator.currentOrThrow
         val scope = rememberCoroutineScope()
         val migration = remember { Injekt.get<EntryMigrationFeature>() }
-        val screenModel = rememberScreenModel {
-            CatalogScreenModel(
+        val viewModel = viewModel {
+            CatalogViewModel(
                 sourceId = sourceId,
                 listingQuery = query,
                 migrationEntryType = currentEntry.type,
             )
         }
-        val state by screenModel.state.collectAsState()
+        val state by viewModel.state.collectAsState()
 
         val snackbarHostState = remember { SnackbarHostState() }
         val migrationFailureMessage = stringResource(MR.strings.internal_error)
 
-        val catalogList = screenModel.catalogPagerFlowFlow.collectAsLazyPagingItems()
-        CatalogScreenEventsEffect(screenModel, snackbarHostState)
+        val catalogList = viewModel.catalogPagerFlowFlow.collectAsLazyPagingItems()
+        CatalogScreenEventsEffect(viewModel, snackbarHostState)
 
         Scaffold(
             topBar = { scrollBehavior ->
                 SearchToolbar(
                     searchQuery = state.toolbarQuery ?: "",
-                    onChangeSearchQuery = screenModel::setToolbarQuery,
+                    onChangeSearchQuery = viewModel::setToolbarQuery,
                     onClickCloseSearch = navigator::pop,
-                    onSearch = screenModel::search,
+                    onSearch = viewModel::search,
                     scrollBehavior = scrollBehavior,
                 )
             },
             floatingActionButton = {
                 SmallExtendedFloatingActionButton(
                     text = { Text(text = stringResource(MR.strings.action_filter)) },
-                    icon = { Icon(Icons.Outlined.FilterList, contentDescription = null) },
-                    onClick = screenModel::openFilterSheet,
+                    icon = { Icon(MaterialSymbols.Rounded.FilterList, contentDescription = null) },
+                    onClick = viewModel::openFilterSheet,
                     modifier = Modifier.animateFloatingActionButton(
-                        visible = state.filters.isNotEmpty() || screenModel.hasFilterCapability,
+                        visible = state.filters.isNotEmpty() || viewModel.hasFilterCapability,
                         alignment = Alignment.BottomEnd,
                     ),
                 )
@@ -118,7 +118,7 @@ data class MigrateSourceSearchScreen(
                         .lastOrNull()
 
                     if (migrateListScreen == null) {
-                        screenModel.showMigrateEntryDialog(current = currentEntry, target = target)
+                        viewModel.showMigrateEntryDialog(current = currentEntry, target = target)
                     } else {
                         migrateListScreen.addMatchOverride(current = currentEntry.id, target = target.id)
                         navigator.popUntil { screen -> screen is MigrationListScreen }
@@ -127,12 +127,12 @@ data class MigrateSourceSearchScreen(
             }
             CatalogContent(
                 catalogList = catalogList,
-                columns = screenModel.getColumnsPreference(
+                columns = viewModel.getColumnsPreference(
                     LocalConfiguration.current.orientation,
-                    screenModel.sourceItemOrientation,
+                    viewModel.sourceItemOrientation,
                 ),
-                displayMode = screenModel.displayMode,
-                sourceItemOrientation = screenModel.sourceItemOrientation,
+                displayMode = viewModel.displayMode,
+                sourceItemOrientation = viewModel.sourceItemOrientation,
                 snackbarHostState = snackbarHostState,
                 contentPadding = paddingValues,
                 onItemClick = { item ->
@@ -146,7 +146,7 @@ data class MigrateSourceSearchScreen(
                     }
                 },
                 onWebViewClick = {
-                    val source = screenModel.catalogSource
+                    val source = viewModel.catalogSource
                     val home = source?.let {
                         Injekt.get<EntrySourceHomeFeature>().resolve(it.id)
                     } as? EntrySourceHomeResolution.Available
@@ -164,9 +164,9 @@ data class MigrateSourceSearchScreen(
             )
         }
 
-        val onDismissRequest = screenModel::dismissDialog
+        val onDismissRequest = viewModel::dismissDialog
         when (val dialog = state.dialog) {
-            is CatalogScreenModel.Dialog.Filter -> {
+            is CatalogViewModel.Dialog.Filter -> {
                 SourceFilterDialog(
                     onDismissRequest = onDismissRequest,
                     filters = state.filters,
@@ -174,21 +174,21 @@ data class MigrateSourceSearchScreen(
                     filterRevision = state.filterRevision,
                     isLoading = state.filterState is FilterUiState.Loading,
                     errorMessage = (state.filterState as? FilterUiState.Error)?.throwable?.message,
-                    onReset = screenModel::resetFilters,
-                    onResetGroup = screenModel::resetFilterGroup,
+                    onReset = viewModel::resetFilters,
+                    onResetGroup = viewModel::resetFilterGroup,
                     pendingFilterEdits = state.pendingFilterEdits,
                     draftQuery = state.draftSearchQuery,
-                    onEditPagedItem = screenModel::editPagedFilterItem,
-                    onFilter = screenModel::applyDraftFilters,
-                    onUpdate = screenModel::setFilters,
-                    onRequestSuggestions = screenModel::filterSuggestions,
-                    onRequestPagedFilterItems = screenModel::pagedFilterItems,
-                    onRequestPagedFilterNavigation = screenModel::pagedFilterNavigation,
-                    pagedFilterBrowseSession = screenModel::pagedFilterBrowseSession,
-                    onRetry = screenModel::retryFilterLoad,
+                    onEditPagedItem = viewModel::editPagedFilterItem,
+                    onFilter = viewModel::applyDraftFilters,
+                    onUpdate = viewModel::setFilters,
+                    onRequestSuggestions = viewModel::filterSuggestions,
+                    onRequestPagedFilterItems = viewModel::pagedFilterItems,
+                    onRequestPagedFilterNavigation = viewModel::pagedFilterNavigation,
+                    pagedFilterBrowseSession = viewModel::pagedFilterBrowseSession,
+                    onRetry = viewModel::retryFilterLoad,
                 )
             }
-            is CatalogScreenModel.Dialog.MigrateEntry -> {
+            is CatalogViewModel.Dialog.MigrateEntry -> {
                 MigrateEntryDialog(
                     current = dialog.current,
                     target = dialog.target,

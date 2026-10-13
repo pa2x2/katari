@@ -5,8 +5,6 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import mihon.feature.migration.session.model.SourceMigrationSessionId
 import uy.kohesive.injekt.Injekt
@@ -21,7 +19,7 @@ class SourceMigrationActionReceiver : BroadcastReceiver() {
         if (intent.action != ACTION_PAUSE_DISCOVERY && intent.action != ACTION_PAUSE_EXECUTION) return
 
         val pendingResult = goAsync()
-        CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
+        Injekt.get<CoroutineScope>().launch {
             try {
                 val scheduler = Injekt.get<SourceMigrationWorkScheduler>()
                 when (intent.action) {

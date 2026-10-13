@@ -6,8 +6,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.OpenInNew
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -28,6 +26,8 @@ import eu.kanade.presentation.more.settings.widget.ProfileSpecificChip
 import eu.kanade.presentation.more.settings.widget.draft.SettingsDraftSaveBar
 import eu.kanade.presentation.more.settings.widget.draft.rememberSettingsDraftLeaveGuard
 import kotlinx.coroutines.delay
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.automirroredrounded.OpenInNew
 import mihon.translation.api.engine.TranslationEngineState
 import mihon.translation.ui.picker.engine.TranslationEngineSelectorRow
 import mihon.translation.ui.picker.language.TranslationLanguagePairSelector
@@ -245,7 +245,7 @@ private fun TranslationPlayground(
                     modifier = Modifier.align(Alignment.CenterHorizontally),
                 ) {
                     Icon(
-                        imageVector = Icons.AutoMirrored.Outlined.OpenInNew,
+                        imageVector = MaterialSymbols.AutoMirroredRounded.OpenInNew,
                         contentDescription = null,
                     )
                     Text(

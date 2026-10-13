@@ -2,7 +2,7 @@ package mihon.feature.library.update.planning
 
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
-import tachiyomi.domain.entry.service.FetchInterval
+import tachiyomi.domain.entry.service.nextupdate.FetchInterval
 import tachiyomi.domain.library.update.repository.LibraryUpdateReportRepository
 import kotlin.time.Instant
 

@@ -12,14 +12,18 @@ import eu.kanade.tachiyomi.data.backup.models.BackupEntry
 import eu.kanade.tachiyomi.data.backup.models.BackupExtensionStore
 import eu.kanade.tachiyomi.data.backup.models.BackupPreference
 import eu.kanade.tachiyomi.data.backup.models.BackupSourcePreferences
+import eu.kanade.tachiyomi.data.backup.models.compatibility.doubleKitsuScores
+import eu.kanade.tachiyomi.data.backup.models.compatibility.hasHalvedKitsuScores
 import eu.kanade.tachiyomi.data.backup.restore.entries.EntryRestoreCoordinator
 import eu.kanade.tachiyomi.data.backup.restore.restorers.CategoriesRestorer
 import eu.kanade.tachiyomi.data.backup.restore.restorers.EntryRestorer
 import eu.kanade.tachiyomi.data.backup.restore.restorers.ExtensionStoreRestorer
 import eu.kanade.tachiyomi.data.backup.restore.restorers.PreferenceRestorer
+import eu.kanade.tachiyomi.data.backup.restore.restorers.SourceNamesRestorer
 import eu.kanade.tachiyomi.data.library.LibraryUpdateJob
 import eu.kanade.tachiyomi.util.system.createFileInCacheDir
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
@@ -57,6 +61,7 @@ class BackupRestorer(
     private val preferenceRestorer: PreferenceRestorer = PreferenceRestorer(context),
     private val extensionStoreRestorer: ExtensionStoreRestorer = ExtensionStoreRestorer(),
     private val entryRestorer: EntryRestorer = EntryRestorer(),
+    private val sourceNamesRestorer: SourceNamesRestorer = SourceNamesRestorer(),
     private val profileDatabase: ProfileDatabase = Injekt.get(),
     private val profileManager: ProfileManager = Injekt.get(),
     private val profileStore: ProfileStore = Injekt.get(),
@@ -73,6 +78,8 @@ class BackupRestorer(
      * Mapping of source ID to source name from backup data
      */
     private var sourceMapping: Map<Long, String> = emptyMap()
+
+    private var kitsuScoresHalved = false
 
     suspend fun restore(uri: Uri, options: RestoreOptions) {
         val startTime = System.currentTimeMillis()
@@ -107,6 +114,10 @@ class BackupRestorer(
         // Store source mapping for error messages
         val backupMaps = backup.backupSources
         sourceMapping = backupMaps.associate { it.sourceId to it.name }
+        kitsuScoresHalved = backup.hasHalvedKitsuScores()
+        if (options.libraryEntries) {
+            sourceNamesRestorer(backupMaps)
+        }
 
         if (backup.backupProfiles.isNotEmpty()) {
             coroutineScope {
@@ -140,11 +151,18 @@ class BackupRestorer(
         }
 
         coroutineScope {
-            if (options.categories) {
+            // Default category preferences and entries are matched to categories that this job creates.
+            val categoriesJob = if (options.categories) {
                 restoreCategories(backup.backupCategories, backup.backupDefaultCategoryUpdateRules)
+            } else {
+                null
             }
             if (options.appSettings) {
-                restoreAppPreferences(backup.backupPreferences, backup.backupCategories.takeIf { options.categories })
+                restoreAppPreferences(
+                    backup.backupPreferences,
+                    backup.backupCategories.takeIf { options.categories },
+                    categoriesJob,
+                )
             }
             if (options.sourceSettings) {
                 restoreSourcePreferences(backup.backupSourcePreferences)
@@ -155,6 +173,7 @@ class BackupRestorer(
                     destinationProfileId,
                     entries,
                     if (options.categories) backup.backupCategories else emptyList(),
+                    categoriesJob,
                 )
             }
             if (options.extensionStores) {
@@ -241,6 +260,7 @@ class BackupRestorer(
                     profile.id,
                     profileBackup.allEntries(),
                     if (options.categories) profileBackup.categories else emptyList(),
+                    categoriesJob = null,
                 ).join()
             }
         }
@@ -341,7 +361,10 @@ class BackupRestorer(
         destinationProfileId: Long,
         backupEntries: List<BackupEntry>,
         backupCategories: List<BackupCategory>,
+        categoriesJob: Job?,
     ) = launch {
+        categoriesJob?.join()
+        if (kitsuScoresHalved) backupEntries.forEach(BackupEntry::doubleKitsuScores)
         val finalization = entryRestoreCoordinator.restoreEntries(
             destinationProfileId = destinationProfileId,
             backupEntries = backupEntries,
@@ -366,8 +389,10 @@ class BackupRestorer(
     private fun CoroutineScope.restoreAppPreferences(
         preferences: List<BackupPreference>,
         categories: List<BackupCategory>?,
+        categoriesJob: Job?,
     ) = launch {
         ensureActive()
+        categoriesJob?.join()
         preferenceRestorer.restoreApp(
             preferences,
             categories,

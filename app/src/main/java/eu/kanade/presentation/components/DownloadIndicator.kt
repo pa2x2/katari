@@ -11,16 +11,13 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.outlined.ArrowDownward
-import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ProgressIndicatorDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.WavyProgressIndicatorDefaults
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
@@ -34,14 +31,20 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.hapticfeedback.HapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
-import eu.kanade.tachiyomi.R
+import mihon.icons.custommaterialsymbols.CustomMaterialSymbols
+import mihon.icons.custommaterialsymbols.rounded.DownloadArrow
+import mihon.icons.custommaterialsymbols.rounded.DownloadCircle
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Error
+import mihon.icons.materialsymbols.roundedfilled.CheckCircle
 import tachiyomi.presentation.core.components.material.IconButtonTokens
 import tachiyomi.presentation.core.util.secondaryItemAlpha
 
@@ -199,7 +202,7 @@ private fun DeletingIndicator(
             strokeCap = StrokeCap.Round,
         )
         Icon(
-            imageVector = Icons.Filled.CheckCircle,
+            imageVector = MaterialSymbols.RoundedFilled.CheckCircle,
             contentDescription = null,
             modifier = Modifier
                 .size(IndicatorSize)
@@ -239,7 +242,7 @@ private fun NotDownloadedIndicator(
         contentAlignment = Alignment.Center,
     ) {
         Icon(
-            painter = painterResource(R.drawable.ic_download_chapter_24dp),
+            imageVector = CustomMaterialSymbols.Rounded.DownloadCircle,
             contentDescription = startContentDescription,
             modifier = Modifier
                 .size(IndicatorSize)
@@ -297,39 +300,38 @@ private fun DownloadingIndicator(
             ),
         contentAlignment = Alignment.Center,
     ) {
-        val arrowColor: Color
-        val strokeColor = MaterialTheme.colorScheme.onSurfaceVariant
+        val color = MaterialTheme.colorScheme.onSurfaceVariant
+        val trackColor = color.copy(alpha = TRACK_ALPHA)
+        val stroke = Stroke(width = with(LocalDensity.current) { IndicatorStrokeWidth.toPx() }, cap = StrokeCap.Round)
         val downloadProgress = downloadProgressProvider()
         val indeterminate = downloadState == DownloadIndicatorState.QUEUE ||
             (downloadState == DownloadIndicatorState.DOWNLOADING && downloadProgress == 0)
         if (indeterminate) {
-            arrowColor = strokeColor
-            CircularProgressIndicator(
-                modifier = IndicatorModifier,
-                color = strokeColor,
-                strokeWidth = IndicatorStrokeWidth,
+            CircularWavyProgressIndicator(
+                modifier = WavyIndicatorModifier,
+                color = color,
                 trackColor = Color.Transparent,
-                strokeCap = StrokeCap.Butt,
+                stroke = stroke,
+                trackStroke = stroke,
+                // Only an active download waves, so a queued one reads as waiting
+                amplitude = if (downloadState == DownloadIndicatorState.DOWNLOADING) INDICATOR_AMPLITUDE else 0f,
+                wavelength = IndicatorWavelength,
             )
         } else {
             val animatedProgress by animateFloatAsState(
                 targetValue = downloadProgress / 100f,
-                animationSpec = ProgressIndicatorDefaults.ProgressAnimationSpec,
+                animationSpec = WavyProgressIndicatorDefaults.ProgressAnimationSpec,
                 label = "progress",
             )
-            arrowColor = if (animatedProgress < 0.5f) {
-                strokeColor
-            } else {
-                MaterialTheme.colorScheme.background
-            }
-            CircularProgressIndicator(
+            CircularWavyProgressIndicator(
                 progress = { animatedProgress },
-                modifier = IndicatorModifier,
-                color = strokeColor,
-                strokeWidth = IndicatorSize / 2,
-                trackColor = Color.Transparent,
-                strokeCap = StrokeCap.Butt,
-                gapSize = 0.dp,
+                modifier = WavyIndicatorModifier,
+                color = color,
+                trackColor = trackColor,
+                stroke = stroke,
+                trackStroke = stroke,
+                amplitude = { WavyProgressIndicatorDefaults.indicatorAmplitude(it) * INDICATOR_AMPLITUDE },
+                wavelength = IndicatorWavelength,
             )
         }
         DropdownMenu(expanded = isMenuExpanded, onDismissRequest = { isMenuExpanded = false }) {
@@ -350,14 +352,14 @@ private fun DownloadingIndicator(
             MenuItems(menuItems, onDismiss = { isMenuExpanded = false })
         }
         Icon(
-            imageVector = Icons.Outlined.ArrowDownward,
+            imageVector = CustomMaterialSymbols.Rounded.DownloadArrow,
             contentDescription = if (downloadState == DownloadIndicatorState.QUEUE) {
                 queuedContentDescription
             } else {
                 downloadingContentDescription
             },
             modifier = ArrowModifier,
-            tint = arrowColor,
+            tint = color,
         )
     }
 }
@@ -384,7 +386,7 @@ private fun DownloadedIndicator(
         contentAlignment = Alignment.Center,
     ) {
         Icon(
-            imageVector = Icons.Filled.CheckCircle,
+            imageVector = MaterialSymbols.RoundedFilled.CheckCircle,
             contentDescription = downloadedContentDescription,
             modifier = Modifier.size(IndicatorSize),
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -421,7 +423,7 @@ private fun ErrorIndicator(
         contentAlignment = Alignment.Center,
     ) {
         Icon(
-            imageVector = Icons.Outlined.ErrorOutline,
+            imageVector = MaterialSymbols.Rounded.Error,
             contentDescription = errorContentDescription,
             modifier = Modifier.size(IndicatorSize),
             tint = MaterialTheme.colorScheme.error,
@@ -452,11 +454,19 @@ private fun Modifier.commonClickable(
 private val IndicatorSize = 26.dp
 private val BadgeInset = 4.dp
 private val IndicatorPadding = 2.dp
-private val IndicatorStrokeWidth = IndicatorPadding
+private val IndicatorStrokeWidth = 2.dp
+private val WavyIndicatorPadding = 1.dp
+private val IndicatorWavelength = 7.dp
+private const val INDICATOR_AMPLITUDE = 0.6f
+private const val TRACK_ALPHA = 0.25f
 
 private val IndicatorModifier = Modifier
     .size(IndicatorSize)
     .padding(IndicatorPadding)
 
+private val WavyIndicatorModifier = Modifier
+    .size(IndicatorSize)
+    .padding(WavyIndicatorPadding)
+
 private val ArrowModifier = Modifier
-    .size(IndicatorSize - 7.dp)
+    .size(IndicatorSize)

@@ -10,10 +10,10 @@ import android.text.Layout
 import android.text.StaticLayout
 import android.text.TextPaint
 import androidx.core.graphics.ColorUtils
-import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView
 import mihon.entry.interactions.manga.reader.text.session.MangaPageTextOverlay
 import mihon.entry.interactions.manga.reader.text.surface.MangaPageTextDecoration
-import mihon.entry.interactions.manga.reader.text.surface.imageToView
+import mihon.text.recognition.api.image.ImageRect
+import mihon.text.recognition.api.image.ImageSize
 import kotlin.math.roundToInt
 
 /**
@@ -44,21 +44,29 @@ internal class MangaPageTextOverlayPainter(context: Context) {
     private val rect = RectF()
     private val layouts = HashMap<MangaPageTextOverlay, FittedLayout>()
 
-    fun draw(view: SubsamplingScaleImageView, canvas: Canvas, decoration: MangaPageTextDecoration) {
+    /**
+     * @param imageToView writes where a rectangle of the recognized image appears in the page view into its target,
+     * or returns false while the page isn't laid out.
+     */
+    fun draw(
+        canvas: Canvas,
+        decoration: MangaPageTextDecoration,
+        imageToView: (ImageRect, ImageSize, RectF) -> Boolean,
+    ) {
         val radius = CORNER_RADIUS_DP * density
         decoration.regions.forEach { region ->
-            if (!view.imageToView(region, decoration.imageSize, rect)) return@forEach
+            if (!imageToView(region, decoration.imageSize, rect)) return@forEach
             canvas.drawRoundRect(rect, radius, radius, fill)
             canvas.drawRoundRect(rect, radius, radius, outline)
         }
         layouts.keys.retainAll(decoration.overlays.toSet())
         decoration.overlays.forEach { overlay ->
-            if (!view.imageToView(overlay.area, decoration.imageSize, rect)) return@forEach
+            if (!imageToView(overlay.area, decoration.imageSize, rect)) return@forEach
             drawTranslation(canvas, overlay, rect, radius)
         }
         // The highlighted text may be a region or an area the user outlined.
         val highlighted = decoration.highlighted ?: return
-        if (view.imageToView(highlighted, decoration.imageSize, rect)) {
+        if (imageToView(highlighted, decoration.imageSize, rect)) {
             canvas.drawRoundRect(rect, radius, radius, highlight)
             canvas.drawRoundRect(rect, radius, radius, outline)
         }

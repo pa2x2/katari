@@ -6,10 +6,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.ArrowForward
-import androidx.compose.material.icons.outlined.Deselect
-import androidx.compose.material.icons.outlined.SelectAll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SmallExtendedFloatingActionButton
@@ -17,14 +13,14 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.animateFloatingActionButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
-import cafe.adriel.voyager.core.model.rememberScreenModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.components.AppBar
@@ -37,6 +33,10 @@ import eu.kanade.tachiyomi.ui.entry.EntryScreen
 import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.flow.collectLatest
 import mihon.feature.migration.config.MigrationConfigScreen
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.automirroredrounded.ArrowForward
+import mihon.icons.materialsymbols.rounded.Deselect
+import mihon.icons.materialsymbols.rounded.SelectAll
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.FastScrollLazyColumn
 import tachiyomi.presentation.core.components.material.Scaffold
@@ -56,9 +56,9 @@ data class MigrateEntriesScreen(
         val context = LocalContext.current
         val haptic = LocalHapticFeedback.current
         val navigator = LocalNavigator.currentOrThrow
-        val screenModel = rememberScreenModel { MigrateEntriesScreenModel(sourceId) }
+        val viewModel = viewModel { MigrateEntriesViewModel(sourceId) }
 
-        val state by screenModel.state.collectAsState()
+        val state by viewModel.state.collectAsStateWithLifecycle()
 
         if (state.isLoading) {
             LoadingScreen()
@@ -66,7 +66,7 @@ data class MigrateEntriesScreen(
         }
 
         BackHandler(enabled = state.searchQuery != null) {
-            screenModel.setSearchQuery(null)
+            viewModel.setSearchQuery(null)
         }
 
         val lazyListState = rememberLazyListState()
@@ -75,7 +75,7 @@ data class MigrateEntriesScreen(
             topBar = { scrollBehavior ->
                 SearchToolbar(
                     searchQuery = state.searchQuery,
-                    onChangeSearchQuery = screenModel::setSearchQuery,
+                    onChangeSearchQuery = viewModel::setSearchQuery,
                     titleContent = {
                         AppBarTitle(
                             title = stringResource(MR.strings.migrationEntriesScreen_title),
@@ -113,14 +113,14 @@ data class MigrateEntriesScreen(
                             listOf(
                                 AppBar.Action(
                                     title = selectAllLabel,
-                                    icon = Icons.Outlined.SelectAll,
-                                    onClick = screenModel::selectAllVisible,
+                                    icon = MaterialSymbols.Rounded.SelectAll,
+                                    onClick = viewModel::selectAllVisible,
                                     enabled = state.visibleItems.isNotEmpty() && !state.allVisibleSelected,
                                 ),
                                 AppBar.Action(
                                     title = deselectAllLabel,
-                                    icon = Icons.Outlined.Deselect,
-                                    onClick = screenModel::deselectAllVisible,
+                                    icon = MaterialSymbols.Rounded.Deselect,
+                                    onClick = viewModel::deselectAllVisible,
                                     enabled = state.visibleSelectionCount > 0,
                                 ),
                             ),
@@ -133,10 +133,10 @@ data class MigrateEntriesScreen(
                 SmallExtendedFloatingActionButton(
                     text = { Text(text = stringResource(MR.strings.migrationConfigScreen_continueButtonText)) },
                     icon = {
-                        Icon(imageVector = Icons.AutoMirrored.Outlined.ArrowForward, contentDescription = null)
+                        Icon(imageVector = MaterialSymbols.AutoMirroredRounded.ArrowForward, contentDescription = null)
                     },
                     onClick = {
-                        val groups = screenModel.migrationGroups()
+                        val groups = viewModel.migrationGroups()
                         if (groups.isNotEmpty()) {
                             navigator.push(MigrationConfigScreen(groups, sourceId))
                         }
@@ -167,13 +167,13 @@ data class MigrateEntriesScreen(
                         lazyListState = lazyListState,
                         contentPadding = contentPadding,
                         state = state,
-                        onToggleSelection = screenModel::toggleSelection,
-                        onToggleGroup = screenModel::toggleGroupSelection,
+                        onToggleSelection = viewModel::toggleSelection,
+                        onToggleGroup = viewModel::toggleGroupSelection,
                         onLongClickItem = { entryId ->
                             if (state.selectionMode) {
-                                screenModel.toggleRangeSelection(entryId)
+                                viewModel.toggleRangeSelection(entryId)
                             } else {
-                                screenModel.toggleSelection(entryId)
+                                viewModel.toggleSelection(entryId)
                             }
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         },
@@ -186,7 +186,7 @@ data class MigrateEntriesScreen(
         }
 
         LaunchedEffect(Unit) {
-            screenModel.events.collectLatest { event ->
+            viewModel.events.collectLatest { event ->
                 when (event) {
                     MigrationEntriesEvent.FailedFetchingFavorites -> {
                         context.toast(MR.strings.internal_error)
@@ -201,7 +201,7 @@ data class MigrateEntriesScreen(
 private fun MigrateEntriesContent(
     lazyListState: LazyListState,
     contentPadding: PaddingValues,
-    state: MigrateEntriesScreenModel.State,
+    state: MigrateEntriesViewModel.State,
     onToggleSelection: (Long) -> Unit,
     onToggleGroup: (Set<Long>) -> Unit,
     onLongClickItem: (Long) -> Unit,

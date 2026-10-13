@@ -16,14 +16,7 @@ class BackupCategory(
     @ProtoNumber(100) var flags: Long = 0,
     /** Null when the category uses the default update rules. */
     @ProtoNumber(101) var updateRules: BackupCategoryUpdateRules? = null,
-) {
-    fun toCategory(id: Long) = Category(
-        id = id,
-        name = this@BackupCategory.name,
-        flags = this@BackupCategory.flags,
-        order = this@BackupCategory.order,
-    )
-}
+)
 
 @Serializable
 class BackupCategoryUpdateRules(

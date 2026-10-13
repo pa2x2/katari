@@ -13,7 +13,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -30,7 +29,7 @@ fun <T : Any> ReaderReadingModeDialog(
     modes: List<T>,
     currentMode: T,
     modeLabel: (T) -> StringResource,
-    modeIcon: (T) -> Int,
+    modeIcon: (T) -> ImageVector,
     onApply: (T) -> Unit,
     onUseDefault: (() -> Unit)?,
     onDismissRequest: () -> Unit,
@@ -56,7 +55,7 @@ fun <T : Any> ReaderReadingModeDialog(
                                 checked = index == selectedIndex,
                                 onCheckedChange = { selectedIndex = index },
                                 modifier = Modifier.fillMaxWidth(),
-                                imageVector = ImageVector.vectorResource(modeIcon(mode)),
+                                imageVector = modeIcon(mode),
                                 title = stringResource(modeLabel(mode)),
                             )
                         }

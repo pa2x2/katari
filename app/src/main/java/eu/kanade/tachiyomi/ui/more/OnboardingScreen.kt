@@ -3,8 +3,6 @@ package eu.kanade.tachiyomi.ui.more
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import androidx.activity.compose.BackHandler
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -16,6 +14,7 @@ import eu.kanade.presentation.more.onboarding.OnboardingScreen
 import eu.kanade.presentation.more.settings.screen.SearchableSettings
 import eu.kanade.presentation.more.settings.screen.SettingsDataScreen
 import eu.kanade.presentation.more.settings.screen.data.RestoreBackupScreen
+import eu.kanade.presentation.more.settings.screen.data.rememberBackupFilePicker
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.ui.setting.SettingsScreen
 import eu.kanade.tachiyomi.util.system.toast
@@ -48,8 +47,8 @@ class OnboardingScreen : Screen() {
             navigator.pop()
         }
 
-        val chooseMihonBackup = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-            if (uri == null) return@rememberLauncherForActivityResult
+        val chooseMihonBackup = rememberBackupFilePicker(mimeType = "application/*") { uri ->
+            if (uri == null) return@rememberBackupFilePicker
 
             finishOnboarding()
             navigator.push(RestoreBackupScreen(uri.toString()))
@@ -82,7 +81,7 @@ class OnboardingScreen : Screen() {
                 }
             },
             onMigrateFromMihon = {
-                chooseMihonBackup.launch("application/*")
+                chooseMihonBackup()
             },
         )
     }

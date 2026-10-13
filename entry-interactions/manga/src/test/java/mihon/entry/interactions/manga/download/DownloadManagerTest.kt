@@ -9,6 +9,7 @@ import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import mihon.entry.interactions.download.EntryDownloadWorkController
 import org.junit.jupiter.api.Test
@@ -37,7 +38,7 @@ class DownloadManagerTest {
         verify(exactly = 1) { downloader.pause() }
     }
 
-    private fun manager(downloader: Downloader): DownloadManager {
+    private fun TestScope.manager(downloader: Downloader): DownloadManager {
         return DownloadManager(
             context = mockk(relaxed = true),
             provider = mockk(),
@@ -46,6 +47,7 @@ class DownloadManagerTest {
             downloader = downloader,
             pendingDeleter = mockk<DownloadPendingDeleter>(),
             workController = mockk<EntryDownloadWorkController>(relaxed = true),
+            scope = backgroundScope,
         )
     }
 }

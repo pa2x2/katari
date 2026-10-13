@@ -5,12 +5,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.VolumeUp
-import androidx.compose.material.icons.outlined.RecordVoiceOver
-import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material.icons.outlined.Stop
-import androidx.compose.material.icons.outlined.Translate
 import androidx.compose.material3.Button
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
@@ -25,6 +19,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextOverflow
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.automirroredrounded.VolumeUp
+import mihon.icons.materialsymbols.rounded.RecordVoiceOver
+import mihon.icons.materialsymbols.rounded.Settings
+import mihon.icons.materialsymbols.rounded.Stop
+import mihon.icons.materialsymbols.rounded.Translate
 import mihon.tts.api.provider.TtsParameterRange
 import mihon.tts.api.provider.TtsParameterSupport
 import mihon.tts.api.provider.TtsProviderDisclosure
@@ -72,19 +72,19 @@ internal fun TtsSettingsPlayground(
             TtsPlaygroundSelector(
                 label = stringResource(MR.strings.tts_settings_engine),
                 value = engineSummary(state),
-                icon = Icons.Outlined.Settings,
+                icon = MaterialSymbols.Rounded.Settings,
                 onClick = onChooseEngine,
             )
             TtsPlaygroundSelector(
                 label = stringResource(MR.strings.tts_settings_default_voice),
                 value = defaultVoiceSummary(state),
-                icon = Icons.Outlined.RecordVoiceOver,
+                icon = MaterialSymbols.Rounded.RecordVoiceOver,
                 onClick = onChooseDefaultVoice,
             )
             TtsPlaygroundSelector(
                 label = stringResource(MR.strings.tts_settings_language_overrides),
                 value = voiceOverridesSummary(state),
-                icon = Icons.Outlined.Translate,
+                icon = MaterialSymbols.Rounded.Translate,
                 onClick = onChooseVoiceOverrides,
             )
 
@@ -111,7 +111,11 @@ internal fun TtsSettingsPlayground(
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Icon(
-                    imageVector = if (previewActive) Icons.Outlined.Stop else Icons.AutoMirrored.Outlined.VolumeUp,
+                    imageVector = if (previewActive) {
+                        MaterialSymbols.Rounded.Stop
+                    } else {
+                        MaterialSymbols.AutoMirroredRounded.VolumeUp
+                    },
                     contentDescription = null,
                 )
                 Text(

@@ -16,12 +16,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material.icons.outlined.Brush
-import androidx.compose.material.icons.outlined.Description
-import androidx.compose.material.icons.outlined.PersonOutline
-import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material3.Button
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
@@ -53,6 +47,12 @@ import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.sourceNotInstalledName
 import mihon.entry.interactions.migration.EntryMigrationAvailability
 import mihon.entry.interactions.migration.EntryMigrationFeature
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Add
+import mihon.icons.materialsymbols.rounded.Brush
+import mihon.icons.materialsymbols.rounded.Description
+import mihon.icons.materialsymbols.rounded.Person
+import mihon.icons.materialsymbols.rounded.Public
 import tachiyomi.domain.entry.model.DuplicateEntryCandidate
 import tachiyomi.domain.entry.model.DuplicateMatchReason
 import tachiyomi.domain.entry.model.Entry
@@ -140,7 +140,7 @@ fun DuplicateEntryDialog(
 
                 TextPreferenceWidget(
                     title = stringResource(MR.strings.action_add_anyway),
-                    icon = Icons.Outlined.Add,
+                    icon = MaterialSymbols.Rounded.Add,
                     onPreferenceClick = {
                         onDismissRequest()
                         onConfirm()
@@ -249,7 +249,7 @@ private fun DuplicateEntryListItem(
                     } else {
                         sourceInfo.name
                     },
-                    iconImageVector = Icons.Outlined.Public,
+                    iconImageVector = MaterialSymbols.Rounded.Public,
                     iconTint = if (sourceInfo.isMissing) MaterialTheme.colorScheme.error else LocalContentColor.current,
                     maxLines = 2,
                 )
@@ -263,7 +263,7 @@ private fun DuplicateEntryListItem(
                 if (!author.isNullOrBlank()) {
                     DuplicateMetaRow(
                         text = author,
-                        iconImageVector = Icons.Outlined.PersonOutline,
+                        iconImageVector = MaterialSymbols.Rounded.Person,
                         maxLines = 2,
                     )
                 }
@@ -272,7 +272,7 @@ private fun DuplicateEntryListItem(
                 if (!artist.isNullOrBlank() && author != artist) {
                     DuplicateMetaRow(
                         text = artist,
-                        iconImageVector = Icons.Outlined.Brush,
+                        iconImageVector = MaterialSymbols.Rounded.Brush,
                         maxLines = 2,
                     )
                 }
@@ -283,7 +283,7 @@ private fun DuplicateEntryListItem(
                     ?.let {
                         DuplicateMetaRow(
                             text = it,
-                            iconImageVector = Icons.Outlined.Description,
+                            iconImageVector = MaterialSymbols.Rounded.Description,
                             maxLines = 3,
                         )
                     }

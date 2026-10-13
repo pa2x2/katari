@@ -10,7 +10,7 @@ class CatalogAppliedFilterRemovalTest {
     private fun EntryFilterList.tags() =
         (single() as EntryFilter.Group<*>).state.map { (it as EntryFilter.TriState).state }
 
-    private fun appliedActionAndHorror(): CatalogScreenModel.State {
+    private fun appliedActionAndHorror(): CatalogViewModel.State {
         val initial = initialCatalogState("").initializeForSource(
             EntryFilterList(
                 object : EntryFilter.Group<EntryFilter<*>>(

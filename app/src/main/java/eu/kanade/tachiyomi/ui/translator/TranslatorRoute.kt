@@ -11,24 +11,24 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import eu.kanade.tachiyomi.ui.translator.presentation.TranslatorScreenContent
 import eu.kanade.tachiyomi.ui.translator.session.TranslatorEvent
-import eu.kanade.tachiyomi.ui.translator.session.TranslatorScreenModel
+import eu.kanade.tachiyomi.ui.translator.session.TranslatorViewModel
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable
 internal fun TranslatorRoute(
-    screenModel: TranslatorScreenModel,
+    viewModel: TranslatorViewModel,
     onNavigateUp: (() -> Unit)?,
     onOpenSettings: () -> Unit,
 ) {
-    val state by screenModel.state.collectAsState()
+    val state by viewModel.state.collectAsState()
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
     val speechFailureMessage = stringResource(MR.strings.translator_speech_failed)
     val swapUnavailableMessage = stringResource(MR.strings.translator_swap_unavailable)
 
-    LaunchedEffect(screenModel) {
-        screenModel.events.collect { event ->
+    LaunchedEffect(viewModel) {
+        viewModel.events.collect { event ->
             when (event) {
                 TranslatorEvent.SpeechFailed -> snackbarHostState.showSnackbar(speechFailureMessage)
                 TranslatorEvent.SwapUnavailable -> snackbarHostState.showSnackbar(swapUnavailableMessage)
@@ -41,22 +41,22 @@ internal fun TranslatorRoute(
         snackbarHostState = snackbarHostState,
         onNavigateUp = onNavigateUp,
         onOpenSettings = onOpenSettings,
-        onTextChange = screenModel::setText,
-        onClearText = screenModel::clearText,
-        onShowPicker = screenModel::showPicker,
-        onDismissPicker = screenModel::dismissPicker,
-        onSelectAutomaticSource = screenModel::selectAutomaticSource,
-        onSelectSource = screenModel::selectSource,
-        onSelectTarget = screenModel::selectTarget,
-        onSelectDefaultTarget = screenModel::selectDefaultTarget,
-        onSelectEngine = screenModel::selectEngine,
-        onSwap = screenModel::swapLanguages,
-        onRetry = screenModel::retry,
-        onExecute = screenModel::execute,
-        onRetryLanguageSupport = screenModel::retryLanguageSupport,
-        onSpeechToggle = screenModel::toggleSpeech,
+        onTextChange = viewModel::setText,
+        onClearText = viewModel::clearText,
+        onShowPicker = viewModel::showPicker,
+        onDismissPicker = viewModel::dismissPicker,
+        onSelectAutomaticSource = viewModel::selectAutomaticSource,
+        onSelectSource = viewModel::selectSource,
+        onSelectTarget = viewModel::selectTarget,
+        onSelectDefaultTarget = viewModel::selectDefaultTarget,
+        onSelectEngine = viewModel::selectEngine,
+        onSwap = viewModel::swapLanguages,
+        onRetry = viewModel::retry,
+        onExecute = viewModel::execute,
+        onRetryLanguageSupport = viewModel::retryLanguageSupport,
+        onSpeechToggle = viewModel::toggleSpeech,
         onExternalAction = { action ->
-            screenModel.handleExternalAction(action) { url ->
+            viewModel.handleExternalAction(action) { url ->
                 runCatching {
                     context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
                 }

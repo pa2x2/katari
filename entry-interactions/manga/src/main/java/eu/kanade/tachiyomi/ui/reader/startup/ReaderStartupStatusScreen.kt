@@ -1,12 +1,12 @@
 package eu.kanade.tachiyomi.ui.reader.startup
 
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Error
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.screens.InfoScreen
@@ -33,7 +33,7 @@ internal fun ReaderStartupErrorScreen(
         color = MaterialTheme.colorScheme.background,
     ) {
         InfoScreen(
-            icon = Icons.Outlined.ErrorOutline,
+            icon = MaterialSymbols.Rounded.Error,
             headingText = stringResource(MR.strings.chapter_error),
             subtitleText = failure.message,
             acceptText = if (failure.canRetry) {

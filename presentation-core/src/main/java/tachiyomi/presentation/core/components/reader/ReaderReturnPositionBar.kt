@@ -4,8 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -17,6 +15,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Close
 import tachiyomi.presentation.core.R
 
 /** Shared action for returning to the position before an explicit reader jump. */
@@ -35,7 +35,7 @@ fun ReaderReturnPositionBar(
             Text(stringResource(R.string.reader_navigation_return))
         }
         IconButton(onClick = onDismiss) {
-            Icon(Icons.Outlined.Close, stringResource(R.string.reader_navigation_dismiss_return))
+            Icon(MaterialSymbols.Rounded.Close, stringResource(R.string.reader_navigation_dismiss_return))
         }
     }
 }

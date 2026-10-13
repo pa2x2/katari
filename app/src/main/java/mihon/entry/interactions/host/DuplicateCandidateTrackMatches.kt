@@ -12,7 +12,8 @@ internal fun duplicateCandidateTrackEntryIds(
     tracks: List<DuplicateCandidateTrackKey>,
 ): Set<Long> {
     val keys = tracks.asSequence()
-        .filter { it.entryId == entryId }
+        // Trackers that don't set a remote id leave it at 0, which says nothing about which title is tracked.
+        .filter { it.entryId == entryId && it.remoteId != 0L }
         .map { it.trackerId to it.remoteId }
         .toSet()
     if (keys.isEmpty()) return emptySet()

@@ -8,9 +8,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material.icons.outlined.PauseCircleOutline
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
@@ -28,7 +25,10 @@ import eu.kanade.presentation.library.update.labelRes
 import eu.kanade.presentation.library.update.sourcePauseEndText
 import eu.kanade.presentation.util.relativeTimeSpanString
 import eu.kanade.tachiyomi.source.entry.EntryUpdateStrategy
-import eu.kanade.tachiyomi.ui.entry.updates.EntryUpdatesScreenModel
+import eu.kanade.tachiyomi.ui.entry.updates.EntryUpdatesViewModel
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Info
+import mihon.icons.materialsymbols.rounded.PauseCircle
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.library.update.model.EntryUpdateDecisionReason
@@ -52,7 +52,7 @@ fun EntryUpdatesSheet(
     mode: EntryUpdateMode,
     status: EntryUpdateStatus?,
     categories: Map<Long, Category>,
-    pausedSources: List<EntryUpdatesScreenModel.PausedSource>,
+    pausedSources: List<EntryUpdatesViewModel.PausedSource>,
     releaseEstimate: String,
     onModeSelected: (EntryUpdateMode) -> Unit,
     onResumeSource: (Long) -> Unit,
@@ -120,7 +120,7 @@ private fun DecisionCard(text: String) {
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Icon(
-                imageVector = Icons.Outlined.Info,
+                imageVector = MaterialSymbols.Rounded.Info,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.primary,
             )
@@ -130,7 +130,7 @@ private fun DecisionCard(text: String) {
 }
 
 @Composable
-private fun PausedSourceCard(source: EntryUpdatesScreenModel.PausedSource, onResume: () -> Unit) {
+private fun PausedSourceCard(source: EntryUpdatesViewModel.PausedSource, onResume: () -> Unit) {
     Surface(
         color = MaterialTheme.colorScheme.surfaceContainerHighest,
         shape = MaterialTheme.shapes.medium,
@@ -144,7 +144,7 @@ private fun PausedSourceCard(source: EntryUpdatesScreenModel.PausedSource, onRes
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(
-                imageVector = Icons.Outlined.PauseCircleOutline,
+                imageVector = MaterialSymbols.Rounded.PauseCircle,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.primary,
             )

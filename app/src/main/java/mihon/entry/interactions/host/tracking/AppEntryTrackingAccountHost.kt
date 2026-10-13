@@ -26,7 +26,10 @@ internal class AppEntryTrackingAccountHost(
     }
 
     override fun observeAccounts(): Flow<List<EntryTrackingHostAccount>> {
-        return combine(trackerManager.trackers.map(Tracker::isLoggedInFlow)) {
+        val accountChanges: List<Flow<Any>> = trackerManager.trackers.flatMap { tracker ->
+            listOf(tracker.isLoggedInFlow, tracker.displayUsernameFlow)
+        }
+        return combine(accountChanges) {
             currentAccounts()
         }
     }
@@ -64,6 +67,10 @@ internal class AppEntryTrackingAccountHost(
 
     override suspend fun logout(serviceId: Long) {
         requireService(serviceId).logout()
+    }
+
+    override suspend fun refreshAccount(serviceId: Long) {
+        requireService(serviceId).refreshUser()
     }
 
     private fun Tracker.toHostAccount(): EntryTrackingHostAccount {

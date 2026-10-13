@@ -48,7 +48,7 @@ internal fun EntryImmersiveContent(
     itemCount: Int,
     itemIdentity: (Int) -> EntryImmersiveItemKey?,
     itemContent: @Composable (Int) -> Entry?,
-    immersiveModel: EntryImmersiveScreenModel,
+    immersiveModel: EntryImmersiveViewModel,
     contextLabel: String,
     modifier: Modifier = Modifier,
     contextSupportingLabel: String? = null,
@@ -161,7 +161,7 @@ internal fun EntryImmersiveContent(
                     onLibraryAction = onLibraryAction,
                     showBackToTop = pagerState.currentPage > 0,
                     onBackToTop = { scope.launch { pagerState.animateScrollToPage(0) } },
-                    onOpenChapter = if (entry != null && itemState is EntryImmersiveScreenModel.ItemState.Ready) {
+                    onOpenChapter = if (entry != null && itemState is EntryImmersiveViewModel.ItemState.Ready) {
                         val openTarget = immersiveFeature.openTarget(itemState.handle)
                         val chapter = itemState.chapter
                         if (openTarget is EntryImmersiveOpenTargetResult.Available &&
@@ -200,9 +200,9 @@ internal fun shouldEnableImmersivePullRefresh(settledPage: Int, pagingBlocked: B
 @Composable
 private fun EntryImmersivePage(
     entry: Entry?,
-    itemState: EntryImmersiveScreenModel.ItemState?,
+    itemState: EntryImmersiveViewModel.ItemState?,
     isActive: Boolean,
-    immersiveModel: EntryImmersiveScreenModel,
+    immersiveModel: EntryImmersiveViewModel,
     contextLabel: String,
     contextSupportingLabel: String?,
     contextLeadingContent: (@Composable () -> Unit)?,
@@ -230,7 +230,7 @@ private fun EntryImmersivePage(
         ReaderMediaLoadingBackground(modifier = Modifier.fillMaxSize())
 
         when (itemState) {
-            is EntryImmersiveScreenModel.ItemState.Ready -> {
+            is EntryImmersiveViewModel.ItemState.Ready -> {
                 when (
                     val renderer = remember(itemState.handle, immersiveModel) {
                         immersiveModel.renderer(itemState.handle)
@@ -254,24 +254,24 @@ private fun EntryImmersivePage(
                     )
                 }
             }
-            is EntryImmersiveScreenModel.ItemState.Error -> ReaderMediaLoadOverlay(
+            is EntryImmersiveViewModel.ItemState.Error -> ReaderMediaLoadOverlay(
                 state = ReaderMediaLoadState.Failed(
                     itemState.throwable.message ?: stringResource(MR.strings.unknown_error),
                 ),
                 onRetry = onRetry,
                 modifier = Modifier.fillMaxSize(),
             )
-            is EntryImmersiveScreenModel.ItemState.Inapplicable -> ReaderMediaLoadOverlay(
+            is EntryImmersiveViewModel.ItemState.Inapplicable -> ReaderMediaLoadOverlay(
                 state = ReaderMediaLoadState.Failed(stringResource(MR.strings.source_unsupported)),
                 onRetry = onRetry,
                 modifier = Modifier.fillMaxSize(),
             )
-            is EntryImmersiveScreenModel.ItemState.Unavailable -> ReaderMediaLoadOverlay(
+            is EntryImmersiveViewModel.ItemState.Unavailable -> ReaderMediaLoadOverlay(
                 state = ReaderMediaLoadState.Failed(immersiveUnavailableMessage(itemState.reason)),
                 onRetry = onRetry,
                 modifier = Modifier.fillMaxSize(),
             )
-            is EntryImmersiveScreenModel.ItemState.Loading, null -> if (isActive) {
+            is EntryImmersiveViewModel.ItemState.Loading, null -> if (isActive) {
                 ReaderMediaLoadOverlay(
                     state = ReaderMediaLoadState.Loading(),
                     onBackgroundClick = onToggleControls,
@@ -284,7 +284,7 @@ private fun EntryImmersivePage(
             ImmersiveOverlay(
                 visible = controlsVisible,
                 entry = entry,
-                chapterName = (itemState as? EntryImmersiveScreenModel.ItemState.Ready)?.chapter?.name,
+                chapterName = (itemState as? EntryImmersiveViewModel.ItemState.Ready)?.chapter?.name,
                 contextLabel = contextLabel,
                 contextSupportingLabel = contextSupportingLabel,
                 contextLeadingContent = contextLeadingContent,

@@ -32,18 +32,6 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.appendInlineContent
 import androidx.compose.foundation.text.selection.SelectionContainer
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.BrokenImage
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.HourglassEmpty
-import androidx.compose.material.icons.filled.Image
-import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material.icons.outlined.Brush
-import androidx.compose.material.icons.outlined.OpenInBrowser
-import androidx.compose.material.icons.outlined.PersonOutline
-import androidx.compose.material.icons.outlined.Refresh
-import androidx.compose.material.icons.outlined.Sync
-import androidx.compose.material.icons.outlined.Update
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -106,7 +94,7 @@ import eu.kanade.presentation.components.getMarkdownLinkStyle
 import eu.kanade.presentation.entry.components.preview.rememberProgressiveEntryPreviewBitmap
 import eu.kanade.presentation.entry.updates.EntryUpdatesLabel
 import eu.kanade.tachiyomi.R
-import eu.kanade.tachiyomi.ui.entry.EntryScreenModel
+import eu.kanade.tachiyomi.ui.entry.EntryViewModel
 import eu.kanade.tachiyomi.util.system.copyToClipboard
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.datetime.TimeZone
@@ -115,6 +103,17 @@ import mihon.core.common.image.progressive.ProgressiveImageState
 import mihon.entry.interactions.catalogue.EntryCatalogueFeature
 import mihon.entry.interactions.media.EntryPreviewPage
 import mihon.entry.interactions.media.EntryPreviewPageStatus
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Brush
+import mihon.icons.materialsymbols.rounded.OpenInBrowser
+import mihon.icons.materialsymbols.rounded.Person
+import mihon.icons.materialsymbols.rounded.Refresh
+import mihon.icons.materialsymbols.rounded.Sync
+import mihon.icons.materialsymbols.rounded.Update
+import mihon.icons.materialsymbols.roundedfilled.BrokenImage
+import mihon.icons.materialsymbols.roundedfilled.CheckCircle
+import mihon.icons.materialsymbols.roundedfilled.Image
+import mihon.icons.materialsymbols.roundedfilled.Warning
 import org.intellij.markdown.MarkdownElementTypes
 import org.intellij.markdown.MarkdownTokenTypes
 import org.intellij.markdown.ast.findChildOfType
@@ -142,8 +141,10 @@ fun EntryInfoBox(
     entry: Entry,
     sourceName: String,
     isStubSource: Boolean,
-    mergedMemberTitles: List<String>,
+    mergedEntryCount: Int,
     onCoverClick: () -> Unit,
+    onSourceClick: () -> Unit,
+    onMergedEntriesClick: (() -> Unit)?,
     doSearch: (query: String, global: Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -184,9 +185,11 @@ fun EntryInfoBox(
                     entry = entry,
                     sourceName = sourceName,
                     isStubSource = isStubSource,
-                    mergedMemberTitles = mergedMemberTitles,
+                    mergedEntryCount = mergedEntryCount,
                     coverType = coverType,
                     onCoverClick = onCoverClick,
+                    onSourceClick = onSourceClick,
+                    onMergedEntriesClick = onMergedEntriesClick,
                     doSearch = doSearch,
                 )
             } else {
@@ -195,9 +198,11 @@ fun EntryInfoBox(
                     entry = entry,
                     sourceName = sourceName,
                     isStubSource = isStubSource,
-                    mergedMemberTitles = mergedMemberTitles,
+                    mergedEntryCount = mergedEntryCount,
                     coverType = coverType,
                     onCoverClick = onCoverClick,
+                    onSourceClick = onSourceClick,
+                    onMergedEntriesClick = onMergedEntriesClick,
                     doSearch = doSearch,
                 )
             }
@@ -244,7 +249,7 @@ fun EntryActionRow(
         }
         EntryActionButton(
             title = updatesLabel.text,
-            icon = Icons.Outlined.Update,
+            icon = MaterialSymbols.Rounded.Update,
             color = when (updatesLabel.emphasis) {
                 EntryUpdatesLabel.Emphasis.Quiet -> defaultActionButtonColor
                 EntryUpdatesLabel.Emphasis.Highlighted -> MaterialTheme.colorScheme.primary
@@ -259,7 +264,11 @@ fun EntryActionRow(
                 } else {
                     pluralStringResource(MR.plurals.num_trackers, count = trackingCount, trackingCount)
                 },
-                icon = if (trackingCount == 0) Icons.Outlined.Sync else Icons.Filled.CheckCircle,
+                icon = if (trackingCount == 0) {
+                    MaterialSymbols.Rounded.Sync
+                } else {
+                    MaterialSymbols.RoundedFilled.CheckCircle
+                },
                 color = if (trackingCount == 0) defaultActionButtonColor else MaterialTheme.colorScheme.primary,
                 onClick = onTrackingClicked,
             )
@@ -267,7 +276,7 @@ fun EntryActionRow(
         if (onWebViewClicked != null) {
             EntryActionButton(
                 title = stringResource(MR.strings.action_web_view),
-                icon = Icons.Outlined.OpenInBrowser,
+                icon = MaterialSymbols.Rounded.OpenInBrowser,
                 color = defaultActionButtonColor,
                 onClick = onWebViewClicked,
                 onLongClick = onWebViewLongClicked,
@@ -276,7 +285,7 @@ fun EntryActionRow(
         if (onDuplicatesClicked != null) {
             EntryActionButton(
                 title = stringResource(MR.strings.action_duplicates),
-                icon = Icons.Filled.Warning,
+                icon = MaterialSymbols.RoundedFilled.Warning,
                 color = MaterialTheme.colorScheme.error,
                 onClick = onDuplicatesClicked,
             )
@@ -295,7 +304,7 @@ fun ExpandableEntryDescription(
     onEditNotes: () -> Unit,
     entryPreviewEnabled: Boolean,
     entryPreviewSize: PreviewSizeUi,
-    entryPreviewState: EntryScreenModel.EntryPreviewState,
+    entryPreviewState: EntryViewModel.EntryPreviewState,
     onPreviewExpandedChange: (Boolean) -> Unit,
     onPreviewRetry: () -> Unit,
     onPreviewPageLoad: (Int) -> Unit,
@@ -425,7 +434,7 @@ internal fun previewGridColumnCount(
 
 @Composable
 fun SharedEntryPreviewSection(
-    state: EntryScreenModel.EntryPreviewState,
+    state: EntryViewModel.EntryPreviewState,
     size: PreviewSizeUi,
     onExpandedChange: (Boolean) -> Unit,
     onRetry: () -> Unit,
@@ -453,7 +462,7 @@ fun SharedEntryPreviewSection(
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
             )
-            val image = AnimatedImageVector.animatedVectorResource(R.drawable.anim_caret_down)
+            val image = AnimatedImageVector.animatedVectorResource(R.drawable.animated_caret_flip)
             Icon(
                 painter = rememberAnimatedVectorPainter(image, !state.isExpanded),
                 contentDescription = stringResource(
@@ -476,7 +485,7 @@ fun SharedEntryPreviewSection(
 
 @Composable
 fun PreviewContent(
-    state: EntryScreenModel.EntryPreviewState,
+    state: EntryViewModel.EntryPreviewState,
     size: PreviewSizeUi,
     onRetry: () -> Unit,
     onPageLoad: (Int) -> Unit,
@@ -485,7 +494,7 @@ fun PreviewContent(
     centerStates: Boolean = false,
     loadingContent: @Composable BoxScope.() -> Unit = {
         PreviewMessage(
-            icon = Icons.Filled.Image,
+            icon = MaterialSymbols.RoundedFilled.Image,
             text = stringResource(MR.strings.transition_pages_loading),
             modifier = Modifier.align(Alignment.Center),
         )
@@ -509,7 +518,7 @@ fun PreviewContent(
             }
             state.pages.isEmpty() -> {
                 PreviewMessage(
-                    icon = Icons.Filled.Warning,
+                    icon = MaterialSymbols.RoundedFilled.Warning,
                     text = stringResource(MR.strings.manga_preview_empty),
                     modifier = if (centerStates) {
                         Modifier.align(Alignment.Center)
@@ -533,7 +542,7 @@ fun PreviewContent(
 
 @Composable
 fun PreviewGrid(
-    pages: List<EntryScreenModel.PreviewPage>,
+    pages: List<EntryViewModel.PreviewPage>,
     size: PreviewSizeUi,
     chapterId: Long?,
     onPageLoad: (Int) -> Unit,
@@ -569,7 +578,7 @@ fun PreviewGrid(
 
 @Composable
 private fun EntryPreviewTile(
-    previewPage: EntryScreenModel.PreviewPage,
+    previewPage: EntryViewModel.PreviewPage,
     chapterId: Long?,
     onPageLoad: (Int) -> Unit,
     onPageClick: ((Long, Int) -> Unit)?,
@@ -661,7 +670,7 @@ private fun EntryPreviewTile(
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         Icon(
-                            imageVector = Icons.Filled.BrokenImage,
+                            imageVector = MaterialSymbols.RoundedFilled.BrokenImage,
                             contentDescription = null,
                         )
                         Text(
@@ -712,12 +721,12 @@ fun PreviewError(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         PreviewMessage(
-            icon = Icons.Filled.Warning,
+            icon = MaterialSymbols.RoundedFilled.Warning,
             text = message,
             modifier = Modifier.weight(1f),
         )
         TextButton(onClick = onRetry) {
-            Icon(imageVector = Icons.Outlined.Refresh, contentDescription = null)
+            Icon(imageVector = MaterialSymbols.Rounded.Refresh, contentDescription = null)
             Spacer(modifier = Modifier.width(8.dp))
             Text(text = stringResource(MR.strings.action_retry))
         }
@@ -746,9 +755,11 @@ private fun EntryAndSourceTitlesLarge(
     entry: Entry,
     sourceName: String,
     isStubSource: Boolean,
-    mergedMemberTitles: List<String>,
+    mergedEntryCount: Int,
     coverType: EntryCover,
     onCoverClick: () -> Unit,
+    onSourceClick: () -> Unit,
+    onMergedEntriesClick: (() -> Unit)?,
     doSearch: (query: String, global: Boolean) -> Unit,
 ) {
     Column(
@@ -774,7 +785,9 @@ private fun EntryAndSourceTitlesLarge(
             status = entry.status,
             sourceName = sourceName,
             isStubSource = isStubSource,
-            mergedMemberTitles = mergedMemberTitles,
+            mergedEntryCount = mergedEntryCount,
+            onSourceClick = onSourceClick,
+            onMergedEntriesClick = onMergedEntriesClick,
             doSearch = doSearch,
             textAlign = TextAlign.Center,
         )
@@ -787,9 +800,11 @@ private fun EntryAndSourceTitlesSmall(
     entry: Entry,
     sourceName: String,
     isStubSource: Boolean,
-    mergedMemberTitles: List<String>,
+    mergedEntryCount: Int,
     coverType: EntryCover,
     onCoverClick: () -> Unit,
+    onSourceClick: () -> Unit,
+    onMergedEntriesClick: (() -> Unit)?,
     doSearch: (query: String, global: Boolean) -> Unit,
 ) {
     Row(
@@ -820,7 +835,9 @@ private fun EntryAndSourceTitlesSmall(
                 status = entry.status,
                 sourceName = sourceName,
                 isStubSource = isStubSource,
-                mergedMemberTitles = mergedMemberTitles,
+                mergedEntryCount = mergedEntryCount,
+                onSourceClick = onSourceClick,
+                onMergedEntriesClick = onMergedEntriesClick,
                 doSearch = doSearch,
             )
         }
@@ -835,7 +852,9 @@ private fun ColumnScope.EntryContentInfo(
     status: EntryStatus,
     sourceName: String,
     isStubSource: Boolean,
-    mergedMemberTitles: List<String>,
+    mergedEntryCount: Int,
+    onSourceClick: () -> Unit,
+    onMergedEntriesClick: (() -> Unit)?,
     doSearch: (query: String, global: Boolean) -> Unit,
     textAlign: TextAlign? = LocalTextStyle.current.textAlign,
 ) {
@@ -860,15 +879,8 @@ private fun ColumnScope.EntryContentInfo(
 
     Spacer(modifier = Modifier.height(2.dp))
 
-    if (mergedMemberTitles.size > 1) {
-        Text(
-            text = mergedMemberTitles.joinToString(separator = " • "),
-            style = MaterialTheme.typography.bodySmall,
-            modifier = Modifier.secondaryItemAlpha(),
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-            textAlign = textAlign,
-        )
+    if (mergedEntryCount > 1 && onMergedEntriesClick != null) {
+        MergedEntriesLink(count = mergedEntryCount, onClick = onMergedEntriesClick)
         Spacer(modifier = Modifier.height(2.dp))
     }
 
@@ -878,7 +890,7 @@ private fun ColumnScope.EntryContentInfo(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
-            imageVector = Icons.Outlined.PersonOutline,
+            imageVector = MaterialSymbols.Rounded.Person,
             contentDescription = null,
             modifier = Modifier.size(16.dp),
         )
@@ -909,7 +921,7 @@ private fun ColumnScope.EntryContentInfo(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(
-                imageVector = Icons.Outlined.Brush,
+                imageVector = MaterialSymbols.Rounded.Brush,
                 contentDescription = null,
                 modifier = Modifier.size(16.dp),
             )
@@ -948,7 +960,7 @@ private fun ColumnScope.EntryContentInfo(
             DotSeparatorText()
             if (isStubSource) {
                 Icon(
-                    imageVector = Icons.Filled.Warning,
+                    imageVector = MaterialSymbols.RoundedFilled.Warning,
                     contentDescription = null,
                     modifier = Modifier
                         .padding(end = 4.dp)
@@ -958,12 +970,7 @@ private fun ColumnScope.EntryContentInfo(
             }
             Text(
                 text = sourceName,
-                modifier = Modifier.clickableNoIndication {
-                    doSearch(
-                        sourceName,
-                        false,
-                    )
-                },
+                modifier = Modifier.clickableNoIndication(onClick = onSourceClick),
                 overflow = TextOverflow.Ellipsis,
                 maxLines = 1,
             )
@@ -1069,7 +1076,7 @@ private fun EntrySummary(
                     modifier = Modifier.background(Brush.verticalGradient(colors = colors)),
                     contentAlignment = Alignment.Center,
                 ) {
-                    val image = AnimatedImageVector.animatedVectorResource(R.drawable.anim_caret_down)
+                    val image = AnimatedImageVector.animatedVectorResource(R.drawable.animated_caret_flip)
                     Icon(
                         painter = rememberAnimatedVectorPainter(image, !expanded),
                         contentDescription = stringResource(

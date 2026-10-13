@@ -5,9 +5,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.selection.SelectionContainer
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.VolumeUp
-import androidx.compose.material.icons.outlined.Stop
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -20,6 +17,9 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.automirroredrounded.VolumeUp
+import mihon.icons.materialsymbols.rounded.Stop
 import mihon.translation.ui.presentation.language.TranslationSourceLanguageChip
 import mihon.translation.ui.presentation.language.TranslationTargetLanguageChip
 import tachiyomi.i18n.*
@@ -130,7 +130,7 @@ internal fun TranslationSpeechIndicator(
         )
     } else {
         Icon(
-            imageVector = if (active) Icons.Outlined.Stop else Icons.AutoMirrored.Outlined.VolumeUp,
+            imageVector = if (active) MaterialSymbols.Rounded.Stop else MaterialSymbols.AutoMirroredRounded.VolumeUp,
             contentDescription = contentDescription,
             modifier = Modifier.size(iconSize),
             tint = if (active) {

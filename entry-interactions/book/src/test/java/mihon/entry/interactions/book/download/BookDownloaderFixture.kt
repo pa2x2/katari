@@ -10,6 +10,8 @@ import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.test.TestScope
 import mihon.book.api.BookContentDescriptor
 import mihon.book.api.BookLocator
 import mihon.book.api.BookPublication
@@ -35,7 +37,7 @@ import java.nio.file.Files
 
 @RunWith(RobolectricTestRunner::class)
 internal abstract class BookDownloaderFixture {
-    protected suspend fun downloadWithBudget(
+    protected suspend fun TestScope.downloadWithBudget(
         budget: BookDownloadResourceBudget,
         primaryBytes: ByteArray = "<p>Budgeted</p>".encodeToByteArray(),
         assetBytes: ByteArray = byteArrayOf(1, 2, 3, 4),
@@ -45,7 +47,7 @@ internal abstract class BookDownloaderFixture {
         val provider = BookDownloadProvider(
             downloadsDirectory = { UniFile.fromFile(downloadRoot) },
         )
-        val cache = BookDownloadCache(provider)
+        val cache = BookDownloadCache(provider, backgroundScope)
         val entry = Entry.create().copy(
             id = 101L,
             profileId = 2L,
@@ -91,6 +93,7 @@ internal abstract class BookDownloaderFixture {
             provider = provider,
             cache = cache,
             sourceManager = mockk {
+                every { isInitialized } returns MutableStateFlow(true)
                 every { get(entry.source) } returns source
             },
             networkHelper = mockk {

@@ -137,7 +137,7 @@ tasks.register("verifyLegacySourceAbi") {
         verifyLegacySourceAbi14,
         verifyLegacySourceAbi16,
         verifyKeiyoushiSourceAbi16,
-        ":source-compat:testDebugUnitTest",
+        ":source-compat:testReleaseUnitTest",
     )
 }
 
@@ -174,25 +174,45 @@ tasks.register("verifyExtensionRuntimeAbi") {
             "eu.kanade.tachiyomi.network",
             "mihon.book.api",
         )
+        val runtimeAbiClasses = listOf("eu.kanade.tachiyomi.AppInfo")
+        // AppInfo reads these by reflection, so R8 sees no use of them.
+        val reflectedRuntimeFields = mapOf(
+            "eu.kanade.tachiyomi.BuildConfig" to listOf("VERSION_CODE", "VERSION_NAME"),
+        )
+        // R8 names the classes it synthesizes, e.g. for desugared lambdas, after their context class. They only exist in
+        // its output, so no extension can link against them.
+        val r8SyntheticMarkers = listOf("\$\$InternalSynthetic", "\$\$ExternalSynthetic")
+        fun isRuntimeAbiClass(className: String) = r8SyntheticMarkers.none(className::contains) && (
+            className in runtimeAbiClasses ||
+                runtimeAbiPackagePrefixes.any { prefix ->
+                    className == prefix || className.startsWith("$prefix.") || className.startsWith("$prefix\$")
+                }
+            )
+
         val removedRuntimeAbi = mutableListOf<String>()
-        var runtimeApiClass: String? = null
+        var removedClass: String? = null
         usageFile.asFile.forEachLine { line ->
             if (line.isNotBlank() && !line.first().isWhitespace()) {
                 val className = line.removeSuffix(":")
-                runtimeApiClass = className.takeIf {
-                    runtimeAbiPackagePrefixes.any { prefix ->
-                        className == prefix || className.startsWith("$prefix.") || className.startsWith("$prefix\$")
-                    }
+                removedClass = className
+                // usage.txt lists a class without a trailing colon when R8 removed the whole class.
+                if (!line.endsWith(":") && (isRuntimeAbiClass(className) || className in reflectedRuntimeFields)) {
+                    removedRuntimeAbi += className
                 }
-            } else if (
-                runtimeApiClass != null &&
-                (line.trimStart().startsWith("public ") || line.trimStart().startsWith("protected "))
-            ) {
-                removedRuntimeAbi += "$runtimeApiClass:\n$line"
+            } else {
+                val className = removedClass ?: return@forEachLine
+                val member = line.trim()
+                val isRuntimeAbiMember = isRuntimeAbiClass(className) &&
+                    (member.startsWith("public ") || member.startsWith("protected "))
+                val isReflectedField = reflectedRuntimeFields[className].orEmpty()
+                    .contains(member.substringAfterLast(' '))
+                if (isRuntimeAbiMember || isReflectedField) {
+                    removedRuntimeAbi += "$className:\n$line"
+                }
             }
         }
         check(removedRuntimeAbi.isEmpty()) {
-            "R8 removed public or protected members from the external extension runtime ABI:\n" +
+            "R8 removed parts of the external extension runtime ABI:\n" +
                 removedRuntimeAbi.joinToString("\n")
         }
 
@@ -240,12 +260,12 @@ val verifyFeatureArchitecture = tasks.register("verifyFeatureArchitecture") {
     description = "Verifies application and Entry Feature boundaries, contracts, and reporting"
     dependsOn(
         "checkFeatureArchitectureBoundaries",
-        ":feature-graph:testDebugUnitTest",
-        ":feature-runtime:testDebugUnitTest",
-        ":feature-validation:testDebugUnitTest",
-        ":translation:api:testDebugUnitTest",
-        ":translation:runtime:testDebugUnitTest",
-        ":entry-interactions:testDebugUnitTest",
+        ":feature-graph:testReleaseUnitTest",
+        ":feature-runtime:testReleaseUnitTest",
+        ":feature-validation:testReleaseUnitTest",
+        ":translation:api:testReleaseUnitTest",
+        ":translation:runtime:testReleaseUnitTest",
+        ":entry-interactions:testReleaseUnitTest",
         ":book-api:testAndroidHostTest",
         ":app:generateFeatureReport",
     )

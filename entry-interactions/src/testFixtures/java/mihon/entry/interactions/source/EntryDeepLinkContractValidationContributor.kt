@@ -7,6 +7,7 @@ import eu.kanade.tachiyomi.source.entry.SEntry
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.flow.MutableStateFlow
 import mihon.entry.interactions.entryContentType
 import mihon.entry.interactions.runtime.toContentTypeId
 import mihon.entry.interactions.validation.contractExpectation
@@ -48,7 +49,10 @@ class EntryDeepLinkContractValidationContributor : FeatureValidationContributor 
                     }
                     val feature = DefaultEntryDeepLinkFeature(
                         productionSubjectEvaluation(type, EntryDeepLinkFeatureContributor),
-                        mockk { every { getAll() } returns listOf(resolver) },
+                        mockk {
+                            every { isInitialized } returns MutableStateFlow(true)
+                            every { getAll() } returns listOf(resolver)
+                        },
                         mockk<NetworkToLocalEntry> {
                             coEvery { this@mockk.invoke(any<Entry>()) } returns persisted
                         },

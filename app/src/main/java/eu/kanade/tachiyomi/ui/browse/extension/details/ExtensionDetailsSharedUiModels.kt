@@ -4,7 +4,6 @@ import androidx.compose.runtime.Immutable
 import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.persistentListOf
 
 @Immutable
 data class ExtensionDetailsSourceUiModel(
@@ -18,19 +17,18 @@ data class ExtensionDetailsSourceUiModel(
     val supportedEntryTypes: Set<EntryType>?,
 )
 
-@Immutable
-data class ExtensionDetailsState(
-    val extension: Extension.Installed? = null,
-    val isIncognito: Boolean = false,
-    private val _sources: ImmutableList<ExtensionDetailsSourceUiModel>? = null,
-) {
-    val sources: ImmutableList<ExtensionDetailsSourceUiModel>
-        get() = _sources ?: persistentListOf()
+sealed interface ExtensionDetailsState {
 
-    val isLoading: Boolean
-        get() = extension == null || _sources == null
+    @Immutable
+    data object Loading : ExtensionDetailsState
 
-    fun copyWithSources(sources: ImmutableList<ExtensionDetailsSourceUiModel>): ExtensionDetailsState {
-        return copy(_sources = sources)
-    }
+    @Immutable
+    data object Uninstalled : ExtensionDetailsState
+
+    @Immutable
+    data class Success(
+        val extension: Extension.Loaded,
+        val isIncognito: Boolean,
+        val sources: ImmutableList<ExtensionDetailsSourceUiModel>,
+    ) : ExtensionDetailsState
 }

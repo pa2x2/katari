@@ -8,12 +8,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ArrowDownward
-import androidx.compose.material.icons.outlined.ArrowUpward
-import androidx.compose.material.icons.outlined.Check
-import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material.icons.outlined.Remove
 import androidx.compose.material3.Icon
 import androidx.compose.material3.InputChip
 import androidx.compose.material3.InputChipDefaults
@@ -29,6 +23,12 @@ import eu.kanade.tachiyomi.ui.browse.source.browse.filter.change.FilterChangeKin
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.change.FilterChangeLabel
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.change.description
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.change.displayText
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.ArrowDownward
+import mihon.icons.materialsymbols.rounded.ArrowUpward
+import mihon.icons.materialsymbols.rounded.Check
+import mihon.icons.materialsymbols.rounded.Close
+import mihon.icons.materialsymbols.rounded.Remove
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
@@ -74,17 +74,17 @@ private fun AppliedFilterChip(
             )
         },
         leadingIcon = when (label.kind) {
-            FilterChangeKind.Included -> Icons.Outlined.Check
-            FilterChangeKind.Excluded -> Icons.Outlined.Remove
-            FilterChangeKind.Ascending -> Icons.Outlined.ArrowUpward
-            FilterChangeKind.Descending -> Icons.Outlined.ArrowDownward
+            FilterChangeKind.Included -> MaterialSymbols.Rounded.Check
+            FilterChangeKind.Excluded -> MaterialSymbols.Rounded.Remove
+            FilterChangeKind.Ascending -> MaterialSymbols.Rounded.ArrowUpward
+            FilterChangeKind.Descending -> MaterialSymbols.Rounded.ArrowDownward
             FilterChangeKind.Value, FilterChangeKind.SelectedCount -> null
         }?.let { icon ->
             { Icon(icon, contentDescription = null, modifier = Modifier.size(InputChipDefaults.IconSize)) }
         },
         trailingIcon = {
             Icon(
-                imageVector = Icons.Outlined.Close,
+                imageVector = MaterialSymbols.Rounded.Close,
                 contentDescription = removeDescription,
                 modifier = Modifier
                     .size(InputChipDefaults.IconSize)

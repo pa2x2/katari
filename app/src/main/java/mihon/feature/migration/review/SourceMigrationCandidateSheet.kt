@@ -11,9 +11,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -27,7 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import cafe.adriel.voyager.core.model.rememberScreenModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -38,6 +35,9 @@ import mihon.feature.migration.review.components.SourceMigrationEntryListItem
 import mihon.feature.migration.session.model.SourceMigrationMatchKind
 import mihon.feature.migration.session.model.SourceMigrationSessionId
 import mihon.feature.migration.session.model.SourceMigrationSessionItem
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Check
+import mihon.icons.materialsymbols.rounded.Search
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.Badge
 import tachiyomi.presentation.core.components.BadgeGroup
@@ -54,20 +54,20 @@ internal fun Screen.SourceMigrationCandidateSheet(
     onDismissRequest: () -> Unit,
 ) {
     val navigator = LocalNavigator.currentOrThrow
-    val screenModel = rememberScreenModel(tag = item.sourceEntryId.toString()) {
-        SourceMigrationCandidateSheetModel(sessionId, item.sourceEntryId)
+    val viewModel = viewModel(key = item.sourceEntryId.toString()) {
+        SourceMigrationCandidateSheetViewModel(sessionId, item.sourceEntryId)
     }
-    val state by screenModel.state.collectAsState()
+    val state by viewModel.state.collectAsState()
 
     LaunchedEffect(Unit) {
-        screenModel.events.collect {
+        viewModel.events.collect {
             onDismissRequest()
         }
     }
 
     LaunchedEffect(state.detailsEntryId) {
         state.detailsEntryId?.let { entryId ->
-            screenModel.consumeDetailsEntry()
+            viewModel.consumeDetailsEntry()
             navigator.push(EntryScreen(entryId, fromSource = true))
         }
     }
@@ -107,8 +107,8 @@ internal fun Screen.SourceMigrationCandidateSheet(
                                 selected = candidate.candidate.targetSourceId == item.targetSourceId &&
                                     candidate.candidate.targetUrl == item.targetUrl,
                                 enabled = !state.isWorking,
-                                onClick = { screenModel.select(candidate.candidate) },
-                                onDetailsClick = { screenModel.openDetails(candidate.candidate) },
+                                onClick = { viewModel.select(candidate.candidate) },
+                                onDetailsClick = { viewModel.openDetails(candidate.candidate) },
                             )
                             if (index < state.candidates.lastIndex) HorizontalDivider()
                         }
@@ -126,7 +126,7 @@ internal fun Screen.SourceMigrationCandidateSheet(
             HorizontalDivider()
             if (item.selectedTargetEntryId != null) {
                 TextButton(
-                    onClick = screenModel::clearSelection,
+                    onClick = viewModel::clearSelection,
                     enabled = !state.isWorking,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -136,7 +136,7 @@ internal fun Screen.SourceMigrationCandidateSheet(
                 }
             }
             Button(
-                onClick = screenModel::searchAgain,
+                onClick = viewModel::searchAgain,
                 enabled = !state.isWorking,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -151,7 +151,7 @@ internal fun Screen.SourceMigrationCandidateSheet(
                         strokeWidth = 2.dp,
                     )
                 } else {
-                    Icon(imageVector = Icons.Outlined.Search, contentDescription = null)
+                    Icon(imageVector = MaterialSymbols.Rounded.Search, contentDescription = null)
                 }
                 Text(
                     text = stringResource(MR.strings.sourceMigrationReview_searchAgain),
@@ -203,7 +203,7 @@ private fun SourceMigrationCandidateRow(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 if (selected) {
                     Icon(
-                        imageVector = Icons.Filled.Check,
+                        imageVector = MaterialSymbols.Rounded.Check,
                         contentDescription = stringResource(MR.strings.selected),
                         tint = MaterialTheme.colorScheme.primary,
                     )

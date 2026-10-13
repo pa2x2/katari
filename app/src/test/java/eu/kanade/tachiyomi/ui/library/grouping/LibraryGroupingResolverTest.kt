@@ -12,6 +12,7 @@ import tachiyomi.domain.library.model.LibraryGrouping
 import tachiyomi.domain.library.model.LibraryGroupingDimension
 import tachiyomi.domain.library.model.LibraryItem
 import tachiyomi.domain.library.model.LibraryItemKey
+import tachiyomi.domain.library.model.LibraryItemSource
 
 class LibraryGroupingResolverTest {
 
@@ -92,11 +93,8 @@ private fun item(
     return LibraryItem(
         entry = entry,
         categories = categories,
-        sourceName = sourceName,
-        sourceLanguage = "en",
+        sources = listOf(LibraryItemSource(sourceId, sourceName, "en")),
         sourceItemOrientation = EntryItemOrientation.VERTICAL,
-        displaySourceId = sourceId,
-        sourceIds = setOf(sourceId),
         isLocal = false,
         isMerged = false,
         memberEntryIds = listOf(LibraryItemKey(type, id)),

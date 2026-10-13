@@ -12,11 +12,11 @@ dependencies {
     api(projects.textRecognition.api)
     api(projects.modelArtifacts.api)
 
+    implementation(projects.icons.materialSymbols)
     implementation(projects.modelArtifacts.ui)
     implementation(projects.presentationCore)
     implementation(libs.androidx.compose.foundation)
     implementation(libs.androidx.compose.material3)
-    implementation(libs.androidx.compose.materialIcons)
     implementation(libs.androidx.compose.uiToolingPreview)
     implementation(libs.kotlinx.coroutines.core)
 

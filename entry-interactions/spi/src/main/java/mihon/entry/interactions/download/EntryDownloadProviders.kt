@@ -64,6 +64,12 @@ interface EntryDownloadProcessor : EntryInteractionProvider {
 
     fun hasDownloads(entry: Entry): Boolean
     fun getDownloadCount(entry: Entry): Int
+
+    /** Returns the download count of each of [entries] by entry id, looking up the downloads once. */
+    fun getDownloadCounts(entries: List<Entry>): Map<Long, Int> {
+        return entries.associate { it.id to getDownloadCount(it) }
+    }
+
     fun getTotalDownloadCount(): Int
     fun isDownloaded(entry: Entry, chapter: EntryChapter, skipCache: Boolean = false): Boolean
     fun getStatus(
@@ -74,6 +80,14 @@ interface EntryDownloadProcessor : EntryInteractionProvider {
         entryTitle: String,
         sourceId: Long,
     ): EntryDownloadStatus
+
+    /** Returns the status of each of [chapters] of [entry] by chapter id, looking up the queue and downloads once. */
+    fun getStatuses(entry: Entry, chapters: List<EntryChapter>): Map<Long, EntryDownloadStatus> {
+        return chapters.associate { chapter ->
+            chapter.id to getStatus(chapter.id, chapter.name, chapter.scanlator, chapter.url, entry.title, entry.source)
+        }
+    }
+
     fun cancelQueuedDownload(chapterId: Long): EntryDownloadStatus?
 }
 

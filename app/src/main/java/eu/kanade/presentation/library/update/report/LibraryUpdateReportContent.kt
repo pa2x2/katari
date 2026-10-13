@@ -10,16 +10,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.CheckCircleOutline
-import androidx.compose.material.icons.outlined.ErrorOutline
-import androidx.compose.material.icons.outlined.ExpandLess
-import androidx.compose.material.icons.outlined.ExpandMore
-import androidx.compose.material.icons.outlined.FiberNew
-import androidx.compose.material.icons.outlined.PauseCircleOutline
-import androidx.compose.material.icons.outlined.Refresh
-import androidx.compose.material.icons.outlined.ReportProblem
-import androidx.compose.material.icons.outlined.SkipNext
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
@@ -45,10 +35,20 @@ import eu.kanade.presentation.library.update.report.components.PauseChip
 import eu.kanade.presentation.library.update.report.components.PausedSourceGroup
 import eu.kanade.presentation.library.update.report.components.ReportRow
 import eu.kanade.presentation.util.relativeTimeSpanString
-import eu.kanade.tachiyomi.ui.library.update.report.LibraryUpdateReportScreenModel
+import eu.kanade.tachiyomi.ui.library.update.report.LibraryUpdateReportViewModel
 import mihon.entry.interactions.migration.EntryMigrationSubject
 import mihon.entry.interactions.source.EntryWebViewResolution
 import mihon.feature.library.update.report.LibraryUpdateReport
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.CheckCircle
+import mihon.icons.materialsymbols.rounded.Error
+import mihon.icons.materialsymbols.rounded.FiberNew
+import mihon.icons.materialsymbols.rounded.KeyboardArrowDown
+import mihon.icons.materialsymbols.rounded.KeyboardArrowUp
+import mihon.icons.materialsymbols.rounded.PauseCircle
+import mihon.icons.materialsymbols.rounded.Refresh
+import mihon.icons.materialsymbols.rounded.SkipNext
+import mihon.icons.materialsymbols.rounded.Warning
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.library.update.model.EntryUpdateDecisionReason
 import tachiyomi.domain.library.update.model.LibraryUpdateTrigger
@@ -71,7 +71,7 @@ class LibraryUpdateReportActions(
 
 @Composable
 fun LibraryUpdateReportContent(
-    state: LibraryUpdateReportScreenModel.State.Ready,
+    state: LibraryUpdateReportViewModel.State.Ready,
     actions: LibraryUpdateReportActions,
     contentPadding: PaddingValues,
 ) {
@@ -105,7 +105,7 @@ fun LibraryUpdateReportContent(
         if (failingCount > 0) {
             item(key = "header-failing") {
                 SectionHeader(
-                    icon = Icons.Outlined.ReportProblem,
+                    icon = MaterialSymbols.Rounded.Warning,
                     title = MR.strings.library_update_report_failing,
                     count = failingCount,
                     isError = true,
@@ -157,7 +157,7 @@ fun LibraryUpdateReportContent(
         if (failedCount > 0) {
             item(key = "header-failed") {
                 SectionHeader(
-                    icon = Icons.Outlined.ErrorOutline,
+                    icon = MaterialSymbols.Rounded.Error,
                     title = MR.strings.library_update_report_failed,
                     count = failedCount,
                     isError = true,
@@ -176,7 +176,7 @@ fun LibraryUpdateReportContent(
                     trailing = {
                         IconButton(onClick = { actions.onRetry(listOf(item.entry)) }) {
                             Icon(
-                                imageVector = Icons.Outlined.Refresh,
+                                imageVector = MaterialSymbols.Rounded.Refresh,
                                 contentDescription = stringResource(MR.strings.library_update_report_retry),
                             )
                         }
@@ -188,7 +188,7 @@ fun LibraryUpdateReportContent(
         if (report.newChapters.isNotEmpty()) {
             item(key = "header-new") {
                 SectionHeader(
-                    icon = Icons.Outlined.FiberNew,
+                    icon = MaterialSymbols.Rounded.FiberNew,
                     title = MR.strings.library_update_report_new,
                     count = report.newChapters.size,
                 )
@@ -212,7 +212,7 @@ fun LibraryUpdateReportContent(
         if (report.noChanges.isNotEmpty()) {
             item(key = "no-changes") {
                 CollapsibleSection(
-                    icon = Icons.Outlined.CheckCircleOutline,
+                    icon = MaterialSymbols.Rounded.CheckCircle,
                     title = MR.strings.library_update_report_no_changes,
                     items = report.noChanges,
                     onClickEntry = actions.onClickEntry,
@@ -222,7 +222,7 @@ fun LibraryUpdateReportContent(
 
         reasonSection(
             key = "skipped",
-            icon = Icons.Outlined.SkipNext,
+            icon = MaterialSymbols.Rounded.SkipNext,
             title = MR.strings.library_update_report_skipped,
             groups = report.skipped,
             onClickEntry = actions.onClickEntry,
@@ -234,7 +234,7 @@ fun LibraryUpdateReportContent(
                     modifier = Modifier.padding(horizontal = MaterialTheme.padding.medium, vertical = 8.dp),
                 ) {
                     Icon(
-                        imageVector = Icons.Outlined.Refresh,
+                        imageVector = MaterialSymbols.Rounded.Refresh,
                         contentDescription = null,
                         modifier = Modifier.padding(end = 8.dp),
                     )
@@ -253,7 +253,7 @@ fun LibraryUpdateReportContent(
         if (notCheckedCount > 0) {
             item(key = "header-not-checked") {
                 SectionHeader(
-                    icon = Icons.Outlined.PauseCircleOutline,
+                    icon = MaterialSymbols.Rounded.PauseCircle,
                     title = MR.strings.library_update_report_not_checked,
                     count = notCheckedCount,
                 )
@@ -293,7 +293,7 @@ fun LibraryUpdateReportContent(
 private fun LazyListScope.failingSourceItems(
     key: String,
     sources: List<LibraryUpdateReport.FailingSource>,
-    state: LibraryUpdateReportScreenModel.State.Ready,
+    state: LibraryUpdateReportViewModel.State.Ready,
     actions: LibraryUpdateReportActions,
 ) {
     items(sources, key = { "$key-source-${it.sourceId}-${it.error}" }) { source ->
@@ -391,7 +391,11 @@ private fun CollapsibleSection(
                 .clickable { expanded = !expanded },
             trailing = {
                 Icon(
-                    imageVector = if (expanded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
+                    imageVector = if (expanded) {
+                        MaterialSymbols.Rounded.KeyboardArrowUp
+                    } else {
+                        MaterialSymbols.Rounded.KeyboardArrowDown
+                    },
                     contentDescription = null,
                 )
             },
@@ -460,7 +464,11 @@ private fun CollapsibleGroup(
                 )
             }
             Icon(
-                imageVector = if (expanded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
+                imageVector = if (expanded) {
+                    MaterialSymbols.Rounded.KeyboardArrowUp
+                } else {
+                    MaterialSymbols.Rounded.KeyboardArrowDown
+                },
                 contentDescription = null,
             )
         }

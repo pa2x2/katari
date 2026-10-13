@@ -5,8 +5,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.DeleteSweep
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -21,8 +19,10 @@ import eu.kanade.presentation.components.relativeDateText
 import eu.kanade.presentation.history.components.HistoryListItem
 import eu.kanade.presentation.more.stats.components.rememberStatisticsDurationFormatter
 import eu.kanade.presentation.theme.TachiyomiPreviewTheme
-import eu.kanade.tachiyomi.ui.history.HistoryScreenModel
+import eu.kanade.tachiyomi.ui.history.HistoryViewModel
 import kotlinx.datetime.LocalDate
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.DeleteSweep
 import tachiyomi.domain.history.model.HistoryItem
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.FastScrollLazyColumn
@@ -34,7 +34,7 @@ import tachiyomi.presentation.core.screens.LoadingScreen
 
 @Composable
 fun HistoryScreen(
-    state: HistoryScreenModel.State,
+    state: HistoryViewModel.State,
     dayDurations: Map<LocalDate, Long>,
     snackbarHostState: SnackbarHostState,
     onSearchQueryChange: (String?) -> Unit,
@@ -44,7 +44,7 @@ fun HistoryScreen(
     onClickResume: (HistoryUiItem) -> Unit,
     onClickDelete: (HistoryItem) -> Unit,
     onClickFavorite: (HistoryUiItem) -> Unit,
-    onDialogChange: (HistoryScreenModel.Dialog?) -> Unit,
+    onDialogChange: (HistoryViewModel.Dialog?) -> Unit,
 ) {
     Scaffold(
         topBar = { scrollBehavior ->
@@ -57,9 +57,9 @@ fun HistoryScreen(
                         listOf(
                             AppBar.Action(
                                 title = stringResource(MR.strings.pref_clear_history),
-                                icon = Icons.Outlined.DeleteSweep,
+                                icon = MaterialSymbols.Rounded.DeleteSweep,
                                 onClick = {
-                                    onDialogChange(HistoryScreenModel.Dialog.DeleteAll)
+                                    onDialogChange(HistoryViewModel.Dialog.DeleteAll)
                                 },
                             ),
                         ),
@@ -164,8 +164,8 @@ sealed class HistoryUiModel {
 @PreviewLightDark
 @Composable
 internal fun HistoryScreenPreviews(
-    @PreviewParameter(HistoryScreenModelStateProvider::class)
-    historyState: HistoryScreenModel.State,
+    @PreviewParameter(HistoryViewModelStateProvider::class)
+    historyState: HistoryViewModel.State,
 ) {
     TachiyomiPreviewTheme {
         HistoryScreen(

@@ -2,7 +2,7 @@ package eu.kanade.tachiyomi.data.track.kitsu
 
 import eu.kanade.tachiyomi.BuildConfig
 import eu.kanade.tachiyomi.data.track.kitsu.dto.KitsuOAuth
-import eu.kanade.tachiyomi.data.track.kitsu.dto.isExpired
+import eu.kanade.tachiyomi.network.parseAs
 import kotlinx.serialization.json.Json
 import okhttp3.Interceptor
 import okhttp3.Response
@@ -23,7 +23,9 @@ class KitsuInterceptor(private val kitsu: Kitsu) : Interceptor {
         if (currentAuth.isExpired()) {
             val response = chain.proceed(KitsuApi.refreshTokenRequest(refreshToken))
             if (response.isSuccessful) {
-                currentAuth = json.decodeFromString(response.body.string())
+                currentAuth = with(json) {
+                    response.parseAs<KitsuOAuth>()
+                }
                 newAuth(currentAuth)
             } else {
                 response.close()

@@ -18,13 +18,13 @@ internal fun Extension.supportedEntryTypesForDisplay(
     },
 ): Set<EntryType>? {
     val advertisedTypes = when (this) {
-        is Extension.Installed ->
+        is Extension.Loaded ->
             sources
                 .flatMapTo(linkedSetOf()) { installedSourceTypes(it).orEmpty() }
         is Extension.Available ->
             sources
                 .flatMapTo(linkedSetOf()) { it.supportedEntryTypes.orEmpty() }
-        is Extension.Untrusted -> emptySet()
+        is Extension.NotLoaded -> emptySet()
     }
 
     return advertisedTypes.takeIf { it.isNotEmpty() }
@@ -32,8 +32,8 @@ internal fun Extension.supportedEntryTypesForDisplay(
 
 internal fun Extension.languagesForDisplay(): Set<String> {
     return when (this) {
-        is Extension.Installed -> setOf(this.lang)
+        is Extension.Loaded -> setOf(this.lang)
         is Extension.Available -> sources.mapTo(linkedSetOf()) { it.lang }
-        is Extension.Untrusted -> setOfNotNull(this.lang)
+        is Extension.NotLoaded -> setOfNotNull(this.lang)
     }
 }

@@ -37,7 +37,8 @@ class LegacyBackupManga(
     @ProtoNumber(111) var initialized: Boolean = false,
     // Mihon uses this field for memo bytes, while older Katari backups used it for displayName.
     @ProtoNumber(112) var displayNameOrMemo: ByteArray? = null,
-    @ProtoNumber(113) var mergeTargetSource: Long? = null,
+    // Mihon writes nextUpdate here, while older Katari backups wrote the merge target source next to field 114.
+    @ProtoNumber(113) var mergeTargetSourceOrNextUpdate: Long? = null,
     @ProtoNumber(114) var mergeTargetUrl: String? = null,
     @ProtoNumber(115) var mergePosition: Int? = null,
     @ProtoNumber(116) var legacyMemo: ByteArray? = null,
@@ -137,13 +138,19 @@ internal fun LegacyBackupManga.toBackupEntry(): BackupEntry {
         mergeTargetUrl = mergeTargetUrl,
         mergeTargetType = EntryType.MANGA,
         mergePosition = mergePosition,
+        nextUpdate = nextUpdate,
         type = EntryType.MANGA,
     )
 }
 
+private val LegacyBackupManga.mergeTargetSource: Long?
+    get() = mergeTargetSourceOrNextUpdate?.takeIf { mergeTargetUrl != null }
+
+internal val LegacyBackupManga.nextUpdate: Long
+    get() = mergeTargetSourceOrNextUpdate?.takeIf { mergeTargetUrl == null } ?: 0L
+
 private fun LegacyBackupManga.resolveDisplayNameAndMemo(): Pair<String?, ByteArray> {
     val hasLegacyKatariFields = legacyMemo != null ||
-        mergeTargetSource != null ||
         mergeTargetUrl != null ||
         mergePosition != null
 

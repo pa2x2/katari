@@ -29,8 +29,13 @@ internal abstract class Installer(private val service: Service) {
     private val extensionManager: ExtensionManager by injectLazy()
 
     private var waitingInstall = AtomicReference<Entry?>(null)
+
+    // Guarded by itself: a failed install continues the queue from the install scope, not only main
     private val queue = Collections.synchronizedList(mutableListOf<Entry>())
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+
+    // Copying an apk into the system installer blocks, and the queue advances from the main thread
+    protected val installScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     /**
      * Installer readiness. If false, queue check will not run.
@@ -101,15 +106,15 @@ internal abstract class Installer(private val service: Service) {
         if (!ready) {
             return
         }
-        if (queue.isEmpty()) {
-            service.stopSelf()
-            return
-        }
-        val nextEntry = queue.first()
-        if (waitingInstall.compareAndSet(null, nextEntry)) {
+        val nextEntry = synchronized(queue) {
+            if (queue.isEmpty()) {
+                service.stopSelf()
+                return
+            }
+            if (!waitingInstall.compareAndSet(null, queue.first())) return
             queue.removeAt(0)
-            processEntry(nextEntry)
         }
+        processEntry(nextEntry)
     }
 
     /**
@@ -118,8 +123,14 @@ internal abstract class Installer(private val service: Service) {
     @CallSuper
     open fun onDestroy() {
         scope.cancel()
-        queue.forEach { extensionManager.updateInstallStep(it.downloadId, InstallStep.Error) }
-        queue.clear()
+        installScope.cancel()
+        val remaining = synchronized(queue) { queue.toList().also { queue.clear() } }
+        remaining.forEach {
+            extensionManager.updateInstallStep(
+                it.downloadId,
+                InstallStep.Error("The installer stopped before it got to this one"),
+            )
+        }
         waitingInstall.store(null)
     }
 
@@ -132,7 +143,10 @@ internal abstract class Installer(private val service: Service) {
      */
     private fun cancelQueue(downloadId: Long) {
         val waitingInstall = this.waitingInstall.load()
-        val toCancel = queue.find { it.downloadId == downloadId } ?: waitingInstall ?: return
+        // Every new install cancels its own package first, which must leave another package's active entry alone
+        val toCancel = synchronized(queue) { queue.find { it.downloadId == downloadId } }
+            ?: waitingInstall?.takeIf { it.downloadId == downloadId }
+            ?: return
         if (cancelEntry(toCancel)) {
             queue.remove(toCancel)
             if (waitingInstall == toCancel) {

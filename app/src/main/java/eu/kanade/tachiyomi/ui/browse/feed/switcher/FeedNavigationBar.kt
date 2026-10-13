@@ -5,8 +5,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Fullscreen
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -21,6 +19,8 @@ import androidx.compose.ui.Modifier
 import eu.kanade.domain.source.model.SourceFeed
 import eu.kanade.domain.source.model.SourceFeedPreset
 import eu.kanade.tachiyomi.ui.browse.feed.FeedViewMode
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Fullscreen
 import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.domain.source.model.Source
 import tachiyomi.i18n.*
@@ -91,7 +91,7 @@ internal fun FeedNavigationBar(
                 enabled = immersiveAvailable,
             ) {
                 Icon(
-                    imageVector = Icons.Outlined.Fullscreen,
+                    imageVector = MaterialSymbols.Rounded.Fullscreen,
                     contentDescription = stringResource(MR.strings.browse_feed_enter_immersive),
                 )
             }

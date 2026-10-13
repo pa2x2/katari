@@ -14,11 +14,6 @@ import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.selection.SelectionContainer
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material.icons.outlined.ContentCopy
-import androidx.compose.material.icons.outlined.OpenInFull
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -33,6 +28,11 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.ArrowDropDown
+import mihon.icons.materialsymbols.rounded.Close
+import mihon.icons.materialsymbols.rounded.ContentCopy
+import mihon.icons.materialsymbols.rounded.OpenInFull
 import mihon.translation.api.result.TranslationResult
 import mihon.translation.ui.presentation.language.TranslationDirectionText
 import mihon.translation.ui.presentation.language.TranslationLanguageArrow
@@ -79,7 +79,7 @@ internal fun TranslationCompactSuccessContent(
         onDismiss?.let {
             Spacer(modifier = Modifier.width(8.dp))
             EdgeIconButton(
-                icon = Icons.Outlined.Close,
+                icon = MaterialSymbols.Rounded.Close,
                 contentDescription = stringResource(MR.strings.action_close),
                 onClick = it,
             )
@@ -143,14 +143,14 @@ internal fun TranslationCompactSuccessContent(
         ) {
             if (showFullscreen) {
                 EdgeIconButton(
-                    icon = Icons.Outlined.OpenInFull,
+                    icon = MaterialSymbols.Rounded.OpenInFull,
                     contentDescription = stringResource(MR.strings.action_expand),
                     onClick = onExpand,
                 )
             }
             if (showCopy) {
                 EdgeIconButton(
-                    icon = Icons.Outlined.ContentCopy,
+                    icon = MaterialSymbols.Rounded.ContentCopy,
                     contentDescription = stringResource(MR.strings.copy),
                     onClick = { onCopy(result.translatedText) },
                 )
@@ -211,7 +211,7 @@ private fun LanguagePill(
                 )
                 if (onChoose != null) {
                     Icon(
-                        imageVector = Icons.Filled.ArrowDropDown,
+                        imageVector = MaterialSymbols.Rounded.ArrowDropDown,
                         contentDescription = null,
                         modifier = Modifier.size(18.dp),
                     )
@@ -269,7 +269,7 @@ private fun EngineLabel(
         )
         if (onChangeEngine != null) {
             Icon(
-                imageVector = Icons.Filled.ArrowDropDown,
+                imageVector = MaterialSymbols.Rounded.ArrowDropDown,
                 contentDescription = null,
                 modifier = Modifier.size(16.dp),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,

@@ -6,9 +6,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material.icons.outlined.DeleteSweep
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -28,6 +25,9 @@ import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppBarActions
 import eu.kanade.presentation.entry.components.EntryCover
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Close
+import mihon.icons.materialsymbols.rounded.DeleteSweep
 import mihon.translation.ui.picker.language.displayName
 import mihon.translation.ui.presentation.language.TranslationDirectionText
 import tachiyomi.i18n.*
@@ -58,7 +58,7 @@ internal fun SeriesTranslationLanguagesContent(
                             listOf(
                                 AppBar.Action(
                                     title = stringResource(MR.strings.translation_series_languages_clear_all),
-                                    icon = Icons.Outlined.DeleteSweep,
+                                    icon = MaterialSymbols.Rounded.DeleteSweep,
                                     onClick = { confirmingClearAll = true },
                                 ),
                             ),
@@ -144,7 +144,7 @@ private fun SeriesTranslationLanguagesRow(
         }
         IconButton(onClick = onClear) {
             Icon(
-                Icons.Outlined.Close,
+                MaterialSymbols.Rounded.Close,
                 contentDescription = stringResource(MR.strings.translation_series_languages_clear),
             )
         }

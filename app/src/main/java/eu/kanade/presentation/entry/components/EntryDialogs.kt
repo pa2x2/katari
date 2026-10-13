@@ -11,9 +11,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.OpenInNew
-import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -39,13 +36,13 @@ import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.presentation.entry.updates.entryReleaseEstimateText
 import eu.kanade.tachiyomi.source.entry.EntryType
-import eu.kanade.tachiyomi.ui.entry.EntryScreenModel
+import eu.kanade.tachiyomi.ui.entry.EntryViewModel
 import eu.kanade.tachiyomi.util.system.isReleaseBuildType
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.daysUntil
 import tachiyomi.domain.entry.model.Entry
-import tachiyomi.domain.entry.service.FetchInterval
+import tachiyomi.domain.entry.service.nextupdate.FetchInterval
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.WheelTextPicker
 import tachiyomi.presentation.core.components.material.padding
@@ -202,7 +199,7 @@ fun EditDisplayNameDialog(
 @Composable
 fun ManageMergeDialog(
     targetId: Long,
-    members: List<EntryScreenModel.MergeMember>,
+    members: List<EntryViewModel.MergeMember>,
     removableIds: List<Long>,
     libraryRemovalIds: List<Long>,
     onDismissRequest: () -> Unit,
@@ -217,7 +214,7 @@ fun ManageMergeDialog(
 ) {
     MergeEditorDialog(
         title = stringResource(MR.strings.action_manage_merge),
-        entries = members.map(EntryScreenModel.MergeMember::toMergeEditorEntry).toPersistentList(),
+        entries = members.map(EntryViewModel.MergeMember::toMergeEditorEntry).toPersistentList(),
         targetId = targetId,
         targetLocked = false,
         onDismissRequest = onDismissRequest,
@@ -247,7 +244,7 @@ fun ManageMergeDialog(
     )
 }
 
-private fun EntryScreenModel.MergeMember.toMergeEditorEntry(): MergeEditorEntry {
+private fun EntryViewModel.MergeMember.toMergeEditorEntry(): MergeEditorEntry {
     return MergeEditorEntry(
         id = id,
         entry = entry,

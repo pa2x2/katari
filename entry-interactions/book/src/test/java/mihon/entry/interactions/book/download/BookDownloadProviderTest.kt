@@ -25,18 +25,18 @@ class BookDownloadProviderTest {
             context = RuntimeEnvironment.getApplication(),
             cacheFile = fixture.root.resolve("book-index"),
         )
-        BookDownloadCache(fixture.provider, store).refresh()
+        BookDownloadCache(fixture.provider, backgroundScope, store).refresh()
         completed.resources.getValue("chapter").openOutputStream().use {
             it.write("tampered chapter".encodeToByteArray())
         }
-        val restoredCache = BookDownloadCache(fixture.provider, store)
+        val restoredCache = BookDownloadCache(fixture.provider, backgroundScope, store)
         restoredCache.ensureInitialized()
         assertEquals(1, restoredCache.getTotalDownloadCount())
 
         assertNull(restoredCache.getVerified(fixture.packageKey))
 
         assertEquals(0, restoredCache.getTotalDownloadCount())
-        val nextCache = BookDownloadCache(spyk(fixture.provider), store)
+        val nextCache = BookDownloadCache(spyk(fixture.provider), backgroundScope, store)
         nextCache.ensureInitialized()
         assertEquals(0, nextCache.getTotalDownloadCount())
     }
@@ -49,6 +49,7 @@ class BookDownloadProviderTest {
         val provider = spyk(fixture.provider)
         val cache = BookDownloadCache(
             provider = provider,
+            scope = backgroundScope,
             indexStore = BookDownloadIndexStore(RuntimeEnvironment.getApplication(), indexFile),
         )
 
@@ -70,7 +71,7 @@ class BookDownloadProviderTest {
             child = fixture.child.copy(id = 12L, url = "/chapter/2"),
         )
         valid.resources.getValue("chapter").openOutputStream().use { it.write("tampered".encodeToByteArray()) }
-        val cache = BookDownloadCache(fixture.provider)
+        val cache = BookDownloadCache(fixture.provider, backgroundScope)
 
         val refresh = cache.refresh()
 

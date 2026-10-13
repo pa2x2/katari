@@ -11,7 +11,7 @@ import eu.kanade.presentation.browse.components.MergeTargetPickerDialog
 import eu.kanade.presentation.browse.components.RemoveMangaDialog
 import eu.kanade.presentation.category.components.ChangeCategoryDialog
 import eu.kanade.presentation.entry.components.DuplicateEntryDialog
-import eu.kanade.tachiyomi.ui.browse.catalog.CatalogScreenModel
+import eu.kanade.tachiyomi.ui.browse.catalog.CatalogViewModel
 import eu.kanade.tachiyomi.ui.category.CategoryScreen
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
 import mihon.feature.migration.dialog.MigrateEntryDialog
@@ -21,17 +21,17 @@ import tachiyomi.presentation.core.i18n.stringResource
 /** The dialogs a feed entry's library actions open, driven by the feed's catalog action model. */
 @Composable
 internal fun Screen.FeedCatalogActionDialogs(
-    dialog: CatalogScreenModel.Dialog?,
-    screenModel: CatalogScreenModel,
+    dialog: CatalogViewModel.Dialog?,
+    viewModel: CatalogViewModel,
     navigator: Navigator,
 ) {
-    val onDismissRequest = screenModel::dismissDialog
+    val onDismissRequest = viewModel::dismissDialog
     when (dialog) {
-        is CatalogScreenModel.Dialog.EntryPreview -> {
+        is CatalogViewModel.Dialog.EntryPreview -> {
             BrowseEntryPreviewSheet(
                 entryId = dialog.entryId,
-                onLibraryAction = screenModel::confirmBrowseLibraryAction,
-                onMergeAction = screenModel::showMergeTargetPicker,
+                onLibraryAction = viewModel::confirmBrowseLibraryAction,
+                onMergeAction = viewModel::showMergeTargetPicker,
                 onOpenEntry = {
                     onDismissRequest()
                     navigator.push(EntryScreen(it, fromSource = true))
@@ -39,48 +39,48 @@ internal fun Screen.FeedCatalogActionDialogs(
                 onDismissRequest = onDismissRequest,
             )
         }
-        is CatalogScreenModel.Dialog.LibraryActionChooser -> {
+        is CatalogViewModel.Dialog.LibraryActionChooser -> {
             BrowseLibraryActionDialog(
                 mangaTitle = dialog.entry.displayTitle,
                 favorite = dialog.entry.favorite,
                 onDismissRequest = onDismissRequest,
                 onLibraryAction = {
                     onDismissRequest()
-                    screenModel.confirmBrowseLibraryAction(dialog.entry)
+                    viewModel.confirmBrowseLibraryAction(dialog.entry)
                 },
-                onMergeIntoLibrary = { screenModel.showMergeTargetPicker(dialog.entry) },
+                onMergeIntoLibrary = { viewModel.showMergeTargetPicker(dialog.entry) },
             )
         }
-        CatalogScreenModel.Dialog.CheckingDuplicates -> DuplicateDetectionLoadingDialog()
-        is CatalogScreenModel.Dialog.RemoveEntry -> {
+        CatalogViewModel.Dialog.CheckingDuplicates -> DuplicateDetectionLoadingDialog()
+        is CatalogViewModel.Dialog.RemoveEntry -> {
             RemoveMangaDialog(
                 onDismissRequest = onDismissRequest,
-                onConfirm = { screenModel.changeFavorite(dialog.entry) },
+                onConfirm = { viewModel.changeFavorite(dialog.entry) },
                 mangaToRemove = dialog.entry,
             )
         }
-        is CatalogScreenModel.Dialog.DuplicateEntry -> {
+        is CatalogViewModel.Dialog.DuplicateEntry -> {
             DuplicateEntryDialog(
                 duplicates = dialog.duplicates,
                 onDismissRequest = onDismissRequest,
-                onConfirm = { screenModel.addFavorite(dialog.entry) },
+                onConfirm = { viewModel.addFavorite(dialog.entry) },
                 onOpenEntry = { navigator.push(EntryScreen(it.id, fromSource = true)) },
                 onMigrate = {
-                    screenModel.showMigrateEntryDialog(current = it, target = dialog.entry)
+                    viewModel.showMigrateEntryDialog(current = it, target = dialog.entry)
                 },
             )
         }
-        is CatalogScreenModel.Dialog.SelectEntryMergeTarget -> {
+        is CatalogViewModel.Dialog.SelectEntryMergeTarget -> {
             MergeTargetPickerDialog(
                 title = stringResource(MR.strings.action_merge_into_library),
                 query = dialog.query,
                 visibleTargets = dialog.visibleTargets,
                 onDismissRequest = onDismissRequest,
-                onQueryChange = screenModel::updateMergeTargetQuery,
-                onSelectTarget = screenModel::openMergeEditor,
+                onQueryChange = viewModel::updateMergeTargetQuery,
+                onSelectTarget = viewModel::openMergeEditor,
             )
         }
-        is CatalogScreenModel.Dialog.EditEntryMerge -> {
+        is CatalogViewModel.Dialog.EditEntryMerge -> {
             BrowseMergeEditorDialog(
                 entries = dialog.entries,
                 targetId = dialog.targetId,
@@ -89,37 +89,37 @@ internal fun Screen.FeedCatalogActionDialogs(
                 libraryRemovalIds = dialog.libraryRemovalIds,
                 confirmEnabled = dialog.enabled,
                 onDismissRequest = onDismissRequest,
-                onMove = screenModel::moveMergeEntry,
-                onSelectTarget = screenModel::setMergeTarget,
-                onToggleRemove = screenModel::toggleMergeEntryRemoval,
-                onToggleLibraryRemove = screenModel::toggleMergeEntryLibraryRemoval,
-                onConfirm = screenModel::confirmBrowseMerge,
+                onMove = viewModel::moveMergeEntry,
+                onSelectTarget = viewModel::setMergeTarget,
+                onToggleRemove = viewModel::toggleMergeEntryRemoval,
+                onToggleLibraryRemove = viewModel::toggleMergeEntryLibraryRemoval,
+                onConfirm = viewModel::confirmBrowseMerge,
             )
         }
-        is CatalogScreenModel.Dialog.ChangeEntryCategory -> {
+        is CatalogViewModel.Dialog.ChangeEntryCategory -> {
             ChangeCategoryDialog(
                 initialSelection = dialog.initialSelection,
                 onDismissRequest = onDismissRequest,
                 onEditCategories = { navigator.push(CategoryScreen()) },
                 onConfirm = { include, _ ->
-                    screenModel.addFavorite(dialog.entry, include)
+                    viewModel.addFavorite(dialog.entry, include)
                 },
             )
         }
-        is CatalogScreenModel.Dialog.MigrateEntry -> {
+        is CatalogViewModel.Dialog.MigrateEntry -> {
             MigrateEntryDialog(
                 current = dialog.current,
                 target = dialog.target,
                 onClickTitle = { navigator.push(EntryScreen(dialog.current.id, fromSource = true)) },
                 onDismissRequest = onDismissRequest,
                 onComplete = {
-                    screenModel.dismissDialog()
+                    viewModel.dismissDialog()
                     navigator.push(EntryScreen(dialog.target.id, fromSource = true))
                 },
             )
         }
-        CatalogScreenModel.Dialog.Filter,
-        is CatalogScreenModel.Dialog.SavePreset,
+        CatalogViewModel.Dialog.Filter,
+        is CatalogViewModel.Dialog.SavePreset,
         null,
         -> Unit
     }

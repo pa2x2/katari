@@ -4,8 +4,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Clear
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
@@ -15,6 +13,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Close
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -50,6 +50,6 @@ internal fun filterFieldKeyboardActions(): KeyboardActions {
 internal fun FilterFieldClearButton(label: String, visible: Boolean, onClear: () -> Unit) {
     if (!visible) return
     IconButton(onClick = onClear) {
-        Icon(Icons.Outlined.Clear, contentDescription = stringResource(MR.strings.filter_clear_value, label))
+        Icon(MaterialSymbols.Rounded.Close, contentDescription = stringResource(MR.strings.filter_clear_value, label))
     }
 }

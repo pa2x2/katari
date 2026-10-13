@@ -74,7 +74,8 @@ class EntryCoverFetcher(
         return when (getResourceType(url)) {
             Type.File -> fileLoader(File(url.substringAfter("file://")))
             Type.URI -> fileUriLoader(url)
-            Type.URL -> httpLoader()
+            // Requests for the same cover at different sizes or through Entry and EntryCover would each download it
+            Type.URL -> concurrentRequests.apply(diskCacheKey) { httpLoader() }
             null -> error("Invalid image")
         }
     }
@@ -367,6 +368,8 @@ class EntryCoverFetcher(
 
         private val CACHE_CONTROL_NO_STORE = CacheControl.Builder().noStore().build()
         private val CACHE_CONTROL_NO_NETWORK_NO_CACHE = CacheControl.Builder().noCache().onlyIfCached().build()
+
+        private val concurrentRequests = DeDupeConcurrentRequests<FetchResult>()
 
         private const val HTTP_NOT_MODIFIED = 304
     }

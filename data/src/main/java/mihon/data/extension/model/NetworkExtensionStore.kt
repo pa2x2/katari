@@ -8,6 +8,7 @@ import mihon.data.extension.model.NetworkExtensionStore.ContentWarning
 import mihon.data.extension.model.NetworkExtensionStore.ExtensionList
 import mihon.domain.extension.model.ExtensionStore
 import eu.kanade.tachiyomi.extension.model.Extension as DomainExtension
+import mihon.domain.extension.model.ContentWarning as DomainContentWarning
 
 @SuppressLint("UnsafeOptInUsageError")
 @Serializable
@@ -107,7 +108,11 @@ fun ExtensionList.toAvailableExtensions(store: ExtensionStore): List<DomainExten
             versionCode = extension.versionCode,
             versionName = extension.versionName,
             lang = if (lang.size == 1) lang.first() else "all",
-            isNsfw = extension.contentWarning >= ContentWarning.MIXED,
+            contentWarning = when (extension.contentWarning) {
+                ContentWarning.UNSPECIFIED, ContentWarning.SAFE -> DomainContentWarning.SAFE
+                ContentWarning.MIXED -> DomainContentWarning.MIXED
+                ContentWarning.NSFW -> DomainContentWarning.NSFW
+            },
             sources = extension.sources.map { source ->
                 DomainExtension.Available.Source(
                     id = source.id,

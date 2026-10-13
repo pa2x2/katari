@@ -32,7 +32,7 @@ import eu.kanade.presentation.more.stats.components.color
 import eu.kanade.presentation.more.stats.components.rememberStatisticsDurationFormatter
 import eu.kanade.presentation.more.stats.data.StatsType
 import eu.kanade.tachiyomi.source.entry.EntryType
-import eu.kanade.tachiyomi.ui.stats.earlier.StatisticsEarlierActivityScreenModel
+import eu.kanade.tachiyomi.ui.stats.earlier.StatisticsEarlierActivityViewModel
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.screens.LoadingScreen
@@ -43,19 +43,19 @@ import java.time.format.FormatStyle
 
 @Composable
 fun StatisticsEarlierActivityScreenContent(
-    state: StatisticsEarlierActivityScreenModel.State,
+    state: StatisticsEarlierActivityViewModel.State,
     selectedType: EntryType?,
     types: List<StatsType>,
     paddingValues: PaddingValues,
     onEntryClick: (Long) -> Unit,
 ) {
     when (state) {
-        StatisticsEarlierActivityScreenModel.State.Loading -> LoadingScreen(Modifier.padding(paddingValues))
-        StatisticsEarlierActivityScreenModel.State.Failed -> CenteredMessage(
+        StatisticsEarlierActivityViewModel.State.Loading -> LoadingScreen(Modifier.padding(paddingValues))
+        StatisticsEarlierActivityViewModel.State.Failed -> CenteredMessage(
             paddingValues = paddingValues,
             message = stringResource(MR.strings.statistics_could_not_load_activity),
         )
-        is StatisticsEarlierActivityScreenModel.State.Success -> {
+        is StatisticsEarlierActivityViewModel.State.Success -> {
             val formatDuration = rememberStatisticsDurationFormatter()
             val details = state.details
             val totalDuration = details.totals.sumOf { it.durationMillis }

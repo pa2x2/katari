@@ -112,7 +112,7 @@ private fun ResolvedReaderSharedToggleSetting.toAppPreference(): Preference.Pref
         title = title.resolve(context),
         subtitle = presentation.subtitle
             .joinToString(separator = "\n") { text -> text.resolve(context) },
-        enabled = presentation.isVisible,
+        visible = presentation.isVisible,
         isInteractive = presentation.isInteractive,
         onDisabledClick = presentation.disabledAction?.let { action ->
             { action.perform(context) }

@@ -11,9 +11,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -23,6 +20,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Add
+import mihon.icons.materialsymbols.rounded.Delete
 import mihon.language.api.tag.LanguageTag
 import mihon.model.artifacts.api.descriptor.ModelArtifactDescriptor
 import mihon.model.artifacts.api.state.ModelArtifactState
@@ -80,7 +80,10 @@ fun TextRecognitionLanguagesList(
                 onClick = { onChooseLanguage(it.language) },
                 trailing = {
                     IconButton(onClick = { onRemoveChoice(it) }) {
-                        Icon(Icons.Outlined.Delete, contentDescription = stringResource(MR.strings.action_remove))
+                        Icon(
+                            MaterialSymbols.Rounded.Delete,
+                            contentDescription = stringResource(MR.strings.action_remove),
+                        )
                     }
                 },
             )
@@ -94,7 +97,7 @@ fun TextRecognitionLanguagesList(
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Icon(Icons.Outlined.Add, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                Icon(MaterialSymbols.Rounded.Add, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                 Text(
                     stringResource(MR.strings.text_recognition_languages_add),
                     style = MaterialTheme.typography.bodyLarge,

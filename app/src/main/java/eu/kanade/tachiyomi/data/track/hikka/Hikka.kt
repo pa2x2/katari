@@ -38,6 +38,8 @@ class Hikka(
         private val SCORE_LIST = IntRange(0, 10)
             .map(Int::toString)
             .toImmutableList()
+
+        private const val SEARCH_ID_PREFIX = "id:"
     }
 
     private val json: Json by injectLazy()
@@ -129,7 +131,15 @@ class Hikka(
         }
     }
 
-    override suspend fun search(query: String): List<TrackSearch> = api.searchManga(query)
+    override suspend fun search(query: String): List<TrackSearch> {
+        if (query.startsWith(SEARCH_ID_PREFIX)) {
+            query.substringAfter(SEARCH_ID_PREFIX).trim().let { slug ->
+                return api.getMangaDetails(slug)?.let { listOf(it) } ?: emptyList()
+            }
+        }
+
+        return api.searchManga(query)
+    }
 
     override suspend fun refresh(track: Track): Track {
         val remoteTrack = api.getManga(track)
@@ -145,6 +155,11 @@ class Hikka(
         track.finished_reading_date = (readContent.endDate ?: 0L) * 1000
 
         return track
+    }
+
+    override suspend fun updateUserConfig() {
+        val currentUser = api.getCurrentUser()
+        saveDisplayUsername(currentUser.username)
     }
 
     override suspend fun login(username: String, password: String) {

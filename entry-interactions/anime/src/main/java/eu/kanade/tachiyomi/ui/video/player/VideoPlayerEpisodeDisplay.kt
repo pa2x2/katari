@@ -24,6 +24,7 @@ internal fun buildVideoPlayerEpisodeDisplayData(
     chapters: List<EntryChapter>,
     memberIds: List<Long>,
     memberTitleById: Map<Long, String>,
+    memberSourceNameById: Map<Long, String>,
     playbackStates: List<EntryProgressState>,
 ): VideoPlayerEpisodeDisplayData {
     val playbackStateByEpisodeId = playbackStates
@@ -43,6 +44,7 @@ internal fun buildVideoPlayerEpisodeDisplayData(
             episodes = displayedEpisodes,
             memberIds = memberIds,
             memberTitleById = memberTitleById,
+            memberSourceNameById = memberSourceNameById,
             fallbackTitle = entry.displayTitle,
         ),
     )
@@ -52,6 +54,7 @@ private fun buildVideoPlayerEpisodeListItems(
     episodes: List<EntryChapter>,
     memberIds: List<Long>,
     memberTitleById: Map<Long, String>,
+    memberSourceNameById: Map<Long, String>,
     fallbackTitle: String,
 ): List<VideoPlayerEpisodeListEntry> {
     if (memberIds.size <= 1) {
@@ -64,6 +67,9 @@ private fun buildVideoPlayerEpisodeListItems(
                 VideoPlayerEpisodeListEntry.MemberHeader(
                     animeId = memberId,
                     title = memberTitleById[memberId].orEmpty().ifBlank { fallbackTitle },
+                    sourceName = memberSourceNameById[memberId],
+                    episodeCount = memberEpisodes.size,
+                    unwatchedCount = memberEpisodes.count { !it.read },
                 ),
             )
             addAll(memberEpisodes.map(VideoPlayerEpisodeListEntry::Item))
@@ -77,6 +83,10 @@ internal sealed class VideoPlayerEpisodeListEntry {
     data class MemberHeader(
         val animeId: Long,
         val title: String,
+        /** Null when every member comes from one source. */
+        val sourceName: String?,
+        val episodeCount: Int,
+        val unwatchedCount: Int,
     ) : VideoPlayerEpisodeListEntry()
 
     @Immutable

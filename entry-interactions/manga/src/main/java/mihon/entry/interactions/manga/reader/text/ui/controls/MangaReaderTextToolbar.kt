@@ -8,14 +8,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material.icons.outlined.HighlightAlt
-import androidx.compose.material.icons.outlined.Subtitles
-import androidx.compose.material.icons.outlined.Visibility
-import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
@@ -41,6 +33,14 @@ import kotlinx.coroutines.flow.Flow
 import mihon.entry.interactions.manga.reader.text.session.MangaReaderTextBlocker
 import mihon.entry.interactions.manga.reader.text.session.MangaReaderTextProgress
 import mihon.entry.interactions.manga.reader.text.translation.MangaPageTranslationIssue
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.ArrowDropDown
+import mihon.icons.materialsymbols.rounded.Close
+import mihon.icons.materialsymbols.rounded.InkSelection
+import mihon.icons.materialsymbols.rounded.MoreVert
+import mihon.icons.materialsymbols.rounded.Subtitles
+import mihon.icons.materialsymbols.rounded.Visibility
+import mihon.icons.materialsymbols.rounded.VisibilityOff
 import mihon.language.api.tag.LanguageTag
 import mihon.model.artifacts.api.descriptor.ModelArtifactDescriptor
 import mihon.model.artifacts.api.state.ModelArtifactState
@@ -110,7 +110,7 @@ internal fun MangaReaderTextToolbar(
                         onClick = onOpenLanguages,
                         label = { TranslationDirectionText(languages, maxLines = 1, overflow = TextOverflow.Ellipsis) },
                         modifier = Modifier.weight(1f, fill = false),
-                        trailingIcon = { Icon(Icons.Filled.ArrowDropDown, contentDescription = null) },
+                        trailingIcon = { Icon(MaterialSymbols.Rounded.ArrowDropDown, contentDescription = null) },
                     )
                 }
                 when (val blocker = (progress as? MangaReaderTextProgress.Blocked)?.blocker) {
@@ -134,14 +134,14 @@ internal fun MangaReaderTextToolbar(
                     }
                     else -> IconButton(onClick = onSelectArea) {
                         Icon(
-                            Icons.Outlined.HighlightAlt,
+                            MaterialSymbols.Rounded.InkSelection,
                             contentDescription = stringResource(MR.strings.reader_text_select_area),
                         )
                     }
                 }
                 IconButton(onClick = onToggleOverlay) {
                     Icon(
-                        imageVector = Icons.Outlined.Subtitles,
+                        imageVector = MaterialSymbols.Rounded.Subtitles,
                         contentDescription = stringResource(MR.strings.pref_page_text_translation_overlay),
                         tint = if (overlay) MaterialTheme.colorScheme.primary else LocalContentColor.current,
                     )
@@ -149,7 +149,11 @@ internal fun MangaReaderTextToolbar(
                 if (overlay) {
                     IconButton(onClick = onToggleOriginal) {
                         Icon(
-                            imageVector = if (showOriginal) Icons.Outlined.Visibility else Icons.Outlined.VisibilityOff,
+                            imageVector = if (showOriginal) {
+                                MaterialSymbols.Rounded.Visibility
+                            } else {
+                                MaterialSymbols.Rounded.VisibilityOff
+                            },
                             contentDescription = stringResource(
                                 if (showOriginal) {
                                     MR.strings.reader_text_show_translations
@@ -164,7 +168,7 @@ internal fun MangaReaderTextToolbar(
                     StoredTranslationMenu(onDelete = onDeleteStoredTranslation)
                 }
                 IconButton(onClick = onClose) {
-                    Icon(Icons.Outlined.Close, contentDescription = stringResource(MR.strings.action_close))
+                    Icon(MaterialSymbols.Rounded.Close, contentDescription = stringResource(MR.strings.action_close))
                 }
             }
             (progress as? MangaReaderTextProgress.TranslationUnavailable)?.let {
@@ -180,7 +184,7 @@ private fun StoredTranslationMenu(onDelete: () -> Unit) {
     Box {
         IconButton(onClick = { expanded = true }) {
             Icon(
-                Icons.Filled.MoreVert,
+                MaterialSymbols.Rounded.MoreVert,
                 contentDescription = stringResource(MR.strings.action_menu_overflow_description),
             )
         }

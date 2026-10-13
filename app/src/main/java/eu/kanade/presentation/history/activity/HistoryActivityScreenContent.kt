@@ -23,8 +23,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.more.stats.data.StatsType
 import eu.kanade.tachiyomi.source.entry.EntryType
-import eu.kanade.tachiyomi.ui.history.activity.HistoryActivityScreenModel
 import eu.kanade.tachiyomi.ui.history.activity.HistoryActivitySummary
+import eu.kanade.tachiyomi.ui.history.activity.HistoryActivityViewModel
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.screens.LoadingScreen
@@ -34,7 +34,7 @@ import java.time.format.FormatStyle
 
 @Composable
 fun HistoryActivityScreenContent(
-    state: HistoryActivityScreenModel.State,
+    state: HistoryActivityViewModel.State,
     summary: HistoryActivitySummary?,
     type: EntryType?,
     types: List<StatsType>,
@@ -46,9 +46,9 @@ fun HistoryActivityScreenContent(
     onLoadMore: () -> Unit,
 ) {
     when (state) {
-        HistoryActivityScreenModel.State.Loading -> LoadingScreen(Modifier.padding(paddingValues))
-        HistoryActivityScreenModel.State.Failed -> ActivityLoadFailed(paddingValues, onRetry)
-        is HistoryActivityScreenModel.State.Success -> ActivitySessionList(
+        HistoryActivityViewModel.State.Loading -> LoadingScreen(Modifier.padding(paddingValues))
+        HistoryActivityViewModel.State.Failed -> ActivityLoadFailed(paddingValues, onRetry)
+        is HistoryActivityViewModel.State.Success -> ActivitySessionList(
             state = state,
             summary = summary,
             type = type,
@@ -74,7 +74,7 @@ private fun ActivityLoadFailed(paddingValues: PaddingValues, onRetry: () -> Unit
 
 @Composable
 private fun ActivitySessionList(
-    state: HistoryActivityScreenModel.State.Success,
+    state: HistoryActivityViewModel.State.Success,
     summary: HistoryActivitySummary?,
     type: EntryType?,
     types: List<StatsType>,

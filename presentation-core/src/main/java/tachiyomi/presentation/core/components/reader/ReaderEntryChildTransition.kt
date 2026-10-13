@@ -10,10 +10,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.foundation.text.appendInlineContent
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
@@ -36,6 +32,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Info
+import mihon.icons.materialsymbols.roundedfilled.CheckCircle
+import mihon.icons.materialsymbols.roundedfilled.Warning
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
@@ -199,7 +199,7 @@ private fun DestinationLoadStatus(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Icon(
-                            imageVector = Icons.Filled.Warning,
+                            imageVector = MaterialSymbols.RoundedFilled.Warning,
                             tint = warningColor,
                             contentDescription = null,
                         )
@@ -238,7 +238,7 @@ private fun NoChildNotification(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(
-                imageVector = Icons.Outlined.Info,
+                imageVector = MaterialSymbols.Rounded.Info,
                 tint = accentColor,
                 contentDescription = null,
             )
@@ -269,7 +269,7 @@ private fun ChildGapWarning(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(
-                imageVector = Icons.Filled.Warning,
+                imageVector = MaterialSymbols.RoundedFilled.Warning,
                 tint = warningColor,
                 contentDescription = null,
             )
@@ -316,7 +316,7 @@ private fun TransitionChild(
                     ),
                 ) {
                     Icon(
-                        imageVector = Icons.Filled.CheckCircle,
+                        imageVector = MaterialSymbols.RoundedFilled.CheckCircle,
                         contentDescription = stringResource(MR.strings.label_downloaded),
                     )
                 },

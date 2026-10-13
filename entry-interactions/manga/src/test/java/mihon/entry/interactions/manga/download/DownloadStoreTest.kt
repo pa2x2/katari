@@ -7,6 +7,10 @@ import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.test.runCurrent
+import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import mihon.entry.interactions.manga.download.model.MangaDownload
 import org.junit.jupiter.api.Test
@@ -21,14 +25,16 @@ class DownloadStoreTest {
     private val source = mockk<UnifiedSource> {
         every { id } returns 42L
     }
+    private val sourcesInitialized = MutableStateFlow(true)
     private val sourceManager = mockk<SourceManager> {
-        every { get(42L) } returns source
+        every { isInitialized } returns sourcesInitialized
+        every { get(42L) } answers { source.takeIf { sourcesInitialized.value } }
     }
     private val entryRepository = mockk<EntryRepository>()
     private val chapterRepository = mockk<EntryChapterRepository>()
 
     @Test
-    fun `restores profile scoped owner identity in queue order`() {
+    fun `restores profile scoped owner identity in queue order`() = runTest {
         val firstEntry = manga(id = 1L, profileId = 10L)
         val secondEntry = manga(id = 2L, profileId = 20L)
         val first = download(firstEntry, chapterId = 11L)
@@ -47,7 +53,7 @@ class DownloadStoreTest {
     }
 
     @Test
-    fun `restores legacy identity and rejects a changed source`() {
+    fun `restores legacy identity and rejects a changed source`() = runTest {
         val entry = manga(id = 5L, profileId = 10L)
         val chapter = EntryChapter.create().copy(id = 6L, entryId = entry.id)
         backend.data["legacy"] = """{"mangaId":5,"chapterId":6,"order":0}"""
@@ -61,6 +67,22 @@ class DownloadStoreTest {
 
         restored.single().entry shouldBe entry
         restored.single().chapter shouldBe chapter
+    }
+
+    @Test
+    fun `keeps a download whose source registers after the restore started`() = runTest {
+        val entry = manga(id = 1L, profileId = 10L)
+        val queued = download(entry, chapterId = 11L)
+        store().addAll(listOf(queued))
+        coEvery { entryRepository.getAllEntriesByProfile(10L) } returns listOf(entry)
+        coEvery { chapterRepository.getChapterById(11L) } returns queued.chapter
+        sourcesInitialized.value = false
+
+        val restoring = async { store().restore() }
+        runCurrent()
+        sourcesInitialized.value = true
+
+        restoring.await().map { it.chapter.id } shouldContainExactly listOf(11L)
     }
 
     private fun store() = DownloadStore(

@@ -1,7 +1,10 @@
 package eu.kanade.tachiyomi.data.track.oauth
 
 import android.net.Uri
+import android.widget.Toast
 import androidx.lifecycle.lifecycleScope
+import eu.kanade.tachiyomi.data.track.comick.ComickMissingScopesException
+import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.launch
 import logcat.LogPriority
 import tachiyomi.core.common.util.system.logcat
@@ -26,6 +29,7 @@ class TrackLoginActivity : BaseOAuthLoginActivity() {
             when (uri.host) {
                 "anilist-auth" -> handleAniList(data["access_token"])
                 "bangumi-auth" -> handleBangumi(data["code"])
+                "comick-auth" -> handleComick(data["code"], data["state"])
                 "mangabaka-auth" -> handleMangaBaka(data["code"], data["state"])
                 "myanimelist-auth" -> handleMyAnimeList(data["code"])
                 "shikimori-auth" -> handleShikimori(data["code"])
@@ -48,6 +52,24 @@ class TrackLoginActivity : BaseOAuthLoginActivity() {
             trackerManager.bangumi.login(code)
         } else {
             trackerManager.bangumi.logout()
+        }
+    }
+
+    private suspend fun handleComick(code: String?, state: String?) {
+        if (state == null) {
+            logcat(LogPriority.WARN) { "Did not receive state parameter from Comick OAuth" }
+            return
+        }
+        if (code != null) {
+            try {
+                if (!trackerManager.comick.completeOAuth(code, state)) {
+                    logcat(LogPriority.WARN) { "Comick OAuth callback was rejected" }
+                }
+            } catch (e: ComickMissingScopesException) {
+                toast(e.message, Toast.LENGTH_LONG)
+            }
+        } else if (!trackerManager.comick.cancelOAuth(state)) {
+            logcat(LogPriority.WARN) { "Comick OAuth callback without a code was rejected" }
         }
     }
 

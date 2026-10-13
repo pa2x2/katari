@@ -1,9 +1,6 @@
 package eu.kanade.tachiyomi.ui.browse.feed.switcher
 
 import androidx.compose.foundation.layout.Box
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ViewList
-import androidx.compose.material.icons.filled.ViewModule
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -14,6 +11,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import eu.kanade.presentation.components.DropdownMenu
 import eu.kanade.presentation.components.RadioMenuItem
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.automirroredroundedfilled.ViewList
+import mihon.icons.materialsymbols.roundedfilled.ViewCompact
+import mihon.icons.materialsymbols.roundedfilled.ViewModule
 import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -36,12 +37,14 @@ internal fun FeedDisplayModeButton(
     Box {
         IconButton(onClick = { expanded = true }) {
             Icon(
-                imageVector = if (displayMode == LibraryDisplayMode.List ||
-                    displayMode == LibraryDisplayMode.ComfortableList
-                ) {
-                    Icons.AutoMirrored.Filled.ViewList
-                } else {
-                    Icons.Filled.ViewModule
+                imageVector = when (displayMode) {
+                    LibraryDisplayMode.List,
+                    LibraryDisplayMode.ComfortableList,
+                    -> MaterialSymbols.AutoMirroredRoundedFilled.ViewList
+                    LibraryDisplayMode.ComfortableGrid -> MaterialSymbols.RoundedFilled.ViewModule
+                    LibraryDisplayMode.CompactGrid,
+                    LibraryDisplayMode.CoverOnlyGrid,
+                    -> MaterialSymbols.RoundedFilled.ViewCompact
                 },
                 contentDescription = stringResource(MR.strings.action_display_mode),
             )

@@ -236,7 +236,7 @@ object SettingsAdvancedScreen : SearchableSettings {
                             mergeStatus.lastFailure?.let { append("\n$it") }
                         }
                     },
-                    enabled = mergeStatus.pendingCount > 0,
+                    visible = mergeStatus.pendingCount > 0,
                     onClick = {
                         scope.launch {
                             mergeStatusFeature.retryPending()
@@ -252,6 +252,7 @@ object SettingsAdvancedScreen : SearchableSettings {
         networkPreferences: NetworkPreferences,
     ): Preference.PreferenceGroup {
         val context = LocalContext.current
+        val scope = rememberCoroutineScope()
         val networkHelper = remember { Injekt.get<NetworkHelper>() }
 
         val userAgentPref = networkPreferences.defaultUserAgent
@@ -279,8 +280,10 @@ object SettingsAdvancedScreen : SearchableSettings {
                                 clearSslPreferences()
                             }
                             WebStorage.getInstance().deleteAllData()
-                            context.applicationInfo?.dataDir?.let { File("$it/app_webview/").deleteRecursively() }
-                            context.toast(MR.strings.webview_data_deleted)
+                            scope.launchNonCancellable {
+                                context.applicationInfo?.dataDir?.let { File("$it/app_webview/").deleteRecursively() }
+                                withUIContext { context.toast(MR.strings.webview_data_deleted) }
+                            }
                         } catch (e: Throwable) {
                             logcat(LogPriority.ERROR, e)
                             context.toast(MR.strings.cache_delete_error)
@@ -327,7 +330,7 @@ object SettingsAdvancedScreen : SearchableSettings {
                 ),
                 Preference.PreferenceItem.TextPreference(
                     title = stringResource(MR.strings.pref_reset_user_agent_string),
-                    enabled = remember(userAgent) { userAgent != userAgentPref.defaultValue() },
+                    visible = remember(userAgent) { userAgent != userAgentPref.defaultValue() },
                     onClick = {
                         userAgentPref.delete()
                         context.toast(MR.strings.requires_app_restart)
@@ -385,6 +388,11 @@ object SettingsAdvancedScreen : SearchableSettings {
                     title = stringResource(MR.strings.pref_disallow_non_ascii_filenames),
                     subtitle = stringResource(MR.strings.pref_disallow_non_ascii_filenames_details),
                 ),
+                Preference.PreferenceItem.SwitchPreference(
+                    preference = globalLibraryPreferences.enableChapterNameHash,
+                    title = stringResource(MR.strings.pref_download_name_hash),
+                    subtitle = stringResource(MR.strings.pref_download_name_hash_summary),
+                ),
             ),
         )
     }
@@ -433,7 +441,7 @@ object SettingsAdvancedScreen : SearchableSettings {
                     subtitleProvider = { value, options ->
                         stringResource(MR.strings.pref_hardware_bitmap_threshold_summary, options[value].orEmpty())
                     },
-                    enabled = !ImageUtil.HARDWARE_BITMAP_UNSUPPORTED &&
+                    visible = !ImageUtil.HARDWARE_BITMAP_UNSUPPORTED &&
                         GLUtil.DEVICE_TEXTURE_LIMIT > GLUtil.SAFE_TEXTURE_LIMIT,
                 ),
                 Preference.PreferenceItem.SwitchPreference(
@@ -519,10 +527,7 @@ object SettingsAdvancedScreen : SearchableSettings {
                 ),
                 Preference.PreferenceItem.TextPreference(
                     title = stringResource(MR.strings.ext_revoke_trust),
-                    onClick = {
-                        trustExtension.revokeAll()
-                        context.toast(MR.strings.requires_app_restart)
-                    },
+                    onClick = { trustExtension.revokeAll() },
                 ),
             ),
         )

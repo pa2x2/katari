@@ -479,7 +479,10 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
             languageSession = languageSession,
             scope = lifecycleScope,
             initialCapabilities = session.readerCapabilities,
-            languageStore = BookTranslationLanguageStore(Injekt.get<EntryTranslationLanguagesFeature>(), session.entry),
+            languageStore = BookTranslationLanguageStore(
+                feature = Injekt.get<EntryTranslationLanguagesFeature>(),
+                book = retainedSessions.currentOwner,
+            ),
         )
         selectionCoordinator = BookSelectionActionCoordinator(
             translationController = translationController,

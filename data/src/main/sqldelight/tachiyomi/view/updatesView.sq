@@ -55,6 +55,7 @@ FROM updatesView
 WHERE profile_id = :profileId
 AND dateUpload > :after
 AND excludedScanlator IS NULL
+ORDER BY datefetch DESC
 LIMIT :limit;
 
 -- The categories of an entry merged with others are those of every member, as in the library. An entry in no
@@ -90,4 +91,5 @@ WHERE profile_id = :profileId
 AND read = :read
 AND dateUpload > :after
 AND excludedScanlator IS NULL
+ORDER BY datefetch DESC
 LIMIT :limit;

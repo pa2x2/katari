@@ -69,6 +69,15 @@ internal class DefaultEntryTrackingAccounts(
         }
     }
 
+    override suspend fun refreshAccount(serviceId: EntryTrackingServiceId): EntryTrackingAccountOperationResult {
+        val account = account(serviceId) ?: return serviceNotRegistered()
+        if (account.loginMethod == EntryTrackingHostLoginMethod.Passive) return loginMethodMismatch()
+        return accountCatching {
+            host.accounts.refreshAccount(serviceId.value)
+            EntryTrackingAccountOperationResult.Completed
+        }
+    }
+
     override fun missingLoginNames(serviceIds: Set<EntryTrackingServiceId>): List<String> {
         val requested = serviceIds.mapTo(mutableSetOf(), EntryTrackingServiceId::value)
         return host.accounts.currentAccounts()

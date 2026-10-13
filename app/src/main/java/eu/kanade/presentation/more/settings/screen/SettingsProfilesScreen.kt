@@ -1,7 +1,5 @@
 package eu.kanade.presentation.more.settings.screen
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -19,6 +17,8 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.more.settings.Preference
 import mihon.feature.profiles.core.ProfilesPreferences
 import mihon.feature.profiles.ui.ProfilesSettingsScreen
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Info
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import uy.kohesive.injekt.Injekt
@@ -59,7 +59,7 @@ object SettingsProfilesScreen : SearchableSettings {
                         widget = {
                             IconButton(onClick = { showProfilesInfo = true }) {
                                 Icon(
-                                    imageVector = Icons.Outlined.Info,
+                                    imageVector = MaterialSymbols.Rounded.Info,
                                     contentDescription = stringResource(MR.strings.profiles_info_title),
                                 )
                             }

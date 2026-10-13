@@ -23,18 +23,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.ZeroCornerSize
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.Label
-import androidx.compose.material.icons.filled.PushPin
-import androidx.compose.material.icons.outlined.BookmarkAdd
-import androidx.compose.material.icons.outlined.BookmarkRemove
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.DoneAll
-import androidx.compose.material.icons.outlined.Download
-import androidx.compose.material.icons.outlined.MoreVert
-import androidx.compose.material.icons.outlined.PushPin
-import androidx.compose.material.icons.outlined.RemoveDone
-import androidx.compose.material.icons.outlined.Translate
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -54,7 +42,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -64,11 +51,24 @@ import eu.kanade.presentation.components.DropdownMenu
 import eu.kanade.presentation.entry.DownloadAction
 import eu.kanade.presentation.entry.EntryTypePresentation
 import eu.kanade.presentation.entry.entryTypePresentation
-import eu.kanade.tachiyomi.R
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import mihon.icons.custommaterialsymbols.CustomMaterialSymbols
+import mihon.icons.custommaterialsymbols.rounded.DonePrevious
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.automirroredrounded.Label
+import mihon.icons.materialsymbols.rounded.BookmarkAdd
+import mihon.icons.materialsymbols.rounded.BookmarkRemove
+import mihon.icons.materialsymbols.rounded.Delete
+import mihon.icons.materialsymbols.rounded.DoneAll
+import mihon.icons.materialsymbols.rounded.Download
+import mihon.icons.materialsymbols.rounded.Keep
+import mihon.icons.materialsymbols.rounded.MoreVert
+import mihon.icons.materialsymbols.rounded.RemoveDone
+import mihon.icons.materialsymbols.rounded.Translate
+import mihon.icons.materialsymbols.roundedfilled.Keep
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import kotlin.time.Duration.Companion.seconds
@@ -128,7 +128,7 @@ fun EntryBottomActionMenu(
                 if (onBookmarkClicked != null) {
                     Button(
                         title = stringResource(bookmarkLabel),
-                        icon = Icons.Outlined.BookmarkAdd,
+                        icon = MaterialSymbols.Rounded.BookmarkAdd,
                         toConfirm = confirm[0],
                         onLongClick = { onLongClickItem(0) },
                         onClick = onBookmarkClicked,
@@ -137,7 +137,7 @@ fun EntryBottomActionMenu(
                 if (onRemoveBookmarkClicked != null) {
                     Button(
                         title = stringResource(removeBookmarkLabel),
-                        icon = Icons.Outlined.BookmarkRemove,
+                        icon = MaterialSymbols.Rounded.BookmarkRemove,
                         toConfirm = confirm[1],
                         onLongClick = { onLongClickItem(1) },
                         onClick = onRemoveBookmarkClicked,
@@ -146,7 +146,7 @@ fun EntryBottomActionMenu(
                 if (onMarkAsReadClicked != null) {
                     Button(
                         title = stringResource(markAsReadLabel),
-                        icon = Icons.Outlined.DoneAll,
+                        icon = MaterialSymbols.Rounded.DoneAll,
                         toConfirm = confirm[2],
                         onLongClick = { onLongClickItem(2) },
                         onClick = onMarkAsReadClicked,
@@ -155,7 +155,7 @@ fun EntryBottomActionMenu(
                 if (onMarkAsUnreadClicked != null) {
                     Button(
                         title = stringResource(markAsUnreadLabel),
-                        icon = Icons.Outlined.RemoveDone,
+                        icon = MaterialSymbols.Rounded.RemoveDone,
                         toConfirm = confirm[3],
                         onLongClick = { onLongClickItem(3) },
                         onClick = onMarkAsUnreadClicked,
@@ -164,7 +164,7 @@ fun EntryBottomActionMenu(
                 if (onMarkPreviousAsReadClicked != null) {
                     Button(
                         title = stringResource(markPreviousAsReadLabel),
-                        icon = ImageVector.vectorResource(R.drawable.ic_done_prev_24dp),
+                        icon = CustomMaterialSymbols.Rounded.DonePrevious,
                         toConfirm = confirm[4],
                         onLongClick = { onLongClickItem(4) },
                         onClick = onMarkPreviousAsReadClicked,
@@ -173,7 +173,7 @@ fun EntryBottomActionMenu(
                 if (onDownloadClicked != null) {
                     Button(
                         title = stringResource(MR.strings.action_download),
-                        icon = Icons.Outlined.Download,
+                        icon = MaterialSymbols.Rounded.Download,
                         toConfirm = confirm[5],
                         onLongClick = { onLongClickItem(5) },
                         onClick = onDownloadClicked,
@@ -182,7 +182,7 @@ fun EntryBottomActionMenu(
                 if (onTranslateClicked != null) {
                     Button(
                         title = stringResource(MR.strings.action_translate),
-                        icon = Icons.Outlined.Translate,
+                        icon = MaterialSymbols.Rounded.Translate,
                         toConfirm = confirm[7],
                         onLongClick = { onLongClickItem(7) },
                         onClick = onTranslateClicked,
@@ -191,7 +191,7 @@ fun EntryBottomActionMenu(
                 if (onDeleteClicked != null) {
                     Button(
                         title = stringResource(MR.strings.action_delete),
-                        icon = Icons.Outlined.Delete,
+                        icon = MaterialSymbols.Rounded.Delete,
                         toConfirm = confirm[6],
                         onLongClick = { onLongClickItem(6) },
                         onClick = onDeleteClicked,
@@ -202,7 +202,7 @@ fun EntryBottomActionMenu(
                     Box {
                         IconButton(onClick = { overflowMenuOpen = true }) {
                             Icon(
-                                imageVector = Icons.Outlined.MoreVert,
+                                imageVector = MaterialSymbols.Rounded.MoreVert,
                                 contentDescription = stringResource(MR.strings.label_more),
                             )
                         }
@@ -329,7 +329,7 @@ fun LibraryBottomActionMenu(
                 if (onChangeCategoryClicked != null) {
                     Button(
                         title = stringResource(MR.strings.action_move_category),
-                        icon = Icons.AutoMirrored.Outlined.Label,
+                        icon = MaterialSymbols.AutoMirroredRounded.Label,
                         toConfirm = false,
                         onLongClick = {},
                         showLabel = true,
@@ -339,7 +339,7 @@ fun LibraryBottomActionMenu(
                 if (onPinClicked != null) {
                     Button(
                         title = stringResource(if (pinSelection) MR.strings.action_pin else MR.strings.action_unpin),
-                        icon = if (pinSelection) Icons.Outlined.PushPin else Icons.Filled.PushPin,
+                        icon = if (pinSelection) MaterialSymbols.Rounded.Keep else MaterialSymbols.RoundedFilled.Keep,
                         toConfirm = false,
                         onLongClick = {},
                         showLabel = true,
@@ -359,7 +359,7 @@ fun LibraryBottomActionMenu(
                 if (onMarkAsReadClicked != null) {
                     Button(
                         title = stringResource(markAsReadLabel),
-                        icon = Icons.Outlined.DoneAll,
+                        icon = MaterialSymbols.Rounded.DoneAll,
                         toConfirm = false,
                         onLongClick = {},
                         showLabel = true,
@@ -369,7 +369,7 @@ fun LibraryBottomActionMenu(
                 if (onMarkAsUnreadClicked != null) {
                     Button(
                         title = stringResource(markAsUnreadLabel),
-                        icon = Icons.Outlined.RemoveDone,
+                        icon = MaterialSymbols.Rounded.RemoveDone,
                         toConfirm = false,
                         onLongClick = {},
                         showLabel = true,
@@ -380,7 +380,7 @@ fun LibraryBottomActionMenu(
                     var downloadExpanded by remember { mutableStateOf(false) }
                     Button(
                         title = stringResource(MR.strings.action_download),
-                        icon = Icons.Outlined.Download,
+                        icon = MaterialSymbols.Rounded.Download,
                         toConfirm = false,
                         onLongClick = {},
                         showLabel = true,
@@ -398,7 +398,7 @@ fun LibraryBottomActionMenu(
                 var overflowMenuOpen by remember { mutableStateOf(false) }
                 Button(
                     title = stringResource(MR.strings.label_more),
-                    icon = Icons.Outlined.MoreVert,
+                    icon = MaterialSymbols.Rounded.MoreVert,
                     toConfirm = false,
                     onLongClick = {},
                     showLabel = true,

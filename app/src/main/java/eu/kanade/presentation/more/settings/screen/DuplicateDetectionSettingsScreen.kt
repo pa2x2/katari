@@ -30,7 +30,6 @@ object DuplicateDetectionSettingsScreen : SearchableSettings {
         val duplicatePreferences = remember { Injekt.get<DuplicatePreferences>() }
 
         val extendedEnabled by duplicatePreferences.extendedDuplicateDetectionEnabled.collectAsState()
-        val minimumMatchScore by duplicatePreferences.minimumMatchScore.collectAsState()
         val descriptionWeight by duplicatePreferences.descriptionWeight.collectAsState()
         val authorWeight by duplicatePreferences.authorWeight.collectAsState()
         val artistWeight by duplicatePreferences.artistWeight.collectAsState()
@@ -79,17 +78,14 @@ object DuplicateDetectionSettingsScreen : SearchableSettings {
                     Preference.PreferenceItem.SliderPreference(
                         preference = duplicatePreferences.minimumMatchScore,
                         title = stringResource(MR.strings.pref_duplicate_detection_minimum_score),
-                        value = minimumMatchScore,
-                        valueString = minimumMatchScore.toString(),
                         subtitle = stringResource(MR.strings.pref_duplicate_detection_minimum_score_summary),
-                        enabled = extendedEnabled,
+                        visible = extendedEnabled,
                         valueRange = 0..DuplicatePreferences.TOTAL_SCORE_BUDGET,
-                        onValueChanged = { duplicatePreferences.minimumMatchScore.set(it) },
                     ),
                     Preference.PreferenceItem.TextPreference(
                         title = stringResource(MR.strings.pref_duplicate_detection_reset_settings),
                         subtitle = stringResource(MR.strings.pref_duplicate_detection_reset_settings_summary),
-                        enabled = extendedEnabled,
+                        visible = extendedEnabled,
                         isProfileSpecific = true,
                         onClick = duplicatePreferences::resetDetectionSettings,
                     ),
@@ -100,7 +96,7 @@ object DuplicateDetectionSettingsScreen : SearchableSettings {
                             titleExclusionPatterns.size,
                             titleExclusionPatterns.size,
                         ),
-                        enabled = extendedEnabled,
+                        visible = extendedEnabled,
                         isProfileSpecific = true,
                         onClick = {
                             navigator.push(DuplicateTitleExclusionsScreen())
@@ -125,106 +121,90 @@ object DuplicateDetectionSettingsScreen : SearchableSettings {
                             Preference.PreferenceItem.SliderPreference(
                                 preference = duplicatePreferences.descriptionWeight,
                                 title = stringResource(MR.strings.pref_duplicate_detection_weight_description),
-                                value = budget.description,
                                 subtitle = stringResource(
                                     MR.strings.pref_duplicate_detection_weight_summary_description,
                                     budget.description,
                                     budget.description + budget.remainingBudget,
                                 ),
-                                enabled = true,
+                                visible = true,
                                 valueRange = 0..(budget.description + budget.remainingBudget),
-                                onValueChanged = { duplicatePreferences.descriptionWeight.set(it) },
                             ),
                             Preference.PreferenceItem.SliderPreference(
                                 preference = duplicatePreferences.authorWeight,
                                 title = stringResource(MR.strings.pref_duplicate_detection_weight_author),
-                                value = budget.author,
                                 subtitle = stringResource(
                                     MR.strings.pref_duplicate_detection_weight_summary_author,
                                     budget.author,
                                     budget.author + budget.remainingBudget,
                                 ),
-                                enabled = true,
+                                visible = true,
                                 valueRange = 0..(budget.author + budget.remainingBudget),
-                                onValueChanged = { duplicatePreferences.authorWeight.set(it) },
                             ),
                             Preference.PreferenceItem.SliderPreference(
                                 preference = duplicatePreferences.artistWeight,
                                 title = stringResource(MR.strings.pref_duplicate_detection_weight_artist),
-                                value = budget.artist,
                                 subtitle = stringResource(
                                     MR.strings.pref_duplicate_detection_weight_summary_artist,
                                     budget.artist,
                                     budget.artist + budget.remainingBudget,
                                 ),
-                                enabled = true,
+                                visible = true,
                                 valueRange = 0..(budget.artist + budget.remainingBudget),
-                                onValueChanged = { duplicatePreferences.artistWeight.set(it) },
                             ),
                             Preference.PreferenceItem.SliderPreference(
                                 preference = duplicatePreferences.coverWeight,
                                 title = stringResource(MR.strings.pref_duplicate_detection_weight_cover),
-                                value = budget.cover,
                                 subtitle = stringResource(
                                     MR.strings.pref_duplicate_detection_weight_summary_cover,
                                     budget.cover,
                                     budget.cover + budget.remainingBudget,
                                 ),
-                                enabled = true,
+                                visible = true,
                                 valueRange = 0..(budget.cover + budget.remainingBudget),
-                                onValueChanged = { duplicatePreferences.coverWeight.set(it) },
                             ),
                             Preference.PreferenceItem.SliderPreference(
                                 preference = duplicatePreferences.genreWeight,
                                 title = stringResource(MR.strings.pref_duplicate_detection_weight_genre),
-                                value = budget.genre,
                                 subtitle = stringResource(
                                     MR.strings.pref_duplicate_detection_weight_summary_genre,
                                     budget.genre,
                                     budget.genre + budget.remainingBudget,
                                 ),
-                                enabled = true,
+                                visible = true,
                                 valueRange = 0..(budget.genre + budget.remainingBudget),
-                                onValueChanged = { duplicatePreferences.genreWeight.set(it) },
                             ),
                             Preference.PreferenceItem.SliderPreference(
                                 preference = duplicatePreferences.statusWeight,
                                 title = stringResource(MR.strings.pref_duplicate_detection_weight_status),
-                                value = budget.status,
                                 subtitle = stringResource(
                                     MR.strings.pref_duplicate_detection_weight_summary_status,
                                     budget.status,
                                     budget.status + budget.remainingBudget,
                                 ),
-                                enabled = true,
+                                visible = true,
                                 valueRange = 0..(budget.status + budget.remainingBudget),
-                                onValueChanged = { duplicatePreferences.statusWeight.set(it) },
                             ),
                             Preference.PreferenceItem.SliderPreference(
                                 preference = duplicatePreferences.chapterCountWeight,
                                 title = stringResource(MR.strings.pref_duplicate_detection_weight_chapter_count),
-                                value = budget.chapterCount,
                                 subtitle = stringResource(
                                     MR.strings.pref_duplicate_detection_weight_summary_chapter_count,
                                     budget.chapterCount,
                                     budget.chapterCount + budget.remainingBudget,
                                 ),
-                                enabled = true,
+                                visible = true,
                                 valueRange = 0..(budget.chapterCount + budget.remainingBudget),
-                                onValueChanged = { duplicatePreferences.chapterCountWeight.set(it) },
                             ),
                             Preference.PreferenceItem.SliderPreference(
                                 preference = duplicatePreferences.titleWeight,
                                 title = stringResource(MR.strings.pref_duplicate_detection_weight_title),
-                                value = budget.title,
                                 subtitle = stringResource(
                                     MR.strings.pref_duplicate_detection_weight_summary_title,
                                     budget.title,
                                     budget.title + budget.remainingBudget,
                                 ),
-                                enabled = true,
+                                visible = true,
                                 valueRange = 0..(budget.title + budget.remainingBudget),
-                                onValueChanged = { duplicatePreferences.titleWeight.set(it) },
                             ),
                         ),
                     ),

@@ -7,7 +7,8 @@ import okhttp3.HttpUrl
 
 class AndroidCookieJar : CookieJar {
 
-    private val manager = CookieManager.getInstance()
+    // Getting it loads WebView, which takes long enough to be felt when done during startup
+    private val manager by lazy { CookieManager.getInstance() }
 
     override fun saveFromResponse(url: HttpUrl, cookies: List<Cookie>) {
         val urlString = url.toString()

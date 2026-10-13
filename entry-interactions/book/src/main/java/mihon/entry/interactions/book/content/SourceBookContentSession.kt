@@ -7,6 +7,8 @@ import eu.kanade.tachiyomi.source.entry.EntryMedia
 import eu.kanade.tachiyomi.source.entry.SEntryChapter
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import mihon.book.api.BookContentResource
 import mihon.book.api.BookContentResourcePage
 import mihon.book.api.BookResourceAvailability
@@ -230,7 +232,8 @@ internal class SourceBookContentSession(
             url = location.sourceChildKey
             name = location.sourceChildKey
         }
-        val nestedMedia = source.getMedia(sourceChild) as? EntryMedia.Book
+        // Sources read responses on the thread they resume on, and resources are opened from the reader's thread.
+        val nestedMedia = withContext(Dispatchers.IO) { source.getMedia(sourceChild) } as? EntryMedia.Book
             ?: error("BOOK source child ${location.sourceChildKey} returned non-BOOK media")
         val nestedResource = nestedMedia.catalog.resources.firstOrNull { it.id == resourceId }
         nestedResource?.requireAccessible()

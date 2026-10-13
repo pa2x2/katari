@@ -54,6 +54,7 @@ internal fun VideoPlayerOverlay(
     anime: Entry,
     currentEpisodeId: Long,
     episodeListItems: List<VideoPlayerEpisodeListEntry>,
+    expandedMemberIds: Set<Long>,
     playbackStateByEpisodeId: Map<Long, EntryProgressState>,
     sourceAvailable: Boolean,
     hasPreviousEpisode: Boolean,
@@ -76,6 +77,7 @@ internal fun VideoPlayerOverlay(
     onOpenEpisodes: () -> Unit,
     onDismissEpisodes: () -> Unit,
     onEpisodeSelected: (EntryChapter) -> Unit,
+    onMemberToggled: (Long) -> Unit,
     onPreviousEpisode: () -> Unit,
     onSeekBackward: () -> Unit,
     onTogglePlayback: () -> Unit,
@@ -285,10 +287,12 @@ internal fun VideoPlayerOverlay(
                 visible = episodesDrawerVisible,
                 anime = anime,
                 episodeListItems = episodeListItems,
+                expandedMemberIds = expandedMemberIds,
                 currentEpisodeId = currentEpisodeId,
                 playbackStateByEpisodeId = playbackStateByEpisodeId,
                 sourceAvailable = sourceAvailable,
                 onEpisodeClick = onEpisodeSelected,
+                onMemberClick = onMemberToggled,
                 onDismissRequest = onDismissEpisodes,
                 modifier = Modifier
                     .fillMaxSize()

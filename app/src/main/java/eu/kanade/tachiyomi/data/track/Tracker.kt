@@ -67,9 +67,14 @@ interface Tracker : TrackerCapabilities {
     @CallSuper
     fun logout()
 
+    /** Re-reads the logged-in account's profile (display name, score format) from the service. Throws on failure. */
+    suspend fun refreshUser()
+
     val isLoggedIn: Boolean
 
     val isLoggedInFlow: Flow<Boolean>
+
+    val displayUsernameFlow: Flow<String>
 
     fun getUsername(): String
 

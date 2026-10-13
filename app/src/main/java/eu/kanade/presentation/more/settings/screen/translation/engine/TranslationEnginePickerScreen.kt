@@ -7,7 +7,7 @@ import androidx.compose.ui.platform.LocalContext
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.more.settings.screen.RefreshTranslationSettingsOnResume
-import eu.kanade.presentation.more.settings.screen.rememberTranslationSettingsScreenModel
+import eu.kanade.presentation.more.settings.screen.rememberTranslationSettingsViewModel
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.util.system.openInBrowser
 import eu.kanade.tachiyomi.util.system.toast
@@ -22,7 +22,7 @@ internal class TranslationEnginePickerScreen : Screen() {
     override fun Content() {
         val context = LocalContext.current
         val navigator = LocalNavigator.currentOrThrow
-        val model = rememberTranslationSettingsScreenModel()
+        val model = rememberTranslationSettingsViewModel()
         val playground by model.playground.collectAsState()
         val engines by model.engines.collectAsState()
 

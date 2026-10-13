@@ -11,6 +11,7 @@ import mihon.entry.interactions.state.EntryConsumptionFeature
 import mihon.feature.graph.FeatureGraphEvaluation
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.source.service.SourceManager
+import tachiyomi.domain.source.service.awaitInitialized
 
 internal class DefaultEntryLibraryUpdateNotificationFeature(
     private val evaluation: FeatureGraphEvaluation,
@@ -65,12 +66,14 @@ internal class DefaultEntryLibraryUpdateNotificationFeature(
         sharedLibraryUpdateNotificationRoute,
     )
 
-    override fun queueWarning(entries: List<Entry>): EntryLibraryUpdateQueueWarning {
+    override suspend fun queueWarning(entries: List<Entry>): EntryLibraryUpdateQueueWarning {
         entries.forEach { entry ->
             check(entry.type in queueWarningTypes) {
                 "Entry type ${entry.type} was not contributed to Library Update notifications"
             }
         }
+        // Sources that haven't loaded yet would all count as metered
+        sourceManager.awaitInitialized()
         val maxEntriesPerMeteredSource = entries
             .groupBy(Entry::source)
             .filterKeys { sourceId -> sourceManager.get(sourceId) !is UnmeteredSource }

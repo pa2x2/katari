@@ -5,7 +5,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalConfiguration
-import cafe.adriel.voyager.core.model.rememberScreenModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.components.AppBar
@@ -34,11 +34,11 @@ data class HistoryActivityScreen(
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val screenModel = rememberScreenModel {
-            HistoryActivityScreenModel(startLocalDate, endLocalDate, typeName, entryIds)
+        val viewModel = viewModel {
+            HistoryActivityViewModel(startLocalDate, endLocalDate, typeName, entryIds)
         }
-        val state by screenModel.state.collectAsState()
-        val summary by screenModel.summary.collectAsState()
+        val state by viewModel.state.collectAsState()
+        val summary by viewModel.summary.collectAsState()
         val locale = LocalConfiguration.current.locales[0]
         val title = remember(startLocalDate, endLocalDate, locale) {
             val formatter = DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(locale)
@@ -52,7 +52,7 @@ data class HistoryActivityScreen(
                 AppBar(
                     title = title,
                     subtitle = entryTitle
-                        ?: screenModel.type?.let { stringResource(it.entryTypePresentation().displayNameLabel) },
+                        ?: viewModel.type?.let { stringResource(it.entryTypePresentation().displayNameLabel) },
                     navigateUp = navigator::pop,
                     scrollBehavior = scrollBehavior,
                 )
@@ -61,14 +61,14 @@ data class HistoryActivityScreen(
             HistoryActivityScreenContent(
                 state = state,
                 summary = summary,
-                type = screenModel.type,
-                types = screenModel.types,
-                showSessionType = screenModel.type == null && !screenModel.isEntryScope,
-                showSessionEntry = !screenModel.isEntryScope,
+                type = viewModel.type,
+                types = viewModel.types,
+                showSessionType = viewModel.type == null && !viewModel.isEntryScope,
+                showSessionEntry = !viewModel.isEntryScope,
                 paddingValues = paddingValues,
                 onEntryClick = { navigator.push(EntryScreen(it)) },
-                onRetry = screenModel::retry,
-                onLoadMore = screenModel::loadMore,
+                onRetry = viewModel::retry,
+                onLoadMore = viewModel::loadMore,
             )
         }
     }

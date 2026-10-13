@@ -143,8 +143,6 @@
     <string name="pref_date_format">तिथिसंरूपम्</string>
     <string name="lock_when_idle">कार्याभावे अपिदधातु</string>
     <string name="secure_screen_summary">अभिरक्षणपटलम् अनुप्रयोगाणां परिवर्तने अनुप्रयोगवस्तु वृणोति पटलप्रतिकृतीनां च सृष्टिं निवारयति॥</string>
-    <string name="pref_category_nsfw_content">प्रौढानां कृते एव (१८+) वस्तुमूलानि</string>
-    <string name="pref_show_nsfw_source">मूलानां विस्ताराणां च सूचीषु दर्शयतु</string>
     <string name="relative_time_today">अद्य</string>
     <string name="pref_library_columns">प्रतिपङ्क्तौ वस्तूनि</string>
     <string name="landscape">अनुप्रस्थम्</string>
@@ -176,8 +174,6 @@
     <string name="ext_installed">प्रतिष्ठापितम्</string>
     <string name="ext_untrusted">अविश्वस्तम्</string>
     <string name="ext_app_info">अनुप्रयोगविवरणम्</string>
-    <string name="ext_nsfw_short">१८+</string>
-    <string name="ext_nsfw_warning">प्रौढानां कृते एव (१८+) वस्तु अन्तः स्यात्</string>
     <string name="ext_install_service_notif">विस्तारं प्रतिष्ठापयति …</string>
     <string name="ext_installer_legacy">क्रमगतम्</string>
     <string name="pref_library_update_refresh_metadata">प्रदत्तांशं स्वयञ्चालितं नवीकरोतु</string>
@@ -198,7 +194,6 @@
     <string name="pref_dual_page_invert">द्विपुटविभाजनस्य स्थापनं व्यत्यासं कुरु</string>
     <string name="pref_dual_page_split">द्विपुटविभाजनम्</string>
     <string name="pref_cutout_short">खण्डितक्षेत्रे वस्तु दर्शयतु</string>
-    <string name="parental_controls_info">एतत् अनधिकारैः उत वस्तुतः अशुद्धचिह्नितैः विस्तारेभ्यः ॰प्रौढानां कृते एव (१८+)॰ इति चिह्नितवस्तूनाम् अनुप्रयोगे दर्शनं न निवारयति।</string>
     <string name="pref_show_navigation_mode_summary">प्रदर्शकस्य उद्घाटने नोदनमण्डलानि दर्शयतु</string>
     <string name="pref_page_transitions">पुटसङ्क्रमान् जीवयतु</string>
     <string name="pref_double_tap_anim_speed">द्विवारनोदनं सञ्जीवनवेगः</string>
@@ -466,7 +461,6 @@
     <string name="set_as_cover">मुखचित्रम् इव स्थापयतु</string>
     <string name="pref_category_for_this_series">अस्यै धारावाहिकायै</string>
     <string name="file_select_cover">मुखचित्रम् चिनोतु</string>
-    <string name="file_select_backup">प्रतिलेखनसञ्चिकां चिनोतु</string>
     <string name="pref_navigate_pan">पुटान्तरे प्लवतु</string>
     <string name="pref_landscape_zoom">अनुप्रस्थचित्रं सर्पकं करोतु</string>
     <string name="pref_refresh_library_covers">ग्रन्थालयमाङ्गामुखचित्राणि नवीकरोतु</string>
@@ -499,8 +493,7 @@
     <string name="transition_pages_error">पुटानाम् आरोहणम् अनुत्तीर्णम् - %1$s</string>
     <string name="download_notifier_text_only_wifi">वै-फ़ै सम्पर्कः न उपलभ्यः</string>
     <string name="download_notifier_no_network">जालसम्पर्कः न उपलभ्यः</string>
-    <string name="copied_to_clipboard">प्रतिलेखः अंशफलकान्ते कृतः -
-\n%1$s</string>
+    <string name="copied_to_clipboard">प्रतिलेखः अंशफलकान्ते कृतः - \n%1$s</string>
     <string name="notification_chapters_single_and_more">अध्यायः %1$s च इतोऽपि %2$d च</string>
     <string name="file_picker_error">सञ्चिकाग्राही अनुप्रयोगः न लभ्यः</string>
     <string name="clear_database_source_item_count">दत्तनिधौ %1$d ग्रन्थालयपराः माङ्गाः सन्ति</string>

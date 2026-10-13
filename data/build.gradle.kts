@@ -44,6 +44,7 @@ dependencies {
     implementation(libs.kotlinx.datetime)
 
     api(libs.bundles.sqldelight)
+    implementation(libs.androidx.sqlite.bundled)
 
     testImplementation(libs.bundles.test)
     testImplementation(libs.kotlinx.coroutines.test)

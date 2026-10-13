@@ -1,12 +1,12 @@
 package eu.kanade.tachiyomi.ui.translator
 
 import androidx.compose.runtime.Composable
-import cafe.adriel.voyager.core.model.rememberScreenModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.ui.setting.SettingsScreen
-import eu.kanade.tachiyomi.ui.translator.session.TranslatorScreenModel
+import eu.kanade.tachiyomi.ui.translator.session.TranslatorViewModel
 
 class TranslatorScreen(
     private val initialText: String = "",
@@ -14,9 +14,9 @@ class TranslatorScreen(
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val screenModel = rememberScreenModel { TranslatorScreenModel(initialText) }
+        val viewModel = viewModel { TranslatorViewModel(initialText) }
         TranslatorRoute(
-            screenModel = screenModel,
+            viewModel = viewModel,
             onNavigateUp = navigator::pop,
             onOpenSettings = {
                 navigator.push(SettingsScreen(SettingsScreen.Destination.Translation))

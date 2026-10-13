@@ -1,9 +1,6 @@
 package eu.kanade.presentation.more.settings.widget
 
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Error
-import androidx.compose.material.icons.outlined.Clear
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -22,6 +19,9 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.window.DialogProperties
 import kotlinx.coroutines.launch
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Close
+import mihon.icons.materialsymbols.roundedfilled.Error
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -59,11 +59,11 @@ fun EditTextPreferenceWidget(
                     onValueChange = { textFieldValue = it },
                     trailingIcon = {
                         if (textFieldValue.text.isBlank()) {
-                            Icon(imageVector = Icons.Filled.Error, contentDescription = null)
+                            Icon(imageVector = MaterialSymbols.RoundedFilled.Error, contentDescription = null)
                         } else {
                             IconButton(onClick = { textFieldValue = TextFieldValue("") }) {
                                 Icon(
-                                    imageVector = Icons.Outlined.Clear,
+                                    imageVector = MaterialSymbols.Rounded.Close,
                                     contentDescription = stringResource(MR.strings.action_reset),
                                 )
                             }

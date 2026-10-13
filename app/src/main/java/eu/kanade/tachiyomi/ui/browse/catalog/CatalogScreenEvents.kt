@@ -11,21 +11,21 @@ import tachiyomi.presentation.core.i18n.stringResource
 /** Presents one-off catalogue events that need the user's attention. */
 @Composable
 internal fun CatalogScreenEventsEffect(
-    screenModel: CatalogScreenModel,
+    viewModel: CatalogViewModel,
     snackbarHostState: SnackbarHostState,
 ) {
     val keptChangesMessage = stringResource(MR.strings.browse_search_kept_filter_changes)
     val reviewLabel = stringResource(MR.strings.action_review)
-    LaunchedEffect(screenModel) {
-        screenModel.events.collect { event ->
+    LaunchedEffect(viewModel) {
+        viewModel.events.collect { event ->
             when (event) {
-                CatalogScreenModel.Event.SearchKeptUnappliedFilters -> {
+                CatalogViewModel.Event.SearchKeptUnappliedFilters -> {
                     val result = snackbarHostState.showSnackbar(
                         message = keptChangesMessage,
                         actionLabel = reviewLabel,
                         duration = SnackbarDuration.Long,
                     )
-                    if (result == SnackbarResult.ActionPerformed) screenModel.openFilterSheet()
+                    if (result == SnackbarResult.ActionPerformed) viewModel.openFilterSheet()
                 }
             }
         }

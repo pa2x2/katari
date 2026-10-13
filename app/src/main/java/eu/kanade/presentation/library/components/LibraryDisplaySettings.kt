@@ -10,5 +10,6 @@ data class LibraryDisplaySettings(
     val localBadge: Boolean = true,
     val languageBadge: Boolean = false,
     val entryTypeBadge: Boolean = true,
+    val mergedBadge: Boolean = true,
     val pinnedDisplayStyle: LibraryPinnedDisplayStyle = LibraryPinnedDisplayStyle.TonalGroup,
 )

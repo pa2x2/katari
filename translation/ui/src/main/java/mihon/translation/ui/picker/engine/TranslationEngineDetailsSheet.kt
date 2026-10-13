@@ -8,8 +8,6 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -22,6 +20,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.automirroredrounded.OpenInNew
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -98,7 +98,7 @@ internal fun TranslationEngineDetailsSheet(
                     TextButton(onClick = { onOpenUrl(url) }) {
                         Text(stringResource(MR.strings.translation_engine_open_attribution))
                         Icon(
-                            imageVector = Icons.AutoMirrored.Filled.OpenInNew,
+                            imageVector = MaterialSymbols.AutoMirroredRounded.OpenInNew,
                             contentDescription = null,
                             modifier = Modifier.padding(start = 8.dp),
                         )
@@ -109,7 +109,7 @@ internal fun TranslationEngineDetailsSheet(
                 TextButton(onClick = { onOpenUrl(url) }) {
                     Text(stringResource(MR.strings.translation_engine_open_documentation))
                     Icon(
-                        imageVector = Icons.AutoMirrored.Filled.OpenInNew,
+                        imageVector = MaterialSymbols.AutoMirroredRounded.OpenInNew,
                         contentDescription = null,
                         modifier = Modifier.padding(start = 8.dp),
                     )

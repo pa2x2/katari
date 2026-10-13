@@ -10,14 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
-import androidx.compose.material.icons.outlined.Check
-import androidx.compose.material.icons.outlined.ExpandMore
-import androidx.compose.material.icons.outlined.Favorite
-import androidx.compose.material.icons.outlined.FilterList
-import androidx.compose.material.icons.outlined.NewReleases
-import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -45,6 +37,14 @@ import eu.kanade.presentation.browse.components.BaseSourceItem
 import eu.kanade.presentation.components.AdaptiveSheet
 import eu.kanade.tachiyomi.ui.browse.source.browse.preset.displayName
 import eu.kanade.tachiyomi.util.system.LocaleHelper
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.automirroredrounded.KeyboardArrowRight
+import mihon.icons.materialsymbols.rounded.Check
+import mihon.icons.materialsymbols.rounded.FilterList
+import mihon.icons.materialsymbols.rounded.KeyboardArrowDown
+import mihon.icons.materialsymbols.rounded.Search
+import mihon.icons.materialsymbols.rounded.Verified
+import mihon.icons.materialsymbols.roundedfilled.Favorite
 import tachiyomi.domain.source.model.Source
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.ScrollbarLazyColumn
@@ -85,7 +85,7 @@ internal fun AddFeedSheet(
                     .fillMaxWidth()
                     .padding(horizontal = MaterialTheme.padding.medium, vertical = MaterialTheme.padding.small),
                 placeholder = { Text(text = stringResource(MR.strings.browse_feed_search_sources)) },
-                leadingIcon = { Icon(imageVector = Icons.Outlined.Search, contentDescription = null) },
+                leadingIcon = { Icon(imageVector = MaterialSymbols.Rounded.Search, contentDescription = null) },
                 singleLine = true,
             )
             ScrollbarLazyColumn {
@@ -170,7 +170,7 @@ private fun AddFeedSourceRow(
                 }
             }
             Icon(
-                imageVector = Icons.Outlined.ExpandMore,
+                imageVector = MaterialSymbols.Rounded.KeyboardArrowDown,
                 contentDescription = null,
                 modifier = Modifier
                     .padding(start = MaterialTheme.padding.small)
@@ -198,7 +198,7 @@ private fun AddFeedPresetRow(
             )
             if (added) {
                 Icon(
-                    imageVector = Icons.Outlined.Check,
+                    imageVector = MaterialSymbols.Rounded.Check,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(18.dp),
@@ -219,7 +219,7 @@ private fun FilteredFeedRow(
     onClick: () -> Unit,
 ) {
     PresetRow(
-        icon = Icons.Outlined.FilterList,
+        icon = MaterialSymbols.Rounded.FilterList,
         onClick = onClick,
         content = {
             Column(modifier = Modifier.weight(1f)) {
@@ -231,7 +231,7 @@ private fun FilteredFeedRow(
                 )
             }
             Icon(
-                imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowRight,
+                imageVector = MaterialSymbols.AutoMirroredRounded.KeyboardArrowRight,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -260,8 +260,8 @@ private fun PresetRow(
 
 private fun SourceFeedPreset.listingIcon(): ImageVector {
     return when (id) {
-        BUILTIN_POPULAR_PRESET_ID -> Icons.Outlined.Favorite
-        BUILTIN_LATEST_PRESET_ID -> Icons.Outlined.NewReleases
-        else -> Icons.Outlined.FilterList
+        BUILTIN_POPULAR_PRESET_ID -> MaterialSymbols.RoundedFilled.Favorite
+        BUILTIN_LATEST_PRESET_ID -> MaterialSymbols.Rounded.Verified
+        else -> MaterialSymbols.Rounded.FilterList
     }
 }

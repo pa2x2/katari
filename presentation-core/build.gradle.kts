@@ -26,13 +26,13 @@ kotlin {
 dependencies {
     api(projects.core.common)
     implementation(projects.domain)
+    implementation(projects.icons.materialSymbols)
     api(projects.i18n)
 
     // Compose
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.foundation)
     implementation(libs.androidx.compose.material3)
-    implementation(libs.androidx.compose.materialIcons)
     implementation(libs.androidx.compose.animation)
     implementation(libs.androidx.compose.animationGraphics)
     debugImplementation(libs.androidx.compose.uiTooling)

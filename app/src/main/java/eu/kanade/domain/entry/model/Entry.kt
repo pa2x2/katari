@@ -8,7 +8,7 @@ import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
 fun Entry.hasCustomCover(coverCache: CoverCache = Injekt.get()): Boolean {
-    return coverCache.getCustomCoverFile(id).exists()
+    return coverCache.hasCustomCover(id)
 }
 
 fun Entry.chaptersFiltered(libraryPreferences: LibraryPreferences = Injekt.get()): Boolean {
