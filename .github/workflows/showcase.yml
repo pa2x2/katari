@@ -95,9 +95,16 @@ jobs:
             echo "$tools/bin"
           } >> "$GITHUB_PATH"
 
-      - name: Build
-        run: ./gradlew :app:assembleBenchmark :showcase:extension:assembleDebug :showcase:capture:assembleBenchmark
+      # Upstream sites such as Project Gutenberg go down for hours, so a run reuses what earlier runs downloaded for the
+      # same content definitions, and only has to reach them when those change.
+      - name: Restore the showcase downloads
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ env.KATARI_SHOWCASE_CACHE }}/downloads
+          key: showcase-downloads-${{ hashFiles('showcase/content/**') }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: showcase-downloads-${{ hashFiles('showcase/content/**') }}-
 
+      # Before the build, so that an upstream site that cannot be reached fails the run in seconds.
       - name: Fetch the showcase content
         working-directory: showcase
         run: |
@@ -105,9 +112,21 @@ jobs:
           npm run fetch
           npm run seed
 
+      - name: Build
+        run: ./gradlew :app:assembleBenchmark :showcase:extension:assembleDebug :showcase:capture:assembleBenchmark
+
       - name: Capture
         working-directory: showcase
         run: npm run capture -- --out "$RUNNER_TEMP/captures"
+
+      # Also after a failure, so a later run starts from whatever this one managed to download, the film the player
+      # streamed included.
+      - name: Save the showcase downloads
+        if: always()
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ env.KATARI_SHOWCASE_CACHE }}/downloads
+          key: showcase-downloads-${{ hashFiles('showcase/content/**') }}-${{ github.run_id }}-${{ github.run_attempt }}
 
       - name: Upload what the failed capture left
         if: failure()
