@@ -207,12 +207,12 @@ import { sitePath } from "../site/links.ts";
     padding: 0.4rem;
     border: 0;
     background: none;
-    color: var(--muted);
+    color: var(--text-muted);
     cursor: pointer;
   }
 
   .expand:hover {
-    color: var(--cream);
+    color: var(--text-strong);
   }
 
   .field {
@@ -221,14 +221,14 @@ import { sitePath } from "../site/links.ts";
     gap: 0.5rem;
     width: 15rem;
     padding: 0 0.7rem;
-    border: 1px solid var(--indigo-light);
+    border: 1px solid var(--border);
     border-radius: 0.5rem;
-    background: var(--indigo);
-    color: var(--muted);
+    background: var(--surface);
+    color: var(--text-muted);
   }
 
   .field:focus-within {
-    border-color: var(--clay);
+    border-color: var(--accent);
   }
 
   input {
@@ -238,14 +238,14 @@ import { sitePath } from "../site/links.ts";
     padding: 0;
     border: 0;
     background: none;
-    color: var(--cream);
+    color: var(--text-strong);
     font: inherit;
     font-size: 0.95rem;
     outline: none;
   }
 
   input::placeholder {
-    color: var(--muted);
+    color: var(--text-muted);
   }
 
   input::-webkit-search-cancel-button {
@@ -254,7 +254,7 @@ import { sitePath } from "../site/links.ts";
 
   kbd {
     padding: 0 0.4rem;
-    border: 1px solid var(--indigo-light);
+    border: 1px solid var(--border);
     border-radius: 0.3rem;
     font-family: var(--sans);
     font-size: 0.75rem;
@@ -270,8 +270,8 @@ import { sitePath } from "../site/links.ts";
     height: 2rem;
     border: 0;
     border-radius: 50%;
-    background: #ffffff1a;
-    color: var(--cream);
+    background: color-mix(in srgb, var(--text-strong) 10%, transparent);
+    color: var(--text-strong);
     cursor: pointer;
   }
 
@@ -283,9 +283,9 @@ import { sitePath } from "../site/links.ts";
     max-height: calc(100dvh - var(--header-height) - 2rem);
     overflow-y: auto;
     padding: 0.5rem;
-    border: 1px solid var(--indigo-light);
+    border: 1px solid var(--border);
     border-radius: 0.75rem;
-    background: var(--night);
+    background: var(--bg);
     box-shadow: 0 1rem 2.5rem #0008;
   }
 
@@ -296,7 +296,7 @@ import { sitePath } from "../site/links.ts";
   .status {
     margin: 0;
     padding: 0 0.6rem;
-    color: var(--muted);
+    color: var(--text-muted);
   }
 
   .status:not(:empty) {
@@ -317,20 +317,20 @@ import { sitePath } from "../site/links.ts";
 
   .results :global(ul) {
     margin: 0 0 0.25rem 0.9rem;
-    border-left: 2px solid var(--indigo-light);
+    border-left: 2px solid var(--border);
   }
 
   .results :global(a) {
     display: block;
     padding: 0.5rem 0.7rem;
     border-radius: 0.5rem;
-    color: var(--cream);
+    color: var(--text-strong);
     text-decoration: none;
   }
 
   .results :global(a:hover),
   .results :global(a:focus-visible) {
-    background: var(--indigo);
+    background: var(--surface);
     outline: none;
   }
 
@@ -345,14 +345,14 @@ import { sitePath } from "../site/links.ts";
 
   .results :global(a span) {
     display: block;
-    color: var(--muted);
+    color: var(--text-muted);
     font-size: 0.85rem;
     line-height: 1.45;
   }
 
   .results :global(mark) {
     background: none;
-    color: var(--clay);
+    color: var(--accent);
     font-weight: 600;
   }
 
@@ -384,7 +384,7 @@ import { sitePath } from "../site/links.ts";
       padding: 0 var(--gutter);
       border: 0;
       border-radius: 0;
-      background: var(--night);
+      background: var(--bg);
     }
 
     .expanded .collapse {

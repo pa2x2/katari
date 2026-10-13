@@ -38,8 +38,8 @@
   width: 1.6rem;
   height: 1.6rem;
   border-radius: 50%;
-  box-shadow: inset 0 0 0 1.5px var(--indigo-light);
-  color: var(--muted);
+  box-shadow: inset 0 0 0 1.5px var(--border);
+  color: var(--text-muted);
   font-size: 0.85rem;
   font-weight: 700;
 }
@@ -58,7 +58,7 @@
   width: 0.32em;
   height: 0.32em;
   border-radius: 50%;
-  background: var(--muted);
+  background: var(--text-muted);
 }
 
 .guide main p {
@@ -81,7 +81,7 @@
 
 .guide main th {
   padding: 0.5rem 0.75rem 0.5rem 0;
-  border-bottom: 1px solid var(--indigo-light);
+  border-bottom: 1px solid var(--border);
   color: var(--text);
   font-weight: 650;
   text-align: left;
@@ -89,7 +89,7 @@
 
 .guide main td {
   padding: 0.5rem 0.75rem 0.5rem 0;
-  border-bottom: 1px solid #1a2438;
+  border-bottom: 1px solid var(--rule);
   color: var(--text);
   vertical-align: top;
 }
@@ -98,10 +98,10 @@
   margin: 0 0 1.25rem;
   padding: 0.9rem 1.1rem;
   overflow-x: auto;
-  border: 1px solid var(--indigo-light);
+  border: 1px solid var(--border);
   border-radius: 0.5rem;
-  background: #0f1626;
-  color: var(--muted);
+  background: var(--code-bg);
+  color: var(--text-muted);
   font-size: 0.88rem;
   line-height: 1.6;
 }

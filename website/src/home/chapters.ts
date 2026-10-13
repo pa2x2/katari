@@ -37,7 +37,7 @@ export interface Feature {
   /** The first shot is the one in front. */
   shots: Shot[];
   /** Showpieces span the page on a background of their own instead of sitting beside their text. */
-  band?: "indigo" | "recap";
+  band?: "tinted" | "recap";
 }
 
 export interface Chapter {
@@ -126,7 +126,7 @@ export const chapters: Chapter[] = [
           "Tap a speech bubble to see it beside the original and hear either read aloud",
           "Translate anything you type in the Translator",
         ],
-        band: "indigo",
+        band: "tinted",
         shots: [
           {
             kind: "compare",

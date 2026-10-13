@@ -20,30 +20,30 @@ const { label, tone = "note" } = Astro.props;
     gap: 0.9rem;
     margin: 0 0 1.25rem;
     padding: 0.8rem 1rem;
-    border-left: 3px solid #6f8fd0;
+    border-left: 3px solid var(--note-line);
     border-radius: 0.4rem;
-    background: #142035;
+    background: var(--note-bg);
     max-width: 70ch;
     color: var(--text);
     font-size: 0.95em;
   }
 
   .warning {
-    border-left-color: var(--clay);
-    background: #2a1d17;
+    border-left-color: var(--accent);
+    background: var(--warning-bg);
   }
 
   strong {
     flex: none;
     max-width: 8rem;
     padding-top: 0.15rem;
-    color: #9fb7e8;
+    color: var(--note-label);
     font-size: 0.85em;
     font-weight: 650;
   }
 
   .warning strong {
-    color: var(--clay);
+    color: var(--accent);
   }
 
   /* The class outranks the guide's own paragraph rule, which would leave a paragraph's margin under the last line. */

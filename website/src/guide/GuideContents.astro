@@ -54,7 +54,7 @@ const { current } = Astro.props;
     justify-content: space-between;
     gap: 1rem;
     padding: 0.7rem 1rem;
-    border: 1px solid var(--indigo-light);
+    border: 1px solid var(--border);
     border-radius: 0.5rem;
     cursor: pointer;
     list-style: none;
@@ -65,7 +65,7 @@ const { current } = Astro.props;
   }
 
   summary span {
-    color: var(--muted);
+    color: var(--text-muted);
   }
 
   summary span::after {
@@ -82,7 +82,7 @@ const { current } = Astro.props;
 
   h2 {
     margin: 1.2rem 0 0.4rem;
-    color: var(--cream);
+    color: var(--text-strong);
     font-family: var(--sans);
     font-size: 0.9rem;
     font-weight: 600;
@@ -101,18 +101,18 @@ const { current } = Astro.props;
   a {
     display: block;
     padding: 0.28rem 0 0.28rem 0.8rem;
-    border-left: 2px solid var(--indigo-light);
-    color: var(--muted);
+    border-left: 2px solid var(--border);
+    color: var(--text-muted);
     text-decoration: none;
   }
 
   a:hover {
-    color: var(--cream);
+    color: var(--text-strong);
   }
 
   a[aria-current="page"] {
-    border-left-color: var(--clay);
-    color: var(--cream);
+    border-left-color: var(--accent);
+    color: var(--text-strong);
     font-weight: 600;
   }
 

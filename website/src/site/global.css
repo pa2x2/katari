@@ -5,14 +5,26 @@
 }
 
 :root {
-  --night: #0b111e;
-  --indigo: #18253f;
-  --indigo-light: #253b62;
-  --clay: #d8895f;
-  --cream: #f4f1e8;
-  --muted: #a9b1c4;
-  /* Running text: softer than the headings' cream, which glares across a whole paragraph on a dark page. */
+  /* Colours by role. Headings and emphasis take --text-strong; running text takes the softer --text, since the
+     strongest colour glares across a whole paragraph on a dark page. */
+  --bg: #0b111e;
+  --surface: #18253f;
+  --border: #253b62;
+  --rule: #1a2438;
+  --code-bg: #0f1626;
+  --text-strong: #f4f1e8;
   --text: #d6dbe5;
+  --text-muted: #a9b1c4;
+  --accent: #d8895f;
+  --on-accent: #0b111e;
+  --note-bg: #142035;
+  --note-line: #6f8fd0;
+  --note-label: #9fb7e8;
+  --warning-bg: #2a1d17;
+  /* Phones, clips and the screenshot viewer show a dark app, so they stay dark whatever the page around them. */
+  --device: #05080f;
+  --device-edge: #2a3550;
+  --on-device: #f4f1e8;
   --serif: "Shippori Mincho", serif;
   --sans: "Inter Variable", system-ui, sans-serif;
   --page-width: 100rem;
@@ -20,8 +32,8 @@
   /* The sticky header's height, which anchors scroll past. */
   --header-height: 4rem;
   color-scheme: dark;
-  background: var(--night);
-  color: var(--cream);
+  background: var(--bg);
+  color: var(--text-strong);
   font-family: var(--sans);
   line-height: 1.55;
   scroll-padding-top: var(--header-height);
@@ -32,7 +44,7 @@ body {
 }
 
 a {
-  color: var(--clay);
+  color: var(--accent);
 }
 
 h1,
@@ -49,8 +61,8 @@ h3 {
   gap: 0.5rem;
   padding: 0.75rem 1.3rem;
   border-radius: 0.3rem;
-  background: var(--clay);
-  color: var(--night);
+  background: var(--accent);
+  color: var(--on-accent);
   font-weight: 650;
   text-decoration: none;
   white-space: nowrap;
@@ -58,8 +70,8 @@ h3 {
 
 .button.quiet {
   background: transparent;
-  color: var(--cream);
-  box-shadow: inset 0 0 0 1px var(--indigo-light);
+  color: var(--text-strong);
+  box-shadow: inset 0 0 0 1px var(--border);
 }
 
 .button:hover {
@@ -69,7 +81,7 @@ h3 {
 /* Orange is kept for what can be clicked and for where you are, so it still stands out there. */
 .kicker {
   margin: 0 0 0.75rem;
-  color: var(--muted);
+  color: var(--text-muted);
   font-size: 0.95rem;
   font-weight: 600;
 }

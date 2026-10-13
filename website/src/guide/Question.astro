@@ -33,7 +33,7 @@ const { id, question, open = false } = Astro.props;
 
 <style>
   details {
-    border-bottom: 1px solid var(--indigo-light);
+    border-bottom: 1px solid var(--border);
   }
 
   summary {
@@ -54,7 +54,7 @@ const { id, question, open = false } = Astro.props;
 
   summary::after {
     content: "+";
-    color: var(--muted);
+    color: var(--text-muted);
     font-family: var(--sans);
   }
 
