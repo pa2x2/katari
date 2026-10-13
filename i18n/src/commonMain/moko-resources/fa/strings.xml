@@ -624,7 +624,6 @@
     <string name="information_cloudflare_help">برای دریافت کمک در مورد کلادفلر اینجا ضربه بزنید</string>
     <string name="library_exported">کتابخانه صادر شد</string>
     <string name="information_no_entries_found">هیچ موردی در این دسته‌بندی یافت نشد</string>
-    <string name="supportUsScreen.currentlySupportedBy">میهون در حال حاضر از حمایت %d+ حامی برخوردار است. می‌خواهیم از تک‌تک شما تشکر کنیم. بیایید با هم میهون را حتی بهتر کنیم.</string>
     <string name="trackers_updated_summary">ردیاب‌ها به چپتر %d به‌روزرسانی شدند</string>
     <string name="remove_private_extension_message">آیا واقعاً می‌خواهید افزونه «%s» را حذف کنید؟</string>
     <string name="tracked_privately">درحال ردیابی خصوصی</string>
@@ -637,7 +636,6 @@
     <string name="migrationListScreen.unknownLatestChapter">ناشناخته</string>
     <string name="extensionStoresScreen.addStore.processing">در حال پردازش…</string>
     <string name="migrationConfigScreen.deepSearchModeSubtitle">عنوان را برای جستجوی گسترده‌تر به کلمات کلیدی تجزیه می‌کند</string>
-    <string name="donationCampaign.paragraph2">می‌توانید از طریق Patreon (که روش پیشنهادی است) یا اوپن‌کالکتیو کمک مالی کنید. اگر سؤالی دارید یا مایلید از روش‌های دیگری حمایت کنید، می‌توانید به‌راحتی از طریق سرور دیسکورد Mihon با من در تماس باشید.</string>
     <string name="are_you_sure">مطمئن هستید؟</string>
     <string name="pref_firebase">تحلیل‌ها و گزارش‌های خرابی</string>
     <string name="action_toggle_private_on">ردیابی خصوصی</string>
@@ -657,19 +655,16 @@
     <string name="appwidget_unavailable_locked">هنگامی که قفل برنامه فعال است، ابزارک در دسترس نیست</string>
     <string name="theme_monochrome">تک‌رنگ</string>
     <string name="migrationConfigScreen.prioritizeByChaptersTitle">تطبیق بر اساس شماره چپتر</string>
-    <string name="donationCampaign.dismiss">نادیده‌‎گرفتن</string>
     <string name="action_set_interval">تنظیم بازه زمانی</string>
     <string name="migrationConfigScreen.prioritizeByChaptersSubtitle">در صورت فعال بودن، عنوانی را انتخاب می‌کند که در دورترین فاصله در پیش‌رو قرار دارد. در غیر این صورت، بر اساس اولویت منبع، اولین مورد منطبق را انتخاب می‌کند.</string>
     <string name="label_mean_score">میانگین نمره</string>
     <string name="file_picker_uri_permission_unsupported">دسترسی پایدار به پوشه برقرار نشد. ممکن است برنامه رفتار غیرمنتظره‌ای داشته باشد.</string>
     <string name="extensionStores">فروشگاه‌های افزونه</string>
-    <string name="supportUsScreen.contactPlatform">دیسکورد</string>
     <string name="manga_display_modified_interval_title">تنظیم‌شده برای به‌روزرسانی در هر</string>
     <string name="pref_debug_info">اطلاعات عیب‌یابی</string>
     <string name="pref_reset_viewer_flags">بازنشانی تنظیمات خواندن برای هر سری</string>
     <string name="pref_dump_crash_logs_summary">گزارش‌های خطا را برای اشتراک‌گذاری با توسعه‌دهندگان در یک فایل ذخیره می‌کند</string>
     <string name="onboarding_storage_help_info">قصد به‌روزرسانی از نسخه‌ای قدیمی‌تر را دارید و نمی‌دانید چه گزینه‌ای را انتخاب کنید؟ برای کسب اطلاعات بیشتر، به راهنمای فضای ذخیره‌سازی مراجعه کنید.</string>
-    <string name="donationCampaign.paragraph3">به هر حال، پشتیبانی از می‌هون توسط من و داوطلبان ادامه خواهد یافت و این پروژه همچنان متن‌باز باقی خواهد ماند.</string>
     <string name="manga_interval_expected_update">پیش‌بینی می‌شود فصل‌های جدید حدود %1$s منتشر شوند؛ بررسی‌ها تقریباً هر %2$s یک‌بار انجام می‌شود.</string>
     <string name="action_add_anyway">به هر حال اضافه کن</string>
     <string name="upcoming_calendar_next">ماه آینده</string>
@@ -702,7 +697,6 @@
     <string name="migrationConfigScreen.additionalSearchQueryLabel">کلمات کلیدی اضافی (اختیاری)</string>
     <string name="migrationListScreen.searchManuallyActionLabel">جستجوی دستی</string>
     <string name="export">صادرات</string>
-    <string name="label_support_us">از ما حمایت کنید</string>
     <string name="notification_incognito_text">غیرفعال کردن حالت ناشناس</string>
     <string name="clear_db_exclude_read">عناوین دارای چپترهای خوانده‌شده را نگه دارید</string>
     <string name="track_error">%1$s خطا: %2$s</string>
@@ -741,7 +735,6 @@
     <string name="source_empty_screen">هیچ منبعی یافت نشد</string>
     <string name="action_webview_close_tab">بستن زبانه</string>
     <string name="pref_user_agent_string">رشته عامل کاربر پیش‌فرض</string>
-    <string name="supportUsScreen.perks">حامیان به کانال‌های اختصاصی دسترسی پیدا می‌کنند و مزایای بیشتری نیز در راه است.</string>
     <string name="no_scanlators_found">ترجمه غیر رسمی یافت نشد</string>
     <string name="pref_filter_upcoming_categories_details">عنوان‌های موجود در دسته‌بندی‌های مستثنی‌شده نمایش داده نمی‌شوند، حتی اگر در هر یک از دسته‌بندی‌های مشمول نیز قرار داشته باشند.</string>
     <string name="scanlator">گروه ترجمه غیررسمی</string>
@@ -771,9 +764,7 @@
     <string name="migrationConfigScreen.dataToMigrateHeader">داده‌های قابل انتقال</string>
     <string name="possible_duplicates_summary">موارد مشابهی با این نام در کتابخانه شما وجود دارد.\n\nیک مورد را برای انتقال انتخاب کنید یا آن را به هر حال اضافه نمایید.</string>
     <string name="custom_cover">جلد سفارشی</string>
-    <string name="supportUsScreen.donationPlatform.opencollective">اوپن کالکتیو</string>
     <string name="unfinished_list">فهرست ناتمام</string>
-    <string name="supportUsScreen.donationPlatform.patreon">پتریون (ترجیحی)</string>
     <string name="label_read_duration">مدت زمان مطالعه</string>
     <string name="pref_invalidate_download_cache_summary">اجبار برنامه به بررسی مجدد چپترهای دانلودشده</string>
     <string name="pref_mark_duplicate_read_chapter_read_existing">پس از خواندن یک چپتر</string>
@@ -844,7 +835,6 @@
     <string name="pref_flash_duration">مدت‌زمان فلاش</string>
     <string name="download_notifier_split_page_not_found">برگه %d هنگام تفکیک یافت نشد</string>
     <string name="author">نویسنده</string>
-    <string name="donationCampaign.title">از برنامه لذت می‌برید؟</string>
     <string name="action_notes">یادداشت‌ها</string>
     <string name="wish_list">فهرست علاقه‌مندی‌</string>
     <string name="pref_flash_with">فلاش با</string>
@@ -852,7 +842,6 @@
     <string name="crash_screen_description">%s با خطای غیرمنتظره‌ای مواجه شد. پیشنهاد می‌کنیم گزارش‌های خرابی را در کانال پشتیبانی ما در دیسکورد به اشتراک بگذارید.</string>
     <string name="label_tracker_section">ردیاب‌ها</string>
     <string name="non_library_settings">همهٔ موارد خوانده‌شده</string>
-    <string name="donationCampaign.paragraph1">سلام! من توسعه‌دهنده اصلی «می‌هون» هستم و می‌خواهم از شما درخواست کنم که حمایت مالی از توسعه آن را مد نظر قرار دهید. با حمایت کافی، می‌توانم به‌صورت تمام‌وقت روی «می‌هون» کار کنم و بر رفع مشکلات قدیمی و همچنین پیاده‌سازی قابلیت‌هایی که بسیار مورد تقاضا بوده‌اند، تمرکز کنم.</string>
     <string name="confirm_tracker_update">به‌روزرسانی ردیاب‌ها به چپتر %d؟</string>
     <string name="pref_mark_duplicate_read_chapter_read">علامت‌گذاری چپتر تکراری خوانده شده به عنوان خوانده شده</string>
     <string name="migrationConfigScreen.selectedHeader">انتخاب‌شده</string>
@@ -861,7 +850,6 @@
     <string name="action_edit_notes">ویرایش یادداشت‌ها</string>
     <string name="label_tracked_titles">عناوین ردیابی‌شده</string>
     <string name="migrationListScreen.copyActionLabel">کپی‌کردن</string>
-    <string name="donationCampaign.contactPlatform">دیسکورد</string>
     <string name="exclude_scanlators">استثنا کردن ترجمه غیر رسمی</string>
     <string name="migrationConfigScreen.continueButtonText">ادامه</string>
     <string name="error_saving_picture">خطا در ذخیره تصویر</string>
@@ -874,6 +862,5 @@
     <string name="manga_interval_expected_update_null">این مانگا یا به پایان رسیده است و یا تاریخ انتشار مشخصی برای آن پیش‌بینی نشده است.</string>
     <string name="migrationConfigScreen.enhancedOptionsWarning">این گزینه‌ها کند و خطرناک هستند و ممکن است منجر به اعمال محدودیت‌هایی از سوی منابع شوند</string>
     <string name="migrationListScreen.progressDialog.cancelLabel">لغو</string>
-    <string name="supportUsScreen.contactForDetailsMessage">برای گزینه‌های جایگزین یا هرگونه سؤال مرتبط، به سرور دیسکورد ما بپیوندید.</string>
     <string name="theme_nord">نورد</string>
 </resources>
