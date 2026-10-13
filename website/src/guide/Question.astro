@@ -1,0 +1,77 @@
+---
+interface Props {
+  /** The question's address on its page; the header's Download link opens one of them, so keep them once published. */
+  id: string;
+  question: string;
+  open?: boolean;
+}
+
+const { id, question, open = false } = Astro.props;
+(Astro.locals.guideSections ??= []).push({ id, title: question });
+---
+
+<details id={id} class="question" open={open}>
+  <summary>{question}</summary>
+  <div class="answer"><slot /></div>
+</details>
+
+<script>
+  // A link to a question, such as the header's Download, has to show its answer even when the visitor closed it.
+  const openQuestion = (hash: string) => {
+    const target = hash.length > 1 ? document.getElementById(decodeURIComponent(hash.slice(1))) : null;
+    const question = target?.closest("details.question");
+    if (question) question.open = true;
+  };
+  openQuestion(location.hash);
+  addEventListener("hashchange", () => openQuestion(location.hash));
+  // Following a link to the anchor already in the address changes no hash, so the click itself has to open it.
+  document.addEventListener("click", (event) => {
+    const link = (event.target as Element).closest("a");
+    if (link && link.pathname === location.pathname && link.hash) openQuestion(link.hash);
+  });
+</script>
+
+<style>
+  details {
+    border-bottom: 1px solid var(--border);
+  }
+
+  summary {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.2rem 0;
+    font-family: var(--serif);
+    font-size: 1.35rem;
+    font-weight: 700;
+    cursor: pointer;
+    list-style: none;
+  }
+
+  summary::-webkit-details-marker {
+    display: none;
+  }
+
+  summary::after {
+    content: "+";
+    color: var(--text-muted);
+    font-family: var(--sans);
+  }
+
+  details[open] summary::after {
+    content: "−";
+  }
+
+  .answer {
+    padding: 0 0 1.5rem;
+  }
+
+  .answer :global(p) {
+    margin: 0 0 1rem;
+    color: var(--text);
+  }
+
+  .answer :global(.download) {
+    margin: 1.5rem 0;
+  }
+</style>

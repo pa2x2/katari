@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppBarTitle
+import eu.kanade.presentation.components.GuideButton
 import eu.kanade.presentation.more.settings.screen.translation.TranslationPlaygroundState
 import eu.kanade.presentation.more.settings.screen.translation.engine.translationEngineLabel
 import eu.kanade.presentation.more.settings.screen.translation.series.SeriesTranslationLanguagesEntry
@@ -107,6 +108,7 @@ internal fun TranslationSettingsContent(
                     )
                 },
                 navigateUp = onBack?.let { navigateUp },
+                actions = { GuideButton(page = "translation/") },
                 scrollBehavior = it,
             )
         },

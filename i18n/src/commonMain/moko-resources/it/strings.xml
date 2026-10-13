@@ -856,7 +856,6 @@
     <string name="download_bookmarked">Segnato</string>
     <string name="considering">Considerando</string>
     <string name="downloading_with_progress">Scaricamento… (%d%%)</string>
-    <string name="label_support_us">Supportaci</string>
     <string name="theme_tokyonight">Tokyo Notte</string>
     <string name="pref_hardware_bitmap_threshold_default">Predefinito (%d)</string>
     <string name="pref_hardware_bitmap_threshold_summary">Se il lettore carica un\'immagine vuota, riduci progressivamente il limite.\nSelezionato: %s</string>

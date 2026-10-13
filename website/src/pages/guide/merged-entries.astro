@@ -1,0 +1,61 @@
+---
+import mergedEntry from "../../captures/merged-entry.png";
+import Callout from "../../guide/Callout.astro";
+import GuidePage from "../../guide/GuidePage.astro";
+import Path from "../../guide/Path.astro";
+import Task from "../../guide/Task.astro";
+---
+
+<GuidePage
+  slug="merged-entries"
+  lead="When a title is published in several places or languages, merge them into one entry with every version inside."
+>
+  <Task id="merge" title="Merge titles" shot={{ image: mergedEntry, alt: "Pepper&Carrot as one entry holding its English and Japanese editions", caption: "Two editions, one entry" }}>
+    <p>Start from wherever the titles are:</p>
+    <ul>
+      <li>In the library, long-press the titles to select them and tap <strong>Merge</strong>.</li>
+      <li>On a title's page, tap <strong>Add to merge</strong> and pick the library entry to merge it into.</li>
+      <li>In Browse or a feed, long-press a title and tap <strong>Merge into library...</strong></li>
+    </ul>
+    <p>
+      Katari then shows the merge, top to bottom in the order the merged entry lists them, with the title the others join marked
+      <strong>Root</strong>. Drag them into the order you want and tap <strong>OK</strong>.
+    </p>
+    <Callout label="What can merge">
+      <p>
+        Only titles of the same kind (comics, video or books) and in the same profile, and at most one of them can already be a merged
+        entry.
+      </p>
+    </Callout>
+  </Task>
+
+  <Task id="manage" title="Change a merge">
+    <p>
+      Open the merged entry and tap <Path>⋮ › Manage merge</Path>. Each title's <strong>⋮</strong> menu has <strong>Set as root</strong>,
+      <strong>Remove</strong>, <strong>Remove from library</strong> and <strong>Open</strong>. Tap <strong>Save</strong> to keep the changes.
+    </p>
+    <p>
+      A title that is part of a merge says <strong>This entry is part of a merged entry.</strong> on its own page, with buttons to open the
+      merged entry or manage it.
+    </p>
+    <p>To give the merged entry a name of its own, tap <Path>⋮ › Set display name</Path>.</p>
+  </Task>
+
+  <Task id="unmerge" title="Unmerge">
+    <p>
+      <strong>Unmerge</strong> in <strong>Manage merge</strong> splits the entry back into its titles straight away, without asking.
+    </p>
+    <p>Removing a merged entry from the library removes all of its titles together.</p>
+  </Task>
+
+  <Task id="reading" title="Read a merged entry">
+    <ul>
+      <li>The chapter list has a header for each title, with its source and chapter count. Tap a header to fold that title away.</li>
+      <li>History and Updates name the title a chapter comes from when it differs from the merged entry's name.</li>
+      <li>
+        The cover shows how many titles it holds. To hide that, turn off <strong>Merged entries</strong> under <strong>Cover badges</strong>
+        in the library's display settings.
+      </li>
+    </ul>
+  </Task>
+</GuidePage>

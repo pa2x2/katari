@@ -1,0 +1,98 @@
+---
+import type { ImageMetadata } from "astro";
+import Phone from "../media/Phone.astro";
+
+interface Props {
+  /** The section's address on its page; the app's help links open some of them, so keep them once published. */
+  id: string;
+  title: string;
+  /** A screenshot of the screen the steps describe, shown beside them. */
+  shot?: { image: ImageMetadata; alt: string; caption: string };
+}
+
+const { id, title, shot } = Astro.props;
+(Astro.locals.guideSections ??= []).push({ id, title });
+---
+
+<section class:list={["task", { "with-shot": shot }]}>
+  {/* The id sits on the heading because Pagefind offers headings with ids as sections of a page in its results. */}
+  <h2 id={id}>
+    {title}
+    <a class="anchor" href={`#${id}`} aria-label={`Link to “${title}”`} data-pagefind-ignore>#</a>
+  </h2>
+  <div class="body">
+    <div class="text"><slot /></div>
+    {shot && <Phone image={shot.image} alt={shot.alt} caption={shot.caption} sizes="(min-width: 44rem) 15rem, 60vw" />}
+  </div>
+</section>
+
+<script>
+  // Following a heading's link also copies its address, which is what someone clicking it to share wants.
+  for (const anchor of document.querySelectorAll<HTMLAnchorElement>(".task .anchor")) {
+    anchor.addEventListener("click", () => {
+      navigator.clipboard?.writeText(anchor.href).catch(() => {});
+    });
+  }
+</script>
+
+<style>
+  .task {
+    padding-top: 1.5rem;
+  }
+
+  h2 {
+    position: relative;
+    margin: 0 0 1rem;
+    font-size: clamp(1.5rem, 3vw, 1.9rem);
+  }
+
+  /* Hidden until the heading is pointed at or the link is focused, so headings read clean. */
+  .anchor {
+    margin-left: 0.5rem;
+    color: var(--text-muted);
+    font-family: var(--sans);
+    font-size: 0.8em;
+    text-decoration: none;
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+
+  h2:hover .anchor,
+  .anchor:focus-visible {
+    opacity: 1;
+  }
+
+  /* Touch screens can't hover, so the link stays faintly visible there. */
+  @media (hover: none) {
+    .anchor {
+      opacity: 0.5;
+    }
+  }
+
+  .with-shot .body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 15rem;
+    align-items: start;
+    gap: 3rem;
+  }
+
+  .body :global(.shot) {
+    --shot-width: 15rem;
+  }
+
+  @media (max-width: 44rem) {
+    .with-shot .body {
+      grid-template-columns: minmax(0, 1fr);
+      justify-items: center;
+      gap: 0.5rem;
+    }
+
+    .text {
+      justify-self: stretch;
+    }
+
+    .body :global(.shot) {
+      --shot-width: min(16rem, 70vw);
+    }
+  }
+</style>

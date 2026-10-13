@@ -7,7 +7,7 @@
   },
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build",
+    "build": "astro build && pagefind --site dist",
     "preview": "astro preview",
     "sync": "node scripts/sync-captures.ts"
   },
@@ -16,6 +16,7 @@
     "@fontsource/shippori-mincho": "^5.3.0",
     "@resvg/resvg-js": "^2.6.2",
     "astro": "^7.3.8",
+    "pagefind": "^1.5.2",
     "satori": "^0.47.1"
   }
 }

@@ -46,12 +46,12 @@ const shown = latest.sections.flatMap((section) => {
     display: grid;
     grid-template-columns: max-content minmax(0, 1fr);
     gap: 2.5rem;
-    max-width: calc(var(--page-width) - 2 * var(--gutter));
+    width: calc(min(100%, var(--page-width)) - 2 * var(--gutter));
     margin: 1rem auto 0;
     padding: 1.75rem 2.25rem;
-    border: 1px solid var(--indigo-light);
+    border: 1px solid var(--border);
     border-radius: 1rem;
-    background: var(--indigo);
+    background: var(--surface);
   }
 
   .kicker {
@@ -65,7 +65,7 @@ const shown = latest.sections.flatMap((section) => {
 
   .date {
     margin: 0.3rem 0 0;
-    color: var(--muted);
+    color: var(--text-muted);
     font-size: 0.9rem;
   }
 
@@ -75,12 +75,10 @@ const shown = latest.sections.flatMap((section) => {
 
   h3 {
     margin: 0 0 0.1rem;
-    color: var(--muted);
+    color: var(--text-muted);
     font-family: var(--sans);
-    font-size: 0.75rem;
-    font-weight: 700;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
+    font-size: 0.9rem;
+    font-weight: 600;
   }
 
   .changes :global(li) {
@@ -95,13 +93,6 @@ const shown = latest.sections.flatMap((section) => {
   a {
     display: inline-block;
     margin-top: 0.75rem;
-  }
-
-  @media (max-width: 74rem) {
-    .changes {
-      margin-right: var(--gutter);
-      margin-left: var(--gutter);
-    }
   }
 
   @media (max-width: 44rem) {

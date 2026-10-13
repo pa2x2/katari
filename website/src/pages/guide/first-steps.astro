@@ -1,0 +1,64 @@
+---
+import globalSearch from "../../captures/global-search.png";
+import Callout from "../../guide/Callout.astro";
+import GuidePage from "../../guide/GuidePage.astro";
+import Path from "../../guide/Path.astro";
+import Task from "../../guide/Task.astro";
+import { sitePath } from "../../site/links.ts";
+---
+
+<GuidePage slug="first-steps" lead="Katari comes empty. Here is how to go from setup to the first title in your library.">
+  <Task id="extension-store" title="Add an extension store">
+    <p>Titles come from sources, and sources come in extensions. Extensions are listed by extension stores, which you add yourself.</p>
+    <ol>
+      <li>Open <Path>Browse › Extensions</Path>, then <Path>⋮ › Extension stores</Path>. With no store yet, the empty list has an <strong>Extension stores</strong> button too.</li>
+      <li>Tap <strong>Add</strong>, paste the store's address into <strong>Store index URL</strong>, and tap <strong>Add</strong>.</li>
+    </ol>
+    <Callout label="Choose stores you trust">
+      <p>Katari has no affiliation with any store or source. A malicious extension can read stored logins and run any code it likes, so add only stores you trust.</p>
+    </Callout>
+  </Task>
+
+  <Task id="install-extensions" title="Install extensions">
+    <ol>
+      <li>Back on <Path>Browse › Extensions</Path>, tap the download button beside an extension to install it.</li>
+      <li>A new extension shows as <strong>Untrusted</strong> until you trust it. Tap the <strong>Trust</strong> button beside it and confirm with <strong>Trust</strong>.</li>
+    </ol>
+    <p>
+      One extension can supply comics, video and books. To see only the kinds you want, tap the filter button and pick them under
+      <strong>Content types</strong>.
+    </p>
+  </Task>
+
+  <Task id="find" title="Find something to read or watch" shot={{ image: globalSearch, alt: "One search finding comics, books and a film", caption: "Global search" }}>
+    <ul>
+      <li><strong>Sources</strong> lists every installed source. Open one to browse it.</li>
+      <li>
+        <strong>Feeds</strong> follows a source's <strong>Popular</strong> or <strong>Latest</strong> list and remembers where you
+        stopped. Add one with <strong>+</strong> on the Feeds tab.
+      </li>
+      <li>To search every source at once, tap <strong>Global search</strong> at the top of <Path>Browse › Sources</Path>.</li>
+    </ul>
+  </Task>
+
+  <Task id="library" title="Add it to your library">
+    <ol>
+      <li>Open a title and tap <strong>Add to library</strong>. It now reads <strong>In library</strong>.</li>
+      <li>If you have categories, Katari asks which ones to put it in.</li>
+    </ol>
+    <p>
+      To skip the question, pick a category under <Path>Settings › Library › Default category</Path>. New chapters, episodes and books
+      of everything in your library arrive in the <strong>Updates</strong> tab; <a href={sitePath("guide/library-updates/")}>Library
+      updates</a> explains when Katari checks.
+    </p>
+  </Task>
+
+  <Task id="tabs" title="Show the Translator, Statistics and Profiles tabs">
+    <p>Katari starts with Library, Updates, History, Browse and More. Translator, Statistics and Switch profile are there too, hidden.</p>
+    <ol>
+      <li>Open <Path>Settings › Appearance › Home screen tabs</Path>.</li>
+      <li>Press and hold a destination, then drop it where you want it.</li>
+    </ol>
+    <p>The bar holds five tabs; the rest go into the overflow. More can't be hidden.</p>
+  </Task>
+</GuidePage>

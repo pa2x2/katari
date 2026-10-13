@@ -4,7 +4,7 @@ import Highlights from "./Highlights.astro";
 import ShotStack from "./ShotStack.astro";
 
 interface Props {
-  feature: Feature & { band: "indigo" | "recap" };
+  feature: Feature & { band: "tinted" | "recap" };
 }
 
 const { feature } = Astro.props;
@@ -29,13 +29,16 @@ const { feature } = Astro.props;
     padding: 5rem 0;
   }
 
-  .indigo {
-    background: var(--indigo);
+  .tinted {
+    background: var(--surface);
   }
 
-  /* The recap's own blue, so the band reads as a page of it. */
+  /* The recap's own blue, so the band reads as a page of it. It is dark in either theme, so its text takes the dark
+     theme's colours, which the inherited text colour has already left behind. */
   .recap {
+    color-scheme: dark;
     background: linear-gradient(160deg, #1d3d66, #0f1f38 70%);
+    color: var(--text-strong);
   }
 
   .inner {
@@ -59,7 +62,7 @@ const { feature } = Astro.props;
 
   p {
     margin: 0;
-    color: var(--muted);
+    color: var(--text-muted);
     font-size: 1.15rem;
   }
 

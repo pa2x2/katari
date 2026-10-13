@@ -1,9 +1,11 @@
 ---
+import SiteSearch from "../search/SiteSearch.astro";
 import { leavesSite, REPOSITORY, sitePath } from "./links.ts";
+import ThemeSwitch from "./theme/ThemeSwitch.astro";
 
 const links = [
   { label: "Features", href: sitePath("#features") },
-  { label: "Get started", href: sitePath("start/") },
+  { label: "Guide", href: sitePath("guide/") },
   { label: "Credits", href: sitePath("credits/") },
   { label: "GitHub", href: REPOSITORY, external: true },
 ];
@@ -22,9 +24,12 @@ const links = [
       </button>
       <ul id="site-links">
         {links.map((link) => <li><a href={link.href} {...(link.external ? leavesSite() : {})}>{link.label}</a></li>)}
+        <li class="theme-in-menu"><ThemeSwitch labelled /></li>
       </ul>
     </nav>
-    <a class="button download" href={sitePath("start/#which-file")}>Download</a>
+    <SiteSearch />
+    <div class="theme-in-header"><ThemeSwitch /></div>
+    <a class="button download" href={sitePath("guide/install/#which-file")}>Download</a>
   </div>
 </header>
 
@@ -66,7 +71,7 @@ const links = [
     top: 0;
     z-index: 10;
     border-bottom: 1px solid transparent;
-    background: color-mix(in srgb, var(--night) 88%, transparent);
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
     backdrop-filter: blur(8px);
   }
 
@@ -84,7 +89,7 @@ const links = [
     display: flex;
     align-items: center;
     gap: 0.6rem;
-    color: var(--cream);
+    color: var(--text-strong);
     font-family: var(--serif);
     font-size: 1.2rem;
     font-weight: 700;
@@ -104,12 +109,12 @@ const links = [
   }
 
   ul a {
-    color: var(--muted);
+    color: var(--text-muted);
     text-decoration: none;
   }
 
   ul a:hover {
-    color: var(--cream);
+    color: var(--text-strong);
   }
 
   .menu {
@@ -117,7 +122,7 @@ const links = [
     padding: 0.4rem;
     border: 0;
     background: none;
-    color: var(--cream);
+    color: var(--text-strong);
     cursor: pointer;
   }
 
@@ -145,19 +150,41 @@ const links = [
       visibility 0.2s;
   }
 
+  /* A phone's header row has no room for the switch, so there it sits in the menu, named. */
+  .theme-in-menu {
+    display: none;
+  }
+
   @media (max-width: 44rem) {
     .menu {
       display: block;
     }
 
-    /* Download stays beside the brand; the menu button takes the far end. */
-    nav {
+    /* Download, search and the menu button gather at the right, search beside the menu: while the page's own
+       download buttons hide the header's, its space stays empty further left instead of stranding the search. */
+    .download {
+      margin-left: auto;
+    }
+
+    .inner :global(.site-search) {
       order: 1;
+    }
+
+    nav {
+      order: 2;
       margin-left: 0;
     }
 
-    .download {
-      margin-left: auto;
+    .inner {
+      gap: 1rem;
+    }
+
+    .theme-in-header {
+      display: none;
+    }
+
+    .theme-in-menu {
+      display: block;
     }
 
     ul {
@@ -169,8 +196,8 @@ const links = [
       flex-direction: column;
       gap: 0;
       padding: 0.5rem var(--gutter) 1rem;
-      border-bottom: 1px solid var(--indigo-light);
-      background: var(--night);
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
     }
 
     .menu[aria-expanded="true"] + ul {

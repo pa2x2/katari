@@ -5,24 +5,48 @@
 }
 
 :root {
-  --night: #0b111e;
-  --indigo: #18253f;
-  --indigo-light: #253b62;
-  --clay: #d8895f;
-  --cream: #f4f1e8;
-  --muted: #a9b1c4;
+  /* Colours by role, each as light-dark(light, dark): the page follows the system's choice through color-scheme.
+     Headings and emphasis take --text-strong; running text takes the softer --text, since the strongest colour glares
+     across a whole paragraph. The light accent is darker so links keep their contrast on white. */
+  color-scheme: light dark;
+  --bg: light-dark(#ffffff, #16181d);
+  --surface: light-dark(#f2f4f7, #1f2228);
+  --border: light-dark(#dce0e7, #323741);
+  --rule: light-dark(#e8ebf0, #262a31);
+  --code-bg: light-dark(#f4f5f8, #1b1e23);
+  --text-strong: light-dark(#15181d, #eeeeee);
+  --text: light-dark(#262a31, #d4d6db);
+  --text-muted: light-dark(#5f6672, #9ca1ab);
+  --accent: light-dark(#a9521f, #e39a70);
+  --on-accent: light-dark(#ffffff, #16181d);
+  --note-bg: light-dark(#eef2f9, #1d2230);
+  --note-line: light-dark(#4f6fae, #7d97cf);
+  --note-label: light-dark(#4f6fae, #9fb2dc);
+  --warning-bg: light-dark(#fbeee5, #2a221c);
+  /* Phones, clips and the screenshot viewer show a dark app, so they stay dark whatever the page around them. */
+  --device: #05080f;
+  --device-edge: #2a3550;
+  --on-device: #f4f1e8;
   --serif: "Shippori Mincho", serif;
   --sans: "Inter Variable", system-ui, sans-serif;
-  --page-width: 72rem;
+  --page-width: 100rem;
   --gutter: 1.5rem;
   /* The sticky header's height, which anchors scroll past. */
   --header-height: 4rem;
-  color-scheme: dark;
-  background: var(--night);
-  color: var(--cream);
+  background: var(--bg);
+  color: var(--text-strong);
   font-family: var(--sans);
   line-height: 1.55;
   scroll-padding-top: var(--header-height);
+}
+
+/* A theme picked with the header's switch; without one, the page follows the system. */
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
 }
 
 body {
@@ -30,7 +54,7 @@ body {
 }
 
 a {
-  color: var(--clay);
+  color: var(--accent);
 }
 
 h1,
@@ -47,8 +71,8 @@ h3 {
   gap: 0.5rem;
   padding: 0.75rem 1.3rem;
   border-radius: 0.3rem;
-  background: var(--clay);
-  color: var(--night);
+  background: var(--accent);
+  color: var(--on-accent);
   font-weight: 650;
   text-decoration: none;
   white-space: nowrap;
@@ -56,21 +80,20 @@ h3 {
 
 .button.quiet {
   background: transparent;
-  color: var(--cream);
-  box-shadow: inset 0 0 0 1px var(--indigo-light);
+  color: var(--text-strong);
+  box-shadow: inset 0 0 0 1px var(--border);
 }
 
 .button:hover {
   filter: brightness(1.08);
 }
 
+/* Orange is kept for what can be clicked and for where you are, so it still stands out there. */
 .kicker {
   margin: 0 0 0.75rem;
-  color: var(--clay);
-  font-size: 0.8rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  font-weight: 600;
 }
 
 .visually-hidden {

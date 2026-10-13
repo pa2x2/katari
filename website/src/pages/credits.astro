@@ -9,7 +9,7 @@ const works: Credit[] = credits;
 ---
 
 <Page title="Credits — Katari" description="The openly licensed works shown in Katari's screenshots, and who made them.">
-  <main>
+  <main data-pagefind-body>
     <h1>Credits</h1>
     <p>
       Every screenshot and clip on this site shows works that are free to share. They are listed here with the license
@@ -54,7 +54,7 @@ const works: Credit[] = credits;
   }
 
   main > p {
-    color: var(--muted);
+    color: var(--text);
   }
 
   .works {
@@ -64,11 +64,11 @@ const works: Credit[] = credits;
 
   .works li {
     padding: 0.9rem 0;
-    border-bottom: 1px solid var(--indigo-light);
-    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
   }
 
   .works strong {
-    color: var(--cream);
+    font-weight: 650;
   }
 </style>

@@ -1,0 +1,132 @@
+---
+import { sitePath } from "../site/links.ts";
+import { guide, type GuideEntry } from "./contents.ts";
+
+interface Props {
+  current: GuideEntry;
+}
+
+const { current } = Astro.props;
+---
+
+{/* Beside the page on wide screens; on a phone it folds into one button above the title, so it never pushes the page down.
+    It starts open, so that without the script the contents stay reachable everywhere. */}
+<details class="contents" open>
+  <summary>Guide contents <span>{current.title}</span></summary>
+  <nav aria-label="Guide">
+    {
+      guide.map((group) => (
+        <>
+          <h2>{group.title}</h2>
+          <ul>
+            {group.pages.map((page) => (
+              <li>
+                <a href={sitePath(`guide/${page.slug}/`)} aria-current={page.slug === current.slug ? "page" : undefined}>
+                  {page.title}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </>
+      ))
+    }
+  </nav>
+</details>
+
+<script>
+  // Open beside the page on wide screens, where its button is hidden; folded on phones; following the window as it resizes.
+  const wide = matchMedia("(min-width: 60rem)");
+  const contents = document.querySelector<HTMLDetailsElement>("details.contents")!;
+  const follow = () => {
+    contents.open = wide.matches;
+  };
+  follow();
+  wide.addEventListener("change", follow);
+</script>
+
+<style>
+  .contents {
+    font-size: 0.92rem;
+  }
+
+  summary {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.7rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    cursor: pointer;
+    list-style: none;
+  }
+
+  summary::-webkit-details-marker {
+    display: none;
+  }
+
+  summary span {
+    color: var(--text-muted);
+  }
+
+  summary span::after {
+    content: " ▾";
+  }
+
+  .contents[open] summary span::after {
+    content: " ▴";
+  }
+
+  nav {
+    padding: 0.5rem 0.25rem 0;
+  }
+
+  h2 {
+    margin: 1.2rem 0 0.4rem;
+    color: var(--text-strong);
+    font-family: var(--sans);
+    font-size: 0.9rem;
+    font-weight: 600;
+  }
+
+  h2:first-child {
+    margin-top: 0.5rem;
+  }
+
+  ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  a {
+    display: block;
+    padding: 0.28rem 0 0.28rem 0.8rem;
+    border-left: 2px solid var(--border);
+    color: var(--text-muted);
+    text-decoration: none;
+  }
+
+  a:hover {
+    color: var(--text-strong);
+  }
+
+  a[aria-current="page"] {
+    border-left-color: var(--accent);
+    color: var(--text-strong);
+    font-weight: 600;
+  }
+
+  @media (min-width: 60rem) {
+    summary {
+      display: none;
+    }
+
+    nav {
+      padding: 0;
+    }
+
+    h2:first-child {
+      margin-top: 0;
+    }
+  }
+</style>

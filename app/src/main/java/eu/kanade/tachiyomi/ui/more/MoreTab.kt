@@ -39,7 +39,6 @@ import mihon.entry.interactions.download.EntryDownloadRuntimeFeature
 import mihon.feature.profiles.core.ProfileManager
 import mihon.feature.profiles.ui.ProfilePickerScreen
 import mihon.feature.profiles.ui.handleProfileShortcut
-import mihon.feature.support.SupportUsScreen
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -98,7 +97,6 @@ data object MoreTab : Tab {
                 }
             },
             onClickSettings = { navigator.push(SettingsScreen()) },
-            onClickSupport = { navigator.push(SupportUsScreen()) },
             onClickAbout = { navigator.push(SettingsScreen(SettingsScreen.Destination.About)) },
         )
     }

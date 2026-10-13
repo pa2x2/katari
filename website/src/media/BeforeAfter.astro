@@ -82,15 +82,15 @@ const height = Math.round(720 / aspectOf(after));
   .frame {
     padding: 0.45rem;
     border-radius: 1.6rem;
-    background: #05080f;
+    background: var(--device);
     box-shadow:
-      0 0 0 1px #2a3550,
+      0 0 0 1px var(--device-edge),
       0 1.5rem 3rem -1rem #000c;
   }
 
   .frame:has(input:focus-visible) {
     box-shadow:
-      0 0 0 2px var(--clay),
+      0 0 0 2px var(--accent),
       0 1.5rem 3rem -1rem #000c;
   }
 
@@ -120,7 +120,7 @@ const height = Math.round(720 / aspectOf(after));
     inset: 0 auto 0 var(--split);
     width: 2px;
     margin-left: -1px;
-    background: var(--clay);
+    background: var(--accent);
   }
 
   .handle {
@@ -133,8 +133,8 @@ const height = Math.round(720 / aspectOf(after));
     width: 2.6rem;
     height: 2.6rem;
     border-radius: 50%;
-    background: var(--clay);
-    color: var(--night);
+    background: var(--accent);
+    color: var(--on-accent);
     box-shadow: 0 0.3rem 1rem #0009;
     transform: translate(-50%, -50%);
     /* The browser leaves a drag that starts on the handle to the script instead of scrolling. */
@@ -161,7 +161,7 @@ const height = Math.round(720 / aspectOf(after));
     display: flex;
     justify-content: space-between;
     margin: 0.8rem 0.6rem 0;
-    color: var(--muted);
+    color: var(--text-muted);
     font-size: 0.9rem;
     line-height: 1.4;
   }

@@ -864,7 +864,6 @@
     <string name="migrationListScreen.migrateDialog.cancelLabel">Cancel·la</string>
     <string name="migrationListScreen.progressDialog.cancelLabel">Cancel·la</string>
     <string name="migrationListScreen.matchWithoutChapterToast">No s’ha trobat cap capítol, aquest element no es pot utilitzar per a migrar</string>
-    <string name="label_support_us">Doneu-nos suport</string>
     <string name="theme_tokyonight">Nit a Tòquio</string>
     <string name="downloading_with_progress">S’està baixant… (%d%%)</string>
     <string name="extensionStores">Magatzems d’extensions</string>
@@ -884,18 +883,6 @@
     <string name="considering">Considerant</string>
     <string name="pref_filter_update_categories_details">Les actualitzacions de les categories excloses no es mostraran fins i tot si són també en qualsevol categoria inclosa.</string>
     <string name="pref_filter_upcoming_categories_details">Els elements de les categories excloses no es mostren, fins i tot si són també en qualsevol categoria inclosa.</string>
-    <string name="supportUsScreen.perks">Els mecenes tenen accés a canals exclusius, i en el futur tindran més avantatges.</string>
-    <string name="supportUsScreen.donationPlatform.patreon">Patreon (preferit)</string>
-    <string name="supportUsScreen.donationPlatform.opencollective">OpenCollective</string>
-    <string name="supportUsScreen.currentlySupportedBy">El Mihon rep el suport de més de %d mecenes. Volem donar-vos les gràcies a tots vosaltres. Junts, fem que el Mihon sigui encara millor.</string>
-    <string name="supportUsScreen.contactForDetailsMessage">Per a opcions alternatives o altres qüestions relacionades, uniu-vos al nostre servidor del Discord.</string>
-    <string name="supportUsScreen.contactPlatform">Discord</string>
-    <string name="donationCampaign.title">Us agrada l’aplicació?</string>
-    <string name="donationCampaign.paragraph1">Ep! Sóc el desenvolupador principal del Mihon, i m’agradaria demanar-vos que considereu donar suport financer al desenvolupament de l’aplicació. Amb prou suport, podré treballar en el Mihon a temps complet i centrar-me a corregir problemes que fa temps que existeixen i a desenvolupar funcionalitats molt demanades.</string>
-    <string name="donationCampaign.paragraph2">Podeu fer un donatiu mitjançant el Patreon (preferit) o OpenCollective. Si teniu qüestions o voleu donar-hi suport mitjançant altres mètodes alternatius, no dubteu a contactar amb mi mitjançant el servidor del Discord del Mihon.</string>
-    <string name="donationCampaign.paragraph3">Sigui com sigui, els voluntaris i jo continuarem mantenint el Mihon i continuarà sent de codi obert.</string>
-    <string name="donationCampaign.contactPlatform">Discord</string>
-    <string name="donationCampaign.dismiss">Ignora</string>
     <string name="pref_hardware_bitmap_threshold_default">Per defecte (%d)</string>
     <string name="pref_always_decode_long_strip_with_ssiv_summary">Afecta el rendiment. Activeu-ho només si en reduir el llindar de mapes de bits no se solucionen els problemes d’imatges buides</string>
     <string name="pref_hardware_bitmap_threshold_summary">Si el lector carrega una imatge buida, reduïu-ne el llindar a poc a poc.\nActual: %s</string>

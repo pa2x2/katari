@@ -19,11 +19,14 @@ const target = release ? {} : leavesSite();
       <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 4v12m-5-5 5 5 5-5M5 20h14" /></svg>
       Download Katari
     </a>
-    <a class="button quiet" href={release?.foss.url ?? `${RELEASES}/latest`} {...target}>Katari FOSS</a>
+    <a class="button quiet" href={release?.foss.url ?? `${RELEASES}/latest`} {...target}>
+      <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 4v12m-5-5 5 5 5-5M5 20h14" /></svg>
+      Download Katari FOSS
+    </a>
   </div>
   <p>
     {release && <>{release.tag} · {releaseDate(release.publishedAt)} · {megabytes(release.standard)} · </>}Android 10 or newer.
-    Katari FOSS leaves out Google services.{explained && <>{" "}<a href={sitePath("start/#which-file")}>Which one?</a></>}
+    Katari FOSS leaves out Google services.{explained && <>{" "}<a href={sitePath("guide/install/#which-file")}>Which one?</a></>}
   </p>
 </div>
 
@@ -51,7 +54,7 @@ const target = release ? {} : leavesSite();
 
   p {
     margin: 0.9rem 0 0;
-    color: var(--muted);
+    color: var(--text-muted);
     font-size: 0.9rem;
   }
 </style>

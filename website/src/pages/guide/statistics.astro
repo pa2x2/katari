@@ -1,0 +1,56 @@
+---
+import entryActivity from "../../captures/entry-activity.png";
+import recapShare from "../../captures/recap-share.png";
+import statistics from "../../captures/statistics.png";
+import Callout from "../../guide/Callout.astro";
+import GuidePage from "../../guide/GuidePage.astro";
+import Path from "../../guide/Path.astro";
+import Task from "../../guide/Task.astro";
+---
+
+<GuidePage
+  slug="statistics"
+  lead="Katari records how long you read and watch, and plays each month and year back as a story."
+>
+  <Task id="open" title="Open your statistics" shot={{ image: statistics, alt: "Reading statistics for the last 30 days, with the daily goal", caption: "The last 30 days" }}>
+    <p>
+      Open <Path>More › Statistics</Path>, or add a Statistics tab under <Path>Settings › Appearance › Home screen tabs</Path>. The chips at
+      the top show the last <strong>7D</strong>, <strong>30D</strong>, <strong>1Y</strong> or <strong>All</strong> of it.
+    </p>
+    <p>
+      Choose which cards show, and in what order, under <Path>⋮ › Customize</Path>. Each profile keeps statistics of its own.
+    </p>
+    <Callout label="Incognito">
+      <p>Nothing you read or watch in incognito mode is recorded.</p>
+    </Callout>
+  </Task>
+
+  <Task id="goal" title="Set a daily goal">
+    <ol>
+      <li>Open <Path>Statistics › ⋮ › Customize</Path>.</li>
+      <li>Under <strong>Goal and recap</strong>, pick minutes for <strong>Daily goal</strong> and tap <strong>Save</strong>.</li>
+    </ol>
+    <p>
+      Today's progress then takes the place of the daily average. A day counts toward your <strong>Streak</strong> with at least a minute of
+      reading or watching, and toward the goal streak when it meets the goal.
+    </p>
+  </Task>
+
+  <Task id="recaps" title="Get monthly and yearly recaps" shot={{ image: recapShare, alt: "A year's recap as a picture to share", caption: "A shared recap" }}>
+    <ul>
+      <li><strong>Yearly recap</strong> is on from the start: a notification on December 1 with your year so far, and on January 1 with the whole year.</li>
+      <li><strong>Monthly recap</strong> is off until you turn it on in <strong>Customize</strong>; then each finished month gets one.</li>
+    </ul>
+    <p>
+      A recap plays like a story: your top titles, your longest run, the hour you read most. <strong>Share</strong> in it turns it into a picture.
+      Past recaps stay under <Path>Statistics › ⋮ › Recaps</Path>.
+    </p>
+  </Task>
+
+  <Task id="title" title="See the time spent on one title" shot={{ image: entryActivity, alt: "Time spent on one book", caption: "Your activity" }}>
+    <p>
+      A title's page shows how long you've spent on it, under its buttons. Tap that line for <strong>Your activity</strong>, day by day. The
+      chapter list's header estimates how long the unread rest would take at your pace.
+    </p>
+  </Task>
+</GuidePage>
