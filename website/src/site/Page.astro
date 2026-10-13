@@ -9,11 +9,9 @@ import { sitePath } from "./links.ts";
 interface Props {
   title: string;
   description: string;
-  /** Widens the header, footer and content for pages read rather than looked at, such as the guide. */
-  wide?: boolean;
 }
 
-const { title, description, wide = false } = Astro.props;
+const { title, description } = Astro.props;
 ---
 
 <!doctype html>
@@ -36,7 +34,7 @@ const { title, description, wide = false } = Astro.props;
     <link rel="icon" href={sitePath("katari.svg")} type="image/svg+xml" />
     <link rel="apple-touch-icon" href={sitePath("apple-touch-icon.png")} />
   </head>
-  <body class:list={{ wide }}>
+  <body>
     <Header />
     <slot />
     <Footer />

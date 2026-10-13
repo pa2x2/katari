@@ -13,7 +13,7 @@
   --muted: #a9b1c4;
   --serif: "Shippori Mincho", serif;
   --sans: "Inter Variable", system-ui, sans-serif;
-  --page-width: 72rem;
+  --page-width: 100rem;
   --gutter: 1.5rem;
   /* The sticky header's height, which anchors scroll past. */
   --header-height: 4rem;
@@ -27,10 +27,6 @@
 
 body {
   margin: 0;
-}
-
-body.wide {
-  --page-width: 100rem;
 }
 
 a {

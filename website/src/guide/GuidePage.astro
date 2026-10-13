@@ -21,7 +21,7 @@ const body = await Astro.slots.render("default");
 const sections = Astro.locals.guideSections;
 ---
 
-<Page title={`${entry.title} — Katari guide`} description={entry.summary} wide>
+<Page title={`${entry.title} — Katari guide`} description={entry.summary}>
   <div class="guide">
     <aside class="pages">
       <GuideContents current={entry} />
