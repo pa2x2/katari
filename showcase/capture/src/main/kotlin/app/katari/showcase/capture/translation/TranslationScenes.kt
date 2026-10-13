@@ -45,13 +45,12 @@ class TranslationScenes {
         toggleReaderBars()
         // The controls may not have started on the page yet when first looked at.
         repeat(2) {
-            awaitGone(By.text(WORKING), TRANSLATION_TIMEOUT_MS)
+            awaitGone(By.text(WORKING), PAGE_TRANSLATION_TIMEOUT_MS)
             settle(extraMs = 3_000)
         }
     }
 
     private companion object {
-        const val TRANSLATION_TIMEOUT_MS = 120_000L
         val WORKING: Pattern = Pattern.compile("Waiting for the page to load|Recognizing text…|Translating…")
     }
 }
