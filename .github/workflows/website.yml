@@ -9,6 +9,8 @@ on:
       - main
     paths:
       - website/**
+      # The What's new card reads the published release's notes from it.
+      - CHANGELOG.md
       - .github/workflows/website.yml
   workflow_dispatch:
 
