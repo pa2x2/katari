@@ -31,6 +31,12 @@ export const guide: GuideGroup[] = [
       { slug: "statistics", title: "Statistics and recaps", summary: "Daily goal, streaks, and your month and year as a story." },
     ],
   },
+  {
+    title: "Keeping things running",
+    pages: [
+      { slug: "library-updates", title: "Library updates", summary: "When Katari checks for new chapters, and what Upcoming shows." },
+    ],
+  },
 ];
 
 export const guidePages: GuideEntry[] = guide.flatMap((group) => group.pages);
