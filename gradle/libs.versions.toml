@@ -104,7 +104,6 @@ androidx-compose-animationGraphics = { module = "androidx.compose.animation:anim
 androidx-compose-bom = { module = "androidx.compose:compose-bom-beta", version.ref = "androidx-compose-bom" }
 androidx-compose-foundation = { module = "androidx.compose.foundation:foundation" }
 androidx-compose-material3 = { module = "androidx.compose.material3:material3" }
-androidx-compose-materialIcons = { module = "androidx.compose.material:material-icons-extended" }
 androidx-compose-runtime = { module = "androidx.compose.runtime:runtime" }
 androidx-compose-runtimeAnnotation = { module = "androidx.compose.runtime:runtime-annotation" }
 androidx-compose-ui = { module = "androidx.compose.ui:ui" }

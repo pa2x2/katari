@@ -22,7 +22,6 @@ dependencies {
 
     implementation(projects.icons.customMaterialSymbols)
     implementation(projects.icons.materialSymbols)
-    implementation(libs.androidx.compose.materialIcons)
     implementation(libs.androidx.core)
 
     testImplementation(libs.bundles.test)

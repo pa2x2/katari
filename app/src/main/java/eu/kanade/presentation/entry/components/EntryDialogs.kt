@@ -41,7 +41,6 @@ import eu.kanade.tachiyomi.util.system.isReleaseBuildType
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.daysUntil
-import mihon.icons.materialsymbols.MaterialSymbols
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.service.nextupdate.FetchInterval
 import tachiyomi.i18n.*

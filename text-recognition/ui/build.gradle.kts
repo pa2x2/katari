@@ -17,7 +17,6 @@ dependencies {
     implementation(projects.presentationCore)
     implementation(libs.androidx.compose.foundation)
     implementation(libs.androidx.compose.material3)
-    implementation(libs.androidx.compose.materialIcons)
     implementation(libs.androidx.compose.uiToolingPreview)
     implementation(libs.kotlinx.coroutines.core)
 
