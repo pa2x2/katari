@@ -20,10 +20,10 @@ class CatalogFilterDraftTest {
         val saved = state.toSavedPresetState(state.defaultFilters)
         (saved.filters.single() as FilterStateNode.CheckBox).state shouldBe false
         val closed = state.copy(dialog = null)
-        (closed.listing as CatalogScreenModel.Listing.Search).filters.single().state shouldBe true
+        (closed.listing as CatalogViewModel.Listing.Search).filters.single().state shouldBe true
         closed.hasUnappliedFilterChanges shouldBe true
         val applied = requireNotNull(closed.applyFilterDraft())
-        (applied.listing as CatalogScreenModel.Listing.Search).filters.single().state shouldBe false
+        (applied.listing as CatalogViewModel.Listing.Search).filters.single().state shouldBe false
         applied.hasUnappliedFilterChanges shouldBe false
         (closed.filters.single() as EntryFilter.CheckBox).state = true
         applied.listing.filters.single().state shouldBe false

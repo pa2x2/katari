@@ -22,7 +22,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import eu.kanade.domain.source.interactor.SetMigrateSorting
 import eu.kanade.presentation.browse.components.BaseSourceItem
 import eu.kanade.presentation.browse.components.SourceIcon
-import eu.kanade.tachiyomi.ui.browse.migration.sources.MigrateSourceScreenModel
+import eu.kanade.tachiyomi.ui.browse.migration.sources.MigrateSourceViewModel
 import eu.kanade.tachiyomi.util.system.copyToClipboard
 import mihon.feature.migration.session.model.SourceMigrationSessionStage
 import mihon.icons.materialsymbols.MaterialSymbols
@@ -48,10 +48,10 @@ import tachiyomi.presentation.core.util.secondaryItemAlpha
 
 @Composable
 fun MigrateSourceScreen(
-    state: MigrateSourceScreenModel.State,
+    state: MigrateSourceViewModel.State,
     contentPadding: PaddingValues,
     onClickItem: (Source) -> Unit,
-    onClickActiveSession: (MigrateSourceScreenModel.ActiveSession) -> Unit,
+    onClickActiveSession: (MigrateSourceViewModel.ActiveSession) -> Unit,
     onToggleSortingDirection: () -> Unit,
     onToggleSortingMode: () -> Unit,
 ) {
@@ -84,10 +84,10 @@ fun MigrateSourceScreen(
 @Composable
 private fun MigrateSourceList(
     list: List<Pair<Source, Long>>,
-    activeSessions: List<MigrateSourceScreenModel.ActiveSession>,
+    activeSessions: List<MigrateSourceViewModel.ActiveSession>,
     contentPadding: PaddingValues,
     onClickItem: (Source) -> Unit,
-    onClickActiveSession: (MigrateSourceScreenModel.ActiveSession) -> Unit,
+    onClickActiveSession: (MigrateSourceViewModel.ActiveSession) -> Unit,
     onLongClickItem: (Source) -> Unit,
     sortingMode: SetMigrateSorting.Mode,
     onToggleSortingMode: () -> Unit,

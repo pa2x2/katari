@@ -30,13 +30,13 @@ import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable
 fun extensionsTab(
-    extensionsScreenModel: ExtensionsScreenModel,
+    extensionsViewModel: ExtensionsViewModel,
 ): TabContent {
     val navigator = LocalNavigator.currentOrThrow
     val context = LocalContext.current
 
-    val updatesCount by extensionsScreenModel.updatesCount.collectAsStateWithLifecycle()
-    val filter by extensionsScreenModel.filter.collectAsStateWithLifecycle()
+    val updatesCount by extensionsViewModel.updatesCount.collectAsStateWithLifecycle()
+    val filter by extensionsViewModel.filter.collectAsStateWithLifecycle()
     var privateExtensionToUninstall by remember { mutableStateOf<Extension.Installed?>(null) }
     var showFilters by rememberSaveable { mutableStateOf(false) }
 
@@ -57,10 +57,10 @@ fun extensionsTab(
             ),
         ),
         content = { contentPadding, _ ->
-            val state by extensionsScreenModel.state.collectAsStateWithLifecycle()
+            val state by extensionsViewModel.state.collectAsStateWithLifecycle()
 
             BackHandler(enabled = state.searchQuery != null) {
-                extensionsScreenModel.search(null)
+                extensionsViewModel.search(null)
             }
 
             ExtensionScreen(
@@ -69,18 +69,18 @@ fun extensionsTab(
                 searchQuery = state.searchQuery,
                 onLongClickItem = { extension ->
                     when (extension) {
-                        is Extension.Available -> extensionsScreenModel.installExtension(extension)
+                        is Extension.Available -> extensionsViewModel.installExtension(extension)
                         is Extension.Installed -> {
                             if (context.isPackageInstalled(extension.pkgName)) {
-                                extensionsScreenModel.uninstallExtension(extension)
+                                extensionsViewModel.uninstallExtension(extension)
                             } else {
                                 privateExtensionToUninstall = extension
                             }
                         }
                     }
                 },
-                onClickItemCancel = extensionsScreenModel::cancelInstallUpdateExtension,
-                onClickUpdateAll = extensionsScreenModel::updateAllExtensions,
+                onClickItemCancel = extensionsViewModel::cancelInstallUpdateExtension,
+                onClickUpdateAll = extensionsViewModel::updateAllExtensions,
                 onOpenWebView = { extension ->
                     extension.sources.getOrNull(0)?.let {
                         navigator.push(
@@ -93,29 +93,29 @@ fun extensionsTab(
                     }
                 },
                 onInstallExtension = { extension ->
-                    extensionsScreenModel.installExtension(extension)
+                    extensionsViewModel.installExtension(extension)
                 },
                 onOpenExtension = { extension ->
                     navigator.push(ExtensionDetailsScreen(extension.pkgName))
                 },
-                onTrustExtension = { extensionsScreenModel.trustExtension(it) },
-                onUninstallExtension = { extensionsScreenModel.uninstallExtension(it) },
+                onTrustExtension = { extensionsViewModel.trustExtension(it) },
+                onUninstallExtension = { extensionsViewModel.uninstallExtension(it) },
                 onUpdateExtension = { extension ->
-                    extensionsScreenModel.updateExtension(extension)
+                    extensionsViewModel.updateExtension(extension)
                 },
-                onRefresh = extensionsScreenModel::findAvailableExtensions,
+                onRefresh = extensionsViewModel::findAvailableExtensions,
             )
 
             if (showFilters) {
                 ExtensionFilterSheet(
                     state = filter,
                     onDismissRequest = { showFilters = false },
-                    onReset = extensionsScreenModel::resetFilters,
-                    onShowAllContentTypes = extensionsScreenModel::showAllContentTypes,
-                    onToggleContentType = extensionsScreenModel::toggleContentType,
-                    onToggleUnspecifiedContentType = extensionsScreenModel::toggleUnspecifiedContentType,
-                    onToggleStore = extensionsScreenModel::toggleStore,
-                    onToggleLanguage = extensionsScreenModel::toggleLanguage,
+                    onReset = extensionsViewModel::resetFilters,
+                    onShowAllContentTypes = extensionsViewModel::showAllContentTypes,
+                    onToggleContentType = extensionsViewModel::toggleContentType,
+                    onToggleUnspecifiedContentType = extensionsViewModel::toggleUnspecifiedContentType,
+                    onToggleStore = extensionsViewModel::toggleStore,
+                    onToggleLanguage = extensionsViewModel::toggleLanguage,
                 )
             }
 
@@ -123,7 +123,7 @@ fun extensionsTab(
                 ExtensionUninstallConfirmation(
                     extensionName = extension.name,
                     onClickConfirm = {
-                        extensionsScreenModel.uninstallExtension(extension)
+                        extensionsViewModel.uninstallExtension(extension)
                     },
                     onDismissRequest = {
                         privateExtensionToUninstall = null

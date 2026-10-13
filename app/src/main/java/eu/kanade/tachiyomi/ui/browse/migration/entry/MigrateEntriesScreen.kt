@@ -20,7 +20,7 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import cafe.adriel.voyager.core.model.rememberScreenModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.components.AppBar
@@ -56,9 +56,9 @@ data class MigrateEntriesScreen(
         val context = LocalContext.current
         val haptic = LocalHapticFeedback.current
         val navigator = LocalNavigator.currentOrThrow
-        val screenModel = rememberScreenModel { MigrateEntriesScreenModel(sourceId) }
+        val viewModel = viewModel { MigrateEntriesViewModel(sourceId) }
 
-        val state by screenModel.state.collectAsStateWithLifecycle()
+        val state by viewModel.state.collectAsStateWithLifecycle()
 
         if (state.isLoading) {
             LoadingScreen()
@@ -66,7 +66,7 @@ data class MigrateEntriesScreen(
         }
 
         BackHandler(enabled = state.searchQuery != null) {
-            screenModel.setSearchQuery(null)
+            viewModel.setSearchQuery(null)
         }
 
         val lazyListState = rememberLazyListState()
@@ -75,7 +75,7 @@ data class MigrateEntriesScreen(
             topBar = { scrollBehavior ->
                 SearchToolbar(
                     searchQuery = state.searchQuery,
-                    onChangeSearchQuery = screenModel::setSearchQuery,
+                    onChangeSearchQuery = viewModel::setSearchQuery,
                     titleContent = {
                         AppBarTitle(
                             title = stringResource(MR.strings.migrationEntriesScreen_title),
@@ -114,13 +114,13 @@ data class MigrateEntriesScreen(
                                 AppBar.Action(
                                     title = selectAllLabel,
                                     icon = MaterialSymbols.Rounded.SelectAll,
-                                    onClick = screenModel::selectAllVisible,
+                                    onClick = viewModel::selectAllVisible,
                                     enabled = state.visibleItems.isNotEmpty() && !state.allVisibleSelected,
                                 ),
                                 AppBar.Action(
                                     title = deselectAllLabel,
                                     icon = MaterialSymbols.Rounded.Deselect,
-                                    onClick = screenModel::deselectAllVisible,
+                                    onClick = viewModel::deselectAllVisible,
                                     enabled = state.visibleSelectionCount > 0,
                                 ),
                             ),
@@ -136,7 +136,7 @@ data class MigrateEntriesScreen(
                         Icon(imageVector = MaterialSymbols.AutoMirroredRounded.ArrowForward, contentDescription = null)
                     },
                     onClick = {
-                        val groups = screenModel.migrationGroups()
+                        val groups = viewModel.migrationGroups()
                         if (groups.isNotEmpty()) {
                             navigator.push(MigrationConfigScreen(groups, sourceId))
                         }
@@ -167,13 +167,13 @@ data class MigrateEntriesScreen(
                         lazyListState = lazyListState,
                         contentPadding = contentPadding,
                         state = state,
-                        onToggleSelection = screenModel::toggleSelection,
-                        onToggleGroup = screenModel::toggleGroupSelection,
+                        onToggleSelection = viewModel::toggleSelection,
+                        onToggleGroup = viewModel::toggleGroupSelection,
                         onLongClickItem = { entryId ->
                             if (state.selectionMode) {
-                                screenModel.toggleRangeSelection(entryId)
+                                viewModel.toggleRangeSelection(entryId)
                             } else {
-                                screenModel.toggleSelection(entryId)
+                                viewModel.toggleSelection(entryId)
                             }
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         },
@@ -186,7 +186,7 @@ data class MigrateEntriesScreen(
         }
 
         LaunchedEffect(Unit) {
-            screenModel.events.collectLatest { event ->
+            viewModel.events.collectLatest { event ->
                 when (event) {
                     MigrationEntriesEvent.FailedFetchingFavorites -> {
                         context.toast(MR.strings.internal_error)
@@ -201,7 +201,7 @@ data class MigrateEntriesScreen(
 private fun MigrateEntriesContent(
     lazyListState: LazyListState,
     contentPadding: PaddingValues,
-    state: MigrateEntriesScreenModel.State,
+    state: MigrateEntriesViewModel.State,
     onToggleSelection: (Long) -> Unit,
     onToggleGroup: (Set<Long>) -> Unit,
     onLongClickItem: (Long) -> Unit,

@@ -2,27 +2,31 @@ package eu.kanade.tachiyomi.ui.browse.source.globalsearch
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
-import cafe.adriel.voyager.core.model.StateScreenModel
-import cafe.adriel.voyager.core.model.screenModelScope
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import eu.kanade.domain.source.service.SourcePreferences
-import eu.kanade.presentation.util.ioCoroutineScope
 import eu.kanade.tachiyomi.extension.ExtensionManager
 import eu.kanade.tachiyomi.ui.base.observation.ObservedItemStore
 import eu.kanade.tachiyomi.ui.base.observation.collectAsState
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.plus
 import kotlinx.coroutines.withContext
 import mihon.entry.interactions.catalogue.EntryCatalogueFeature
 import mihon.entry.interactions.catalogue.EntryCatalogueSearchRequest
 import mihon.entry.interactions.catalogue.EntryCatalogueSearchResult
 import mihon.entry.interactions.catalogue.EntryCatalogueSourceInfo
 import tachiyomi.core.common.preference.toggle
+import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.domain.entry.interactor.GetEntry
 import tachiyomi.domain.entry.interactor.NetworkToLocalEntry
 import uy.kohesive.injekt.Injekt
@@ -30,7 +34,7 @@ import uy.kohesive.injekt.api.get
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicLong
 
-class GlobalSearchScreenModel(
+class GlobalSearchViewModel(
     initialQuery: String = "",
     initialExtensionFilter: String? = null,
     sourcePreferences: SourcePreferences = Injekt.get(),
@@ -39,7 +43,10 @@ class GlobalSearchScreenModel(
     private val getEntry: GetEntry = Injekt.get(),
     private val preferences: SourcePreferences = Injekt.get(),
     private val catalogueFeature: EntryCatalogueFeature = Injekt.get(),
-) : StateScreenModel<GlobalSearchScreenModel.State>(State(searchQuery = initialQuery)) {
+) : ViewModel() {
+
+    val state: StateFlow<GlobalSearchViewModel.State>
+        field = MutableStateFlow<GlobalSearchViewModel.State>(State(searchQuery = initialQuery))
 
     private val coroutineDispatcher = Executors.newFixedThreadPool(5).asCoroutineDispatcher()
     private var searchJob: Job? = null
@@ -48,7 +55,7 @@ class GlobalSearchScreenModel(
     // job was cancelled, so its result is dropped by comparing generations where the state is updated.
     private val searchGeneration = AtomicLong()
     private val itemStore = ObservedItemStore<Long, GlobalSearchItem>(
-        scope = ioCoroutineScope,
+        scope = viewModelScope + Dispatchers.IO,
         keyOf = GlobalSearchItem::id,
         supersedes = { candidate, current -> candidate.entry.version >= current.entry.version },
     ) { entryIds ->
@@ -73,9 +80,9 @@ class GlobalSearchScreenModel(
     }
 
     init {
-        screenModelScope.launch {
+        viewModelScope.launch {
             preferences.globalSearchFilterState.changes().collectLatest { onlyShowHasResults ->
-                mutableState.update { it.copy(onlyShowHasResults = onlyShowHasResults) }
+                state.update { it.copy(onlyShowHasResults = onlyShowHasResults) }
             }
         }
 
@@ -89,10 +96,10 @@ class GlobalSearchScreenModel(
         }
     }
 
-    override fun onDispose() {
+    override fun onCleared() {
         searchJob?.cancel()
         coroutineDispatcher.close()
-        super.onDispose()
+        super.onCleared()
     }
 
     @Composable
@@ -130,11 +137,11 @@ class GlobalSearchScreenModel(
     }
 
     fun updateSearchQuery(query: String?) {
-        mutableState.update { it.copy(searchQuery = query) }
+        state.update { it.copy(searchQuery = query) }
     }
 
     fun setSourceFilter(filter: SourceFilter) {
-        mutableState.update { it.copy(sourceFilter = filter) }
+        state.update { it.copy(sourceFilter = filter) }
         search()
     }
 
@@ -157,7 +164,7 @@ class GlobalSearchScreenModel(
         searchJob?.cancel()
         val generation = searchGeneration.incrementAndGet()
 
-        searchJob = ioCoroutineScope.launch {
+        searchJob = viewModelScope.launchIO {
             val sources = getSelectedSources()
                 .let {
                     if (sourceFilter != SourceFilter.PinnedOnly) {
@@ -211,7 +218,7 @@ class GlobalSearchScreenModel(
     }
 
     private fun updateItems(items: Map<EntryCatalogueSourceInfo, GlobalSearchItemResult>) {
-        mutableState.update {
+        state.update {
             it.copy(
                 items = items.toSortedMap(sortComparator(items)),
             )
@@ -220,7 +227,7 @@ class GlobalSearchScreenModel(
 
     // Sources finish concurrently, so each result is merged into the state it updates rather than into a snapshot.
     private fun updateItem(source: EntryCatalogueSourceInfo, result: GlobalSearchItemResult, generation: Long) {
-        mutableState.update {
+        state.update {
             if (generation != searchGeneration.get()) return@update it
             val items = it.items + (source to result)
             it.copy(items = items.toSortedMap(sortComparator(items)))

@@ -5,7 +5,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import cafe.adriel.voyager.core.model.rememberScreenModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.browse.ExtensionDetailsScreen
@@ -21,8 +21,8 @@ data class ExtensionDetailsScreen(
     @Composable
     override fun Content() {
         val context = LocalContext.current
-        val screenModel = rememberScreenModel { ExtensionDetailsScreenModel(pkgName = pkgName, context = context) }
-        val state by screenModel.state.collectAsStateWithLifecycle()
+        val viewModel = viewModel { ExtensionDetailsViewModel(pkgName = pkgName, context = context) }
+        val state by viewModel.state.collectAsStateWithLifecycle()
 
         val navigator = LocalNavigator.currentOrThrow
 
@@ -37,12 +37,12 @@ data class ExtensionDetailsScreen(
                     navigateUp = navigator::pop,
                     state = state,
                     onClickSourcePreferences = { navigator.push(SourcePreferencesScreen(it)) },
-                    onClickEnableAll = { screenModel.toggleSources(true) },
-                    onClickDisableAll = { screenModel.toggleSources(false) },
-                    onClickClearCookies = screenModel::clearCookies,
-                    onClickUninstall = screenModel::uninstallExtension,
-                    onClickSource = screenModel::toggleSource,
-                    onClickIncognito = screenModel::toggleIncognito,
+                    onClickEnableAll = { viewModel.toggleSources(true) },
+                    onClickDisableAll = { viewModel.toggleSources(false) },
+                    onClickClearCookies = viewModel::clearCookies,
+                    onClickUninstall = viewModel::uninstallExtension,
+                    onClickSource = viewModel::toggleSource,
+                    onClickIncognito = viewModel::toggleIncognito,
                 )
             }
         }

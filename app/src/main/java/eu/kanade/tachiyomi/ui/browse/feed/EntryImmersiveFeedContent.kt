@@ -24,7 +24,7 @@ import eu.kanade.presentation.browse.components.SourceIcon
 import eu.kanade.presentation.browse.immersive.rememberEntryImmersivePositionState
 import eu.kanade.tachiyomi.ui.browse.immersive.EntryImmersiveContent
 import eu.kanade.tachiyomi.ui.browse.immersive.EntryImmersiveItemKey
-import eu.kanade.tachiyomi.ui.browse.immersive.EntryImmersiveScreenModel
+import eu.kanade.tachiyomi.ui.browse.immersive.EntryImmersiveViewModel
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.launch
 import mihon.icons.materialsymbols.MaterialSymbols
@@ -40,8 +40,8 @@ import tachiyomi.presentation.core.screens.LoadingScreen
 
 @Composable
 internal fun EntryImmersiveFeedContent(
-    timelineModel: FeedScreenModel<CatalogListItem>,
-    immersiveModel: EntryImmersiveScreenModel,
+    timelineModel: FeedViewModel<CatalogListItem>,
+    immersiveModel: EntryImmersiveViewModel,
     snackbarHostState: SnackbarHostState,
     activeSource: Source,
     feedLabel: FeedLabel,
@@ -137,7 +137,7 @@ internal fun EntryImmersiveFeedContent(
         )
         FeedNewItemsIndicator(
             state = timelineState,
-            screenModel = timelineModel,
+            viewModel = timelineModel,
             viewportKey = pagerState,
             viewport = {
                 FeedViewport(
@@ -162,7 +162,7 @@ internal fun EntryImmersiveFeedContent(
 @Composable
 private fun rememberFeedEntry(
     itemRef: FeedItemRef,
-    timelineModel: FeedScreenModel<CatalogListItem>,
+    timelineModel: FeedViewModel<CatalogListItem>,
 ): Entry? {
     val item by remember(itemRef, timelineModel) { timelineModel.itemState(itemRef) }.collectAsState()
     return (item as? CatalogListItem.EntryItem)?.entry

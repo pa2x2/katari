@@ -1,8 +1,8 @@
 package eu.kanade.tachiyomi.ui.browse.extension
 
 import android.app.Application
-import cafe.adriel.voyager.core.model.ScreenModel
-import cafe.adriel.voyager.core.model.screenModelScope
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.domain.extension.interactor.GetExtensionLanguages
 import eu.kanade.domain.extension.interactor.GetExtensionsByType
@@ -41,7 +41,7 @@ import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import kotlin.time.Duration.Companion.seconds
 
-class ExtensionsScreenModel(
+class ExtensionsViewModel(
     basePreferences: BasePreferences = Injekt.get(),
     private val extensionManager: ExtensionManager = Injekt.get(),
     private val getExtensions: GetExtensionsByType = Injekt.get(),
@@ -53,7 +53,7 @@ class ExtensionsScreenModel(
         BrowseContentTypeFilterController(preferences),
     private val storeFilterController: ExtensionStoreFilterController =
         ExtensionStoreFilterController(preferences),
-) : ScreenModel {
+) : ViewModel() {
 
     private val context = Injekt.get<Application>()
 
@@ -68,7 +68,7 @@ class ExtensionsScreenModel(
     ) { updates, inProgress ->
         if (inProgress) 0 else updates
     }
-        .stateIn(screenModelScope, SharingStarted.WhileSubscribed(5.seconds), 0)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5.seconds), 0)
 
     val filter: StateFlow<ExtensionFilterState> = combine(
         getExtensionLanguages.subscribe(),
@@ -85,7 +85,7 @@ class ExtensionsScreenModel(
     }
         .catch { throwable -> logcat(LogPriority.ERROR, throwable) }
         .flowOn(Dispatchers.IO)
-        .stateIn(screenModelScope, SharingStarted.WhileSubscribed(5.seconds), ExtensionFilterState())
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5.seconds), ExtensionFilterState())
 
     private val isRefreshing = MutableStateFlow(false)
 
@@ -136,7 +136,7 @@ class ExtensionsScreenModel(
         }
     }
         .flowOn(Dispatchers.IO)
-        .stateIn(screenModelScope, SharingStarted.WhileSubscribed(5.seconds), null)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5.seconds), null)
 
     val state: StateFlow<ExtensionListState> = combine(
         items,
@@ -154,10 +154,10 @@ class ExtensionsScreenModel(
             filter = filter,
         )
     }
-        .stateIn(screenModelScope, SharingStarted.WhileSubscribed(5.seconds), ExtensionListState())
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5.seconds), ExtensionListState())
 
     init {
-        screenModelScope.launchIO { findAvailableExtensions() }
+        viewModelScope.launchIO { findAvailableExtensions() }
     }
 
     fun searchQueryPredicate(query: String): (Extension) -> Boolean {
@@ -231,7 +231,7 @@ class ExtensionsScreenModel(
     }
 
     fun updateAllExtensions() {
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             (extensionManager.getLoadedExtensions() + extensionManager.getNotLoadedExtensions())
                 .filter { it.hasUpdate }
                 .forEach(::updateExtension)
@@ -239,13 +239,13 @@ class ExtensionsScreenModel(
     }
 
     fun installExtension(extension: Extension.Available) {
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             extensionManager.installExtension(extension).collectToInstallUpdate(extension)
         }
     }
 
     fun updateExtension(extension: Extension.Installed) {
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             extensionManager.updateExtension(extension).collectToInstallUpdate(extension)
         }
     }
@@ -263,7 +263,7 @@ class ExtensionsScreenModel(
     }
 
     fun findAvailableExtensions() {
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             isRefreshing.update { true }
 
             extensionManager.findAvailableExtensions(forceRefresh = true)

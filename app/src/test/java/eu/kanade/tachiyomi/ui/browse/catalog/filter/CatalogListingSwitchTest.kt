@@ -8,7 +8,7 @@ import io.kotest.matchers.types.shouldBeSameInstanceAs
 import org.junit.jupiter.api.Test
 
 class CatalogListingSwitchTest {
-    private fun appliedSearch(): CatalogScreenModel.State {
+    private fun appliedSearch(): CatalogViewModel.State {
         val state = initialCatalogState("").initializeForSource(
             EntryFilterList(object : EntryFilter.CheckBox("Completed") {}).detachedCopy(),
         )
@@ -23,7 +23,7 @@ class CatalogListingSwitchTest {
 
         val searched = applied.searchWithAppliedFilters("one")
 
-        val listing = searched.listing as CatalogScreenModel.Listing.Search
+        val listing = searched.listing as CatalogViewModel.Listing.Search
         listing.query shouldBe "one"
         listing.filters.single().state shouldBe true
         searched.hasUnappliedFilterChanges shouldBe true
@@ -35,7 +35,7 @@ class CatalogListingSwitchTest {
         val applied = appliedSearch()
         val search = applied.listing
 
-        val popular = applied.switchListing(CatalogScreenModel.Listing.Popular)
+        val popular = applied.switchListing(CatalogViewModel.Listing.Popular)
 
         popular.restorableSearch shouldBeSameInstanceAs search
         (popular.filters.single() as EntryFilter.CheckBox).state shouldBe true

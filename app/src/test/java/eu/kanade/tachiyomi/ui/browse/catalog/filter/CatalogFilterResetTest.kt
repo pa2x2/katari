@@ -41,7 +41,7 @@ class CatalogFilterResetTest {
         state.value.filterResetPending shouldBe false
         state.value.filters.single().state shouldBe true
         (state.value.pageableListing === applied.listing) shouldBe true
-        (state.value.listing as CatalogScreenModel.Listing.Search).filters.single().state shouldBe false
+        (state.value.listing as CatalogViewModel.Listing.Search).filters.single().state shouldBe false
         // Reloading defaults does not silently save a preset that still requires repair.
         state.value.repairNeedsSave shouldBe true
         state.value.applyFilterDraft() shouldBe null

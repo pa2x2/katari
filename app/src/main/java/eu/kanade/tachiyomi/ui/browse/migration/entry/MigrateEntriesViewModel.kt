@@ -1,8 +1,8 @@
 package eu.kanade.tachiyomi.ui.browse.migration.entry
 
 import androidx.compose.runtime.Immutable
-import cafe.adriel.voyager.core.model.ScreenModel
-import cafe.adriel.voyager.core.model.screenModelScope
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import eu.kanade.tachiyomi.ui.browse.migration.entry.models.MigrationEntrySelectionAvailability
@@ -45,7 +45,7 @@ import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import kotlin.time.Duration.Companion.seconds
 
-class MigrateEntriesScreenModel(
+class MigrateEntriesViewModel(
     private val sourceId: Long,
     private val sourceManager: SourceManager = Injekt.get(),
     private val entryRepository: EntryRepository = Injekt.get(),
@@ -53,7 +53,7 @@ class MigrateEntriesScreenModel(
     private val catalogue: EntryCatalogueFeature = Injekt.get(),
     private val migration: EntryMigrationFeature = Injekt.get(),
     private val mergeGrouping: EntryMergeLibraryGroupingFeature = Injekt.get(),
-) : ScreenModel {
+) : ViewModel() {
 
     private val _events: Channel<MigrationEntriesEvent> = Channel()
     val events: Flow<MigrationEntriesEvent> = _events.receiveAsFlow()
@@ -110,7 +110,7 @@ class MigrateEntriesScreenModel(
         )
     }
         .flowOn(Dispatchers.IO)
-        .stateIn(screenModelScope, SharingStarted.WhileSubscribed(5.seconds), State())
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5.seconds), State())
 
     private fun selectionGroup(group: EntryMergeLibraryGroup): MigrationEntrySelectionGroup? {
         val members = group.orderedEntries.map { entry ->

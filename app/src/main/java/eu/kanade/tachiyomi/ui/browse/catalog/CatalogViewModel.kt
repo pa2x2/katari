@@ -7,14 +7,14 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingSource
 import androidx.paging.cachedIn
 import androidx.paging.filter
 import androidx.paging.map
-import cafe.adriel.voyager.core.model.StateScreenModel
-import cafe.adriel.voyager.core.model.screenModelScope
 import eu.kanade.core.preference.asState
 import eu.kanade.domain.source.interactor.GetIncognitoState
 import eu.kanade.domain.source.model.CATALOGUE_LATEST_QUERY
@@ -34,7 +34,6 @@ import eu.kanade.presentation.entry.components.MergeTargetSearchController
 import eu.kanade.presentation.entry.components.buildMergeTargetQuery
 import eu.kanade.presentation.entry.components.buildMergeTargets
 import eu.kanade.presentation.entry.components.rankMergeTargets
-import eu.kanade.presentation.util.ioCoroutineScope
 import eu.kanade.tachiyomi.source.entry.EntryFilterList
 import eu.kanade.tachiyomi.source.entry.EntryFilterNavigationRequest
 import eu.kanade.tachiyomi.source.entry.EntryFilterPageItem
@@ -51,8 +50,10 @@ import eu.kanade.tachiyomi.ui.browse.source.browse.filter.paged.PagedFilterBrows
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -62,6 +63,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.flow.updateAndGet
+import kotlinx.coroutines.plus
 import logcat.LogPriority
 import mihon.core.common.CustomPreferences
 import mihon.core.common.browseLongPressActionPriorityForSource
@@ -126,7 +128,7 @@ import eu.kanade.tachiyomi.source.entry.EntryFilter as SourceModelFilter
 private val CatalogListItem.entry: Entry
     get() = (this as CatalogListItem.EntryItem).entry
 
-class CatalogScreenModel(
+class CatalogViewModel(
     private val sourceId: Long,
     listingQuery: String?,
     private val migrationEntryType: EntryType? = null,
@@ -151,16 +153,17 @@ class CatalogScreenModel(
     private val entrySourceSettingsFeature: EntrySourceSettingsFeature = Injekt.get(),
     private val getIncognitoState: GetIncognitoState = Injekt.get(),
     private val application: Application = Injekt.get(),
-) : StateScreenModel<CatalogScreenModel.State>(
-    initialCatalogState(listingQuery),
-) {
+) : ViewModel() {
 
-    var displayMode by sourcePreferences.sourceDisplayMode(sourceId).asState(screenModelScope)
-    var feedsEnabled by customPreferences.enableFeeds.asState(screenModelScope)
+    val state: StateFlow<CatalogViewModel.State>
+        field = MutableStateFlow<CatalogViewModel.State>(initialCatalogState(listingQuery))
+
+    var displayMode by sourcePreferences.sourceDisplayMode(sourceId).asState(viewModelScope)
+    var feedsEnabled by customPreferences.enableFeeds.asState(viewModelScope)
     private val defaultBrowseLongPressActionPriority by
-        customPreferences.browseLongPressActionPriority.asState(screenModelScope)
+        customPreferences.browseLongPressActionPriority.asState(viewModelScope)
     private val browseLongPressActionOverrides by
-        customPreferences.browseLongPressActionOverrides.asState(screenModelScope)
+        customPreferences.browseLongPressActionOverrides.asState(viewModelScope)
     val browseLongPressActionPriority: List<CustomPreferences.BrowseLongPressAction>
         get() = browseLongPressActionPriorityForSource(
             sourceId = sourceId,
@@ -170,17 +173,17 @@ class CatalogScreenModel(
 
     private val filterLoader = CatalogFilterLoader(entryCatalogueFeature)
     private val presetHelper = CatalogPresetHelper(sourceId, browseFeedService, entryCatalogueFeature)
-    private val pagedFilterBrowseSessions = PagedFilterBrowseSessionStore(screenModelScope)
-    private val pagedFilterEdits = CatalogPagedFilterEdits(screenModelScope) { pending ->
-        mutableState.update { it.copy(pendingFilterEdits = pending) }
+    private val pagedFilterBrowseSessions = PagedFilterBrowseSessionStore(viewModelScope)
+    private val pagedFilterEdits = CatalogPagedFilterEdits(viewModelScope) { pending ->
+        state.update { it.copy(pendingFilterEdits = pending) }
     }
     private val filterReset = CatalogFilterReset(
-        state = mutableState,
+        state = state,
         loadFilters = { filterLoader.load(sourceId) },
         discardEdits = { pagedFilterEdits.discard() },
         retainSessions = pagedFilterBrowseSessions::retain,
     )
-    private val mergeTargetSearchController = MergeTargetSearchController<MergeTarget>(screenModelScope)
+    private val mergeTargetSearchController = MergeTargetSearchController<MergeTarget>(viewModelScope)
 
     private val _events = Channel<Event>(Channel.UNLIMITED)
     val events: Flow<Event> = _events.receiveAsFlow()
@@ -193,13 +196,13 @@ class CatalogScreenModel(
 
     init {
         if (catalogSource == null) {
-            mutableState.update { it.copy(filterState = FilterUiState.Unavailable) }
+            state.update { it.copy(filterState = FilterUiState.Unavailable) }
         } else {
-            screenModelScope.launchIO {
+            viewModelScope.launchIO {
                 loadFilters(initialFilterSnapshot = initialFilterSnapshot)
             }
             if (openFilterSheetOnStart) {
-                mutableState.update { it.copy(dialog = Dialog.Filter) }
+                state.update { it.copy(dialog = Dialog.Filter) }
             }
 
             if (!getIncognitoState.await(sourceId)) {
@@ -210,7 +213,7 @@ class CatalogScreenModel(
 
     private val hideInLibraryItems = sourcePreferences.hideInLibraryItems.get()
     private val catalogItemStore = ObservedItemStore<Long, CatalogListItem.EntryItem>(
-        scope = ioCoroutineScope,
+        scope = viewModelScope + Dispatchers.IO,
         keyOf = { it.entry.id },
         supersedes = { candidate, current -> candidate.entry.version >= current.entry.version },
     ) { entryIds ->
@@ -237,10 +240,10 @@ class CatalogScreenModel(
                         .filter { migrationEntryType == null || it.value?.entryType == migrationEntryType }
                         .filter { !hideInLibraryItems || it.value?.favorite != true }
                 }
-                    .cachedIn(ioCoroutineScope)
+                    .cachedIn(viewModelScope + Dispatchers.IO)
             }
         }
-        .stateIn(ioCoroutineScope, SharingStarted.Lazily, emptyFlow())
+        .stateIn(viewModelScope + Dispatchers.IO, SharingStarted.Lazily, emptyFlow())
 
     val sourceName: String
         get() = catalogSource?.name ?: ""
@@ -283,7 +286,7 @@ class CatalogScreenModel(
 
     fun resetFilters() {
         if (catalogSource == null) return
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             filterReset.reset()
         }
     }
@@ -312,7 +315,7 @@ class CatalogScreenModel(
 
     fun applyDraftFilters(): Boolean {
         val applied = state.value.applyFilterDraft() ?: return false
-        mutableState.value = applied
+        state.value = applied
         return true
     }
 
@@ -324,7 +327,7 @@ class CatalogScreenModel(
                 state.value.defaultFilters,
             )
         }
-        mutableState.update {
+        state.update {
             val withDraft = if (remove && issue.target != null) {
                 it.withRepublishedDraftFilters(it.filters)
             } else {
@@ -344,16 +347,16 @@ class CatalogScreenModel(
         presetHelper.savePreset(
             preset.copy(filters = saved.filters, listingMode = saved.listingMode, query = saved.query),
         )
-        mutableState.update { it.copy(repairNeedsSave = false) }
+        state.update { it.copy(repairNeedsSave = false) }
     }
 
     fun setListing(listing: Listing) {
-        mutableState.update { it.switchListing(listing) }
+        state.update { it.switchListing(listing) }
     }
 
     /** Resets one applied filter value to its default and re-runs the search. */
     fun removeAppliedFilter(path: List<Int>) {
-        mutableState.update { it.withoutAppliedFilter(path) }
+        state.update { it.withoutAppliedFilter(path) }
     }
 
     /** Returns to the parked search when another listing is shown, otherwise edits the filters. */
@@ -364,7 +367,7 @@ class CatalogScreenModel(
 
     fun setFilters(filters: EntryFilterList) {
         pagedFilterBrowseSessions.retain(filters)
-        mutableState.update { it.withRepublishedDraftFilters(filters) }
+        state.update { it.withRepublishedDraftFilters(filters) }
     }
 
     suspend fun filterSuggestions(
@@ -418,7 +421,7 @@ class CatalogScreenModel(
     }
 
     fun search(query: String) {
-        val searched = mutableState.updateAndGet { it.searchWithAppliedFilters(query) }
+        val searched = state.updateAndGet { it.searchWithAppliedFilters(query) }
         if (searched.hasUnappliedFilterChanges) {
             _events.trySend(Event.SearchKeptUnappliedFilters)
         }
@@ -427,7 +430,7 @@ class CatalogScreenModel(
     fun searchGenre(genreName: String) {
         if (catalogSource == null) return
 
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             val defaultFilters = freshResolvedFilters() ?: return@launchIO
             pagedFilterBrowseSessions.retain(defaultFilters)
             var genreExists = false
@@ -457,7 +460,7 @@ class CatalogScreenModel(
                 }
             }
 
-            mutableState.update {
+            state.update {
                 val listing = if (genreExists) {
                     Listing.Search(query = null, filters = defaultFilters.detachedCopy())
                 } else {
@@ -476,9 +479,9 @@ class CatalogScreenModel(
 
     fun openFilterSheet() {
         if (catalogSource == null) return
-        mutableState.update { it.copy(dialog = Dialog.Filter) }
+        state.update { it.copy(dialog = Dialog.Filter) }
         if (state.value.filterState is FilterUiState.Uninitialized) {
-            screenModelScope.launchIO {
+            viewModelScope.launchIO {
                 loadFilters()
             }
         }
@@ -486,7 +489,7 @@ class CatalogScreenModel(
 
     fun retryFilterLoad() {
         if (catalogSource == null) return
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             if (state.value.filterResetPending) {
                 filterReset.reset()
             } else {
@@ -497,13 +500,13 @@ class CatalogScreenModel(
 
     private suspend fun loadFilters(initialFilterSnapshot: List<FilterStateNode> = emptyList()) {
         pagedFilterEdits.discard()
-        mutableState.update { it.copy(filterState = FilterUiState.Loading) }
+        state.update { it.copy(filterState = FilterUiState.Loading) }
 
         runCatching {
             filterLoader.load(sourceId)
         }.onSuccess { sourceFilters ->
             pagedFilterBrowseSessions.retain(sourceFilters)
-            mutableState.update {
+            state.update {
                 it.initializeForSource(
                     sourceFilters = sourceFilters,
                     initialFilterSnapshot = initialFilterSnapshot,
@@ -518,7 +521,7 @@ class CatalogScreenModel(
                 browseFeedService.migratePresetFilters(original, state.value.filters.snapshot())
             }
         }.onFailure { throwable ->
-            mutableState.update {
+            state.update {
                 it.copy(
                     filterState = FilterUiState.Error(throwable),
                 )
@@ -530,7 +533,7 @@ class CatalogScreenModel(
         return runCatching {
             filterLoader.load(sourceId)
         }.onFailure { throwable ->
-            mutableState.update {
+            state.update {
                 it.copy(
                     filterState = FilterUiState.Error(throwable),
                 )
@@ -549,7 +552,7 @@ class CatalogScreenModel(
     }
 
     fun addFavorite(entry: Entry) {
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             applyLibraryAdd(
                 EntryLibraryAddRequest(entry, duplicatePolicy = EntryLibraryDuplicatePolicy.ALLOW),
             )
@@ -557,7 +560,7 @@ class CatalogScreenModel(
     }
 
     fun addFavorite(entry: Entry, categoryIds: List<Long>) {
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             applyLibraryAdd(
                 EntryLibraryAddRequest(
                     entry = entry,
@@ -573,7 +576,7 @@ class CatalogScreenModel(
     }
 
     fun confirmBrowseLibraryAction(entry: Entry) {
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             handleLibraryAction(entry)
         }
     }
@@ -622,7 +625,7 @@ class CatalogScreenModel(
     }
 
     fun changeFavorite(entry: Entry) {
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             if (entry.favorite) {
                 when (val result = entryLibraryMembershipFeature.remove(listOf(entry))) {
                     is EntryLibraryRemovalResult.Failed -> logcat(LogPriority.ERROR, result.cause)
@@ -677,7 +680,7 @@ class CatalogScreenModel(
 
     private fun showEntryMergeTargetPicker(entry: Entry) {
         mergeTargetSearchController.cancelPending()
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             val targets = buildMergeTargets(
                 libraryItems = getLibraryEntries.await(),
                 sourceNames = Injekt.get(),
@@ -701,7 +704,7 @@ class CatalogScreenModel(
         when (val dialog = state.value.dialog) {
             is Dialog.SelectEntryMergeTarget -> {
                 if (dialog.query == query) return
-                mutableState.update { currentState ->
+                state.update { currentState ->
                     val current = currentState.dialog as? Dialog.SelectEntryMergeTarget ?: return@update currentState
                     if (current.targets !== dialog.targets) return@update currentState
                     currentState.copy(
@@ -712,7 +715,7 @@ class CatalogScreenModel(
                     )
                 }
                 mergeTargetSearchController.submit(dialog.targets, query) { visibleTargets ->
-                    mutableState.update { currentState ->
+                    state.update { currentState ->
                         val current = currentState.dialog as? Dialog.SelectEntryMergeTarget
                             ?: return@update currentState
                         if (current.targets !== dialog.targets || current.query != query) return@update currentState
@@ -729,10 +732,10 @@ class CatalogScreenModel(
     fun openMergeEditor(targetId: Long) {
         when (val dialog = state.value.dialog) {
             is Dialog.SelectEntryMergeTarget -> {
-                screenModelScope.launchIO {
+                viewModelScope.launchIO {
                     val target = dialog.visibleTargets.firstOrNull { it.id == targetId } ?: return@launchIO
                     val editor = createEntryMergeEditorDialog(dialog.entry, target) ?: return@launchIO
-                    mutableState.update { currentState ->
+                    state.update { currentState ->
                         val current = currentState.dialog as? Dialog.SelectEntryMergeTarget
                             ?: return@update currentState
                         if (current.targets !== dialog.targets) return@update currentState
@@ -745,7 +748,7 @@ class CatalogScreenModel(
     }
 
     fun moveMergeEntry(fromIndex: Int, toIndex: Int) {
-        mutableState.update { currentState ->
+        state.update { currentState ->
             when (val dialog = currentState.dialog) {
                 is Dialog.EditEntryMerge -> {
                     val entries = dialog.entries.toMutableList()
@@ -760,7 +763,7 @@ class CatalogScreenModel(
     }
 
     fun setMergeTarget(itemId: Long) {
-        mutableState.update { currentState ->
+        state.update { currentState ->
             when (val dialog = currentState.dialog) {
                 is Dialog.EditEntryMerge -> {
                     val entry = dialog.entries.firstOrNull { it.id == itemId } ?: return@update currentState
@@ -781,7 +784,7 @@ class CatalogScreenModel(
     }
 
     fun toggleMergeEntryRemoval(itemId: Long) {
-        mutableState.update { currentState ->
+        state.update { currentState ->
             when (val dialog = currentState.dialog) {
                 is Dialog.EditEntryMerge -> {
                     val entry = dialog.entries.firstOrNull { it.id == itemId } ?: return@update currentState
@@ -797,7 +800,7 @@ class CatalogScreenModel(
     }
 
     fun toggleMergeEntryLibraryRemoval(itemId: Long) {
-        mutableState.update { currentState ->
+        state.update { currentState ->
             when (val dialog = currentState.dialog) {
                 is Dialog.EditEntryMerge -> {
                     val entry = dialog.entries.firstOrNull { it.id == itemId } ?: return@update currentState
@@ -815,7 +818,7 @@ class CatalogScreenModel(
     fun confirmBrowseMerge() {
         when (val dialog = state.value.dialog) {
             is Dialog.EditEntryMerge -> {
-                screenModelScope.launchIO {
+                viewModelScope.launchIO {
                     val result = entryMergeFeature.execute(
                         EntryMergeCommitIntent(
                             editReference = dialog.editReference,
@@ -969,7 +972,7 @@ class CatalogScreenModel(
         if (!feedsEnabled || catalogSource == null) return
         val preset = feedPresets().firstOrNull { it.id == presetId } ?: return
         pagedFilterEdits.discard()
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             val filters = freshResolvedFilters() ?: return@launchIO
             val defaults = filters.detachedCopy()
             val restoration = filters.restoreSnapshot(preset.filters)
@@ -977,7 +980,7 @@ class CatalogScreenModel(
                 browseFeedService.migratePresetFilters(preset, filters.snapshot())
             }
             pagedFilterBrowseSessions.retain(filters)
-            mutableState.update {
+            state.update {
                 it.withRepublishedDraftFilters(filters).copy(
                     defaultFilters = defaults,
                     draftMode = preset.listingMode,
@@ -1002,7 +1005,7 @@ class CatalogScreenModel(
         if (!presetHelper.canDeletePreset(presetId)) return
 
         presetHelper.removePreset(presetId)
-        mutableState.update {
+        state.update {
             if (it.appliedCustomPresetId == presetId) {
                 it.copy(appliedCustomPresetId = null)
             } else {
@@ -1029,7 +1032,7 @@ class CatalogScreenModel(
             Dialog.SavePreset.Mode.Create -> {
                 if (catalogSource == null) return
 
-                screenModelScope.launchIO {
+                viewModelScope.launchIO {
                     val preset = SourceFeedPreset(
                         id = UUID.randomUUID().toString(),
                         sourceId = sourceId,
@@ -1040,7 +1043,7 @@ class CatalogScreenModel(
                         filters = presetState.filters,
                     )
                     presetHelper.savePreset(preset)
-                    mutableState.update {
+                    state.update {
                         it.copy(
                             draftPresetId = preset.id,
                             repairNeedsSave = false,
@@ -1065,7 +1068,7 @@ class CatalogScreenModel(
                 if (catalogSource == null) return
 
                 val preset = presetHelper.customPreset(dialog.presetId) ?: return
-                screenModelScope.launchIO {
+                viewModelScope.launchIO {
                     presetHelper.savePreset(
                         preset.copy(
                             name = trimmed,
@@ -1075,7 +1078,7 @@ class CatalogScreenModel(
                             filters = presetState.filters,
                         ),
                     )
-                    mutableState.update {
+                    state.update {
                         it.copy(
                             draftPresetId = preset.id,
                             repairNeedsSave = false,
@@ -1096,14 +1099,14 @@ class CatalogScreenModel(
     }
 
     fun setToolbarQuery(query: String?) {
-        mutableState.update { it.copy(toolbarQuery = query) }
+        state.update { it.copy(toolbarQuery = query) }
     }
 
     private fun setDialog(dialog: Dialog?) {
         if (state.value.dialog is Dialog.SelectEntryMergeTarget && dialog !is Dialog.SelectEntryMergeTarget) {
             mergeTargetSearchController.cancelPending()
         }
-        mutableState.update { it.copy(dialog = dialog) }
+        state.update { it.copy(dialog = dialog) }
     }
 
     private suspend fun showLibraryActionChooserOrHandle(entry: Entry) {
@@ -1226,11 +1229,11 @@ class CatalogScreenModel(
     }
 }
 
-private fun CatalogScreenModel.Listing.toFeatureListing(): EntryCatalogueListing {
+private fun CatalogViewModel.Listing.toFeatureListing(): EntryCatalogueListing {
     return when (this) {
-        CatalogScreenModel.Listing.Popular -> EntryCatalogueListing.Popular
-        CatalogScreenModel.Listing.Latest -> EntryCatalogueListing.Latest
-        is CatalogScreenModel.Listing.Search -> EntryCatalogueListing.Search(query.orEmpty(), filters)
+        CatalogViewModel.Listing.Popular -> EntryCatalogueListing.Popular
+        CatalogViewModel.Listing.Latest -> EntryCatalogueListing.Latest
+        is CatalogViewModel.Listing.Search -> EntryCatalogueListing.Search(query.orEmpty(), filters)
     }
 }
 
@@ -1249,9 +1252,9 @@ sealed interface FilterUiState {
     data object Unavailable : FilterUiState
 }
 
-internal fun initialCatalogState(listingQuery: String?): CatalogScreenModel.State {
-    return CatalogScreenModel.State(
-        listing = CatalogScreenModel.Listing.valueOf(listingQuery),
+internal fun initialCatalogState(listingQuery: String?): CatalogViewModel.State {
+    return CatalogViewModel.State(
+        listing = CatalogViewModel.Listing.valueOf(listingQuery),
     )
 }
 

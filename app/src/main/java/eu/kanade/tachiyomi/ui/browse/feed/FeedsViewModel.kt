@@ -1,8 +1,8 @@
 package eu.kanade.tachiyomi.ui.browse.feed
 
 import androidx.compose.runtime.Immutable
-import cafe.adriel.voyager.core.model.StateScreenModel
-import cafe.adriel.voyager.core.model.screenModelScope
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import eu.kanade.domain.source.interactor.GetEnabledCatalogSources
 import eu.kanade.domain.source.model.BUILTIN_LATEST_PRESET_ID
 import eu.kanade.domain.source.model.BUILTIN_POPULAR_PRESET_ID
@@ -19,6 +19,8 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -33,17 +35,20 @@ import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.util.UUID
 
-class FeedsScreenModel(
+class FeedsViewModel(
     private val contentMode: SourceFeedContentMode = SourceFeedContentMode.Browse,
     private val browseFeedService: BrowseFeedService = Injekt.get(),
     private val profileSourcePreferences: ProfileSourcePreferences = Injekt.get(),
     private val getEnabledCatalogSources: GetEnabledCatalogSources = Injekt.get(),
     private val sourceManager: SourceManager = Injekt.get(),
     private val activeProfileProvider: ActiveProfileProvider = Injekt.get(),
-) : StateScreenModel<FeedsScreenModel.State>(State()) {
+) : ViewModel() {
+
+    val state: StateFlow<FeedsViewModel.State>
+        field = MutableStateFlow<FeedsViewModel.State>(State())
 
     init {
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             observeProfileAwareFeedState(
                 activeProfileIdFlow = activeProfileProvider.activeProfileIdFlow,
                 enabledSources = { getEnabledCatalogSources.subscribe(it) },
@@ -51,7 +56,7 @@ class FeedsScreenModel(
                 sourcesLoaded = sourceManager.isInitialized,
                 contentMode = contentMode,
             ).collectLatest { observedState ->
-                mutableState.update { state ->
+                state.update { state ->
                     val nextState = state.copy(
                         profileId = observedState.profileId,
                         sources = observedState.sources,
@@ -74,11 +79,11 @@ class FeedsScreenModel(
     }
 
     fun showCreateDialog() {
-        mutableState.update { it.copy(dialog = Dialog.AddFeed) }
+        state.update { it.copy(dialog = Dialog.AddFeed) }
     }
 
     fun showManageDialog() {
-        mutableState.update {
+        state.update {
             if (it.validFeeds.isEmpty()) {
                 it.copy(dialog = null)
             } else {
@@ -88,12 +93,12 @@ class FeedsScreenModel(
     }
 
     fun closeDialog() {
-        mutableState.update { it.copy(dialog = null) }
+        state.update { it.copy(dialog = null) }
     }
 
     fun selectFeed(feedId: String) {
         persistSelectedFeed(feedId)
-        mutableState.update { it.copy(selectedFeedId = feedId) }
+        state.update { it.copy(selectedFeedId = feedId) }
     }
 
     fun createFeed(sourceId: Long, presetId: String) {
@@ -273,7 +278,7 @@ internal fun observeProfileAwareFeedState(
     browseState: (Long) -> Flow<BrowseFeedService.State>,
     sourcesLoaded: Flow<Boolean>,
     contentMode: SourceFeedContentMode = SourceFeedContentMode.Browse,
-): Flow<FeedsScreenModel.State> {
+): Flow<FeedsViewModel.State> {
     return activeProfileIdFlow
         .distinctUntilChanged()
         .flatMapLatest { profileId ->
@@ -282,7 +287,7 @@ internal fun observeProfileAwareFeedState(
                 browseState(profileId),
                 sourcesLoaded,
             ) { sources, browseState, sourcesLoaded ->
-                FeedsScreenModel.State(
+                FeedsViewModel.State(
                     profileId = profileId,
                     sources = sources
                         .groupBy { it.id }

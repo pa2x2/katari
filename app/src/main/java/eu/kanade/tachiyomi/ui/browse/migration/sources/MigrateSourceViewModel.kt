@@ -1,8 +1,8 @@
 package eu.kanade.tachiyomi.ui.browse.migration.sources
 
 import androidx.compose.runtime.Immutable
-import cafe.adriel.voyager.core.model.ScreenModel
-import cafe.adriel.voyager.core.model.screenModelScope
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import eu.kanade.domain.source.interactor.GetSourcesWithFavoriteCount
 import eu.kanade.domain.source.interactor.SetMigrateSorting
 import eu.kanade.domain.source.service.SourcePreferences
@@ -35,7 +35,7 @@ import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import kotlin.time.Duration.Companion.seconds
 
-class MigrateSourceScreenModel(
+class MigrateSourceViewModel(
     private val preferences: SourcePreferences = Injekt.get(),
     private val getSourcesWithFavoriteCount: GetSourcesWithFavoriteCount = Injekt.get(),
     private val entryRepository: EntryRepository = Injekt.get(),
@@ -43,7 +43,7 @@ class MigrateSourceScreenModel(
     private val sessionStore: SourceMigrationSessionStore = Injekt.get(),
     private val profileManager: ProfileManager = Injekt.get(),
     private val sourceManager: SourceManager = Injekt.get(),
-) : ScreenModel {
+) : ViewModel() {
 
     private val _channel = Channel<Event>(Int.MAX_VALUE)
     val channel = _channel.receiveAsFlow()
@@ -92,7 +92,7 @@ class MigrateSourceScreenModel(
         )
     }
         .flowOn(Dispatchers.IO)
-        .stateIn(screenModelScope, SharingStarted.WhileSubscribed(5.seconds), State())
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5.seconds), State())
 
     fun toggleSortingMode() {
         preferences.migrationSortingMode.getAndSet { mode ->

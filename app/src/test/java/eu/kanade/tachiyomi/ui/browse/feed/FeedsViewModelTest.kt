@@ -14,7 +14,7 @@ import org.junit.jupiter.api.Test
 import tachiyomi.domain.source.model.EntryCatalogueDescription
 import tachiyomi.domain.source.model.Source
 
-class FeedsScreenModelTest {
+class FeedsViewModelTest {
 
     @Test
     fun `profile switch waits for matching sources before emitting feed state`() = runTest {
@@ -28,7 +28,7 @@ class FeedsScreenModelTest {
             1L to MutableSharedFlow<BrowseFeedService.State>(replay = 1),
             2L to MutableSharedFlow<BrowseFeedService.State>(replay = 1),
         )
-        val states = mutableListOf<FeedsScreenModel.State>()
+        val states = mutableListOf<FeedsViewModel.State>()
 
         val job = launch {
             observeProfileAwareFeedState(

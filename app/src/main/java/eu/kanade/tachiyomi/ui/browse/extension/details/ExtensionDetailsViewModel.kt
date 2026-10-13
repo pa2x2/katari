@@ -1,8 +1,8 @@
 package eu.kanade.tachiyomi.ui.browse.extension.details
 
 import android.content.Context
-import cafe.adriel.voyager.core.model.ScreenModel
-import cafe.adriel.voyager.core.model.screenModelScope
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import eu.kanade.domain.extension.interactor.GetExtensionSources
 import eu.kanade.domain.source.interactor.ToggleIncognito
 import eu.kanade.domain.source.interactor.ToggleSource
@@ -38,7 +38,7 @@ import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import kotlin.time.Duration.Companion.seconds
 
-class ExtensionDetailsScreenModel(
+class ExtensionDetailsViewModel(
     pkgName: String,
     private val context: Context,
     private val network: NetworkHelper = Injekt.get(),
@@ -50,7 +50,7 @@ class ExtensionDetailsScreenModel(
     private val catalogueFeature: EntryCatalogueFeature = Injekt.get(),
     private val sourceHomeFeature: EntrySourceHomeFeature = Injekt.get(),
     private val sourceSettingsFeature: EntrySourceSettingsFeature = Injekt.get(),
-) : ScreenModel {
+) : ViewModel() {
 
     val state: StateFlow<ExtensionDetailsState> = extensionManager.loadedExtensionsFlow
         .map { extensions -> extensions.firstOrNull { extension -> extension.pkgName == pkgName } }
@@ -64,7 +64,7 @@ class ExtensionDetailsScreenModel(
                 ExtensionDetailsState.Success(extension = extension, isIncognito = isIncognito, sources = sources)
             }
         }
-        .stateIn(screenModelScope, SharingStarted.WhileSubscribed(5.seconds), ExtensionDetailsState.Loading)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5.seconds), ExtensionDetailsState.Loading)
 
     private val loadedExtension: Extension.Loaded?
         get() = (state.value as? ExtensionDetailsState.Success)?.extension

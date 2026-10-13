@@ -36,7 +36,7 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import cafe.adriel.voyager.core.model.rememberScreenModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
@@ -52,13 +52,13 @@ import eu.kanade.presentation.more.settings.screen.BrowseLongPressActionsScreen
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import eu.kanade.tachiyomi.ui.browse.catalog.BrowseLongPressOutcome
 import eu.kanade.tachiyomi.ui.browse.catalog.CatalogScreen
-import eu.kanade.tachiyomi.ui.browse.catalog.CatalogScreenModel
+import eu.kanade.tachiyomi.ui.browse.catalog.CatalogViewModel
 import eu.kanade.tachiyomi.ui.browse.feed.add.AddFeedSheet
 import eu.kanade.tachiyomi.ui.browse.feed.manage.ManageFeedsSheet
 import eu.kanade.tachiyomi.ui.browse.feed.manage.RenameFeedDialog
 import eu.kanade.tachiyomi.ui.browse.feed.switcher.FeedNavigationBar
 import eu.kanade.tachiyomi.ui.browse.feed.switcher.FeedPickerSheet
-import eu.kanade.tachiyomi.ui.browse.immersive.EntryImmersiveScreenModel
+import eu.kanade.tachiyomi.ui.browse.immersive.EntryImmersiveViewModel
 import eu.kanade.tachiyomi.ui.browse.source.browse.preset.displayName
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
 import eu.kanade.tachiyomi.ui.home.HomeScreen
@@ -94,12 +94,12 @@ fun Screen.feedsTab(contentMode: SourceFeedContentMode = SourceFeedContentMode.B
     val profileManager = remember { Injekt.get<ProfileManager>() }
     val activeProfile by profileManager.activeProfile.collectAsState()
     val activeProfileId = activeProfile?.id ?: profileManager.activeProfileId
-    val screenModel = rememberScreenModel { FeedsScreenModel(contentMode) }
-    val state by screenModel.state.collectAsState()
+    val viewModel = viewModel { FeedsViewModel(contentMode) }
+    val state by viewModel.state.collectAsState()
     val singleEnabledFeed = state.enabledFeeds.singleOrNull()
-    val singleEnabledFeedSource = singleEnabledFeed?.let { screenModel.sourceFor(it.sourceId) }
-    val singleEnabledFeedPreset = singleEnabledFeed?.let(screenModel::presetFor)
-    val activeFeedSource = screenModel.activeFeed()?.let { screenModel.sourceFor(it.sourceId) }
+    val singleEnabledFeedSource = singleEnabledFeed?.let { viewModel.sourceFor(it.sourceId) }
+    val singleEnabledFeedPreset = singleEnabledFeed?.let(viewModel::presetFor)
+    val activeFeedSource = viewModel.activeFeed()?.let { viewModel.sourceFor(it.sourceId) }
     var feedViewMode by remember { mutableStateOf(FeedViewMode.Regular) }
 
     return TabContent(
@@ -122,13 +122,13 @@ fun Screen.feedsTab(contentMode: SourceFeedContentMode = SourceFeedContentMode.B
                 AppBar.Action(
                     title = stringResource(MR.strings.browse_feed_add),
                     icon = MaterialSymbols.Rounded.Add,
-                    onClick = screenModel::showCreateDialog,
+                    onClick = viewModel::showCreateDialog,
                 ),
             )
             add(
                 AppBar.OverflowAction(
                     title = stringResource(MR.strings.browse_manage_feeds),
-                    onClick = screenModel::showManageDialog,
+                    onClick = viewModel::showManageDialog,
                 ),
             )
             if (activeFeedSource != null) {
@@ -147,7 +147,7 @@ fun Screen.feedsTab(contentMode: SourceFeedContentMode = SourceFeedContentMode.B
             FeedsTabContent(
                 activeProfileId = activeProfileId,
                 state = state,
-                screenModel = screenModel,
+                viewModel = viewModel,
                 navigator = navigator,
                 contentPadding = contentPadding,
                 snackbarHostState = snackbarHostState,
@@ -193,8 +193,8 @@ private fun SingleFeedTabLabel(
 @Composable
 private fun Screen.FeedsTabContent(
     activeProfileId: Long,
-    state: FeedsScreenModel.State,
-    screenModel: FeedsScreenModel,
+    state: FeedsViewModel.State,
+    viewModel: FeedsViewModel,
     navigator: Navigator,
     contentPadding: PaddingValues,
     snackbarHostState: SnackbarHostState,
@@ -207,9 +207,9 @@ private fun Screen.FeedsTabContent(
         return
     }
 
-    val activeFeed = screenModel.activeFeed()
-    val activeSource = activeFeed?.let { screenModel.sourceFor(it.sourceId) }
-    val activePreset = activeFeed?.let(screenModel::presetFor)
+    val activeFeed = viewModel.activeFeed()
+    val activeSource = activeFeed?.let { viewModel.sourceFor(it.sourceId) }
+    val activePreset = activeFeed?.let(viewModel::presetFor)
     var renamingFeedId by rememberSaveable { mutableStateOf<String?>(null) }
     val sourceManager = remember { Injekt.get<SourceManager>() }
     val immersiveFeature = remember { Injekt.get<EntryImmersiveFeature>() }
@@ -257,15 +257,15 @@ private fun Screen.FeedsTabContent(
                 EmptyScreenAction(
                     stringRes = MR.strings.browse_feed_add,
                     icon = MaterialSymbols.Rounded.Add,
-                    onClick = screenModel::showCreateDialog,
+                    onClick = viewModel::showCreateDialog,
                 ),
             ),
         )
     } else if (activeFeed != null && activeSource != null && activePreset != null) {
         val enabledFeeds = state.enabledFeeds
-        val activeDisplayMode = screenModel.displayModeFor(
+        val activeDisplayMode = viewModel.displayModeFor(
             activeFeed,
-            screenModel.sourceDisplayMode(activeFeed.sourceId),
+            viewModel.sourceDisplayMode(activeFeed.sourceId),
         )
         var showFeedPicker by remember(activeFeed.id) { mutableStateOf(false) }
         var jumpToNewestRequest by remember(activeFeed.id) { mutableIntStateOf(0) }
@@ -274,42 +274,38 @@ private fun Screen.FeedsTabContent(
             modifier = Modifier.pointerInput(Unit) {},
         ) {
             key(activeProfileId, activeFeed.id, activePreset) {
-                val actionModel = rememberScreenModel(
-                    tag = "feed-actions-$activeProfileId-${activeFeed.id}-${activePreset.hashCode()}",
-                ) {
-                    CatalogScreenModel(
-                        sourceId = activeSource.id,
-                        listingQuery = activePreset.toListing().requestQuery,
-                        initialFilterSnapshot = activePreset.filters,
-                        initialPresetId = activePreset.id,
-                        browseFeedService = Injekt.get<eu.kanade.domain.source.service.BrowseFeedService>()
-                            .forProfile(activeProfileId),
-                    )
-                }
-                val actionState by actionModel.state.collectAsState()
-                val timelineModel = rememberScreenModel(
-                    tag = "feed-timeline-$activeProfileId-${activeFeed.id}-${activePreset.hashCode()}",
-                ) {
-                    FeedScreenModel(
-                        feedId = activeFeed.id,
-                        initialFilterSnapshot = activePreset.filters,
-                        chronological = activePreset.chronological,
-                        browseFeedService = Injekt.get<eu.kanade.domain.source.service.BrowseFeedService>()
-                            .forProfile(activeProfileId),
-                        hideInLibraryItems = Injekt.get<ProfileSourcePreferences>()
-                            .forProfile(activeProfileId).hideInLibraryItems.get(),
-                        source = CatalogFeedItemSource(
+                val actionModel =
+                    viewModel(key = "feed-actions-$activeProfileId-${activeFeed.id}-${activePreset.hashCode()}") {
+                        CatalogViewModel(
                             sourceId = activeSource.id,
                             listingQuery = activePreset.toListing().requestQuery,
                             initialFilterSnapshot = activePreset.filters,
-                        ),
-                    )
-                }
+                            initialPresetId = activePreset.id,
+                            browseFeedService = Injekt.get<eu.kanade.domain.source.service.BrowseFeedService>()
+                                .forProfile(activeProfileId),
+                        )
+                    }
+                val actionState by actionModel.state.collectAsState()
+                val timelineModel =
+                    viewModel(key = "feed-timeline-$activeProfileId-${activeFeed.id}-${activePreset.hashCode()}") {
+                        FeedViewModel(
+                            feedId = activeFeed.id,
+                            initialFilterSnapshot = activePreset.filters,
+                            chronological = activePreset.chronological,
+                            browseFeedService = Injekt.get<eu.kanade.domain.source.service.BrowseFeedService>()
+                                .forProfile(activeProfileId),
+                            hideInLibraryItems = Injekt.get<ProfileSourcePreferences>()
+                                .forProfile(activeProfileId).hideInLibraryItems.get(),
+                            source = CatalogFeedItemSource(
+                                sourceId = activeSource.id,
+                                listingQuery = activePreset.toListing().requestQuery,
+                                initialFilterSnapshot = activePreset.filters,
+                            ),
+                        )
+                    }
                 val timelineState by timelineModel.state.collectAsState()
-                val immersiveModel = rememberScreenModel(
-                    tag = "feed-immersive-$activeProfileId-${activeFeed.id}",
-                ) {
-                    EntryImmersiveScreenModel()
+                val immersiveModel = viewModel(key = "feed-immersive-$activeProfileId-${activeFeed.id}") {
+                    EntryImmersiveViewModel()
                 }
                 val catalogueFeature = remember { Injekt.get<EntryCatalogueFeature>() }
                 val catalogSource = remember(activeSource.id) {
@@ -341,7 +337,7 @@ private fun Screen.FeedsTabContent(
                 if (actionState.repairNeedsSave) {
                     FeedPresetRepairNotice(onRepair = actionModel::openFilterSheet)
                 }
-                if (actionState.dialog == CatalogScreenModel.Dialog.Filter) {
+                if (actionState.dialog == CatalogViewModel.Dialog.Filter) {
                     FeedPresetRepairSheet(actionModel, actionState)
                 }
                 Box(
@@ -373,7 +369,7 @@ private fun Screen.FeedsTabContent(
                         ) {
                             CatalogFeedBrowseContent(
                                 source = catalogSource,
-                                screenModel = timelineModel,
+                                viewModel = timelineModel,
                                 columns = columns,
                                 displayMode = activeDisplayMode,
                                 snackbarHostState = snackbarHostState,
@@ -421,13 +417,13 @@ private fun Screen.FeedsTabContent(
                     FeedPickerSheet(
                         feeds = enabledFeeds,
                         selectedFeedId = activeFeed.id,
-                        sourceFor = screenModel::sourceFor,
-                        presetFor = screenModel::presetFor,
+                        sourceFor = viewModel::sourceFor,
+                        presetFor = viewModel::presetFor,
                         canJumpToNewest = timelineState.itemRefs.isNotEmpty() &&
                             timelineModel.savedAnchorSnapshot().resolvedItem() != timelineState.itemRefs.firstOrNull(),
                         onSelect = { feedId ->
                             showFeedPicker = false
-                            screenModel.selectFeed(feedId)
+                            viewModel.selectFeed(feedId)
                         },
                         onRefresh = {
                             showFeedPicker = false
@@ -439,11 +435,11 @@ private fun Screen.FeedsTabContent(
                         },
                         onAddFeed = {
                             showFeedPicker = false
-                            screenModel.showCreateDialog()
+                            viewModel.showCreateDialog()
                         },
                         onManageFeeds = {
                             showFeedPicker = false
-                            screenModel.showManageDialog()
+                            viewModel.showManageDialog()
                         },
                         onDismissRequest = { showFeedPicker = false },
                     )
@@ -451,7 +447,7 @@ private fun Screen.FeedsTabContent(
 
                 FeedCatalogActionDialogs(
                     dialog = actionState.dialog,
-                    screenModel = actionModel,
+                    viewModel = actionModel,
                     navigator = navigator,
                 )
             }
@@ -461,15 +457,15 @@ private fun Screen.FeedsTabContent(
                     feeds = enabledFeeds,
                     selectedFeed = activeFeed,
                     selectedDisplayMode = activeDisplayMode,
-                    sourceFor = screenModel::sourceFor,
-                    presetFor = screenModel::presetFor,
+                    sourceFor = viewModel::sourceFor,
+                    presetFor = viewModel::presetFor,
                     immersiveAvailable = immersiveAvailable,
                     onFeedViewModeChange = onFeedViewModeChange,
-                    onDisplayModeChange = { screenModel.updateFeedDisplayMode(activeFeed.id, it) },
-                    onFeedSelect = screenModel::selectFeed,
+                    onDisplayModeChange = { viewModel.updateFeedDisplayMode(activeFeed.id, it) },
+                    onFeedSelect = viewModel::selectFeed,
                     onRenameFeed = { renamingFeedId = activeFeed.id },
-                    onAddFeed = screenModel::showCreateDialog,
-                    onManageFeeds = screenModel::showManageDialog,
+                    onAddFeed = viewModel::showCreateDialog,
+                    onManageFeeds = viewModel::showManageDialog,
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
@@ -477,38 +473,38 @@ private fun Screen.FeedsTabContent(
     }
 
     when (state.dialog) {
-        FeedsScreenModel.Dialog.AddFeed -> {
+        FeedsViewModel.Dialog.AddFeed -> {
             AddFeedSheet(
                 sources = state.listedSources,
                 feeds = state.validFeeds,
-                presetsFor = screenModel::presetsFor,
-                onSelectPreset = { source, preset -> screenModel.createFeed(source.id, preset.id) },
+                presetsFor = viewModel::presetsFor,
+                onSelectPreset = { source, preset -> viewModel.createFeed(source.id, preset.id) },
                 onCreateFilteredFeed = { source ->
-                    screenModel.closeDialog()
+                    viewModel.closeDialog()
                     navigator.push(CatalogScreen(source.id, listingQuery = null, openFilters = true))
                 },
-                onDismissRequest = screenModel::closeDialog,
+                onDismissRequest = viewModel::closeDialog,
             )
         }
-        FeedsScreenModel.Dialog.ManageFeeds -> {
+        FeedsViewModel.Dialog.ManageFeeds -> {
             ManageFeedsSheet(
                 feeds = state.validFeeds,
-                sourceFor = screenModel::sourceFor,
-                presetFor = screenModel::presetFor,
-                onReorder = screenModel::reorderFeed,
-                onToggle = screenModel::toggleFeed,
+                sourceFor = viewModel::sourceFor,
+                presetFor = viewModel::presetFor,
+                onReorder = viewModel::reorderFeed,
+                onToggle = viewModel::toggleFeed,
                 onRename = { renamingFeedId = it.id },
-                onRemove = screenModel::removeFeed,
-                onRestore = screenModel::restoreFeed,
-                onAddFeed = screenModel::showCreateDialog,
-                onDismissRequest = screenModel::closeDialog,
+                onRemove = viewModel::removeFeed,
+                onRestore = viewModel::restoreFeed,
+                onAddFeed = viewModel::showCreateDialog,
+                onDismissRequest = viewModel::closeDialog,
             )
         }
         null -> Unit
     }
 
     val renamingFeed = renamingFeedId?.let { feedId -> state.feeds.firstOrNull { it.id == feedId } }
-    val renamingPreset = renamingFeed?.let(screenModel::presetFor)
+    val renamingPreset = renamingFeed?.let(viewModel::presetFor)
     if (renamingFeed != null && renamingPreset != null) {
         RenameFeedDialog(
             currentTitle = renamingFeed.title,
@@ -516,7 +512,7 @@ private fun Screen.FeedsTabContent(
             onDismissRequest = { renamingFeedId = null },
             onConfirm = { title ->
                 renamingFeedId = null
-                screenModel.renameFeed(renamingFeed.id, title)
+                viewModel.renameFeed(renamingFeed.id, title)
             },
         )
     }

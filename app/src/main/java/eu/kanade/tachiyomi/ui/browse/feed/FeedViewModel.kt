@@ -1,9 +1,9 @@
 package eu.kanade.tachiyomi.ui.browse.feed
 
 import androidx.compose.runtime.Immutable
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingSource
-import cafe.adriel.voyager.core.model.StateScreenModel
-import cafe.adriel.voyager.core.model.screenModelScope
 import eu.kanade.domain.source.model.FeedItemRef
 import eu.kanade.domain.source.model.SourceFeedAnchor
 import eu.kanade.domain.source.model.SourceFeedTimeline
@@ -15,6 +15,7 @@ import eu.kanade.tachiyomi.ui.base.observation.ObservedItemStore
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
@@ -22,7 +23,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
 import java.util.concurrent.atomic.AtomicLong
 
-class FeedScreenModel<T : Any>(
+class FeedViewModel<T : Any>(
     private val feedId: String,
     private val initialFilterSnapshot: List<eu.kanade.domain.source.model.FilterStateNode>,
     private val chronological: Boolean = true,
@@ -30,24 +31,27 @@ class FeedScreenModel<T : Any>(
     private val hideInLibraryItems: Boolean,
     private val source: FeedItemSource<T>,
     private val workerDispatcher: CoroutineDispatcher = Dispatchers.IO,
-) : StateScreenModel<FeedScreenModel.State>(initialState(browseFeedService, feedId)) {
+) : ViewModel() {
+
+    val state: StateFlow<FeedViewModel.State>
+        field = MutableStateFlow<FeedViewModel.State>(initialState(browseFeedService, feedId))
 
     private var currentSavedAnchor = browseFeedService.anchorSnapshot(feedId).resolvedAnchor()
     private var persistedAnchor = currentSavedAnchor
     private var resolvedFilters: EntryFilterList? = null
     private val refreshGeneration = AtomicLong()
     private val itemStore = ObservedItemStore(
-        scope = screenModelScope + workerDispatcher,
+        scope = viewModelScope + workerDispatcher,
         keyOf = source::itemRef,
         supersedes = source::supersedes,
         observeItems = source::observeItems,
     )
 
     init {
-        screenModelScope.launch(workerDispatcher) {
+        viewModelScope.launch(workerDispatcher) {
             browseFeedService.timeline(feedId).collectLatest { timeline ->
                 val items = timeline.resolvedItems()
-                mutableState.update {
+                state.update {
                     it.copy(
                         itemRefs = items,
                         nextPageKey = timeline.nextPageKey,
@@ -57,7 +61,7 @@ class FeedScreenModel<T : Any>(
             }
         }
 
-        screenModelScope.launch(workerDispatcher) {
+        viewModelScope.launch(workerDispatcher) {
             if (hideInLibraryItems) {
                 normalizeTimeline()
             }
@@ -75,13 +79,13 @@ class FeedScreenModel<T : Any>(
         val pendingRefresh = currentState.pendingRefresh
         if (pendingRefresh != null) {
             if (pendingRefresh.nextPageKey == null) return
-            screenModelScope.launch(workerDispatcher) {
+            viewModelScope.launch(workerDispatcher) {
                 resumePendingRefresh(currentState, pendingRefresh)
             }
             return
         }
 
-        screenModelScope.launch(workerDispatcher) {
+        viewModelScope.launch(workerDispatcher) {
             refreshInternal(manual = manual)
         }
     }
@@ -98,7 +102,7 @@ class FeedScreenModel<T : Any>(
             return
         }
 
-        screenModelScope.launch(workerDispatcher) {
+        viewModelScope.launch(workerDispatcher) {
             appendInternal()
         }
     }
@@ -121,7 +125,7 @@ class FeedScreenModel<T : Any>(
     }
 
     fun consumeNewItemsIndicator() {
-        mutableState.update {
+        state.update {
             if (it.newItemsAvailableCount == 0 || it.pendingRefresh != null) {
                 it
             } else {
@@ -132,7 +136,7 @@ class FeedScreenModel<T : Any>(
 
     fun showNewItems() {
         while (true) {
-            val currentState = mutableState.value
+            val currentState = state.value
             val pendingRefresh = currentState.pendingRefresh
             if (pendingRefresh == null) {
                 consumeNewItemsIndicator()
@@ -152,7 +156,7 @@ class FeedScreenModel<T : Any>(
                 newItemsAvailableCount = 0,
                 newItemsCountIsLowerBound = false,
             )
-            if (mutableState.compareAndSet(currentState, activatedState)) {
+            if (state.compareAndSet(currentState, activatedState)) {
                 currentSavedAnchor = anchor
                 persistedAnchor = anchor
                 browseFeedService.saveAnchor(feedId = feedId, anchor = anchor)
@@ -181,7 +185,7 @@ class FeedScreenModel<T : Any>(
         val existingRefSet = existingRefs.toHashSet()
         var error: Throwable? = null
 
-        mutableState.update {
+        state.update {
             it.copy(
                 isRefreshing = true,
                 isManualRefresh = manual,
@@ -198,7 +202,7 @@ class FeedScreenModel<T : Any>(
             newPagingSource()
         } catch (e: Throwable) {
             if (e is CancellationException) throw e
-            mutableState.update {
+            state.update {
                 it.copy(
                     isRefreshing = false,
                     isManualRefresh = false,
@@ -218,7 +222,7 @@ class FeedScreenModel<T : Any>(
         }
 
         if (page == null) {
-            mutableState.update {
+            state.update {
                 it.copy(
                     isRefreshing = false,
                     isManualRefresh = false,
@@ -237,7 +241,7 @@ class FeedScreenModel<T : Any>(
                 itemRefs = pageRefs,
                 nextPageKey = page.nextKey,
             )
-            mutableState.update {
+            state.update {
                 it.copy(
                     isRefreshing = false,
                     isManualRefresh = false,
@@ -269,7 +273,7 @@ class FeedScreenModel<T : Any>(
 
         persistTimeline(itemRefs = mergedRefs, nextPageKey = nextPageKey)
 
-        mutableState.update {
+        state.update {
             it.copy(
                 itemRefs = mergedRefs,
                 nextPageKey = nextPageKey,
@@ -303,7 +307,7 @@ class FeedScreenModel<T : Any>(
             } catch (e: Throwable) {
                 if (e is CancellationException) throw e
                 if (refreshGeneration.get() == generation) {
-                    mutableState.update {
+                    state.update {
                         if (refreshGeneration.get() != generation || it.pendingRefresh == null) {
                             it
                         } else {
@@ -329,7 +333,7 @@ class FeedScreenModel<T : Any>(
                 val mergedRefs = (bridgedRefs + existingRefs).distinct()
 
                 while (refreshGeneration.get() == generation) {
-                    val currentState = mutableState.value
+                    val currentState = state.value
                     if (currentState.pendingRefresh == null) return
                     val mergedState = currentState.copy(
                         itemRefs = mergedRefs,
@@ -340,7 +344,7 @@ class FeedScreenModel<T : Any>(
                         newItemsCountIsLowerBound = false,
                         error = null,
                     )
-                    if (mutableState.compareAndSet(currentState, mergedState)) {
+                    if (state.compareAndSet(currentState, mergedState)) {
                         persistTimeline(
                             itemRefs = mergedRefs,
                             nextPageKey = existingNextPageKey,
@@ -358,7 +362,7 @@ class FeedScreenModel<T : Any>(
             // repeating items it already returned would otherwise be paged forever.
             val pageAdvanced = page.data.map(source::itemRef).count(loadedRefs::add) > 0
             nextPageKey = page.nextKey.takeIf { pageAdvanced }
-            mutableState.update {
+            state.update {
                 if (refreshGeneration.get() != generation || it.pendingRefresh == null) {
                     it
                 } else {
@@ -382,7 +386,7 @@ class FeedScreenModel<T : Any>(
         pendingRefresh: PendingRefresh,
     ) {
         val generation = refreshGeneration.incrementAndGet()
-        mutableState.update {
+        state.update {
             if (it.pendingRefresh != pendingRefresh) {
                 it
             } else {
@@ -397,7 +401,7 @@ class FeedScreenModel<T : Any>(
             newPagingSource()
         } catch (e: Throwable) {
             if (e is CancellationException) throw e
-            mutableState.update {
+            state.update {
                 if (refreshGeneration.get() != generation || it.pendingRefresh == null) {
                     it
                 } else {
@@ -422,7 +426,7 @@ class FeedScreenModel<T : Any>(
     private suspend fun refreshCurrentPageInternal(manual: Boolean) {
         var error: Throwable? = null
 
-        mutableState.update {
+        state.update {
             it.copy(
                 isRefreshing = true,
                 isManualRefresh = manual,
@@ -435,7 +439,7 @@ class FeedScreenModel<T : Any>(
             newPagingSource()
         } catch (e: Throwable) {
             if (e is CancellationException) throw e
-            mutableState.update {
+            state.update {
                 it.copy(
                     isRefreshing = false,
                     isManualRefresh = false,
@@ -464,7 +468,7 @@ class FeedScreenModel<T : Any>(
             )
         }
 
-        mutableState.update {
+        state.update {
             it.copy(
                 itemRefs = if (page != null) refs else it.itemRefs,
                 nextPageKey = if (page != null) nextPageKey else it.nextPageKey,
@@ -486,7 +490,7 @@ class FeedScreenModel<T : Any>(
         var error: Throwable? = null
         var pagesScanned = 0
 
-        mutableState.update {
+        state.update {
             it.copy(
                 isAppending = true,
                 error = null,
@@ -497,7 +501,7 @@ class FeedScreenModel<T : Any>(
             newPagingSource()
         } catch (e: Throwable) {
             if (e is CancellationException) throw e
-            mutableState.update {
+            state.update {
                 it.copy(
                     isAppending = false,
                     hasLoaded = true,
@@ -534,7 +538,7 @@ class FeedScreenModel<T : Any>(
             nextPageKey = nextPageKey,
         )
 
-        mutableState.update {
+        state.update {
             it.copy(
                 itemRefs = currentRefs,
                 nextPageKey = nextPageKey,
@@ -619,7 +623,7 @@ class FeedScreenModel<T : Any>(
             browseFeedService.saveAnchor(feedId, normalizedAnchor)
         }
 
-        mutableState.update {
+        state.update {
             it.copy(
                 itemRefs = normalizedRefs,
                 nextPageKey = timeline.nextPageKey,

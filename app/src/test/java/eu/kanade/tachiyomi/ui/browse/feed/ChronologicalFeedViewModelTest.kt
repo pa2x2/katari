@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.ui.browse.feed
 
+import androidx.lifecycle.ViewModelStore
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
 import eu.kanade.domain.source.model.FeedItemRef
@@ -10,6 +11,7 @@ import eu.kanade.domain.source.service.BrowseFeedService
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.tachiyomi.source.entry.EntryFilterList
 import eu.kanade.tachiyomi.source.entry.EntryType
+import eu.kanade.tachiyomi.ui.base.viewmodel.createViewModel
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineDispatcher
@@ -27,10 +29,10 @@ import kotlinx.coroutines.test.setMain
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Test
 
-class ChronologicalFeedScreenModelTest {
+class ChronologicalFeedViewModelTest {
 
     @Test
-    fun `init cleans saved favorites while preserving surviving anchor`() = feedTest {
+    fun `init cleans saved favorites while preserving surviving anchor`() = feedTest { viewModels ->
         val preferences = SourcePreferences(BrowseFeedPreferenceStore(), testJson)
         preferences.hideInLibraryItems.set(true)
 
@@ -50,7 +52,7 @@ class ChronologicalFeedScreenModelTest {
             anchor = SourceFeedAnchor.fromItem(FeedItemRef(2L, EntryType.ANIME), scrollOffset = 24),
         )
 
-        val screenModel = fakeFeedScreenModel(
+        val viewModel = viewModels.fakeFeedViewModel(
             feedId = FEED_ID,
             browseFeedService = browseFeedService,
             workerDispatcher = Dispatchers.Main,
@@ -65,8 +67,8 @@ class ChronologicalFeedScreenModelTest {
         try {
             advanceUntilIdle()
 
-            screenModel.state.value.itemRefs shouldBe listOf(FeedItemRef(2L, EntryType.ANIME))
-            screenModel.state.value.savedAnchor shouldBe SourceFeedAnchor.fromItem(
+            viewModel.state.value.itemRefs shouldBe listOf(FeedItemRef(2L, EntryType.ANIME))
+            viewModel.state.value.savedAnchor shouldBe SourceFeedAnchor.fromItem(
                 FeedItemRef(2L, EntryType.ANIME),
                 scrollOffset = 24,
             )
@@ -79,12 +81,12 @@ class ChronologicalFeedScreenModelTest {
                 scrollOffset = 24,
             )
         } finally {
-            screenModel.onDispose()
+            viewModels.clear()
         }
     }
 
     @Test
-    fun `partial bridge pages stay behind the loading boundary until overlap`() = feedTest {
+    fun `partial bridge pages stay behind the loading boundary until overlap`() = feedTest { viewModels ->
         val preferences = SourcePreferences(BrowseFeedPreferenceStore(), testJson)
         val browseFeedService = BrowseFeedService(preferences)
         val oldRef = FeedItemRef(100L, EntryType.MANGA)
@@ -115,7 +117,7 @@ class ChronologicalFeedScreenModelTest {
                 if (key == 1L) continueBridge.await()
             },
         )
-        val screenModel = fakeFeedScreenModel(
+        val viewModel = viewModels.fakeFeedViewModel(
             feedId = FEED_ID,
             browseFeedService = browseFeedService,
             workerDispatcher = Dispatchers.Main,
@@ -129,23 +131,23 @@ class ChronologicalFeedScreenModelTest {
 
         try {
             advanceUntilIdle()
-            screenModel.refresh(manual = true)
+            viewModel.refresh(manual = true)
             runCurrent()
 
             val bridgedRefs = listOf(
                 FeedItemRef(1L, EntryType.MANGA),
                 FeedItemRef(2L, EntryType.ANIME),
             )
-            screenModel.state.value.itemRefs shouldBe listOf(oldRef)
-            screenModel.state.value.isBridgingRefresh shouldBe true
-            screenModel.state.value.pendingRefresh shouldBe FeedScreenModel.PendingRefresh(
+            viewModel.state.value.itemRefs shouldBe listOf(oldRef)
+            viewModel.state.value.isBridgingRefresh shouldBe true
+            viewModel.state.value.pendingRefresh shouldBe FeedViewModel.PendingRefresh(
                 itemRefs = bridgedRefs,
                 nextPageKey = 1L,
             )
             browseFeedService.timelineSnapshot(FEED_ID) shouldBe
                 SourceFeedTimeline.fromItems(listOf(oldRef), nextPageKey = 10L)
 
-            screenModel.saveAnchor(oldRef, scrollOffset = 12)
+            viewModel.saveAnchor(oldRef, scrollOffset = 12)
             browseFeedService.anchorSnapshot(FEED_ID) shouldBe
                 SourceFeedAnchor.fromItem(oldRef, scrollOffset = 12)
 
@@ -153,19 +155,19 @@ class ChronologicalFeedScreenModelTest {
             advanceUntilIdle()
 
             val mergedRefs = bridgedRefs + oldRef
-            screenModel.state.value.itemRefs shouldBe mergedRefs
-            screenModel.state.value.pendingRefresh shouldBe null
+            viewModel.state.value.itemRefs shouldBe mergedRefs
+            viewModel.state.value.pendingRefresh shouldBe null
             browseFeedService.timelineSnapshot(FEED_ID) shouldBe
                 SourceFeedTimeline.fromItems(mergedRefs, nextPageKey = 10L)
             browseFeedService.anchorSnapshot(FEED_ID) shouldBe
                 SourceFeedAnchor.fromItem(oldRef, scrollOffset = 12)
         } finally {
-            screenModel.onDispose()
+            viewModels.clear()
         }
     }
 
     @Test
-    fun `refresh without any overlap keeps an explicit switch to the newest timeline`() = feedTest {
+    fun `refresh without any overlap keeps an explicit switch to the newest timeline`() = feedTest { viewModels ->
         val preferences = SourcePreferences(BrowseFeedPreferenceStore(), testJson)
         val browseFeedService = BrowseFeedService(preferences)
         val oldRef = FeedItemRef(100L, EntryType.MANGA)
@@ -192,7 +194,7 @@ class ChronologicalFeedScreenModelTest {
                 ),
             ),
         )
-        val screenModel = fakeFeedScreenModel(
+        val viewModel = viewModels.fakeFeedViewModel(
             feedId = FEED_ID,
             browseFeedService = browseFeedService,
             workerDispatcher = Dispatchers.Main,
@@ -207,7 +209,7 @@ class ChronologicalFeedScreenModelTest {
 
         try {
             advanceUntilIdle()
-            screenModel.refresh(manual = true)
+            viewModel.refresh(manual = true)
             advanceUntilIdle()
 
             val newestRefs = listOf(
@@ -216,31 +218,31 @@ class ChronologicalFeedScreenModelTest {
                 FeedItemRef(3L, EntryType.MANGA),
             )
             pagingSource.loadKeys shouldBe listOf(null, 1L)
-            screenModel.state.value.itemRefs shouldBe listOf(oldRef)
-            screenModel.state.value.pendingRefresh shouldBe FeedScreenModel.PendingRefresh(
+            viewModel.state.value.itemRefs shouldBe listOf(oldRef)
+            viewModel.state.value.pendingRefresh shouldBe FeedViewModel.PendingRefresh(
                 itemRefs = newestRefs,
                 nextPageKey = null,
             )
-            screenModel.state.value.newItemsAvailableCount shouldBe 3
-            screenModel.state.value.newItemsCountIsLowerBound shouldBe false
-            screenModel.state.value.isBridgingRefresh shouldBe false
+            viewModel.state.value.newItemsAvailableCount shouldBe 3
+            viewModel.state.value.newItemsCountIsLowerBound shouldBe false
+            viewModel.state.value.isBridgingRefresh shouldBe false
 
-            screenModel.showNewItems()
+            viewModel.showNewItems()
             advanceUntilIdle()
 
-            screenModel.state.value.itemRefs shouldBe newestRefs
-            screenModel.state.value.pendingRefresh shouldBe null
+            viewModel.state.value.itemRefs shouldBe newestRefs
+            viewModel.state.value.pendingRefresh shouldBe null
             browseFeedService.timelineSnapshot(FEED_ID) shouldBe
                 SourceFeedTimeline.fromItems(newestRefs, nextPageKey = null)
             browseFeedService.anchorSnapshot(FEED_ID) shouldBe
                 SourceFeedAnchor.fromItem(newestRefs.first(), scrollOffset = 0)
         } finally {
-            screenModel.onDispose()
+            viewModels.clear()
         }
     }
 
     @Test
-    fun `failed bridge page resumes into the saved timeline instead of replacing it`() = feedTest {
+    fun `failed bridge page resumes into the saved timeline instead of replacing it`() = feedTest { viewModels ->
         val preferences = SourcePreferences(BrowseFeedPreferenceStore(), testJson)
         val browseFeedService = BrowseFeedService(preferences)
         val oldRefs = listOf(
@@ -273,7 +275,7 @@ class ChronologicalFeedScreenModelTest {
                 if (key == 1L && bridgePageFailures++ == 0) throw NoResultsException()
             },
         )
-        val screenModel = fakeFeedScreenModel(
+        val viewModel = viewModels.fakeFeedViewModel(
             feedId = FEED_ID,
             browseFeedService = browseFeedService,
             workerDispatcher = Dispatchers.Main,
@@ -285,29 +287,29 @@ class ChronologicalFeedScreenModelTest {
 
         try {
             advanceUntilIdle()
-            screenModel.refresh(manual = true)
+            viewModel.refresh(manual = true)
             advanceUntilIdle()
 
-            screenModel.state.value.pendingRefresh?.nextPageKey shouldBe 1L
-            screenModel.showNewItems()
-            screenModel.state.value.itemRefs shouldBe oldRefs
+            viewModel.state.value.pendingRefresh?.nextPageKey shouldBe 1L
+            viewModel.showNewItems()
+            viewModel.state.value.itemRefs shouldBe oldRefs
 
-            screenModel.refresh(manual = true)
+            viewModel.refresh(manual = true)
             advanceUntilIdle()
 
             val mergedRefs = listOf(1L, 2L, 3L).map { FeedItemRef(it, EntryType.MANGA) } + oldRefs
-            screenModel.state.value.itemRefs shouldBe mergedRefs
-            screenModel.state.value.pendingRefresh shouldBe null
-            screenModel.state.value.newItemsAvailableCount shouldBe 3
+            viewModel.state.value.itemRefs shouldBe mergedRefs
+            viewModel.state.value.pendingRefresh shouldBe null
+            viewModel.state.value.newItemsAvailableCount shouldBe 3
             browseFeedService.timelineSnapshot(FEED_ID) shouldBe
                 SourceFeedTimeline.fromItems(mergedRefs, nextPageKey = 10L)
         } finally {
-            screenModel.onDispose()
+            viewModels.clear()
         }
     }
 
     @Test
-    fun `bridge stops when the source repeats a page it already returned`() = feedTest {
+    fun `bridge stops when the source repeats a page it already returned`() = feedTest { viewModels ->
         val preferences = SourcePreferences(BrowseFeedPreferenceStore(), testJson)
         val browseFeedService = BrowseFeedService(preferences)
         val oldRef = FeedItemRef(100L, EntryType.MANGA)
@@ -327,7 +329,7 @@ class ChronologicalFeedScreenModelTest {
                 3L to pageResult(data = repeatedPage, nextKey = 4L),
             ),
         )
-        val screenModel = fakeFeedScreenModel(
+        val viewModel = viewModels.fakeFeedViewModel(
             feedId = FEED_ID,
             browseFeedService = browseFeedService,
             workerDispatcher = Dispatchers.Main,
@@ -339,17 +341,17 @@ class ChronologicalFeedScreenModelTest {
 
         try {
             advanceUntilIdle()
-            screenModel.refresh(manual = true)
+            viewModel.refresh(manual = true)
             advanceUntilIdle()
 
             pagingSource.loadKeys shouldBe listOf(null, 1L, 2L)
-            screenModel.state.value.pendingRefresh shouldBe FeedScreenModel.PendingRefresh(
+            viewModel.state.value.pendingRefresh shouldBe FeedViewModel.PendingRefresh(
                 itemRefs = listOf(1L, 2L).map { FeedItemRef(it, EntryType.MANGA) },
                 nextPageKey = null,
             )
-            screenModel.state.value.isBridgingRefresh shouldBe false
+            viewModel.state.value.isBridgingRefresh shouldBe false
         } finally {
-            screenModel.onDispose()
+            viewModels.clear()
         }
     }
 
@@ -364,11 +366,11 @@ class ChronologicalFeedScreenModelTest {
 }
 
 @OptIn(ExperimentalCoroutinesApi::class)
-private fun feedTest(testBody: suspend TestScope.() -> Unit) = runTest {
+private fun feedTest(testBody: suspend TestScope.(ViewModelStore) -> Unit) = runTest {
     val dispatcher = StandardTestDispatcher(testScheduler)
     Dispatchers.setMain(dispatcher)
     try {
-        testBody()
+        testBody(ViewModelStore())
     } finally {
         Dispatchers.resetMain()
     }
@@ -380,21 +382,23 @@ private data class FakeItem(
     val favorite: Boolean,
 )
 
-private fun fakeFeedScreenModel(
+private fun ViewModelStore.fakeFeedViewModel(
     feedId: String,
     browseFeedService: BrowseFeedService,
     workerDispatcher: CoroutineDispatcher,
     itemsById: Map<Long, FakeItem> = emptyMap(),
     pagingSourceFactory: () -> RecordingPagingSource<FakeItem> = { RecordingPagingSource(emptyMap()) },
-) = FeedScreenModel(
-    feedId = feedId,
-    initialFilterSnapshot = emptyList(),
-    chronological = true,
-    browseFeedService = browseFeedService,
-    hideInLibraryItems = true,
-    source = FakeFeedItemSource(itemsById, pagingSourceFactory),
-    workerDispatcher = workerDispatcher,
-)
+) = createViewModel {
+    FeedViewModel(
+        feedId = feedId,
+        initialFilterSnapshot = emptyList(),
+        chronological = true,
+        browseFeedService = browseFeedService,
+        hideInLibraryItems = true,
+        source = FakeFeedItemSource(itemsById, pagingSourceFactory),
+        workerDispatcher = workerDispatcher,
+    )
+}
 
 private class FakeFeedItemSource(
     private val itemsById: Map<Long, FakeItem>,

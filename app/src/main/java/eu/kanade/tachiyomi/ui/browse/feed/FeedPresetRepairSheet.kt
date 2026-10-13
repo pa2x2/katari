@@ -8,7 +8,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import eu.kanade.tachiyomi.ui.browse.catalog.CatalogScreenModel
+import eu.kanade.tachiyomi.ui.browse.catalog.CatalogViewModel
 import eu.kanade.tachiyomi.ui.browse.source.browse.SourceFilterDialog
 import eu.kanade.tachiyomi.ui.browse.source.browse.preset.SourceFilterPresetActions
 import eu.kanade.tachiyomi.ui.browse.source.browse.preset.displayName
@@ -24,33 +24,33 @@ internal fun FeedPresetRepairNotice(onRepair: () -> Unit) {
 }
 
 @Composable
-internal fun FeedPresetRepairSheet(screenModel: CatalogScreenModel, state: CatalogScreenModel.State) {
+internal fun FeedPresetRepairSheet(viewModel: CatalogViewModel, state: CatalogViewModel.State) {
     SourceFilterDialog(
-        onDismissRequest = screenModel::dismissDialog,
+        onDismissRequest = viewModel::dismissDialog,
         filters = state.filters,
         defaultFilters = state.defaultFilters,
         filterRevision = state.filterRevision,
-        presetActions = screenModel.draftCustomPreset()?.let {
+        presetActions = viewModel.draftCustomPreset()?.let {
             SourceFilterPresetActions(
                 presets = emptyList(),
                 currentPresetId = it.id,
                 currentPresetName = it.displayName(),
             )
         },
-        onReset = screenModel::resetFilters,
-        onResetGroup = screenModel::resetFilterGroup,
+        onReset = viewModel::resetFilters,
+        onResetGroup = viewModel::resetFilterGroup,
         pendingFilterEdits = state.pendingFilterEdits,
         draftQuery = state.draftSearchQuery,
-        onEditPagedItem = screenModel::editPagedFilterItem,
-        onFilter = screenModel::applyDraftFilters,
+        onEditPagedItem = viewModel::editPagedFilterItem,
+        onFilter = viewModel::applyDraftFilters,
         repairIssues = state.repairIssues,
         repairNeedsSave = state.repairNeedsSave,
-        onResolveIssue = screenModel::resolvePresetIssue,
-        onSaveRepair = screenModel::saveRepairedPreset,
-        onUpdate = screenModel::setFilters,
-        onRequestSuggestions = screenModel::filterSuggestions,
-        onRequestPagedFilterItems = screenModel::pagedFilterItems,
-        onRequestPagedFilterNavigation = screenModel::pagedFilterNavigation,
-        pagedFilterBrowseSession = screenModel::pagedFilterBrowseSession,
+        onResolveIssue = viewModel::resolvePresetIssue,
+        onSaveRepair = viewModel::saveRepairedPreset,
+        onUpdate = viewModel::setFilters,
+        onRequestSuggestions = viewModel::filterSuggestions,
+        onRequestPagedFilterItems = viewModel::pagedFilterItems,
+        onRequestPagedFilterNavigation = viewModel::pagedFilterNavigation,
+        pagedFilterBrowseSession = viewModel::pagedFilterBrowseSession,
     )
 }

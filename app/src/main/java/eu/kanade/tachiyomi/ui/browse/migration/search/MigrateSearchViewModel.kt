@@ -1,10 +1,9 @@
 package eu.kanade.tachiyomi.ui.browse.migration.search
 
-import cafe.adriel.voyager.core.model.screenModelScope
+import androidx.lifecycle.viewModelScope
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.SearchItemResult
-import eu.kanade.tachiyomi.ui.browse.source.globalsearch.SearchScreenModel
-import kotlinx.coroutines.flow.update
+import eu.kanade.tachiyomi.ui.browse.source.globalsearch.SearchViewModel
 import kotlinx.coroutines.launch
 import mihon.entry.interactions.catalogue.EntryCatalogueFeature
 import mihon.entry.interactions.catalogue.EntryCatalogueSourceInfo
@@ -17,13 +16,13 @@ import tachiyomi.domain.entry.repository.EntryRepository
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
-class MigrateSearchScreenModel(
+class MigrateSearchViewModel(
     val subject: EntryMigrationSubject,
     private val entryRepository: EntryRepository = Injekt.get(),
     private val sourcePreferences: SourcePreferences = Injekt.get(),
     private val migration: EntryMigrationFeature = Injekt.get(),
     private val catalogueFeature: EntryCatalogueFeature = Injekt.get(),
-) : SearchScreenModel() {
+) : SearchViewModel() {
 
     private val migrationSources by lazy { sourcePreferences.migrationSources.get() }
     private var entryType: eu.kanade.tachiyomi.source.entry.EntryType? = null
@@ -36,10 +35,10 @@ class MigrateSearchScreenModel(
     }
 
     init {
-        screenModelScope.launch {
+        viewModelScope.launch {
             val entry = entryRepository.getEntryById(subject.entryId, subject.profileId) ?: return@launch
             entryType = entry.type
-            mutableState.update {
+            updateState {
                 it.copy(
                     from = entry,
                     searchQuery = entry.title,

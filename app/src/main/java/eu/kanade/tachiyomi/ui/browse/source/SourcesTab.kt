@@ -7,7 +7,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import cafe.adriel.voyager.core.model.rememberScreenModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -32,8 +32,8 @@ import tachiyomi.presentation.core.i18n.stringResource
 @Composable
 fun Screen.sourcesTab(): TabContent {
     val navigator = LocalNavigator.currentOrThrow
-    val screenModel = rememberScreenModel { SourcesScreenModel() }
-    val state by screenModel.state.collectAsStateWithLifecycle()
+    val viewModel = viewModel { SourcesViewModel() }
+    val state by viewModel.state.collectAsStateWithLifecycle()
     var showFilters by rememberSaveable { mutableStateOf(false) }
 
     return TabContent(
@@ -59,19 +59,19 @@ fun Screen.sourcesTab(): TabContent {
                 onClickItem = { source, listing ->
                     navigator.push(CatalogScreen(source.id, listingQuery(listing)))
                 },
-                onClickPin = screenModel::togglePin,
-                onLongClickItem = screenModel::showSourceDialog,
+                onClickPin = viewModel::togglePin,
+                onLongClickItem = viewModel::showSourceDialog,
             )
 
             if (showFilters) {
                 SourcesFilterSheet(
                     state = state.filter,
                     onDismissRequest = { showFilters = false },
-                    onClickLanguage = screenModel::toggleLanguage,
-                    onClickSource = screenModel::toggleSource,
-                    onShowAllContentTypes = screenModel::showAllContentTypes,
-                    onToggleContentType = screenModel::toggleContentType,
-                    onToggleUnspecifiedContentType = screenModel::toggleUnspecifiedContentType,
+                    onClickLanguage = viewModel::toggleLanguage,
+                    onClickSource = viewModel::toggleSource,
+                    onShowAllContentTypes = viewModel::showAllContentTypes,
+                    onToggleContentType = viewModel::toggleContentType,
+                    onToggleUnspecifiedContentType = viewModel::toggleUnspecifiedContentType,
                 )
             }
 
@@ -80,22 +80,22 @@ fun Screen.sourcesTab(): TabContent {
                 SourceOptionsDialog(
                     source = source,
                     onClickPin = {
-                        screenModel.togglePin(source)
-                        screenModel.closeDialog()
+                        viewModel.togglePin(source)
+                        viewModel.closeDialog()
                     },
                     onClickDisable = {
-                        screenModel.toggleSource(source)
-                        screenModel.closeDialog()
+                        viewModel.toggleSource(source)
+                        viewModel.closeDialog()
                     },
-                    onDismiss = screenModel::closeDialog,
+                    onDismiss = viewModel::closeDialog,
                 )
             }
 
             val internalErrString = stringResource(MR.strings.internal_error)
             LaunchedEffect(Unit) {
-                screenModel.events.collectLatest { event ->
+                viewModel.events.collectLatest { event ->
                     when (event) {
-                        SourcesScreenModel.Event.FailedFetchingSources -> {
+                        SourcesViewModel.Event.FailedFetchingSources -> {
                             launch { snackbarHostState.showSnackbar(internalErrString) }
                         }
                     }

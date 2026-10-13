@@ -1,8 +1,8 @@
 package eu.kanade.tachiyomi.ui.browse.source
 
 import androidx.compose.runtime.Immutable
-import cafe.adriel.voyager.core.model.ScreenModel
-import cafe.adriel.voyager.core.model.screenModelScope
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import eu.kanade.domain.source.interactor.GetEnabledCatalogSources
 import eu.kanade.domain.source.interactor.GetLanguagesWithCatalogSources
 import eu.kanade.domain.source.interactor.SourceListState
@@ -35,7 +35,7 @@ import uy.kohesive.injekt.api.get
 import java.util.SortedMap
 import kotlin.time.Duration.Companion.seconds
 
-class SourcesScreenModel(
+class SourcesViewModel(
     private val getEnabledCatalogSources: GetEnabledCatalogSources = Injekt.get(),
     private val getLanguagesWithCatalogSources: GetLanguagesWithCatalogSources = Injekt.get(),
     private val toggleSource: ToggleSource = Injekt.get(),
@@ -44,7 +44,7 @@ class SourcesScreenModel(
     private val preferences: SourcePreferences = Injekt.get(),
     private val contentTypeFilterController: BrowseContentTypeFilterController =
         BrowseContentTypeFilterController(preferences),
-) : ScreenModel {
+) : ViewModel() {
 
     private val _events = Channel<Event>(Int.MAX_VALUE)
     val events = _events.receiveAsFlow()
@@ -98,7 +98,7 @@ class SourcesScreenModel(
         )
     }
         .flowOn(Dispatchers.IO)
-        .stateIn(screenModelScope, SharingStarted.WhileSubscribed(5.seconds), State())
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5.seconds), State())
 
     fun toggleSource(source: Source) {
         toggleSource.await(source)

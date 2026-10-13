@@ -30,8 +30,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.paging.LoadState
-import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.core.util.ifSourcesLoaded
@@ -60,7 +60,7 @@ import eu.kanade.presentation.more.settings.screen.BrowseLongPressActionsScreen
 import eu.kanade.presentation.util.AssistContentScreen
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.ui.browse.extension.details.SourcePreferencesScreen
-import eu.kanade.tachiyomi.ui.browse.immersive.EntryImmersiveScreenModel
+import eu.kanade.tachiyomi.ui.browse.immersive.EntryImmersiveViewModel
 import eu.kanade.tachiyomi.ui.browse.source.browse.SourceFilterDialog
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.change.FilterChanges
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.change.changeLabels
@@ -110,23 +110,23 @@ data class CatalogScreen(
             return
         }
 
-        val screenModel =
-            rememberScreenModel { CatalogScreenModel(sourceId, listingQuery, openFilterSheetOnStart = openFilters) }
-        val state by screenModel.state.collectAsState()
-        val feedsEnabled = screenModel.feedsEnabled
+        val viewModel =
+            viewModel { CatalogViewModel(sourceId, listingQuery, openFilterSheetOnStart = openFilters) }
+        val state by viewModel.state.collectAsState()
+        val feedsEnabled = viewModel.feedsEnabled
 
         val navigator = LocalNavigator.currentOrThrow
         val navigateUp: () -> Unit = {
             when {
-                !state.isUserQuery && state.toolbarQuery != null -> screenModel.setToolbarQuery(null)
+                !state.isUserQuery && state.toolbarQuery != null -> viewModel.setToolbarQuery(null)
                 else -> navigator.pop()
             }
         }
 
-        val catalogSource = screenModel.catalogSource
+        val catalogSource = viewModel.catalogSource
         if (catalogSource == null) {
             MissingSourceScreen(
-                source = screenModel.sourceDisplayInfo,
+                source = viewModel.sourceDisplayInfo,
                 navigateUp = navigateUp,
             )
             return
@@ -136,15 +136,15 @@ data class CatalogScreen(
         val haptic = LocalHapticFeedback.current
         val snackbarHostState = remember { SnackbarHostState() }
 
-        val catalogList = screenModel.catalogPagerFlowFlow.collectAsLazyPagingItems()
-        CatalogScreenEventsEffect(screenModel, snackbarHostState)
+        val catalogList = viewModel.catalogPagerFlowFlow.collectAsLazyPagingItems()
+        CatalogScreenEventsEffect(viewModel, snackbarHostState)
         var presetPendingDeletion by rememberSaveable { mutableStateOf<String?>(null) }
         var filterFocusPath by remember { mutableStateOf<List<Int>?>(null) }
         var immersiveMode by rememberSaveable(sourceId) { mutableStateOf(false) }
         val immersivePositionState = rememberEntryImmersivePositionState(resetKey = state.listing)
-        val immersiveAvailable = screenModel.isImmersiveSourceAvailable
-        val immersiveModel = rememberScreenModel(tag = "catalog-immersive-$sourceId") {
-            EntryImmersiveScreenModel()
+        val immersiveAvailable = viewModel.isImmersiveSourceAvailable
+        val immersiveModel = viewModel(key = "catalog-immersive-$sourceId") {
+            EntryImmersiveViewModel()
         }
 
         BackHandler(enabled = immersiveMode) { immersiveMode = false }
@@ -153,19 +153,19 @@ data class CatalogScreen(
             if (!immersiveAvailable) immersiveMode = false
         }
 
-        val onWebViewClick = screenModel.homeUrl?.let { url ->
+        val onWebViewClick = viewModel.homeUrl?.let { url ->
             {
                 navigator.push(
                     WebViewScreen(
                         url = url,
-                        initialTitle = screenModel.sourceName,
+                        initialTitle = viewModel.sourceName,
                         sourceId = sourceId,
                     ),
                 )
             }
         }
 
-        val onSettingsClick = if (screenModel.isConfigurable) {
+        val onSettingsClick = if (viewModel.isConfigurable) {
             {
                 navigator.push(SourcePreferencesScreen(sourceId))
             }
@@ -175,18 +175,18 @@ data class CatalogScreen(
 
         LaunchedEffect(feedsEnabled, state.dialog) {
             if (!feedsEnabled) {
-                if (state.dialog is CatalogScreenModel.Dialog.SavePreset) {
-                    screenModel.dismissDialog()
+                if (state.dialog is CatalogViewModel.Dialog.SavePreset) {
+                    viewModel.dismissDialog()
                 }
                 presetPendingDeletion = null
             }
         }
 
-        LaunchedEffect(screenModel.homeUrl) {
-            assistUrl = screenModel.homeUrl
+        LaunchedEffect(viewModel.homeUrl) {
+            assistUrl = viewModel.homeUrl
         }
 
-        val appliedSearch = state.listing as? CatalogScreenModel.Listing.Search ?: state.restorableSearch
+        val appliedSearch = state.listing as? CatalogViewModel.Listing.Search ?: state.restorableSearch
         val appliedFilterChanges = remember(appliedSearch, state.filterRevision) {
             appliedSearch?.let { FilterChanges.of(it.filters, state.defaultFilters) } ?: FilterChanges.Empty
         }
@@ -198,11 +198,11 @@ data class CatalogScreen(
             CatalogImmersiveContent(
                 catalogList = catalogList,
                 immersiveModel = immersiveModel,
-                sourceName = screenModel.sourceName,
+                sourceName = viewModel.sourceName,
                 snackbarHostState = snackbarHostState,
                 onExitImmersive = { immersiveMode = false },
                 onEntryClick = { navigator.push(EntryScreen(it.id, fromSource = true)) },
-                onLibraryAction = screenModel::confirmBrowseLibraryAction,
+                onLibraryAction = viewModel::confirmBrowseLibraryAction,
                 positionState = immersivePositionState,
                 modifier = Modifier.fillMaxSize(),
             )
@@ -213,18 +213,18 @@ data class CatalogScreen(
                         modifier = Modifier.background(MaterialTheme.colorScheme.surface),
                     ) {
                         CatalogToolbar(
-                            title = screenModel.sourceName,
+                            title = viewModel.sourceName,
                             searchQuery = state.toolbarQuery,
-                            onSearchQueryChange = screenModel::setToolbarQuery,
-                            displayMode = screenModel.displayMode,
-                            onDisplayModeChange = { screenModel.displayMode = it },
+                            onSearchQueryChange = viewModel::setToolbarQuery,
+                            displayMode = viewModel.displayMode,
+                            onDisplayModeChange = { viewModel.displayMode = it },
                             navigateUp = navigateUp,
                             onWebViewClick = onWebViewClick,
                             onSettingsClick = onSettingsClick,
                             onLongPressActionsClick = {
                                 navigator.push(BrowseLongPressActionsScreen(sourceId))
                             },
-                            onSearch = screenModel::search,
+                            onSearch = viewModel::search,
                             onEnterImmersive = if (immersiveAvailable) {
                                 { immersiveMode = true }
                             } else {
@@ -239,8 +239,8 @@ data class CatalogScreen(
                             horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
                         ) {
                             FilterChip(
-                                selected = state.listing == CatalogScreenModel.Listing.Popular,
-                                onClick = { screenModel.setListing(CatalogScreenModel.Listing.Popular) },
+                                selected = state.listing == CatalogViewModel.Listing.Popular,
+                                onClick = { viewModel.setListing(CatalogViewModel.Listing.Popular) },
                                 leadingIcon = {
                                     Icon(
                                         imageVector = MaterialSymbols.RoundedFilled.Favorite,
@@ -250,10 +250,10 @@ data class CatalogScreen(
                                 },
                                 label = { Text(text = stringResource(MR.strings.popular)) },
                             )
-                            if (screenModel.supportsLatest) {
+                            if (viewModel.supportsLatest) {
                                 FilterChip(
-                                    selected = state.listing == CatalogScreenModel.Listing.Latest,
-                                    onClick = { screenModel.setListing(CatalogScreenModel.Listing.Latest) },
+                                    selected = state.listing == CatalogViewModel.Listing.Latest,
+                                    onClick = { viewModel.setListing(CatalogViewModel.Listing.Latest) },
                                     leadingIcon = {
                                         Icon(
                                             imageVector = MaterialSymbols.Rounded.Verified,
@@ -264,22 +264,22 @@ data class CatalogScreen(
                                     label = { Text(text = stringResource(MR.strings.latest)) },
                                 )
                             }
-                            if (state.filters.isNotEmpty() || screenModel.hasFilterCapability) {
+                            if (state.filters.isNotEmpty() || viewModel.hasFilterCapability) {
                                 CatalogFilterChip(
-                                    selected = state.listing is CatalogScreenModel.Listing.Search,
+                                    selected = state.listing is CatalogViewModel.Listing.Search,
                                     changedCount = appliedFilterChanges.total.changed,
-                                    onClick = screenModel::onFilterChipClick,
+                                    onClick = viewModel::onFilterChipClick,
                                 )
                             }
                         }
-                        if (state.listing is CatalogScreenModel.Listing.Search && appliedFilterLabels.isNotEmpty()) {
+                        if (state.listing is CatalogViewModel.Listing.Search && appliedFilterLabels.isNotEmpty()) {
                             CatalogAppliedFilterChips(
                                 labels = appliedFilterLabels,
                                 onOpenFilters = {
                                     filterFocusPath = it.path
-                                    screenModel.openFilterSheet()
+                                    viewModel.openFilterSheet()
                                 },
-                                onRemove = { screenModel.removeAppliedFilter(it.path) },
+                                onRemove = { viewModel.removeAppliedFilter(it.path) },
                             )
                         }
 
@@ -297,12 +297,12 @@ data class CatalogScreen(
                 ) {
                     CatalogContent(
                         catalogList = catalogList,
-                        columns = screenModel.getColumnsPreference(
+                        columns = viewModel.getColumnsPreference(
                             LocalConfiguration.current.orientation,
-                            screenModel.sourceItemOrientation,
+                            viewModel.sourceItemOrientation,
                         ),
-                        displayMode = screenModel.displayMode,
-                        sourceItemOrientation = screenModel.sourceItemOrientation,
+                        displayMode = viewModel.displayMode,
+                        sourceItemOrientation = viewModel.sourceItemOrientation,
                         snackbarHostState = snackbarHostState,
                         contentPadding = paddingValues,
                         onItemClick = { item ->
@@ -312,7 +312,7 @@ data class CatalogScreen(
                         onItemLongClick = { item ->
                             scope.launch {
                                 val outcome = withIOContext {
-                                    screenModel.onItemLongClick(item)
+                                    viewModel.onItemLongClick(item)
                                 }
                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                 if (outcome == BrowseLongPressOutcome.StartImmersive) {
@@ -333,11 +333,11 @@ data class CatalogScreen(
             }
         }
 
-        val onDismissRequest = screenModel::dismissDialog
-        val draftPreset = if (feedsEnabled) screenModel.draftPreset() else null
-        val draftCustomPreset = if (feedsEnabled) screenModel.draftCustomPreset() else null
+        val onDismissRequest = viewModel::dismissDialog
+        val draftPreset = if (feedsEnabled) viewModel.draftPreset() else null
+        val draftCustomPreset = if (feedsEnabled) viewModel.draftCustomPreset() else null
         when (val dialog = state.dialog) {
-            is CatalogScreenModel.Dialog.Filter -> {
+            is CatalogViewModel.Dialog.Filter -> {
                 SourceFilterDialog(
                     onDismissRequest = {
                         filterFocusPath = null
@@ -350,61 +350,61 @@ data class CatalogScreen(
                     errorMessage = (state.filterState as? FilterUiState.Error)?.throwable?.message,
                     presetActions = if (feedsEnabled) {
                         SourceFilterPresetActions(
-                            presets = screenModel.feedPresets(),
+                            presets = viewModel.feedPresets(),
                             currentPresetId = draftPreset?.id,
                             currentPresetName = draftPreset?.displayName(),
-                            onApply = screenModel::applyPreset,
-                            onEdit = screenModel::showEditPresetDialog,
+                            onApply = viewModel::applyPreset,
+                            onEdit = viewModel::showEditPresetDialog,
                             onDelete = { presetPendingDeletion = it },
-                            canDelete = screenModel::canDeletePreset,
-                            onSaveAsNew = screenModel::showSavePresetDialog,
-                            onUpdateCurrent = draftCustomPreset?.let { screenModel::showUpdateCurrentPresetDialog },
+                            canDelete = viewModel::canDeletePreset,
+                            onSaveAsNew = viewModel::showSavePresetDialog,
+                            onUpdateCurrent = draftCustomPreset?.let { viewModel::showUpdateCurrentPresetDialog },
                         )
                     } else {
                         null
                     },
                     focusPath = filterFocusPath,
-                    onReset = screenModel::resetFilters,
-                    onResetGroup = screenModel::resetFilterGroup,
+                    onReset = viewModel::resetFilters,
+                    onResetGroup = viewModel::resetFilterGroup,
                     pendingFilterEdits = state.pendingFilterEdits,
                     draftQuery = state.draftSearchQuery,
-                    onEditPagedItem = screenModel::editPagedFilterItem,
-                    onFilter = screenModel::applyDraftFilters,
+                    onEditPagedItem = viewModel::editPagedFilterItem,
+                    onFilter = viewModel::applyDraftFilters,
                     repairIssues = state.repairIssues,
                     repairNeedsSave = state.repairNeedsSave,
-                    onResolveIssue = screenModel::resolvePresetIssue,
-                    onSaveRepair = screenModel::saveRepairedPreset,
+                    onResolveIssue = viewModel::resolvePresetIssue,
+                    onSaveRepair = viewModel::saveRepairedPreset,
                     hasUnappliedChanges = state.hasUnappliedFilterChanges,
-                    onUpdate = screenModel::setFilters,
-                    onRequestSuggestions = screenModel::filterSuggestions,
-                    onRequestPagedFilterItems = screenModel::pagedFilterItems,
-                    onRequestPagedFilterNavigation = screenModel::pagedFilterNavigation,
-                    pagedFilterBrowseSession = screenModel::pagedFilterBrowseSession,
-                    onRetry = screenModel::retryFilterLoad,
+                    onUpdate = viewModel::setFilters,
+                    onRequestSuggestions = viewModel::filterSuggestions,
+                    onRequestPagedFilterItems = viewModel::pagedFilterItems,
+                    onRequestPagedFilterNavigation = viewModel::pagedFilterNavigation,
+                    pagedFilterBrowseSession = viewModel::pagedFilterBrowseSession,
+                    onRetry = viewModel::retryFilterLoad,
                 )
             }
-            is CatalogScreenModel.Dialog.SavePreset -> if (feedsEnabled) {
+            is CatalogViewModel.Dialog.SavePreset -> if (feedsEnabled) {
                 BrowseFeedNameDialog(
                     title = when (dialog.mode) {
-                        CatalogScreenModel.Dialog.SavePreset.Mode.Create -> MR.strings.browse_feed_save_preset
-                        CatalogScreenModel.Dialog.SavePreset.Mode.EditMetadata -> MR.strings.action_edit
-                        CatalogScreenModel.Dialog.SavePreset.Mode.UpdateFromCurrentState ->
+                        CatalogViewModel.Dialog.SavePreset.Mode.Create -> MR.strings.browse_feed_save_preset
+                        CatalogViewModel.Dialog.SavePreset.Mode.EditMetadata -> MR.strings.action_edit
+                        CatalogViewModel.Dialog.SavePreset.Mode.UpdateFromCurrentState ->
                             MR.strings.browse_feed_update_preset
                     },
                     initialValue = dialog.name,
                     initialChronological = dialog.chronological,
                     duplicateName = { name ->
-                        screenModel.hasPresetName(name, excludingPresetId = dialog.presetId)
+                        viewModel.hasPresetName(name, excludingPresetId = dialog.presetId)
                     },
                     onDismissRequest = onDismissRequest,
-                    onConfirm = screenModel::savePreset,
+                    onConfirm = viewModel::savePreset,
                 )
             }
-            is CatalogScreenModel.Dialog.EntryPreview -> {
+            is CatalogViewModel.Dialog.EntryPreview -> {
                 BrowseEntryPreviewSheet(
                     entryId = dialog.entryId,
-                    onLibraryAction = screenModel::confirmBrowseLibraryAction,
-                    onMergeAction = screenModel::showMergeTargetPicker,
+                    onLibraryAction = viewModel::confirmBrowseLibraryAction,
+                    onMergeAction = viewModel::showMergeTargetPicker,
                     onOpenEntry = {
                         onDismissRequest()
                         navigator.push(EntryScreen(it, fromSource = true))
@@ -412,62 +412,62 @@ data class CatalogScreen(
                     onDismissRequest = onDismissRequest,
                 )
             }
-            is CatalogScreenModel.Dialog.LibraryActionChooser -> {
+            is CatalogViewModel.Dialog.LibraryActionChooser -> {
                 BrowseLibraryActionDialog(
                     mangaTitle = dialog.entry.displayTitle,
                     favorite = dialog.entry.favorite,
                     onDismissRequest = onDismissRequest,
                     onLibraryAction = {
                         onDismissRequest()
-                        screenModel.confirmBrowseLibraryAction(
-                            CatalogListItem.EntryItem(dialog.entry, screenModel.sourceItemOrientation),
+                        viewModel.confirmBrowseLibraryAction(
+                            CatalogListItem.EntryItem(dialog.entry, viewModel.sourceItemOrientation),
                         )
                     },
                     onMergeIntoLibrary = {
-                        screenModel.showMergeTargetPicker(
-                            CatalogListItem.EntryItem(dialog.entry, screenModel.sourceItemOrientation),
+                        viewModel.showMergeTargetPicker(
+                            CatalogListItem.EntryItem(dialog.entry, viewModel.sourceItemOrientation),
                         )
                     },
                 )
             }
-            CatalogScreenModel.Dialog.CheckingDuplicates -> DuplicateDetectionLoadingDialog()
-            is CatalogScreenModel.Dialog.RemoveEntry -> {
+            CatalogViewModel.Dialog.CheckingDuplicates -> DuplicateDetectionLoadingDialog()
+            is CatalogViewModel.Dialog.RemoveEntry -> {
                 RemoveMangaDialog(
                     onDismissRequest = onDismissRequest,
                     onConfirm = {
-                        screenModel.changeFavorite(
-                            CatalogListItem.EntryItem(dialog.entry, screenModel.sourceItemOrientation),
+                        viewModel.changeFavorite(
+                            CatalogListItem.EntryItem(dialog.entry, viewModel.sourceItemOrientation),
                         )
                     },
                     mangaToRemove = dialog.entry,
                 )
             }
-            is CatalogScreenModel.Dialog.DuplicateEntry -> {
+            is CatalogViewModel.Dialog.DuplicateEntry -> {
                 DuplicateEntryDialog(
                     duplicates = dialog.duplicates,
                     onDismissRequest = onDismissRequest,
                     onConfirm = {
-                        screenModel.addFavorite(
-                            CatalogListItem.EntryItem(dialog.entry, screenModel.sourceItemOrientation),
+                        viewModel.addFavorite(
+                            CatalogListItem.EntryItem(dialog.entry, viewModel.sourceItemOrientation),
                         )
                     },
                     onOpenEntry = { navigator.push(EntryScreen(it.id, fromSource = true)) },
                     onMigrate = {
-                        screenModel.showMigrateEntryDialog(current = it, target = dialog.entry)
+                        viewModel.showMigrateEntryDialog(current = it, target = dialog.entry)
                     },
                 )
             }
-            is CatalogScreenModel.Dialog.SelectEntryMergeTarget -> {
+            is CatalogViewModel.Dialog.SelectEntryMergeTarget -> {
                 MergeTargetPickerDialog(
                     title = stringResource(MR.strings.action_merge_into_library),
                     query = dialog.query,
                     visibleTargets = dialog.visibleTargets,
                     onDismissRequest = onDismissRequest,
-                    onQueryChange = screenModel::updateMergeTargetQuery,
-                    onSelectTarget = screenModel::openMergeEditor,
+                    onQueryChange = viewModel::updateMergeTargetQuery,
+                    onSelectTarget = viewModel::openMergeEditor,
                 )
             }
-            is CatalogScreenModel.Dialog.EditEntryMerge -> {
+            is CatalogViewModel.Dialog.EditEntryMerge -> {
                 BrowseMergeEditorDialog(
                     entries = dialog.entries,
                     targetId = dialog.targetId,
@@ -476,31 +476,31 @@ data class CatalogScreen(
                     libraryRemovalIds = dialog.libraryRemovalIds,
                     confirmEnabled = dialog.enabled,
                     onDismissRequest = onDismissRequest,
-                    onMove = screenModel::moveMergeEntry,
-                    onSelectTarget = screenModel::setMergeTarget,
-                    onToggleRemove = screenModel::toggleMergeEntryRemoval,
-                    onToggleLibraryRemove = screenModel::toggleMergeEntryLibraryRemoval,
-                    onConfirm = screenModel::confirmBrowseMerge,
+                    onMove = viewModel::moveMergeEntry,
+                    onSelectTarget = viewModel::setMergeTarget,
+                    onToggleRemove = viewModel::toggleMergeEntryRemoval,
+                    onToggleLibraryRemove = viewModel::toggleMergeEntryLibraryRemoval,
+                    onConfirm = viewModel::confirmBrowseMerge,
                 )
             }
-            is CatalogScreenModel.Dialog.ChangeEntryCategory -> {
+            is CatalogViewModel.Dialog.ChangeEntryCategory -> {
                 ChangeCategoryDialog(
                     initialSelection = dialog.initialSelection,
                     onDismissRequest = onDismissRequest,
                     onEditCategories = { navigator.push(CategoryScreen()) },
                     onConfirm = { include, _ ->
-                        screenModel.addFavorite(dialog.entry, include)
+                        viewModel.addFavorite(dialog.entry, include)
                     },
                 )
             }
-            is CatalogScreenModel.Dialog.MigrateEntry -> {
+            is CatalogViewModel.Dialog.MigrateEntry -> {
                 MigrateEntryDialog(
                     current = dialog.current,
                     target = dialog.target,
                     onClickTitle = { navigator.push(EntryScreen(dialog.current.id, fromSource = true)) },
                     onDismissRequest = onDismissRequest,
                     onComplete = {
-                        screenModel.dismissDialog()
+                        viewModel.dismissDialog()
                         navigator.push(EntryScreen(dialog.target.id, fromSource = true))
                     },
                 )
@@ -510,12 +510,12 @@ data class CatalogScreen(
 
         presetPendingDeletion
             ?.takeIf { feedsEnabled }
-            ?.let { presetId -> screenModel.feedPresets().firstOrNull { it.id == presetId } }
+            ?.let { presetId -> viewModel.feedPresets().firstOrNull { it.id == presetId } }
             ?.let { preset ->
                 DeleteBrowsePresetDialog(
                     presetName = preset.displayName(),
                     onDismissRequest = { presetPendingDeletion = null },
-                    onConfirm = { screenModel.removePreset(preset.id) },
+                    onConfirm = { viewModel.removePreset(preset.id) },
                 )
             }
 
@@ -523,8 +523,8 @@ data class CatalogScreen(
             queryEvent.receiveAsFlow()
                 .collectLatest {
                     when (it) {
-                        is SearchType.Genre -> screenModel.searchGenre(it.txt)
-                        is SearchType.Text -> screenModel.search(it.txt)
+                        is SearchType.Genre -> viewModel.searchGenre(it.txt)
+                        is SearchType.Text -> viewModel.search(it.txt)
                     }
                 }
         }

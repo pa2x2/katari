@@ -6,7 +6,7 @@ import eu.kanade.tachiyomi.source.entry.EntryFilterList
 import kotlinx.coroutines.flow.Flow
 
 /**
- * What a feed lists and where its items come from. [FeedScreenModel] starts loading while it is constructed, so it
+ * What a feed lists and where its items come from. [FeedViewModel] starts loading while it is constructed, so it
  * is handed a finished source instead of calling into a subclass whose own properties are not assigned yet.
  */
 interface FeedItemSource<T : Any> {

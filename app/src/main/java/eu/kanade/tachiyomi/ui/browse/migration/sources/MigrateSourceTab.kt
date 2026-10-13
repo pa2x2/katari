@@ -4,7 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import cafe.adriel.voyager.core.model.rememberScreenModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -22,8 +22,8 @@ import tachiyomi.presentation.core.i18n.stringResource
 fun Screen.migrateSourceTab(): TabContent {
     val uriHandler = LocalUriHandler.current
     val navigator = LocalNavigator.currentOrThrow
-    val screenModel = rememberScreenModel { MigrateSourceScreenModel() }
-    val state by screenModel.state.collectAsStateWithLifecycle()
+    val viewModel = viewModel { MigrateSourceViewModel() }
+    val state by viewModel.state.collectAsStateWithLifecycle()
 
     return TabContent(
         titleRes = MR.strings.label_migration,
@@ -46,8 +46,8 @@ fun Screen.migrateSourceTab(): TabContent {
                 onClickActiveSession = { session ->
                     navigator.push(SourceMigrationReviewScreen(session.id))
                 },
-                onToggleSortingDirection = screenModel::toggleSortingDirection,
-                onToggleSortingMode = screenModel::toggleSortingMode,
+                onToggleSortingDirection = viewModel::toggleSortingDirection,
+                onToggleSortingMode = viewModel::toggleSortingMode,
             )
         },
     )

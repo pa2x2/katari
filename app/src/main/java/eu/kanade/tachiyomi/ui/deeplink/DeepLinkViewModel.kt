@@ -1,8 +1,10 @@
 package eu.kanade.tachiyomi.ui.deeplink
 
 import androidx.compose.runtime.Immutable
-import cafe.adriel.voyager.core.model.StateScreenModel
-import cafe.adriel.voyager.core.model.screenModelScope
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import logcat.LogPriority
 import mihon.entry.interactions.source.EntryDeepLinkFeature
@@ -13,18 +15,21 @@ import tachiyomi.domain.entry.model.Entry
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
-class DeepLinkScreenModel(
+class DeepLinkViewModel(
     query: String = "",
     private val deepLinkFeature: EntryDeepLinkFeature = Injekt.get(),
-) : StateScreenModel<DeepLinkScreenModel.State>(State.Loading) {
+) : ViewModel() {
+
+    val state: StateFlow<DeepLinkViewModel.State>
+        field = MutableStateFlow<DeepLinkViewModel.State>(State.Loading)
 
     init {
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             val resolution = deepLinkFeature.resolve(query)
             if (resolution is EntryDeepLinkResolution.Failed) {
                 logcat(LogPriority.ERROR, resolution.cause) { "Failed to resolve deep link" }
             }
-            mutableState.update {
+            state.update {
                 when (resolution) {
                     is EntryDeepLinkResolution.Resolved -> State.Result(resolution.entry, resolution.childId)
                     EntryDeepLinkResolution.NoMatch,

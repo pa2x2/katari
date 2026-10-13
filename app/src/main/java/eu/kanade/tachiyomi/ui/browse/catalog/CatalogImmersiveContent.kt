@@ -13,7 +13,7 @@ import androidx.paging.compose.LazyPagingItems
 import eu.kanade.presentation.browse.immersive.EntryImmersivePositionState
 import eu.kanade.tachiyomi.ui.browse.immersive.EntryImmersiveContent
 import eu.kanade.tachiyomi.ui.browse.immersive.EntryImmersiveItemKey
-import eu.kanade.tachiyomi.ui.browse.immersive.EntryImmersiveScreenModel
+import eu.kanade.tachiyomi.ui.browse.immersive.EntryImmersiveViewModel
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.StateFlow
 import mihon.icons.materialsymbols.MaterialSymbols
@@ -29,7 +29,7 @@ import tachiyomi.presentation.core.screens.LoadingScreen
 @Composable
 internal fun CatalogImmersiveContent(
     catalogList: LazyPagingItems<StateFlow<CatalogListItem?>>,
-    immersiveModel: EntryImmersiveScreenModel,
+    immersiveModel: EntryImmersiveViewModel,
     sourceName: String,
     snackbarHostState: SnackbarHostState,
     onExitImmersive: () -> Unit,

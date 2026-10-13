@@ -9,7 +9,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import cafe.adriel.voyager.core.model.rememberScreenModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
 import cafe.adriel.voyager.navigator.tab.TabOptions
@@ -17,7 +17,7 @@ import eu.kanade.presentation.components.TabbedScreen
 import eu.kanade.presentation.util.Tab
 import eu.kanade.presentation.util.rememberAnimatedVectorPainter
 import eu.kanade.tachiyomi.R
-import eu.kanade.tachiyomi.ui.browse.extension.ExtensionsScreenModel
+import eu.kanade.tachiyomi.ui.browse.extension.ExtensionsViewModel
 import eu.kanade.tachiyomi.ui.browse.extension.extensionsTab
 import eu.kanade.tachiyomi.ui.browse.feed.feedsTab
 import eu.kanade.tachiyomi.ui.browse.migration.sources.migrateSourceTab
@@ -71,20 +71,20 @@ data object BrowseTab : Tab {
         val feedsEnabled by customPreferences.enableFeeds.collectAsState()
 
         // Hoisted for extensions tab's search bar
-        val extensionsScreenModel = rememberScreenModel { ExtensionsScreenModel() }
-        val extensionsSearchQuery by extensionsScreenModel.searchQuery.collectAsStateWithLifecycle()
+        val extensionsViewModel = viewModel { ExtensionsViewModel() }
+        val extensionsSearchQuery by extensionsViewModel.searchQuery.collectAsStateWithLifecycle()
 
         val tabs = if (feedsEnabled) {
             persistentListOf(
                 feedsTab(),
                 sourcesTab(),
-                extensionsTab(extensionsScreenModel),
+                extensionsTab(extensionsViewModel),
                 migrateSourceTab(),
             )
         } else {
             persistentListOf(
                 sourcesTab(),
-                extensionsTab(extensionsScreenModel),
+                extensionsTab(extensionsViewModel),
                 migrateSourceTab(),
             )
         }
@@ -106,7 +106,7 @@ data object BrowseTab : Tab {
             tabs = tabs,
             state = state,
             searchQuery = extensionsSearchQuery,
-            onChangeSearchQuery = extensionsScreenModel::search,
+            onChangeSearchQuery = extensionsViewModel::search,
         )
         LaunchedEffect(state, sourcesTabIndex) {
             switchToPageChannel.receiveAsFlow()

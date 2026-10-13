@@ -2,12 +2,14 @@ package eu.kanade.tachiyomi.ui.webview
 
 import android.content.Context
 import androidx.core.net.toUri
-import cafe.adriel.voyager.core.model.StateScreenModel
+import androidx.lifecycle.ViewModel
 import eu.kanade.presentation.more.stats.StatsScreenState
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.util.system.openInBrowser
 import eu.kanade.tachiyomi.util.system.toShareIntent
 import eu.kanade.tachiyomi.util.system.toast
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import logcat.LogPriority
 import mihon.entry.interactions.source.EntryWebViewFeature
 import mihon.entry.interactions.source.EntryWebViewHeadersResolution
@@ -16,11 +18,14 @@ import tachiyomi.core.common.util.system.logcat
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
-class WebViewScreenModel(
+class WebViewViewModel(
     val sourceId: Long?,
     private val webViewFeature: EntryWebViewFeature = Injekt.get(),
     private val network: NetworkHelper = Injekt.get(),
-) : StateScreenModel<StatsScreenState>(StatsScreenState.Loading) {
+) : ViewModel() {
+
+    val state: StateFlow<StatsScreenState>
+        field = MutableStateFlow<StatsScreenState>(StatsScreenState.Loading)
 
     var headers = emptyMap<String, String>()
 

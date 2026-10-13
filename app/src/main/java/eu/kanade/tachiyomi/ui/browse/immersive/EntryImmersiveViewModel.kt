@@ -1,14 +1,16 @@
 package eu.kanade.tachiyomi.ui.browse.immersive
 
 import android.content.Context
-import cafe.adriel.voyager.core.model.StateScreenModel
-import cafe.adriel.voyager.core.model.screenModelScope
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -30,11 +32,14 @@ import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.util.concurrent.ConcurrentHashMap
 
-class EntryImmersiveScreenModel(
+class EntryImmersiveViewModel(
     private val entryChapterRepository: EntryChapterRepository = Injekt.get(),
     private val immersiveFeature: EntryImmersiveFeature = Injekt.get(),
     private val sourceManager: SourceManager = Injekt.get(),
-) : StateScreenModel<EntryImmersiveScreenModel.State>(State()) {
+) : ViewModel() {
+
+    val state: StateFlow<EntryImmersiveViewModel.State>
+        field = MutableStateFlow<EntryImmersiveViewModel.State>(State())
 
     private val loadJobs = ConcurrentHashMap<EntryImmersiveItemKey, Job>()
     private val loadTokens = ConcurrentHashMap<EntryImmersiveItemKey, Any>()
@@ -49,18 +54,18 @@ class EntryImmersiveScreenModel(
 
         val token = Any()
         loadTokens[ref] = token
-        mutableState.update { current ->
+        state.update { current ->
             current.copy(items = current.items + (ref to ItemState.Loading(entry)))
         }
 
-        val job = screenModelScope.launch(Dispatchers.IO, start = CoroutineStart.LAZY) {
+        val job = viewModelScope.launch(Dispatchers.IO, start = CoroutineStart.LAZY) {
             try {
                 val nextState = resolveItem(context, entry, forceSync = force)
                 val accepted = synchronized(loadTokens) {
                     if (loadTokens[ref] !== token) {
                         false
                     } else {
-                        mutableState.update { current ->
+                        state.update { current ->
                             current.copy(items = current.items + (ref to nextState))
                         }
                         true
@@ -72,7 +77,7 @@ class EntryImmersiveScreenModel(
             } catch (e: Throwable) {
                 synchronized(loadTokens) {
                     if (loadTokens[ref] === token) {
-                        mutableState.update { current ->
+                        state.update { current ->
                             current.copy(items = current.items + (ref to ItemState.Error(entry, e)))
                         }
                     }
@@ -100,7 +105,7 @@ class EntryImmersiveScreenModel(
                 loadTokens.remove(ref)
             }
             val states = evictedRefs.mapNotNull(state.value.items::get)
-            mutableState.update { current ->
+            state.update { current ->
                 current.copy(items = current.items.filterKeys { it in itemRefs })
             }
             states
@@ -115,19 +120,19 @@ class EntryImmersiveScreenModel(
     fun renderer(handle: EntryImmersiveHandle) = immersiveFeature.renderer(handle)
 
     fun persistProgress(handle: EntryImmersiveHandle, progress: EntryImmersiveProgress) {
-        screenModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(Dispatchers.IO) {
             withContext(NonCancellable) {
                 immersiveFeature.persistProgress(handle, progress)
             }
         }
     }
 
-    override fun onDispose() {
+    override fun onCleared() {
         loadJobs.values.forEach(Job::cancel)
         loadJobs.clear()
         loadTokens.clear()
         state.value.items.values.forEach(::release)
-        super.onDispose()
+        super.onCleared()
     }
 
     private suspend fun resolveItem(context: Context, entry: Entry, forceSync: Boolean): ItemState {
