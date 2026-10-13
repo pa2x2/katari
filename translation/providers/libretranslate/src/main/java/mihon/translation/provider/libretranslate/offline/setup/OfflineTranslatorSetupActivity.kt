@@ -36,6 +36,7 @@ import mihon.translation.provider.server.setup.components.ProviderSetupScaffold
 import mihon.translation.provider.server.setup.components.ProviderSetupSecondaryButton
 import mihon.translation.provider.server.setup.components.ProviderSetupStatus
 import mihon.translation.provider.server.setup.components.ProviderSetupStatusPanel
+import mihon.translation.provider.server.R as ServerConnectionR
 
 internal class OfflineTranslatorSetupActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -132,7 +133,7 @@ private fun OfflineTranslatorSetupScreen(
 ) {
     ProviderSetupScaffold(
         title = stringResource(R.string.offline_translator_setup_title),
-        backContentDescription = stringResource(R.string.translation_provider_back),
+        backContentDescription = stringResource(ServerConnectionR.string.translation_provider_back),
         onBack = onBack,
     ) {
         ProviderSetupHeader(
@@ -171,14 +172,14 @@ private fun OfflineTranslatorSetupScreen(
         status?.let {
             ProviderSetupStatusPanel(
                 status = it,
-                testingLabel = stringResource(R.string.translation_provider_status_testing),
-                successLabel = stringResource(R.string.translation_provider_status_success),
-                failureLabel = stringResource(R.string.translation_provider_status_failure),
+                testingLabel = stringResource(ServerConnectionR.string.translation_provider_status_testing),
+                successLabel = stringResource(ServerConnectionR.string.translation_provider_status_success),
+                failureLabel = stringResource(ServerConnectionR.string.translation_provider_status_failure),
             )
         }
         if (status is ProviderSetupStatus.Success) {
             ProviderSetupPrimaryButton(
-                label = stringResource(R.string.translation_provider_done),
+                label = stringResource(ServerConnectionR.string.translation_provider_done),
                 enabled = true,
                 onClick = onDone,
             )
