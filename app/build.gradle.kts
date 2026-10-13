@@ -235,6 +235,7 @@ dependencies {
     implementation(dependencies.project(mapOf("path" to projects.domain.path)))
     implementation(dependencies.project(mapOf("path" to projects.icons.customMaterialSymbols.path)))
     implementation(dependencies.project(mapOf("path" to projects.icons.materialSymbols.path)))
+    implementation(dependencies.project(mapOf("path" to projects.icons.simpleIcons.path)))
     implementation(dependencies.project(mapOf("path" to projects.presentationCore.path)))
     implementation(dependencies.project(mapOf("path" to projects.presentationWidget.path)))
     implementation(dependencies.project(mapOf("path" to projects.telemetry.path)))

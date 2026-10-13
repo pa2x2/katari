@@ -31,14 +31,14 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import mihon.feature.appupdate.AppUpdateBuild
 import mihon.feature.appupdate.ui.appUpdateAboutItems
+import mihon.icons.simpleicons.Github
+import mihon.icons.simpleicons.SimpleIcons
 import tachiyomi.core.common.Constants
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.LinkIcon
 import tachiyomi.presentation.core.components.ScrollbarLazyColumn
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.icons.CustomIcons
-import tachiyomi.presentation.core.icons.Github
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import kotlin.time.Instant
@@ -112,7 +112,7 @@ object AboutScreen : Screen() {
                     ) {
                         LinkIcon(
                             label = "Katari",
-                            icon = CustomIcons.Github,
+                            icon = SimpleIcons.Github,
                             url = Constants.URL_REPOSITORY,
                         )
                     }
