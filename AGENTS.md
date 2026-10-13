@@ -66,7 +66,7 @@ Every one of these has been written here before and deleted.
 
 ## Validation
 - Run `./gradlew spotlessApply` from the repo root.
-- App unit tests run on the `foss` buildType (`testBuildType = "foss"`); library modules run theirs on `debug` and multiplatform modules through `allTests`. Focused example: `./gradlew :app:testFossUnitTest --tests '...'`.
+- App unit tests run on the `foss` buildType (`testBuildType = "foss"`); library modules run theirs on `release` (the variant the app consumes, so tests reuse its compilation) and multiplatform modules through `allTests`. Focused example: `./gradlew :app:testFossUnitTest --tests '...'`.
 - `./gradlew verifyTests --console=plain --warning-mode=all` runs every module's host tests and build-logic tests and compiles every device test. Every change that touches production or test code must pass it; `testFossUnitTest` and other module-specific test tasks cover a single module and leave failures elsewhere unnoticed. Modules join `verifyTests` through the convention plugins, so do not add per-module test tasks to aggregate verification lists.
 - Changes to application or Entry Feature runtime modules, production runtime components, platform-service factories used during module installation, the production validation environment, or the Android minimum SDK must pass `./gradlew verifyEntryFeatureArchitecture verifyTests --console=plain --warning-mode=all`. Focused module tests and compilation do not exercise the complete production composition and are insufficient for these changes. Do not report the work complete until this command passes.
 - FOSS compilation can be verified with `:app:compileFossKotlin`; telemetry-enabled release compilation uses `:app:compileReleaseKotlin -Pinclude-telemetry`.

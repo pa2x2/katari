@@ -137,7 +137,7 @@ tasks.register("verifyLegacySourceAbi") {
         verifyLegacySourceAbi14,
         verifyLegacySourceAbi16,
         verifyKeiyoushiSourceAbi16,
-        ":source-compat:testDebugUnitTest",
+        ":source-compat:testReleaseUnitTest",
     )
 }
 
@@ -260,12 +260,12 @@ val verifyFeatureArchitecture = tasks.register("verifyFeatureArchitecture") {
     description = "Verifies application and Entry Feature boundaries, contracts, and reporting"
     dependsOn(
         "checkFeatureArchitectureBoundaries",
-        ":feature-graph:testDebugUnitTest",
-        ":feature-runtime:testDebugUnitTest",
-        ":feature-validation:testDebugUnitTest",
-        ":translation:api:testDebugUnitTest",
-        ":translation:runtime:testDebugUnitTest",
-        ":entry-interactions:testDebugUnitTest",
+        ":feature-graph:testReleaseUnitTest",
+        ":feature-runtime:testReleaseUnitTest",
+        ":feature-validation:testReleaseUnitTest",
+        ":translation:api:testReleaseUnitTest",
+        ":translation:runtime:testReleaseUnitTest",
+        ":entry-interactions:testReleaseUnitTest",
         ":book-api:testAndroidHostTest",
         ":app:generateFeatureReport",
     )
