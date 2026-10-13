@@ -46,6 +46,9 @@ jobs:
         uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
         with:
           cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+          # The action only writes from the default branch, but day-to-day pushes go to upcoming, which would otherwise
+          # keep restoring an ever older snapshot from main
+          cache-read-only: ${{ github.ref != 'refs/heads/main' && github.ref != 'refs/heads/upcoming' }}
 
       - name: Check code format
         run: ./gradlew spotlessCheck
