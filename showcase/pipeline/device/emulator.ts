@@ -2,9 +2,9 @@
  * The dedicated showcase emulator: a rootable Google APIs image, so the pipeline can pin the date and write app state,
  * wiped on every boot, so no run inherits another's state.
  */
-import { spawn } from "node:child_process";
-import { existsSync } from "node:fs";
-import { homedir } from "node:os";
+import { type ChildProcess, spawn } from "node:child_process";
+import { closeSync, existsSync, mkdtempSync, openSync, readFileSync } from "node:fs";
+import { homedir, tmpdir } from "node:os";
 import { join } from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
 import { run } from "../run-command.ts";
@@ -16,6 +16,7 @@ const DEVICE_PROFILE = "pixel_9a";
 export const SHOWCASE_SERIAL = "emulator-5554";
 const BOOT_TIMEOUT_MS = 10 * 60_000;
 const SHUTDOWN_TIMEOUT_MS = 60_000;
+const BOOT_FAILURE_OUTPUT_LINES = 40;
 
 export async function bootShowcaseEmulator(): Promise<Device> {
   // Scenes find views by text and tap by screen fractions, so a second device would only ever be touched by mistake.
@@ -24,6 +25,9 @@ export async function bootShowcaseEmulator(): Promise<Device> {
   if (!existsSync(join(homedir(), ".android", "avd", `${AVD}.avd`))) {
     run("sh", ["-c", `echo no | avdmanager create avd -n ${AVD} -k '${SYSTEM_IMAGE}' -d ${DEVICE_PROFILE}`]);
   }
+  // In a file, since a kept emulator outlives this script and anything reading its output.
+  const log = join(mkdtempSync(join(tmpdir(), "katari-showcase-")), "emulator.log");
+  const output = openSync(log, "w");
   const emulator = spawn(
     "emulator",
     [
@@ -34,19 +38,21 @@ export async function bootShowcaseEmulator(): Promise<Device> {
       // Host GPU rendering crashes the emulator's render thread on some drivers.
       "-gpu", "swiftshader_indirect",
     ],
-    { detached: true, stdio: "ignore" },
+    { detached: true, stdio: ["ignore", output, output] },
   );
+  closeSync(output);
   emulator.unref();
 
   const device = new Device(SHOWCASE_SERIAL);
   try {
-    await awaitBoot(device);
+    await awaitBoot(device, emulator);
     device.adb("root");
-    await awaitBoot(device);
+    await awaitBoot(device, emulator);
   } catch (error) {
     // Left running, it would stop every later run from starting.
     emulator.kill();
-    throw error;
+    const lines = readFileSync(log, "utf8").trimEnd().split("\n").slice(-BOOT_FAILURE_OUTPUT_LINES).join("\n");
+    throw new Error(`${(error as Error).message}. The emulator's last output, all of it in ${log}:\n${lines}`);
   }
   // Downloads that wait for an unmetered network treat Wi-Fi as unmetered and mobile data as metered.
   device.shell("svc wifi enable; svc data disable");
@@ -68,9 +74,12 @@ export async function shutDown(device: Device): Promise<void> {
   }
 }
 
-async function awaitBoot(device: Device): Promise<void> {
+async function awaitBoot(device: Device, emulator: ChildProcess): Promise<void> {
   const deadline = Date.now() + BOOT_TIMEOUT_MS;
   while (Date.now() < deadline) {
+    if (emulator.exitCode !== null || emulator.signalCode !== null) {
+      throw new Error(`${AVD} exited with ${emulator.exitCode ?? emulator.signalCode} before it booted`);
+    }
     try {
       if (device.shell("getprop sys.boot_completed").trim() === "1") return;
     } catch {
