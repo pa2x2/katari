@@ -481,6 +481,20 @@ fun ApplicationVariant.buildConfigField(type: String, name: String, value: Provi
     buildConfigFields?.put(name, value.map { BuildConfigField(type, it, null) })
 }
 
+/**
+ * Descriptor files of every module in the checkout. Hidden top-level directories are skipped because
+ * agent worktrees and workspaces (`.claude/`, `.agents-workspaces/`) hold whole nested checkouts whose
+ * copies would otherwise collide with the real descriptors' ids.
+ */
+fun repositoryDescriptors(fileSuffix: String, variantName: String): ConfigurableFileTree =
+    fileTree(layout.settingsDirectory) {
+        include("**/src/main/**/*$fileSuffix")
+        include("**/src/$variantName/**/*$fileSuffix")
+        exclude(".*/**")
+        exclude("**/build/**")
+        exclude("translation-workspace/**")
+    }
+
 androidComponents {
     onVariants { variant ->
         if (variant.buildType !in releasedBuildTypes) return@onVariants
@@ -516,22 +530,8 @@ androidComponents {
                 "generate${variantName}ApplicationFeatureTopology",
             ) {
                 this.variantName.set(variant.name)
-                moduleDescriptors.from(
-                    fileTree(layout.settingsDirectory) {
-                        include("**/src/main/**/*.application-feature-module")
-                        include("**/src/${variant.name}/**/*.application-feature-module")
-                        exclude("**/build/**")
-                        exclude("translation-workspace/**")
-                    },
-                )
-                componentDescriptors.from(
-                    fileTree(layout.settingsDirectory) {
-                        include("**/src/main/**/*.application-feature-runtime-component")
-                        include("**/src/${variant.name}/**/*.application-feature-runtime-component")
-                        exclude("**/build/**")
-                        exclude("translation-workspace/**")
-                    },
-                )
+                moduleDescriptors.from(repositoryDescriptors(".application-feature-module", variant.name))
+                componentDescriptors.from(repositoryDescriptors(".application-feature-runtime-component", variant.name))
                 outputDirectory.set(
                     layout.buildDirectory.dir("generated/source/application-feature-topology/${variant.name}"),
                 )
