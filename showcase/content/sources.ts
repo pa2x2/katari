@@ -101,6 +101,8 @@ export const works: WorkDefinition[] = [
     video: {
       url: "https://upload.wikimedia.org/wikipedia/commons/transcoded/f/f1/Sintel_movie_4K.webm/Sintel_movie_4K.webm.1080p.vp9.webm",
     },
+    // The player scene seeks to 691 s (showcase/capture PlayerScenes.kt), and the player buffers 50 s past it.
+    played: { from: 680, to: 760 },
     cover: { url: "https://upload.wikimedia.org/wikipedia/commons/8/8f/Sintel_poster.jpg" },
   },
   {

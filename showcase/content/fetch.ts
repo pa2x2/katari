@@ -15,8 +15,10 @@ import { cacheDir, cached } from "./download-cache.ts";
 import { extractCover } from "./epub-cover.ts";
 import type { ResolvedWork } from "./resolved-work.ts";
 import { resolveWork } from "./resolvers/resolve-work.ts";
+import type { FilmWork, WorkDefinition } from "./source-definitions.ts";
 import { sources, works } from "./sources.ts";
-import { streamedSize } from "./streamed-file.ts";
+import { readStreamed, streamedSize } from "./streamed-file.ts";
+import { cuePoints } from "./webm-cues.ts";
 import { localZip, remoteZip } from "./zip-archive.ts";
 
 const CONCURRENT_WORKS = 4;
@@ -34,14 +36,15 @@ mkdirSync(join(out, "files"), { recursive: true });
 const streamed: Record<string, string> = {};
 const catalogWorks = await mapConcurrently(works, async (work) => {
   console.error(`fetching ${work.id}`);
-  return materialize(await resolveWork(work), new Set(work.fetchChapters));
+  return materialize(await resolveWork(work), work);
 });
 const catalog: Catalog = { sources, works: catalogWorks };
 writeFileSync(join(out, "catalog.json"), `${JSON.stringify(catalog, null, 2)}\n`);
 writeFileSync(join(out, STREAMED_FILES), `${JSON.stringify(streamed, null, 2)}\n`);
 console.log(out);
 
-async function materialize(work: ResolvedWork, fetched: Set<number>): Promise<CatalogWork> {
+async function materialize(work: ResolvedWork, definition: WorkDefinition): Promise<CatalogWork> {
+  const fetched = new Set(definition.fetchChapters);
   for (const number of fetched) {
     if (!work.chapters.some((chapter) => chapter.number === number)) throw new Error(`${work.id} has no chapter ${number}`);
   }
@@ -49,7 +52,8 @@ async function materialize(work: ResolvedWork, fetched: Set<number>): Promise<Ca
   for (const chapter of work.chapters) {
     const files = chapter.files.map((url, index) => `files/${work.id}/${chapter.number}/${fileName(work, index + 1, url)}`);
     if (fetched.has(chapter.number)) {
-      for (const [index, url] of chapter.files.entries()) await place(work, url, files[index]!);
+      const played = definition.kind === "film" ? definition.played : undefined;
+      for (const [index, url] of chapter.files.entries()) await place(work, url, files[index]!, played);
     }
     chapters.push({ number: chapter.number, name: chapter.name, date: chapter.date, files });
   }
@@ -69,14 +73,29 @@ function fileName(work: ResolvedWork, index: number, url: string): string {
   }
 }
 
-async function place(work: ResolvedWork, url: string, path: string): Promise<void> {
+async function place(work: ResolvedWork, url: string, path: string, played?: FilmWork["played"]): Promise<void> {
   if (work.type === "anime") {
     // Asked now so that a video the player could not seek in fails the fetch rather than the player scene.
     await streamedSize(url);
+    if (played !== undefined) await prefetchPlayback(url, played);
     streamed[path] = url;
   } else {
     link(await cached(url), join(out, path));
   }
+}
+
+/**
+ * Downloads what the player reads of the WebM at [url] to play [played]: its header and index, the clusters from the
+ * cue at or before the start to the first cue past the end, and the last cluster, where a film the seed finished opens.
+ */
+async function prefetchPlayback(url: string, played: NonNullable<FilmWork["played"]>): Promise<void> {
+  if (extname(url) !== ".webm") throw new Error(`${url}: only a WebM says where its played stretch is`);
+  const size = await streamedSize(url);
+  const cues = await cuePoints((start, end) => readStreamed(url, start, Math.min(end, size)));
+  const first = cues.findLast((cue) => cue.seconds <= played.from) ?? cues[0]!;
+  const after = cues.find((cue) => cue.seconds > played.to);
+  await readStreamed(url, first.offset, after?.offset ?? size);
+  await readStreamed(url, cues.at(-1)!.offset, size);
 }
 
 async function cover(work: ResolvedWork, fetched: Set<number>): Promise<string> {

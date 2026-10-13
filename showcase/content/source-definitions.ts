@@ -63,6 +63,11 @@ export interface FilmWork extends WorkBase {
   attribution: string;
   /** A WebM or MP4 that answers byte ranges, since it is streamed to the player rather than downloaded. */
   video: { url: string };
+  /**
+   * The stretch of the film a scene plays, in seconds, which fetch.ts downloads ahead of the run with the WebM's header
+   * and ending, so the player waits on no upstream site during the scene. The rest is streamed only if asked for.
+   */
+  played?: { from: number; to: number };
   cover: CoverDefinition;
 }
 

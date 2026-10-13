@@ -20,6 +20,13 @@ export async function* streamedBytes(url: string, start: number, end: number): A
   }
 }
 
+/** The bytes of [url] from [start] up to [end], read through the same chunks the content server streams. */
+export async function readStreamed(url: string, start: number, end: number): Promise<Buffer> {
+  const parts: Buffer[] = [];
+  for await (const part of streamedBytes(url, start, end - 1)) parts.push(part);
+  return Buffer.concat(parts);
+}
+
 function chunk(url: string, index: number): Promise<{ bytes: Buffer; size: number }> {
   return cachedRange(url, `bytes=${index * CHUNK_SIZE}-${(index + 1) * CHUNK_SIZE - 1}`);
 }
