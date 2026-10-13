@@ -62,7 +62,12 @@ export async function installOfflineTranslator(device: Device): Promise<void> {
   });
 }
 
-/** Its server runs while the app's process does, which launching it starts. */
+/**
+ * Its server runs while the app's process does, which launching it starts. Not launched through
+ * `monkey`: its one random event can be a rotation, which leaves the device's auto-rotate on.
+ */
 export function startOfflineTranslator(device: Device): void {
-  device.shell(`monkey -p ${OFFLINE_TRANSLATOR_ID} -c android.intent.category.LAUNCHER 1`);
+  device.shell(
+    `am start -n "$(cmd package resolve-activity --brief -a android.intent.action.MAIN -c android.intent.category.LAUNCHER ${OFFLINE_TRANSLATOR_ID} | tail -n 1)"`,
+  );
 }
