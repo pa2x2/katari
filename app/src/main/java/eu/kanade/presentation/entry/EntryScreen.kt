@@ -3,7 +3,6 @@ package eu.kanade.presentation.entry
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
@@ -16,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
@@ -694,22 +694,22 @@ fun EntryScreenLargeImpl(
             )
         },
         bottomBar = {
-            Box(
-                modifier = Modifier.fillMaxWidth(),
-                contentAlignment = Alignment.BottomEnd,
-            ) {
-                SharedEntryBottomActionMenu(
-                    selected = state.selectedChapters,
-                    childProgressLabels = state.childProgressLabels,
-                    onMultiBookmarkClicked = onMultiBookmarkClicked,
-                    onMultiMarkAsReadClicked = onMultiMarkAsReadClicked,
-                    onMarkPreviousAsReadClicked = onMarkPreviousAsReadClicked,
-                    onDownloadChapter = onDownloadChapter,
-                    translation = translation,
-                    onMultiDeleteClicked = onMultiDeleteClicked,
-                    fillFraction = 0.5f,
-                )
-            }
+            // Aligned by its own modifier: a wrapper would always be laid out, and the scaffold then drops the
+            // navigation bar inset under the FAB
+            SharedEntryBottomActionMenu(
+                selected = state.selectedChapters,
+                childProgressLabels = state.childProgressLabels,
+                onMultiBookmarkClicked = onMultiBookmarkClicked,
+                onMultiMarkAsReadClicked = onMultiMarkAsReadClicked,
+                onMarkPreviousAsReadClicked = onMarkPreviousAsReadClicked,
+                onDownloadChapter = onDownloadChapter,
+                translation = translation,
+                onMultiDeleteClicked = onMultiDeleteClicked,
+                fillFraction = 0.5f,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .wrapContentWidth(Alignment.End),
+            )
         },
         snackbarHost = { AppSnackbarHost(hostState = snackbarHostState) },
         floatingActionButton = {
