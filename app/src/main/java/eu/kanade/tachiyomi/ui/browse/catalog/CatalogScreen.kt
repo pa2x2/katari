@@ -79,6 +79,7 @@ import mihon.icons.materialsymbols.automirroredroundedfilled.ViewList
 import mihon.icons.materialsymbols.rounded.Fullscreen
 import mihon.icons.materialsymbols.rounded.Verified
 import mihon.icons.materialsymbols.roundedfilled.Favorite
+import mihon.icons.materialsymbols.roundedfilled.ViewCompact
 import mihon.icons.materialsymbols.roundedfilled.ViewModule
 import mihon.presentation.core.util.collectAsLazyPagingItems
 import tachiyomi.core.common.util.lang.withIOContext
@@ -580,12 +581,14 @@ private fun CatalogToolbar(
                     add(
                         AppBar.Action(
                             title = stringResource(MR.strings.action_display_mode),
-                            icon = if (displayMode == LibraryDisplayMode.List ||
-                                displayMode == LibraryDisplayMode.ComfortableList
-                            ) {
-                                MaterialSymbols.AutoMirroredRoundedFilled.ViewList
-                            } else {
-                                MaterialSymbols.RoundedFilled.ViewModule
+                            icon = when (displayMode) {
+                                LibraryDisplayMode.List,
+                                LibraryDisplayMode.ComfortableList,
+                                -> MaterialSymbols.AutoMirroredRoundedFilled.ViewList
+                                LibraryDisplayMode.ComfortableGrid -> MaterialSymbols.RoundedFilled.ViewModule
+                                LibraryDisplayMode.CompactGrid,
+                                LibraryDisplayMode.CoverOnlyGrid,
+                                -> MaterialSymbols.RoundedFilled.ViewCompact
                             },
                             onClick = { selectingDisplayMode = true },
                             menu = {

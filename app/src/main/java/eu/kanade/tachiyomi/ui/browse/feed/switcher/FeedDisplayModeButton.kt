@@ -13,6 +13,7 @@ import eu.kanade.presentation.components.DropdownMenu
 import eu.kanade.presentation.components.RadioMenuItem
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.automirroredroundedfilled.ViewList
+import mihon.icons.materialsymbols.roundedfilled.ViewCompact
 import mihon.icons.materialsymbols.roundedfilled.ViewModule
 import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.i18n.*
@@ -36,12 +37,14 @@ internal fun FeedDisplayModeButton(
     Box {
         IconButton(onClick = { expanded = true }) {
             Icon(
-                imageVector = if (displayMode == LibraryDisplayMode.List ||
-                    displayMode == LibraryDisplayMode.ComfortableList
-                ) {
-                    MaterialSymbols.AutoMirroredRoundedFilled.ViewList
-                } else {
-                    MaterialSymbols.RoundedFilled.ViewModule
+                imageVector = when (displayMode) {
+                    LibraryDisplayMode.List,
+                    LibraryDisplayMode.ComfortableList,
+                    -> MaterialSymbols.AutoMirroredRoundedFilled.ViewList
+                    LibraryDisplayMode.ComfortableGrid -> MaterialSymbols.RoundedFilled.ViewModule
+                    LibraryDisplayMode.CompactGrid,
+                    LibraryDisplayMode.CoverOnlyGrid,
+                    -> MaterialSymbols.RoundedFilled.ViewCompact
                 },
                 contentDescription = stringResource(MR.strings.action_display_mode),
             )
