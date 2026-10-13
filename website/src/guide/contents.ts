@@ -19,7 +19,10 @@ export interface GuideGroup {
 export const guide: GuideGroup[] = [
   {
     title: "Start",
-    pages: [{ slug: "install", title: "Install", summary: "Which file to download, how Katari updates, and moving from Mihon.", checked: "1.15" }],
+    pages: [
+      { slug: "install", title: "Install", summary: "Which file to download, how Katari updates, and moving from Mihon.", checked: "1.15" },
+      { slug: "first-steps", title: "First steps", summary: "Add an extension store, find a title, and start reading.", checked: "1.15" },
+    ],
   },
 ];
 

@@ -1,7 +1,7 @@
 ---
 import DownloadButtons from "../../download/DownloadButtons.astro";
 import GuidePage from "../../guide/GuidePage.astro";
-import { leavesSite, RELEASES } from "../../site/links.ts";
+import { leavesSite, RELEASES, sitePath } from "../../site/links.ts";
 ---
 
 <GuidePage slug="install" lead="Answers to what comes up between downloading Katari and reading in it.">
@@ -50,6 +50,7 @@ import { leavesSite, RELEASES } from "../../site/links.ts";
       <p>
         Katari comes with no content and has no affiliation with any provider. Sources are extensions you choose: add
         an extension store under Browse › Extensions, then install the extensions you want from it.
+        <a href={sitePath("guide/first-steps/")}>First steps</a> walks through it.
       </p>
     </div>
   </details>
