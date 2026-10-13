@@ -342,11 +342,11 @@ private fun HomeNavigationBaseIcon(
             )
         } else {
             val iconResource = when (tab) {
-                HomeScreenTabs.Library -> R.drawable.anim_library_enter
-                HomeScreenTabs.Updates -> R.drawable.anim_updates_enter
-                HomeScreenTabs.History -> R.drawable.anim_history_enter
-                HomeScreenTabs.Browse -> R.drawable.anim_browse_enter
-                HomeScreenTabs.More -> R.drawable.anim_more_enter
+                HomeScreenTabs.Library -> R.drawable.animated_library
+                HomeScreenTabs.Updates -> R.drawable.animated_updates
+                HomeScreenTabs.History -> R.drawable.animated_history
+                HomeScreenTabs.Browse -> R.drawable.animated_browse_enter
+                HomeScreenTabs.More -> R.drawable.animated_more
                 HomeScreenTabs.Profiles -> error("Handled above")
                 HomeScreenTabs.Translator -> error("Handled above")
                 HomeScreenTabs.Statistics -> error("Handled above")
