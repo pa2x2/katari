@@ -5,6 +5,7 @@ import "./global.css";
 import Footer from "./Footer.astro";
 import Header from "./Header.astro";
 import { sitePath } from "./links.ts";
+import ThemeScript from "./theme/ThemeScript.astro";
 
 interface Props {
   title: string;
@@ -20,6 +21,7 @@ const { title, description } = Astro.props;
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="color-scheme" content="light dark" />
+    <ThemeScript />
     <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#16181d" media="(prefers-color-scheme: dark)" />
     <meta name="description" content={description} />

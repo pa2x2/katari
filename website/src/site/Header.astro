@@ -1,6 +1,7 @@
 ---
 import SiteSearch from "../search/SiteSearch.astro";
 import { leavesSite, REPOSITORY, sitePath } from "./links.ts";
+import ThemeSwitch from "./theme/ThemeSwitch.astro";
 
 const links = [
   { label: "Features", href: sitePath("#features") },
@@ -23,9 +24,11 @@ const links = [
       </button>
       <ul id="site-links">
         {links.map((link) => <li><a href={link.href} {...(link.external ? leavesSite() : {})}>{link.label}</a></li>)}
+        <li class="theme-in-menu"><ThemeSwitch labelled /></li>
       </ul>
     </nav>
     <SiteSearch />
+    <div class="theme-in-header"><ThemeSwitch /></div>
     <a class="button download" href={sitePath("guide/install/#which-file")}>Download</a>
   </div>
 </header>
@@ -147,6 +150,11 @@ const links = [
       visibility 0.2s;
   }
 
+  /* A phone's header row has no room for the switch, so there it sits in the menu, named. */
+  .theme-in-menu {
+    display: none;
+  }
+
   @media (max-width: 44rem) {
     .menu {
       display: block;
@@ -164,6 +172,14 @@ const links = [
 
     .inner {
       gap: 1rem;
+    }
+
+    .theme-in-header {
+      display: none;
+    }
+
+    .theme-in-menu {
+      display: block;
     }
 
     ul {

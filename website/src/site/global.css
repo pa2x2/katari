@@ -40,6 +40,15 @@
   scroll-padding-top: var(--header-height);
 }
 
+/* A theme picked with the header's switch; without one, the page follows the system. */
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+}
+
 body {
   margin: 0;
 }
