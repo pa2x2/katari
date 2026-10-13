@@ -17,8 +17,11 @@ import { sitePath } from "../../site/links.ts";
             {group.pages.map((page) => (
               <li>
                 <a href={sitePath(`guide/${page.slug}/`)}>
+                  <span class="icon">
+                    <page.icon aria-hidden="true" />
+                  </span>
                   <strong>{page.title}</strong>
-                  <span>{page.summary}</span>
+                  <span class="summary">{page.summary}</span>
                 </a>
               </li>
             ))}
@@ -59,7 +62,7 @@ import { sitePath } from "../../site/links.ts";
 
   ul {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
     gap: 1rem;
     margin: 0;
     padding: 0;
@@ -67,7 +70,10 @@ import { sitePath } from "../../site/links.ts";
   }
 
   a {
-    display: block;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-content: start;
+    column-gap: 1rem;
     height: 100%;
     padding: 1.1rem 1.25rem;
     border: 1px solid var(--indigo-light);
@@ -81,14 +87,30 @@ import { sitePath } from "../../site/links.ts";
     border-color: var(--clay);
   }
 
+  .icon {
+    display: grid;
+    grid-row: span 2;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 0.6rem;
+    background: var(--indigo-light);
+    color: var(--clay);
+  }
+
+  .icon :global(svg) {
+    width: 1.6rem;
+    height: 1.6rem;
+    fill: currentColor;
+  }
+
   strong {
-    display: block;
     margin-bottom: 0.3rem;
     font-family: var(--serif);
     font-size: 1.3rem;
   }
 
-  span {
+  .summary {
     color: var(--muted);
     font-size: 0.95rem;
   }
