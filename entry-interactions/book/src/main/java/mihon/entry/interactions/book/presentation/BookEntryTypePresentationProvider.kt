@@ -1,7 +1,5 @@
 package mihon.entry.interactions.book.presentation
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Book
 import eu.kanade.tachiyomi.source.entry.EntryType
 import mihon.entry.interactions.presentation.EntryHistorySubtitlePresentation
 import mihon.entry.interactions.presentation.EntryNotificationChildNumberPolicy
@@ -9,14 +7,16 @@ import mihon.entry.interactions.presentation.EntryPartialProgressPresentation
 import mihon.entry.interactions.presentation.EntryTypePresentation
 import mihon.entry.interactions.presentation.EntryUpdateNotificationVocabulary
 import mihon.entry.interactions.runtime.EntryTypePresentationProvider
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Book
 import tachiyomi.i18n.*
 
 internal object BookEntryTypePresentationProvider : EntryTypePresentationProvider {
     override val type = EntryType.BOOK
     override val presentation = EntryTypePresentation(
         displayNameLabel = MR.strings.entry_type_book,
-        badgeIcon = Icons.Outlined.Book,
-        coverOverlayIcon = Icons.Outlined.Book,
+        badgeIcon = MaterialSymbols.Rounded.Book,
+        coverOverlayIcon = MaterialSymbols.Rounded.Book,
         markAsConsumedLabel = MR.strings.action_mark_as_seen,
         markAsUnconsumedLabel = MR.strings.action_mark_as_unseen,
         markPreviousAsConsumedLabel = MR.strings.action_mark_previous_as_seen,
@@ -45,7 +45,7 @@ internal object BookEntryTypePresentationProvider : EntryTypePresentationProvide
         intervalExpectedUpdateLabel = MR.strings.manga_interval_expected_update,
         intervalExpectedUpdateNullLabel = MR.strings.manga_interval_expected_update_null,
         immersiveOpenLabel = MR.strings.action_open,
-        immersiveOpenIcon = Icons.Outlined.Book,
+        immersiveOpenIcon = MaterialSymbols.Rounded.Book,
         historySubtitle = EntryHistorySubtitlePresentation.NameAndTimestamp,
         partialProgress = EntryPartialProgressPresentation.Fixed(MR.strings.label_started),
         updateNotification = EntryUpdateNotificationVocabulary(

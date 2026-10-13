@@ -30,6 +30,7 @@ dependencies {
 
     implementation(projects.core.common)
     implementation(projects.i18n)
+    implementation(projects.icons.materialSymbols)
     implementation(projects.presentationCore)
     implementation(projects.sourceApi)
 

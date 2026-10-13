@@ -13,11 +13,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ViewList
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.outlined.ExpandLess
-import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -33,6 +28,11 @@ import androidx.compose.ui.unit.dp
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerEpisodeListEntry
 import mihon.entry.interactions.anime.state.durationMs
 import mihon.entry.interactions.anime.state.positionMs
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.automirroredroundedfilled.ViewList
+import mihon.icons.materialsymbols.rounded.KeyboardArrowDown
+import mihon.icons.materialsymbols.rounded.KeyboardArrowUp
+import mihon.icons.materialsymbols.roundedfilled.PlayArrow
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.EntryProgressState
@@ -73,7 +73,7 @@ internal fun VideoPlayerEpisodesDrawer(
     OverlayListDrawer(
         visible = visible,
         title = stringResource(MR.strings.episodes),
-        icon = Icons.AutoMirrored.Filled.ViewList,
+        icon = MaterialSymbols.AutoMirroredRoundedFilled.ViewList,
         closeDescription = stringResource(MR.strings.action_close),
         onDismissRequest = onDismissRequest,
         modifier = modifier,
@@ -194,7 +194,11 @@ private fun VideoPlayerEpisodeMemberHeader(
             )
         }
         Icon(
-            imageVector = if (expanded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
+            imageVector = if (expanded) {
+                MaterialSymbols.Rounded.KeyboardArrowUp
+            } else {
+                MaterialSymbols.Rounded.KeyboardArrowDown
+            },
             contentDescription = null,
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -253,7 +257,7 @@ private fun VideoPlayerEpisodeRow(
         ) {
             if (selected) {
                 Icon(
-                    imageVector = Icons.Filled.PlayArrow,
+                    imageVector = MaterialSymbols.RoundedFilled.PlayArrow,
                     contentDescription = null,
                     tint = contentColor,
                 )
@@ -311,7 +315,7 @@ internal fun VideoPlayerTimelineToolbar(
     ) {
         OverlayActionButton(
             title = stringResource(MR.strings.episodes),
-            icon = Icons.AutoMirrored.Filled.ViewList,
+            icon = MaterialSymbols.AutoMirroredRoundedFilled.ViewList,
             onClick = onOpenEpisodes,
             contentDescription = stringResource(MR.strings.action_view_episodes),
             containerColor = Color.Transparent,

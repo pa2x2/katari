@@ -22,6 +22,7 @@ dependencies {
     implementation(projects.core.common)
     implementation(projects.entryViewerSettingsUi)
     implementation(projects.i18n)
+    implementation(projects.icons.materialSymbols)
     implementation(projects.presentationCore)
     implementation(projects.translation.ui)
     implementation(libs.androidx.activity.compose)

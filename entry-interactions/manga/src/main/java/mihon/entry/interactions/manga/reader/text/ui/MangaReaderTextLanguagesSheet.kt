@@ -6,8 +6,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.selection.toggleable
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -24,6 +22,8 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.reader.components.AdaptiveSheet
 import mihon.entry.interactions.manga.reader.text.session.MangaReaderTextState
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Close
 import mihon.translation.ui.picker.language.displayName
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -59,7 +59,7 @@ internal fun MangaReaderTextLanguagesSheet(
                     style = MaterialTheme.typography.titleMedium,
                 )
                 IconButton(onClick = onDismiss) {
-                    Icon(Icons.Outlined.Close, contentDescription = stringResource(MR.strings.action_close))
+                    Icon(MaterialSymbols.Rounded.Close, contentDescription = stringResource(MR.strings.action_close))
                 }
             }
             HorizontalDivider()

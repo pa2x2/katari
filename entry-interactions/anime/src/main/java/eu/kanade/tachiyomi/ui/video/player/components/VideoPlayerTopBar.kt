@@ -5,11 +5,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.outlined.Lock
-import androidx.compose.material.icons.outlined.PictureInPictureAlt
-import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -24,6 +19,11 @@ import androidx.compose.ui.unit.dp
 import mihon.entry.interactions.source.EntryChildWebViewAction
 import mihon.entry.interactions.source.EntryChildWebViewActionsMenu
 import mihon.entry.interactions.source.EntryChildWebViewResolution
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.automirroredrounded.ArrowBack
+import mihon.icons.materialsymbols.rounded.Lock
+import mihon.icons.materialsymbols.rounded.PictureInPictureAlt
+import mihon.icons.materialsymbols.rounded.Settings
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -54,7 +54,7 @@ internal fun VideoPlayerTopBar(
     ) {
         IconButton(onClick = onBack) {
             Icon(
-                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                imageVector = MaterialSymbols.AutoMirroredRounded.ArrowBack,
                 contentDescription = "Back",
                 tint = Color.White,
             )
@@ -84,7 +84,7 @@ internal fun VideoPlayerTopBar(
         ) {
             VideoPlayerUtilityButton(onClick = onToggleLock) {
                 Icon(
-                    imageVector = Icons.Outlined.Lock,
+                    imageVector = MaterialSymbols.Rounded.Lock,
                     contentDescription = stringResource(MR.strings.anime_playback_lock_controls),
                     tint = Color.White,
                 )
@@ -92,7 +92,7 @@ internal fun VideoPlayerTopBar(
             if (showPictureInPictureButton) {
                 VideoPlayerUtilityButton(onClick = onEnterPictureInPicture) {
                     Icon(
-                        imageVector = Icons.Outlined.PictureInPictureAlt,
+                        imageVector = MaterialSymbols.Rounded.PictureInPictureAlt,
                         contentDescription = stringResource(MR.strings.pref_enable_anime_picture_in_picture),
                         tint = Color.White,
                     )
@@ -100,7 +100,7 @@ internal fun VideoPlayerTopBar(
             }
             VideoPlayerUtilityButton(onClick = onOpenSettings) {
                 Icon(
-                    imageVector = Icons.Outlined.Settings,
+                    imageVector = MaterialSymbols.Rounded.Settings,
                     contentDescription = stringResource(MR.strings.label_settings),
                     tint = Color.White,
                 )

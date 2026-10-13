@@ -1,7 +1,5 @@
 package mihon.entry.interactions.manga.presentation
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.MenuBook
 import eu.kanade.tachiyomi.source.entry.EntryType
 import mihon.entry.interactions.presentation.EntryHistorySubtitlePresentation
 import mihon.entry.interactions.presentation.EntryNotificationChildNumberPolicy
@@ -9,13 +7,15 @@ import mihon.entry.interactions.presentation.EntryPartialProgressPresentation
 import mihon.entry.interactions.presentation.EntryTypePresentation
 import mihon.entry.interactions.presentation.EntryUpdateNotificationVocabulary
 import mihon.entry.interactions.runtime.EntryTypePresentationProvider
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.automirroredrounded.MenuBook
 import tachiyomi.i18n.*
 
 internal object MangaEntryTypePresentationProvider : EntryTypePresentationProvider {
     override val type = EntryType.MANGA
     override val presentation = EntryTypePresentation(
         displayNameLabel = MR.strings.entry_type_manga,
-        badgeIcon = Icons.AutoMirrored.Outlined.MenuBook,
+        badgeIcon = MaterialSymbols.AutoMirroredRounded.MenuBook,
         coverOverlayIcon = null,
         markAsConsumedLabel = MR.strings.action_mark_as_read,
         markAsUnconsumedLabel = MR.strings.action_mark_as_unread,
@@ -45,7 +45,7 @@ internal object MangaEntryTypePresentationProvider : EntryTypePresentationProvid
         intervalExpectedUpdateLabel = MR.strings.manga_interval_expected_update,
         intervalExpectedUpdateNullLabel = MR.strings.manga_interval_expected_update_null,
         immersiveOpenLabel = MR.strings.browse_manga_feed_open_in_reader,
-        immersiveOpenIcon = Icons.AutoMirrored.Outlined.MenuBook,
+        immersiveOpenIcon = MaterialSymbols.AutoMirroredRounded.MenuBook,
         historySubtitle = EntryHistorySubtitlePresentation.NumberAndTimestamp(MR.strings.recent_manga_time),
         partialProgress = EntryPartialProgressPresentation.NumberedPosition(MR.strings.chapter_progress),
         updateNotification = EntryUpdateNotificationVocabulary(

@@ -15,6 +15,7 @@ dependencies {
     api(libs.androidx.appCompat)
     api(libs.coil.core)
 
+    implementation(projects.icons.materialSymbols)
     implementation(projects.presentationCore)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.materialIcons)

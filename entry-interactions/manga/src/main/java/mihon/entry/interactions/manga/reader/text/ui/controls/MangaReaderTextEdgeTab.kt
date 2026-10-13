@@ -6,8 +6,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Translate
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -18,6 +16,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.unit.dp
 import mihon.entry.interactions.manga.reader.text.session.MangaReaderTextProgress
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Translate
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -50,7 +50,7 @@ internal fun MangaReaderTextEdgeTab(
                 CircularProgressIndicator(modifier = Modifier.size(32.dp), strokeWidth = 2.dp)
             }
             Icon(
-                imageVector = Icons.Outlined.Translate,
+                imageVector = MaterialSymbols.Rounded.Translate,
                 contentDescription = expandLabel,
                 modifier = Modifier.size(20.dp),
             )

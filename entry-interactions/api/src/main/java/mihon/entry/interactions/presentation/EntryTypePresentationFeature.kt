@@ -2,13 +2,13 @@
 
 package mihon.entry.interactions.presentation
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material.icons.outlined.OpenInFull
 import androidx.compose.ui.graphics.vector.ImageVector
 import dev.icerock.moko.resources.PluralsResource
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.tachiyomi.source.entry.EntryType
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Info
+import mihon.icons.materialsymbols.rounded.OpenInFull
 import tachiyomi.i18n.*
 
 /** Type-owned vocabulary and imagery. These values describe a type; they never authorize product behavior. */
@@ -103,8 +103,8 @@ interface EntryTypePresentationFeature {
 /** Explicit neutral vocabulary for mixed/no-type surfaces; never a fallback for a concrete contributed type. */
 val genericEntryTypePresentation = EntryTypePresentation(
     displayNameLabel = MR.strings.entry_type_generic,
-    badgeIcon = Icons.Outlined.Info,
-    coverOverlayIcon = Icons.Outlined.Info,
+    badgeIcon = MaterialSymbols.Rounded.Info,
+    coverOverlayIcon = MaterialSymbols.Rounded.Info,
     markAsConsumedLabel = MR.strings.action_mark_as_seen,
     markAsUnconsumedLabel = MR.strings.action_mark_as_unseen,
     markPreviousAsConsumedLabel = MR.strings.action_mark_previous_as_seen,
@@ -133,7 +133,7 @@ val genericEntryTypePresentation = EntryTypePresentation(
     intervalExpectedUpdateLabel = MR.strings.item_interval_expected_update,
     intervalExpectedUpdateNullLabel = MR.strings.item_interval_expected_update_null,
     immersiveOpenLabel = MR.strings.action_open,
-    immersiveOpenIcon = Icons.Outlined.OpenInFull,
+    immersiveOpenIcon = MaterialSymbols.Rounded.OpenInFull,
     historySubtitle = EntryHistorySubtitlePresentation.NameAndTimestamp,
     partialProgress = EntryPartialProgressPresentation.Fixed(MR.strings.label_started),
     updateNotification = EntryUpdateNotificationVocabulary(

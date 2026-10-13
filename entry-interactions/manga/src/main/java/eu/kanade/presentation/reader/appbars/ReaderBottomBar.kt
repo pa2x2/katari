@@ -1,11 +1,5 @@
 package eu.kanade.presentation.reader.appbars
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.ViewList
-import androidx.compose.material.icons.outlined.Pause
-import androidx.compose.material.icons.outlined.PlayArrow
-import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material.icons.outlined.Translate
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
@@ -17,6 +11,12 @@ import androidx.compose.ui.semantics.stateDescription
 import mihon.entry.interactions.manga.R
 import mihon.entry.interactions.reader.settings.ReaderOrientation
 import mihon.entry.interactions.reader.settings.ReadingMode
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.automirroredrounded.ViewList
+import mihon.icons.materialsymbols.rounded.PlayArrow
+import mihon.icons.materialsymbols.rounded.Settings
+import mihon.icons.materialsymbols.rounded.Translate
+import mihon.icons.materialsymbols.roundedfilled.Pause
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.reader.ReaderChromeBottomBar
 import tachiyomi.presentation.core.components.reader.ReaderChromeBottomBarAction
@@ -72,7 +72,11 @@ fun ReaderBottomBar(
         if (showAutoScrollToggle) {
             ReaderChromeBottomBarAction(onClick = onClickAutoScroll) {
                 Icon(
-                    imageVector = if (autoScrollActive) Icons.Outlined.Pause else Icons.Outlined.PlayArrow,
+                    imageVector = if (autoScrollActive) {
+                        MaterialSymbols.RoundedFilled.Pause
+                    } else {
+                        MaterialSymbols.Rounded.PlayArrow
+                    },
                     contentDescription = stringResource(MR.strings.pref_auto_scroll),
                 )
             }
@@ -80,7 +84,7 @@ fun ReaderBottomBar(
 
         ReaderChromeBottomBarAction(onClick = onClickChapterNavigation) {
             Icon(
-                imageVector = Icons.AutoMirrored.Outlined.ViewList,
+                imageVector = MaterialSymbols.AutoMirroredRounded.ViewList,
                 contentDescription = stringResource(MR.strings.reader_table_of_contents),
             )
         }
@@ -91,7 +95,7 @@ fun ReaderBottomBar(
             modifier = Modifier.semantics { stateDescription = textTranslationState },
         ) {
             Icon(
-                imageVector = Icons.Outlined.Translate,
+                imageVector = MaterialSymbols.Rounded.Translate,
                 contentDescription = stringResource(MR.strings.reader_text_translate),
                 tint = if (textTranslationActive) MaterialTheme.colorScheme.primary else LocalContentColor.current,
             )
@@ -99,7 +103,7 @@ fun ReaderBottomBar(
 
         ReaderChromeBottomBarAction(onClick = onClickSettings) {
             Icon(
-                imageVector = Icons.Outlined.Settings,
+                imageVector = MaterialSymbols.Rounded.Settings,
                 contentDescription = stringResource(MR.strings.action_settings),
             )
         }

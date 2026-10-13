@@ -20,6 +20,7 @@ dependencies {
     api(projects.translation.api)
     api(libs.kotlinx.coroutines.core)
 
+    implementation(projects.icons.materialSymbols)
     implementation(libs.androidx.compose.materialIcons)
     implementation(libs.androidx.core)
 
