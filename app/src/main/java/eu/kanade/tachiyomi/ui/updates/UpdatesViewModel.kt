@@ -316,8 +316,6 @@ class UpdatesViewModel(
 
     suspend fun updateLibrary(): Boolean = LibraryUpdateJob.startNow(application)
 
-    suspend fun updateSkippedOfLatest(): Boolean = LibraryUpdateJob.startSkippedOfLatest(application)
-
     /**
      * Update status of downloads.
      *

@@ -41,7 +41,7 @@ import eu.kanade.presentation.library.components.LibraryContent
 import eu.kanade.presentation.library.components.LibraryScrollToTopTarget
 import eu.kanade.presentation.library.components.LibraryToolbar
 import eu.kanade.presentation.library.components.LibraryUpdateModeDialog
-import eu.kanade.presentation.library.update.rememberLibraryUpdateStarter
+import eu.kanade.presentation.library.update.rememberReportingLibraryUpdateStarter
 import eu.kanade.presentation.more.onboarding.GETTING_STARTED_URL
 import eu.kanade.presentation.more.settings.screen.data.rememberRestoreBackupLauncher
 import eu.kanade.presentation.util.Tab
@@ -114,7 +114,7 @@ data object LibraryTab : Tab {
         val scrollToTopTarget = remember { LibraryScrollToTopTarget() }
 
         // A started update also reports its progress on the library's progress strip.
-        val updateStarter = rememberLibraryUpdateStarter(snackbarHostState) {
+        val updateStarter = rememberReportingLibraryUpdateStarter(snackbarHostState) {
             LibraryUpdateJob.startSkippedOfLatest(context)
         }
 

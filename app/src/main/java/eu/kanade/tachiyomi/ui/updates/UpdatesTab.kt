@@ -92,10 +92,8 @@ data object UpdatesTab : Tab {
 
         val latestUpdateSummary by viewModel.latestUpdateSummary.collectAsStateWithLifecycle()
         val pausedSourceNames by viewModel.pausedSourceNames.collectAsStateWithLifecycle()
-        val updateStarter = rememberLibraryUpdateStarter(
-            snackbarHostState = viewModel.snackbarHostState,
-            startSkippedOfLatest = viewModel::updateSkippedOfLatest,
-        )
+        // The last-updated header already shows how the latest update went and opens its report, so no result snackbar.
+        val updateStarter = rememberLibraryUpdateStarter(viewModel.snackbarHostState)
 
         val openUpdateReport = { navigator.push(LibraryUpdateReportScreen()) }.takeIf { latestUpdateSummary != null }
         val selected = state.selected
