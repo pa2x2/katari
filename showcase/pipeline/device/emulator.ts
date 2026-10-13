@@ -17,13 +17,17 @@ export const SHOWCASE_SERIAL = "emulator-5554";
 const BOOT_TIMEOUT_MS = 10 * 60_000;
 const SHUTDOWN_TIMEOUT_MS = 60_000;
 const BOOT_FAILURE_OUTPUT_LINES = 40;
+// Passed to avdmanager and the emulator alike: by default avdmanager finds the AVD folder under the account's home
+// directory and the emulator under $HOME, and on CI runners the two differ.
+const AVD_HOME = process.env.ANDROID_AVD_HOME ?? join(homedir(), ".android", "avd");
+const AVD_ENV = { ...process.env, ANDROID_AVD_HOME: AVD_HOME };
 
 export async function bootShowcaseEmulator(): Promise<Device> {
   // Scenes find views by text and tap by screen fractions, so a second device would only ever be touched by mistake.
   const running = attachedSerials().filter((serial) => serial.startsWith("emulator-"));
   if (running.length > 0) throw new Error(`Stop the running emulators first: ${running.join(", ")}`);
-  if (!existsSync(join(homedir(), ".android", "avd", `${AVD}.avd`))) {
-    run("sh", ["-c", `echo no | avdmanager create avd -n ${AVD} -k '${SYSTEM_IMAGE}' -d ${DEVICE_PROFILE}`]);
+  if (!existsSync(join(AVD_HOME, `${AVD}.avd`))) {
+    run("sh", ["-c", `echo no | avdmanager create avd -n ${AVD} -k '${SYSTEM_IMAGE}' -d ${DEVICE_PROFILE}`], AVD_ENV);
   }
   // In a file, since a kept emulator outlives this script and anything reading its output.
   const log = join(mkdtempSync(join(tmpdir(), "katari-showcase-")), "emulator.log");
@@ -38,7 +42,7 @@ export async function bootShowcaseEmulator(): Promise<Device> {
       // Host GPU rendering crashes the emulator's render thread on some drivers.
       "-gpu", "swiftshader_indirect",
     ],
-    { detached: true, stdio: ["ignore", output, output] },
+    { detached: true, env: AVD_ENV, stdio: ["ignore", output, output] },
   );
   closeSync(output);
   emulator.unref();
