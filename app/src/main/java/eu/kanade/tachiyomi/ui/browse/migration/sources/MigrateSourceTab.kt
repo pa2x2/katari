@@ -15,6 +15,7 @@ import eu.kanade.tachiyomi.ui.browse.migration.entry.MigrateEntriesScreen
 import mihon.feature.migration.review.SourceMigrationReviewScreen
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.automirroredrounded.Help
+import tachiyomi.core.common.Constants
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -32,7 +33,7 @@ fun Screen.migrateSourceTab(): TabContent {
                 title = stringResource(MR.strings.migration_help_guide),
                 icon = MaterialSymbols.AutoMirroredRounded.Help,
                 onClick = {
-                    uriHandler.openUri("https://mihon.app/docs/guides/source-migration")
+                    uriHandler.openUri("${Constants.URL_GUIDE}source-migration/")
                 },
             ),
         ),

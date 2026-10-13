@@ -390,7 +390,7 @@ private fun Screen.FeedsTabContent(
                                         )
                                     }
                                 },
-                                onHelpClick = { uriHandler.openUri(Constants.URL_HELP) },
+                                onHelpClick = { uriHandler.openUri(Constants.URL_HELP_TROUBLESHOOTING) },
                                 onLocalSourceHelpClick = { uriHandler.openUri(LocalSource.HELP_URL) },
                                 onItemClick = openItem,
                                 onItemLongClick = { item ->

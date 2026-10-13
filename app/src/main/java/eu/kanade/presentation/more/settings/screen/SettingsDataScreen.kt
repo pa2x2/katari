@@ -60,6 +60,7 @@ import mihon.entry.interactions.media.EntryMediaCacheFeature
 import mihon.entry.interactions.media.EntryMediaCacheId
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.automirroredrounded.Help
+import tachiyomi.core.common.Constants
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.storage.displayablePath
 import tachiyomi.core.common.util.lang.launchNonCancellable
@@ -79,7 +80,7 @@ import uy.kohesive.injekt.api.get
 object SettingsDataScreen : SearchableSettings {
 
     val restorePreferenceKeyString = MR.strings.label_backup
-    const val HELP_URL = "https://mihon.app/docs/faq/storage"
+    const val HELP_URL = "${Constants.URL_GUIDE}backups-and-storage/"
 
     @ReadOnlyComposable
     @Composable
