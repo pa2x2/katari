@@ -1,0 +1,91 @@
+---
+import Callout from "../../guide/Callout.astro";
+import GuidePage from "../../guide/GuidePage.astro";
+import Path from "../../guide/Path.astro";
+import Task from "../../guide/Task.astro";
+import { leavesSite, REPOSITORY, sitePath } from "../../site/links.ts";
+---
+
+<GuidePage slug="troubleshooting" lead="The problems people run into most, and what fixes them.">
+  <Task id="verify" title="A source asks you to prove you're human">
+    <p>Sites behind Cloudflare and similar checks fail with <strong>Failed to bypass Cloudflare</strong> or an HTTP error such as 403.</p>
+    <ol>
+      <li>Open the title, or the source's error screen, and tap <strong>WebView</strong> (or <strong>Open in WebView</strong>).</li>
+      <li>Complete the check in the page that opens, then go back and tap <strong>Retry</strong>.</li>
+      <li>
+        Still failing? Under <Path>Settings › Advanced</Path>, tap <strong>Clear cookies</strong>, or <strong>Clear WebView data</strong>, and
+        try again.
+      </li>
+      <li>
+        Some sites block Katari's browser signature. Changing <strong>Default user agent string</strong> on the same screen, then restarting
+        Katari, can help.
+      </li>
+    </ol>
+    <p>Keep Android System WebView up to date; an old one fails these checks more often.</p>
+  </Task>
+
+  <Task id="source-errors" title="A source shows an error">
+    <ul>
+      <li><strong>HTTP 429</strong>: the site is limiting how often you ask. Wait a while, and check fewer titles at once.</li>
+      <li>Other <strong>HTTP</strong> codes: open the site in <strong>WebView</strong> to see what it says.</li>
+      <li><strong>No Internet connection</strong> or <strong>Couldn't reach</strong> the site: check the connection, or try <strong>DNS over HTTPS (DoH)</strong> under <Path>Settings › Advanced</Path>.</li>
+      <li><strong>Source not found</strong>: its extension is missing. Install it again from your extension store.</li>
+    </ul>
+  </Task>
+
+  <Task id="extensions" title="An extension doesn't show up">
+    <p>Under <Path>Browse › Extensions</Path>, extensions that can't be used are grouped with the reason:</p>
+    <table>
+      <thead>
+        <tr><th>Shown as</th><th>What to do</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Untrusted</strong></td><td>Tap <strong>Trust</strong> if you trust where it came from.</td></tr>
+        <tr><td><strong>Not loaded</strong></td><td>Tap the info button for the reason. Usually updating the extension or Katari helps.</td></tr>
+        <tr><td><strong>Filtered</strong></td><td>Its content warning is one you didn't allow. Change <strong>Allowed content warnings</strong> under <Path>Settings › Browse</Path>.</td></tr>
+        <tr><td><strong>Orphaned</strong></td><td>No store you've added lists it any more. Uninstall it, or add its store again.</td></tr>
+      </tbody>
+    </table>
+  </Task>
+
+  <Task id="background" title="Updates or backups stop in the background">
+    <p>
+      Android puts apps to sleep to save battery, and some phone makers do it hard. Under <Path>Settings › Advanced</Path>, tap
+      <strong>Disable battery optimization</strong>, then follow the steps for your phone on <a href="https://dontkillmyapp.com" {...leavesSite()}>Don't kill my app!</a>
+    </p>
+  </Task>
+
+  <Task id="models" title="Text recognition models don't download">
+    <p>
+      <strong>Waiting for a non-metered network</strong> means the download was approved for Wi-Fi only. Connect to Wi-Fi, or start it
+      again and tick <strong>Allow download over mobile data</strong>. <strong>Not enough storage</strong> needs space freed first. See
+      <a href={sitePath("guide/translation/#text-recognition")}>Translation</a>.
+    </p>
+  </Task>
+
+  <Task id="app-update" title="An app update won't install">
+    <ul>
+      <li>
+        <strong>This update is signed with a different key than the installed app</strong>: the Katari you have was built by someone else,
+        and Android won't replace it. <a href={sitePath("guide/backups-and-storage/#backup")}>Back up</a>, uninstall it, install Katari from
+        the <a href={`${REPOSITORY}/releases/latest`} {...leavesSite()}>release page</a>, and restore the backup.
+      </li>
+      <li><strong>GitHub is limiting update checks from this network</strong>: try again later.</li>
+      <li><strong>There isn't enough free storage to install the update</strong>: free some space and try again.</li>
+    </ul>
+    <Callout label="Two apps">
+      <p>
+        Katari and Katari FOSS are separate apps with separate libraries. Installing one doesn't update or replace the other; move your
+        library between them with a <a href={sitePath("guide/backups-and-storage/#backup")}>backup</a>.
+      </p>
+    </Callout>
+  </Task>
+
+  <Task id="report" title="Report a problem">
+    <ol>
+      <li>Under <Path>Settings › Advanced</Path>, tap <strong>Share crash logs</strong> and save the file.</li>
+      <li>In <Path>Settings › About</Path>, tap <strong>Version</strong> to copy the version details.</li>
+      <li>Open an <a href={`${REPOSITORY}/issues`} {...leavesSite()}>issue on GitHub</a> with both, and the steps that lead to the problem.</li>
+    </ol>
+  </Task>
+</GuidePage>

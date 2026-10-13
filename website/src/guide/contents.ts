@@ -39,6 +39,7 @@ export const guide: GuideGroup[] = [
       { slug: "tracking", title: "Tracking", summary: "Send your progress to AniList, MyAnimeList and other trackers." },
       { slug: "local-source", title: "Local source", summary: "Read comics from your own files." },
       { slug: "source-migration", title: "Moving to another source", summary: "Move titles to a new source and keep what you've read." },
+      { slug: "troubleshooting", title: "Troubleshooting", summary: "Cloudflare checks, missing extensions, stopped updates, failed installs." },
     ],
   },
 ];
