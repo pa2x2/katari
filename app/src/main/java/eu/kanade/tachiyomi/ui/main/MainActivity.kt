@@ -78,6 +78,7 @@ import eu.kanade.presentation.components.AppStateBanners
 import eu.kanade.presentation.components.DownloadedOnlyBannerBackgroundColor
 import eu.kanade.presentation.components.IncognitoModeBannerBackgroundColor
 import eu.kanade.presentation.components.IndexingBannerBackgroundColor
+import eu.kanade.presentation.more.AppMigratingScreen
 import eu.kanade.presentation.more.settings.screen.browse.ExtensionStoresScreen
 import eu.kanade.presentation.more.settings.screen.data.RestoreBackupScreen
 import eu.kanade.presentation.util.AssistContentScreen
@@ -89,6 +90,7 @@ import eu.kanade.tachiyomi.extension.ExtensionManager
 import eu.kanade.tachiyomi.ui.base.activity.BaseActivity
 import eu.kanade.tachiyomi.ui.base.delegate.SecureActivityDelegate
 import eu.kanade.tachiyomi.ui.base.delegate.requestAppUnlock
+import eu.kanade.tachiyomi.ui.base.migration.rememberAppMigrating
 import eu.kanade.tachiyomi.ui.browse.BrowseTab
 import eu.kanade.tachiyomi.ui.browse.catalog.CatalogScreen
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchScreen
@@ -119,7 +121,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import logcat.LogPriority
-import mihon.core.migration.Migrator
 import mihon.entry.interactions.download.EntryDownloadRuntimeFeature
 import mihon.entry.interactions.media.EntryMediaCacheClearResult
 import mihon.entry.interactions.media.EntryMediaCacheFeature
@@ -208,8 +209,6 @@ class MainActivity : BaseActivity() {
 
         super.onCreate(savedInstanceState)
 
-        Migrator.awaitAndRelease()
-
         // Do not let the launcher create a new activity http://stackoverflow.com/questions/16283079
         if (!isTaskRoot) {
             finish()
@@ -217,6 +216,13 @@ class MainActivity : BaseActivity() {
         }
 
         setComposeContent {
+            if (rememberAppMigrating()) {
+                AppMigratingScreen()
+                // Release the splash screen so the reason for the wait shows
+                LaunchedEffect(Unit) { ready = true }
+                return@setComposeContent
+            }
+
             val context = LocalContext.current
             val scope = rememberCoroutineScope()
             val activity = context as MainActivity

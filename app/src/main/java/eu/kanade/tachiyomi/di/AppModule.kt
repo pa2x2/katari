@@ -28,7 +28,9 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.protobuf.ProtoBuf
 import logcat.LogPriority
+import mihon.data.database.DatabaseRepositoryImpl
 import mihon.data.database.createSqlDriver
+import mihon.domain.database.repository.DatabaseRepository
 import mihon.entry.interactions.download.markEntryDownloadRuntimeDependenciesRegistered
 import mihon.entry.interactions.host.AppEntryMergeDuplicateCandidateHost
 import mihon.entry.interactions.host.AppEntryMergeHost
@@ -120,11 +122,13 @@ class AppModule(val app: Application) : InjektModule {
         addSingleton(app)
         addSingleton<Context>(app)
 
+        addSingletonFactory { DatabaseRepositoryImpl() }
+        addSingletonFactory<DatabaseRepository> { get<DatabaseRepositoryImpl>() }
         addSingletonFactory<SqlDriver> {
             synchronized(lock) {
                 sqlDriverRef?.get()?.let { return@synchronized it }
 
-                createSqlDriver(app).also { sqlDriverRef = WeakReference(it) }
+                createSqlDriver(app, get()).also { sqlDriverRef = WeakReference(it) }
             }
         }
         addSingletonFactory {

@@ -3,11 +3,12 @@ package eu.kanade.tachiyomi.ui.setting
 import android.os.Bundle
 import androidx.activity.enableEdgeToEdge
 import cafe.adriel.voyager.navigator.Navigator
+import eu.kanade.presentation.more.AppMigratingScreen
 import eu.kanade.presentation.more.settings.screen.textrecognition.languages.TextRecognitionOverridePipelineScreen
 import eu.kanade.presentation.util.DefaultNavigatorScreenTransition
 import eu.kanade.tachiyomi.ui.base.activity.BaseActivity
+import eu.kanade.tachiyomi.ui.base.migration.rememberAppMigrating
 import eu.kanade.tachiyomi.util.view.setComposeContent
-import mihon.core.migration.Migrator
 import mihon.entry.viewer.settings.navigation.ViewerSettingsNavigation
 import mihon.language.api.tag.LanguageTag
 import mihon.text.recognition.api.host.TextRecognitionSettingsNavigation
@@ -22,7 +23,6 @@ class SettingsActivity : BaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        Migrator.awaitAndRelease()
         enableEdgeToEdge()
 
         val screen = when (intent.action) {
@@ -51,6 +51,11 @@ class SettingsActivity : BaseActivity() {
         }
 
         setComposeContent {
+            if (rememberAppMigrating()) {
+                AppMigratingScreen()
+                return@setComposeContent
+            }
+
             Navigator(screen = screen) { navigator ->
                 DefaultNavigatorScreenTransition(navigator)
             }

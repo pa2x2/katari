@@ -6,6 +6,7 @@ import androidx.sqlite.SQLiteConnection
 import androidx.sqlite.SQLiteDriver
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import androidx.sqlite.execSQL
+import app.cash.sqldelight.db.QueryResult
 import app.cash.sqldelight.db.SqlDriver
 import com.eygraber.sqldelight.androidx.driver.AndroidxSqliteConcurrencyModel.MultipleReadersSingleWriter
 import com.eygraber.sqldelight.androidx.driver.AndroidxSqliteConfiguration
@@ -20,7 +21,7 @@ import tachiyomi.data.Database
  * on every connection, so a connection waits for a lock held by another one instead of failing with SQLITE_BUSY.
  * Low-RAM devices get one reader instead of four, since each connection keeps its own page cache.
  */
-fun createSqlDriver(context: Context): SqlDriver {
+fun createSqlDriver(context: Context, databaseRepository: DatabaseRepositoryImpl): SqlDriver {
     val isLowRam = context.getSystemService(ActivityManager::class.java)?.isLowRamDevice == true
     return AndroidxSqliteDriver(
         connectionFactory = object : AndroidxSqliteConnectionFactory {
@@ -38,5 +39,13 @@ fun createSqlDriver(context: Context): SqlDriver {
             isForeignKeyConstraintsEnabled = true,
             concurrencyModel = MultipleReadersSingleWriter(isWal = true, walCount = if (isLowRam) 1 else 4),
         ),
+        // onConfigure runs before the driver compares the schema version, and onOpen once the schema is ready
+        onConfigure = {
+            val version = executePragmaQuery("user_version", { QueryResult.Value(it.apply { next() }.getLong(0)) })
+            databaseRepository.isMigrating.value = version in 1..<Database.Schema.version
+        },
+        onOpen = {
+            databaseRepository.isMigrating.value = false
+        },
     )
 }
