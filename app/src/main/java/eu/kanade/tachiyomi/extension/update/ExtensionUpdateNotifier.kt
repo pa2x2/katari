@@ -2,7 +2,6 @@ package eu.kanade.tachiyomi.extension.update
 
 import android.content.Context
 import androidx.core.app.NotificationCompat
-import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.core.security.SecurityPreferences
 import eu.kanade.tachiyomi.data.notification.NotificationReceiver
 import eu.kanade.tachiyomi.data.notification.Notifications
@@ -12,6 +11,7 @@ import tachiyomi.core.common.i18n.pluralStringResource
 import tachiyomi.i18n.*
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
+import mihon.icons.materialsymbols.R as MaterialSymbolsR
 
 class ExtensionUpdateNotifier(
     private val context: Context,
@@ -39,7 +39,7 @@ class ExtensionUpdateNotifier(
                 setContentText(extNames)
                 setStyle(NotificationCompat.BigTextStyle().bigText(extNames))
             }
-            setSmallIcon(R.drawable.ic_extension_24dp)
+            setSmallIcon(MaterialSymbolsR.drawable.rounded_filled_extension)
             setContentIntent(NotificationReceiver.openExtensionsPendingActivity(context))
             setAutoCancel(true)
         }
@@ -67,7 +67,7 @@ class ExtensionUpdateNotifier(
                 setContentText(extNames)
                 setStyle(NotificationCompat.BigTextStyle().bigText(extNames))
             }
-            setSmallIcon(R.drawable.ic_extension_24dp)
+            setSmallIcon(MaterialSymbolsR.drawable.rounded_filled_extension)
             setContentIntent(NotificationReceiver.openExtensionsPendingActivity(context))
             setAutoCancel(true)
         }

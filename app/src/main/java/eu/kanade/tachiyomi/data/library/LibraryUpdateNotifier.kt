@@ -49,6 +49,7 @@ import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.math.RoundingMode
 import java.text.NumberFormat
+import mihon.icons.materialsymbols.R as MaterialSymbolsR
 
 class LibraryUpdateNotifier(
     private val context: Context,
@@ -81,11 +82,15 @@ class LibraryUpdateNotifier(
     val progressNotificationBuilder by lazy {
         context.notificationBuilder(Notifications.CHANNEL_LIBRARY_PROGRESS) {
             setContentTitle(context.stringResource(MR.strings.app_name))
-            setSmallIcon(R.drawable.ic_refresh_24dp)
+            setSmallIcon(MaterialSymbolsR.drawable.rounded_refresh)
             setLargeIcon(notificationBitmap)
             setOngoing(true)
             setOnlyAlertOnce(true)
-            addAction(R.drawable.ic_close_24dp, context.stringResource(MR.strings.action_cancel), cancelIntent)
+            addAction(
+                MaterialSymbolsR.drawable.rounded_close,
+                context.stringResource(MR.strings.action_cancel),
+                cancelIntent,
+            )
         }
     }
 
@@ -148,7 +153,7 @@ class LibraryUpdateNotifier(
             Notifications.CHANNEL_LIBRARY_PROGRESS,
         ) {
             setContentTitle(context.stringResource(MR.strings.label_warning))
-            setSmallIcon(R.drawable.ic_warning_white_24dp)
+            setSmallIcon(MaterialSymbolsR.drawable.rounded_filled_warning)
             setTimeoutAfter(WARNING_NOTIF_TIMEOUT_MS)
             if (rulesProfileId != null) {
                 setStyle(
@@ -164,7 +169,7 @@ class LibraryUpdateNotifier(
                     ),
                 )
                 addAction(
-                    R.drawable.ic_warning_white_24dp,
+                    MaterialSymbolsR.drawable.rounded_filled_warning,
                     context.stringResource(MR.strings.action_learn_more),
                     helpIntent,
                 )
@@ -309,14 +314,14 @@ class LibraryUpdateNotifier(
 
             if (EntryLibraryUpdateNotificationAction.MARK_CONSUMED in update.actions) {
                 addAction(
-                    R.drawable.ic_done_24dp,
+                    MaterialSymbolsR.drawable.rounded_check,
                     context.stringResource(update.markConsumedLabel),
                     update.markConsumedIntent(context, route.summaryNotificationId),
                 )
             }
             if (EntryLibraryUpdateNotificationAction.VIEW_ENTRY in update.actions) {
                 addAction(
-                    R.drawable.ic_book_24dp,
+                    MaterialSymbolsR.drawable.rounded_book,
                     context.stringResource(update.viewChildrenLabel),
                     update.viewEntryIntent(context, route.summaryNotificationId),
                 )

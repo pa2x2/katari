@@ -108,6 +108,7 @@ import java.util.IdentityHashMap
 import kotlin.math.abs
 import kotlin.math.pow
 import kotlin.math.roundToInt
+import mihon.icons.materialsymbols.R as MaterialSymbolsR
 
 private const val SIDE_GESTURE_VERTICAL_RATIO = 1.35f
 private const val SIDE_GESTURE_ZONE_HORIZONTAL_INSET_FRACTION = 0.1f
@@ -1952,7 +1953,11 @@ class VideoPlayerActivity : AppCompatActivity() {
         } else {
             stringResource(MR.strings.action_play)
         }
-        val iconRes = if (isPlaying) R.drawable.ic_pause_24dp else R.drawable.ic_play_arrow_24dp
+        val iconRes = if (isPlaying) {
+            MaterialSymbolsR.drawable.rounded_filled_pause
+        } else {
+            MaterialSymbolsR.drawable.rounded_filled_play_arrow
+        }
         val pendingIntent = PendingIntent.getBroadcast(
             this,
             0,
