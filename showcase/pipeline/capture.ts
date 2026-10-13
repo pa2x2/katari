@@ -118,6 +118,8 @@ async function prepare(device: Device): Promise<void> {
     device.adb("install", "-r", values["app-apk"]);
     // The seed restore scene waits for the notification the app posts once the restore is done.
     device.shell(`pm grant ${APP_ID} android.permission.POST_NOTIFICATIONS`);
+    // Without it, the extension list opens with a banner asking for it.
+    device.shell(`appops set ${APP_ID} REQUEST_INSTALL_PACKAGES allow`);
     device.adb("install", "-r", values["extension-apk"]);
     device.adb("install", "-r", "-t", values["capture-apk"]);
     await installOfflineTranslator(device);

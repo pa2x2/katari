@@ -65,6 +65,8 @@ export interface BackupEntry {
   progressStates: BackupBookProgressState[];
   /** Epoch milliseconds of the last library update that checked the entry. */
   lastUpdate: number;
+  /** Epoch milliseconds the entry's next chapter is expected; finished works expect none. */
+  nextUpdate?: number;
   activitySessions: BackupActivitySession[];
   activityCompletions: BackupActivityCompletion[];
   /** Epoch milliseconds from which the entry's activity counts as precisely tracked. */
@@ -260,6 +262,7 @@ function encodeEntry(writer: ProtoWriter, entry: BackupEntry): void {
         .string(7, "consumption"),
     )
     .int(42, entry.statisticsEpoch)
+    .int(45, entry.nextUpdate)
     .int(100, ENTRY_TYPE_ORDINALS[entry.type]);
 }
 

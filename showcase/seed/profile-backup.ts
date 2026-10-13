@@ -10,7 +10,7 @@ import type {
   ProfileScopedBackup,
 } from "./backup-messages.ts";
 import { bookPosition } from "./book-position.ts";
-import { newChapters, type ProfilePlan } from "./library-plan.ts";
+import { NEXT_CHAPTER_EXPECTED_AT, newChapters, type ProfilePlan } from "./library-plan.ts";
 import { chapterUrl, readingHistory, type WorkHistory } from "./reading-history.ts";
 import { LIBRARY_UPDATED_AT, SHOWCASE_NOW, STATISTICS_EPOCH } from "./showcase-clock.ts";
 
@@ -79,6 +79,7 @@ export function profileBackup(
       playbackStates: history?.playbackStates ?? [],
       progressStates: history?.bookProgress ? [bookProgress(catalogWork, history.bookProgress)] : [],
       lastUpdate: LIBRARY_UPDATED_AT,
+      nextUpdate: catalogWork.status === "ongoing" ? NEXT_CHAPTER_EXPECTED_AT : undefined,
       activitySessions: history?.sessions ?? [],
       activityCompletions: history?.completions ?? [],
       statisticsEpoch: STATISTICS_EPOCH,

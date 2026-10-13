@@ -25,6 +25,19 @@ class StatisticsScenes {
         capture("statistics-year")
     }
 
+    /** The daily goal sits at the end of the sheet, below the cards. */
+    @Test
+    fun customize() {
+        openStatistics()
+        tap(By.desc("More options"))
+        tap(By.text("Customize"))
+        val sheet = find(By.scrollable(true))
+        do {
+            val more = sheet.scroll(Direction.DOWN, 1f, SCROLL_PX_PER_SECOND)
+        } while (more)
+        capture("statistics-customize")
+    }
+
     private companion object {
         const val SCROLL_PX_PER_SECOND = 100
     }
