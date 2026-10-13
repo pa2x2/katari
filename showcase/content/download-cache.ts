@@ -6,7 +6,8 @@
  * upstream site serves at the same URL by then, and the capture run shows any visible difference in the screenshots it
  * proposes. Delete the cache folder to download everything again.
  *
- * Every download is logged, so a run that needed none shows that it needed none.
+ * A cached file a run reads gets its modification time renewed, so CI can tell what a run used from what only an earlier
+ * one needed, and keep only the former. Every download is logged, so a run that needed none shows that it needed none.
  */
 import { createHash } from "node:crypto";
 import {
@@ -16,6 +17,7 @@ import {
   readFileSync,
   renameSync,
   unlinkSync,
+  utimesSync,
   writeFileSync,
 } from "node:fs";
 import { homedir } from "node:os";
@@ -107,8 +109,12 @@ function rangePath(url: string, range: string): string {
   return join(downloadsDir(), urlKey(`${url}#${range}`));
 }
 
+/** Whether [path] is in the cache, renewing its modification time when it is: see the top of this file. */
 function isCached(path: string): boolean {
-  return existsSync(path);
+  if (!existsSync(path)) return false;
+  const now = new Date();
+  utimesSync(path, now, now);
+  return true;
 }
 
 function once(path: string, write: () => Promise<void>): Promise<void> {

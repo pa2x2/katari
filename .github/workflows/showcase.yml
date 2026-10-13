@@ -26,6 +26,8 @@ jobs:
     runs-on: ubuntu-26.04
     timeout-minutes: 120
     permissions:
+      # Reads the downloads an earlier run kept.
+      actions: read
       contents: read
     outputs:
       differences: ${{ steps.compare.outputs.differences }}
@@ -95,19 +97,33 @@ jobs:
             echo "$tools/bin"
           } >> "$GITHUB_PATH"
 
-      # Outside the checkout, by an absolute path, which actions/cache needs. The runner context that names the runner's
-      # temporary folder is not available to the job's env.
+      # Outside the checkout, by an absolute path. The runner context that names the runner's temporary folder is not
+      # available to the job's env.
       - name: Locate the showcase cache
         run: echo "KATARI_SHOWCASE_CACHE=$RUNNER_TEMP/showcase-cache" >> "$GITHUB_ENV"
 
-      # Upstream sites such as Project Gutenberg go down for hours, so a run reuses what earlier runs downloaded for the
-      # same content definitions, and only has to reach them when those change.
+      # Upstream sites such as Project Gutenberg go down for hours and Wikimedia limits how often it is asked, so a run
+      # starts from what the last run that downloaded anything kept. It is an artifact rather than an Actions cache: a
+      # release's run can only read caches of its tag and of main, and the build's Gradle caches, written on every push
+      # to upcoming, evict the rest of a repository's caches within hours.
       - name: Restore the showcase downloads
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ${{ env.KATARI_SHOWCASE_CACHE }}/downloads
-          key: showcase-downloads-${{ hashFiles('showcase/content/**') }}-${{ github.run_id }}-${{ github.run_attempt }}
-          restore-keys: showcase-downloads-${{ hashFiles('showcase/content/**') }}-
+        id: restore
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          downloads="$KATARI_SHOWCASE_CACHE/downloads"
+          mkdir -p "$downloads"
+          run="$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts?name=showcase-downloads&per_page=1" \
+            --jq '.artifacts[] | select(.expired | not) | .workflow_run.id')"
+          if [[ -n "$run" ]]; then
+            gh run download "$run" --repo "$GITHUB_REPOSITORY" --name showcase-downloads --dir "$downloads"
+          fi
+          # Written after the restore, so that the files the run reads, whose modification time the download cache renews,
+          # are newer than it and the rest are not.
+          ls "$downloads" > "$RUNNER_TEMP/restored-downloads"
+          echo "Restored $(wc -l < "$RUNNER_TEMP/restored-downloads") downloads${run:+ from run $run}."
 
       # Before the build, so that an upstream site that cannot be reached fails the run in seconds.
       - name: Fetch the showcase content
@@ -121,17 +137,44 @@ jobs:
         run: ./gradlew :app:assembleBenchmark :showcase:extension:assembleDebug :showcase:capture:assembleBenchmark
 
       - name: Capture
+        id: capture
         working-directory: showcase
         run: npm run capture -- --out "$RUNNER_TEMP/captures"
 
-      # Also after a failure, so a later run starts from whatever this one managed to download, the film the player
-      # streamed included.
-      - name: Save the showcase downloads
-        if: always()
-        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      - name: Note whether the run changed the downloads
+        id: downloads
+        if: always() && steps.restore.outcome == 'success'
+        env:
+          CAPTURED: ${{ steps.capture.outcome }}
+        run: |
+          set -euo pipefail
+
+          downloads="$KATARI_SHOWCASE_CACHE/downloads"
+          find "$downloads" -name '*.partial' -delete
+          # Once every scene has run, what the run did not read goes, which is how a download sources.ts no longer
+          # needs leaves. A failed run keeps it all, since the scenes after the failure never read theirs.
+          if [[ "$CAPTURED" == success ]]; then
+            find "$downloads" -type f ! -newer "$RUNNER_TEMP/restored-downloads" -delete
+          fi
+          ls "$downloads" > "$RUNNER_TEMP/kept-downloads"
+          if cmp -s "$RUNNER_TEMP/restored-downloads" "$RUNNER_TEMP/kept-downloads"; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Only when something changed, so the latest one is the one to restore. Also after a failure, so a later run starts
+      # from whatever this one managed to download, the film the player streamed included.
+      - name: Keep the showcase downloads for later runs
+        if: always() && steps.downloads.outputs.changed == 'true'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
+          name: showcase-downloads
           path: ${{ env.KATARI_SHOWCASE_CACHE }}/downloads
-          key: showcase-downloads-${{ hashFiles('showcase/content/**') }}-${{ github.run_id }}-${{ github.run_attempt }}
+          # Books and videos are compressed already.
+          compression-level: 0
+          # A rerun of the job replaces what its earlier attempt kept.
+          overwrite: true
 
       - name: Upload what the failed capture left
         if: failure()
@@ -140,6 +183,7 @@ jobs:
           name: showcase-failure
           path: ${{ runner.temp }}/captures
           if-no-files-found: ignore
+          overwrite: true
 
       - name: Compare with the published captures
         id: compare
@@ -161,6 +205,7 @@ jobs:
         with:
           name: showcase-proposal
           path: ${{ runner.temp }}/proposal
+          overwrite: true
 
   propose:
     name: Propose the changed captures
