@@ -1,4 +1,15 @@
 /* What every guide page's text shares: numbered steps and plain lists, written straight into each page's markup. */
+.guide main {
+  font-size: 1.125rem;
+}
+
+/* Lines short enough for the eye to find the start of the next one: 70ch, about 85 letters of Inter. Tables and
+   screenshots still take the whole column. */
+.guide main :is(p, ol, ul:not([class])) {
+  max-width: 70ch;
+  line-height: 1.65;
+}
+
 .guide main ol,
 .guide main ul:not([class]) {
   margin: 0 0 1rem;
@@ -13,7 +24,7 @@
 .guide main ol > li {
   position: relative;
   padding: 0.15rem 0 0.7rem 2.4rem;
-  color: var(--muted);
+  color: var(--text);
   counter-increment: step;
 }
 
@@ -36,7 +47,7 @@
 .guide main ul:not([class]) > li {
   position: relative;
   padding: 0.15rem 0 0.5rem 1.5rem;
-  color: var(--muted);
+  color: var(--text);
 }
 
 .guide main ul:not([class]) > li::before {
@@ -52,15 +63,12 @@
 
 .guide main p {
   margin: 0 0 1rem;
-  color: var(--muted);
+  color: var(--text);
 }
 
-.guide main :is(li, p, td) :is(strong, em) {
-  color: var(--cream);
-}
-
+/* The app's labels stand out by weight alone; a brighter colour too would make every paragraph flicker. */
 .guide main strong {
-  font-weight: 600;
+  font-weight: 650;
 }
 
 /* Pagefind runs adjacent cells' text together in its excerpts, so pages keep a space between one cell's tags and the next. */
@@ -68,21 +76,21 @@
   width: 100%;
   margin: 0 0 1.25rem;
   border-collapse: collapse;
-  font-size: 0.95rem;
+  font-size: 0.9em;
 }
 
 .guide main th {
   padding: 0.5rem 0.75rem 0.5rem 0;
   border-bottom: 1px solid var(--indigo-light);
-  color: var(--cream);
-  font-weight: 600;
+  color: var(--text);
+  font-weight: 650;
   text-align: left;
 }
 
 .guide main td {
   padding: 0.5rem 0.75rem 0.5rem 0;
   border-bottom: 1px solid #1a2438;
-  color: var(--muted);
+  color: var(--text);
   vertical-align: top;
 }
 

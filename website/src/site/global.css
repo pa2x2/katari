@@ -11,6 +11,8 @@
   --clay: #d8895f;
   --cream: #f4f1e8;
   --muted: #a9b1c4;
+  /* Running text: softer than the headings' cream, which glares across a whole paragraph on a dark page. */
+  --text: #d6dbe5;
   --serif: "Shippori Mincho", serif;
   --sans: "Inter Variable", system-ui, sans-serif;
   --page-width: 100rem;
