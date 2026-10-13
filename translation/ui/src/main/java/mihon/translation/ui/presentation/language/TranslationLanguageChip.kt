@@ -7,9 +7,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.ArrowForward
-import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -22,6 +19,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.automirroredrounded.ArrowForward
+import mihon.icons.materialsymbols.rounded.ArrowDropDown
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -78,7 +78,7 @@ internal fun TranslationLanguageChipPair(
 @Composable
 internal fun TranslationLanguageArrow() {
     Icon(
-        imageVector = Icons.AutoMirrored.Outlined.ArrowForward,
+        imageVector = MaterialSymbols.AutoMirroredRounded.ArrowForward,
         contentDescription = null,
         modifier = Modifier
             .padding(horizontal = 4.dp)
@@ -116,7 +116,7 @@ private fun TranslationLanguageChip(
                 overflow = TextOverflow.Ellipsis,
             )
             Icon(
-                imageVector = Icons.Filled.ArrowDropDown,
+                imageVector = MaterialSymbols.Rounded.ArrowDropDown,
                 contentDescription = null,
                 modifier = Modifier.size(18.dp),
             )

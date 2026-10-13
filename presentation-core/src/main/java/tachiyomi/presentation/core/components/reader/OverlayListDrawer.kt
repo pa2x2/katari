@@ -17,8 +17,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -31,6 +29,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Close
 
 /** Reusable modal side drawer for reader/player navigation lists. */
 @Composable
@@ -103,7 +103,7 @@ fun OverlayListDrawer(
                             }
                             IconButton(onClick = onDismissRequest) {
                                 Icon(
-                                    imageVector = Icons.Filled.Close,
+                                    imageVector = MaterialSymbols.Rounded.Close,
                                     contentDescription = closeDescription,
                                 )
                             }

@@ -6,8 +6,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
@@ -24,6 +22,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Check
 import mihon.language.api.tag.LanguageTag
 import mihon.translation.ui.presentation.language.TranslationDirectionText
 import tachiyomi.i18n.*
@@ -195,7 +195,7 @@ private fun TranslationPickerRow(
         trailingContent = if (selected) {
             {
                 Icon(
-                    imageVector = Icons.Filled.Check,
+                    imageVector = MaterialSymbols.Rounded.Check,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.primary,
                 )

@@ -26,6 +26,7 @@ kotlin {
 dependencies {
     api(projects.core.common)
     implementation(projects.domain)
+    implementation(projects.icons.materialSymbols)
     api(projects.i18n)
 
     // Compose

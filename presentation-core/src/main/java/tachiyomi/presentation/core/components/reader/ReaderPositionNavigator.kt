@@ -14,9 +14,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.SkipNext
-import androidx.compose.material.icons.outlined.SkipPrevious
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonColors
@@ -46,6 +43,9 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.SkipNext
+import mihon.icons.materialsymbols.rounded.SkipPrevious
 
 /** Shared reader seek control; callers define the position units and commit policy. */
 @Composable
@@ -176,7 +176,7 @@ private fun HorizontalReaderPageNavigator(
             SectionButton(
                 enabled = if (isRtl) nextSectionEnabled else previousSectionEnabled,
                 onClick = if (isRtl) onNextSection else onPreviousSection,
-                icon = Icons.Outlined.SkipPrevious,
+                icon = MaterialSymbols.Rounded.SkipPrevious,
                 description = if (isRtl) nextSectionDescription else previousSectionDescription,
                 colors = buttonColor,
             )
@@ -246,7 +246,7 @@ private fun HorizontalReaderPageNavigator(
             SectionButton(
                 enabled = if (isRtl) previousSectionEnabled else nextSectionEnabled,
                 onClick = if (isRtl) onPreviousSection else onNextSection,
-                icon = Icons.Outlined.SkipNext,
+                icon = MaterialSymbols.Rounded.SkipNext,
                 description = if (isRtl) previousSectionDescription else nextSectionDescription,
                 colors = buttonColor,
             )
@@ -283,7 +283,7 @@ private fun VerticalReaderPageNavigator(
         SectionButton(
             enabled = previousSectionEnabled,
             onClick = onPreviousSection,
-            icon = Icons.Outlined.SkipPrevious,
+            icon = MaterialSymbols.Rounded.SkipPrevious,
             description = previousSectionDescription,
             colors = buttonColor,
             modifier = Modifier.rotate(90f),
@@ -327,7 +327,7 @@ private fun VerticalReaderPageNavigator(
         SectionButton(
             enabled = nextSectionEnabled,
             onClick = onNextSection,
-            icon = Icons.Outlined.SkipNext,
+            icon = MaterialSymbols.Rounded.SkipNext,
             description = nextSectionDescription,
             colors = buttonColor,
             modifier = Modifier.rotate(90f),

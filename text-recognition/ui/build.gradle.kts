@@ -12,6 +12,7 @@ dependencies {
     api(projects.textRecognition.api)
     api(projects.modelArtifacts.api)
 
+    implementation(projects.icons.materialSymbols)
     implementation(projects.modelArtifacts.ui)
     implementation(projects.presentationCore)
     implementation(libs.androidx.compose.foundation)

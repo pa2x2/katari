@@ -9,9 +9,6 @@ import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.TextObfuscationMode
 import androidx.compose.foundation.text.input.rememberTextFieldState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Visibility
-import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -37,6 +34,9 @@ import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.theme.TachiyomiPreviewTheme
 import kotlinx.coroutines.launch
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Visibility
+import mihon.icons.materialsymbols.rounded.VisibilityOff
 import mihon.translation.provider.server.R
 import mihon.translation.provider.server.ServerEndpointPolicy
 import mihon.translation.provider.server.setup.components.ProviderInformationCard
@@ -200,9 +200,9 @@ private fun ServerSetupScreen(
                 ) {
                     Icon(
                         imageVector = if (apiKeyVisible) {
-                            Icons.Outlined.VisibilityOff
+                            MaterialSymbols.Rounded.VisibilityOff
                         } else {
-                            Icons.Outlined.Visibility
+                            MaterialSymbols.Rounded.Visibility
                         },
                         contentDescription = stringResource(
                             if (apiKeyVisible) {

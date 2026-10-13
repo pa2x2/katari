@@ -11,6 +11,7 @@ android {
 dependencies {
     api(projects.tts.api)
 
+    implementation(projects.icons.materialSymbols)
     implementation(projects.presentationCore)
     implementation(libs.androidx.compose.foundation)
     implementation(libs.androidx.compose.material3)

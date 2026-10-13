@@ -11,6 +11,7 @@ android {
 dependencies {
     api(projects.translation.api)
 
+    implementation(projects.icons.materialSymbols)
     implementation(projects.presentationCore)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.foundation)
