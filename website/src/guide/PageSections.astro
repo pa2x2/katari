@@ -8,7 +8,7 @@ interface Props {
 const { sections } = Astro.props;
 ---
 
-{/* Beside the page on wide screens; on a phone it folds into one button above the title, so it never pushes the page down.
+{/* Beside the page on wide screens; narrower, it folds into one button above the title, so it never pushes the page down.
     It starts open, so that without the script the sections stay reachable everywhere. */}
 <details class="sections" open>
   <summary>On this page <span></span></summary>
@@ -32,8 +32,8 @@ const { sections } = Astro.props;
   const targets = links.map((link) => document.getElementById(link.hash.slice(1))!);
   const current = contents.querySelector("summary span")!;
 
-  // Open beside the page on wide screens, where its button is hidden; folded on phones; following the window as it resizes.
-  const wide = matchMedia("(min-width: 60rem)");
+  // Open beside the page on wide screens, where its button is hidden; folded above it otherwise; following the window as it resizes.
+  const wide = matchMedia("(min-width: 88rem)");
   const follow = () => {
     contents.open = wide.matches;
   };
@@ -155,7 +155,7 @@ const { sections } = Astro.props;
     color: var(--cream);
   }
 
-  @media (min-width: 60rem) {
+  @media (min-width: 88rem) {
     summary {
       display: none;
     }

@@ -30,7 +30,7 @@ body {
 }
 
 body.wide {
-  --page-width: 84rem;
+  --page-width: 100rem;
 }
 
 a {

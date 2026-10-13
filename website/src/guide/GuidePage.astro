@@ -3,6 +3,7 @@ import Viewer from "../media/Viewer.astro";
 import { leavesSite, REPOSITORY, sitePath } from "../site/links.ts";
 import Page from "../site/Page.astro";
 import { guideEntry } from "./contents.ts";
+import GuideContents from "./GuideContents.astro";
 import PageSections from "./PageSections.astro";
 import "./guide.css";
 
@@ -22,7 +23,10 @@ const sections = Astro.locals.guideSections;
 
 <Page title={`${entry.title} — Katari guide`} description={entry.summary} wide>
   <div class="guide">
-    <aside>
+    <aside class="pages">
+      <GuideContents current={entry} />
+    </aside>
+    <aside class="sections">
       <PageSections sections={sections} />
     </aside>
     <main data-pagefind-body>
@@ -60,16 +64,32 @@ const sections = Astro.locals.guideSections;
 </Page>
 
 <style>
+  /* The guide's pages on the left and the page's own sections on the right, each beside the article rather than
+     taken out of its width. Narrower windows fold the sections, then the pages too, into buttons above the article. */
   .guide {
     display: grid;
-    grid-template-columns: 15rem minmax(0, 1fr);
-    gap: 4rem;
+    grid-template-columns: 14rem minmax(0, 60rem) 14rem;
+    grid-template-areas: "pages main sections";
+    justify-content: center;
+    column-gap: 3rem;
     max-width: var(--page-width);
     margin: 0 auto;
     padding: 3rem var(--gutter) 0;
   }
 
-  /* The contents stay in view while the page scrolls past them. */
+  main {
+    grid-area: main;
+  }
+
+  .pages {
+    grid-area: pages;
+  }
+
+  .sections {
+    grid-area: sections;
+  }
+
+  /* Both stay in view while the article scrolls past them. */
   aside {
     position: sticky;
     top: calc(var(--header-height) + 2rem);
@@ -136,16 +156,46 @@ const sections = Astro.locals.guideSections;
     text-align: right;
   }
 
-  @media (max-width: 60rem) {
+  @media (width < 88rem) {
+    .guide {
+      grid-template-columns: 14rem minmax(0, 1fr);
+      grid-template-areas:
+        "pages sections"
+        "pages main";
+    }
+
+    .sections {
+      position: static;
+      max-height: none;
+      margin-bottom: 1.75rem;
+    }
+
+    .pages {
+      grid-row: 1 / span 2;
+    }
+  }
+
+  @media (width < 60rem) {
     .guide {
       grid-template-columns: minmax(0, 1fr);
-      gap: 0;
+      grid-template-areas:
+        "pages"
+        "sections"
+        "main";
       padding-top: 1.5rem;
     }
 
     aside {
       position: static;
       max-height: none;
+    }
+
+    .pages {
+      grid-row: auto;
+      margin-bottom: 0.75rem;
+    }
+
+    .sections {
       margin-bottom: 1.75rem;
     }
   }
