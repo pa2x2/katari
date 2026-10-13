@@ -28,6 +28,9 @@ fun rememberAppMigrating(): Boolean {
         Migrator.awaitAndRelease()
         appMigrating = false
     }
+    // Uncaught on purpose: a failed database migration otherwise leaves the migrating screen up for good, while the
+    // crash screen tells what went wrong and lets the logs be shared
+    LaunchedEffect(Unit) { databaseRepository.awaitOpen() }
     val databaseMigrating by databaseRepository.isMigrating.collectAsState()
 
     val migrating = appMigrating || databaseMigrating

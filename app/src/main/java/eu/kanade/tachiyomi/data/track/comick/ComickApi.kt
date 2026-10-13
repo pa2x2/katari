@@ -31,6 +31,7 @@ import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import tachiyomi.core.common.util.lang.withIOContext
 import uy.kohesive.injekt.injectLazy
+import java.math.RoundingMode
 import kotlin.time.Duration.Companion.minutes
 import tachiyomi.domain.track.model.EntryTrack as DomainTrack
 
@@ -73,7 +74,7 @@ class ComickApi(
                 put("status", track.status.toApiListStatus())
                 if (track.last_chapter_read > 0) {
                     putJsonObject("progress") {
-                        put("number", track.last_chapter_read)
+                        put("number", track.last_chapter_read.toProgressNumber())
                     }
                 } else {
                     put("progress", null)
@@ -136,7 +137,7 @@ class ComickApi(
                 put("rating", track.score.toInt().takeIf { it > 0 })
                 put("status", track.status.toApiListStatus())
                 putJsonObject("progress") {
-                    put("number", track.last_chapter_read.toString())
+                    put("number", track.last_chapter_read.toProgressNumber())
                 }
             }
                 .toString()
@@ -291,4 +292,9 @@ class ComickApi(
             ),
         )
     }
+}
+
+// A raw Double shows on Comick with float noise, e.g. 35.019996643066406
+private fun Double.toProgressNumber(): String {
+    return toBigDecimal().setScale(2, RoundingMode.HALF_UP).stripTrailingZeros().toPlainString()
 }

@@ -122,7 +122,7 @@ class AppModule(val app: Application) : InjektModule {
         addSingleton(app)
         addSingleton<Context>(app)
 
-        addSingletonFactory { DatabaseRepositoryImpl() }
+        addSingletonFactory { DatabaseRepositoryImpl(lazy { get<SqlDriver>() }) }
         addSingletonFactory<DatabaseRepository> { get<DatabaseRepositoryImpl>() }
         addSingletonFactory<SqlDriver> {
             synchronized(lock) {

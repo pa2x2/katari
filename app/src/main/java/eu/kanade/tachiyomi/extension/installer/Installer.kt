@@ -29,6 +29,8 @@ internal abstract class Installer(private val service: Service) {
     private val extensionManager: ExtensionManager by injectLazy()
 
     private var waitingInstall = AtomicReference<Entry?>(null)
+
+    // Guarded by itself: a failed install continues the queue from the install scope, not only main
     private val queue = Collections.synchronizedList(mutableListOf<Entry>())
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
@@ -104,15 +106,15 @@ internal abstract class Installer(private val service: Service) {
         if (!ready) {
             return
         }
-        if (queue.isEmpty()) {
-            service.stopSelf()
-            return
-        }
-        val nextEntry = queue.first()
-        if (waitingInstall.compareAndSet(null, nextEntry)) {
+        val nextEntry = synchronized(queue) {
+            if (queue.isEmpty()) {
+                service.stopSelf()
+                return
+            }
+            if (!waitingInstall.compareAndSet(null, queue.first())) return
             queue.removeAt(0)
-            processEntry(nextEntry)
         }
+        processEntry(nextEntry)
     }
 
     /**
@@ -122,13 +124,13 @@ internal abstract class Installer(private val service: Service) {
     open fun onDestroy() {
         scope.cancel()
         installScope.cancel()
-        queue.forEach {
+        val remaining = synchronized(queue) { queue.toList().also { queue.clear() } }
+        remaining.forEach {
             extensionManager.updateInstallStep(
                 it.downloadId,
                 InstallStep.Error("The installer stopped before it got to this one"),
             )
         }
-        queue.clear()
         waitingInstall.store(null)
     }
 
@@ -142,7 +144,7 @@ internal abstract class Installer(private val service: Service) {
     private fun cancelQueue(downloadId: Long) {
         val waitingInstall = this.waitingInstall.load()
         // Every new install cancels its own package first, which must leave another package's active entry alone
-        val toCancel = queue.find { it.downloadId == downloadId }
+        val toCancel = synchronized(queue) { queue.find { it.downloadId == downloadId } }
             ?: waitingInstall?.takeIf { it.downloadId == downloadId }
             ?: return
         if (cancelEntry(toCancel)) {

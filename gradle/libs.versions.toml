@@ -19,6 +19,7 @@ androidx-glance = "1.2.0"
 androidx-interpolator = "1.0.0"
 androidx-lifecycle = "2.11.0"
 androidx-media3 = "1.11.1"
+androidx-navigationEvent = "1.2.0"
 androidx-paging = "3.5.2"
 androidx-preference = "1.2.1"
 androidx-profileInstaller = "1.4.1"
@@ -128,6 +129,7 @@ androidx-media3-exoplayer = { module = "androidx.media3:media3-exoplayer", versi
 androidx-media3-exoplayerHls = { module = "androidx.media3:media3-exoplayer-hls", version.ref = "androidx-media3" }
 androidx-media3-session = { module = "androidx.media3:media3-session", version.ref = "androidx-media3" }
 androidx-media3-ui = { module = "androidx.media3:media3-ui", version.ref = "androidx-media3" }
+androidx-navigationEvent = { module = "androidx.navigationevent:navigationevent", version.ref = "androidx-navigationEvent" }
 androidx-paging-compose = { module = "androidx.paging:paging-compose", version.ref = "androidx-paging" }
 androidx-paging-runtime = { module = "androidx.paging:paging-runtime", version.ref = "androidx-paging" }
 androidx-preference = { module = "androidx.preference:preference-ktx", version.ref = "androidx-preference" }

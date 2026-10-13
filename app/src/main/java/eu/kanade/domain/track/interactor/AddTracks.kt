@@ -5,8 +5,6 @@ import eu.kanade.domain.track.model.toDomainTrack
 import eu.kanade.tachiyomi.data.database.models.Track
 import eu.kanade.tachiyomi.data.track.EnhancedTracker
 import eu.kanade.tachiyomi.data.track.Tracker
-import eu.kanade.tachiyomi.util.lang.convertEpochMillisZone
-import kotlinx.datetime.TimeZone
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.core.common.util.lang.withNonCancellableContext
 import tachiyomi.domain.entry.model.Entry
@@ -55,10 +53,7 @@ class AddTracks(
                         .minOrNull()
 
                     firstReadChapterDate?.let {
-                        val startDate = firstReadChapterDate.time.convertEpochMillisZone(
-                            TimeZone.currentSystemDefault(),
-                            TimeZone.UTC,
-                        )
+                        val startDate = firstReadChapterDate.time
                         track = track.copy(
                             startDate = startDate,
                         )

@@ -9,6 +9,7 @@ import android.webkit.JsResult
 import android.webkit.RenderProcessGoneDetail
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -47,6 +48,7 @@ import eu.kanade.tachiyomi.BuildConfig
 import eu.kanade.tachiyomi.util.system.getHtml
 import eu.kanade.tachiyomi.util.system.setDefaultSettings
 import eu.kanade.tachiyomi.util.system.setUserAgent
+import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.launch
 import logcat.LogPriority
 import mihon.icons.materialsymbols.MaterialSymbols
@@ -141,6 +143,7 @@ fun WebViewScreenContent(
                 view.destroy()
                 if (!renderProcessGone) {
                     renderProcessGone = true
+                    view.context.toast(MR.strings.information_webview_crashed, Toast.LENGTH_LONG)
                     onNavigateUp()
                 }
                 return true

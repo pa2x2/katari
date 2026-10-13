@@ -28,7 +28,7 @@ internal class PagerViewerAdapter(private val viewer: PagerViewer) : ViewPagerAd
     /**
      * Holds preprocessed items so they don't get removed when changing chapter
      */
-    private var preprocessed: MutableMap<Int, InsertPage> = mutableMapOf()
+    private var preprocessed: List<InsertPage> = emptyList()
 
     var nextTransition: EntryChildTransition.Next<ReaderChapter>? = null
         private set
@@ -70,13 +70,15 @@ internal class PagerViewerAdapter(private val viewer: PagerViewer) : ViewPagerAd
 
             val lastPage = pages.last()
 
-            // Insert preprocessed pages into current page list
-            preprocessed.keys.sortedDescending()
-                .forEach { key ->
-                    if (lastPage.index == key) {
-                        insertPageLastPage = preprocessed[key]
+            // Insert preprocessed pages into current page list. Pages of the adjacent chapters are split too, and
+            // placed by their index, so only this chapter's belong here.
+            preprocessed.filter { it.chapter.chapter.id == chapters.current.chapter.id }
+                .sortedByDescending { it.index }
+                .forEach { page ->
+                    if (lastPage.index == page.index) {
+                        insertPageLastPage = page
                     }
-                    preprocessed[key]?.let { pages.add(key + 1, it) }
+                    pages.add(page.index + 1, page)
                 }
 
             newItems.addPages(pages)
@@ -98,6 +100,8 @@ internal class PagerViewerAdapter(private val viewer: PagerViewer) : ViewPagerAd
 
         newItems.addPages(chapters.next?.pages)
 
+        val currentItem = items.getOrNull(viewer.pager.currentItem)
+
         // Resets double-page splits, else insert pages get misplaced
         items.removeAll { item -> item is ReaderViewerItem.Page && item.page is InsertPage }
 
@@ -105,9 +109,18 @@ internal class PagerViewerAdapter(private val viewer: PagerViewer) : ViewPagerAd
             newItems.reverse()
         }
 
-        preprocessed = mutableMapOf()
+        val adjacentChapterIds = setOfNotNull(chapters.previous?.chapter?.id, chapters.next?.chapter?.id)
+        preprocessed = preprocessed.filter { it.chapter.chapter.id in adjacentChapterIds }
         items = newItems
         notifyDataSetChanged()
+
+        // The pager only follows the pages it has created, so before its first layout it would stay at the same
+        // position while pages are added in front, e.g. the next chapter's in right to left, and land in another
+        // chapter
+        val currentPosition = items.indexOf(currentItem)
+        if (currentPosition != -1 && currentPosition != viewer.pager.currentItem) {
+            viewer.pager.setCurrentItem(currentPosition, false)
+        }
 
         // Will skip insert page otherwise
         if (insertPageLastPage != null) {
@@ -159,9 +172,12 @@ internal class PagerViewerAdapter(private val viewer: PagerViewer) : ViewPagerAd
     fun onPageSplit(currentPage: ReaderPage, newPage: InsertPage) {
         val currentIndex = items.indexOf(ReaderViewerItem.Page(currentPage))
 
-        // Put aside preprocessed pages for next chapter so they don't get removed when changing chapter
+        // Put aside pages of an adjacent chapter until it becomes the current one, so they are not lost on the change
         if (currentPage.chapter.chapter.id != currentChapter?.chapter?.id) {
-            preprocessed[newPage.index] = newPage
+            val chapterId = newPage.chapter.chapter.id
+            if (preprocessed.none { it.chapter.chapter.id == chapterId && it.index == newPage.index }) {
+                preprocessed = preprocessed + newPage
+            }
             return
         }
 

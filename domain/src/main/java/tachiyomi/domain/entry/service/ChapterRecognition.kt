@@ -2,6 +2,7 @@ package tachiyomi.domain.entry.service
 
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
+import java.util.Locale
 import kotlin.math.floor
 import kotlin.math.round
 
@@ -76,9 +77,9 @@ object ChapterRecognition {
     private val prologue = Regex("""\b(?:prologue|one.?shot|pilot)\b""")
 
     /**
-     * Formats numbers without trailing zeros and with a dot whatever the locale, e.g. 10.5, 3, 24.005
+     * Formats numbers without trailing zeros, with ASCII digits and a dot whatever the locale, e.g. 10.5, 3, 24.005
      */
-    private val formatter = DecimalFormat("#.###", DecimalFormatSymbols().apply { decimalSeparator = '.' })
+    private val formatter = DecimalFormat("#.###", DecimalFormatSymbols(Locale.ROOT))
 
     /**
      * A chapter as the source lists it, with the number it gave, see [isKnown].
