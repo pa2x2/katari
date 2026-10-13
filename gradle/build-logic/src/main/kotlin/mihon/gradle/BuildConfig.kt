@@ -9,7 +9,7 @@ interface BuildConfig {
 }
 
 val Project.Config: BuildConfig get() = object : BuildConfig {
-    override val includeTelemetry: Boolean = project.hasProperty("include-telemetry")
-    override val enableUpdater: Boolean = project.hasProperty("enable-updater")
-    override val includeDependencyInfo: Boolean = project.hasProperty("include-dependency-info")
+    override val includeTelemetry: Boolean = providers.gradleProperty("include-telemetry").isPresent
+    override val enableUpdater: Boolean = providers.gradleProperty("enable-updater").isPresent
+    override val includeDependencyInfo: Boolean = providers.gradleProperty("include-dependency-info").isPresent
 }

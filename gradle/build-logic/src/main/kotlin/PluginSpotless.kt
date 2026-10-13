@@ -59,7 +59,7 @@ class PluginSpotless : Plugin<Project> {
             }
         }
 
-        if (this == rootProject) {
+        if (path == ":") {
             val boundaryCheck = tasks.register<EntryInteractionBoundaryCheckTask>("checkEntryInteractionBoundaries") {
                 description = "Checks Entry and application Feature boundary hardening rules."
                 group = "verification"

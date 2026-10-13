@@ -30,7 +30,7 @@ if (Config.includeTelemetry) {
     apply(plugin = libs.plugins.firebase.crashlytics.get().pluginId)
 }
 
-val keystorePropertiesFile = rootProject.file("keystore.properties")
+val keystorePropertiesFile = layout.settingsDirectory.file("keystore.properties").asFile
 
 /** ABIs of the published APKs; the in-app updater keeps its own copy in ReleaseApkSelection. */
 val releasedAbis = listOf("armeabi-v7a", "arm64-v8a")
@@ -517,7 +517,7 @@ androidComponents {
             ) {
                 this.variantName.set(variant.name)
                 moduleDescriptors.from(
-                    rootProject.fileTree(rootProject.layout.projectDirectory) {
+                    fileTree(layout.settingsDirectory) {
                         include("**/src/main/**/*.application-feature-module")
                         include("**/src/${variant.name}/**/*.application-feature-module")
                         exclude("**/build/**")
@@ -525,7 +525,7 @@ androidComponents {
                     },
                 )
                 componentDescriptors.from(
-                    rootProject.fileTree(rootProject.layout.projectDirectory) {
+                    fileTree(layout.settingsDirectory) {
                         include("**/src/main/**/*.application-feature-runtime-component")
                         include("**/src/${variant.name}/**/*.application-feature-runtime-component")
                         exclude("**/build/**")
