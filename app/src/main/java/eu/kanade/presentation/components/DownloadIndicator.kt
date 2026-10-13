@@ -37,12 +37,12 @@ import androidx.compose.ui.hapticfeedback.HapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
-import eu.kanade.tachiyomi.R
+import mihon.icons.custommaterialsymbols.CustomMaterialSymbols
+import mihon.icons.custommaterialsymbols.rounded.DownloadArrow
+import mihon.icons.custommaterialsymbols.rounded.DownloadCircle
 import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.ArrowDownward
 import mihon.icons.materialsymbols.rounded.Error
 import mihon.icons.materialsymbols.roundedfilled.CheckCircle
 import tachiyomi.presentation.core.components.material.IconButtonTokens
@@ -242,7 +242,7 @@ private fun NotDownloadedIndicator(
         contentAlignment = Alignment.Center,
     ) {
         Icon(
-            painter = painterResource(R.drawable.ic_download_chapter_24dp),
+            imageVector = CustomMaterialSymbols.Rounded.DownloadCircle,
             contentDescription = startContentDescription,
             modifier = Modifier
                 .size(IndicatorSize)
@@ -352,7 +352,7 @@ private fun DownloadingIndicator(
             MenuItems(menuItems, onDismiss = { isMenuExpanded = false })
         }
         Icon(
-            imageVector = MaterialSymbols.Rounded.ArrowDownward,
+            imageVector = CustomMaterialSymbols.Rounded.DownloadArrow,
             contentDescription = if (downloadState == DownloadIndicatorState.QUEUE) {
                 queuedContentDescription
             } else {
@@ -469,4 +469,4 @@ private val WavyIndicatorModifier = Modifier
     .padding(WavyIndicatorPadding)
 
 private val ArrowModifier = Modifier
-    .size(IndicatorSize - 7.dp)
+    .size(IndicatorSize)

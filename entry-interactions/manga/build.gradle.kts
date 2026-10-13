@@ -38,6 +38,7 @@ dependencies {
     implementation(projects.coreMetadata)
     implementation(projects.entryViewerSettingsUi)
     implementation(projects.i18n)
+    implementation(projects.icons.customMaterialSymbols)
     implementation(projects.icons.materialSymbols)
     implementation(projects.language.api)
     implementation(projects.modelArtifacts.ui)

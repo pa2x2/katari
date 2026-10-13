@@ -10,7 +10,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import kotlinx.coroutines.launch
@@ -33,7 +32,7 @@ internal fun RowScope.BookDocumentReadingModeShortcut(binding: ViewerSettingBind
         modifier = Modifier.semantics { stateDescription = description },
     ) {
         Icon(
-            painter = painterResource(mode.effectiveValue.iconRes),
+            imageVector = mode.effectiveValue.icon,
             contentDescription = stringResource(MR.strings.viewer),
         )
     }
@@ -48,7 +47,7 @@ internal fun RowScope.BookDocumentReadingModeShortcut(binding: ViewerSettingBind
             modes = BookDocumentReadingMode.entries,
             currentMode = mode.effectiveValue,
             modeLabel = BookDocumentReadingMode::stringRes,
-            modeIcon = BookDocumentReadingMode::iconRes,
+            modeIcon = BookDocumentReadingMode::icon,
             onApply = { selected ->
                 scope.launch {
                     val current = binding.state.value

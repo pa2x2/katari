@@ -5,14 +5,15 @@ import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
-import mihon.entry.interactions.manga.R
 import mihon.entry.interactions.reader.settings.ReaderOrientation
 import mihon.entry.interactions.reader.settings.ReadingMode
+import mihon.icons.custommaterialsymbols.CustomMaterialSymbols
+import mihon.icons.custommaterialsymbols.rounded.CropOff
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.automirroredrounded.ViewList
+import mihon.icons.materialsymbols.rounded.Crop
 import mihon.icons.materialsymbols.rounded.PlayArrow
 import mihon.icons.materialsymbols.rounded.Settings
 import mihon.icons.materialsymbols.rounded.Translate
@@ -46,7 +47,7 @@ fun ReaderBottomBar(
             modifier = Modifier.semantics { stateDescription = readingModeDescription },
         ) {
             Icon(
-                painter = painterResource(readingMode.iconRes),
+                imageVector = readingMode.icon,
                 contentDescription = stringResource(MR.strings.viewer),
             )
         }
@@ -64,7 +65,7 @@ fun ReaderBottomBar(
 
         ReaderChromeBottomBarAction(onClick = onClickCropBorder) {
             Icon(
-                painter = painterResource(if (cropEnabled) R.drawable.ic_crop_24dp else R.drawable.ic_crop_off_24dp),
+                imageVector = if (cropEnabled) MaterialSymbols.Rounded.Crop else CustomMaterialSymbols.Rounded.CropOff,
                 contentDescription = stringResource(MR.strings.pref_crop_borders),
             )
         }

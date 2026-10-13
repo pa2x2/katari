@@ -42,7 +42,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -52,11 +51,12 @@ import eu.kanade.presentation.components.DropdownMenu
 import eu.kanade.presentation.entry.DownloadAction
 import eu.kanade.presentation.entry.EntryTypePresentation
 import eu.kanade.presentation.entry.entryTypePresentation
-import eu.kanade.tachiyomi.R
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import mihon.icons.custommaterialsymbols.CustomMaterialSymbols
+import mihon.icons.custommaterialsymbols.rounded.DonePrevious
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.automirroredrounded.Label
 import mihon.icons.materialsymbols.rounded.BookmarkAdd
@@ -164,7 +164,7 @@ fun EntryBottomActionMenu(
                 if (onMarkPreviousAsReadClicked != null) {
                     Button(
                         title = stringResource(markPreviousAsReadLabel),
-                        icon = ImageVector.vectorResource(R.drawable.ic_done_prev_24dp),
+                        icon = CustomMaterialSymbols.Rounded.DonePrevious,
                         toConfirm = confirm[4],
                         onLongClick = { onLongClickItem(4) },
                         onClick = onMarkPreviousAsReadClicked,
