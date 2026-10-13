@@ -5,9 +5,19 @@
  * machine reuse it and CI restores it between runs. Upstream files are not pinned: a fresh cache picks up whatever an
  * upstream site serves at the same URL by then, and the capture run shows any visible difference in the screenshots it
  * proposes. Delete the cache folder to download everything again.
+ *
+ * Every download is logged, so a run that needed none shows that it needed none.
  */
 import { createHash } from "node:crypto";
-import { createWriteStream, existsSync, mkdirSync, readFileSync, renameSync, unlinkSync, writeFileSync } from "node:fs";
+import {
+  createWriteStream,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  renameSync,
+  unlinkSync,
+  writeFileSync,
+} from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { Readable } from "node:stream";
@@ -48,7 +58,8 @@ const inFlight = new Map<string, Promise<void>>();
 /** The cached download of [url], downloaded first when missing. */
 export async function cached(url: string): Promise<string> {
   const path = join(downloadsDir(), urlKey(url));
-  if (!existsSync(path)) await once(path, () => download(url, path));
+  if (isCached(path)) return path;
+  await once(path, () => download(url, path));
   return path;
 }
 
@@ -57,8 +68,8 @@ export async function cached(url: string): Promise<string> {
  * like a whole download, so a range has to be asked for the same way on every run to be found there again.
  */
 export async function cachedRange(url: string, range: string): Promise<{ bytes: Buffer; size: number }> {
-  const path = join(downloadsDir(), urlKey(`${url}#${range}`));
-  if (!existsSync(path)) {
+  const path = rangePath(url, range);
+  if (!isCached(path)) {
     await once(path, async () => {
       const response = await request(url, { Range: range });
       const size = rangeResponseSize(url, response);
@@ -67,6 +78,37 @@ export async function cachedRange(url: string, range: string): Promise<{ bytes: 
   }
   const [meta, bytes] = splitAtomicFile(readFileSync(path));
   return { bytes, size: JSON.parse(meta).size };
+}
+
+/** The `Range` header value for the bytes from [start] to [end] inclusive. */
+export function byteRange(start: number, end: number): string {
+  return `bytes=${start}-${end}`;
+}
+
+/**
+ * Caches the adjacent byte [ranges] of [url], in order, each as [cachedRange] asks for it with [byteRange], downloading
+ * the ones missing in a single request rather than one each. Sites that limit how often they are asked, as Wikimedia
+ * does, then answer a run's first download of a film's played stretch at once.
+ */
+export async function cacheRanges(url: string, ranges: { start: number; end: number }[]): Promise<void> {
+  const missing = ranges.filter((range) => !isCached(rangePath(url, byteRange(range.start, range.end))));
+  if (missing.length === 0) return;
+  const start = missing[0]!.start;
+  const response = await request(url, { Range: byteRange(start, missing.at(-1)!.end) });
+  const size = rangeResponseSize(url, response);
+  const bytes = Buffer.from(await response.arrayBuffer());
+  for (const range of ranges.filter((range) => range.start >= start && range.start < start + bytes.length)) {
+    const part = bytes.subarray(range.start - start, range.end - start + 1);
+    writeAtomically(rangePath(url, byteRange(range.start, range.end)), JSON.stringify({ size }), part);
+  }
+}
+
+function rangePath(url: string, range: string): string {
+  return join(downloadsDir(), urlKey(`${url}#${range}`));
+}
+
+function isCached(path: string): boolean {
+  return existsSync(path);
 }
 
 function once(path: string, write: () => Promise<void>): Promise<void> {
@@ -80,6 +122,7 @@ function once(path: string, write: () => Promise<void>): Promise<void> {
 
 /** Requests [url], retrying the failures that an upstream site recovers from on its own. */
 async function request(url: string, headers: Record<string, string> = {}): Promise<Response> {
+  console.error(`  downloading ${url}${headers.Range === undefined ? "" : ` ${headers.Range}`}`);
   for (let attempt = 1; ; attempt++) {
     let failure = "";
     let response: Response | undefined;

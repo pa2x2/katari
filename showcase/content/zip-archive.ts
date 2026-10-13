@@ -4,7 +4,7 @@
  * end says where every member sits. Zip64 is not read; no EPUB comes near the 4 GiB it is needed for.
  */
 import { inflateRawSync } from "node:zlib";
-import { cachedRange } from "./download-cache.ts";
+import { byteRange, cachedRange } from "./download-cache.ts";
 
 interface ZipMember {
   method: number;
@@ -54,16 +54,16 @@ export async function remoteZip(url: string): Promise<RemoteZip> {
   const directory =
     start >= tailStart
       ? tail.bytes.subarray(start - tailStart, end - tailStart)
-      : (await cachedRange(url, `bytes=${start}-${end - 1}`)).bytes;
+      : (await cachedRange(url, byteRange(start, end - 1))).bytes;
   const members = centralDirectory(directory);
   return {
     async read(name) {
       const member = memberNamed(members, name);
       const offset = member.localHeaderOffset;
-      const header = await cachedRange(url, `bytes=${offset}-${offset + LOCAL_HEADER_LENGTH - 1}`);
+      const header = await cachedRange(url, byteRange(offset, offset + LOCAL_HEADER_LENGTH - 1));
       const dataStart = offset + localHeaderLength(header.bytes);
       if (member.compressedSize === 0) return Buffer.alloc(0);
-      const data = await cachedRange(url, `bytes=${dataStart}-${dataStart + member.compressedSize - 1}`);
+      const data = await cachedRange(url, byteRange(dataStart, dataStart + member.compressedSize - 1));
       return decompress(member, data.bytes);
     },
   };

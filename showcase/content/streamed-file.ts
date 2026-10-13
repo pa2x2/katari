@@ -3,7 +3,7 @@
  * what a scene plays is downloaded. Ranges are fetched in aligned chunks that the download cache keeps, so a later run
  * that plays the same part needs no network.
  */
-import { cachedRange } from "./download-cache.ts";
+import { byteRange, cacheRanges, cachedRange } from "./download-cache.ts";
 
 const CHUNK_SIZE = 1 << 20;
 
@@ -27,6 +27,18 @@ export async function readStreamed(url: string, start: number, end: number): Pro
   return Buffer.concat(parts);
 }
 
+/** Caches the bytes of [url] from [start] up to [end] ahead of the player, with a single download for what is missing. */
+export async function prefetch(url: string, start: number, end: number): Promise<void> {
+  const chunks = [];
+  for (let index = Math.floor(start / CHUNK_SIZE); index * CHUNK_SIZE < end; index++) chunks.push(chunkBounds(index));
+  await cacheRanges(url, chunks);
+}
+
 function chunk(url: string, index: number): Promise<{ bytes: Buffer; size: number }> {
-  return cachedRange(url, `bytes=${index * CHUNK_SIZE}-${(index + 1) * CHUNK_SIZE - 1}`);
+  const { start, end } = chunkBounds(index);
+  return cachedRange(url, byteRange(start, end));
+}
+
+function chunkBounds(index: number): { start: number; end: number } {
+  return { start: index * CHUNK_SIZE, end: (index + 1) * CHUNK_SIZE - 1 };
 }

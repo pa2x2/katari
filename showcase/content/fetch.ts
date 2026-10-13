@@ -17,11 +17,13 @@ import type { ResolvedWork } from "./resolved-work.ts";
 import { resolveWork } from "./resolvers/resolve-work.ts";
 import type { FilmWork, WorkDefinition } from "./source-definitions.ts";
 import { sources, works } from "./sources.ts";
-import { readStreamed, streamedSize } from "./streamed-file.ts";
+import { prefetch, readStreamed, streamedSize } from "./streamed-file.ts";
 import { cuePoints } from "./webm-cues.ts";
 import { localZip, remoteZip } from "./zip-archive.ts";
 
 const CONCURRENT_WORKS = 4;
+// How far past what the player has read the content server streams, as far as the connection's buffers take it.
+const SERVER_READ_AHEAD = 8 << 20;
 
 const { values } = parseArgs({ options: { out: { type: "string", default: join(cacheDir(), "served") } } });
 const out = resolve(values.out);
@@ -85,8 +87,10 @@ async function place(work: ResolvedWork, url: string, path: string, played?: Fil
 }
 
 /**
- * Downloads what the player reads of the WebM at [url] to play [played]: its header and index, the clusters from the
- * cue at or before the start to the first cue past the end, and the last cluster, where a film the seed finished opens.
+ * Downloads what the player reads of the WebM at [url] to play [played]: its header and first cluster, which it reads on
+ * opening the film, its index, the clusters from the cue at or before the start to the first cue past the end, and the
+ * last cluster, where a film the seed finished opens. The first two stretches run on by what the content server streams
+ * ahead of the player.
  */
 async function prefetchPlayback(url: string, played: NonNullable<FilmWork["played"]>): Promise<void> {
   if (extname(url) !== ".webm") throw new Error(`${url}: only a WebM says where its played stretch is`);
@@ -94,8 +98,9 @@ async function prefetchPlayback(url: string, played: NonNullable<FilmWork["playe
   const cues = await cuePoints((start, end) => readStreamed(url, start, Math.min(end, size)));
   const first = cues.findLast((cue) => cue.seconds <= played.from) ?? cues[0]!;
   const after = cues.find((cue) => cue.seconds > played.to);
-  await readStreamed(url, first.offset, after?.offset ?? size);
-  await readStreamed(url, cues.at(-1)!.offset, size);
+  await prefetch(url, 0, Math.min((cues[1]?.offset ?? size) + SERVER_READ_AHEAD, size));
+  await prefetch(url, first.offset, Math.min((after?.offset ?? size) + SERVER_READ_AHEAD, size));
+  await prefetch(url, cues.at(-1)!.offset, size);
 }
 
 async function cover(work: ResolvedWork, fetched: Set<number>): Promise<string> {
