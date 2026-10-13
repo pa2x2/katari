@@ -1,0 +1,60 @@
+---
+import Callout from "../../guide/Callout.astro";
+import GuidePage from "../../guide/GuidePage.astro";
+import Path from "../../guide/Path.astro";
+import Task from "../../guide/Task.astro";
+import { leavesSite } from "../../site/links.ts";
+---
+
+<GuidePage
+  slug="source-migration"
+  lead="When a source stops working or a better one appears, move your titles to it and keep what you've read."
+>
+  <Task id="one-title" title="Move one title">
+    <ol>
+      <li>Open the title and tap <Path>⋮ › Migrate</Path>. It has to be in your library.</li>
+      <li>Pick the sources to look in, then the match.</li>
+      <li>Under <strong>Select data to include</strong>, choose what comes along, then tap <strong>Migrate</strong>, or <strong>Copy</strong> to keep the old one too.</li>
+    </ol>
+  </Task>
+
+  <Task id="many-titles" title="Move many titles">
+    <ol>
+      <li>Open <Path>Browse › Migrate</Path> and pick the source to move away from, then the titles.</li>
+      <li>Pick the sources to look in and the data to bring along.</li>
+      <li>
+        Katari searches in the background; <strong>Review replacements</strong> shows what it found, and you can leave the screen meanwhile.
+        Check the matches and tap <strong>Migrate</strong>.
+      </li>
+    </ol>
+    <p>You can also select titles in the library and tap <Path>More › Migrate</Path>.</p>
+  </Task>
+
+  <Task id="what-moves" title="What comes along">
+    <ul>
+      <li><strong>Items</strong>: which chapters or episodes you've read, and your bookmarks.</li>
+      <li><strong>Categories</strong>, a <strong>Custom cover</strong> and <strong>Notes</strong>, when the title has them.</li>
+      <li>Tracking always comes along.</li>
+    </ul>
+    <Callout label="Downloads" tone="warning">
+      <p>
+        <strong>Delete downloads of current entry after migration</strong> is on from the start. Turn it off to keep the old source's
+        downloads.
+      </p>
+    </Callout>
+  </Task>
+
+  <Task id="katari" title="Comics, video, books and merged entries">
+    <ul>
+      <li>A title moves to a source of the same kind: comics to comics, video to video, books to books.</li>
+      <li>
+        In a merged entry, only the titles from the source you're leaving move. If the match is already in the same merged entry, the
+        duplicate goes; if it's in another, it moves over.
+      </li>
+    </ul>
+    <p>
+      Mihon's <a href="https://mihon.app/docs/guides/source-migration" {...leavesSite()}>source migration guide</a> covers the same flow in
+      more detail, for comics.
+    </p>
+  </Task>
+</GuidePage>

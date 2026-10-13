@@ -38,6 +38,7 @@ export const guide: GuideGroup[] = [
       { slug: "backups-and-storage", title: "Backups and storage", summary: "What a backup keeps, where files go, and moving from Mihon." },
       { slug: "tracking", title: "Tracking", summary: "Send your progress to AniList, MyAnimeList and other trackers." },
       { slug: "local-source", title: "Local source", summary: "Read comics from your own files." },
+      { slug: "source-migration", title: "Moving to another source", summary: "Move titles to a new source and keep what you've read." },
     ],
   },
 ];
