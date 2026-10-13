@@ -60,7 +60,7 @@ export const chapters: Chapter[] = [
         title: "Comics, books, and films on one shelf",
         text: "Everything you follow shares one library, one updates feed, and one history.",
         highlights: [
-          "A title published in several places or languages becomes one entry with every version inside",
+          "Merge a title published in several places or languages into one entry with every version inside",
           "New chapters, episodes, and books arrive in one feed",
         ],
         shots: [
@@ -91,7 +91,7 @@ export const chapters: Chapter[] = [
       {
         id: "profiles",
         title: "Everyone gets their own library",
-        text: "Profiles keep separate libraries, history, statistics, and settings.",
+        text: "Profiles keep separate libraries, history, statistics, and reader and library settings.",
         highlights: ["For a shared tablet, or for keeping collections apart"],
         shots: [
           { kind: "still", image: profiles, alt: "Choosing between two profiles", caption: "Pick a profile" },
@@ -111,7 +111,7 @@ export const chapters: Chapter[] = [
         id: "readers",
         title: "A reader made for each format",
         text: "Books flow like books, comics turn page by page, and films play in a player with the controls you expect.",
-        highlights: ["Book themes for day and night", "Books read aloud", "A video player with episodes at hand"],
+        highlights: ["Book themes for day and night", "Hear any passage of a book read aloud", "A video player with episodes at hand"],
         shots: [
           { kind: "still", image: bookPaper, alt: "A book in the paper theme", caption: "The paper theme" },
           { kind: "still", image: bookDusk, alt: "The same page in the dusk theme", caption: "The dusk theme" },
