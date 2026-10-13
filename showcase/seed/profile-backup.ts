@@ -1,4 +1,5 @@
 /** One profile of the seed: its library entries with their history, and the settings the screenshots rely on. */
+import { existsSync } from "node:fs";
 import type { CatalogWork } from "../content/catalog.ts";
 import { EMULATOR_CONTENT_SERVER } from "../content/content-server.ts";
 import type {
@@ -90,7 +91,11 @@ export function profileBackup(
     progress: NonNullable<WorkHistory["bookProgress"]>,
   ): BackupBookProgressState {
     const chapter = catalogWork.chapters.find((candidate) => candidate.number === progress.chapter)!;
-    const position = bookPosition(servedFile(chapter.files[0]!), progress.progression);
+    const epub = servedFile(chapter.files[0]!);
+    if (!existsSync(epub)) {
+      raise(`${catalogWork.id} has a saved position, so content/sources.ts must fetch its chapter ${chapter.number}`);
+    }
+    const position = bookPosition(epub, progress.progression);
     return {
       chapterUrl: chapterUrl(catalogWork.id, progress.chapter),
       // The showcase extension names a book's only resource after its work (showcase/extension media/ShowcaseMedia.kt).

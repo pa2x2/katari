@@ -1,20 +1,25 @@
 /**
  * Builds the folder the showcase content server serves, from the works in sources.ts as their upstream sites have them.
  *
- * The folder holds `catalog.json` (see catalog.ts) and `files/`, with every page, book, video, and cover under the path
- * the catalog gives for it.
+ * The folder holds `catalog.json` (see catalog.ts), which lists every chapter's files, and `files/`, with every cover
+ * and the files of the chapters sources.ts fetches, under the paths the catalog gives. A film's video stays upstream
+ * and is listed in `streamed.json`, from which the content server streams what the player reads.
  */
-import { copyFileSync, existsSync, linkSync, mkdirSync, renameSync, rmSync, unlinkSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, linkSync, mkdirSync, readFileSync, rmSync, unlinkSync, writeFileSync } from "node:fs";
 import { dirname, extname, join, resolve } from "node:path";
 import { parseArgs } from "node:util";
 import sharp from "sharp";
 import type { Catalog, CatalogChapter, CatalogWork } from "./catalog.ts";
-import { cacheDir, cached, urlKey } from "./download-cache.ts";
+import { STREAMED_FILES } from "./content-server.ts";
+import { cacheDir, cached } from "./download-cache.ts";
 import { extractCover } from "./epub-cover.ts";
-import type { RemoteFile, ResolvedWork } from "./resolved-work.ts";
+import type { ResolvedWork } from "./resolved-work.ts";
 import { resolveWork } from "./resolvers/resolve-work.ts";
 import { sources, works } from "./sources.ts";
-import { extractMember } from "./zip-archive.ts";
+import { streamedSize } from "./streamed-file.ts";
+import { localZip, remoteZip } from "./zip-archive.ts";
+
+const CONCURRENT_WORKS = 4;
 
 const { values } = parseArgs({ options: { out: { type: "string", default: join(cacheDir(), "served") } } });
 const out = resolve(values.out);
@@ -26,75 +31,95 @@ for (const work of works) {
 rmSync(join(out, "files"), { recursive: true, force: true });
 mkdirSync(join(out, "files"), { recursive: true });
 
-const catalogWorks: CatalogWork[] = [];
-for (const work of works) {
+const streamed: Record<string, string> = {};
+const catalogWorks = await mapConcurrently(works, async (work) => {
   console.error(`fetching ${work.id}`);
-  catalogWorks.push(await materialize(await resolveWork(work)));
-}
+  return materialize(await resolveWork(work), new Set(work.fetchChapters));
+});
 const catalog: Catalog = { sources, works: catalogWorks };
 writeFileSync(join(out, "catalog.json"), `${JSON.stringify(catalog, null, 2)}\n`);
+writeFileSync(join(out, STREAMED_FILES), `${JSON.stringify(streamed, null, 2)}\n`);
 console.log(out);
 
-async function materialize(work: ResolvedWork): Promise<CatalogWork> {
+async function materialize(work: ResolvedWork, fetched: Set<number>): Promise<CatalogWork> {
+  for (const number of fetched) {
+    if (!work.chapters.some((chapter) => chapter.number === number)) throw new Error(`${work.id} has no chapter ${number}`);
+  }
   const chapters: CatalogChapter[] = [];
   for (const chapter of work.chapters) {
-    const directory = `files/${work.id}/${chapter.number}`;
-    const files = [];
-    for (const [index, file] of chapter.files.entries()) {
-      files.push(await place(file, `${directory}/${fileName(work, index + 1, file)}`));
+    const files = chapter.files.map((url, index) => `files/${work.id}/${chapter.number}/${fileName(work, index + 1, url)}`);
+    if (fetched.has(chapter.number)) {
+      for (const [index, url] of chapter.files.entries()) await place(work, url, files[index]!);
     }
     chapters.push({ number: chapter.number, name: chapter.name, date: chapter.date, files });
   }
   const { chapters: _, cover: __, ...described } = work;
   const credit = "credit" in work.cover ? (work.cover.credit ?? null) : null;
-  return { ...described, cover: await cover(work, chapters), coverCredit: credit, chapters };
+  return { ...described, cover: await cover(work, fetched), coverCredit: credit, chapters };
 }
 
-function fileName(work: ResolvedWork, index: number, file: RemoteFile): string {
+function fileName(work: ResolvedWork, index: number, url: string): string {
   switch (work.type) {
     case "manga":
-      return `${String(index).padStart(3, "0")}${extname(file.url)}`;
+      return `${String(index).padStart(3, "0")}${extname(url)}`;
     case "book":
       return "book.epub";
     case "anime":
-      return `video${extname(file.member ?? file.url)}`;
+      return `video${extname(url)}`;
   }
 }
 
-async function place(file: RemoteFile, path: string): Promise<string> {
-  const download = await cached(file.url);
-  const target = join(out, path);
-  mkdirSync(dirname(target), { recursive: true });
-  link(file.member === undefined ? download : await extracted(download, file.url, file.member), target);
-  return path;
-}
-
-/** [member] of the zip [archive] downloaded from [url], extracted once into the cache. */
-async function extracted(archive: string, url: string, member: string): Promise<string> {
-  const path = join(cacheDir(), "extracted", urlKey(url), member);
-  if (!existsSync(path)) {
-    mkdirSync(dirname(path), { recursive: true });
-    await extractMember(archive, member, `${path}.partial`);
-    renameSync(`${path}.partial`, path);
+async function place(work: ResolvedWork, url: string, path: string): Promise<void> {
+  if (work.type === "anime") {
+    // Asked now so that a video the player could not seek in fails the fetch rather than the player scene.
+    await streamedSize(url);
+    streamed[path] = url;
+  } else {
+    link(await cached(url), join(out, path));
   }
-  return path;
 }
 
-async function cover(work: ResolvedWork, chapters: CatalogChapter[]): Promise<string> {
+async function cover(work: ResolvedWork, fetched: Set<number>): Promise<string> {
   if ("fromEpub" in work.cover) {
-    const { image, extension } = extractCover(join(out, chapters[0]!.files[0]!));
+    const chapter = work.chapters[0]!;
+    const epub = chapter.files[0]!;
+    // A book whose chapter is not fetched gives up only the bytes of its cover.
+    const zip = fetched.has(chapter.number) ? localZip(readFileSync(await cached(epub))) : await remoteZip(epub);
+    const { image, extension } = await extractCover((member) => zip.read(member));
     const path = `files/${work.id}/cover${extension}`;
+    mkdirSync(dirname(join(out, path)), { recursive: true });
     writeFileSync(join(out, path), image);
     return path;
   }
   const download = await cached(work.cover.url);
   const path = `files/${work.id}/cover${extname(work.cover.url)}`;
   if (work.cover.crop === undefined) link(download, join(out, path));
-  else await sharp(download).extract(work.cover.crop).jpeg({ quality: 92 }).toFile(join(out, path));
+  else {
+    mkdirSync(dirname(join(out, path)), { recursive: true });
+    await sharp(download).extract(work.cover.crop).jpeg({ quality: 92 }).toFile(join(out, path));
+  }
   return path;
 }
 
+/**
+ * [transform] applied to every item, a few items at a time, in the items' order. Each work takes several requests of
+ * about a second in turn, and the Gutenberg mirror is run by volunteers, so only a few are asked for at once.
+ */
+async function mapConcurrently<T, R>(items: T[], transform: (item: T) => Promise<R>): Promise<R[]> {
+  const results: R[] = new Array(items.length);
+  let next = 0;
+  const worker = async () => {
+    while (next < items.length) {
+      const index = next++;
+      results[index] = await transform(items[index]!);
+    }
+  };
+  await Promise.all(Array.from({ length: CONCURRENT_WORKS }, worker));
+  return results;
+}
+
 function link(source: string, target: string): void {
+  mkdirSync(dirname(target), { recursive: true });
   if (existsSync(target)) unlinkSync(target);
   try {
     linkSync(source, target);

@@ -23,7 +23,7 @@ export async function resolvePepperCarrot(work: PepperCarrotWork): Promise<Resol
       // Episodes credit their original-language text as a translation called "original version".
       .filter((name) => name !== "original version")
       .forEach((name) => translators.add(name));
-    const files = (await pageUrls(folder, work.language, number)).map((url) => ({ url }));
+    const files = await pageUrls(folder, work.language, number);
     chapters.push({ number, name: chapterName(work.language, number, folder), date: info.published, files });
   }
   const translation = translators.size > 0 ? `, translated by ${[...translators].join(", ")}` : "";

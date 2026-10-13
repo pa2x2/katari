@@ -19,7 +19,7 @@ export function resolveFilm(work: FilmWork): ResolvedContent {
         number: 1,
         name: work.title,
         date: work.released,
-        files: [work.video],
+        files: [work.video.url],
       },
     ],
   };

@@ -33,7 +33,7 @@ export async function resolveGutenberg(work: GutenbergWork): Promise<ResolvedCon
         number: 1,
         name: title,
         date: text(record.issued),
-        files: [{ url: `https://www.gutenberg.org/cache/epub/${work.book}/pg${work.book}-images-3.epub` }],
+        files: [`https://www.gutenberg.org/cache/epub/${work.book}/pg${work.book}-images-3.epub`],
       },
     ],
   };

@@ -24,6 +24,12 @@ export interface CoverDefinition {
 interface WorkBase {
   id: string;
   source: string;
+  /**
+   * Chapters whose files the capture run needs: those a scene opens, and books the seed saves a reading position in,
+   * which it measures and identifies by the EPUB. The other chapters are listed with their files left upstream, and a
+   * work is otherwise shown by its cover and metadata alone. A film's video is streamed rather than downloaded.
+   */
+  fetchChapters?: number[];
 }
 
 export interface PepperCarrotWork extends WorkBase {
@@ -55,8 +61,8 @@ export interface FilmWork extends WorkBase {
   genres: string[];
   license: License;
   attribution: string;
-  /** `member` names the video inside the downloaded zip, when it is one. */
-  video: { url: string; member?: string };
+  /** A WebM or MP4 that answers byte ranges, since it is streamed to the player rather than downloaded. */
+  video: { url: string };
   cover: CoverDefinition;
 }
 
