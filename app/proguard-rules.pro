@@ -4,14 +4,13 @@
 -keepattributes Signature
 -keep,allowshrinking class * extends uy.kohesive.injekt.api.FullTypeReference
 
-# Injekt keys its registry by those types, Voyager keys screens and screen models by class name, and a ViewModel
-# created without an explicit key is stored under its class name. Merging two of these classes gives two registrations,
-# screens or ViewModels the same key, so R8 may remove them but not merge them. Nested classes (lambdas, continuations,
+# Injekt keys its registry by those types, Voyager keys screens by class name, and a ViewModel created without an
+# explicit key is stored under its class name. Merging two of these classes gives two registrations, screens or
+# ViewModels the same key, so R8 may remove them but not merge them. Nested classes (lambdas, continuations,
 # queries) stay free to merge, so an injected type must be a top-level class; nested screens and ViewModels are covered
 # by their own rules.
 -keep,allowshrinking class !**$*,eu.kanade.**,tachiyomi.**,mihon.**
 -keep,allowshrinking class * implements cafe.adriel.voyager.core.screen.Screen
--keep,allowshrinking class * implements cafe.adriel.voyager.core.model.ScreenModel
 -keep,allowshrinking class * extends androidx.lifecycle.ViewModel
 
 # Keep common dependencies used in extensions
