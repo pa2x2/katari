@@ -4,23 +4,28 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Looper
 import android.webkit.JavascriptInterface
+import android.webkit.RenderProcessGoneDetail
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Toast
 import androidx.core.content.ContextCompat
+import androidx.webkit.ScriptHandler
+import androidx.webkit.WebViewCompat
+import androidx.webkit.WebViewFeature
 import eu.kanade.tachiyomi.network.AndroidCookieJar
 import eu.kanade.tachiyomi.util.system.isOutdated
 import eu.kanade.tachiyomi.util.system.toast
+import logcat.LogPriority
 import okhttp3.Cookie
 import okhttp3.HttpUrl
-import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.Interceptor
 import okhttp3.Request
 import okhttp3.Response
 import org.jsoup.Jsoup
 import tachiyomi.core.common.i18n.stringResource
+import tachiyomi.core.common.util.system.logcat
 import tachiyomi.i18n.*
 import java.io.IOException
 import java.util.concurrent.ConcurrentHashMap
@@ -103,51 +108,74 @@ class CloudflareInterceptor(
         val latch = CountDownLatch(1)
 
         var webview: WebView? = null
+        var listenerScriptHandler: ScriptHandler? = null
+        val useIsolatedWorld = WebViewFeature.isFeatureSupported(WebViewFeature.JS_INJECTION_IN_FRAME_AND_WORLD)
 
         var cloudflareBypassed = false
+        var challengeFailed = false
+        var isRenderProcessGone = false
 
-        val origRequestUrl = originalRequest.url.toString()
+        // A WebView can only load a page with GET, and loading the url of another method usually reaches an
+        // endpoint that answers GET without a challenge to solve. The clearance covers the whole site, so it's
+        // earned on the site's root page instead.
+        val challengeUrl = if (originalRequest.method == "GET") {
+            originalRequest.url.toString()
+        } else {
+            originalRequest.url.newBuilder().encodedPath("/").query(null).fragment(null).build().toString()
+        }
         val headers = parseHeaders(originalRequest.headers)
 
         executor.execute {
-            webview = createWebView(originalRequest)
+            val view = createWebView(originalRequest)
+            webview = view
 
-            webview.addJavascriptInterface(
-                object {
-                    @Suppress("unused")
-                    @JavascriptInterface
-                    fun interactiveDetected() {
-                        // The challenge cannot be solved non-interactively, abort.
+            fun onChallengeEvent(event: String) {
+                when (event) {
+                    // The challenge cannot be solved non-interactively, abort.
+                    "interactiveBegin" -> latch.countDown()
+                    "fail" -> {
+                        challengeFailed = true
                         latch.countDown()
                     }
-                },
-                "mihon",
-            )
+                }
+            }
 
-            webview.webViewClient = object : WebViewClient() {
+            if (useIsolatedWorld) {
+                // An isolated world keeps the bridge out of the page's reach
+                val world = WebViewCompat.getExecutionWorld(view, JS_BRIDGE_NAME)
+                val origins = setOf(originalRequest.url.origin())
+                val listener = WebViewCompat.WebMessageListener { _, message, _, isMainFrame, _ ->
+                    if (isMainFrame) message.data?.let(::onChallengeEvent)
+                }
+                WebViewCompat.addWebMessageListener(view, JS_BRIDGE_NAME, origins, world, listener)
+                listenerScriptHandler = WebViewCompat.addJavaScriptOnEvent(
+                    view,
+                    CHALLENGE_LISTENER_SCRIPT,
+                    WebViewCompat.INJECTION_EVENT_DOCUMENT_START,
+                    origins,
+                    world,
+                )
+            } else {
+                view.addJavascriptInterface(
+                    object {
+                        @Suppress("unused")
+                        @JavascriptInterface
+                        fun postMessage(event: String) = onChallengeEvent(event)
+                    },
+                    JS_BRIDGE_NAME,
+                )
+            }
+
+            view.webViewClient = object : WebViewClient() {
                 override fun onPageFinished(view: WebView, url: String) {
-                    fun isCloudFlareBypassed(): Boolean {
-                        return cookieManager.get(origRequestUrl.toHttpUrl())
-                            .firstOrNull { it.name == "cf_clearance" }
-                            .let { it != null && it != oldCookie }
-                    }
-
-                    if (isCloudFlareBypassed()) {
+                    val clearance = cookieManager.cloudflareClearance(originalRequest.url)
+                    if (!challengeFailed && clearance != null && clearance != oldCookie) {
                         cloudflareBypassed = true
                         latch.countDown()
                     }
 
-                    if (url == origRequestUrl) {
-                        view.evaluateJavascript(
-                            """
-                                addEventListener("message", ({data}) => {
-                                    if (data?.source === "cloudflare-challenge" && data?.event === "interactiveBegin") {
-                                        mihon.interactiveDetected();
-                                    }
-                                })
-                            """.trimIndent(),
-                            null,
-                        )
+                    if (url == challengeUrl && !useIsolatedWorld) {
+                        view.evaluateJavascript(CHALLENGE_LISTENER_SCRIPT, null)
                     }
                 }
 
@@ -170,9 +198,20 @@ class CloudflareInterceptor(
                         }
                     }
                 }
+
+                override fun onRenderProcessGone(view: WebView, detail: RenderProcessGoneDetail): Boolean {
+                    // Not handling it kills the app, failing the bypass is enough
+                    logcat(LogPriority.ERROR) {
+                        "WebView renderer gone during Cloudflare bypass: crashed=${detail.didCrash()}, " +
+                            "priority=${detail.rendererPriorityAtExit()}, url=$challengeUrl"
+                    }
+                    isRenderProcessGone = true
+                    latch.countDown()
+                    return true
+                }
             }
 
-            webview.loadUrl(origRequestUrl, headers)
+            view.loadUrl(challengeUrl, headers)
         }
 
         var waitCompleted = false
@@ -181,12 +220,25 @@ class CloudflareInterceptor(
             waitCompleted = true
         } finally {
             executor.execute {
-                if (waitCompleted && !cloudflareBypassed && webview?.isOutdated() == true) {
+                // Only destroy can be called on a WebView whose renderer is gone
+                if (waitCompleted && !cloudflareBypassed && !isRenderProcessGone && webview?.isOutdated() == true) {
                     context.toast(MR.strings.information_webview_outdated, Toast.LENGTH_LONG)
                 }
 
                 webview?.run {
-                    stopLoading()
+                    if (!isRenderProcessGone) {
+                        if (useIsolatedWorld) {
+                            WebViewCompat.removeWebMessageListener(
+                                this,
+                                WebViewCompat.getExecutionWorld(this, JS_BRIDGE_NAME),
+                                JS_BRIDGE_NAME,
+                            )
+                        } else {
+                            removeJavascriptInterface(JS_BRIDGE_NAME)
+                        }
+                        listenerScriptHandler?.remove()
+                        stopLoading()
+                    }
                     destroy()
                 }
             }
@@ -194,12 +246,23 @@ class CloudflareInterceptor(
 
         // Throw exception if we failed to bypass Cloudflare
         if (!cloudflareBypassed) {
+            // A clearance from a failed challenge would only be rejected again, and requests waiting on this
+            // challenge would take it for a fresh one
+            cookieManager.remove(originalRequest.url, COOKIE_NAMES, 0)
             throw CloudflareBypassException()
         }
     }
 }
 
 private val ERROR_CODES = listOf(403, 503)
+private const val JS_BRIDGE_NAME = "mihon"
+private val CHALLENGE_LISTENER_SCRIPT = """
+    addEventListener("message", ({data}) => {
+        if (data?.source === "cloudflare-challenge") {
+            mihon?.postMessage(data.event);
+        }
+    })
+""".trimIndent()
 private const val MAX_LEGACY_CHALLENGE_BODY_BYTES = 64L * 1024
 private const val MAX_CHALLENGE_SOLVE_ATTEMPTS = 2
 private val SERVER_CHECK = setOf("cloudflare-nginx", "cloudflare")
@@ -285,6 +348,11 @@ internal class CloudflareChallengeCoordinator(
         val monitor: Any = Any(),
         var users: Int = 0,
     )
+}
+
+// An origin rule without a port only matches the scheme's default one
+private fun HttpUrl.origin(): String {
+    return if (port == HttpUrl.defaultPort(scheme)) "$scheme://$host" else "$scheme://$host:$port"
 }
 
 private fun AndroidCookieJar.cloudflareClearance(url: HttpUrl): Cookie? {
