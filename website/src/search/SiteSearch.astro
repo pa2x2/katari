@@ -1,0 +1,154 @@
+---
+// Searches the whole site through the index Pagefind writes into dist/pagefind after the Astro build. Pages mark the
+// text worth finding with data-pagefind-body, so the header, footer and download buttons stay out of the results.
+import { sitePath } from "../site/links.ts";
+---
+
+<button class="open-search" type="button" aria-haspopup="dialog">
+  <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" /><path d="m15.5 15.5 5 5" /></svg>
+  <span class="visually-hidden">Search</span>
+</button>
+
+<dialog class="search" aria-label="Search the site" data-bundle={sitePath("pagefind/")} data-base={sitePath()}>
+  <div class="panel">
+    <div class="results"></div>
+    <p class="unavailable" hidden>Search works on the built site; this page was served without its index.</p>
+    <button class="close" type="button" aria-label="Close">✕</button>
+  </div>
+</dialog>
+
+<script>
+  declare const PagefindUI: new (options: Record<string, unknown>) => unknown;
+
+  const dialog = document.querySelector<HTMLDialogElement>("dialog.search")!;
+  const bundle = dialog.dataset.bundle!;
+  let loading: Promise<void> | undefined;
+
+  // The search interface is only fetched once someone asks for it, so pages load without it.
+  const load = () =>
+    (loading ??= new Promise<void>((resolve, reject) => {
+      const style = document.createElement("link");
+      style.rel = "stylesheet";
+      style.href = `${bundle}pagefind-ui.css`;
+      document.head.append(style);
+      const script = document.createElement("script");
+      script.src = `${bundle}pagefind-ui.js`;
+      script.onload = () => {
+        new PagefindUI({
+          element: dialog.querySelector(".results"),
+          bundlePath: bundle,
+          // The index holds addresses relative to the site's root, which GitHub Pages serves under a base path.
+          baseUrl: dialog.dataset.base,
+          showSubResults: true,
+          // Every page would show the same logo, as no page has a picture of its own to offer.
+          showImages: false,
+        });
+        resolve();
+      };
+      script.onerror = reject;
+      document.head.append(script);
+    }));
+
+  const open = async () => {
+    dialog.showModal();
+    try {
+      await load();
+      dialog.querySelector<HTMLInputElement>(".pagefind-ui__search-input")?.focus();
+    } catch {
+      dialog.querySelector<HTMLElement>(".unavailable")!.hidden = false;
+    }
+  };
+
+  document.querySelector(".open-search")!.addEventListener("click", open);
+  dialog.querySelector(".close")!.addEventListener("click", () => dialog.close());
+  // A click on the dimmed backdrop lands on the dialog itself.
+  dialog.addEventListener("click", (event) => {
+    if (event.target === dialog) dialog.close();
+  });
+  // A result may only jump within the current page, which would leave the dialog over it.
+  dialog.addEventListener("click", (event) => {
+    if ((event.target as Element).closest(".results a")) dialog.close();
+  });
+</script>
+
+<style>
+  .open-search {
+    display: grid;
+    place-items: center;
+    padding: 0.4rem;
+    border: 0;
+    background: none;
+    color: var(--muted);
+    cursor: pointer;
+  }
+
+  .open-search:hover {
+    color: var(--cream);
+  }
+
+  .open-search svg {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+  }
+
+  .search {
+    width: min(42rem, calc(100vw - 2rem));
+    max-height: calc(100dvh - 6rem);
+    margin: 4rem auto auto;
+    padding: 0;
+    border: 1px solid var(--indigo-light);
+    border-radius: 0.75rem;
+    background: var(--night);
+    color: var(--cream);
+    /* Pagefind's interface takes its colours from these. */
+    --pagefind-ui-scale: 0.85;
+    --pagefind-ui-primary: var(--clay);
+    --pagefind-ui-text: var(--cream);
+    --pagefind-ui-background: var(--night);
+    --pagefind-ui-border: var(--indigo-light);
+    --pagefind-ui-tag: var(--indigo);
+    --pagefind-ui-border-width: 1px;
+    --pagefind-ui-border-radius: 0.5rem;
+    --pagefind-ui-font: var(--sans);
+  }
+
+  .search::backdrop {
+    background: #05080fcc;
+    backdrop-filter: blur(4px);
+  }
+
+  .panel {
+    position: relative;
+    padding: 1.25rem 3.5rem 1.25rem 1.25rem;
+  }
+
+  .search :global(mark) {
+    background: none;
+    color: var(--clay);
+    font-weight: 600;
+  }
+
+  .unavailable {
+    margin: 0;
+    color: var(--muted);
+  }
+
+  .close {
+    position: absolute;
+    top: 1.35rem;
+    right: 1rem;
+    width: 2.2rem;
+    height: 2.2rem;
+    border: 0;
+    border-radius: 50%;
+    background: #ffffff1a;
+    color: var(--cream);
+    cursor: pointer;
+  }
+
+  .close:hover {
+    background: #ffffff33;
+  }
+</style>
