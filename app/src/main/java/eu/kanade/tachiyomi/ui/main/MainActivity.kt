@@ -35,9 +35,6 @@ import androidx.compose.foundation.layout.windowInsetsBottomHeight
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.OpenInNew
-import androidx.compose.material.icons.outlined.VolunteerActivism
 import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -136,6 +133,9 @@ import mihon.feature.migration.work.SourceMigrationNotifier
 import mihon.feature.profiles.core.Profile
 import mihon.feature.profiles.core.ProfileManager
 import mihon.feature.support.SupportUsScreen
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.automirroredrounded.OpenInNew
+import mihon.icons.materialsymbols.rounded.VolunteerActivism
 import mihon.translation.api.host.TranslationSettingsNavigation
 import tachiyomi.core.common.Constants
 import tachiyomi.core.common.i18n.stringResource
@@ -600,7 +600,7 @@ class MainActivity : BaseActivity() {
                             horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
                         ) {
                             Icon(
-                                imageVector = Icons.Outlined.VolunteerActivism,
+                                imageVector = MaterialSymbols.Rounded.VolunteerActivism,
                                 contentDescription = null,
                             )
                             Text(
@@ -629,7 +629,7 @@ class MainActivity : BaseActivity() {
                                     text = stringResource(MR.strings.donationCampaign_contactPlatform),
                                 )
                                 Icon(
-                                    imageVector = Icons.AutoMirrored.Outlined.OpenInNew,
+                                    imageVector = MaterialSymbols.AutoMirroredRounded.OpenInNew,
                                     contentDescription = null,
                                 )
                             }

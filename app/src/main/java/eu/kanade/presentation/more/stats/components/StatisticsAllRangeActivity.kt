@@ -6,9 +6,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ChevronLeft
-import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -19,6 +16,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.ChevronLeft
+import mihon.icons.materialsymbols.rounded.ChevronRight
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -36,11 +36,11 @@ internal fun AllRangeYearNavigation(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         TextButton(onClick = onAllActivity) {
-            Icon(Icons.Outlined.ChevronLeft, contentDescription = null)
+            Icon(MaterialSymbols.Rounded.ChevronLeft, contentDescription = null)
             Text(stringResource(MR.strings.statistics_all_activity))
         }
         IconButton(enabled = previousEnabled, onClick = onPrevious) {
-            Icon(Icons.Outlined.ChevronLeft, stringResource(MR.strings.statistics_previous_year))
+            Icon(MaterialSymbols.Rounded.ChevronLeft, stringResource(MR.strings.statistics_previous_year))
         }
         Text(
             text = year.toString(),
@@ -49,7 +49,7 @@ internal fun AllRangeYearNavigation(
             textAlign = TextAlign.Center,
         )
         IconButton(enabled = nextEnabled, onClick = onNext) {
-            Icon(Icons.Outlined.ChevronRight, stringResource(MR.strings.statistics_next_year))
+            Icon(MaterialSymbols.Rounded.ChevronRight, stringResource(MR.strings.statistics_next_year))
         }
     }
 }

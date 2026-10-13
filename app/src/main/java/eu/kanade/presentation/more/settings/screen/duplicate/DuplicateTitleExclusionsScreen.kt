@@ -8,11 +8,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material.icons.outlined.KeyboardArrowDown
-import androidx.compose.material.icons.outlined.KeyboardArrowUp
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
@@ -39,6 +34,11 @@ import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.WarningBanner
 import eu.kanade.presentation.util.Screen
 import kotlinx.coroutines.delay
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Delete
+import mihon.icons.materialsymbols.rounded.Edit
+import mihon.icons.materialsymbols.rounded.KeyboardArrowDown
+import mihon.icons.materialsymbols.rounded.KeyboardArrowUp
 import tachiyomi.domain.library.service.DuplicatePreferences
 import tachiyomi.domain.library.service.DuplicateTitleExclusions
 import tachiyomi.i18n.*
@@ -220,25 +220,25 @@ private fun DuplicateTitleExclusionItem(
             )
             IconButton(enabled = canMoveUp, onClick = onMoveUp) {
                 Icon(
-                    imageVector = Icons.Outlined.KeyboardArrowUp,
+                    imageVector = MaterialSymbols.Rounded.KeyboardArrowUp,
                     contentDescription = stringResource(MR.strings.action_move_to_top),
                 )
             }
             IconButton(enabled = canMoveDown, onClick = onMoveDown) {
                 Icon(
-                    imageVector = Icons.Outlined.KeyboardArrowDown,
+                    imageVector = MaterialSymbols.Rounded.KeyboardArrowDown,
                     contentDescription = stringResource(MR.strings.action_move_to_bottom),
                 )
             }
             IconButton(onClick = onEdit) {
                 Icon(
-                    imageVector = Icons.Outlined.Edit,
+                    imageVector = MaterialSymbols.Rounded.Edit,
                     contentDescription = stringResource(MR.strings.action_edit),
                 )
             }
             IconButton(onClick = onDelete) {
                 Icon(
-                    imageVector = Icons.Outlined.Delete,
+                    imageVector = MaterialSymbols.Rounded.Delete,
                     contentDescription = stringResource(MR.strings.action_delete),
                 )
             }

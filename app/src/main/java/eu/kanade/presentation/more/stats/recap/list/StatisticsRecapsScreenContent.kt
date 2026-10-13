@@ -5,8 +5,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.AutoStories
 import androidx.compose.material3.Badge
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
@@ -16,6 +14,8 @@ import androidx.compose.ui.Modifier
 import eu.kanade.tachiyomi.ui.stats.recap.list.StatisticsRecapsScreenModel
 import eu.kanade.tachiyomi.ui.stats.recap.period.StatisticsRecapPeriod
 import eu.kanade.tachiyomi.ui.stats.recap.recapPeriodTitle
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.AutoStories
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.ListGroupHeader
 import tachiyomi.presentation.core.i18n.stringResource
@@ -54,7 +54,7 @@ fun StatisticsRecapsScreenContent(
 @Composable
 private fun RecapRow(title: String, isNew: Boolean, onClick: () -> Unit) {
     ListItem(
-        leadingContent = { Icon(Icons.Outlined.AutoStories, contentDescription = null) },
+        leadingContent = { Icon(MaterialSymbols.Rounded.AutoStories, contentDescription = null) },
         trailingContent = if (isNew) {
             { Badge { Text(stringResource(MR.strings.statistics_recap_new)) } }
         } else {

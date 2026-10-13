@@ -2,14 +2,6 @@ package eu.kanade.presentation.entry.components
 
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.BookmarkAdd
-import androidx.compose.material.icons.outlined.BookmarkRemove
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.Done
-import androidx.compose.material.icons.outlined.Download
-import androidx.compose.material.icons.outlined.FileDownloadOff
-import androidx.compose.material.icons.outlined.RemoveDone
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.contentColorFor
@@ -24,6 +16,14 @@ import eu.kanade.presentation.entry.translation.ChapterTranslateAction
 import me.saket.swipe.SwipeableActionsBox
 import mihon.entry.interactions.download.EntryDownloadState
 import mihon.entry.interactions.translate.EntryTranslateStatus
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.BookmarkAdd
+import mihon.icons.materialsymbols.rounded.BookmarkRemove
+import mihon.icons.materialsymbols.rounded.Check
+import mihon.icons.materialsymbols.rounded.Delete
+import mihon.icons.materialsymbols.rounded.Download
+import mihon.icons.materialsymbols.rounded.FileDownloadOff
+import mihon.icons.materialsymbols.rounded.RemoveDone
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.EntryChildListItemContent
@@ -126,22 +126,22 @@ private fun getSwipeAction(
 ): me.saket.swipe.SwipeAction? {
     return when (action) {
         LibraryPreferences.ChapterSwipeAction.ToggleRead -> swipeAction(
-            icon = if (!read) Icons.Outlined.Done else Icons.Outlined.RemoveDone,
+            icon = if (!read) MaterialSymbols.Rounded.Check else MaterialSymbols.Rounded.RemoveDone,
             background = background,
             isUndo = read,
             onSwipe = onSwipe,
         )
         LibraryPreferences.ChapterSwipeAction.ToggleBookmark -> swipeAction(
-            icon = if (!bookmark) Icons.Outlined.BookmarkAdd else Icons.Outlined.BookmarkRemove,
+            icon = if (!bookmark) MaterialSymbols.Rounded.BookmarkAdd else MaterialSymbols.Rounded.BookmarkRemove,
             background = background,
             isUndo = bookmark,
             onSwipe = onSwipe,
         )
         LibraryPreferences.ChapterSwipeAction.Download -> swipeAction(
             icon = when (downloadState) {
-                EntryDownloadState.NOT_DOWNLOADED, EntryDownloadState.ERROR -> Icons.Outlined.Download
-                EntryDownloadState.QUEUE, EntryDownloadState.DOWNLOADING -> Icons.Outlined.FileDownloadOff
-                EntryDownloadState.DOWNLOADED -> Icons.Outlined.Delete
+                EntryDownloadState.NOT_DOWNLOADED, EntryDownloadState.ERROR -> MaterialSymbols.Rounded.Download
+                EntryDownloadState.QUEUE, EntryDownloadState.DOWNLOADING -> MaterialSymbols.Rounded.FileDownloadOff
+                EntryDownloadState.DOWNLOADED -> MaterialSymbols.Rounded.Delete
             },
             background = background,
             onSwipe = onSwipe,

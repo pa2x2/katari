@@ -7,8 +7,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.RadioButton
@@ -25,6 +23,8 @@ import androidx.compose.ui.unit.dp
 import mihon.entry.interactions.lifecycle.profile.EntryProfileMoveConflict
 import mihon.entry.interactions.lifecycle.profile.EntryProfileMoveConflictResolution
 import mihon.feature.profiles.core.Profile
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Lock
 import tachiyomi.domain.category.model.Category
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -50,7 +50,10 @@ fun MoveEntriesProfileDialog(
                     ) {
                         Text(profile.name, modifier = Modifier.weight(1f))
                         if (profile.requiresAuth) {
-                            Icon(Icons.Outlined.Lock, contentDescription = stringResource(MR.strings.profiles_locked))
+                            Icon(
+                                MaterialSymbols.Rounded.Lock,
+                                contentDescription = stringResource(MR.strings.profiles_locked),
+                            )
                         }
                     }
                 }

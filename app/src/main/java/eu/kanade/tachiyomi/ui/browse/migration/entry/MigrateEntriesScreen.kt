@@ -6,10 +6,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.ArrowForward
-import androidx.compose.material.icons.outlined.Deselect
-import androidx.compose.material.icons.outlined.SelectAll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SmallExtendedFloatingActionButton
@@ -37,6 +33,10 @@ import eu.kanade.tachiyomi.ui.entry.EntryScreen
 import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.flow.collectLatest
 import mihon.feature.migration.config.MigrationConfigScreen
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.automirroredrounded.ArrowForward
+import mihon.icons.materialsymbols.rounded.Deselect
+import mihon.icons.materialsymbols.rounded.SelectAll
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.FastScrollLazyColumn
 import tachiyomi.presentation.core.components.material.Scaffold
@@ -113,13 +113,13 @@ data class MigrateEntriesScreen(
                             listOf(
                                 AppBar.Action(
                                     title = selectAllLabel,
-                                    icon = Icons.Outlined.SelectAll,
+                                    icon = MaterialSymbols.Rounded.SelectAll,
                                     onClick = screenModel::selectAllVisible,
                                     enabled = state.visibleItems.isNotEmpty() && !state.allVisibleSelected,
                                 ),
                                 AppBar.Action(
                                     title = deselectAllLabel,
-                                    icon = Icons.Outlined.Deselect,
+                                    icon = MaterialSymbols.Rounded.Deselect,
                                     onClick = screenModel::deselectAllVisible,
                                     enabled = state.visibleSelectionCount > 0,
                                 ),
@@ -133,7 +133,7 @@ data class MigrateEntriesScreen(
                 SmallExtendedFloatingActionButton(
                     text = { Text(text = stringResource(MR.strings.migrationConfigScreen_continueButtonText)) },
                     icon = {
-                        Icon(imageVector = Icons.AutoMirrored.Outlined.ArrowForward, contentDescription = null)
+                        Icon(imageVector = MaterialSymbols.AutoMirroredRounded.ArrowForward, contentDescription = null)
                     },
                     onClick = {
                         val groups = screenModel.migrationGroups()

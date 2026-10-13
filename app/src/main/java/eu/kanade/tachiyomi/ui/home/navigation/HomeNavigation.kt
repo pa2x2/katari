@@ -17,12 +17,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.outlined.AccountCircle
-import androidx.compose.material.icons.outlined.Menu
-import androidx.compose.material.icons.outlined.QueryStats
-import androidx.compose.material.icons.outlined.Translate
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.DropdownMenuItem
@@ -45,6 +39,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import eu.kanade.tachiyomi.R
 import mihon.core.common.HomeScreenTabs
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.AccountCircle
+import mihon.icons.materialsymbols.rounded.Menu
+import mihon.icons.materialsymbols.rounded.QueryStats
+import mihon.icons.materialsymbols.rounded.Translate
+import mihon.icons.materialsymbols.roundedfilled.Home
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.material.NavigationBar
 import tachiyomi.presentation.core.components.material.NavigationRail
@@ -261,7 +261,7 @@ private fun RowScope.HomeNavigationBarItem(
                             .offset(x = (-7).dp, y = (-5).dp),
                     ) {
                         Icon(
-                            imageVector = Icons.Filled.Home,
+                            imageVector = MaterialSymbols.RoundedFilled.Home,
                             contentDescription = stringResource(MR.strings.home_navigation_startup),
                             modifier = Modifier.size(10.dp),
                         )
@@ -292,7 +292,7 @@ private fun HomeNavigationMenuIcon(selectedOverflowTab: HomeScreenTabs?) {
     ) { activeTab ->
         if (activeTab == null) {
             Icon(
-                imageVector = Icons.Outlined.Menu,
+                imageVector = MaterialSymbols.Rounded.Menu,
                 contentDescription = stringResource(MR.strings.home_navigation_menu),
             )
         } else {
@@ -306,7 +306,7 @@ private fun HomeNavigationMenuIcon(selectedOverflowTab: HomeScreenTabs?) {
                     showBadge = false,
                 )
                 Icon(
-                    imageVector = Icons.Outlined.Menu,
+                    imageVector = MaterialSymbols.Rounded.Menu,
                     contentDescription = stringResource(MR.strings.home_navigation_menu),
                     modifier = Modifier.size(20.dp),
                 )
@@ -324,19 +324,19 @@ private fun HomeNavigationBaseIcon(
     key(tab) {
         if (tab == HomeScreenTabs.Profiles) {
             Icon(
-                imageVector = Icons.Outlined.AccountCircle,
+                imageVector = MaterialSymbols.Rounded.AccountCircle,
                 contentDescription = stringResource(MR.strings.profiles_switch_summary),
                 modifier = modifier,
             )
         } else if (tab == HomeScreenTabs.Translator) {
             Icon(
-                imageVector = Icons.Outlined.Translate,
+                imageVector = MaterialSymbols.Rounded.Translate,
                 contentDescription = homeNavigationTitle(tab),
                 modifier = modifier,
             )
         } else if (tab == HomeScreenTabs.Statistics) {
             Icon(
-                imageVector = Icons.Outlined.QueryStats,
+                imageVector = MaterialSymbols.Rounded.QueryStats,
                 contentDescription = homeNavigationTitle(tab),
                 modifier = modifier,
             )

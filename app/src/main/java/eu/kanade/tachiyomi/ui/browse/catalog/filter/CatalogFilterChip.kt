@@ -3,8 +3,6 @@ package eu.kanade.tachiyomi.ui.browse.catalog
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.FilterList
 import androidx.compose.material3.Badge
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -17,6 +15,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.unit.dp
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.FilterList
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -32,7 +32,7 @@ internal fun CatalogFilterChip(
         onClick = onClick,
         leadingIcon = {
             Icon(
-                imageVector = Icons.Outlined.FilterList,
+                imageVector = MaterialSymbols.Rounded.FilterList,
                 contentDescription = null,
                 modifier = Modifier.size(FilterChipDefaults.IconSize),
             )

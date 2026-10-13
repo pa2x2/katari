@@ -5,8 +5,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -41,6 +39,8 @@ import eu.kanade.tachiyomi.ui.library.update.report.LibraryUpdateReportScreen
 import mihon.feature.library.update.planning.LibraryUpdatePreview
 import mihon.feature.library.update.planning.LibraryUpdateSettings
 import mihon.feature.library.update.planning.LibraryUpdateSkipRule
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Tune
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.library.service.LibraryPreferences.Companion.DEVICE_CHARGING
 import tachiyomi.domain.library.service.LibraryPreferences.Companion.DEVICE_NETWORK_NOT_METERED
@@ -222,7 +222,7 @@ object SettingsLibraryUpdatesScreen : SearchableSettings {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             if (overrides != null) {
                                 Icon(
-                                    imageVector = Icons.Outlined.Tune,
+                                    imageVector = MaterialSymbols.Rounded.Tune,
                                     contentDescription = null,
                                     tint = MaterialTheme.colorScheme.primary,
                                     modifier = Modifier.padding(end = 12.dp),

@@ -13,15 +13,6 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material.icons.outlined.Download
-import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material.icons.outlined.OpenInBrowser
-import androidx.compose.material.icons.outlined.Public
-import androidx.compose.material.icons.outlined.Refresh
-import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material.icons.outlined.VerifiedUser
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -62,6 +53,14 @@ import eu.kanade.tachiyomi.ui.browse.extension.ExtensionUiModel
 import eu.kanade.tachiyomi.ui.browse.extension.supportedEntryTypesForDisplay
 import eu.kanade.tachiyomi.util.system.LocaleHelper
 import eu.kanade.tachiyomi.util.system.launchRequestPackageInstallsPermission
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Close
+import mihon.icons.materialsymbols.rounded.Download
+import mihon.icons.materialsymbols.rounded.Info
+import mihon.icons.materialsymbols.rounded.OpenInBrowser
+import mihon.icons.materialsymbols.rounded.Refresh
+import mihon.icons.materialsymbols.rounded.Settings
+import mihon.icons.materialsymbols.rounded.VerifiedUser
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.DotSeparatorNoSpaceText
 import tachiyomi.presentation.core.components.FastScrollLazyColumn
@@ -114,7 +113,7 @@ fun ExtensionScreen(
                     actions = listOf(
                         EmptyScreenAction(
                             stringRes = MR.strings.extensionStores,
-                            icon = Icons.Outlined.Settings,
+                            icon = MaterialSymbols.Rounded.Settings,
                             onClick = { navigator.push(ExtensionStoresScreen()) },
                         ),
                     ),
@@ -523,7 +522,7 @@ private fun ExtensionItemActions(
             !isIdle -> {
                 IconButton(onClick = { onClickItemCancel(extension) }) {
                     Icon(
-                        imageVector = Icons.Outlined.Close,
+                        imageVector = MaterialSymbols.Rounded.Close,
                         contentDescription = stringResource(MR.strings.action_cancel),
                     )
                 }
@@ -531,13 +530,13 @@ private fun ExtensionItemActions(
             installStep is InstallStep.Error -> {
                 IconButton(onClick = { onClickItemError(installStep) }) {
                     Icon(
-                        imageVector = Icons.Outlined.Info,
+                        imageVector = MaterialSymbols.Rounded.Info,
                         contentDescription = stringResource(MR.strings.ext_install_error_details),
                     )
                 }
                 IconButton(onClick = { onClickItemAction(extension) }) {
                     Icon(
-                        imageVector = Icons.Outlined.Refresh,
+                        imageVector = MaterialSymbols.Rounded.Refresh,
                         contentDescription = stringResource(MR.strings.action_retry),
                     )
                 }
@@ -545,7 +544,7 @@ private fun ExtensionItemActions(
             installStep == InstallStep.RequiresUserAction -> {
                 IconButton(onClick = { onClickItemAction(extension) }) {
                     Icon(
-                        imageVector = Icons.Outlined.Download,
+                        imageVector = MaterialSymbols.Rounded.Download,
                         contentDescription = stringResource(MR.strings.ext_update),
                     )
                 }
@@ -555,7 +554,7 @@ private fun ExtensionItemActions(
                     is Extension.Loaded -> {
                         IconButton(onClick = { onClickItemSecondaryAction(extension) }) {
                             Icon(
-                                imageVector = Icons.Outlined.Settings,
+                                imageVector = MaterialSymbols.Rounded.Settings,
                                 contentDescription = stringResource(MR.strings.action_settings),
                             )
                         }
@@ -563,7 +562,7 @@ private fun ExtensionItemActions(
                         if (extension.hasUpdate) {
                             IconButton(onClick = { onClickItemAction(extension) }) {
                                 Icon(
-                                    imageVector = Icons.Outlined.Download,
+                                    imageVector = MaterialSymbols.Rounded.Download,
                                     contentDescription = stringResource(MR.strings.ext_update),
                                 )
                             }
@@ -573,7 +572,11 @@ private fun ExtensionItemActions(
                         val isUntrusted = extension.reason is Extension.NotLoaded.Reason.Untrusted
                         IconButton(onClick = { onClickItemSecondaryAction(extension) }) {
                             Icon(
-                                imageVector = if (isUntrusted) Icons.Outlined.VerifiedUser else Icons.Outlined.Info,
+                                imageVector = if (isUntrusted) {
+                                    MaterialSymbols.Rounded.VerifiedUser
+                                } else {
+                                    MaterialSymbols.Rounded.Info
+                                },
                                 contentDescription = if (isUntrusted) {
                                     stringResource(MR.strings.ext_trust)
                                 } else {
@@ -585,7 +588,7 @@ private fun ExtensionItemActions(
                         if (extension.hasUpdate) {
                             IconButton(onClick = { onClickItemAction(extension) }) {
                                 Icon(
-                                    imageVector = Icons.Outlined.Download,
+                                    imageVector = MaterialSymbols.Rounded.Download,
                                     contentDescription = stringResource(MR.strings.ext_update),
                                 )
                             }
@@ -597,7 +600,7 @@ private fun ExtensionItemActions(
                                 onClick = { onClickItemSecondaryAction(extension) },
                             ) {
                                 Icon(
-                                    imageVector = Icons.Outlined.OpenInBrowser,
+                                    imageVector = MaterialSymbols.Rounded.OpenInBrowser,
                                     contentDescription = stringResource(MR.strings.action_open_in_web_view),
                                 )
                             }
@@ -605,7 +608,7 @@ private fun ExtensionItemActions(
 
                         IconButton(onClick = { onClickItemAction(extension) }) {
                             Icon(
-                                imageVector = Icons.Outlined.Download,
+                                imageVector = MaterialSymbols.Rounded.Download,
                                 contentDescription = stringResource(MR.strings.ext_install),
                             )
                         }

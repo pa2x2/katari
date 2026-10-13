@@ -4,9 +4,6 @@ import android.util.DisplayMetrics
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.height
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Dangerous
-import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -22,6 +19,9 @@ import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.coil.InstalledExtensionIcon
 import eu.kanade.tachiyomi.data.coil.InstalledSourceIcon
 import eu.kanade.tachiyomi.extension.model.Extension
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.roundedfilled.Dangerous
+import mihon.icons.materialsymbols.roundedfilled.Warning
 import tachiyomi.domain.source.model.Source
 import tachiyomi.source.local.isLocal
 
@@ -39,7 +39,7 @@ fun SourceIcon(
     when {
         source.isStub -> {
             Image(
-                imageVector = Icons.Filled.Warning,
+                imageVector = MaterialSymbols.RoundedFilled.Warning,
                 contentDescription = null,
                 colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.error),
                 modifier = iconModifier,
@@ -93,7 +93,7 @@ fun ExtensionIcon(
             )
         }
         is Extension.NotLoaded -> Image(
-            imageVector = Icons.Filled.Dangerous,
+            imageVector = MaterialSymbols.RoundedFilled.Dangerous,
             contentDescription = null,
             colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.error),
             modifier = modifier.then(defaultModifier),

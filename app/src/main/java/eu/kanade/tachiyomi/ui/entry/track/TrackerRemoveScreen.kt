@@ -7,8 +7,6 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
@@ -31,6 +29,8 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.util.Screen
 import mihon.entry.interactions.tracking.EntryTrackingFeature
 import mihon.entry.interactions.tracking.EntryTrackingServiceDescriptor
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Delete
 import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.i18n.*
@@ -53,7 +53,7 @@ internal data class TrackerRemoveScreen(
         var removeRemoteTrack by remember { mutableStateOf(false) }
         AlertDialogContent(
             modifier = Modifier.windowInsetsPadding(WindowInsets.systemBars),
-            icon = { Icon(Icons.Outlined.Delete, contentDescription = null) },
+            icon = { Icon(MaterialSymbols.Rounded.Delete, contentDescription = null) },
             title = {
                 Text(
                     text = stringResource(MR.strings.track_delete_title, service.name),

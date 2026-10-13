@@ -13,11 +13,6 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.ArrowForward
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.outlined.Pause
-import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
@@ -57,6 +52,11 @@ import mihon.feature.migration.session.model.SourceMigrationSessionId
 import mihon.feature.migration.session.model.SourceMigrationSessionStage
 import mihon.feature.migration.work.SourceMigrationNotificationVisibility
 import mihon.feature.migration.work.SourceMigrationNotifier
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.automirroredrounded.ArrowForward
+import mihon.icons.materialsymbols.rounded.Check
+import mihon.icons.materialsymbols.rounded.PlayArrow
+import mihon.icons.materialsymbols.roundedfilled.Pause
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.Badge
 import tachiyomi.presentation.core.components.BadgeGroup
@@ -150,14 +150,14 @@ class SourceMigrationReviewScreen(
                                 -> add(
                                     AppBar.Action(
                                         title = stringResource(MR.strings.action_pause),
-                                        icon = Icons.Outlined.Pause,
+                                        icon = MaterialSymbols.RoundedFilled.Pause,
                                         onClick = screenModel::pauseDiscovery,
                                     ),
                                 )
                                 SourceMigrationSessionStage.DISCOVERY_PAUSED -> add(
                                     AppBar.Action(
                                         title = stringResource(MR.strings.action_resume),
-                                        icon = Icons.Outlined.PlayArrow,
+                                        icon = MaterialSymbols.Rounded.PlayArrow,
                                         onClick = screenModel::resumeDiscovery,
                                     ),
                                 )
@@ -166,14 +166,14 @@ class SourceMigrationReviewScreen(
                                 -> add(
                                     AppBar.Action(
                                         title = stringResource(MR.strings.action_pause),
-                                        icon = Icons.Outlined.Pause,
+                                        icon = MaterialSymbols.RoundedFilled.Pause,
                                         onClick = screenModel::pauseExecution,
                                     ),
                                 )
                                 SourceMigrationSessionStage.EXECUTION_PAUSED -> add(
                                     AppBar.Action(
                                         title = stringResource(MR.strings.action_resume),
-                                        icon = Icons.Outlined.PlayArrow,
+                                        icon = MaterialSymbols.Rounded.PlayArrow,
                                         onClick = screenModel::resumeExecution,
                                     ),
                                 )
@@ -216,7 +216,7 @@ class SourceMigrationReviewScreen(
                     },
                     icon = {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Outlined.ArrowForward,
+                            imageVector = MaterialSymbols.AutoMirroredRounded.ArrowForward,
                             contentDescription = null,
                         )
                     },
@@ -494,7 +494,7 @@ private fun SourceMigrationFilterChip(
         leadingIcon = if (selected) {
             {
                 Icon(
-                    imageVector = Icons.Filled.Check,
+                    imageVector = MaterialSymbols.Rounded.Check,
                     contentDescription = null,
                 )
             }

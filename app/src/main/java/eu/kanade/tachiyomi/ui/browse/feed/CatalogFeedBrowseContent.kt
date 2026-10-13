@@ -20,11 +20,6 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.HelpOutline
-import androidx.compose.material.icons.outlined.KeyboardArrowUp
-import androidx.compose.material.icons.outlined.OpenInBrowser
-import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -66,6 +61,11 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import mihon.entry.interactions.catalogue.EntryCatalogueSourceInfo
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.automirroredrounded.Help
+import mihon.icons.materialsymbols.rounded.KeyboardArrowUp
+import mihon.icons.materialsymbols.rounded.OpenInBrowser
+import mihon.icons.materialsymbols.rounded.Refresh
 import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.domain.source.model.CatalogListItem
 import tachiyomi.i18n.*
@@ -228,7 +228,7 @@ fun CatalogFeedBrowseContent(
                 listOf(
                     EmptyScreenAction(
                         stringRes = MR.strings.local_source_help_guide,
-                        icon = Icons.AutoMirrored.Outlined.HelpOutline,
+                        icon = MaterialSymbols.AutoMirroredRounded.Help,
                         onClick = onLocalSourceHelpClick,
                     ),
                 )
@@ -236,17 +236,17 @@ fun CatalogFeedBrowseContent(
                 listOf(
                     EmptyScreenAction(
                         stringRes = MR.strings.action_retry,
-                        icon = Icons.Outlined.Refresh,
+                        icon = MaterialSymbols.Rounded.Refresh,
                         onClick = screenModel::refresh,
                     ),
                     EmptyScreenAction(
                         stringRes = MR.strings.action_open_in_web_view,
-                        icon = Icons.Outlined.OpenInBrowser,
+                        icon = MaterialSymbols.Rounded.OpenInBrowser,
                         onClick = onWebViewClick,
                     ),
                     EmptyScreenAction(
                         stringRes = MR.strings.label_help,
-                        icon = Icons.AutoMirrored.Outlined.HelpOutline,
+                        icon = MaterialSymbols.AutoMirroredRounded.Help,
                         onClick = onHelpClick,
                     ),
                 )
@@ -471,7 +471,7 @@ internal fun NewItemsChip(
                 )
             } else {
                 Icon(
-                    imageVector = Icons.Outlined.KeyboardArrowUp,
+                    imageVector = MaterialSymbols.Rounded.KeyboardArrowUp,
                     contentDescription = null,
                 )
             }
@@ -510,7 +510,7 @@ private fun FeedBackToTopButton(
             verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
         ) {
             Icon(
-                imageVector = Icons.Outlined.KeyboardArrowUp,
+                imageVector = MaterialSymbols.Rounded.KeyboardArrowUp,
                 contentDescription = null,
             )
             Text(

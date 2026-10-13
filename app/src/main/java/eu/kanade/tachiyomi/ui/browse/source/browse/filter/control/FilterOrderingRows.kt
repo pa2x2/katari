@@ -10,13 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.Sort
-import androidx.compose.material.icons.outlined.ArrowDownward
-import androidx.compose.material.icons.outlined.ArrowDropDown
-import androidx.compose.material.icons.outlined.ArrowUpward
-import androidx.compose.material.icons.outlined.Check
-import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -38,6 +31,13 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import eu.kanade.tachiyomi.source.entry.EntryFilter
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.automirroredrounded.Sort
+import mihon.icons.materialsymbols.rounded.ArrowDownward
+import mihon.icons.materialsymbols.rounded.ArrowDropDown
+import mihon.icons.materialsymbols.rounded.ArrowUpward
+import mihon.icons.materialsymbols.rounded.Check
+import mihon.icons.materialsymbols.rounded.Tune
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -49,7 +49,7 @@ import tachiyomi.presentation.core.i18n.stringResource
 internal fun FilterSortRow(filter: EntryFilter.Sort, onUpdate: () -> Unit) {
     val selection = filter.state
     FilterMenuRow(
-        icon = Icons.AutoMirrored.Outlined.Sort,
+        icon = MaterialSymbols.AutoMirroredRounded.Sort,
         label = filter.name,
         value = selection?.let { filter.values.getOrNull(it.index) } ?: stringResource(MR.strings.filter_sort_unset),
         options = filter.values.toList(),
@@ -70,7 +70,7 @@ internal fun FilterSortRow(filter: EntryFilter.Sort, onUpdate: () -> Unit) {
 @Composable
 internal fun FilterOrderingSelectRow(filter: EntryFilter.Select<*>, onUpdate: () -> Unit) {
     FilterMenuRow(
-        icon = Icons.Outlined.Tune,
+        icon = MaterialSymbols.Rounded.Tune,
         label = filter.name,
         value = filter.values.getOrNull(filter.state)?.toString().orEmpty(),
         options = filter.values.map { it.toString() },
@@ -123,7 +123,7 @@ private fun FilterMenuRow(
                             overflow = TextOverflow.Ellipsis,
                             modifier = Modifier.weight(1f, fill = false),
                         )
-                        Icon(Icons.Outlined.ArrowDropDown, contentDescription = null)
+                        Icon(MaterialSymbols.Rounded.ArrowDropDown, contentDescription = null)
                     }
                 }
             }
@@ -133,7 +133,7 @@ private fun FilterMenuRow(
                         text = { Text(option) },
                         leadingIcon = {
                             if (index == selectedIndex) {
-                                Icon(Icons.Outlined.Check, contentDescription = null)
+                                Icon(MaterialSymbols.Rounded.Check, contentDescription = null)
                             } else {
                                 Spacer(Modifier.width(24.dp))
                             }
@@ -160,7 +160,7 @@ private fun FilterSortDirection(ascending: Boolean?, enabled: Boolean, onChange:
             onClick = { onChange(false) },
             enabled = enabled,
             shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
-            icon = { Icon(Icons.Outlined.ArrowDownward, contentDescription = null, Modifier.size(18.dp)) },
+            icon = { Icon(MaterialSymbols.Rounded.ArrowDownward, contentDescription = null, Modifier.size(18.dp)) },
             modifier = Modifier.semantics { contentDescription = descendingDescription },
         ) {
             Text(stringResource(MR.strings.filter_sort_desc))
@@ -170,7 +170,7 @@ private fun FilterSortDirection(ascending: Boolean?, enabled: Boolean, onChange:
             onClick = { onChange(true) },
             enabled = enabled,
             shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
-            icon = { Icon(Icons.Outlined.ArrowUpward, contentDescription = null, Modifier.size(18.dp)) },
+            icon = { Icon(MaterialSymbols.Rounded.ArrowUpward, contentDescription = null, Modifier.size(18.dp)) },
             modifier = Modifier.semantics { contentDescription = ascendingDescription },
         ) {
             Text(stringResource(MR.strings.filter_sort_asc))

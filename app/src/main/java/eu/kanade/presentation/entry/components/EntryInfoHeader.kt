@@ -32,18 +32,6 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.appendInlineContent
 import androidx.compose.foundation.text.selection.SelectionContainer
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.BrokenImage
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.HourglassEmpty
-import androidx.compose.material.icons.filled.Image
-import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material.icons.outlined.Brush
-import androidx.compose.material.icons.outlined.OpenInBrowser
-import androidx.compose.material.icons.outlined.PersonOutline
-import androidx.compose.material.icons.outlined.Refresh
-import androidx.compose.material.icons.outlined.Sync
-import androidx.compose.material.icons.outlined.Update
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -115,6 +103,17 @@ import mihon.core.common.image.progressive.ProgressiveImageState
 import mihon.entry.interactions.catalogue.EntryCatalogueFeature
 import mihon.entry.interactions.media.EntryPreviewPage
 import mihon.entry.interactions.media.EntryPreviewPageStatus
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Brush
+import mihon.icons.materialsymbols.rounded.OpenInBrowser
+import mihon.icons.materialsymbols.rounded.Person
+import mihon.icons.materialsymbols.rounded.Refresh
+import mihon.icons.materialsymbols.rounded.Sync
+import mihon.icons.materialsymbols.rounded.Update
+import mihon.icons.materialsymbols.roundedfilled.BrokenImage
+import mihon.icons.materialsymbols.roundedfilled.CheckCircle
+import mihon.icons.materialsymbols.roundedfilled.Image
+import mihon.icons.materialsymbols.roundedfilled.Warning
 import org.intellij.markdown.MarkdownElementTypes
 import org.intellij.markdown.MarkdownTokenTypes
 import org.intellij.markdown.ast.findChildOfType
@@ -250,7 +249,7 @@ fun EntryActionRow(
         }
         EntryActionButton(
             title = updatesLabel.text,
-            icon = Icons.Outlined.Update,
+            icon = MaterialSymbols.Rounded.Update,
             color = when (updatesLabel.emphasis) {
                 EntryUpdatesLabel.Emphasis.Quiet -> defaultActionButtonColor
                 EntryUpdatesLabel.Emphasis.Highlighted -> MaterialTheme.colorScheme.primary
@@ -265,7 +264,11 @@ fun EntryActionRow(
                 } else {
                     pluralStringResource(MR.plurals.num_trackers, count = trackingCount, trackingCount)
                 },
-                icon = if (trackingCount == 0) Icons.Outlined.Sync else Icons.Filled.CheckCircle,
+                icon = if (trackingCount == 0) {
+                    MaterialSymbols.Rounded.Sync
+                } else {
+                    MaterialSymbols.RoundedFilled.CheckCircle
+                },
                 color = if (trackingCount == 0) defaultActionButtonColor else MaterialTheme.colorScheme.primary,
                 onClick = onTrackingClicked,
             )
@@ -273,7 +276,7 @@ fun EntryActionRow(
         if (onWebViewClicked != null) {
             EntryActionButton(
                 title = stringResource(MR.strings.action_web_view),
-                icon = Icons.Outlined.OpenInBrowser,
+                icon = MaterialSymbols.Rounded.OpenInBrowser,
                 color = defaultActionButtonColor,
                 onClick = onWebViewClicked,
                 onLongClick = onWebViewLongClicked,
@@ -282,7 +285,7 @@ fun EntryActionRow(
         if (onDuplicatesClicked != null) {
             EntryActionButton(
                 title = stringResource(MR.strings.action_duplicates),
-                icon = Icons.Filled.Warning,
+                icon = MaterialSymbols.RoundedFilled.Warning,
                 color = MaterialTheme.colorScheme.error,
                 onClick = onDuplicatesClicked,
             )
@@ -491,7 +494,7 @@ fun PreviewContent(
     centerStates: Boolean = false,
     loadingContent: @Composable BoxScope.() -> Unit = {
         PreviewMessage(
-            icon = Icons.Filled.Image,
+            icon = MaterialSymbols.RoundedFilled.Image,
             text = stringResource(MR.strings.transition_pages_loading),
             modifier = Modifier.align(Alignment.Center),
         )
@@ -515,7 +518,7 @@ fun PreviewContent(
             }
             state.pages.isEmpty() -> {
                 PreviewMessage(
-                    icon = Icons.Filled.Warning,
+                    icon = MaterialSymbols.RoundedFilled.Warning,
                     text = stringResource(MR.strings.manga_preview_empty),
                     modifier = if (centerStates) {
                         Modifier.align(Alignment.Center)
@@ -667,7 +670,7 @@ private fun EntryPreviewTile(
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         Icon(
-                            imageVector = Icons.Filled.BrokenImage,
+                            imageVector = MaterialSymbols.RoundedFilled.BrokenImage,
                             contentDescription = null,
                         )
                         Text(
@@ -718,12 +721,12 @@ fun PreviewError(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         PreviewMessage(
-            icon = Icons.Filled.Warning,
+            icon = MaterialSymbols.RoundedFilled.Warning,
             text = message,
             modifier = Modifier.weight(1f),
         )
         TextButton(onClick = onRetry) {
-            Icon(imageVector = Icons.Outlined.Refresh, contentDescription = null)
+            Icon(imageVector = MaterialSymbols.Rounded.Refresh, contentDescription = null)
             Spacer(modifier = Modifier.width(8.dp))
             Text(text = stringResource(MR.strings.action_retry))
         }
@@ -887,7 +890,7 @@ private fun ColumnScope.EntryContentInfo(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
-            imageVector = Icons.Outlined.PersonOutline,
+            imageVector = MaterialSymbols.Rounded.Person,
             contentDescription = null,
             modifier = Modifier.size(16.dp),
         )
@@ -918,7 +921,7 @@ private fun ColumnScope.EntryContentInfo(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(
-                imageVector = Icons.Outlined.Brush,
+                imageVector = MaterialSymbols.Rounded.Brush,
                 contentDescription = null,
                 modifier = Modifier.size(16.dp),
             )
@@ -957,7 +960,7 @@ private fun ColumnScope.EntryContentInfo(
             DotSeparatorText()
             if (isStubSource) {
                 Icon(
-                    imageVector = Icons.Filled.Warning,
+                    imageVector = MaterialSymbols.RoundedFilled.Warning,
                     contentDescription = null,
                     modifier = Modifier
                         .padding(end = 4.dp)

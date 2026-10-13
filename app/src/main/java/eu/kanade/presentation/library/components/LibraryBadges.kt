@@ -1,9 +1,6 @@
 package eu.kanade.presentation.library.components
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Download
-import androidx.compose.material.icons.outlined.Folder
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -11,6 +8,9 @@ import eu.kanade.presentation.browse.components.CatalogTypeBadge
 import eu.kanade.presentation.entry.components.EntryActionIcons
 import eu.kanade.presentation.theme.TachiyomiPreviewTheme
 import eu.kanade.tachiyomi.source.entry.EntryType
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Download
+import mihon.icons.materialsymbols.rounded.Folder
 import tachiyomi.domain.library.model.LibraryItem
 import tachiyomi.presentation.core.components.Badge
 
@@ -19,7 +19,7 @@ internal fun DownloadsBadge(count: Int) {
     if (count > 0) {
         Badge(
             text = "$count",
-            icon = Icons.Outlined.Download,
+            icon = MaterialSymbols.Rounded.Download,
             color = MaterialTheme.colorScheme.surfaceContainerHighest,
             textColor = MaterialTheme.colorScheme.onSurface,
         )
@@ -41,7 +41,7 @@ internal fun UnreadBadge(count: Long) {
 internal fun LocalBadge(isLocal: Boolean) {
     if (isLocal) {
         Badge(
-            imageVector = Icons.Outlined.Folder,
+            imageVector = MaterialSymbols.Rounded.Folder,
             color = MaterialTheme.colorScheme.tertiary,
             iconColor = MaterialTheme.colorScheme.onTertiary,
         )

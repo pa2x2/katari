@@ -8,8 +8,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.AutoStories
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -22,6 +20,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.more.stats.recap.palette.RecapPalette
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.AutoStories
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -40,7 +40,7 @@ internal fun StatisticsYearRecapBanner(title: String, onOpen: () -> Unit, modifi
             .clickable(onClick = onOpen)
             .padding(16.dp),
     ) {
-        Icon(Icons.Outlined.AutoStories, contentDescription = null, tint = palette.accent)
+        Icon(MaterialSymbols.Rounded.AutoStories, contentDescription = null, tint = palette.accent)
         Column(Modifier.weight(1f)) {
             Text(
                 text = stringResource(MR.strings.statistics_recap_banner_title, title),

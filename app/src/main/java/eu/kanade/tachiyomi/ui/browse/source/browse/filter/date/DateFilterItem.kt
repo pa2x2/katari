@@ -5,9 +5,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.CalendarMonth
-import androidx.compose.material.icons.outlined.Clear
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -24,6 +21,9 @@ import androidx.compose.ui.unit.dp
 import eu.kanade.tachiyomi.source.entry.filter.EntryDateFilter
 import eu.kanade.tachiyomi.source.entry.filter.EntryPartialDate
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.validation.displayMessage
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.CalendarMonth
+import mihon.icons.materialsymbols.rounded.Close
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -48,7 +48,7 @@ internal fun DateFilterItem(filter: EntryDateFilter, isError: Boolean, onUpdate:
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
-            Icons.Outlined.CalendarMonth,
+            MaterialSymbols.Rounded.CalendarMonth,
             contentDescription = null,
             tint = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
         )
@@ -78,7 +78,7 @@ internal fun DateFilterItem(filter: EntryDateFilter, isError: Boolean, onUpdate:
                 filter.dateValue = null
                 onUpdate()
             }) {
-                Icon(Icons.Outlined.Clear, stringResource(MR.strings.filter_clear_date))
+                Icon(MaterialSymbols.Rounded.Close, stringResource(MR.strings.filter_clear_date))
             }
         }
     }

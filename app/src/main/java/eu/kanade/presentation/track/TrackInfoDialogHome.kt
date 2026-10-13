@@ -22,9 +22,6 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.DropdownMenuItem
@@ -58,6 +55,9 @@ import eu.kanade.tachiyomi.util.lang.toJavaLocalDate
 import eu.kanade.tachiyomi.util.system.copyToClipboard
 import mihon.entry.interactions.tracking.EntryTrackingServiceDescriptor
 import mihon.entry.interactions.tracking.EntryTrackingSessionService
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.MoreVert
+import mihon.icons.materialsymbols.roundedfilled.VisibilityOff
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import java.time.format.DateTimeFormatter
@@ -178,7 +178,7 @@ private fun TrackInfoItem(
                             modifier = Modifier.absoluteOffset(x = (-5).dp),
                         ) {
                             Icon(
-                                imageVector = Icons.Filled.VisibilityOff,
+                                imageVector = MaterialSymbols.RoundedFilled.VisibilityOff,
                                 contentDescription = stringResource(MR.strings.tracked_privately),
                                 modifier = Modifier.size(14.dp),
                             )
@@ -338,7 +338,7 @@ private fun TrackInfoItemMenu(
     Box(modifier = Modifier.wrapContentSize(Alignment.TopStart)) {
         IconButton(onClick = { expanded = true }) {
             Icon(
-                imageVector = Icons.Outlined.MoreVert,
+                imageVector = MaterialSymbols.Rounded.MoreVert,
                 contentDescription = stringResource(MR.strings.label_more),
             )
         }

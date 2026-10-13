@@ -7,8 +7,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.selection.selectableGroup
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExposedDropdownMenu
 import androidx.compose.material3.ExposedDropdownMenuAnchorType
@@ -27,6 +25,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Check
 
 private const val MAX_CHIP_OPTIONS = 5
 private const val MAX_CHIP_LABEL_LENGTH = 16
@@ -82,7 +82,7 @@ private fun FilterChoiceChips(
                     leadingIcon = if (selected) {
                         {
                             Icon(
-                                Icons.Outlined.Check,
+                                MaterialSymbols.Rounded.Check,
                                 contentDescription = null,
                                 Modifier.size(FilterChipDefaults.IconSize),
                             )

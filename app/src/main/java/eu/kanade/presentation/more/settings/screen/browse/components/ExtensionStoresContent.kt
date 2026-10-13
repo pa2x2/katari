@@ -7,12 +7,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.Label
-import androidx.compose.material.icons.outlined.ContentCopy
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.OpenInBrowser
-import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -22,6 +16,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import mihon.domain.extension.model.ExtensionStore
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.automirroredrounded.Label
+import mihon.icons.materialsymbols.rounded.ContentCopy
+import mihon.icons.materialsymbols.rounded.Delete
+import mihon.icons.materialsymbols.rounded.OpenInBrowser
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
@@ -82,7 +81,7 @@ private fun ExtensionStoresListItem(
                 ),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Icon(imageVector = Icons.AutoMirrored.Outlined.Label, contentDescription = null)
+            Icon(imageVector = MaterialSymbols.AutoMirroredRounded.Label, contentDescription = null)
             Text(
                 text = store.name,
                 modifier = Modifier.padding(start = MaterialTheme.padding.medium),
@@ -96,7 +95,7 @@ private fun ExtensionStoresListItem(
         ) {
             IconButton(onClick = onOpenWebsite) {
                 Icon(
-                    imageVector = Icons.Outlined.OpenInBrowser,
+                    imageVector = MaterialSymbols.Rounded.OpenInBrowser,
                     contentDescription = stringResource(MR.strings.action_open_in_browser),
                 )
             }
@@ -112,14 +111,14 @@ private fun ExtensionStoresListItem(
 
             IconButton(onClick = onCopy) {
                 Icon(
-                    imageVector = Icons.Outlined.ContentCopy,
+                    imageVector = MaterialSymbols.Rounded.ContentCopy,
                     contentDescription = stringResource(MR.strings.action_copy_to_clipboard),
                 )
             }
 
             IconButton(onClick = onDelete) {
                 Icon(
-                    imageVector = Icons.Outlined.Delete,
+                    imageVector = MaterialSymbols.Rounded.Delete,
                     contentDescription = stringResource(MR.strings.action_delete),
                 )
             }

@@ -7,9 +7,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Done
-import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -25,6 +22,9 @@ import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.more.settings.LocalPreferenceHighlighted
 import eu.kanade.presentation.track.components.TrackLogoIcon
 import mihon.entry.interactions.tracking.EntryTrackingServiceDescriptor
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Check
+import mihon.icons.materialsymbols.rounded.Refresh
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.pulsingHighlightBackground
 import tachiyomi.presentation.core.i18n.stringResource
@@ -82,7 +82,7 @@ fun TrackingPreferenceWidget(
                         )
                     } else {
                         Icon(
-                            imageVector = Icons.Outlined.Refresh,
+                            imageVector = MaterialSymbols.Rounded.Refresh,
                             contentDescription = stringResource(MR.strings.refresh_tracker_profile),
                         )
                     }
@@ -90,7 +90,7 @@ fun TrackingPreferenceWidget(
             }
             if (isLoggedIn) {
                 Icon(
-                    imageVector = Icons.Outlined.Done,
+                    imageVector = MaterialSymbols.Rounded.Check,
                     modifier = Modifier
                         .padding(4.dp)
                         .size(32.dp),

@@ -9,9 +9,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ExpandLess
-import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -35,6 +32,9 @@ import eu.kanade.presentation.entry.components.EntryCover
 import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.presentation.more.stats.components.StatisticsDurationPrecision
 import eu.kanade.presentation.more.stats.components.rememberStatisticsDurationFormatter
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.KeyboardArrowDown
+import mihon.icons.materialsymbols.rounded.KeyboardArrowUp
 import tachiyomi.domain.history.model.activity.HistoryActivitySegmentDetail
 import tachiyomi.domain.history.model.activity.HistoryActivitySessionDetail
 import tachiyomi.i18n.*
@@ -208,7 +208,11 @@ internal fun ActivitySessionCard(
                     )
                     Spacer(Modifier.width(8.dp))
                     Icon(
-                        imageVector = if (childrenExpanded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
+                        imageVector = if (childrenExpanded) {
+                            MaterialSymbols.Rounded.KeyboardArrowUp
+                        } else {
+                            MaterialSymbols.Rounded.KeyboardArrowDown
+                        },
                         contentDescription = stringResource(
                             if (childrenExpanded) MR.strings.action_collapse else MR.strings.action_expand,
                         ),

@@ -2,10 +2,6 @@ package eu.kanade.presentation.library.components
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Row
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Deselect
-import androidx.compose.material.icons.outlined.FilterList
-import androidx.compose.material.icons.outlined.SelectAll
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -20,6 +16,10 @@ import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppBarActions
 import eu.kanade.presentation.components.SearchToolbar
 import kotlinx.collections.immutable.toPersistentList
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Deselect
+import mihon.icons.materialsymbols.rounded.FilterList
+import mihon.icons.materialsymbols.rounded.SelectAll
 import tachiyomi.domain.library.model.LibraryGrouping
 import tachiyomi.domain.library.model.LibraryGroupingDimension
 import tachiyomi.i18n.*
@@ -115,7 +115,7 @@ private fun LibraryRegularToolbar(
                     add(
                         AppBar.Action(
                             title = stringResource(MR.strings.action_filter),
-                            icon = Icons.Outlined.FilterList,
+                            icon = MaterialSymbols.Rounded.FilterList,
                             iconTint = filterTint,
                             onClick = onClickFilter,
                         ),
@@ -163,12 +163,12 @@ private fun LibrarySelectionToolbar(
                 listOf(
                     AppBar.Action(
                         title = stringResource(MR.strings.action_select_all),
-                        icon = Icons.Outlined.SelectAll,
+                        icon = MaterialSymbols.Rounded.SelectAll,
                         onClick = onClickSelectAll,
                     ),
                     AppBar.Action(
                         title = stringResource(MR.strings.action_select_inverse),
-                        icon = Icons.Outlined.Deselect,
+                        icon = MaterialSymbols.Rounded.Deselect,
                         onClick = onClickInvertSelection,
                     ),
                 ),

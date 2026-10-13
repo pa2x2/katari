@@ -3,9 +3,6 @@ package eu.kanade.presentation.more.stats.components
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ChevronLeft
-import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -17,6 +14,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import eu.kanade.presentation.more.stats.data.StatsActivityWindow
 import eu.kanade.presentation.more.stats.data.StatsRange
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.ChevronLeft
+import mihon.icons.materialsymbols.rounded.ChevronRight
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -37,7 +37,7 @@ internal fun StatisticsWindowNavigation(
     ) {
         if (finite) {
             IconButton(enabled = olderEnabled, onClick = onOlder) {
-                Icon(Icons.Outlined.ChevronLeft, stringResource(MR.strings.statistics_older_activity))
+                Icon(MaterialSymbols.Rounded.ChevronLeft, stringResource(MR.strings.statistics_older_activity))
             }
         }
         Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -52,7 +52,7 @@ internal fun StatisticsWindowNavigation(
         }
         if (finite) {
             IconButton(enabled = newerEnabled, onClick = onNewer) {
-                Icon(Icons.Outlined.ChevronRight, stringResource(MR.strings.statistics_newer_activity))
+                Icon(MaterialSymbols.Rounded.ChevronRight, stringResource(MR.strings.statistics_newer_activity))
             }
         }
     }

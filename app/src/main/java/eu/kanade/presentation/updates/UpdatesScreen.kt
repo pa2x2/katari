@@ -8,12 +8,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.CalendarMonth
-import androidx.compose.material.icons.outlined.Deselect
-import androidx.compose.material.icons.outlined.FilterList
-import androidx.compose.material.icons.outlined.Refresh
-import androidx.compose.material.icons.outlined.SelectAll
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
@@ -35,6 +29,12 @@ import eu.kanade.presentation.entry.components.EntryBottomActionMenu
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.CalendarMonth
+import mihon.icons.materialsymbols.rounded.Deselect
+import mihon.icons.materialsymbols.rounded.FilterList
+import mihon.icons.materialsymbols.rounded.Refresh
+import mihon.icons.materialsymbols.rounded.SelectAll
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.FastScrollLazyColumn
 import tachiyomi.presentation.core.components.material.PullRefresh
@@ -182,7 +182,7 @@ private fun UpdatesAppBar(
                     add(
                         AppBar.Action(
                             title = stringResource(MR.strings.action_filter),
-                            icon = Icons.Outlined.FilterList,
+                            icon = MaterialSymbols.Rounded.FilterList,
                             iconTint = if (hasFilters) MaterialTheme.colorScheme.active else LocalContentColor.current,
                             onClick = onFilterClicked,
                         ),
@@ -192,7 +192,7 @@ private fun UpdatesAppBar(
                     add(
                         AppBar.Action(
                             title = stringResource(MR.strings.action_view_upcoming),
-                            icon = Icons.Outlined.CalendarMonth,
+                            icon = MaterialSymbols.Rounded.CalendarMonth,
                             onClick = onCalendarClicked,
                         ),
                     )
@@ -200,7 +200,7 @@ private fun UpdatesAppBar(
                 add(
                     AppBar.Action(
                         title = stringResource(MR.strings.action_update_library),
-                        icon = Icons.Outlined.Refresh,
+                        icon = MaterialSymbols.Rounded.Refresh,
                         onClick = onUpdateLibrary,
                     ),
                 )
@@ -215,12 +215,12 @@ private fun UpdatesAppBar(
                 listOf(
                     AppBar.Action(
                         title = stringResource(MR.strings.action_select_all),
-                        icon = Icons.Outlined.SelectAll,
+                        icon = MaterialSymbols.Rounded.SelectAll,
                         onClick = onSelectAll,
                     ),
                     AppBar.Action(
                         title = stringResource(MR.strings.action_select_inverse),
-                        icon = Icons.Outlined.Deselect,
+                        icon = MaterialSymbols.Rounded.Deselect,
                         onClick = onInvertSelection,
                     ),
                 ),

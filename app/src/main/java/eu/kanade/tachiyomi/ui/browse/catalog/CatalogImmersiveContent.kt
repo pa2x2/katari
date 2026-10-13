@@ -1,7 +1,5 @@
 package eu.kanade.tachiyomi.ui.browse.catalog
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
@@ -18,6 +16,8 @@ import eu.kanade.tachiyomi.ui.browse.immersive.EntryImmersiveItemKey
 import eu.kanade.tachiyomi.ui.browse.immersive.EntryImmersiveScreenModel
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.StateFlow
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Refresh
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.source.model.CatalogListItem
 import tachiyomi.i18n.*
@@ -66,7 +66,7 @@ internal fun CatalogImmersiveContent(
             actions = persistentListOf(
                 EmptyScreenAction(
                     stringRes = MR.strings.action_retry,
-                    icon = Icons.Outlined.Refresh,
+                    icon = MaterialSymbols.Rounded.Refresh,
                     onClick = catalogList::refresh,
                 ),
             ),

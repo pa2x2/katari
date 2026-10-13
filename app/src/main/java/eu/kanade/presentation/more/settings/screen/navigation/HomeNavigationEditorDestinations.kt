@@ -13,9 +13,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.outlined.DragIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExposedDropdownMenu
 import androidx.compose.material3.ExposedDropdownMenuAnchorType
@@ -48,6 +45,9 @@ import eu.kanade.tachiyomi.ui.home.navigation.HomeNavigationOverflowItems
 import eu.kanade.tachiyomi.ui.home.navigation.homeNavigationTitle
 import mihon.core.common.HomeScreenTabs
 import mihon.core.common.homeScreenContentTabOrder
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.DragIndicator
+import mihon.icons.materialsymbols.roundedfilled.Home
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -72,7 +72,7 @@ internal fun StartupTabSelector(
             singleLine = true,
             label = { Text(stringResource(MR.strings.home_navigation_startup_tab)) },
             leadingIcon = {
-                Icon(Icons.Filled.Home, contentDescription = null)
+                Icon(MaterialSymbols.RoundedFilled.Home, contentDescription = null)
             },
             trailingIcon = {
                 ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
@@ -160,7 +160,7 @@ private fun DestinationTile(
             Spacer(Modifier.width(10.dp))
             Text(title, modifier = Modifier.weight(1f), maxLines = 1)
             Icon(
-                Icons.Outlined.DragIndicator,
+                MaterialSymbols.Rounded.DragIndicator,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -229,7 +229,7 @@ internal fun OverflowDestination(
                     trailingContent = { tab ->
                         if (tab == startupTab) {
                             Icon(
-                                Icons.Filled.Home,
+                                MaterialSymbols.RoundedFilled.Home,
                                 contentDescription = stringResource(MR.strings.home_navigation_startup),
                                 modifier = Modifier.size(16.dp),
                             )

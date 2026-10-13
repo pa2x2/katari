@@ -9,8 +9,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -26,6 +24,8 @@ import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.more.stats.data.StatsProgress
 import eu.kanade.presentation.more.stats.data.StatsType
 import eu.kanade.tachiyomi.source.entry.EntryType
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.ChevronRight
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -56,7 +56,7 @@ internal fun StatisticsMediaCard(
                     Text(count.toString(), style = MaterialTheme.typography.labelLarge)
                     Spacer(Modifier.width(6.dp))
                     Icon(
-                        imageVector = Icons.Outlined.ChevronRight,
+                        imageVector = MaterialSymbols.Rounded.ChevronRight,
                         contentDescription = null,
                         modifier = Modifier.size(20.dp),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,

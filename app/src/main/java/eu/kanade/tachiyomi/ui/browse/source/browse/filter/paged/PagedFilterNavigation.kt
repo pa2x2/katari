@@ -19,8 +19,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsEndWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.UnfoldMore
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -44,6 +42,8 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
 import eu.kanade.tachiyomi.source.entry.EntryFilterNavigationTarget
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.UnfoldMore
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.SettingsItemsPaddings
 import tachiyomi.presentation.core.i18n.stringResource
@@ -61,7 +61,7 @@ internal fun PagedFilterNavigationMenu(
 
     Box(modifier = Modifier.padding(horizontal = SettingsItemsPaddings.Horizontal)) {
         TextButton(onClick = { expanded = true }) {
-            Icon(Icons.Outlined.UnfoldMore, contentDescription = null)
+            Icon(MaterialSymbols.Rounded.UnfoldMore, contentDescription = null)
             Text(stringResource(MR.strings.browse_filter_jump_to))
         }
         DropdownMenu(

@@ -12,11 +12,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material.icons.outlined.ArrowDropDown
-import androidx.compose.material.icons.outlined.DragHandle
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
@@ -50,6 +45,11 @@ import eu.kanade.tachiyomi.ui.browse.feed.FeedLabelText
 import eu.kanade.tachiyomi.ui.browse.feed.rememberFeedLabel
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Add
+import mihon.icons.materialsymbols.rounded.ArrowDropDown
+import mihon.icons.materialsymbols.rounded.Check
+import mihon.icons.materialsymbols.rounded.DragHandle
 import tachiyomi.domain.source.model.Source
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.material.padding
@@ -153,7 +153,7 @@ internal fun FeedSwitcher(
                     trailingIcon = if (feed.id == selectedFeed.id) {
                         {
                             Icon(
-                                imageVector = Icons.Filled.Check,
+                                imageVector = MaterialSymbols.Rounded.Check,
                                 contentDescription = stringResource(MR.strings.selected),
                                 tint = MaterialTheme.colorScheme.primary,
                             )
@@ -167,12 +167,12 @@ internal fun FeedSwitcher(
             DropdownMenuItem(
                 text = { Text(text = stringResource(MR.strings.browse_feed_add)) },
                 onClick = onAddFeed,
-                leadingIcon = { Icon(imageVector = Icons.Outlined.Add, contentDescription = null) },
+                leadingIcon = { Icon(imageVector = MaterialSymbols.Rounded.Add, contentDescription = null) },
             )
             DropdownMenuItem(
                 text = { Text(text = stringResource(MR.strings.browse_manage_feeds)) },
                 onClick = onManageFeeds,
-                leadingIcon = { Icon(imageVector = Icons.Outlined.DragHandle, contentDescription = null) },
+                leadingIcon = { Icon(imageVector = MaterialSymbols.Rounded.DragHandle, contentDescription = null) },
             )
         }
     }
@@ -211,7 +211,7 @@ private fun FeedSwitcherChip(
                 subtitleColor = MaterialTheme.colorScheme.onSecondaryContainer,
                 modifier = Modifier.weight(1f),
             )
-            Icon(imageVector = Icons.Outlined.ArrowDropDown, contentDescription = null)
+            Icon(imageVector = MaterialSymbols.Rounded.ArrowDropDown, contentDescription = null)
         }
     }
 }

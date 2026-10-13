@@ -9,8 +9,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.HorizontalDivider
@@ -39,6 +37,8 @@ import mihon.feature.profiles.core.Profile
 import mihon.feature.profiles.core.ProfileConstants
 import mihon.feature.profiles.core.ProfileManager
 import mihon.feature.profiles.core.hasNameConflict
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Add
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
@@ -68,7 +68,7 @@ class ProfilesSettingsScreen : Screen() {
                     actions = {
                         IconButton(onClick = { dialog = ProfilesDialog.Create }) {
                             Icon(
-                                imageVector = Icons.Outlined.Add,
+                                imageVector = MaterialSymbols.Rounded.Add,
                                 contentDescription = stringResource(MR.strings.profiles_add_profile),
                             )
                         }

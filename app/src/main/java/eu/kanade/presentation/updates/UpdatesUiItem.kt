@@ -14,9 +14,6 @@ import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Bookmark
-import androidx.compose.material.icons.filled.Circle
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
@@ -45,6 +42,9 @@ import eu.kanade.presentation.entry.translation.ChapterTranslateAction
 import eu.kanade.presentation.util.relativeTimeSpanString
 import eu.kanade.tachiyomi.ui.updates.UpdatesItem
 import mihon.entry.interactions.translate.EntryTranslateStatus
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.roundedfilled.Bookmark
+import mihon.icons.materialsymbols.roundedfilled.Circle
 import tachiyomi.domain.updates.model.UpdateItem
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.DotSeparatorText
@@ -301,7 +301,7 @@ internal fun UnifiedUpdatesUiItem(
 
             if (!update.consumed) {
                 Icon(
-                    imageVector = Icons.Filled.Circle,
+                    imageVector = MaterialSymbols.RoundedFilled.Circle,
                     contentDescription = stringResource(
                         update.entryType.entryTypePresentation().unconsumedIndicatorLabel,
                     ),
@@ -314,7 +314,7 @@ internal fun UnifiedUpdatesUiItem(
 
             if (update is UpdateItem.EntryUpdate && update.update.bookmark) {
                 Icon(
-                    imageVector = Icons.Filled.Bookmark,
+                    imageVector = MaterialSymbols.RoundedFilled.Bookmark,
                     contentDescription = stringResource(MR.strings.action_filter_bookmarked),
                     modifier = Modifier
                         .sizeIn(maxHeight = with(LocalDensity.current) { textHeight.toDp() - 2.dp }),

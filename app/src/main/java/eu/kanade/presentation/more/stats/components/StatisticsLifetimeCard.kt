@@ -12,8 +12,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -28,6 +26,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.ChevronRight
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import java.time.LocalDate
@@ -127,7 +127,7 @@ private fun LifetimeRow(
         Text(duration, style = MaterialTheme.typography.labelLarge)
         if (onClick != null) {
             Icon(
-                imageVector = Icons.Outlined.ChevronRight,
+                imageVector = MaterialSymbols.Rounded.ChevronRight,
                 contentDescription = null,
                 modifier = Modifier.padding(start = 4.dp).size(20.dp),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,

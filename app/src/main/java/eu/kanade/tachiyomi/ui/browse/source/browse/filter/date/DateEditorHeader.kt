@@ -7,8 +7,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -28,6 +26,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import eu.kanade.tachiyomi.source.entry.filter.EntryDateFilter
 import eu.kanade.tachiyomi.source.entry.filter.EntryDatePrecision
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Close
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import java.time.Month
@@ -46,7 +46,7 @@ internal fun DateEditorHeader(
             Modifier.weight(1f).semantics { heading() },
             style = MaterialTheme.typography.headlineSmall,
         )
-        IconButton(onClick = onCancel) { Icon(Icons.Outlined.Close, stringResource(MR.strings.action_cancel)) }
+        IconButton(onClick = onCancel) { Icon(MaterialSymbols.Rounded.Close, stringResource(MR.strings.action_cancel)) }
     }
     filter.filterMetadata.description?.takeIf { it.isNotBlank() }?.let {
         Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)

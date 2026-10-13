@@ -8,9 +8,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Deselect
-import androidx.compose.material.icons.outlined.SelectAll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
@@ -47,6 +44,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 import mihon.entry.interactions.lifecycle.removal.EntryDestructiveRemovalFeature
 import mihon.entry.interactions.lifecycle.removal.EntryDestructiveRemovalResult
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Deselect
+import mihon.icons.materialsymbols.rounded.SelectAll
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.launchUI
 import tachiyomi.domain.entry.repository.EntryRepository
@@ -145,12 +145,12 @@ class ClearDatabaseScreen : Screen() {
                                         actions = listOf(
                                             AppBar.Action(
                                                 title = stringResource(MR.strings.action_select_all),
-                                                icon = Icons.Outlined.SelectAll,
+                                                icon = MaterialSymbols.Rounded.SelectAll,
                                                 onClick = model::selectAll,
                                             ),
                                             AppBar.Action(
                                                 title = stringResource(MR.strings.action_select_inverse),
-                                                icon = Icons.Outlined.Deselect,
+                                                icon = MaterialSymbols.Rounded.Deselect,
                                                 onClick = model::invertSelection,
                                             ),
                                         ),

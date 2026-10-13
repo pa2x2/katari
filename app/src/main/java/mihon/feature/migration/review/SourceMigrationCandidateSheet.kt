@@ -11,9 +11,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -38,6 +35,9 @@ import mihon.feature.migration.review.components.SourceMigrationEntryListItem
 import mihon.feature.migration.session.model.SourceMigrationMatchKind
 import mihon.feature.migration.session.model.SourceMigrationSessionId
 import mihon.feature.migration.session.model.SourceMigrationSessionItem
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Check
+import mihon.icons.materialsymbols.rounded.Search
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.Badge
 import tachiyomi.presentation.core.components.BadgeGroup
@@ -151,7 +151,7 @@ internal fun Screen.SourceMigrationCandidateSheet(
                         strokeWidth = 2.dp,
                     )
                 } else {
-                    Icon(imageVector = Icons.Outlined.Search, contentDescription = null)
+                    Icon(imageVector = MaterialSymbols.Rounded.Search, contentDescription = null)
                 }
                 Text(
                     text = stringResource(MR.strings.sourceMigrationReview_searchAgain),
@@ -203,7 +203,7 @@ private fun SourceMigrationCandidateRow(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 if (selected) {
                     Icon(
-                        imageVector = Icons.Filled.Check,
+                        imageVector = MaterialSymbols.Rounded.Check,
                         contentDescription = stringResource(MR.strings.selected),
                         tint = MaterialTheme.colorScheme.primary,
                     )

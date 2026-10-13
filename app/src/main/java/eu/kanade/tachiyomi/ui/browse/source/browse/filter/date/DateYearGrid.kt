@@ -8,9 +8,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowLeft
-import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -34,6 +31,9 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import eu.kanade.tachiyomi.source.entry.filter.EntryDateFilter
 import eu.kanade.tachiyomi.source.entry.filter.EntryPartialDate
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.automirroredrounded.KeyboardArrowLeft
+import mihon.icons.materialsymbols.automirroredrounded.KeyboardArrowRight
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -68,13 +68,19 @@ internal fun DateYearGrid(
                 enabled = state.yearPageStart > (filter.minimum?.year ?: 1),
                 onClick = { onChange(state.browseYears(-12)) },
             ) {
-                Icon(Icons.AutoMirrored.Outlined.KeyboardArrowLeft, stringResource(MR.strings.filter_previous_years))
+                Icon(
+                    MaterialSymbols.AutoMirroredRounded.KeyboardArrowLeft,
+                    stringResource(MR.strings.filter_previous_years),
+                )
             }
             IconButton(
                 enabled = state.yearPageStart + 12 <= (filter.maximum?.year ?: 9999),
                 onClick = { onChange(state.browseYears(12)) },
             ) {
-                Icon(Icons.AutoMirrored.Outlined.KeyboardArrowRight, stringResource(MR.strings.filter_next_years))
+                Icon(
+                    MaterialSymbols.AutoMirroredRounded.KeyboardArrowRight,
+                    stringResource(MR.strings.filter_next_years),
+                )
             }
         }
         TextButton(onClick = { jumping = !jumping }) { Text(stringResource(MR.strings.filter_jump_year)) }

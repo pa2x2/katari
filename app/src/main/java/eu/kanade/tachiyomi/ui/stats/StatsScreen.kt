@@ -1,7 +1,5 @@
 package eu.kanade.tachiyomi.ui.stats
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Share
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
@@ -30,6 +28,8 @@ import eu.kanade.tachiyomi.ui.stats.recap.list.StatisticsRecapsScreen
 import eu.kanade.tachiyomi.ui.stats.recap.period.StatisticsRecapPeriod
 import eu.kanade.tachiyomi.ui.stats.recap.recapPeriodTitle
 import eu.kanade.tachiyomi.ui.stats.top.StatisticsTopTitlesScreen
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Share
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
@@ -71,7 +71,7 @@ class StatsScreen : Screen() {
                                     shownWindow?.let { window ->
                                         AppBar.Action(
                                             title = stringResource(MR.strings.statistics_share_recap),
-                                            icon = Icons.Outlined.Share,
+                                            icon = MaterialSymbols.Rounded.Share,
                                             onClick = {
                                                 navigator.push(
                                                     StatisticsRecapScreen(

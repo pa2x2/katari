@@ -11,10 +11,6 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.outlined.ArrowDownward
-import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
@@ -45,6 +41,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import eu.kanade.tachiyomi.R
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.ArrowDownward
+import mihon.icons.materialsymbols.rounded.Error
+import mihon.icons.materialsymbols.roundedfilled.CheckCircle
 import tachiyomi.presentation.core.components.material.IconButtonTokens
 import tachiyomi.presentation.core.util.secondaryItemAlpha
 
@@ -202,7 +202,7 @@ private fun DeletingIndicator(
             strokeCap = StrokeCap.Round,
         )
         Icon(
-            imageVector = Icons.Filled.CheckCircle,
+            imageVector = MaterialSymbols.RoundedFilled.CheckCircle,
             contentDescription = null,
             modifier = Modifier
                 .size(IndicatorSize)
@@ -352,7 +352,7 @@ private fun DownloadingIndicator(
             MenuItems(menuItems, onDismiss = { isMenuExpanded = false })
         }
         Icon(
-            imageVector = Icons.Outlined.ArrowDownward,
+            imageVector = MaterialSymbols.Rounded.ArrowDownward,
             contentDescription = if (downloadState == DownloadIndicatorState.QUEUE) {
                 queuedContentDescription
             } else {
@@ -386,7 +386,7 @@ private fun DownloadedIndicator(
         contentAlignment = Alignment.Center,
     ) {
         Icon(
-            imageVector = Icons.Filled.CheckCircle,
+            imageVector = MaterialSymbols.RoundedFilled.CheckCircle,
             contentDescription = downloadedContentDescription,
             modifier = Modifier.size(IndicatorSize),
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -423,7 +423,7 @@ private fun ErrorIndicator(
         contentAlignment = Alignment.Center,
     ) {
         Icon(
-            imageVector = Icons.Outlined.ErrorOutline,
+            imageVector = MaterialSymbols.Rounded.Error,
             contentDescription = errorContentDescription,
             modifier = Modifier.size(IndicatorSize),
             tint = MaterialTheme.colorScheme.error,

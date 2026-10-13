@@ -9,11 +9,6 @@ import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.ArrowForward
-import androidx.compose.material.icons.outlined.Deselect
-import androidx.compose.material.icons.outlined.DragHandle
-import androidx.compose.material.icons.outlined.SelectAll
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -60,6 +55,11 @@ import mihon.feature.migration.session.model.SourceMigrationDiscoveryDepth
 import mihon.feature.migration.session.model.SourceMigrationSessionDraft
 import mihon.feature.migration.session.model.SourceMigrationSessionGroupDraft
 import mihon.feature.migration.session.model.SourceMigrationSessionId
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.automirroredrounded.ArrowForward
+import mihon.icons.materialsymbols.rounded.Deselect
+import mihon.icons.materialsymbols.rounded.DragHandle
+import mihon.icons.materialsymbols.rounded.SelectAll
 import sh.calvin.reorderable.ReorderableCollectionItemScope
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.ReorderableLazyListState
@@ -173,12 +173,12 @@ class MigrationConfigScreen private constructor(
                             listOf(
                                 AppBar.Action(
                                     title = stringResource(MR.strings.migrationConfigScreen_selectAllLabel),
-                                    icon = Icons.Outlined.SelectAll,
+                                    icon = MaterialSymbols.Rounded.SelectAll,
                                     onClick = { screenModel.toggleSelection(ScreenModel.SelectionConfig.All) },
                                 ),
                                 AppBar.Action(
                                     title = stringResource(MR.strings.migrationConfigScreen_selectNoneLabel),
-                                    icon = Icons.Outlined.Deselect,
+                                    icon = MaterialSymbols.Rounded.Deselect,
                                     onClick = { screenModel.toggleSelection(ScreenModel.SelectionConfig.None) },
                                 ),
                                 AppBar.OverflowAction(
@@ -197,7 +197,9 @@ class MigrationConfigScreen private constructor(
             floatingActionButton = {
                 SmallExtendedFloatingActionButton(
                     text = { Text(text = stringResource(MR.strings.migrationConfigScreen_continueButtonText)) },
-                    icon = { Icon(imageVector = Icons.AutoMirrored.Outlined.ArrowForward, contentDescription = null) },
+                    icon = {
+                        Icon(imageVector = MaterialSymbols.AutoMirroredRounded.ArrowForward, contentDescription = null)
+                    },
                     onClick = {
                         if (state.selectedSourceIds.isNotEmpty()) {
                             screenModel.saveSources()
@@ -334,7 +336,7 @@ class MigrationConfigScreen private constructor(
             trailingContent = if (dragEnabled) {
                 {
                     Icon(
-                        imageVector = Icons.Outlined.DragHandle,
+                        imageVector = MaterialSymbols.Rounded.DragHandle,
                         contentDescription = null,
                         modifier = with(scope) {
                             Modifier.draggableHandle()

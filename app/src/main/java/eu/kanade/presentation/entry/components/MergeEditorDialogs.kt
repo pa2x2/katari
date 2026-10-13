@@ -14,13 +14,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.outlined.Clear
-import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material.icons.outlined.DragHandle
-import androidx.compose.material.icons.outlined.Lock
-import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenuItem
@@ -49,6 +42,12 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import kotlinx.collections.immutable.ImmutableList
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Close
+import mihon.icons.materialsymbols.rounded.DragHandle
+import mihon.icons.materialsymbols.rounded.Lock
+import mihon.icons.materialsymbols.rounded.MoreVert
+import mihon.icons.materialsymbols.roundedfilled.CheckCircle
 import sh.calvin.reorderable.ReorderableCollectionItemScope
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
@@ -125,7 +124,7 @@ fun MergeEditorDialog(
                 }
                 if (targetLocked) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(imageVector = Icons.Outlined.Lock, contentDescription = null)
+                        Icon(imageVector = MaterialSymbols.Rounded.Lock, contentDescription = null)
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(text = stringResource(MR.strings.merge_existing_target_locked))
                     }
@@ -198,7 +197,7 @@ fun MergeTargetPickerSheet(
                 )
                 IconButton(onClick = onDismissRequest) {
                     Icon(
-                        imageVector = Icons.Outlined.Close,
+                        imageVector = MaterialSymbols.Rounded.Close,
                         contentDescription = stringResource(MR.strings.action_close),
                     )
                 }
@@ -240,7 +239,7 @@ fun MergeTargetPickerSheet(
                             },
                         ) {
                             Icon(
-                                imageVector = Icons.Outlined.Clear,
+                                imageVector = MaterialSymbols.Rounded.Close,
                                 contentDescription = stringResource(MR.strings.action_reset),
                             )
                         }
@@ -403,7 +402,7 @@ private fun ReorderableCollectionItemScope.MergeEditorItem(
                         Box {
                             IconButton(onClick = { expanded = true }) {
                                 Icon(
-                                    imageVector = Icons.Outlined.MoreVert,
+                                    imageVector = MaterialSymbols.Rounded.MoreVert,
                                     contentDescription = stringResource(MR.strings.label_more),
                                 )
                             }
@@ -490,7 +489,7 @@ private fun ReorderableCollectionItemScope.MergeEditorItem(
                     }
                     isTarget -> {
                         Icon(
-                            imageVector = Icons.Filled.CheckCircle,
+                            imageVector = MaterialSymbols.RoundedFilled.CheckCircle,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.primary,
                         )
@@ -499,7 +498,7 @@ private fun ReorderableCollectionItemScope.MergeEditorItem(
 
                 if (showDragHandle) {
                     Icon(
-                        imageVector = Icons.Outlined.DragHandle,
+                        imageVector = MaterialSymbols.Rounded.DragHandle,
                         contentDescription = null,
                         modifier = Modifier.draggableHandle(),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,

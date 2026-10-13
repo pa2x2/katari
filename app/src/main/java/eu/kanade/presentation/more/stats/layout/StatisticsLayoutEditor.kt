@@ -11,8 +11,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.DragHandle
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
@@ -40,6 +38,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.more.stats.components.rememberStatisticsDurationFormatter
 import eu.kanade.presentation.more.stats.data.StatsRecapNotifications
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.DragHandle
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
 import tachiyomi.domain.statistics.model.StatisticsCard
@@ -137,7 +137,10 @@ internal fun StatisticsLayoutEditor(
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
                                 IconButton(onClick = {}, modifier = Modifier.draggableHandle()) {
-                                    Icon(Icons.Outlined.DragHandle, stringResource(MR.strings.statistics_reorder))
+                                    Icon(
+                                        MaterialSymbols.Rounded.DragHandle,
+                                        stringResource(MR.strings.statistics_reorder),
+                                    )
                                 }
                                 Column(Modifier.weight(1f).padding(horizontal = 8.dp)) {
                                     Text(label)

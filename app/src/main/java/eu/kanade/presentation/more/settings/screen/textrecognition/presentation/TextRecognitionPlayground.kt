@@ -6,10 +6,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ArrowDropDown
-import androidx.compose.material.icons.outlined.Image
-import androidx.compose.material.icons.outlined.Language
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.FilledTonalButton
@@ -27,6 +23,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import kotlinx.coroutines.flow.Flow
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.ArrowDropDown
+import mihon.icons.materialsymbols.rounded.Image
+import mihon.icons.materialsymbols.rounded.Language
 import mihon.model.artifacts.api.descriptor.ModelArtifactDescriptor
 import mihon.model.artifacts.api.download.ModelArtifactDownloadApproval
 import mihon.model.artifacts.api.state.ModelArtifactState
@@ -77,7 +77,7 @@ internal fun TextRecognitionPlayground(
                     contentPadding = ButtonDefaults.ButtonWithIconContentPadding,
                 ) {
                     Icon(
-                        imageVector = Icons.Outlined.Language,
+                        imageVector = MaterialSymbols.Rounded.Language,
                         contentDescription = stringResource(MR.strings.text_recognition_settings_text_language),
                         modifier = Modifier.size(ButtonDefaults.IconSize),
                     )
@@ -88,14 +88,14 @@ internal fun TextRecognitionPlayground(
                         modifier = Modifier.padding(start = MaterialTheme.padding.small),
                     )
                     Icon(
-                        imageVector = Icons.Outlined.ArrowDropDown,
+                        imageVector = MaterialSymbols.Rounded.ArrowDropDown,
                         contentDescription = null,
                         modifier = Modifier.size(ButtonDefaults.IconSize),
                     )
                 }
                 OutlinedButton(onClick = onChooseImage, modifier = Modifier.weight(1f)) {
                     Icon(
-                        imageVector = Icons.Outlined.Image,
+                        imageVector = MaterialSymbols.Rounded.Image,
                         contentDescription = null,
                         modifier = Modifier.size(ButtonDefaults.IconSize),
                     )

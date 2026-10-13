@@ -10,9 +10,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -38,6 +35,9 @@ import mihon.entry.interactions.migration.EntryMigrationOption
 import mihon.feature.migration.options.getLabel
 import mihon.feature.migration.options.toEntryMigrationOptions
 import mihon.feature.migration.session.model.SourceMigrationDiscoveryDepth
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Check
+import mihon.icons.materialsymbols.roundedfilled.Warning
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.getAndSet
 import tachiyomi.core.common.preference.toggle
@@ -108,7 +108,7 @@ fun MigrationConfigScreenSheet(
                                 leadingIcon = {
                                     if (selected) {
                                         Icon(
-                                            imageVector = Icons.Filled.Check,
+                                            imageVector = MaterialSymbols.Rounded.Check,
                                             contentDescription = null,
                                         )
                                     }
@@ -255,7 +255,7 @@ private fun MigrationSheetWarningItem(
     ListItem(
         leadingContent = {
             Icon(
-                imageVector = Icons.Filled.Warning,
+                imageVector = MaterialSymbols.RoundedFilled.Warning,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.active,
             )

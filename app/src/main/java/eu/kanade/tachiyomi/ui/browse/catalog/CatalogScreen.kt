@@ -10,13 +10,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ViewList
-import androidx.compose.material.icons.filled.ViewModule
-import androidx.compose.material.icons.outlined.Favorite
-import androidx.compose.material.icons.outlined.FilterList
-import androidx.compose.material.icons.outlined.Fullscreen
-import androidx.compose.material.icons.outlined.NewReleases
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -81,6 +74,12 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import mihon.feature.migration.dialog.MigrateEntryDialog
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.automirroredroundedfilled.ViewList
+import mihon.icons.materialsymbols.rounded.Fullscreen
+import mihon.icons.materialsymbols.rounded.Verified
+import mihon.icons.materialsymbols.roundedfilled.Favorite
+import mihon.icons.materialsymbols.roundedfilled.ViewModule
 import mihon.presentation.core.util.collectAsLazyPagingItems
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.domain.library.model.LibraryDisplayMode
@@ -243,7 +242,7 @@ data class CatalogScreen(
                                 onClick = { screenModel.setListing(CatalogScreenModel.Listing.Popular) },
                                 leadingIcon = {
                                     Icon(
-                                        imageVector = Icons.Outlined.Favorite,
+                                        imageVector = MaterialSymbols.RoundedFilled.Favorite,
                                         contentDescription = null,
                                         modifier = Modifier.size(FilterChipDefaults.IconSize),
                                     )
@@ -256,7 +255,7 @@ data class CatalogScreen(
                                     onClick = { screenModel.setListing(CatalogScreenModel.Listing.Latest) },
                                     leadingIcon = {
                                         Icon(
-                                            imageVector = Icons.Outlined.NewReleases,
+                                            imageVector = MaterialSymbols.Rounded.Verified,
                                             contentDescription = null,
                                             modifier = Modifier.size(FilterChipDefaults.IconSize),
                                         )
@@ -573,7 +572,7 @@ private fun CatalogToolbar(
                         add(
                             AppBar.Action(
                                 title = stringResource(MR.strings.browse_enter_immersive),
-                                icon = Icons.Outlined.Fullscreen,
+                                icon = MaterialSymbols.Rounded.Fullscreen,
                                 onClick = it,
                             ),
                         )
@@ -584,9 +583,9 @@ private fun CatalogToolbar(
                             icon = if (displayMode == LibraryDisplayMode.List ||
                                 displayMode == LibraryDisplayMode.ComfortableList
                             ) {
-                                Icons.AutoMirrored.Filled.ViewList
+                                MaterialSymbols.AutoMirroredRoundedFilled.ViewList
                             } else {
-                                Icons.Filled.ViewModule
+                                MaterialSymbols.RoundedFilled.ViewModule
                             },
                             onClick = { selectingDisplayMode = true },
                             menu = {

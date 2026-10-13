@@ -6,10 +6,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.selection.toggleable
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.CheckBox
-import androidx.compose.material.icons.rounded.CheckBoxOutlineBlank
-import androidx.compose.material.icons.rounded.IndeterminateCheckBox
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -25,6 +21,10 @@ import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import eu.kanade.tachiyomi.source.entry.EntryFilter
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.CheckBoxOutlineBlank
+import mihon.icons.materialsymbols.roundedfilled.CheckBox
+import mihon.icons.materialsymbols.roundedfilled.IndeterminateCheckBox
 
 /** A boolean filter option. */
 @Composable
@@ -69,9 +69,9 @@ internal fun FilterTriStateRow(filter: EntryFilter.TriState, onUpdate: () -> Uni
     ) {
         Icon(
             imageVector = when (state) {
-                FilterOptionState.NotUsed -> Icons.Rounded.CheckBoxOutlineBlank
-                FilterOptionState.Included -> Icons.Rounded.CheckBox
-                FilterOptionState.Excluded -> Icons.Rounded.IndeterminateCheckBox
+                FilterOptionState.NotUsed -> MaterialSymbols.Rounded.CheckBoxOutlineBlank
+                FilterOptionState.Included -> MaterialSymbols.RoundedFilled.CheckBox
+                FilterOptionState.Excluded -> MaterialSymbols.RoundedFilled.IndeterminateCheckBox
             },
             contentDescription = null,
             tint = when (state) {

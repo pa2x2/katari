@@ -4,9 +4,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Check
-import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.FilterChip
@@ -17,6 +14,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Check
+import mihon.icons.materialsymbols.rounded.PlayArrow
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
@@ -42,7 +42,7 @@ internal fun ResumeChip(onClick: () -> Unit) {
         label = { Text(stringResource(MR.strings.library_update_report_resume)) },
         leadingIcon = {
             Icon(
-                imageVector = Icons.Outlined.PlayArrow,
+                imageVector = MaterialSymbols.Rounded.PlayArrow,
                 contentDescription = null,
                 modifier = Modifier.size(AssistChipDefaults.IconSize),
             )
@@ -57,7 +57,7 @@ internal fun PauseChip(paused: Boolean, label: String, onPausedChange: (Boolean)
         onClick = { onPausedChange(!paused) },
         label = { Text(label) },
         leadingIcon = if (paused) {
-            { Icon(imageVector = Icons.Outlined.Check, contentDescription = null) }
+            { Icon(imageVector = MaterialSymbols.Rounded.Check, contentDescription = null) }
         } else {
             null
         },

@@ -16,9 +16,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
@@ -58,6 +55,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.presentation.entry.components.EntryCover
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Check
+import mihon.icons.materialsymbols.roundedfilled.PlayArrow
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.BadgeGroup
 import tachiyomi.presentation.core.i18n.stringResource
@@ -532,7 +532,7 @@ private fun SelectionIndicator(
     ) {
         if (isSelected) {
             Icon(
-                imageVector = Icons.Filled.Check,
+                imageVector = MaterialSymbols.Rounded.Check,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.onPrimary,
                 modifier = Modifier.size(18.dp),
@@ -561,7 +561,7 @@ private fun ContinueReadingButton(
             modifier = Modifier.size(size),
         ) {
             Icon(
-                imageVector = Icons.Filled.PlayArrow,
+                imageVector = MaterialSymbols.RoundedFilled.PlayArrow,
                 contentDescription = stringResource(contentDescription),
                 modifier = Modifier.size(iconSize),
             )

@@ -14,9 +14,6 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -39,6 +36,9 @@ import eu.kanade.presentation.library.components.CommonEntryItemDefaults
 import eu.kanade.presentation.library.components.EntryComfortableGridItem
 import eu.kanade.presentation.util.formattedMessage
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Close
+import mihon.icons.materialsymbols.rounded.Refresh
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryCover
 import tachiyomi.i18n.*
@@ -87,7 +87,7 @@ fun RelatedEntriesDialog(
                     Spacer(Modifier.weight(1f))
                     IconButton(onClick = onDismissRequest) {
                         Icon(
-                            imageVector = Icons.Outlined.Close,
+                            imageVector = MaterialSymbols.Rounded.Close,
                             contentDescription = stringResource(MR.strings.action_close),
                         )
                     }
@@ -110,7 +110,7 @@ fun RelatedEntriesDialog(
                             actions = listOf(
                                 EmptyScreenAction(
                                     stringRes = MR.strings.action_retry,
-                                    icon = Icons.Outlined.Refresh,
+                                    icon = MaterialSymbols.Rounded.Refresh,
                                     onClick = screenModel::retry,
                                 ),
                             ),
@@ -122,7 +122,7 @@ fun RelatedEntriesDialog(
                             actions = listOf(
                                 EmptyScreenAction(
                                     stringRes = MR.strings.action_retry,
-                                    icon = Icons.Outlined.Refresh,
+                                    icon = MaterialSymbols.Rounded.Refresh,
                                     onClick = screenModel::retry,
                                 ),
                             ),
@@ -136,7 +136,7 @@ fun RelatedEntriesDialog(
                                     actions = listOf(
                                         EmptyScreenAction(
                                             stringRes = MR.strings.action_retry,
-                                            icon = Icons.Outlined.Refresh,
+                                            icon = MaterialSymbols.Rounded.Refresh,
                                             onClick = screenModel::retry,
                                         ),
                                     ),

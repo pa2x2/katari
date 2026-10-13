@@ -1,8 +1,6 @@
 package eu.kanade.tachiyomi.ui.browse.extension
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.FilterList
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -25,6 +23,8 @@ import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.ui.browse.extension.details.ExtensionDetailsScreen
 import eu.kanade.tachiyomi.ui.webview.WebViewScreen
 import eu.kanade.tachiyomi.util.system.isPackageInstalled
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.FilterList
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -47,7 +47,7 @@ fun extensionsTab(
         actions = listOf(
             AppBar.Action(
                 title = stringResource(MR.strings.action_filter),
-                icon = Icons.Outlined.FilterList,
+                icon = MaterialSymbols.Rounded.FilterList,
                 badgeCount = filter.activeFilterCount.takeIf { it > 0 },
                 onClick = { showFilters = true },
             ),

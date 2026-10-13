@@ -1,8 +1,6 @@
 package eu.kanade.presentation.library.update.report.components
 
 import androidx.compose.foundation.layout.Box
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
@@ -15,6 +13,8 @@ import androidx.compose.runtime.setValue
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.presentation.components.DropdownMenu
 import eu.kanade.presentation.library.update.sourcePauseEndText
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Check
 import tachiyomi.domain.library.update.model.SourceUpdatePause
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -55,7 +55,7 @@ internal fun SourcePauseChip(
                 )
             },
             leadingIcon = if (pause != null) {
-                { Icon(imageVector = Icons.Outlined.Check, contentDescription = null) }
+                { Icon(imageVector = MaterialSymbols.Rounded.Check, contentDescription = null) }
             } else {
                 null
             },

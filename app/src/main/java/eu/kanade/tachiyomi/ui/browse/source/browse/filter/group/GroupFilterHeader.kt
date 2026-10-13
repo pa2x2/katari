@@ -7,11 +7,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ExpandLess
-import androidx.compose.material.icons.outlined.ExpandMore
-import androidx.compose.material.icons.outlined.MoreVert
-import androidx.compose.material.icons.outlined.RestartAlt
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
@@ -40,6 +35,11 @@ import eu.kanade.tachiyomi.ui.browse.source.browse.filter.change.FilterChanges
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.clearSelection
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.control.FilterSheetInsets
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.metadata
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.KeyboardArrowDown
+import mihon.icons.materialsymbols.rounded.KeyboardArrowUp
+import mihon.icons.materialsymbols.rounded.MoreVert
+import mihon.icons.materialsymbols.rounded.RestartAlt
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -106,7 +106,7 @@ internal fun GroupFilterHeader(
                     onUpdate()
                 }) {
                     Icon(
-                        Icons.Outlined.RestartAlt,
+                        MaterialSymbols.Rounded.RestartAlt,
                         contentDescription = stringResource(MR.strings.filter_reset_group, filter.name),
                         tint = MaterialTheme.colorScheme.primary,
                     )
@@ -119,7 +119,11 @@ internal fun GroupFilterHeader(
                 }
             }
             Icon(
-                if (state.expanded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
+                if (state.expanded) {
+                    MaterialSymbols.Rounded.KeyboardArrowUp
+                } else {
+                    MaterialSymbols.Rounded.KeyboardArrowDown
+                },
                 contentDescription = null,
                 modifier = Modifier.padding(horizontal = 4.dp),
             )
@@ -133,7 +137,7 @@ private fun GroupClearMenu(groupName: String, onClear: () -> Unit) {
     Box {
         IconButton(onClick = { expanded = true }) {
             Icon(
-                Icons.Outlined.MoreVert,
+                MaterialSymbols.Rounded.MoreVert,
                 contentDescription = stringResource(MR.strings.filter_group_actions, groupName),
             )
         }

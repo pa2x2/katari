@@ -11,8 +11,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentWidth
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -73,6 +71,8 @@ import mihon.entry.interactions.media.EntryImmersiveSourceAvailability
 import mihon.entry.interactions.source.EntrySourceHomeFeature
 import mihon.entry.interactions.source.EntrySourceHomeResolution
 import mihon.feature.profiles.core.ProfileManager
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Add
 import tachiyomi.core.common.Constants
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.domain.source.model.CatalogListItem
@@ -121,7 +121,7 @@ fun Screen.feedsTab(contentMode: SourceFeedContentMode = SourceFeedContentMode.B
             add(
                 AppBar.Action(
                     title = stringResource(MR.strings.browse_feed_add),
-                    icon = Icons.Outlined.Add,
+                    icon = MaterialSymbols.Rounded.Add,
                     onClick = screenModel::showCreateDialog,
                 ),
             )
@@ -256,7 +256,7 @@ private fun Screen.FeedsTabContent(
             actions = listOf(
                 EmptyScreenAction(
                     stringRes = MR.strings.browse_feed_add,
-                    icon = Icons.Outlined.Add,
+                    icon = MaterialSymbols.Rounded.Add,
                     onClick = screenModel::showCreateDialog,
                 ),
             ),

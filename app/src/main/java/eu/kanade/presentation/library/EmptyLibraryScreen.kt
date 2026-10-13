@@ -6,10 +6,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.HelpOutline
-import androidx.compose.material.icons.outlined.Explore
-import androidx.compose.material.icons.outlined.SettingsBackupRestore
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -22,6 +18,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.automirroredrounded.Help
+import mihon.icons.materialsymbols.rounded.Explore
+import mihon.icons.materialsymbols.rounded.SettingsBackupRestore
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.screens.EmptyScreen
@@ -54,16 +54,16 @@ fun EmptyLibraryScreen(
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Button(onClick = onBrowseSources, modifier = Modifier.fillMaxWidth()) {
-                ButtonIcon(Icons.Outlined.Explore)
+                ButtonIcon(MaterialSymbols.Rounded.Explore)
                 Text(stringResource(MR.strings.action_browse_sources))
             }
             OutlinedButton(onClick = onRestoreBackup, modifier = Modifier.fillMaxWidth()) {
-                ButtonIcon(Icons.Outlined.SettingsBackupRestore)
+                ButtonIcon(MaterialSymbols.Rounded.SettingsBackupRestore)
                 Text(stringResource(MR.strings.pref_restore_backup))
             }
         }
         TextButton(onClick = onOpenGuide, modifier = Modifier.padding(top = 8.dp)) {
-            ButtonIcon(Icons.AutoMirrored.Outlined.HelpOutline)
+            ButtonIcon(MaterialSymbols.AutoMirroredRounded.Help)
             Text(stringResource(MR.strings.getting_started_guide))
         }
     }

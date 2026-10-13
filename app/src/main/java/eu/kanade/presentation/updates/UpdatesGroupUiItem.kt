@@ -3,10 +3,6 @@ package eu.kanade.presentation.updates
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Circle
-import androidx.compose.material.icons.outlined.ExpandLess
-import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
@@ -23,6 +19,10 @@ import eu.kanade.presentation.entry.components.EntryChapterDownloadIndicator
 import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.tachiyomi.ui.updates.UpdatesItem
 import mihon.entry.interactions.download.EntryDownloadState
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.KeyboardArrowDown
+import mihon.icons.materialsymbols.rounded.KeyboardArrowUp
+import mihon.icons.materialsymbols.roundedfilled.Circle
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
@@ -62,7 +62,7 @@ internal fun UpdatesGroupUiItem(
             entryType.InlineEntryTypeIndicator(modifier = Modifier.padding(end = 4.dp))
             if (items.any { !it.update.consumed }) {
                 Icon(
-                    imageVector = Icons.Filled.Circle,
+                    imageVector = MaterialSymbols.RoundedFilled.Circle,
                     contentDescription = stringResource(entryType.entryTypePresentation().unconsumedIndicatorLabel),
                     modifier = Modifier
                         .height(8.dp)
@@ -108,7 +108,11 @@ internal fun UpdatesGroupUiItem(
                 }
                 IconButton(onClick = onToggleExpanded) {
                     Icon(
-                        imageVector = if (group.expanded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
+                        imageVector = if (group.expanded) {
+                            MaterialSymbols.Rounded.KeyboardArrowUp
+                        } else {
+                            MaterialSymbols.Rounded.KeyboardArrowDown
+                        },
                         contentDescription = stringResource(
                             if (group.expanded) MR.strings.action_collapse else MR.strings.action_expand,
                         ),

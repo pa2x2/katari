@@ -5,8 +5,6 @@ import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsIgnoringVisibility
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
@@ -29,6 +27,8 @@ import eu.kanade.tachiyomi.ui.browse.immersive.EntryImmersiveItemKey
 import eu.kanade.tachiyomi.ui.browse.immersive.EntryImmersiveScreenModel
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.launch
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Refresh
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.source.model.CatalogListItem
 import tachiyomi.domain.source.model.Source
@@ -81,7 +81,7 @@ internal fun EntryImmersiveFeedContent(
             actions = persistentListOf(
                 EmptyScreenAction(
                     stringRes = MR.strings.action_retry,
-                    icon = Icons.Outlined.Refresh,
+                    icon = MaterialSymbols.Rounded.Refresh,
                     onClick = { timelineModel.refresh(manual = true) },
                 ),
             ),

@@ -6,10 +6,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.Sort
-import androidx.compose.material.icons.filled.Pause
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.SmallExtendedFloatingActionButton
@@ -34,6 +30,10 @@ import eu.kanade.presentation.components.DropdownMenu
 import eu.kanade.presentation.components.NestedMenuItem
 import eu.kanade.presentation.components.TabContent
 import eu.kanade.tachiyomi.databinding.DownloadListBinding
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.automirroredrounded.Sort
+import mihon.icons.materialsymbols.roundedfilled.Pause
+import mihon.icons.materialsymbols.roundedfilled.PlayArrow
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.screens.EmptyScreen
@@ -53,7 +53,7 @@ internal fun downloadQueueDownloadsTab(screenModel: DownloadQueueScreenModel): T
             listOf(
                 AppBar.Action(
                     title = stringResource(MR.strings.action_sort),
-                    icon = Icons.AutoMirrored.Outlined.Sort,
+                    icon = MaterialSymbols.AutoMirroredRounded.Sort,
                     onClick = { sortExpanded = true },
                 ),
                 AppBar.OverflowAction(
@@ -175,7 +175,14 @@ private fun PauseButton(screenModel: DownloadQueueScreenModel, modifier: Modifie
     SmallExtendedFloatingActionButton(
         text = { Text(text = stringResource(if (isRunning) MR.strings.action_pause else MR.strings.action_resume)) },
         icon = {
-            Icon(imageVector = if (isRunning) Icons.Filled.Pause else Icons.Filled.PlayArrow, contentDescription = null)
+            Icon(
+                imageVector = if (isRunning) {
+                    MaterialSymbols.RoundedFilled.Pause
+                } else {
+                    MaterialSymbols.RoundedFilled.PlayArrow
+                },
+                contentDescription = null,
+            )
         },
         onClick = { if (isRunning) screenModel.pauseDownloads() else screenModel.startDownloads() },
         modifier = modifier,

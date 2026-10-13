@@ -9,12 +9,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material.icons.outlined.DragHandle
-import androidx.compose.material.icons.outlined.KeyboardArrowUp
-import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -29,6 +23,12 @@ import eu.kanade.domain.source.model.SourceFeedPreset
 import eu.kanade.presentation.components.AdaptiveSheet
 import eu.kanade.tachiyomi.ui.browse.feed.FeedLabelText
 import eu.kanade.tachiyomi.ui.browse.feed.rememberFeedLabel
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Add
+import mihon.icons.materialsymbols.rounded.Check
+import mihon.icons.materialsymbols.rounded.DragHandle
+import mihon.icons.materialsymbols.rounded.KeyboardArrowUp
+import mihon.icons.materialsymbols.rounded.Refresh
 import tachiyomi.domain.source.model.Source
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -61,13 +61,13 @@ internal fun FeedPickerSheet(
             )
             FeedSheetAction(
                 label = stringResource(MR.strings.action_refresh),
-                icon = Icons.Outlined.Refresh,
+                icon = MaterialSymbols.Rounded.Refresh,
                 onClick = onRefresh,
             )
             if (canJumpToNewest) {
                 FeedSheetAction(
                     label = stringResource(MR.strings.action_move_to_top),
-                    icon = Icons.Outlined.KeyboardArrowUp,
+                    icon = MaterialSymbols.Rounded.KeyboardArrowUp,
                     onClick = onJumpToNewest,
                 )
             }
@@ -90,7 +90,7 @@ internal fun FeedPickerSheet(
                         )
                         if (feed.id == selectedFeedId) {
                             Icon(
-                                imageVector = Icons.Filled.Check,
+                                imageVector = MaterialSymbols.Rounded.Check,
                                 contentDescription = null,
                                 tint = MaterialTheme.colorScheme.primary,
                             )
@@ -101,12 +101,12 @@ internal fun FeedPickerSheet(
             HorizontalDivider()
             FeedSheetAction(
                 label = stringResource(MR.strings.browse_feed_add),
-                icon = Icons.Outlined.Add,
+                icon = MaterialSymbols.Rounded.Add,
                 onClick = onAddFeed,
             )
             FeedSheetAction(
                 label = stringResource(MR.strings.browse_manage_feeds),
-                icon = Icons.Outlined.DragHandle,
+                icon = MaterialSymbols.Rounded.DragHandle,
                 onClick = onManageFeeds,
             )
         }

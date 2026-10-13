@@ -17,8 +17,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.rememberTextFieldState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Clear
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -53,6 +51,8 @@ import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.util.Screen
 import kotlinx.coroutines.flow.collectLatest
 import mihon.entry.interactions.media.EntryViewerSettingsFeature
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Close
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
@@ -133,7 +133,7 @@ class SettingsSearchScreen : Screen() {
                             if (textFieldState.text.isNotEmpty()) {
                                 IconButton(onClick = { textFieldState.clearText() }) {
                                     Icon(
-                                        imageVector = Icons.Outlined.Clear,
+                                        imageVector = MaterialSymbols.Rounded.Close,
                                         contentDescription = stringResource(MR.strings.action_reset),
                                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                     )

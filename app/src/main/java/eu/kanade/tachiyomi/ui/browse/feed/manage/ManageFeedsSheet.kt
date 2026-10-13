@@ -11,12 +11,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.DragHandle
-import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -46,6 +40,12 @@ import eu.kanade.presentation.components.AppSnackbarHost
 import eu.kanade.tachiyomi.ui.browse.feed.FeedLabelText
 import eu.kanade.tachiyomi.ui.browse.feed.rememberFeedLabel
 import kotlinx.coroutines.launch
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Add
+import mihon.icons.materialsymbols.rounded.Delete
+import mihon.icons.materialsymbols.rounded.DragHandle
+import mihon.icons.materialsymbols.rounded.Edit
+import mihon.icons.materialsymbols.rounded.MoreVert
 import sh.calvin.reorderable.ReorderableCollectionItemScope
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
@@ -132,7 +132,7 @@ internal fun ManageFeedsSheet(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Icon(
-                        imageVector = Icons.Outlined.Add,
+                        imageVector = MaterialSymbols.Rounded.Add,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.primary,
                     )
@@ -168,7 +168,7 @@ private fun ReorderableCollectionItemScope.ManageFeedRow(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
-            imageVector = Icons.Outlined.DragHandle,
+            imageVector = MaterialSymbols.Rounded.DragHandle,
             contentDescription = null,
             modifier = Modifier.draggableHandle(),
         )
@@ -186,14 +186,14 @@ private fun ReorderableCollectionItemScope.ManageFeedRow(
         Box {
             IconButton(onClick = { menuExpanded = true }) {
                 Icon(
-                    imageVector = Icons.Outlined.MoreVert,
+                    imageVector = MaterialSymbols.Rounded.MoreVert,
                     contentDescription = stringResource(MR.strings.label_more),
                 )
             }
             DropdownMenu(expanded = menuExpanded, onDismissRequest = { menuExpanded = false }) {
                 DropdownMenuItem(
                     text = { Text(text = stringResource(MR.strings.browse_feed_rename)) },
-                    leadingIcon = { Icon(imageVector = Icons.Outlined.Edit, contentDescription = null) },
+                    leadingIcon = { Icon(imageVector = MaterialSymbols.Rounded.Edit, contentDescription = null) },
                     onClick = {
                         menuExpanded = false
                         onRename()
@@ -201,7 +201,7 @@ private fun ReorderableCollectionItemScope.ManageFeedRow(
                 )
                 DropdownMenuItem(
                     text = { Text(text = stringResource(MR.strings.action_delete)) },
-                    leadingIcon = { Icon(imageVector = Icons.Outlined.Delete, contentDescription = null) },
+                    leadingIcon = { Icon(imageVector = MaterialSymbols.Rounded.Delete, contentDescription = null) },
                     onClick = {
                         menuExpanded = false
                         onRemove()

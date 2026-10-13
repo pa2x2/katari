@@ -12,9 +12,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ArrowDownward
-import androidx.compose.material.icons.outlined.ArrowUpward
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -33,6 +30,9 @@ import eu.kanade.presentation.more.stats.data.StatsActivityWindow
 import eu.kanade.presentation.more.stats.data.StatsDailyGoal
 import eu.kanade.presentation.more.stats.data.StatsRange
 import eu.kanade.presentation.more.stats.data.StatsType
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.ArrowDownward
+import mihon.icons.materialsymbols.rounded.ArrowUpward
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
@@ -237,7 +237,11 @@ private fun PeriodComparison(activity: StatsActivity, formatDuration: (Long) -> 
     Row(verticalAlignment = Alignment.CenterVertically) {
         if (delta != 0L) {
             Icon(
-                imageVector = if (delta > 0L) Icons.Outlined.ArrowUpward else Icons.Outlined.ArrowDownward,
+                imageVector = if (delta > 0L) {
+                    MaterialSymbols.Rounded.ArrowUpward
+                } else {
+                    MaterialSymbols.Rounded.ArrowDownward
+                },
                 contentDescription = null,
                 modifier = Modifier.size(12.dp),
                 tint = color,
