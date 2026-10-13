@@ -289,6 +289,14 @@ class StatsViewModel(
     }
 
     fun navigateActivityByBuckets(bucketCount: Int) {
+        navigateActivity { shiftedByBuckets(bucketCount) }
+    }
+
+    fun navigateActivityByWindows(windowCount: Int) {
+        navigateActivity { shiftedByWindows(windowCount) }
+    }
+
+    private fun navigateActivity(shift: StatsActivityWindow.() -> StatsActivityWindow) {
         val activity = (state.value as? StatsScreenState.Success)
             ?.activity
             ?.let { it as? ActivityState.Available }
@@ -297,7 +305,7 @@ class StatsViewModel(
 
         val latestEndDate = today.value
         val target = activity.data.window
-            .shiftedByBuckets(bucketCount)
+            .shift()
             .clampedTo(activity.data.trackingStartDate, latestEndDate)
         if (target.endDate == activity.data.window.endDate) return
         finiteWindowSelection.value = target.takeUnless { it.isLatest }
