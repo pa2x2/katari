@@ -7,18 +7,18 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
-import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.screen.tts.RefreshTtsSettingsOnResume
-import eu.kanade.presentation.more.settings.screen.tts.TtsSettingsScreenModel
+import eu.kanade.presentation.more.settings.screen.tts.TtsSettingsViewModel
 import eu.kanade.presentation.more.settings.screen.tts.engine.TtsEnginePickerScreen
 import eu.kanade.presentation.more.settings.screen.tts.presentTtsHostActionResult
 import eu.kanade.presentation.more.settings.screen.tts.presentation.TtsSettingsContent
 import eu.kanade.presentation.more.settings.screen.tts.voice.TtsDefaultVoicePickerScreen
 import eu.kanade.presentation.more.settings.screen.tts.voice.TtsVoiceOverridesScreen
 import eu.kanade.presentation.util.LocalBackPress
+import eu.kanade.tachiyomi.ui.base.viewmodel.rememberScreenViewModel
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -62,7 +62,7 @@ object SettingsTtsScreen : SearchableSettings {
         val context = LocalContext.current
         val navigator = LocalNavigator.currentOrThrow
         val backPress = LocalBackPress.current
-        val model = rememberTtsSettingsScreenModel()
+        val model = rememberTtsSettingsViewModel()
         val state by model.state.collectAsState()
         val searchHighlightKey = remember { SearchableSettings.highlightKey }
 
@@ -110,5 +110,5 @@ object SettingsTtsScreen : SearchableSettings {
 }
 
 @Composable
-internal fun rememberTtsSettingsScreenModel(): TtsSettingsScreenModel =
-    SettingsTtsScreen.rememberScreenModel { TtsSettingsScreenModel() }
+internal fun rememberTtsSettingsViewModel(): TtsSettingsViewModel =
+    SettingsTtsScreen.rememberScreenViewModel { TtsSettingsViewModel() }

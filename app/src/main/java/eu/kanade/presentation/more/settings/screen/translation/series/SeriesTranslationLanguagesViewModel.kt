@@ -1,7 +1,7 @@
 package eu.kanade.presentation.more.settings.screen.translation.series
 
-import cafe.adriel.voyager.core.model.ScreenModel
-import cafe.adriel.voyager.core.model.screenModelScope
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
@@ -21,23 +21,23 @@ import uy.kohesive.injekt.api.get
 
 /** The series of the active profile that use their own translation languages, and clearing them. */
 @OptIn(ExperimentalCoroutinesApi::class)
-internal class SeriesTranslationLanguagesScreenModel(
+internal class SeriesTranslationLanguagesViewModel(
     private val repository: EntryTranslationLanguagesRepository = Injekt.get(),
     private val entryRepository: EntryRepository = Injekt.get(),
     private val activeProfile: ActiveProfileProvider = Injekt.get(),
-) : ScreenModel {
+) : ViewModel() {
     /** Ordered by series title; null until first loaded. */
     val series: StateFlow<List<SeriesTranslationLanguages>?> = activeProfile.activeProfileIdFlow
         .flatMapLatest(::seriesOf)
-        .stateIn(screenModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), null)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), null)
 
     /** Makes the series follow the default languages again. */
     fun clear(entryId: Long) {
-        screenModelScope.launch { repository.clearLanguages(entryId, System.currentTimeMillis()) }
+        viewModelScope.launch { repository.clearLanguages(entryId, System.currentTimeMillis()) }
     }
 
     fun clearAll() {
-        screenModelScope.launch {
+        viewModelScope.launch {
             repository.clearLanguagesByProfile(activeProfile.activeProfileId, System.currentTimeMillis())
         }
     }

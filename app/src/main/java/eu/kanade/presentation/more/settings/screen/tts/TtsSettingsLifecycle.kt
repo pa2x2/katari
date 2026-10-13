@@ -7,7 +7,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 
 @Composable
-internal fun RefreshTtsSettingsOnResume(model: TtsSettingsScreenModel) {
+internal fun RefreshTtsSettingsOnResume(model: TtsSettingsViewModel) {
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner, model) {
         val observer = LifecycleEventObserver { _, event ->

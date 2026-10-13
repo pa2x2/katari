@@ -2,12 +2,13 @@ package eu.kanade.presentation.more.settings.screen.libraryupdates
 
 import android.app.Application
 import androidx.compose.runtime.Immutable
-import cafe.adriel.voyager.core.model.StateScreenModel
-import cafe.adriel.voyager.core.model.screenModelScope
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import eu.kanade.tachiyomi.data.library.LibraryUpdateJob
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import mihon.feature.library.update.planning.LibraryUpdateSkipRule
 import tachiyomi.domain.category.interactor.GetCategories
@@ -20,16 +21,19 @@ import tachiyomi.domain.library.update.repository.LibraryUpdateRulesRepository
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
-class CategoryUpdateRulesScreenModel(
+class CategoryUpdateRulesViewModel(
     private val categoryId: Long,
     private val application: Application = Injekt.get(),
     private val libraryPreferences: LibraryPreferences = Injekt.get(),
     private val rulesRepository: LibraryUpdateRulesRepository = Injekt.get(),
     getCategories: GetCategories = Injekt.get(),
-) : StateScreenModel<CategoryUpdateRulesScreenModel.State>(State()) {
+) : ViewModel() {
+
+    val state: StateFlow<CategoryUpdateRulesViewModel.State>
+        field = MutableStateFlow<CategoryUpdateRulesViewModel.State>(State())
 
     init {
-        screenModelScope.launch {
+        viewModelScope.launch {
             combine(
                 getCategories.subscribe(),
                 rulesRepository.subscribeCategoryRules(),
@@ -43,7 +47,7 @@ class CategoryUpdateRulesScreenModel(
                     libraryIntervalHours = interval,
                 )
             }
-                .collectLatest { state -> mutableState.update { state } }
+                .collectLatest { newState -> state.value = newState }
         }
     }
 
@@ -75,7 +79,7 @@ class CategoryUpdateRulesScreenModel(
     private fun save(rules: CategoryUpdateRules) {
         // Until the category has loaded, the rules are a placeholder that would overwrite Default's.
         if (state.value.category == null) return
-        screenModelScope.launch {
+        viewModelScope.launch {
             rulesRepository.setCategoryRules(rules)
             LibraryUpdateJob.setupTask(application)
         }

@@ -18,7 +18,7 @@ import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.components.AppBar
-import eu.kanade.presentation.more.settings.screen.rememberTextRecognitionSettingsScreenModel
+import eu.kanade.presentation.more.settings.screen.rememberTextRecognitionSettingsViewModel
 import eu.kanade.presentation.util.Screen
 import mihon.language.api.tag.LanguageTag
 import mihon.model.artifacts.api.descriptor.ModelArtifactDescriptor
@@ -46,7 +46,7 @@ internal class TextRecognitionOverridePipelineScreen(
         val navigator = LocalNavigator.currentOrThrow
         val activity = LocalActivity.current
         val close: () -> Unit = { if (!navigator.pop()) activity?.finish() }
-        val model = rememberTextRecognitionSettingsScreenModel()
+        val model = rememberTextRecognitionSettingsViewModel()
         val language = remember(languageTag) { LanguageTag.require(languageTag) }
         val choices by remember(language) { model.controller.observePipelineChoices(language) }
             .collectAsState(initial = null)

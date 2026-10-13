@@ -21,7 +21,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import cafe.adriel.voyager.core.model.rememberScreenModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.category.visualName
@@ -30,7 +30,7 @@ import eu.kanade.presentation.library.update.libraryUpdateRunSummaryText
 import eu.kanade.presentation.library.update.sourcePauseStateText
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.screen.libraryupdates.CategoryUpdateRulesScreen
-import eu.kanade.presentation.more.settings.screen.libraryupdates.LibraryUpdatesSettingsScreenModel
+import eu.kanade.presentation.more.settings.screen.libraryupdates.LibraryUpdatesSettingsViewModel
 import eu.kanade.presentation.more.settings.screen.libraryupdates.libraryUpdateIntervalLabel
 import eu.kanade.presentation.more.settings.screen.libraryupdates.libraryUpdateIntervals
 import eu.kanade.presentation.more.settings.screen.libraryupdates.titleRes
@@ -72,8 +72,8 @@ object SettingsLibraryUpdatesScreen : SearchableSettings {
     override fun getPreferences(): List<Preference> {
         val navigator = LocalNavigator.currentOrThrow
         val libraryPreferences = remember { Injekt.get<LibraryPreferences>() }
-        val screenModel = rememberScreenModel { LibraryUpdatesSettingsScreenModel() }
-        val state by screenModel.state.collectFlowAsState()
+        val viewModel = viewModel { LibraryUpdatesSettingsViewModel() }
+        val state by viewModel.state.collectFlowAsState()
 
         return listOfNotNull(
             Preference.PreferenceItem.TextPreference(
@@ -89,12 +89,12 @@ object SettingsLibraryUpdatesScreen : SearchableSettings {
             ) {
                 NextUpdateCard(nextRunAt = state.nextRunAt, preview = state.preview)
             },
-            getScheduleGroup(screenModel, state, libraryPreferences),
-            getCategoriesGroup(state, screenModel, onOpenCategory = { navigator.push(CategoryUpdateRulesScreen(it)) })
+            getScheduleGroup(viewModel, state, libraryPreferences),
+            getCategoriesGroup(state, viewModel, onOpenCategory = { navigator.push(CategoryUpdateRulesScreen(it)) })
                 .takeIf { state.hasUserCategories },
-            getSourcesGroup(state, screenModel).takeIf { state.sources.isNotEmpty() },
-            getTypesGroup(state, screenModel).takeIf { state.types.size > 1 },
-            getSkipRulesGroup(state, screenModel, libraryPreferences),
+            getSourcesGroup(state, viewModel).takeIf { state.sources.isNotEmpty() },
+            getTypesGroup(state, viewModel).takeIf { state.types.size > 1 },
+            getSkipRulesGroup(state, viewModel, libraryPreferences),
             Preference.PreferenceGroup(
                 title = stringResource(MR.strings.library_updates_also),
                 preferenceItems = listOf(
@@ -157,8 +157,8 @@ object SettingsLibraryUpdatesScreen : SearchableSettings {
 
     @Composable
     private fun getScheduleGroup(
-        screenModel: LibraryUpdatesSettingsScreenModel,
-        state: LibraryUpdatesSettingsScreenModel.State,
+        viewModel: LibraryUpdatesSettingsViewModel,
+        state: LibraryUpdatesSettingsViewModel.State,
         libraryPreferences: LibraryPreferences,
     ): Preference.PreferenceGroup {
         val interval by libraryPreferences.autoUpdateInterval.collectAsState()
@@ -171,7 +171,7 @@ object SettingsLibraryUpdatesScreen : SearchableSettings {
                     entries = mapOf(0 to stringResource(MR.strings.update_never)) + libraryUpdateIntervals(),
                     title = stringResource(MR.strings.pref_library_update_interval),
                     onValueChanged = {
-                        screenModel.setInterval(it)
+                        viewModel.setInterval(it)
                         true
                     },
                 ),
@@ -185,7 +185,7 @@ object SettingsLibraryUpdatesScreen : SearchableSettings {
                     title = stringResource(MR.strings.pref_library_update_restriction),
                     subtitle = stringResource(MR.strings.restrictions),
                     onValueChanged = {
-                        screenModel.rescheduleAfterDeviceConditionsChange()
+                        viewModel.rescheduleAfterDeviceConditionsChange()
                         true
                     },
                 ).takeIf { schedulePeriod != null },
@@ -195,8 +195,8 @@ object SettingsLibraryUpdatesScreen : SearchableSettings {
 
     @Composable
     private fun getCategoriesGroup(
-        state: LibraryUpdatesSettingsScreenModel.State,
-        screenModel: LibraryUpdatesSettingsScreenModel,
+        state: LibraryUpdatesSettingsViewModel.State,
+        viewModel: LibraryUpdatesSettingsViewModel,
         onOpenCategory: (Long) -> Unit,
     ): Preference.PreferenceGroup {
         var expanded by rememberSaveable { mutableStateOf(false) }
@@ -230,7 +230,7 @@ object SettingsLibraryUpdatesScreen : SearchableSettings {
                             }
                             Switch(
                                 checked = row.rules.autoUpdate,
-                                onCheckedChange = { screenModel.setCategoryChecked(row.category.id, it) },
+                                onCheckedChange = { viewModel.setCategoryChecked(row.category.id, it) },
                             )
                         }
                     },
@@ -245,8 +245,8 @@ object SettingsLibraryUpdatesScreen : SearchableSettings {
 
     @Composable
     private fun getSourcesGroup(
-        state: LibraryUpdatesSettingsScreenModel.State,
-        screenModel: LibraryUpdatesSettingsScreenModel,
+        state: LibraryUpdatesSettingsViewModel.State,
+        viewModel: LibraryUpdatesSettingsViewModel,
     ): Preference.PreferenceGroup {
         var expanded by rememberSaveable { mutableStateOf(false) }
         val off = state.sources.count { !it.checked }
@@ -254,7 +254,7 @@ object SettingsLibraryUpdatesScreen : SearchableSettings {
         return Preference.PreferenceGroup(
             title = stringResource(MR.strings.label_sources),
             preferenceItems = if (expanded) {
-                state.sources.map { sourceSwitch(it, screenModel) } +
+                state.sources.map { sourceSwitch(it, viewModel) } +
                     showAllToggle(expanded = true, onToggle = { expanded = false })
             } else {
                 // Paused sources stay listed, so resuming one doesn't take a search through every source.
@@ -269,15 +269,15 @@ object SettingsLibraryUpdatesScreen : SearchableSettings {
                         isProfileSpecific = true,
                         onClick = { expanded = true },
                     ),
-                ) + state.sources.filterNot { it.checked }.map { sourceSwitch(it, screenModel) }
+                ) + state.sources.filterNot { it.checked }.map { sourceSwitch(it, viewModel) }
             },
         )
     }
 
     @Composable
     private fun sourceSwitch(
-        row: LibraryUpdatesSettingsScreenModel.SourceRow,
-        screenModel: LibraryUpdatesSettingsScreenModel,
+        row: LibraryUpdatesSettingsViewModel.SourceRow,
+        viewModel: LibraryUpdatesSettingsViewModel,
     ) = Preference.PreferenceItem.TextPreference(
         title = row.name,
         subtitle = listOfNotNull(
@@ -287,13 +287,13 @@ object SettingsLibraryUpdatesScreen : SearchableSettings {
             .joinToString(" · "),
         isProfileSpecific = true,
         widget = { Switch(checked = row.checked, onCheckedChange = null) },
-        onClick = { screenModel.setSourceChecked(row.id, !row.checked) },
+        onClick = { viewModel.setSourceChecked(row.id, !row.checked) },
     )
 
     @Composable
     private fun getTypesGroup(
-        state: LibraryUpdatesSettingsScreenModel.State,
-        screenModel: LibraryUpdatesSettingsScreenModel,
+        state: LibraryUpdatesSettingsViewModel.State,
+        viewModel: LibraryUpdatesSettingsViewModel,
     ): Preference.PreferenceGroup {
         return Preference.PreferenceGroup(
             title = stringResource(MR.strings.library_updates_types),
@@ -303,7 +303,7 @@ object SettingsLibraryUpdatesScreen : SearchableSettings {
                     subtitle = pluralStringResource(MR.plurals.library_updates_entries, row.entryCount, row.entryCount),
                     isProfileSpecific = true,
                     widget = { Switch(checked = row.checked, onCheckedChange = null) },
-                    onClick = { screenModel.setTypeChecked(row.type, !row.checked) },
+                    onClick = { viewModel.setTypeChecked(row.type, !row.checked) },
                 )
             },
         )
@@ -311,8 +311,8 @@ object SettingsLibraryUpdatesScreen : SearchableSettings {
 
     @Composable
     private fun getSkipRulesGroup(
-        state: LibraryUpdatesSettingsScreenModel.State,
-        screenModel: LibraryUpdatesSettingsScreenModel,
+        state: LibraryUpdatesSettingsViewModel.State,
+        viewModel: LibraryUpdatesSettingsViewModel,
         libraryPreferences: LibraryPreferences,
     ): Preference.PreferenceGroup {
         val values by libraryPreferences.updateSkipRules.collectAsState()
@@ -333,7 +333,7 @@ object SettingsLibraryUpdatesScreen : SearchableSettings {
                     },
                     isProfileSpecific = true,
                     widget = { Switch(checked = on, onCheckedChange = null) },
-                    onClick = { screenModel.setSkipRule(rule, !on) },
+                    onClick = { viewModel.setSkipRule(rule, !on) },
                 )
             },
         )

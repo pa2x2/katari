@@ -10,19 +10,19 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.more.settings.Preference
-import eu.kanade.presentation.more.settings.screen.translation.TranslationSettingsScreenModel
+import eu.kanade.presentation.more.settings.screen.translation.TranslationSettingsViewModel
 import eu.kanade.presentation.more.settings.screen.translation.engine.TranslationEnginePickerScreen
 import eu.kanade.presentation.more.settings.screen.translation.engine.translationEngineLabel
 import eu.kanade.presentation.more.settings.screen.translation.language.TranslationLanguagePickerScreen
 import eu.kanade.presentation.more.settings.screen.translation.language.TranslationLanguagePickerTarget
 import eu.kanade.presentation.more.settings.screen.translation.presentation.TranslationSettingsContent
 import eu.kanade.presentation.more.settings.screen.translation.series.SeriesTranslationLanguagesScreen
-import eu.kanade.presentation.more.settings.screen.translation.series.rememberSeriesTranslationLanguagesScreenModel
+import eu.kanade.presentation.more.settings.screen.translation.series.rememberSeriesTranslationLanguagesViewModel
 import eu.kanade.presentation.util.LocalBackPress
+import eu.kanade.tachiyomi.ui.base.viewmodel.rememberScreenViewModel
 import eu.kanade.tachiyomi.util.system.openInBrowser
 import eu.kanade.tachiyomi.util.system.toast
 import mihon.translation.api.host.TranslationHostActionResult
@@ -95,11 +95,11 @@ object SettingsTranslationScreen : SearchableSettings {
         val context = LocalContext.current
         val backPress = LocalBackPress.current
         val navigator = LocalNavigator.currentOrThrow
-        val model = rememberTranslationSettingsScreenModel()
+        val model = rememberTranslationSettingsViewModel()
         val playground by model.playground.collectAsState()
         val engines by model.engines.collectAsState()
         val languageSupport by model.languageSupport.collectAsState()
-        val seriesLanguages by rememberSeriesTranslationLanguagesScreenModel().series.collectAsState()
+        val seriesLanguages by rememberSeriesTranslationLanguagesViewModel().series.collectAsState()
         val searchHighlightKey = remember { SearchableSettings.highlightKey }
 
         RefreshTranslationSettingsOnResume(model)
@@ -216,11 +216,11 @@ object SettingsTranslationScreen : SearchableSettings {
 }
 
 @Composable
-internal fun rememberTranslationSettingsScreenModel(): TranslationSettingsScreenModel =
-    SettingsTranslationScreen.rememberScreenModel { TranslationSettingsScreenModel() }
+internal fun rememberTranslationSettingsViewModel(): TranslationSettingsViewModel =
+    SettingsTranslationScreen.rememberScreenViewModel { TranslationSettingsViewModel() }
 
 @Composable
-internal fun RefreshTranslationSettingsOnResume(model: TranslationSettingsScreenModel) {
+internal fun RefreshTranslationSettingsOnResume(model: TranslationSettingsViewModel) {
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner, model) {
         val observer = LifecycleEventObserver { _, event ->

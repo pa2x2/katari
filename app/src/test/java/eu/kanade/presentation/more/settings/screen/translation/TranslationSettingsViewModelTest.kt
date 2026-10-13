@@ -1,5 +1,7 @@
 package eu.kanade.presentation.more.settings.screen.translation
 
+import androidx.lifecycle.ViewModelStore
+import eu.kanade.tachiyomi.ui.base.viewmodel.createViewModel
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -49,7 +51,7 @@ import org.junit.jupiter.api.Test
 import tachiyomi.core.common.preference.InMemoryPreferenceStore
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class TranslationSettingsScreenModelTest {
+class TranslationSettingsViewModelTest {
     @Test
     fun `provider readiness updates incrementally without resolving selection early`() = runTest {
         val dispatcher = StandardTestDispatcher(testScheduler)
@@ -58,10 +60,13 @@ class TranslationSettingsScreenModelTest {
         val hostActions = FakeHostActions().apply {
             inspectionStates = inspections
         }
-        val model = TranslationSettingsScreenModel(
-            feature = SetupRequiredFeature(),
-            hostActions = hostActions,
-        )
+        val viewModels = ViewModelStore()
+        val model = viewModels.createViewModel {
+            TranslationSettingsViewModel(
+                feature = SetupRequiredFeature(),
+                hostActions = hostActions,
+            )
+        }
 
         try {
             runCurrent()
@@ -102,7 +107,7 @@ class TranslationSettingsScreenModelTest {
             model.playground.value.engineSelectionResolved shouldBe true
             model.playground.value.engine shouldBe SECOND_ENGINE
         } finally {
-            model.onDispose()
+            viewModels.clear()
             Dispatchers.resetMain()
         }
     }
@@ -112,10 +117,13 @@ class TranslationSettingsScreenModelTest {
         val dispatcher = StandardTestDispatcher(testScheduler)
         Dispatchers.setMain(dispatcher)
         val hostActions = FakeHostActions()
-        val model = TranslationSettingsScreenModel(
-            feature = SetupRequiredFeature(),
-            hostActions = hostActions,
-        )
+        val viewModels = ViewModelStore()
+        val model = viewModels.createViewModel {
+            TranslationSettingsViewModel(
+                feature = SetupRequiredFeature(),
+                hostActions = hostActions,
+            )
+        }
 
         try {
             advanceUntilIdle()
@@ -130,7 +138,7 @@ class TranslationSettingsScreenModelTest {
             hostActions.defaultTargetLanguage.get() shouldBe
                 TranslationTargetLanguageSelection.Explicit(FRENCH)
         } finally {
-            model.onDispose()
+            viewModels.clear()
             Dispatchers.resetMain()
         }
     }

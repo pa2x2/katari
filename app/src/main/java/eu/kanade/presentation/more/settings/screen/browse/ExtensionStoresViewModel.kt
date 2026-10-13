@@ -1,8 +1,8 @@
 package eu.kanade.presentation.more.settings.screen.browse
 
 import androidx.compose.runtime.Immutable
-import cafe.adriel.voyager.core.model.ScreenModel
-import cafe.adriel.voyager.core.model.screenModelScope
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import eu.kanade.tachiyomi.extension.ExtensionManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,13 +24,13 @@ import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import kotlin.time.Duration.Companion.seconds
 
-class ExtensionStoresScreenModel(
+class ExtensionStoresViewModel(
     private val getExtensionStores: GetExtensionStores = Injekt.get(),
     private val addExtensionStore: AddExtensionStore = Injekt.get(),
     private val removeExtensionStore: RemoveExtensionStore = Injekt.get(),
     private val updateExtensionStores: UpdateExtensionStores = Injekt.get(),
     private val extensionManager: ExtensionManager = Injekt.get(),
-) : ScreenModel {
+) : ViewModel() {
 
     private val dialog = MutableStateFlow<ExtensionStoreDialog?>(null)
 
@@ -41,7 +41,7 @@ class ExtensionStoresScreenModel(
         ExtensionStoreScreenState.Success(stores = stores, dialog = dialog)
     }
         .flowOn(Dispatchers.IO)
-        .stateIn(screenModelScope, SharingStarted.WhileSubscribed(5.seconds), ExtensionStoreScreenState.Loading)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5.seconds), ExtensionStoreScreenState.Loading)
 
     /**
      * Creates and adds a new repo to the database.
@@ -49,7 +49,7 @@ class ExtensionStoresScreenModel(
      * @param baseUrl The baseUrl of the repo to create.
      */
     fun createRepo(baseUrl: String) {
-        screenModelScope.launch {
+        viewModelScope.launch {
             dialog.update {
                 when (it) {
                     is ExtensionStoreDialog.Create -> it.copy(processing = true)
@@ -84,7 +84,7 @@ class ExtensionStoresScreenModel(
      * Refreshes information for each repository.
      */
     fun refreshRepos() {
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             updateExtensionStores()
         }
     }
@@ -93,14 +93,14 @@ class ExtensionStoresScreenModel(
      * Deletes the given repo from the database
      */
     fun deleteRepo(baseUrl: String) {
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             removeExtensionStore(baseUrl)
             extensionManager.findAvailableExtensions()
         }
     }
 
     fun addFromDeeplink(storeIndexUrl: String) {
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             val alreadyExists = getExtensionStores.get().any { it.indexUrl == storeIndexUrl }
             dialog.update { ExtensionStoreDialog.Confirm(url = storeIndexUrl, alreadyExists = alreadyExists) }
         }

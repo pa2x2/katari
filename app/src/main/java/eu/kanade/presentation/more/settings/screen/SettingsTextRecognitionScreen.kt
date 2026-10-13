@@ -7,11 +7,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.more.settings.Preference
-import eu.kanade.presentation.more.settings.screen.textrecognition.TextRecognitionSettingsScreenModel
+import eu.kanade.presentation.more.settings.screen.textrecognition.TextRecognitionSettingsViewModel
 import eu.kanade.presentation.more.settings.screen.textrecognition.engine.TextRecognitionEnginePickerScreen
 import eu.kanade.presentation.more.settings.screen.textrecognition.language.TextRecognitionPlaygroundLanguageScreen
 import eu.kanade.presentation.more.settings.screen.textrecognition.languages.TextRecognitionLanguagesScreen
@@ -19,6 +18,7 @@ import eu.kanade.presentation.more.settings.screen.textrecognition.models.ModelA
 import eu.kanade.presentation.more.settings.screen.textrecognition.presentation.TextRecognitionSettingsContent
 import eu.kanade.presentation.more.settings.screen.textrecognition.presentation.textRecognitionSettingsPreferences
 import eu.kanade.presentation.util.LocalBackPress
+import eu.kanade.tachiyomi.ui.base.viewmodel.rememberScreenViewModel
 import tachiyomi.i18n.*
 
 object SettingsTextRecognitionScreen : SearchableSettings {
@@ -34,7 +34,7 @@ object SettingsTextRecognitionScreen : SearchableSettings {
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
         val backPress = LocalBackPress.current
-        val model = rememberTextRecognitionSettingsScreenModel()
+        val model = rememberTextRecognitionSettingsViewModel()
         val state by model.state.collectAsState()
         val storedModels by model.storedModels.collectAsState()
         val pickImage = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
@@ -63,5 +63,5 @@ object SettingsTextRecognitionScreen : SearchableSettings {
 }
 
 @Composable
-internal fun rememberTextRecognitionSettingsScreenModel(): TextRecognitionSettingsScreenModel =
-    SettingsTextRecognitionScreen.rememberScreenModel { TextRecognitionSettingsScreenModel() }
+internal fun rememberTextRecognitionSettingsViewModel(): TextRecognitionSettingsViewModel =
+    SettingsTextRecognitionScreen.rememberScreenViewModel { TextRecognitionSettingsViewModel() }

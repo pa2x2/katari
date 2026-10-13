@@ -1,8 +1,8 @@
 package eu.kanade.presentation.more.settings.screen.tts
 
 import androidx.appcompat.app.AppCompatDelegate
-import cafe.adriel.voyager.core.model.ScreenModel
-import cafe.adriel.voyager.core.model.screenModelScope
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
 import mihon.language.api.tag.LanguageTag
 import mihon.tts.api.TtsFeature
@@ -18,14 +18,14 @@ import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.util.Locale
 
-internal class TtsSettingsScreenModel(
+internal class TtsSettingsViewModel(
     feature: TtsFeature = Injekt.get(),
     hostActions: TtsHostActions = Injekt.get(),
-) : ScreenModel {
+) : ViewModel() {
     val controller = TtsSettingsController(
         feature = feature,
         hostActions = hostActions,
-        scope = screenModelScope,
+        scope = viewModelScope,
         initialPreviewLanguage = effectiveUiLanguage(),
     )
     val state = controller.state
@@ -87,7 +87,7 @@ internal class TtsSettingsScreenModel(
         perform(onComplete) { controller.acknowledgeProviderDisclosure(engine, disclosure) }
     }
 
-    override fun onDispose() {
+    override fun onCleared() {
         controller.close()
     }
 
@@ -95,7 +95,7 @@ internal class TtsSettingsScreenModel(
         onComplete: (TtsHostActionResult) -> Unit,
         action: suspend () -> TtsHostActionResult,
     ) {
-        screenModelScope.launch {
+        viewModelScope.launch {
             val result = action()
             onComplete(result)
             if (result == TtsHostActionResult.Completed) {

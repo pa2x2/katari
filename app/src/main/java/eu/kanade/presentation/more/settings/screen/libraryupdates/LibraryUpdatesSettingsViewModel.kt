@@ -2,12 +2,14 @@ package eu.kanade.presentation.more.settings.screen.libraryupdates
 
 import android.app.Application
 import androidx.compose.runtime.Immutable
-import cafe.adriel.voyager.core.model.StateScreenModel
-import cafe.adriel.voyager.core.model.screenModelScope
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import eu.kanade.tachiyomi.data.library.LibraryUpdateJob
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.visualName
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.mapLatest
@@ -39,7 +41,7 @@ import uy.kohesive.injekt.api.get
 import kotlin.time.Clock
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class LibraryUpdatesSettingsScreenModel(
+class LibraryUpdatesSettingsViewModel(
     private val application: Application = Injekt.get(),
     private val libraryPreferences: LibraryPreferences = Injekt.get(),
     private val getLibraryEntries: GetLibraryEntries = Injekt.get(),
@@ -49,7 +51,10 @@ class LibraryUpdatesSettingsScreenModel(
     private val sourceManager: SourceManager = Injekt.get(),
     fetchInterval: FetchInterval = Injekt.get(),
     eligibility: EntryUpdateEligibilityFeature = Injekt.get(),
-) : StateScreenModel<LibraryUpdatesSettingsScreenModel.State>(State()) {
+) : ViewModel() {
+
+    val state: StateFlow<LibraryUpdatesSettingsViewModel.State>
+        field = MutableStateFlow<LibraryUpdatesSettingsViewModel.State>(State())
 
     private val previewCalculator = LibraryUpdatePreview.Calculator(LibraryUpdatePlanner(eligibility), eligibility)
     private val settingsReader = LibraryUpdateSettings.Reader(libraryPreferences, rulesRepository)
@@ -57,17 +62,17 @@ class LibraryUpdatesSettingsScreenModel(
     private val contextReader = LibraryUpdatePlanningContext.Reader(reportRepository, fetchInterval)
 
     init {
-        screenModelScope.launch {
+        viewModelScope.launch {
             reportRepository.subscribeLatestSummary().collectLatest { summary ->
-                mutableState.update { it.copy(lastRun = summary) }
+                state.update { it.copy(lastRun = summary) }
             }
         }
-        screenModelScope.launch {
+        viewModelScope.launch {
             LibraryUpdateJob.nextAutomaticRunFlow(application).collectLatest { nextRunAt ->
-                mutableState.update { it.copy(nextRunAt = nextRunAt) }
+                state.update { it.copy(nextRunAt = nextRunAt) }
             }
         }
-        screenModelScope.launch {
+        viewModelScope.launch {
             // The library settings are read again when planning, so their changes only need to trigger it.
             combine(
                 getLibraryEntries.subscribe(),
@@ -77,7 +82,7 @@ class LibraryUpdatesSettingsScreenModel(
             ) { items, categories, categoryRules, _ -> Inputs(items, categories, categoryRules) }
                 .mapLatest { inputs -> inputs.toContent() }
                 .collectLatest { content ->
-                    mutableState.update {
+                    state.update {
                         it.copy(
                             preview = content.preview,
                             categories = content.categories,
@@ -96,7 +101,7 @@ class LibraryUpdatesSettingsScreenModel(
     }
 
     fun setCategoryRules(rules: CategoryUpdateRules) {
-        screenModelScope.launch {
+        viewModelScope.launch {
             rulesRepository.setCategoryRules(rules)
             // A category's own interval can make the automatic update run more or less often.
             LibraryUpdateJob.setupTask(application)
@@ -125,11 +130,11 @@ class LibraryUpdatesSettingsScreenModel(
     }
 
     fun setInterval(hours: Int) {
-        screenModelScope.launch { LibraryUpdateJob.setupTask(application, hours) }
+        viewModelScope.launch { LibraryUpdateJob.setupTask(application, hours) }
     }
 
     fun rescheduleAfterDeviceConditionsChange() {
-        screenModelScope.launch { LibraryUpdateJob.setupTask(application) }
+        viewModelScope.launch { LibraryUpdateJob.setupTask(application) }
     }
 
     private suspend fun Inputs.toContent(): Content {

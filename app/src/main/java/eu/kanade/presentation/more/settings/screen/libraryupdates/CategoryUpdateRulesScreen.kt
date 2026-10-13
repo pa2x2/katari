@@ -4,7 +4,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import cafe.adriel.voyager.core.model.rememberScreenModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.category.visualName
@@ -25,8 +25,8 @@ class CategoryUpdateRulesScreen(private val categoryId: Long) : Screen() {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val screenModel = rememberScreenModel { CategoryUpdateRulesScreenModel(categoryId) }
-        val state by screenModel.state.collectAsState()
+        val viewModel = viewModel { CategoryUpdateRulesViewModel(categoryId) }
+        val state by viewModel.state.collectAsState()
         val overrides = state.rules.overrides
 
         Scaffold(
@@ -51,13 +51,13 @@ class CategoryUpdateRulesScreen(private val categoryId: Long) : Screen() {
                         subtitle = stringResource(MR.strings.library_updates_category_off_summary)
                             .takeIf { !state.rules.autoUpdate },
                         checked = state.rules.autoUpdate,
-                        onClick = { screenModel.setAutoUpdate(!state.rules.autoUpdate) },
+                        onClick = { viewModel.setAutoUpdate(!state.rules.autoUpdate) },
                     ),
                     switchItem(
                         title = stringResource(MR.strings.library_updates_use_library_rules),
                         checked = overrides == null,
                         enabled = state.rules.autoUpdate,
-                        onClick = { screenModel.setUseLibraryRules(overrides != null) },
+                        onClick = { viewModel.setUseLibraryRules(overrides != null) },
                     ),
                     overrides?.let {
                         Preference.PreferenceGroup(
@@ -76,7 +76,7 @@ class CategoryUpdateRulesScreen(private val categoryId: Long) : Screen() {
                                     ),
                                     checked = on,
                                     enabled = state.rules.autoUpdate,
-                                    onClick = { screenModel.setSkipRule(rule, !on) },
+                                    onClick = { viewModel.setSkipRule(rule, !on) },
                                 )
                             },
                         )
@@ -97,7 +97,7 @@ class CategoryUpdateRulesScreen(private val categoryId: Long) : Screen() {
                                     title = stringResource(MR.strings.library_updates_check_every),
                                     visible = state.rules.autoUpdate,
                                     isProfileSpecific = true,
-                                    onValueChanged = { screenModel.setIntervalHours(it.toIntOrNull()) },
+                                    onValueChanged = { viewModel.setIntervalHours(it.toIntOrNull()) },
                                 ),
                             ),
                         )

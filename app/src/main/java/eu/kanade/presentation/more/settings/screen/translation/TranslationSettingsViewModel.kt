@@ -1,7 +1,7 @@
 package eu.kanade.presentation.more.settings.screen.translation
 
-import cafe.adriel.voyager.core.model.ScreenModel
-import cafe.adriel.voyager.core.model.screenModelScope
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -32,15 +32,15 @@ import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.util.Locale
 
-internal class TranslationSettingsScreenModel(
+internal class TranslationSettingsViewModel(
     feature: TranslationFeature = Injekt.get(),
     private val hostActions: TranslationHostActions = Injekt.get(),
-) : ScreenModel {
-    private val environment = TranslationSessionEnvironmentController(hostActions, screenModelScope)
+) : ViewModel() {
+    private val environment = TranslationSessionEnvironmentController(hostActions, viewModelScope)
     val engines = environment.engineStates
     val controller = TranslationSessionController(
         feature = feature,
-        parentScope = screenModelScope,
+        parentScope = viewModelScope,
         executionMode = TranslationSessionExecutionMode.FollowProviderPolicy,
         selectionSettleDelayMillis = PLAYGROUND_DEBOUNCE_MILLIS,
     )
@@ -199,7 +199,7 @@ internal class TranslationSettingsScreenModel(
         }
     }
 
-    override fun onDispose() {
+    override fun onCleared() {
         environmentObservationJob?.cancel()
         environment.close()
         controller.close()
@@ -210,7 +210,7 @@ internal class TranslationSettingsScreenModel(
     }
 
     private fun observeEnvironment() {
-        environmentObservationJob = screenModelScope.launch {
+        environmentObservationJob = viewModelScope.launch {
             environment.inspection.collect { inspection ->
                 if (!inspection.selectionResolved) return@collect
                 if (appliedResolvedSelection && inspection.selectedEngine == lastResolvedSelection) return@collect
@@ -292,7 +292,7 @@ internal class TranslationSettingsScreenModel(
         onComplete: (TranslationHostActionResult) -> Unit,
         action: suspend () -> TranslationHostActionResult,
     ) {
-        screenModelScope.launch {
+        viewModelScope.launch {
             val result = try {
                 action()
             } catch (error: CancellationException) {

@@ -1,7 +1,7 @@
 package eu.kanade.presentation.more.settings.screen.textrecognition.models
 
-import cafe.adriel.voyager.core.model.ScreenModel
-import cafe.adriel.voyager.core.model.screenModelScope
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
@@ -15,20 +15,20 @@ import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
 /** Stored model revisions sorted by what the profile's saved recognition settings read with them. */
-internal class ModelArtifactStorageScreenModel(
+internal class ModelArtifactStorageViewModel(
     private val store: ModelArtifactStore = Injekt.get(),
     hostActions: TextRecognitionHostActions = Injekt.get(),
-) : ScreenModel {
+) : ViewModel() {
     val stored: StateFlow<TextRecognitionStoredModels?> =
-        hostActions.observeStoredModels(store).stateIn(screenModelScope, SharingStarted.Eagerly, null)
+        hostActions.observeStoredModels(store).stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     fun delete(artifact: ModelArtifactId) {
-        screenModelScope.launch { store.delete(artifact) }
+        viewModelScope.launch { store.delete(artifact) }
     }
 
     /** Deletes every model no component of this build asks for. */
     fun deleteObsolete() {
         val obsolete = stored.value?.obsolete.orEmpty().map { it.descriptor.id }.distinct()
-        screenModelScope.launch { obsolete.forEach { store.delete(it) } }
+        viewModelScope.launch { obsolete.forEach { store.delete(it) } }
     }
 }
