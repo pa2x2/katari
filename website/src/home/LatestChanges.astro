@@ -46,7 +46,7 @@ const shown = latest.sections.flatMap((section) => {
     display: grid;
     grid-template-columns: max-content minmax(0, 1fr);
     gap: 2.5rem;
-    max-width: calc(var(--page-width) - 2 * var(--gutter));
+    width: calc(min(100%, var(--page-width)) - 2 * var(--gutter));
     margin: 1rem auto 0;
     padding: 1.75rem 2.25rem;
     border: 1px solid var(--indigo-light);
@@ -93,13 +93,6 @@ const shown = latest.sections.flatMap((section) => {
   a {
     display: inline-block;
     margin-top: 0.75rem;
-  }
-
-  @media (max-width: 74rem) {
-    .changes {
-      margin-right: var(--gutter);
-      margin-left: var(--gutter);
-    }
   }
 
   @media (max-width: 44rem) {
