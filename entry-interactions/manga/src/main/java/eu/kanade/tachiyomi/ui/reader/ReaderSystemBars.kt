@@ -6,6 +6,7 @@ import androidx.core.graphics.ColorUtils
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.lifecycle.Lifecycle
 
 /**
  * Applies manga reader visibility and icon-contrast policy to Android system bars.
@@ -13,11 +14,12 @@ import androidx.core.view.WindowInsetsControllerCompat
  * Bars kept visible while reading float over the edge-to-edge page, so their icons follow the content sampled behind
  * them instead of the app theme until the reader menu covers them.
  */
-internal class ReaderSystemBars(window: Window) {
+internal class ReaderSystemBars(window: Window, lifecycle: Lifecycle) {
     private val controller = WindowCompat.getInsetsController(window, window.decorView)
     private val appUsesDarkStatusBarIcons = controller.isAppearanceLightStatusBars
     private val appUsesDarkNavigationBarIcons = controller.isAppearanceLightNavigationBars
-    private val contentSampler = ReaderSystemBarContentSampler(window, onContentChanged = ::applyIconAppearance)
+    private val contentSampler =
+        ReaderSystemBarContentSampler(window, lifecycle, onContentChanged = ::applyIconAppearance)
 
     private var menuVisible = false
 

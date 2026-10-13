@@ -211,7 +211,7 @@ class ReaderActivity : EntryInteractionActivity() {
         }
 
         enableEdgeToEdge()
-        systemBars = ReaderSystemBars(window)
+        systemBars = ReaderSystemBars(window, lifecycle)
 
         super.onCreate(savedInstanceState)
 
