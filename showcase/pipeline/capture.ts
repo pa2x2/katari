@@ -73,7 +73,12 @@ try {
   if (!values["reuse-emulator"]) await prepare(device);
   device.shell(`rm -rf ${CAPTURE_DIRECTORY} ${FAILURE_DIRECTORY}`);
   await timed("waiting for the device to settle", () => awaitIdle(device));
-  for (const scene of scenes) await timed(`capturing ${scene}`, () => runScene(device, APP_ID, scene));
+  for (const scene of scenes) {
+    // Times shown relative to now, such as "opened 27 minutes ago", would otherwise depend on how long the scenes
+    // before took, and cross a minute in some runs but not in others.
+    pinShowcaseClock(device);
+    await timed(`capturing ${scene}`, () => runScene(device, APP_ID, scene));
+  }
   device.pull(`${CAPTURE_DIRECTORY}/.`, out);
   if (scenes.includes("statistics.RecapScenes")) {
     device.pull(RECAP_SHARE_IMAGE, join(out, "recap-share.png"));
