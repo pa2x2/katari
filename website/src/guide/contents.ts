@@ -24,6 +24,10 @@ export const guide: GuideGroup[] = [
       { slug: "first-steps", title: "First steps", summary: "Add an extension store, find a title, and start reading.", checked: "1.15" },
     ],
   },
+  {
+    title: "Katari's features",
+    pages: [{ slug: "translation", title: "Translation", summary: "Translate comic pages and typed text, on the phone or with a server.", checked: "1.15" }],
+  },
 ];
 
 export const guidePages: GuideEntry[] = guide.flatMap((group) => group.pages);
