@@ -174,25 +174,40 @@ tasks.register("verifyExtensionRuntimeAbi") {
             "eu.kanade.tachiyomi.network",
             "mihon.book.api",
         )
+        val runtimeAbiClasses = listOf("eu.kanade.tachiyomi.AppInfo")
+        // AppInfo reads these by reflection, so R8 sees no use of them.
+        val reflectedRuntimeFields = mapOf(
+            "eu.kanade.tachiyomi.BuildConfig" to listOf("VERSION_CODE", "VERSION_NAME"),
+        )
+        fun isRuntimeAbiClass(className: String) = className in runtimeAbiClasses ||
+            runtimeAbiPackagePrefixes.any { prefix ->
+                className == prefix || className.startsWith("$prefix.") || className.startsWith("$prefix\$")
+            }
+
         val removedRuntimeAbi = mutableListOf<String>()
-        var runtimeApiClass: String? = null
+        var removedClass: String? = null
         usageFile.asFile.forEachLine { line ->
             if (line.isNotBlank() && !line.first().isWhitespace()) {
                 val className = line.removeSuffix(":")
-                runtimeApiClass = className.takeIf {
-                    runtimeAbiPackagePrefixes.any { prefix ->
-                        className == prefix || className.startsWith("$prefix.") || className.startsWith("$prefix\$")
-                    }
+                removedClass = className
+                // usage.txt lists a class without a trailing colon when R8 removed the whole class.
+                if (!line.endsWith(":") && (isRuntimeAbiClass(className) || className in reflectedRuntimeFields)) {
+                    removedRuntimeAbi += className
                 }
-            } else if (
-                runtimeApiClass != null &&
-                (line.trimStart().startsWith("public ") || line.trimStart().startsWith("protected "))
-            ) {
-                removedRuntimeAbi += "$runtimeApiClass:\n$line"
+            } else {
+                val className = removedClass ?: return@forEachLine
+                val member = line.trim()
+                val isRuntimeAbiMember = isRuntimeAbiClass(className) &&
+                    (member.startsWith("public ") || member.startsWith("protected "))
+                val isReflectedField = reflectedRuntimeFields[className].orEmpty()
+                    .contains(member.substringAfterLast(' '))
+                if (isRuntimeAbiMember || isReflectedField) {
+                    removedRuntimeAbi += "$className:\n$line"
+                }
             }
         }
         check(removedRuntimeAbi.isEmpty()) {
-            "R8 removed public or protected members from the external extension runtime ABI:\n" +
+            "R8 removed parts of the external extension runtime ABI:\n" +
                 removedRuntimeAbi.joinToString("\n")
         }
 
