@@ -36,6 +36,7 @@ export const guide: GuideGroup[] = [
     pages: [
       { slug: "library-updates", title: "Library updates", summary: "When Katari checks for new chapters, and what Upcoming shows." },
       { slug: "backups-and-storage", title: "Backups and storage", summary: "What a backup keeps, where files go, and moving from Mihon." },
+      { slug: "tracking", title: "Tracking", summary: "Send your progress to AniList, MyAnimeList and other trackers." },
     ],
   },
 ];
