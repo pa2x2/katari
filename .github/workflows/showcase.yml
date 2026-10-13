@@ -189,14 +189,23 @@ jobs:
           set -euo pipefail
 
           result="$RUNNER_TEMP/proposal/result.json"
-          branch="showcase/${RUN_NAME}-${GITHUB_RUN_ID}"
+          # A proposal nobody has merged yet is replaced rather than joined by another, so only the latest captures wait
+          # for review. Its branch gets one commit on top of assets, whatever an earlier run pushed there.
+          existing="$(gh pr list --base assets --state open --json number,headRefName \
+            --jq '[.[] | select(.headRefName | startswith("showcase/"))] | first // empty | "\(.number) \(.headRefName)"')"
+          if [[ -n "$existing" ]]; then
+            read -r number branch <<< "$existing"
+          else
+            number=""
+            branch="showcase/proposal"
+          fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git switch --create "$branch"
           cp "$RUNNER_TEMP"/proposal/files/* .
           git add --all
           git commit --message "(docs): refresh the showcase captures for $RUN_NAME"
-          git push origin "$branch"
+          git push --force origin "$branch"
 
           {
             echo "Captured from \`$RUN_NAME\`. Changed:"
@@ -209,4 +218,9 @@ jobs:
               jq -r '.retired[] | "- `\(.)`"' "$result"
             fi
           } > "$RUNNER_TEMP/body.md"
-          gh pr create --base assets --head "$branch" --title "(docs): refresh the showcase captures for $RUN_NAME" --body-file "$RUNNER_TEMP/body.md"
+          title="(docs): refresh the showcase captures for $RUN_NAME"
+          if [[ -n "$number" ]]; then
+            gh pr edit "$number" --title "$title" --body-file "$RUNNER_TEMP/body.md"
+          else
+            gh pr create --base assets --head "$branch" --title "$title" --body-file "$RUNNER_TEMP/body.md"
+          fi
