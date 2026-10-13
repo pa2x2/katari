@@ -318,10 +318,11 @@ internal class DownloadManager(
             if (!removed) return@withIOContext false
             cache.removeManga(manga)
 
-            // Delete source directory if empty
-            val sourceDir = provider.findSourceDir(source)
-            if (sourceDir?.listFiles()?.isEmpty() == true) {
-                sourceDir.delete()
+            // Delete source directories if empty
+            provider.findSourceDirs(source)
+                .filter { it.listFiles()?.isEmpty() == true }
+                .forEach { it.delete() }
+            if (provider.findSourceDirs(source).isEmpty()) {
                 cache.removeSource(source)
             }
             true
@@ -361,14 +362,23 @@ internal class DownloadManager(
     }
 
     /**
-     * Renames source download folder
+     * Renames source download folders. A legacy folder keeps the legacy form, so every source sharing it, renamed
+     * together as the sources of one extension are, still finds it.
      *
      * @param oldSource the old source.
      * @param newSource the new source.
      */
     fun renameSource(oldSource: UnifiedSource, newSource: UnifiedSource) {
-        val oldFolder = provider.findSourceDir(oldSource) ?: return
-        val newName = provider.getSourceDirName(newSource)
+        val oldNames = provider.getSourceDirNames(oldSource)
+        val newNames = provider.getSourceDirNames(newSource)
+        renameSourceDir(oldNames.current, newNames.current)
+        if (oldNames.legacy != null && newNames.legacy != null) {
+            renameSourceDir(oldNames.legacy, newNames.legacy)
+        }
+    }
+
+    private fun renameSourceDir(oldName: String, newName: String) {
+        val oldFolder = provider.findSourceDir(oldName) ?: return
 
         if (oldFolder.name == newName) return
 

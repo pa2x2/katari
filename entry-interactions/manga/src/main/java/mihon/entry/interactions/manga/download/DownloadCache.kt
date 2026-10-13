@@ -237,7 +237,7 @@ internal class DownloadCache(
             var sourceDir = rootDownloadsDir.sourceDirs[manga.source]
             if (sourceDir == null) {
                 val source = sourceManager.get(manga.source) ?: return
-                val sourceUniFile = provider.findSourceDir(source) ?: return
+                val sourceUniFile = provider.findSourceDirs(source).firstOrNull() ?: return
                 sourceDir = SourceDirectory(sourceUniFile)
                 rootDownloadsDir.sourceDirs += manga.source to sourceDir
             }
@@ -367,47 +367,42 @@ internal class DownloadCache(
                 sources = getSources()
             }
 
-            val sourceMap = sources.associate { provider.getSourceDirName(it).lowercase() to it.id }
+            val sourceDirNames = sources.associate { it.id to provider.getSourceDirNames(it) }
 
             rootDownloadsDirMutex.withLock {
                 val updatedRootDir = RootDirectory(storageManager.getDownloadsDirectory())
 
-                updatedRootDir.sourceDirs = updatedRootDir.dir?.listFiles().orEmpty()
+                val folders = updatedRootDir.dir?.listFiles().orEmpty()
                     .filter { it.isDirectory && !it.name.isNullOrBlank() }
-                    .mapNotNull { dir ->
-                        val sourceId = sourceMap[dir.name!!.lowercase()]
-                        sourceId?.let { it to SourceDirectory(dir) }
-                    }
-                    .toMap()
-
-                updatedRootDir.sourceDirs.values.map { sourceDir ->
-                    async {
-                        sourceDir.mangaDirs = sourceDir.dir?.listFiles().orEmpty()
-                            .filter { it.isDirectory && !it.name.isNullOrBlank() }
-                            .associate { it.name!! to MangaDirectory(it) }
-
-                        sourceDir.mangaDirs.values.forEach { mangaDir ->
-                            mangaDir.dir?.recoverMangaPublicationBackups()
-                            val chapterDirs = mangaDir.dir?.listFiles().orEmpty()
-                                .mapNotNull {
-                                    when {
-                                        // Ignore incomplete downloads
-                                        it.name?.endsWith(Downloader.TMP_DIR_SUFFIX) == true -> null
-                                        // Folder of images
-                                        it.isDirectory && it.isValidMangaChapterArtifact() -> it.name
-                                        // CBZ files
-                                        it.isFile && it.isValidMangaChapterArtifact() -> it.nameWithoutExtension
-                                        // Anything else is irrelevant
-                                        else -> null
-                                    }
-                                }
-                                .toSet()
-
-                            mangaDir.chapterDirs = chapterDirs
-                        }
+                    .associateByTo(sortedMapOf(String.CASE_INSENSITIVE_ORDER)) { it.name!! }
+                legacySourceDirRenames(folders.keys, sourceDirNames.values).forEach { (legacyName, currentName) ->
+                    if (folders.getValue(legacyName).renameTo(currentName)) {
+                        folders.remove(legacyName)
+                        updatedRootDir.dir?.findFile(currentName)?.let { folders[currentName] = it }
+                    } else {
+                        logcat(LogPriority.ERROR) { "Failed to rename legacy source download folder: $legacyName" }
                     }
                 }
+
+                val foldersBySource = sourceDirNames
+                    .mapValues { (_, names) -> names.all.mapNotNull { folders[it] } }
+                    .filterValues { it.isNotEmpty() }
+
+                // A legacy folder shared by several sources is listed once, and they share its entries
+                val mangaDirsByFolder = foldersBySource.values.flatten().distinctBy { it.name!!.lowercase() }
+                    .map { folder ->
+                        async { folder.name!!.lowercase() to listMangaDirs(folder) }
+                    }
                     .awaitAll()
+                    .toMap()
+
+                updatedRootDir.sourceDirs = foldersBySource.mapValues { (_, sourceFolders) ->
+                    // Entries in the current folder take the place of same-named ones in the legacy folder
+                    val mangaDirs = sourceFolders.asReversed()
+                        .flatMap { mangaDirsByFolder.getValue(it.name!!.lowercase()).toList() }
+                        .toMap()
+                    SourceDirectory(sourceFolders.first(), mangaDirs)
+                }
 
                 rootDownloadsDir = updatedRootDir
             }
@@ -426,6 +421,33 @@ internal class DownloadCache(
 
         // Mainly to notify the indexing notifier UI
         notifyChanges()
+    }
+
+    private fun listMangaDirs(sourceFolder: UniFile): Map<String, MangaDirectory> {
+        val mangaDirs = sourceFolder.listFiles().orEmpty()
+            .filter { it.isDirectory && !it.name.isNullOrBlank() }
+            .associate { it.name!! to MangaDirectory(it) }
+
+        mangaDirs.values.forEach { mangaDir ->
+            mangaDir.dir?.recoverMangaPublicationBackups()
+            val chapterDirs = mangaDir.dir?.listFiles().orEmpty()
+                .mapNotNull {
+                    when {
+                        // Ignore incomplete downloads
+                        it.name?.endsWith(Downloader.TMP_DIR_SUFFIX) == true -> null
+                        // Folder of images
+                        it.isDirectory && it.isValidMangaChapterArtifact() -> it.name
+                        // CBZ files
+                        it.isFile && it.isValidMangaChapterArtifact() -> it.nameWithoutExtension
+                        // Anything else is irrelevant
+                        else -> null
+                    }
+                }
+                .toSet()
+
+            mangaDir.chapterDirs = chapterDirs
+        }
+        return mangaDirs
     }
 
     private fun getSources(): List<UnifiedSource> {
