@@ -1,0 +1,171 @@
+---
+import type { GuideSection } from "./sections.ts";
+
+interface Props {
+  sections: GuideSection[];
+}
+
+const { sections } = Astro.props;
+---
+
+{/* Beside the page on wide screens; on a phone it folds into one button above the title, so it never pushes the page down.
+    It starts open, so that without the script the sections stay reachable everywhere. */}
+<details class="sections" open>
+  <summary>On this page <span></span></summary>
+  <nav aria-label="On this page">
+    <h2>On this page</h2>
+    <ul>
+      {
+        sections.map((section) => (
+          <li>
+            <a href={`#${section.id}`}>{section.title}</a>
+          </li>
+        ))
+      }
+    </ul>
+  </nav>
+</details>
+
+<script>
+  const contents = document.querySelector<HTMLDetailsElement>("details.sections")!;
+  const links = [...contents.querySelectorAll<HTMLAnchorElement>("nav a")];
+  const targets = links.map((link) => document.getElementById(link.hash.slice(1))!);
+  const current = contents.querySelector("summary span")!;
+
+  // Open beside the page on wide screens, where its button is hidden; folded on phones; following the window as it resizes.
+  const wide = matchMedia("(min-width: 60rem)");
+  const follow = () => {
+    contents.open = wide.matches;
+  };
+  follow();
+  wide.addEventListener("change", follow);
+  contents.addEventListener("click", (event) => {
+    if ((event.target as Element).closest("nav a") && !wide.matches) contents.open = false;
+  });
+
+  // The section being read is the last one whose heading has scrolled up to below the header.
+  const header = parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 0;
+  let scheduled = false;
+  const mark = () => {
+    scheduled = false;
+    let reading = -1;
+    targets.forEach((target, index) => {
+      if (target.getBoundingClientRect().top <= header + 120) reading = index;
+    });
+    // At the bottom of the page the last sections may never reach the top, but they are what is on screen.
+    if (innerHeight + scrollY >= document.documentElement.scrollHeight - 2) reading = targets.length - 1;
+    links.forEach((link, index) => {
+      if (index === reading) link.setAttribute("aria-current", "location");
+      else link.removeAttribute("aria-current");
+    });
+    current.textContent = reading >= 0 ? links[reading].textContent : "";
+  };
+  addEventListener(
+    "scroll",
+    () => {
+      if (scheduled) return;
+      scheduled = true;
+      requestAnimationFrame(mark);
+    },
+    { passive: true },
+  );
+  mark();
+</script>
+
+<style>
+  .sections {
+    font-size: 0.92rem;
+  }
+
+  summary {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.7rem 1rem;
+    border: 1px solid var(--indigo-light);
+    border-radius: 0.5rem;
+    cursor: pointer;
+    list-style: none;
+  }
+
+  summary::-webkit-details-marker {
+    display: none;
+  }
+
+  summary span {
+    overflow: hidden;
+    color: var(--muted);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  summary::after {
+    content: "▾";
+    color: var(--muted);
+  }
+
+  .sections[open] summary::after {
+    content: "▴";
+  }
+
+  summary span:empty {
+    display: none;
+  }
+
+  summary span:not(:empty) {
+    flex: 1;
+    text-align: right;
+  }
+
+  nav {
+    padding: 0.5rem 0.25rem 0;
+  }
+
+  h2 {
+    display: none;
+    margin: 0 0 0.6rem;
+    color: var(--muted);
+    font-family: var(--sans);
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  a {
+    display: block;
+    padding: 0.32rem 0 0.32rem 0.8rem;
+    border-left: 2px solid var(--indigo-light);
+    color: var(--muted);
+    line-height: 1.35;
+    text-decoration: none;
+  }
+
+  a:hover {
+    color: var(--cream);
+  }
+
+  a[aria-current="location"] {
+    border-left-color: var(--clay);
+    color: var(--cream);
+  }
+
+  @media (min-width: 60rem) {
+    summary {
+      display: none;
+    }
+
+    nav {
+      padding: 0;
+    }
+
+    h2 {
+      display: block;
+    }
+  }
+</style>

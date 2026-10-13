@@ -11,6 +11,7 @@ interface Props {
 }
 
 const { id, title, shot } = Astro.props;
+(Astro.locals.guideSections ??= []).push({ id, title });
 ---
 
 <section id={id} class:list={["task", { "with-shot": shot }]}>

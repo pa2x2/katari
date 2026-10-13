@@ -3,7 +3,7 @@ import Viewer from "../media/Viewer.astro";
 import { leavesSite, REPOSITORY, sitePath } from "../site/links.ts";
 import Page from "../site/Page.astro";
 import { guideEntry } from "./contents.ts";
-import GuideContents from "./GuideContents.astro";
+import PageSections from "./PageSections.astro";
 import "./guide.css";
 
 interface Props {
@@ -14,18 +14,22 @@ interface Props {
 
 const { slug, lead } = Astro.props;
 const { entry, group, previous, next } = guideEntry(slug);
+// The body renders first so that each Task and Question in it has recorded its section before the sidebar lists them.
+Astro.locals.guideSections = [];
+const body = await Astro.slots.render("default");
+const sections = Astro.locals.guideSections;
 ---
 
 <Page title={`${entry.title} — Katari guide`} description={entry.summary}>
   <div class="guide">
     <aside>
-      <GuideContents current={entry} />
+      <PageSections sections={sections} />
     </aside>
     <main data-pagefind-body>
       <p class="kicker">{group.title}</p>
       <h1>{entry.title}</h1>
       <p class="lead">{lead}</p>
-      <slot />
+      <Fragment set:html={body} />
       <footer class="page-end">
         <p>
           Something wrong or missing?{" "}
