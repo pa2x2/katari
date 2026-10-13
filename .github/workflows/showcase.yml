@@ -1,7 +1,8 @@
 name: Showcase
 
 # Recaptures every showcase screenshot and clip from a published release on a freshly wiped emulator, and proposes
-# the ones that visibly changed as a pull request against the `assets` branch, which the website is built from.
+# the ones that visibly changed, and the removal of any no scene captures any more, as a pull request against the
+# `assets` branch, which the website is built from.
 # It runs apart from the release workflow and never holds a release up.
 on:
   release:
@@ -27,7 +28,7 @@ jobs:
     permissions:
       contents: read
     outputs:
-      changed: ${{ steps.compare.outputs.changed }}
+      differences: ${{ steps.compare.outputs.differences }}
     env:
       # Matches showcase/pipeline/device/emulator.ts.
       SYSTEM_IMAGE: system-images;android-36.1;google_apis;x86_64
@@ -152,10 +153,10 @@ jobs:
           jq -r '.changed[]' "$proposal/result.json" | while read -r name; do
             cp "$RUNNER_TEMP/captures/$name" "$proposal/files/"
           done
-          echo "changed=$(jq '.changed | length' "$proposal/result.json")" >> "$GITHUB_OUTPUT"
+          echo "differences=$(jq '(.changed | length) + (.retired | length)' "$proposal/result.json")" >> "$GITHUB_OUTPUT"
 
       - name: Upload the changed captures
-        if: steps.compare.outputs.changed != '0'
+        if: steps.compare.outputs.differences != '0'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: showcase-proposal
@@ -165,7 +166,7 @@ jobs:
     name: Propose the changed captures
     runs-on: ubuntu-26.04
     needs: capture
-    if: needs.capture.outputs.changed != '0'
+    if: needs.capture.outputs.differences != '0'
     permissions:
       contents: write
       pull-requests: write
@@ -185,6 +186,8 @@ jobs:
       - name: Open the pull request
         env:
           GH_TOKEN: ${{ github.token }}
+          # Captures change what the website shows, so their owner reviews every proposal.
+          REVIEWER: ${{ github.repository_owner }}
         run: |
           set -euo pipefail
 
@@ -202,25 +205,34 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git switch --create "$branch"
-          cp "$RUNNER_TEMP"/proposal/files/* .
+          cp -r "$RUNNER_TEMP/proposal/files/." .
+          # The website shows only what the scenes capture, so a capture no scene takes any more goes too.
+          jq -r '.retired[]' "$result" | while read -r name; do
+            git rm --quiet -- "$name"
+          done
           git add --all
           git commit --message "(docs): refresh the showcase captures for $RUN_NAME"
           git push --force origin "$branch"
 
           {
-            echo "Captured from \`$RUN_NAME\`. Changed:"
-            echo
-            jq -r '.changed[] | "- `\(.)`"' "$result"
+            echo "Captured from \`$RUN_NAME\`."
+            if [[ "$(jq '.changed | length' "$result")" != 0 ]]; then
+              echo
+              echo "Changed:"
+              echo
+              jq -r '.changed[] | "- `\(.)`"' "$result"
+            fi
             if [[ "$(jq '.retired | length' "$result")" != 0 ]]; then
               echo
-              echo "No longer captured, left in place for a person to remove:"
+              echo "Removed, since no scene captures them any more:"
               echo
               jq -r '.retired[] | "- `\(.)`"' "$result"
             fi
           } > "$RUNNER_TEMP/body.md"
           title="(docs): refresh the showcase captures for $RUN_NAME"
           if [[ -n "$number" ]]; then
-            gh pr edit "$number" --title "$title" --body-file "$RUNNER_TEMP/body.md"
+            gh pr edit "$number" --title "$title" --body-file "$RUNNER_TEMP/body.md" --add-assignee "$REVIEWER"
           else
-            gh pr create --base assets --head "$branch" --title "$title" --body-file "$RUNNER_TEMP/body.md"
+            gh pr create --base assets --head "$branch" --title "$title" --body-file "$RUNNER_TEMP/body.md" \
+              --assignee "$REVIEWER"
           fi

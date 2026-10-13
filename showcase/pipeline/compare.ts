@@ -5,10 +5,10 @@
  * that way, since its frames land at slightly different moments each run, so it follows the stills of the same feature:
  * the recap clip is replaced when a recap still changed. Credits change when their text does.
  *
- * With --apply, changed and new files are copied over the published folder; files no capture produces any more are
- * listed but left alone.
+ * With --apply, changed and new files are copied over the published folder, and files no capture produces any more are
+ * deleted from it.
  */
-import { copyFileSync, existsSync, readdirSync, readFileSync } from "node:fs";
+import { copyFileSync, existsSync, readdirSync, readFileSync, rmSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { parseArgs } from "node:util";
 import sharp from "sharp";
@@ -54,7 +54,10 @@ for (const [clip, prefix] of Object.entries(CLIP_STILLS)) {
 }
 const retired = existsSync(published) ? readdirSync(published).filter((name) => PUBLISHED.test(name) && !files.includes(name)) : [];
 
-if (values.apply) for (const name of changed) copyFileSync(join(captured, name), join(published, name));
+if (values.apply) {
+  for (const name of changed) copyFileSync(join(captured, name), join(published, name));
+  for (const name of retired) rmSync(join(published, name));
+}
 console.log(JSON.stringify({ changed, retired }, null, 2));
 
 async function differs(before: string, after: string): Promise<boolean> {
