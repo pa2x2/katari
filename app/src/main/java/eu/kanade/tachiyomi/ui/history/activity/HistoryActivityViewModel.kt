@@ -1,12 +1,13 @@
 package eu.kanade.tachiyomi.ui.history.activity
 
 import androidx.compose.runtime.Immutable
-import cafe.adriel.voyager.core.model.StateScreenModel
-import cafe.adriel.voyager.core.model.screenModelScope
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import eu.kanade.presentation.more.stats.data.StatsType
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.ui.stats.buildStatisticsTypes
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
@@ -32,7 +33,7 @@ import uy.kohesive.injekt.api.get
 import java.time.LocalDate
 
 /** @param entryIds when set, only sessions of these entries: one title, or every member of a merged title. */
-class HistoryActivityScreenModel(
+class HistoryActivityViewModel(
     private val startLocalDate: String,
     private val endLocalDate: String,
     typeName: String?,
@@ -42,7 +43,10 @@ class HistoryActivityScreenModel(
     statisticsRepository: StatisticsRepository = Injekt.get(),
     statisticsFeature: EntryStatisticsFeature = Injekt.get(),
     presentationFeature: EntryTypePresentationFeature = Injekt.get(),
-) : StateScreenModel<HistoryActivityScreenModel.State>(State.Loading) {
+) : ViewModel() {
+
+    val state: StateFlow<HistoryActivityViewModel.State>
+        field = MutableStateFlow<HistoryActivityViewModel.State>(State.Loading)
 
     val type = typeName?.let { name -> EntryType.entries.firstOrNull { it.name == name } }
     private val scope = when {
@@ -78,13 +82,13 @@ class HistoryActivityScreenModel(
             emit(null)
         }
         .flowOn(Dispatchers.IO)
-        .stateIn(screenModelScope, SharingStarted.WhileSubscribed(5_000), null)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     init {
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             activeProfileProvider.activeProfileIdFlow.collectLatest { profileId ->
                 activeProfileId = profileId
-                mutableState.update { State.Loading }
+                state.update { State.Loading }
                 loadPage(profileId = profileId, reset = true)
             }
         }
@@ -92,8 +96,8 @@ class HistoryActivityScreenModel(
 
     fun retry() {
         val profileId = activeProfileId ?: return
-        screenModelScope.launchIO {
-            mutableState.update { State.Loading }
+        viewModelScope.launchIO {
+            state.update { State.Loading }
             loadPage(profileId = profileId, reset = true)
         }
     }
@@ -102,8 +106,8 @@ class HistoryActivityScreenModel(
         val profileId = activeProfileId ?: return
         val current = state.value as? State.Success ?: return
         if (!current.hasMore || current.loadingMore) return
-        screenModelScope.launchIO {
-            mutableState.update { value ->
+        viewModelScope.launchIO {
+            state.update { value ->
                 (value as? State.Success)?.copy(loadingMore = true, loadMoreFailed = false) ?: value
             }
             loadPage(profileId = profileId, reset = false)
@@ -122,7 +126,7 @@ class HistoryActivityScreenModel(
                 offset = offset,
                 limit = PAGE_SIZE,
             )
-            mutableState.update { value ->
+            state.update { value ->
                 val existing = if (reset) emptyList() else (value as? State.Success)?.sessions.orEmpty()
                 State.Success(
                     sessions = (existing + page.sessions).distinctBy(HistoryActivitySessionDetail::sessionId),
@@ -133,7 +137,7 @@ class HistoryActivityScreenModel(
             }
         } catch (error: Exception) {
             logcat(LogPriority.ERROR, error)
-            mutableState.update { value ->
+            state.update { value ->
                 if (reset) {
                     State.Failed
                 } else {

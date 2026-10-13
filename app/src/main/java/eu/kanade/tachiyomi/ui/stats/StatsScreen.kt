@@ -10,7 +10,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import cafe.adriel.voyager.core.model.rememberScreenModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.components.AppBar
@@ -41,14 +41,14 @@ class StatsScreen : Screen() {
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
 
-        val screenModel = rememberScreenModel { StatsScreenModel() }
-        val state by screenModel.state.collectAsState()
-        val newYearRecap by screenModel.newYearRecap.collectAsState()
+        val viewModel = viewModel { StatsViewModel() }
+        val state by viewModel.state.collectAsState()
+        val newYearRecap by viewModel.newYearRecap.collectAsState()
         val lifecycleOwner = LocalLifecycleOwner.current
 
-        DisposableEffect(lifecycleOwner, screenModel) {
+        DisposableEffect(lifecycleOwner, viewModel) {
             val observer = LifecycleEventObserver { _, event ->
-                if (event == Lifecycle.Event.ON_RESUME) screenModel.refreshToday()
+                if (event == Lifecycle.Event.ON_RESUME) viewModel.refreshToday()
             }
             lifecycleOwner.lifecycle.addObserver(observer)
             onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
@@ -116,16 +116,16 @@ class StatsScreen : Screen() {
                 paddingValues = paddingValues,
                 customizing = customizing,
                 onCustomizingChange = { customizing = it },
-                onRangeSelected = screenModel::setRange,
-                onSaveLayout = screenModel::setCardLayout,
-                onSaveDailyGoal = screenModel::setDailyGoal,
-                onSaveRecapNotifications = screenModel::setRecapNotifications,
+                onRangeSelected = viewModel::setRange,
+                onSaveLayout = viewModel::setCardLayout,
+                onSaveDailyGoal = viewModel::setDailyGoal,
+                onSaveRecapNotifications = viewModel::setRecapNotifications,
                 newYearRecapTitle = newYearRecap?.let { recapPeriodTitle(it) },
                 onOpenNewYearRecap = { newYearRecap?.let { navigator.push(StatisticsRecapScreen(it)) } },
-                onTypeSelected = screenModel::setType,
-                onNavigateActivity = screenModel::navigateActivityByBuckets,
-                onShowToday = screenModel::showToday,
-                onRetryActivity = screenModel::retryActivity,
+                onTypeSelected = viewModel::setType,
+                onNavigateActivity = viewModel::navigateActivityByBuckets,
+                onShowToday = viewModel::showToday,
+                onRetryActivity = viewModel::retryActivity,
                 onOpenActivity = { type, point ->
                     navigator.push(
                         HistoryActivityScreen(

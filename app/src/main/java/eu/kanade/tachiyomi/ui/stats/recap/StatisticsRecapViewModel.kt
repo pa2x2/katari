@@ -2,8 +2,8 @@ package eu.kanade.tachiyomi.ui.stats.recap
 
 import android.app.Application
 import android.graphics.Bitmap
-import cafe.adriel.voyager.core.model.StateScreenModel
-import cafe.adriel.voyager.core.model.screenModelScope
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import eu.kanade.tachiyomi.extension.ExtensionManager
 import eu.kanade.tachiyomi.ui.stats.recap.cover.recapCoverSeedColor
 import eu.kanade.tachiyomi.ui.stats.recap.delivery.editionKey
@@ -42,7 +42,7 @@ import java.time.LocalDate
  * Loads a period's activity once, then rebuilds its story whenever titles are hidden or shown, so hiding a title
  * takes effect on the page being watched.
  */
-class StatisticsRecapScreenModel(
+class StatisticsRecapViewModel(
     private val period: StatisticsRecapPeriod,
     private val application: Application = Injekt.get(),
     activeProfileProvider: ActiveProfileProvider = Injekt.get(),
@@ -50,7 +50,10 @@ class StatisticsRecapScreenModel(
     private val recapRepository: StatisticsRecapRepository = Injekt.get(),
     private val statisticsFeature: EntryStatisticsFeature = Injekt.get(),
     private val extensionManager: ExtensionManager = Injekt.get(),
-) : StateScreenModel<StatisticsRecapScreenModel.State>(State.Loading) {
+) : ViewModel() {
+
+    val state: StateFlow<StatisticsRecapViewModel.State>
+        field = MutableStateFlow<StatisticsRecapViewModel.State>(State.Loading)
 
     private val profileId = activeProfileProvider.activeProfileId
     private val preferences = StatisticsPreferences(profileStore.profileStore(profileId))
@@ -67,7 +70,7 @@ class StatisticsRecapScreenModel(
         if (period is StatisticsRecapPeriod.Year && period.editionKey == newYearRecap(LocalDate.now())?.editionKey) {
             preferences.lastOpenedYearRecap.set(period.editionKey)
         }
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             val loaded = try {
                 load()
             } catch (error: Exception) {
@@ -75,8 +78,8 @@ class StatisticsRecapScreenModel(
                 null
             }
             when {
-                loaded == null -> mutableState.update { State.Failed }
-                loaded.first.segments.isEmpty() -> mutableState.update { State.Empty }
+                loaded == null -> state.update { State.Failed }
+                loaded.first.segments.isEmpty() -> state.update { State.Empty }
                 else -> collectStories(loaded.first, loaded.second)
             }
         }
@@ -128,7 +131,7 @@ class StatisticsRecapScreenModel(
                 .map { StatisticsRecapTitle(it.id, it.type, it.title, it.cover, 0L) }
             State.Success(story, hiddenTitles, includeNsfw)
         }.collect { success ->
-            mutableState.update { success }
+            state.update { success }
             loadCoverSeeds(success.story)
         }
     }

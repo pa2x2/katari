@@ -2,8 +2,8 @@ package eu.kanade.tachiyomi.ui.stats
 
 import android.app.Application
 import androidx.compose.ui.util.fastDistinctBy
-import cafe.adriel.voyager.core.model.StateScreenModel
-import cafe.adriel.voyager.core.model.screenModelScope
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.presentation.more.stats.ActivityState
 import eu.kanade.presentation.more.stats.StatsScreenState
@@ -59,7 +59,7 @@ import java.time.LocalDate
 import java.time.ZonedDateTime
 import java.util.Locale
 
-class StatsScreenModel(
+class StatsViewModel(
     private val activeProfileProvider: ActiveProfileProvider = Injekt.get(),
     private val getLibraryEntries: GetLibraryEntries = Injekt.get(),
     private val presentationFeature: EntryTypePresentationFeature = Injekt.get(),
@@ -69,7 +69,10 @@ class StatsScreenModel(
     private val profileStore: ProfileStore = Injekt.get(),
     private val basePreferences: BasePreferences = Injekt.get(),
     private val application: Application = Injekt.get(),
-) : StateScreenModel<StatsScreenState>(StatsScreenState.Loading) {
+) : ViewModel() {
+
+    val state: StateFlow<StatsScreenState>
+        field = MutableStateFlow<StatsScreenState>(StatsScreenState.Loading)
 
     private val activityReload = MutableStateFlow(0L)
     private val today = MutableStateFlow(LocalDate.now())
@@ -77,7 +80,7 @@ class StatsScreenModel(
     private val types = buildStatisticsTypes(statisticsFeature, presentationFeature)
 
     init {
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             observeProfileScopedState(activeProfileProvider.activeProfileIdFlow) { profileId ->
                 combine(
                     getLibraryEntries.subscribe(profileId).map { libraryEntries ->
@@ -192,12 +195,12 @@ class StatsScreenModel(
                 }.distinctUntilChanged().flowOn(Dispatchers.IO)
             }.collect { event ->
                 when (event) {
-                    is ProfileScopedStateEvent.Reset -> mutableState.update { StatsScreenState.Loading }
-                    is ProfileScopedStateEvent.Value -> mutableState.update { event.value }
+                    is ProfileScopedStateEvent.Reset -> state.update { StatsScreenState.Loading }
+                    is ProfileScopedStateEvent.Value -> state.update { event.value }
                 }
             }
         }
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             while (true) {
                 val now = ZonedDateTime.now()
                 val nextMidnight = now.toLocalDate().plusDays(1L).atStartOfDay(now.zone)
@@ -247,7 +250,7 @@ class StatsScreenModel(
             logcat(LogPriority.ERROR, error)
             emit(null)
         }
-        .stateIn(screenModelScope, SharingStarted.WhileSubscribed(5_000L), null)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000L), null)
 
     fun setDailyGoal(profileId: Long, minutes: Int) {
         if ((state.value as? StatsScreenState.Success)?.profileId != profileId) return

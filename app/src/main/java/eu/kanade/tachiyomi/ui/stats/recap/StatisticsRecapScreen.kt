@@ -10,7 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
-import cafe.adriel.voyager.core.model.rememberScreenModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import dev.icerock.moko.resources.StringResource
@@ -39,17 +39,17 @@ data class StatisticsRecapScreen(private val period: StatisticsRecapPeriod) : Sc
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
         val context = LocalContext.current
-        val screenModel = rememberScreenModel { StatisticsRecapScreenModel(period) }
-        val state by screenModel.state.collectAsState()
-        val seeds by screenModel.coverSeeds.collectAsState()
+        val viewModel = viewModel { StatisticsRecapViewModel(period) }
+        val state by viewModel.state.collectAsState()
+        val seeds by viewModel.coverSeeds.collectAsState()
         val title = recapPeriodTitle(period)
         val footer = "${stringResource(MR.strings.app_name)} · $title"
 
         when (val current = state) {
-            StatisticsRecapScreenModel.State.Loading -> LoadingScreen()
-            StatisticsRecapScreenModel.State.Failed -> RecapMessage(MR.strings.statistics_could_not_load_activity)
-            StatisticsRecapScreenModel.State.Empty -> RecapMessage(MR.strings.statistics_empty_period)
-            is StatisticsRecapScreenModel.State.Success -> {
+            StatisticsRecapViewModel.State.Loading -> LoadingScreen()
+            StatisticsRecapViewModel.State.Failed -> RecapMessage(MR.strings.statistics_could_not_load_activity)
+            StatisticsRecapViewModel.State.Empty -> RecapMessage(MR.strings.statistics_empty_period)
+            is StatisticsRecapViewModel.State.Success -> {
                 val story = current.story
                 val palettes = remember(seeds) { mutableMapOf<Int, RecapPalette>() }
                 val themeSeed = MaterialTheme.colorScheme.primary.toArgb()
@@ -68,12 +68,12 @@ data class StatisticsRecapScreen(private val period: StatisticsRecapPeriod) : Sc
                     footer = footer,
                     includeNsfw = current.includeNsfw,
                     hiddenTitles = current.hiddenTitles,
-                    onIncludeNsfwChange = screenModel::setIncludeNsfw,
-                    onHide = screenModel::hide,
-                    onShowAgain = screenModel::showAgain,
+                    onIncludeNsfwChange = viewModel::setIncludeNsfw,
+                    onHide = viewModel::hide,
+                    onShowAgain = viewModel::showAgain,
                     onShare = { image ->
                         try {
-                            val file = screenModel.writeImage(image.asAndroidBitmap(), context.cacheImageDir)
+                            val file = viewModel.writeImage(image.asAndroidBitmap(), context.cacheImageDir)
                             context.startActivity(file.getUriCompat(context).toShareIntent(context, type = "image/png"))
                         } catch (error: Exception) {
                             logcat(LogPriority.ERROR, error)

@@ -11,7 +11,7 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import eu.kanade.tachiyomi.ui.stats.recap.list.StatisticsRecapsScreenModel
+import eu.kanade.tachiyomi.ui.stats.recap.list.StatisticsRecapsViewModel
 import eu.kanade.tachiyomi.ui.stats.recap.period.StatisticsRecapPeriod
 import eu.kanade.tachiyomi.ui.stats.recap.recapPeriodTitle
 import mihon.icons.materialsymbols.MaterialSymbols
@@ -23,7 +23,7 @@ import tachiyomi.presentation.core.screens.EmptyScreen
 
 @Composable
 fun StatisticsRecapsScreenContent(
-    state: StatisticsRecapsScreenModel.State,
+    state: StatisticsRecapsViewModel.State,
     paddingValues: PaddingValues,
     onOpen: (StatisticsRecapPeriod) -> Unit,
 ) {

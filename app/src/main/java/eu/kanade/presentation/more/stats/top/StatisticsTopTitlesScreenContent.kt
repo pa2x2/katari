@@ -24,7 +24,7 @@ import eu.kanade.presentation.more.stats.components.color
 import eu.kanade.presentation.more.stats.components.rememberStatisticsDurationFormatter
 import eu.kanade.presentation.more.stats.data.StatsType
 import eu.kanade.tachiyomi.source.entry.EntryType
-import eu.kanade.tachiyomi.ui.stats.top.StatisticsTopTitlesScreenModel
+import eu.kanade.tachiyomi.ui.stats.top.StatisticsTopTitlesViewModel
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import tachiyomi.i18n.*
@@ -33,7 +33,7 @@ import tachiyomi.presentation.core.screens.LoadingScreen
 
 @Composable
 fun StatisticsTopTitlesScreenContent(
-    state: StatisticsTopTitlesScreenModel.State,
+    state: StatisticsTopTitlesViewModel.State,
     selectedType: EntryType?,
     types: List<StatsType>,
     totalDurationMillis: Long,

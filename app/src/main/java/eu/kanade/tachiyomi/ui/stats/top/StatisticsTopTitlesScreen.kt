@@ -3,7 +3,7 @@ package eu.kanade.tachiyomi.ui.stats.top
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import cafe.adriel.voyager.core.model.rememberScreenModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.components.AppBar
@@ -29,10 +29,10 @@ data class StatisticsTopTitlesScreen(
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val screenModel = rememberScreenModel {
-            StatisticsTopTitlesScreenModel(typeName, startLocalDate, endLocalDate)
+        val viewModel = viewModel {
+            StatisticsTopTitlesViewModel(typeName, startLocalDate, endLocalDate)
         }
-        val state by screenModel.state.collectAsState()
+        val state by viewModel.state.collectAsState()
 
         Scaffold(
             topBar = { scrollBehavior ->
@@ -46,11 +46,11 @@ data class StatisticsTopTitlesScreen(
         ) { paddingValues ->
             StatisticsTopTitlesScreenContent(
                 state = state,
-                selectedType = screenModel.type,
-                types = screenModel.types,
+                selectedType = viewModel.type,
+                types = viewModel.types,
                 totalDurationMillis = totalDurationMillis,
                 paddingValues = paddingValues,
-                onLoadMore = screenModel::loadMore,
+                onLoadMore = viewModel::loadMore,
                 onEntryClick = { navigator.push(EntryScreen(it)) },
             )
         }

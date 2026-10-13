@@ -1,12 +1,14 @@
 package eu.kanade.tachiyomi.ui.stats.top
 
 import androidx.compose.runtime.Immutable
-import cafe.adriel.voyager.core.model.StateScreenModel
-import cafe.adriel.voyager.core.model.screenModelScope
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import eu.kanade.presentation.more.stats.data.StatsType
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.ui.stats.buildStatisticsTypes
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import logcat.LogPriority
@@ -21,7 +23,7 @@ import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
 /** Every title with timed activity in one window, ranked by time and loaded a page at a time. */
-class StatisticsTopTitlesScreenModel(
+class StatisticsTopTitlesViewModel(
     typeName: String?,
     private val startLocalDate: String?,
     private val endLocalDate: String,
@@ -29,7 +31,10 @@ class StatisticsTopTitlesScreenModel(
     private val statisticsRepository: StatisticsRepository = Injekt.get(),
     statisticsFeature: EntryStatisticsFeature = Injekt.get(),
     presentationFeature: EntryTypePresentationFeature = Injekt.get(),
-) : StateScreenModel<StatisticsTopTitlesScreenModel.State>(State()) {
+) : ViewModel() {
+
+    val state: StateFlow<StatisticsTopTitlesViewModel.State>
+        field = MutableStateFlow<StatisticsTopTitlesViewModel.State>(State())
 
     val type = typeName?.let { name -> EntryType.entries.firstOrNull { it.name == name } }
     val types: List<StatsType> = buildStatisticsTypes(statisticsFeature, presentationFeature)
@@ -42,8 +47,8 @@ class StatisticsTopTitlesScreenModel(
     fun loadMore() {
         val current = state.value
         if (loadJob?.isActive == true || current.endReached) return
-        mutableState.update { it.copy(loading = true, failed = false) }
-        loadJob = screenModelScope.launchIO {
+        state.update { it.copy(loading = true, failed = false) }
+        loadJob = viewModelScope.launchIO {
             try {
                 val page = statisticsRepository.getTopEntriesPage(
                     profileId = activeProfileProvider.activeProfileIdFlow.first(),
@@ -53,12 +58,12 @@ class StatisticsTopTitlesScreenModel(
                     offset = current.titles.size.toLong(),
                     limit = PAGE_SIZE,
                 )
-                mutableState.update {
+                state.update {
                     it.copy(titles = it.titles + page, loading = false, endReached = page.size < PAGE_SIZE)
                 }
             } catch (error: Exception) {
                 logcat(LogPriority.ERROR, error)
-                mutableState.update { it.copy(loading = false, failed = true) }
+                state.update { it.copy(loading = false, failed = true) }
             }
         }
     }
