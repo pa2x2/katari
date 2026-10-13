@@ -1,4 +1,5 @@
 ---
+import upcoming from "../../captures/upcoming.png";
 import updates from "../../captures/updates.png";
 import Callout from "../../guide/Callout.astro";
 import GuidePage from "../../guide/GuidePage.astro";
@@ -74,7 +75,7 @@ import Task from "../../guide/Task.astro";
     </Callout>
   </Task>
 
-  <Task id="upcoming" title="What Upcoming shows">
+  <Task id="upcoming" title="What Upcoming shows" shot={{ image: upcoming, alt: "A month's calendar marking the day a series' next episode is expected", caption: "Upcoming" }}>
     <p>
       <Path>Updates › View Upcoming Updates</Path> opens a calendar of when titles are expected to get something new, worked out from how
       often they did before. It's an estimate, not a release date: a series on break or a source with wrong dates throws it off.

@@ -1,4 +1,5 @@
 ---
+import extensions from "../../captures/extensions.png";
 import globalSearch from "../../captures/global-search.png";
 import Callout from "../../guide/Callout.astro";
 import GuidePage from "../../guide/GuidePage.astro";
@@ -19,7 +20,7 @@ import { sitePath } from "../../site/links.ts";
     </Callout>
   </Task>
 
-  <Task id="install-extensions" title="Install extensions">
+  <Task id="install-extensions" title="Install extensions" shot={{ image: extensions, alt: "An installed extension that supplies comics, video and books", caption: "Extensions" }}>
     <ol>
       <li>Back on <Path>Browse › Extensions</Path>, tap the download button beside an extension to install it.</li>
       <li>A new extension shows as <strong>Untrusted</strong> until you trust it. Tap the <strong>Trust</strong> button beside it and confirm with <strong>Trust</strong>.</li>
