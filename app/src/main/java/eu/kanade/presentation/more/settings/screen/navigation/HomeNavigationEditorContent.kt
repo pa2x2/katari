@@ -303,8 +303,7 @@ internal fun HomeNavigationEditorContent(
                     hostState = snackbarHostState,
                     modifier = Modifier
                         .align(Alignment.CenterStart)
-                        .widthIn(max = 280.dp)
-                        .padding(start = 16.dp),
+                        .widthIn(max = 280.dp),
                 )
             }
         }
