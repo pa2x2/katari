@@ -46,9 +46,13 @@ const { label, tone = "note" } = Astro.props;
     color: var(--clay);
   }
 
-  div :global(p) {
+  /* The class outranks the guide's own paragraph rule, which would leave a paragraph's margin under the last line. */
+  .callout div :global(p) {
     margin: 0;
-    color: var(--cream);
+  }
+
+  .callout div :global(p + p) {
+    margin-top: 0.6rem;
   }
 
   @media (max-width: 30rem) {
