@@ -4,6 +4,10 @@ import { readText } from "../download-cache.ts";
 import type { ResolvedContent } from "../resolved-work.ts";
 import type { GutenbergWork } from "../source-definitions.ts";
 
+// Project Gutenberg asks automated downloads to use a mirror rather than its website, whose front end is also down for
+// hours at a time. Its own mirror serves the same files under the same paths.
+const MIRROR = "https://gutenberg.pglaf.org";
+
 const GENERATED_SUMMARY_NOTE = "(This is an automatically generated summary.)";
 
 type Node = Record<string, unknown>;
@@ -33,7 +37,7 @@ export async function resolveGutenberg(work: GutenbergWork): Promise<ResolvedCon
         number: 1,
         name: title,
         date: text(record.issued),
-        files: [`https://www.gutenberg.org/cache/epub/${work.book}/pg${work.book}-images-3.epub`],
+        files: [`${MIRROR}/cache/epub/${work.book}/pg${work.book}-images-3.epub`],
       },
     ],
   };
@@ -41,7 +45,7 @@ export async function resolveGutenberg(work: GutenbergWork): Promise<ResolvedCon
 
 async function catalogRecord(book: number): Promise<Node> {
   const parser = new XMLParser({ ignoreAttributes: false, removeNSPrefix: true, parseTagValue: false });
-  const document = parser.parse(await readText(`https://www.gutenberg.org/cache/epub/${book}/pg${book}.rdf`));
+  const document = parser.parse(await readText(`${MIRROR}/cache/epub/${book}/pg${book}.rdf`));
   return document.RDF.ebook as Node;
 }
 
