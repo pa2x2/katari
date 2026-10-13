@@ -1,0 +1,149 @@
+---
+import Viewer from "../media/Viewer.astro";
+import { leavesSite, REPOSITORY, sitePath } from "../site/links.ts";
+import Page from "../site/Page.astro";
+import { guideEntry } from "./contents.ts";
+import GuideContents from "./GuideContents.astro";
+import "./guide.css";
+
+interface Props {
+  slug: string;
+  /** The sentence under the title, saying what the page is for. */
+  lead: string;
+}
+
+const { slug, lead } = Astro.props;
+const { entry, group, previous, next } = guideEntry(slug);
+---
+
+<Page title={`${entry.title} — Katari guide`} description={entry.summary}>
+  <div class="guide">
+    <aside>
+      <GuideContents current={entry} />
+    </aside>
+    <main data-pagefind-body>
+      <p class="kicker">{group.title}</p>
+      <h1>{entry.title}</h1>
+      <p class="lead">{lead}</p>
+      <slot />
+      <footer class="page-end">
+        <p>
+          Written for Katari {entry.checked}. Something wrong or missing?{" "}
+          <a href={`${REPOSITORY}/edit/main/website/src/pages/guide/${slug}.astro`} {...leavesSite()}>Suggest a fix</a>.
+        </p>
+        <nav class="neighbours" aria-label="More of the guide">
+          {
+            previous && (
+              <a class="previous" href={sitePath(`guide/${previous.slug}/`)}>
+                <span>Previous</span>
+                {previous.title}
+              </a>
+            )
+          }
+          {
+            next && (
+              <a class="next" href={sitePath(`guide/${next.slug}/`)}>
+                <span>Next</span>
+                {next.title}
+              </a>
+            )
+          }
+        </nav>
+      </footer>
+    </main>
+  </div>
+  <Viewer />
+</Page>
+
+<style>
+  .guide {
+    display: grid;
+    grid-template-columns: 13rem minmax(0, 46rem);
+    justify-content: center;
+    gap: 3.5rem;
+    max-width: var(--page-width);
+    margin: 0 auto;
+    padding: 3rem var(--gutter) 0;
+  }
+
+  /* The contents stay in view while the page scrolls past them. */
+  aside {
+    position: sticky;
+    top: calc(var(--header-height) + 2rem);
+    align-self: start;
+    max-height: calc(100dvh - var(--header-height) - 3rem);
+    overflow-y: auto;
+  }
+
+  h1 {
+    margin: 0 0 0.75rem;
+    font-size: clamp(2.4rem, 6vw, 3.4rem);
+  }
+
+  .lead {
+    margin: 0 0 1rem;
+    color: var(--muted);
+    font-size: 1.15rem;
+  }
+
+  .page-end {
+    margin-top: 3.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--indigo-light);
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+
+  .page-end p {
+    margin: 0;
+  }
+
+  .neighbours {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+
+  .neighbours a {
+    padding: 0.8rem 1rem;
+    border: 1px solid var(--indigo-light);
+    border-radius: 0.5rem;
+    color: var(--cream);
+    font-family: var(--serif);
+    font-size: 1.15rem;
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  .neighbours a:hover {
+    border-color: var(--clay);
+  }
+
+  .neighbours span {
+    display: block;
+    color: var(--muted);
+    font-family: var(--sans);
+    font-size: 0.8rem;
+    font-weight: 400;
+  }
+
+  .next {
+    grid-column: 2;
+    text-align: right;
+  }
+
+  @media (max-width: 60rem) {
+    .guide {
+      grid-template-columns: minmax(0, 46rem);
+      gap: 0;
+      padding-top: 1.5rem;
+    }
+
+    aside {
+      position: static;
+      max-height: none;
+      margin-bottom: 1.75rem;
+    }
+  }
+</style>

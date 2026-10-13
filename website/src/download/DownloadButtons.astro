@@ -23,7 +23,7 @@ const target = release ? {} : leavesSite();
   </div>
   <p>
     {release && <>{release.tag} · {releaseDate(release.publishedAt)} · {megabytes(release.standard)} · </>}Android 10 or newer.
-    Katari FOSS leaves out Google services.{explained && <>{" "}<a href={sitePath("start/#which-file")}>Which one?</a></>}
+    Katari FOSS leaves out Google services.{explained && <>{" "}<a href={sitePath("guide/install/#which-file")}>Which one?</a></>}
   </p>
 </div>
 

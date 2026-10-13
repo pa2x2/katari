@@ -1,0 +1,59 @@
+---
+interface Props {
+  /** A word or two naming the catch, such as "Not in backups". */
+  label: string;
+  /** A warning stands out for things that fail without saying so; a note adds context. */
+  tone?: "note" | "warning";
+}
+
+const { label, tone = "note" } = Astro.props;
+---
+
+<aside class:list={["callout", tone]}>
+  <strong>{label}</strong>
+  <div><slot /></div>
+</aside>
+
+<style>
+  .callout {
+    display: flex;
+    gap: 0.9rem;
+    margin: 0 0 1.25rem;
+    padding: 0.8rem 1rem;
+    border-left: 3px solid #6f8fd0;
+    border-radius: 0.4rem;
+    background: #142035;
+    color: var(--cream);
+    font-size: 0.95rem;
+  }
+
+  .warning {
+    border-left-color: var(--clay);
+    background: #2a1d17;
+  }
+
+  strong {
+    flex: none;
+    padding-top: 0.15rem;
+    color: #9fb7e8;
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .warning strong {
+    color: var(--clay);
+  }
+
+  div :global(p) {
+    margin: 0;
+    color: var(--cream);
+  }
+
+  @media (max-width: 30rem) {
+    .callout {
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+  }
+</style>

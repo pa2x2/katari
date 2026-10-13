@@ -1,0 +1,95 @@
+---
+import { guide } from "../../guide/contents.ts";
+import Page from "../../site/Page.astro";
+import { sitePath } from "../../site/links.ts";
+---
+
+<Page title="Guide — Katari" description="How to use Katari, from the first extension to backups, with the app's own words for every step.">
+  <main data-pagefind-body>
+    <p class="kicker">Guide</p>
+    <h1>Using Katari</h1>
+    <p class="lead">From the first extension to backups, with the app's own words for every step.</p>
+    {
+      guide.map((group) => (
+        <section aria-label={group.title}>
+          <h2>{group.title}</h2>
+          <ul>
+            {group.pages.map((page) => (
+              <li>
+                <a href={sitePath(`guide/${page.slug}/`)}>
+                  <strong>{page.title}</strong>
+                  <span>{page.summary}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))
+    }
+  </main>
+</Page>
+
+<style>
+  main {
+    max-width: var(--page-width);
+    margin: 0 auto;
+    padding: 3rem var(--gutter) 0;
+  }
+
+  h1 {
+    margin: 0 0 0.75rem;
+    font-size: clamp(2.4rem, 6vw, 3.6rem);
+  }
+
+  .lead {
+    max-width: 40rem;
+    margin: 0;
+    color: var(--muted);
+    font-size: 1.15rem;
+  }
+
+  h2 {
+    margin: 2.5rem 0 0.9rem;
+    color: var(--muted);
+    font-family: var(--sans);
+    font-size: 0.8rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  ul {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+    gap: 1rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  a {
+    display: block;
+    height: 100%;
+    padding: 1.1rem 1.25rem;
+    border: 1px solid var(--indigo-light);
+    border-radius: 0.75rem;
+    background: var(--indigo);
+    color: var(--cream);
+    text-decoration: none;
+  }
+
+  a:hover {
+    border-color: var(--clay);
+  }
+
+  strong {
+    display: block;
+    margin-bottom: 0.3rem;
+    font-family: var(--serif);
+    font-size: 1.3rem;
+  }
+
+  span {
+    color: var(--muted);
+    font-size: 0.95rem;
+  }
+</style>
