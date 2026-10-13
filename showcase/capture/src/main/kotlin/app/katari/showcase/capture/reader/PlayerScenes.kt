@@ -18,8 +18,9 @@ import java.util.regex.Pattern
 @RunWith(AndroidJUnit4::class)
 class PlayerScenes {
     /**
-     * Sintel paused on the cliff at sunset, a shot that barely moves for several seconds. A tap on the timeline can
-     * only aim within a second or so, and anywhere in this shot gives the same still.
+     * Sintel paused on the cliff at sunset. A tap on the timeline can only aim within a second or so, and a pause lands
+     * wherever playback has got to, so the shot is aimed only once the film is paused: from then on a tap seeks exactly
+     * where it lands and the player stays there, so every run taps the same spots and shows the same frame.
      */
     @Test
     fun player() {
@@ -32,18 +33,18 @@ class PlayerScenes {
         try {
             settle()
             // The seed finished the film, so it opens on its last frame, where a seek starts it playing a moment
-            // later; it can still show Play when the first pause looks. Paused, a seek stays put and the controls stay
-            // up, so the tap is corrected until the player rests on the target.
-            seekTo(TARGET_SECONDS)
+            // later; it can still show Play when the first pause looks, so every tap checks it stayed paused.
+            tapTimeline()
             var attempts = 0
             while (true) {
                 check(attempts++ < SEEK_ATTEMPTS) { "The player never stopped at $TARGET_SECONDS seconds" }
                 pause()
+                tapTimeline()
                 settle(extraMs = 3_000)
                 if (!device.hasObject(By.desc("Play"))) continue
                 val shown = shownSeconds()
                 if (shown == TARGET_SECONDS) break
-                seekTo(TARGET_SECONDS, from = shown)
+                tapX += (TARGET_SECONDS - shown) * (TIMELINE_END - TIMELINE_START) / DURATION_SECONDS
             }
             showControls()
             capture("player")
@@ -52,12 +53,12 @@ class PlayerScenes {
         }
     }
 
-    private var tapX = TIMELINE_START + (TIMELINE_END - TIMELINE_START) * TARGET_SECONDS / DURATION_SECONDS
+    // Aimed at the middle of the second, which leaves the most room for where the tap lands.
+    private var tapX = TIMELINE_START + (TIMELINE_END - TIMELINE_START) * (TARGET_SECONDS + 0.5f) / DURATION_SECONDS
 
-    /** Taps the timeline, which runs along the bottom of the landscape screen, moving the last tap by the error. */
-    private fun seekTo(seconds: Int, from: Int? = null) {
+    /** Taps the timeline, which runs along the bottom of the landscape screen. */
+    private fun tapTimeline() {
         showControls()
-        if (from != null) tapX += (seconds - from) * (TIMELINE_END - TIMELINE_START) / DURATION_SECONDS
         tapAt(tapX, TIMELINE_Y)
         settle()
     }
