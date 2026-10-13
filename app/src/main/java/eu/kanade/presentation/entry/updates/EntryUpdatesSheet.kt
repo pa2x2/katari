@@ -25,7 +25,7 @@ import eu.kanade.presentation.library.update.labelRes
 import eu.kanade.presentation.library.update.sourcePauseEndText
 import eu.kanade.presentation.util.relativeTimeSpanString
 import eu.kanade.tachiyomi.source.entry.EntryUpdateStrategy
-import eu.kanade.tachiyomi.ui.entry.updates.EntryUpdatesScreenModel
+import eu.kanade.tachiyomi.ui.entry.updates.EntryUpdatesViewModel
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Info
 import mihon.icons.materialsymbols.rounded.PauseCircle
@@ -52,7 +52,7 @@ fun EntryUpdatesSheet(
     mode: EntryUpdateMode,
     status: EntryUpdateStatus?,
     categories: Map<Long, Category>,
-    pausedSources: List<EntryUpdatesScreenModel.PausedSource>,
+    pausedSources: List<EntryUpdatesViewModel.PausedSource>,
     releaseEstimate: String,
     onModeSelected: (EntryUpdateMode) -> Unit,
     onResumeSource: (Long) -> Unit,
@@ -130,7 +130,7 @@ private fun DecisionCard(text: String) {
 }
 
 @Composable
-private fun PausedSourceCard(source: EntryUpdatesScreenModel.PausedSource, onResume: () -> Unit) {
+private fun PausedSourceCard(source: EntryUpdatesViewModel.PausedSource, onResume: () -> Unit) {
     Surface(
         color = MaterialTheme.colorScheme.surfaceContainerHighest,
         shape = MaterialTheme.shapes.medium,

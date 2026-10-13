@@ -36,7 +36,7 @@ import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.presentation.entry.updates.entryReleaseEstimateText
 import eu.kanade.tachiyomi.source.entry.EntryType
-import eu.kanade.tachiyomi.ui.entry.EntryScreenModel
+import eu.kanade.tachiyomi.ui.entry.EntryViewModel
 import eu.kanade.tachiyomi.util.system.isReleaseBuildType
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.datetime.TimeZone
@@ -199,7 +199,7 @@ fun EditDisplayNameDialog(
 @Composable
 fun ManageMergeDialog(
     targetId: Long,
-    members: List<EntryScreenModel.MergeMember>,
+    members: List<EntryViewModel.MergeMember>,
     removableIds: List<Long>,
     libraryRemovalIds: List<Long>,
     onDismissRequest: () -> Unit,
@@ -214,7 +214,7 @@ fun ManageMergeDialog(
 ) {
     MergeEditorDialog(
         title = stringResource(MR.strings.action_manage_merge),
-        entries = members.map(EntryScreenModel.MergeMember::toMergeEditorEntry).toPersistentList(),
+        entries = members.map(EntryViewModel.MergeMember::toMergeEditorEntry).toPersistentList(),
         targetId = targetId,
         targetLocked = false,
         onDismissRequest = onDismissRequest,
@@ -244,7 +244,7 @@ fun ManageMergeDialog(
     )
 }
 
-private fun EntryScreenModel.MergeMember.toMergeEditorEntry(): MergeEditorEntry {
+private fun EntryViewModel.MergeMember.toMergeEditorEntry(): MergeEditorEntry {
     return MergeEditorEntry(
         id = id,
         entry = entry,

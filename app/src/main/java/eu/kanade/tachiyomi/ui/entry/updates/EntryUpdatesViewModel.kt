@@ -1,9 +1,11 @@
 package eu.kanade.tachiyomi.ui.entry.updates
 
 import androidx.compose.runtime.Immutable
-import cafe.adriel.voyager.core.model.StateScreenModel
-import cafe.adriel.voyager.core.model.screenModelScope
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import eu.kanade.tachiyomi.source.visualName
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
@@ -27,7 +29,7 @@ import uy.kohesive.injekt.api.get
  *
  * @param memberIds the entry's merged members, or the entry alone, whose sources may be paused.
  */
-class EntryUpdatesScreenModel(
+class EntryUpdatesViewModel(
     private val entryId: Long,
     memberIds: List<Long>,
     private val rulesRepository: LibraryUpdateRulesRepository = Injekt.get(),
@@ -36,13 +38,16 @@ class EntryUpdatesScreenModel(
     entryRepository: EntryRepository = Injekt.get(),
     libraryPreferences: LibraryPreferences = Injekt.get(),
     sourceManager: SourceManager = Injekt.get(),
-) : StateScreenModel<EntryUpdatesScreenModel.State>(State()) {
+) : ViewModel() {
+
+    val state: StateFlow<EntryUpdatesViewModel.State>
+        field = MutableStateFlow<EntryUpdatesViewModel.State>(State())
 
     private val sourcePauses = LibrarySourcePauses(libraryPreferences)
 
     init {
         val sourceIds = flow { emit(entryRepository.getEntriesByIds(memberIds).map { it.source }.distinct()) }
-        screenModelScope.launch {
+        viewModelScope.launch {
             combine(
                 rulesRepository.subscribeEntryMode(entryId),
                 reportRepository.subscribeStatus(entryId),
@@ -61,12 +66,12 @@ class EntryUpdatesScreenModel(
                     },
                 )
             }
-                .collectLatest { state -> mutableState.update { state } }
+                .collectLatest { newState -> state.value = newState }
         }
     }
 
     fun setMode(mode: EntryUpdateMode) {
-        screenModelScope.launch { rulesRepository.setEntryMode(listOf(entryId), mode) }
+        viewModelScope.launch { rulesRepository.setEntryMode(listOf(entryId), mode) }
     }
 
     fun resumeSource(sourceId: Long) {

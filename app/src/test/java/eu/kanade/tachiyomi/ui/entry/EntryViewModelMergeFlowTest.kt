@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 
-class EntryScreenModelMergeFlowTest {
+class EntryViewModelMergeFlowTest {
 
     @Test
     fun `owner refresh is not collapsed when entry and children remain equal`() = runTest {

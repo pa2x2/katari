@@ -94,7 +94,7 @@ import eu.kanade.presentation.components.getMarkdownLinkStyle
 import eu.kanade.presentation.entry.components.preview.rememberProgressiveEntryPreviewBitmap
 import eu.kanade.presentation.entry.updates.EntryUpdatesLabel
 import eu.kanade.tachiyomi.R
-import eu.kanade.tachiyomi.ui.entry.EntryScreenModel
+import eu.kanade.tachiyomi.ui.entry.EntryViewModel
 import eu.kanade.tachiyomi.util.system.copyToClipboard
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.datetime.TimeZone
@@ -304,7 +304,7 @@ fun ExpandableEntryDescription(
     onEditNotes: () -> Unit,
     entryPreviewEnabled: Boolean,
     entryPreviewSize: PreviewSizeUi,
-    entryPreviewState: EntryScreenModel.EntryPreviewState,
+    entryPreviewState: EntryViewModel.EntryPreviewState,
     onPreviewExpandedChange: (Boolean) -> Unit,
     onPreviewRetry: () -> Unit,
     onPreviewPageLoad: (Int) -> Unit,
@@ -434,7 +434,7 @@ internal fun previewGridColumnCount(
 
 @Composable
 fun SharedEntryPreviewSection(
-    state: EntryScreenModel.EntryPreviewState,
+    state: EntryViewModel.EntryPreviewState,
     size: PreviewSizeUi,
     onExpandedChange: (Boolean) -> Unit,
     onRetry: () -> Unit,
@@ -485,7 +485,7 @@ fun SharedEntryPreviewSection(
 
 @Composable
 fun PreviewContent(
-    state: EntryScreenModel.EntryPreviewState,
+    state: EntryViewModel.EntryPreviewState,
     size: PreviewSizeUi,
     onRetry: () -> Unit,
     onPageLoad: (Int) -> Unit,
@@ -542,7 +542,7 @@ fun PreviewContent(
 
 @Composable
 fun PreviewGrid(
-    pages: List<EntryScreenModel.PreviewPage>,
+    pages: List<EntryViewModel.PreviewPage>,
     size: PreviewSizeUi,
     chapterId: Long?,
     onPageLoad: (Int) -> Unit,
@@ -578,7 +578,7 @@ fun PreviewGrid(
 
 @Composable
 private fun EntryPreviewTile(
-    previewPage: EntryScreenModel.PreviewPage,
+    previewPage: EntryViewModel.PreviewPage,
     chapterId: Long?,
     onPageLoad: (Int) -> Unit,
     onPageClick: ((Long, Int) -> Unit)?,

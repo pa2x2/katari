@@ -7,7 +7,7 @@ import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.ui.util.fastAny
-import cafe.adriel.voyager.core.model.screenModelScope
+import androidx.lifecycle.viewModelScope
 import eu.kanade.core.util.addOrRemove
 import eu.kanade.domain.entry.model.chaptersFiltered
 import eu.kanade.domain.track.model.AutoTrackState
@@ -26,7 +26,7 @@ import eu.kanade.presentation.util.formattedMessage
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import eu.kanade.tachiyomi.source.getDisplayNameForEntryInfo
-import eu.kanade.tachiyomi.ui.base.screenmodel.GatedStateScreenModel
+import eu.kanade.tachiyomi.ui.base.viewmodel.GatedStateViewModel
 import eu.kanade.tachiyomi.ui.entry.translation.ChapterTranslationModel
 import eu.kanade.tachiyomi.util.lang.toStoredDisplayName
 import eu.kanade.tachiyomi.util.system.toast
@@ -169,7 +169,7 @@ import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import kotlin.time.Duration.Companion.milliseconds
 
-class EntryScreenModel(
+class EntryViewModel(
     private val context: Context,
     private val entryId: Long,
     private val isFromSource: Boolean,
@@ -207,13 +207,13 @@ class EntryScreenModel(
     private val entryTrackingFeature: EntryTrackingFeature = Injekt.get(),
     private val sourceManager: SourceManager = Injekt.get(),
     val snackbarHostState: SnackbarHostState = SnackbarHostState(),
-) : GatedStateScreenModel<EntryScreenModel.State>(State.Loading) {
+) : GatedStateViewModel<EntryViewModel.State>(State.Loading) {
 
-    private val mergeTargetSearchController = MergeTargetSearchController<MergeTarget>(screenModelScope)
+    private val mergeTargetSearchController = MergeTargetSearchController<MergeTarget>(viewModelScope)
 
     /** Translation of the listed chapters; chapters to translate that are not downloaded yet are downloaded. */
     val translation = ChapterTranslationModel(
-        scope = screenModelScope,
+        scope = viewModelScope,
         context = context,
         snackbarHostState = snackbarHostState,
         download = { chapters ->
@@ -232,7 +232,7 @@ class EntryScreenModel(
 
     private val memberExpansion = MergedMemberExpansionSession(
         repository = mergedMemberExpansionRepository,
-        scope = screenModelScope,
+        scope = viewModelScope,
         memberIds = mutableState.filterIsInstance<State.Success>().map { it.memberIds },
     )
 
@@ -402,7 +402,7 @@ class EntryScreenModel(
 
         observeDownloads()
 
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             val entry = getEntry.await(entryId)
             if (entry == null) {
                 mutableState.update { State.Error }
@@ -465,7 +465,7 @@ class EntryScreenModel(
             observeTrackers()
 
             // Fetch info-chapters when needed
-            if (screenModelScope.isActive && (needRefreshInfo || needRefreshChapter)) {
+            if (viewModelScope.isActive && (needRefreshInfo || needRefreshChapter)) {
                 launchRefreshFromSource(
                     manualFetch = false,
                     fetchInfo = needRefreshInfo,
@@ -630,7 +630,7 @@ class EntryScreenModel(
         val pageCount = previewConfigState.value.pageCount
 
         previewLoadJob?.cancel()
-        previewLoadJob = screenModelScope.launchIO {
+        previewLoadJob = viewModelScope.launchIO {
             clearPreviewResources(resetState = false, cancelLoadJob = false)
             updatePreviewState {
                 it.copy(
@@ -720,7 +720,7 @@ class EntryScreenModel(
         if (previewPageJobs[pageIndex]?.isActive == true) return
 
         previewPageJobs = previewPageJobs + (
-            pageIndex to screenModelScope.launchIO {
+            pageIndex to viewModelScope.launchIO {
                 try {
                     entryPreviewFeature.loadPage(handle, pageIndex)
                 } catch (_: Throwable) {
@@ -755,7 +755,7 @@ class EntryScreenModel(
         fetchChapters: Boolean,
     ): Job {
         refreshFromSourceJob?.cancel()
-        return screenModelScope.launchIO {
+        return viewModelScope.launchIO {
             updateSuccessState { it.copy(isRefreshingData = true) }
             try {
                 refreshFromSourceJob = coroutineContext[Job]
@@ -804,8 +804,8 @@ class EntryScreenModel(
         }
     }
 
-    override fun onDispose() {
-        super.onDispose()
+    override fun onCleared() {
+        super.onCleared()
         previewConfigJob?.cancel()
         duplicateObservationJob?.cancel()
         clearPreviewResources(resetState = false)
@@ -857,14 +857,14 @@ class EntryScreenModel(
             logcat(LogPriority.ERROR, e)
             val message = with(context) { e.formattedMessage }
 
-            screenModelScope.launch {
+            viewModelScope.launch {
                 snackbarHostState.showSnackbar(message = message)
             }
         }
     }
 
     private fun showRefreshFailure(message: String) {
-        screenModelScope.launch {
+        viewModelScope.launch {
             snackbarHostState.showSnackbar(message = message)
         }
     }
@@ -890,7 +890,7 @@ class EntryScreenModel(
     }
 
     private fun offerDownloadDeletion(downloadEntries: List<Entry>) {
-        screenModelScope.launch {
+        viewModelScope.launch {
             if (downloadEntries.isEmpty()) return@launch
             val result = snackbarHostState.showSnackbar(
                 message = context.stringResource(MR.strings.delete_downloads_for_manga),
@@ -911,7 +911,7 @@ class EntryScreenModel(
         checkDuplicate: Boolean = true,
     ) {
         val state = successState ?: return
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             val entry = state.entry
 
             if (isFavorited) {
@@ -961,7 +961,7 @@ class EntryScreenModel(
 
     fun showChangeCategoryDialog() {
         val entry = successState?.entry ?: return
-        screenModelScope.launch {
+        viewModelScope.launch {
             val categories = getCategories()
             val selection = getDisplayedMemberIds().flatMap { getEntryCategoryIds(it) }.distinct()
             updateSuccessState { successState ->
@@ -983,7 +983,7 @@ class EntryScreenModel(
     }
 
     fun setFetchInterval(entry: Entry, interval: Int) {
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             val updatedEntry = entry.copy(
                 // Custom intervals are negative
                 fetchInterval = -interval,
@@ -1001,7 +1001,7 @@ class EntryScreenModel(
      * Deletes all the downloads selected from the structured Library-removal follow-up.
      */
     private fun deleteDownloads(entries: List<Entry>) {
-        screenModelScope.launchNonCancellable {
+        viewModelScope.launchNonCancellable {
             entries.forEach { entry -> downloadMaintenance.removeEntryDownloads(entry) }
         }
     }
@@ -1032,7 +1032,7 @@ class EntryScreenModel(
     }
 
     fun moveEntryToCategoriesAndAddToLibrary(entry: Entry, categories: List<Long>) {
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             if (entry.favorite) {
                 getDisplayedMemberIds().forEach { memberId ->
                     setEntryCategories.await(memberId, categories)
@@ -1054,7 +1054,7 @@ class EntryScreenModel(
     // Chapters list - start
 
     private fun observeDownloads() {
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             downloadRuntime.statusUpdates()
                 .filter { download ->
                     successState?.containsChapter(download) == true
@@ -1129,7 +1129,7 @@ class EntryScreenModel(
      * @throws IllegalStateException if the swipe action is [LibraryPreferences.ChapterSwipeAction.Disabled]
      */
     fun chapterSwipe(chapterItem: EntryChapterList.Item, swipeAction: LibraryPreferences.ChapterSwipeAction) {
-        screenModelScope.launch {
+        viewModelScope.launch {
             executeChapterSwipeAction(chapterItem, swipeAction)
         }
     }
@@ -1199,7 +1199,7 @@ class EntryScreenModel(
                     ),
                 )
             }
-            screenModelScope.launchIO {
+            viewModelScope.launchIO {
                 when (
                     val resolution = entryDownloadOptionsFeature.resolve(
                         context,
@@ -1247,7 +1247,7 @@ class EntryScreenModel(
         val successState = successState ?: return
         toggleAllSelection(false)
 
-        screenModelScope.launchNonCancellable {
+        viewModelScope.launchNonCancellable {
             val entry = successState.entry
             val chapters = items.map { it.chapter }
             if (selection != null) {
@@ -1300,7 +1300,7 @@ class EntryScreenModel(
         val state = successState ?: return
         val candidateItems = getBulkDownloadCandidateItems()
 
-        screenModelScope.launchNonCancellable {
+        viewModelScope.launchNonCancellable {
             val result = entryDownloadActionFeature.resolveBulkDownloadCandidates(
                 EntryBulkDownloadRequest(
                     entry = state.entry,
@@ -1359,7 +1359,7 @@ class EntryScreenModel(
     fun markChaptersRead(chapters: List<EntryChapter>, read: Boolean) {
         toggleAllSelection(false)
         if (chapters.isEmpty()) return
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             setReadStatus(read, chapters)
 
             if (!read || successState?.hasLoggedInTrackers == false || autoTrackState == AutoTrackState.NEVER) {
@@ -1439,7 +1439,7 @@ class EntryScreenModel(
      * @param chapters the list of chapters to bookmark.
      */
     fun bookmarkChapters(chapters: List<EntryChapter>, bookmarked: Boolean) {
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             chapters.groupBy { it.entryId }.forEach { (memberEntryId, memberChapters) ->
                 val entry = entryRepository.getEntryById(memberEntryId) ?: return@forEach
                 entryBookmarkFeature.setBookmarked(entry, memberChapters, bookmarked)
@@ -1454,7 +1454,7 @@ class EntryScreenModel(
      * @param chapters the list of chapters to delete.
      */
     fun deleteChapters(chapters: List<EntryChapter>) {
-        screenModelScope.launchNonCancellable {
+        viewModelScope.launchNonCancellable {
             try {
                 chapters.groupBy { it.entryId }
                     .forEach { (memberEntryId, memberChapters) ->
@@ -1479,7 +1479,7 @@ class EntryScreenModel(
             TriState.ENABLED_IS -> Entry.CHAPTER_SHOW_UNREAD
             TriState.ENABLED_NOT -> Entry.CHAPTER_SHOW_READ
         }
-        screenModelScope.launchNonCancellable {
+        viewModelScope.launchNonCancellable {
             updateMergedMemberEntries { memberEntry ->
                 setEntryChapterFlags.await(memberEntry.id, memberEntry.chapterFlags.setUnreadFilter(flag))
             }
@@ -1499,7 +1499,7 @@ class EntryScreenModel(
             TriState.ENABLED_NOT -> Entry.CHAPTER_SHOW_NOT_DOWNLOADED
         }
 
-        screenModelScope.launchNonCancellable {
+        viewModelScope.launchNonCancellable {
             updateMergedMemberEntries { memberEntry ->
                 setEntryChapterFlags.await(memberEntry.id, memberEntry.chapterFlags.setDownloadedFilter(flag))
             }
@@ -1519,7 +1519,7 @@ class EntryScreenModel(
             TriState.ENABLED_NOT -> Entry.CHAPTER_SHOW_NOT_BOOKMARKED
         }
 
-        screenModelScope.launchNonCancellable {
+        viewModelScope.launchNonCancellable {
             updateMergedMemberEntries { memberEntry ->
                 setEntryChapterFlags.await(memberEntry.id, memberEntry.chapterFlags.setBookmarkFilter(flag))
             }
@@ -1533,7 +1533,7 @@ class EntryScreenModel(
     fun setDisplayMode(mode: Long) {
         val entry = successState?.entry ?: return
 
-        screenModelScope.launchNonCancellable {
+        viewModelScope.launchNonCancellable {
             updateMergedMemberEntries { memberEntry ->
                 setEntryChapterFlags.await(memberEntry.id, memberEntry.chapterFlags.setDisplayMode(mode))
             }
@@ -1547,7 +1547,7 @@ class EntryScreenModel(
     fun setSorting(sort: Long) {
         val entry = successState?.entry ?: return
 
-        screenModelScope.launchNonCancellable {
+        viewModelScope.launchNonCancellable {
             updateMergedMemberEntries { memberEntry ->
                 setEntryChapterFlags.await(memberEntry.id, memberEntry.chapterFlags.setSortingModeOrFlipOrder(sort))
             }
@@ -1556,7 +1556,7 @@ class EntryScreenModel(
 
     fun setCurrentSettingsAsDefault(applyToExisting: Boolean) {
         val entry = successState?.entry ?: return
-        screenModelScope.launchNonCancellable {
+        viewModelScope.launchNonCancellable {
             libraryPreferences.setChapterSettingsDefault(entry)
             if (applyToExisting) {
                 updateMergedMemberEntries { memberEntry ->
@@ -1570,7 +1570,7 @@ class EntryScreenModel(
     }
 
     fun resetToDefaultSettings() {
-        screenModelScope.launchNonCancellable {
+        viewModelScope.launchNonCancellable {
             updateMergedMemberEntries { memberEntry ->
                 setDefaultChapterFlags(memberEntry)
             }
@@ -1792,7 +1792,7 @@ class EntryScreenModel(
     fun showMergeTargetPicker() {
         val state = successState ?: return
         mergeTargetSearchController.cancelPending()
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             val excludedIds = state.mergeGroupMemberIds.toSet()
             val targets = buildMergeTargets(
                 libraryItems = getLibraryEntries.await(),
@@ -1842,7 +1842,7 @@ class EntryScreenModel(
 
     fun openMergeEditor(targetId: Long) {
         val dialog = successState?.dialog as? Dialog.SelectMergeTarget ?: return
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             val target = dialog.visibleTargets.firstOrNull { it.id == targetId } ?: return@launchIO
             val editor = createMergeEditorDialog(dialog.entry, target) ?: return@launchIO
             updateSuccessState {
@@ -1907,7 +1907,7 @@ class EntryScreenModel(
 
     fun confirmMerge() {
         val dialog = successState?.dialog as? Dialog.EditMerge ?: return
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             val result = entryMergeFeature.execute(
                 EntryMergeCommitIntent(
                     editReference = dialog.editReference,
@@ -1935,7 +1935,7 @@ class EntryScreenModel(
     private fun showRemoveMergedEntryDialog() {
         val state = successState ?: return
         if (!state.isMerged) return
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             val members = state.memberIds.mapNotNull { memberId -> getEntryOrNull(memberId) }
                 .toImmutableList()
             updateSuccessState {
@@ -1964,7 +1964,7 @@ class EntryScreenModel(
     fun showManageMergeDialog() {
         val state = successState ?: return
         if (!state.isPartOfMerge) return
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             val editor = getExistingMergeEditor(state.entry) ?: return@launchIO
             val target = editor.entries.firstOrNull { it.reference == editor.target } ?: return@launchIO
             val members = editor.entries.map { editorEntry ->
@@ -1990,7 +1990,7 @@ class EntryScreenModel(
 
     fun updateDisplayName(displayName: String) {
         val entry = successState?.entry ?: return
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             entryRepository.updateDisplayName(entry.id, displayName.toStoredDisplayName(entry.title))
             dismissDialog()
         }
@@ -1999,7 +1999,7 @@ class EntryScreenModel(
     fun removeMergedMembers(entryIds: List<Long>) {
         val state = successState ?: return
         val dialog = state.dialog as? Dialog.ManageMerge
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             if (entryIds.isEmpty()) return@launchIO
             if (dialog != null) {
                 saveManageMerge(dialog, entryIds)
@@ -2098,7 +2098,7 @@ class EntryScreenModel(
 
     fun saveMergeOrder() {
         val dialog = successState?.dialog as? Dialog.ManageMerge ?: return
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             saveManageMerge(dialog, dialog.removableIds + dialog.libraryRemovalIds)
             dismissDialog()
         }
@@ -2119,7 +2119,7 @@ class EntryScreenModel(
 
     fun removeMergedEntry(entries: List<Entry>, deleteFromLibrary: Boolean, deleteChapters: Boolean) {
         val state = successState ?: return
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             val result = entryMergeFeature.execute(
                 EntryMergeRemoveEntriesIntent(
                     subject = EntryMergeSubject(state.entry.profileId, state.entry.id),
@@ -2134,7 +2134,7 @@ class EntryScreenModel(
 
     fun unmergeAll() {
         val state = successState ?: return
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             val result = entryMergeFeature.execute(
                 EntryMergeDissolveIntent(EntryMergeSubject(state.entry.profileId, state.entry.id)),
             )
@@ -2151,7 +2151,7 @@ class EntryScreenModel(
     fun setExcludedScanlators(excludedScanlators: Set<String>) {
         val state = successState ?: return
 
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             entryChildGroupFilterFeature.setExcludedGroups(
                 scope = EntryChildGroupFilterScope(state.entry, getDisplayedMemberIds()),
                 excludedGroups = excludedScanlators,
@@ -2666,11 +2666,11 @@ private fun Map<Long, EntryMergeEditorEntryReference>.referencesFor(
     return filterKeys { it in ids }.values.toSet()
 }
 
-private fun List<EntryScreenModel.MergeMember>.referencesFor(
+private fun List<EntryViewModel.MergeMember>.referencesFor(
     entryIds: Collection<Long>,
 ): Set<EntryMergeEditorEntryReference> {
     val ids = entryIds.toSet()
-    return filter { it.id in ids }.mapTo(linkedSetOf(), EntryScreenModel.MergeMember::reference)
+    return filter { it.id in ids }.mapTo(linkedSetOf(), EntryViewModel.MergeMember::reference)
 }
 
 private fun Long.setUnreadFilter(flag: Long): Long {

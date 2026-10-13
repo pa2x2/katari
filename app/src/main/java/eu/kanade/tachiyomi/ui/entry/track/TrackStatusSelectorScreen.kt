@@ -4,14 +4,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import cafe.adriel.voyager.core.model.StateScreenModel
-import cafe.adriel.voyager.core.model.rememberScreenModel
-import cafe.adriel.voyager.core.model.screenModelScope
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.presentation.track.TrackStatusSelector
 import eu.kanade.presentation.util.Screen
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import mihon.entry.interactions.tracking.EntryTrackingFeature
 import mihon.entry.interactions.tracking.EntryTrackingMutation
@@ -31,14 +33,14 @@ internal data class TrackStatusSelectorScreen(
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val screenModel = rememberScreenModel { Model(entry, track, service) }
-        val state by screenModel.state.collectAsState()
+        val viewModel = viewModel { Model(entry, track, service) }
+        val state by viewModel.state.collectAsState()
         TrackStatusSelector(
             selection = state.selection,
-            onSelectionChange = screenModel::setSelection,
-            selections = screenModel.selections,
+            onSelectionChange = viewModel::setSelection,
+            selections = viewModel.selections,
             onConfirm = {
-                screenModel.setStatus()
+                viewModel.setStatus()
                 navigator.pop()
             },
             onDismissRequest = navigator::pop,
@@ -50,17 +52,20 @@ internal data class TrackStatusSelectorScreen(
         track: EntryTrackingRecord,
         private val service: EntryTrackingServiceDescriptor,
         private val trackingFeature: EntryTrackingFeature = Injekt.get(),
-    ) : StateScreenModel<Model.State>(State(track.status)) {
+    ) : ViewModel() {
+
+        val state: StateFlow<Model.State>
+            field = MutableStateFlow<Model.State>(State(track.status))
 
         val selections: Map<Long, StringResource?> = service.capabilities.statuses.associate { it.value to it.label }
 
         fun setSelection(selection: Long) {
-            mutableState.update { it.copy(selection = selection) }
+            state.update { it.copy(selection = selection) }
         }
 
         fun setStatus() {
             val selection = state.value.selection
-            screenModelScope.launchNonCancellable {
+            viewModelScope.launchNonCancellable {
                 trackingFeature.mutate(entry, service.id, EntryTrackingMutation.Status(selection))
                     .logFailure("status update")
             }

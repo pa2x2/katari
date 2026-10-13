@@ -3,8 +3,8 @@ package eu.kanade.tachiyomi.ui.entry
 import android.content.Context
 import android.net.Uri
 import androidx.compose.material3.SnackbarHostState
-import cafe.adriel.voyager.core.model.ScreenModel
-import cafe.adriel.voyager.core.model.screenModelScope
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import coil3.asDrawable
 import coil3.imageLoader
 import coil3.request.ImageRequest
@@ -39,7 +39,7 @@ import uy.kohesive.injekt.api.get
 import java.time.Instant
 import kotlin.time.Duration.Companion.seconds
 
-class EntryCoverScreenModel(
+class EntryCoverViewModel(
     private val entryId: Long,
     private val getEntry: GetEntry = Injekt.get(),
     private val imageSaver: ImageSaver = Injekt.get(),
@@ -47,14 +47,14 @@ class EntryCoverScreenModel(
     private val entryRepository: EntryRepository = Injekt.get(),
 
     val snackbarHostState: SnackbarHostState = SnackbarHostState(),
-) : ScreenModel {
+) : ViewModel() {
 
     val state: StateFlow<Entry?> = getEntry.subscribe(entryId)
         .flowOn(Dispatchers.IO)
-        .stateIn(screenModelScope, SharingStarted.WhileSubscribed(5.seconds), null)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5.seconds), null)
 
     fun saveCover(context: Context) {
-        screenModelScope.launch {
+        viewModelScope.launch {
             try {
                 saveCoverInternal(context, temp = false)
                 snackbarHostState.showSnackbar(
@@ -72,7 +72,7 @@ class EntryCoverScreenModel(
     }
 
     fun shareCover(context: Context) {
-        screenModelScope.launch {
+        viewModelScope.launch {
             try {
                 val uri = saveCoverInternal(context, temp = true) ?: return@launch
                 withUIContext {
@@ -124,7 +124,7 @@ class EntryCoverScreenModel(
      */
     fun editCover(context: Context, data: Uri) {
         val entry = state.value ?: return
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             context.contentResolver.openInputStream(data)?.use {
                 try {
                     entry.editCover(Injekt.get(), it, coverCache = coverCache)
@@ -137,7 +137,7 @@ class EntryCoverScreenModel(
     }
 
     fun deleteCustomCover(context: Context) {
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             try {
                 coverCache.deleteCustomCover(entryId)
                 entryRepository.update(
@@ -152,7 +152,7 @@ class EntryCoverScreenModel(
     }
 
     fun showAddToLibraryFirst(context: Context) {
-        screenModelScope.launch {
+        viewModelScope.launch {
             snackbarHostState.showSnackbar(
                 context.stringResource(MR.strings.notification_first_add_to_library),
                 withDismissAction = true,
@@ -161,7 +161,7 @@ class EntryCoverScreenModel(
     }
 
     private fun notifyCoverUpdated(context: Context) {
-        screenModelScope.launch {
+        viewModelScope.launch {
             snackbarHostState.showSnackbar(
                 context.stringResource(MR.strings.cover_updated),
                 withDismissAction = true,
@@ -170,7 +170,7 @@ class EntryCoverScreenModel(
     }
 
     private fun notifyFailedCoverUpdate(context: Context, e: Throwable) {
-        screenModelScope.launch {
+        viewModelScope.launch {
             snackbarHostState.showSnackbar(
                 context.stringResource(MR.strings.notification_cover_update_failed),
                 withDismissAction = true,

@@ -3,7 +3,7 @@ package eu.kanade.tachiyomi.ui.entry.notes
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import cafe.adriel.voyager.core.model.rememberScreenModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.entry.EntryNotesScreen
@@ -17,14 +17,14 @@ class EntryNotesScreen(
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
 
-        val screenModel = rememberScreenModel { EntryNotesScreenModel(entry) }
-        val state by screenModel.state.collectAsState()
+        val viewModel = viewModel { EntryNotesViewModel(entry) }
+        val state by viewModel.state.collectAsState()
 
         EntryNotesScreen(
             state = state,
             navigateUp = navigator::pop,
-            onUpdate = screenModel::updateNotes,
-            onFinish = screenModel::finishEditing,
+            onUpdate = viewModel::updateNotes,
+            onFinish = viewModel::finishEditing,
         )
     }
 }

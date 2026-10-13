@@ -2,18 +2,21 @@ package eu.kanade.tachiyomi.ui.entry.related
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
-import cafe.adriel.voyager.core.model.StateScreenModel
-import cafe.adriel.voyager.core.model.screenModelScope
-import eu.kanade.presentation.util.ioCoroutineScope
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import eu.kanade.tachiyomi.ui.base.observation.ObservedItemStore
 import eu.kanade.tachiyomi.ui.base.observation.collectAsState
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.plus
 import mihon.entry.interactions.child.EntryRelatedEntriesFeature
 import mihon.entry.interactions.child.EntryRelatedEntriesLoadResult
 import mihon.entry.interactions.child.EntryRelatedEntriesUnavailableReason
@@ -21,15 +24,18 @@ import tachiyomi.domain.entry.model.Entry
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
-class RelatedEntriesScreenModel(
+class RelatedEntriesViewModel(
     private val entryId: Long,
     private val relatedEntriesFeature: EntryRelatedEntriesFeature = Injekt.get(),
-) : StateScreenModel<RelatedEntriesScreenModel.State>(State.Idle) {
+) : ViewModel() {
+
+    val state: StateFlow<RelatedEntriesViewModel.State>
+        field = MutableStateFlow<RelatedEntriesViewModel.State>(State.Idle)
 
     private var loadJob: Job? = null
     private var loadGeneration = 0L
     private val entryStore = ObservedItemStore<Long, Entry>(
-        scope = ioCoroutineScope,
+        scope = viewModelScope + Dispatchers.IO,
         keyOf = Entry::id,
         supersedes = { candidate, current -> candidate.version >= current.version },
         observeItems = relatedEntriesFeature::observeEntries,
@@ -63,26 +69,26 @@ class RelatedEntriesScreenModel(
 
         loadJob?.cancel()
         val generation = ++loadGeneration
-        mutableState.update { currentState ->
+        state.update { currentState ->
             if (retainSuccess && currentState is State.Success) {
                 currentState.copy(isRefreshing = true)
             } else {
                 State.Loading
             }
         }
-        loadJob = screenModelScope.launch {
+        loadJob = viewModelScope.launch {
             try {
                 val result = relatedEntriesFeature.load(entryId)
                 if (generation == loadGeneration) {
                     when (result) {
-                        is EntryRelatedEntriesLoadResult.Loaded -> mutableState.update {
+                        is EntryRelatedEntriesLoadResult.Loaded -> state.update {
                             State.Success(
                                 relatedEntries = result.entries.toImmutableList(),
                                 sourceItemOrientation = result.orientation,
                                 isRefreshing = false,
                             )
                         }
-                        is EntryRelatedEntriesLoadResult.Unavailable -> mutableState.update {
+                        is EntryRelatedEntriesLoadResult.Unavailable -> state.update {
                             State.Unavailable(result.reason)
                         }
                     }
@@ -91,16 +97,16 @@ class RelatedEntriesScreenModel(
                 throw e
             } catch (e: Throwable) {
                 if (generation == loadGeneration) {
-                    mutableState.update { State.Error(e) }
+                    state.update { State.Error(e) }
                 }
             }
         }
     }
 
-    override fun onDispose() {
+    override fun onCleared() {
         loadGeneration++
         loadJob?.cancel()
-        super.onDispose()
+        super.onCleared()
     }
 
     @Immutable

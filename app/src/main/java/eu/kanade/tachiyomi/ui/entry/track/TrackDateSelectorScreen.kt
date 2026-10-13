@@ -17,9 +17,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
-import cafe.adriel.voyager.core.model.ScreenModel
-import cafe.adriel.voyager.core.model.rememberScreenModel
-import cafe.adriel.voyager.core.model.screenModelScope
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -87,19 +87,19 @@ internal data class TrackDateSelectorScreen(
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val screenModel = rememberScreenModel { Model(entry, track, service, start) }
+        val viewModel = viewModel { Model(entry, track, service, start) }
         val canRemove = if (start) track.startDate > 0 else track.finishDate > 0
         TrackDateSelector(
             title = stringResource(
                 if (start) MR.strings.track_started_reading_date else MR.strings.track_finished_reading_date,
             ),
-            initialSelectedDateMillis = screenModel.initialSelection,
+            initialSelectedDateMillis = viewModel.initialSelection,
             selectableDates = selectableDates,
             onConfirm = {
-                screenModel.setDate(it)
+                viewModel.setDate(it)
                 navigator.pop()
             },
-            onRemove = { screenModel.confirmRemoveDate(navigator) }.takeIf { canRemove },
+            onRemove = { viewModel.confirmRemoveDate(navigator) }.takeIf { canRemove },
             onDismissRequest = navigator::pop,
         )
     }
@@ -110,7 +110,7 @@ internal data class TrackDateSelectorScreen(
         private val service: EntryTrackingServiceDescriptor,
         private val start: Boolean,
         private val trackingFeature: EntryTrackingFeature = Injekt.get(),
-    ) : ScreenModel {
+    ) : ViewModel() {
 
         val initialSelection: Long
             get() = (if (start) track.startDate else track.finishDate)
@@ -132,7 +132,7 @@ internal data class TrackDateSelectorScreen(
         }
 
         private fun mutateDate(epochMillis: Long) {
-            screenModelScope.launchNonCancellable {
+            viewModelScope.launchNonCancellable {
                 val mutation = if (start) {
                     EntryTrackingMutation.StartDate(epochMillis)
                 } else {
@@ -153,7 +153,7 @@ private data class TrackDateRemoverScreen(
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val screenModel = rememberScreenModel { Model(entry, service, start) }
+        val viewModel = viewModel { Model(entry, service, start) }
         AlertDialogContent(
             modifier = Modifier.windowInsetsPadding(WindowInsets.systemBars),
             icon = { Icon(MaterialSymbols.Rounded.Delete, contentDescription = null) },
@@ -185,7 +185,7 @@ private data class TrackDateRemoverScreen(
                     }
                     FilledTonalButton(
                         onClick = {
-                            screenModel.removeDate()
+                            viewModel.removeDate()
                             navigator.popUntil { it is TrackInfoDialogHomeScreen }
                         },
                         colors = ButtonDefaults.filledTonalButtonColors(
@@ -205,10 +205,10 @@ private data class TrackDateRemoverScreen(
         private val service: EntryTrackingServiceDescriptor,
         private val start: Boolean,
         private val trackingFeature: EntryTrackingFeature = Injekt.get(),
-    ) : ScreenModel {
+    ) : ViewModel() {
 
         fun removeDate() {
-            screenModelScope.launchNonCancellable {
+            viewModelScope.launchNonCancellable {
                 val mutation = if (start) EntryTrackingMutation.StartDate(0) else EntryTrackingMutation.FinishDate(0)
                 trackingFeature.mutate(entry, service.id, mutation).logFailure("date removal")
             }

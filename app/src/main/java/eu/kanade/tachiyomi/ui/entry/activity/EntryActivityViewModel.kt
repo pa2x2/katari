@@ -1,9 +1,11 @@
 package eu.kanade.tachiyomi.ui.entry.activity
 
 import androidx.compose.runtime.Immutable
-import cafe.adriel.voyager.core.model.StateScreenModel
-import cafe.adriel.voyager.core.model.screenModelScope
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import eu.kanade.tachiyomi.source.entry.EntryType
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
@@ -27,13 +29,16 @@ import java.time.LocalDate
  *
  * @param memberIds the merged title's members, or the entry alone.
  */
-class EntryActivityScreenModel(
+class EntryActivityViewModel(
     private val profileId: Long,
     private val type: EntryType,
     memberIds: List<Long>,
     private val repository: EntryActivityRepository = Injekt.get(),
     statisticsFeature: EntryStatisticsFeature = Injekt.get(),
-) : StateScreenModel<EntryActivityScreenModel.State>(State()) {
+) : ViewModel() {
+
+    val state: StateFlow<EntryActivityViewModel.State>
+        field = MutableStateFlow<EntryActivityViewModel.State>(State())
 
     private val contribution = statisticsFeature.contribution(type)
 
@@ -45,7 +50,7 @@ class EntryActivityScreenModel(
 
     init {
         val monthsSince = LocalDate.now().withDayOfMonth(1).minusMonths(MONTHS - 1L).toString()
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             combine(
                 repository.subscribeSummary(memberIds, monthsSince),
                 repository.subscribeChapterDurations(memberIds),
@@ -57,7 +62,7 @@ class EntryActivityScreenModel(
                         type = loadTypePace(durations),
                         borrowTypePace = contribution?.itemPaceCarriesAcrossTitles == true,
                     )
-                    mutableState.update {
+                    state.update {
                         State(
                             summary = summary.takeIf { it.totalDurationMillis > 0L },
                             readChapterDurations = durations

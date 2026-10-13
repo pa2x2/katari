@@ -42,16 +42,14 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import cafe.adriel.voyager.core.model.rememberScreenModel
-import cafe.adriel.voyager.core.screen.Screen
-import cafe.adriel.voyager.core.screen.ScreenKey
+import androidx.lifecycle.viewmodel.compose.viewModel
 import eu.kanade.presentation.components.AdaptiveSheet
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppSnackbarHost
 import eu.kanade.presentation.entry.components.EntryActionIcons
 import eu.kanade.presentation.entry.components.PreviewContent
 import eu.kanade.presentation.entry.components.PreviewSizeUi
-import eu.kanade.tachiyomi.ui.entry.EntryScreenModel
+import eu.kanade.tachiyomi.ui.entry.EntryViewModel
 import eu.kanade.tachiyomi.util.system.copyToClipboard
 import kotlinx.coroutines.launch
 import mihon.entry.interactions.media.EntryPreviewOpenTargetResult
@@ -84,24 +82,17 @@ fun BrowseEntryPreviewSheet(
     val activeProfile by profileManager.activeProfile.collectAsStateWithLifecycle()
     var previousProfileId by remember(entryId) { mutableStateOf(activeProfile?.id) }
     var hasRequestedPreview by rememberSaveable(entryId) { mutableStateOf(false) }
-    val screenModel = object : Screen {
-        override val key: ScreenKey = "browse-entry-preview-screen-$entryId"
-
-        @Composable
-        override fun Content() {
-            error("Not used")
-        }
-    }.rememberScreenModel(tag = entryId.toString()) {
-        EntryScreenModel(
+    val viewModel = viewModel(key = "browse-entry-preview-$entryId") {
+        EntryViewModel(
             context = context,
             entryId = entryId,
             isFromSource = true,
         )
     }
 
-    val state by screenModel.state.collectAsStateWithLifecycle()
-    val previewConfig by screenModel.previewConfig.collectAsStateWithLifecycle()
-    val previewState by screenModel.previewState.collectAsStateWithLifecycle()
+    val state by viewModel.state.collectAsStateWithLifecycle()
+    val previewConfig by viewModel.previewConfig.collectAsStateWithLifecycle()
+    val previewState by viewModel.previewState.collectAsStateWithLifecycle()
 
     LaunchedEffect(activeProfile?.id) {
         val currentProfileId = activeProfile?.id
@@ -109,15 +100,15 @@ fun BrowseEntryPreviewSheet(
         previousProfileId = currentProfileId
 
         if (currentProfileId != null && lastProfileId != null && currentProfileId != lastProfileId) {
-            screenModel.setPreviewExpanded(false)
+            viewModel.setPreviewExpanded(false)
             onDismissRequest()
         }
     }
 
     LaunchedEffect(state, hasRequestedPreview, previewState.chapterId) {
-        if (!hasRequestedPreview && state is EntryScreenModel.State.Success && previewState.chapterId == null) {
+        if (!hasRequestedPreview && state is EntryViewModel.State.Success && previewState.chapterId == null) {
             hasRequestedPreview = true
-            screenModel.setPreviewExpanded(true)
+            viewModel.setPreviewExpanded(true)
         }
     }
 
@@ -127,20 +118,20 @@ fun BrowseEntryPreviewSheet(
         enableImplicitDismiss = false,
     ) {
         when (val currentState = state) {
-            EntryScreenModel.State.Loading,
-            EntryScreenModel.State.Error,
+            EntryViewModel.State.Loading,
+            EntryViewModel.State.Error,
             -> {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
                 }
             }
-            is EntryScreenModel.State.Success -> {
+            is EntryViewModel.State.Success -> {
                 BrowseEntryPreviewDialogContent(
                     title = currentState.entry.displayTitle,
                     state = currentState,
                     previewState = previewState,
                     previewSize = previewConfig.size.toPreviewSizeUi(),
-                    snackbarHostState = screenModel.snackbarHostState,
+                    snackbarHostState = viewModel.snackbarHostState,
                     onDismissRequest = onDismissRequest,
                     onLibraryAction = onLibraryAction,
                     onMergeAction = onMergeAction,
@@ -148,11 +139,11 @@ fun BrowseEntryPreviewSheet(
                         onDismissRequest()
                         onOpenEntry(currentState.entry.id)
                     },
-                    onRetry = screenModel::retryPreview,
-                    onPageLoad = screenModel::loadPreviewPage,
+                    onRetry = viewModel::retryPreview,
+                    onPageLoad = viewModel::loadPreviewPage,
                     onPageClick = (
                         { _: Long, pageIndex: Int ->
-                            val target = screenModel.previewOpenTarget(pageIndex)
+                            val target = viewModel.previewOpenTarget(pageIndex)
                             if (target is EntryPreviewOpenTargetResult.Available) {
                                 scope.launch {
                                     val chapter = currentState.chapters.firstOrNull {
@@ -169,7 +160,7 @@ fun BrowseEntryPreviewSheet(
                             }
                         }
                         ).takeIf {
-                        screenModel.isPreviewOpenApplicable(currentState.entry.type)
+                        viewModel.isPreviewOpenApplicable(currentState.entry.type)
                     },
                 )
             }
@@ -180,8 +171,8 @@ fun BrowseEntryPreviewSheet(
 @Composable
 private fun BrowseEntryPreviewDialogContent(
     title: String,
-    state: EntryScreenModel.State.Success,
-    previewState: EntryScreenModel.EntryPreviewState,
+    state: EntryViewModel.State.Success,
+    previewState: EntryViewModel.EntryPreviewState,
     previewSize: PreviewSizeUi,
     snackbarHostState: SnackbarHostState,
     onDismissRequest: () -> Unit,

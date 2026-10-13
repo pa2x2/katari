@@ -18,7 +18,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import cafe.adriel.voyager.core.model.rememberScreenModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -57,11 +57,11 @@ import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import eu.kanade.tachiyomi.ui.browse.catalog.CatalogScreen
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchScreen
 import eu.kanade.tachiyomi.ui.category.CategoryScreen
-import eu.kanade.tachiyomi.ui.entry.activity.EntryActivityScreenModel
+import eu.kanade.tachiyomi.ui.entry.activity.EntryActivityViewModel
 import eu.kanade.tachiyomi.ui.entry.related.RelatedEntriesDialog
-import eu.kanade.tachiyomi.ui.entry.related.RelatedEntriesScreenModel
+import eu.kanade.tachiyomi.ui.entry.related.RelatedEntriesViewModel
 import eu.kanade.tachiyomi.ui.entry.track.TrackInfoDialogHomeScreen
-import eu.kanade.tachiyomi.ui.entry.updates.EntryUpdatesScreenModel
+import eu.kanade.tachiyomi.ui.entry.updates.EntryUpdatesViewModel
 import eu.kanade.tachiyomi.ui.history.activity.HistoryActivityScreen
 import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.tachiyomi.ui.setting.SettingsScreen
@@ -129,31 +129,31 @@ class EntryScreen(
         val entryBookmarkFeature = remember { Injekt.get<EntryBookmarkFeature>() }
         val entryRelatedEntriesFeature = remember { Injekt.get<EntryRelatedEntriesFeature>() }
         val entryWebViewFeature = remember { Injekt.get<EntryWebViewFeature>() }
-        val screenModel = rememberScreenModel {
-            EntryScreenModel(
+        val viewModel = viewModel {
+            EntryViewModel(
                 context = context,
                 entryId = entryId,
                 isFromSource = fromSource,
                 bypassMerge = bypassMerge ?: false,
             )
         }
-        val relatedEntriesScreenModel = rememberScreenModel(tag = "related-entries-$entryId") {
-            RelatedEntriesScreenModel(entryId, entryRelatedEntriesFeature)
+        val relatedEntriesViewModel = viewModel(key = "related-entries-$entryId") {
+            RelatedEntriesViewModel(entryId, entryRelatedEntriesFeature)
         }
 
-        val state by screenModel.state.collectAsStateWithLifecycle()
+        val state by viewModel.state.collectAsStateWithLifecycle()
 
-        if (state is EntryScreenModel.State.Loading) {
+        if (state is EntryViewModel.State.Loading) {
             LoadingScreen()
             return
         }
 
-        if (state is EntryScreenModel.State.Error) {
+        if (state is EntryViewModel.State.Error) {
             navigator.pop()
             return
         }
 
-        val successState = state as EntryScreenModel.State.Success
+        val successState = state as EntryViewModel.State.Success
         val downloadRequest = remember(successState.entry.type, successState.downloadSourceIds) {
             EntryDownloadActionRequest(
                 type = successState.entry.type,
@@ -182,17 +182,17 @@ class EntryScreen(
             successState.chapters.map { it.entry }.distinctBy { it.id }
         }
         val translationStatuses by remember(translationEntries) {
-            screenModel.translation.statuses(translationEntries)
+            viewModel.translation.statuses(translationEntries)
         }.collectAsStateWithLifecycle(emptyMap())
         val translationUi = remember(translationStatuses) {
             EntryChapterTranslationUi(translationStatuses) { items, action ->
                 val chapters = items.map { TranslatableChapter(it.entry, it.chapter, it.downloadState) }
-                screenModel.translation.run(chapters, action, translationStatuses)
+                viewModel.translation.run(chapters, action, translationStatuses)
             }
-        }.takeIf { downloadsAvailable && translationEntries.any { screenModel.translation.isApplicable(it.type) } }
-        val translationSetup by screenModel.translation.sheet.collectAsStateWithLifecycle()
-        val previewConfig by screenModel.previewConfig.collectAsStateWithLifecycle()
-        val previewState by screenModel.previewState.collectAsStateWithLifecycle()
+        }.takeIf { downloadsAvailable && translationEntries.any { viewModel.translation.isApplicable(it.type) } }
+        val translationSetup by viewModel.translation.sheet.collectAsStateWithLifecycle()
+        val previewConfig by viewModel.previewConfig.collectAsStateWithLifecycle()
+        val previewState by viewModel.previewState.collectAsStateWithLifecycle()
         val webView = remember(successState.entry) {
             entryWebViewFeature.resolveEntry(successState.entry)
         }
@@ -209,10 +209,10 @@ class EntryScreen(
         val openApplicable = entryOpenFeature.isApplicable(successState.entry.type)
         val consumptionApplicable = entryConsumptionFeature.isApplicable(successState.entry.type)
 
-        val updatesScreenModel = rememberScreenModel(tag = "updates-${successState.entry.id}") {
-            EntryUpdatesScreenModel(successState.entry.id, successState.memberIds)
+        val updatesViewModel = viewModel(key = "updates-${successState.entry.id}") {
+            EntryUpdatesViewModel(successState.entry.id, successState.memberIds)
         }
-        val updatesState by updatesScreenModel.state.collectAsStateWithLifecycle()
+        val updatesState by updatesViewModel.state.collectAsStateWithLifecycle()
         var showUpdatesSheet by rememberSaveable(successState.entry.id) { mutableStateOf(false) }
         val nextUpdateDays = remember(successState.entry.expectedNextUpdate) {
             daysUntilRelease(successState.entry.expectedNextUpdate)
@@ -235,29 +235,29 @@ class EntryScreen(
                     nextUpdate = successState.entry.expectedNextUpdate,
                     entryType = successState.entry.type,
                 ),
-                onModeSelected = updatesScreenModel::setMode,
-                onResumeSource = updatesScreenModel::resumeSource,
+                onModeSelected = updatesViewModel::setMode,
+                onResumeSource = updatesViewModel::resumeSource,
                 onReleaseEstimateClicked = {
                     showUpdatesSheet = false
-                    screenModel.showSetFetchIntervalDialog()
-                }.takeIf { !isReleaseBuildType && screenModel.isUpdateIntervalEnabled },
+                    viewModel.showSetFetchIntervalDialog()
+                }.takeIf { !isReleaseBuildType && viewModel.isUpdateIntervalEnabled },
                 onDismissRequest = { showUpdatesSheet = false },
             )
         }
 
-        val activityScreenModel = rememberScreenModel(
-            tag = "activity-${successState.entry.id}-${successState.memberIds.joinToString(",")}",
+        val activityViewModel = viewModel(
+            key = "activity-${successState.entry.id}-${successState.memberIds.joinToString(",")}",
         ) {
-            EntryActivityScreenModel(successState.entry.profileId, successState.entry.type, successState.memberIds)
+            EntryActivityViewModel(successState.entry.profileId, successState.entry.type, successState.memberIds)
         }
-        val activityState by activityScreenModel.state.collectAsStateWithLifecycle()
+        val activityState by activityViewModel.state.collectAsStateWithLifecycle()
         var showActivitySheet by rememberSaveable(successState.entry.id) { mutableStateOf(false) }
         val activitySummary = activityState.summary
         if (showActivitySheet && activitySummary != null) {
             EntryActivitySheet(
                 summary = activitySummary,
                 progress = successState.chapterProgress,
-                consumedUnitLabel = activityScreenModel.consumedUnitLabel,
+                consumedUnitLabel = activityViewModel.consumedUnitLabel,
                 paceMillis = activityState.paceMillis,
                 onOpenActivity = activitySummary.firstActivityLocalDate?.let { firstDate ->
                     {
@@ -285,17 +285,17 @@ class EntryScreen(
 
         EntryScreen(
             state = successState,
-            snackbarHostState = screenModel.snackbarHostState,
+            snackbarHostState = viewModel.snackbarHostState,
             updatesLabel = updatesLabel,
             activity = activityState,
             onActivityClicked = { showActivitySheet = true },
             isTabletUi = isTabletUi(),
-            chapterSwipeStartAction = screenModel.chapterSwipeStartAction.availableFor(
+            chapterSwipeStartAction = viewModel.chapterSwipeStartAction.availableFor(
                 downloadsSupported = downloadsAvailable,
                 bookmarksSupported = bookmarksSupported,
                 consumptionSupported = consumptionApplicable,
             ),
-            chapterSwipeEndAction = screenModel.chapterSwipeEndAction.availableFor(
+            chapterSwipeEndAction = viewModel.chapterSwipeEndAction.availableFor(
                 downloadsSupported = downloadsAvailable,
                 bookmarksSupported = bookmarksSupported,
                 consumptionSupported = consumptionApplicable,
@@ -307,14 +307,14 @@ class EntryScreen(
                 }
                 Unit
             }.takeIf { openApplicable },
-            onDownloadChapter = screenModel::runChapterDownloadActions.takeIf { downloadsAvailable },
-            downloadProgressProvider = screenModel::getDownloadProgress,
+            onDownloadChapter = viewModel::runChapterDownloadActions.takeIf { downloadsAvailable },
+            downloadProgressProvider = viewModel::getDownloadProgress,
             translation = translationUi,
             onAddToLibraryClicked = {
-                screenModel.toggleFavorite()
+                viewModel.toggleFavorite()
                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
             },
-            onAddToMergeClicked = screenModel::showMergeTargetPicker.takeIf {
+            onAddToMergeClicked = viewModel::showMergeTargetPicker.takeIf {
                 !successState.isPartOfMerge &&
                     (successState.isFromSource || successState.entry.favorite)
             },
@@ -328,58 +328,58 @@ class EntryScreen(
                 if (!successState.hasLoggedInTrackers) {
                     navigator.push(SettingsScreen(SettingsScreen.Destination.Tracking))
                 } else {
-                    screenModel.showTrackDialog()
+                    viewModel.showTrackDialog()
                 }
-            }.takeIf { screenModel.supportsTracking() },
-            onDuplicatesClicked = screenModel::showDuplicateDialog.takeIf {
+            }.takeIf { viewModel.supportsTracking() },
+            onDuplicatesClicked = viewModel::showDuplicateDialog.takeIf {
                 successState.isFromSource &&
                     successState.entry.initialized &&
                     successState.duplicateCandidates.isNotEmpty()
             },
-            onTagSearch = { scope.launch { performGenreSearch(navigator, it, screenModel.source) } },
-            onFilterButtonClicked = screenModel::showSettingsDialog,
-            onRefresh = screenModel::fetchAllFromSource,
+            onTagSearch = { scope.launch { performGenreSearch(navigator, it, viewModel.source) } },
+            onFilterButtonClicked = viewModel::showSettingsDialog,
+            onRefresh = viewModel::fetchAllFromSource,
             onContinueReading = {
                 scope.launch {
-                    continueReading(context, screenModel, successState.entry)
+                    continueReading(context, viewModel, successState.entry)
                 }
                 Unit
-            }.takeIf { screenModel.isContinueApplicable(successState.entry) },
+            }.takeIf { viewModel.isContinueApplicable(successState.entry) },
             onSearch = { query, global -> scope.launch { performSearch(navigator, query, global) } },
-            onCoverClicked = screenModel::showCoverDialog,
+            onCoverClicked = viewModel::showCoverDialog,
             onShareClicked = { shareEntry(context, checkNotNull(availableWebView)) }.takeIf {
                 availableWebView != null
             },
-            onDownloadActionClicked = screenModel::runDownloadAction
+            onDownloadActionClicked = viewModel::runDownloadAction
                 .takeIf { bulkDownloadsAvailable },
             bookmarkedDownloadsSupported = bookmarkedDownloadsSupported,
-            onEditCategoryClicked = screenModel::showChangeCategoryDialog.takeIf { successState.entry.favorite },
+            onEditCategoryClicked = viewModel::showChangeCategoryDialog.takeIf { successState.entry.favorite },
             onUpdatesClicked = { showUpdatesSheet = true }.takeIf { successState.entry.favorite },
-            onEditDisplayNameClicked = screenModel::showEditDisplayNameDialog.takeIf { successState.entry.favorite },
-            onManageMergeClicked = screenModel::showManageMergeDialog.takeIf { successState.isPartOfMerge },
+            onEditDisplayNameClicked = viewModel::showEditDisplayNameDialog.takeIf { successState.entry.favorite },
+            onManageMergeClicked = viewModel::showManageMergeDialog.takeIf { successState.isPartOfMerge },
             onOpenMergedEntryClicked = {
                 navigator.push(EntryScreen(successState.mergeTargetId))
             }.takeIf { successState.showMergeNotice },
             onMigrateClicked = {
-                screenModel.migrationSubject()?.let { navigator.push(MigrationConfigScreen(it)) }
+                viewModel.migrationSubject()?.let { navigator.push(MigrationConfigScreen(it)) }
                 Unit
-            }.takeIf { screenModel.migrationAvailable() },
+            }.takeIf { viewModel.migrationAvailable() },
             onRelatedEntriesClicked = {
                 showRelatedEntriesDialog = true
             }.takeIf { relatedEntriesAvailability is EntryRelatedEntriesAvailability.Available },
             onEditNotesClicked = {
                 navigator.push(eu.kanade.tachiyomi.ui.entry.notes.EntryNotesScreen(entry = successState.entry))
             },
-            onMultiBookmarkClicked = screenModel::bookmarkChapters.takeIf { bookmarksSupported },
-            onMultiMarkAsReadClicked = screenModel::markChaptersRead.takeIf { consumptionApplicable },
-            onMarkPreviousAsReadClicked = screenModel::markPreviousChapterRead.takeIf { consumptionApplicable },
-            onMultiDeleteClicked = screenModel::showDeleteChapterDialog,
-            onChapterSwipe = screenModel::chapterSwipe,
-            onMemberHeaderClicked = screenModel::toggleMemberExpanded,
-            onChapterSelected = screenModel::toggleSelection,
-            onAllChapterSelected = screenModel::toggleAllSelection,
-            onInvertSelection = screenModel::invertSelection,
-            entryPreviewEnabled = screenModel.isEntryPreviewEnabled(successState.entry),
+            onMultiBookmarkClicked = viewModel::bookmarkChapters.takeIf { bookmarksSupported },
+            onMultiMarkAsReadClicked = viewModel::markChaptersRead.takeIf { consumptionApplicable },
+            onMarkPreviousAsReadClicked = viewModel::markPreviousChapterRead.takeIf { consumptionApplicable },
+            onMultiDeleteClicked = viewModel::showDeleteChapterDialog,
+            onChapterSwipe = viewModel::chapterSwipe,
+            onMemberHeaderClicked = viewModel::toggleMemberExpanded,
+            onChapterSelected = viewModel::toggleSelection,
+            onAllChapterSelected = viewModel::toggleAllSelection,
+            onInvertSelection = viewModel::invertSelection,
+            entryPreviewEnabled = viewModel.isEntryPreviewEnabled(successState.entry),
             entryPreviewSize = when (previewConfig.size) {
                 EntryPreviewSize.SMALL -> PreviewSizeUi.SMALL
                 EntryPreviewSize.MEDIUM -> PreviewSizeUi.MEDIUM
@@ -387,12 +387,12 @@ class EntryScreen(
                 EntryPreviewSize.EXTRA_LARGE -> PreviewSizeUi.EXTRA_LARGE
             },
             entryPreviewState = previewState,
-            onPreviewExpandedChange = screenModel::setPreviewExpanded,
-            onPreviewRetry = screenModel::retryPreview,
-            onPreviewPageLoad = screenModel::loadPreviewPage,
+            onPreviewExpandedChange = viewModel::setPreviewExpanded,
+            onPreviewRetry = viewModel::retryPreview,
+            onPreviewPageLoad = viewModel::loadPreviewPage,
             onPreviewPageClick = (
                 { _: Long, pageIndex: Int ->
-                    val target = screenModel.previewOpenTarget(pageIndex)
+                    val target = viewModel.previewOpenTarget(pageIndex)
                     if (target is EntryPreviewOpenTargetResult.Available) {
                         scope.launch {
                             openChapter(
@@ -407,14 +407,14 @@ class EntryScreen(
                         }
                     }
                 }
-                ).takeIf { screenModel.isPreviewOpenApplicable(successState.entry.type) },
+                ).takeIf { viewModel.isPreviewOpenApplicable(successState.entry.type) },
         )
 
-        translationSetup?.let { EntryTranslateSetupSheet(it, screenModel.translation) }
+        translationSetup?.let { EntryTranslateSetupSheet(it, viewModel.translation) }
 
         if (showRelatedEntriesDialog) {
             RelatedEntriesDialog(
-                screenModel = relatedEntriesScreenModel,
+                viewModel = relatedEntriesViewModel,
                 onDismissRequest = { showRelatedEntriesDialog = false },
                 onEntryClick = { relatedEntry ->
                     showRelatedEntriesDialog = false
@@ -425,54 +425,54 @@ class EntryScreen(
 
         var showScanlatorsDialog by remember { mutableStateOf(false) }
 
-        val onDismissRequest = { screenModel.dismissDialog() }
+        val onDismissRequest = { viewModel.dismissDialog() }
         when (val dialog = successState.dialog) {
             null -> {}
-            is EntryScreenModel.Dialog.ChangeCategory -> {
+            is EntryViewModel.Dialog.ChangeCategory -> {
                 ChangeCategoryDialog(
                     initialSelection = dialog.initialSelection,
                     onDismissRequest = onDismissRequest,
                     onEditCategories = { navigator.push(CategoryScreen()) },
                     onConfirm = { include, _ ->
-                        screenModel.moveEntryToCategoriesAndAddToLibrary(dialog.entry, include)
+                        viewModel.moveEntryToCategoriesAndAddToLibrary(dialog.entry, include)
                     },
                 )
             }
-            is EntryScreenModel.Dialog.DeleteChapters -> {
+            is EntryViewModel.Dialog.DeleteChapters -> {
                 DeleteChaptersDialog(
                     entryType = successState.entry.type,
                     onDismissRequest = onDismissRequest,
                     onConfirm = {
-                        screenModel.toggleAllSelection(false)
-                        screenModel.deleteChapters(dialog.chapters)
+                        viewModel.toggleAllSelection(false)
+                        viewModel.deleteChapters(dialog.chapters)
                     },
                 )
             }
-            is EntryScreenModel.Dialog.DownloadSettings -> {
+            is EntryViewModel.Dialog.DownloadSettings -> {
                 EntryDownloadSettingsDialog(
                     selectedCount = dialog.items.size,
                     options = dialog.options,
                     onDismissRequest = onDismissRequest,
-                    onConfirm = screenModel::confirmDownloadSettings,
+                    onConfirm = viewModel::confirmDownloadSettings,
                 )
             }
-            is EntryScreenModel.Dialog.DuplicateEntry -> {
+            is EntryViewModel.Dialog.DuplicateEntry -> {
                 DuplicateEntryDialog(
                     duplicates = dialog.duplicates,
                     onDismissRequest = onDismissRequest,
-                    onConfirm = { screenModel.toggleFavorite(onRemoved = { _ -> }, checkDuplicate = false) },
+                    onConfirm = { viewModel.toggleFavorite(onRemoved = { _ -> }, checkDuplicate = false) },
                     onOpenEntry = { navigator.push(EntryScreen(it.id)) },
-                    onMigrate = { screenModel.showMigrateDialog(it) },
+                    onMigrate = { viewModel.showMigrateDialog(it) },
                 )
             }
-            is EntryScreenModel.Dialog.EditDisplayName -> {
+            is EntryViewModel.Dialog.EditDisplayName -> {
                 EditDisplayNameDialog(
                     initialValue = dialog.initialValue,
                     onDismissRequest = onDismissRequest,
-                    onConfirm = screenModel::updateDisplayName,
+                    onConfirm = viewModel::updateDisplayName,
                 )
             }
-            is EntryScreenModel.Dialog.EditMerge -> {
+            is EntryViewModel.Dialog.EditMerge -> {
                 BrowseMergeEditorDialog(
                     entries = dialog.entries,
                     targetId = dialog.targetId,
@@ -481,24 +481,24 @@ class EntryScreen(
                     libraryRemovalIds = dialog.libraryRemovalIds,
                     confirmEnabled = dialog.enabled,
                     onDismissRequest = onDismissRequest,
-                    onMove = screenModel::moveMergeEntry,
-                    onSelectTarget = screenModel::setMergeTarget,
-                    onToggleRemove = screenModel::toggleMergeEntryRemoval,
-                    onToggleLibraryRemove = screenModel::toggleMergeEntryLibraryRemoval,
-                    onConfirm = screenModel::confirmMerge,
+                    onMove = viewModel::moveMergeEntry,
+                    onSelectTarget = viewModel::setMergeTarget,
+                    onToggleRemove = viewModel::toggleMergeEntryRemoval,
+                    onToggleLibraryRemove = viewModel::toggleMergeEntryLibraryRemoval,
+                    onConfirm = viewModel::confirmMerge,
                 )
             }
-            is EntryScreenModel.Dialog.ManageMerge -> {
+            is EntryViewModel.Dialog.ManageMerge -> {
                 ManageMergeDialog(
                     targetId = dialog.targetId,
                     members = dialog.members,
                     removableIds = dialog.removableIds,
                     libraryRemovalIds = dialog.libraryRemovalIds,
                     onDismissRequest = onDismissRequest,
-                    onMove = screenModel::reorderMergeMembers,
-                    onSaveOrder = screenModel::saveMergeOrder,
+                    onMove = viewModel::reorderMergeMembers,
+                    onSaveOrder = viewModel::saveMergeOrder,
                     onOpenManga = { entryIdToOpen ->
-                        screenModel.dismissDialog()
+                        viewModel.dismissDialog()
                         navigator.push(
                             EntryScreen(
                                 entryIdToOpen,
@@ -506,31 +506,31 @@ class EntryScreen(
                             ),
                         )
                     },
-                    onSelectTarget = screenModel::setManageMergeTarget,
-                    onToggleRemoveMember = screenModel::toggleMergedMemberRemoval,
-                    onToggleRemoveMemberFromLibrary = screenModel::toggleMergedMemberLibraryRemoval,
-                    onRemoveMembers = screenModel::removeMergedMembers,
-                    onUnmergeAll = screenModel::unmergeAll,
+                    onSelectTarget = viewModel::setManageMergeTarget,
+                    onToggleRemoveMember = viewModel::toggleMergedMemberRemoval,
+                    onToggleRemoveMemberFromLibrary = viewModel::toggleMergedMemberLibraryRemoval,
+                    onRemoveMembers = viewModel::removeMergedMembers,
+                    onUnmergeAll = viewModel::unmergeAll,
                 )
             }
-            EntryScreenModel.Dialog.RemoveFromLibrary -> {
+            EntryViewModel.Dialog.RemoveFromLibrary -> {
                 RemoveMangaDialog(
                     onDismissRequest = onDismissRequest,
-                    onConfirm = screenModel::removeFromLibrary,
+                    onConfirm = viewModel::removeFromLibrary,
                     mangaToRemove = successState.entry,
                 )
             }
-            is EntryScreenModel.Dialog.RemoveMergedEntry -> {
+            is EntryViewModel.Dialog.RemoveMergedEntry -> {
                 DeleteLibraryEntriesDialog(
                     containsLocalEntries = dialog.containsLocalEntry,
                     containsMergedEntries = true,
                     onDismissRequest = onDismissRequest,
                     onConfirm = { deleteEntry, deleteChapter ->
-                        screenModel.removeMergedEntry(dialog.members, deleteEntry, deleteChapter)
+                        viewModel.removeMergedEntry(dialog.members, deleteEntry, deleteChapter)
                     },
                 )
             }
-            is EntryScreenModel.Dialog.Migrate -> {
+            is EntryViewModel.Dialog.Migrate -> {
                 MigrateEntryDialog(
                     current = dialog.current,
                     target = dialog.target,
@@ -539,33 +539,33 @@ class EntryScreen(
                     onDismissRequest = onDismissRequest,
                 )
             }
-            is EntryScreenModel.Dialog.SelectMergeTarget -> {
+            is EntryViewModel.Dialog.SelectMergeTarget -> {
                 MergeTargetPickerDialog(
                     title = context.stringResource(MR.strings.action_merge_into_library),
                     query = dialog.query,
                     visibleTargets = dialog.visibleTargets,
                     onDismissRequest = onDismissRequest,
-                    onQueryChange = screenModel::updateMergeTargetQuery,
-                    onSelectTarget = screenModel::openMergeEditor,
+                    onQueryChange = viewModel::updateMergeTargetQuery,
+                    onSelectTarget = viewModel::openMergeEditor,
                 )
             }
-            EntryScreenModel.Dialog.SettingsSheet -> EntryChapterSettingsDialog(
+            EntryViewModel.Dialog.SettingsSheet -> EntryChapterSettingsDialog(
                 onDismissRequest = onDismissRequest,
                 entry = successState.entry,
                 isMerged = successState.isMerged,
-                onDownloadFilterChanged = screenModel::setDownloadedFilter,
-                onUnreadFilterChanged = screenModel::setUnreadFilter,
-                onBookmarkedFilterChanged = screenModel::setBookmarkedFilter,
-                onSortModeChanged = screenModel::setSorting,
-                onDisplayModeChanged = screenModel::setDisplayMode,
-                onSetAsDefault = screenModel::setCurrentSettingsAsDefault,
-                onResetToDefault = screenModel::resetToDefaultSettings,
+                onDownloadFilterChanged = viewModel::setDownloadedFilter,
+                onUnreadFilterChanged = viewModel::setUnreadFilter,
+                onBookmarkedFilterChanged = viewModel::setBookmarkedFilter,
+                onSortModeChanged = viewModel::setSorting,
+                onDisplayModeChanged = viewModel::setDisplayMode,
+                onSetAsDefault = viewModel::setCurrentSettingsAsDefault,
+                onResetToDefault = viewModel::resetToDefaultSettings,
                 scanlatorFilterActive = successState.scanlatorFilterActive,
                 onScanlatorFilterClicked = {
                     showScanlatorsDialog = true
                 }.takeIf { successState.childGroupFilterApplicable },
             )
-            EntryScreenModel.Dialog.TrackSheet -> {
+            EntryViewModel.Dialog.TrackSheet -> {
                 NavigatorAdaptiveSheet(
                     screen = TrackInfoDialogHomeScreen(
                         entry = successState.entry,
@@ -574,8 +574,8 @@ class EntryScreen(
                     onDismissRequest = onDismissRequest,
                 )
             }
-            EntryScreenModel.Dialog.FullCover -> {
-                val sm = rememberScreenModel { EntryCoverScreenModel(successState.entry.id) }
+            EntryViewModel.Dialog.FullCover -> {
+                val sm = viewModel { EntryCoverViewModel(successState.entry.id) }
                 val entry by sm.state.collectAsStateWithLifecycle()
                 if (entry != null) {
                     val getContent = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) {
@@ -602,14 +602,14 @@ class EntryScreen(
                     LoadingScreen(Modifier.systemBarsPadding())
                 }
             }
-            is EntryScreenModel.Dialog.SetFetchInterval -> {
+            is EntryViewModel.Dialog.SetFetchInterval -> {
                 SetIntervalDialog(
                     interval = dialog.entry.fetchInterval,
                     nextUpdate = dialog.entry.expectedNextUpdate,
                     entryType = dialog.entry.type,
                     onDismissRequest = onDismissRequest,
-                    onValueChanged = { interval: Int -> screenModel.setFetchInterval(dialog.entry, interval) }
-                        .takeIf { screenModel.isUpdateIntervalEnabled },
+                    onValueChanged = { interval: Int -> viewModel.setFetchInterval(dialog.entry, interval) }
+                        .takeIf { viewModel.isUpdateIntervalEnabled },
                 )
             }
         }
@@ -622,13 +622,13 @@ class EntryScreen(
                 availableScanlators = childGroupFilterState.availableGroups,
                 excludedScanlators = childGroupFilterState.excludedGroups,
                 onDismissRequest = { showScanlatorsDialog = false },
-                onConfirm = screenModel::setExcludedScanlators,
+                onConfirm = viewModel::setExcludedScanlators,
             )
         }
     }
 
-    private suspend fun continueReading(context: Context, screenModel: EntryScreenModel, entry: Entry) {
-        screenModel.continueEntry(context, entry)
+    private suspend fun continueReading(context: Context, viewModel: EntryViewModel, entry: Entry) {
+        viewModel.continueEntry(context, entry)
     }
 
     private suspend fun openChapter(

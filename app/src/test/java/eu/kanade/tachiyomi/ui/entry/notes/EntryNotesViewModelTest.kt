@@ -1,5 +1,7 @@
 package eu.kanade.tachiyomi.ui.entry.notes
 
+import androidx.lifecycle.ViewModelStore
+import eu.kanade.tachiyomi.ui.base.viewmodel.createViewModel
 import io.kotest.assertions.nondeterministic.eventually
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
@@ -21,9 +23,9 @@ import tachiyomi.domain.entry.repository.EntryRepository
 import java.util.Collections
 import kotlin.time.Duration.Companion.seconds
 
-class EntryNotesScreenModelTest {
+class EntryNotesViewModelTest {
     @Test
-    fun `final edit is accepted and drained after screen model disposal`() = runTest {
+    fun `final edit is accepted and drained after the view model is cleared`() = runTest {
         val writes = Collections.synchronizedList(mutableListOf<String>())
         val firstWriteStarted = CompletableDeferred<Unit>()
         val releaseFirstWrite = CompletableDeferred<Unit>()
@@ -38,12 +40,13 @@ class EntryNotesScreenModelTest {
                 true
             }
         }
-        val model = EntryNotesScreenModel(entry(), repository)
+        val viewModels = ViewModelStore()
+        val model = viewModels.createViewModel { EntryNotesViewModel(entry(), repository) }
 
         model.updateNotes("first")
         firstWriteStarted.await()
         model.updateNotes("intermediate")
-        model.onDispose()
+        viewModels.clear()
         model.finishEditing("final")
         releaseFirstWrite.complete(Unit)
 
@@ -68,7 +71,7 @@ class EntryNotesScreenModelTest {
         val ASYNC_TIMEOUT = 5.seconds
 
         @OptIn(DelicateCoroutinesApi::class)
-        val mainThread = newSingleThreadContext("EntryNotesScreenModelTest")
+        val mainThread = newSingleThreadContext("EntryNotesViewModelTest")
 
         @JvmStatic
         @BeforeAll

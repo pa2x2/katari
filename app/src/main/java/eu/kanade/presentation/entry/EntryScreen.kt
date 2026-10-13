@@ -67,8 +67,8 @@ import eu.kanade.presentation.entry.updates.EntryUpdatesLabel
 import eu.kanade.presentation.more.stats.components.rememberStatisticsDurationFormatter
 import eu.kanade.presentation.util.formatChapterNumber
 import eu.kanade.tachiyomi.ui.entry.EntryChapterList
-import eu.kanade.tachiyomi.ui.entry.EntryScreenModel
-import eu.kanade.tachiyomi.ui.entry.activity.EntryActivityScreenModel
+import eu.kanade.tachiyomi.ui.entry.EntryViewModel
+import eu.kanade.tachiyomi.ui.entry.activity.EntryActivityViewModel
 import eu.kanade.tachiyomi.ui.entry.entrySelectionActionLabels
 import eu.kanade.tachiyomi.util.system.copyToClipboard
 import mihon.entry.interactions.child.EntryChildProgressLabel
@@ -87,10 +87,10 @@ import kotlin.time.Instant
 
 @Composable
 fun EntryScreen(
-    state: EntryScreenModel.State.Success,
+    state: EntryViewModel.State.Success,
     snackbarHostState: SnackbarHostState,
     updatesLabel: EntryUpdatesLabel,
-    activity: EntryActivityScreenModel.State,
+    activity: EntryActivityViewModel.State,
     onActivityClicked: () -> Unit,
     isTabletUi: Boolean,
     chapterSwipeStartAction: LibraryPreferences.ChapterSwipeAction,
@@ -147,7 +147,7 @@ fun EntryScreen(
     onInvertSelection: () -> Unit,
     entryPreviewEnabled: Boolean,
     entryPreviewSize: eu.kanade.presentation.entry.components.PreviewSizeUi,
-    entryPreviewState: EntryScreenModel.EntryPreviewState,
+    entryPreviewState: EntryViewModel.EntryPreviewState,
     onPreviewExpandedChange: (Boolean) -> Unit,
     onPreviewRetry: () -> Unit,
     onPreviewPageLoad: (Int) -> Unit,
@@ -275,10 +275,10 @@ fun EntryScreen(
 
 @Composable
 private fun EntryScreenSmallImpl(
-    state: EntryScreenModel.State.Success,
+    state: EntryViewModel.State.Success,
     snackbarHostState: SnackbarHostState,
     updatesLabel: EntryUpdatesLabel,
-    activity: EntryActivityScreenModel.State,
+    activity: EntryActivityViewModel.State,
     onActivityClicked: () -> Unit,
     chapterSwipeStartAction: LibraryPreferences.ChapterSwipeAction,
     chapterSwipeEndAction: LibraryPreferences.ChapterSwipeAction,
@@ -335,7 +335,7 @@ private fun EntryScreenSmallImpl(
     onInvertSelection: () -> Unit,
     entryPreviewEnabled: Boolean,
     entryPreviewSize: eu.kanade.presentation.entry.components.PreviewSizeUi,
-    entryPreviewState: EntryScreenModel.EntryPreviewState,
+    entryPreviewState: EntryViewModel.EntryPreviewState,
     onPreviewExpandedChange: (Boolean) -> Unit,
     onPreviewRetry: () -> Unit,
     onPreviewPageLoad: (Int) -> Unit,
@@ -577,10 +577,10 @@ private fun EntryScreenSmallImpl(
 
 @Composable
 fun EntryScreenLargeImpl(
-    state: EntryScreenModel.State.Success,
+    state: EntryViewModel.State.Success,
     snackbarHostState: SnackbarHostState,
     updatesLabel: EntryUpdatesLabel,
-    activity: EntryActivityScreenModel.State,
+    activity: EntryActivityViewModel.State,
     onActivityClicked: () -> Unit,
     chapterSwipeStartAction: LibraryPreferences.ChapterSwipeAction,
     chapterSwipeEndAction: LibraryPreferences.ChapterSwipeAction,
@@ -637,7 +637,7 @@ fun EntryScreenLargeImpl(
     onInvertSelection: () -> Unit,
     entryPreviewEnabled: Boolean,
     entryPreviewSize: eu.kanade.presentation.entry.components.PreviewSizeUi,
-    entryPreviewState: EntryScreenModel.EntryPreviewState,
+    entryPreviewState: EntryViewModel.EntryPreviewState,
     onPreviewExpandedChange: (Boolean) -> Unit,
     onPreviewRetry: () -> Unit,
     onPreviewPageLoad: (Int) -> Unit,
@@ -1091,7 +1091,7 @@ private fun onChapterItemClick(
 
 /** Several sources have no single name to search for, so their line opens Manage merge, which lists each member's. */
 private fun sourceClickAction(
-    state: EntryScreenModel.State.Success,
+    state: EntryViewModel.State.Success,
     onManageMergeClicked: (() -> Unit)?,
     onSearch: (query: String, global: Boolean) -> Unit,
 ): () -> Unit {

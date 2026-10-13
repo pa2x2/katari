@@ -5,14 +5,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import cafe.adriel.voyager.core.model.StateScreenModel
-import cafe.adriel.voyager.core.model.rememberScreenModel
-import cafe.adriel.voyager.core.model.screenModelScope
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.track.TrackerSearch
 import eu.kanade.presentation.util.Screen
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import mihon.entry.interactions.tracking.EntryTrackingFeature
@@ -35,18 +37,18 @@ data class TrackerSearchScreen(
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val screenModel = rememberScreenModel { Model(entry, currentUrl, initialQuery, service) }
-        val state by screenModel.state.collectAsState()
+        val viewModel = viewModel { Model(entry, currentUrl, initialQuery, service) }
+        val state by viewModel.state.collectAsState()
         val textFieldState = rememberTextFieldState(initialQuery)
 
         TrackerSearch(
             state = textFieldState,
-            onDispatchQuery = { screenModel.trackingSearch(textFieldState.text.toString()) },
+            onDispatchQuery = { viewModel.trackingSearch(textFieldState.text.toString()) },
             queryResult = state.queryResult,
             selected = state.selected,
-            onSelectedChange = screenModel::updateSelection,
+            onSelectedChange = viewModel::updateSelection,
             onConfirmSelection = { private ->
-                state.selected?.let { screenModel.registerTracking(it, private) }
+                state.selected?.let { viewModel.registerTracking(it, private) }
                 navigator.pop()
             },
             onDismissRequest = navigator::pop,
@@ -60,7 +62,10 @@ data class TrackerSearchScreen(
         initialQuery: String,
         private val service: EntryTrackingServiceDescriptor,
         private val trackingFeature: EntryTrackingFeature = Injekt.get(),
-    ) : StateScreenModel<Model.State>(State()) {
+    ) : ViewModel() {
+
+        val state: StateFlow<Model.State>
+            field = MutableStateFlow<Model.State>(State())
 
         private var searchJob: Job? = null
 
@@ -71,8 +76,8 @@ data class TrackerSearchScreen(
         fun trackingSearch(query: String) {
             // A slower earlier search must not overwrite the results of a newer one
             searchJob?.cancel()
-            searchJob = screenModelScope.launch {
-                mutableState.update { it.copy(queryResult = null, selected = null) }
+            searchJob = viewModelScope.launch {
+                state.update { it.copy(queryResult = null, selected = null) }
                 val result = withIOContext { trackingFeature.search(entry, service.id, query) }
                 val presentationResult = when (result) {
                     is EntryTrackingSearchResult.Found -> Result.success(result.candidates)
@@ -81,7 +86,7 @@ data class TrackerSearchScreen(
                         IllegalStateException(result.reason.name),
                     )
                 }
-                mutableState.update { oldState ->
+                state.update { oldState ->
                     oldState.copy(
                         queryResult = presentationResult,
                         selected = presentationResult.getOrNull()?.find { it.remoteUrl == currentUrl },
@@ -91,13 +96,13 @@ data class TrackerSearchScreen(
         }
 
         fun registerTracking(candidate: EntryTrackingSearchCandidate, private: Boolean) {
-            screenModelScope.launchNonCancellable {
+            viewModelScope.launchNonCancellable {
                 trackingFeature.register(entry, service.id, candidate, private).logFailure("registration")
             }
         }
 
         fun updateSelection(selected: EntryTrackingSearchCandidate) {
-            mutableState.update { it.copy(selected = selected) }
+            state.update { it.copy(selected = selected) }
         }
 
         @Immutable

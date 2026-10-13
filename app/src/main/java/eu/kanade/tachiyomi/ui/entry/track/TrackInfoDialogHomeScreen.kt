@@ -8,9 +8,9 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
-import cafe.adriel.voyager.core.model.StateScreenModel
-import cafe.adriel.voyager.core.model.rememberScreenModel
-import cafe.adriel.voyager.core.model.screenModelScope
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.domain.ui.UiPreferences
@@ -19,6 +19,8 @@ import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.util.system.copyToClipboard
 import eu.kanade.tachiyomi.util.system.openInBrowser
 import eu.kanade.tachiyomi.util.system.toast
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -47,9 +49,9 @@ data class TrackInfoDialogHomeScreen(
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
         val context = LocalContext.current
-        val screenModel = rememberScreenModel { Model(entry) }
+        val viewModel = viewModel { Model(entry) }
         val dateFormat = remember { UiPreferences.dateFormat(Injekt.get<UiPreferences>().dateFormat.get()) }
-        val state by screenModel.state.collectAsState()
+        val state by viewModel.state.collectAsState()
 
         TrackInfoDialogHome(
             trackItems = state.trackItems,
@@ -71,7 +73,7 @@ data class TrackInfoDialogHomeScreen(
             },
             onNewSearch = {
                 if (it.service.capabilities.supportsAutomaticBinding) {
-                    screenModel.registerAutomatically(it)
+                    viewModel.registerAutomatically(it)
                 } else {
                     navigator.push(
                         TrackerSearchScreen(
@@ -88,7 +90,7 @@ data class TrackInfoDialogHomeScreen(
                 navigator.push(TrackerRemoveScreen(entry, it.service))
             },
             onCopyLink = { context.copyTrackerLink(it) },
-            onTogglePrivate = screenModel::togglePrivate,
+            onTogglePrivate = viewModel::togglePrivate,
         )
     }
 
@@ -103,20 +105,23 @@ data class TrackInfoDialogHomeScreen(
     private class Model(
         private val entry: Entry,
         private val trackingFeature: EntryTrackingFeature = Injekt.get(),
-    ) : StateScreenModel<Model.State>(State()) {
+    ) : ViewModel() {
+
+        val state: StateFlow<Model.State>
+            field = MutableStateFlow<Model.State>(State())
 
         init {
-            screenModelScope.launch { refreshTrackers() }
-            screenModelScope.launch {
+            viewModelScope.launch { refreshTrackers() }
+            viewModelScope.launch {
                 trackingFeature.observeSession(entry).collectLatest { session ->
                     val services = (session as? EntryTrackingSession.Available)?.services.orEmpty()
-                    mutableState.update { it.copy(trackItems = services) }
+                    state.update { it.copy(trackItems = services) }
                 }
             }
         }
 
         fun registerAutomatically(item: EntryTrackingSessionService) {
-            screenModelScope.launchNonCancellable {
+            viewModelScope.launchNonCancellable {
                 when (trackingFeature.registerAutomatically(entry, item.service.id)) {
                     EntryTrackingAutomaticRegistrationResult.Registered -> Unit
                     EntryTrackingAutomaticRegistrationResult.NoMatch,
@@ -128,7 +133,7 @@ data class TrackInfoDialogHomeScreen(
         }
 
         fun togglePrivate(item: EntryTrackingSessionService) {
-            screenModelScope.launchNonCancellable {
+            viewModelScope.launchNonCancellable {
                 trackingFeature.mutate(
                     entry = entry,
                     serviceId = item.service.id,

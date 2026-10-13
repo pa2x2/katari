@@ -50,15 +50,15 @@ import tachiyomi.presentation.core.screens.LoadingScreen
 
 @Composable
 fun RelatedEntriesDialog(
-    screenModel: RelatedEntriesScreenModel,
+    viewModel: RelatedEntriesViewModel,
     onDismissRequest: () -> Unit,
     onEntryClick: (Entry) -> Unit,
 ) {
     val context = LocalContext.current
-    val state by screenModel.state.collectAsStateWithLifecycle()
+    val state by viewModel.state.collectAsStateWithLifecycle()
 
-    LaunchedEffect(screenModel) {
-        screenModel.load()
+    LaunchedEffect(viewModel) {
+        viewModel.load()
     }
 
     Dialog(
@@ -100,35 +100,35 @@ fun RelatedEntriesDialog(
                         .weight(1f),
                 ) {
                     when (val currentState = state) {
-                        RelatedEntriesScreenModel.State.Idle,
-                        RelatedEntriesScreenModel.State.Loading,
+                        RelatedEntriesViewModel.State.Idle,
+                        RelatedEntriesViewModel.State.Loading,
                         -> LoadingScreen(Modifier.fillMaxSize())
 
-                        is RelatedEntriesScreenModel.State.Error -> EmptyScreen(
+                        is RelatedEntriesViewModel.State.Error -> EmptyScreen(
                             message = with(context) { currentState.throwable.formattedMessage },
                             modifier = Modifier.fillMaxSize(),
                             actions = listOf(
                                 EmptyScreenAction(
                                     stringRes = MR.strings.action_retry,
                                     icon = MaterialSymbols.Rounded.Refresh,
-                                    onClick = screenModel::retry,
+                                    onClick = viewModel::retry,
                                 ),
                             ),
                         )
 
-                        is RelatedEntriesScreenModel.State.Unavailable -> EmptyScreen(
+                        is RelatedEntriesViewModel.State.Unavailable -> EmptyScreen(
                             message = stringResource(MR.strings.no_results_found),
                             modifier = Modifier.fillMaxSize(),
                             actions = listOf(
                                 EmptyScreenAction(
                                     stringRes = MR.strings.action_retry,
                                     icon = MaterialSymbols.Rounded.Refresh,
-                                    onClick = screenModel::retry,
+                                    onClick = viewModel::retry,
                                 ),
                             ),
                         )
 
-                        is RelatedEntriesScreenModel.State.Success -> {
+                        is RelatedEntriesViewModel.State.Success -> {
                             if (currentState.relatedEntries.isEmpty()) {
                                 EmptyScreen(
                                     message = stringResource(MR.strings.no_results_found),
@@ -137,7 +137,7 @@ fun RelatedEntriesDialog(
                                         EmptyScreenAction(
                                             stringRes = MR.strings.action_retry,
                                             icon = MaterialSymbols.Rounded.Refresh,
-                                            onClick = screenModel::retry,
+                                            onClick = viewModel::retry,
                                         ),
                                     ),
                                 )
@@ -145,13 +145,13 @@ fun RelatedEntriesDialog(
                                 PullRefresh(
                                     refreshing = currentState.isRefreshing,
                                     enabled = !currentState.isRefreshing,
-                                    onRefresh = screenModel::refresh,
+                                    onRefresh = viewModel::refresh,
                                     modifier = Modifier.fillMaxSize(),
                                 ) {
                                     RelatedEntriesContent(
                                         entries = currentState.relatedEntries,
                                         sourceItemOrientation = currentState.sourceItemOrientation,
-                                        entryState = screenModel::getEntryState,
+                                        entryState = viewModel::getEntryState,
                                         onEntryClick = onEntryClick,
                                     )
                                 }
