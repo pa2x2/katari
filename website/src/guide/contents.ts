@@ -29,6 +29,7 @@ export const guide: GuideGroup[] = [
     pages: [
       { slug: "translation", title: "Translation", summary: "Translate comic pages and typed text, on the phone or with a server.", checked: "1.15" },
       { slug: "merged-entries", title: "Merged entries", summary: "One entry for every edition of a title.", checked: "1.15" },
+      { slug: "profiles", title: "Profiles", summary: "Separate libraries, history and settings on one phone.", checked: "1.15" },
     ],
   },
 ];
