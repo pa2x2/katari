@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.components.AppBar
+import eu.kanade.presentation.components.GuideButton
 import eu.kanade.presentation.util.Screen
 import kotlinx.coroutines.launch
 import mihon.feature.profiles.core.Profile
@@ -66,6 +67,7 @@ class ProfilesSettingsScreen : Screen() {
                     title = stringResource(MR.strings.profiles_title),
                     navigateUp = navigator::pop,
                     actions = {
+                        GuideButton(page = "profiles/")
                         IconButton(onClick = { dialog = ProfilesDialog.Create }) {
                             Icon(
                                 imageVector = MaterialSymbols.Rounded.Add,

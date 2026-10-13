@@ -2,6 +2,7 @@ package eu.kanade.presentation.more.settings.screen.textrecognition.presentation
 
 import androidx.compose.runtime.Composable
 import eu.kanade.presentation.components.AppBar
+import eu.kanade.presentation.components.GuideButton
 import eu.kanade.presentation.more.settings.PreferenceScreen
 import eu.kanade.presentation.more.settings.widget.draft.SettingsDraftSaveBar
 import eu.kanade.presentation.more.settings.widget.draft.rememberSettingsDraftLeaveGuard
@@ -49,6 +50,7 @@ internal fun TextRecognitionSettingsContent(
             AppBar(
                 title = stringResource(MR.strings.text_recognition_title),
                 navigateUp = onBack?.let { navigateUp },
+                actions = { GuideButton(page = "translation/#text-recognition") },
                 scrollBehavior = it,
             )
         },
