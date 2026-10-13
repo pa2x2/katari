@@ -26,7 +26,10 @@ export const guide: GuideGroup[] = [
   },
   {
     title: "Katari's features",
-    pages: [{ slug: "translation", title: "Translation", summary: "Translate comic pages and typed text, on the phone or with a server.", checked: "1.15" }],
+    pages: [
+      { slug: "translation", title: "Translation", summary: "Translate comic pages and typed text, on the phone or with a server.", checked: "1.15" },
+      { slug: "merged-entries", title: "Merged entries", summary: "One entry for every edition of a title.", checked: "1.15" },
+    ],
   },
 ];
 
