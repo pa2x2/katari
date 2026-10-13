@@ -3,27 +3,28 @@ package eu.kanade.tachiyomi.data.backup.restore.restorers
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.tachiyomi.data.backup.models.BackupPreference
 import eu.kanade.tachiyomi.data.backup.models.BooleanPreferenceValue
+import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
-import mihon.core.migration.migrations.MigrationTestPreferenceStore
-import mihon.core.migration.migrations.MigrationTestProfileStore
 import mihon.domain.extension.model.ContentWarning
 import mihon.feature.library.update.legacy.LegacyUpdateCategoriesConversion
+import mihon.feature.profiles.core.ProfileStore
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Test
+import tachiyomi.core.common.preference.FakePreferenceStore
 
 class PreferenceRestorerTest {
 
     // A backup made before content warnings hid NSFW extensions, and the restored profile would load them
     @Test
     fun `a backup's hidden NSFW extensions stay hidden in the restored profile`() = runTest {
-        val profile = MigrationTestPreferenceStore()
+        val profile = FakePreferenceStore()
         val restorer = PreferenceRestorer(
             context = mockk(),
             getCategories = mockk(),
-            preferenceStore = MigrationTestPreferenceStore(),
-            profileStore = MigrationTestProfileStore(mapOf(2L to profile)),
+            preferenceStore = FakePreferenceStore(),
+            profileStore = mockk<ProfileStore> { every { profileStore(2L) } returns profile },
             legacyUpdateCategoriesConversion = LegacyUpdateCategoriesConversion(mockk(), mockk()),
         )
 

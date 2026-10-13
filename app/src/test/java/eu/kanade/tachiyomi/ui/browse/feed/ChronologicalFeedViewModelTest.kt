@@ -6,7 +6,6 @@ import androidx.paging.PagingState
 import eu.kanade.domain.source.model.FeedItemRef
 import eu.kanade.domain.source.model.SourceFeedAnchor
 import eu.kanade.domain.source.model.SourceFeedTimeline
-import eu.kanade.domain.source.service.BrowseFeedPreferenceStore
 import eu.kanade.domain.source.service.BrowseFeedService
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.tachiyomi.source.entry.EntryFilterList
@@ -28,12 +27,13 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Test
+import tachiyomi.core.common.preference.FakePreferenceStore
 
 class ChronologicalFeedViewModelTest {
 
     @Test
     fun `init cleans saved favorites while preserving surviving anchor`() = feedTest { viewModels ->
-        val preferences = SourcePreferences(BrowseFeedPreferenceStore(), testJson)
+        val preferences = SourcePreferences(FakePreferenceStore(), testJson)
         preferences.hideInLibraryItems.set(true)
 
         val browseFeedService = BrowseFeedService(preferences)
@@ -87,7 +87,7 @@ class ChronologicalFeedViewModelTest {
 
     @Test
     fun `partial bridge pages stay behind the loading boundary until overlap`() = feedTest { viewModels ->
-        val preferences = SourcePreferences(BrowseFeedPreferenceStore(), testJson)
+        val preferences = SourcePreferences(FakePreferenceStore(), testJson)
         val browseFeedService = BrowseFeedService(preferences)
         val oldRef = FeedItemRef(100L, EntryType.MANGA)
         browseFeedService.saveTimeline(
@@ -168,7 +168,7 @@ class ChronologicalFeedViewModelTest {
 
     @Test
     fun `refresh without any overlap keeps an explicit switch to the newest timeline`() = feedTest { viewModels ->
-        val preferences = SourcePreferences(BrowseFeedPreferenceStore(), testJson)
+        val preferences = SourcePreferences(FakePreferenceStore(), testJson)
         val browseFeedService = BrowseFeedService(preferences)
         val oldRef = FeedItemRef(100L, EntryType.MANGA)
         browseFeedService.saveTimeline(
@@ -243,7 +243,7 @@ class ChronologicalFeedViewModelTest {
 
     @Test
     fun `failed bridge page resumes into the saved timeline instead of replacing it`() = feedTest { viewModels ->
-        val preferences = SourcePreferences(BrowseFeedPreferenceStore(), testJson)
+        val preferences = SourcePreferences(FakePreferenceStore(), testJson)
         val browseFeedService = BrowseFeedService(preferences)
         val oldRefs = listOf(
             FeedItemRef(100L, EntryType.MANGA),
@@ -310,7 +310,7 @@ class ChronologicalFeedViewModelTest {
 
     @Test
     fun `bridge stops when the source repeats a page it already returned`() = feedTest { viewModels ->
-        val preferences = SourcePreferences(BrowseFeedPreferenceStore(), testJson)
+        val preferences = SourcePreferences(FakePreferenceStore(), testJson)
         val browseFeedService = BrowseFeedService(preferences)
         val oldRef = FeedItemRef(100L, EntryType.MANGA)
         browseFeedService.saveTimeline(
