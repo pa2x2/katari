@@ -31,7 +31,9 @@ class SeedRestore {
             "am start -a android.intent.action.VIEW -t application/octet-stream -d ${argument("seedUri")} " +
                 "--grant-read-uri-permission -n $appId/eu.kanade.tachiyomi.ui.main.MainActivity",
         )
-        tap(By.text("Restore"))
+        // Shown disabled until the app has read and checked the backup, which takes longer on a busy emulator; a tap
+        // before then does nothing.
+        tap(By.text("Restore").enabled(true))
         awaitRestoreCompleted()
         clearNotifications()
     }
