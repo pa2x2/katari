@@ -17,8 +17,7 @@ export const SHOWCASE_SERIAL = "emulator-5554";
 const BOOT_TIMEOUT_MS = 10 * 60_000;
 const SHUTDOWN_TIMEOUT_MS = 60_000;
 const BOOT_FAILURE_OUTPUT_LINES = 40;
-// Passed to avdmanager and the emulator alike: by default avdmanager finds the AVD folder under the account's home
-// directory and the emulator under $HOME, and on CI runners the two differ.
+// Passed to avdmanager and the emulator alike, so both use the folder this script checks.
 const AVD_HOME = process.env.ANDROID_AVD_HOME ?? join(homedir(), ".android", "avd");
 const AVD_ENV = { ...process.env, ANDROID_AVD_HOME: AVD_HOME };
 
@@ -26,8 +25,12 @@ export async function bootShowcaseEmulator(): Promise<Device> {
   // Scenes find views by text and tap by screen fractions, so a second device would only ever be touched by mistake.
   const running = attachedSerials().filter((serial) => serial.startsWith("emulator-"));
   if (running.length > 0) throw new Error(`Stop the running emulators first: ${running.join(", ")}`);
-  if (!existsSync(join(AVD_HOME, `${AVD}.avd`))) {
-    run("sh", ["-c", `echo no | avdmanager create avd -n ${AVD} -k '${SYSTEM_IMAGE}' -d ${DEVICE_PROFILE}`], AVD_ENV);
+  // The emulator finds an AVD by its .ini, which avdmanager writes beside the .avd folder.
+  const avdIni = join(AVD_HOME, `${AVD}.ini`);
+  if (!existsSync(avdIni)) {
+    const command = `echo no | avdmanager create avd --force -n ${AVD} -k '${SYSTEM_IMAGE}' -d ${DEVICE_PROFILE} 2>&1`;
+    const output = run("sh", ["-c", command], AVD_ENV);
+    if (!existsSync(avdIni)) throw new Error(`avdmanager created no ${avdIni}:\n${output}`);
   }
   // In a file, since a kept emulator outlives this script and anything reading its output.
   const log = join(mkdtempSync(join(tmpdir(), "katari-showcase-")), "emulator.log");
