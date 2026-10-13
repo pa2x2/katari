@@ -119,11 +119,13 @@ async function prepare(device: Device): Promise<void> {
     startOfflineTranslator(device);
   });
 
+  // The apps just installed keep the system busy for minutes, which slows the screens the seed restore taps through.
+  await timed("waiting for the device to settle", () => awaitIdle(device));
   const seedUri = await pushSeed(device);
   await timed("restoring the seed", () => runScene(device, APP_ID, "SeedRestore", { seedUri }));
   // Reading during setup happens at the real time and must stay out of the showcase history.
   writePreferences(device, APP_ID, APP_PREFERENCES, { __APP_STATE_incognito_mode: true });
-  // Text recognition is the slowest work a scene waits for, and the apps just installed keep the system busy for minutes.
+  // Text recognition is the slowest work a scene waits for, and the restore may have set the system to work again.
   await timed("waiting for the device to settle", () => awaitIdle(device));
   await timed("readying on-page translation", () => runScene(device, APP_ID, "translation.TranslationSetup"));
   writePreferences(device, APP_ID, APP_PREFERENCES, {

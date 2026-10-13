@@ -3,7 +3,6 @@ package app.katari.showcase.capture
 import android.os.SystemClock
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.uiautomator.By
-import androidx.test.uiautomator.StaleObjectException
 import androidx.test.uiautomator.Until
 import app.katari.showcase.capture.ShowcaseDevice.appId
 import app.katari.showcase.capture.ShowcaseDevice.argument
@@ -13,6 +12,7 @@ import app.katari.showcase.capture.ShowcaseDevice.find
 import app.katari.showcase.capture.ShowcaseDevice.launch
 import app.katari.showcase.capture.ShowcaseDevice.shell
 import app.katari.showcase.capture.ShowcaseDevice.tap
+import app.katari.showcase.capture.ShowcaseDevice.tapUntil
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -25,9 +25,9 @@ class SeedRestore {
     @Test
     fun restoreSeed() {
         launch()
-        tap(By.text("Browse"))
-        tap(By.text("Extensions"))
-        tap(By.desc("Trust"))
+        tapUntil(By.text("Browse"), Until.hasObject(By.text("Extensions")))
+        tapUntil(By.text("Extensions"), Until.hasObject(By.desc("Trust")))
+        tapUntil(By.desc("Trust"), Until.hasObject(By.text("Trust")))
         tap(By.text("Trust"))
 
         shell(
@@ -40,21 +40,12 @@ class SeedRestore {
     }
 
     /**
-     * The screen slides in and reads the backup before its button works, and a tap before then does nothing. Starting
-     * the restore closes the screen, so the button is tapped until it does; the app keeps a restore already running.
+     * The screen reads the backup before its button works, and a tap before then does nothing. Starting the restore
+     * closes the screen, which tells a tap that took; the app keeps a restore already running.
      */
     private fun startRestore() {
         find(By.text(RESTORE_SCREEN_TITLE))
-        val deadline = SystemClock.uptimeMillis() + START_TIMEOUT_MS
-        while (true) {
-            try {
-                device.findObject(By.text("Restore"))?.click()
-            } catch (_: StaleObjectException) {
-                // Redrawn between finding and tapping it; the next attempt finds it again.
-            }
-            if (device.wait(Until.gone(By.text(RESTORE_SCREEN_TITLE)), START_ATTEMPT_MS)) return
-            if (SystemClock.uptimeMillis() > deadline) fail("The restore never started")
-        }
+        tapUntil(By.text("Restore"), Until.gone(By.text(RESTORE_SCREEN_TITLE)), START_TIMEOUT_MS)
     }
 
     /**
@@ -88,7 +79,6 @@ class SeedRestore {
 
     private companion object {
         const val RESTORE_SCREEN_TITLE = "Restore backup"
-        const val START_ATTEMPT_MS = 2_000L
         const val START_TIMEOUT_MS = 60_000L
         const val RESTORE_COMPLETED = "Restore completed"
         const val RESTORE_TIMEOUT_MS = 180_000L

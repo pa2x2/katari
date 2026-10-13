@@ -6,6 +6,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.BySelector
 import androidx.test.uiautomator.Direction
+import androidx.test.uiautomator.SearchCondition
 import androidx.test.uiautomator.StaleObjectException
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiObject2
@@ -74,6 +75,23 @@ internal object ShowcaseDevice {
         }
     }
 
+    /**
+     * Taps [selector] until [done] holds. A tap made while the screen is still sliding in, which a busy device draws
+     * slowly, lands where the control was a moment before and does nothing.
+     */
+    fun tapUntil(selector: BySelector, done: SearchCondition<Boolean>, timeoutMs: Long = TIMEOUT_MS) {
+        val deadline = SystemClock.uptimeMillis() + timeoutMs
+        while (true) {
+            try {
+                device.findObject(selector)?.click()
+            } catch (_: StaleObjectException) {
+                // Redrawn between finding and tapping it; the next attempt finds it again.
+            }
+            if (device.wait(done, TAP_ATTEMPT_MS)) return
+            if (SystemClock.uptimeMillis() > deadline) fail("Tapping $selector never took effect")
+        }
+    }
+
     /** Waits until the UI is idle and covers loaded over the network have had time to fade in. */
     fun settle(extraMs: Long = 1_500) {
         device.waitForIdle()
@@ -133,6 +151,7 @@ internal object ShowcaseDevice {
     }
 
     private const val TIMEOUT_MS = 30_000L
+    private const val TAP_ATTEMPT_MS = 2_000L
     private const val RECORDER_START_MS = 1_000L
     private const val STILL_ATTEMPTS = 20
     private const val STILL_INTERVAL_MS = 500L
