@@ -38,8 +38,8 @@
   width: 1.6rem;
   height: 1.6rem;
   border-radius: 50%;
-  background: var(--clay);
-  color: var(--night);
+  box-shadow: inset 0 0 0 1.5px var(--indigo-light);
+  color: var(--muted);
   font-size: 0.85rem;
   font-weight: 700;
 }
@@ -53,12 +53,12 @@
 .guide main ul:not([class]) > li::before {
   content: "";
   position: absolute;
-  top: 0.7rem;
-  left: 0.2rem;
-  width: 0.5rem;
-  height: 0.5rem;
+  top: 0.82em;
+  left: 0.35rem;
+  width: 0.32em;
+  height: 0.32em;
   border-radius: 50%;
-  background: var(--clay);
+  background: var(--muted);
 }
 
 .guide main p {
