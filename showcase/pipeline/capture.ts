@@ -137,7 +137,7 @@ async function prepare(device: Device): Promise<void> {
   });
 
   pinShowcaseClock(device);
-  freezeStatusBar(device);
+  await freezeStatusBar(device);
 }
 
 function reusedEmulator(): Device {
