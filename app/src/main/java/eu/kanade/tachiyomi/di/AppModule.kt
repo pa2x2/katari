@@ -3,12 +3,7 @@ package eu.kanade.tachiyomi.di
 import android.app.Application
 import android.content.Context
 import androidx.core.content.ContextCompat
-import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import app.cash.sqldelight.db.SqlDriver
-import com.eygraber.sqldelight.androidx.driver.AndroidxSqliteConfiguration
-import com.eygraber.sqldelight.androidx.driver.AndroidxSqliteDatabaseType
-import com.eygraber.sqldelight.androidx.driver.AndroidxSqliteDriver
-import com.eygraber.sqldelight.androidx.driver.FileProvider
 import eu.kanade.domain.track.store.DelayedTrackingStore
 import eu.kanade.presentation.more.settings.screen.productionEntryViewerSettingsScreenProjectionResolver
 import eu.kanade.tachiyomi.data.cache.CoverCache
@@ -33,6 +28,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.protobuf.ProtoBuf
 import logcat.LogPriority
+import mihon.data.database.createSqlDriver
 import mihon.entry.interactions.download.markEntryDownloadRuntimeDependenciesRegistered
 import mihon.entry.interactions.host.AppEntryMergeDuplicateCandidateHost
 import mihon.entry.interactions.host.AppEntryMergeHost
@@ -128,15 +124,7 @@ class AppModule(val app: Application) : InjektModule {
             synchronized(lock) {
                 sqlDriverRef?.get()?.let { return@synchronized it }
 
-                AndroidxSqliteDriver(
-                    driver = BundledSQLiteDriver(),
-                    databaseType = AndroidxSqliteDatabaseType.FileProvider(app, "tachiyomi.db"),
-                    schema = Database.Schema,
-                    configuration = AndroidxSqliteConfiguration(
-                        isForeignKeyConstraintsEnabled = true,
-                    ),
-                )
-                    .also { sqlDriverRef = WeakReference(it) }
+                createSqlDriver(app).also { sqlDriverRef = WeakReference(it) }
             }
         }
         addSingletonFactory {
