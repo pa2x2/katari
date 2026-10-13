@@ -29,7 +29,6 @@ jobs:
     outputs:
       changed: ${{ steps.compare.outputs.changed }}
     env:
-      KATARI_SHOWCASE_CACHE: ${{ github.workspace }}/../showcase-cache
       # Matches showcase/pipeline/device/emulator.ts.
       SYSTEM_IMAGE: system-images;android-36.1;google_apis;x86_64
 
@@ -94,6 +93,11 @@ jobs:
             echo "$ANDROID_HOME/platform-tools"
             echo "$tools/bin"
           } >> "$GITHUB_PATH"
+
+      # Outside the checkout, by an absolute path, which actions/cache needs. The runner context that names the runner's
+      # temporary folder is not available to the job's env.
+      - name: Locate the showcase cache
+        run: echo "KATARI_SHOWCASE_CACHE=$RUNNER_TEMP/showcase-cache" >> "$GITHUB_ENV"
 
       # Upstream sites such as Project Gutenberg go down for hours, so a run reuses what earlier runs downloaded for the
       # same content definitions, and only has to reach them when those change.
