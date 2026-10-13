@@ -124,6 +124,7 @@ class StatsScreen : Screen() {
                 onOpenNewYearRecap = { newYearRecap?.let { navigator.push(StatisticsRecapScreen(it)) } },
                 onTypeSelected = viewModel::setType,
                 onNavigateActivity = viewModel::navigateActivityByBuckets,
+                onPageActivity = viewModel::navigateActivityByWindows,
                 onShowToday = viewModel::showToday,
                 onRetryActivity = viewModel::retryActivity,
                 onOpenActivity = { type, point ->
