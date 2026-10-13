@@ -1,35 +1,16 @@
-package mihon.core.migration.migrations
+package tachiyomi.core.common.preference
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.flowOf
-import mihon.feature.profiles.core.ProfileStore
-import tachiyomi.core.common.preference.Preference
-import tachiyomi.core.common.preference.PreferenceStore
 
 /**
- * Preference-store fixtures shared by tests of profile-scoped preference migrations and their restore conversions.
+ * Unlike [InMemoryPreferenceStore], every lookup of a key returns the same preference, so a value set through one
+ * lookup is read back through the next, as with SharedPreferences.
  */
-internal class MigrationTestProfileStore(
-    private val stores: Map<Long, PreferenceStore>,
-) : ProfileStore {
-    override val currentProfileId: Long = stores.keys.first()
-    override val currentProfileIdFlow: Flow<Long> = flowOf(currentProfileId)
-    override fun setCurrentProfileId(profileId: Long) = Unit
-    override fun basePreferenceStore(): PreferenceStore = stores.getValue(currentProfileId)
-    override fun appStateStore(): PreferenceStore = stores.getValue(currentProfileId)
-    override fun privateStore(): PreferenceStore = stores.getValue(currentProfileId)
-    override fun profileStore(): PreferenceStore = stores.getValue(currentProfileId)
-    override fun profileStore(profileId: Long): PreferenceStore = stores.getValue(profileId)
-    override fun appStateStore(profileId: Long): PreferenceStore = stores.getValue(profileId)
-    override fun privateStore(profileId: Long): PreferenceStore = stores.getValue(profileId)
-    override fun sourcePreferenceKey(sourceId: Long, profileId: Long): String = "source_${profileId}_$sourceId"
-}
-
-internal class MigrationTestPreferenceStore : PreferenceStore {
-    private val values = mutableMapOf<String, MigrationTestPreference<*>>()
+internal class FakePreferenceStore : PreferenceStore {
+    private val values = mutableMapOf<String, FakePreference<*>>()
 
     override fun getString(key: String, defaultValue: String) = preference(key, defaultValue)
     override fun getLong(key: String, defaultValue: Long) = preference(key, defaultValue)
@@ -63,11 +44,11 @@ internal class MigrationTestPreferenceStore : PreferenceStore {
 
     @Suppress("UNCHECKED_CAST")
     private fun <T> preference(key: String, defaultValue: T): Preference<T> {
-        return values.getOrPut(key) { MigrationTestPreference(key, defaultValue) } as Preference<T>
+        return values.getOrPut(key) { FakePreference(key, defaultValue) } as Preference<T>
     }
 }
 
-internal class MigrationTestPreference<T>(
+private class FakePreference<T>(
     private val key: String,
     private val defaultValue: T,
 ) : Preference<T> {

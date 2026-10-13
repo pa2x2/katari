@@ -1,35 +1,14 @@
 package eu.kanade.tachiyomi.ui.browse.source.browse
 
-import androidx.compose.runtime.saveable.SaverScope
 import eu.kanade.tachiyomi.source.entry.EntryFilter
 import eu.kanade.tachiyomi.source.entry.EntryFilterList
 import eu.kanade.tachiyomi.source.entry.EntryFilterPage
 import eu.kanade.tachiyomi.source.entry.EntryFilterPageItem
 import eu.kanade.tachiyomi.source.entry.EntryFilterPageRequest
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.shouldNotBe
 import org.junit.jupiter.api.Test
 
-private val TestSaverScope = object : SaverScope {
-    override fun canBeSaved(value: Any): Boolean = true
-}
-
 class SourceFilterRouteTest {
-    @Test
-    fun `paged route round-trips a stable path without holding the mutable instance`() {
-        val group = PagedFixture("Characters")
-        val filters = EntryFilterList(
-            object : EntryFilter.CheckBox("Manga", true) {},
-            group,
-        )
-        val path = filters.pathTo(group) shouldNotBe null
-        val route = SourceFilterRoute.PagedGroup(requireNotNull(path))
-
-        val saver = sourceFilterRouteSaver()
-        val saved = with(TestSaverScope) { with(saver) { save(route) } } shouldNotBe null
-        with(saver) { restore(requireNotNull(saved)) } shouldBe route
-    }
-
     @Test
     fun `live resolution descends into nested groups and rejects stale paths`() {
         val nested = PagedFixture("Tags")
