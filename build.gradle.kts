@@ -179,10 +179,15 @@ tasks.register("verifyExtensionRuntimeAbi") {
         val reflectedRuntimeFields = mapOf(
             "eu.kanade.tachiyomi.BuildConfig" to listOf("VERSION_CODE", "VERSION_NAME"),
         )
-        fun isRuntimeAbiClass(className: String) = className in runtimeAbiClasses ||
-            runtimeAbiPackagePrefixes.any { prefix ->
-                className == prefix || className.startsWith("$prefix.") || className.startsWith("$prefix\$")
-            }
+        // R8 names the classes it synthesizes, e.g. for desugared lambdas, after their context class. They only exist in
+        // its output, so no extension can link against them.
+        val r8SyntheticMarkers = listOf("\$\$InternalSynthetic", "\$\$ExternalSynthetic")
+        fun isRuntimeAbiClass(className: String) = r8SyntheticMarkers.none(className::contains) && (
+            className in runtimeAbiClasses ||
+                runtimeAbiPackagePrefixes.any { prefix ->
+                    className == prefix || className.startsWith("$prefix.") || className.startsWith("$prefix\$")
+                }
+            )
 
         val removedRuntimeAbi = mutableListOf<String>()
         var removedClass: String? = null
