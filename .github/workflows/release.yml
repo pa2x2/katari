@@ -18,7 +18,7 @@ concurrency:
 jobs:
   get_tag:
     name: Decide what to release
-    runs-on: 'ubuntu-24.04'
+    runs-on: 'ubuntu-26.04'
     outputs:
       # Empty when there is nothing to release, which skips every other job.
       tag: ${{ steps.extract.outputs.tag }}
@@ -67,7 +67,7 @@ jobs:
 
   build:
     name: Build
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     needs: get_tag
     if: needs.get_tag.outputs.tag != ''
 
@@ -83,11 +83,18 @@ jobs:
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+        with:
+          cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+
+      - name: Decode signing keystore
+        run: echo "$SIGNING_KEY" | base64 -d > "$RUNNER_TEMP/katari.keystore"
+        env:
+          SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
 
       - name: Build
         run: ./gradlew assembleRelease verifyExtensionRuntimeAbi -Pinclude-telemetry -Penable-updater
         env:
-          storeFileBase64: ${{ secrets.SIGNING_KEY }}
+          storeFile: ${{ runner.temp }}/katari.keystore
           storePassword: ${{ secrets.KEY_STORE_PASSWORD }}
           keyAlias: ${{ secrets.ALIAS }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
@@ -111,7 +118,7 @@ jobs:
 
   build_foss:
     name: Build (FOSS)
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     needs: get_tag
     if: needs.get_tag.outputs.tag != ''
 
@@ -128,13 +135,19 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
         with:
+          cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
           cache-read-only: true
+
+      - name: Decode signing keystore
+        run: echo "$SIGNING_KEY" | base64 -d > "$RUNNER_TEMP/katari.keystore"
+        env:
+          SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
 
       - name: Build
         # FOSS builds update themselves too; unlike -Pinclude-telemetry, -Penable-updater adds no Google services.
         run: ./gradlew assembleFoss -Penable-updater
         env:
-          storeFileBase64: ${{ secrets.SIGNING_KEY }}
+          storeFile: ${{ runner.temp }}/katari.keystore
           storePassword: ${{ secrets.KEY_STORE_PASSWORD }}
           keyAlias: ${{ secrets.ALIAS }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
@@ -160,7 +173,7 @@ jobs:
 
   release:
     name: Create GitHub Release
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     needs: [get_tag, build, build_foss]
     permissions:
       contents: write

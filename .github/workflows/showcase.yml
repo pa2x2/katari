@@ -22,7 +22,7 @@ jobs:
   # proposal job below publishes what it found.
   capture:
     name: Capture
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 120
     permissions:
       contents: read
@@ -55,6 +55,7 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
         with:
+          cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
           cache-read-only: true
 
       - name: Set up Node
@@ -137,7 +138,7 @@ jobs:
 
   propose:
     name: Propose the changed captures
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     needs: capture
     if: needs.capture.outputs.changed != '0'
     permissions:

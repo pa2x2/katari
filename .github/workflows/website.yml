@@ -22,7 +22,7 @@ permissions: {}
 jobs:
   build:
     name: Build
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
 
@@ -63,7 +63,7 @@ jobs:
 
   deploy:
     name: Deploy
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     needs: build
     permissions:
       pages: write
