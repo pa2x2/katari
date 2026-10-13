@@ -43,7 +43,7 @@ import tachiyomi.presentation.core.theme.active
 
 @Composable
 fun UpcomingScreenContent(
-    state: UpcomingScreenModel.State,
+    state: UpcomingViewModel.State,
     setSelectedYearMonth: (YearMonth) -> Unit,
     onClickUpcoming: (entry: Entry) -> Unit,
     onClickFilter: () -> Unit,

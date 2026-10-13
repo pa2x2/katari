@@ -35,7 +35,7 @@ import eu.kanade.presentation.library.update.report.components.PauseChip
 import eu.kanade.presentation.library.update.report.components.PausedSourceGroup
 import eu.kanade.presentation.library.update.report.components.ReportRow
 import eu.kanade.presentation.util.relativeTimeSpanString
-import eu.kanade.tachiyomi.ui.library.update.report.LibraryUpdateReportScreenModel
+import eu.kanade.tachiyomi.ui.library.update.report.LibraryUpdateReportViewModel
 import mihon.entry.interactions.migration.EntryMigrationSubject
 import mihon.entry.interactions.source.EntryWebViewResolution
 import mihon.feature.library.update.report.LibraryUpdateReport
@@ -71,7 +71,7 @@ class LibraryUpdateReportActions(
 
 @Composable
 fun LibraryUpdateReportContent(
-    state: LibraryUpdateReportScreenModel.State.Ready,
+    state: LibraryUpdateReportViewModel.State.Ready,
     actions: LibraryUpdateReportActions,
     contentPadding: PaddingValues,
 ) {
@@ -293,7 +293,7 @@ fun LibraryUpdateReportContent(
 private fun LazyListScope.failingSourceItems(
     key: String,
     sources: List<LibraryUpdateReport.FailingSource>,
-    state: LibraryUpdateReportScreenModel.State.Ready,
+    state: LibraryUpdateReportViewModel.State.Ready,
     actions: LibraryUpdateReportActions,
 ) {
     items(sources, key = { "$key-source-${it.sourceId}-${it.error}" }) { source ->

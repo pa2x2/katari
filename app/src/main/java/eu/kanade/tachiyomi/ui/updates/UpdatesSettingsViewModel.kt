@@ -1,6 +1,6 @@
 package eu.kanade.tachiyomi.ui.updates
 
-import cafe.adriel.voyager.core.model.ScreenModel
+import androidx.lifecycle.ViewModel
 import eu.kanade.tachiyomi.source.entry.EntryType
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.TriState
@@ -11,10 +11,10 @@ import tachiyomi.domain.updates.service.UpdatesPreferences
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
-class UpdatesSettingsScreenModel(
+class UpdatesSettingsViewModel(
     val updatesPreferences: UpdatesPreferences = Injekt.get(),
     val getCategories: GetCategories = Injekt.get(),
-) : ScreenModel {
+) : ViewModel() {
 
     fun cycleCategory(category: Category) {
         cycle(category.id, updatesPreferences.filterIncludedCategories, updatesPreferences.filterExcludedCategories)

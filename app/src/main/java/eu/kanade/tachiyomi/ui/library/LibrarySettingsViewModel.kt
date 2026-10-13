@@ -1,7 +1,7 @@
 package eu.kanade.tachiyomi.ui.library
 
-import cafe.adriel.voyager.core.model.ScreenModel
-import cafe.adriel.voyager.core.model.screenModelScope
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -23,19 +23,19 @@ import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import kotlin.time.Duration.Companion.seconds
 
-class LibrarySettingsScreenModel(
+class LibrarySettingsViewModel(
     val libraryPreferences: LibraryPreferences = Injekt.get(),
     private val setDisplayMode: SetDisplayMode = Injekt.get(),
     private val setSortModeForCategory: SetSortModeForCategory = Injekt.get(),
     trackingFeature: EntryTrackingFeature = Injekt.get(),
-) : ScreenModel {
+) : ViewModel() {
 
     val trackingServicesFlow = trackingFeature.observeAccounts()
         .map { snapshot ->
             snapshot.accounts.filter(EntryTrackingAccount::isLoggedIn).map(EntryTrackingAccount::service)
         }
         .stateIn(
-            scope = screenModelScope,
+            scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5.seconds.inWholeMilliseconds),
             initialValue = trackingFeature.currentAccounts().accounts
                 .filter(EntryTrackingAccount::isLoggedIn)
@@ -61,7 +61,7 @@ class LibrarySettingsScreenModel(
     }
 
     fun setSort(category: Category?, mode: LibrarySort.Type, direction: LibrarySort.Direction) {
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             val targetCategory = category
                 ?.takeIf { !it.isSystemCategory }
             setSortModeForCategory.await(targetCategory, mode, direction)

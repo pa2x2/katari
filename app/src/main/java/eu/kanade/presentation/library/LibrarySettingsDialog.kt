@@ -20,7 +20,7 @@ import eu.kanade.presentation.library.components.LibraryPinnedStyleChooser
 import eu.kanade.presentation.library.grouping.LibraryGroupingEditor
 import eu.kanade.presentation.library.grouping.showLibraryGroupingTabsLabel
 import eu.kanade.tachiyomi.source.entry.EntryType
-import eu.kanade.tachiyomi.ui.library.LibrarySettingsScreenModel
+import eu.kanade.tachiyomi.ui.library.LibrarySettingsViewModel
 import eu.kanade.tachiyomi.util.system.isReleaseBuildType
 import mihon.entry.interactions.library.EntryLibraryFilterAvailability
 import mihon.icons.materialsymbols.MaterialSymbols
@@ -44,7 +44,7 @@ import tachiyomi.presentation.core.util.collectAsState
 @Composable
 fun LibrarySettingsDialog(
     onDismissRequest: () -> Unit,
-    screenModel: LibrarySettingsScreenModel,
+    viewModel: LibrarySettingsViewModel,
     category: Category?,
     filterAvailability: EntryLibraryFilterAvailability,
 ) {
@@ -64,19 +64,19 @@ fun LibrarySettingsDialog(
         ) {
             when (page) {
                 0 -> FilterPage(
-                    screenModel = screenModel,
+                    viewModel = viewModel,
                     filterAvailability = filterAvailability,
                 )
                 1 -> SortPage(
                     category = category,
-                    screenModel = screenModel,
+                    viewModel = viewModel,
                     progressSummaryAvailable = filterAvailability.progressSummary.isAvailable,
                 )
                 2 -> DisplayPage(
-                    screenModel = screenModel,
+                    viewModel = viewModel,
                 )
                 3 -> GroupPage(
-                    screenModel = screenModel,
+                    viewModel = viewModel,
                 )
             }
         }
@@ -85,12 +85,12 @@ fun LibrarySettingsDialog(
 
 @Composable
 private fun FilterPage(
-    screenModel: LibrarySettingsScreenModel,
+    viewModel: LibrarySettingsViewModel,
     filterAvailability: EntryLibraryFilterAvailability,
 ) {
-    val filterDownloaded by screenModel.libraryPreferences.filterDownloaded.collectAsState()
-    val downloadedOnly by screenModel.libraryPreferences.downloadedOnly.collectAsState()
-    val updateSkipRules by screenModel.libraryPreferences.updateSkipRules.collectAsState()
+    val filterDownloaded by viewModel.libraryPreferences.filterDownloaded.collectAsState()
+    val downloadedOnly by viewModel.libraryPreferences.downloadedOnly.collectAsState()
+    val updateSkipRules by viewModel.libraryPreferences.updateSkipRules.collectAsState()
 
     TriStateItem(
         label = stringResource(MR.strings.label_downloaded),
@@ -100,10 +100,10 @@ private fun FilterPage(
             filterDownloaded
         },
         enabled = !downloadedOnly,
-        onClick = { screenModel.toggleFilter(LibraryPreferences::filterDownloaded) },
+        onClick = { viewModel.toggleFilter(LibraryPreferences::filterDownloaded) },
     )
     if (filterAvailability.progressSummary.isAvailable) {
-        val filterUnread by screenModel.libraryPreferences.filterUnread.collectAsState()
+        val filterUnread by viewModel.libraryPreferences.filterUnread.collectAsState()
         // Each type names its own unconsumed state; a mixed library lists every distinct name.
         val unconsumedLabel = filterAvailability.progressSummary.applicableTypes
             .sortedBy(EntryType::ordinal)
@@ -114,28 +114,28 @@ private fun FilterPage(
         TriStateItem(
             label = unconsumedLabel,
             state = filterUnread,
-            onClick = { screenModel.toggleFilter(LibraryPreferences::filterUnread) },
+            onClick = { viewModel.toggleFilter(LibraryPreferences::filterUnread) },
         )
-        val filterNotStarted by screenModel.libraryPreferences.filterNotStarted.collectAsState()
+        val filterNotStarted by viewModel.libraryPreferences.filterNotStarted.collectAsState()
         TriStateItem(
             label = stringResource(MR.strings.label_not_started),
             state = filterNotStarted,
-            onClick = { screenModel.toggleFilter(LibraryPreferences::filterNotStarted) },
+            onClick = { viewModel.toggleFilter(LibraryPreferences::filterNotStarted) },
         )
     }
     if (filterAvailability.bookmarking.isAvailable) {
-        val filterBookmarked by screenModel.libraryPreferences.filterBookmarked.collectAsState()
+        val filterBookmarked by viewModel.libraryPreferences.filterBookmarked.collectAsState()
         TriStateItem(
             label = stringResource(MR.strings.action_filter_bookmarked),
             state = filterBookmarked,
-            onClick = { screenModel.toggleFilter(LibraryPreferences::filterBookmarked) },
+            onClick = { viewModel.toggleFilter(LibraryPreferences::filterBookmarked) },
         )
     }
-    val filterCompleted by screenModel.libraryPreferences.filterCompleted.collectAsState()
+    val filterCompleted by viewModel.libraryPreferences.filterCompleted.collectAsState()
     TriStateItem(
         label = stringResource(MR.strings.completed),
         state = filterCompleted,
-        onClick = { screenModel.toggleFilter(LibraryPreferences::filterCompleted) },
+        onClick = { viewModel.toggleFilter(LibraryPreferences::filterCompleted) },
     )
     // TODO: re-enable when custom intervals are ready for stable
     if (
@@ -143,40 +143,40 @@ private fun FilterPage(
         filterAvailability.outsideReleasePeriod.isAvailable &&
         LibraryPreferences.SKIP_OUTSIDE_RELEASE_PERIOD in updateSkipRules
     ) {
-        val filterIntervalCustom by screenModel.libraryPreferences.filterIntervalCustom.collectAsState()
+        val filterIntervalCustom by viewModel.libraryPreferences.filterIntervalCustom.collectAsState()
         TriStateItem(
             label = stringResource(MR.strings.action_filter_interval_custom),
             state = filterIntervalCustom,
-            onClick = { screenModel.toggleFilter(LibraryPreferences::filterIntervalCustom) },
+            onClick = { viewModel.toggleFilter(LibraryPreferences::filterIntervalCustom) },
         )
     }
 
-    val trackingServices by screenModel.trackingServicesFlow.collectAsState()
+    val trackingServices by viewModel.trackingServicesFlow.collectAsState()
     when (trackingServices.size) {
         0 -> {
             // No trackers
         }
         1 -> {
             val service = trackingServices[0]
-            val filterTracker by screenModel.libraryPreferences
+            val filterTracker by viewModel.libraryPreferences
                 .filterTracking(service.id.value.toInt())
                 .collectAsState()
             TriStateItem(
                 label = stringResource(MR.strings.action_filter_tracked),
                 state = filterTracker,
-                onClick = { screenModel.toggleTracker(service.id.value.toInt()) },
+                onClick = { viewModel.toggleTracker(service.id.value.toInt()) },
             )
         }
         else -> {
             HeadingItem(MR.strings.action_filter_tracked)
             trackingServices.map { service ->
-                val filterTracker by screenModel.libraryPreferences
+                val filterTracker by viewModel.libraryPreferences
                     .filterTracking(service.id.value.toInt())
                     .collectAsState()
                 TriStateItem(
                     label = service.name,
                     state = filterTracker,
-                    onClick = { screenModel.toggleTracker(service.id.value.toInt()) },
+                    onClick = { viewModel.toggleTracker(service.id.value.toInt()) },
                 )
             }
         }
@@ -186,11 +186,11 @@ private fun FilterPage(
 @Composable
 private fun SortPage(
     category: Category?,
-    screenModel: LibrarySettingsScreenModel,
+    viewModel: LibrarySettingsViewModel,
     progressSummaryAvailable: Boolean,
 ) {
-    val trackingServices by screenModel.trackingServicesFlow.collectAsState()
-    val globalSort by screenModel.libraryPreferences.sortingMode.collectAsState()
+    val trackingServices by viewModel.trackingServicesFlow.collectAsState()
+    val globalSort by viewModel.libraryPreferences.sortingMode.collectAsState()
     val currentSort = category.effectiveLibrarySort(globalSort)
     val sortingMode = currentSort.type
     val sortDescending = !currentSort.isAscending
@@ -225,7 +225,7 @@ private fun SortPage(
                 icon = MaterialSymbols.Rounded.Refresh
                     .takeIf { sortingMode == LibrarySort.Type.Random },
                 onClick = {
-                    screenModel.setSort(category, mode, LibrarySort.Direction.Ascending)
+                    viewModel.setSort(category, mode, LibrarySort.Direction.Ascending)
                 },
             )
             return@forEach
@@ -247,7 +247,7 @@ private fun SortPage(
                         LibrarySort.Direction.Ascending
                     }
                 }
-                screenModel.setSort(category, mode, direction)
+                viewModel.setSort(category, mode, direction)
             },
         )
     }
@@ -255,27 +255,27 @@ private fun SortPage(
 
 @Composable
 private fun DisplayPage(
-    screenModel: LibrarySettingsScreenModel,
+    viewModel: LibrarySettingsViewModel,
 ) {
-    val displayMode by screenModel.libraryPreferences.displayMode.collectAsState()
+    val displayMode by viewModel.libraryPreferences.displayMode.collectAsState()
     LibraryDisplayModeChooser(
         selectedMode = displayMode,
-        onModeSelected = screenModel::setDisplayMode,
+        onModeSelected = viewModel::setDisplayMode,
     )
 
-    val pinnedDisplayStyle by screenModel.libraryPreferences.pinnedDisplayStyle.collectAsState()
+    val pinnedDisplayStyle by viewModel.libraryPreferences.pinnedDisplayStyle.collectAsState()
     LibraryPinnedStyleChooser(
         selectedStyle = pinnedDisplayStyle,
-        onStyleSelected = screenModel::setPinnedDisplayStyle,
+        onStyleSelected = viewModel::setPinnedDisplayStyle,
     )
 
     if (displayMode != LibraryDisplayMode.List && displayMode != LibraryDisplayMode.ComfortableList) {
         val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
         val columnPreference = remember(isLandscape) {
             if (isLandscape) {
-                screenModel.libraryPreferences.landscapeColumns
+                viewModel.libraryPreferences.landscapeColumns
             } else {
-                screenModel.libraryPreferences.portraitColumns
+                viewModel.libraryPreferences.portraitColumns
             }
         }
 
@@ -300,56 +300,56 @@ private fun DisplayPage(
     HeadingItem(MR.strings.overlay_header)
     CheckboxItem(
         label = stringResource(MR.strings.action_display_download_badge),
-        pref = screenModel.libraryPreferences.downloadBadge,
+        pref = viewModel.libraryPreferences.downloadBadge,
     )
     CheckboxItem(
         label = stringResource(MR.strings.action_display_unseen_badge),
-        pref = screenModel.libraryPreferences.unreadBadge,
+        pref = viewModel.libraryPreferences.unreadBadge,
     )
     CheckboxItem(
         label = stringResource(MR.strings.action_display_local_badge),
-        pref = screenModel.libraryPreferences.localBadge,
+        pref = viewModel.libraryPreferences.localBadge,
     )
     CheckboxItem(
         label = stringResource(MR.strings.action_display_language_badge),
-        pref = screenModel.libraryPreferences.languageBadge,
+        pref = viewModel.libraryPreferences.languageBadge,
     )
     CheckboxItem(
         label = stringResource(MR.strings.action_display_entry_type_badge),
-        pref = screenModel.libraryPreferences.entryTypeBadge,
+        pref = viewModel.libraryPreferences.entryTypeBadge,
     )
     CheckboxItem(
         label = stringResource(MR.strings.action_display_merged_badge),
-        pref = screenModel.libraryPreferences.mergedBadge,
+        pref = viewModel.libraryPreferences.mergedBadge,
     )
 
     HeadingItem(MR.strings.library_cover_actions_header)
     CheckboxItem(
         label = stringResource(MR.strings.action_display_show_continue_button),
-        pref = screenModel.libraryPreferences.showContinueReadingButton,
+        pref = viewModel.libraryPreferences.showContinueReadingButton,
     )
 
     HeadingItem(MR.strings.tabs_header)
-    val grouping by screenModel.libraryPreferences.grouping.collectAsState()
+    val grouping by viewModel.libraryPreferences.grouping.collectAsState()
     CheckboxItem(
         label = showLibraryGroupingTabsLabel(grouping),
-        pref = screenModel.libraryPreferences.categoryTabs,
+        pref = viewModel.libraryPreferences.categoryTabs,
     )
     CheckboxItem(
         label = stringResource(MR.strings.action_display_show_number_of_items),
-        pref = screenModel.libraryPreferences.categoryNumberOfItems,
+        pref = viewModel.libraryPreferences.categoryNumberOfItems,
     )
 }
 
 @Composable
 private fun GroupPage(
-    screenModel: LibrarySettingsScreenModel,
+    viewModel: LibrarySettingsViewModel,
 ) {
-    val grouping by screenModel.libraryPreferences.grouping.collectAsState()
+    val grouping by viewModel.libraryPreferences.grouping.collectAsState()
     HeadingItem(MR.strings.library_grouping_hierarchy)
     LibraryGroupingEditor(
         grouping = grouping,
-        onGroupingChange = screenModel::setGrouping,
+        onGroupingChange = viewModel::setGrouping,
         modifier = Modifier.padding(horizontal = TabbedDialogPaddings.Horizontal),
     )
 }

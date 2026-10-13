@@ -21,7 +21,7 @@ import eu.kanade.presentation.components.TabbedDialog
 import eu.kanade.presentation.components.TabbedDialogPaddings
 import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.tachiyomi.source.entry.EntryType
-import eu.kanade.tachiyomi.ui.updates.UpdatesSettingsScreenModel
+import eu.kanade.tachiyomi.ui.updates.UpdatesSettingsViewModel
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.TriState
 import tachiyomi.domain.updates.model.UpdatesFeedFilter
@@ -44,7 +44,7 @@ import tachiyomi.presentation.core.util.collectAsState
 @Composable
 fun UpdatesFilterDialog(
     onDismissRequest: () -> Unit,
-    screenModel: UpdatesSettingsScreenModel,
+    viewModel: UpdatesSettingsViewModel,
     filter: UpdatesFeedFilter,
     entryTypes: List<EntryType>,
     sources: Map<Long, String>,
@@ -67,15 +67,15 @@ fun UpdatesFilterDialog(
         ) {
             when (tabs[page]) {
                 UpdatesFilterTab.Filter -> FilterSheet(
-                    screenModel = screenModel,
+                    viewModel = viewModel,
                     options = options,
                 )
-                UpdatesFilterTab.Categories -> CategoryFilterSheet(screenModel = screenModel)
+                UpdatesFilterTab.Categories -> CategoryFilterSheet(viewModel = viewModel)
                 UpdatesFilterTab.Types -> entryTypes.forEach { type ->
                     TriStateItem(
                         label = stringResource(type.entryTypePresentation().displayNameLabel),
                         state = filter.types.stateOf(type),
-                        onClick = { screenModel.cycleEntryType(type) },
+                        onClick = { viewModel.cycleEntryType(type) },
                     )
                 }
                 UpdatesFilterTab.Sources ->
@@ -85,7 +85,7 @@ fun UpdatesFilterDialog(
                             TriStateItem(
                                 label = name,
                                 state = filter.sources.stateOf(sourceId),
-                                onClick = { screenModel.cycleSource(sourceId) },
+                                onClick = { viewModel.cycleSource(sourceId) },
                             )
                         }
             }
@@ -123,15 +123,15 @@ fun unifiedUpdatesFilterOptions(): List<UpdatesFilterOption> {
 
 @Composable
 private fun FilterSheet(
-    screenModel: UpdatesSettingsScreenModel,
+    viewModel: UpdatesSettingsViewModel,
     options: List<UpdatesFilterOption>,
 ) {
     options.forEach { option ->
-        val state by option.preference(screenModel.updatesPreferences).collectAsState()
+        val state by option.preference(viewModel.updatesPreferences).collectAsState()
         TriStateItem(
             label = stringResource(option.label),
             state = state,
-            onClick = { screenModel.toggleFilter(option.preference) },
+            onClick = { viewModel.toggleFilter(option.preference) },
         )
     }
 }
@@ -143,7 +143,7 @@ data class UpdatesFilterOption(
 
 @Composable
 private fun ColumnScope.CategoryFilterSheet(
-    screenModel: UpdatesSettingsScreenModel,
+    viewModel: UpdatesSettingsViewModel,
 ) {
     Text(
         stringResource(MR.strings.pref_filter_update_categories_details),
@@ -157,7 +157,7 @@ private fun ColumnScope.CategoryFilterSheet(
 
     HorizontalDivider(modifier = Modifier.padding(MaterialTheme.padding.extraSmall))
 
-    val allCategories by screenModel.getCategories.subscribe().collectAsState(initial = emptyList())
+    val allCategories by viewModel.getCategories.subscribe().collectAsState(initial = emptyList())
 
     if (allCategories.isEmpty()) {
         // since it includes the system category, this should only happen when loading is required
@@ -165,8 +165,8 @@ private fun ColumnScope.CategoryFilterSheet(
         return
     }
 
-    val excluded by screenModel.updatesPreferences.filterExcludedCategories.collectAsState()
-    val included by screenModel.updatesPreferences.filterIncludedCategories.collectAsState()
+    val excluded by viewModel.updatesPreferences.filterExcludedCategories.collectAsState()
+    val included by viewModel.updatesPreferences.filterIncludedCategories.collectAsState()
 
     Column {
         allCategories.fastForEach { category ->
@@ -179,7 +179,7 @@ private fun ColumnScope.CategoryFilterSheet(
                 label = category.visualName,
                 state = state,
                 onClick = {
-                    screenModel.cycleCategory(category)
+                    viewModel.cycleCategory(category)
                 },
             )
         }

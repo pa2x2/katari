@@ -41,8 +41,8 @@ import kotlin.math.roundToInt
 
 /** The download queue as a tab of the queue screen, with its sorting, Cancel all and Pause. */
 @Composable
-internal fun downloadQueueDownloadsTab(screenModel: DownloadQueueScreenModel): TabContent {
-    val downloadList by screenModel.state.collectAsStateWithLifecycle()
+internal fun downloadQueueDownloadsTab(viewModel: DownloadQueueViewModel): TabContent {
+    val downloadList by viewModel.state.collectAsStateWithLifecycle()
     var sortExpanded by remember { mutableStateOf(false) }
     return TabContent(
         titleRes = MR.strings.label_downloads_tab,
@@ -58,7 +58,7 @@ internal fun downloadQueueDownloadsTab(screenModel: DownloadQueueScreenModel): T
                 ),
                 AppBar.OverflowAction(
                     title = stringResource(MR.strings.action_cancel_all),
-                    onClick = screenModel::clearQueue,
+                    onClick = viewModel::clearQueue,
                 ),
             )
         },
@@ -70,14 +70,14 @@ internal fun downloadQueueDownloadsTab(screenModel: DownloadQueueScreenModel): T
                         modifier = Modifier.padding(contentPadding),
                     )
                 } else {
-                    DownloadList(screenModel, downloadList, contentPadding)
+                    DownloadList(viewModel, downloadList, contentPadding)
                 }
                 Box(modifier = Modifier.align(Alignment.TopEnd)) {
-                    SortMenu(screenModel, expanded = sortExpanded, onDismissRequest = { sortExpanded = false })
+                    SortMenu(viewModel, expanded = sortExpanded, onDismissRequest = { sortExpanded = false })
                 }
                 if (downloadList.isNotEmpty()) {
                     PauseButton(
-                        screenModel = screenModel,
+                        viewModel = viewModel,
                         modifier = Modifier
                             .align(Alignment.BottomEnd)
                             .padding(contentPadding)
@@ -91,7 +91,7 @@ internal fun downloadQueueDownloadsTab(screenModel: DownloadQueueScreenModel): T
 
 @Composable
 private fun DownloadList(
-    screenModel: DownloadQueueScreenModel,
+    viewModel: DownloadQueueViewModel,
     downloadList: List<DownloadQueueHeaderItem>,
     contentPadding: PaddingValues,
 ) {
@@ -104,26 +104,26 @@ private fun DownloadList(
     AndroidView(
         modifier = Modifier.fillMaxWidth(),
         factory = { context ->
-            screenModel.controllerBinding = DownloadListBinding.inflate(LayoutInflater.from(context))
-            screenModel.adapter = DownloadQueueAdapter(screenModel.listener)
-            screenModel.controllerBinding.root.adapter = screenModel.adapter
-            screenModel.adapter?.isHandleDragEnabled = true
-            screenModel.controllerBinding.root.layoutManager = LinearLayoutManager(context)
+            viewModel.controllerBinding = DownloadListBinding.inflate(LayoutInflater.from(context))
+            viewModel.adapter = DownloadQueueAdapter(viewModel.listener)
+            viewModel.controllerBinding.root.adapter = viewModel.adapter
+            viewModel.adapter?.isHandleDragEnabled = true
+            viewModel.controllerBinding.root.layoutManager = LinearLayoutManager(context)
 
-            ViewCompat.setNestedScrollingEnabled(screenModel.controllerBinding.root, true)
+            ViewCompat.setNestedScrollingEnabled(viewModel.controllerBinding.root, true)
 
-            screenModel.controllerBinding.root
+            viewModel.controllerBinding.root
         },
         update = {
-            screenModel.controllerBinding.root.updatePadding(left = left, top = top, right = right, bottom = bottom)
-            screenModel.adapter?.updateDataSet(downloadList)
+            viewModel.controllerBinding.root.updatePadding(left = left, top = top, right = right, bottom = bottom)
+            viewModel.adapter?.updateDataSet(downloadList)
         },
     )
 }
 
 @Composable
 private fun SortMenu(
-    screenModel: DownloadQueueScreenModel,
+    viewModel: DownloadQueueViewModel,
     expanded: Boolean,
     onDismissRequest: () -> Unit,
 ) {
@@ -134,14 +134,14 @@ private fun SortMenu(
                 DropdownMenuItem(
                     text = { Text(text = stringResource(MR.strings.action_newest)) },
                     onClick = {
-                        screenModel.reorderQueue({ item -> item.payloadAsDownloadQueueItem().dateUpload }, true)
+                        viewModel.reorderQueue({ item -> item.payloadAsDownloadQueueItem().dateUpload }, true)
                         closeMenu()
                     },
                 )
                 DropdownMenuItem(
                     text = { Text(text = stringResource(MR.strings.action_oldest)) },
                     onClick = {
-                        screenModel.reorderQueue({ item -> item.payloadAsDownloadQueueItem().dateUpload }, false)
+                        viewModel.reorderQueue({ item -> item.payloadAsDownloadQueueItem().dateUpload }, false)
                         closeMenu()
                     },
                 )
@@ -153,14 +153,14 @@ private fun SortMenu(
                 DropdownMenuItem(
                     text = { Text(text = stringResource(MR.strings.action_asc)) },
                     onClick = {
-                        screenModel.reorderQueue({ item -> item.payloadAsDownloadQueueItem().chapterNumber }, false)
+                        viewModel.reorderQueue({ item -> item.payloadAsDownloadQueueItem().chapterNumber }, false)
                         closeMenu()
                     },
                 )
                 DropdownMenuItem(
                     text = { Text(text = stringResource(MR.strings.action_desc)) },
                     onClick = {
-                        screenModel.reorderQueue({ item -> item.payloadAsDownloadQueueItem().chapterNumber }, true)
+                        viewModel.reorderQueue({ item -> item.payloadAsDownloadQueueItem().chapterNumber }, true)
                         closeMenu()
                     },
                 )
@@ -170,8 +170,8 @@ private fun SortMenu(
 }
 
 @Composable
-private fun PauseButton(screenModel: DownloadQueueScreenModel, modifier: Modifier) {
-    val isRunning by screenModel.isDownloaderRunning.collectAsStateWithLifecycle()
+private fun PauseButton(viewModel: DownloadQueueViewModel, modifier: Modifier) {
+    val isRunning by viewModel.isDownloaderRunning.collectAsStateWithLifecycle()
     SmallExtendedFloatingActionButton(
         text = { Text(text = stringResource(if (isRunning) MR.strings.action_pause else MR.strings.action_resume)) },
         icon = {
@@ -184,7 +184,7 @@ private fun PauseButton(screenModel: DownloadQueueScreenModel, modifier: Modifie
                 contentDescription = null,
             )
         },
-        onClick = { if (isRunning) screenModel.pauseDownloads() else screenModel.startDownloads() },
+        onClick = { if (isRunning) viewModel.pauseDownloads() else viewModel.startDownloads() },
         modifier = modifier,
     )
 }

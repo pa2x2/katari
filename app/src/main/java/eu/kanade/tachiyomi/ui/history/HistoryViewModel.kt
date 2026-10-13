@@ -2,11 +2,11 @@ package eu.kanade.tachiyomi.ui.history
 
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Immutable
-import cafe.adriel.voyager.core.model.screenModelScope
+import androidx.lifecycle.viewModelScope
 import eu.kanade.core.util.insertSeparators
 import eu.kanade.presentation.history.HistoryUiItem
 import eu.kanade.presentation.history.HistoryUiModel
-import eu.kanade.tachiyomi.ui.base.screenmodel.GatedStateScreenModel
+import eu.kanade.tachiyomi.ui.base.viewmodel.GatedStateViewModel
 import eu.kanade.tachiyomi.ui.collapseByVisibleEntry
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
@@ -57,7 +57,7 @@ import tachiyomi.domain.statistics.repository.StatisticsRepository
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
-class HistoryScreenModel(
+class HistoryViewModel(
     private val entryLibraryMembershipFeature: EntryLibraryMembershipFeature = Injekt.get(),
     private val entryMergeNavigationFeature: EntryMergeNavigationFeature = Injekt.get(),
     private val getEntry: GetEntry = Injekt.get(),
@@ -67,7 +67,7 @@ class HistoryScreenModel(
     private val activeProfileProvider: ActiveProfileProvider = Injekt.get(),
     statisticsRepository: StatisticsRepository = Injekt.get(),
     val snackbarHostState: SnackbarHostState = SnackbarHostState(),
-) : GatedStateScreenModel<HistoryScreenModel.State>(State()) {
+) : GatedStateViewModel<HistoryViewModel.State>(State()) {
 
     private val _events: Channel<Event> = Channel(Channel.UNLIMITED)
     val events: Flow<Event> = _events.receiveAsFlow()
@@ -90,7 +90,7 @@ class HistoryScreenModel(
             emit(emptyMap())
         }
         .flowOn(Dispatchers.IO)
-        .stateIn(screenModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
 
     init {
         gatedScope.launch {
@@ -181,7 +181,7 @@ class HistoryScreenModel(
     }
 
     fun removeFromHistory(history: HistoryItem, all: Boolean = false) {
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             if (all) {
                 removeHistory.await(history.history.entryId)
             } else {
@@ -191,7 +191,7 @@ class HistoryScreenModel(
     }
 
     fun removeAllHistory() {
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             if (removeHistory.awaitAll()) {
                 _events.send(Event.HistoryCleared)
             }
@@ -208,7 +208,7 @@ class HistoryScreenModel(
     }
 
     fun moveEntryToCategoriesAndAddToLibrary(entry: Entry, categories: List<Long>) {
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             addToLibrary(
                 EntryLibraryAddRequest(
                     entry = entry,
@@ -220,14 +220,14 @@ class HistoryScreenModel(
     }
 
     fun addFavorite(entryId: Long) {
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             val entry = getEntry.await(entryId) ?: return@launchIO
             addToLibrary(EntryLibraryAddRequest(entry))
         }
     }
 
     fun addFavorite(entry: Entry) {
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             addToLibrary(
                 EntryLibraryAddRequest(entry, duplicatePolicy = EntryLibraryDuplicatePolicy.ALLOW),
             )

@@ -2,13 +2,13 @@ package eu.kanade.tachiyomi.ui.download
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import cafe.adriel.voyager.core.model.rememberScreenModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.components.TabbedScreen
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.source.entry.EntryType
-import eu.kanade.tachiyomi.ui.download.translation.TranslationQueueScreenModel
+import eu.kanade.tachiyomi.ui.download.translation.TranslationQueueViewModel
 import eu.kanade.tachiyomi.ui.download.translation.translationQueueTab
 import mihon.entry.interactions.translate.EntryTranslateFeature
 import tachiyomi.i18n.*
@@ -22,8 +22,8 @@ object DownloadQueueScreen : Screen() {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val downloads = rememberScreenModel { DownloadQueueScreenModel() }
-        val translations = rememberScreenModel { TranslationQueueScreenModel() }
+        val downloads = viewModel { DownloadQueueViewModel() }
+        val translations = viewModel { TranslationQueueViewModel() }
         val translationAvailable = remember {
             Injekt.get<EntryTranslateFeature>().let { feature -> EntryType.entries.any(feature::isApplicable) }
         }

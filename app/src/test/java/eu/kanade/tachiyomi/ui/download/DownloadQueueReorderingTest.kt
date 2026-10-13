@@ -1,8 +1,8 @@
 package eu.kanade.tachiyomi.ui.download
 
-import cafe.adriel.voyager.core.annotation.InternalVoyagerApi
-import cafe.adriel.voyager.core.model.ScreenModelStore
+import androidx.lifecycle.ViewModelStore
 import eu.kanade.tachiyomi.source.entry.EntryType
+import eu.kanade.tachiyomi.ui.base.viewmodel.createViewModel
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
@@ -22,15 +22,16 @@ import mihon.entry.interactions.download.EntryDownloadState
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
-@OptIn(ExperimentalCoroutinesApi::class, InternalVoyagerApi::class)
+@OptIn(ExperimentalCoroutinesApi::class)
 class DownloadQueueReorderingTest {
     @Test
     fun `sorting paused queue publishes new row order to screen`() = verifyReorder(listOf(3L, 2L, 1L)) { model ->
         model.reorderQueue({ it.payload.chapterNumber }, reverse = true)
     }
 
-    private fun verifyReorder(expected: List<Long>, action: (DownloadQueueScreenModel) -> Unit) = runTest {
+    private fun verifyReorder(expected: List<Long>, action: (DownloadQueueViewModel) -> Unit) = runTest {
         val dispatcher = UnconfinedTestDispatcher(testScheduler)
+        val viewModels = ViewModelStore()
         Dispatchers.setMain(dispatcher)
         try {
             val initial = (1L..3L).map { id ->
@@ -56,8 +57,7 @@ class DownloadQueueReorderingTest {
                     runtimeState.value = state(firstArg())
                 }
             }
-            val key = "queue-reorder-regression"
-            val model = ScreenModelStore.getOrPut(key, null) { DownloadQueueScreenModel(runtime) }
+            val model = viewModels.createViewModel { DownloadQueueViewModel(runtime) }
             var renderedOrder = emptyList<Long>()
             val rendering = backgroundScope.launch(dispatcher) {
                 model.state.collect { headers ->
@@ -76,7 +76,7 @@ class DownloadQueueReorderingTest {
             assertEquals(expected, renderedOrder, "screen must receive changed order")
             rendering.cancel()
         } finally {
-            ScreenModelStore.onDisposeNavigator("queue-reorder-regression")
+            viewModels.clear()
             Dispatchers.resetMain()
         }
     }

@@ -2,17 +2,18 @@ package eu.kanade.tachiyomi.ui.library.update.report
 
 import android.app.Application
 import androidx.compose.runtime.Immutable
-import cafe.adriel.voyager.core.model.StateScreenModel
-import cafe.adriel.voyager.core.model.screenModelScope
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import eu.kanade.tachiyomi.data.library.LibraryUpdateJob
 import eu.kanade.tachiyomi.source.visualName
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import mihon.entry.interactions.migration.EntryMigrationFeature
 import mihon.entry.interactions.migration.EntryMigrationSelectionResult
@@ -33,7 +34,7 @@ import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class LibraryUpdateReportScreenModel(
+class LibraryUpdateReportViewModel(
     private val application: Application = Injekt.get(),
     private val reportRepository: LibraryUpdateReportRepository = Injekt.get(),
     private val rulesRepository: LibraryUpdateRulesRepository = Injekt.get(),
@@ -42,7 +43,10 @@ class LibraryUpdateReportScreenModel(
     private val sourceManager: SourceManager = Injekt.get(),
     private val migrationFeature: EntryMigrationFeature = Injekt.get(),
     private val webViewFeature: EntryWebViewFeature = Injekt.get(),
-) : StateScreenModel<LibraryUpdateReportScreenModel.State>(State.Loading) {
+) : ViewModel() {
+
+    val state: StateFlow<LibraryUpdateReportViewModel.State>
+        field = MutableStateFlow<LibraryUpdateReportViewModel.State>(State.Loading)
 
     private val sourcePauses = LibrarySourcePauses(libraryPreferences)
 
@@ -64,12 +68,12 @@ class LibraryUpdateReportScreenModel(
             .map { modes -> modes.filterValues { it == EntryUpdateMode.NEVER }.keys }
         // Rechecks started from the report fold into it without starting a run of their own.
         val isUpdating = LibraryUpdateJob.progressFlow(application).map { it != null }
-        screenModelScope.launch {
+        viewModelScope.launch {
             combine(reports, pauses, pausedEntryIds, isUpdating) { latest, sourcePausesNow, entryIds, updating ->
                 latest?.copy(sourcePauses = sourcePausesNow, pausedEntryIds = entryIds, isUpdating = updating)
                     ?: State.Empty
             }
-                .collectLatest { state -> mutableState.update { state } }
+                .collectLatest { newState -> state.value = newState }
         }
     }
 
@@ -108,7 +112,7 @@ class LibraryUpdateReportScreenModel(
     /** Pausing leaves the entry out of every library update until its mode is changed back. */
     fun setEntryPaused(entry: Entry, paused: Boolean) {
         val mode = if (paused) EntryUpdateMode.NEVER else EntryUpdateMode.FOLLOW_RULES
-        screenModelScope.launch { rulesRepository.setEntryMode(listOf(entry.id), mode) }
+        viewModelScope.launch { rulesRepository.setEntryMode(listOf(entry.id), mode) }
     }
 
     /** @param until when the pause ends, in epoch milliseconds, or null to pause until the source is resumed. */

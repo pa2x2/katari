@@ -3,7 +3,7 @@ package eu.kanade.tachiyomi.ui.library
 import android.content.Context
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.util.fastMap
-import cafe.adriel.voyager.core.model.screenModelScope
+import androidx.lifecycle.viewModelScope
 import eu.kanade.core.preference.PreferenceMutableState
 import eu.kanade.core.preference.asState
 import eu.kanade.presentation.entry.DownloadAction
@@ -15,7 +15,7 @@ import eu.kanade.tachiyomi.data.library.LibraryUpdateProgress
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.getDisplayNameForEntryInfo
-import eu.kanade.tachiyomi.ui.base.screenmodel.GatedStateScreenModel
+import eu.kanade.tachiyomi.ui.base.viewmodel.GatedStateViewModel
 import eu.kanade.tachiyomi.ui.library.grouping.resolveLibraryPages
 import eu.kanade.tachiyomi.util.system.isReleaseBuildType
 import kotlinx.collections.immutable.ImmutableList
@@ -119,7 +119,7 @@ import uy.kohesive.injekt.api.get
 import kotlin.random.Random
 import kotlin.time.Duration.Companion.seconds
 
-class LibraryScreenModel(
+class LibraryViewModel(
     private val context: Context,
     private val getLibraryEntries: GetLibraryEntries = Injekt.get(),
     private val getCategories: GetCategories = Injekt.get(),
@@ -143,26 +143,26 @@ class LibraryScreenModel(
     private val profileDatabase: ProfileDatabase = Injekt.get(),
     private val profileManager: ProfileManager = Injekt.get(),
     private val entryProfileMoveFeature: EntryProfileMoveFeature = Injekt.get(),
-) : GatedStateScreenModel<LibraryScreenModel.State>(State()) {
+) : GatedStateViewModel<LibraryViewModel.State>(State()) {
 
     val moveEvents = Channel<MoveEvent>(Channel.BUFFERED)
     private var moveInProgress = false
     private val pagePersistenceRequests = Channel<PagePersistenceRequest>(Channel.UNLIMITED)
 
-    private val displayModeState = libraryPreferences.displayMode.asState(screenModelScope)
-    private val portraitColumnsState = libraryPreferences.portraitColumns.asState(screenModelScope)
-    private val landscapeColumnsState = libraryPreferences.landscapeColumns.asState(screenModelScope)
+    private val displayModeState = libraryPreferences.displayMode.asState(viewModelScope)
+    private val portraitColumnsState = libraryPreferences.portraitColumns.asState(viewModelScope)
+    private val landscapeColumnsState = libraryPreferences.landscapeColumns.asState(viewModelScope)
 
     /** The running library update, whichever screen or schedule started it. */
     val updateProgress: StateFlow<LibraryUpdateProgress?> = LibraryUpdateJob.progressFlow(context)
-        .stateIn(screenModelScope, SharingStarted.WhileSubscribed(5.seconds), null)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5.seconds), null)
 
     fun cancelUpdate() {
-        screenModelScope.launchIO { LibraryUpdateJob.stop(context) }
+        viewModelScope.launchIO { LibraryUpdateJob.stop(context) }
     }
 
     init {
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             for (request in pagePersistenceRequests) {
                 val preferences = LibraryPreferences(profileStore.profileStore(request.profileId))
                 if (preferences.lastUsedCategory.get() != request.pageIndex) {
@@ -185,7 +185,7 @@ class LibraryScreenModel(
             .onEach { available ->
                 mutableState.update { state -> state.copy(mergeSelectionAvailable = available) }
             }
-            .launchIn(screenModelScope)
+            .launchIn(viewModelScope)
         gatedScope.launchIO {
             observeProfileScopedState(profileStore.currentProfileIdFlow) { profileId ->
                 val scopedLibraryPreferences = LibraryPreferences(profileStore.profileStore(profileId))
@@ -343,7 +343,7 @@ class LibraryScreenModel(
                     )
                 }
             }
-            .launchIn(screenModelScope)
+            .launchIn(viewModelScope)
 
         observeLibraryDisplaySettings(libraryPreferences)
             .onEach { displaySettings ->
@@ -351,7 +351,7 @@ class LibraryScreenModel(
                     state.copy(displaySettings = displaySettings)
                 }
             }
-            .launchIn(screenModelScope)
+            .launchIn(viewModelScope)
     }
 
     private fun List<LibraryItem>.applyFilters(
@@ -525,7 +525,7 @@ class LibraryScreenModel(
     }
 
     private fun downloadBulkDownloadCandidates(action: DownloadAction, items: List<LibraryItem>) {
-        screenModelScope.launchNonCancellable {
+        viewModelScope.launchNonCancellable {
             val entries = getActionEntries(selectedActionEntryIds(items))
             entries.forEach { entry ->
                 val result = entryDownloadActionFeature.resolveBulkDownloadCandidates(
@@ -558,7 +558,7 @@ class LibraryScreenModel(
      */
     fun markReadSelection(read: Boolean) {
         val entryIds = selectedActionEntryIds(mutableState.value.selectedLibraryItems)
-        screenModelScope.launchNonCancellable {
+        viewModelScope.launchNonCancellable {
             val entries = getActionEntries(entryIds)
             entries.forEach { entry ->
                 val chapters = entryChapterRepository.getChaptersByEntryIdAwait(entry.id)
@@ -578,7 +578,7 @@ class LibraryScreenModel(
         if (entryIds.isEmpty()) return
         val libraryPinned = state.selectionPinAction.libraryPinned ?: return
         clearSelection()
-        screenModelScope.launchNonCancellable {
+        viewModelScope.launchNonCancellable {
             setLibraryPinned.await(profileId, entryIds, libraryPinned)
         }
     }
@@ -595,7 +595,7 @@ class LibraryScreenModel(
         deleteFromLibrary: Boolean,
         deleteChapters: Boolean,
     ) {
-        screenModelScope.launchNonCancellable {
+        viewModelScope.launchNonCancellable {
             val distinctEntries = entries.distinctBy { it.id }
 
             if (deleteFromLibrary) {
@@ -622,7 +622,7 @@ class LibraryScreenModel(
      * Bulk update categories of selected items using old and new common categories.
      */
     fun setEntryCategories(items: List<LibraryItem>, addCategories: List<Long>, removeCategories: List<Long>) {
-        screenModelScope.launchNonCancellable {
+        viewModelScope.launchNonCancellable {
             updateLibraryItemCategories(
                 items = items,
                 addCategories = addCategories,
@@ -757,7 +757,7 @@ class LibraryScreenModel(
         val items = state.selection.mapNotNull { state.libraryData.favoritesById[it] }
         // Hide the default category because it has a different behavior than the ones from db.
         val categories = state.libraryData.categories.filter { it.id != 0L }
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             val selection = prepareLibraryCategorySelection(items) { item ->
                 categoriesForLibraryItem(item, getCategories::await)
             }
@@ -778,7 +778,7 @@ class LibraryScreenModel(
         val selectedItems = mutableState.value.selectedLibraryItems
         val entryIds = selectedActionEntryIds(selectedItems)
         val containsMergedEntries = selectedItems.any(LibraryItem::isMerged)
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             val entries = getActionEntries(entryIds)
             val containsLocalEntries = entries.any { it.source == LocalSource.ID }
             mutableState.update {
@@ -795,7 +795,7 @@ class LibraryScreenModel(
 
     fun openUpdateModeDialog() {
         val entryIds = mutableState.value.selectedLibraryItems.map { it.entry.id }.distinct()
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             val modes = updateRulesRepository.getEntryModes()
             val currentMode = entryIds
                 .map { modes[it] ?: EntryUpdateMode.FOLLOW_RULES }
@@ -807,7 +807,7 @@ class LibraryScreenModel(
 
     fun setUpdateMode(entryIds: List<Long>, mode: EntryUpdateMode) {
         clearSelection()
-        screenModelScope.launchIO { updateRulesRepository.setEntryMode(entryIds, mode) }
+        viewModelScope.launchIO { updateRulesRepository.setEntryMode(entryIds, mode) }
     }
 
     /** The selected entries to check for updates, clearing the selection as the check takes over. */
@@ -818,7 +818,7 @@ class LibraryScreenModel(
     }
 
     fun openMoveProfileDialog() {
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             val sourceProfileId = profileStore.currentProfileId
             val profiles = availableMoveProfiles(
                 profiles = profileManager.visibleProfiles.value,
@@ -832,7 +832,7 @@ class LibraryScreenModel(
     }
 
     fun openMoveCategoryDialog(profile: Profile) {
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             val categories = profileDatabase.getAllCategories(profile.id).filter { it.id != Category.UNCATEGORIZED_ID }
             mutableState.update { it.copy(dialog = Dialog.MoveCategory(profile, categories)) }
         }
@@ -844,7 +844,7 @@ class LibraryScreenModel(
         val selectedIds = mutableState.value.selectedLibraryItems.map { it.entry.id }.distinct()
         if (selectedIds.isEmpty()) return
         moveInProgress = true
-        screenModelScope.launchNonCancellable {
+        viewModelScope.launchNonCancellable {
             try {
                 require(profileStore.currentProfileId == sourceProfileId) {
                     "Active profile changed before the move"
@@ -888,7 +888,7 @@ class LibraryScreenModel(
             }
         } else {
             moveInProgress = true
-            screenModelScope.launchNonCancellable {
+            viewModelScope.launchNonCancellable {
                 executeClaimedMove(dialog.preview, resolutions)
             }
         }
@@ -925,7 +925,7 @@ class LibraryScreenModel(
 
     fun openMergeDialog() {
         val selectedItems = mutableState.value.selectedLibraryItems
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             val entries = selectedItems.flatMap(LibraryItem::memberEntries).distinctBy(Entry::id)
             val editor = when (val result = entryMergeFeature.prepare(EntryMergePrepareIntent(entries))) {
                 is EntryMergePreparationResult.Ready -> result.editor
@@ -986,7 +986,7 @@ class LibraryScreenModel(
     fun confirmMergeSelection() {
         when (val dialog = mutableState.value.dialog) {
             is Dialog.MergeEntry -> {
-                screenModelScope.launchNonCancellable {
+                viewModelScope.launchNonCancellable {
                     val result = entryMergeFeature.execute(
                         EntryMergeCommitIntent(
                             editReference = dialog.editReference,
@@ -1020,7 +1020,7 @@ class LibraryScreenModel(
         ) : Dialog
         data class MergeEntry(
             val editReference: EntryMergeEditReference,
-            val entries: ImmutableList<LibraryScreenModel.MergeEntry>,
+            val entries: ImmutableList<LibraryViewModel.MergeEntry>,
             val targetId: Long,
             val targetReference: EntryMergeEditorEntryReference,
             val targetLocked: Boolean,
@@ -1230,14 +1230,14 @@ internal enum class LibraryPinSelectionAction(val libraryPinned: Boolean?) {
 }
 
 internal fun observeGroupedLibraryPages(
-    libraryData: Flow<LibraryScreenModel.LibraryData>,
+    libraryData: Flow<LibraryViewModel.LibraryData>,
     grouping: Flow<LibraryGrouping>,
     sortingMode: Flow<LibrarySort>,
     randomSortSeed: Flow<Int>,
-    applyGrouping: (LibraryScreenModel.LibraryData, LibraryGrouping) -> List<LibraryPage>,
+    applyGrouping: (LibraryViewModel.LibraryData, LibraryGrouping) -> List<LibraryPage>,
     applySort: (
         pages: List<LibraryPage>,
-        data: LibraryScreenModel.LibraryData,
+        data: LibraryViewModel.LibraryData,
         sortingMode: LibrarySort,
         randomSortSeed: Int,
     ) -> List<LibraryPage>,

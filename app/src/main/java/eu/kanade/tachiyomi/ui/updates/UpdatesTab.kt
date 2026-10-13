@@ -14,7 +14,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import cafe.adriel.voyager.core.model.rememberScreenModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -80,21 +80,21 @@ data object UpdatesTab : Tab {
         val navigator = LocalNavigator.currentOrThrow
         val scope = androidx.compose.runtime.rememberCoroutineScope()
         val entryOpenFeature = remember { Injekt.get<EntryOpenFeature>() }
-        val screenModel = rememberScreenModel { UpdatesScreenModel() }
-        val settingsScreenModel = rememberScreenModel { UpdatesSettingsScreenModel() }
-        val state by screenModel.state.collectAsStateWithLifecycle()
-        val translationStatuses by screenModel.translationStatuses.collectAsStateWithLifecycle()
-        val translationSetup by screenModel.translation.sheet.collectAsStateWithLifecycle()
+        val viewModel = viewModel { UpdatesViewModel() }
+        val settingsViewModel = viewModel { UpdatesSettingsViewModel() }
+        val state by viewModel.state.collectAsStateWithLifecycle()
+        val translationStatuses by viewModel.translationStatuses.collectAsStateWithLifecycle()
+        val translationSetup by viewModel.translation.sheet.collectAsStateWithLifecycle()
 
-        val categories by settingsScreenModel.getCategories.subscribe().collectAsState(initial = emptyList())
+        val categories by settingsViewModel.getCategories.subscribe().collectAsState(initial = emptyList())
         val feed = state.feed
         val filterSummary = updatesFeedFilterSummary(feed.filter, categories, feed.sources)
 
-        val latestUpdateSummary by screenModel.latestUpdateSummary.collectAsStateWithLifecycle()
-        val pausedSourceNames by screenModel.pausedSourceNames.collectAsStateWithLifecycle()
+        val latestUpdateSummary by viewModel.latestUpdateSummary.collectAsStateWithLifecycle()
+        val pausedSourceNames by viewModel.pausedSourceNames.collectAsStateWithLifecycle()
         val updateStarter = rememberLibraryUpdateStarter(
-            snackbarHostState = screenModel.snackbarHostState,
-            startSkippedOfLatest = screenModel::updateSkippedOfLatest,
+            snackbarHostState = viewModel.snackbarHostState,
+            startSkippedOfLatest = viewModel::updateSkippedOfLatest,
         )
 
         val openUpdateReport = { navigator.push(LibraryUpdateReportScreen()) }.takeIf { latestUpdateSummary != null }
@@ -110,60 +110,60 @@ data object UpdatesTab : Tab {
                 bottomBarConfig = UpdatesBottomBarConfig(
                     visible = state.selected.isNotEmpty(),
                     onBookmarkClicked = {
-                        screenModel.bookmarkUpdates(state.selected, true)
+                        viewModel.bookmarkUpdates(state.selected, true)
                     }.takeIf {
-                        screenModel.hasBookmarkAction(selected, bookmark = true)
+                        viewModel.hasBookmarkAction(selected, bookmark = true)
                     },
                     onRemoveBookmarkClicked = {
-                        screenModel.bookmarkUpdates(state.selected, false)
+                        viewModel.bookmarkUpdates(state.selected, false)
                     }.takeIf {
-                        screenModel.hasBookmarkAction(selected, bookmark = false)
+                        viewModel.hasBookmarkAction(selected, bookmark = false)
                     },
                     onMarkAsReadClicked = {
-                        screenModel.markUpdatesConsumed(state.selected, true)
+                        viewModel.markUpdatesConsumed(state.selected, true)
                     }.takeIf {
-                        screenModel.hasConsumedAction(selected, consumed = true)
+                        viewModel.hasConsumedAction(selected, consumed = true)
                     },
                     onMarkAsUnreadClicked = {
-                        screenModel.markUpdatesConsumed(state.selected, false)
+                        viewModel.markUpdatesConsumed(state.selected, false)
                     }.takeIf {
-                        screenModel.hasConsumedAction(selected, consumed = false)
+                        viewModel.hasConsumedAction(selected, consumed = false)
                     },
                     markAsReadLabel = actionLabels.markAsReadLabel,
                     markAsUnreadLabel = actionLabels.markAsUnreadLabel,
                     onDownloadClicked = {
-                        screenModel.downloadChapters(state.selected, ChapterDownloadAction.START)
+                        viewModel.downloadChapters(state.selected, ChapterDownloadAction.START)
                     }.takeIf {
-                        screenModel.canUseDownloadActions(selected) && selected.any {
+                        viewModel.canUseDownloadActions(selected) && selected.any {
                             it.update is UpdateItem.EntryUpdate &&
                                 it.downloadAvailable &&
                                 it.downloadStateProvider() != EntryDownloadState.DOWNLOADED
                         }
                     },
                     onDeleteClicked = {
-                        screenModel.showConfirmDeleteChapters(state.selected)
+                        viewModel.showConfirmDeleteChapters(state.selected)
                     }.takeIf {
-                        screenModel.canUseDownloadActions(selected) && selected.any {
+                        viewModel.canUseDownloadActions(selected) && selected.any {
                             it.update is UpdateItem.EntryUpdate &&
                                 it.downloadStateProvider() == EntryDownloadState.DOWNLOADED
                         }
                     },
                 ),
             ),
-            snackbarHostState = screenModel.snackbarHostState,
-            onSelectAll = screenModel::toggleAllSelection,
-            onInvertSelection = screenModel::invertSelection,
-            onUpdateLibrary = { updateStarter.start(screenModel::updateLibrary) },
+            snackbarHostState = viewModel.snackbarHostState,
+            onSelectAll = viewModel::toggleAllSelection,
+            onInvertSelection = viewModel::invertSelection,
+            onUpdateLibrary = { updateStarter.start(viewModel::updateLibrary) },
             onCalendarClicked = { navigator.push(UpcomingScreen()) },
-            onFilterClicked = screenModel::showFilterDialog,
+            onFilterClicked = viewModel::showFilterDialog,
             hasActiveFilters = feed.filter.isActive,
             filterSummary = if (feed.filter.isActive && state.items.isNotEmpty()) {
                 {
                     UpdatesFilterSummaryBar(
                         summary = filterSummary,
                         hiddenByFilters = feed.hiddenByFilters,
-                        onClick = screenModel::showFilterDialog,
-                        onClear = settingsScreenModel::clearFilters,
+                        onClick = viewModel::showFilterDialog,
+                        onClear = settingsViewModel::clearFilters,
                     )
                 }
             } else {
@@ -173,7 +173,7 @@ data object UpdatesTab : Tab {
                 // An update that found nothing still says when it ran and what it couldn't check
                 Column(modifier = modifier.fillMaxSize()) {
                     UpdatesLastUpdatedHeader(
-                        lastUpdated = screenModel.lastUpdated,
+                        lastUpdated = viewModel.lastUpdated,
                         failed = latestUpdateSummary?.failed ?: 0,
                         pausedSources = pausedSourceNames,
                         onClick = openUpdateReport,
@@ -181,7 +181,7 @@ data object UpdatesTab : Tab {
                     if (feed.hiddenByFilters > 0) {
                         UpdatesFilteredEmptyScreen(
                             summary = filterSummary,
-                            onClearFilters = settingsScreenModel::clearFilters,
+                            onClearFilters = settingsViewModel::clearFilters,
                             modifier = Modifier.weight(1f),
                         )
                     } else {
@@ -191,7 +191,7 @@ data object UpdatesTab : Tab {
             },
         ) {
             updatesLastUpdatedItem(
-                lastUpdated = screenModel.lastUpdated,
+                lastUpdated = viewModel.lastUpdated,
                 failed = latestUpdateSummary?.failed ?: 0,
                 pausedSources = pausedSourceNames,
                 onClick = openUpdateReport,
@@ -199,9 +199,9 @@ data object UpdatesTab : Tab {
             unifiedUpdatesUiItems(
                 uiModels = state.getUiModel(),
                 selectionMode = state.selectionMode,
-                onUpdateSelected = screenModel::toggleSelection,
-                onGroupSelected = screenModel::setGroupSelection,
-                onToggleGroupExpanded = screenModel::toggleGroupExpanded,
+                onUpdateSelected = viewModel::toggleSelection,
+                onGroupSelected = viewModel::setGroupSelection,
+                onToggleGroupExpanded = viewModel::toggleGroupExpanded,
                 onClickCover = { item ->
                     navigator.push(EntryScreen(item.visibleEntryId))
                 },
@@ -218,33 +218,33 @@ data object UpdatesTab : Tab {
                         entryOpenFeature.open(context, entry, chapter)
                     }
                 },
-                onDownloadChapter = screenModel::downloadChapters,
+                onDownloadChapter = viewModel::downloadChapters,
                 translateStatusOf = { translationStatuses[(it.update as? UpdateItem.EntryUpdate)?.update?.chapterId] },
-                isTranslateApplicable = { screenModel.translation.isApplicable(it.update.entryType) },
-                onTranslateChapter = screenModel::translateChapter,
+                isTranslateApplicable = { viewModel.translation.isApplicable(it.update.entryType) },
+                onTranslateChapter = viewModel::translateChapter,
             )
             updatesFeedFooterItem(
                 hiddenByFilters = feed.hiddenByFilters,
                 fromHiddenSources = feed.fromHiddenSources,
-                onClearFilters = settingsScreenModel::clearFilters,
+                onClearFilters = settingsViewModel::clearFilters,
             )
         }
 
-        translationSetup?.let { EntryTranslateSetupSheet(it, screenModel.translation) }
+        translationSetup?.let { EntryTranslateSetupSheet(it, viewModel.translation) }
 
-        val onDismissDialog = { screenModel.setDialog(null) }
+        val onDismissDialog = { viewModel.setDialog(null) }
         when (val dialog = state.dialog) {
-            is UpdatesScreenModel.Dialog.DeleteConfirmation -> {
+            is UpdatesViewModel.Dialog.DeleteConfirmation -> {
                 UpdatesDeleteConfirmationDialog(
                     entryTypes = dialog.toDelete.map { it.update.entryType },
                     onDismissRequest = onDismissDialog,
-                    onConfirm = { screenModel.deleteChapters(dialog.toDelete) },
+                    onConfirm = { viewModel.deleteChapters(dialog.toDelete) },
                 )
             }
-            is UpdatesScreenModel.Dialog.FilterSheet -> {
+            is UpdatesViewModel.Dialog.FilterSheet -> {
                 UpdatesFilterDialog(
                     onDismissRequest = onDismissDialog,
-                    screenModel = settingsScreenModel,
+                    viewModel = settingsViewModel,
                     filter = feed.filter,
                     entryTypes = feed.entryTypes,
                     sources = feed.sources,
@@ -263,10 +263,10 @@ data object UpdatesTab : Tab {
             }
         }
         DisposableEffect(Unit) {
-            screenModel.resetNewUpdatesCount()
+            viewModel.resetNewUpdatesCount()
 
             onDispose {
-                screenModel.resetNewUpdatesCount()
+                viewModel.resetNewUpdatesCount()
             }
         }
     }

@@ -19,7 +19,7 @@ import eu.kanade.presentation.components.relativeDateText
 import eu.kanade.presentation.history.components.HistoryListItem
 import eu.kanade.presentation.more.stats.components.rememberStatisticsDurationFormatter
 import eu.kanade.presentation.theme.TachiyomiPreviewTheme
-import eu.kanade.tachiyomi.ui.history.HistoryScreenModel
+import eu.kanade.tachiyomi.ui.history.HistoryViewModel
 import kotlinx.datetime.LocalDate
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.DeleteSweep
@@ -34,7 +34,7 @@ import tachiyomi.presentation.core.screens.LoadingScreen
 
 @Composable
 fun HistoryScreen(
-    state: HistoryScreenModel.State,
+    state: HistoryViewModel.State,
     dayDurations: Map<LocalDate, Long>,
     snackbarHostState: SnackbarHostState,
     onSearchQueryChange: (String?) -> Unit,
@@ -44,7 +44,7 @@ fun HistoryScreen(
     onClickResume: (HistoryUiItem) -> Unit,
     onClickDelete: (HistoryItem) -> Unit,
     onClickFavorite: (HistoryUiItem) -> Unit,
-    onDialogChange: (HistoryScreenModel.Dialog?) -> Unit,
+    onDialogChange: (HistoryViewModel.Dialog?) -> Unit,
 ) {
     Scaffold(
         topBar = { scrollBehavior ->
@@ -59,7 +59,7 @@ fun HistoryScreen(
                                 title = stringResource(MR.strings.pref_clear_history),
                                 icon = MaterialSymbols.Rounded.DeleteSweep,
                                 onClick = {
-                                    onDialogChange(HistoryScreenModel.Dialog.DeleteAll)
+                                    onDialogChange(HistoryViewModel.Dialog.DeleteAll)
                                 },
                             ),
                         ),
@@ -164,8 +164,8 @@ sealed class HistoryUiModel {
 @PreviewLightDark
 @Composable
 internal fun HistoryScreenPreviews(
-    @PreviewParameter(HistoryScreenModelStateProvider::class)
-    historyState: HistoryScreenModel.State,
+    @PreviewParameter(HistoryViewModelStateProvider::class)
+    historyState: HistoryViewModel.State,
 ) {
     TachiyomiPreviewTheme {
         HistoryScreen(

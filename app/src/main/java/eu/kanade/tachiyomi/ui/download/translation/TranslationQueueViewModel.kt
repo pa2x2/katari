@@ -2,8 +2,8 @@ package eu.kanade.tachiyomi.ui.download.translation
 
 import android.app.Application
 import androidx.compose.material3.SnackbarHostState
-import cafe.adriel.voyager.core.model.ScreenModel
-import cafe.adriel.voyager.core.model.screenModelScope
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import eu.kanade.presentation.entry.translation.ChapterTranslateAction
 import eu.kanade.presentation.entry.translation.TranslatableChapter
 import eu.kanade.tachiyomi.ui.entry.translation.ChapterTranslationModel
@@ -28,23 +28,23 @@ import uy.kohesive.injekt.api.get
 
 /** The translation queue as the queue screen lists it, with pausing, cancelling and retrying its chapters. */
 @OptIn(ExperimentalCoroutinesApi::class)
-class TranslationQueueScreenModel(
+class TranslationQueueViewModel(
     application: Application = Injekt.get(),
     private val feature: EntryTranslateFeature = Injekt.get(),
     private val entries: EntryRepository = Injekt.get(),
     private val chapters: EntryChapterRepository = Injekt.get(),
     private val downloads: EntryDownloadRuntimeFeature = Injekt.get(),
     private val downloadAction: EntryDownloadActionFeature = Injekt.get(),
-) : ScreenModel {
+) : ViewModel() {
     val snackbarHostState = SnackbarHostState()
 
     /** Settles what blocks chapters that failed for want of setup before they are queued again. */
     val translation = ChapterTranslationModel(
-        scope = screenModelScope,
+        scope = viewModelScope,
         context = application,
         snackbarHostState = snackbarHostState,
         download = { items ->
-            screenModelScope.launch {
+            viewModelScope.launch {
                 items.groupBy { it.entry }.forEach { (entry, group) ->
                     downloadAction.download(entry, group.map { it.chapter }, startNow = false)
                 }
@@ -60,28 +60,28 @@ class TranslationQueueScreenModel(
     /** The queue in processing order; null until first loaded. */
     val rows: StateFlow<List<TranslationQueueRow>?> = feature.queue
         .mapLatest(::rowsOf)
-        .stateIn(screenModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), null)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), null)
 
     val waiting: StateFlow<EntryTranslateWaiting?> = feature.waiting
-        .stateIn(screenModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), null)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), null)
 
     val paused: StateFlow<Boolean> = feature.paused
-        .stateIn(screenModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), false)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), false)
 
     fun pause() = feature.pause()
 
     fun resume() = feature.resume()
 
     fun cancelAll() {
-        screenModelScope.launch { feature.cancelAll() }
+        viewModelScope.launch { feature.cancelAll() }
     }
 
     fun cancel(row: TranslationQueueRow) {
-        screenModelScope.launch { feature.cancel(listOf(row.chapter.id)) }
+        viewModelScope.launch { feature.cancel(listOf(row.chapter.id)) }
     }
 
     fun startNow(row: TranslationQueueRow) {
-        screenModelScope.launch { feature.startNow(listOf(row.chapter.id)) }
+        viewModelScope.launch { feature.startNow(listOf(row.chapter.id)) }
     }
 
     /** Queues a failed chapter again; one that failed for want of setup opens the requirements first. */

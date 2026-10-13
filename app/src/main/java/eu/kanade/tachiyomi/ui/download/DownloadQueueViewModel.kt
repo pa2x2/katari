@@ -1,8 +1,8 @@
 package eu.kanade.tachiyomi.ui.download
 
 import android.view.MenuItem
-import cafe.adriel.voyager.core.model.ScreenModel
-import cafe.adriel.voyager.core.model.screenModelScope
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.databinding.DownloadListBinding
 import kotlinx.coroutines.flow.SharingStarted
@@ -18,9 +18,9 @@ import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import kotlin.time.Duration.Companion.seconds
 
-class DownloadQueueScreenModel(
+class DownloadQueueViewModel(
     private val downloadRuntime: EntryDownloadRuntimeFeature = Injekt.get(),
-) : ScreenModel {
+) : ViewModel() {
 
     // The rows last handed to the adapter; transfer ticks update them in place instead of emitting a new list
     private var rows = emptyList<DownloadQueueHeaderItem>()
@@ -66,7 +66,7 @@ class DownloadQueueScreenModel(
             }
                 .also { rows = it }
         }
-        .stateIn(screenModelScope, SharingStarted.WhileSubscribed(5.seconds), emptyList())
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5.seconds), emptyList())
 
     lateinit var controllerBinding: DownloadListBinding
     var adapter: DownloadQueueAdapter? = null
@@ -96,12 +96,12 @@ class DownloadQueueScreenModel(
         }
     }
 
-    override fun onDispose() {
+    override fun onCleared() {
         adapter = null
     }
 
     val isDownloaderRunning = downloadRuntime.state.map { it.isRunning }
-        .stateIn(screenModelScope, SharingStarted.WhileSubscribed(5.seconds), false)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5.seconds), false)
 
     fun startDownloads() {
         downloadRuntime.start()

@@ -46,7 +46,7 @@ import tachiyomi.presentation.core.screens.EmptyScreen
 
 /** The translation queue as a tab of the queue screen, with its own Pause and Cancel all. */
 @Composable
-internal fun translationQueueTab(model: TranslationQueueScreenModel): TabContent {
+internal fun translationQueueTab(model: TranslationQueueViewModel): TabContent {
     val rows by model.rows.collectAsStateWithLifecycle()
     val waiting by model.waiting.collectAsStateWithLifecycle()
     val paused by model.paused.collectAsStateWithLifecycle()

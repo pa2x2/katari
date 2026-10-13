@@ -3,7 +3,7 @@ package mihon.feature.upcoming
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import cafe.adriel.voyager.core.model.rememberScreenModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.util.Screen
@@ -15,13 +15,13 @@ class UpcomingScreen : Screen() {
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
 
-        val screenModel = rememberScreenModel { UpcomingScreenModel() }
-        val state by screenModel.state.collectAsStateWithLifecycle()
+        val viewModel = viewModel { UpcomingViewModel() }
+        val state by viewModel.state.collectAsStateWithLifecycle()
 
         when (state.dialog) {
-            is UpcomingScreenModel.Dialog.FilterSheet -> {
+            is UpcomingViewModel.Dialog.FilterSheet -> {
                 UpcomingFilterDialog(
-                    screenModel = screenModel,
+                    viewModel = viewModel,
                 )
             }
 
@@ -30,10 +30,10 @@ class UpcomingScreen : Screen() {
 
         UpcomingScreenContent(
             state = state,
-            setSelectedYearMonth = screenModel::setSelectedYearMonth,
+            setSelectedYearMonth = viewModel::setSelectedYearMonth,
             onClickUpcoming = { navigator.push(EntryScreen(it.id)) },
             hasActiveFilters = state.hasActiveFilters,
-            onClickFilter = screenModel::showFilterDialog,
+            onClickFilter = viewModel::showFilterDialog,
         )
     }
 }

@@ -2,8 +2,8 @@ package eu.kanade.tachiyomi.ui.category
 
 import android.app.Application
 import androidx.compose.runtime.Immutable
-import cafe.adriel.voyager.core.model.ScreenModel
-import cafe.adriel.voyager.core.model.screenModelScope
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.tachiyomi.data.library.LibraryUpdateJob
 import kotlinx.coroutines.channels.Channel
@@ -29,7 +29,7 @@ import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import kotlin.time.Duration.Companion.seconds
 
-class CategoryScreenModel(
+class CategoryViewModel(
     private val getCategories: GetCategories = Injekt.get(),
     private val createCategoryWithName: CreateCategoryWithName = Injekt.get(),
     private val deleteCategory: DeleteCategory = Injekt.get(),
@@ -37,7 +37,7 @@ class CategoryScreenModel(
     private val renameCategory: RenameCategory = Injekt.get(),
     private val rulesRepository: LibraryUpdateRulesRepository = Injekt.get(),
     private val application: Application = Injekt.get(),
-) : ScreenModel {
+) : ViewModel() {
 
     private val _events: Channel<CategoryEvent> = Channel()
     val events = _events.receiveAsFlow()
@@ -53,10 +53,10 @@ class CategoryScreenModel(
             dialog = dialog,
         )
     }
-        .stateIn(screenModelScope, SharingStarted.WhileSubscribed(5.seconds), CategoryScreenState.Loading)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5.seconds), CategoryScreenState.Loading)
 
     fun createCategory(name: String) {
-        screenModelScope.launch {
+        viewModelScope.launch {
             when (createCategoryWithName.await(name)) {
                 is CreateCategoryWithName.Result.InternalError -> _events.send(CategoryEvent.InternalError)
                 else -> {}
@@ -65,7 +65,7 @@ class CategoryScreenModel(
     }
 
     fun deleteCategory(categoryId: Long) {
-        screenModelScope.launch {
+        viewModelScope.launch {
             when (deleteCategory.await(categoryId = categoryId)) {
                 is DeleteCategory.Result.InternalError -> _events.send(CategoryEvent.InternalError)
                 else -> {}
@@ -74,7 +74,7 @@ class CategoryScreenModel(
     }
 
     fun changeOrder(category: Category, newIndex: Int) {
-        screenModelScope.launch {
+        viewModelScope.launch {
             when (reorderCategory.await(category, newIndex)) {
                 is ReorderCategory.Result.InternalError -> _events.send(CategoryEvent.InternalError)
                 else -> {}
@@ -83,14 +83,14 @@ class CategoryScreenModel(
     }
 
     fun showEditDialog(category: Category) {
-        screenModelScope.launch {
+        viewModelScope.launch {
             val rules = rulesRepository.getCategoryRules()[category.id] ?: CategoryUpdateRules(category.id)
             showDialog(CategoryDialog.Edit(category, rules))
         }
     }
 
     fun editCategory(category: Category, rules: CategoryUpdateRules, name: String, autoUpdate: Boolean) {
-        screenModelScope.launch {
+        viewModelScope.launch {
             if (name != category.name) {
                 when (renameCategory.await(category, name)) {
                     is RenameCategory.Result.InternalError -> _events.send(CategoryEvent.InternalError)

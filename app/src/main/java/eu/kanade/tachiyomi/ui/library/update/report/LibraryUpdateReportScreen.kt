@@ -8,7 +8,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
-import cafe.adriel.voyager.core.model.rememberScreenModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.components.AppBar
@@ -34,8 +34,8 @@ class LibraryUpdateReportScreen : Screen() {
         val navigator = LocalNavigator.currentOrThrow
         val context = LocalContext.current
         val scope = rememberCoroutineScope()
-        val screenModel = rememberScreenModel { LibraryUpdateReportScreenModel() }
-        val state by screenModel.state.collectAsState()
+        val viewModel = viewModel { LibraryUpdateReportViewModel() }
+        val state by viewModel.state.collectAsState()
         val snackbarHostState = remember { SnackbarHostState() }
 
         // A started recheck shows up in this report as it runs, so only a refused start needs a message.
@@ -57,11 +57,11 @@ class LibraryUpdateReportScreen : Screen() {
             snackbarHost = { SnackbarHost(snackbarHostState) },
         ) { contentPadding ->
             when (val current = state) {
-                LibraryUpdateReportScreenModel.State.Loading -> LoadingScreen()
-                LibraryUpdateReportScreenModel.State.Empty -> EmptyScreen(
+                LibraryUpdateReportViewModel.State.Loading -> LoadingScreen()
+                LibraryUpdateReportViewModel.State.Empty -> EmptyScreen(
                     stringRes = MR.strings.library_updates_last_update_none,
                 )
-                is LibraryUpdateReportScreenModel.State.Ready -> LibraryUpdateReportContent(
+                is LibraryUpdateReportViewModel.State.Ready -> LibraryUpdateReportContent(
                     state = current,
                     contentPadding = contentPadding,
                     actions = LibraryUpdateReportActions(
@@ -77,11 +77,11 @@ class LibraryUpdateReportScreen : Screen() {
                                 ),
                             )
                         },
-                        onSetPaused = screenModel::setEntryPaused,
-                        onPauseSource = screenModel::pauseSource,
-                        onResumeSource = screenModel::resumeSource,
-                        onRetry = { entries -> scope.launch { reportStart(screenModel.retry(entries)) } },
-                        onCheckSkipped = { scope.launch { reportStart(screenModel.checkSkipped()) } },
+                        onSetPaused = viewModel::setEntryPaused,
+                        onPauseSource = viewModel::pauseSource,
+                        onResumeSource = viewModel::resumeSource,
+                        onRetry = { entries -> scope.launch { reportStart(viewModel.retry(entries)) } },
+                        onCheckSkipped = { scope.launch { reportStart(viewModel.checkSkipped()) } },
                     ),
                 )
             }

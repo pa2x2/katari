@@ -5,7 +5,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
-import cafe.adriel.voyager.core.model.screenModelScope
+import androidx.lifecycle.viewModelScope
 import eu.kanade.core.preference.asState
 import eu.kanade.core.util.addOrRemove
 import eu.kanade.presentation.entry.components.ChapterDownloadAction
@@ -17,7 +17,7 @@ import eu.kanade.presentation.updates.toUpdatesUiModels
 import eu.kanade.tachiyomi.data.library.LibraryUpdateJob
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.visualName
-import eu.kanade.tachiyomi.ui.base.screenmodel.GatedStateScreenModel
+import eu.kanade.tachiyomi.ui.base.viewmodel.GatedStateViewModel
 import eu.kanade.tachiyomi.ui.collapseByVisibleEntry
 import eu.kanade.tachiyomi.ui.entry.translation.ChapterTranslationModel
 import eu.kanade.tachiyomi.util.lang.toLocalDate
@@ -93,7 +93,7 @@ import uy.kohesive.injekt.api.get
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.milliseconds
 
-class UpdatesScreenModel(
+class UpdatesViewModel(
     private val downloadRuntime: EntryDownloadRuntimeFeature = Injekt.get(),
     private val entryDownloadActionFeature: EntryDownloadActionFeature = Injekt.get(),
     private val entryConsumptionFeature: EntryConsumptionFeature = Injekt.get(),
@@ -109,15 +109,15 @@ class UpdatesScreenModel(
     private val application: Application = Injekt.get(),
     reportRepository: LibraryUpdateReportRepository = Injekt.get(),
     val snackbarHostState: SnackbarHostState = SnackbarHostState(),
-) : GatedStateScreenModel<UpdatesScreenModel.State>(State()) {
+) : GatedStateViewModel<UpdatesViewModel.State>(State()) {
 
     /** Translation of listed chapters; chapters to translate that are not downloaded yet are downloaded. */
     val translation = ChapterTranslationModel(
-        scope = screenModelScope,
+        scope = viewModelScope,
         context = application,
         snackbarHostState = snackbarHostState,
         download = { chapters ->
-            screenModelScope.launch {
+            viewModelScope.launch {
                 chapters.groupBy { it.entry }.forEach { (entry, group) ->
                     entryDownloadActionFeature.download(entry, group.map { it.chapter }, startNow = false)
                 }
@@ -152,12 +152,12 @@ class UpdatesScreenModel(
                 translated + queued
             }
         }
-        .stateIn(screenModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
 
-    val lastUpdated by libraryPreferences.lastUpdatedTimestamp.asState(screenModelScope)
+    val lastUpdated by libraryPreferences.lastUpdatedTimestamp.asState(viewModelScope)
 
     val latestUpdateSummary: StateFlow<LibraryUpdateRunSummary?> = reportRepository.subscribeLatestSummary()
-        .stateIn(screenModelScope, SharingStarted.WhileSubscribed(5_000), null)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     val pausedSourceNames: StateFlow<List<String>> = PausedLibrarySources(
         sourcePauses = LibrarySourcePauses(libraryPreferences),
@@ -165,7 +165,7 @@ class UpdatesScreenModel(
         sourceManager = sourceManager,
     )
         .subscribe()
-        .stateIn(screenModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     private val selectionState = UpdatesSelectionState()
     private val selectedKeys: HashSet<LibraryItemKey> = HashSet()
@@ -249,12 +249,12 @@ class UpdatesScreenModel(
             }
         }
 
-        screenModelScope.launchIO {
+        viewModelScope.launchIO {
             downloadRuntime.statusUpdates()
                 // Each tick scans the list for its row, and the progress shown needn't move more often than this
                 .sampleProgress(200.milliseconds)
                 .catch { logcat(LogPriority.ERROR, it) }
-                .collect(this@UpdatesScreenModel::updateDownloadState)
+                .collect(this@UpdatesViewModel::updateDownloadState)
         }
     }
 
@@ -353,7 +353,7 @@ class UpdatesScreenModel(
         if (!canUseDownloadActions(items)) return
         val chapterItems = items.filter { it.update is UpdateItem.EntryUpdate }
         if (chapterItems.isEmpty()) return
-        screenModelScope.launch {
+        viewModelScope.launch {
             when (action) {
                 ChapterDownloadAction.START -> {
                     downloadChapters(chapterItems)
@@ -392,7 +392,7 @@ class UpdatesScreenModel(
 
     fun translateChapter(item: UpdatesItem, action: ChapterTranslateAction) {
         val update = item.update as? UpdateItem.EntryUpdate ?: return
-        screenModelScope.launch {
+        viewModelScope.launch {
             val entry = getEntry.await(update.update.entryId) ?: return@launch
             val chapter = entryChapterRepository.getChapterById(update.update.chapterId) ?: return@launch
             translation.run(
@@ -424,7 +424,7 @@ class UpdatesScreenModel(
     }
 
     fun markUpdatesConsumed(updates: List<UpdatesItem>, consumed: Boolean) {
-        screenModelScope.launchNonCancellable {
+        viewModelScope.launchNonCancellable {
             updates.entryChapterSelections()
                 .forEach { (entry, chapters) ->
                     entryConsumptionFeature.setConsumed(entry, chapters, consumed)
@@ -438,7 +438,7 @@ class UpdatesScreenModel(
      * @param updates the list of chapters to bookmark.
      */
     fun bookmarkUpdates(updates: List<UpdatesItem>, bookmark: Boolean) {
-        screenModelScope.launchNonCancellable {
+        viewModelScope.launchNonCancellable {
             updates.entryChapterSelections()
                 .forEach { (entry, chapters) ->
                     entryBookmarkFeature.setBookmarked(entry, chapters, bookmark)
@@ -466,7 +466,7 @@ class UpdatesScreenModel(
      * @param updatesItem the list of chapters to download.
      */
     private fun downloadChapters(updatesItem: List<UpdatesItem>) {
-        screenModelScope.launchNonCancellable {
+        viewModelScope.launchNonCancellable {
             val chapterUpdates = updatesItem.mapNotNull { it.update as? UpdateItem.EntryUpdate }
             val groupedUpdates = chapterUpdates.groupBy { it.update.entryId }.values
             for (updates in groupedUpdates) {
@@ -487,7 +487,7 @@ class UpdatesScreenModel(
      * @param updatesItem list of chapters
      */
     fun deleteChapters(updatesItem: List<UpdatesItem>) {
-        screenModelScope.launchNonCancellable {
+        viewModelScope.launchNonCancellable {
             val chapterUpdates = updatesItem.mapNotNull { it.update as? UpdateItem.EntryUpdate }
             chapterUpdates
                 .groupBy { it.update.entryId }

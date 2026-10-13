@@ -2,7 +2,7 @@ package eu.kanade.presentation.history
 
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import eu.kanade.tachiyomi.source.entry.EntryType
-import eu.kanade.tachiyomi.ui.history.HistoryScreenModel
+import eu.kanade.tachiyomi.ui.history.HistoryViewModel
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import tachiyomi.domain.entry.model.EntryCover
@@ -15,9 +15,9 @@ import kotlin.time.Duration.Companion.days
 import kotlin.time.Instant
 import kotlin.time.toJavaInstant
 
-class HistoryScreenModelStateProvider : PreviewParameterProvider<HistoryScreenModel.State> {
+class HistoryViewModelStateProvider : PreviewParameterProvider<HistoryViewModel.State> {
 
-    private val multiPage = HistoryScreenModel.State(
+    private val multiPage = HistoryViewModel.State(
         searchQuery = null,
         list =
         listOf(HistoryUiModelExamples.headerToday)
@@ -31,7 +31,7 @@ class HistoryScreenModelStateProvider : PreviewParameterProvider<HistoryScreenMo
         dialog = null,
     )
 
-    private val shortRecent = HistoryScreenModel.State(
+    private val shortRecent = HistoryViewModel.State(
         searchQuery = null,
         list = listOf(
             HistoryUiModelExamples.headerToday,
@@ -40,7 +40,7 @@ class HistoryScreenModelStateProvider : PreviewParameterProvider<HistoryScreenMo
         dialog = null,
     )
 
-    private val shortFuture = HistoryScreenModel.State(
+    private val shortFuture = HistoryViewModel.State(
         searchQuery = null,
         list = listOf(
             HistoryUiModelExamples.headerTomorrow,
@@ -49,23 +49,23 @@ class HistoryScreenModelStateProvider : PreviewParameterProvider<HistoryScreenMo
         dialog = null,
     )
 
-    private val empty = HistoryScreenModel.State(
+    private val empty = HistoryViewModel.State(
         searchQuery = null,
         list = listOf(),
         dialog = null,
     )
 
-    private val loadingWithSearchQuery = HistoryScreenModel.State(
+    private val loadingWithSearchQuery = HistoryViewModel.State(
         searchQuery = "Example Search Query",
     )
 
-    private val loading = HistoryScreenModel.State(
+    private val loading = HistoryViewModel.State(
         searchQuery = null,
         list = null,
         dialog = null,
     )
 
-    override val values: Sequence<HistoryScreenModel.State> = sequenceOf(
+    override val values: Sequence<HistoryViewModel.State> = sequenceOf(
         multiPage,
         shortRecent,
         shortFuture,

@@ -4,7 +4,7 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.ui.util.fastMap
 import androidx.compose.ui.util.fastMapIndexedNotNull
 import eu.kanade.core.util.insertSeparatorsReversed
-import eu.kanade.tachiyomi.ui.base.screenmodel.GatedStateScreenModel
+import eu.kanade.tachiyomi.ui.base.viewmodel.GatedStateViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
@@ -46,7 +46,7 @@ import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import kotlin.time.Clock
 
-class UpcomingScreenModel(
+class UpcomingViewModel(
     private val getUpcomingEntries: GetUpcomingEntries = Injekt.get(),
     val getCategories: GetCategories = Injekt.get(),
     val upcomingPreferences: UpcomingPreferences = Injekt.get(),
@@ -58,7 +58,7 @@ class UpcomingScreenModel(
     reportRepository: LibraryUpdateReportRepository = Injekt.get(),
     fetchInterval: FetchInterval = Injekt.get(),
     eligibility: EntryUpdateEligibilityFeature = Injekt.get(),
-) : GatedStateScreenModel<UpcomingScreenModel.State>(State()) {
+) : GatedStateViewModel<UpcomingViewModel.State>(State()) {
 
     private val planner = LibraryUpdatePlanner(eligibility)
     private val settingsReader = LibraryUpdateSettings.Reader(libraryPreferences, rulesRepository)

@@ -1,8 +1,8 @@
 package eu.kanade.tachiyomi.ui.download
 
-import cafe.adriel.voyager.core.annotation.InternalVoyagerApi
-import cafe.adriel.voyager.core.model.ScreenModelStore
+import androidx.lifecycle.ViewModelStore
 import eu.kanade.tachiyomi.source.entry.EntryType
+import eu.kanade.tachiyomi.ui.base.viewmodel.createViewModel
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
@@ -25,10 +25,11 @@ import mihon.entry.interactions.download.EntryDownloadState
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
-@OptIn(ExperimentalCoroutinesApi::class, InternalVoyagerApi::class)
-class DownloadQueueScreenModelTest {
+@OptIn(ExperimentalCoroutinesApi::class)
+class DownloadQueueViewModelTest {
     @Test
     fun `progress and phase updates replace queued snapshots even before a row is bound`() = runTest {
+        val viewModels = ViewModelStore()
         Dispatchers.setMain(UnconfinedTestDispatcher(testScheduler))
         try {
             val queued = EntryDownloadQueueItem(
@@ -49,7 +50,7 @@ class DownloadQueueScreenModelTest {
             val runtime = mockk<EntryDownloadRuntimeFeature> {
                 every { state } returns runtimeState
             }
-            val model = ScreenModelStore.getOrPut("download-queue-test", null) { DownloadQueueScreenModel(runtime) }
+            val model = viewModels.createViewModel { DownloadQueueViewModel(runtime) }
             // The queue is only observed while the screen collects it
             backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { model.state.collect {} }
             val row = model.state.value.single().subItems.single()
@@ -80,7 +81,7 @@ class DownloadQueueScreenModelTest {
 
             assertEquals(EntryDownloadPhase.FINALIZING, row.model().presentation.phase)
         } finally {
-            ScreenModelStore.onDisposeNavigator("download-queue-test")
+            viewModels.clear()
             Dispatchers.resetMain()
         }
     }
