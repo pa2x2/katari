@@ -3,7 +3,7 @@
  * wiped on every boot, so no run inherits another's state.
  */
 import { type ChildProcess, spawn } from "node:child_process";
-import { closeSync, existsSync, mkdtempSync, openSync, readFileSync } from "node:fs";
+import { closeSync, existsSync, mkdirSync, mkdtempSync, openSync, readFileSync } from "node:fs";
 import { homedir, tmpdir } from "node:os";
 import { join } from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
@@ -17,7 +17,8 @@ export const SHOWCASE_SERIAL = "emulator-5554";
 const BOOT_TIMEOUT_MS = 10 * 60_000;
 const SHUTDOWN_TIMEOUT_MS = 60_000;
 const BOOT_FAILURE_OUTPUT_LINES = 40;
-// Passed to avdmanager and the emulator alike, so both use the folder this script checks.
+// Passed to avdmanager and the emulator alike, so both use the folder this script checks. Without it, avdmanager
+// prefers $XDG_CONFIG_HOME/.android when that exists, as it does on GitHub's runners, and the emulator never looks there.
 const AVD_HOME = process.env.ANDROID_AVD_HOME ?? join(homedir(), ".android", "avd");
 const AVD_ENV = { ...process.env, ANDROID_AVD_HOME: AVD_HOME };
 
@@ -28,6 +29,8 @@ export async function bootShowcaseEmulator(): Promise<Device> {
   // The emulator finds an AVD by its .ini, which avdmanager writes beside the .avd folder.
   const avdIni = join(AVD_HOME, `${AVD}.ini`);
   if (!existsSync(avdIni)) {
+    // avdmanager ignores an ANDROID_AVD_HOME that does not exist yet.
+    mkdirSync(AVD_HOME, { recursive: true });
     const command = `echo no | avdmanager create avd --force -n ${AVD} -k '${SYSTEM_IMAGE}' -d ${DEVICE_PROFILE} 2>&1`;
     const output = run("sh", ["-c", command], AVD_ENV);
     if (!existsSync(avdIni)) throw new Error(`avdmanager created no ${avdIni}:\n${output}`);
