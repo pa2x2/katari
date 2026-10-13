@@ -28,7 +28,7 @@ const { entry, group, previous, next } = guideEntry(slug);
       <slot />
       <footer class="page-end">
         <p>
-          Written for Katari {entry.checked}. Something wrong or missing?{" "}
+          Something wrong or missing?{" "}
           <a href={`${REPOSITORY}/edit/main/website/src/pages/guide/${slug}.astro`} {...leavesSite()}>Suggest a fix</a>.
         </p>
         <nav class="neighbours" aria-label="More of the guide">

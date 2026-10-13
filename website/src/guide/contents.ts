@@ -7,8 +7,6 @@ export interface GuideEntry {
   title: string;
   /** One line on the index. */
   summary: string;
-  /** The Katari version the page was last checked against, so a stale page reads as stale. */
-  checked: string;
 }
 
 export interface GuideGroup {
@@ -20,17 +18,17 @@ export const guide: GuideGroup[] = [
   {
     title: "Start",
     pages: [
-      { slug: "install", title: "Install", summary: "Which file to download, how Katari updates, and moving from Mihon.", checked: "1.15" },
-      { slug: "first-steps", title: "First steps", summary: "Add an extension store, find a title, and start reading.", checked: "1.15" },
+      { slug: "install", title: "Install", summary: "Which file to download, how Katari updates, and moving from Mihon." },
+      { slug: "first-steps", title: "First steps", summary: "Add an extension store, find a title, and start reading." },
     ],
   },
   {
     title: "Katari's features",
     pages: [
-      { slug: "translation", title: "Translation", summary: "Translate comic pages and typed text, on the phone or with a server.", checked: "1.15" },
-      { slug: "merged-entries", title: "Merged entries", summary: "One entry for every edition of a title.", checked: "1.15" },
-      { slug: "profiles", title: "Profiles", summary: "Separate libraries, history and settings on one phone.", checked: "1.15" },
-      { slug: "statistics", title: "Statistics and recaps", summary: "Daily goal, streaks, and your month and year as a story.", checked: "1.15" },
+      { slug: "translation", title: "Translation", summary: "Translate comic pages and typed text, on the phone or with a server." },
+      { slug: "merged-entries", title: "Merged entries", summary: "One entry for every edition of a title." },
+      { slug: "profiles", title: "Profiles", summary: "Separate libraries, history and settings on one phone." },
+      { slug: "statistics", title: "Statistics and recaps", summary: "Daily goal, streaks, and your month and year as a story." },
     ],
   },
 ];
