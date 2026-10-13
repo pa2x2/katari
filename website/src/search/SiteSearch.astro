@@ -1,79 +1,208 @@
 ---
 // Searches the whole site through the index Pagefind writes into dist/pagefind after the Astro build. Pages mark the
 // text worth finding with data-pagefind-body, so the header, footer and download buttons stay out of the results.
+// Results drop down under the header's field; narrow headers have no room for the field, so an icon turns the whole
+// header into it.
 import { sitePath } from "../site/links.ts";
 ---
 
-<button class="open-search" type="button" aria-haspopup="dialog">
-  <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" /><path d="m15.5 15.5 5 5" /></svg>
-  <span class="visually-hidden">Search</span>
-</button>
-
-<dialog class="search" aria-label="Search the site" data-bundle={sitePath("pagefind/")} data-base={sitePath()}>
-  <div class="panel">
-    <div class="results"></div>
-    <p class="unavailable" hidden>Search works on the built site; this page was served without its index.</p>
-    <button class="close" type="button" aria-label="Close">✕</button>
+<div class="site-search" data-bundle={sitePath("pagefind/")} data-base={sitePath()}>
+  <button class="expand" type="button" aria-expanded="false" aria-controls="site-search-field">
+    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" /><path d="m15.5 15.5 5 5" /></svg>
+    <span class="visually-hidden">Search</span>
+  </button>
+  <form class="field" id="site-search-field" role="search">
+    <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" /><path d="m15.5 15.5 5 5" /></svg>
+    <input
+      type="search"
+      placeholder="Search"
+      aria-label="Search the site"
+      autocomplete="off"
+      spellcheck="false"
+      aria-controls="site-search-results"
+    />
+    <kbd aria-hidden="true">/</kbd>
+    <button class="collapse" type="button" aria-label="Close search">✕</button>
+  </form>
+  <div class="results" id="site-search-results" hidden>
+    <p class="status" aria-live="polite"></p>
+    <ol></ol>
   </div>
-</dialog>
+</div>
 
 <script>
-  declare const PagefindUI: new (options: Record<string, unknown>) => unknown;
+  interface SubResult {
+    title: string;
+    url: string;
+    excerpt: string;
+  }
+  interface ResultData {
+    url: string;
+    excerpt: string;
+    meta: { title?: string };
+    sub_results: SubResult[];
+  }
+  interface Pagefind {
+    options(options: Record<string, unknown>): Promise<void>;
+    debouncedSearch(query: string): Promise<{ results: { data(): Promise<ResultData> }[] } | null>;
+  }
 
-  const dialog = document.querySelector<HTMLDialogElement>("dialog.search")!;
-  const bundle = dialog.dataset.bundle!;
-  let loading: Promise<void> | undefined;
+  const shown = 8;
+  const sectionsShown = 3;
 
-  // The search interface is only fetched once someone asks for it, so pages load without it.
+  const root = document.querySelector<HTMLElement>(".site-search")!;
+  const expand = root.querySelector<HTMLButtonElement>(".expand")!;
+  const input = root.querySelector<HTMLInputElement>("input")!;
+  const results = root.querySelector<HTMLElement>(".results")!;
+  const status = results.querySelector<HTMLElement>(".status")!;
+  const list = results.querySelector<HTMLOListElement>("ol")!;
+  let loading: Promise<Pagefind> | undefined;
+
+  // The index is only fetched once someone starts searching, so pages load without it.
   const load = () =>
-    (loading ??= new Promise<void>((resolve, reject) => {
-      const style = document.createElement("link");
-      style.rel = "stylesheet";
-      style.href = `${bundle}pagefind-ui.css`;
-      document.head.append(style);
-      const script = document.createElement("script");
-      script.src = `${bundle}pagefind-ui.js`;
-      script.onload = () => {
-        new PagefindUI({
-          element: dialog.querySelector(".results"),
-          bundlePath: bundle,
-          // The index holds addresses relative to the site's root, which GitHub Pages serves under a base path.
-          baseUrl: dialog.dataset.base,
-          showSubResults: true,
-          // Every page would show the same logo, as no page has a picture of its own to offer.
-          showImages: false,
-        });
-        resolve();
-      };
-      script.onerror = reject;
-      document.head.append(script);
-    }));
+    (loading ??= (async () => {
+      const pagefind: Pagefind = await import(/* @vite-ignore */ `${root.dataset.bundle}pagefind.js`);
+      // The index holds addresses relative to the site's root, which GitHub Pages serves under a base path.
+      await pagefind.options({ baseUrl: root.dataset.base });
+      return pagefind;
+    })());
 
-  const open = async () => {
-    dialog.showModal();
-    try {
-      await load();
-      dialog.querySelector<HTMLInputElement>(".pagefind-ui__search-input")?.focus();
-    } catch {
-      dialog.querySelector<HTMLElement>(".unavailable")!.hidden = false;
-    }
+  const setExpanded = (expanded: boolean) => {
+    root.classList.toggle("expanded", expanded);
+    expand.setAttribute("aria-expanded", String(expanded));
+  };
+  const close = () => {
+    results.hidden = true;
+    setExpanded(false);
   };
 
-  document.querySelector(".open-search")!.addEventListener("click", open);
-  dialog.querySelector(".close")!.addEventListener("click", () => dialog.close());
-  // A click on the dimmed backdrop lands on the dialog itself.
-  dialog.addEventListener("click", (event) => {
-    if (event.target === dialog) dialog.close();
+  const link = (url: string, title: string, excerpt?: string) => {
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    const heading = document.createElement("strong");
+    heading.textContent = title;
+    anchor.append(heading);
+    if (excerpt) {
+      const text = document.createElement("span");
+      // Pagefind escapes the page's text and only adds <mark> around the words that matched.
+      text.innerHTML = excerpt;
+      anchor.append(text);
+    }
+    return anchor;
+  };
+
+  const search = async () => {
+    const query = input.value.trim();
+    if (!query) {
+      results.hidden = true;
+      return;
+    }
+    let pagefind: Pagefind;
+    try {
+      pagefind = await load();
+    } catch {
+      status.textContent = "Search works on the built site; this page was served without its index.";
+      list.replaceChildren();
+      results.hidden = false;
+      return;
+    }
+    // A newer keystroke supersedes this search, which then resolves to null.
+    const found = await pagefind.debouncedSearch(query);
+    if (!found || input.value.trim() !== query) return;
+    const pages = await Promise.all(found.results.slice(0, shown).map((result) => result.data()));
+    if (input.value.trim() !== query) return;
+    list.replaceChildren(
+      ...pages.map((page) => {
+        const item = document.createElement("li");
+        const sections = page.sub_results.filter((section) => section.url !== page.url).slice(0, sectionsShown);
+        // The sections' excerpts already show where the words are, which the page's own would only repeat.
+        item.append(link(page.url, page.meta.title ?? page.url, sections.length ? undefined : page.excerpt));
+        if (sections.length) {
+          const nested = document.createElement("ul");
+          for (const section of sections) {
+            const entry = document.createElement("li");
+            entry.append(link(section.url, section.title, section.excerpt));
+            nested.append(entry);
+          }
+          item.append(nested);
+        }
+        return item;
+      }),
+    );
+    status.textContent = pages.length ? "" : `Nothing found for “${query}”.`;
+    results.hidden = false;
+  };
+
+  input.addEventListener("focus", () => {
+    load().catch(() => {});
+    if (input.value.trim()) results.hidden = false;
   });
-  // A result may only jump within the current page, which would leave the dialog over it.
-  dialog.addEventListener("click", (event) => {
-    if ((event.target as Element).closest(".results a")) dialog.close();
+  input.addEventListener("input", search);
+  root.querySelector("form")!.addEventListener("submit", (event) => {
+    event.preventDefault();
+    list.querySelector("a")?.click();
+  });
+
+  expand.addEventListener("click", () => {
+    setExpanded(true);
+    input.focus();
+  });
+  root.querySelector(".collapse")!.addEventListener("click", () => {
+    close();
+    expand.focus();
+  });
+
+  // The arrow keys walk from the field through the results and back.
+  root.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+      if (results.hidden && !root.classList.contains("expanded")) return;
+      close();
+      input.blur();
+      return;
+    }
+    if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
+    const links = [...list.querySelectorAll<HTMLAnchorElement>("a")];
+    if (results.hidden || !links.length) return;
+    event.preventDefault();
+    const index = links.indexOf(document.activeElement as HTMLAnchorElement);
+    const next = event.key === "ArrowDown" ? index + 1 : index - 1;
+    if (next < 0) input.focus();
+    else links[Math.min(next, links.length - 1)].focus();
+  });
+
+  document.addEventListener("click", (event) => {
+    if (!root.contains(event.target as Node)) close();
+  });
+  // A result may only jump within the current page, which would leave the results over it.
+  list.addEventListener("click", (event) => {
+    if ((event.target as Element).closest("a")) close();
+  });
+
+  // "/" jumps to the search, as on many documentation sites, unless the visitor is already typing somewhere.
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "/" || event.ctrlKey || event.metaKey || event.altKey) return;
+    const target = event.target as HTMLElement;
+    if (target.isContentEditable || target.closest("input, textarea, select")) return;
+    event.preventDefault();
+    if (getComputedStyle(expand).display !== "none") setExpanded(true);
+    input.focus();
   });
 </script>
 
 <style>
-  .open-search {
-    display: grid;
+  .site-search {
+    position: relative;
+  }
+
+  svg {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+  }
+
+  .expand {
+    display: none;
     place-items: center;
     padding: 0.4rem;
     border: 0;
@@ -82,65 +211,63 @@ import { sitePath } from "../site/links.ts";
     cursor: pointer;
   }
 
-  .open-search:hover {
+  .expand:hover {
     color: var(--cream);
   }
 
-  .open-search svg {
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 2;
-    stroke-linecap: round;
-  }
-
-  .search {
-    width: min(42rem, calc(100vw - 2rem));
-    max-height: calc(100dvh - 6rem);
-    margin: 4rem auto auto;
-    padding: 0;
+  .field {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 15rem;
+    padding: 0 0.7rem;
     border: 1px solid var(--indigo-light);
-    border-radius: 0.75rem;
-    background: var(--night);
-    color: var(--cream);
-    /* Pagefind's interface takes its colours from these. */
-    --pagefind-ui-scale: 0.85;
-    --pagefind-ui-primary: var(--clay);
-    --pagefind-ui-text: var(--cream);
-    --pagefind-ui-background: var(--night);
-    --pagefind-ui-border: var(--indigo-light);
-    --pagefind-ui-tag: var(--indigo);
-    --pagefind-ui-border-width: 1px;
-    --pagefind-ui-border-radius: 0.5rem;
-    --pagefind-ui-font: var(--sans);
-  }
-
-  .search::backdrop {
-    background: #05080fcc;
-    backdrop-filter: blur(4px);
-  }
-
-  .panel {
-    position: relative;
-    padding: 1.25rem 3.5rem 1.25rem 1.25rem;
-  }
-
-  .search :global(mark) {
-    background: none;
-    color: var(--clay);
-    font-weight: 600;
-  }
-
-  .unavailable {
-    margin: 0;
+    border-radius: 0.5rem;
+    background: var(--indigo);
     color: var(--muted);
   }
 
-  .close {
-    position: absolute;
-    top: 1.35rem;
-    right: 1rem;
-    width: 2.2rem;
-    height: 2.2rem;
+  .field:focus-within {
+    border-color: var(--clay);
+  }
+
+  input {
+    flex: 1;
+    min-width: 0;
+    height: 2.3rem;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--cream);
+    font: inherit;
+    font-size: 0.95rem;
+    outline: none;
+  }
+
+  input::placeholder {
+    color: var(--muted);
+  }
+
+  input::-webkit-search-cancel-button {
+    display: none;
+  }
+
+  kbd {
+    padding: 0 0.4rem;
+    border: 1px solid var(--indigo-light);
+    border-radius: 0.3rem;
+    font-family: var(--sans);
+    font-size: 0.75rem;
+  }
+
+  .field:focus-within kbd {
+    display: none;
+  }
+
+  .collapse {
+    display: none;
+    width: 2rem;
+    height: 2rem;
     border: 0;
     border-radius: 50%;
     background: #ffffff1a;
@@ -148,7 +275,129 @@ import { sitePath } from "../site/links.ts";
     cursor: pointer;
   }
 
-  .close:hover {
-    background: #ffffff33;
+  .results {
+    position: absolute;
+    top: calc(100% + 0.6rem);
+    right: 0;
+    width: min(36rem, calc(100vw - 2 * var(--gutter)));
+    max-height: calc(100dvh - var(--header-height) - 2rem);
+    overflow-y: auto;
+    padding: 0.5rem;
+    border: 1px solid var(--indigo-light);
+    border-radius: 0.75rem;
+    background: var(--night);
+    box-shadow: 0 1rem 2.5rem #0008;
+  }
+
+  .results[hidden] {
+    display: none;
+  }
+
+  .status {
+    margin: 0;
+    padding: 0 0.6rem;
+    color: var(--muted);
+  }
+
+  .status:not(:empty) {
+    padding: 0.6rem;
+  }
+
+  /* The results are built by the script, so Astro's scoped selectors can't reach them. */
+  .results :global(ol),
+  .results :global(ul) {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .results :global(ol > li + li) {
+    margin-top: 0.25rem;
+  }
+
+  .results :global(ul) {
+    margin: 0 0 0.25rem 0.9rem;
+    border-left: 2px solid var(--indigo-light);
+  }
+
+  .results :global(a) {
+    display: block;
+    padding: 0.5rem 0.7rem;
+    border-radius: 0.5rem;
+    color: var(--cream);
+    text-decoration: none;
+  }
+
+  .results :global(a:hover),
+  .results :global(a:focus-visible) {
+    background: var(--indigo);
+    outline: none;
+  }
+
+  .results :global(strong) {
+    display: block;
+    font-weight: 600;
+  }
+
+  .results :global(ul strong) {
+    font-size: 0.92rem;
+  }
+
+  .results :global(a span) {
+    display: block;
+    color: var(--muted);
+    font-size: 0.85rem;
+    line-height: 1.45;
+  }
+
+  .results :global(mark) {
+    background: none;
+    color: var(--clay);
+    font-weight: 600;
+  }
+
+  /* Below this width the header has no room for the field beside its links. */
+  @media (max-width: 60rem) {
+    .site-search {
+      position: static;
+    }
+
+    .expand {
+      display: grid;
+    }
+
+    .field {
+      display: none;
+    }
+
+    kbd {
+      display: none;
+    }
+
+    /* Expanded, the field covers the header's whole row and the results span the page under it. */
+    .expanded .field {
+      display: flex;
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      width: auto;
+      padding: 0 var(--gutter);
+      border: 0;
+      border-radius: 0;
+      background: var(--night);
+    }
+
+    .expanded .collapse {
+      display: block;
+    }
+
+    .results {
+      top: var(--header-height);
+      right: 0;
+      left: 0;
+      width: auto;
+      border-width: 0 0 1px;
+      border-radius: 0;
+    }
   }
 </style>

@@ -63,6 +63,7 @@
   font-weight: 600;
 }
 
+/* Pagefind runs adjacent cells' text together in its excerpts, so pages keep a space between one cell's tags and the next. */
 .guide main table {
   width: 100%;
   margin: 0 0 1.25rem;

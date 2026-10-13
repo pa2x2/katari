@@ -14,10 +14,11 @@ const { id, title, shot } = Astro.props;
 (Astro.locals.guideSections ??= []).push({ id, title });
 ---
 
-<section id={id} class:list={["task", { "with-shot": shot }]}>
-  <h2>
+<section class:list={["task", { "with-shot": shot }]}>
+  {/* The id sits on the heading because Pagefind offers headings with ids as sections of a page in its results. */}
+  <h2 id={id}>
     {title}
-    <a class="anchor" href={`#${id}`} aria-label={`Link to “${title}”`}>#</a>
+    <a class="anchor" href={`#${id}`} aria-label={`Link to “${title}”`} data-pagefind-ignore>#</a>
   </h2>
   <div class="body">
     <div class="text"><slot /></div>

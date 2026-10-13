@@ -33,7 +33,7 @@ const enlarged = zoomable ? await getImage({ src: image, width: landscape ? 1800
           sizes={sizes}
           loading={eager ? "eager" : "lazy"}
         />
-        <span class="visually-hidden">Enlarge</span>
+        <span class="visually-hidden" data-pagefind-ignore>Enlarge</span>
       </button>
     ) : (
       <div class="frame">
