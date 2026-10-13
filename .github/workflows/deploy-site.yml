@@ -1,6 +1,7 @@
 name: Deploy the website
 
-# The website is built from main, where its workflow lives; a push here only asks that workflow to run with the new captures.
+# The website workflow lives on main and builds the newest published release with the captures here; a push here only
+# asks that workflow to run so the site picks up the new captures.
 on:
   push:
     branches:
