@@ -160,14 +160,19 @@ const links = [
       display: block;
     }
 
-    /* Search and Download move to the right; the menu button takes the far end. */
-    nav {
-      order: 1;
-      margin-left: 0;
+    /* Download, search and the menu button gather at the right, search beside the menu: while the page's own
+       download buttons hide the header's, its space stays empty further left instead of stranding the search. */
+    .download {
+      margin-left: auto;
     }
 
     .inner :global(.site-search) {
-      margin-left: auto;
+      order: 1;
+    }
+
+    nav {
+      order: 2;
+      margin-left: 0;
     }
 
     .inner {
