@@ -13,18 +13,31 @@ interface Props {
 
 const { src, poster, label, caption } = Astro.props;
 const posterImage = await getImage({ src: poster, width: 540, format: "webp" });
+// The browser's own controls would cover the bottom of the clip, so the whole frame plays and pauses it instead.
 ---
 
 <figure class="shot clip" style={`--aspect: ${aspectOf(poster)}`}>
-  <div class="frame">
-    <video src={src} poster={posterImage.src} aria-label={label} controls muted loop playsinline preload="none"></video>
-  </div>
+  <button class="frame" type="button" aria-label={`Play: ${label}`} data-label={label}>
+    <video src={src} poster={posterImage.src} muted loop playsinline preload="none" aria-hidden="true"></video>
+    <svg class="play" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6.5v11l9-5.5z" /></svg>
+  </button>
   <figcaption>{caption}</figcaption>
 </figure>
 
 <script>
+  for (const frame of document.querySelectorAll<HTMLButtonElement>(".clip .frame")) {
+    const video = frame.querySelector("video")!;
+    const show = () => {
+      frame.dataset.playing = String(!video.paused);
+      frame.ariaLabel = `${video.paused ? "Play" : "Pause"}: ${frame.dataset.label}`;
+    };
+    video.addEventListener("play", show);
+    video.addEventListener("pause", show);
+    frame.addEventListener("click", () => (video.paused ? video.play().catch(() => {}) : video.pause()));
+  }
+
   // Plays by itself only for visitors who haven't asked for less motion, and only while on screen, so the clip isn't
-  // downloaded for someone who never scrolls to it. The controls pause it either way.
+  // downloaded for someone who never scrolls to it. A tap on the frame pauses it either way.
   if (matchMedia("(prefers-reduced-motion: no-preference)").matches) {
     const scrolledAway = new WeakSet<HTMLVideoElement>();
     const observer = new IntersectionObserver((entries) => {
@@ -56,12 +69,47 @@ const posterImage = await getImage({ src: poster, width: 540, format: "webp" });
   }
 
   .frame {
+    position: relative;
+    display: block;
+    width: 100%;
     padding: 0.45rem;
+    border: 0;
     border-radius: 1.6rem;
     background: var(--device);
     box-shadow:
       0 0 0 1px var(--device-edge),
       0 1.5rem 3rem -1rem #000c;
+    cursor: pointer;
+    transition: box-shadow 0.2s;
+  }
+
+  .frame:hover,
+  .frame:focus-visible {
+    box-shadow:
+      0 0 0 2px var(--accent),
+      0 1.5rem 3rem -1rem #000c;
+  }
+
+  .frame:focus-visible {
+    outline: none;
+  }
+
+  .play {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 3.5rem;
+    height: 3.5rem;
+    padding: 0.8rem;
+    border-radius: 50%;
+    background: #0009;
+    fill: var(--on-device);
+    transform: translate(-50%, -50%);
+    transition: opacity 0.2s;
+  }
+
+  [data-playing="true"] .play {
+    opacity: 0;
   }
 
   video {
