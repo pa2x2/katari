@@ -25,8 +25,8 @@ import Task from "../../guide/Task.astro";
       <li>Open <Path>Settings › Library updates</Path>.</li>
       <li>Under <strong>Schedule</strong>, set <strong>Automatic updates</strong> to how often to check. It is <strong>Off</strong> at first.</li>
       <li>
-        <strong>Automatic updates device restrictions</strong> keeps the checks to Wi-Fi, which is how it starts, or to unmetered networks
-        or charging.
+        <strong>Automatic updates device restrictions</strong> picks when checks may run: <strong>Only on Wi-Fi</strong>, <strong>Only on unmetered
+        network</strong>, or <strong>When charging</strong>. Only on Wi-Fi is on from the start.
       </li>
     </ol>
     <p>The top of the screen says when the next check runs and how many titles it will look at.</p>
@@ -38,12 +38,13 @@ import Task from "../../guide/Task.astro";
       <li><strong>Categories</strong> and <strong>Sources</strong> turn whole categories or sources off.</li>
       <li><strong>Types</strong> leaves out comics, video or books, once your library holds more than one kind.</li>
       <li>
-        <strong>Skip an entry when…</strong> skips titles that are completed, that you haven't started, or that still have unseen items, and
-        checks others only near their expected release. Skipping completed titles and checking near the release are on from the start.
+        <strong>Skip an entry when…</strong> skips titles that are completed, that you haven't started, or that still have unseen items. It
+        can also check a title only around when its next release is expected. Skipping completed titles and checking near the release are
+        on from the start.
       </li>
     </ul>
     <p>
-      One title can step out of the rules: on its page, tap the <strong>Updates</strong> button and choose <strong>Always check</strong> or
+      To set a different rule for one title, tap the <strong>Updates</strong> button on its page and choose <strong>Always check</strong> or
       <strong>Never check</strong>. <strong>Follow library rules</strong> puts it back. The same sheet says why the title was or wasn't checked.
     </p>
   </Task>
@@ -51,10 +52,11 @@ import Task from "../../guide/Task.astro";
   <Task id="report" title="See what the last check did">
     <p>
       Tap <strong>Last update</strong> in <Path>Settings › Library updates</Path>, or the time at the top of Updates, for the
-      <strong>Update report</strong>: what failed, what was new, and what was skipped. Retry or migrate failed titles from there.
+      <strong>Update report</strong>. It lists what failed, what was new, and what was skipped, and lets you retry failed titles or move
+      them to another source.
     </p>
     <p>
-      <strong>Pause source</strong> takes a struggling source out of updates for a day, three days, a week, or until you resume it. Tap it
+      <strong>Pause source</strong> leaves a failing source out of updates for a day, three days, a week, or until you resume it. Tap it
       again to resume.
     </p>
   </Task>
@@ -71,14 +73,14 @@ import Task from "../../guide/Task.astro";
       <li>Download a few chapters at a time rather than whole series.</li>
     </ul>
     <Callout label="Not a bug">
-      <p>The warning only advises; the update or download still runs.</p>
+      <p>The warning is advice. The update or download still runs.</p>
     </Callout>
   </Task>
 
   <Task id="upcoming" title="What Upcoming shows" shot={{ image: upcoming, alt: "A month's calendar marking the day a series' next episode is expected", caption: "Upcoming" }}>
     <p>
-      <Path>Updates › View Upcoming Updates</Path> opens a calendar of when titles are expected to get something new, worked out from how
-      often they did before. It's an estimate, not a release date: a series on break or a source with wrong dates throws it off.
+      <Path>Updates › View Upcoming Updates</Path> opens a calendar of when titles are expected to get something new, based on how often
+      they got new chapters before. It's an estimate, not a release date. A series on break or a source with wrong dates throws it off.
     </p>
     <p>
       Titles that automatic updates won't check are marked <strong>Won't be checked</strong>, with the reason. <strong>Filter</strong> limits

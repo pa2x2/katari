@@ -110,8 +110,8 @@ export const chapters: Chapter[] = [
       {
         id: "readers",
         title: "A reader made for each format",
-        text: "Books flow like books, comics turn page by page, and films play in a player with the controls you expect.",
-        highlights: ["Book themes for day and night", "Hear any passage of a book read aloud", "A video player with episodes at hand"],
+        text: "Books get a reader with themes and read-aloud, comics turn page by page, and films play in a full video player.",
+        highlights: ["Book themes for day and night", "Hear any passage of a book read aloud", "Switch episodes without leaving the player"],
         shots: [
           { kind: "still", image: bookPaper, alt: "A book in the paper theme", caption: "The paper theme" },
           { kind: "still", image: bookDusk, alt: "The same page in the dusk theme", caption: "The dusk theme" },
@@ -121,7 +121,7 @@ export const chapters: Chapter[] = [
       {
         id: "translation",
         title: "Read the original, understand every line",
-        text: "Katari finds the text on a comic page and translates it in place, with text recognition and translation running on the phone.",
+        text: "Katari finds the text on a comic page and translates it in place. With an on-device engine, nothing leaves your phone.",
         highlights: [
           "Tap a speech bubble to see it beside the original and hear either read aloud",
           "Translate anything you type in the Translator",
@@ -168,7 +168,7 @@ export const chapters: Chapter[] = [
       {
         id: "recap",
         title: "Your year, as a story",
-        text: "Every month and every year gets a recap that plays like a story.",
+        text: "Every year, and every month if you like, gets a recap that plays like a story.",
         highlights: ["The titles you spent the most time with, your longest streak, and the hour you read most", "Share it as a picture"],
         band: "recap",
         shots: [

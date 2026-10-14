@@ -28,7 +28,7 @@ import Task from "../../guide/Task.astro";
       <tbody>
         <tr><td><strong>Android System Translation</strong></td> <td>On the phone</td> <td>Android 12 or newer</td></tr>
         <tr><td><strong>Offline Translator</strong></td> <td>On the phone</td> <td>The Offline Translator app, set up as below</td></tr>
-        <tr><td><strong>DeepL-compatible server</strong></td> <td>Over the network</td> <td>A server URL, and an API key for DeepL's own</td></tr>
+        <tr><td><strong>DeepL-compatible server</strong></td> <td>Over the network</td> <td>A server URL, and an API key for DeepL itself</td></tr>
         <tr><td><strong>LibreTranslate Server</strong></td> <td>Over the network</td> <td>A server URL, and an API key if the server asks</td></tr>
       </tbody>
     </table>
@@ -38,7 +38,7 @@ import Task from "../../guide/Task.astro";
   <Task id="offline-translator" title="Set up Offline Translator">
     <ol>
       <li>Install Offline Translator from F-Droid and download its language models.</li>
-      <li>In Offline Translator, enable its HTTP API and bind it to localhost.</li>
+      <li>In Offline Translator, turn on its HTTP API and limit it to localhost, so only apps on this phone can reach it.</li>
       <li>In Katari, pick <strong>Offline Translator</strong> as the engine, confirm the <strong>HTTP API port</strong> (5000 unless you changed it), and tap <strong>Test connection</strong>.</li>
     </ol>
   </Task>
@@ -72,9 +72,9 @@ import Task from "../../guide/Task.astro";
   <Task id="text-recognition" title="Choose how text is recognized" shot={{ image: textRecognition, alt: "Text recognition models by language, with Japanese downloaded and the rest still to download", caption: "Languages" }}>
     <p>Katari reads the page with models it downloads once and keeps on the phone. The bar picks them by the page's language:</p>
     <ul>
-      <li><strong>Japanese manga</strong> finds the bubbles with the comic text and bubble detector and reads them with Manga OCR, vertical text and furigana included.</li>
-      <li><strong>Comics</strong> in other scripts read their bubbles with PaddleOCR.</li>
-      <li><strong>Comics with ML Kit</strong> uses Google's text recognition instead.</li>
+      <li><strong>Japanese manga</strong> reads Japanese, vertical text and furigana included.</li>
+      <li>Other languages have their own option, such as <strong>Korean comics</strong> or <strong>Cyrillic comics</strong>.</li>
+      <li><strong>Comics with ML Kit</strong> uses Google's text recognition instead. It reads vertical text less reliably.</li>
     </ul>
     <p>
       <Path>Settings › Text recognition</Path> changes the engine and the choice per language, lists <strong>Downloaded models</strong> with
@@ -88,14 +88,14 @@ import Task from "../../guide/Task.astro";
       </p>
     </Callout>
     <Callout label="Katari FOSS">
-      <p>ML Kit needs Google Play services, so Katari FOSS leaves it out. The on-device models are in both builds.</p>
+      <p>ML Kit needs Google Play services, so Katari FOSS leaves it out. Every other option works in both.</p>
     </Callout>
   </Task>
 
   <Task id="series" title="Keep a series' languages" shot={{ image: seriesLanguages, alt: "A series' page language and target language, over its translated page", caption: "Languages for this series" }}>
     <p>
       Tap the language chip in the translation bar to open <strong>Languages for this series</strong>. <strong>Page language</strong> and
-      <strong>Translate to</strong> stay with the series; changing the page language reads its pages again. <strong>Translate downloads</strong>
+      <strong>Translate to</strong> stay with the series. After you change the page language, Katari reads its pages again. <strong>Translate downloads</strong>
       translates the series' chapters in the background once they're downloaded.
     </p>
   </Task>

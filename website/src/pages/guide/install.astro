@@ -5,7 +5,7 @@ import Question from "../../guide/Question.astro";
 import { leavesSite, RELEASES, sitePath } from "../../site/links.ts";
 ---
 
-<GuidePage slug="install" lead="Answers to what comes up between downloading Katari and reading in it.">
+<GuidePage slug="install" lead="Which file to get, how updates work, and how to bring your library over from Mihon.">
   <Question id="which-file" question="Which file should I download?" open>
     <p>
       Katari runs on phones and tablets with Android 10 or newer. Most people want <strong>Katari</strong>. The
@@ -13,8 +13,9 @@ import { leavesSite, RELEASES, sitePath } from "../../site/links.ts";
     </p>
     <DownloadButtons explained={false} />
     <p>
-      Both come as smaller builds for one kind of processor too: arm64-v8a for most phones of recent years, and
-      armeabi-v7a for older ones. They are on the <a href={`${RELEASES}/latest`} {...leavesSite()}>release page</a>.
+      The <a href={`${RELEASES}/latest`} {...leavesSite()}>release page</a> also has smaller files made for one type of
+      processor. Most phones from recent years take arm64-v8a, and older ones take armeabi-v7a. If you're not sure, the
+      buttons above work on every phone.
     </p>
   </Question>
 
@@ -32,15 +33,15 @@ import { leavesSite, RELEASES, sitePath } from "../../site/links.ts";
       <a href={sitePath("guide/backups-and-storage/#mihon")}>Backups and storage</a> walks through it.
     </p>
     <p>
-      To keep your downloads, select the storage folder Mihon used. Extensions installed privately in Mihon need to
-      be installed again.
+      To keep your downloads, select the storage folder Mihon used. Extensions installed privately in Mihon have to be
+      installed again in Katari.
     </p>
   </Question>
 
   <Question id="content" question="Where does the content come from?">
     <p>
-      Katari comes with no content and has no affiliation with any provider. Sources are extensions you choose: add
-      an extension store under Browse › Extensions, then install the extensions you want from it.
+      Katari comes with no content and has no affiliation with any provider. Content comes from extensions you
+      choose. Add an extension store under Browse › Extensions, then install the extensions you want from it.
       <a href={sitePath("guide/first-steps/")}>First steps</a> walks through it.
     </p>
   </Question>

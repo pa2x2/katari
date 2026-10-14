@@ -18,7 +18,7 @@ const { id, title, shot } = Astro.props;
   {/* The id sits on the heading because Pagefind offers headings with ids as sections of a page in its results. */}
   <h2 id={id}>
     {title}
-    <a class="anchor" href={`#${id}`} aria-label={`Link to “${title}”`} data-pagefind-ignore>#</a>
+    <a class="anchor" href={`#${id}`} aria-label={`Link to "${title}"`} data-pagefind-ignore>#</a>
   </h2>
   <div class="body">
     <div class="text"><slot /></div>

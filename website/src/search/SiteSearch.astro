@@ -101,7 +101,7 @@ import { sitePath } from "../site/links.ts";
     try {
       pagefind = await load();
     } catch {
-      status.textContent = "Search works on the built site; this page was served without its index.";
+      status.textContent = "Search isn't available right now.";
       list.replaceChildren();
       results.hidden = false;
       return;
@@ -129,7 +129,7 @@ import { sitePath } from "../site/links.ts";
         return item;
       }),
     );
-    status.textContent = pages.length ? "" : `Nothing found for “${query}”.`;
+    status.textContent = pages.length ? "" : `Nothing found for "${query}".`;
     results.hidden = false;
   };
 
