@@ -171,7 +171,7 @@ class DomainModule : InjektModule {
         addFactory { GetTracksPerEntry(get()) }
         addFactory { GetTracks(get()) }
         addFactory { InsertTrack(get()) }
-        addFactory { SyncChapterProgressWithTrack(get(), get(), get(), get()) }
+        addFactory { SyncChapterProgressWithTrack(get(), get(), get()) }
 
         addSingletonFactory<HistoryRepository> { HistoryRepositoryImpl(get(), get()) }
         addSingletonFactory<HistoryActivityBackupRepository> { HistoryActivityBackupRepositoryImpl(get()) }
