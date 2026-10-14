@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -42,6 +41,7 @@ import androidx.media3.exoplayer.ExoPlayer
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerSeekPreviewState
 import eu.kanade.tachiyomi.ui.video.player.coerceToPlaybackDuration
 import eu.kanade.tachiyomi.ui.video.player.formatPlaybackTimestamp
+import tachiyomi.presentation.core.components.LoadingIndicator
 import kotlin.math.roundToInt
 import kotlin.math.roundToLong
 
@@ -309,12 +309,11 @@ private fun VideoPlayerSeekPreview(
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
                                 if (showLoading) {
-                                    CircularProgressIndicator(
+                                    LoadingIndicator(
                                         modifier = Modifier
                                             .padding(end = 6.dp)
                                             .size(12.dp),
                                         color = Color.White,
-                                        strokeWidth = 2.dp,
                                     )
                                 }
                                 Text(
@@ -331,12 +330,11 @@ private fun VideoPlayerSeekPreview(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         if (showLoadingTimestamp) {
-                            CircularProgressIndicator(
+                            LoadingIndicator(
                                 modifier = Modifier
                                     .padding(end = 8.dp)
                                     .size(14.dp),
                                 color = Color.White,
-                                strokeWidth = 2.dp,
                             )
                         }
                         Text(

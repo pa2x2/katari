@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -40,6 +39,7 @@ import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.automirroredrounded.OpenInNew
 import org.intellij.markdown.flavours.gfm.GFMFlavourDescriptor
 import tachiyomi.i18n.*
+import tachiyomi.presentation.core.components.LoadingIndicator
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -197,7 +197,7 @@ private fun Actions(
                 Text(text = stringResource(MR.strings.app_update_cancel_download))
             }
             AppUpdateStatus.Installing -> Button(onClick = {}, enabled = false, modifier = fullWidth) {
-                CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
+                LoadingIndicator(modifier = Modifier.size(16.dp))
                 Spacer(modifier = Modifier.width(MaterialTheme.padding.small))
                 Text(text = stringResource(MR.strings.app_update_installing))
             }

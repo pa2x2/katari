@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
@@ -22,6 +21,7 @@ import mihon.icons.materialsymbols.rounded.SkipPrevious
 import mihon.icons.materialsymbols.roundedfilled.Pause
 import mihon.icons.materialsymbols.roundedfilled.PlayArrow
 import tachiyomi.i18n.*
+import tachiyomi.presentation.core.components.LoadingIndicator
 import tachiyomi.presentation.core.i18n.stringResource
 
 private val youtubeLikeControlButtonSize = 60.dp
@@ -59,10 +59,9 @@ internal fun VideoPlayerCenterControls(
         VideoPlayerTransportButton(
             icon = {
                 if (isLoading) {
-                    CircularProgressIndicator(
+                    LoadingIndicator(
                         modifier = Modifier.size(30.dp),
                         color = Color.White,
-                        strokeWidth = 2.dp,
                     )
                 } else {
                     Icon(

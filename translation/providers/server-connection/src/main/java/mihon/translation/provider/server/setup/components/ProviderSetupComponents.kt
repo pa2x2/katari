@@ -19,7 +19,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -35,6 +34,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.automirroredrounded.ArrowBack
+import tachiyomi.presentation.core.components.LoadingIndicator
 
 sealed interface ProviderSetupStatus {
     data object Testing : ProviderSetupStatus
@@ -205,9 +205,8 @@ fun ProviderSetupStatusPanel(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             if (status == ProviderSetupStatus.Testing) {
-                CircularProgressIndicator(
+                LoadingIndicator(
                     modifier = Modifier.size(24.dp),
-                    strokeWidth = 2.dp,
                 )
             }
             Column(

@@ -121,6 +121,7 @@ import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryStatus
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.DotSeparatorText
+import tachiyomi.presentation.core.components.LoadingIndicator
 import tachiyomi.presentation.core.components.material.DISABLED_ALPHA
 import tachiyomi.presentation.core.components.material.TextButton
 import tachiyomi.presentation.core.components.material.padding
@@ -645,7 +646,7 @@ private fun EntryPreviewTile(
                             if (status == EntryPreviewPageStatus.DownloadingImage && progress in 0..100) {
                                 CircularProgressIndicator(progress = { progress / 100f })
                             } else {
-                                CircularProgressIndicator()
+                                LoadingIndicator()
                             }
                             Text(
                                 text = when (status) {

@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AssistChip
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -49,6 +48,7 @@ import mihon.model.artifacts.ui.state.modelArtifactFailureLabel
 import mihon.translation.ui.picker.language.displayName
 import mihon.translation.ui.presentation.language.TranslationDirectionText
 import tachiyomi.i18n.*
+import tachiyomi.presentation.core.components.LoadingIndicator
 import tachiyomi.presentation.core.i18n.stringResource
 
 /**
@@ -92,7 +92,7 @@ internal fun MangaReaderTextToolbar(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 if (progress.isWorking) {
-                    CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
+                    LoadingIndicator(modifier = Modifier.size(16.dp))
                 }
                 // Once pages are ready the languages say everything the hint would; page translation problems get a row
                 // of their own below.

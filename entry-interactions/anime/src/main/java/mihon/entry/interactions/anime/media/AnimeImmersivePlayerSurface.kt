@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -53,6 +52,7 @@ import mihon.icons.materialsymbols.automirroredrounded.VolumeUp
 import mihon.icons.materialsymbols.roundedfilled.Pause
 import mihon.icons.materialsymbols.roundedfilled.PlayArrow
 import tachiyomi.i18n.*
+import tachiyomi.presentation.core.components.LoadingIndicator
 import tachiyomi.presentation.core.components.reader.ReaderMediaLoadOverlay
 import tachiyomi.presentation.core.components.reader.ReaderMediaLoadState
 import tachiyomi.presentation.core.i18n.stringResource
@@ -264,11 +264,9 @@ internal fun AnimeImmersivePlayerSurface(
                     contentAlignment = Alignment.Center,
                 ) {
                     if (isBuffering) {
-                        CircularProgressIndicator(
+                        LoadingIndicator(
                             modifier = Modifier.size(28.dp),
                             color = Color.White,
-                            trackColor = Color.White.copy(alpha = 0.2f),
-                            strokeWidth = 2.dp,
                         )
                     } else {
                         Icon(

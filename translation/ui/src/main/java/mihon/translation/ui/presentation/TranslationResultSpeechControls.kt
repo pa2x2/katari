@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.selection.SelectionContainer
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -23,6 +22,7 @@ import mihon.icons.materialsymbols.rounded.Stop
 import mihon.translation.ui.presentation.language.TranslationSourceLanguageChip
 import mihon.translation.ui.presentation.language.TranslationTargetLanguageChip
 import tachiyomi.i18n.*
+import tachiyomi.presentation.core.components.LoadingIndicator
 import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable
@@ -122,11 +122,10 @@ internal fun TranslationSpeechIndicator(
         },
     )
     if (active && speechState.phase == TranslationResultSpeechPhase.Preparing) {
-        CircularProgressIndicator(
+        LoadingIndicator(
             modifier = Modifier
                 .size(iconSize - 2.dp)
                 .semantics { this.contentDescription = contentDescription },
-            strokeWidth = 2.dp,
         )
     } else {
         Icon(
