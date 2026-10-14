@@ -14,8 +14,8 @@ const links = [
 <header class="header">
   <div class="inner">
     <a class="brand" href={sitePath()}>
-      <img src={sitePath("katari.svg")} alt="" width="32" height="32" />
-      Katari
+      <img src={sitePath("katari.svg")} alt="Katari" width="32" height="32" />
+      <span class="name" aria-hidden="true">Katari</span>
     </a>
     <nav aria-label="Site">
       <button class="menu" type="button" aria-expanded="false" aria-controls="site-links">
@@ -208,6 +208,14 @@ const links = [
       display: block;
       padding: 0.6rem 0;
       font-size: 1.1rem;
+    }
+  }
+
+  /* Narrower than this, the name, Download, search and the menu button need more than a phone's width, so the logo
+     stands for the name. */
+  @media (max-width: 24rem) {
+    .name {
+      display: none;
     }
   }
 </style>

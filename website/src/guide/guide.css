@@ -1,34 +1,36 @@
-/* What every guide page's text shares: numbered steps and plain lists, written straight into each page's markup. */
-.guide main {
+/* What every guide page's text shares: numbered steps and plain lists, written straight into each page's markup.
+   Every selector sits in :where(), so these are only defaults: a component placed in a page, such as the download
+   buttons, keeps its own styles for its paragraphs and lists. */
+:where(.guide main) {
   font-size: 1.125rem;
 }
 
 /* Lines short enough for the eye to find the start of the next one: 70ch, about 85 letters of Inter. Tables and
    screenshots still take the whole column. */
-.guide main :is(p, ol, ul:not([class])) {
+:where(.guide main) :is(p, ol, ul:not([class])) {
   max-width: 70ch;
   line-height: 1.65;
 }
 
-.guide main ol,
-.guide main ul:not([class]) {
+:where(.guide main) ol,
+:where(.guide main) ul:not([class]) {
   margin: 0 0 1rem;
   padding: 0;
   list-style: none;
 }
 
-.guide main ol {
+:where(.guide main) ol {
   counter-reset: step;
 }
 
-.guide main ol > li {
+:where(.guide main) ol > li {
   position: relative;
   padding: 0.15rem 0 0.7rem 2.4rem;
   color: var(--text);
   counter-increment: step;
 }
 
-.guide main ol > li::before {
+:where(.guide main) ol > li::before {
   content: counter(step);
   position: absolute;
   top: 0.2rem;
@@ -44,13 +46,13 @@
   font-weight: 700;
 }
 
-.guide main ul:not([class]) > li {
+:where(.guide main) ul:not([class]) > li {
   position: relative;
   padding: 0.15rem 0 0.5rem 1.5rem;
   color: var(--text);
 }
 
-.guide main ul:not([class]) > li::before {
+:where(.guide main) ul:not([class]) > li::before {
   content: "";
   position: absolute;
   top: 0.82em;
@@ -61,25 +63,25 @@
   background: var(--text-muted);
 }
 
-.guide main p {
+:where(.guide main) p {
   margin: 0 0 1rem;
   color: var(--text);
 }
 
 /* The app's labels stand out by weight alone; a brighter colour too would make every paragraph flicker. */
-.guide main strong {
+:where(.guide main) strong {
   font-weight: 650;
 }
 
 /* Pagefind runs adjacent cells' text together in its excerpts, so pages keep a space between one cell's tags and the next. */
-.guide main table {
+:where(.guide main) table {
   width: 100%;
   margin: 0 0 1.25rem;
   border-collapse: collapse;
   font-size: 0.9em;
 }
 
-.guide main th {
+:where(.guide main) th {
   padding: 0.5rem 0.75rem 0.5rem 0;
   border-bottom: 1px solid var(--border);
   color: var(--text);
@@ -87,14 +89,14 @@
   text-align: left;
 }
 
-.guide main td {
+:where(.guide main) td {
   padding: 0.5rem 0.75rem 0.5rem 0;
   border-bottom: 1px solid var(--rule);
   color: var(--text);
   vertical-align: top;
 }
 
-.guide main pre {
+:where(.guide main) pre {
   margin: 0 0 1.25rem;
   padding: 0.9rem 1.1rem;
   overflow-x: auto;
@@ -106,7 +108,7 @@
   line-height: 1.6;
 }
 
-.guide main code {
+:where(.guide main) code {
   font-family: ui-monospace, monospace;
   font-size: 0.9em;
 }
