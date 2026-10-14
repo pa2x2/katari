@@ -19,6 +19,8 @@ export const SCENES = [
   "statistics.RecapScenes",
   "browse.BrowseScenes",
   "translation.TranslatorScenes",
+  "translation.TranslationSettingsScenes",
+  "settings.BackupScenes",
   "translation.TranslationScenes",
   "reader.BookScenes",
   "reader.PlayerScenes",

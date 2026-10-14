@@ -1,4 +1,5 @@
 ---
+import migration from "../../captures/migration.png";
 import Callout from "../../guide/Callout.astro";
 import GuidePage from "../../guide/GuidePage.astro";
 import Path from "../../guide/Path.astro";
@@ -18,7 +19,7 @@ import { leavesSite } from "../../site/links.ts";
     </ol>
   </Task>
 
-  <Task id="many-titles" title="Move many titles">
+  <Task id="many-titles" title="Move many titles" shot={{ image: migration, alt: "Sources to migrate from, each with how many of your titles it has", caption: "Migrate" }}>
     <ol>
       <li>Open <Path>Browse › Migrate</Path> and pick the source to move away from, then the titles.</li>
       <li>Pick the sources to look in and the data to bring along.</li>

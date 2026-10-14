@@ -1,4 +1,5 @@
 ---
+import createBackup from "../../captures/create-backup.png";
 import Callout from "../../guide/Callout.astro";
 import GuidePage from "../../guide/GuidePage.astro";
 import Path from "../../guide/Path.astro";
@@ -24,7 +25,7 @@ import Task from "../../guide/Task.astro";
     </p>
   </Task>
 
-  <Task id="backup" title="Back up">
+  <Task id="backup" title="Back up" shot={{ image: createBackup, alt: "What a backup can keep, each with a box to tick", caption: "Create backup" }}>
     <ol>
       <li>Open <Path>Settings › Data and storage</Path> and tap <strong>Create backup</strong>.</li>
       <li>Tick what to keep: library entries, chapters, tracking, history, categories, app settings, extension stores and source settings.</li>

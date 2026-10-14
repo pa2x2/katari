@@ -20,4 +20,15 @@ class EntryScenes {
         find(By.text("Your activity"))
         capture("entry-activity")
     }
+
+    @Test
+    fun manageMerge() {
+        openProfile("Personal")
+        tap(By.text("Pepper&Carrot"))
+        find(By.textContains("ペッパー"))
+        tap(By.desc("More options"))
+        tap(By.text("Manage merge"))
+        find(By.text("Unmerge"))
+        capture("manage-merge")
+    }
 }

@@ -4,7 +4,9 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.uiautomator.By
 import app.katari.showcase.capture.ShowcaseDevice.awaitGone
 import app.katari.showcase.capture.ShowcaseDevice.capture
+import app.katari.showcase.capture.ShowcaseDevice.find
 import app.katari.showcase.capture.ShowcaseDevice.settle
+import app.katari.showcase.capture.ShowcaseDevice.tap
 import app.katari.showcase.capture.ShowcaseDevice.tapAt
 import app.katari.showcase.capture.openProfile
 import org.junit.Test
@@ -33,6 +35,17 @@ class TranslationScenes {
         // The bubble beside Pepper on her flying bed, in the last panel.
         tapAt(0.815f, 0.687f)
         capture("translation-popup")
+    }
+
+    /** The languages the series keeps, over its page translated with them. */
+    @Test
+    fun seriesLanguages() {
+        openProfile("Personal")
+        openJapaneseEpisode()
+        translatePage()
+        tap(By.text("Japanese → English"))
+        find(By.text("Languages for this series"))
+        capture("series-languages")
     }
 
     /**

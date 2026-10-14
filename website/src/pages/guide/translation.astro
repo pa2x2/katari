@@ -1,5 +1,9 @@
 ---
+import beforeTranslating from "../../captures/before-translating.png";
+import seriesLanguages from "../../captures/series-languages.png";
+import textRecognition from "../../captures/text-recognition.png";
 import translationAfter from "../../captures/translation-after.png";
+import translationEngines from "../../captures/translation-engines.png";
 import translationPopup from "../../captures/translation-popup.png";
 import translator from "../../captures/translator.png";
 import Callout from "../../guide/Callout.astro";
@@ -12,8 +16,11 @@ import Task from "../../guide/Task.astro";
   slug="translation"
   lead="Katari finds the text on a comic page and translates it. Text recognition always runs on the phone; with the right engine, translation does too."
 >
-  <Task id="engine" title="Pick a translation engine">
-    <p>Choose one under <Path>Settings › Translation › Translation engine</Path>, and the language to translate into under <strong>Target language</strong>.</p>
+  <Task id="engine" title="Pick a translation engine" shot={{ image: translationEngines, alt: "The translation engines, each saying whether it is ready", caption: "Translation engine" }}>
+    <p>
+      At the top of <Path>Settings › Translation</Path>, tap the engine's name to pick another under <strong>Translation engine</strong>, and
+      the language on the right to choose the one to translate into. Tap <strong>Save</strong> to keep them.
+    </p>
     <table>
       <thead>
         <tr><th>Engine</th> <th>Runs</th> <th>What it needs</th></tr>
@@ -62,7 +69,7 @@ import Task from "../../guide/Task.astro";
     </p>
   </Task>
 
-  <Task id="text-recognition" title="Choose how text is recognized">
+  <Task id="text-recognition" title="Choose how text is recognized" shot={{ image: textRecognition, alt: "Text recognition models by language, with Japanese downloaded and the rest still to download", caption: "Languages" }}>
     <p>Katari reads the page with models it downloads once and keeps on the phone. The bar picks them by the page's language:</p>
     <ul>
       <li><strong>Japanese manga</strong> finds the bubbles with the comic text and bubble detector and reads them with Manga OCR, vertical text and furigana included.</li>
@@ -85,7 +92,7 @@ import Task from "../../guide/Task.astro";
     </Callout>
   </Task>
 
-  <Task id="series" title="Keep a series' languages">
+  <Task id="series" title="Keep a series' languages" shot={{ image: seriesLanguages, alt: "A series' page language and target language, over its translated page", caption: "Languages for this series" }}>
     <p>
       Tap the language chip in the translation bar to open <strong>Languages for this series</strong>. <strong>Page language</strong> and
       <strong>Translate to</strong> stay with the series; changing the page language reads its pages again. <strong>Translate downloads</strong>
@@ -93,7 +100,7 @@ import Task from "../../guide/Task.astro";
     </p>
   </Task>
 
-  <Task id="chapters" title="Translate whole chapters ahead">
+  <Task id="chapters" title="Translate whole chapters ahead" shot={{ image: beforeTranslating, alt: "What a chapter still needs before it can be translated, each with a button to fix it", caption: "Before translating" }}>
     <ol>
       <li>On a title's page, long-press chapters to select them and tap <strong>Translate</strong>.</li>
       <li><strong>Before translating</strong> lists anything still missing, each with a button to fix it. Then tap <strong>Translate</strong>.</li>

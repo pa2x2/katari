@@ -48,4 +48,14 @@ class LibraryScenes {
         find(By.textContains("Episode 7"))
         capture("updates")
     }
+
+    /** The seed expects Pepper&Carrot's next episode two days after its last. */
+    @Test
+    fun upcoming() {
+        openProfile("Personal")
+        tap(By.text("Updates"))
+        tap(By.desc("View Upcoming Updates"))
+        find(By.text("Pepper&Carrot"))
+        capture("upcoming")
+    }
 }
