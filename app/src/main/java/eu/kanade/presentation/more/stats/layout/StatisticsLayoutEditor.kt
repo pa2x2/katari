@@ -36,6 +36,7 @@ import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import eu.kanade.presentation.components.GuideButton
 import eu.kanade.presentation.more.stats.components.rememberStatisticsDurationFormatter
 import eu.kanade.presentation.more.stats.data.StatsRecapNotifications
 import mihon.icons.materialsymbols.MaterialSymbols
@@ -84,7 +85,14 @@ internal fun StatisticsLayoutEditor(
         ),
     ) {
         Column(Modifier.fillMaxWidth().fillMaxHeight(0.9f).padding(horizontal = 16.dp)) {
-            Text(stringResource(MR.strings.statistics_customize), style = MaterialTheme.typography.titleLarge)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    stringResource(MR.strings.statistics_customize),
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.weight(1f),
+                )
+                GuideButton(page = "statistics/")
+            }
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 TextButton(onClick = { draft = StatisticsCardLayout() }) {
                     Text(stringResource(MR.strings.statistics_reset_layout))

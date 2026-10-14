@@ -37,7 +37,7 @@ export interface Feature {
   /** The first shot is the one in front. */
   shots: Shot[];
   /** Showpieces span the page on a background of their own instead of sitting beside their text. */
-  band?: "indigo" | "recap";
+  band?: "tinted" | "recap";
 }
 
 export interface Chapter {
@@ -60,7 +60,7 @@ export const chapters: Chapter[] = [
         title: "Comics, books, and films on one shelf",
         text: "Everything you follow shares one library, one updates feed, and one history.",
         highlights: [
-          "A title published in several places or languages becomes one entry with every version inside",
+          "Merge a title published in several places or languages into one entry with every version inside",
           "New chapters, episodes, and books arrive in one feed",
         ],
         shots: [
@@ -91,7 +91,7 @@ export const chapters: Chapter[] = [
       {
         id: "profiles",
         title: "Everyone gets their own library",
-        text: "Profiles keep separate libraries, history, statistics, and settings.",
+        text: "Profiles keep separate libraries, history, statistics, and reader and library settings.",
         highlights: ["For a shared tablet, or for keeping collections apart"],
         shots: [
           { kind: "still", image: profiles, alt: "Choosing between two profiles", caption: "Pick a profile" },
@@ -110,8 +110,8 @@ export const chapters: Chapter[] = [
       {
         id: "readers",
         title: "A reader made for each format",
-        text: "Books flow like books, comics turn page by page, and films play in a player with the controls you expect.",
-        highlights: ["Book themes for day and night", "Books read aloud", "A video player with episodes at hand"],
+        text: "Books get a reader with themes and read-aloud, comics turn page by page, and films play in a full video player.",
+        highlights: ["Book themes for day and night", "Hear any passage of a book read aloud", "Switch episodes without leaving the player"],
         shots: [
           { kind: "still", image: bookPaper, alt: "A book in the paper theme", caption: "The paper theme" },
           { kind: "still", image: bookDusk, alt: "The same page in the dusk theme", caption: "The dusk theme" },
@@ -121,12 +121,12 @@ export const chapters: Chapter[] = [
       {
         id: "translation",
         title: "Read the original, understand every line",
-        text: "Katari finds the text on a comic page and translates it in place, with text recognition and translation running on the phone.",
+        text: "Katari finds the text on a comic page and translates it in place. With an on-device engine, nothing leaves your phone.",
         highlights: [
           "Tap a speech bubble to see it beside the original and hear either read aloud",
           "Translate anything you type in the Translator",
         ],
-        band: "indigo",
+        band: "tinted",
         shots: [
           {
             kind: "compare",

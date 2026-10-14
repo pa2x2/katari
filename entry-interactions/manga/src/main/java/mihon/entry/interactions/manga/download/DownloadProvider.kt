@@ -3,6 +3,7 @@ package mihon.entry.interactions.manga.download
 import android.content.ContentResolver
 import android.content.Context
 import com.hippo.unifile.UniFile
+import eu.kanade.tachiyomi.source.entry.EntryCatalogueSource
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import eu.kanade.tachiyomi.util.lang.Hash.md5
 import eu.kanade.tachiyomi.util.storage.DiskUtil
@@ -18,6 +19,7 @@ import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.library.service.GlobalLibraryPreferences
+import tachiyomi.domain.source.model.UnifiedStubSource
 import tachiyomi.domain.storage.service.StorageManager
 import tachiyomi.i18n.*
 import uy.kohesive.injekt.Injekt
@@ -26,7 +28,7 @@ import java.io.IOException
 
 /**
  * This class is used to provide the directories where the downloads should be saved.
- * It uses the following path scheme: /<root downloads dir>/<source name>/<manga>/<chapter>
+ * It uses the following path scheme: /<root downloads dir>/<source name (LANG)>/<manga>/<chapter>
  *
  * @param context the application context.
  */
@@ -54,7 +56,10 @@ internal class DownloadProvider(
             )
         }
 
-        val sourceDirName = getSourceDirName(source)
+        // An entry downloaded into a legacy source folder keeps its chapters together there
+        findEntryDir(entryTitle, source)?.let { return Result.success(it) }
+
+        val sourceDirName = getSourceDirNames(source).current
         val sourceDir = downloadsDir.createDirectory(sourceDirName)
         if (sourceDir == null) {
             val displayablePath = downloadsDir.displayablePath + "/$sourceDirName"
@@ -77,24 +82,27 @@ internal class DownloadProvider(
         return Result.success(entryDir)
     }
 
-    /**
-     * Returns the download directory for a source if it exists.
-     *
-     * @param source the source to query.
-     */
-    fun findSourceDir(source: UnifiedSource): UniFile? {
-        return downloadsDir?.findFile(getSourceDirName(source))
+    /** Returns the existing download directories of a source, the one under its current name first. */
+    fun findSourceDirs(source: UnifiedSource): List<UniFile> {
+        val downloadsDir = downloadsDir ?: return emptyList()
+        return getSourceDirNames(source).all.mapNotNull(downloadsDir::findFile)
+    }
+
+    /** Returns the download directory named [sourceDirName] if it exists. */
+    fun findSourceDir(sourceDirName: String): UniFile? {
+        return downloadsDir?.findFile(sourceDirName)
     }
 
     /**
-     * Returns the download directory for a manga if it exists.
+     * Returns the download directory for a manga if it exists, preferring the one in the source's current directory.
      *
      * @param entryTitle the title of the manga to query.
      * @param source the source of the manga.
      */
     fun findEntryDir(entryTitle: String, source: UnifiedSource): UniFile? {
-        val sourceDir = findSourceDir(source)
-        return sourceDir?.findFile(getEntryDirName(entryTitle))
+        val sourceDirs = findSourceDirs(source).ifEmpty { return null }
+        val entryDirName = getEntryDirName(entryTitle)
+        return sourceDirs.firstNotNullOfOrNull { it.findFile(entryDirName) }
     }
 
     /**
@@ -198,16 +206,16 @@ internal class DownloadProvider(
     fun getChapterTranslationTemporaryFileName(chapterArtifact: UniFile): String =
         getChapterTranslationFileName(chapterArtifact) + ".tmp"
 
-    /**
-     * Returns the download directory name for a source.
-     *
-     * @param source the source to query.
-     */
-    fun getSourceDirName(source: UnifiedSource): String {
-        return DiskUtil.buildValidFilename(
-            source.name,
-            disallowNonAscii = libraryPreferences.disallowNonAsciiFilenames.get(),
+    fun getSourceDirNames(source: UnifiedSource): SourceDirNames {
+        val disallowNonAscii = libraryPreferences.disallowNonAsciiFilenames.get()
+        val legacy = DiskUtil.buildValidFilename(source.name, disallowNonAscii = disallowNonAscii)
+        val language = (source as? EntryCatalogueSource)?.lang ?: (source as? UnifiedStubSource)?.lang
+        if (language.isNullOrBlank()) return SourceDirNames(current = legacy, legacy = null)
+        val current = DiskUtil.buildValidFilename(
+            "${source.name} (${language.uppercase()})",
+            disallowNonAscii = disallowNonAscii,
         )
+        return SourceDirNames(current = current, legacy = legacy)
     }
 
     /**

@@ -4,7 +4,9 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.uiautomator.By
 import app.katari.showcase.capture.ShowcaseDevice.awaitGone
 import app.katari.showcase.capture.ShowcaseDevice.capture
+import app.katari.showcase.capture.ShowcaseDevice.find
 import app.katari.showcase.capture.ShowcaseDevice.settle
+import app.katari.showcase.capture.ShowcaseDevice.tap
 import app.katari.showcase.capture.ShowcaseDevice.tapAt
 import app.katari.showcase.capture.openProfile
 import org.junit.Test
@@ -35,6 +37,17 @@ class TranslationScenes {
         capture("translation-popup")
     }
 
+    /** The languages the series keeps, over its page translated with them. */
+    @Test
+    fun seriesLanguages() {
+        openProfile("Personal")
+        openJapaneseEpisode()
+        translatePage()
+        tap(By.text("Japanese → English"))
+        find(By.text("Languages for this series"))
+        capture("series-languages")
+    }
+
     /**
      * Translation starts with the reader's translation controls and runs once per visit to the chapter. Until the
      * page's bubbles are recognized, translated and drawn, the controls say what they are doing. Closing the controls
@@ -45,13 +58,12 @@ class TranslationScenes {
         toggleReaderBars()
         // The controls may not have started on the page yet when first looked at.
         repeat(2) {
-            awaitGone(By.text(WORKING), TRANSLATION_TIMEOUT_MS)
+            awaitGone(By.text(WORKING), PAGE_TRANSLATION_TIMEOUT_MS)
             settle(extraMs = 3_000)
         }
     }
 
     private companion object {
-        const val TRANSLATION_TIMEOUT_MS = 120_000L
         val WORKING: Pattern = Pattern.compile("Waiting for the page to load|Recognizing text…|Translating…")
     }
 }

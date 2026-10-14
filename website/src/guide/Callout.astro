@@ -1,0 +1,64 @@
+---
+interface Props {
+  /** A word or two naming the catch, such as "Not in backups". */
+  label: string;
+  /** A warning stands out for things that fail without saying so; a note adds context. */
+  tone?: "note" | "warning";
+}
+
+const { label, tone = "note" } = Astro.props;
+---
+
+<aside class:list={["callout", tone]}>
+  <strong>{label}</strong>
+  <div><slot /></div>
+</aside>
+
+<style>
+  .callout {
+    display: flex;
+    gap: 0.9rem;
+    margin: 0 0 1.25rem;
+    padding: 0.8rem 1rem;
+    border-left: 3px solid var(--note-line);
+    border-radius: 0.4rem;
+    background: var(--note-bg);
+    max-width: 70ch;
+    color: var(--text);
+    font-size: 0.95em;
+  }
+
+  .warning {
+    border-left-color: var(--accent);
+    background: var(--warning-bg);
+  }
+
+  strong {
+    flex: none;
+    max-width: 8rem;
+    padding-top: 0.15rem;
+    color: var(--note-label);
+    font-size: 0.85em;
+    font-weight: 650;
+  }
+
+  .warning strong {
+    color: var(--accent);
+  }
+
+  /* The class outranks the guide's own paragraph rule, which would leave a paragraph's margin under the last line. */
+  .callout div :global(p) {
+    margin: 0;
+  }
+
+  .callout div :global(p + p) {
+    margin-top: 0.6rem;
+  }
+
+  @media (max-width: 30rem) {
+    .callout {
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+  }
+</style>

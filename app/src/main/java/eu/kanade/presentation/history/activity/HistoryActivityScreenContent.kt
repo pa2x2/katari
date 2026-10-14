@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -26,6 +25,7 @@ import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.ui.history.activity.HistoryActivitySummary
 import eu.kanade.tachiyomi.ui.history.activity.HistoryActivityViewModel
 import tachiyomi.i18n.*
+import tachiyomi.presentation.core.components.LoadingIndicator
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.screens.LoadingScreen
 import java.time.LocalDate
@@ -131,7 +131,7 @@ private fun ActivitySessionList(
             item("load-more") {
                 Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                     if (state.loadingMore) {
-                        CircularProgressIndicator()
+                        LoadingIndicator()
                     } else {
                         TextButton(onClick = onLoadMore) {
                             Text(

@@ -1,0 +1,222 @@
+---
+import Viewer from "../media/Viewer.astro";
+import { leavesSite, REPOSITORY, sitePath } from "../site/links.ts";
+import Page from "../site/Page.astro";
+import { guideEntry } from "./contents.ts";
+import GuideContents from "./GuideContents.astro";
+import PageSections from "./PageSections.astro";
+import "./guide.css";
+
+interface Props {
+  slug: string;
+  /** The sentence under the title, saying what the page is for. */
+  lead: string;
+}
+
+const { slug, lead } = Astro.props;
+const { entry, group, previous, next } = guideEntry(slug);
+// The body renders first so that each Task and Question in it has recorded its section before the sidebar lists them.
+Astro.locals.guideSections = [];
+const body = await Astro.slots.render("default");
+const sections = Astro.locals.guideSections;
+---
+
+<Page title={`${entry.title} · Katari guide`} description={entry.summary}>
+  <div class="guide">
+    <aside class="pages">
+      <GuideContents current={entry} />
+    </aside>
+    <aside class="sections">
+      <PageSections sections={sections} />
+    </aside>
+    <main data-pagefind-body>
+      <p class="kicker" data-pagefind-ignore>{group.title}</p>
+      <h1>{entry.title}</h1>
+      <p class="lead">{lead}</p>
+      <Fragment set:html={body} />
+      <footer class="page-end">
+        <p>
+          Something wrong or missing?{" "}
+          <a href={`${REPOSITORY}/issues`} {...leavesSite()}>Tell us on GitHub</a>.
+        </p>
+        <nav class="neighbours" aria-label="More of the guide">
+          {
+            previous && (
+              <a class="previous" href={sitePath(`guide/${previous.slug}/`)}>
+                <span>Previous</span>
+                {previous.title}
+              </a>
+            )
+          }
+          {
+            next && (
+              <a class="next" href={sitePath(`guide/${next.slug}/`)}>
+                <span>Next</span>
+                {next.title}
+              </a>
+            )
+          }
+        </nav>
+      </footer>
+    </main>
+  </div>
+  <Viewer />
+</Page>
+
+<style>
+  /* The guide's pages on the left and the page's own sections on the right, each beside the article rather than
+     taken out of its width. Narrower windows fold the sections, then the pages too, into buttons above the article. */
+  .guide {
+    display: grid;
+    grid-template-columns: 14rem minmax(0, 60rem) 14rem;
+    grid-template-areas: "pages main sections";
+    justify-content: center;
+    column-gap: 3rem;
+    max-width: var(--page-width);
+    margin: 0 auto;
+    padding: 3rem var(--gutter) 0;
+  }
+
+  main {
+    grid-area: main;
+  }
+
+  .pages {
+    grid-area: pages;
+  }
+
+  .sections {
+    grid-area: sections;
+  }
+
+  /* Both stay in view while the article scrolls past them. */
+  aside {
+    position: sticky;
+    top: calc(var(--header-height) + 2rem);
+    align-self: start;
+    max-height: calc(100dvh - var(--header-height) - 3rem);
+    overflow-y: auto;
+  }
+
+  /* A title longer than any word now still wraps on the smallest phones instead of widening the page. */
+  h1 {
+    margin: 0 0 0.75rem;
+    font-size: clamp(2.4rem, 6vw, 3.4rem);
+    hyphens: auto;
+    overflow-wrap: break-word;
+  }
+
+  .lead {
+    margin: 0 0 1rem;
+    color: var(--text-muted);
+    font-size: 1.3rem;
+    line-height: 1.5;
+  }
+
+  .page-end {
+    margin-top: 3.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: 0.9rem;
+  }
+
+  .page-end p {
+    margin: 0;
+  }
+
+  .neighbours {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+
+  .neighbours a {
+    padding: 0.8rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    color: var(--text-strong);
+    font-family: var(--serif);
+    font-size: 1.15rem;
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  .neighbours a:hover {
+    border-color: var(--accent);
+  }
+
+  .neighbours span {
+    display: block;
+    color: var(--text-muted);
+    font-family: var(--sans);
+    font-size: 0.8rem;
+    font-weight: 400;
+  }
+
+  .next {
+    grid-column: 2;
+    text-align: right;
+  }
+
+  @media (width < 88rem) {
+    .guide {
+      grid-template-columns: 14rem minmax(0, 1fr);
+      grid-template-areas:
+        "pages sections"
+        "pages main";
+    }
+
+    .sections {
+      position: static;
+      max-height: none;
+      margin-bottom: 1.75rem;
+    }
+
+    .pages {
+      grid-row: 1 / span 2;
+    }
+  }
+
+  /* "Troubleshooting" is wider than the smallest phones' column at the usual size, and side by side the neighbours'
+     titles no longer fit half of it. */
+  @media (width < 24rem) {
+    h1 {
+      font-size: 2rem;
+    }
+
+    .neighbours {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .next {
+      grid-column: auto;
+    }
+  }
+
+  @media (width < 60rem) {
+    .guide {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-areas:
+        "pages"
+        "sections"
+        "main";
+      padding-top: 1.5rem;
+    }
+
+    aside {
+      position: static;
+      max-height: none;
+    }
+
+    .pages {
+      grid-row: auto;
+      margin-bottom: 0.75rem;
+    }
+
+    .sections {
+      margin-bottom: 1.75rem;
+    }
+  }
+</style>

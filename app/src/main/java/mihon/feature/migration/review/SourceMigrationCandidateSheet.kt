@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -41,6 +40,7 @@ import mihon.icons.materialsymbols.rounded.Search
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.Badge
 import tachiyomi.presentation.core.components.BadgeGroup
+import tachiyomi.presentation.core.components.LoadingIndicator
 import tachiyomi.presentation.core.components.material.Button
 import tachiyomi.presentation.core.components.material.TextButton
 import tachiyomi.presentation.core.components.material.padding
@@ -91,7 +91,7 @@ internal fun Screen.SourceMigrationCandidateSheet(
                             .padding(MaterialTheme.padding.large),
                         contentAlignment = Alignment.Center,
                     ) {
-                        CircularProgressIndicator()
+                        LoadingIndicator()
                     }
                 }
                 state.candidates.isNotEmpty() -> {
@@ -146,9 +146,8 @@ internal fun Screen.SourceMigrationCandidateSheet(
                     ),
             ) {
                 if (state.isWorking) {
-                    CircularProgressIndicator(
+                    LoadingIndicator(
                         modifier = Modifier.size(20.dp),
-                        strokeWidth = 2.dp,
                     )
                 } else {
                     Icon(imageVector = MaterialSymbols.Rounded.Search, contentDescription = null)

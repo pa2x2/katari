@@ -56,6 +56,9 @@ export const newChapters: { work: string; chapter: number; fetchedAt: number }[]
   { work: "pepper-carrot-ja", chapter: 8, fetchedAt: Date.UTC(2026, 11, 15, 7, 0) },
 ];
 
+/** When ongoing works expect their next chapter, two days after the last as the two before came; Upcoming shows it. */
+export const NEXT_CHAPTER_EXPECTED_AT = Date.UTC(2026, 11, 17, 7, 0);
+
 /** Playback length of the films, in milliseconds. */
 export const filmDurations: Record<string, number> = {
   sintel: 888_032,

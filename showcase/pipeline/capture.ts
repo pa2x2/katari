@@ -18,6 +18,7 @@ import { profiles } from "../seed/library-plan.ts";
 import { LIBRARY_UPDATED_AT } from "../seed/showcase-clock.ts";
 import { writeCredits } from "./credits.ts";
 import { attachedSerials, Device } from "./device/adb.ts";
+import { awaitIdle } from "./device/device-idle.ts";
 import { pinShowcaseClock, useRealClock } from "./device/device-clock.ts";
 import { bootShowcaseEmulator, SHOWCASE_SERIAL, shutDown } from "./device/emulator.ts";
 import { installOfflineTranslator, startOfflineTranslator } from "./device/offline-translator.ts";
@@ -71,7 +72,13 @@ try {
   server = await startContentServer(values.served);
   if (!values["reuse-emulator"]) await prepare(device);
   device.shell(`rm -rf ${CAPTURE_DIRECTORY} ${FAILURE_DIRECTORY}`);
-  for (const scene of scenes) await timed(`capturing ${scene}`, () => runScene(device, APP_ID, scene));
+  await timed("waiting for the device to settle", () => awaitIdle(device));
+  for (const scene of scenes) {
+    // Times shown relative to now, such as "opened 27 minutes ago", would otherwise depend on how long the scenes
+    // before took, and cross a minute in some runs but not in others.
+    pinShowcaseClock(device);
+    await timed(`capturing ${scene}`, () => runScene(device, APP_ID, scene));
+  }
   device.pull(`${CAPTURE_DIRECTORY}/.`, out);
   if (scenes.includes("statistics.RecapScenes")) {
     device.pull(RECAP_SHARE_IMAGE, join(out, "recap-share.png"));
@@ -111,16 +118,22 @@ async function prepare(device: Device): Promise<void> {
     device.adb("install", "-r", values["app-apk"]);
     // The seed restore scene waits for the notification the app posts once the restore is done.
     device.shell(`pm grant ${APP_ID} android.permission.POST_NOTIFICATIONS`);
+    // Without it, the extension list opens with a banner asking for it.
+    device.shell(`appops set ${APP_ID} REQUEST_INSTALL_PACKAGES allow`);
     device.adb("install", "-r", values["extension-apk"]);
     device.adb("install", "-r", "-t", values["capture-apk"]);
     await installOfflineTranslator(device);
     startOfflineTranslator(device);
   });
 
+  // The apps just installed keep the system busy for minutes, which slows the screens the seed restore taps through.
+  await timed("waiting for the device to settle", () => awaitIdle(device));
   const seedUri = await pushSeed(device);
   await timed("restoring the seed", () => runScene(device, APP_ID, "SeedRestore", { seedUri }));
   // Reading during setup happens at the real time and must stay out of the showcase history.
   writePreferences(device, APP_ID, APP_PREFERENCES, { __APP_STATE_incognito_mode: true });
+  // Text recognition is the slowest work a scene waits for, and the restore may have set the system to work again.
+  await timed("waiting for the device to settle", () => awaitIdle(device));
   await timed("readying on-page translation", () => runScene(device, APP_ID, "translation.TranslationSetup"));
   writePreferences(device, APP_ID, APP_PREFERENCES, {
     __APP_STATE_incognito_mode: false,
@@ -131,7 +144,7 @@ async function prepare(device: Device): Promise<void> {
   });
 
   pinShowcaseClock(device);
-  freezeStatusBar(device);
+  await freezeStatusBar(device);
 }
 
 function reusedEmulator(): Device {

@@ -1,0 +1,55 @@
+---
+import DownloadButtons from "../../download/DownloadButtons.astro";
+import GuidePage from "../../guide/GuidePage.astro";
+import Question from "../../guide/Question.astro";
+import { leavesSite, RELEASES, sitePath } from "../../site/links.ts";
+---
+
+<GuidePage slug="install" lead="Which file to get, how updates work, and how to bring your library over from Mihon.">
+  <Question id="which-file" question="Which file should I download?" open>
+    <p>
+      Katari runs on phones and tablets with Android 10 or newer. Most people want <strong>Katari</strong>. The
+      same app without Google services is <strong>Katari FOSS</strong>, which never sends crash logs or usage data.
+    </p>
+    <DownloadButtons explained={false} />
+    <p>
+      The <a href={`${RELEASES}/latest`} {...leavesSite()}>release page</a> also has smaller files made for one type of
+      processor. Most phones from recent years take arm64-v8a, and older ones take armeabi-v7a. If you're not sure, the
+      buttons above work on every phone.
+    </p>
+  </Question>
+
+  <Question id="updates" question="Does Katari update itself?">
+    <p>
+      Yes, both builds do. When a new version is out, Katari offers to download and install it. Android asks once
+      for permission to let Katari install apps.
+    </p>
+  </Question>
+
+  <Question id="from-mihon" question="Can I bring my library over from Mihon?">
+    <p>
+      Yes. In Mihon, create a backup containing everything you want to keep, then choose it when Katari's setup
+      offers <em>Move from Mihon</em>. Include private settings to bring source preferences and sign-ins along.
+      <a href={sitePath("guide/backups-and-storage/#mihon")}>Backups and storage</a> walks through it.
+    </p>
+    <p>
+      To keep your downloads, select the storage folder Mihon used. Extensions installed privately in Mihon have to be
+      installed again in Katari.
+    </p>
+  </Question>
+
+  <Question id="content" question="Where does the content come from?">
+    <p>
+      Katari comes with no content and has no affiliation with any provider. Content comes from extensions you
+      choose. Add an extension store under Browse › Extensions, then install the extensions you want from it.
+      <a href={sitePath("guide/first-steps/")}>First steps</a> walks through it.
+    </p>
+  </Question>
+
+  <Question id="data-sent" question="What does Katari send, and can I turn it off?">
+    <p>
+      Katari can send anonymized crash logs and usage data. Its setup shows both as switches, and you can change
+      them any time in Settings › Security and privacy. Katari FOSS sends neither.
+    </p>
+  </Question>
+</GuidePage>

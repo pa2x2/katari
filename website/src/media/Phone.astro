@@ -33,7 +33,7 @@ const enlarged = zoomable ? await getImage({ src: image, width: landscape ? 1800
           sizes={sizes}
           loading={eager ? "eager" : "lazy"}
         />
-        <span class="visually-hidden">Enlarge</span>
+        <span class="visually-hidden" data-pagefind-ignore>Enlarge</span>
       </button>
     ) : (
       <div class="frame">
@@ -66,9 +66,9 @@ const enlarged = zoomable ? await getImage({ src: image, width: landscape ? 1800
     padding: 0.45rem;
     border: 0;
     border-radius: 1.6rem;
-    background: #05080f;
+    background: var(--device);
     box-shadow:
-      0 0 0 1px #2a3550,
+      0 0 0 1px var(--device-edge),
       0 1.5rem 3rem -1rem #000c;
   }
 
@@ -84,7 +84,7 @@ const enlarged = zoomable ? await getImage({ src: image, width: landscape ? 1800
   button.frame:hover,
   button.frame:focus-visible {
     box-shadow:
-      0 0 0 2px var(--clay),
+      0 0 0 2px var(--accent),
       0 1.5rem 3rem -1rem #000c;
   }
 
@@ -101,7 +101,7 @@ const enlarged = zoomable ? await getImage({ src: image, width: landscape ? 1800
 
   figcaption {
     margin-top: 0.8rem;
-    color: var(--muted);
+    color: var(--text-muted);
     font-size: 0.9rem;
     line-height: 1.4;
     text-align: center;

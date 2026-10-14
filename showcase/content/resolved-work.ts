@@ -1,18 +1,13 @@
 /** A work from sources.ts as its resolver describes it: its metadata and where each of its files is downloaded from. */
 import type { CoverDefinition, EntryType, License } from "./source-definitions.ts";
 
-export interface RemoteFile {
-  url: string;
-  /** The file inside the downloaded zip that the work uses. */
-  member?: string;
-}
-
 export interface ResolvedChapter {
   number: number;
   name: string;
   /** ISO date the chapter was published. */
   date: string;
-  files: RemoteFile[];
+  /** Upstream URLs of the chapter's files. */
+  files: string[];
 }
 
 /** Gutenberg EPUBs carry their own cover, which fetch.ts extracts when sources.ts names none. */

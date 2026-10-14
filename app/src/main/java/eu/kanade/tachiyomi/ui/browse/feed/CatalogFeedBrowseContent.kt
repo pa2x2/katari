@@ -20,7 +20,6 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarDuration
@@ -69,6 +68,7 @@ import mihon.icons.materialsymbols.rounded.Refresh
 import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.domain.source.model.CatalogListItem
 import tachiyomi.i18n.*
+import tachiyomi.presentation.core.components.LoadingIndicator
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.screens.EmptyScreen
@@ -465,9 +465,8 @@ internal fun NewItemsChip(
             verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
         ) {
             if (isBridging) {
-                CircularProgressIndicator(
+                LoadingIndicator(
                     modifier = Modifier.size(18.dp),
-                    strokeWidth = 2.dp,
                 )
             } else {
                 Icon(
@@ -673,9 +672,8 @@ private fun FeedBridgeLoadingItem() {
         horizontalArrangement = Arrangement.spacedBy(8.dp, androidx.compose.ui.Alignment.CenterHorizontally),
         verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
     ) {
-        CircularProgressIndicator(
+        LoadingIndicator(
             modifier = Modifier.size(20.dp),
-            strokeWidth = 2.dp,
         )
         Text(
             text = stringResource(MR.strings.browse_feed_loading_newer_items),

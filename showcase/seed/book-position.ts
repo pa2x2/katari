@@ -5,8 +5,8 @@
  */
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
-import { list, memberPath, type PackageNode, readPackage } from "../content/epub-package.ts";
-import { readMember } from "../content/zip-archive.ts";
+import { EPUB_CONTAINER, list, memberPath, type PackageNode, packagePath, parsePackage } from "../content/epub-package.ts";
+import { localZip } from "../content/zip-archive.ts";
 
 export interface BookPosition {
   /** The publication's sha256, which the reader checks positions against. */
@@ -18,11 +18,14 @@ export interface BookPosition {
 
 /** The position [progression] of the way through [epub], measured by the size of its spine documents. */
 export function bookPosition(epub: string, progression: number): BookPosition {
-  const { path, document } = readPackage(epub);
+  const bytes = readFileSync(epub);
+  const zip = localZip(bytes);
+  const path = packagePath(zip.read(EPUB_CONTAINER));
+  const document = parsePackage(zip.read(path));
   const hrefs = new Map(list((document.manifest as PackageNode).item).map((item) => [item.id, String(item.href)]));
   const spine = list((document.spine as PackageNode).itemref).map((ref) => {
     const resourceId = memberPath(path, hrefs.get(ref.idref) ?? raise(`${epub} spine names unknown item ${ref.idref}`));
-    return { resourceId, size: readMember(epub, resourceId).length };
+    return { resourceId, size: zip.sizes.get(resourceId) ?? raise(`${epub} has no spine document ${resourceId}`) };
   });
   const total = spine.reduce((sum, resource) => sum + resource.size, 0);
   let before = 0;
@@ -30,7 +33,7 @@ export function bookPosition(epub: string, progression: number): BookPosition {
     if (before + resource.size >= progression * total) {
       const resourceProgression = (progression * total - before) / resource.size;
       return {
-        revision: createHash("sha256").update(readFileSync(epub)).digest("hex"),
+        revision: createHash("sha256").update(bytes).digest("hex"),
         resourceId: resource.resourceId,
         resourceProgression,
         totalProgression: (before + resourceProgression * resource.size) / total,

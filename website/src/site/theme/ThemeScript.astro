@@ -1,0 +1,11 @@
+---
+// Runs in the head, before the page is drawn, so a visitor who picked a theme never sees the other one flash first.
+// ThemeSwitch.astro stores the choice under the same key.
+---
+
+<script is:inline>
+  try {
+    const theme = localStorage.getItem("katari-theme");
+    if (theme === "light" || theme === "dark") document.documentElement.dataset.theme = theme;
+  } catch {}
+</script>

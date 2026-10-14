@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,6 +35,7 @@ import mihon.entry.interactions.source.EntryChildWebViewResolution
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.EntryProgressState
+import tachiyomi.presentation.core.components.LoadingIndicator
 
 private val overlayBarsSlideAnimationSpec = tween<IntOffset>(190)
 private val overlayBarsFadeAnimationSpec = tween<Float>(125)
@@ -242,10 +242,9 @@ internal fun VideoPlayerOverlay(
             enter = fadeIn(animationSpec = overlayCenterFadeAnimationSpec),
             exit = fadeOut(animationSpec = overlayCenterFadeAnimationSpec),
         ) {
-            CircularProgressIndicator(
+            LoadingIndicator(
                 modifier = Modifier.size(30.dp),
                 color = Color.White,
-                strokeWidth = 2.dp,
             )
         }
 

@@ -1,7 +1,8 @@
 name: Showcase
 
 # Recaptures every showcase screenshot and clip from a published release on a freshly wiped emulator, and proposes
-# the ones that visibly changed as a pull request against the `assets` branch, which the website is built from.
+# the ones that visibly changed, and the removal of any no scene captures any more, as a pull request against the
+# `assets` branch, which the website is built from.
 # It runs apart from the release workflow and never holds a release up.
 on:
   release:
@@ -25,11 +26,12 @@ jobs:
     runs-on: ubuntu-26.04
     timeout-minutes: 120
     permissions:
+      # Reads the downloads an earlier run kept.
+      actions: read
       contents: read
     outputs:
-      changed: ${{ steps.compare.outputs.changed }}
+      differences: ${{ steps.compare.outputs.differences }}
     env:
-      KATARI_SHOWCASE_CACHE: ${{ github.workspace }}/../showcase-cache
       # Matches showcase/pipeline/device/emulator.ts.
       SYSTEM_IMAGE: system-images;android-36.1;google_apis;x86_64
 
@@ -78,7 +80,9 @@ jobs:
           sudo apt-get install --yes ffmpeg
 
           sdkmanager="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
-          yes | "$sdkmanager" --licenses > /dev/null
+          # Fed from a process substitution rather than a pipe: the runner ignores SIGPIPE, so once sdkmanager stops
+          # reading, `yes` fails with a broken pipe, which pipefail would turn into the step's failure.
+          "$sdkmanager" --licenses < <(yes 2> /dev/null) > /dev/null
           # The image's command-line tools may predate the device profile the showcase emulator is created from. An
           # update installed by the running tools lands beside them, as latest-2.
           "$sdkmanager" --install "cmdline-tools;latest" emulator "$SYSTEM_IMAGE" > /dev/null
@@ -93,9 +97,35 @@ jobs:
             echo "$tools/bin"
           } >> "$GITHUB_PATH"
 
-      - name: Build
-        run: ./gradlew :app:assembleBenchmark :showcase:extension:assembleDebug :showcase:capture:assembleBenchmark
+      # Outside the checkout, by an absolute path. The runner context that names the runner's temporary folder is not
+      # available to the job's env.
+      - name: Locate the showcase cache
+        run: echo "KATARI_SHOWCASE_CACHE=$RUNNER_TEMP/showcase-cache" >> "$GITHUB_ENV"
 
+      # Upstream sites such as Project Gutenberg go down for hours and Wikimedia limits how often it is asked, so a run
+      # starts from what the last run that downloaded anything kept. It is an artifact rather than an Actions cache: a
+      # release's run can only read caches of its tag and of main, and the build's Gradle caches, written on every push
+      # to upcoming, evict the rest of a repository's caches within hours.
+      - name: Restore the showcase downloads
+        id: restore
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          downloads="$KATARI_SHOWCASE_CACHE/downloads"
+          mkdir -p "$downloads"
+          run="$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts?name=showcase-downloads&per_page=1" \
+            --jq '.artifacts[] | select(.expired | not) | .workflow_run.id')"
+          if [[ -n "$run" ]]; then
+            gh run download "$run" --repo "$GITHUB_REPOSITORY" --name showcase-downloads --dir "$downloads"
+          fi
+          # Written after the restore, so that the files the run reads, whose modification time the download cache renews,
+          # are newer than it and the rest are not.
+          ls "$downloads" > "$RUNNER_TEMP/restored-downloads"
+          echo "Restored $(wc -l < "$RUNNER_TEMP/restored-downloads") downloads${run:+ from run $run}."
+
+      # Before the build, so that an upstream site that cannot be reached fails the run in seconds.
       - name: Fetch the showcase content
         working-directory: showcase
         run: |
@@ -103,9 +133,48 @@ jobs:
           npm run fetch
           npm run seed
 
+      - name: Build
+        run: ./gradlew :app:assembleBenchmark :showcase:extension:assembleDebug :showcase:capture:assembleBenchmark
+
       - name: Capture
+        id: capture
         working-directory: showcase
         run: npm run capture -- --out "$RUNNER_TEMP/captures"
+
+      - name: Note whether the run changed the downloads
+        id: downloads
+        if: always() && steps.restore.outcome == 'success'
+        env:
+          CAPTURED: ${{ steps.capture.outcome }}
+        run: |
+          set -euo pipefail
+
+          downloads="$KATARI_SHOWCASE_CACHE/downloads"
+          find "$downloads" -name '*.partial' -delete
+          # Once every scene has run, what the run did not read goes, which is how a download sources.ts no longer
+          # needs leaves. A failed run keeps it all, since the scenes after the failure never read theirs.
+          if [[ "$CAPTURED" == success ]]; then
+            find "$downloads" -type f ! -newer "$RUNNER_TEMP/restored-downloads" -delete
+          fi
+          ls "$downloads" > "$RUNNER_TEMP/kept-downloads"
+          if cmp -s "$RUNNER_TEMP/restored-downloads" "$RUNNER_TEMP/kept-downloads"; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Only when something changed, so the latest one is the one to restore. Also after a failure, so a later run starts
+      # from whatever this one managed to download, the film the player streamed included.
+      - name: Keep the showcase downloads for later runs
+        if: always() && steps.downloads.outputs.changed == 'true'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: showcase-downloads
+          path: ${{ env.KATARI_SHOWCASE_CACHE }}/downloads
+          # Books and videos are compressed already.
+          compression-level: 0
+          # A rerun of the job replaces what its earlier attempt kept.
+          overwrite: true
 
       - name: Upload what the failed capture left
         if: failure()
@@ -114,6 +183,7 @@ jobs:
           name: showcase-failure
           path: ${{ runner.temp }}/captures
           if-no-files-found: ignore
+          overwrite: true
 
       - name: Compare with the published captures
         id: compare
@@ -127,20 +197,21 @@ jobs:
           jq -r '.changed[]' "$proposal/result.json" | while read -r name; do
             cp "$RUNNER_TEMP/captures/$name" "$proposal/files/"
           done
-          echo "changed=$(jq '.changed | length' "$proposal/result.json")" >> "$GITHUB_OUTPUT"
+          echo "differences=$(jq '(.changed | length) + (.retired | length)' "$proposal/result.json")" >> "$GITHUB_OUTPUT"
 
       - name: Upload the changed captures
-        if: steps.compare.outputs.changed != '0'
+        if: steps.compare.outputs.differences != '0'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: showcase-proposal
           path: ${{ runner.temp }}/proposal
+          overwrite: true
 
   propose:
     name: Propose the changed captures
     runs-on: ubuntu-26.04
     needs: capture
-    if: needs.capture.outputs.changed != '0'
+    if: needs.capture.outputs.differences != '0'
     permissions:
       contents: write
       pull-requests: write
@@ -160,28 +231,53 @@ jobs:
       - name: Open the pull request
         env:
           GH_TOKEN: ${{ github.token }}
+          # Captures change what the website shows, so their owner reviews every proposal.
+          REVIEWER: ${{ github.repository_owner }}
         run: |
           set -euo pipefail
 
           result="$RUNNER_TEMP/proposal/result.json"
-          branch="showcase/${RUN_NAME}-${GITHUB_RUN_ID}"
+          # A proposal nobody has merged yet is replaced rather than joined by another, so only the latest captures wait
+          # for review. Its branch gets one commit on top of assets, whatever an earlier run pushed there.
+          existing="$(gh pr list --base assets --state open --json number,headRefName \
+            --jq '[.[] | select(.headRefName | startswith("showcase/"))] | first // empty | "\(.number) \(.headRefName)"')"
+          if [[ -n "$existing" ]]; then
+            read -r number branch <<< "$existing"
+          else
+            number=""
+            branch="showcase/proposal"
+          fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git switch --create "$branch"
-          cp "$RUNNER_TEMP"/proposal/files/* .
+          cp -r "$RUNNER_TEMP/proposal/files/." .
+          # The website shows only what the scenes capture, so a capture no scene takes any more goes too.
+          jq -r '.retired[]' "$result" | while read -r name; do
+            git rm --quiet -- "$name"
+          done
           git add --all
           git commit --message "(docs): refresh the showcase captures for $RUN_NAME"
-          git push origin "$branch"
+          git push --force origin "$branch"
 
           {
-            echo "Captured from \`$RUN_NAME\`. Changed:"
-            echo
-            jq -r '.changed[] | "- `\(.)`"' "$result"
+            echo "Captured from \`$RUN_NAME\`."
+            if [[ "$(jq '.changed | length' "$result")" != 0 ]]; then
+              echo
+              echo "Changed:"
+              echo
+              jq -r '.changed[] | "- `\(.)`"' "$result"
+            fi
             if [[ "$(jq '.retired | length' "$result")" != 0 ]]; then
               echo
-              echo "No longer captured, left in place for a person to remove:"
+              echo "Removed, since no scene captures them any more:"
               echo
               jq -r '.retired[] | "- `\(.)`"' "$result"
             fi
           } > "$RUNNER_TEMP/body.md"
-          gh pr create --base assets --head "$branch" --title "(docs): refresh the showcase captures for $RUN_NAME" --body-file "$RUNNER_TEMP/body.md"
+          title="(docs): refresh the showcase captures for $RUN_NAME"
+          if [[ -n "$number" ]]; then
+            gh pr edit "$number" --title "$title" --body-file "$RUNNER_TEMP/body.md" --add-assignee "$REVIEWER"
+          else
+            gh pr create --base assets --head "$branch" --title "$title" --body-file "$RUNNER_TEMP/body.md" \
+              --assignee "$REVIEWER"
+          fi

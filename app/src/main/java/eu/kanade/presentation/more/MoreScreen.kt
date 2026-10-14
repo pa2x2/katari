@@ -29,7 +29,6 @@ import mihon.icons.materialsymbols.rounded.QueryStats
 import mihon.icons.materialsymbols.rounded.Settings
 import mihon.icons.materialsymbols.rounded.Storage
 import mihon.icons.materialsymbols.rounded.Sync
-import mihon.icons.materialsymbols.rounded.VolunteerActivism
 import tachiyomi.core.common.Constants
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.ScrollbarLazyColumn
@@ -54,7 +53,6 @@ fun MoreScreen(
     onClickDataAndStorage: () -> Unit,
     onClickProfiles: () -> Unit,
     onClickSettings: () -> Unit,
-    onClickSupport: () -> Unit,
     onClickAbout: () -> Unit,
 ) {
     val uriHandler = LocalUriHandler.current
@@ -176,13 +174,6 @@ fun MoreScreen(
                         onPreferenceClick = onClickProfiles,
                     )
                 }
-            }
-            item {
-                TextPreferenceWidget(
-                    title = stringResource(MR.strings.label_support_us),
-                    icon = MaterialSymbols.Rounded.VolunteerActivism,
-                    onPreferenceClick = onClickSupport,
-                )
             }
             item {
                 TextPreferenceWidget(

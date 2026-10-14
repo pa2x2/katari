@@ -3,7 +3,6 @@ package mihon.entry.interactions.book.document.reader.paging
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.text.selection.DisableSelection
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
@@ -15,6 +14,7 @@ import mihon.book.api.document.BookDocumentBlockContent
 import mihon.entry.interactions.book.document.reader.BookDocumentViewerItem
 import mihon.entry.interactions.book.document.reader.LocalBookDocumentChapterSelection
 import tachiyomi.domain.entry.model.EntryChapter
+import tachiyomi.presentation.core.components.LoadingIndicator
 
 /** Measures rich rows on the UI thread; prose shaping and page assembly run in background preparation. */
 @Composable
@@ -59,7 +59,7 @@ internal fun BookDocumentPaginationLayout(
         val viewport = subcompose("viewport") {
             val pages = preparedBookDocumentPages(items, constraints.maxWidth, pageHeight, richHeights, textMeasurer)
             if (pages.isEmpty()) {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { LoadingIndicator() }
             } else {
                 content(pages)
             }

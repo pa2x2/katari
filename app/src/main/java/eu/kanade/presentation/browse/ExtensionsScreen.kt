@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalTextStyle
@@ -64,6 +63,7 @@ import mihon.icons.materialsymbols.rounded.VerifiedUser
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.DotSeparatorNoSpaceText
 import tachiyomi.presentation.core.components.FastScrollLazyColumn
+import tachiyomi.presentation.core.components.LoadingIndicator
 import tachiyomi.presentation.core.components.material.PullRefresh
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.components.material.topSmallPaddingValues
@@ -361,9 +361,8 @@ private fun ExtensionItem(
             ) {
                 val idle = installStep.isCompleted()
                 if (!idle) {
-                    CircularProgressIndicator(
+                    LoadingIndicator(
                         modifier = Modifier.size(40.dp),
-                        strokeWidth = 2.dp,
                     )
                 }
 

@@ -8,8 +8,8 @@ import credits from "../captures/credits.json";
 const works: Credit[] = credits;
 ---
 
-<Page title="Credits — Katari" description="The openly licensed works shown in Katari's screenshots, and who made them.">
-  <main>
+<Page title="Credits · Katari" description="The openly licensed works shown in Katari's screenshots, and who made them.">
+  <main data-pagefind-body>
     <h1>Credits</h1>
     <p>
       Every screenshot and clip on this site shows works that are free to share. They are listed here with the license
@@ -30,8 +30,13 @@ const works: Credit[] = credits;
     </ul>
     <h2>Translation</h2>
     <p>
-      The translations are made on the device by <a href="https://github.com/davidventura/offline-translator" {...leavesSite()}>Offline
-      Translator</a> by David Ventura, with its Japanese to English model.
+      On the device, ogkalu's <a href="https://huggingface.co/ogkalu/comic-text-and-bubble-detector" {...leavesSite()}>Comic text and
+      bubble detector</a> finds the speech bubbles and kha-white's <a href="https://github.com/kha-white/manga-ocr" {...leavesSite()}>Manga
+      OCR</a> reads their Japanese. Both are under the Apache License 2.0.
+    </p>
+    <p>
+      David Ventura's <a href="https://github.com/davidventura/offline-translator" {...leavesSite()}>Offline Translator</a> made the
+      translations on the device, with its Japanese to English model.
     </p>
   </main>
 </Page>
@@ -49,7 +54,7 @@ const works: Credit[] = credits;
   }
 
   main > p {
-    color: var(--muted);
+    color: var(--text);
   }
 
   .works {
@@ -59,11 +64,11 @@ const works: Credit[] = credits;
 
   .works li {
     padding: 0.9rem 0;
-    border-bottom: 1px solid var(--indigo-light);
-    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
   }
 
   .works strong {
-    color: var(--cream);
+    font-weight: 650;
   }
 </style>

@@ -5,21 +5,29 @@ import android.graphics.Rect
 import android.os.Handler
 import android.os.Looper
 import android.view.PixelCopy
+import android.view.View
 import android.view.ViewTreeObserver
 import android.view.Window
 import androidx.core.graphics.ColorUtils
 import androidx.core.graphics.createBitmap
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 
 /**
  * Samples the reader content drawn behind system bars so bar icons can keep contrast with the page beneath them.
  *
  * Pages are drawn edge-to-edge, so the artwork under a bar changes with every page turn and scroll. While enabled,
  * redraws are sampled at most once per [SAMPLE_INTERVAL_MS], with a trailing sample once drawing settles.
+ *
+ * [PixelCopy] throws for a window without a surface. A sample is therefore only scheduled by a drawn frame, which
+ * proves a surface existed, and is dropped if the surface goes away first: stopping the activity destroys it right
+ * after ON_STOP is dispatched, and the window manager releases it when it hides the window.
  */
 internal class ReaderSystemBarContentSampler(
     private val window: Window,
+    lifecycle: Lifecycle,
     private val onContentChanged: () -> Unit,
 ) {
     /** Whether the content behind the status bar is light, or null before it has been sampled. */
@@ -40,16 +48,23 @@ internal class ReaderSystemBarContentSampler(
     private var enabled = false
     private var samplePending = false
 
+    init {
+        lifecycle.addObserver(
+            LifecycleEventObserver { _, event ->
+                if (event == Lifecycle.Event.ON_STOP) cancelSample()
+            },
+        )
+    }
+
     fun setEnabled(enabled: Boolean) {
         if (this.enabled == enabled) return
         this.enabled = enabled
         if (enabled) {
             decorView.viewTreeObserver.addOnDrawListener(drawListener)
-            scheduleSample()
+            decorView.invalidate()
         } else {
             decorView.viewTreeObserver.removeOnDrawListener(drawListener)
-            handler.removeCallbacks(sampleRunnable)
-            samplePending = false
+            cancelSample()
         }
     }
 
@@ -59,8 +74,13 @@ internal class ReaderSystemBarContentSampler(
         handler.postDelayed(sampleRunnable, SAMPLE_INTERVAL_MS)
     }
 
+    private fun cancelSample() {
+        handler.removeCallbacks(sampleRunnable)
+        samplePending = false
+    }
+
     private fun sample() {
-        if (!enabled || !decorView.isAttachedToWindow) return
+        if (!enabled || !decorView.isAttachedToWindow || decorView.windowVisibility != View.VISIBLE) return
         val insets = ViewCompat.getRootWindowInsets(decorView) ?: return
         val width = decorView.width
         val height = decorView.height

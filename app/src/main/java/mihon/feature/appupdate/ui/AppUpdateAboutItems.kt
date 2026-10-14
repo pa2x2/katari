@@ -3,7 +3,6 @@ package mihon.feature.appupdate.ui
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -19,6 +18,7 @@ import mihon.feature.appupdate.AppUpdatePreferences
 import mihon.feature.appupdate.AppUpdateStatus
 import mihon.feature.appupdate.check.AppUpdateChannel
 import tachiyomi.i18n.*
+import tachiyomi.presentation.core.components.LoadingIndicator
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
 import uy.kohesive.injekt.Injekt
@@ -45,7 +45,7 @@ private fun CheckForUpdatesItem() {
         subtitle = state.status.subtitle(state.update, lastCheckedAt),
         widget = {
             AnimatedVisibility(visible = checking) {
-                CircularProgressIndicator(modifier = Modifier.size(28.dp), strokeWidth = 3.dp)
+                LoadingIndicator(modifier = Modifier.size(28.dp))
             }
         },
         onPreferenceClick = {

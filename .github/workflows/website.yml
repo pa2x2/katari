@@ -1,16 +1,16 @@
 name: Website
 
-# Builds the website from website/ on main and the captures on the `assets` branch, and deploys it to GitHub
-# Pages. The `assets` branch starts this workflow whenever a capture pull request is merged into it, and
-# website-release.yml whenever a release is published.
+# Builds the website of the newest published release, so the site only ever describes an app people can download,
+# with the captures on the `assets` branch, and deploys it to GitHub Pages. website-release.yml starts this workflow
+# when a release is published, and the `assets` branch whenever a capture pull request is merged into it. A manual
+# run can name another ref, such as a branch cut from the release tag with a website-only fix.
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - website/**
-      - .github/workflows/website.yml
   workflow_dispatch:
+    inputs:
+      ref:
+        description: Branch, tag or commit to build the website from; empty builds the newest published release
+        required: false
+        type: string
 
 concurrency:
   group: ${{ github.workflow }}
@@ -27,8 +27,20 @@ jobs:
       contents: read
 
     steps:
+      - name: Pick the ref
+        id: ref
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REQUESTED: ${{ inputs.ref }}
+        run: |
+          ref="${REQUESTED:-$(gh release view --repo "$GITHUB_REPOSITORY" --json tagName --jq .tagName)}"
+          echo "::notice::Building the website from $ref."
+          echo "ref=$ref" >> "$GITHUB_OUTPUT"
+
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ steps.ref.outputs.ref }}
 
       - name: Checkout captures
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -14,6 +13,7 @@ import androidx.compose.ui.unit.dp
 import mihon.feature.profiles.core.Profile
 import mihon.feature.profiles.ui.ProfilePickerScene
 import tachiyomi.i18n.*
+import tachiyomi.presentation.core.components.LoadingIndicator
 import tachiyomi.presentation.core.i18n.stringResource
 
 internal data class ProfileStartupDecision(
@@ -108,7 +108,7 @@ internal fun ProfileGateContent(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center,
             ) {
-                CircularProgressIndicator()
+                LoadingIndicator()
             }
         }
         state == ProfileStartupGateState.Authenticating -> {
@@ -120,7 +120,7 @@ internal fun ProfileGateContent(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    CircularProgressIndicator()
+                    LoadingIndicator()
                     authProfileName?.let {
                         Text(
                             text = stringResource(MR.strings.unlock_app_title, it),
@@ -136,7 +136,7 @@ internal fun ProfileGateContent(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center,
                 ) {
-                    CircularProgressIndicator()
+                    LoadingIndicator()
                 }
             } else {
                 ProfilePickerScene(

@@ -32,7 +32,7 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.tooling.preview.Preview
 
 /**
- * A combined [CircularProgressIndicator] that always rotates.
+ * A [LoadingIndicator] until progress is known, then a [CircularProgressIndicator] that always rotates.
  *
  * By always rotating we give the feedback to the user that the application isn't 'stuck'.
  */
@@ -48,10 +48,8 @@ fun CombinedCircularProgressIndicator(
         modifier = modifier,
     ) { indeterminate ->
         if (indeterminate) {
-            // Indeterminate
-            CircularProgressIndicator()
+            LoadingIndicator()
         } else {
-            // Determinate
             val infiniteTransition = rememberInfiniteTransition(label = "infiniteRotation")
             val rotation by infiniteTransition.animateFloat(
                 initialValue = 0f,

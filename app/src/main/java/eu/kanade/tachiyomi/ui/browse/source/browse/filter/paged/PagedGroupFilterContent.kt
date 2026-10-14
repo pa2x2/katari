@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -53,6 +52,7 @@ import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Close
 import mihon.icons.materialsymbols.rounded.Search
 import tachiyomi.i18n.*
+import tachiyomi.presentation.core.components.LoadingIndicator
 import tachiyomi.presentation.core.components.material.PullRefresh
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -303,7 +303,7 @@ private fun PagedGroupItemList(
                                 modifier = Modifier.fillMaxWidth().padding(FilterSheetInsets.Horizontal),
                                 horizontalArrangement = Arrangement.Center,
                             ) {
-                                CircularProgressIndicator()
+                                LoadingIndicator()
                             }
                         }
                     } else if (items.loadState.refresh is LoadState.Error && items.itemCount == 0) {
@@ -342,7 +342,7 @@ private fun PagedGroupItemList(
                                 modifier = Modifier.fillMaxWidth().padding(FilterSheetInsets.Horizontal),
                                 horizontalArrangement = Arrangement.Center,
                             ) {
-                                CircularProgressIndicator()
+                                LoadingIndicator()
                             }
                         }
                     } else if (items.loadState.append is LoadState.Error) {
@@ -383,7 +383,7 @@ private fun ProjectedFilterItem(
     }
 
     when (val current = projection) {
-        ProjectedFilterItemState.Loading -> CircularProgressIndicator(modifier = Modifier.padding(16.dp))
+        ProjectedFilterItemState.Loading -> LoadingIndicator(modifier = Modifier.padding(16.dp))
         ProjectedFilterItemState.Failed -> RetryItem {
             scope.launch { projection = projectFilterItemState(group, item, null) }
         }

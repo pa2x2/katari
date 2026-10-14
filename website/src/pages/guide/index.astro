@@ -1,0 +1,116 @@
+---
+import { guide } from "../../guide/contents.ts";
+import Page from "../../site/Page.astro";
+import { sitePath } from "../../site/links.ts";
+---
+
+<Page title="Guide · Katari" description="Step-by-step help with setting up and using Katari. Every button and setting is named as the app shows it.">
+  <main>
+    <p class="kicker">Guide</p>
+    <h1>Using Katari</h1>
+    <p class="lead">Step-by-step help with setting up and using Katari. Every button and setting is named as the app shows it.</p>
+    {
+      guide.map((group) => (
+        <section aria-label={group.title}>
+          <h2>{group.title}</h2>
+          <ul>
+            {group.pages.map((page) => (
+              <li>
+                <a href={sitePath(`guide/${page.slug}/`)}>
+                  <span class="icon">
+                    <page.icon aria-hidden="true" />
+                  </span>
+                  <strong>{page.title}</strong>
+                  <span class="summary">{page.summary}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))
+    }
+  </main>
+</Page>
+
+<style>
+  main {
+    max-width: var(--page-width);
+    margin: 0 auto;
+    padding: 3rem var(--gutter) 0;
+  }
+
+  h1 {
+    margin: 0 0 0.75rem;
+    font-size: clamp(2.4rem, 6vw, 3.6rem);
+  }
+
+  .lead {
+    max-width: 40rem;
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 1.15rem;
+  }
+
+  h2 {
+    margin: 2.5rem 0 0.9rem;
+    color: var(--text-strong);
+    font-family: var(--sans);
+    font-size: 1.05rem;
+    font-weight: 600;
+  }
+
+  ul {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(20rem, 100%), 1fr));
+    gap: 1rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  a {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-content: start;
+    column-gap: 1rem;
+    height: 100%;
+    padding: 1.1rem 1.25rem;
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    background: var(--surface);
+    color: var(--text-strong);
+    text-decoration: none;
+  }
+
+  a:hover {
+    border-color: var(--accent);
+  }
+
+  .icon {
+    display: grid;
+    grid-row: span 2;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 0.6rem;
+    background: var(--border);
+    color: var(--accent);
+  }
+
+  .icon :global(svg) {
+    width: 1.6rem;
+    height: 1.6rem;
+    fill: currentColor;
+  }
+
+  strong {
+    margin-bottom: 0.3rem;
+    font-family: var(--serif);
+    font-size: 1.3rem;
+  }
+
+  .summary {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+  }
+</style>

@@ -6,7 +6,8 @@
  * show the difference for review.
  *
  * A work's `kind` picks its resolver: `peppercarrot` lists episode pages on peppercarrot.com, `gutenberg` reads a
- * Project Gutenberg book's catalog record, and `film` takes its metadata as written here.
+ * Project Gutenberg book's catalog record, and `film` takes its metadata as written here. Only the chapters a work names
+ * in `fetchChapters` are downloaded.
  */
 import type { CoverDefinition, SourceDefinition, WorkDefinition } from "./source-definitions.ts";
 import sourceList from "./source-list/sources.json" with { type: "json" };
@@ -39,12 +40,15 @@ export const works: WorkDefinition[] = [
     kind: "peppercarrot",
     language: "ja",
     episodes: { first: 1, last: 8 },
+    // The translation scenes read episode 6.
+    fetchChapters: [6],
     title: "ペッパー＆キャロット",
     description: "カオサの見習い魔女ペッパーと相棒の猫キャロットが、魔法の世界エレヴァで騒動を巻き起こす。",
     genres: ["Fantasy", "Comedy", "Adventure"],
     cover: pepperCarrotCover,
   },
-  { id: "alice-in-wonderland", source: "gutenberg", kind: "gutenberg", book: 11 },
+  // Family stopped partway through it.
+  { id: "alice-in-wonderland", source: "gutenberg", kind: "gutenberg", book: 11, fetchChapters: [1] },
   { id: "pride-and-prejudice", source: "gutenberg", kind: "gutenberg", book: 1342 },
   {
     id: "frankenstein",
@@ -54,7 +58,8 @@ export const works: WorkDefinition[] = [
     title: "Frankenstein; or, The Modern Prometheus",
   },
   { id: "the-time-machine", source: "gutenberg", kind: "gutenberg", book: 35 },
-  { id: "sherlock-holmes", source: "gutenberg", kind: "gutenberg", book: 1661 },
+  // The book reader scenes open it where Personal stopped.
+  { id: "sherlock-holmes", source: "gutenberg", kind: "gutenberg", book: 1661, fetchChapters: [1] },
   { id: "treasure-island", source: "gutenberg", kind: "gutenberg", book: 120 },
   { id: "peter-pan", source: "gutenberg", kind: "gutenberg", book: 16 },
   { id: "dorian-gray", source: "gutenberg", kind: "gutenberg", book: 174 },
@@ -90,10 +95,14 @@ export const works: WorkDefinition[] = [
     genres: ["Fantasy", "Adventure", "Drama"],
     license: { name: "CC BY 3.0", url: "https://creativecommons.org/licenses/by/3.0/" },
     attribution: "© copyright Blender Foundation | durian.blender.org",
-    // Wikimedia's 1080p transcode is a fifth the size of Blender's own 1080p file, for the same frames on a phone.
+    // The player scene plays it. Wikimedia's 1080p transcode is a fifth the size of Blender's own 1080p file, for the
+    // same frames on a phone.
+    fetchChapters: [1],
     video: {
       url: "https://upload.wikimedia.org/wikipedia/commons/transcoded/f/f1/Sintel_movie_4K.webm/Sintel_movie_4K.webm.1080p.vp9.webm",
     },
+    // The player scene seeks to 691 s (showcase/capture PlayerScenes.kt), and the player buffers 50 s past it.
+    played: { from: 680, to: 760 },
     cover: { url: "https://upload.wikimedia.org/wikipedia/commons/8/8f/Sintel_poster.jpg" },
   },
   {
@@ -108,10 +117,8 @@ export const works: WorkDefinition[] = [
     genres: ["Comedy", "Family"],
     license: { name: "CC BY 3.0", url: "https://creativecommons.org/licenses/by/3.0/" },
     attribution: "© copyright Blender Foundation | www.bigbuckbunny.org",
-    // Only its cover is shown, so the smallest encode will do.
     video: {
-      url: "https://download.blender.org/peach/bigbuckbunny_movies/BigBuckBunny_320x180.mp4.zip",
-      member: "BigBuckBunny_320x180.mp4",
+      url: "https://upload.wikimedia.org/wikipedia/commons/transcoded/c/c0/Big_Buck_Bunny_4K.webm/Big_Buck_Bunny_4K.webm.720p.vp9.webm",
     },
     cover: { url: "https://upload.wikimedia.org/wikipedia/commons/c/c5/Big_buck_bunny_poster_big.jpg" },
   },

@@ -1,0 +1,43 @@
+---
+import Callout from "../../guide/Callout.astro";
+import GuidePage from "../../guide/GuidePage.astro";
+import Path from "../../guide/Path.astro";
+import Task from "../../guide/Task.astro";
+---
+
+<GuidePage slug="tracking" lead="Katari sends your reading progress to tracking sites such as AniList and MyAnimeList.">
+  <Callout label="Comics only" tone="warning">
+    <p>For now only comics can be tracked. Books and video have no tracking, on any tracker.</p>
+  </Callout>
+
+  <Task id="log-in" title="Log in to a tracker">
+    <ol>
+      <li>Open <Path>Settings › Tracking</Path>.</li>
+      <li>Tap a tracker and log in.</li>
+    </ol>
+    <p>
+      The trackers are MangaBaka, MyAnimeList, AniList, Kitsu, Shikimori, Bangumi, MangaUpdates, Hikka and Comick. A login belongs to the
+      profile you're in, so each profile can use its own accounts.
+    </p>
+  </Task>
+
+  <Task id="track" title="Track a title">
+    <ol>
+      <li>Open the title and tap <strong>Tracking</strong>.</li>
+      <li>Pick the tracker and find the title on it.</li>
+    </ol>
+    <p>
+      From then on Katari updates the tracker as your progress changes, while <strong>Update tracking after progress changes</strong> in
+      <Path>Settings › Tracking</Path> is on, as it is from the start. It only sends; changes made on the tracker's site don't come
+      back. When you mark chapters read by hand on a title's page, <strong>Update tracking when marked finished</strong> decides whether
+      the tracker follows: <strong>Always</strong>, <strong>Always ask</strong> or <strong>Never</strong>.
+    </p>
+  </Task>
+
+  <Task id="enhanced" title="Trackers that follow your library by themselves">
+    <p>
+      Komga, Kavita and Suwayomi are servers you run, with matching sources. Log in under <strong>Enhanced trackers</strong>, and titles from
+      their sources are tracked as soon as you add them to the library.
+    </p>
+  </Task>
+</GuidePage>

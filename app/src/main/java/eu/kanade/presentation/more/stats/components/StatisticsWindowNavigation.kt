@@ -20,7 +20,7 @@ import mihon.icons.materialsymbols.rounded.ChevronRight
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
-/** Moves a finite window by one bucket; Today appears next to the dates once an older window is shown. */
+/** Moves a finite window by its own length; Today appears next to the dates once an older window is shown. */
 @Composable
 internal fun StatisticsWindowNavigation(
     window: StatsActivityWindow,

@@ -3,7 +3,6 @@ package eu.kanade.tachiyomi.ui.browse.source.browse.filter
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExposedDropdownMenu
 import androidx.compose.material3.ExposedDropdownMenuAnchorType
@@ -33,6 +32,7 @@ import eu.kanade.tachiyomi.ui.browse.source.browse.filter.control.FilterSheetIns
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.control.filterFieldKeyboardActions
 import mihon.entry.interactions.catalogue.EntryCatalogueFilterSuggestionsResult
 import tachiyomi.i18n.*
+import tachiyomi.presentation.core.components.LoadingIndicator
 import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable
@@ -132,7 +132,7 @@ internal fun AutocompleteFilterItem(
                         onClick = {},
                         enabled = false,
                         leadingIcon = {
-                            CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                            LoadingIndicator(modifier = Modifier.size(24.dp))
                         },
                         contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
                     )

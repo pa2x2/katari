@@ -1,0 +1,94 @@
+---
+import upcoming from "../../captures/upcoming.png";
+import updates from "../../captures/updates.png";
+import Callout from "../../guide/Callout.astro";
+import GuidePage from "../../guide/GuidePage.astro";
+import Path from "../../guide/Path.astro";
+import Task from "../../guide/Task.astro";
+---
+
+<GuidePage
+  slug="library-updates"
+  lead="Katari checks your sources for new chapters, episodes and books, either when you ask or on a schedule you set."
+>
+  <Task id="check" title="Check for new chapters" shot={{ image: updates, alt: "New episodes listed in the updates feed", caption: "Updates" }}>
+    <ul>
+      <li>Pull down on the library to check the page you're on, such as one category.</li>
+      <li>The library's <strong>⋮</strong> menu has <strong>Update library</strong> for everything.</li>
+      <li>Pull down on the <strong>Updates</strong> tab to check the whole library.</li>
+    </ul>
+    <p>What's new lands in <strong>Updates</strong>, newest first.</p>
+  </Task>
+
+  <Task id="schedule" title="Check on a schedule">
+    <ol>
+      <li>Open <Path>Settings › Library updates</Path>.</li>
+      <li>Under <strong>Schedule</strong>, set <strong>Automatic updates</strong> to how often to check. It is <strong>Off</strong> at first.</li>
+      <li>
+        <strong>Automatic updates device restrictions</strong> picks when checks may run: <strong>Only on Wi-Fi</strong>, <strong>Only on unmetered
+        network</strong>, or <strong>When charging</strong>. Only on Wi-Fi is on from the start.
+      </li>
+    </ol>
+    <p>The top of the screen says when the next check runs and how many titles it will look at.</p>
+  </Task>
+
+  <Task id="what-is-checked" title="Choose what gets checked">
+    <p>Every check follows the library's rules, set on the same screen:</p>
+    <ul>
+      <li><strong>Categories</strong> and <strong>Sources</strong> turn whole categories or sources off.</li>
+      <li><strong>Types</strong> leaves out comics, video or books, once your library holds more than one kind.</li>
+      <li>
+        <strong>Skip an entry when…</strong> skips titles that are completed, that you haven't started, or that still have unseen items. It
+        can also check a title only around when its next release is expected. Skipping completed titles and checking near the release are
+        on from the start.
+      </li>
+    </ul>
+    <p>
+      Tap a category to give it its own <strong>Skip an entry when…</strong> rules and <strong>Check every</strong> schedule; turning
+      <strong>Use library rules</strong> back on drops them.
+    </p>
+    <p>
+      To set a different rule for one title, tap the <strong>Updates</strong> button on its page and choose <strong>Always check</strong> or
+      <strong>Never check</strong>. <strong>Follow library rules</strong> puts it back. The same sheet says why the title was or wasn't checked.
+    </p>
+  </Task>
+
+  <Task id="report" title="See what the last check did">
+    <p>
+      Tap <strong>Last update</strong> in <Path>Settings › Library updates</Path>, or the time at the top of Updates, for the
+      <strong>Update report</strong>. It lists what failed, what was new, and what was skipped, and lets you retry failed titles or move
+      them to another source.
+    </p>
+    <p>
+      <strong>Pause source</strong> leaves a failing source out of updates for a day, three days, a week, until a date and time you pick,
+      or until you resume it. Tap it again to resume.
+    </p>
+  </Task>
+
+  <Task id="large-updates" title="Why Katari warns about large updates">
+    <p>
+      Checking or downloading a lot from one source at once looks like an attack to many sites, and they answer by slowing down or
+      blocking requests, sometimes for everyone using the source. Katari warns when one update checks more than 60 titles from a source,
+      or when many downloads from one source queue up.
+    </p>
+    <ul>
+      <li>Split your library into categories and turn off the ones you don't follow closely.</li>
+      <li>Leave <strong>Only check near its expected release</strong> on.</li>
+      <li>Download a few chapters at a time rather than whole series.</li>
+    </ul>
+    <Callout label="Not a bug">
+      <p>The warning is advice. The update or download still runs.</p>
+    </Callout>
+  </Task>
+
+  <Task id="upcoming" title="What Upcoming shows" shot={{ image: upcoming, alt: "A month's calendar marking the day a series' next episode is expected", caption: "Upcoming" }}>
+    <p>
+      <Path>Updates › View Upcoming Updates</Path> opens a calendar of when titles are expected to get something new, based on how often
+      they got new chapters before. It's an estimate, not a release date. A series on break or a source with wrong dates throws it off.
+    </p>
+    <p>
+      Titles that automatic updates won't check are marked <strong>Won't be checked</strong>, with the reason. <strong>Filter</strong> limits
+      the calendar to some categories.
+    </p>
+  </Task>
+</GuidePage>

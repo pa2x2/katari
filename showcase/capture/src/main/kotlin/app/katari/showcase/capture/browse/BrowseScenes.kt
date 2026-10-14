@@ -45,4 +45,23 @@ class BrowseScenes {
         find(By.text("Treasure Island"))
         capture("feed")
     }
+
+    /** The showcase extension supplies every kind of title, which its row shows. */
+    @Test
+    fun extensions() {
+        openProfile("Personal")
+        tap(By.text("Browse"))
+        tap(By.text("Extensions"))
+        find(By.text("Showcase"))
+        capture("extensions")
+    }
+
+    @Test
+    fun migration() {
+        openProfile("Personal")
+        tap(By.text("Browse"))
+        tap(By.text("Migrate"))
+        find(By.text("Project Gutenberg"))
+        capture("migration")
+    }
 }

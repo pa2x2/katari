@@ -36,7 +36,8 @@ class TranslationSetup {
         find(By.text("Japanese → English"), timeoutMs = MODEL_DOWNLOAD_TIMEOUT_MS)
 
         tap(By.desc("Show translations on the page"))
-        tap(By.text("Set up"))
+        // Offered once the page's text is recognized and the translator turns out not to be set up yet.
+        tap(By.text("Set up"), timeoutMs = PAGE_TRANSLATION_TIMEOUT_MS)
         tap(By.text("Allow on-device translation"))
         closeTranslationBar()
     }

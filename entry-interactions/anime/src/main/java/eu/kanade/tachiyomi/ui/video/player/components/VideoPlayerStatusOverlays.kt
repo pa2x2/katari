@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -49,6 +48,7 @@ import mihon.icons.materialsymbols.rounded.Brightness6
 import mihon.icons.materialsymbols.rounded.LockOpen
 import mihon.icons.materialsymbols.rounded.SkipNext
 import tachiyomi.i18n.*
+import tachiyomi.presentation.core.components.LoadingIndicator
 import tachiyomi.presentation.core.i18n.stringResource
 
 private const val SIDE_GESTURE_FEEDBACK_VISIBLE_DURATION_MS = 900L
@@ -64,7 +64,7 @@ internal fun VideoPlayerLoadingOverlay(modifier: Modifier = Modifier) {
         modifier = modifier.background(Color.Black.copy(alpha = 0.84f)),
         contentAlignment = Alignment.Center,
     ) {
-        CircularProgressIndicator(color = Color.White)
+        LoadingIndicator(color = Color.White)
     }
 }
 
@@ -140,10 +140,9 @@ internal fun VideoPlayerSwitchingOverlay(modifier: Modifier = Modifier) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        CircularProgressIndicator(
+        LoadingIndicator(
             modifier = Modifier.size(20.dp),
             color = Color.White,
-            strokeWidth = 2.dp,
         )
         Text(
             text = "Switching source...",

@@ -9,36 +9,26 @@ import mihon.entry.interactions.state.EntryConsumptionFeature
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.repository.EntryChapterRepository
-import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.track.interactor.InsertTrack
 import tachiyomi.domain.track.model.EntryTrack
 import kotlin.math.max
 
+/**
+ * Marks chapters read up to an enhanced tracker's progress. Only enhanced trackers follow the library this way; for the
+ * others tracking is one-way, so what changes on their sites never reaches the chapters.
+ */
 class SyncChapterProgressWithTrack(
-    private val entryRepository: EntryRepository,
     private val entryChapterRepository: EntryChapterRepository,
     private val entryConsumptionFeature: EntryConsumptionFeature,
     private val insertTrack: InsertTrack,
 ) {
 
     suspend fun await(
-        entryId: Long,
-        remoteTrack: EntryTrack,
-        tracker: Tracker,
-    ) {
-        if (tracker !is EnhancedTracker) {
-            return
-        }
-        val entry = entryRepository.getEntryById(entryId) ?: return
-        await(entry, remoteTrack, tracker)
-    }
-
-    suspend fun await(
         entry: Entry,
         remoteTrack: EntryTrack,
         tracker: Tracker,
     ) {
-        if (!tracker.supportsEntryType(entry.type)) {
+        if (tracker !is EnhancedTracker || !tracker.supportsEntryType(entry.type)) {
             return
         }
 

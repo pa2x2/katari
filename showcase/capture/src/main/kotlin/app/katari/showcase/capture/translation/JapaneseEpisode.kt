@@ -38,4 +38,10 @@ internal fun closeTranslationBar() {
 // A spot in the middle column of the second page that no speech bubble covers, so the tap reaches the reader.
 internal fun toggleReaderBars() = tapAt(0.5f, 0.3f)
 
+/**
+ * How long the page's text may take to be recognized and translated. On a GitHub runner that takes 90 to 130 seconds,
+ * most of it in Offline Translator, whose only build is for arm64 and runs translated on the x86_64 emulator.
+ */
+internal const val PAGE_TRANSLATION_TIMEOUT_MS = 5 * 60_000L
+
 private const val EPISODE = "第6話"

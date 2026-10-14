@@ -49,6 +49,18 @@ internal fun StatsActivityWindow.shiftedByBuckets(bucketCount: Int): StatsActivi
     )
 }
 
+/** Moves by whole windows, so one step back from the latest window lands on its [previousWindow]. */
+internal fun StatsActivityWindow.shiftedByWindows(windowCount: Int): StatsActivityWindow =
+    shiftedByBuckets(windowCount * range.windowBucketCount)
+
+private val StatsRange.windowBucketCount: Int
+    get() = when (this) {
+        StatsRange.SEVEN_DAYS -> 7
+        StatsRange.THIRTY_DAYS -> 30
+        StatsRange.ONE_YEAR -> 12
+        StatsRange.ALL -> 0
+    }
+
 /** The same-length window that ends the day before this one starts; All has no previous window. */
 internal fun StatsActivityWindow.previousWindow(): StatsActivityWindow? {
     val start = startDate ?: return null

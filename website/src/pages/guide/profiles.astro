@@ -1,0 +1,74 @@
+---
+import libraryFamily from "../../captures/library-family.png";
+import profiles from "../../captures/profiles.png";
+import Callout from "../../guide/Callout.astro";
+import GuidePage from "../../guide/GuidePage.astro";
+import Path from "../../guide/Path.astro";
+import Task from "../../guide/Task.astro";
+---
+
+<GuidePage
+  slug="profiles"
+  lead="Each profile has its own library, history and statistics, for a shared tablet or for keeping collections apart."
+>
+  <Task id="add" title="Add a profile">
+    <ol>
+      <li>Open <Path>Settings › Profiles › Manage profiles</Path>.</li>
+      <li>Tap <strong>+</strong> (<strong>Add profile</strong>), give it a <strong>Name</strong>, and confirm.</li>
+    </ol>
+    <p>The same screen renames profiles with <strong>Edit</strong> and puts away the ones you don't use with <strong>Archive</strong>.</p>
+  </Task>
+
+  <Task id="switch" title="Switch profiles" shot={{ image: profiles, alt: "Choosing between two profiles", caption: "Select profile" }}>
+    <ul>
+      <li><Path>More › Switch profile</Path> switches straight to the other profile when there are two, and asks which one when there are more.</li>
+      <li>With <strong>Choose profile on launch</strong> on, as it is from the start, Katari asks every time it opens.</li>
+      <li>
+        Once there are two or more profiles, a <strong>Switch</strong> tab can sit in the bottom bar; add it under
+        <Path>Settings › Appearance › Home screen tabs</Path>.
+      </li>
+    </ul>
+  </Task>
+
+  <Task id="kept-apart" title="What a profile keeps apart" shot={{ image: libraryFamily, alt: "The Family profile's library of children's classics", caption: "Another profile's library" }}>
+    <table>
+      <thead>
+        <tr><th>Each profile has its own</th> <th>All profiles share</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Library, categories, history and statistics</td> <td>Downloads and the storage folder</td></tr>
+        <tr><td>Library display, reader and appearance settings</td> <td>Backups</td></tr>
+        <tr><td>Source settings, tracker logins and feeds</td> <td>Networking and privacy settings</td></tr>
+        <tr><td>Translation, text-to-speech and text recognition choices</td> <td>Extension stores and downloaded models</td></tr>
+        <tr><td>Its lock and its startup screen</td> <td>Auto-translate settings for downloads</td></tr>
+      </tbody>
+    </table>
+  </Task>
+
+  <Task id="lock" title="Lock a profile">
+    <ol>
+      <li>Switch to the profile and open <Path>Settings › Security and privacy</Path>.</li>
+      <li>Turn on <strong>Require unlock</strong>, then pick how soon it locks again under <strong>Lock when idle</strong>.</li>
+    </ol>
+    <p>
+      The idle time starts when you leave Katari or switch to another profile. Katari asks again whenever it starts, and with
+      <strong>Never</strong> switching to the profile doesn't ask. <strong>Require unlock</strong> only shows on phones with a screen
+      lock.
+    </p>
+  </Task>
+
+  <Task id="move" title="Move titles to another profile">
+    <ol>
+      <li>In the library, long-press the titles to select them, then tap <Path>More › Move to profile</Path>.</li>
+      <li>Pick the profile, unlocking it if it asks, and a category there.</li>
+      <li>If the other profile already has a title, choose to overwrite it, remove yours, or leave it.</li>
+    </ol>
+  </Task>
+
+  <Task id="delete" title="Delete a profile">
+    <p>Archive it first; archived profiles get a <strong>Delete</strong> button. Deleting removes everything in that profile for good.</p>
+    <Callout label="Can't archive">
+      <p>The profile you're using and the Default profile can't be archived.</p>
+    </Callout>
+  </Task>
+</GuidePage>

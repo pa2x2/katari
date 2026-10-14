@@ -93,12 +93,12 @@ const aspect = (shot: Shot) => aspectOf(shot.kind === "still" ? shot.image : sho
     .overlap .slot,
     .legend li {
       grid-area: 1 / 1;
-      --shot-width: min(17rem, 46cqi);
+      --shot-width: min(20rem, 46cqi);
     }
 
     .overlap.upright-1 :is(.slot, .legend li),
     .overlap.upright-2 :is(.slot, .legend li) {
-      --shot-width: min(17rem, 62cqi);
+      --shot-width: min(20rem, 62cqi);
     }
 
     /* The phones' own captions would sit under the front one, so the legend shows them; screen readers still read
@@ -153,8 +153,8 @@ const aspect = (shot: Shot) => aspectOf(shot.kind === "still" ? shot.image : sho
     .overlap .wide {
       position: relative;
       z-index: 3;
-      width: min(28rem, 90cqi);
-      margin: -11rem auto 0;
+      width: min(33rem, 90cqi);
+      margin: -13rem auto 0;
       transform: translateX(-6%);
     }
 
@@ -164,7 +164,7 @@ const aspect = (shot: Shot) => aspectOf(shot.kind === "still" ? shot.image : sho
       margin: 1rem 0 0;
       padding: 0;
       list-style: none;
-      color: var(--muted);
+      color: var(--text-muted);
       font-size: 0.9rem;
       line-height: 1.4;
       text-align: center;
@@ -198,7 +198,7 @@ const aspect = (shot: Shot) => aspectOf(shot.kind === "still" ? shot.image : sho
 
     /* Each starts as wide as the shared height needs, and a narrow page shrinks them all in proportion. */
     .row .slot {
-      --row-height: 38rem;
+      --row-height: 44rem;
       flex: 0 1 var(--shot-width);
       min-width: 0;
     }

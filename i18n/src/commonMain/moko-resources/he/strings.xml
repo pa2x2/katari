@@ -721,7 +721,6 @@
     <string name="upcoming_calendar_next">החודש הבא</string>
     <string name="upcoming_calendar_prev">החודש שעבר</string>
     <string name="pref_filter_upcoming_categories_details">פריטים בקטגוריות מוחרגות לא יוצגו, גם אם הם מופיעים בקטגוריות נבחרות.</string>
-    <string name="label_support_us">תמיכה בפרויקט</string>
     <string name="unlock_app_title">פתיחת %s</string>
     <string name="clear_database_text">פעולה זו תסיר פריטים ממסד הנתונים</string>
     <string name="pref_mark_duplicate_read_chapter_read">סימון פרקים כפולים כ\'נקרא\'</string>

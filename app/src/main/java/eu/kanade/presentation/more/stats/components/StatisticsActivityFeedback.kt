@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -18,6 +17,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.more.stats.ActivityState
 import tachiyomi.i18n.*
+import tachiyomi.presentation.core.components.LoadingIndicator
 import tachiyomi.presentation.core.i18n.stringResource
 
 /** Retains loading and retry feedback when the user hides the activity chart. */
@@ -40,7 +40,7 @@ internal fun StatisticsActivityFeedback(state: ActivityState, onRetry: () -> Uni
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        if (loading != null) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
+        if (loading != null) LoadingIndicator(Modifier.size(20.dp))
         Text(
             text = stringResource(
                 if (loading != null) {
