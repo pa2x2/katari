@@ -168,7 +168,7 @@ export const chapters: Chapter[] = [
       {
         id: "recap",
         title: "Your year, as a story",
-        text: "Every year, and every month if you like, gets a recap that plays like a story.",
+        text: "Every month and every year gets a recap that plays like a story.",
         highlights: ["The titles you spent the most time with, your longest streak, and the hour you read most", "Share it as a picture"],
         band: "recap",
         shots: [

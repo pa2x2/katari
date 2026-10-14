@@ -23,7 +23,10 @@ import Task from "../../guide/Task.astro";
     <ul>
       <li><Path>More › Switch profile</Path> switches straight to the other profile when there are two, and asks which one when there are more.</li>
       <li>With <strong>Choose profile on launch</strong> on, as it is from the start, Katari asks every time it opens.</li>
-      <li>A <strong>Switch</strong> tab can sit in the bottom bar; add it under <Path>Settings › Appearance › Home screen tabs</Path>.</li>
+      <li>
+        Once there are two or more profiles, a <strong>Switch</strong> tab can sit in the bottom bar; add it under
+        <Path>Settings › Appearance › Home screen tabs</Path>.
+      </li>
     </ul>
   </Task>
 
@@ -48,8 +51,9 @@ import Task from "../../guide/Task.astro";
       <li>Turn on <strong>Require unlock</strong>, then pick how soon it locks again under <strong>Lock when idle</strong>.</li>
     </ol>
     <p>
-      The idle time starts when you switch away from the profile. Every locked profile asks again after Katari restarts. <strong>Require
-      unlock</strong> only shows on phones with a screen lock.
+      The idle time starts when you leave Katari or switch to another profile. Katari asks again whenever it starts, and with
+      <strong>Never</strong> switching to the profile doesn't ask. <strong>Require unlock</strong> only shows on phones with a screen
+      lock.
     </p>
   </Task>
 
