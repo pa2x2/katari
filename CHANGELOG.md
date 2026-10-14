@@ -1,5 +1,28 @@
 # Changelog
 
+## [1.15.1] - 2026-10-14
+
+### ✨ Added
+
+- Translation, text recognition, profiles, merging and the Statistics layout editor have help buttons that open their guide page.
+
+### 🔄 Changed
+
+- Help links open Katari's guide on its website instead of Mihon's documentation.
+- Loading indicators use the Material 3 Expressive style.
+
+### 🗑️ Removed
+
+- Mihon's donation screen and the donation prompt it showed every six months.
+
+### 🐛 Fixed
+
+- Manga downloads use Mihon's folder names, so Katari finds the downloads in a Mihon storage folder.
+- Trackers other than Komga, Kavita and Suwayomi no longer mark chapters read from their progress.
+- The arrows on the Statistics activity chart move by the whole selected period instead of one bar.
+- The Settings action on the migration search screen opens the source's settings instead of the help site.
+- Occasional manga reader crash that happened when you leave it or turn the screen off.
+
 ## [1.15.0] - 2026-10-13
 
 ### ✨ Added
@@ -719,7 +742,8 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v1.15.0...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/v1.15.1...HEAD
+[1.15.1]: https://github.com/pa2x2/katari/releases/tag/v1.15.1
 [1.15.0]: https://github.com/pa2x2/katari/releases/tag/v1.15.0
 [1.14.2]: https://github.com/pa2x2/katari/releases/tag/v1.14.2
 [1.14.1]: https://github.com/pa2x2/katari/releases/tag/v1.14.1
