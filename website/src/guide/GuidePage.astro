@@ -98,9 +98,12 @@ const sections = Astro.locals.guideSections;
     overflow-y: auto;
   }
 
+  /* A title longer than any word now still wraps on the smallest phones instead of widening the page. */
   h1 {
     margin: 0 0 0.75rem;
     font-size: clamp(2.4rem, 6vw, 3.4rem);
+    hyphens: auto;
+    overflow-wrap: break-word;
   }
 
   .lead {
@@ -173,6 +176,22 @@ const sections = Astro.locals.guideSections;
 
     .pages {
       grid-row: 1 / span 2;
+    }
+  }
+
+  /* "Troubleshooting" is wider than the smallest phones' column at the usual size, and side by side the neighbours'
+     titles no longer fit half of it. */
+  @media (width < 24rem) {
+    h1 {
+      font-size: 2rem;
+    }
+
+    .neighbours {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .next {
+      grid-column: auto;
     }
   }
 
