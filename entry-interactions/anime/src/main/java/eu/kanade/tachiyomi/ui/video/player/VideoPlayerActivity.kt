@@ -197,6 +197,9 @@ class VideoPlayerActivity : AppCompatActivity() {
     private var playbackVolumeLevel by mutableStateOf(0)
     private var playbackVolumeMaxLevel by mutableStateOf(1)
     private var controlsLocked by mutableStateOf(false)
+
+    // Applied once the player exists, as an intent can arrive before the stream has been resolved.
+    private var pendingPausedStartMs by mutableStateOf<Long?>(null)
     private var pictureInPictureActionReceiverRegistered = false
     private var brightnessObserverRegistered = false
     private val brightnessObserver = object : ContentObserver(Handler(Looper.getMainLooper())) {
@@ -275,6 +278,11 @@ class VideoPlayerActivity : AppCompatActivity() {
                 networkHelper = networkHelper,
             )
         }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        pausedStartPositionMs(intent)?.let { pendingPausedStartMs = it }
     }
 
     override fun finish() {
@@ -739,6 +747,14 @@ class VideoPlayerActivity : AppCompatActivity() {
                     playbackSnapshot = currentPlayer.capturePlaybackSnapshot()
                     latestPlaybackSnapshot = playbackSnapshot
                     updatePictureInPictureParams(playbackSnapshot)
+                }
+
+                // After the effect above, which starts every new player playing.
+                LaunchedEffect(currentPlayer, pendingPausedStartMs) {
+                    val positionMs = pendingPausedStartMs ?: return@LaunchedEffect
+                    pendingPausedStartMs = null
+                    currentPlayer.playWhenReady = false
+                    currentPlayer.seekTo(positionMs)
                 }
 
                 LaunchedEffect(current.playback.currentAdaptiveQuality, currentPlayer) {

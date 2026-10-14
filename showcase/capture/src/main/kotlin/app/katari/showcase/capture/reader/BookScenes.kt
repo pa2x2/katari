@@ -2,12 +2,14 @@ package app.katari.showcase.capture.reader
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.uiautomator.By
+import androidx.test.uiautomator.BySelector
 import app.katari.showcase.capture.ShowcaseDevice.capture
 import app.katari.showcase.capture.ShowcaseDevice.device
 import app.katari.showcase.capture.ShowcaseDevice.find
 import app.katari.showcase.capture.ShowcaseDevice.settle
 import app.katari.showcase.capture.ShowcaseDevice.tap
-import app.katari.showcase.capture.ShowcaseDevice.tapAt
+import app.katari.showcase.capture.ShowcaseDevice.tapToHide
+import app.katari.showcase.capture.ShowcaseDevice.tapToShow
 import app.katari.showcase.capture.openEntry
 import app.katari.showcase.capture.openProfile
 import org.junit.Test
@@ -32,17 +34,20 @@ class BookScenes {
     }
 
     private fun chooseTheme(theme: String) {
-        tapAt(0.5f, 0.5f)
-        tap(By.desc("Settings"))
+        tapToShow(0.5f, 0.5f, READER_BARS)
+        tap(READER_BARS)
         tap(By.text("Appearance"))
         tap(By.text(theme))
         device.pressBack()
         settle()
         // Closing the settings leaves the reader's bars showing.
-        if (device.hasObject(By.desc("Settings"))) tapAt(0.5f, 0.5f)
+        tapToHide(0.5f, 0.5f, READER_BARS)
     }
 
     private companion object {
         val READER_PROGRESS: Pattern = Pattern.compile("""\d+%""")
+
+        // The reader's settings button, on screen only while its bars are.
+        val READER_BARS: BySelector = By.desc("Settings")
     }
 }

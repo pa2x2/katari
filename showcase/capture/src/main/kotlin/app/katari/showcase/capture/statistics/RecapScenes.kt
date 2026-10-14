@@ -1,12 +1,11 @@
 package app.katari.showcase.capture.statistics
 
 import android.os.SystemClock
-import android.view.InputDevice
 import android.view.MotionEvent
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.BySelector
+import androidx.test.uiautomator.StaleObjectException
 import androidx.test.uiautomator.Until
 import app.katari.showcase.capture.ShowcaseDevice.capture
 import app.katari.showcase.capture.ShowcaseDevice.device
@@ -16,6 +15,7 @@ import app.katari.showcase.capture.ShowcaseDevice.record
 import app.katari.showcase.capture.ShowcaseDevice.shell
 import app.katari.showcase.capture.ShowcaseDevice.tap
 import app.katari.showcase.capture.ShowcaseDevice.tapAt
+import app.katari.showcase.capture.ShowcaseDevice.touch
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.util.regex.Pattern
@@ -41,17 +41,16 @@ class RecapScenes {
     /**
      * Pages keep moving after their entrance, so a still would catch them somewhere different on every run. With
      * animations removed, the recap opens with its entrances finished and its motion at rest, and holding a finger on
-     * the page stops the progress bar above it.
+     * the page stops the progress bar above it, which [onPage] does from right after each page turns.
      */
     @Test
     fun pages() {
         shell("settings put global animator_duration_scale 0")
         try {
             openRecap()
-            advanceTo(By.text(Pattern.compile("your #1", Pattern.CASE_INSENSITIVE)))
-            whileHolding { capture("recap-top") }
+            onPage(By.text(Pattern.compile("your #1", Pattern.CASE_INSENSITIVE))) { capture("recap-top") }
             // The summary is shown as the picture it shares rather than as a screenshot.
-            advanceTo(By.text("Watch again"))
+            onPage(By.text("Watch again")) {}
 
             tap(By.text("Share"))
             // The image is written before the share sheet opens, and the test ending earlier would leave it half
@@ -76,43 +75,73 @@ class RecapScenes {
      * Holds a finger on the page's footer while [block] runs, which pauses the story. A long press elsewhere could
      * land on a title, which offers to hide it, and releasing after one never counts as a tap.
      */
-    private fun whileHolding(block: () -> Unit) {
+    private fun <T> whileHolding(block: () -> T): T {
         val x = device.displayWidth * 0.3f
         val y = device.displayHeight * FOOTER_Y
         val downTime = SystemClock.uptimeMillis()
         touch(MotionEvent.ACTION_DOWN, downTime, x, y)
         try {
-            block()
+            return block()
         } finally {
             touch(MotionEvent.ACTION_UP, downTime, x, y)
         }
     }
 
-    private fun touch(action: Int, downTime: Long, x: Float, y: Float) {
-        val event = MotionEvent.obtain(downTime, SystemClock.uptimeMillis(), action, x, y, 0)
-        event.source = InputDevice.SOURCE_TOUCHSCREEN
-        try {
-            check(InstrumentationRegistry.getInstrumentation().uiAutomation.injectInputEvent(event, true)) {
-                "The touch could not be injected"
-            }
-        } finally {
-            event.recycle()
-        }
-    }
-
-    /** Each page is given time to appear in the accessibility tree before moving on, or a tap could skip past it. */
-    private fun advanceTo(page: BySelector) {
+    /**
+     * Turns pages until [page] is on screen, then runs [block] on it. The story stays paused under a finger from right
+     * after each tap, so every page is read, and the last one shot, at the same point of its progress whatever the
+     * device's speed. A busy device reports a page piece by piece and can take seconds to, so a page is read once its
+     * text has held still, and the tap before it is seen to have taken by that text changing.
+     */
+    private fun onPage(page: BySelector, block: () -> Unit) {
+        var shown: String? = null
         repeat(MAX_PAGES) {
-            if (device.wait(Until.hasObject(page), PAGE_WAIT_MS)) return
+            val reached = whileHolding {
+                shown?.let { awaitTurnFrom(it, page) }
+                shown = settledPageText()
+                device.hasObject(page).also { if (it) block() }
+            }
+            if (reached) return
             tapAt(0.85f, 0.5f)
         }
         fail("The recap never reached $page")
     }
 
+    private fun awaitTurnFrom(shown: String, page: BySelector) {
+        val deadline = SystemClock.uptimeMillis() + PAGE_TURN_TIMEOUT_MS
+        while (pageText() == shown) {
+            if (SystemClock.uptimeMillis() > deadline) fail("The recap never turned past its page while seeking $page")
+            SystemClock.sleep(PAGE_POLL_MS)
+        }
+    }
+
+    private fun settledPageText(): String {
+        var text = pageText()
+        while (true) {
+            SystemClock.sleep(PAGE_SETTLE_MS)
+            val again = pageText()
+            if (again == text) return text
+            text = again
+        }
+    }
+
+    private fun pageText(): String {
+        while (true) {
+            try {
+                return device.findObjects(By.text(ANY_TEXT)).joinToString("\n") { it.text }
+            } catch (_: StaleObjectException) {
+                // A page turned while it was read; reading again gets the new one whole.
+            }
+        }
+    }
+
     private companion object {
         const val CLIP_PAGES = 5
         const val MAX_PAGES = 20
-        const val PAGE_WAIT_MS = 2_000L
+        const val PAGE_SETTLE_MS = 1_500L
+        const val PAGE_TURN_TIMEOUT_MS = 30_000L
+        const val PAGE_POLL_MS = 250L
+        val ANY_TEXT: Pattern = Pattern.compile(".+", Pattern.DOTALL)
 
         // The footer every page ends with, as a fraction of the screen's height.
         const val FOOTER_Y = 0.87f

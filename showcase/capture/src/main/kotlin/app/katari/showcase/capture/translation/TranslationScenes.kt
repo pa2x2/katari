@@ -55,7 +55,7 @@ class TranslationScenes {
      */
     private fun translatePage() {
         openTranslationBar()
-        toggleReaderBars()
+        hideReaderBars()
         // The controls may not have started on the page yet when first looked at.
         repeat(2) {
             awaitGone(By.text(WORKING), PAGE_TRANSLATION_TIMEOUT_MS)

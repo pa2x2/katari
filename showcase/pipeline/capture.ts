@@ -107,9 +107,9 @@ function saveDiagnostics(device: Device): void {
   try {
     device.pull(`${FAILURE_DIRECTORY}/.`, out);
   } catch {
-    // The failure happened before any scene could leave a screenshot.
+    // The failure happened before any scene could leave a screenshot or report.
   }
-  console.error(`the device log and any screenshots of the failure are in ${out}`);
+  console.error(`the device log and any screenshots and reports of the failure are in ${out}`);
 }
 
 async function prepare(device: Device): Promise<void> {
@@ -130,12 +130,11 @@ async function prepare(device: Device): Promise<void> {
   await timed("waiting for the device to settle", () => awaitIdle(device));
   const seedUri = await pushSeed(device);
   await timed("restoring the seed", () => runScene(device, APP_ID, "SeedRestore", { seedUri }));
-  // Reading during setup happens at the real time and must stay out of the showcase history.
-  writePreferences(device, APP_ID, APP_PREFERENCES, { __APP_STATE_incognito_mode: true });
   // Text recognition is the slowest work a scene waits for, and the restore may have set the system to work again.
   await timed("waiting for the device to settle", () => awaitIdle(device));
   await timed("readying on-page translation", () => runScene(device, APP_ID, "translation.TranslationSetup"));
   writePreferences(device, APP_ID, APP_PREFERENCES, {
+    // Setup reads in incognito, which shows a banner over every screen.
     __APP_STATE_incognito_mode: false,
     // Library state is kept per profile; the restore creates the seed's profiles with ids from 1 in plan order.
     ...Object.fromEntries(

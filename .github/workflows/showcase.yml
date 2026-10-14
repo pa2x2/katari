@@ -8,9 +8,16 @@ on:
   release:
     types: [published]
   workflow_dispatch:
+    inputs:
+      propose:
+        description: Propose the changed captures. Off, the run only checks that every scene captures.
+        type: boolean
+        default: true
 
+# Runs that propose replace one another's proposal, so they take turns. A run that only checks the scenes runs alongside
+# anything. The input is read as text: missing on a release, it would compare equal to false as a boolean.
 concurrency:
-  group: ${{ github.workflow }}
+  group: ${{ github.workflow }}-${{ github.event.inputs.propose == 'false' && github.run_id || 'proposal' }}
   cancel-in-progress: false
 
 permissions: {}
@@ -84,8 +91,15 @@ jobs:
           # reading, `yes` fails with a broken pipe, which pipefail would turn into the step's failure.
           "$sdkmanager" --licenses < <(yes 2> /dev/null) > /dev/null
           # The image's command-line tools may predate the device profile the showcase emulator is created from. An
-          # update installed by the running tools lands beside them, as latest-2.
-          "$sdkmanager" --install "cmdline-tools;latest" emulator "$SYSTEM_IMAGE" > /dev/null
+          # update installed by the running tools lands beside them, as latest-2. A download cut short fails the install
+          # with "Error reading Zip content", and the next attempt downloads it again.
+          for attempt in 1 2 3; do
+            if "$sdkmanager" --install "cmdline-tools;latest" emulator "$SYSTEM_IMAGE" > /dev/null; then break; fi
+            if [ "$attempt" = 3 ]; then
+              echo "::error::The Android SDK packages did not install in 3 attempts."
+              exit 1
+            fi
+          done
           tools="$(ls -d "$ANDROID_HOME"/cmdline-tools/latest* | sort -V | tail -n 1)"
           if ! "$tools/bin/avdmanager" list device -c | grep -qx pixel_9a; then
             echo "::error::The Android command-line tools have no pixel_9a device profile."
@@ -185,6 +199,16 @@ jobs:
           if-no-files-found: ignore
           overwrite: true
 
+      # The benchmark build is minified, so the app's frames in a failure's thread dumps read only through its mapping.
+      - name: Upload the app's mapping for the failure's thread dumps
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: showcase-failure-mapping
+          path: app/build/outputs/mapping/benchmark/mapping.txt
+          if-no-files-found: ignore
+          overwrite: true
+
       - name: Compare with the published captures
         id: compare
         run: |
@@ -211,7 +235,7 @@ jobs:
     name: Propose the changed captures
     runs-on: ubuntu-26.04
     needs: capture
-    if: needs.capture.outputs.differences != '0'
+    if: needs.capture.outputs.differences != '0' && github.event.inputs.propose != 'false'
     permissions:
       contents: write
       pull-requests: write
