@@ -1,6 +1,5 @@
 package mihon.entry.interactions.book.document.reader
 
-import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.interaction.DragInteraction
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -159,18 +158,12 @@ internal fun BookDocumentEndlessViewer(
     LaunchedEffect(items) {
         if (!initialPositionRestored) {
             if (initialLocation != null) {
-                val index = items.indexOfPosition(initialLocation.section.key, initialLocation.position)
-                if (index >= 0) {
-                    listState.scrollToItem(index)
-                    if ((items[index] as? BookDocumentViewerItem.Block)?.content?.content is
-                            mihon.book.api.document.BookDocumentBlockContent.Text
-                    ) {
-                        val top = snapshotFlow {
-                            viewportGeometry.lineTop(initialLocation.section, initialLocation.position)
-                        }.filterNotNull().first()
-                        listState.scrollBy(top)
-                    }
-                }
+                listState.scrollToBookDocumentLine(
+                    initialLocation.section,
+                    initialLocation.position,
+                    items.indexOfPosition(initialLocation.section.key, initialLocation.position),
+                    viewportGeometry,
+                )
             } else {
                 currentSection?.let { scrollToSectionPosition(it) }
             }
@@ -212,7 +205,12 @@ internal fun BookDocumentEndlessViewer(
         if (request.alignToPassage) {
             listState.scrollToBookDocumentPassage(section, request.position, items, viewportGeometry)
         } else {
-            scrollToSectionPosition(section, request.position)
+            listState.scrollToBookDocumentLine(
+                section,
+                request.position,
+                items.indexOfPosition(section.key, request.position),
+                viewportGeometry,
+            )
         }
         // Publish the settled viewport before acknowledging the request, so seek controls can
         // replace their optimistic value with measured progress without exposing the old position.
@@ -236,6 +234,16 @@ internal fun BookDocumentEndlessViewer(
                 restoredNavigationId = request.id,
             ),
         )
+        // The target now starts the viewport, but a saved reading position is restored to the
+        // viewport centre. Persist what is at the centre so reopening shows this same view.
+        withFrameNanos { }
+        val info = listState.layoutInfo
+        bookDocumentViewerLocation(
+            currentItems,
+            info.visibleBookDocumentLayouts(),
+            info.viewportStartOffset,
+            info.viewportEndOffset,
+        )?.let(currentOnLocation)
     }
 
     LaunchedEffect(listState, items) {
