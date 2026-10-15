@@ -13,8 +13,6 @@ dependencies {
     api(projects.translation.api)
 
     implementation(projects.language.runtime)
-    implementation(projects.featureGraph)
-    implementation(projects.featureRuntime)
     implementation(projects.core.common)
     implementation(projects.translation.spi)
     implementation(libs.androidx.appCompat)

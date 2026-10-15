@@ -1,6 +1,5 @@
 package mihon.entry.interactions.manga.library
 
-import eu.kanade.tachiyomi.source.entry.EntryType
 import mihon.entry.interactions.library.EntryLibraryProgressEvidence
 import mihon.entry.interactions.library.EntryLibraryProgressProvider
 import mihon.entry.interactions.manga.runtime.requireManga
@@ -14,7 +13,6 @@ import tachiyomi.domain.entry.repository.EntryProgressRepository
 internal class MangaLibraryProgressProvider(
     private val entryProgressRepository: EntryProgressRepository,
 ) : EntryLibraryProgressProvider {
-    override val type = EntryType.MANGA
 
     override suspend fun evidence(entry: Entry, chapters: List<EntryChapter>): EntryLibraryProgressEvidence {
         entry.requireManga()

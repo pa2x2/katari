@@ -6,8 +6,7 @@ import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
-import mihon.entry.interactions.runtime.EntryInteractionPlugin
-import mihon.entry.interactions.runtime.createEntryInteractions
+import mihon.entry.interactions.runtime.DefaultEntryInteractions
 import mihon.entry.viewer.settings.ViewerSettingCodecs
 import mihon.entry.viewer.settings.ViewerSettingDefinition
 import mihon.entry.viewer.settings.ViewerSettingId
@@ -16,7 +15,6 @@ import mihon.entry.viewer.settings.ViewerSettingOverrideRepository
 import mihon.entry.viewer.settings.ViewerSettingScope
 import mihon.entry.viewer.settings.ViewerSettingsCategory
 import mihon.entry.viewer.settings.ViewerSettingsProvider
-import mihon.feature.graph.ContributionOwner
 import org.junit.jupiter.api.Test
 import tachiyomi.core.common.preference.InMemoryPreferenceStore
 import tachiyomi.core.common.preference.Preference
@@ -50,18 +48,8 @@ class EntryViewerSettingsFeatureTest {
         projections: List<EntryViewerSettingsScreenProjection>,
         repository: ViewerSettingOverrideRepository,
     ): EntryViewerSettingsFeature {
-        val interactions = createEntryInteractions(
-            listOf(
-                object : EntryInteractionPlugin {
-                    override val type = EntryType.BOOK
-                    override val owner = ContributionOwner("test.viewer-settings.book")
-                    override val providerBindings = listOf(
-                        EntryViewerSettingsCapability.bind(
-                            DefaultEntryViewerSettingsProvider(EntryType.BOOK, surfaces) { it },
-                        ),
-                    )
-                },
-            ),
+        val interactions = DefaultEntryInteractions(
+            viewerSettingsProviders = mapOf(EntryType.BOOK to DefaultEntryViewerSettingsProvider(surfaces)),
         )
         return DefaultEntryViewerSettingsFeature(
             applicableTypes = setOf(EntryType.BOOK),

@@ -15,7 +15,6 @@ import mihon.entry.interactions.persistence.backup.EntryBackupStateParticipant
 import mihon.entry.interactions.runtime.EntryInteractions
 import mihon.entry.interactions.state.backup.EntryProgressBackupParticipant
 import mihon.entry.interactions.state.migration.EntryProgressMigrationParticipant
-import mihon.feature.graph.FeatureGraphContributor
 import tachiyomi.domain.entry.interactor.GetEntryWithChapters
 import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.library.service.GlobalLibraryPreferences
@@ -69,22 +68,6 @@ object EntryStateBindings {
         getEntryWithChapters = getEntryWithChapters,
         globalLibraryPreferences = globalLibraryPreferences,
     )
-
-    @Provides
-    @IntoSet
-    fun consumptionGraphContributor(): FeatureGraphContributor = EntryConsumptionFeatureContributor
-
-    @Provides
-    @IntoSet
-    fun bookmarkGraphContributor(): FeatureGraphContributor = EntryBookmarkFeatureContributor
-
-    @Provides
-    @IntoSet
-    fun updateEligibilityGraphContributor(): FeatureGraphContributor = EntryUpdateEligibilityFeatureContributor
-
-    @Provides
-    @IntoSet
-    fun progressGraphContributor(): FeatureGraphContributor = EntryProgressFeatureContributor
 
     @Provides
     @IntoSet

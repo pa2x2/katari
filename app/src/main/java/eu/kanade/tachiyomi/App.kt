@@ -53,10 +53,10 @@ import mihon.app.di.AppGraph
 import mihon.app.di.injekt.MetroInjektRegistrar
 import mihon.app.localnetwork.LocalNetworkPermissionPrompter
 import mihon.core.metro.GraphProvider
+import mihon.core.metro.StartupWarmup
 import mihon.core.migration.Migrator
 import mihon.core.migration.migrations.migrations
 import mihon.entry.interactions.runtime.addEntryInteractionImageComponents
-import mihon.feature.runtime.registerProfilePreferenceOwners
 import mihon.telemetry.TelemetryConfig
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.preference.Preference
@@ -73,7 +73,7 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
 
     // Built on first use rather than in onCreate: WorkManager and content providers can reach it before onCreate runs.
     override val graph: AppGraph by lazy {
-        createGraphFactory<AppGraph.Factory>().create(this).also { it.registerProfilePreferenceOwners() }
+        createGraphFactory<AppGraph.Factory>().create(this).also { it.profilePreferenceOwners }
     }
 
     init {
@@ -109,8 +109,7 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
             graph.networkHelper
             graph.sourceManager
             graph.database
-            graph.featureRuntimeContributions.validate(graph.featureRuntimeComposition.evaluation)
-            graph.featureRuntimeContributions.warmUp()
+            graph.startupWarmups.forEach(StartupWarmup::warmUp)
         }
 
         setupNotificationChannels()

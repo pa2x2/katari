@@ -9,7 +9,6 @@ import dev.zacsweers.metro.IntoSet
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import eu.kanade.tachiyomi.network.NetworkHelper
-import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.serialization.json.Json
 import mihon.core.metro.AppCoroutineScope
@@ -24,7 +23,6 @@ import mihon.entry.interactions.book.document.resource.BookRemoteResourceConsent
 import mihon.entry.interactions.book.download.BookDownloadCache
 import mihon.entry.interactions.book.download.BookDownloadIndexStore
 import mihon.entry.interactions.book.download.BookDownloadManager
-import mihon.entry.interactions.book.download.BookDownloadProcessorDependencies
 import mihon.entry.interactions.book.download.BookDownloadProvider
 import mihon.entry.interactions.book.download.BookDownloadStore
 import mihon.entry.interactions.book.download.BookDownloader
@@ -42,11 +40,9 @@ import mihon.entry.interactions.book.reader.BookReaderSessionRegistry
 import mihon.entry.interactions.book.reader.translation.BookAutomaticTranslationPreferences
 import mihon.entry.interactions.book.reader.translation.BookAutomaticTranslationSettingsProvider
 import mihon.entry.interactions.download.EntryDownloadWorkController
-import mihon.entry.interactions.media.DefaultEntryViewerSettingsProvider
 import mihon.entry.interactions.media.session.EntryMediaSessionEventSink
 import mihon.entry.interactions.reader.preparation.ReaderChapterPreparationPreferences
 import mihon.entry.interactions.reader.settings.BookDocumentReaderSettings
-import mihon.entry.interactions.runtime.EntryInteractionPlugin
 import mihon.entry.interactions.runtime.ReaderSettingsSurfaceCapabilities
 import mihon.entry.viewer.settings.shared.ReaderSharedSettingsProvider
 import mihon.translation.api.host.TranslationHostActions
@@ -65,44 +61,6 @@ import tachiyomi.domain.storage.service.StorageManager
 @ContributesTo(AppScope::class)
 @BindingContainer
 object BookEntryInteractionBindings {
-    @Provides
-    @IntoSet
-    @SingleIn(AppScope::class)
-    internal fun plugin(
-        getEntryWithChapters: GetEntryWithChapters,
-        entryChapterRepository: EntryChapterRepository,
-        entryProgressRepository: EntryProgressRepository,
-        preparerRegistry: BookContentPreparerRegistry,
-        mediaSession: BookMediaSessionProcessor,
-        viewerSettingsProvider: BookDocumentReaderSettingsProvider,
-        downloadManager: () -> BookDownloadManager,
-        downloadCache: () -> BookDownloadCache,
-        sourceManager: SourceManager,
-        entryRepository: EntryRepository,
-        materializationCache: () -> BookMaterializationCache,
-    ): EntryInteractionPlugin = bookEntryInteractionPlugin(
-        BookEntryInteractionDependencies(
-            getEntryWithChapters = getEntryWithChapters,
-            entryChapterRepository = entryChapterRepository,
-            entryProgressRepository = entryProgressRepository,
-            downloadsEnabled = preparerRegistry.canPrepareContent,
-            mediaSession = mediaSession,
-        ),
-        downloadProcessorDependencies = {
-            BookDownloadProcessorDependencies(
-                manager = downloadManager(),
-                cache = downloadCache(),
-                sourceManager = sourceManager,
-                entryRepository = entryRepository,
-                getEntryWithChapters = getEntryWithChapters,
-            )
-        },
-        materializationCache = materializationCache,
-        viewerSettingsProvider = DefaultEntryViewerSettingsProvider(
-            type = EntryType.BOOK,
-            surfaces = listOf(viewerSettingsProvider),
-        ),
-    )
 
     @Provides
     @ElementsIntoSet

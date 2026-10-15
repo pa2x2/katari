@@ -9,11 +9,8 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import mihon.entry.interactions.media.session.EntryMediaSessionEvent
-import mihon.entry.interactions.runtime.EntryInteractionPlugin
-import mihon.entry.interactions.runtime.EntryInteractionProviderBinding
+import mihon.entry.interactions.runtime.DefaultEntryInteractions
 import mihon.entry.interactions.runtime.EntryInteractions
-import mihon.entry.interactions.runtime.createEntryInteractions
-import mihon.feature.graph.ContributionOwner
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
@@ -51,7 +48,7 @@ class EntryProgressFeatureTest {
             coEvery { get(source.id, "", child.url) } returns current
             coEvery { mergeAndSyncChild(capture(recorded)) } answers { recorded.captured }
         }
-        val feature = featureFor(interactionsFor(), repository)
+        val feature = featureFor(DefaultEntryInteractions(), repository)
 
         feature.recordMediaProgress(
             EntryMediaSessionEvent.Progressed(
@@ -67,20 +64,6 @@ class EntryProgressFeatureTest {
             mapOf(
                 "future.extension" to JsonPrimitive("preserved"),
                 "book.location" to JsonPrimitive("new"),
-            ),
-        )
-    }
-
-    private fun interactionsFor(
-        vararg bindings: EntryInteractionProviderBinding<*>,
-    ): EntryInteractions {
-        return createEntryInteractions(
-            listOf(
-                object : EntryInteractionPlugin {
-                    override val type = EntryType.BOOK
-                    override val owner = ContributionOwner("test.partial-progress-type")
-                    override val providerBindings = bindings.toList()
-                },
             ),
         )
     }

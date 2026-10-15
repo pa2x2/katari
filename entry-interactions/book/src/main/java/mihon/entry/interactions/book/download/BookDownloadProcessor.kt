@@ -23,14 +23,15 @@ import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.source.service.SourceManager
 
 internal class BookDownloadProcessor(
-    private val dependencies: BookDownloadProcessorDependencies,
+    private val manager: BookDownloadManager,
+    private val cache: BookDownloadCache,
+    private val sourceManager: SourceManager,
+    private val entryRepository: EntryRepository,
+    private val getEntryWithChapters: GetEntryWithChapters,
 ) : EntryDownloadProcessor,
     EntryBulkDownloadCandidateProcessor {
-    private val manager: BookDownloadManager = dependencies.manager
-    private val cache: BookDownloadCache = dependencies.cache
-    private val ownerResolver = EntryDownloadOwnerResolver(dependencies.entryRepository)
+    private val ownerResolver = EntryDownloadOwnerResolver(entryRepository)
 
-    override val type: EntryType = EntryType.BOOK
     override val changes: Flow<Unit> = manager.cacheChanges.onStart {
         cache.awaitInitialSnapshot()
         emit(Unit)
@@ -41,7 +42,7 @@ internal class BookDownloadProcessor(
         queue = manager.queueState,
         statusUpdates = manager.statusFlow(),
         progressUpdates = manager.progressFlow(),
-    ) { downloads -> downloads.toBookEntryDownloadQueueGroups(dependencies.sourceManager) }
+    ) { downloads -> downloads.toBookEntryDownloadQueueGroups(sourceManager) }
     override val events = manager.events
 
     override fun updates(): Flow<EntryDownloadStatus> = merge(
@@ -110,7 +111,7 @@ internal class BookDownloadProcessor(
         candidates: List<EntryChapter>?,
     ): List<EntryChapter> {
         entry.requireBook()
-        return (candidates ?: dependencies.getEntryWithChapters.awaitChapters(entry))
+        return (candidates ?: getEntryWithChapters.awaitChapters(entry))
             .filterNot { isDownloadedByOwner(entry, it) }
     }
 
@@ -178,7 +179,7 @@ internal class BookDownloadProcessor(
         val owner = if (chapter.entryId == visibleEntry.id) {
             visibleEntry
         } else {
-            dependencies.entryRepository.getEntryById(chapter.entryId)
+            entryRepository.getEntryById(chapter.entryId)
         } ?: return false
         return cache.isDownloaded(BookDownloadPackageKey(owner.source, owner.url, chapter.url))
     }
@@ -191,12 +192,4 @@ private fun BookDownloadPackageUpdate.toEntryDownloadStatus() = EntryDownloadSta
     entryId = manifest.entryId,
     sourceId = manifest.sourceId,
     persistedContentChanged = true,
-)
-
-internal data class BookDownloadProcessorDependencies(
-    val manager: BookDownloadManager,
-    val cache: BookDownloadCache,
-    val sourceManager: SourceManager,
-    val entryRepository: EntryRepository,
-    val getEntryWithChapters: GetEntryWithChapters,
 )

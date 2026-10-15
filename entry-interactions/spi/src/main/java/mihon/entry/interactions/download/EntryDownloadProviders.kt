@@ -3,13 +3,10 @@ package mihon.entry.interactions.download
 import android.content.Context
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import kotlinx.coroutines.flow.Flow
-import mihon.entry.interactions.runtime.EntryInteractionProvider
-import mihon.entry.interactions.runtime.entryInteractionCapability
-import mihon.feature.graph.CapabilityId
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 
-interface EntryDownloadProcessor : EntryInteractionProvider {
+interface EntryDownloadProcessor {
     /** Emits when persisted downloaded content changes, independently of transient queue state. */
     val changes: Flow<Unit>
     val isInitializing: Flow<Boolean>
@@ -91,7 +88,7 @@ interface EntryDownloadProcessor : EntryInteractionProvider {
     fun cancelQueuedDownload(chapterId: Long): EntryDownloadStatus?
 }
 
-interface EntryDownloadOptionsProcessor : EntryInteractionProvider {
+interface EntryDownloadOptionsProcessor {
     suspend fun downloadWithOptions(
         entry: Entry,
         chapters: List<EntryChapter>,
@@ -106,46 +103,10 @@ interface EntryDownloadOptionsProcessor : EntryInteractionProvider {
     ): EntryDownloadOptions?
 }
 
-/** Marker implemented by a type that provides one or more specialized download-setting behaviors. */
-interface EntryDownloadSettingProvider : EntryInteractionProvider
-
-interface EntryBulkDownloadCandidateProcessor : EntryInteractionProvider {
+interface EntryBulkDownloadCandidateProcessor {
     /** Loads media-specific candidates before shared bulk-action selection is applied. */
     suspend fun resolveBulkDownloadCandidatePool(
         entry: Entry,
         candidates: List<EntryChapter>? = null,
     ): List<EntryChapter>
 }
-
-val EntryDownloadCapability = entryInteractionCapability<EntryDownloadProcessor>(
-    id = CapabilityId("entry.download"),
-)
-
-val EntryDownloadOptionsCapability = entryInteractionCapability<EntryDownloadOptionsProcessor>(
-    id = CapabilityId("entry.download.options"),
-)
-
-val EntryDownloadArchivePackagingCapability =
-    entryInteractionCapability<EntryDownloadSettingProvider>(
-        id = CapabilityId("entry.download.setting.archive-packaging"),
-    )
-
-val EntryDownloadTallImageSplittingCapability =
-    entryInteractionCapability<EntryDownloadSettingProvider>(
-        id = CapabilityId("entry.download.setting.tall-image-splitting"),
-    )
-
-val EntryDownloadParallelSourceTransfersCapability =
-    entryInteractionCapability<EntryDownloadSettingProvider>(
-        id = CapabilityId("entry.download.setting.parallel-source-transfers"),
-    )
-
-val EntryDownloadParallelItemTransfersCapability =
-    entryInteractionCapability<EntryDownloadSettingProvider>(
-        id = CapabilityId("entry.download.setting.parallel-item-transfers"),
-    )
-
-val EntryBulkDownloadCandidateCapability =
-    entryInteractionCapability<EntryBulkDownloadCandidateProcessor>(
-        id = CapabilityId("entry.download.bulk-candidates"),
-    )

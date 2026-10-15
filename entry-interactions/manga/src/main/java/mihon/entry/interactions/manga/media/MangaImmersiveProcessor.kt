@@ -26,7 +26,6 @@ internal class MangaImmersiveProcessor(
     private val loadPageSession: suspend (Context, Entry, EntryChapter) -> ReaderChapter,
     private val now: () -> Long = System::currentTimeMillis,
 ) : EntryImmersiveProcessor {
-    override val type: EntryType = EntryType.MANGA
     override val loadMode = EntryImmersiveLoadMode.FIRST_READING_CHILD
     override val preloadRadius: Int = 1
     private val persistMutex = Mutex()
@@ -43,7 +42,7 @@ internal class MangaImmersiveProcessor(
             val pages = requireNotNull(readerChapter.pages)
             val progress = entryProgressRepository?.get(chapter.entryId, "", chapter.progressResourceKey)
             return EntryImmersiveHandle.ImagePages(
-                entryType = type,
+                entryType = EntryType.MANGA,
                 chapterId = chapter.id,
                 delegate = MangaImmersiveMedia(
                     readerChapter = readerChapter,

@@ -2,142 +2,15 @@ package mihon.entry.interactions.source
 
 import eu.kanade.tachiyomi.source.entry.ChapterWebViewSource
 import eu.kanade.tachiyomi.source.entry.WebViewSource
-import mihon.feature.graph.CapabilityExpression
-import mihon.feature.graph.ContextInputId
-import mihon.feature.graph.ContributionOwner
-import mihon.feature.graph.FeatureArtifactId
-import mihon.feature.graph.FeatureBehaviorContract
-import mihon.feature.graph.FeatureBehaviorProjection
-import mihon.feature.graph.FeatureContextBlocker
-import mihon.feature.graph.FeatureContextDecision
-import mihon.feature.graph.FeatureContribution
-import mihon.feature.graph.FeatureGraphContributionSink
-import mihon.feature.graph.FeatureGraphContributor
-import mihon.feature.graph.FeatureId
-import mihon.feature.graph.FeatureIntegration
-import mihon.feature.graph.FeatureIntegrationId
-import mihon.feature.graph.contextInputDefinition
-import mihon.feature.graph.featureContextRule
 import tachiyomi.domain.entry.adapter.toSEntry
 import tachiyomi.domain.entry.adapter.toSEntryChapter
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.source.service.SourceManager
 
-internal val ENTRY_WEB_VIEW_FEATURE_ID = FeatureId("entry.web-view")
-private val ENTRY_WEB_VIEW_OWNER = ContributionOwner("entry-web-view")
-internal val ENTRY_WEB_VIEW_INTEGRATION_ID = FeatureIntegrationId("entry.web-view.source")
-internal val ENTRY_CHILD_WEB_VIEW_INTEGRATION_ID = FeatureIntegrationId("entry.web-view.child-source")
-
-internal object EntryWebViewBehaviorContract : FeatureBehaviorContract {
-    override val id = FeatureArtifactId("entry.web-view.behavior")
-}
-
-internal object EntryChildWebViewBehaviorContract : FeatureBehaviorContract {
-    override val id = FeatureArtifactId("entry.web-view.child-behavior")
-}
-
 internal data class EntryWebViewContext(val installed: Boolean, val supported: Boolean)
 
-internal val ENTRY_WEB_VIEW_CONTEXT = contextInputDefinition<EntryWebViewContext>(
-    id = ContextInputId("entry.web-view.source-context"),
-    owner = ENTRY_SOURCE_CONTEXT_OWNER,
-)
-private val ENTRY_WEB_VIEW_MISSING = FeatureContextBlocker(
-    FeatureArtifactId("entry.web-view.source-missing"),
-    listOf(ENTRY_WEB_VIEW_CONTEXT),
-)
-private val ENTRY_WEB_VIEW_UNSUPPORTED = FeatureContextBlocker(
-    FeatureArtifactId("entry.web-view.unsupported"),
-    listOf(ENTRY_WEB_VIEW_CONTEXT),
-)
 internal data class EntryChildWebViewContext(val installed: Boolean, val supported: Boolean)
-
-internal val ENTRY_CHILD_WEB_VIEW_CONTEXT = contextInputDefinition<EntryChildWebViewContext>(
-    id = ContextInputId("entry.web-view.child-source-context"),
-    owner = ENTRY_SOURCE_CONTEXT_OWNER,
-)
-private val ENTRY_CHILD_WEB_VIEW_MISSING = FeatureContextBlocker(
-    FeatureArtifactId("entry.web-view.child-source-missing"),
-    listOf(ENTRY_CHILD_WEB_VIEW_CONTEXT),
-)
-private val ENTRY_CHILD_WEB_VIEW_UNSUPPORTED = FeatureContextBlocker(
-    FeatureArtifactId("entry.web-view.child-unsupported"),
-    listOf(ENTRY_CHILD_WEB_VIEW_CONTEXT),
-)
-private enum class EntryWebViewBehavior(
-    override val id: FeatureArtifactId,
-) : FeatureBehaviorProjection {
-    AVAILABILITY(FeatureArtifactId("entry.web-view.availability")),
-    CANONICAL_URL(FeatureArtifactId("entry.web-view.canonical-url")),
-    NAVIGATION(FeatureArtifactId("entry.web-view.navigation")),
-    SHARE(FeatureArtifactId("entry.web-view.share")),
-    ASSIST(FeatureArtifactId("entry.web-view.assist")),
-    RUNTIME_HEADERS(FeatureArtifactId("entry.web-view.runtime-headers")),
-}
-private enum class EntryChildWebViewBehavior(
-    override val id: FeatureArtifactId,
-) : FeatureBehaviorProjection {
-    AVAILABILITY(FeatureArtifactId("entry.web-view.child-availability")),
-    CANONICAL_URL(FeatureArtifactId("entry.web-view.child-canonical-url")),
-    NAVIGATION(FeatureArtifactId("entry.web-view.child-navigation")),
-    BROWSER(FeatureArtifactId("entry.web-view.child-browser")),
-    SHARE(FeatureArtifactId("entry.web-view.child-share")),
-    ASSIST(FeatureArtifactId("entry.web-view.child-assist")),
-}
-
-internal object EntryWebViewFeatureContributor : FeatureGraphContributor {
-    override val owner = ENTRY_WEB_VIEW_OWNER
-
-    override fun contributeTo(sink: FeatureGraphContributionSink) {
-        sink.add(
-            FeatureContribution(
-                feature = ENTRY_WEB_VIEW_FEATURE_ID,
-                owner = owner,
-                integrations = listOf(
-                    FeatureIntegration(
-                        id = ENTRY_WEB_VIEW_INTEGRATION_ID,
-                        prerequisites = CapabilityExpression.Always,
-                        contextInputs = listOf(ENTRY_WEB_VIEW_CONTEXT),
-                        contextRule = featureContextRule(owner) { evidence ->
-                            val context = evidence.value(ENTRY_WEB_VIEW_CONTEXT)
-                            when {
-                                !context.installed -> FeatureContextDecision.Blocked(listOf(ENTRY_WEB_VIEW_MISSING))
-                                !context.supported -> FeatureContextDecision.Blocked(listOf(ENTRY_WEB_VIEW_UNSUPPORTED))
-                                else -> FeatureContextDecision.Applicable
-                            }
-                        },
-                        contextBlockers = listOf(ENTRY_WEB_VIEW_MISSING, ENTRY_WEB_VIEW_UNSUPPORTED),
-                        behaviorProjections = EntryWebViewBehavior.entries,
-                        behavioralContracts = listOf(EntryWebViewBehaviorContract),
-                    ),
-                    FeatureIntegration(
-                        id = ENTRY_CHILD_WEB_VIEW_INTEGRATION_ID,
-                        prerequisites = CapabilityExpression.Always,
-                        contextInputs = listOf(ENTRY_CHILD_WEB_VIEW_CONTEXT),
-                        contextRule = featureContextRule(owner) { evidence ->
-                            val context = evidence.value(ENTRY_CHILD_WEB_VIEW_CONTEXT)
-                            when {
-                                !context.installed ->
-                                    FeatureContextDecision.Blocked(listOf(ENTRY_CHILD_WEB_VIEW_MISSING))
-                                !context.supported ->
-                                    FeatureContextDecision.Blocked(listOf(ENTRY_CHILD_WEB_VIEW_UNSUPPORTED))
-                                else -> FeatureContextDecision.Applicable
-                            }
-                        },
-                        contextBlockers = listOf(
-                            ENTRY_CHILD_WEB_VIEW_MISSING,
-                            ENTRY_CHILD_WEB_VIEW_UNSUPPORTED,
-                        ),
-                        specializedPrerequisites = listOf(EntryChildWebViewHostContribution.definition),
-                        behaviorProjections = EntryChildWebViewBehavior.entries,
-                        behavioralContracts = listOf(EntryChildWebViewBehaviorContract),
-                    ),
-                ),
-            ),
-        )
-    }
-}
 
 internal class DefaultEntryWebViewFeature(
     private val sourceManager: SourceManager,

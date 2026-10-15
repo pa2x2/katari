@@ -9,6 +9,7 @@ import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import mihon.core.metro.AppCoroutineScope
+import mihon.core.metro.StartupWarmup
 import mihon.entry.interactions.download.EntryDownloadMaintenanceFeature
 import mihon.entry.interactions.durable.EntryDurableConsequences
 import mihon.entry.interactions.durable.EntryDurableParticipant
@@ -23,8 +24,6 @@ import mihon.entry.interactions.merge.consequence.legacy.EntryMergeLegacyConsequ
 import mihon.entry.interactions.merge.host.EntryMergeHost
 import mihon.entry.interactions.persistence.backup.EntryBackupStateParticipant
 import mihon.entry.interactions.tracking.EntryTrackingFeature
-import mihon.feature.graph.FeatureGraphContributor
-import mihon.feature.runtime.FeatureRuntimeWarmup
 import tachiyomi.domain.entry.service.EntryChildOwnershipResolutionPort
 import tachiyomi.domain.entry.service.EntryLibraryGroupingResolutionPort
 
@@ -153,10 +152,6 @@ object EntryMergeBindings {
 
     @Provides
     @IntoSet
-    fun graphContributor(): FeatureGraphContributor = EntryMergeFeatureContributor
-
-    @Provides
-    @IntoSet
     internal fun customCoverParticipant(
         mergeHost: EntryMergeHost,
         libraryCustomCoverHost: EntryLibraryCustomCoverHost,
@@ -170,7 +165,7 @@ object EntryMergeBindings {
     internal fun consequenceRetryWarmup(
         @AppCoroutineScope scope: CoroutineScope,
         delivery: () -> EntryMergeConsequenceDelivery,
-    ): FeatureRuntimeWarmup = FeatureRuntimeWarmup {
+    ): StartupWarmup = StartupWarmup {
         scope.launch {
             delivery().runRetryLoop()
         }

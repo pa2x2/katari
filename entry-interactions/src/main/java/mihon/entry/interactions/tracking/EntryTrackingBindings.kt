@@ -15,7 +15,6 @@ import mihon.entry.interactions.tracking.backup.EntryTrackingBackupFeature
 import mihon.entry.interactions.tracking.backup.EntryTrackingBackupParticipant
 import mihon.entry.interactions.tracking.host.EntryTrackingHost
 import mihon.entry.interactions.tracking.merge.EntryTrackingMergeParticipant
-import mihon.feature.graph.FeatureGraphContributor
 import tachiyomi.domain.entry.model.Entry
 
 @ContributesTo(AppScope::class)
@@ -32,10 +31,6 @@ object EntryTrackingBindings {
     @SingleIn(AppScope::class)
     fun backupFeature(trackingHost: EntryTrackingHost): EntryTrackingBackupFeature =
         DefaultEntryTrackingBackupFeature(trackingHost.backup)
-
-    @Provides
-    @IntoSet
-    fun graphContributor(): FeatureGraphContributor = EntryTrackingFeatureContributor
 
     @Provides
     @IntoSet

@@ -15,7 +15,6 @@ import mihon.entry.interactions.runtime.EntryChildListProcessor
 import mihon.entry.interactions.runtime.EntryChildProgressProcessor
 import mihon.entry.interactions.runtime.EntryInteractions
 import mihon.entry.interactions.runtime.EntryMissingChildGapProcessor
-import mihon.feature.graph.FeatureGraphContributor
 import tachiyomi.domain.entry.interactor.GetEntry
 import tachiyomi.domain.entry.interactor.NetworkToLocalEntry
 import tachiyomi.domain.source.service.EntrySourceDescriptionResolutionPort
@@ -67,18 +66,6 @@ object EntryChildBindings {
         getEntry = getEntry,
         sourceDescription = sourceDescription,
     )
-
-    @Provides
-    @IntoSet
-    fun childListGraphContributor(): FeatureGraphContributor = EntryChildListFeatureContributor
-
-    @Provides
-    @IntoSet
-    fun childGroupFilterGraphContributor(): FeatureGraphContributor = EntryChildGroupFilterFeatureContributor
-
-    @Provides
-    @IntoSet
-    fun relatedEntriesGraphContributor(): FeatureGraphContributor = EntryRelatedEntriesFeatureContributor
 
     @Provides
     @IntoSet

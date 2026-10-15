@@ -14,11 +14,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
-import mihon.entry.interactions.runtime.EntryInteractionPlugin
-import mihon.entry.interactions.runtime.EntryInteractionProviderBinding
-import mihon.entry.interactions.runtime.createEntryInteractions
-import mihon.entry.interactions.runtime.providersOf
-import mihon.feature.graph.ContributionOwner
+import mihon.entry.interactions.runtime.DefaultEntryInteractions
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.model.Entry
 
@@ -33,7 +29,7 @@ class EntryDownloadRuntimeFeatureTest {
             listOf(EntryDownloadQueueGroup(item.sourceId, "Source", item.entryType, listOf(item))),
         )
         val processor = processor(queue)
-        val feature = featureFor(backgroundScope, EntryDownloadCapability.bind(processor))
+        val feature = featureFor(backgroundScope, processor)
         feature.state.first().queue.single().items.single() shouldBe item
 
         advanceTimeBy(5_001)
@@ -43,33 +39,16 @@ class EntryDownloadRuntimeFeatureTest {
         feature.state.first().queue shouldBe emptyList()
     }
 
-    private fun featureFor(
-        scope: CoroutineScope,
-        vararg bindings: EntryInteractionProviderBinding<*>,
-    ): EntryDownloadRuntimeFeature {
-        val plugins = listOf(plugin(EntryType.BOOK, *bindings))
-        val interactions = createEntryInteractions(plugins)
+    private fun featureFor(scope: CoroutineScope, processor: EntryDownloadProcessor): EntryDownloadRuntimeFeature {
         return DefaultEntryDownloadRuntimeFeature(
-            applicableTypes = plugins.providersOf(EntryDownloadCapability).keys,
-            interaction = interactions.download,
+            applicableTypes = setOf(EntryType.BOOK),
+            interaction = DefaultEntryInteractions(downloadProcessors = mapOf(EntryType.BOOK to processor)).download,
             scope = scope,
         )
     }
 
-    private fun plugin(
-        type: EntryType,
-        vararg bindings: EntryInteractionProviderBinding<*>,
-    ): EntryInteractionPlugin {
-        return object : EntryInteractionPlugin {
-            override val type = type
-            override val owner = ContributionOwner("test.type.${type.name.lowercase()}")
-            override val providerBindings = bindings.toList()
-        }
-    }
-
     private fun processor(queue: Flow<List<EntryDownloadQueueGroup>>): EntryDownloadProcessor {
         return mockk(relaxed = true) {
-            every { type } returns EntryType.BOOK
             every { changes } returns emptyFlow()
             every { isInitializing } returns flowOf(false)
             every { isRunning } returns flowOf(true)

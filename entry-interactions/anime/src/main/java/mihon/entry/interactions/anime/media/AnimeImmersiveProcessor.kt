@@ -32,7 +32,6 @@ internal class AnimeImmersiveProcessor(
     private val mediaCache: () -> VideoPlayerMediaCache,
     private val basePreferences: () -> AnimePlayerBasePreferences,
 ) : EntryImmersiveProcessor {
-    override val type: EntryType = EntryType.ANIME
     override val loadMode = EntryImmersiveLoadMode.FIRST_READING_CHILD
     override val preloadRadius: Int = 1
     private val persistMutex = Mutex()
@@ -57,7 +56,7 @@ internal class AnimeImmersiveProcessor(
                     restore(progress)
                 }
                 EntryImmersiveHandle.Playback(
-                    entryType = type,
+                    entryType = EntryType.ANIME,
                     chapterId = chapter.id,
                     stream = result.stream,
                     subtitles = result.subtitles,

@@ -8,9 +8,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
-import mihon.entry.interactions.runtime.EntryInteractionPlugin
-import mihon.entry.interactions.runtime.createEntryInteractions
-import mihon.feature.graph.ContributionOwner
+import mihon.entry.interactions.runtime.DefaultEntryInteractions
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 
@@ -25,7 +23,6 @@ internal class EntryDownloadQueueRunnerFixture(
     val entry = Entry.create().copy(id = 1, source = 2, profileId = 1, type = type)
 
     val processor = mockk<EntryDownloadProcessor>(relaxed = true) {
-        every { type } returns this@EntryDownloadQueueRunnerFixture.type
         every { changes } returns emptyFlow()
         every { isInitializing } returns flowOf(false)
         every { isRunning } returns running
@@ -100,12 +97,4 @@ internal class EntryDownloadQueueRunnerFixture(
 }
 
 internal fun downloadInteraction(vararg fixtures: EntryDownloadQueueRunnerFixture): EntryDownloadInteraction =
-    createEntryInteractions(
-        fixtures.map { fixture ->
-            object : EntryInteractionPlugin {
-                override val type = fixture.type
-                override val owner = ContributionOwner("test.download.${type.name.lowercase()}")
-                override val providerBindings = listOf(EntryDownloadCapability.bind(fixture.processor))
-            }
-        },
-    ).download
+    DefaultEntryInteractions(downloadProcessors = fixtures.associate { it.type to it.processor }).download

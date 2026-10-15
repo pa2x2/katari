@@ -8,9 +8,6 @@ import dev.zacsweers.metro.IntoSet
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.Dispatchers
-import mihon.feature.graph.CapabilityProvider
-import mihon.feature.graph.FeatureGraphContributor
-import mihon.feature.runtime.FeatureGraphValidator
 import mihon.model.artifacts.api.ModelArtifactStore
 import mihon.text.recognition.api.TextRecognitionFeature
 import mihon.text.recognition.api.host.TextRecognitionHostActions
@@ -18,9 +15,6 @@ import mihon.text.recognition.runtime.cache.TextDetectionCache
 import mihon.text.recognition.runtime.cache.TextRecognitionResultCache
 import mihon.text.recognition.runtime.execution.CachedRecognitionExecutor
 import mihon.text.recognition.runtime.feature.DefaultTextRecognitionFeature
-import mihon.text.recognition.runtime.graph.TextRecognitionFeatureCapability
-import mihon.text.recognition.runtime.graph.TextRecognitionFeatureContributor
-import mihon.text.recognition.runtime.graph.TextRecognitionFeatureGraphStateValidator
 import mihon.text.recognition.runtime.host.DefaultTextRecognitionHostActions
 import mihon.text.recognition.runtime.pipeline.PageTextDetection
 import mihon.text.recognition.runtime.registry.TextRecognitionComponentRegistry
@@ -98,21 +92,6 @@ object TextRecognitionBindings {
         preferences: ProfileTextRecognitionPreferences,
         resolver: TextRecognitionPipelineResolver,
     ): TextRecognitionHostActions = DefaultTextRecognitionHostActions(registry, preferences, resolver)
-
-    @Provides
-    @IntoSet
-    fun graphContributor(): FeatureGraphContributor = TextRecognitionFeatureContributor
-
-    @Provides
-    @IntoSet
-    fun featureCapability(feature: TextRecognitionFeature): CapabilityProvider<*> =
-        TextRecognitionFeatureCapability.bind(feature)
-
-    @Provides
-    @IntoSet
-    fun graphValidator(): FeatureGraphValidator = FeatureGraphValidator { evaluation ->
-        TextRecognitionFeatureGraphStateValidator(evaluation).validate()
-    }
 }
 
 private const val CACHE_DIRECTORY = "text-recognition"

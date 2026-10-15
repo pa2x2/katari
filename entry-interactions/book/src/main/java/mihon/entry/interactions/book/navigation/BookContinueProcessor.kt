@@ -1,7 +1,6 @@
 package mihon.entry.interactions.book.navigation
 
 import android.content.Context
-import eu.kanade.tachiyomi.source.entry.EntryType
 import mihon.entry.interactions.book.runtime.requireBook
 import mihon.entry.interactions.navigation.EntryContinueProcessor
 import mihon.entry.interactions.navigation.EntryOpenOptions
@@ -17,7 +16,6 @@ internal class BookContinueProcessor(
     private val entryProgressRepository: EntryProgressRepository,
     private val openProcessor: BookOpenProcessor,
 ) : EntryContinueProcessor {
-    override val type = EntryType.BOOK
 
     override suspend fun findNext(entry: Entry): EntryChapter? {
         entry.requireBook()

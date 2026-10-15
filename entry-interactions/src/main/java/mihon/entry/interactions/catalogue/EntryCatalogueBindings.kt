@@ -3,14 +3,12 @@ package mihon.entry.interactions.catalogue
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.ContributesTo
-import dev.zacsweers.metro.IntoSet
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import mihon.entry.interactions.catalogue.host.EntryCatalogueProviderHost
 import mihon.entry.interactions.catalogue.host.EntrySourceDescriptionAdapter
 import mihon.entry.interactions.catalogue.host.SourceManagerEntryCatalogueProviderHost
 import mihon.entry.interactions.catalogue.runtime.DefaultEntryCatalogueFeature
-import mihon.feature.graph.FeatureGraphContributor
 import tachiyomi.domain.entry.interactor.NetworkToLocalEntry
 import tachiyomi.domain.source.service.EntrySourceDescriptionResolutionPort
 import tachiyomi.domain.source.service.SourceManager
@@ -35,8 +33,4 @@ object EntryCatalogueBindings {
     internal fun sourceDescription(
         host: EntryCatalogueProviderHost,
     ): EntrySourceDescriptionResolutionPort = EntrySourceDescriptionAdapter(host)
-
-    @Provides
-    @IntoSet
-    fun graphContributor(): FeatureGraphContributor = EntryCatalogueFeatureContributor
 }

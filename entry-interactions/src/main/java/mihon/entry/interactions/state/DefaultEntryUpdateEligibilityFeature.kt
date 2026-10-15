@@ -34,3 +34,11 @@ private fun EntryUpdateEligibilityContext.skipReason(
         else -> null
     }
 }
+
+private data class EntryUpdateEligibilityContext(
+    val oneShotAlreadyFetched: Boolean,
+    val completed: Boolean,
+    val hasUnconsumed: Boolean,
+    val notStartedWithChildren: Boolean,
+    val outsideReleasePeriod: Boolean,
+)

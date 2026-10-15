@@ -32,8 +32,8 @@ internal class DefaultEntryViewerSettingsFeature(
             "Viewer Settings type $type has no operational provider"
         }
     }
-    private val surfacesById = providersByType.values
-        .flatMap { provider -> provider.surfaces.map { surface -> provider.type to surface } }
+    private val surfacesById = providersByType
+        .flatMap { (type, provider) -> provider.surfaces.map { surface -> type to surface } }
         .also { surfaces ->
             val duplicateIds = surfaces.groupingBy { it.second.id }.eachCount().filterValues { it > 1 }.keys
             check(duplicateIds.isEmpty()) { "Duplicate Viewer Settings surface IDs: $duplicateIds" }

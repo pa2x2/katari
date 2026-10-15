@@ -6,8 +6,8 @@ import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.IntoSet
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
+import mihon.core.metro.StartupWarmup
 import mihon.entry.interactions.runtime.ReaderSettingsSurfaceCapabilities
-import mihon.feature.runtime.FeatureRuntimeWarmup
 import tachiyomi.core.common.preference.InstalledProfilePreferenceOwner
 import tachiyomi.core.common.preference.ProfilePreferenceKeyPattern
 import tachiyomi.core.common.preference.ProfilePreferenceOwnerId
@@ -56,6 +56,6 @@ object ReaderChapterPreparationBindings {
     // before a reader reads the per-surface preferences.
     @Provides
     @IntoSet
-    fun settingsProviderWarmup(provider: () -> ReaderChapterPreparationSettingsProvider): FeatureRuntimeWarmup =
-        FeatureRuntimeWarmup { provider() }
+    fun settingsProviderWarmup(provider: () -> ReaderChapterPreparationSettingsProvider): StartupWarmup =
+        StartupWarmup { provider() }
 }

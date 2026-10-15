@@ -5,12 +5,9 @@ import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.test.runTest
-import mihon.entry.interactions.runtime.EntryChildGroupFilterCapability
+import mihon.entry.interactions.runtime.DefaultEntryInteractions
 import mihon.entry.interactions.runtime.EntryChildGroupFilterDataSource
 import mihon.entry.interactions.runtime.EntryChildGroupFilterProcessor
-import mihon.entry.interactions.runtime.EntryInteractionPlugin
-import mihon.entry.interactions.runtime.createEntryInteractions
-import mihon.feature.graph.ContributionOwner
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
@@ -39,15 +36,8 @@ class EntryChildGroupFilterFeatureTest {
     }
 
     private fun fixture(dataSource: FakeDataSource = FakeDataSource()): Fixture {
-        val bindings = listOf(EntryChildGroupFilterCapability.bind(TestChildGroupFilterProcessor))
-        val interactions = createEntryInteractions(
-            listOf(
-                object : EntryInteractionPlugin {
-                    override val type = EntryType.BOOK
-                    override val owner = ContributionOwner("test.type.book")
-                    override val providerBindings = bindings
-                },
-            ),
+        val interactions = DefaultEntryInteractions(
+            childGroupFilterProcessors = mapOf(EntryType.BOOK to TestChildGroupFilterProcessor),
         )
         return Fixture(
             feature = DefaultEntryChildGroupFilterFeature(
@@ -63,8 +53,6 @@ class EntryChildGroupFilterFeatureTest {
     )
 
     private object TestChildGroupFilterProcessor : EntryChildGroupFilterProcessor {
-        override val type = EntryType.BOOK
-
         override fun groupFor(entry: Entry, chapter: EntryChapter): String? {
             return normalizeGroup(entry, chapter.scanlator.orEmpty())
         }

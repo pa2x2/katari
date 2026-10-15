@@ -1,6 +1,5 @@
 package mihon.entry.interactions.anime.media
 
-import eu.kanade.tachiyomi.source.entry.EntryType
 import mihon.entry.interactions.anime.runtime.requireAnime
 import mihon.entry.interactions.media.EntryPlaybackPreferencesSnapshot
 import mihon.entry.interactions.media.EntryPlaybackQualityMode
@@ -13,7 +12,6 @@ import tachiyomi.domain.entry.repository.PlaybackPreferencesRepository
 internal class AnimePlaybackPreferencesProcessor(
     private val playbackPreferencesRepository: PlaybackPreferencesRepository,
 ) : EntryPlaybackPreferencesProcessor {
-    override val type: EntryType = EntryType.ANIME
 
     override suspend fun snapshot(entry: Entry): EntryPlaybackPreferencesSnapshot? {
         entry.requireAnime()

@@ -3,7 +3,6 @@ package mihon.entry.interactions.library
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.ContributesTo
-import dev.zacsweers.metro.IntoSet
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import eu.kanade.tachiyomi.source.entry.EntryType
@@ -22,14 +21,13 @@ import mihon.entry.interactions.navigation.EntryContinueFeature
 import mihon.entry.interactions.navigation.EntryContinueProcessor
 import mihon.entry.interactions.navigation.EntryOpenFeature
 import mihon.entry.interactions.presentation.EntryTypePresentationFeature
-import mihon.entry.interactions.runtime.EntryInteractionPlugin
 import mihon.entry.interactions.runtime.EntryInteractions
 import mihon.entry.interactions.runtime.EntryOutsideReleasePeriodFilterProvider
+import mihon.entry.interactions.runtime.EntryTypePresentationProvider
 import mihon.entry.interactions.source.EntrySourceRefreshFeature
 import mihon.entry.interactions.state.EntryBookmarkProcessor
 import mihon.entry.interactions.state.EntryConsumptionFeature
 import mihon.entry.interactions.tracking.EntryTrackingFeature
-import mihon.feature.graph.FeatureGraphContributor
 import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.entry.service.EntryLibraryProgressResolutionPort
@@ -106,7 +104,7 @@ object EntryLibraryBindings {
     @Provides
     @SingleIn(AppScope::class)
     fun updateNotificationFeature(
-        plugins: Set<EntryInteractionPlugin>,
+        typePresentationProviders: Map<EntryType, EntryTypePresentationProvider>,
         presentationFeature: EntryTypePresentationFeature,
         openFeature: EntryOpenFeature,
         consumptionFeature: EntryConsumptionFeature,
@@ -115,7 +113,7 @@ object EntryLibraryBindings {
         mergeNavigation: () -> EntryMergeNavigationFeature,
         entryRepository: () -> EntryRepository,
     ): EntryLibraryUpdateNotificationFeature = DefaultEntryLibraryUpdateNotificationFeature(
-        participatingTypes = plugins.mapTo(mutableSetOf(), EntryInteractionPlugin::type),
+        participatingTypes = typePresentationProviders.keys,
         presentationFeature = presentationFeature,
         openFeature = openFeature,
         consumptionFeature = consumptionFeature,
@@ -128,21 +126,4 @@ object EntryLibraryBindings {
             entryRepository().getEntryById(visibleEntryId, entry.profileId) ?: entry
         },
     )
-
-    @Provides
-    @IntoSet
-    fun filterGraphContributor(): FeatureGraphContributor = EntryLibraryFilterFeatureContributor
-
-    @Provides
-    @IntoSet
-    fun progressGraphContributor(): FeatureGraphContributor = EntryLibraryProgressFeatureContributor
-
-    @Provides
-    @IntoSet
-    fun updateRefreshGraphContributor(): FeatureGraphContributor = EntryLibraryUpdateRefreshFeatureContributor
-
-    @Provides
-    @IntoSet
-    fun updateNotificationGraphContributor(): FeatureGraphContributor =
-        EntryLibraryUpdateNotificationFeatureContributor
 }

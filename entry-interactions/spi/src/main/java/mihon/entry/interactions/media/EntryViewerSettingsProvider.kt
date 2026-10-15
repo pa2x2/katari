@@ -1,14 +1,11 @@
 package mihon.entry.interactions.media
 
 import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.entry.interactions.runtime.EntryInteractionProvider
-import mihon.entry.interactions.runtime.entryInteractionCapability
 import mihon.entry.viewer.settings.ViewerSettingScope
 import mihon.entry.viewer.settings.ViewerSettingsProvider
-import mihon.feature.graph.CapabilityId
 
 /** Type-owned collection of genuine viewer engines and their settings definitions. */
-interface EntryViewerSettingsProvider : EntryInteractionProvider {
+interface EntryViewerSettingsProvider {
     val surfaces: List<ViewerSettingsProvider>
 
     /** Removes type-owned legacy viewer state while preserving unrelated flags. */
@@ -16,7 +13,6 @@ interface EntryViewerSettingsProvider : EntryInteractionProvider {
 }
 
 class DefaultEntryViewerSettingsProvider(
-    override val type: EntryType,
     override val surfaces: List<ViewerSettingsProvider>,
     private val legacyViewerFlagsNormalization: (Long) -> Long = { it },
 ) : EntryViewerSettingsProvider {
@@ -27,10 +23,10 @@ class DefaultEntryViewerSettingsProvider(
             .filterValues { it > 1 }
             .keys
         require(duplicateSurfaceIds.isEmpty()) {
-            "Duplicate Viewer Settings surfaces for $type: $duplicateSurfaceIds"
+            "Duplicate Viewer Settings surfaces: $duplicateSurfaceIds"
         }
         surfaces.forEach { surface ->
-            require(surface.id.isNotBlank()) { "Viewer Settings surface ID must not be blank for $type" }
+            require(surface.id.isNotBlank()) { "Viewer Settings surface ID must not be blank" }
             val duplicateSettingIds = surface.settings.groupingBy { it.id }.eachCount().filterValues { it > 1 }.keys
             require(duplicateSettingIds.isEmpty()) {
                 "Duplicate Viewer Settings definitions for ${surface.id}: $duplicateSettingIds"
@@ -53,11 +49,6 @@ class DefaultEntryViewerSettingsProvider(
 
     override fun normalizeLegacyViewerFlags(flags: Long): Long = legacyViewerFlagsNormalization(flags)
 }
-
-val EntryViewerSettingsCapability =
-    entryInteractionCapability<EntryViewerSettingsProvider>(
-        id = CapabilityId("entry.viewer-settings"),
-    )
 
 interface EntryViewerSettingsInteraction {
     fun provider(type: EntryType): EntryViewerSettingsProvider?

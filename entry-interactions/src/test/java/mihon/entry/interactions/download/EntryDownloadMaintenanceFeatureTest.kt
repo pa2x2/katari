@@ -9,11 +9,7 @@ import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import mihon.entry.interactions.merge.EntryMergeDownloadOwners
-import mihon.entry.interactions.runtime.EntryInteractionPlugin
-import mihon.entry.interactions.runtime.EntryInteractionProviderBinding
-import mihon.entry.interactions.runtime.createEntryInteractions
-import mihon.entry.interactions.runtime.providersOf
-import mihon.feature.graph.ContributionOwner
+import mihon.entry.interactions.runtime.DefaultEntryInteractions
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.model.Entry
 
@@ -29,10 +25,7 @@ class EntryDownloadMaintenanceFeatureTest {
         every { processor.hasDownloads(failedDeletion) } returnsMany listOf(true, false)
         coEvery { processor.deleteEntryDownloads(failedDeletion) } returns false
         every { processor.hasDownloads(remainingDownloads) } returns true
-        val feature = featureFor(
-            EntryDownloadCapability.bind(processor),
-            owners = listOf(failedDeletion, remainingDownloads),
-        )
+        val feature = featureFor(processor, owners = listOf(failedDeletion, remainingDownloads))
         val plan = (feature.prepareRemoval(entry) as EntryDownloadRemovalPreparation.Prepared).plan
 
         feature.applyRemoval(plan) shouldBe
@@ -40,14 +33,12 @@ class EntryDownloadMaintenanceFeatureTest {
     }
 
     private fun featureFor(
-        vararg bindings: EntryInteractionProviderBinding<*>,
+        processor: EntryDownloadProcessor,
         owners: List<Entry> = listOf(entry),
     ): EntryDownloadMaintenanceFeature {
-        val plugins = listOf(plugin(*bindings))
-        val interactions = createEntryInteractions(plugins)
         return DefaultEntryDownloadMaintenanceFeature(
-            types = plugins.providersOf(EntryDownloadCapability).keys,
-            interaction = interactions.download,
+            types = setOf(EntryType.BOOK),
+            interaction = DefaultEntryInteractions(downloadProcessors = mapOf(EntryType.BOOK to processor)).download,
             ownership = mockk {
                 coEvery { resolveDownloadOwners(any()) } returns EntryMergeDownloadOwners(
                     profileId = entry.profileId,
@@ -58,17 +49,8 @@ class EntryDownloadMaintenanceFeatureTest {
         )
     }
 
-    private fun plugin(vararg bindings: EntryInteractionProviderBinding<*>): EntryInteractionPlugin {
-        return object : EntryInteractionPlugin {
-            override val type = EntryType.BOOK
-            override val owner = ContributionOwner("test.type.book")
-            override val providerBindings = bindings.toList()
-        }
-    }
-
     private fun processor(): EntryDownloadProcessor {
         return mockk(relaxed = true) {
-            every { type } returns EntryType.BOOK
             every { changes } returns emptyFlow()
             every { isInitializing } returns flowOf(false)
             every { isRunning } returns flowOf(false)

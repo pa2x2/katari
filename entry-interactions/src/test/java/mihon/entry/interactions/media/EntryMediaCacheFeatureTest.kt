@@ -5,9 +5,7 @@ import eu.kanade.tachiyomi.source.entry.EntryType
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.mockk.mockk
-import mihon.entry.interactions.runtime.EntryInteractionPlugin
-import mihon.entry.interactions.runtime.createEntryInteractions
-import mihon.feature.graph.ContributionOwner
+import mihon.entry.interactions.runtime.DefaultEntryInteractions
 import org.junit.jupiter.api.Test
 import tachiyomi.core.common.preference.InMemoryPreferenceStore
 
@@ -27,7 +25,7 @@ class EntryMediaCacheFeatureTest {
                 "future_cleared_auto_clear",
             ),
         )
-        val feature = feature(plugin(provider(failed, cleared)))
+        val feature = feature(provider(failed, cleared))
         feature.settings().forEach { it.autoClearOnLaunch.set(true) }
 
         feature.clearEnabledOnLaunch().map { it::class } shouldContainExactly listOf(
@@ -52,7 +50,7 @@ class EntryMediaCacheFeatureTest {
             ),
         )
 
-        feature(plugin(provider(artifact)), store).settings().single().autoClearOnLaunch.get() shouldBe true
+        feature(provider(artifact), store).settings().single().autoClearOnLaunch.get() shouldBe true
 
         val alreadyMigratedStore = InMemoryPreferenceStore(
             sequenceOf(
@@ -60,33 +58,23 @@ class EntryMediaCacheFeatureTest {
                 InMemoryPreferenceStore.InMemoryPreference("future_auto_clear", false, false),
             ),
         )
-        feature(plugin(provider(artifact)), alreadyMigratedStore)
+        feature(provider(artifact), alreadyMigratedStore)
             .settings().single().autoClearOnLaunch.get() shouldBe false
     }
 
     private fun feature(
-        plugin: EntryInteractionPlugin,
+        provider: EntryMediaCacheProvider,
         store: InMemoryPreferenceStore = InMemoryPreferenceStore(),
     ): EntryMediaCacheFeature {
-        val interactions = createEntryInteractions(listOf(plugin))
         return DefaultEntryMediaCacheFeature(
-            applicableTypes = setOf(plugin.type),
-            interaction = interactions.mediaCache,
+            applicableTypes = setOf(EntryType.BOOK),
+            interaction = DefaultEntryInteractions(mediaCacheProviders = mapOf(EntryType.BOOK to provider)).mediaCache,
             preferenceStore = store,
         )
     }
 
-    private fun plugin(provider: EntryMediaCacheProvider): EntryInteractionPlugin {
-        return object : EntryInteractionPlugin {
-            override val type = EntryType.BOOK
-            override val owner = ContributionOwner("test.future-type")
-            override val providerBindings = listOf(EntryMediaCacheCapability.bind(provider))
-        }
-    }
-
     private fun provider(vararg artifacts: EntryMediaCacheArtifact): EntryMediaCacheProvider {
         return object : EntryMediaCacheProvider {
-            override val type = EntryType.BOOK
             override val artifacts = artifacts.toList()
         }
     }

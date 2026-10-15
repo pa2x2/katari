@@ -13,6 +13,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.plus
 import mihon.core.metro.AppCoroutineScope
+import mihon.core.metro.StartupWarmup
 import mihon.entry.interactions.download.configuration.backup.DefaultEntryDownloadConfigurationBackupFeature
 import mihon.entry.interactions.download.configuration.backup.EntryDownloadConfigurationBackupFeature
 import mihon.entry.interactions.download.configuration.backup.EntryDownloadConfigurationBackupParticipant
@@ -26,12 +27,8 @@ import mihon.entry.interactions.merge.EntryMergeDownloadOwnershipProjection
 import mihon.entry.interactions.merge.consequence.EntryMergeDurableEvent
 import mihon.entry.interactions.migration.consequence.EntryMigrationDurableEvent
 import mihon.entry.interactions.persistence.backup.EntryBackupStateParticipant
-import mihon.entry.interactions.runtime.EntryInteractionPlugin
 import mihon.entry.interactions.runtime.EntryInteractions
-import mihon.entry.interactions.runtime.providersOf
 import mihon.entry.interactions.state.EntryBookmarkProcessor
-import mihon.feature.graph.FeatureGraphContributor
-import mihon.feature.runtime.FeatureRuntimeWarmup
 import tachiyomi.domain.category.interactor.GetCategories
 import tachiyomi.domain.download.service.DownloadPreferences
 import tachiyomi.domain.entry.interactor.GetEntryWithChapters
@@ -64,10 +61,6 @@ object EntryDownloadBindings {
     @Provides
     internal fun runtimeFeature(coordinator: EntryDownloadRuntimeCoordinator): EntryDownloadRuntimeFeature =
         coordinator
-
-    @Provides
-    @IntoSet
-    fun runtimeGraphContributor(): FeatureGraphContributor = EntryDownloadRuntimeFeatureContributor
 
     @Provides
     @SingleIn(AppScope::class)
@@ -133,12 +126,8 @@ object EntryDownloadBindings {
 
     @Provides
     @IntoSet
-    fun actionGraphContributor(): FeatureGraphContributor = EntryDownloadActionFeatureContributor
-
-    @Provides
-    @IntoSet
-    internal fun notificationManagerWarmup(manager: () -> EntryDownloadNotificationManager): FeatureRuntimeWarmup =
-        FeatureRuntimeWarmup { manager().start() }
+    internal fun notificationManagerWarmup(manager: () -> EntryDownloadNotificationManager): StartupWarmup =
+        StartupWarmup { manager().start() }
 
     @Provides
     @SingleIn(AppScope::class)
@@ -170,10 +159,6 @@ object EntryDownloadBindings {
     ): EntryAutomaticDownloadFeature = coordinator
 
     @Provides
-    @IntoSet
-    fun automaticDownloadGraphContributor(): FeatureGraphContributor = EntryAutomaticDownloadFeatureContributor
-
-    @Provides
     @SingleIn(AppScope::class)
     fun lifecycleEventSink(feature: () -> EntryDownloadLifecycleFeature): EntryDownloadLifecycleEventSink =
         EntryDownloadLifecycleEventSink { event -> feature().onEvent(event) }
@@ -201,10 +186,6 @@ object EntryDownloadBindings {
     )
 
     @Provides
-    @IntoSet
-    fun lifecycleGraphContributor(): FeatureGraphContributor = EntryDownloadLifecycleFeatureContributor
-
-    @Provides
     @SingleIn(AppScope::class)
     fun optionsFeature(
         optionsProcessors: Map<EntryType, EntryDownloadOptionsProcessor>,
@@ -216,23 +197,8 @@ object EntryDownloadBindings {
 
     @Provides
     @SingleIn(AppScope::class)
-    fun settingsFeature(plugins: Set<EntryInteractionPlugin>): EntryDownloadSettingsFeature =
-        DefaultEntryDownloadSettingsFeature(
-            availableSettings = buildSet {
-                if (plugins.providersOf(EntryDownloadArchivePackagingCapability).isNotEmpty()) {
-                    add(EntryDownloadSetting.ARCHIVE_PACKAGING)
-                }
-                if (plugins.providersOf(EntryDownloadTallImageSplittingCapability).isNotEmpty()) {
-                    add(EntryDownloadSetting.TALL_IMAGE_SPLITTING)
-                }
-                if (plugins.providersOf(EntryDownloadParallelSourceTransfersCapability).isNotEmpty()) {
-                    add(EntryDownloadSetting.PARALLEL_SOURCE_TRANSFERS)
-                }
-                if (plugins.providersOf(EntryDownloadParallelItemTransfersCapability).isNotEmpty()) {
-                    add(EntryDownloadSetting.PARALLEL_ITEM_TRANSFERS)
-                }
-            },
-        )
+    fun settingsFeature(availableSettings: Set<EntryDownloadSetting>): EntryDownloadSettingsFeature =
+        DefaultEntryDownloadSettingsFeature(availableSettings)
 
     @Provides
     @SingleIn(AppScope::class)
@@ -245,10 +211,6 @@ object EntryDownloadBindings {
     )
 
     @Provides
-    @IntoSet
-    fun configurationGraphContributor(): FeatureGraphContributor = EntryDownloadConfigurationFeatureContributor
-
-    @Provides
     @SingleIn(AppScope::class)
     internal fun maintenanceFeature(
         downloadProcessors: Map<EntryType, EntryDownloadProcessor>,
@@ -259,10 +221,6 @@ object EntryDownloadBindings {
         interaction = interactions.download,
         ownership = ownership,
     )
-
-    @Provides
-    @IntoSet
-    fun maintenanceGraphContributor(): FeatureGraphContributor = EntryDownloadMaintenanceFeatureContributor
 
     @Provides
     @IntoSet

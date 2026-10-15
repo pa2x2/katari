@@ -10,6 +10,7 @@ import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import mihon.core.metro.AppCoroutineScope
+import mihon.core.metro.StartupWarmup
 import mihon.entry.interactions.download.EntryDownloadMaintenanceFeature
 import mihon.entry.interactions.durable.EntryDurableConsequences
 import mihon.entry.interactions.durable.EntryDurableParticipant
@@ -28,8 +29,6 @@ import mihon.entry.interactions.state.EntryBookmarkProcessor
 import mihon.entry.interactions.state.EntryConsumptionProcessor
 import mihon.entry.interactions.state.EntryMigrationProvider
 import mihon.entry.interactions.tracking.EntryTrackingFeature
-import mihon.feature.graph.FeatureGraphContributor
-import mihon.feature.runtime.FeatureRuntimeWarmup
 
 @ContributesTo(AppScope::class)
 @BindingContainer
@@ -102,10 +101,6 @@ object EntryMigrationBindings {
 
     @Provides
     @IntoSet
-    fun graphContributor(): FeatureGraphContributor = EntryMigrationFeatureContributor
-
-    @Provides
-    @IntoSet
     internal fun customCoverParticipant(
         customCoverHost: EntryMigrationCustomCoverHost,
     ): EntryDurableParticipant<EntryMigrationDurableEvent> = EntryMigrationCustomCoverParticipant(customCoverHost)
@@ -115,7 +110,7 @@ object EntryMigrationBindings {
     internal fun consequenceRetryWarmup(
         @AppCoroutineScope scope: CoroutineScope,
         delivery: () -> EntryMigrationConsequenceDelivery,
-    ): FeatureRuntimeWarmup = FeatureRuntimeWarmup {
+    ): StartupWarmup = StartupWarmup {
         scope.launch {
             delivery().runRetryLoop()
         }

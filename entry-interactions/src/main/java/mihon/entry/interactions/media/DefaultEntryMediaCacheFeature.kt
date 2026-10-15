@@ -14,17 +14,17 @@ internal class DefaultEntryMediaCacheFeature(
     private val preferencesById: Map<EntryMediaCacheId, Preference<Boolean>>
 
     init {
-        val providers = applicableTypes.sortedBy { it.ordinal }.map { type ->
+        val providers = applicableTypes.sortedBy { it.ordinal }.associateWith { type ->
             checkNotNull(interaction.provider(type)) {
                 "Media-cache type $type has no operational provider"
             }
         }
-        providers.forEach { provider ->
+        providers.forEach { (type, provider) ->
             check(provider.artifacts.isNotEmpty()) {
-                "Media-cache provider ${provider.type} must contribute at least one artifact"
+                "Media-cache provider $type must contribute at least one artifact"
             }
         }
-        artifacts = providers.flatMap(EntryMediaCacheProvider::artifacts)
+        artifacts = providers.values.flatMap(EntryMediaCacheProvider::artifacts)
         artifactsById = artifacts.associateBy(EntryMediaCacheArtifact::id)
         check(artifactsById.size == artifacts.size) {
             "Duplicate media-cache artifact ids: ${artifacts.groupingBy { it.id }.eachCount().duplicates()}"

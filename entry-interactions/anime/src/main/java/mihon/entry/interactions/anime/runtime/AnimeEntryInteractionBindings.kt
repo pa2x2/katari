@@ -8,13 +8,10 @@ import dev.zacsweers.metro.IntoSet
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import eu.kanade.tachiyomi.network.NetworkHelper
-import eu.kanade.tachiyomi.source.entry.EntryType
-import eu.kanade.tachiyomi.ui.video.player.AnimePlayerBasePreferences
-import eu.kanade.tachiyomi.ui.video.player.VideoPlayerMediaCache
-import eu.kanade.tachiyomi.ui.video.player.VideoStreamResolver
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.serialization.json.Json
 import mihon.core.metro.AppCoroutineScope
+import mihon.core.metro.StartupWarmup
 import mihon.entry.interactions.anime.download.AnimeDownloadCache
 import mihon.entry.interactions.anime.download.AnimeDownloadManager
 import mihon.entry.interactions.anime.download.AnimeDownloadProvider
@@ -23,25 +20,15 @@ import mihon.entry.interactions.anime.download.AnimeDownloader
 import mihon.entry.interactions.anime.media.session.AnimeMediaSessionProcessor
 import mihon.entry.interactions.catalogue.EntryCatalogueFeature
 import mihon.entry.interactions.download.EntryDownloadWorkController
-import mihon.entry.interactions.media.DefaultEntryViewerSettingsProvider
 import mihon.entry.interactions.media.ENTRY_VIEWER_SETTINGS_LEGACY_PREFERENCE_OWNER_GROUP_ID
 import mihon.entry.interactions.media.session.EntryMediaSessionEventSink
-import mihon.entry.interactions.runtime.EntryInteractionPlugin
-import mihon.entry.interactions.runtime.EntryPlayerCache
 import mihon.entry.interactions.settings.AnimePlayerPreferences
-import mihon.entry.interactions.settings.EntryInteractionPreferences
-import mihon.feature.runtime.FeatureRuntimeWarmup
 import tachiyomi.core.common.preference.InstalledProfilePreferenceOwner
 import tachiyomi.core.common.preference.ProfilePreferenceOwnerGroupId
 import tachiyomi.core.common.preference.ProfilePreferenceOwnerId
 import tachiyomi.core.common.preference.ProfilePreferenceOwnerInstaller
-import tachiyomi.domain.download.service.DownloadPreferences
-import tachiyomi.domain.entry.interactor.GetEntryWithChapters
-import tachiyomi.domain.entry.repository.DownloadPreferencesRepository
 import tachiyomi.domain.entry.repository.EntryChapterRepository
-import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.entry.repository.EntryRepository
-import tachiyomi.domain.entry.repository.PlaybackPreferencesRepository
 import tachiyomi.domain.library.service.GlobalLibraryPreferences
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.domain.storage.service.StorageManager
@@ -140,54 +127,6 @@ object AnimeEntryInteractionBindings {
 
     @Provides
     @IntoSet
-    @SingleIn(AppScope::class)
-    internal fun plugin(
-        entryChapterRepository: EntryChapterRepository,
-        getEntryWithChapters: GetEntryWithChapters,
-        entryProgressRepository: EntryProgressRepository,
-        playbackPreferencesRepository: PlaybackPreferencesRepository,
-        animeDownloadManager: AnimeDownloadManager,
-        animeDownloadCache: AnimeDownloadCache,
-        downloadPreferences: DownloadPreferences,
-        downloadPreferencesRepository: DownloadPreferencesRepository,
-        sourceManager: SourceManager,
-        entryRepository: EntryRepository,
-        mediaSession: AnimeMediaSessionProcessor,
-        entryInteractionPreferences: EntryInteractionPreferences,
-        viewerSettingsProvider: AnimePlayerPreferences,
-        resolveVideoStream: () -> VideoStreamResolver,
-        playerCache: () -> EntryPlayerCache,
-        networkHelper: () -> NetworkHelper,
-        mediaCache: () -> VideoPlayerMediaCache,
-        basePreferences: () -> AnimePlayerBasePreferences,
-    ): EntryInteractionPlugin = animeEntryInteractionPlugin(
-        AnimeEntryInteractionRuntimeDependencies(
-            entryChapterRepository = entryChapterRepository,
-            getEntryWithChapters = getEntryWithChapters,
-            entryProgressRepository = entryProgressRepository,
-            playbackPreferencesRepository = playbackPreferencesRepository,
-            animeDownloadManager = animeDownloadManager,
-            animeDownloadCache = animeDownloadCache,
-            downloadPreferences = downloadPreferences,
-            downloadPreferencesRepository = downloadPreferencesRepository,
-            sourceManager = sourceManager,
-            entryRepository = entryRepository,
-            mediaSession = mediaSession,
-            entryInteractionPreferences = entryInteractionPreferences,
-        ),
-        resolveVideoStream = resolveVideoStream,
-        playerCache = playerCache,
-        networkHelper = networkHelper,
-        mediaCache = mediaCache,
-        basePreferences = basePreferences,
-        viewerSettingsProvider = DefaultEntryViewerSettingsProvider(
-            type = EntryType.ANIME,
-            surfaces = listOf(viewerSettingsProvider),
-        ),
-    )
-
-    @Provides
-    @IntoSet
-    internal fun downloadManagerWarmup(downloadManager: () -> AnimeDownloadManager): FeatureRuntimeWarmup =
-        FeatureRuntimeWarmup { downloadManager() }
+    internal fun downloadManagerWarmup(downloadManager: () -> AnimeDownloadManager): StartupWarmup =
+        StartupWarmup { downloadManager() }
 }

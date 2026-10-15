@@ -6,7 +6,6 @@ import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import mihon.entry.interactions.runtime.EntryImmersiveProcessor
 import mihon.entry.interactions.runtime.EntryPreviewConfigurationProvider
 import mihon.entry.interactions.runtime.EntryPreviewProcessor
-import mihon.entry.interactions.runtime.requireMatchingEntryType
 import mihon.entry.interactions.runtime.requireProcessor
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
@@ -52,7 +51,6 @@ internal class ProviderBackedEntryImmersiveInteraction(
         source: UnifiedSource,
     ): EntryImmersiveHandle {
         val processor = processors.requireProcessor("immersive feed", entry.type)
-        processor.requireMatchingEntryType("immersive feed", entry, processors.keys)
         return processor.load(context, entry, chapter, source)
     }
 

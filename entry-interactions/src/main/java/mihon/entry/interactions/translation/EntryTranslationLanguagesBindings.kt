@@ -14,7 +14,6 @@ import mihon.entry.interactions.state.EntryMigrationProvider
 import mihon.entry.interactions.state.EntryTranslationLanguagesProvider
 import mihon.entry.interactions.translation.backup.EntryTranslationLanguagesBackupParticipant
 import mihon.entry.interactions.translation.migration.EntryTranslationLanguagesMigrationParticipant
-import mihon.feature.graph.FeatureGraphContributor
 import tachiyomi.domain.entry.repository.EntryTranslationLanguagesRepository
 
 @ContributesTo(AppScope::class)
@@ -34,10 +33,6 @@ object EntryTranslationLanguagesBindings {
 
     @Provides
     internal fun feature(impl: DefaultEntryTranslationLanguagesFeature): EntryTranslationLanguagesFeature = impl
-
-    @Provides
-    @IntoSet
-    fun graphContributor(): FeatureGraphContributor = EntryTranslationLanguagesFeatureContributor
 
     @Provides
     @IntoSet

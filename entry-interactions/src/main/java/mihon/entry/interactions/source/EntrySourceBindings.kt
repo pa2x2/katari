@@ -3,12 +3,10 @@ package mihon.entry.interactions.source
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.ContributesTo
-import dev.zacsweers.metro.IntoSet
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import mihon.entry.interactions.download.EntryAutomaticDownloadCoordinator
 import mihon.entry.interactions.download.EntryDownloadRuntimeFeature
-import mihon.feature.graph.FeatureGraphContributor
 import tachiyomi.domain.entry.interactor.NetworkToLocalEntry
 import tachiyomi.domain.entry.interactor.SyncEntryWithSource
 import tachiyomi.domain.entry.repository.EntryChapterRepository
@@ -26,10 +24,6 @@ object EntrySourceBindings {
     )
 
     @Provides
-    @IntoSet
-    fun settingsGraphContributor(): FeatureGraphContributor = EntrySourceSettingsFeatureContributor
-
-    @Provides
     @SingleIn(AppScope::class)
     fun homeFeature(
         sourceManager: SourceManager,
@@ -38,20 +32,12 @@ object EntrySourceBindings {
     )
 
     @Provides
-    @IntoSet
-    fun homeGraphContributor(): FeatureGraphContributor = EntrySourceHomeFeatureContributor
-
-    @Provides
     @SingleIn(AppScope::class)
     fun coverNetworkFeature(
         sourceManager: SourceManager,
     ): EntryCoverNetworkFeature = DefaultEntryCoverNetworkFeature(
         sourceManager = sourceManager,
     )
-
-    @Provides
-    @IntoSet
-    fun coverNetworkGraphContributor(): FeatureGraphContributor = EntryCoverNetworkFeatureContributor
 
     @Provides
     @SingleIn(AppScope::class)
@@ -70,20 +56,12 @@ object EntrySourceBindings {
     )
 
     @Provides
-    @IntoSet
-    fun refreshGraphContributor(): FeatureGraphContributor = EntrySourceRefreshFeatureContributor
-
-    @Provides
     @SingleIn(AppScope::class)
     fun webViewFeature(
         sourceManager: SourceManager,
     ): EntryWebViewFeature = DefaultEntryWebViewFeature(
         sourceManager = sourceManager,
     )
-
-    @Provides
-    @IntoSet
-    fun webViewGraphContributor(): FeatureGraphContributor = EntryWebViewFeatureContributor
 
     @Provides
     @SingleIn(AppScope::class)
@@ -100,10 +78,6 @@ object EntrySourceBindings {
     )
 
     @Provides
-    @IntoSet
-    fun deepLinkGraphContributor(): FeatureGraphContributor = EntryDeepLinkFeatureContributor
-
-    @Provides
     @SingleIn(AppScope::class)
     fun trackerSourceAdapterFeature(
         sourceManager: SourceManager,
@@ -114,8 +88,4 @@ object EntrySourceBindings {
         settings = settings,
         home = home,
     )
-
-    @Provides
-    @IntoSet
-    fun trackerSourceAdapterGraphContributor(): FeatureGraphContributor = EntryTrackerSourceAdapterFeatureContributor
 }

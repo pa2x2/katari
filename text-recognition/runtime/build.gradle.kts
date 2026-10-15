@@ -13,8 +13,6 @@ dependencies {
     api(projects.textRecognition.api)
 
     implementation(projects.core.common)
-    implementation(projects.featureGraph)
-    implementation(projects.featureRuntime)
     implementation(projects.textRecognition.spi)
     implementation(libs.diskLruCache)
     implementation(libs.kotlinx.coroutines.core)

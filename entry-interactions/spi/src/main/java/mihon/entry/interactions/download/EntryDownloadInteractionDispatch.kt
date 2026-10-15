@@ -10,7 +10,6 @@ import mihon.entry.interactions.runtime.combinedAny
 import mihon.entry.interactions.runtime.combinedFlatten
 import mihon.entry.interactions.runtime.combinedLatestUnit
 import mihon.entry.interactions.runtime.merged
-import mihon.entry.interactions.runtime.requireMatchingEntryType
 import mihon.entry.interactions.runtime.requireProcessor
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
@@ -67,7 +66,6 @@ internal class EntryDownloadInteractionDispatch(
 
     override suspend fun renameEntry(entry: Entry, newTitle: String) {
         val processor = processors[entry.type] ?: return
-        processor.requireMatchingEntryType("download", entry, processors.keys)
         processor.renameEntry(entry, newTitle)
     }
 
@@ -91,14 +89,12 @@ internal class EntryDownloadInteractionDispatch(
 
     override suspend fun queue(entry: Entry, chapters: List<EntryChapter>, autoStart: Boolean) {
         val processor = processors.requireProcessor("download", entry.type)
-        processor.requireMatchingEntryType("download", entry, processors.keys)
         processor.queue(entry, chapters, autoStart)
         if (autoStart) paused.value = false
     }
 
     override suspend fun download(entry: Entry, chapters: List<EntryChapter>, startNow: Boolean) {
         val processor = processors.requireProcessor("download", entry.type)
-        processor.requireMatchingEntryType("download", entry, processors.keys)
         processor.download(entry, chapters, startNow)
         paused.value = false
     }
@@ -110,7 +106,6 @@ internal class EntryDownloadInteractionDispatch(
         startNow: Boolean,
     ) {
         val processor = optionsProcessors.requireProcessor("download options", entry.type)
-        processor.requireMatchingEntryType("download options", entry, optionsProcessors.keys)
         processor.downloadWithOptions(entry, chapters, selection, startNow)
         paused.value = false
     }
@@ -121,7 +116,6 @@ internal class EntryDownloadInteractionDispatch(
         chapter: EntryChapter,
     ): EntryDownloadOptions? {
         val processor = optionsProcessors[entry.type] ?: return null
-        processor.requireMatchingEntryType("download options", entry, optionsProcessors.keys)
         return processor.resolveDownloadOptions(context, entry, chapter)
     }
 
@@ -130,37 +124,31 @@ internal class EntryDownloadInteractionDispatch(
         candidates: List<EntryChapter>?,
     ): List<EntryChapter> {
         val processor = bulkCandidateProcessors.requireProcessor("bulk download candidates", entry.type)
-        processor.requireMatchingEntryType("bulk download candidates", entry, bulkCandidateProcessors.keys)
         return processor.resolveBulkDownloadCandidatePool(entry, candidates)
     }
 
     override suspend fun delete(entry: Entry, chapters: List<EntryChapter>) {
         val processor = processors[entry.type] ?: return
-        processor.requireMatchingEntryType("download", entry, processors.keys)
         processor.delete(entry, chapters)
     }
 
     override suspend fun cleanup(entry: Entry, chapters: List<EntryChapter>) {
         val processor = processors[entry.type] ?: return
-        processor.requireMatchingEntryType("download", entry, processors.keys)
         processor.cleanup(entry, chapters)
     }
 
     override suspend fun deleteEntryDownloads(entry: Entry): Boolean {
         val processor = processors[entry.type] ?: return false
-        processor.requireMatchingEntryType("download", entry, processors.keys)
         return processor.deleteEntryDownloads(entry)
     }
 
     override fun hasDownloads(entry: Entry): Boolean {
         val processor = processors[entry.type] ?: return false
-        processor.requireMatchingEntryType("download", entry, processors.keys)
         return processor.hasDownloads(entry)
     }
 
     override fun getDownloadCount(entry: Entry): Int {
         val processor = processors[entry.type] ?: return 0
-        processor.requireMatchingEntryType("download", entry, processors.keys)
         return processor.getDownloadCount(entry)
     }
 
@@ -168,7 +156,6 @@ internal class EntryDownloadInteractionDispatch(
         return buildMap {
             entries.groupBy(Entry::type).forEach { (type, typeEntries) ->
                 val processor = processors[type] ?: return@forEach
-                processor.requireMatchingEntryType("download", typeEntries.first(), processors.keys)
                 putAll(processor.getDownloadCounts(typeEntries))
             }
         }
@@ -180,7 +167,6 @@ internal class EntryDownloadInteractionDispatch(
 
     override fun isDownloaded(entry: Entry, chapter: EntryChapter, skipCache: Boolean): Boolean {
         val processor = processors[entry.type] ?: return false
-        processor.requireMatchingEntryType("download", entry, processors.keys)
         return processor.isDownloaded(entry, chapter, skipCache)
     }
 
@@ -210,7 +196,6 @@ internal class EntryDownloadInteractionDispatch(
             ?: return chapters.associate {
                 it.id to EntryDownloadStatus(entry.type, it.id, EntryDownloadState.NOT_DOWNLOADED)
             }
-        processor.requireMatchingEntryType("download", entry, processors.keys)
         return processor.getStatuses(entry, chapters)
     }
 

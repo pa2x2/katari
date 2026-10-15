@@ -12,6 +12,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.plus
 import mihon.core.metro.AppCoroutineScope
 import mihon.core.metro.BasePreferenceStore
+import mihon.core.metro.StartupWarmup
 import mihon.entry.interactions.child.EntryChildListFeature
 import mihon.entry.interactions.durable.EntryDurableParticipant
 import mihon.entry.interactions.media.backup.EntryPlaybackPreferencesBackupParticipant
@@ -32,8 +33,6 @@ import mihon.entry.interactions.state.EntryMigrationProvider
 import mihon.entry.interactions.state.EntryPlaybackPreferencesProcessor
 import mihon.entry.viewer.settings.ViewerSettingBinder
 import mihon.entry.viewer.settings.ViewerSettingOverrideRepository
-import mihon.feature.graph.FeatureGraphContributor
-import mihon.feature.runtime.FeatureRuntimeWarmup
 import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.domain.entry.repository.EntryRepository
 
@@ -51,10 +50,6 @@ object EntryMediaBindings {
         migrationTypes = playbackPreferencesProcessors.keys intersect migrationProviders.keys,
         interaction = interactions.playbackPreferences,
     )
-
-    @Provides
-    @IntoSet
-    fun playbackPreferencesGraphContributor(): FeatureGraphContributor = EntryPlaybackPreferencesFeatureContributor
 
     @Provides
     @IntoSet
@@ -83,10 +78,6 @@ object EntryMediaBindings {
     )
 
     @Provides
-    @IntoSet
-    fun previewGraphContributor(): FeatureGraphContributor = EntryPreviewFeatureContributor
-
-    @Provides
     @SingleIn(AppScope::class)
     internal fun immersiveFeature(
         immersiveProcessors: Map<EntryType, EntryImmersiveProcessor>,
@@ -105,10 +96,6 @@ object EntryMediaBindings {
         childList = childList,
         sourceRefresh = sourceRefresh,
     )
-
-    @Provides
-    @IntoSet
-    fun immersiveGraphContributor(): FeatureGraphContributor = EntryImmersiveFeatureContributor
 
     @Provides
     @SingleIn(AppScope::class)
@@ -153,18 +140,14 @@ object EntryMediaBindings {
 
     @Provides
     @IntoSet
-    fun viewerSettingsGraphContributor(): FeatureGraphContributor = EntryViewerSettingsFeatureContributor
-
-    @Provides
-    @IntoSet
     internal fun viewerSettingsMigrationParticipant(
         feature: () -> EntryViewerSettingsFeature,
     ): EntryDurableParticipant<EntryMigrationDurableEvent> = EntryViewerSettingsMigrationParticipant(feature)
 
     @Provides
     @IntoSet
-    fun viewerSettingsWarmup(feature: () -> EntryViewerSettingsFeature): FeatureRuntimeWarmup =
-        FeatureRuntimeWarmup { feature() }
+    fun viewerSettingsWarmup(feature: () -> EntryViewerSettingsFeature): StartupWarmup =
+        StartupWarmup { feature() }
 
     @Provides
     @SingleIn(AppScope::class)
@@ -177,10 +160,6 @@ object EntryMediaBindings {
         interaction = interactions.mediaCache,
         preferenceStore = preferenceStore,
     )
-
-    @Provides
-    @IntoSet
-    fun mediaCacheGraphContributor(): FeatureGraphContributor = EntryMediaCacheFeatureContributor
 
     @Provides
     @IntoSet

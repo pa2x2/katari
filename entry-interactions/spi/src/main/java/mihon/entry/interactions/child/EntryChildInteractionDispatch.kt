@@ -6,7 +6,6 @@ import mihon.entry.interactions.runtime.EntryChildGroupFilterProcessor
 import mihon.entry.interactions.runtime.EntryChildListProcessor
 import mihon.entry.interactions.runtime.EntryChildProgressProcessor
 import mihon.entry.interactions.runtime.EntryMissingChildGapProcessor
-import mihon.entry.interactions.runtime.requireMatchingEntryType
 import mihon.entry.interactions.runtime.requireProcessor
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
@@ -20,7 +19,6 @@ internal class ProviderBackedEntryChildListInteraction(
         memberIds: List<Long>,
     ): List<EntryChapter> {
         val processor = processors.requireProcessor("child list", entry.type)
-        processor.requireMatchingEntryType("child list", entry, processors.keys)
         return processor.sortedForReading(entry, chapters, memberIds)
     }
 
@@ -30,7 +28,6 @@ internal class ProviderBackedEntryChildListInteraction(
         memberIds: List<Long>,
     ): List<EntryChapter> {
         val processor = processors.requireProcessor("child list", entry.type)
-        processor.requireMatchingEntryType("child list", entry, processors.keys)
         return processor.sortedForDisplay(entry, chapters, memberIds)
     }
 }
@@ -40,7 +37,6 @@ internal class ProviderBackedEntryChildProgressInteraction(
 ) : EntryChildProgressInteraction {
     override fun progressLabels(request: EntryChildProgressRequest): Flow<Map<Long, EntryChildProgressLabel>> {
         val processor = processors.requireProcessor("child progress", request.entry.type)
-        processor.requireMatchingEntryType("child progress", request.entry, processors.keys)
         return processor.progressLabels(request)
     }
 }
@@ -50,7 +46,6 @@ internal class ProviderBackedEntryMissingChildGapInteraction(
 ) : EntryMissingChildGapInteraction {
     override fun buildDisplayList(request: EntryChildListRequest): EntryChildListDisplay {
         val processor = processors.requireProcessor("missing child gaps", request.entry.type)
-        processor.requireMatchingEntryType("missing child gaps", request.entry, processors.keys)
         return processor.buildDisplayList(request)
     }
 }
@@ -60,13 +55,11 @@ internal class ProviderBackedEntryChildGroupFilterInteraction(
 ) : EntryChildGroupFilterInteraction {
     override fun groupFor(entry: Entry, chapter: EntryChapter): String? {
         val processor = processors.requireProcessor("child group filter", entry.type)
-        processor.requireMatchingEntryType("child group filter", entry, processors.keys)
         return processor.groupFor(entry, chapter)
     }
 
     override fun normalizeGroup(entry: Entry, group: String): String? {
         val processor = processors.requireProcessor("child group filter", entry.type)
-        processor.requireMatchingEntryType("child group filter", entry, processors.keys)
         return processor.normalizeGroup(entry, group)
     }
 }

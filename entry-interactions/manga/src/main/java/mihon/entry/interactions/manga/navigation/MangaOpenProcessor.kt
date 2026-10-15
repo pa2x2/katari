@@ -2,7 +2,6 @@ package mihon.entry.interactions.manga.navigation
 
 import android.app.PendingIntent
 import android.content.Context
-import eu.kanade.tachiyomi.source.entry.EntryType
 import mihon.entry.interactions.manga.runtime.requireManga
 import mihon.entry.interactions.navigation.EntryOpenOptions
 import mihon.entry.interactions.navigation.EntryOpenProcessor
@@ -14,7 +13,6 @@ internal class MangaOpenProcessor(
     private val createPendingIntent: (Context, Entry, EntryChapter, EntryOpenOptions) -> PendingIntent =
         ::mangaReaderPendingIntent,
 ) : EntryOpenProcessor {
-    override val type: EntryType = EntryType.MANGA
 
     override fun open(context: Context, entry: Entry, chapter: EntryChapter, options: EntryOpenOptions) {
         entry.requireManga()

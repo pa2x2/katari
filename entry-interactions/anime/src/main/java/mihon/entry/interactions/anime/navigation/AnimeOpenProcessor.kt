@@ -2,7 +2,6 @@ package mihon.entry.interactions.anime.navigation
 
 import android.app.PendingIntent
 import android.content.Context
-import eu.kanade.tachiyomi.source.entry.EntryType
 import mihon.entry.interactions.anime.runtime.requireAnime
 import mihon.entry.interactions.navigation.EntryOpenOptions
 import mihon.entry.interactions.navigation.EntryOpenProcessor
@@ -14,7 +13,6 @@ internal class AnimeOpenProcessor(
     private val createPendingIntent: (Context, Entry, EntryChapter, EntryOpenOptions) -> PendingIntent =
         ::animePlayerPendingIntent,
 ) : EntryOpenProcessor {
-    override val type: EntryType = EntryType.ANIME
 
     override fun open(context: Context, entry: Entry, chapter: EntryChapter, options: EntryOpenOptions) {
         entry.requireAnime()

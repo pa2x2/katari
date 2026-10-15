@@ -1,6 +1,5 @@
 package mihon.entry.interactions.book.state
 
-import eu.kanade.tachiyomi.source.entry.EntryType
 import mihon.entry.interactions.book.runtime.requireBook
 import mihon.entry.interactions.state.EntryConsumptionProcessor
 import mihon.entry.interactions.state.consumptionStatus
@@ -16,7 +15,6 @@ internal class BookConsumptionProcessor(
     private val entryChapterRepository: EntryChapterRepository,
     private val now: () -> Long = System::currentTimeMillis,
 ) : EntryConsumptionProcessor {
-    override val type = EntryType.BOOK
 
     override suspend fun setConsumed(
         entry: Entry,

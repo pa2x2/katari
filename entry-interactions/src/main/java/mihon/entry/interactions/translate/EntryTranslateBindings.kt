@@ -12,6 +12,7 @@ import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import mihon.core.metro.AppCoroutineScope
+import mihon.core.metro.StartupWarmup
 import mihon.entry.interactions.download.EntryAutomaticDownloadFeature
 import mihon.entry.interactions.download.EntryDownloadNotificationActions
 import mihon.entry.interactions.download.EntryDownloadProcessor
@@ -26,8 +27,6 @@ import mihon.entry.interactions.translate.work.EntryTranslateConditions
 import mihon.entry.interactions.translate.work.EntryTranslateQueueRunner
 import mihon.entry.interactions.translate.work.EntryTranslateWorkController
 import mihon.entry.interactions.translation.EntryTranslationLanguagesFeature
-import mihon.feature.graph.FeatureGraphContributor
-import mihon.feature.runtime.FeatureRuntimeWarmup
 import mihon.translation.api.host.TranslationHostActions
 import tachiyomi.domain.entry.interactor.GetEntryWithChapters
 import tachiyomi.domain.entry.repository.EntryChapterRepository
@@ -178,16 +177,12 @@ object EntryTranslateBindings {
 
     @Provides
     @IntoSet
-    fun graphContributor(): FeatureGraphContributor = EntryTranslateFeatureContributor
-
-    @Provides
-    @IntoSet
     internal fun backgroundWorkWarmup(
         @AppCoroutineScope scope: () -> CoroutineScope,
         downloadChaining: () -> EntryTranslateDownloadChaining,
         downloadRules: () -> EntryTranslateDownloadRules,
         pausedNotification: () -> EntryTranslatePausedNotification,
-    ): FeatureRuntimeWarmup = FeatureRuntimeWarmup {
+    ): StartupWarmup = StartupWarmup {
         val appScope = scope()
         appScope.launch { downloadChaining().run() }
         appScope.launch { downloadRules().run() }
