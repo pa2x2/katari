@@ -4,12 +4,8 @@
 -keepattributes Signature
 -keep,allowshrinking class * extends uy.kohesive.injekt.api.FullTypeReference
 
-# The Feature graph looks contributions, projections and contexts up by their KClass, Voyager keys screens by class
-# name, and a ViewModel created without an explicit key is stored under its class name. Merging two of these classes
-# gives two contributions, screens or ViewModels the same key, so R8 may remove them but not merge them. Nested
-# classes (lambdas, continuations, queries) stay free to merge, so a Feature-keyed type must be a top-level class;
-# nested screens and ViewModels are covered by their own rules.
--keep,allowshrinking class !**$*,eu.kanade.**,tachiyomi.**,mihon.**
+# Voyager keys screens by class name, and a ViewModel created without an explicit key is stored under its class name.
+# Merging two of these classes gives two screens or ViewModels the same key, so R8 may remove them but not merge them.
 -keep,allowshrinking class * implements cafe.adriel.voyager.core.screen.Screen
 -keep,allowshrinking class * extends androidx.lifecycle.ViewModel
 
