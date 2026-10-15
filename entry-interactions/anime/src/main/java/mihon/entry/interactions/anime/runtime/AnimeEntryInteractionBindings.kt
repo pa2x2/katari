@@ -1,0 +1,168 @@
+package mihon.entry.interactions.anime.runtime
+
+import android.app.Application
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.BindingContainer
+import dev.zacsweers.metro.ContributesTo
+import dev.zacsweers.metro.IntoSet
+import dev.zacsweers.metro.Provides
+import dev.zacsweers.metro.SingleIn
+import eu.kanade.tachiyomi.network.NetworkHelper
+import eu.kanade.tachiyomi.source.entry.EntryType
+import kotlinx.serialization.json.Json
+import mihon.entry.interactions.anime.download.AnimeDownloadCache
+import mihon.entry.interactions.anime.download.AnimeDownloadManager
+import mihon.entry.interactions.anime.download.AnimeDownloadProvider
+import mihon.entry.interactions.anime.download.AnimeDownloader
+import mihon.entry.interactions.anime.media.session.AnimeMediaSessionProcessor
+import mihon.entry.interactions.media.DefaultEntryViewerSettingsProvider
+import mihon.entry.interactions.media.ENTRY_VIEWER_SETTINGS_LEGACY_PREFERENCE_OWNER_GROUP_ID
+import mihon.entry.interactions.media.session.EntryMediaSessionEventSink
+import mihon.entry.interactions.runtime.EntryInteractionPlugin
+import mihon.entry.interactions.settings.AnimePlayerPreferences
+import mihon.entry.interactions.settings.EntryInteractionPreferences
+import mihon.feature.runtime.FeatureRuntimeWarmup
+import mihon.feature.runtime.injekt.InjektExport
+import mihon.feature.runtime.injekt.injektExport
+import tachiyomi.core.common.preference.InstalledProfilePreferenceOwner
+import tachiyomi.core.common.preference.ProfilePreferenceOwnerGroupId
+import tachiyomi.core.common.preference.ProfilePreferenceOwnerId
+import tachiyomi.core.common.preference.ProfilePreferenceOwnerInstaller
+import tachiyomi.domain.download.service.DownloadPreferences
+import tachiyomi.domain.entry.interactor.GetEntryWithChapters
+import tachiyomi.domain.entry.repository.DownloadPreferencesRepository
+import tachiyomi.domain.entry.repository.EntryChapterRepository
+import tachiyomi.domain.entry.repository.EntryProgressRepository
+import tachiyomi.domain.entry.repository.EntryRepository
+import tachiyomi.domain.entry.repository.PlaybackPreferencesRepository
+import tachiyomi.domain.source.service.SourceManager
+
+@ContributesTo(AppScope::class)
+@BindingContainer
+object AnimeEntryInteractionBindings {
+    @Provides
+    @SingleIn(AppScope::class)
+    internal fun downloadProvider(application: Application): AnimeDownloadProvider = AnimeDownloadProvider(application)
+
+    @Provides
+    @SingleIn(AppScope::class)
+    internal fun downloadCache(application: Application): AnimeDownloadCache = AnimeDownloadCache(application)
+
+    @Provides
+    @SingleIn(AppScope::class)
+    internal fun downloader(
+        application: Application,
+        provider: AnimeDownloadProvider,
+        cache: AnimeDownloadCache,
+        sourceManager: SourceManager,
+        networkHelper: NetworkHelper,
+        json: Json,
+    ): AnimeDownloader = AnimeDownloader(application, provider, cache, sourceManager, networkHelper, json)
+
+    @Provides
+    @SingleIn(AppScope::class)
+    internal fun downloadManager(
+        application: Application,
+        cache: AnimeDownloadCache,
+        provider: AnimeDownloadProvider,
+        downloader: AnimeDownloader,
+        sourceManager: SourceManager,
+    ): AnimeDownloadManager = AnimeDownloadManager(application, cache, provider, downloader, sourceManager)
+
+    @Provides
+    @SingleIn(AppScope::class)
+    fun viewerSettingsOwner(
+        owners: ProfilePreferenceOwnerInstaller,
+    ): InstalledProfilePreferenceOwner<AnimePlayerPreferences> = owners.register(
+        id = ProfilePreferenceOwnerId("entry-interactions.anime.viewer-settings"),
+        groups = setOf(
+            ProfilePreferenceOwnerGroupId(ENTRY_VIEWER_SETTINGS_LEGACY_PREFERENCE_OWNER_GROUP_ID),
+        ),
+        factory = ::AnimePlayerPreferences,
+    )
+
+    @Provides
+    @IntoSet
+    fun viewerSettingsOwnerRegistration(
+        owner: InstalledProfilePreferenceOwner<AnimePlayerPreferences>,
+    ): InstalledProfilePreferenceOwner<*> = owner
+
+    @Provides
+    @SingleIn(AppScope::class)
+    fun viewerSettingsProvider(owner: InstalledProfilePreferenceOwner<AnimePlayerPreferences>): AnimePlayerPreferences =
+        owner.create()
+
+    @Provides
+    @SingleIn(AppScope::class)
+    internal fun mediaSession(sink: EntryMediaSessionEventSink): AnimeMediaSessionProcessor =
+        AnimeMediaSessionProcessor(sink)
+
+    @Provides
+    @IntoSet
+    @SingleIn(AppScope::class)
+    internal fun plugin(
+        entryChapterRepository: EntryChapterRepository,
+        getEntryWithChapters: GetEntryWithChapters,
+        entryProgressRepository: EntryProgressRepository,
+        playbackPreferencesRepository: PlaybackPreferencesRepository,
+        animeDownloadManager: AnimeDownloadManager,
+        animeDownloadCache: AnimeDownloadCache,
+        downloadPreferences: DownloadPreferences,
+        downloadPreferencesRepository: DownloadPreferencesRepository,
+        sourceManager: SourceManager,
+        entryRepository: EntryRepository,
+        mediaSession: AnimeMediaSessionProcessor,
+        entryInteractionPreferences: EntryInteractionPreferences,
+        viewerSettingsProvider: AnimePlayerPreferences,
+    ): EntryInteractionPlugin = animeEntryInteractionPlugin(
+        AnimeEntryInteractionRuntimeDependencies(
+            entryChapterRepository = entryChapterRepository,
+            getEntryWithChapters = getEntryWithChapters,
+            entryProgressRepository = entryProgressRepository,
+            playbackPreferencesRepository = playbackPreferencesRepository,
+            animeDownloadManager = animeDownloadManager,
+            animeDownloadCache = animeDownloadCache,
+            downloadPreferences = downloadPreferences,
+            downloadPreferencesRepository = downloadPreferencesRepository,
+            sourceManager = sourceManager,
+            entryRepository = entryRepository,
+            mediaSession = mediaSession,
+            entryInteractionPreferences = entryInteractionPreferences,
+        ),
+        viewerSettingsProvider = DefaultEntryViewerSettingsProvider(
+            type = EntryType.ANIME,
+            surfaces = listOf(viewerSettingsProvider),
+        ),
+    )
+
+    @Provides
+    @IntoSet
+    internal fun downloadManagerWarmup(downloadManager: () -> AnimeDownloadManager): FeatureRuntimeWarmup =
+        FeatureRuntimeWarmup { downloadManager() }
+
+    @Provides
+    @IntoSet
+    internal fun exportDownloadProvider(provider: () -> AnimeDownloadProvider): InjektExport<*> =
+        injektExport(provider)
+
+    @Provides
+    @IntoSet
+    internal fun exportDownloadCache(cache: () -> AnimeDownloadCache): InjektExport<*> = injektExport(cache)
+
+    @Provides
+    @IntoSet
+    internal fun exportDownloader(downloader: () -> AnimeDownloader): InjektExport<*> = injektExport(downloader)
+
+    @Provides
+    @IntoSet
+    internal fun exportDownloadManager(manager: () -> AnimeDownloadManager): InjektExport<*> = injektExport(manager)
+
+    @Provides
+    @IntoSet
+    fun exportViewerSettingsProvider(provider: () -> AnimePlayerPreferences): InjektExport<*> = injektExport(provider)
+
+    @Provides
+    @IntoSet
+    internal fun exportMediaSession(mediaSession: () -> AnimeMediaSessionProcessor): InjektExport<*> =
+        injektExport(mediaSession)
+}

@@ -8,7 +8,12 @@ import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import eu.kanade.presentation.more.settings.screen.productionEntryViewerSettingsScreenProjectionResolver
 import eu.kanade.tachiyomi.data.cache.CoverCache
+import eu.kanade.tachiyomi.data.entry.AppEntryChildGroupFilterDataSource
+import eu.kanade.tachiyomi.entry.AppEntryDownloadNotificationActions
+import eu.kanade.tachiyomi.entry.AppMediaSessionIncognitoState
+import eu.kanade.tachiyomi.ui.base.delegate.ThemingDelegateImpl
 import mihon.core.metro.BasePreferenceStore
+import mihon.entry.interactions.download.EntryDownloadNotificationActions
 import mihon.entry.interactions.host.library.AppEntryLibraryCustomCoverHost
 import mihon.entry.interactions.host.library.AppEntryLibraryMembershipHost
 import mihon.entry.interactions.host.lifecycle.profile.AppEntryProfileMoveChildGroupFilterStateHost
@@ -33,11 +38,14 @@ import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveTrackingS
 import mihon.entry.interactions.lifecycle.removal.host.EntryDestructiveRemovalCustomCoverHost
 import mihon.entry.interactions.lifecycle.removal.host.EntryDestructiveRemovalHost
 import mihon.entry.interactions.media.EntryViewerSettingsScreenProjectionResolver
+import mihon.entry.interactions.media.session.EntryMediaSessionIncognitoState
 import mihon.entry.interactions.merge.host.EntryMergeHost
 import mihon.entry.interactions.migration.host.EntryMigrationConsequenceHost
 import mihon.entry.interactions.migration.host.EntryMigrationCustomCoverHost
 import mihon.entry.interactions.migration.host.EntryMigrationExecutionHost
 import mihon.entry.interactions.migration.host.EntryMigrationPreparationHost
+import mihon.entry.interactions.runtime.EntryChildGroupFilterDataSource
+import mihon.entry.interactions.runtime.EntryInteractionActivityTheme
 import mihon.entry.interactions.source.EntryLibraryTitleUpdatePolicy
 import mihon.entry.interactions.tracking.host.EntryTrackingHost
 import mihon.feature.profiles.core.ProfileStore
@@ -167,5 +175,23 @@ abstract class AppEntryHostBindings {
         @Provides
         @BasePreferenceStore
         fun basePreferenceStore(): PreferenceStore = Injekt.get<ProfileStore>().basePreferenceStore()
+
+        @Provides
+        @SingleIn(AppScope::class)
+        fun activityTheme(): EntryInteractionActivityTheme =
+            EntryInteractionActivityTheme(ThemingDelegateImpl()::applyAppTheme)
+
+        @Provides
+        @SingleIn(AppScope::class)
+        fun notificationActions(): EntryDownloadNotificationActions = AppEntryDownloadNotificationActions()
+
+        @Provides
+        @SingleIn(AppScope::class)
+        fun childGroupFilterDataSource(): EntryChildGroupFilterDataSource =
+            AppEntryChildGroupFilterDataSource(Injekt.get(), Injekt.get(), Injekt.get())
+
+        @Provides
+        @SingleIn(AppScope::class)
+        fun mediaSessionIncognitoState(): EntryMediaSessionIncognitoState = AppMediaSessionIncognitoState(Injekt.get())
     }
 }

@@ -72,23 +72,6 @@ import mihon.feature.runtime.FeatureRuntimeComposition
 import mihon.feature.runtime.FeatureRuntimeInputs
 import mihon.feature.runtime.createFeatureRuntimeComposition
 
-fun createEntryInteractions(
-    plugins: List<EntryInteractionPlugin>,
-    featureContributors: List<FeatureGraphContributor>,
-    executionBindings: List<FeatureExecutionParticipantBinding<*>> = emptyList(),
-    durableExecutionBindings: List<FeatureDurableExecutionParticipantBinding<*>> = emptyList(),
-): EntryInteractions = createEntryInteractionComposition(
-    plugins,
-    featureContributors,
-    executionBindings,
-    durableExecutionBindings,
-).interactions
-
-data class EntryInteractionInstallation(
-    val interactions: EntryInteractions,
-    val featureRuntimeInputs: FeatureRuntimeInputs,
-)
-
 data class EntryInteractionComposition(
     val interactions: EntryInteractions,
     val featureRuntime: FeatureRuntimeComposition,
@@ -112,56 +95,46 @@ fun createEntryInteractionComposition(
     executionBindings: List<FeatureExecutionParticipantBinding<*>> = emptyList(),
     durableExecutionBindings: List<FeatureDurableExecutionParticipantBinding<*>> = emptyList(),
 ): EntryInteractionComposition {
-    val installation = createEntryInteractionInstallation(
-        plugins = plugins,
-        featureContributors = featureContributors,
-        executionBindings = executionBindings,
-        durableExecutionBindings = durableExecutionBindings,
-    )
     return EntryInteractionComposition(
-        interactions = installation.interactions,
-        featureRuntime = createFeatureRuntimeComposition(listOf(installation.featureRuntimeInputs)),
+        interactions = createEntryInteractions(plugins),
+        featureRuntime = createFeatureRuntimeComposition(
+            listOf(
+                FeatureRuntimeInputs(
+                    graphContributors = plugins + featureContributors,
+                    executionBindings = executionBindings,
+                    durableExecutionBindings = durableExecutionBindings,
+                ),
+            ),
+        ),
     )
 }
 
-fun createEntryInteractionInstallation(
-    plugins: List<EntryInteractionPlugin>,
-    featureContributors: List<FeatureGraphContributor>,
-    executionBindings: List<FeatureExecutionParticipantBinding<*>> = emptyList(),
-    durableExecutionBindings: List<FeatureDurableExecutionParticipantBinding<*>> = emptyList(),
-): EntryInteractionInstallation {
+fun createEntryInteractions(plugins: List<EntryInteractionPlugin>): EntryInteractions {
     validateEntryInteractionPlugins(plugins)
     val providers = EntryInteractionProviderIndex(plugins)
-    return EntryInteractionInstallation(
-        interactions = DefaultEntryInteractions(
-            openProcessors = providers[EntryOpenCapability],
-            continueProcessors = providers[EntryContinueCapability],
-            downloadProcessors = providers[EntryDownloadCapability],
-            downloadOptionsProcessors = providers[EntryDownloadOptionsCapability],
-            bulkDownloadCandidateProcessors = providers[EntryBulkDownloadCandidateCapability],
-            consumptionProcessors = providers[EntryConsumptionCapability],
-            bookmarkProcessors = providers[EntryBookmarkCapability],
-            progressProcessors = providers[EntryProgressCapability],
-            playbackPreferencesProcessors = providers[EntryPlaybackPreferencesCapability],
-            childListProcessors = providers[EntryChildListCapability],
-            childProgressProcessors = providers[EntryChildProgressCapability],
-            missingChildGapProcessors = providers[EntryMissingChildGapCapability],
-            childGroupFilterProcessors = providers[EntryChildGroupFilterCapability],
-            previewProcessors = providers[EntryPreviewCapability],
-            previewConfigurationProviders = providers[EntryPreviewConfigurationCapability],
-            immersiveProcessors = providers[EntryImmersiveCapability],
-            libraryProgressProviders = providers[EntryLibraryProgressCapability],
-            typePresentationProviders = providers[EntryTypePresentationCapability],
-            viewerSettingsProviders = providers[EntryViewerSettingsCapability],
-            mediaCacheProviders = providers[EntryMediaCacheCapability],
-            statisticsProviders = providers[EntryStatisticsCapability],
-            translateProcessors = providers[EntryTranslateCapability],
-        ),
-        featureRuntimeInputs = FeatureRuntimeInputs(
-            graphContributors = plugins + featureContributors,
-            executionBindings = executionBindings,
-            durableExecutionBindings = durableExecutionBindings,
-        ),
+    return DefaultEntryInteractions(
+        openProcessors = providers[EntryOpenCapability],
+        continueProcessors = providers[EntryContinueCapability],
+        downloadProcessors = providers[EntryDownloadCapability],
+        downloadOptionsProcessors = providers[EntryDownloadOptionsCapability],
+        bulkDownloadCandidateProcessors = providers[EntryBulkDownloadCandidateCapability],
+        consumptionProcessors = providers[EntryConsumptionCapability],
+        bookmarkProcessors = providers[EntryBookmarkCapability],
+        progressProcessors = providers[EntryProgressCapability],
+        playbackPreferencesProcessors = providers[EntryPlaybackPreferencesCapability],
+        childListProcessors = providers[EntryChildListCapability],
+        childProgressProcessors = providers[EntryChildProgressCapability],
+        missingChildGapProcessors = providers[EntryMissingChildGapCapability],
+        childGroupFilterProcessors = providers[EntryChildGroupFilterCapability],
+        previewProcessors = providers[EntryPreviewCapability],
+        previewConfigurationProviders = providers[EntryPreviewConfigurationCapability],
+        immersiveProcessors = providers[EntryImmersiveCapability],
+        libraryProgressProviders = providers[EntryLibraryProgressCapability],
+        typePresentationProviders = providers[EntryTypePresentationCapability],
+        viewerSettingsProviders = providers[EntryViewerSettingsCapability],
+        mediaCacheProviders = providers[EntryMediaCacheCapability],
+        statisticsProviders = providers[EntryStatisticsCapability],
+        translateProcessors = providers[EntryTranslateCapability],
     )
 }
 

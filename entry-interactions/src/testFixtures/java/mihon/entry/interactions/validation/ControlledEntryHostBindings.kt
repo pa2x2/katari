@@ -4,6 +4,7 @@ import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.Provides
 import io.mockk.mockk
 import mihon.core.metro.BasePreferenceStore
+import mihon.entry.interactions.download.EntryDownloadNotificationActions
 import mihon.entry.interactions.library.membership.host.EntryLibraryCustomCoverHost
 import mihon.entry.interactions.library.membership.host.EntryLibraryMembershipHost
 import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveChildGroupFilterStateHost
@@ -16,11 +17,14 @@ import mihon.entry.interactions.lifecycle.removal.host.EntryDestructiveRemovalCu
 import mihon.entry.interactions.lifecycle.removal.host.EntryDestructiveRemovalHost
 import mihon.entry.interactions.media.EntryViewerSettingsScreenProjection
 import mihon.entry.interactions.media.EntryViewerSettingsScreenProjectionResolver
+import mihon.entry.interactions.media.session.EntryMediaSessionIncognitoState
 import mihon.entry.interactions.merge.host.EntryMergeHost
 import mihon.entry.interactions.migration.host.EntryMigrationConsequenceHost
 import mihon.entry.interactions.migration.host.EntryMigrationCustomCoverHost
 import mihon.entry.interactions.migration.host.EntryMigrationExecutionHost
 import mihon.entry.interactions.migration.host.EntryMigrationPreparationHost
+import mihon.entry.interactions.runtime.EntryChildGroupFilterDataSource
+import mihon.entry.interactions.runtime.EntryInteractionActivityTheme
 import mihon.entry.interactions.source.EntryLibraryTitleUpdatePolicy
 import mihon.entry.interactions.tracking.host.EntryTrackingHost
 import tachiyomi.core.common.preference.InMemoryPreferenceStore
@@ -87,6 +91,18 @@ object ControlledEntryHostBindings {
     @Provides
     @BasePreferenceStore
     fun basePreferenceStore(): PreferenceStore = InMemoryPreferenceStore()
+
+    @Provides
+    fun activityTheme(): EntryInteractionActivityTheme = mockk(relaxed = true)
+
+    @Provides
+    fun notificationActions(): EntryDownloadNotificationActions = mockk(relaxed = true)
+
+    @Provides
+    fun childGroupFilterDataSource(): EntryChildGroupFilterDataSource = mockk(relaxed = true)
+
+    @Provides
+    fun mediaSessionIncognitoState(): EntryMediaSessionIncognitoState = mockk(relaxed = true)
 }
 
 private fun viewerSettingsProjection(id: String): EntryViewerSettingsScreenProjection {

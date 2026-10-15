@@ -46,7 +46,7 @@ import tachiyomi.domain.entry.repository.EntryProgressRepository
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
-fun bookEntryInteractionPlugin(
+internal fun bookEntryInteractionPlugin(
     dependencies: BookEntryInteractionDependencies,
     viewerSettingsProvider: EntryViewerSettingsProvider? = null,
 ): EntryInteractionPlugin {
@@ -111,7 +111,7 @@ fun bookEntryInteractionPlugin(
     }
 }
 
-data class BookEntryInteractionDependencies(
+internal data class BookEntryInteractionDependencies(
     val getEntryWithChapters: GetEntryWithChapters,
     val entryChapterRepository: EntryChapterRepository,
     val entryProgressRepository: EntryProgressRepository,

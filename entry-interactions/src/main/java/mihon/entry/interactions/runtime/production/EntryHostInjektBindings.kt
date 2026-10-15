@@ -7,14 +7,12 @@ import dev.zacsweers.metro.Provides
 import eu.kanade.tachiyomi.core.security.SecurityPreferences
 import eu.kanade.tachiyomi.network.NetworkHelper
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.serialization.json.Json
+import mihon.core.common.image.progressive.ProgressiveImageEngine
 import mihon.core.metro.AppCoroutineScope
-import mihon.entry.interactions.download.EntryDownloadNotificationActions
-import mihon.entry.interactions.media.session.EntryMediaSessionIncognitoState
-import mihon.entry.interactions.runtime.EntryChildGroupFilterDataSource
-import mihon.entry.interactions.runtime.EntryInteractions
 import mihon.entry.interactions.translate.EntryTranslatePreferences
 import mihon.entry.viewer.settings.ViewerSettingOverrideRepository
-import mihon.feature.runtime.FeatureRuntimeComposition
+import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.domain.category.interactor.GetCategories
 import tachiyomi.domain.download.service.DownloadPreferences
 import tachiyomi.domain.entry.interactor.GetEntry
@@ -27,28 +25,40 @@ import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.entry.repository.EntryTranslationLanguagesRepository
 import tachiyomi.domain.entry.repository.EntryTranslationQueueRepository
+import tachiyomi.domain.entry.repository.PlaybackPreferencesRepository
 import tachiyomi.domain.history.repository.HistoryRepository
 import tachiyomi.domain.library.service.GlobalLibraryPreferences
 import tachiyomi.domain.source.service.SourceManager
+import tachiyomi.domain.storage.service.StorageManager
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
 /**
- * Services the Entry Features read from Injekt until they move into the graph. Production registers them in the app
- * modules and the Entry runtime installation; production validation registers controlled ones. Injekt factories
- * (the domain interactors) stay unscoped here so each lookup still gets a new instance.
+ * Services the Entry Features and type modules read from Injekt until they move into the graph. Production registers
+ * them in the app modules; production validation registers controlled ones. Injekt factories (the domain interactors)
+ * stay unscoped here so each lookup still gets a new instance.
  */
 @ContributesTo(AppScope::class)
 @BindingContainer
 object EntryHostInjektBindings {
-    @Provides
-    fun entryInteractions(): EntryInteractions = Injekt.get()
-
-    @Provides
-    fun featureRuntimeComposition(): FeatureRuntimeComposition = Injekt.get()
 
     @Provides
     fun networkHelper(): NetworkHelper = Injekt.get()
+
+    @Provides
+    fun preferenceStore(): PreferenceStore = Injekt.get()
+
+    @Provides
+    fun storageManager(): StorageManager = Injekt.get()
+
+    @Provides
+    fun json(): Json = Injekt.get()
+
+    @Provides
+    fun progressiveImageEngine(): ProgressiveImageEngine = Injekt.get()
+
+    @Provides
+    fun playbackPreferencesRepository(): PlaybackPreferencesRepository = Injekt.get()
 
     @Provides
     @AppCoroutineScope
@@ -88,12 +98,6 @@ object EntryHostInjektBindings {
     fun syncEntryWithSource(): SyncEntryWithSource = Injekt.get()
 
     @Provides
-    fun childGroupFilterDataSource(): EntryChildGroupFilterDataSource = Injekt.get()
-
-    @Provides
-    fun mediaSessionIncognitoState(): EntryMediaSessionIncognitoState = Injekt.get()
-
-    @Provides
     fun downloadPreferencesRepository(): DownloadPreferencesRepository = Injekt.get()
 
     @Provides
@@ -113,7 +117,4 @@ object EntryHostInjektBindings {
 
     @Provides
     fun getCategories(): GetCategories = Injekt.get()
-
-    @Provides
-    fun downloadNotificationActions(): EntryDownloadNotificationActions = Injekt.get()
 }

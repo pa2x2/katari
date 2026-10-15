@@ -32,7 +32,10 @@ class ProductionEntryInteractionContractValidationTest {
     @Test
     fun `production composition executes every discovered contract without unresolved work`() = runTest {
         val composition = environment.composition(
-            createGraphFactory<EntryInteractionValidationGraph.Factory>().create(environment.application),
+            createGraphFactory<EntryInteractionValidationGraph.Factory>().create(
+                application = environment.application,
+                profilePreferenceOwners = environment.profilePreferenceOwners,
+            ),
         )
 
         val result = validateEntryInteractionContracts(composition)

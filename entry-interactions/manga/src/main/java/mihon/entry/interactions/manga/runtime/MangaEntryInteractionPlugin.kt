@@ -68,27 +68,6 @@ import tachiyomi.domain.source.service.SourceManager
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
-fun mangaEntryInteractionPlugin(
-    dependencies: MangaEntryInteractionDependencies,
-    viewerSettingsProvider: EntryViewerSettingsProvider? = null,
-): EntryInteractionPlugin {
-    return mangaEntryInteractionPlugin(
-        MangaEntryInteractionRuntimeDependencies(
-            getEntryWithChapters = dependencies.getEntryWithChapters,
-            entryChapterRepository = dependencies.entryChapterRepository,
-            entryProgressRepository = dependencies.entryProgressRepository,
-            downloadPreferences = dependencies.downloadPreferences,
-            downloadManager = Injekt.get(),
-            downloadCache = Injekt.get(),
-            sourceManager = dependencies.sourceManager,
-            entryRepository = Injekt.get(),
-            mediaSession = dependencies.mediaSession,
-            entryInteractionPreferences = dependencies.entryInteractionPreferences,
-        ),
-        viewerSettingsProvider = viewerSettingsProvider,
-    )
-}
-
 internal fun mangaEntryInteractionPlugin(
     dependencies: MangaEntryInteractionRuntimeDependencies,
     viewerSettingsProvider: EntryViewerSettingsProvider? = null,
@@ -171,16 +150,6 @@ internal fun mangaEntryInteractionPlugin(
         )
     }
 }
-
-data class MangaEntryInteractionDependencies(
-    val getEntryWithChapters: GetEntryWithChapters,
-    val entryChapterRepository: EntryChapterRepository,
-    val entryProgressRepository: EntryProgressRepository,
-    val downloadPreferences: DownloadPreferences,
-    val sourceManager: SourceManager,
-    val mediaSession: EntryMediaSessionProcessor,
-    val entryInteractionPreferences: EntryInteractionPreferences,
-)
 
 internal data class MangaEntryInteractionRuntimeDependencies(
     val getEntryWithChapters: GetEntryWithChapters,

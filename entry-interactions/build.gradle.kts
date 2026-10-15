@@ -1,5 +1,3 @@
-import mihon.gradle.tasks.GenerateEntryInteractionTopologyTask
-
 plugins {
     alias(mihonx.plugins.android.library)
     alias(mihonx.plugins.spotless)
@@ -15,39 +13,19 @@ android {
     }
 }
 
-androidComponents {
-    onVariants { variant ->
-        val javaSources = variant.sources.java ?: return@onVariants
-        val variantName = variant.name.replaceFirstChar { it.uppercase() }
-        val generatedTopology = tasks.register<GenerateEntryInteractionTopologyTask>(
-            "generate${variantName}EntryInteractionTopology",
-        ) {
-            this.variantName.set(variant.name)
-            typeModuleDescriptors.from(
-                fileTree(layout.projectDirectory) {
-                    include("*/src/main/**/*.entry-type-module")
-                    include("*/src/${variant.name}/**/*.entry-type-module")
-                },
-            )
-            outputDirectory.set(
-                layout.buildDirectory.dir("generated/source/entry-interaction-topology/${variant.name}"),
-            )
-        }
-        javaSources.addGeneratedSourceDirectory(generatedTopology) { it.outputDirectory }
-    }
-}
-
 dependencies {
     api(projects.entryInteractions.api)
     api(projects.entryViewerSettingsApi)
+    // Metro aggregates contributions from the app graph's compile classpath, so the type modules have to reach it.
+    // The boundary check still keeps application sources from importing them.
+    api(projects.entryInteractions.manga)
+    api(projects.entryInteractions.anime)
+    api(projects.entryInteractions.book)
 
     implementation(projects.core.common)
     implementation(projects.core.metro)
     implementation(projects.entryInteractions.spi)
     implementation(projects.entryInteractions.downloadNotification)
-    implementation(projects.entryInteractions.manga)
-    implementation(projects.entryInteractions.anime)
-    implementation(projects.entryInteractions.book)
     implementation(projects.sourceCompat)
     implementation(projects.sourceLocal)
     implementation(libs.androidx.core)

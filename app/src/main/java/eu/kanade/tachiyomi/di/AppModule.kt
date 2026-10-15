@@ -6,19 +6,15 @@ import androidx.core.content.ContextCompat
 import app.cash.sqldelight.db.SqlDriver
 import eu.kanade.domain.track.store.DelayedTrackingStore
 import eu.kanade.tachiyomi.data.cache.CoverCache
-import eu.kanade.tachiyomi.data.entry.AppEntryChildGroupFilterDataSource
 import eu.kanade.tachiyomi.data.saver.ImageSaver
 import eu.kanade.tachiyomi.data.track.TrackerManager
-import eu.kanade.tachiyomi.entry.AppEntryDownloadNotificationActions
 import eu.kanade.tachiyomi.entry.AppEntryMetadataChangeNotifier
-import eu.kanade.tachiyomi.entry.AppMediaSessionIncognitoState
 import eu.kanade.tachiyomi.extension.ExtensionManager
 import eu.kanade.tachiyomi.network.JavaScriptEngine
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.source.AndroidSourceManager
 import eu.kanade.tachiyomi.source.entry.EntryPreferenceProvider
 import eu.kanade.tachiyomi.source.getDisplayNameForEntryInfo
-import eu.kanade.tachiyomi.ui.base.delegate.ThemingDelegateImpl
 import eu.kanade.tachiyomi.util.system.isDebugBuildType
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
@@ -32,9 +28,6 @@ import mihon.data.database.DatabaseRepositoryImpl
 import mihon.data.database.createSqlDriver
 import mihon.domain.database.repository.DatabaseRepository
 import mihon.entry.interactions.download.markEntryDownloadRuntimeDependenciesRegistered
-import mihon.entry.interactions.runtime.EntryInteractionActivityTheme
-import mihon.entry.interactions.runtime.EntryInteractionRuntimeDependencies
-import mihon.entry.interactions.runtime.addEntryInteractionRuntime
 import mihon.entry.interactions.translate.markEntryTranslateRuntimeDependenciesRegistered
 import mihon.feature.appupdate.AppUpdateController
 import mihon.feature.appupdate.check.GithubReleaseSource
@@ -52,16 +45,13 @@ import mihon.feature.migration.work.SourceMigrationWorkScheduler
 import mihon.feature.profiles.core.ProfileDatabase
 import mihon.feature.profiles.core.ProfileManager
 import mihon.feature.profiles.core.ProfileSourcePreferenceProvider
-import mihon.feature.profiles.core.ProfileStore
 import mihon.feature.runtime.FeatureRuntimeComposition
 import mihon.feature.runtime.FeatureRuntimeWarmup
 import mihon.feature.runtime.addFeatureRuntimeGraph
-import mihon.feature.runtime.createFeatureRuntimeComposition
 import mihon.telemetry.TelemetryConfig
 import nl.adaptivity.xmlutil.XmlDeclMode
 import nl.adaptivity.xmlutil.core.XmlVersion
 import nl.adaptivity.xmlutil.serialization.XML
-import tachiyomi.core.common.preference.ProfilePreferenceOwnerInstaller
 import tachiyomi.core.common.storage.AndroidStorageFolderProvider
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.data.AndroidDatabaseHandler
@@ -205,31 +195,9 @@ class AppModule(val app: Application, private val graph: AppGraph) : InjektModul
         addSingletonFactory { DelayedTrackingStore(app) }
 
         addFeatureRuntimeGraph(graph)
-        val entryRuntimeInstallation = addEntryInteractionRuntime(
-            app = app,
-            dependencies = EntryInteractionRuntimeDependencies(
-                activityTheme = EntryInteractionActivityTheme(ThemingDelegateImpl()::applyAppTheme),
-                notificationActions = AppEntryDownloadNotificationActions(),
-                childGroupFilterDataSource = AppEntryChildGroupFilterDataSource(get(), get(), get()),
-                mediaSessionIncognitoState = AppMediaSessionIncognitoState(get()),
-                basePreferenceStore = get<ProfileStore>().basePreferenceStore(),
-                profilePreferenceOwners = ProfilePreferenceOwnerInstaller(get()) {
-                    get<ProfileStore>().profileStore()
-                },
-            ),
-        )
-        addSingletonFactory<FeatureRuntimeComposition> {
-            createFeatureRuntimeComposition(
-                listOf(
-                    entryRuntimeInstallation.featureRuntimeInputs,
-                    graph.featureRuntimeContributions.featureRuntimeInputs,
-                ),
-            )
-        }
         addSingletonFactory {
             FeatureRuntimeWarmup {
                 graph.featureRuntimeContributions.validate(get<FeatureRuntimeComposition>().evaluation)
-                entryRuntimeInstallation.warmups.forEach { it() }
                 graph.featureRuntimeContributions.warmUp()
             }
         }

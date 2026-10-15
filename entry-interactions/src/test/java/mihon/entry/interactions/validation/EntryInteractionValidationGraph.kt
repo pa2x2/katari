@@ -7,6 +7,7 @@ import dev.zacsweers.metro.Provides
 import io.mockk.mockk
 import mihon.feature.runtime.FeatureRuntimeGraph
 import mihon.translation.api.host.TranslationHostActions
+import tachiyomi.core.common.preference.ProfilePreferenceOwnerInstaller
 
 /** The Entry Features this module contributes, with the host services the validation environment controls. */
 @DependencyGraph(AppScope::class, bindingContainers = [ControlledEntryHostBindings::class])
@@ -17,6 +18,9 @@ interface EntryInteractionValidationGraph : FeatureRuntimeGraph {
 
     @DependencyGraph.Factory
     fun interface Factory {
-        fun create(@Provides application: Application): EntryInteractionValidationGraph
+        fun create(
+            @Provides application: Application,
+            @Provides profilePreferenceOwners: ProfilePreferenceOwnerInstaller,
+        ): EntryInteractionValidationGraph
     }
 }

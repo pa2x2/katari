@@ -15,20 +15,12 @@ import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import kotlinx.serialization.json.Json
-import mihon.entry.interactions.download.EntryDownloadLifecycleEventSink
-import mihon.entry.interactions.download.EntryDownloadNotificationActions
-import mihon.entry.interactions.download.EntryDownloadWorkController
-import mihon.entry.interactions.media.session.EntryMediaSessionIncognitoState
 import mihon.entry.interactions.runtime.EntryInteractionComposition
-import mihon.entry.interactions.runtime.EntryInteractionRuntimeDependencies
-import mihon.entry.interactions.runtime.addEntryInteractionRuntime
-import mihon.entry.interactions.settings.EntryInteractionPreferences
 import mihon.entry.interactions.translate.EntryTranslatePreferences
 import mihon.entry.viewer.settings.ViewerSettingOverrideRepository
 import mihon.feature.runtime.FeatureRuntimeComposition
 import mihon.feature.runtime.FeatureRuntimeGraph
 import mihon.feature.runtime.addFeatureRuntimeGraph
-import mihon.feature.runtime.createFeatureRuntimeComposition
 import nl.adaptivity.xmlutil.serialization.XML
 import okhttp3.OkHttpClient
 import tachiyomi.core.common.preference.InMemoryPreferenceStore
@@ -92,25 +84,6 @@ class ProductionEntryInteractionValidationEnvironment(
     fun composition(graph: FeatureRuntimeGraph): EntryInteractionComposition {
         installControlledRuntimeDependencies()
         Injekt.addFeatureRuntimeGraph(graph)
-        val runtimeInstallation = Injekt.addEntryInteractionRuntime(
-            app = application,
-            dependencies = EntryInteractionRuntimeDependencies(
-                activityTheme = mockk(relaxed = true),
-                notificationActions = mockk<EntryDownloadNotificationActions>(relaxed = true),
-                childGroupFilterDataSource = mockk(relaxed = true),
-                mediaSessionIncognitoState = mockk(relaxed = true),
-                basePreferenceStore = InMemoryPreferenceStore(),
-                profilePreferenceOwners = profilePreferenceOwners,
-            ),
-        )
-        Injekt.addSingletonFactory<FeatureRuntimeComposition> {
-            createFeatureRuntimeComposition(
-                listOf(
-                    runtimeInstallation.featureRuntimeInputs,
-                    graph.featureRuntimeContributions.featureRuntimeInputs,
-                ),
-            )
-        }
         graph.featureRuntimeContributions.validate(Injekt.get<FeatureRuntimeComposition>().evaluation)
         return Injekt.get<EntryInteractionComposition>()
     }
@@ -139,10 +112,6 @@ class ProductionEntryInteractionValidationEnvironment(
                 every { isInitialized } returns MutableStateFlow(true)
             }
         }
-        Injekt.addSingletonFactory<EntryDownloadWorkController> { mockk(relaxed = true) }
-        Injekt.addSingletonFactory<EntryMediaSessionIncognitoState> { mockk(relaxed = true) }
-        Injekt.addSingletonFactory<EntryDownloadLifecycleEventSink> { mockk(relaxed = true) }
-        Injekt.addSingletonFactory<EntryInteractionPreferences> { mockk(relaxed = true) }
         Injekt.addSingletonFactory<ViewerSettingOverrideRepository> { mockk(relaxed = true) }
         Injekt.addSingletonFactory<GetEntryWithChapters> { mockk(relaxed = true) }
         Injekt.addSingletonFactory<GetEntry> { mockk(relaxed = true) }

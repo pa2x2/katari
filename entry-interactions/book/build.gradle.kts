@@ -3,6 +3,8 @@ plugins {
     alias(mihonx.plugins.compose)
     alias(mihonx.plugins.spotless)
     alias(libs.plugins.kotlin.serialization)
+
+    alias(libs.plugins.metro)
 }
 
 android {
@@ -20,6 +22,7 @@ dependencies {
     implementation(projects.tts.ui)
 
     implementation(projects.core.common)
+    implementation(projects.core.metro)
     implementation(projects.entryViewerSettingsUi)
     implementation(projects.i18n)
     implementation(projects.icons.materialSymbols)

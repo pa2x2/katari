@@ -55,29 +55,6 @@ import tachiyomi.domain.source.service.SourceManager
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
-fun animeEntryInteractionPlugin(
-    dependencies: AnimeEntryInteractionDependencies,
-    viewerSettingsProvider: EntryViewerSettingsProvider? = null,
-): EntryInteractionPlugin {
-    return animeEntryInteractionPlugin(
-        AnimeEntryInteractionRuntimeDependencies(
-            entryChapterRepository = dependencies.entryChapterRepository,
-            getEntryWithChapters = dependencies.getEntryWithChapters,
-            entryProgressRepository = dependencies.entryProgressRepository,
-            playbackPreferencesRepository = dependencies.playbackPreferencesRepository,
-            animeDownloadManager = Injekt.get(),
-            animeDownloadCache = Injekt.get(),
-            downloadPreferences = dependencies.downloadPreferences,
-            downloadPreferencesRepository = dependencies.downloadPreferencesRepository,
-            sourceManager = dependencies.sourceManager,
-            entryRepository = dependencies.entryRepository,
-            mediaSession = dependencies.mediaSession,
-            entryInteractionPreferences = dependencies.entryInteractionPreferences,
-        ),
-        viewerSettingsProvider = viewerSettingsProvider,
-    )
-}
-
 internal fun animeEntryInteractionPlugin(
     dependencies: AnimeEntryInteractionRuntimeDependencies,
     viewerSettingsProvider: EntryViewerSettingsProvider? = null,
@@ -144,19 +121,6 @@ internal fun animeEntryInteractionPlugin(
         )
     }
 }
-
-data class AnimeEntryInteractionDependencies(
-    val entryChapterRepository: EntryChapterRepository,
-    val getEntryWithChapters: GetEntryWithChapters,
-    val entryProgressRepository: EntryProgressRepository,
-    val playbackPreferencesRepository: PlaybackPreferencesRepository,
-    val downloadPreferences: DownloadPreferences,
-    val downloadPreferencesRepository: DownloadPreferencesRepository,
-    val sourceManager: SourceManager,
-    val entryRepository: EntryRepository,
-    val mediaSession: EntryMediaSessionProcessor,
-    val entryInteractionPreferences: EntryInteractionPreferences,
-)
 
 internal data class AnimeEntryInteractionRuntimeDependencies(
     val entryChapterRepository: EntryChapterRepository,
