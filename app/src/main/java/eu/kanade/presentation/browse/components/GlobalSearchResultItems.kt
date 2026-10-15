@@ -11,6 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.automirroredrounded.ArrowForward
 import mihon.icons.materialsymbols.roundedfilled.Error
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
@@ -22,7 +23,10 @@ import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
-/** One source's part of a search: a row that opens the source, then [content] with what it found. */
+/**
+ * One source's part of a search: a row that opens the source, then [content] with what it found. Unlike a list's
+ * navigation rows, the row heads its own tappable results, so the arrow tells that it opens the source itself.
+ */
 @Composable
 fun GlobalSearchResultItem(
     title: String,
@@ -32,7 +36,12 @@ fun GlobalSearchResultItem(
     content: @Composable () -> Unit,
 ) {
     Column(modifier = modifier) {
-        SettingsRow(title = title, subtitle = subtitle, onClick = onClick)
+        SettingsRow(
+            title = title,
+            subtitle = subtitle,
+            trailing = { Icon(MaterialSymbols.AutoMirroredRounded.ArrowForward, contentDescription = null) },
+            onClick = onClick,
+        )
         content()
     }
 }
