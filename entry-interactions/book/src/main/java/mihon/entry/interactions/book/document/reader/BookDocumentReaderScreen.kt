@@ -27,8 +27,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import mihon.core.metro.metroGraph
 import mihon.entry.interactions.book.R
 import mihon.entry.interactions.book.document.reader.navigation.BookDocumentJumpHistory
 import mihon.entry.interactions.book.document.reader.navigation.BookDocumentNavigationTarget
@@ -59,6 +61,7 @@ import mihon.entry.interactions.book.reader.translation.bookTranslationLanguageD
 import mihon.entry.interactions.reader.navigation.EntryReaderNavigationSheet
 import mihon.entry.interactions.reader.settings.BookDocumentReadingMode
 import mihon.entry.interactions.reader.settings.ChapterTransitionMode
+import mihon.entry.interactions.runtime.EntryInteractionActivityGraph
 import mihon.entry.interactions.source.EntryChildWebViewAction
 import mihon.entry.interactions.source.EntryChildWebViewActionsMenu
 import mihon.entry.interactions.source.EntryChildWebViewResolution
@@ -132,6 +135,10 @@ internal fun BookDocumentReaderScreen(
 
     // The settings dialog is a window over the reader, so translation announcements go to it while it is open.
     val settingsSnackbarHostState = remember { SnackbarHostState() }
+    val context = LocalContext.current
+    val sharedSettingsRegistry = remember {
+        context.metroGraph<EntryInteractionActivityGraph>().readerSharedSettingsRegistry
+    }
     val translationSnackbarHostState = if (state.settingsVisible) settingsSnackbarHostState else snackbarHostState
     val currentOnChromeToggle by rememberUpdatedState(onChromeToggle)
     val currentOnNavigationSelected by rememberUpdatedState(onNavigationSelected)
@@ -367,6 +374,7 @@ internal fun BookDocumentReaderScreen(
             }
             if (state.settingsVisible) {
                 ReaderSettingsDialogHost(
+                    sharedSettingsRegistry = sharedSettingsRegistry,
                     settingsSurfaceId = BookDocumentReaderProcessor.SETTINGS_SURFACE_ID,
                     capabilities = BookDocumentReaderProcessor.CAPABILITIES,
                     sharedSettingBindings = settingBindings.sharedSettings,

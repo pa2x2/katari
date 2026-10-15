@@ -3,6 +3,12 @@ package mihon.feature.upcoming
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.util.fastMap
 import androidx.compose.ui.util.fastMapIndexedNotNull
+import androidx.lifecycle.ViewModel
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.ContributesIntoMap
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.binding
+import dev.zacsweers.metrox.viewmodel.ViewModelKey
 import eu.kanade.core.util.insertSeparatorsReversed
 import eu.kanade.tachiyomi.ui.base.viewmodel.GatedStateViewModel
 import kotlinx.coroutines.flow.Flow
@@ -20,6 +26,7 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.YearMonth
 import kotlinx.datetime.toLocalDateTime
 import kotlinx.datetime.yearMonth
+import mihon.app.di.AppUiScope
 import mihon.domain.upcoming.interactor.GetUpcomingEntries
 import mihon.entry.interactions.state.EntryUpdateEligibilityFeature
 import mihon.feature.library.update.planning.LibraryUpdateDecision
@@ -42,22 +49,23 @@ import tachiyomi.domain.library.update.repository.LibraryUpdateReportRepository
 import tachiyomi.domain.library.update.repository.LibraryUpdateRulesRepository
 import tachiyomi.domain.source.service.HiddenSourceIds
 import tachiyomi.domain.upcoming.service.UpcomingPreferences
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 import kotlin.time.Clock
 
+@Inject
+@ViewModelKey
+@ContributesIntoMap(AppUiScope::class, binding = binding<ViewModel>())
 class UpcomingViewModel(
-    private val getUpcomingEntries: GetUpcomingEntries = Injekt.get(),
-    val getCategories: GetCategories = Injekt.get(),
-    val upcomingPreferences: UpcomingPreferences = Injekt.get(),
-    private val hiddenSourceIds: HiddenSourceIds = Injekt.get(),
-    private val activeProfileProvider: ActiveProfileProvider = Injekt.get(),
-    private val getLibraryEntries: GetLibraryEntries = Injekt.get(),
-    libraryPreferences: LibraryPreferences = Injekt.get(),
-    rulesRepository: LibraryUpdateRulesRepository = Injekt.get(),
-    reportRepository: LibraryUpdateReportRepository = Injekt.get(),
-    fetchInterval: FetchInterval = Injekt.get(),
-    eligibility: EntryUpdateEligibilityFeature = Injekt.get(),
+    private val getUpcomingEntries: GetUpcomingEntries,
+    val getCategories: GetCategories,
+    val upcomingPreferences: UpcomingPreferences,
+    private val hiddenSourceIds: HiddenSourceIds,
+    private val activeProfileProvider: ActiveProfileProvider,
+    private val getLibraryEntries: GetLibraryEntries,
+    libraryPreferences: LibraryPreferences,
+    rulesRepository: LibraryUpdateRulesRepository,
+    reportRepository: LibraryUpdateReportRepository,
+    fetchInterval: FetchInterval,
+    eligibility: EntryUpdateEligibilityFeature,
 ) : GatedStateViewModel<UpcomingViewModel.State>(State()) {
 
     private val planner = LibraryUpdatePlanner(eligibility)

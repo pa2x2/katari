@@ -16,17 +16,17 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.selects.select
 import logcat.LogPriority
+import mihon.core.metro.metroGraph
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.download.service.DownloadPreferences
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
 class EntryDownloadJob(context: Context, workerParams: WorkerParameters) : CoroutineWorker(context, workerParams) {
-    @Volatile
-    private var dependencies: EntryDownloadWorkerDependencies? = null
+    private val dependencies by lazy {
+        applicationContext.metroGraph<EntryDownloadWorkerGraph>().entryDownloadWorkerDependencies
+    }
 
     override suspend fun getForegroundInfo(): ForegroundInfo {
-        val notificationProvider = dependencies().notificationProvider
+        val notificationProvider = dependencies.notificationProvider
         return ForegroundInfo(
             notificationProvider.notificationId,
             notificationProvider.notification(),
@@ -39,7 +39,6 @@ class EntryDownloadJob(context: Context, workerParams: WorkerParameters) : Corou
     }
 
     override suspend fun doWork(): Result {
-        val dependencies = dependencies()
         while (true) {
             if (!dependencies.downloads.hasPendingDownloads()) return Result.success()
             setForegroundSafely(dependencies.notificationProvider)
@@ -92,22 +91,4 @@ class EntryDownloadJob(context: Context, workerParams: WorkerParameters) : Corou
             logcat(LogPriority.ERROR, error) { "Not allowed to foreground download worker" }
         }
     }
-
-    private suspend fun dependencies(): EntryDownloadWorkerDependencies {
-        dependencies?.let { return it }
-        EntryDownloadRuntimeAvailability.awaitInstalled()
-        return synchronized(this) {
-            dependencies ?: EntryDownloadWorkerDependencies(
-                downloads = Injekt.get(),
-                downloadPreferences = Injekt.get(),
-                notificationProvider = Injekt.get(),
-            ).also { dependencies = it }
-        }
-    }
 }
-
-private data class EntryDownloadWorkerDependencies(
-    val downloads: EntryDownloadRuntimeCoordinator,
-    val downloadPreferences: DownloadPreferences,
-    val notificationProvider: EntryDownloadForegroundNotificationProvider,
-)

@@ -84,9 +84,9 @@ class EntryInteractionBoundaryCheckTaskTest {
     fun `application composition cannot authorize type-specific interaction behavior`() {
         createBaseFixture(
             additionalFiles = mapOf(
-                "app/src/main/java/eu/kanade/tachiyomi/di/AppModule.kt" to
+                "app/src/main/java/mihon/app/di/AppBindings.kt" to
                     """
-                        package eu.kanade.tachiyomi.di
+                        package mihon.app.di
 
                         import eu.kanade.tachiyomi.source.entry.EntryType
                         import mihon.entry.interactions.manga.MangaOpenProcessor

@@ -55,12 +55,14 @@ internal fun checkEntryViewerSettingsProjectionBoundaries(
             )
         }
 
-    val appModule = productionSources.firstOrNull { source -> source.relativePath == APP_MODULE }
-    if (appModule == null || !appModule.content.contains("productionEntryViewerSettingsScreenProjectionResolver()")) {
+    val hostBindings = productionSources.firstOrNull { source -> source.relativePath == APP_ENTRY_HOST_BINDINGS_PATH }
+    if (hostBindings == null ||
+        !hostBindings.content.contains("productionEntryViewerSettingsScreenProjectionResolver()")
+    ) {
         findings += EntryViewerSettingsProjectionBoundaryFinding(
-            relativePath = APP_MODULE,
+            relativePath = APP_ENTRY_HOST_BINDINGS_PATH,
             lineNumber = null,
-            reason = "AppModule must install the build-enforced Viewer Settings screen projection resolver",
+            reason = "AppEntryHostBindings must provide the build-enforced Viewer Settings screen projection resolver",
         )
     }
 
@@ -101,7 +103,6 @@ private data class ViewerSettingsScreenDeclaration(
 
 private const val VIEWER_SETTINGS_SCREEN_REGISTRY =
     "app/src/main/java/eu/kanade/presentation/more/settings/screen/EntryViewerSettingsScreenProjections.kt"
-private const val APP_MODULE = "app/src/main/java/eu/kanade/tachiyomi/di/AppModule.kt"
 
 private val APP_VIEWER_SETTINGS_SCREEN_DECLARATION = Regex(
     """\b(?:object|class)\s+([A-Za-z_][A-Za-z0-9_]*)\s*:\s*AppEntryViewerSettingsScreenProjection\b""",

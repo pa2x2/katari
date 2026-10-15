@@ -10,16 +10,15 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
 import cafe.adriel.voyager.navigator.tab.TabOptions
+import dev.zacsweers.metrox.viewmodel.metroViewModel
 import eu.kanade.presentation.entry.components.ChapterDownloadAction
 import eu.kanade.presentation.entry.translation.EntryTranslateSetupSheet
 import eu.kanade.presentation.library.update.rememberLibraryUpdateStarter
@@ -44,17 +43,12 @@ import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.tachiyomi.ui.library.update.report.LibraryUpdateReportScreen
 import eu.kanade.tachiyomi.ui.main.MainActivity
 import mihon.entry.interactions.download.EntryDownloadState
-import mihon.entry.interactions.navigation.EntryOpenFeature
 import mihon.feature.upcoming.UpcomingScreen
 import mihon.presentation.kit.feedback.EmptyScreen
 import tachiyomi.core.common.util.lang.launchIO
-import tachiyomi.domain.entry.repository.EntryChapterRepository
-import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.updates.model.UpdateItem
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
 data object UpdatesTab : Tab {
 
@@ -79,9 +73,8 @@ data object UpdatesTab : Tab {
         val context = LocalContext.current
         val navigator = LocalNavigator.currentOrThrow
         val scope = androidx.compose.runtime.rememberCoroutineScope()
-        val entryOpenFeature = remember { Injekt.get<EntryOpenFeature>() }
-        val viewModel = viewModel { UpdatesViewModel() }
-        val settingsViewModel = viewModel { UpdatesSettingsViewModel() }
+        val viewModel = metroViewModel<UpdatesViewModel>()
+        val settingsViewModel = metroViewModel<UpdatesSettingsViewModel>()
         val state by viewModel.state.collectAsStateWithLifecycle()
         val translationStatuses by viewModel.translationStatuses.collectAsStateWithLifecycle()
         val translationSetup by viewModel.translation.sheet.collectAsStateWithLifecycle()
@@ -203,19 +196,8 @@ data object UpdatesTab : Tab {
                 onClickCover = { item ->
                     navigator.push(EntryScreen(item.visibleEntryId))
                 },
-                isOpenApplicable = { item -> entryOpenFeature.isApplicable(item.update.entryType) },
-                onClickUpdate = { item ->
-                    scope.launchIO {
-                        val entry = Injekt.get<EntryRepository>().getEntryById(item.visibleEntryId)
-                            ?: return@launchIO
-                        val chapterId = when (val update = item.update) {
-                            is UpdateItem.EntryUpdate -> update.update.chapterId
-                        }
-                        val chapter = Injekt.get<EntryChapterRepository>().getChapterById(chapterId)
-                            ?: return@launchIO
-                        entryOpenFeature.open(context, entry, chapter)
-                    }
-                },
+                isOpenApplicable = viewModel::isOpenApplicable,
+                onClickUpdate = { item -> scope.launchIO { viewModel.openUpdate(context, item) } },
                 onDownloadChapter = viewModel::downloadChapters,
                 translateStatusOf = { translationStatuses[(it.update as? UpdateItem.EntryUpdate)?.update?.chapterId] },
                 isTranslateApplicable = { viewModel.translation.isApplicable(it.update.entryType) },

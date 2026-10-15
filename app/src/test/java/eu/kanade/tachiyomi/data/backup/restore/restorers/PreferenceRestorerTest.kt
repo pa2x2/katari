@@ -7,7 +7,6 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import mihon.domain.extension.model.ContentWarning
-import mihon.feature.library.update.legacy.LegacyUpdateCategoriesConversion
 import mihon.feature.profiles.core.ProfileStore
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -25,7 +24,8 @@ class PreferenceRestorerTest {
             getCategories = mockk(),
             preferenceStore = FakePreferenceStore(),
             profileStore = mockk<ProfileStore> { every { profileStore(2L) } returns profile },
-            legacyUpdateCategoriesConversion = LegacyUpdateCategoriesConversion(mockk(), mockk()),
+            categoryRepository = mockk(),
+            updateRulesRepository = mockk(),
         )
 
         restorer.restoreAppForProfile(

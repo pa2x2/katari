@@ -25,16 +25,7 @@ abstract class EntryInteractionBoundaryCheckTask : DefaultTask() {
                 reason = finding.reason,
             )
         }
-        findings += checkEntryFeatureRuntimeModuleBoundaries(featureRuntimeModuleSources(root)).map { finding ->
-            Finding(
-                relativePath = finding.relativePath,
-                lineNumber = finding.lineNumber,
-                reason = finding.reason,
-            )
-        }
-        findings += checkApplicationFeatureRuntimeModuleBoundaries(
-            applicationFeatureRuntimeModuleSources(root),
-        ).map { finding ->
+        findings += checkFeatureBehaviorIdBoundaries(featureBehaviorIdSources(root)).map { finding ->
             Finding(
                 relativePath = finding.relativePath,
                 lineNumber = finding.lineNumber,
@@ -108,57 +99,19 @@ abstract class EntryInteractionBoundaryCheckTask : DefaultTask() {
         )
     }
 
-    private fun featureRuntimeModuleSources(root: File): List<EntryFeatureRuntimeModuleBoundarySource> {
+    private fun featureBehaviorIdSources(root: File): List<FeatureBehaviorIdBoundarySource> {
         val entryInteractions = root.resolve("entry-interactions")
         if (!entryInteractions.isDirectory) return emptyList()
         return entryInteractions.walkTopDown()
             .filter { it.isFile && it.extension == "kt" }
             .filterNot { it.invariantSeparatorsPath.contains("/build/") }
             .map { file ->
-                EntryFeatureRuntimeModuleBoundarySource(
+                FeatureBehaviorIdBoundarySource(
                     relativePath = file.relativeTo(root).invariantSeparatorsPath,
                     content = file.readText(),
                 )
             }
             .toList()
-    }
-
-    private fun applicationFeatureRuntimeModuleSources(
-        root: File,
-    ): List<ApplicationFeatureRuntimeModuleBoundarySource> {
-        val productionSources = root.walkTopDown()
-            .filter { file ->
-                file.isFile &&
-                    (
-                        (file.extension == "kt" && "/src/main/" in file.invariantSeparatorsPath) ||
-                            file.extension == "application-feature-module" ||
-                            file.extension == "application-feature-runtime-component"
-                        )
-            }
-            .filterNot { file ->
-                val path = file.invariantSeparatorsPath
-                "/build/" in path ||
-                    "/.git/" in path ||
-                    "/.gradle/" in path ||
-                    "/node_modules/" in path ||
-                    "/translation-workspace/" in path
-            }
-            .map { file ->
-                ApplicationFeatureRuntimeModuleBoundarySource(
-                    relativePath = file.relativeTo(root).invariantSeparatorsPath,
-                    content = file.readText(),
-                )
-            }
-            .toList()
-        val appBuild = root.resolve("app/build.gradle.kts")
-            .takeIf(File::isFile)
-            ?.let { file ->
-                ApplicationFeatureRuntimeModuleBoundarySource(
-                    relativePath = file.relativeTo(root).invariantSeparatorsPath,
-                    content = file.readText(),
-                )
-            }
-        return productionSources + listOfNotNull(appBuild)
     }
 
     companion object {
@@ -310,18 +263,6 @@ private class EntryInteractionBoundaryRules(
         }
         .distinctBy { it.qualifiedName }
         .toList()
-
-    private val typeRuntimeModuleBridgeNames = sourceIndex.files
-        .asSequence()
-        .filter { it.owningTypeModule() != null }
-        .flatMap { it.topLevelDeclarations.asSequence() }
-        .filter { declaration ->
-            declaration.kind == KotlinDeclarationKind.FUNCTION &&
-                declaration.isPublic &&
-                declaration.returnTypeName == "EntryTypeRuntimeModule"
-        }
-        .map(KotlinDeclaration::qualifiedName)
-        .toSet()
 
     fun check(): List<Finding> {
         val findings = mutableListOf<Finding>()
@@ -616,14 +557,12 @@ private class EntryInteractionBoundaryRules(
             val importedFqName = import.importedFqName ?: return@forEach
             val module = typeModules.firstOrNull { importedFqName.startsWith("${it.packagePrefix}.") }
                 ?: return@forEach
-            if (importedFqName in typeRuntimeModuleBridgeNames) return@forEach
 
             findings += Finding(
                 relativePath = file.relativePath,
                 lineNumber = import.lineNumber,
-                reason =
-                "root Entry interaction composition may import only the public ${module.name} runtime-module " +
-                    "bridge, not type-module implementation symbols: $importedFqName",
+                reason = "root Entry interactions must not import ${module.name} type-module symbols; " +
+                    "type modules contribute to the dependency graph: $importedFqName",
             )
         }
     }
@@ -660,7 +599,7 @@ private class EntryInteractionBoundaryRules(
             "domain/src/main/java/tachiyomi/domain/entry/service/EntryLibraryProgressResolution.kt",
             "domain/src/main/java/tachiyomi/domain/entry/interactor/GetLibraryEntries.kt",
             "entry-interactions/api/src/main/java/mihon/entry/interactions/library/EntryLibraryProgressFeature.kt",
-            "entry-interactions/src/main/java/mihon/entry/interactions/library/EntryLibraryRuntimeModules.kt",
+            "entry-interactions/src/main/java/mihon/entry/interactions/library/EntryLibraryBindings.kt",
         )
         if (file.relativePath in allowedPaths) return
 
@@ -817,10 +756,10 @@ private class EntryInteractionBoundaryRules(
         if (file.isTestPath()) return
         val allowedPaths = setOf(
             "domain/src/main/java/tachiyomi/domain/entry/interactor/SyncEntryWithSource.kt",
-            "app/src/main/java/eu/kanade/domain/DomainModule.kt",
             "entry-interactions/src/main/java/mihon/entry/interactions/source/EntrySourceRefreshFeature.kt",
+            "entry-interactions/src/main/java/mihon/entry/interactions/source/EntrySourceBindings.kt",
         )
-        if (file.relativePath in allowedPaths) return
+        if (file.relativePath in allowedPaths || isAppGraphCompositionPath(file.relativePath)) return
 
         file.findReference("SyncEntryWithSource")?.let { reference ->
             findings += Finding(
@@ -879,9 +818,7 @@ private class EntryInteractionBoundaryRules(
             "entry-interactions/src/main/java/mihon/entry/interactions/tracking/",
         ) || file.relativePath.startsWith(
             "app/src/main/java/mihon/entry/interactions/host/tracking/",
-        ) || file.relativePath ==
-            "entry-interactions/src/main/java/mihon/entry/interactions/runtime/EntryInteractionRuntime.kt" ||
-            file.relativePath == "app/src/main/java/eu/kanade/tachiyomi/di/AppModule.kt"
+        ) || isEntryHostCompositionPath(file.relativePath)
         if (ownsTrackingHost) return
 
         trackingHostApiNames.forEach { name ->
@@ -1004,7 +941,7 @@ private class EntryInteractionBoundaryRules(
     }
 
     private fun checkDownloadRuntimeReferences(file: KotlinSourceFile, findings: MutableList<Finding>) {
-        if (file.isRootCompositionPath() || file.isTestPath()) return
+        if (file.isTestPath()) return
 
         downloadRuntimeSymbols.forEach { symbol ->
             if (file.isOwnedBy(symbol.owner)) return@forEach
@@ -1014,7 +951,7 @@ private class EntryInteractionBoundaryRules(
                     relativePath = file.relativePath,
                     lineNumber = reference.lineNumber,
                     reason = "direct ${symbol.simpleName} download runtime reference outside " +
-                        "${symbol.owner.name} type module/root composition",
+                        "${symbol.owner.name} type module",
                 )
             }
         }
@@ -1121,9 +1058,8 @@ private class EntryInteractionBoundaryRules(
                         }
 
                         if (file.isPublicTypeModuleApiPath()) return@forEach
-                        if (declaration.isDependencyContainer()) return@forEach
-                        if (declaration.isPluginFactory()) return@forEach
-                        if (declaration.isRuntimeBridgeFunction(file)) return@forEach
+                        if (declaration.isBindingContainer(file)) return@forEach
+                        if (declaration.isGraphEntryPoint(file)) return@forEach
 
                         findings += Finding(
                             relativePath = file.relativePath,
@@ -1138,20 +1074,22 @@ private class EntryInteractionBoundaryRules(
         return superTypeNames.any { it in processorInterfaceNames }
     }
 
-    private fun KotlinDeclaration.isDependencyContainer(): Boolean {
-        return kind == KotlinDeclarationKind.CLASS &&
-            name.endsWith("EntryInteractionDependencies")
+    // Type modules reach the app only through the binding containers the Metro graph aggregates, and Metro
+    // aggregates only public containers.
+    private fun KotlinDeclaration.isBindingContainer(file: KotlinSourceFile): Boolean {
+        return kind == KotlinDeclarationKind.OBJECT &&
+            name.endsWith("Bindings") &&
+            file.relativePath.endsWith("/$name.kt")
     }
 
-    private fun KotlinDeclaration.isPluginFactory(): Boolean {
-        return kind == KotlinDeclarationKind.FUNCTION &&
-            returnTypeName == "EntryInteractionPlugin"
-    }
-
-    private fun KotlinDeclaration.isRuntimeBridgeFunction(file: KotlinSourceFile): Boolean {
-        if (kind != KotlinDeclarationKind.FUNCTION) return false
-        return file.relativePath.endsWith("RuntimeModule.kt") ||
-            file.relativePath.endsWith("MangaReaderCoilComponents.kt")
+    // Android-constructed components of a type module reach the graph through a contributed `<Owner>Graph`
+    // interface. Its members must be public, so internal services travel in an `<Owner>Dependencies` holder whose
+    // constructor and members stay internal.
+    private fun KotlinDeclaration.isGraphEntryPoint(file: KotlinSourceFile): Boolean {
+        val owner = file.relativePath.substringAfterLast('/').removeSuffix("Graph.kt")
+        if (!file.relativePath.endsWith("/${owner}Graph.kt")) return false
+        return (kind == KotlinDeclarationKind.INTERFACE && name == "${owner}Graph") ||
+            (kind == KotlinDeclarationKind.CLASS && name == "${owner}Dependencies")
     }
 
     private fun KotlinDeclaration.isRuntimeMediaResolutionInternal(): Boolean {
@@ -1187,11 +1125,6 @@ private class EntryInteractionBoundaryRules(
             isTestPath()
     }
 
-    private fun KotlinSourceFile.isRootCompositionPath(): Boolean {
-        return relativePath ==
-            "entry-interactions/src/main/java/mihon/entry/interactions/runtime/EntryInteractionRuntime.kt"
-    }
-
     private fun KotlinSourceFile.isApplicationLayer(): Boolean {
         return APPLICATION_LAYER_ROOTS.any { root -> relativePath.startsWith(root) }
     }
@@ -1222,7 +1155,7 @@ private class EntryInteractionBoundaryRules(
             packageName == DOMAIN_TRACKER_PACKAGE ||
             packageName.startsWith("$DOMAIN_TRACKER_PACKAGE.") ||
             relativePath.startsWith("app/src/main/java/mihon/entry/interactions/host/tracking/") ||
-            relativePath == "app/src/main/java/eu/kanade/tachiyomi/di/AppModule.kt"
+            isAppGraphCompositionPath(relativePath)
     }
 
     private fun KotlinSourceFile.isTypeBranchAllowedPath(): Boolean {

@@ -6,14 +6,17 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.ContributesIntoMap
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metrox.viewmodel.ViewModelKey
+import dev.zacsweers.metrox.viewmodel.metroViewModel
 import eu.kanade.presentation.more.settings.widget.TextPreferenceWidget
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.source.entry.EntryType
@@ -24,6 +27,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.plus
+import mihon.app.di.AppUiScope
 import mihon.entry.interactions.navigation.EntryOpenFeature
 import mihon.feature.profiles.core.ProfileManager
 import mihon.presentation.kit.feedback.EmptyScreen
@@ -33,8 +37,6 @@ import mihon.presentation.kit.navigation.Scaffold
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.presentation.core.util.plus
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
 class AnimePlayerLauncherScreen : Screen() {
 
@@ -46,8 +48,8 @@ class AnimePlayerLauncherScreen : Screen() {
     override fun Content() {
         val context = LocalContext.current
         val navigator = LocalNavigator.currentOrThrow
-        val viewModel = viewModel { Model() }
-        val entryOpenFeature = remember { Injekt.get<EntryOpenFeature>() }
+        val viewModel = metroViewModel<Model>()
+        val entryOpenFeature = viewModel.entryOpenFeature
         val state by viewModel.state.collectAsState()
 
         Scaffold(
@@ -90,10 +92,14 @@ class AnimePlayerLauncherScreen : Screen() {
         }
     }
 
-    private class Model(
-        private val profileManager: ProfileManager = Injekt.get(),
-        private val entryRepository: EntryRepository = Injekt.get(),
-        private val entryChapterRepository: EntryChapterRepository = Injekt.get(),
+    @Inject
+    @ViewModelKey
+    @ContributesIntoMap(AppUiScope::class)
+    internal class Model(
+        val entryOpenFeature: EntryOpenFeature,
+        private val profileManager: ProfileManager,
+        private val entryRepository: EntryRepository,
+        private val entryChapterRepository: EntryChapterRepository,
     ) : ViewModel() {
 
         val state = profileManager.activeProfile
@@ -131,7 +137,7 @@ class AnimePlayerLauncherScreen : Screen() {
             .stateIn(viewModelScope + Dispatchers.IO, SharingStarted.WhileSubscribed(5_000), State.Loading)
     }
 
-    private sealed interface State {
+    internal sealed interface State {
         data object Loading : State
 
         data object Empty : State
@@ -139,7 +145,7 @@ class AnimePlayerLauncherScreen : Screen() {
         data class Ready(val items: kotlinx.collections.immutable.ImmutableList<AnimeLauncherItem>) : State
     }
 
-    private data class AnimeLauncherItem(
+    internal data class AnimeLauncherItem(
         val entry: tachiyomi.domain.entry.model.Entry,
         val chapter: tachiyomi.domain.entry.model.EntryChapter,
         val animeTitle: String,

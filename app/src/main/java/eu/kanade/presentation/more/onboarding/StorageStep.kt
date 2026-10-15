@@ -24,14 +24,13 @@ import mihon.presentation.kit.theme.TextRole
 import tachiyomi.domain.storage.service.StoragePreferences
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
 internal class StorageStep(
+    storagePreferences: StoragePreferences,
     private val migratingFromMihon: Boolean,
 ) : OnboardingStep {
 
-    private val storagePref = Injekt.get<StoragePreferences>().baseStorageDirectory
+    private val storagePref = storagePreferences.baseStorageDirectory
 
     private var _isComplete by mutableStateOf(false)
 

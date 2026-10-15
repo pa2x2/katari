@@ -3,6 +3,9 @@ package tachiyomi.data.entry
 import app.cash.sqldelight.async.coroutines.awaitAsList
 import app.cash.sqldelight.async.coroutines.awaitAsOne
 import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -19,6 +22,8 @@ import tachiyomi.domain.entry.model.EntryChapterSummary
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 
 @OptIn(ExperimentalCoroutinesApi::class)
+@Inject
+@SingleIn(AppScope::class)
 class EntryChapterRepositoryImpl(
     private val handler: DatabaseHandler,
     private val profileProvider: ActiveProfileProvider,

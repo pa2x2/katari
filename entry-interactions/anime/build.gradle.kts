@@ -3,6 +3,7 @@ plugins {
     alias(mihonx.plugins.compose)
     alias(mihonx.plugins.spotless)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.metro)
 }
 
 android {
@@ -27,6 +28,7 @@ dependencies {
     api(libs.kotlinx.coroutines.core)
 
     implementation(projects.core.common)
+    implementation(projects.core.metro)
     implementation(projects.i18n)
     implementation(projects.icons.materialSymbols)
     implementation(projects.entryViewerChromeUi)
@@ -47,7 +49,7 @@ dependencies {
     implementation(libs.androidx.media3.ui)
     implementation(libs.bundles.androidx.lifecycle)
     implementation(libs.bundles.serialization)
-    implementation(libs.injekt)
+    api(libs.metrox.viewmodel)
     implementation(libs.unifile)
 
     testImplementation(projects.entryInteractions)

@@ -6,14 +6,16 @@ import eu.kanade.tachiyomi.data.database.models.Track
 import eu.kanade.tachiyomi.data.track.BaseTracker
 import eu.kanade.tachiyomi.data.track.DeletableTracker
 import eu.kanade.tachiyomi.data.track.ExternalLoginTracker
+import eu.kanade.tachiyomi.data.track.TrackerDependencies
 import eu.kanade.tachiyomi.data.track.model.TrackSearch
 import eu.kanade.tachiyomi.data.track.myanimelist.dto.MALOAuth
-import kotlinx.serialization.json.Json
 import tachiyomi.i18n.*
-import uy.kohesive.injekt.injectLazy
 import tachiyomi.domain.track.model.EntryTrack as DomainTrack
 
-class MyAnimeList(id: Long) : BaseTracker(id, "MyAnimeList"), DeletableTracker, ExternalLoginTracker {
+class MyAnimeList(
+    id: Long,
+    dependencies: TrackerDependencies,
+) : BaseTracker(id, "MyAnimeList", dependencies), DeletableTracker, ExternalLoginTracker {
 
     override val accountOrder = 1
 
@@ -32,10 +34,8 @@ class MyAnimeList(id: Long) : BaseTracker(id, "MyAnimeList"), DeletableTracker, 
             .map(Int::toString)
     }
 
-    private val json: Json by injectLazy()
-
-    private val interceptor by lazy { MyAnimeListInterceptor(this) }
-    private val api by lazy { MyAnimeListApi(id, client, interceptor) }
+    private val interceptor by lazy { MyAnimeListInterceptor(this, json) }
+    private val api by lazy { MyAnimeListApi(id, client, interceptor, json) }
 
     override val supportsReadingDates: Boolean = true
 

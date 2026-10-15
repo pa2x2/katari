@@ -2,6 +2,9 @@ package tachiyomi.data.statistics.recap
 
 import app.cash.sqldelight.async.coroutines.awaitAsList
 import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.coroutines.flow.Flow
 import tachiyomi.data.DatabaseHandler
@@ -14,6 +17,8 @@ import tachiyomi.domain.statistics.recap.StatisticsRecapRepository
 import tachiyomi.domain.statistics.recap.StatisticsRecapSegment
 import tachiyomi.domain.statistics.service.StatisticsActivityPolicy
 
+@Inject
+@SingleIn(AppScope::class)
 class StatisticsRecapRepositoryImpl(
     private val handler: DatabaseHandler,
 ) : StatisticsRecapRepository {

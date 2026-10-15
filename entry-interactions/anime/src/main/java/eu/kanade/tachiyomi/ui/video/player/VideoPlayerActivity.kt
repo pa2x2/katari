@@ -64,6 +64,7 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaSession
 import androidx.media3.ui.PlayerView
+import dev.zacsweers.metrox.viewmodel.ViewModelGraph
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerErrorOverlay
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerLoadingOverlay
@@ -79,7 +80,9 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import logcat.LogPriority
+import mihon.core.metro.metroGraph
 import mihon.entry.interactions.anime.R
+import mihon.entry.interactions.runtime.EntryInteractionActivityGraph
 import mihon.entry.interactions.settings.AnimePlayerPreferences
 import mihon.entry.interactions.source.EntryChildWebViewAction
 import mihon.entry.interactions.source.EntryChildWebViewResolution
@@ -90,8 +93,6 @@ import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.i18n.*
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 import java.util.IdentityHashMap
 import kotlin.math.abs
 import kotlin.math.pow
@@ -155,11 +156,12 @@ private fun Throwable.formatForPlaybackError(prefix: String = "Cause"): String {
 
 class VideoPlayerActivity : AppCompatActivity() {
 
-    private val viewModel by viewModels<VideoPlayerViewModel>()
-    private val networkHelper: NetworkHelper by lazy { Injekt.get() }
-    private val mediaCache: VideoPlayerMediaCache by lazy { Injekt.get() }
-    private val animePlayerPreferences: AnimePlayerPreferences by lazy { Injekt.get() }
-    private val viewerSettingBinder: ViewerSettingBinder by lazy { Injekt.get() }
+    private val viewModel by viewModels<VideoPlayerViewModel> { metroGraph<ViewModelGraph>().metroViewModelFactory }
+    private val dependencies by lazy { metroGraph<AnimePlayerGraph>().animePlayerDependencies }
+    private val networkHelper: NetworkHelper by lazy { dependencies.networkHelper }
+    private val mediaCache: VideoPlayerMediaCache by lazy { dependencies.mediaCache }
+    private val animePlayerPreferences: AnimePlayerPreferences by lazy { dependencies.animePlayerPreferences }
+    private val viewerSettingBinder: ViewerSettingBinder by lazy { dependencies.viewerSettingBinder }
     private val pictureInPictureSetting by lazy {
         viewerSettingBinder.bind(animePlayerPreferences.pictureInPictureSetting)
     }
@@ -207,7 +209,8 @@ class VideoPlayerActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        registerAnimePlayerSecureScreen()
+        val activityGraph = metroGraph<EntryInteractionActivityGraph>()
+        registerAnimePlayerSecureScreen(activityGraph.readerBasePreferences, activityGraph.securityPreferences)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             overrideActivityTransition(
                 Activity.OVERRIDE_TRANSITION_OPEN,

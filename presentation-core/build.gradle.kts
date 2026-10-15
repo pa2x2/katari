@@ -3,6 +3,7 @@ plugins {
     alias(mihonx.plugins.compose)
 
     alias(mihonx.plugins.spotless)
+    alias(libs.plugins.metro)
 }
 
 android {
@@ -26,6 +27,7 @@ kotlin {
 
 dependencies {
     api(projects.core.common)
+    implementation(projects.core.metro)
     implementation(projects.domain)
     implementation(projects.icons.materialSymbols)
     implementation(projects.icons.customMaterialSymbols)
@@ -47,7 +49,6 @@ dependencies {
 
     implementation(libs.androidx.paging.runtime)
     implementation(libs.androidx.paging.compose)
-    implementation(libs.injekt)
     implementation(libs.materialKolor)
     implementation(libs.composeRichEditor)
 }

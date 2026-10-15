@@ -15,7 +15,7 @@ import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
-import uy.kohesive.injekt.injectLazy
+import mihon.app.di.appGraph
 import java.util.Collections
 import kotlin.concurrent.atomics.AtomicReference
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
@@ -26,7 +26,7 @@ import kotlin.concurrent.atomics.ExperimentalAtomicApi
 @OptIn(ExperimentalAtomicApi::class)
 internal abstract class Installer(private val service: Service) {
 
-    private val extensionManager: ExtensionManager by injectLazy()
+    private val extensionManager: ExtensionManager by lazy { service.appGraph.extensionManager }
 
     private var waitingInstall = AtomicReference<Entry?>(null)
 

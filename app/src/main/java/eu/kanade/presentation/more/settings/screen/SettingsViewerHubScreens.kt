@@ -9,12 +9,14 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.more.settings.Preference
+import mihon.app.di.appGraph
 import mihon.entry.interactions.media.EntryViewerSettingsDestination
 import mihon.entry.interactions.media.EntryViewerSettingsFeature
 import mihon.entry.interactions.media.EntryViewerSettingsScreenProjection
@@ -22,12 +24,9 @@ import mihon.entry.viewer.settings.ViewerSettingsCategory
 import mihon.entry.viewer.settings.shared.ReaderSharedSettingAction
 import mihon.entry.viewer.settings.shared.ReaderSharedSettingAvailability
 import mihon.entry.viewer.settings.shared.ReaderSharedSettingText
-import mihon.entry.viewer.settings.shared.ReaderSharedSettingsRegistry
 import mihon.entry.viewer.settings.shared.ResolvedReaderSharedToggleSetting
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
 abstract class AppEntryViewerSettingsScreenProjection :
     EntryViewerSettingsScreenProjection,
@@ -44,7 +43,8 @@ abstract class AppEntryViewerSettingsScreenProjection :
      */
     @Composable
     final override fun getPreferences(): List<Preference> {
-        val registry = remember { Injekt.get<ReaderSharedSettingsRegistry>() }
+        val context = LocalContext.current
+        val registry = remember { context.appGraph.readerSharedSettingsRegistry }
         val sharedSettings = remember(registry, surfaceId) { registry.settingsForSurface(surfaceId) }
         val surfacePreferences = getSurfacePreferences()
         if (sharedSettings.isEmpty()) return surfacePreferences
@@ -80,8 +80,9 @@ object SettingsPlayerScreen : SearchableSettings {
 
 @Composable
 private fun viewerProviderPreferences(category: ViewerSettingsCategory): List<Preference> {
+    val context = LocalContext.current
     val navigator = LocalNavigator.currentOrThrow
-    val feature = remember { Injekt.get<EntryViewerSettingsFeature>() }
+    val feature = remember { context.appGraph.entryViewerSettingsFeature }
 
     val destinations = feature.destinations
         .filter { it.category == category }
@@ -97,7 +98,7 @@ private fun viewerProviderPreferences(category: ViewerSettingsCategory): List<Pr
     if (category != ViewerSettingsCategory.READER) return destinations
 
     val sharedSettings = remember {
-        Injekt.get<ReaderSharedSettingsRegistry>().rootSettings()
+        context.appGraph.readerSharedSettingsRegistry.rootSettings()
     }
     return sharedSettings.map { setting -> setting.toAppPreference() } + destinations
 }

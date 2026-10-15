@@ -10,9 +10,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.Assisted
+import dev.zacsweers.metro.AssistedFactory
+import dev.zacsweers.metro.AssistedInject
+import dev.zacsweers.metro.ContributesIntoMap
+import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
+import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
+import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.presentation.track.TrackInfoDialogHome
 import eu.kanade.presentation.util.Screen
@@ -25,6 +32,8 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import logcat.LogPriority
+import mihon.app.di.AppUiScope
+import mihon.app.di.appGraph
 import mihon.entry.interactions.tracking.EntryTrackingAutomaticRegistrationResult
 import mihon.entry.interactions.tracking.EntryTrackingFeature
 import mihon.entry.interactions.tracking.EntryTrackingMutation
@@ -38,8 +47,6 @@ import tachiyomi.core.common.util.lang.withUIContext
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.i18n.*
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
 data class TrackInfoDialogHomeScreen(
     private val entry: Entry,
@@ -49,8 +56,8 @@ data class TrackInfoDialogHomeScreen(
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
         val context = LocalContext.current
-        val viewModel = viewModel { Model(entry) }
-        val dateFormat = remember { UiPreferences.dateFormat(Injekt.get<UiPreferences>().dateFormat.get()) }
+        val viewModel = assistedMetroViewModel<Model, Model.Factory> { create(entry) }
+        val dateFormat = remember { UiPreferences.dateFormat(context.appGraph.uiPreferences.dateFormat.get()) }
         val state by viewModel.state.collectAsState()
 
         TrackInfoDialogHome(
@@ -102,10 +109,19 @@ data class TrackInfoDialogHomeScreen(
         item.track?.remoteUrl?.takeIf(String::isNotBlank)?.let { copyToClipboard(it, it) }
     }
 
-    private class Model(
-        private val entry: Entry,
-        private val trackingFeature: EntryTrackingFeature = Injekt.get(),
+    @AssistedInject
+    class Model(
+        @Assisted private val entry: Entry,
+        private val trackingFeature: EntryTrackingFeature,
+        private val application: Application,
     ) : ViewModel() {
+
+        @AssistedFactory
+        @ManualViewModelAssistedFactoryKey
+        @ContributesIntoMap(AppUiScope::class)
+        interface Factory : ManualViewModelAssistedFactory {
+            fun create(entry: Entry): Model
+        }
 
         val state: StateFlow<Model.State>
             field = MutableStateFlow<Model.State>(State())
@@ -127,7 +143,7 @@ data class TrackInfoDialogHomeScreen(
                     EntryTrackingAutomaticRegistrationResult.NoMatch,
                     is EntryTrackingAutomaticRegistrationResult.Unavailable,
                     is EntryTrackingAutomaticRegistrationResult.Failed,
-                    -> withUIContext { Injekt.get<Application>().toast(MR.strings.error_no_match) }
+                    -> withUIContext { application.toast(MR.strings.error_no_match) }
                 }
             }
         }
@@ -159,9 +175,8 @@ data class TrackInfoDialogHomeScreen(
                 "Failed to refresh track data entryId=${entry.id} for service ${failure.serviceId.value}"
             }
             withUIContext {
-                val context = Injekt.get<Application>()
-                context.toast(
-                    context.stringResource(
+                application.toast(
+                    application.stringResource(
                         MR.strings.track_error,
                         failure.serviceName,
                         failure.cause.message.orEmpty(),

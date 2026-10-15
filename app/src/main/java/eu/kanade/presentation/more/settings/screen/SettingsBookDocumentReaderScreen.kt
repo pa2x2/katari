@@ -4,19 +4,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
 import eu.kanade.presentation.more.settings.Preference
+import mihon.app.di.appGraph
 import mihon.entry.interactions.reader.settings.BookDocumentReaderProgressStyle
 import mihon.entry.interactions.reader.settings.BookDocumentReaderSettings
 import mihon.entry.interactions.reader.settings.BookDocumentReaderThemeMode
 import mihon.entry.interactions.reader.settings.BookDocumentReadingMode
 import mihon.entry.interactions.reader.settings.ChapterTransitionMode
-import mihon.entry.viewer.settings.ViewerSettingBinder
 import mihon.entry.viewer.settings.asProfilePreference
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
 object SettingsBookDocumentReaderScreen : AppEntryViewerSettingsScreenProjection() {
     override val surfaceId = BookDocumentReaderSettings.SURFACE_ID
@@ -27,8 +26,9 @@ object SettingsBookDocumentReaderScreen : AppEntryViewerSettingsScreenProjection
 
     @Composable
     override fun getSurfacePreferences(): List<Preference> {
-        val provider = remember { Injekt.get<BookDocumentReaderSettings>() }
-        val binder = remember { Injekt.get<ViewerSettingBinder>() }
+        val context = LocalContext.current
+        val provider = remember { context.appGraph.bookDocumentReaderSettings }
+        val binder = remember { context.appGraph.viewerSettingBinder }
         val readingMode = remember(provider, binder) { binder.bind(provider.readingModeSetting).asProfilePreference() }
         val tapZones = remember(provider, binder) { binder.bind(provider.tapZonesSetting).asProfilePreference() }
         val tapInversion =

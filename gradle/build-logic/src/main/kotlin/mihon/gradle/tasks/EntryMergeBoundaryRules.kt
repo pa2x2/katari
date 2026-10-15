@@ -162,7 +162,7 @@ private fun EntryMergeBoundarySource.isAllowedHostReference(name: String): Boole
     if (relativePath.startsWith(ENTRY_INTERACTIONS_MERGE_IMPLEMENTATION_ROOT)) {
         return true
     }
-    if (relativePath == ENTRY_INTERACTION_RUNTIME_PATH && fileName == "EntryInteractionRuntime.kt") return true
+    if (isEntryHostCompositionPath(relativePath)) return true
     return relativePath.startsWith(APPLICATION_ENTRY_INTERACTION_HOST_ROOT) &&
         fileName.contains("EntryMerge") &&
         fileName.endsWith("Host.kt")
@@ -214,9 +214,6 @@ private const val ENTRY_INTERACTIONS_MERGE_API_ROOT =
 
 private const val ENTRY_INTERACTIONS_MERGE_IMPLEMENTATION_ROOT =
     "entry-interactions/src/main/java/mihon/entry/interactions/merge/"
-
-private const val ENTRY_INTERACTION_RUNTIME_PATH =
-    "entry-interactions/src/main/java/mihon/entry/interactions/runtime/EntryInteractionRuntime.kt"
 
 private const val APPLICATION_ENTRY_INTERACTION_HOST_ROOT =
     "app/src/main/java/mihon/entry/interactions/host/"

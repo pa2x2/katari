@@ -1,6 +1,10 @@
 package mihon.entry.interactions.anime.runtime
 
+import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.source.entry.EntryType
+import eu.kanade.tachiyomi.ui.video.player.AnimePlayerBasePreferences
+import eu.kanade.tachiyomi.ui.video.player.VideoPlayerMediaCache
+import eu.kanade.tachiyomi.ui.video.player.VideoStreamResolver
 import mihon.entry.interactions.anime.child.AnimeChildListProcessor
 import mihon.entry.interactions.anime.download.AnimeDownloadCache
 import mihon.entry.interactions.anime.download.AnimeDownloadManager
@@ -33,6 +37,7 @@ import mihon.entry.interactions.runtime.EntryChildListCapability
 import mihon.entry.interactions.runtime.EntryChildProgressCapability
 import mihon.entry.interactions.runtime.EntryImmersiveCapability
 import mihon.entry.interactions.runtime.EntryInteractionPlugin
+import mihon.entry.interactions.runtime.EntryPlayerCache
 import mihon.entry.interactions.runtime.EntryPreviewCapability
 import mihon.entry.interactions.runtime.EntryPreviewConfigurationCapability
 import mihon.entry.interactions.runtime.EntryStatisticsCapability
@@ -52,34 +57,14 @@ import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.entry.repository.PlaybackPreferencesRepository
 import tachiyomi.domain.source.service.SourceManager
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
-
-fun animeEntryInteractionPlugin(
-    dependencies: AnimeEntryInteractionDependencies,
-    viewerSettingsProvider: EntryViewerSettingsProvider? = null,
-): EntryInteractionPlugin {
-    return animeEntryInteractionPlugin(
-        AnimeEntryInteractionRuntimeDependencies(
-            entryChapterRepository = dependencies.entryChapterRepository,
-            getEntryWithChapters = dependencies.getEntryWithChapters,
-            entryProgressRepository = dependencies.entryProgressRepository,
-            playbackPreferencesRepository = dependencies.playbackPreferencesRepository,
-            animeDownloadManager = Injekt.get(),
-            animeDownloadCache = Injekt.get(),
-            downloadPreferences = dependencies.downloadPreferences,
-            downloadPreferencesRepository = dependencies.downloadPreferencesRepository,
-            sourceManager = dependencies.sourceManager,
-            entryRepository = dependencies.entryRepository,
-            mediaSession = dependencies.mediaSession,
-            entryInteractionPreferences = dependencies.entryInteractionPreferences,
-        ),
-        viewerSettingsProvider = viewerSettingsProvider,
-    )
-}
 
 internal fun animeEntryInteractionPlugin(
     dependencies: AnimeEntryInteractionRuntimeDependencies,
+    resolveVideoStream: () -> VideoStreamResolver,
+    playerCache: () -> EntryPlayerCache,
+    networkHelper: () -> NetworkHelper,
+    mediaCache: () -> VideoPlayerMediaCache,
+    basePreferences: () -> AnimePlayerBasePreferences,
     viewerSettingsProvider: EntryViewerSettingsProvider? = null,
 ): EntryInteractionPlugin {
     val openProcessor = AnimeOpenProcessor()
@@ -107,8 +92,11 @@ internal fun animeEntryInteractionPlugin(
     )
     val immersiveProcessor = AnimeImmersiveProcessor(
         entryProgressRepository = dependencies.entryProgressRepository,
-        resolveVideoStream = { Injekt.get() },
+        resolveVideoStream = resolveVideoStream,
         mediaSession = dependencies.mediaSession,
+        networkHelper = networkHelper,
+        mediaCache = mediaCache,
+        basePreferences = basePreferences,
     )
     return object : EntryInteractionPlugin {
         override val type = EntryType.ANIME
@@ -134,7 +122,7 @@ internal fun animeEntryInteractionPlugin(
                     EntryMediaSessionCapability.bind(dependencies.mediaSession),
                     EntryTypePresentationCapability.bind(AnimeEntryTypePresentationProvider),
                     EntryStatisticsCapability.bind(AnimeEntryStatisticsProvider),
-                    EntryMediaCacheCapability.bind(AnimeMediaCacheProvider { Injekt.get() }),
+                    EntryMediaCacheCapability.bind(AnimeMediaCacheProvider(playerCache)),
                 ),
             )
             viewerSettingsProvider?.let { add(EntryViewerSettingsCapability.bind(it)) }
@@ -144,19 +132,6 @@ internal fun animeEntryInteractionPlugin(
         )
     }
 }
-
-data class AnimeEntryInteractionDependencies(
-    val entryChapterRepository: EntryChapterRepository,
-    val getEntryWithChapters: GetEntryWithChapters,
-    val entryProgressRepository: EntryProgressRepository,
-    val playbackPreferencesRepository: PlaybackPreferencesRepository,
-    val downloadPreferences: DownloadPreferences,
-    val downloadPreferencesRepository: DownloadPreferencesRepository,
-    val sourceManager: SourceManager,
-    val entryRepository: EntryRepository,
-    val mediaSession: EntryMediaSessionProcessor,
-    val entryInteractionPreferences: EntryInteractionPreferences,
-)
 
 internal data class AnimeEntryInteractionRuntimeDependencies(
     val entryChapterRepository: EntryChapterRepository,

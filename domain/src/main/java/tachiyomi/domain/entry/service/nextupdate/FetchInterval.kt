@@ -1,5 +1,6 @@
 package tachiyomi.domain.entry.service.nextupdate
 
+import dev.zacsweers.metro.Inject
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
@@ -12,6 +13,7 @@ import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import kotlin.time.Instant
 
+@Inject
 class FetchInterval(
     private val entryChapterRepository: EntryChapterRepository,
 ) {

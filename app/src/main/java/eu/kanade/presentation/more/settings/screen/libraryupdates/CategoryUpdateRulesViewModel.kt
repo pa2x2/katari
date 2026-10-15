@@ -4,12 +4,20 @@ import android.app.Application
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.Assisted
+import dev.zacsweers.metro.AssistedFactory
+import dev.zacsweers.metro.AssistedInject
+import dev.zacsweers.metro.ContributesIntoMap
+import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
+import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
 import eu.kanade.tachiyomi.data.library.LibraryUpdateJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
+import mihon.app.di.AppUiScope
 import mihon.feature.library.update.planning.LibraryUpdateSkipRule
 import tachiyomi.domain.category.interactor.GetCategories
 import tachiyomi.domain.category.model.Category
@@ -18,15 +26,14 @@ import tachiyomi.domain.library.update.model.CategoryUpdateOverrides
 import tachiyomi.domain.library.update.model.CategoryUpdateRules
 import tachiyomi.domain.library.update.model.LibraryUpdateSkipRules
 import tachiyomi.domain.library.update.repository.LibraryUpdateRulesRepository
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
+@AssistedInject
 class CategoryUpdateRulesViewModel(
-    private val categoryId: Long,
-    private val application: Application = Injekt.get(),
-    private val libraryPreferences: LibraryPreferences = Injekt.get(),
-    private val rulesRepository: LibraryUpdateRulesRepository = Injekt.get(),
-    getCategories: GetCategories = Injekt.get(),
+    @Assisted private val categoryId: Long,
+    private val application: Application,
+    private val libraryPreferences: LibraryPreferences,
+    private val rulesRepository: LibraryUpdateRulesRepository,
+    getCategories: GetCategories,
 ) : ViewModel() {
 
     val state: StateFlow<CategoryUpdateRulesViewModel.State>
@@ -92,4 +99,11 @@ class CategoryUpdateRulesViewModel(
         val librarySkipRules: LibraryUpdateSkipRules = LibraryUpdateSkipRules.None,
         val libraryIntervalHours: Int = 0,
     )
+
+    @AssistedFactory
+    @ManualViewModelAssistedFactoryKey
+    @ContributesIntoMap(AppUiScope::class)
+    interface Factory : ManualViewModelAssistedFactory {
+        fun create(categoryId: Long): CategoryUpdateRulesViewModel
+    }
 }

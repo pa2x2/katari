@@ -2,11 +2,13 @@ package eu.kanade.presentation.entry
 
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import eu.kanade.presentation.util.formatChapterNumber
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.util.lang.toTimestampString
+import mihon.app.di.appGraph
 import mihon.entry.interactions.presentation.EntryHistorySubtitlePresentation
 import mihon.entry.interactions.presentation.EntryPartialProgressPresentation
 import mihon.entry.interactions.presentation.EntryTypePresentationFeature
@@ -15,8 +17,6 @@ import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 import java.util.Date
 import kotlin.time.Duration.Companion.milliseconds
 import eu.kanade.presentation.util.toDurationString as durationToString
@@ -27,16 +27,24 @@ typealias EntryTypePresentation = mihon.entry.interactions.presentation.EntryTyp
  * Resolves contributed type vocabulary. Generic resolution retains the requested type so missing projection evidence
  * remains available to validation while every presentation surface receives renderable neutral vocabulary.
  */
-fun EntryType?.entryTypePresentation(
-    feature: EntryTypePresentationFeature = Injekt.get(),
-): EntryTypePresentation {
+fun EntryType?.entryTypePresentation(feature: EntryTypePresentationFeature): EntryTypePresentation {
     return feature.presentation(this).presentation
 }
 
-fun Iterable<EntryType>.selectionEntryTypePresentation(
-    feature: EntryTypePresentationFeature = Injekt.get(),
-): EntryTypePresentation {
+@Composable
+@ReadOnlyComposable
+fun EntryType?.entryTypePresentation(): EntryTypePresentation {
+    return entryTypePresentation(LocalContext.current.appGraph.entryTypePresentationFeature)
+}
+
+fun Iterable<EntryType>.selectionEntryTypePresentation(feature: EntryTypePresentationFeature): EntryTypePresentation {
     return toSet().singleOrNull().entryTypePresentation(feature)
+}
+
+@Composable
+@ReadOnlyComposable
+fun Iterable<EntryType>.selectionEntryTypePresentation(): EntryTypePresentation {
+    return selectionEntryTypePresentation(LocalContext.current.appGraph.entryTypePresentationFeature)
 }
 
 @Composable

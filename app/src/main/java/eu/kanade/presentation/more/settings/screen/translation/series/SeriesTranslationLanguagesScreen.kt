@@ -29,4 +29,4 @@ internal class SeriesTranslationLanguagesScreen : Screen() {
 /** Shared by Translation settings and the list it opens, so both show the same series. */
 @Composable
 internal fun rememberSeriesTranslationLanguagesViewModel(): SeriesTranslationLanguagesViewModel =
-    SettingsTranslationScreen.rememberScreenViewModel { SeriesTranslationLanguagesViewModel() }
+    SettingsTranslationScreen.rememberScreenViewModel<SeriesTranslationLanguagesViewModel>()

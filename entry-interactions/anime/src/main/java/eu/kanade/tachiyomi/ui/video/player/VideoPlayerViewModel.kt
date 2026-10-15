@@ -23,7 +23,6 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -56,31 +55,24 @@ import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.entry.repository.MergedMemberExpansionRepository
 import tachiyomi.domain.entry.repository.PlaybackPreferencesRepository
-import tachiyomi.domain.entry.service.MergedMemberExpansion
 import tachiyomi.domain.entry.service.MergedMemberExpansionSession
 import tachiyomi.domain.entry.service.sortedForReading
 import tachiyomi.domain.source.service.SourceInfoNames
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
 private const val PRELOAD_MAX_AGE_MS = 30_000L
 
-internal class VideoPlayerViewModel @JvmOverloads constructor(
+internal class VideoPlayerViewModel(
     private val savedState: SavedStateHandle,
-    private val resolveVideoStream: VideoStreamResolver = Injekt.get<ResolveVideoStream>(),
-    private val playbackPreferencesRepository: PlaybackPreferencesRepository = Injekt.get(),
-    private val entryChapterRepository: EntryChapterRepository = Injekt.get(),
-    private val getEntryWithChapters: GetEntryWithChapters? = runCatching {
-        Injekt.get<GetEntryWithChapters>()
-    }.getOrNull(),
-    private val entryRepository: EntryRepository? = runCatching { Injekt.get<EntryRepository>() }.getOrNull(),
-    private val sourceNames: SourceInfoNames? = runCatching { Injekt.get<SourceInfoNames>() }.getOrNull(),
-    private val mergedMemberExpansionRepository: MergedMemberExpansionRepository? = runCatching {
-        Injekt.get<MergedMemberExpansionRepository>()
-    }.getOrNull(),
-    private val entryProgressRepository: EntryProgressRepository = Injekt.get(),
-    private val mediaSession: AnimeMediaSessionProcessor = Injekt.get(),
-    private val webViewFeature: EntryWebViewFeature = Injekt.get(),
+    private val resolveVideoStream: VideoStreamResolver,
+    private val playbackPreferencesRepository: PlaybackPreferencesRepository,
+    private val entryChapterRepository: EntryChapterRepository,
+    private val getEntryWithChapters: GetEntryWithChapters,
+    private val entryRepository: EntryRepository,
+    private val sourceNames: SourceInfoNames,
+    mergedMemberExpansionRepository: MergedMemberExpansionRepository,
+    private val entryProgressRepository: EntryProgressRepository,
+    private val mediaSession: AnimeMediaSessionProcessor,
+    private val webViewFeature: EntryWebViewFeature,
     private val resolveDispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val persistenceDispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val now: () -> Long = { System.currentTimeMillis() },
@@ -91,24 +83,22 @@ internal class VideoPlayerViewModel @JvmOverloads constructor(
     private val mutableEvents = MutableSharedFlow<Event>(extraBufferCapacity = 1)
     val events = mutableEvents.asSharedFlow()
 
-    private val memberExpansion = mergedMemberExpansionRepository?.let { repository ->
-        MergedMemberExpansionSession(
-            repository = repository,
-            scope = viewModelScope,
-            memberIds = mutableState.filterIsInstance<State.Ready>().map { it.memberIds },
-        )
-    }
+    private val memberExpansion = MergedMemberExpansionSession(
+        repository = mergedMemberExpansionRepository,
+        scope = viewModelScope,
+        memberIds = mutableState.filterIsInstance<State.Ready>().map { it.memberIds },
+    )
 
     /** Merged members whose episodes the drawer lists; the playing member opens until it is toggled. */
     val expandedMemberIds: StateFlow<Set<Long>> = combine(
-        memberExpansion?.state ?: flowOf(MergedMemberExpansion()),
+        memberExpansion.state,
         mutableState.filterIsInstance<State.Ready>().map { it.ownerEntryId },
     ) { expansion, playingMemberId -> expansion.shown(playingMemberId) }
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptySet())
 
     fun toggleMemberExpanded(memberId: Long) {
         val ready = mutableState.value as? State.Ready ?: return
-        memberExpansion?.toggle(memberId, ready.ownerEntryId)
+        memberExpansion.toggle(memberId, ready.ownerEntryId)
     }
 
     private var initialized = false
@@ -602,13 +592,7 @@ internal class VideoPlayerViewModel @JvmOverloads constructor(
         episodes: List<EntryChapter>,
         episodeId: Long,
     ): EntryChildWindow<EntryChapter>? {
-        val sortedEpisodes = if (getEntryWithChapters != null) {
-            episodes.sortedForReading(effectiveEntry)
-        } else {
-            episodes.sortedBy(EntryChapter::sourceOrder)
-        }
-
-        return sortedEpisodes.entryChildWindow(episodeId, EntryChapter::id)
+        return episodes.sortedForReading(effectiveEntry).entryChildWindow(episodeId, EntryChapter::id)
     }
 
     private suspend fun resolveEpisodeDrawerData(
@@ -616,20 +600,17 @@ internal class VideoPlayerViewModel @JvmOverloads constructor(
         ownerEntry: Entry,
     ): EpisodeDrawerData {
         val effectiveEntry = if (bypassMerge) ownerEntry else entry
-        val episodes = getEntryWithChapters?.awaitChapters(effectiveEntry, bypassMerge = bypassMerge)
-            ?: entryChapterRepository.getChaptersByEntryIdAwait(
-                effectiveEntry.id,
-            )
+        val episodes = getEntryWithChapters.awaitChapters(effectiveEntry, bypassMerge = bypassMerge)
         val memberIds = episodes.map(EntryChapter::entryId).distinct()
         val fallbackEntries = mapOf(entry.id to entry, ownerEntry.id to ownerEntry)
         val memberEntries = memberIds.associateWith { memberId ->
-            runCatching { entryRepository?.getEntryById(memberId) }.getOrNull() ?: fallbackEntries[memberId]
+            runCatching { entryRepository.getEntryById(memberId) }.getOrNull() ?: fallbackEntries[memberId]
         }
         val memberTitleById = memberEntries.mapValues { (_, member) -> member?.displayTitle.orEmpty() }
         val memberSourceIds = memberEntries.mapNotNull { (memberId, member) -> member?.let { memberId to it.source } }
         val memberSourceNameById = if (memberSourceIds.map { it.second }.distinct().size > 1) {
             memberSourceIds.associate { (memberId, sourceId) ->
-                memberId to sourceNames?.of(sourceId).orEmpty()
+                memberId to sourceNames.of(sourceId)
             }
         } else {
             emptyMap()

@@ -1,5 +1,6 @@
 package tachiyomi.domain.history.interactor
 
+import dev.zacsweers.metro.Inject
 import tachiyomi.domain.entry.interactor.GetEntry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.repository.EntryChapterRepository
@@ -7,6 +8,7 @@ import tachiyomi.domain.entry.service.sortedForReading
 import tachiyomi.domain.history.repository.HistoryRepository
 import tachiyomi.domain.source.service.HiddenSourceIds
 
+@Inject
 class GetNextChapters(
     private val getEntry: GetEntry,
     private val entryChapterRepository: EntryChapterRepository,

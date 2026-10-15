@@ -1,6 +1,8 @@
 plugins {
     alias(mihonx.plugins.android.library)
     alias(mihonx.plugins.spotless)
+
+    alias(libs.plugins.metro)
 }
 
 android {
@@ -12,9 +14,7 @@ android {
 }
 
 dependencies {
-    implementation(projects.featureRuntime)
     implementation(projects.textRecognition.api)
-    implementation(projects.textRecognition.runtime)
     implementation(projects.textRecognition.spi)
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.onnxruntime.android)

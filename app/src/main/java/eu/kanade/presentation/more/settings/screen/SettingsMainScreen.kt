@@ -51,8 +51,6 @@ import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 import cafe.adriel.voyager.core.screen.Screen as VoyagerScreen
 
 object SettingsMainScreen : Screen() {
@@ -265,7 +263,7 @@ object SettingsMainScreen : Screen() {
         Item(
             titleRes = MR.strings.pref_category_about,
             formatSubtitle = {
-                "${stringResource(MR.strings.app_name)} ${AboutScreen.getVersionName(withBuildDate = false)}"
+                "${stringResource(MR.strings.app_name)} ${AboutScreen.getVersionName()}"
             },
             icon = MaterialSymbols.Rounded.Info,
             screen = AboutScreen,

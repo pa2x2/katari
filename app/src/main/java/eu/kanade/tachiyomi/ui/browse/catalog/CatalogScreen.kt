@@ -17,10 +17,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.paging.LoadState
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
+import dev.zacsweers.metrox.viewmodel.metroViewModel
 import eu.kanade.core.util.ifSourcesLoaded
 import eu.kanade.domain.source.model.snapshot
 import eu.kanade.presentation.browse.CatalogContent
@@ -88,8 +89,17 @@ data class CatalogScreen(
             return
         }
 
-        val viewModel =
-            viewModel { CatalogViewModel(sourceId, listingQuery, openFilterSheetOnStart = openFilters) }
+        val viewModel = assistedMetroViewModel<CatalogViewModel, CatalogViewModel.Factory> {
+            create(
+                sourceId = sourceId,
+                listingQuery = listingQuery,
+                migrationEntryType = null,
+                initialFilterSnapshot = emptyList(),
+                initialPresetId = null,
+                openFilterSheetOnStart = openFilters,
+                feedProfileId = null,
+            )
+        }
         val state by viewModel.state.collectAsState()
         val feedsEnabled = viewModel.feedsEnabled
 
@@ -121,9 +131,7 @@ data class CatalogScreen(
         var immersiveMode by rememberSaveable(sourceId) { mutableStateOf(false) }
         val immersivePositionState = rememberEntryImmersivePositionState(resetKey = state.listing)
         val immersiveAvailable = viewModel.isImmersiveSourceAvailable
-        val immersiveModel = viewModel(key = "catalog-immersive-$sourceId") {
-            EntryImmersiveViewModel()
-        }
+        val immersiveModel = metroViewModel<EntryImmersiveViewModel>(key = "catalog-immersive-$sourceId")
 
         BackHandler(enabled = immersiveMode) { immersiveMode = false }
 

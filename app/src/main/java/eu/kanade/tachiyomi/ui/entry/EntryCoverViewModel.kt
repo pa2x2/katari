@@ -8,6 +8,14 @@ import coil3.asDrawable
 import coil3.imageLoader
 import coil3.request.ImageRequest
 import coil3.size.Size
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.Assisted
+import dev.zacsweers.metro.AssistedFactory
+import dev.zacsweers.metro.AssistedInject
+import dev.zacsweers.metro.ContributesIntoMap
+import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
+import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
+import eu.kanade.domain.entry.model.hasCustomCover
 import eu.kanade.tachiyomi.data.cache.CoverCache
 import eu.kanade.tachiyomi.data.saver.Image
 import eu.kanade.tachiyomi.data.saver.ImageSaver
@@ -23,6 +31,7 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import logcat.LogPriority
+import mihon.app.di.AppUiScope
 import mihon.presentation.kit.feedback.SnackbarHostState
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.lang.launchIO
@@ -30,28 +39,40 @@ import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.core.common.util.lang.withUIContext
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.interactor.GetEntry
+import tachiyomi.domain.entry.interactor.UpdateEntry
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.asEntryCover
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.i18n.*
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
+import tachiyomi.source.local.image.LocalCoverManager
 import java.time.Instant
 import kotlin.time.Duration.Companion.seconds
 
+@AssistedInject
 class EntryCoverViewModel(
-    private val entryId: Long,
-    private val getEntry: GetEntry = Injekt.get(),
-    private val imageSaver: ImageSaver = Injekt.get(),
-    private val coverCache: CoverCache = Injekt.get(),
-    private val entryRepository: EntryRepository = Injekt.get(),
-
-    val snackbarHostState: SnackbarHostState = SnackbarHostState(),
+    @Assisted private val entryId: Long,
+    private val getEntry: GetEntry,
+    private val imageSaver: ImageSaver,
+    private val coverCache: CoverCache,
+    private val entryRepository: EntryRepository,
+    private val localCoverManager: LocalCoverManager,
+    private val updateEntry: UpdateEntry,
 ) : ViewModel() {
+
+    @AssistedFactory
+    @ManualViewModelAssistedFactoryKey
+    @ContributesIntoMap(AppUiScope::class)
+    interface Factory : ManualViewModelAssistedFactory {
+        fun create(entryId: Long): EntryCoverViewModel
+    }
+
+    val snackbarHostState = SnackbarHostState()
 
     val state: StateFlow<Entry?> = getEntry.subscribe(entryId)
         .flowOn(Dispatchers.IO)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5.seconds), null)
+
+    fun hasCustomCover(entry: Entry): Boolean = entry.hasCustomCover(coverCache)
 
     fun saveCover(context: Context) {
         viewModelScope.launch {
@@ -127,7 +148,7 @@ class EntryCoverViewModel(
         viewModelScope.launchIO {
             context.contentResolver.openInputStream(data)?.use {
                 try {
-                    entry.editCover(Injekt.get(), it, coverCache = coverCache)
+                    entry.editCover(localCoverManager, it, updateEntry = updateEntry, coverCache = coverCache)
                     notifyCoverUpdated(context)
                 } catch (e: Exception) {
                     notifyFailedCoverUpdate(context, e)

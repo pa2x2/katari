@@ -1,23 +1,27 @@
 package eu.kanade.tachiyomi.ui.more
 
+import android.content.Context
 import androidx.compose.animation.graphics.res.animatedVectorResource
 import androidx.compose.animation.graphics.res.rememberAnimatedVectorPainter
 import androidx.compose.animation.graphics.vector.AnimatedImageVector
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
 import cafe.adriel.voyager.navigator.tab.TabOptions
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.ContributesIntoMap
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metrox.viewmodel.ViewModelKey
+import dev.zacsweers.metrox.viewmodel.metroViewModel
 import eu.kanade.core.preference.asState
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.domain.ui.UiPreferences
@@ -29,12 +33,13 @@ import eu.kanade.tachiyomi.ui.category.CategoryScreen
 import eu.kanade.tachiyomi.ui.download.DownloadQueueScreen
 import eu.kanade.tachiyomi.ui.setting.SettingsScreen
 import eu.kanade.tachiyomi.ui.stats.StatsScreen
-import eu.kanade.tachiyomi.ui.stats.recap.delivery.subscribeUnopenedYearRecap
+import eu.kanade.tachiyomi.ui.stats.recap.delivery.StatisticsUnopenedYearRecap
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import mihon.app.di.AppUiScope
 import mihon.entry.interactions.download.EntryDownloadRuntimeFeature
 import mihon.feature.profiles.core.ProfileManager
 import mihon.feature.profiles.ui.ProfilePickerScreen
@@ -42,8 +47,6 @@ import mihon.feature.profiles.ui.handleProfileShortcut
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
 data object MoreTab : Tab {
 
@@ -68,9 +71,7 @@ data object MoreTab : Tab {
         val context = LocalContext.current
         val navigator = LocalNavigator.currentOrThrow
         val scope = rememberCoroutineScope()
-        val viewModel = viewModel { MoreViewModel() }
-        val profileManager = remember { Injekt.get<ProfileManager>() }
-        val uiPreferences = remember { Injekt.get<UiPreferences>() }
+        val viewModel = metroViewModel<MoreViewModel>()
         val downloadQueueState by viewModel.downloadQueueState.collectAsState()
         val hasNewRecap by viewModel.hasNewRecap.collectAsState()
         MoreScreen(
@@ -87,10 +88,8 @@ data object MoreTab : Tab {
             onClickDataAndStorage = { navigator.push(SettingsScreen(SettingsScreen.Destination.DataAndStorage)) },
             onClickProfiles = {
                 scope.launch {
-                    handleProfileShortcut(
+                    viewModel.openProfileShortcut(
                         context = context,
-                        profileManager = profileManager,
-                        uiPreferences = uiPreferences,
                         onOpenProfilePicker = { navigator.push(ProfilePickerScreen()) },
                         onBeforeSwitch = { navigator.popUntilRoot() },
                     )
@@ -102,10 +101,16 @@ data object MoreTab : Tab {
     }
 }
 
-private class MoreViewModel(
-    downloadRuntime: EntryDownloadRuntimeFeature = Injekt.get(),
-    basePreferences: BasePreferences = Injekt.get(),
-    libraryPreferences: LibraryPreferences = Injekt.get(),
+@Inject
+@ViewModelKey
+@ContributesIntoMap(AppUiScope::class)
+internal class MoreViewModel(
+    downloadRuntime: EntryDownloadRuntimeFeature,
+    basePreferences: BasePreferences,
+    libraryPreferences: LibraryPreferences,
+    unopenedYearRecap: StatisticsUnopenedYearRecap,
+    private val profileManager: ProfileManager,
+    private val uiPreferences: UiPreferences,
 ) : ViewModel() {
 
     var downloadedOnly by libraryPreferences.downloadedOnly.asState(viewModelScope)
@@ -126,9 +131,21 @@ private class MoreViewModel(
             DownloadQueueState.Stopped,
         )
 
-    val hasNewRecap: StateFlow<Boolean> = subscribeUnopenedYearRecap()
+    val hasNewRecap: StateFlow<Boolean> = unopenedYearRecap.subscribe()
         .map { it != null }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
+
+    suspend fun openProfileShortcut(
+        context: Context,
+        onOpenProfilePicker: () -> Unit,
+        onBeforeSwitch: () -> Unit,
+    ): Boolean = handleProfileShortcut(
+        context = context,
+        profileManager = profileManager,
+        uiPreferences = uiPreferences,
+        onOpenProfilePicker = onOpenProfilePicker,
+        onBeforeSwitch = onBeforeSwitch,
+    )
 }
 
 sealed interface DownloadQueueState {

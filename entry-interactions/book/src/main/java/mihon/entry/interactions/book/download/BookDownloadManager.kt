@@ -1,6 +1,5 @@
 package mihon.entry.interactions.book.download
 
-import android.content.Context
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import kotlinx.coroutines.CancellationException
@@ -35,20 +34,17 @@ import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.i18n.*
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
 internal class BookDownloadManager(
-    context: Context,
-    private val cache: BookDownloadCache = Injekt.get(),
-    private val provider: BookDownloadProvider = Injekt.get(),
-    private val downloader: BookDownloader = Injekt.get(),
-    private val preparedDocumentCache: BookDocumentPreparedCache = Injekt.get(),
-    private val resourceGatewayFactory: BookPublicationResourceGatewayFactory = Injekt.get(),
-    private val sourceManager: SourceManager = Injekt.get(),
-    private val store: BookDownloadStore = BookDownloadStore(context),
-    private val workController: EntryDownloadWorkController = Injekt.get(),
-    private val scope: CoroutineScope = Injekt.get(),
+    private val cache: BookDownloadCache,
+    private val provider: BookDownloadProvider,
+    private val downloader: BookDownloader,
+    private val preparedDocumentCache: BookDocumentPreparedCache,
+    private val resourceGatewayFactory: BookPublicationResourceGatewayFactory,
+    private val sourceManager: SourceManager,
+    private val store: BookDownloadStore,
+    private val workController: EntryDownloadWorkController,
+    private val scope: CoroutineScope,
 ) {
     private val queueMutationLock = Any()
     private val processorMutex = Mutex()

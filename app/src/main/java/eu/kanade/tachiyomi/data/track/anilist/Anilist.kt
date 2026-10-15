@@ -7,14 +7,16 @@ import eu.kanade.tachiyomi.data.database.models.Track
 import eu.kanade.tachiyomi.data.track.BaseTracker
 import eu.kanade.tachiyomi.data.track.DeletableTracker
 import eu.kanade.tachiyomi.data.track.ExternalLoginTracker
+import eu.kanade.tachiyomi.data.track.TrackerDependencies
 import eu.kanade.tachiyomi.data.track.anilist.dto.ALOAuth
 import eu.kanade.tachiyomi.data.track.model.TrackSearch
-import kotlinx.serialization.json.Json
 import tachiyomi.i18n.*
-import uy.kohesive.injekt.injectLazy
 import tachiyomi.domain.track.model.EntryTrack as DomainTrack
 
-class Anilist(id: Long) : BaseTracker(id, "AniList"), DeletableTracker, ExternalLoginTracker {
+class Anilist(
+    id: Long,
+    dependencies: TrackerDependencies,
+) : BaseTracker(id, "AniList", dependencies), DeletableTracker, ExternalLoginTracker {
 
     override val accountOrder = 2
 
@@ -34,8 +36,6 @@ class Anilist(id: Long) : BaseTracker(id, "AniList"), DeletableTracker, External
 
         private const val SEARCH_ID_PREFIX = "id:"
     }
-
-    private val json: Json by injectLazy()
 
     private val interceptor by lazy { AnilistInterceptor(this) }
 

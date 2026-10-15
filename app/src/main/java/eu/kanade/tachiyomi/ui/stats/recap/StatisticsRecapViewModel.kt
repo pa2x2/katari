@@ -4,6 +4,13 @@ import android.app.Application
 import android.graphics.Bitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.Assisted
+import dev.zacsweers.metro.AssistedFactory
+import dev.zacsweers.metro.AssistedInject
+import dev.zacsweers.metro.ContributesIntoMap
+import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
+import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
 import eu.kanade.tachiyomi.extension.ExtensionManager
 import eu.kanade.tachiyomi.ui.stats.recap.cover.recapCoverSeedColor
 import eu.kanade.tachiyomi.ui.stats.recap.delivery.editionKey
@@ -22,6 +29,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import logcat.LogPriority
+import mihon.app.di.AppUiScope
 import mihon.domain.extension.model.ContentWarning
 import mihon.entry.interactions.statistics.EntryStatisticsFeature
 import mihon.feature.profiles.core.ProfileStore
@@ -33,8 +41,6 @@ import tachiyomi.domain.statistics.recap.StatisticsRecapActivity
 import tachiyomi.domain.statistics.recap.StatisticsRecapPeriodTotals
 import tachiyomi.domain.statistics.recap.StatisticsRecapRepository
 import tachiyomi.domain.statistics.service.StatisticsPreferences
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 import java.io.File
 import java.time.LocalDate
 
@@ -42,15 +48,23 @@ import java.time.LocalDate
  * Loads a period's activity once, then rebuilds its story whenever titles are hidden or shown, so hiding a title
  * takes effect on the page being watched.
  */
+@AssistedInject
 class StatisticsRecapViewModel(
-    private val period: StatisticsRecapPeriod,
-    private val application: Application = Injekt.get(),
-    activeProfileProvider: ActiveProfileProvider = Injekt.get(),
-    profileStore: ProfileStore = Injekt.get(),
-    private val recapRepository: StatisticsRecapRepository = Injekt.get(),
-    private val statisticsFeature: EntryStatisticsFeature = Injekt.get(),
-    private val extensionManager: ExtensionManager = Injekt.get(),
+    @Assisted private val period: StatisticsRecapPeriod,
+    private val application: Application,
+    activeProfileProvider: ActiveProfileProvider,
+    profileStore: ProfileStore,
+    private val recapRepository: StatisticsRecapRepository,
+    private val statisticsFeature: EntryStatisticsFeature,
+    private val extensionManager: ExtensionManager,
 ) : ViewModel() {
+
+    @AssistedFactory
+    @ManualViewModelAssistedFactoryKey
+    @ContributesIntoMap(AppUiScope::class)
+    interface Factory : ManualViewModelAssistedFactory {
+        fun create(period: StatisticsRecapPeriod): StatisticsRecapViewModel
+    }
 
     val state: StateFlow<StatisticsRecapViewModel.State>
         field = MutableStateFlow<StatisticsRecapViewModel.State>(State.Loading)

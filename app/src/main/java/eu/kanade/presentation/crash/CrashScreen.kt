@@ -7,8 +7,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import eu.kanade.tachiyomi.util.CrashLogUtil
 import kotlinx.coroutines.launch
+import mihon.app.di.appGraph
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.BugReport
 import mihon.presentation.kit.content.Text
@@ -37,7 +37,7 @@ fun CrashScreen(
         acceptText = stringResource(MR.strings.pref_dump_crash_logs),
         onAcceptClick = {
             scope.launch {
-                CrashLogUtil(context).dumpLogs(exception)
+                context.appGraph.crashLogUtilFactory.create(context).dumpLogs(exception)
             }
         },
         rejectText = stringResource(MR.strings.crash_screen_restart_application),

@@ -7,10 +7,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import dev.zacsweers.metrox.viewmodel.metroViewModel
 import eu.kanade.domain.source.interactor.SourceListListing
 import eu.kanade.domain.source.model.CATALOGUE_LATEST_QUERY
 import eu.kanade.domain.source.model.CATALOGUE_POPULAR_QUERY
@@ -32,7 +32,7 @@ import tachiyomi.presentation.core.i18n.stringResource
 @Composable
 fun Screen.sourcesTab(): TabContent {
     val navigator = LocalNavigator.currentOrThrow
-    val viewModel = viewModel { SourcesViewModel() }
+    val viewModel = metroViewModel<SourcesViewModel>()
     val state by viewModel.state.collectAsStateWithLifecycle()
     var showFilters by rememberSaveable { mutableStateOf(false) }
 

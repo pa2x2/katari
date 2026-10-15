@@ -32,12 +32,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.core.view.WindowInsetsControllerCompat
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.R
 import kotlinx.coroutines.launch
+import mihon.app.di.appGraph
 import mihon.feature.profiles.core.Profile
-import mihon.feature.profiles.core.ProfileManager
 import mihon.feature.profiles.ui.components.ProfilePickerTile
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Settings
@@ -50,8 +49,6 @@ import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
 class ProfilePickerScreen : Screen() {
 
@@ -60,8 +57,8 @@ class ProfilePickerScreen : Screen() {
         val context = LocalContext.current
         val navigator = LocalNavigator.currentOrThrow
         val scope = rememberCoroutineScope()
-        val profileManager = remember { Injekt.get<ProfileManager>() }
-        val uiPreferences = remember { Injekt.get<UiPreferences>() }
+        val profileManager = remember { context.appGraph.profileManager }
+        val uiPreferences = remember { context.appGraph.uiPreferences }
 
         val profiles by profileManager.visibleProfiles.collectAsState()
         val activeProfile by profileManager.activeProfile.collectAsState()

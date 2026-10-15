@@ -1,2 +1,0 @@
-id=entry.backup
-module=mihon.entry.interactions.persistence.backup.EntryBackupFeatureRuntimeModule

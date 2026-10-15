@@ -12,13 +12,19 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.Assisted
+import dev.zacsweers.metro.AssistedFactory
+import dev.zacsweers.metro.AssistedInject
+import dev.zacsweers.metro.ContributesIntoMap
+import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
+import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
+import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 import eu.kanade.presentation.components.WarningBanner
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.data.backup.BackupFileValidator
@@ -28,6 +34,7 @@ import eu.kanade.tachiyomi.util.system.DeviceUtil
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
+import mihon.app.di.AppUiScope
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.list.CheckRow
 import mihon.presentation.kit.navigation.AppBar
@@ -45,9 +52,8 @@ class RestoreBackupScreen(
 
     @Composable
     override fun Content() {
-        val context = LocalContext.current
         val navigator = LocalNavigator.currentOrThrow
-        val model = viewModel { RestoreBackupViewModel(context, uri) }
+        val model = assistedMetroViewModel<RestoreBackupViewModel, RestoreBackupViewModel.Factory> { create(uri) }
         val state by model.state.collectAsState()
 
         Scaffold(
@@ -152,10 +158,19 @@ class RestoreBackupScreen(
     }
 }
 
-private class RestoreBackupViewModel(
+@AssistedInject
+internal class RestoreBackupViewModel(
+    @Assisted private val uri: String,
     private val context: Context,
-    private val uri: String,
+    private val backupFileValidator: BackupFileValidator,
 ) : ViewModel() {
+
+    @AssistedFactory
+    @ManualViewModelAssistedFactoryKey
+    @ContributesIntoMap(AppUiScope::class)
+    interface Factory : ManualViewModelAssistedFactory {
+        fun create(uri: String): RestoreBackupViewModel
+    }
 
     val state: StateFlow<RestoreBackupViewModel.State>
         field = MutableStateFlow<RestoreBackupViewModel.State>(State())
@@ -184,7 +199,7 @@ private class RestoreBackupViewModel(
 
     private suspend fun validate(uri: Uri) {
         val results = try {
-            BackupFileValidator(context).validate(uri)
+            backupFileValidator.validate(uri)
         } catch (e: Exception) {
             setError(
                 error = InvalidRestore(uri, e.message.toString()),

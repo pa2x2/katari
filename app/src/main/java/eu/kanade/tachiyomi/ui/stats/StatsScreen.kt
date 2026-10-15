@@ -10,9 +10,9 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import dev.zacsweers.metrox.viewmodel.metroViewModel
 import eu.kanade.presentation.more.stats.ActivityState
 import eu.kanade.presentation.more.stats.StatsScreenContent
 import eu.kanade.presentation.more.stats.StatsScreenState
@@ -41,7 +41,7 @@ class StatsScreen : Screen() {
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
 
-        val viewModel = viewModel { StatsViewModel() }
+        val viewModel = metroViewModel<StatsViewModel>()
         val state by viewModel.state.collectAsState()
         val newYearRecap by viewModel.newYearRecap.collectAsState()
         val lifecycleOwner = LocalLifecycleOwner.current

@@ -14,11 +14,9 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.selects.select
 import logcat.LogPriority
-import mihon.entry.interactions.translate.EntryTranslateRuntimeAvailability
+import mihon.core.metro.metroGraph
 import mihon.entry.interactions.translate.notification.EntryTranslateNotifier
 import tachiyomi.core.common.util.system.logcat
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
 /**
  * Drains the translation queue in the background, with an ongoing notification of the chapter being translated. While
@@ -27,10 +25,13 @@ import uy.kohesive.injekt.api.get
  */
 class EntryTranslateJob(context: Context, workerParams: WorkerParameters) : CoroutineWorker(context, workerParams) {
 
-    override suspend fun getForegroundInfo(): ForegroundInfo = foregroundInfo(dependencies().notifier)
+    private val dependencies by lazy {
+        applicationContext.metroGraph<EntryTranslateWorkerGraph>().entryTranslateWorkerDependencies
+    }
+
+    override suspend fun getForegroundInfo(): ForegroundInfo = foregroundInfo(dependencies.notifier)
 
     override suspend fun doWork(): Result {
-        val dependencies = dependencies()
         while (true) {
             if (dependencies.conditions.paused.first() || !dependencies.runner.hasPendingWork()) {
                 return Result.success()
@@ -47,8 +48,10 @@ class EntryTranslateJob(context: Context, workerParams: WorkerParameters) : Coro
     /**
      * Runs until the queue is idle or paused, which returns true, or until the rules hold it, which returns false.
      */
-    private suspend fun runUntilHeld(dependencies: Dependencies): Boolean = coroutineScope {
-        val (runner, notifier, conditions) = dependencies
+    private suspend fun runUntilHeld(dependencies: EntryTranslateWorkerDependencies): Boolean = coroutineScope {
+        val runner = dependencies.runner
+        val notifier = dependencies.notifier
+        val conditions = dependencies.conditions
         val notifications = launch {
             combine(runner.active, conditions.waiting, ::Pair).collect { (active, waiting) ->
                 notifier.update(active, waiting)
@@ -83,16 +86,5 @@ class EntryTranslateJob(context: Context, workerParams: WorkerParameters) : Coro
         notifier.notificationId,
         notifier.notification(null, null),
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC else 0,
-    )
-
-    private suspend fun dependencies(): Dependencies {
-        EntryTranslateRuntimeAvailability.awaitInstalled()
-        return Dependencies(runner = Injekt.get(), notifier = Injekt.get(), conditions = Injekt.get())
-    }
-
-    private data class Dependencies(
-        val runner: EntryTranslateQueueRunner,
-        val notifier: EntryTranslateNotifier,
-        val conditions: EntryTranslateConditions,
     )
 }

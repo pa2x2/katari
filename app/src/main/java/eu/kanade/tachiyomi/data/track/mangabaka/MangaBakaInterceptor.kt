@@ -5,11 +5,8 @@ import eu.kanade.tachiyomi.network.parseAs
 import kotlinx.serialization.json.Json
 import okhttp3.Interceptor
 import okhttp3.Response
-import uy.kohesive.injekt.injectLazy
 
-class MangaBakaInterceptor(private val mangaBaka: MangaBaka) : Interceptor {
-
-    private val json: Json by injectLazy()
+class MangaBakaInterceptor(private val mangaBaka: MangaBaka, private val json: Json) : Interceptor {
 
     override fun intercept(chain: Interceptor.Chain): Response {
         val originalRequest = chain.request()

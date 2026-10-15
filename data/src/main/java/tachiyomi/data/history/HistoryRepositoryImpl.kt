@@ -1,6 +1,9 @@
 package tachiyomi.data.history
 
 import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
@@ -18,6 +21,8 @@ import tachiyomi.domain.history.model.activity.HistoryCompletionUpdate
 import tachiyomi.domain.history.repository.HistoryRepository
 
 @OptIn(ExperimentalCoroutinesApi::class)
+@Inject
+@SingleIn(AppScope::class)
 class HistoryRepositoryImpl(
     private val handler: DatabaseHandler,
     private val profileProvider: ActiveProfileProvider,

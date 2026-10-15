@@ -26,7 +26,7 @@ import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import eu.kanade.tachiyomi.util.system.copyToClipboard
-import mihon.entry.interactions.catalogue.EntryCatalogueFeature
+import mihon.app.di.appGraph
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Brush
 import mihon.icons.materialsymbols.rounded.Person
@@ -44,8 +44,6 @@ import tachiyomi.domain.entry.model.EntryStatus
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.clickableNoIndication
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
 /** An entry's header: its cover beside (phones) or above (tablets) its title, people, status and source. */
 @Composable
@@ -62,8 +60,9 @@ fun EntryInfoBox(
     doSearch: (query: String, global: Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val context = LocalContext.current
     val coverType = remember(entry.source) {
-        Injekt.get<EntryCatalogueFeature>().description(entry.source).itemOrientation.toGridCoverType()
+        context.appGraph.entryCatalogueFeature.description(entry.source).itemOrientation.toGridCoverType()
     }
 
     Box(modifier = modifier) {

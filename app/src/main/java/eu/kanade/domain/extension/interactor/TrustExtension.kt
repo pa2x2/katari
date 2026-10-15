@@ -2,6 +2,7 @@ package eu.kanade.domain.extension.interactor
 
 import android.content.pm.PackageInfo
 import androidx.core.content.pm.PackageInfoCompat
+import dev.zacsweers.metro.Inject
 import eu.kanade.domain.source.service.GlobalSourcePreferences
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -12,6 +13,7 @@ import mihon.domain.extension.model.ExtensionStore
 import mihon.domain.extension.repository.ExtensionStoreRepository
 import tachiyomi.core.common.preference.getAndSet
 
+@Inject
 class TrustExtension(
     private val preferences: GlobalSourcePreferences,
     private val repository: ExtensionStoreRepository,

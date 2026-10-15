@@ -1,5 +1,8 @@
 package tachiyomi.data.library.update
 
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
@@ -14,6 +17,8 @@ import tachiyomi.domain.library.update.model.LibraryUpdateTrigger
 import tachiyomi.domain.library.update.repository.LibraryUpdateReportRepository
 
 @OptIn(ExperimentalCoroutinesApi::class)
+@Inject
+@SingleIn(AppScope::class)
 class LibraryUpdateReportRepositoryImpl(
     private val handler: DatabaseHandler,
     private val profileProvider: ActiveProfileProvider,

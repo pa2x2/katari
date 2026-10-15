@@ -69,4 +69,4 @@ object SettingsTtsScreen : SearchableSettings {
 
 @Composable
 internal fun rememberTtsSettingsViewModel(): TtsSettingsViewModel =
-    SettingsTtsScreen.rememberScreenViewModel { TtsSettingsViewModel() }
+    SettingsTtsScreen.rememberScreenViewModel<TtsSettingsViewModel>()

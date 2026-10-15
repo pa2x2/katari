@@ -30,7 +30,6 @@ import okhttp3.Request
 import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import tachiyomi.core.common.util.lang.withIOContext
-import uy.kohesive.injekt.injectLazy
 import java.math.RoundingMode
 import kotlin.time.Duration.Companion.minutes
 import tachiyomi.domain.track.model.EntryTrack as DomainTrack
@@ -39,9 +38,8 @@ class ComickApi(
     private val trackerId: Long,
     baseClient: OkHttpClient,
     interceptor: ComickInterceptor,
+    private val json: Json,
 ) {
-
-    private val json: Json by injectLazy()
 
     private val client = baseClient.newBuilder()
         .rateLimit(permits = 55, period = 1.minutes)

@@ -5,8 +5,6 @@ import tachiyomi.domain.chapter.model.Chapter
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.source.local.LocalSource
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
 fun EntryChapter.toReaderChapter(): Chapter {
     return Chapter(
@@ -47,11 +45,11 @@ internal fun Chapter.toEntryChapter(): EntryChapter {
     )
 }
 
-internal fun List<Chapter>.filterDownloaded(mangaById: Map<Long, Entry>): List<Chapter> {
+internal fun List<Chapter>.filterDownloaded(mangaById: Map<Long, Entry>, downloadCache: DownloadCache): List<Chapter> {
     return filter { chapter ->
         val manga = mangaById[chapter.mangaId] ?: return@filter false
         manga.source == LocalSource.ID ||
-            Injekt.get<DownloadCache>().isChapterDownloaded(
+            downloadCache.isChapterDownloaded(
                 chapter.name,
                 chapter.scanlator,
                 chapter.url,

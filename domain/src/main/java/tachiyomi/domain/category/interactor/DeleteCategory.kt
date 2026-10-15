@@ -1,5 +1,6 @@
 package tachiyomi.domain.category.interactor
 
+import dev.zacsweers.metro.Inject
 import logcat.LogPriority
 import tachiyomi.core.common.util.lang.withNonCancellableContext
 import tachiyomi.core.common.util.system.logcat
@@ -10,6 +11,7 @@ import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.upcoming.service.UpcomingPreferences
 import tachiyomi.domain.updates.service.UpdatesPreferences
 
+@Inject
 class DeleteCategory(
     private val categoryRepository: CategoryRepository,
     private val libraryPreferences: LibraryPreferences,

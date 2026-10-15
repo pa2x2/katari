@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.data.backup.restore.restorers
 
+import dev.zacsweers.metro.Inject
 import eu.kanade.tachiyomi.data.backup.models.BackupCategory
 import eu.kanade.tachiyomi.data.backup.models.BackupChapter
 import eu.kanade.tachiyomi.data.backup.models.BackupEntry
@@ -34,26 +35,25 @@ import tachiyomi.domain.history.repository.HistoryActivityBackupRepository
 import tachiyomi.domain.history.repository.HistoryRepository
 import tachiyomi.domain.library.update.model.EntryUpdateMode
 import tachiyomi.domain.library.update.repository.LibraryUpdateRulesRepository
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 import java.util.Date
 import java.util.UUID
 import kotlin.math.max
 import kotlin.time.Clock
 
+@Inject
 class EntryRestorer(
-    private val handler: DatabaseHandler = Injekt.get(),
-    private val profileProvider: ActiveProfileProvider = Injekt.get(),
-    private val getCategories: GetCategories = Injekt.get(),
-    private val entryRepository: EntryRepository = Injekt.get(),
-    private val entryChapterRepository: EntryChapterRepository = Injekt.get(),
-    private val entryBackupFeature: EntryBackupFeature = Injekt.get(),
-    private val upsertHistory: UpsertHistory = Injekt.get(),
-    private val historyRepository: HistoryRepository = Injekt.get(),
-    private val activityBackupRepository: HistoryActivityBackupRepository = Injekt.get(),
-    private val fetchInterval: FetchInterval = Injekt.get(),
-    private val updateRulesRepository: LibraryUpdateRulesRepository = Injekt.get(),
-    private val mergedMemberExpansionRepository: MergedMemberExpansionRepository = Injekt.get(),
+    private val handler: DatabaseHandler,
+    private val profileProvider: ActiveProfileProvider,
+    private val getCategories: GetCategories,
+    private val entryRepository: EntryRepository,
+    private val entryChapterRepository: EntryChapterRepository,
+    private val entryBackupFeature: EntryBackupFeature,
+    private val upsertHistory: UpsertHistory,
+    private val historyRepository: HistoryRepository,
+    private val activityBackupRepository: HistoryActivityBackupRepository,
+    private val fetchInterval: FetchInterval,
+    private val updateRulesRepository: LibraryUpdateRulesRepository,
+    private val mergedMemberExpansionRepository: MergedMemberExpansionRepository,
 ) {
 
     private val timeZone = TimeZone.currentSystemDefault()

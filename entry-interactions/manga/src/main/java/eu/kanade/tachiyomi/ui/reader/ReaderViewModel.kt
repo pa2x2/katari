@@ -12,6 +12,7 @@ import eu.kanade.tachiyomi.source.entry.EntryCatalogueSource
 import eu.kanade.tachiyomi.source.model.Page
 import eu.kanade.tachiyomi.ui.reader.loader.ChapterLoader
 import eu.kanade.tachiyomi.ui.reader.loader.ReaderLoadException
+import eu.kanade.tachiyomi.ui.reader.loader.ReaderPageSessionLoader
 import eu.kanade.tachiyomi.ui.reader.loader.scheduling.LoadAheadNetworkPolicy
 import eu.kanade.tachiyomi.ui.reader.loader.scheduling.ReaderReadAhead
 import eu.kanade.tachiyomi.ui.reader.model.InsertPage
@@ -65,8 +66,9 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import logcat.LogPriority
+import mihon.entry.interactions.child.EntryChildListFeature
+import mihon.entry.interactions.manga.download.DownloadCache
 import mihon.entry.interactions.manga.download.DownloadManager
-import mihon.entry.interactions.manga.download.DownloadProvider
 import mihon.entry.interactions.manga.download.model.MangaDownload
 import mihon.entry.interactions.manga.media.session.MangaMediaSessionProcessor
 import mihon.entry.interactions.manga.reader.settings.MangaReaderSettingsBindings
@@ -93,15 +95,21 @@ import mihon.entry.interactions.reader.settings.ReadingMode
 import mihon.entry.interactions.source.EntryChildWebViewResolution
 import mihon.entry.interactions.source.EntryWebViewFeature
 import mihon.entry.interactions.state.EntryBookmarkFeature
+import mihon.entry.interactions.translate.EntryTranslateFeature
+import mihon.entry.interactions.translation.EntryTranslationLanguagesFeature
 import mihon.entry.viewer.settings.ResolvedViewerSetting
 import mihon.entry.viewer.settings.ViewerSettingBinder
 import mihon.entry.viewer.settings.ViewerSettingBinding
 import mihon.entry.viewer.settings.ViewerSettingSource
 import mihon.entry.viewer.settings.updateEntry
 import mihon.language.api.tag.LanguageTag
+import mihon.model.artifacts.api.ModelArtifactStore
+import mihon.text.recognition.api.TextRecognitionFeature
 import mihon.text.recognition.api.host.TextRecognitionHostActions
+import mihon.translation.api.TranslationFeature
 import mihon.translation.api.host.TranslationHostActionResult
 import mihon.translation.api.host.TranslationHostActions
+import mihon.tts.api.TtsFeature
 import mihon.tts.ui.playback.ShortFormSpeechFailure
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.launchNonCancellable
@@ -121,8 +129,6 @@ import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.source.local.LocalSource
 import tachiyomi.source.local.image.LocalCoverManager
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 import java.io.File
 import java.io.InputStream
 import java.time.Instant
@@ -133,30 +139,41 @@ import kotlin.time.Duration.Companion.seconds
 /**
  * Presenter used by the activity to perform background operations.
  */
-internal class ReaderViewModel @JvmOverloads constructor(
+internal class ReaderViewModel(
     private val savedState: SavedStateHandle,
-    private val sourceManager: SourceManager = Injekt.get(),
-    private val webViewFeature: EntryWebViewFeature = Injekt.get(),
-    private val imageSaver: ReaderImageSaver = ReaderImageSaver(Injekt.get<Application>()),
-    private val mangaReaderSettings: MangaReaderSettings = Injekt.get(),
-    private val getEntry: GetEntry = Injekt.get(),
-    private val getEntryWithChapters: GetEntryWithChapters = Injekt.get(),
-    private val entryProgressRepository: EntryProgressRepository = Injekt.get(),
-    private val entryRepository: EntryRepository = Injekt.get(),
-    private val bookmarkFeature: EntryBookmarkFeature = Injekt.get(),
-    private val viewerSettingBinder: ViewerSettingBinder = Injekt.get(),
-    private val libraryPreferences: LibraryPreferences = Injekt.get(),
-    private val localCoverManager: LocalCoverManager = Injekt.get(),
-    private val mediaSession: MangaMediaSessionProcessor = Injekt.get(),
-    private val appScope: CoroutineScope = Injekt.get(),
-    private val navigationPresenter: EntryReaderNavigationPresenter = EntryReaderNavigationPresenter(
-        getEntryWithChapters = Injekt.get(),
-        childListFeature = Injekt.get(),
-    ),
+    private val application: Application,
+    private val sourceManager: SourceManager,
+    private val webViewFeature: EntryWebViewFeature,
+    private val mangaReaderSettings: MangaReaderSettings,
+    private val getEntry: GetEntry,
+    private val getEntryWithChapters: GetEntryWithChapters,
+    childListFeature: EntryChildListFeature,
+    private val entryProgressRepository: EntryProgressRepository,
+    private val entryRepository: EntryRepository,
+    private val bookmarkFeature: EntryBookmarkFeature,
+    private val viewerSettingBinder: ViewerSettingBinder,
+    private val libraryPreferences: LibraryPreferences,
+    private val localCoverManager: LocalCoverManager,
+    private val customCoverWriter: EntryCustomCoverWriter,
+    private val mediaSession: MangaMediaSessionProcessor,
+    private val appScope: CoroutineScope,
+    val downloadManager: DownloadManager,
+    private val downloadCache: DownloadCache,
+    private val pageSessionLoader: ReaderPageSessionLoader,
+    chapterTranslationStore: MangaChapterTranslationStore,
+    private val translationHostActions: TranslationHostActions,
+    private val textRecognitionHostActions: TextRecognitionHostActions,
+    translationFeature: TranslationFeature,
+    translationLanguagesFeature: EntryTranslationLanguagesFeature,
+    translateFeature: EntryTranslateFeature,
+    ttsFeature: TtsFeature,
+    textRecognitionFeature: TextRecognitionFeature,
+    modelArtifactStore: ModelArtifactStore,
 ) : ViewModel() {
 
-    private val downloadManager: DownloadManager = Injekt.get()
-    private val downloadProvider: DownloadProvider = Injekt.get()
+    private val imageSaver = ReaderImageSaver(application)
+
+    private val navigationPresenter = EntryReaderNavigationPresenter(getEntryWithChapters, childListFeature)
 
     private val mutableState = MutableStateFlow(State())
     val state = mutableState.asStateFlow()
@@ -172,10 +189,9 @@ internal class ReaderViewModel @JvmOverloads constructor(
 
     val jumpHistory = MangaReaderJumpHistory()
 
-    private val readAhead = ReaderReadAhead(LoadAheadNetworkPolicy(Injekt.get<Application>()))
+    val sourcesInitialized: StateFlow<Boolean> = sourceManager.isInitialized
 
-    private val translationHostActions: TranslationHostActions = Injekt.get()
-    private val textRecognitionHostActions: TextRecognitionHostActions = Injekt.get()
+    private val readAhead = ReaderReadAhead(LoadAheadNetworkPolicy(application))
 
     /**
      * The series the current chapter belongs to, once it is loaded. In a merged entry that is the chapter's member, not
@@ -188,14 +204,14 @@ internal class ReaderViewModel @JvmOverloads constructor(
 
     /** Translates text recognized on pages. */
     val textTranslation = MangaTextTranslationController(
-        feature = Injekt.get(),
+        feature = translationFeature,
         hostActions = translationHostActions,
         scope = viewModelScope,
-        languageStore = MangaTranslationLanguageStore(feature = Injekt.get(), series = series),
+        languageStore = MangaTranslationLanguageStore(feature = translationLanguagesFeature, series = series),
     )
 
     val textTranslationSpeech = MangaTranslationSpeechController(
-        feature = Injekt.get(),
+        feature = ttsFeature,
         translation = textTranslation.hostCoordinator.controller.state,
         scope = viewModelScope,
         onFailure = { eventChannel.trySend(Event.TranslationSpeechFailed(it)) },
@@ -205,12 +221,12 @@ internal class ReaderViewModel @JvmOverloads constructor(
     val translateDownloads = MangaReaderTranslateDownloads(
         scope = viewModelScope,
         series = series,
-        languages = Injekt.get(),
-        translate = Injekt.get(),
+        languages = translationLanguagesFeature,
+        translate = translateFeature,
     )
 
     private val storedTranslations = MangaReaderStoredTranslations(
-        store = Injekt.get<MangaChapterTranslationStore>(),
+        store = chapterTranslationStore,
         downloadManager = downloadManager,
         sourceManager = sourceManager,
         series = { series.value },
@@ -218,10 +234,10 @@ internal class ReaderViewModel @JvmOverloads constructor(
 
     /** Recognizes page text while the reader's translate mode is on. */
     val textSession = MangaReaderTextSession(
-        recognition = Injekt.get(),
-        modelStore = Injekt.get(),
+        recognition = textRecognitionFeature,
+        modelStore = modelArtifactStore,
         translator = MangaPageTranslator(
-            feature = Injekt.get(),
+            feature = translationFeature,
             languages = textTranslation.hostCoordinator.languages,
             engineName = textTranslation::pageEngineName,
         ),
@@ -412,7 +428,7 @@ internal class ReaderViewModel @JvmOverloads constructor(
             }
             .run {
                 if (libraryPreferences.downloadedOnly.get()) {
-                    filterDownloaded(mangaById.filterValues { it != null }.mapValues { it.value!! })
+                    filterDownloaded(mangaById.filterValues { it != null }.mapValues { it.value!! }, downloadCache)
                 } else {
                     this
                 }
@@ -514,13 +530,7 @@ internal class ReaderViewModel @JvmOverloads constructor(
                         )
                     sourceManager.isInitialized.first { it }
                     installViewerSettingBindings(entry)
-                    ChapterLoader(
-                        context = Injekt.get<Application>(),
-                        downloadManager = downloadManager,
-                        downloadProvider = downloadProvider,
-                        manga = entry,
-                        sourceManager = sourceManager,
-                    ).also { loader = it }
+                    pageSessionLoader.chapterLoader(application, entry).also { loader = it }
                 }
                 if (chapterList.isEmpty()) chapterList = loadChapterList(checkNotNull(manga))
                 val requestedChapter = chapterList.firstOrNull { chapterId == it.chapter.id }
@@ -1199,8 +1209,7 @@ internal class ReaderViewModel @JvmOverloads constructor(
         if (page?.status != Page.State.Ready) return
         val manga = manga ?: return
 
-        val context = Injekt.get<Application>()
-        val notifier = SaveImageNotifier(context)
+        val notifier = SaveImageNotifier(application)
         notifier.onClear()
 
         val filename = generateFilename(manga, page)
@@ -1247,8 +1256,7 @@ internal class ReaderViewModel @JvmOverloads constructor(
         if (page?.status != Page.State.Ready) return
         val manga = manga ?: return
 
-        val context = Injekt.get<Application>()
-        val destDir = File(context.cacheDir, "shared_image")
+        val destDir = File(application.cacheDir, "shared_image")
 
         val filename = generateFilename(manga, page)
 
@@ -1301,7 +1309,7 @@ internal class ReaderViewModel @JvmOverloads constructor(
         }
 
         if (manga.favorite) {
-            Injekt.get<EntryCustomCoverWriter>().write(manga.id, inputStream)
+            customCoverWriter.write(manga.id, inputStream)
             updateCoverLastModified(manga.id)
         }
     }

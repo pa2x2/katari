@@ -2,12 +2,20 @@ package eu.kanade.tachiyomi.ui.translator.session
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.Assisted
+import dev.zacsweers.metro.AssistedFactory
+import dev.zacsweers.metro.AssistedInject
+import dev.zacsweers.metro.ContributesIntoMap
+import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
+import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import mihon.app.di.AppUiScope
 import mihon.language.api.tag.LanguageTag
 import mihon.translation.api.TranslationFeature
 import mihon.translation.api.engine.TranslationEngineId
@@ -34,16 +42,23 @@ import mihon.tts.api.request.TtsLanguageSelection
 import mihon.tts.ui.playback.ShortFormSpeechController
 import mihon.tts.ui.playback.ShortFormSpeechPhase
 import mihon.tts.ui.playback.ShortFormSpeechRequest
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
+@AssistedInject
 internal class TranslatorViewModel(
-    initialText: String = "",
-    feature: TranslationFeature = Injekt.get(),
-    private val hostActions: TranslationHostActions = Injekt.get(),
-    ttsFeature: TtsFeature = Injekt.get(),
-    private val languagePreferences: TranslatorLanguagePreferences = Injekt.get(),
+    @Assisted initialText: String,
+    feature: TranslationFeature,
+    private val hostActions: TranslationHostActions,
+    ttsFeature: TtsFeature,
+    private val languagePreferences: TranslatorLanguagePreferences,
 ) : ViewModel() {
+
+    @AssistedFactory
+    @ManualViewModelAssistedFactoryKey
+    @ContributesIntoMap(AppUiScope::class)
+    interface Factory : ManualViewModelAssistedFactory {
+        fun create(initialText: String): TranslatorViewModel
+    }
+
     private val coordinator = TranslationSessionHostCoordinator(
         feature = feature,
         hostActions = hostActions,

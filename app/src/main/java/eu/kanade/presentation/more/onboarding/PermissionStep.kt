@@ -35,11 +35,10 @@ import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
-import uy.kohesive.injekt.injectLazy
 
-internal class PermissionStep : OnboardingStep {
-
-    private val privacyPreferences: PrivacyPreferences by injectLazy()
+internal class PermissionStep(
+    private val privacyPreferences: PrivacyPreferences,
+) : OnboardingStep {
 
     override val isComplete: Boolean = true
 

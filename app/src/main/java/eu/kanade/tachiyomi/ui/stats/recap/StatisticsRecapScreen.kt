@@ -8,10 +8,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import dev.icerock.moko.resources.StringResource
+import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 import eu.kanade.presentation.more.stats.recap.components.rememberRecapFormats
 import eu.kanade.presentation.more.stats.recap.story.RecapStoryPlayer
 import eu.kanade.presentation.util.Screen
@@ -37,7 +37,9 @@ data class StatisticsRecapScreen(private val period: StatisticsRecapPeriod) : Sc
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
         val context = LocalContext.current
-        val viewModel = viewModel { StatisticsRecapViewModel(period) }
+        val viewModel = assistedMetroViewModel<StatisticsRecapViewModel, StatisticsRecapViewModel.Factory> {
+            create(period)
+        }
         val state by viewModel.state.collectAsState()
         val seeds by viewModel.coverSeeds.collectAsState()
         val title = recapPeriodTitle(period)

@@ -42,8 +42,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import logcat.LogPriority
+import mihon.app.di.appGraph
 import mihon.entry.interactions.media.EntryMediaCacheClearResult
-import mihon.entry.interactions.media.EntryMediaCacheFeature
 import mihon.entry.interactions.media.EntryMediaCacheId
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.automirroredrounded.Help
@@ -59,13 +59,10 @@ import tachiyomi.core.common.util.lang.withUIContext
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.backup.service.BackupPreferences
 import tachiyomi.domain.entry.model.Entry
-import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.storage.service.StoragePreferences
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
 object SettingsDataScreen : SearchableSettings {
 
@@ -88,8 +85,9 @@ object SettingsDataScreen : SearchableSettings {
 
     @Composable
     override fun getPreferences(): List<Preference> {
-        val backupPreferences = Injekt.get<BackupPreferences>()
-        val storagePreferences = Injekt.get<StoragePreferences>()
+        val context = LocalContext.current
+        val backupPreferences = context.appGraph.backupPreferences
+        val storagePreferences = context.appGraph.storagePreferences
 
         return listOf(
             getStorageLocationPref(storagePreferences = storagePreferences),
@@ -240,7 +238,7 @@ object SettingsDataScreen : SearchableSettings {
     private fun getDataGroup(): Preference.PreferenceGroup {
         val context = LocalContext.current
         val scope = rememberCoroutineScope()
-        val mediaCacheFeature = remember { Injekt.get<EntryMediaCacheFeature>() }
+        val mediaCacheFeature = remember { context.appGraph.entryMediaCacheFeature }
         val mediaCacheSettings = remember(mediaCacheFeature) { mediaCacheFeature.settings() }
         var cacheSizeSema by remember { mutableIntStateOf(0) }
         val cacheSizes by produceState(emptyMap<EntryMediaCacheId, String>(), mediaCacheSettings, cacheSizeSema) {
@@ -324,7 +322,7 @@ object SettingsDataScreen : SearchableSettings {
 
         val context = LocalContext.current
         val scope = rememberCoroutineScope()
-        val entryRepository = remember { Injekt.get<EntryRepository>() }
+        val entryRepository = remember { context.appGraph.entryRepository }
         var favorites by remember { mutableStateOf<List<Entry>>(emptyList()) }
         LaunchedEffect(Unit) {
             favorites = entryRepository.getFavorites()

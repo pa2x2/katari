@@ -14,9 +14,9 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.ui.browse.migration.entry.components.MigrateEntrySelectionGroup
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
@@ -51,7 +51,9 @@ data class MigrateEntriesScreen(
         val context = LocalContext.current
         val haptic = LocalHapticFeedback.current
         val navigator = LocalNavigator.currentOrThrow
-        val viewModel = viewModel { MigrateEntriesViewModel(sourceId) }
+        val viewModel = assistedMetroViewModel<MigrateEntriesViewModel, MigrateEntriesViewModel.Factory> {
+            create(sourceId)
+        }
 
         val state by viewModel.state.collectAsStateWithLifecycle()
 

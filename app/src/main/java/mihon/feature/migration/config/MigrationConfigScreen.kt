@@ -14,9 +14,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.util.fastForEachIndexed
-import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.ui.browse.migration.search.MigrateSearchScreen
 import mihon.entry.interactions.migration.EntryMigrationOption
@@ -61,8 +61,8 @@ class MigrationConfigScreen private constructor(
         val navigator = LocalNavigator.currentOrThrow
 
         val isSourceSession = sessionGroups != null && originSourceId != null
-        val viewModel = viewModel {
-            MigrationConfigViewModel(
+        val viewModel = assistedMetroViewModel<MigrationConfigViewModel, MigrationConfigViewModel.Factory> {
+            create(
                 requiredEntryTypes = sessionGroups.orEmpty()
                     .flatMap(SourceMigrationSessionGroupDraft::members)
                     .filter { entry -> sessionGroups.orEmpty().any { entry.id in it.selectedEntryIds } }

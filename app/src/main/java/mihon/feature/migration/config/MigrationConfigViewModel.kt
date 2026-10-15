@@ -2,12 +2,20 @@ package mihon.feature.migration.config
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.Assisted
+import dev.zacsweers.metro.AssistedFactory
+import dev.zacsweers.metro.AssistedInject
+import dev.zacsweers.metro.ContributesIntoMap
+import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
+import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.util.system.LocaleHelper
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
+import mihon.app.di.AppUiScope
 import mihon.entry.interactions.catalogue.EntryCatalogueFeature
 import mihon.entry.interactions.migration.EntryMigrationOption
 import mihon.feature.migration.session.SourceMigrationSessionStore
@@ -19,18 +27,28 @@ import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.domain.source.model.EntryCatalogueDescription
 import tachiyomi.domain.source.model.Source
 import tachiyomi.domain.source.service.SourceManager
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
+@AssistedInject
 internal class MigrationConfigViewModel(
-    private val requiredEntryTypes: Set<EntryType>,
-    private val excludedSourceId: Long?,
-    private val persistSourceSelection: Boolean,
-    val sourcePreferences: SourcePreferences = Injekt.get(),
-    private val sourceManager: SourceManager = Injekt.get(),
-    private val catalogueFeature: EntryCatalogueFeature = Injekt.get(),
-    private val sessionStore: SourceMigrationSessionStore = Injekt.get(),
+    @Assisted private val requiredEntryTypes: Set<EntryType>,
+    @Assisted private val excludedSourceId: Long?,
+    @Assisted private val persistSourceSelection: Boolean,
+    val sourcePreferences: SourcePreferences,
+    private val sourceManager: SourceManager,
+    private val catalogueFeature: EntryCatalogueFeature,
+    private val sessionStore: SourceMigrationSessionStore,
 ) : ViewModel() {
+
+    @AssistedFactory
+    @ManualViewModelAssistedFactoryKey
+    @ContributesIntoMap(AppUiScope::class)
+    interface Factory : ManualViewModelAssistedFactory {
+        fun create(
+            requiredEntryTypes: Set<EntryType>,
+            excludedSourceId: Long?,
+            persistSourceSelection: Boolean,
+        ): MigrationConfigViewModel
+    }
 
     val state: StateFlow<MigrationConfigViewModel.State>
         field = MutableStateFlow<MigrationConfigViewModel.State>(State())

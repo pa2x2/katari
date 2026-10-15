@@ -1,10 +1,15 @@
 package tachiyomi.data.entry
 
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.flow.Flow
 import tachiyomi.data.DatabaseHandler
 import tachiyomi.domain.entry.model.DownloadPreferences
 import tachiyomi.domain.entry.repository.DownloadPreferencesRepository
 
+@Inject
+@SingleIn(AppScope::class)
 class DownloadPreferencesRepositoryImpl(
     private val handler: DatabaseHandler,
 ) : DownloadPreferencesRepository {

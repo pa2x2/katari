@@ -1,5 +1,6 @@
 package eu.kanade.domain.extension.interactor
 
+import dev.zacsweers.metro.Inject
 import eu.kanade.domain.extension.model.Extensions
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.tachiyomi.extension.ExtensionManager
@@ -8,6 +9,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import mihon.domain.extension.model.ExtensionStore
 
+@Inject
 class GetExtensionsByType(
     private val preferences: SourcePreferences,
     private val extensionManager: ExtensionManager,

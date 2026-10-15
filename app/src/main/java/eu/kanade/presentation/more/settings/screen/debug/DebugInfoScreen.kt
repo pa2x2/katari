@@ -10,7 +10,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.profileinstaller.ProfileVerifier
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import eu.kanade.domain.base.BasePreferences
+import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.PreferenceScaffold
 import eu.kanade.presentation.more.settings.screen.about.AboutScreen
@@ -22,6 +22,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.guava.await
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import mihon.app.di.appGraph
 import mihon.core.common.FeatureFlags
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Autorenew
@@ -29,8 +30,6 @@ import mihon.presentation.kit.button.IconButton
 import mihon.presentation.kit.theme.ContentTone
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.util.collectAsState
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
 class DebugInfoScreen : Screen() {
 
@@ -66,7 +65,8 @@ class DebugInfoScreen : Screen() {
         val context = LocalContext.current
         val scope = rememberCoroutineScope()
 
-        val installationIdPref = remember { Injekt.get<BasePreferences>().installationId }
+        val installationIdPref = remember { context.appGraph.basePreferences.installationId }
+        val uiPreferences = remember { context.appGraph.uiPreferences }
         val installationId by installationIdPref.collectAsState()
 
         return Preference.PreferenceGroup(
@@ -74,11 +74,13 @@ class DebugInfoScreen : Screen() {
             preferenceItems = listOf(
                 Preference.PreferenceItem.TextPreference(
                     title = "Version",
-                    subtitle = AboutScreen.getVersionName(false),
+                    subtitle = AboutScreen.getVersionName(),
                 ),
                 Preference.PreferenceItem.TextPreference(
                     title = "Build time",
-                    subtitle = AboutScreen.getFormattedBuildTime(),
+                    subtitle = AboutScreen.getFormattedBuildTime(
+                        UiPreferences.dateFormat(uiPreferences.dateFormat.get()),
+                    ),
                 ),
                 Preference.PreferenceItem.TextPreference(
                     title = "Installation ID",

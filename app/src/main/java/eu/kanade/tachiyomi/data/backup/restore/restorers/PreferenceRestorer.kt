@@ -2,6 +2,7 @@ package eu.kanade.tachiyomi.data.backup.restore.restorers
 
 import android.content.Context
 import android.util.Log
+import dev.zacsweers.metro.Inject
 import eu.kanade.domain.source.service.LegacyNsfwSourceConversion
 import eu.kanade.tachiyomi.data.backup.create.BackupCreateJob
 import eu.kanade.tachiyomi.data.backup.models.BackupCategory
@@ -23,19 +24,23 @@ import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.core.common.preference.plusAssign
 import tachiyomi.domain.category.interactor.GetCategories
 import tachiyomi.domain.category.model.Category
+import tachiyomi.domain.category.repository.CategoryRepository
 import tachiyomi.domain.download.service.DownloadPreferences
 import tachiyomi.domain.library.service.LibraryPreferences
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
+import tachiyomi.domain.library.update.repository.LibraryUpdateRulesRepository
 
+@Inject
 class PreferenceRestorer(
     private val context: Context,
-    private val getCategories: GetCategories = Injekt.get(),
-    private val preferenceStore: PreferenceStore = Injekt.get(),
-    private val profileStore: ProfileStore = Injekt.get(),
-    private val legacyUpdateCategoriesConversion: LegacyUpdateCategoriesConversion =
-        LegacyUpdateCategoriesConversion(Injekt.get(), Injekt.get()),
+    private val getCategories: GetCategories,
+    private val preferenceStore: PreferenceStore,
+    private val profileStore: ProfileStore,
+    categoryRepository: CategoryRepository,
+    updateRulesRepository: LibraryUpdateRulesRepository,
 ) {
+    private val legacyUpdateCategoriesConversion =
+        LegacyUpdateCategoriesConversion(categoryRepository, updateRulesRepository)
+
     suspend fun restoreApp(
         preferences: List<BackupPreference>,
         backupCategories: List<BackupCategory>?,

@@ -9,8 +9,8 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
-import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.domain.ui.model.AppTheme
+import mihon.core.metro.metroGraph
 import mihon.presentation.kit.theme.colorscheme.BaseColorScheme
 import mihon.presentation.kit.theme.colorscheme.CatppuccinColorScheme
 import mihon.presentation.kit.theme.colorscheme.GreenAppleColorScheme
@@ -27,8 +27,6 @@ import mihon.presentation.kit.theme.colorscheme.TidalWaveColorScheme
 import mihon.presentation.kit.theme.colorscheme.TokyoNightColorScheme
 import mihon.presentation.kit.theme.colorscheme.YinYangColorScheme
 import mihon.presentation.kit.theme.colorscheme.YotsubaColorScheme
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
 @Composable
 fun KatariTheme(
@@ -36,7 +34,8 @@ fun KatariTheme(
     amoled: Boolean? = null,
     content: @Composable () -> Unit,
 ) {
-    val uiPreferences = Injekt.get<UiPreferences>()
+    val context = LocalContext.current
+    val uiPreferences = remember(context) { context.metroGraph<KatariThemeGraph>().uiPreferences }
     BaseKatariTheme(
         appTheme = appTheme ?: uiPreferences.appTheme.get(),
         isAmoled = amoled ?: uiPreferences.themeDarkAmoled.get(),

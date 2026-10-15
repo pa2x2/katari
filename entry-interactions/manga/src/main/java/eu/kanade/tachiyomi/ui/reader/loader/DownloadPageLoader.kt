@@ -1,6 +1,6 @@
 package eu.kanade.tachiyomi.ui.reader.loader
 
-import android.app.Application
+import android.content.Context
 import android.net.Uri
 import com.hippo.unifile.UniFile
 import eu.kanade.tachiyomi.data.database.models.toDomainChapter
@@ -13,20 +13,18 @@ import mihon.core.archive.archiveReader
 import mihon.entry.interactions.manga.download.DownloadManager
 import mihon.entry.interactions.manga.download.DownloadProvider
 import tachiyomi.domain.entry.model.Entry
-import uy.kohesive.injekt.injectLazy
 
 /**
  * Loader used to load a chapter from the downloaded chapters.
  */
 internal class DownloadPageLoader(
+    private val context: Context,
     private val chapter: ReaderChapter,
     private val manga: Entry,
     private val source: UnifiedSource,
     private val downloadManager: DownloadManager,
     private val downloadProvider: DownloadProvider,
 ) : PageLoader() {
-
-    private val context: Application by injectLazy()
 
     private var archivePageLoader: ArchivePageLoader? = null
 

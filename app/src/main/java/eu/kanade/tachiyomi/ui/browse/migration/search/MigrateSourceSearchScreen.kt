@@ -7,9 +7,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.ui.platform.LocalContext
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 import eu.kanade.core.util.ifSourcesLoaded
 import eu.kanade.presentation.browse.CatalogContent
 import eu.kanade.presentation.util.Screen
@@ -22,11 +23,9 @@ import eu.kanade.tachiyomi.ui.entry.EntryScreen
 import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.tachiyomi.ui.webview.WebViewScreen
 import kotlinx.coroutines.launch
-import mihon.entry.interactions.migration.EntryMigrationFeature
+import mihon.app.di.appGraph
 import mihon.entry.interactions.migration.EntryMigrationPreparationResult
 import mihon.entry.interactions.migration.EntryMigrationPrepareIntent
-import mihon.entry.interactions.source.EntrySourceHomeFeature
-import mihon.entry.interactions.source.EntrySourceHomeResolution
 import mihon.feature.migration.dialog.MigrateEntryDialog
 import mihon.feature.migration.list.MigrationListScreen
 import mihon.icons.materialsymbols.MaterialSymbols
@@ -42,8 +41,6 @@ import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.source.model.CatalogListItem
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
 data class MigrateSourceSearchScreen(
     private val currentEntry: Entry,
@@ -60,12 +57,17 @@ data class MigrateSourceSearchScreen(
 
         val navigator = LocalNavigator.currentOrThrow
         val scope = rememberCoroutineScope()
-        val migration = remember { Injekt.get<EntryMigrationFeature>() }
-        val viewModel = viewModel {
-            CatalogViewModel(
+        val context = LocalContext.current
+        val migration = remember { context.appGraph.entryMigrationFeature }
+        val viewModel = assistedMetroViewModel<CatalogViewModel, CatalogViewModel.Factory> {
+            create(
                 sourceId = sourceId,
                 listingQuery = query,
                 migrationEntryType = currentEntry.type,
+                initialFilterSnapshot = emptyList(),
+                initialPresetId = null,
+                openFilterSheetOnStart = false,
+                feedProfileId = null,
             )
         }
         val state by viewModel.state.collectAsState()
@@ -138,13 +140,11 @@ data class MigrateSourceSearchScreen(
                 },
                 onWebViewClick = {
                     val source = viewModel.catalogSource
-                    val home = source?.let {
-                        Injekt.get<EntrySourceHomeFeature>().resolve(it.id)
-                    } as? EntrySourceHomeResolution.Available
-                    if (source != null && home != null) {
+                    val homeUrl = viewModel.homeUrl
+                    if (source != null && homeUrl != null) {
                         navigator.push(
                             WebViewScreen(
-                                url = home.url,
+                                url = homeUrl,
                                 initialTitle = source.name,
                                 sourceId = source.id,
                             ),

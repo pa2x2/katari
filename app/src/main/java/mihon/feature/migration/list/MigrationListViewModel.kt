@@ -3,6 +3,13 @@ package mihon.feature.migration.list
 import androidx.annotation.FloatRange
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.Assisted
+import dev.zacsweers.metro.AssistedFactory
+import dev.zacsweers.metro.AssistedInject
+import dev.zacsweers.metro.ContributesIntoMap
+import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
+import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
 import eu.kanade.domain.source.service.SourcePreferences
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
@@ -20,6 +27,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import logcat.LogPriority
+import mihon.app.di.AppUiScope
 import mihon.entry.interactions.catalogue.EntryCatalogueFeature
 import mihon.entry.interactions.catalogue.EntryCatalogueSourceInfo
 import mihon.entry.interactions.migration.EntryMigrationExecuteIntent
@@ -48,25 +56,32 @@ import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.source.service.SourceManager
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
+@AssistedInject
 class MigrationListViewModel(
-    subjects: Collection<EntryMigrationSubject>,
-    extraSearchQuery: String?,
-    private val selectedOptions: Set<EntryMigrationOption>,
-    private val preferences: SourcePreferences = Injekt.get(),
-    private val sourceManager: SourceManager = Injekt.get(),
-    private val networkToLocalEntry: NetworkToLocalEntry = Injekt.get(),
-    private val entryChapterRepository: EntryChapterRepository = Injekt.get(),
-    private val entryRepository: EntryRepository = Injekt.get(),
-    private val migration: EntryMigrationFeature = Injekt.get(),
-    private val catalogueFeature: EntryCatalogueFeature = Injekt.get(),
-    private val mergeContextResolver: MigrationMergeContextResolver = MigrationMergeContextResolver(
-        Injekt.get(),
-        entryRepository,
-    ),
+    @Assisted subjects: Collection<EntryMigrationSubject>,
+    @Assisted extraSearchQuery: String?,
+    @Assisted private val selectedOptions: Set<EntryMigrationOption>,
+    private val preferences: SourcePreferences,
+    private val sourceManager: SourceManager,
+    private val networkToLocalEntry: NetworkToLocalEntry,
+    private val entryChapterRepository: EntryChapterRepository,
+    private val entryRepository: EntryRepository,
+    private val migration: EntryMigrationFeature,
+    private val catalogueFeature: EntryCatalogueFeature,
+    private val mergeContextResolver: MigrationMergeContextResolver,
 ) : ViewModel() {
+
+    @AssistedFactory
+    @ManualViewModelAssistedFactoryKey
+    @ContributesIntoMap(AppUiScope::class)
+    interface Factory : ManualViewModelAssistedFactory {
+        fun create(
+            subjects: Collection<EntryMigrationSubject>,
+            extraSearchQuery: String?,
+            selectedOptions: Set<EntryMigrationOption>,
+        ): MigrationListViewModel
+    }
 
     val state: StateFlow<MigrationListViewModel.State>
         field = MutableStateFlow<MigrationListViewModel.State>(State())

@@ -17,12 +17,12 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
 import cafe.adriel.voyager.navigator.tab.TabOptions
+import dev.zacsweers.metrox.viewmodel.metroViewModel
 import eu.kanade.presentation.category.components.ChangeCategoryDialog
 import eu.kanade.presentation.entry.DownloadAction
 import eu.kanade.presentation.entry.components.MergeEditorDialog
@@ -59,9 +59,8 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
-import mihon.entry.interactions.navigation.EntryContinueFeature
+import mihon.app.di.appGraph
 import mihon.feature.migration.config.MigrationConfigScreen
-import mihon.feature.profiles.core.ProfileManager
 import mihon.presentation.kit.feedback.LoadingScreen
 import mihon.presentation.kit.feedback.SnackbarHost
 import mihon.presentation.kit.feedback.SnackbarHostState
@@ -71,8 +70,6 @@ import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.domain.library.model.LibraryItem
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 import androidx.compose.runtime.collectAsState as collectFlowAsState
 
 data object LibraryTab : Tab {
@@ -99,14 +96,12 @@ data object LibraryTab : Tab {
         val context = LocalContext.current
         val scope = rememberCoroutineScope()
         val haptic = LocalHapticFeedback.current
-        val profileManager = remember { Injekt.get<ProfileManager>() }
+        val profileManager = remember { context.appGraph.profileManager }
         val activeProfile by profileManager.activeProfile.collectFlowAsState()
         val visibleProfiles by profileManager.visibleProfiles.collectFlowAsState()
-        val entryContinueFeature = remember { Injekt.get<EntryContinueFeature>() }
 
-        val viewModel = viewModel { LibraryViewModel(context.applicationContext) }
-        val settingsViewModel =
-            viewModel(key = activeProfile?.id?.toString()) { LibrarySettingsViewModel() }
+        val viewModel = metroViewModel<LibraryViewModel>()
+        val settingsViewModel = metroViewModel<LibrarySettingsViewModel>(key = activeProfile?.id?.toString())
         val state by viewModel.state.collectAsStateWithLifecycle()
         val updateProgress by viewModel.updateProgress.collectAsStateWithLifecycle()
 
@@ -247,12 +242,12 @@ data object LibraryTab : Tab {
                         },
                         onContinueReadingClicked = { item: LibraryItem ->
                             scope.launchIO {
-                                entryContinueFeature.continueEntry(context, item.entry)
+                                viewModel.continueEntry(context, item.entry)
                             }
                             Unit
                         }.takeIf { state.showContinueButton },
                         isContinueReadingAvailable = { item ->
-                            entryContinueFeature.isApplicable(item.entry.type)
+                            viewModel.canContinue(item.entry.type)
                         },
                         onToggleSelection = viewModel::toggleSelection,
                         onToggleRangeSelection = { page, item ->

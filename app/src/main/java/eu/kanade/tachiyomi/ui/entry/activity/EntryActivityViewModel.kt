@@ -3,6 +3,13 @@ package eu.kanade.tachiyomi.ui.entry.activity
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.Assisted
+import dev.zacsweers.metro.AssistedFactory
+import dev.zacsweers.metro.AssistedInject
+import dev.zacsweers.metro.ContributesIntoMap
+import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
+import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
 import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -11,6 +18,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import logcat.LogPriority
+import mihon.app.di.AppUiScope
 import mihon.entry.interactions.statistics.EntryStatisticsFeature
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.system.logcat
@@ -19,8 +27,6 @@ import tachiyomi.domain.statistics.entry.EntryActivitySummary
 import tachiyomi.domain.statistics.entry.EntryCatchUpPace
 import tachiyomi.domain.statistics.entry.EntryChapterDuration
 import tachiyomi.domain.statistics.entry.EntryChapterPace
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 import java.time.LocalDate
 
 /**
@@ -29,13 +35,21 @@ import java.time.LocalDate
  *
  * @param memberIds the merged title's members, or the entry alone.
  */
+@AssistedInject
 class EntryActivityViewModel(
-    private val profileId: Long,
-    private val type: EntryType,
-    memberIds: List<Long>,
-    private val repository: EntryActivityRepository = Injekt.get(),
-    statisticsFeature: EntryStatisticsFeature = Injekt.get(),
+    @Assisted private val profileId: Long,
+    @Assisted private val type: EntryType,
+    @Assisted memberIds: List<Long>,
+    private val repository: EntryActivityRepository,
+    statisticsFeature: EntryStatisticsFeature,
 ) : ViewModel() {
+
+    @AssistedFactory
+    @ManualViewModelAssistedFactoryKey
+    @ContributesIntoMap(AppUiScope::class)
+    interface Factory : ManualViewModelAssistedFactory {
+        fun create(profileId: Long, type: EntryType, memberIds: List<Long>): EntryActivityViewModel
+    }
 
     val state: StateFlow<EntryActivityViewModel.State>
         field = MutableStateFlow<EntryActivityViewModel.State>(State())

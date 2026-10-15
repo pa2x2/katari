@@ -19,16 +19,12 @@ import eu.kanade.tachiyomi.ui.stats.recap.period.StatisticsRecapPeriod
 import eu.kanade.tachiyomi.util.system.notify
 import eu.kanade.tachiyomi.util.system.workManager
 import logcat.LogPriority
-import mihon.feature.profiles.core.ProfileStore
+import mihon.app.di.appGraph
 import tachiyomi.core.common.i18n.pluralStringResource
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.system.logcat
-import tachiyomi.data.ActiveProfileProvider
-import tachiyomi.domain.statistics.recap.StatisticsRecapRepository
 import tachiyomi.domain.statistics.service.StatisticsPreferences
 import tachiyomi.i18n.*
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -46,9 +42,11 @@ import java.util.concurrent.TimeUnit
 class StatisticsRecapNotificationJob(context: Context, workerParams: WorkerParameters) :
     CoroutineWorker(context, workerParams) {
 
+    private val graph = context.appGraph
+
     override suspend fun doWork(): Result {
-        val profileId = Injekt.get<ActiveProfileProvider>().activeProfileId
-        val preferences = StatisticsPreferences(Injekt.get<ProfileStore>().profileStore(profileId))
+        val profileId = graph.activeProfileProvider.activeProfileId
+        val preferences = StatisticsPreferences(graph.profileStore.profileStore(profileId))
         return try {
             notifyMonthIfDue(profileId, preferences)
             notifyYearIfDue(profileId, preferences)
@@ -115,7 +113,7 @@ class StatisticsRecapNotificationJob(context: Context, workerParams: WorkerParam
     }
 
     private suspend fun headlineOf(profileId: Long, period: StatisticsRecapPeriod): StatisticsRecapHeadline? {
-        val activity = Injekt.get<StatisticsRecapRepository>()
+        val activity = graph.statisticsRecapRepository
             .getActivity(profileId, period.start.toString(), period.end.toString())
         return recapHeadline(period, activity)
     }
@@ -145,8 +143,9 @@ class StatisticsRecapNotificationJob(context: Context, workerParams: WorkerParam
 
         /** Matches the schedule to the active profile's settings. */
         fun setupTask(context: Context) {
-            val profileId = Injekt.get<ActiveProfileProvider>().activeProfileId
-            val preferences = StatisticsPreferences(Injekt.get<ProfileStore>().profileStore(profileId))
+            val graph = context.appGraph
+            val profileId = graph.activeProfileProvider.activeProfileId
+            val preferences = StatisticsPreferences(graph.profileStore.profileStore(profileId))
             if (!preferences.monthlyRecapNotification.get() && !preferences.yearlyRecapNotification.get()) {
                 context.workManager.cancelUniqueWork(TAG)
                 return
@@ -165,7 +164,7 @@ class StatisticsRecapNotificationJob(context: Context, workerParams: WorkerParam
          * already over.
          */
         fun setEnabled(context: Context, profileId: Long, notifications: StatsRecapNotifications) {
-            val preferences = StatisticsPreferences(Injekt.get<ProfileStore>().profileStore(profileId))
+            val preferences = StatisticsPreferences(context.appGraph.profileStore.profileStore(profileId))
             if (notifications.monthly && !preferences.monthlyRecapNotification.get()) {
                 preferences.lastRecapNotificationMonth.set(YearMonth.now().minusMonths(1L).toString())
             }

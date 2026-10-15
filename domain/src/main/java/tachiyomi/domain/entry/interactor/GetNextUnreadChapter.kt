@@ -1,8 +1,10 @@
 package tachiyomi.domain.entry.interactor
 
+import dev.zacsweers.metro.Inject
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 
+@Inject
 class GetNextUnreadChapter(
     private val entryChapterRepository: EntryChapterRepository,
 ) {

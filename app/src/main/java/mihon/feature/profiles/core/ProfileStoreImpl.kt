@@ -14,13 +14,11 @@ import kotlinx.coroutines.flow.onEach
 import tachiyomi.core.common.preference.AndroidPreferenceStore
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.PreferenceStore
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 import java.io.File
 
 class ProfileStoreImpl(
     private val application: Application,
-    private val profilesPreferences: ProfilesPreferences = Injekt.get(),
+    private val profilesPreferences: ProfilesPreferences,
 ) : ProfileAwareStore {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)

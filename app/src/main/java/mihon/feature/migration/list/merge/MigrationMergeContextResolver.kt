@@ -1,9 +1,11 @@
 package mihon.feature.migration.list.merge
 
+import dev.zacsweers.metro.Inject
 import mihon.entry.interactions.merge.EntryMergeLibraryGroupingFeature
 import mihon.feature.migration.list.models.MigrationMergeContext
 import tachiyomi.domain.entry.repository.EntryRepository
 
+@Inject
 class MigrationMergeContextResolver(
     private val grouping: EntryMergeLibraryGroupingFeature,
     private val entryRepository: EntryRepository,

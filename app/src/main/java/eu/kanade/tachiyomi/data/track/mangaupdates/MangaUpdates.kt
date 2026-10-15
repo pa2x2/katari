@@ -5,13 +5,17 @@ import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.database.models.Track
 import eu.kanade.tachiyomi.data.track.BaseTracker
 import eu.kanade.tachiyomi.data.track.DeletableTracker
+import eu.kanade.tachiyomi.data.track.TrackerDependencies
 import eu.kanade.tachiyomi.data.track.mangaupdates.dto.MUListItem
 import eu.kanade.tachiyomi.data.track.mangaupdates.dto.MURating
 import eu.kanade.tachiyomi.data.track.model.TrackSearch
 import tachiyomi.i18n.*
 import tachiyomi.domain.track.model.EntryTrack as DomainTrack
 
-class MangaUpdates(id: Long) : BaseTracker(id, "MangaUpdates"), DeletableTracker {
+class MangaUpdates(
+    id: Long,
+    dependencies: TrackerDependencies,
+) : BaseTracker(id, "MangaUpdates", dependencies), DeletableTracker {
 
     override val accountOrder = 4
 
@@ -38,7 +42,7 @@ class MangaUpdates(id: Long) : BaseTracker(id, "MangaUpdates"), DeletableTracker
 
     private val interceptor by lazy { MangaUpdatesInterceptor(this) }
 
-    private val api by lazy { MangaUpdatesApi(client, interceptor) }
+    private val api by lazy { MangaUpdatesApi(client, interceptor, json) }
 
     override fun getLogo(): Int = R.drawable.brand_mangaupdates
 

@@ -1,5 +1,6 @@
 package eu.kanade.domain.track.interactor
 
+import dev.zacsweers.metro.Inject
 import eu.kanade.domain.track.model.toDbTrack
 import eu.kanade.tachiyomi.data.track.EnhancedTracker
 import eu.kanade.tachiyomi.data.track.Tracker
@@ -17,6 +18,7 @@ import kotlin.math.max
  * Marks chapters read up to an enhanced tracker's progress. Only enhanced trackers follow the library this way; for the
  * others tracking is one-way, so what changes on their sites never reaches the chapters.
  */
+@Inject
 class SyncChapterProgressWithTrack(
     private val entryChapterRepository: EntryChapterRepository,
     private val entryConsumptionFeature: EntryConsumptionFeature,

@@ -14,14 +14,15 @@ import mihon.graphql.suwayomi.SuwayomiGetMangaUnreadChaptersQuery
 import mihon.graphql.suwayomi.SuwayomiMarkAndDeleteChaptersMutation
 import mihon.graphql.suwayomi.SuwayomiMarkChaptersReadMutation
 import mihon.graphql.suwayomi.SuwayomiUpdateMangaProgressMutation
-import uy.kohesive.injekt.injectLazy
 import java.security.MessageDigest
 
-class SuwayomiApi(private val trackerId: Long) {
+class SuwayomiApi(
+    private val trackerId: Long,
+    private val sourceAdapterFeature: Lazy<EntryTrackerSourceAdapterFeature>,
+) {
 
-    private val sourceAdapterFeature: EntryTrackerSourceAdapterFeature by injectLazy()
     private val sourceAdapter: EntryTrackerSourceAdapterResolution.Available by lazy {
-        sourceAdapterFeature.resolve(sourceId) as? EntryTrackerSourceAdapterResolution.Available
+        sourceAdapterFeature.value.resolve(sourceId) as? EntryTrackerSourceAdapterResolution.Available
             ?: error("Source $sourceId does not provide the Suwayomi tracker connection")
     }
     private val baseUrl: String by lazy { sourceAdapter.homeUrl.trimEnd('/') }

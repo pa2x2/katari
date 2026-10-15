@@ -21,9 +21,8 @@ import tachiyomi.domain.source.model.UnifiedStubSource
 import tachiyomi.domain.source.repository.StubSourceRepository
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.source.local.LocalSource
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
-import uy.kohesive.injekt.injectLazy
+import tachiyomi.source.local.image.LocalCoverManager
+import tachiyomi.source.local.io.LocalSourceFileSystem
 import java.util.concurrent.ConcurrentHashMap
 
 class AndroidSourceManager(
@@ -31,12 +30,13 @@ class AndroidSourceManager(
     private val extensionManager: ExtensionManager,
     private val sourceRepository: StubSourceRepository,
     private val scope: CoroutineScope,
+    private val downloadMaintenance: Lazy<EntryDownloadMaintenanceFeature>,
+    private val localSourceFileSystem: Lazy<LocalSourceFileSystem>,
+    private val localCoverManager: Lazy<LocalCoverManager>,
 ) : SourceManager {
 
     private val _isInitialized = MutableStateFlow(false)
     override val isInitialized: StateFlow<Boolean> = _isInitialized.asStateFlow()
-
-    private val downloadMaintenance: EntryDownloadMaintenanceFeature by injectLazy()
 
     private val sourcesMap = ConcurrentHashMap<Long, UnifiedSource>()
     private val stubSourcesMap = ConcurrentHashMap<Long, StubSource>()
@@ -52,8 +52,8 @@ class AndroidSourceManager(
                     val extensionSources = mapUnifiedSources(extensions)
                     val localSource = LocalSource(
                         context,
-                        Injekt.get(),
-                        Injekt.get(),
+                        localSourceFileSystem.value,
+                        localCoverManager.value,
                     )
                     val allSources = extensionSources + (localSource.id to localSource)
 
@@ -147,7 +147,7 @@ class AndroidSourceManager(
             if (dbSource == stub) return@launch
             sourceRepository.upsertStubSource(stub.id, stub.lang, stub.name)
             if (dbSource != null) {
-                downloadMaintenance.renameSource(UnifiedStubSource(dbSource), UnifiedStubSource(stub))
+                downloadMaintenance.value.renameSource(UnifiedStubSource(dbSource), UnifiedStubSource(stub))
             }
         }
     }

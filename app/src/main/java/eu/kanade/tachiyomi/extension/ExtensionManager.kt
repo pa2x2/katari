@@ -1,9 +1,11 @@
 package eu.kanade.tachiyomi.extension
 
 import android.content.Context
+import eu.kanade.domain.base.BasePreferences
 import eu.kanade.domain.extension.interactor.TrustExtension
 import eu.kanade.domain.source.service.GlobalSourcePreferences
 import eu.kanade.domain.source.service.SourcePreferences
+import eu.kanade.tachiyomi.core.security.SecurityPreferences
 import eu.kanade.tachiyomi.extension.installer.ExtensionInstallOperation
 import eu.kanade.tachiyomi.extension.installer.ExtensionInstallRouting
 import eu.kanade.tachiyomi.extension.installer.routing
@@ -18,6 +20,7 @@ import eu.kanade.tachiyomi.extension.update.ExtensionUpdateNotifier
 import eu.kanade.tachiyomi.extension.util.ExtensionInstallReceiver
 import eu.kanade.tachiyomi.extension.util.ExtensionInstaller
 import eu.kanade.tachiyomi.extension.util.ExtensionLoader
+import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
@@ -52,8 +55,6 @@ import tachiyomi.core.common.util.lang.withUIContext
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.source.model.StubSource
 import tachiyomi.i18n.*
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 import java.util.Locale
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
@@ -67,15 +68,18 @@ import java.util.concurrent.atomic.AtomicBoolean
  */
 class ExtensionManager(
     private val context: Context,
-    private val preferences: SourcePreferences = Injekt.get(),
-    private val globalPreferences: GlobalSourcePreferences = Injekt.get(),
-    private val trustExtension: TrustExtension = Injekt.get(),
-    private val profileDatabase: ProfileDatabase = Injekt.get(),
-    private val profileStore: ProfileAwareStore = Injekt.get(),
-    private val extensionStoreRepository: ExtensionStoreRepository = Injekt.get(),
-    private val updateExtensionStores: UpdateExtensionStores = Injekt.get(),
-    private val customPreferences: GlobalCustomPreferences = Injekt.get(),
-    private val scope: CoroutineScope = Injekt.get(),
+    private val preferences: SourcePreferences,
+    private val globalPreferences: GlobalSourcePreferences,
+    private val trustExtension: TrustExtension,
+    private val profileDatabase: ProfileDatabase,
+    private val profileStore: ProfileAwareStore,
+    private val extensionStoreRepository: ExtensionStoreRepository,
+    private val updateExtensionStores: UpdateExtensionStores,
+    private val customPreferences: GlobalCustomPreferences,
+    private val basePreferences: BasePreferences,
+    private val securityPreferences: SecurityPreferences,
+    private val networkHelper: Lazy<NetworkHelper>,
+    private val scope: CoroutineScope,
 ) {
 
     private val isInitialized = MutableStateFlow(false)
@@ -90,9 +94,9 @@ class ExtensionManager(
     /**
      * The installer which installs, updates and uninstalls the extensions.
      */
-    private val installer by lazy { ExtensionInstaller(context, scope) }
+    private val installer by lazy { ExtensionInstaller(context, scope, basePreferences, networkHelper) }
 
-    private val updateNotifier by lazy { ExtensionUpdateNotifier(context) }
+    private val updateNotifier by lazy { ExtensionUpdateNotifier(context, securityPreferences) }
 
     private val autoUpdater by lazy { ExtensionAutoUpdater(installer, updateNotifier) }
 

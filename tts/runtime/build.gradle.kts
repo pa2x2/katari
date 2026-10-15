@@ -1,6 +1,8 @@
 plugins {
     alias(mihonx.plugins.android.library)
     alias(mihonx.plugins.spotless)
+
+    alias(libs.plugins.metro)
 }
 
 android {
@@ -15,7 +17,6 @@ dependencies {
     implementation(projects.featureRuntime)
     implementation(projects.language.runtime)
     implementation(projects.tts.spi)
-    implementation(libs.injekt)
     implementation(libs.kotlinx.coroutines.core)
 
     testImplementation(libs.bundles.test)

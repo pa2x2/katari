@@ -26,6 +26,7 @@ import coil3.request.crossfade
 import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.sourceNotInstalledName
+import mihon.app.di.appGraph
 import mihon.entry.interactions.migration.EntryMigrationAvailability
 import mihon.entry.interactions.migration.EntryMigrationFeature
 import mihon.icons.materialsymbols.MaterialSymbols
@@ -54,15 +55,11 @@ import mihon.presentation.kit.theme.TextRole
 import tachiyomi.domain.entry.model.DuplicateEntryCandidate
 import tachiyomi.domain.entry.model.DuplicateMatchReason
 import tachiyomi.domain.entry.model.Entry
-import tachiyomi.domain.library.service.DuplicatePreferences
 import tachiyomi.domain.source.model.SourceDisplayInfo
-import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
 @Composable
 fun DuplicateEntryDialog(
@@ -73,8 +70,9 @@ fun DuplicateEntryDialog(
     onMigrate: (entry: Entry) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val sourceManager = remember { Injekt.get<SourceManager>() }
-    val migration = remember { Injekt.get<EntryMigrationFeature>() }
+    val context = LocalContext.current
+    val sourceManager = remember { context.appGraph.sourceManager }
+    val migration = remember { context.appGraph.entryMigrationFeature }
     val horizontalPadding = PaddingValues(horizontal = KatariTheme.spacing.rowInset)
     val horizontalPaddingModifier = Modifier.padding(horizontalPadding)
 
@@ -152,10 +150,11 @@ private fun DuplicateEntryListItem(
     onOpenEntry: () -> Unit,
     onMigrate: (() -> Unit)?,
 ) {
+    val context = LocalContext.current
     val sourceInfo = getSourceInfo()
     val entry = duplicate.entry
     val statusPresentation = entry.status.presentation()
-    val duplicatePreferences = remember { Injekt.get<DuplicatePreferences>() }
+    val duplicatePreferences = remember { context.appGraph.duplicatePreferences }
     val extendedEnabled by duplicatePreferences.extendedDuplicateDetectionEnabled.collectAsState()
 
     // A strong match is filled with the error container, so it stands out even without its score badge.

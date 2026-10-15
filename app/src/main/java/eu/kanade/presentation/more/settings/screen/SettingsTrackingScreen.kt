@@ -12,17 +12,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import eu.kanade.domain.track.model.AutoTrackState
-import eu.kanade.domain.track.service.TrackPreferences
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.screen.tracking.TrackingLoginDialog
 import eu.kanade.presentation.more.settings.screen.tracking.TrackingLogoutDialog
 import eu.kanade.tachiyomi.util.system.openInBrowser
 import eu.kanade.tachiyomi.util.system.toast
 import logcat.LogPriority
+import mihon.app.di.appGraph
 import mihon.entry.interactions.tracking.EntryTrackingAccount
 import mihon.entry.interactions.tracking.EntryTrackingAccountOperationResult
 import mihon.entry.interactions.tracking.EntryTrackingCredentialIdentity
-import mihon.entry.interactions.tracking.EntryTrackingFeature
 import mihon.entry.interactions.tracking.EntryTrackingLoginMethod
 import mihon.entry.interactions.tracking.EntryTrackingServiceId
 import mihon.icons.materialsymbols.MaterialSymbols
@@ -35,8 +34,6 @@ import tachiyomi.core.common.util.lang.withUIContext
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
 object SettingsTrackingScreen : SearchableSettings {
 
@@ -57,8 +54,8 @@ object SettingsTrackingScreen : SearchableSettings {
     @Composable
     override fun getPreferences(): List<Preference> {
         val context = LocalContext.current
-        val trackPreferences = remember { Injekt.get<TrackPreferences>() }
-        val trackingFeature = remember { Injekt.get<EntryTrackingFeature>() }
+        val trackPreferences = remember { context.appGraph.trackPreferences }
+        val trackingFeature = remember { context.appGraph.entryTrackingFeature }
         val scope = rememberCoroutineScope()
         val accountSnapshot by trackingFeature.observeAccounts().collectAsState(trackingFeature.currentAccounts())
 

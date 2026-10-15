@@ -4,9 +4,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.tachiyomi.util.system.hasDisplayCutout
+import mihon.app.di.appGraph
 import mihon.entry.interactions.reader.settings.ChapterTransitionMode
 import mihon.entry.interactions.reader.settings.MangaReaderSettings
 import mihon.entry.interactions.reader.settings.ReaderOrientation
@@ -18,8 +20,6 @@ import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 import java.text.NumberFormat
 import tachiyomi.core.common.preference.Preference as CorePreference
 
@@ -33,8 +33,9 @@ object SettingsMangaReaderScreen : AppEntryViewerSettingsScreenProjection() {
 
     @Composable
     override fun getSurfacePreferences(): List<Preference> {
-        val settings = remember { Injekt.get<MangaReaderSettings>() }
-        val settingBinder = remember { Injekt.get<ViewerSettingBinder>() }
+        val context = LocalContext.current
+        val settings = remember { context.appGraph.mangaReaderSettings }
+        val settingBinder = remember { context.appGraph.viewerSettingBinder }
         val defaultReadingMode = settings.profilePreference(settingBinder, settings.reading.readingMode)
         val defaultOrientation = settings.profilePreference(settingBinder, settings.reading.orientation)
 

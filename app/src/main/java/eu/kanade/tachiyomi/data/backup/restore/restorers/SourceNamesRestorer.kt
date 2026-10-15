@@ -1,15 +1,15 @@
 package eu.kanade.tachiyomi.data.backup.restore.restorers
 
+import dev.zacsweers.metro.Inject
 import eu.kanade.tachiyomi.data.backup.models.BackupSource
 import tachiyomi.domain.source.repository.StubSourceRepository
 import tachiyomi.domain.source.service.SourceManager
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
 /** Without a stub, a source that isn't installed has no name for the next backup to write. */
+@Inject
 class SourceNamesRestorer(
-    private val sourceManager: SourceManager = Injekt.get(),
-    private val stubSourceRepository: StubSourceRepository = Injekt.get(),
+    private val sourceManager: SourceManager,
+    private val stubSourceRepository: StubSourceRepository,
 ) {
 
     suspend operator fun invoke(backupSources: List<BackupSource>) {

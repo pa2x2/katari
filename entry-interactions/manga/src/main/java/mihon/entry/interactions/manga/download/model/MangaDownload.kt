@@ -10,13 +10,8 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import mihon.entry.interactions.download.EntryDownloadMessage
-import tachiyomi.domain.entry.interactor.GetEntry
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
-import tachiyomi.domain.entry.repository.EntryChapterRepository
-import tachiyomi.domain.source.service.SourceManager
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 import kotlin.time.Duration.Companion.milliseconds
 
 internal data class MangaDownload(
@@ -67,19 +62,4 @@ internal data class MangaDownload(
             val pages = pages ?: return 0
             return pages.map(Page::progress).average().toInt()
         }
-
-    companion object {
-        suspend fun fromChapterId(
-            chapterId: Long,
-            entryChapterRepository: EntryChapterRepository = Injekt.get(),
-            getEntry: GetEntry = Injekt.get(),
-            sourceManager: SourceManager = Injekt.get(),
-        ): MangaDownload? {
-            val entryChapter = entryChapterRepository.getChapterById(chapterId) ?: return null
-            val entry = getEntry.await(entryChapter.entryId) ?: return null
-            val source = sourceManager.get(entry.source) ?: return null
-
-            return MangaDownload(source, entry, entryChapter)
-        }
-    }
 }

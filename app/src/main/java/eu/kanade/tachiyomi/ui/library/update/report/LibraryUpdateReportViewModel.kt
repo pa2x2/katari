@@ -4,6 +4,10 @@ import android.app.Application
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.ContributesIntoMap
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metrox.viewmodel.ViewModelKey
 import eu.kanade.tachiyomi.data.library.LibraryUpdateJob
 import eu.kanade.tachiyomi.source.visualName
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -15,6 +19,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.launch
+import mihon.app.di.AppUiScope
 import mihon.entry.interactions.migration.EntryMigrationFeature
 import mihon.entry.interactions.migration.EntryMigrationSelectionResult
 import mihon.entry.interactions.migration.EntryMigrationSubject
@@ -30,19 +35,20 @@ import tachiyomi.domain.library.update.model.SourceUpdatePause
 import tachiyomi.domain.library.update.repository.LibraryUpdateReportRepository
 import tachiyomi.domain.library.update.repository.LibraryUpdateRulesRepository
 import tachiyomi.domain.source.service.SourceManager
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
 @OptIn(ExperimentalCoroutinesApi::class)
+@Inject
+@ViewModelKey
+@ContributesIntoMap(AppUiScope::class)
 class LibraryUpdateReportViewModel(
-    private val application: Application = Injekt.get(),
-    private val reportRepository: LibraryUpdateReportRepository = Injekt.get(),
-    private val rulesRepository: LibraryUpdateRulesRepository = Injekt.get(),
-    private val entryRepository: EntryRepository = Injekt.get(),
-    private val libraryPreferences: LibraryPreferences = Injekt.get(),
-    private val sourceManager: SourceManager = Injekt.get(),
-    private val migrationFeature: EntryMigrationFeature = Injekt.get(),
-    private val webViewFeature: EntryWebViewFeature = Injekt.get(),
+    private val application: Application,
+    private val reportRepository: LibraryUpdateReportRepository,
+    private val rulesRepository: LibraryUpdateRulesRepository,
+    private val entryRepository: EntryRepository,
+    private val libraryPreferences: LibraryPreferences,
+    private val sourceManager: SourceManager,
+    private val migrationFeature: EntryMigrationFeature,
+    private val webViewFeature: EntryWebViewFeature,
 ) : ViewModel() {
 
     val state: StateFlow<LibraryUpdateReportViewModel.State>

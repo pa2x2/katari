@@ -1,21 +1,19 @@
 package eu.kanade.tachiyomi.data.backup
 
-import android.content.Context
 import android.net.Uri
+import dev.zacsweers.metro.Inject
 import eu.kanade.tachiyomi.data.backup.models.Backup
 import eu.kanade.tachiyomi.source.visualName
 import mihon.entry.interactions.tracking.EntryTrackingFeature
 import mihon.entry.interactions.tracking.EntryTrackingServiceId
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.domain.source.service.awaitInitialized
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
+@Inject
 class BackupFileValidator(
-    private val context: Context,
-
-    private val sourceManager: SourceManager = Injekt.get(),
-    private val trackingFeature: EntryTrackingFeature = Injekt.get(),
+    private val backupDecoder: BackupDecoder,
+    private val sourceManager: SourceManager,
+    private val trackingFeature: EntryTrackingFeature,
 ) {
 
     /**
@@ -25,7 +23,7 @@ class BackupFileValidator(
      */
     suspend fun validate(uri: Uri): Results {
         val backup = try {
-            BackupDecoder(context).decode(uri)
+            backupDecoder.decode(uri)
         } catch (e: Exception) {
             throw IllegalStateException(e)
         }

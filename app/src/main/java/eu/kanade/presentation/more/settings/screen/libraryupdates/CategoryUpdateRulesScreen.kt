@@ -3,9 +3,9 @@ package eu.kanade.presentation.more.settings.screen.libraryupdates
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 import eu.kanade.presentation.category.visualName
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.PreferenceScreen
@@ -25,7 +25,9 @@ class CategoryUpdateRulesScreen(private val categoryId: Long) : Screen() {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val viewModel = viewModel { CategoryUpdateRulesViewModel(categoryId) }
+        val viewModel = assistedMetroViewModel<CategoryUpdateRulesViewModel, CategoryUpdateRulesViewModel.Factory> {
+            create(categoryId)
+        }
         val state by viewModel.state.collectAsState()
         val overrides = state.rules.overrides
 
