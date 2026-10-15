@@ -1,8 +1,8 @@
 package mihon.entry.interactions.library
 
+import mihon.entry.interactions.download.EntryAutomaticDownloadBatch
+import mihon.entry.interactions.download.EntryAutomaticDownloadCoordinator
 import mihon.entry.interactions.entryContentType
-import mihon.entry.interactions.execute
-import mihon.entry.interactions.runtime.throwFirstFailure
 import mihon.entry.interactions.runtime.toContentTypeId
 import mihon.entry.interactions.source.EntrySourceRefreshFailure
 import mihon.entry.interactions.source.EntrySourceRefreshFeature
@@ -22,8 +22,6 @@ import mihon.feature.graph.FeatureGraphEvaluation
 import mihon.feature.graph.FeatureId
 import mihon.feature.graph.FeatureIntegration
 import mihon.feature.graph.FeatureIntegrationId
-import mihon.feature.graph.execution.FeatureExecutionRuntime
-import mihon.feature.graph.execution.afterFeatureCommitVolatile
 
 internal val ENTRY_LIBRARY_UPDATE_REFRESH_FEATURE_ID = FeatureId("entry.library-update-refresh")
 internal val ENTRY_LIBRARY_UPDATE_REFRESH_OWNER = ContributionOwner("entry-library-update")
@@ -59,14 +57,13 @@ internal object EntryLibraryUpdateRefreshFeatureContributor : FeatureGraphContri
                 ),
             ),
         )
-        sink.add(ENTRY_LIBRARY_UPDATE_NEW_CHILDREN_EXECUTION_POINT)
     }
 }
 
 internal class DefaultEntryLibraryUpdateRefreshFeature(
     evaluation: FeatureGraphEvaluation,
     private val sourceRefresh: EntrySourceRefreshFeature,
-    private val executions: FeatureExecutionRuntime,
+    private val automaticDownloads: () -> EntryAutomaticDownloadCoordinator,
 ) : EntryLibraryUpdateRefreshFeature {
     private val selectedTypes = evaluation.libraryUpdateRefreshContentTypes()
 
@@ -76,7 +73,7 @@ internal class DefaultEntryLibraryUpdateRefreshFeature(
 
     private suspend fun refresh(
         request: EntryLibraryUpdateRefreshRequest,
-        session: EntryLibraryUpdateExecutionSession,
+        automaticDownloadBatch: EntryAutomaticDownloadBatch,
     ): EntryLibraryUpdateRefreshResult {
         check(request.entry.type.toContentTypeId() in selectedTypes) {
             "Entry type ${request.entry.type} was not contributed to Library Update Refresh"
@@ -98,17 +95,7 @@ internal class DefaultEntryLibraryUpdateRefreshFeature(
             is EntrySourceRefreshResult.Refreshed -> {
                 val newChildren = result.insertedChildren.sortedByDescending { it.sourceOrder }
                 if (newChildren.isNotEmpty()) {
-                    executions.afterFeatureCommitVolatile {
-                        execute(
-                            point = ENTRY_LIBRARY_UPDATE_NEW_CHILDREN_EXECUTION_POINT,
-                            contentType = request.entry.type.toContentTypeId(),
-                            event = EntryLibraryUpdateNewChildrenEvent(
-                                request.entry,
-                                newChildren,
-                                session,
-                            ),
-                        ).throwFirstFailure()
-                    }
+                    automaticDownloadBatch.enqueue(request.entry, newChildren)
                 }
                 EntryLibraryUpdateRefreshResult.Updated(newChildren)
             }
@@ -125,18 +112,18 @@ internal class DefaultEntryLibraryUpdateRefreshFeature(
     private class DefaultEntryLibraryUpdateRefreshSession(
         private val feature: DefaultEntryLibraryUpdateRefreshFeature,
     ) : EntryLibraryUpdateRefreshSession {
-        private val executionSession = EntryLibraryUpdateExecutionSession()
+        private val automaticDownloadBatch = feature.automaticDownloads().newLibraryUpdateBatch()
         private var completed = false
 
         override suspend fun refresh(request: EntryLibraryUpdateRefreshRequest): EntryLibraryUpdateRefreshResult {
             check(!completed) { "Cannot refresh after the Library update session completed" }
-            return feature.refresh(request, executionSession)
+            return feature.refresh(request, automaticDownloadBatch)
         }
 
         override fun complete() {
             if (completed) return
             completed = true
-            executionSession.complete()
+            automaticDownloadBatch.complete()
         }
     }
 }

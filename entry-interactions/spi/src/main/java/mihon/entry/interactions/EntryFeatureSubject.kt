@@ -10,12 +10,7 @@ import mihon.feature.graph.FeatureId
 import mihon.feature.graph.FeatureIntegrationId
 import mihon.feature.graph.FeatureIntegrationSubject
 import mihon.feature.graph.FeatureSubjectId
-import mihon.feature.graph.execution.AfterCommitVolatileFeatureExecutionPointDefinition
-import mihon.feature.graph.execution.FeatureAfterCommitVolatileExecutionScope
 import mihon.feature.graph.execution.FeatureExecutionParticipantSubject
-import mihon.feature.graph.execution.FeatureExecutionResult
-import mihon.feature.graph.execution.FeatureTransactionalExecutionScope
-import mihon.feature.graph.execution.TransactionalFeatureExecutionPointDefinition
 import mihon.feature.graph.resolveFeatureContext as resolveSubjectFeatureContext
 
 /** Entry-boundary projection of a generic Feature integration subject. */
@@ -43,18 +38,6 @@ fun resolveFeatureContext(
     integration = integration,
     evidence = evidence,
 )
-
-suspend fun <E : Any> FeatureTransactionalExecutionScope.execute(
-    point: TransactionalFeatureExecutionPointDefinition<E>,
-    contentType: ContentTypeId,
-    event: E,
-): FeatureExecutionResult = execute(point, FeatureSubjectId.EntryContentType(contentType), event)
-
-suspend fun <E : Any> FeatureAfterCommitVolatileExecutionScope.execute(
-    point: AfterCommitVolatileFeatureExecutionPointDefinition<E>,
-    contentType: ContentTypeId,
-    event: E,
-): FeatureExecutionResult = execute(point, FeatureSubjectId.EntryContentType(contentType), event)
 
 private fun FeatureSubjectId.requireEntryContentType(): ContentTypeId = when (this) {
     FeatureSubjectId.Application ->

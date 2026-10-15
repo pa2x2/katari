@@ -6,6 +6,7 @@ import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.IntoSet
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
+import mihon.entry.interactions.download.EntryAutomaticDownloadCoordinator
 import mihon.entry.interactions.download.EntryDownloadActionFeature
 import mihon.entry.interactions.download.EntryDownloadMaintenanceFeature
 import mihon.entry.interactions.library.membership.EntryLibraryMembershipCoordinator
@@ -75,13 +76,14 @@ object EntryLibraryBindings {
 
     @Provides
     @SingleIn(AppScope::class)
-    fun updateRefreshFeature(
+    internal fun updateRefreshFeature(
         composition: FeatureRuntimeComposition,
         sourceRefresh: EntrySourceRefreshFeature,
+        automaticDownloads: () -> EntryAutomaticDownloadCoordinator,
     ): EntryLibraryUpdateRefreshFeature = DefaultEntryLibraryUpdateRefreshFeature(
         evaluation = composition.evaluation,
         sourceRefresh = sourceRefresh,
-        executions = composition.executions,
+        automaticDownloads = automaticDownloads,
     )
 
     @Provides

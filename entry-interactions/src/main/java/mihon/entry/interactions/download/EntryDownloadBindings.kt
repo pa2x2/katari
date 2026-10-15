@@ -27,8 +27,6 @@ import mihon.entry.interactions.migration.consequence.EntryMigrationDurableEvent
 import mihon.entry.interactions.persistence.backup.EntryBackupStateParticipant
 import mihon.entry.interactions.runtime.EntryInteractions
 import mihon.feature.graph.FeatureGraphContributor
-import mihon.feature.graph.execution.FeatureExecutionHandler
-import mihon.feature.graph.execution.FeatureExecutionParticipantBinding
 import mihon.feature.runtime.FeatureRuntimeComposition
 import mihon.feature.runtime.FeatureRuntimeWarmup
 import tachiyomi.domain.category.interactor.GetCategories
@@ -166,23 +164,6 @@ object EntryDownloadBindings {
     fun automaticDownloadGraphContributor(): FeatureGraphContributor = EntryAutomaticDownloadFeatureContributor
 
     @Provides
-    @IntoSet
-    fun automaticDownloadRefreshGraphContributor(): FeatureGraphContributor =
-        EntryAutomaticDownloadRefreshContributor
-
-    @Provides
-    @IntoSet
-    internal fun automaticDownloadSourceRefreshParticipant(
-        coordinator: () -> EntryAutomaticDownloadCoordinator,
-    ): FeatureExecutionParticipantBinding<*> = entryAutomaticDownloadSourceRefreshBinding(coordinator)
-
-    @Provides
-    @IntoSet
-    internal fun automaticDownloadLibraryUpdateParticipant(
-        coordinator: () -> EntryAutomaticDownloadCoordinator,
-    ): FeatureExecutionParticipantBinding<*> = entryAutomaticDownloadLibraryUpdateBinding(coordinator)
-
-    @Provides
     @SingleIn(AppScope::class)
     fun lifecycleEventSink(feature: () -> EntryDownloadLifecycleFeature): EntryDownloadLifecycleEventSink =
         EntryDownloadLifecycleEventSink { event -> feature().onEvent(event) }
@@ -274,26 +255,3 @@ object EntryDownloadBindings {
         feature: () -> EntryDownloadConfigurationBackupFeature,
     ): EntryBackupStateParticipant = EntryDownloadConfigurationBackupParticipant(feature)
 }
-
-internal fun entryAutomaticDownloadSourceRefreshBinding(
-    feature: () -> EntryAutomaticDownloadCoordinator,
-) = FeatureExecutionParticipantBinding(
-    definition = ENTRY_AUTOMATIC_DOWNLOAD_SOURCE_REFRESH_PARTICIPANT,
-    handler = FeatureExecutionHandler { event ->
-        feature().downloadAfterEntryRefresh(event.entry, event.newChildren)
-    },
-)
-
-internal fun entryAutomaticDownloadLibraryUpdateBinding(
-    feature: () -> EntryAutomaticDownloadCoordinator,
-) = FeatureExecutionParticipantBinding(
-    definition = ENTRY_AUTOMATIC_DOWNLOAD_LIBRARY_UPDATE_PARTICIPANT,
-    handler = FeatureExecutionHandler { event ->
-        val batch = event.session.state(
-            participant = ENTRY_AUTOMATIC_DOWNLOAD_LIBRARY_UPDATE_PARTICIPANT.id,
-            create = feature()::newLibraryUpdateBatch,
-            complete = EntryAutomaticDownloadBatch::complete,
-        )
-        batch.enqueue(event.entry, event.newChildren)
-    },
-)

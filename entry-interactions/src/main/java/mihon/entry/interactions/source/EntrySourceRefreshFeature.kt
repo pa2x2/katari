@@ -1,10 +1,8 @@
 package mihon.entry.interactions.source
 
 import kotlinx.coroutines.CancellationException
+import mihon.entry.interactions.download.EntryAutomaticDownloadCoordinator
 import mihon.entry.interactions.download.EntryDownloadRuntimeFeature
-import mihon.entry.interactions.execute
-import mihon.entry.interactions.runtime.throwFirstFailure
-import mihon.entry.interactions.runtime.toContentTypeId
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.ContextInputId
 import mihon.feature.graph.ContributionOwner
@@ -22,8 +20,6 @@ import mihon.feature.graph.FeatureIntegration
 import mihon.feature.graph.FeatureIntegrationId
 import mihon.feature.graph.contextEvidence
 import mihon.feature.graph.contextInputDefinition
-import mihon.feature.graph.execution.FeatureExecutionRuntime
-import mihon.feature.graph.execution.afterFeatureCommitVolatile
 import mihon.feature.graph.featureContextRule
 import tachiyomi.domain.chapter.model.NoChaptersException
 import tachiyomi.domain.entry.interactor.SyncEntryWithSource
@@ -83,13 +79,12 @@ internal object EntrySourceRefreshFeatureContributor : FeatureGraphContributor {
                 ),
             ),
         )
-        sink.add(ENTRY_SOURCE_REFRESH_NEW_CHILDREN_EXECUTION_POINT)
     }
 }
 
 internal class DefaultEntrySourceRefreshFeature(
     private val evaluation: FeatureGraphEvaluation,
-    private val executions: FeatureExecutionRuntime,
+    private val automaticDownloads: () -> EntryAutomaticDownloadCoordinator,
     private val sourceManager: SourceManager,
     private val syncEntryWithSource: SyncEntryWithSource,
     private val downloadRuntime: () -> EntryDownloadRuntimeFeature,
@@ -121,16 +116,7 @@ internal class DefaultEntrySourceRefreshFeature(
             sync.removedChapterIds.forEach { downloadRuntime().cancelQueued(request.entry.type, it) }
             val result = sync.toRefreshResult()
             if (request.manual && result.insertedChildren.isNotEmpty()) {
-                executions.afterFeatureCommitVolatile {
-                    execute(
-                        point = ENTRY_SOURCE_REFRESH_NEW_CHILDREN_EXECUTION_POINT,
-                        contentType = request.entry.type.toContentTypeId(),
-                        event = EntrySourceRefreshNewChildrenEvent(
-                            request.entry,
-                            result.insertedChildren,
-                        ),
-                    ).throwFirstFailure()
-                }
+                automaticDownloads().downloadAfterEntryRefresh(request.entry, result.insertedChildren)
             }
             result
         } catch (error: CancellationException) {

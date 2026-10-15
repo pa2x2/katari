@@ -1,10 +1,8 @@
 package mihon.entry.interactions.download
 
 import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.entry.interactions.library.ENTRY_LIBRARY_UPDATE_NEW_CHILDREN_EXECUTION_POINT
 import mihon.entry.interactions.runtime.applicableProviderTypes
 import mihon.entry.interactions.runtime.requireEntryContextState
-import mihon.entry.interactions.source.ENTRY_SOURCE_REFRESH_NEW_CHILDREN_EXECUTION_POINT
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.ContextInputId
 import mihon.feature.graph.ContributionOwner
@@ -14,7 +12,6 @@ import mihon.feature.graph.FeatureBehaviorProjection
 import mihon.feature.graph.FeatureContextBlocker
 import mihon.feature.graph.FeatureContextDecision
 import mihon.feature.graph.FeatureContribution
-import mihon.feature.graph.FeatureExecutionParticipantId
 import mihon.feature.graph.FeatureGraphContributionSink
 import mihon.feature.graph.FeatureGraphContributor
 import mihon.feature.graph.FeatureGraphEvaluation
@@ -23,7 +20,6 @@ import mihon.feature.graph.FeatureIntegration
 import mihon.feature.graph.FeatureIntegrationId
 import mihon.feature.graph.contextEvidence
 import mihon.feature.graph.contextInputDefinition
-import mihon.feature.graph.execution.FeatureExecutionParticipantDefinition
 import mihon.feature.graph.featureContextRule
 
 internal val ENTRY_AUTOMATIC_DOWNLOAD_FEATURE_ID = FeatureId("entry.download.automatic")
@@ -39,30 +35,6 @@ internal object EntryAutomaticDownloadProviderBehaviorContract : FeatureBehavior
 internal object EntryAutomaticDownloadContextBehaviorContract : FeatureBehaviorContract {
     override val id = FeatureArtifactId("entry.download.automatic.context-behavior")
 }
-
-internal object EntryAutomaticDownloadSourceRefreshBehaviorContract : FeatureBehaviorContract {
-    override val id = FeatureArtifactId("entry.download.automatic.source-refresh.behavior")
-}
-
-internal object EntryAutomaticDownloadLibraryUpdateBehaviorContract : FeatureBehaviorContract {
-    override val id = FeatureArtifactId("entry.download.automatic.library-update.behavior")
-}
-
-internal val ENTRY_AUTOMATIC_DOWNLOAD_SOURCE_REFRESH_PARTICIPANT = FeatureExecutionParticipantDefinition(
-    id = FeatureExecutionParticipantId("entry.download.automatic.source-refresh"),
-    owner = FEATURE_OWNER,
-    point = ENTRY_SOURCE_REFRESH_NEW_CHILDREN_EXECUTION_POINT,
-    prerequisites = CapabilityExpression.Provided(EntryDownloadCapability.definition),
-    behavioralContracts = listOf(EntryAutomaticDownloadSourceRefreshBehaviorContract),
-)
-
-internal val ENTRY_AUTOMATIC_DOWNLOAD_LIBRARY_UPDATE_PARTICIPANT = FeatureExecutionParticipantDefinition(
-    id = FeatureExecutionParticipantId("entry.download.automatic.library-update"),
-    owner = FEATURE_OWNER,
-    point = ENTRY_LIBRARY_UPDATE_NEW_CHILDREN_EXECUTION_POINT,
-    prerequisites = CapabilityExpression.Provided(EntryDownloadCapability.definition),
-    behavioralContracts = listOf(EntryAutomaticDownloadLibraryUpdateBehaviorContract),
-)
 
 private object EntryAutomaticDownloadProviderBehavior : FeatureBehaviorProjection {
     override val id = FeatureArtifactId("entry.download.automatic.provider-dispatch")
@@ -178,15 +150,6 @@ internal object EntryAutomaticDownloadFeatureContributor : FeatureGraphContribut
                 ),
             ),
         )
-    }
-}
-
-internal object EntryAutomaticDownloadRefreshContributor : FeatureGraphContributor {
-    override val owner = FEATURE_OWNER
-
-    override fun contributeTo(sink: FeatureGraphContributionSink) {
-        sink.add(ENTRY_AUTOMATIC_DOWNLOAD_SOURCE_REFRESH_PARTICIPANT)
-        sink.add(ENTRY_AUTOMATIC_DOWNLOAD_LIBRARY_UPDATE_PARTICIPANT)
     }
 }
 

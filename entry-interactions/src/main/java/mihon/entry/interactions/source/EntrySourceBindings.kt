@@ -6,6 +6,7 @@ import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.IntoSet
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
+import mihon.entry.interactions.download.EntryAutomaticDownloadCoordinator
 import mihon.entry.interactions.download.EntryDownloadRuntimeFeature
 import mihon.feature.graph.FeatureGraphContributor
 import mihon.feature.runtime.FeatureRuntimeComposition
@@ -61,15 +62,16 @@ object EntrySourceBindings {
 
     @Provides
     @SingleIn(AppScope::class)
-    fun refreshFeature(
+    internal fun refreshFeature(
         composition: FeatureRuntimeComposition,
         sourceManager: SourceManager,
         syncEntryWithSource: SyncEntryWithSource,
         downloadRuntime: () -> EntryDownloadRuntimeFeature,
         titlePolicy: EntryLibraryTitleUpdatePolicy,
+        automaticDownloads: () -> EntryAutomaticDownloadCoordinator,
     ): EntrySourceRefreshFeature = DefaultEntrySourceRefreshFeature(
         evaluation = composition.evaluation,
-        executions = composition.executions,
+        automaticDownloads = automaticDownloads,
         sourceManager = sourceManager,
         syncEntryWithSource = syncEntryWithSource,
         downloadRuntime = downloadRuntime,

@@ -14,7 +14,10 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
-import mihon.entry.interactions.refresh.refreshFeatureTestComposition
+import mihon.entry.interactions.runtime.EntryInteractionPlugin
+import mihon.entry.interactions.runtime.EntryInteractionProviderBinding
+import mihon.entry.interactions.runtime.createEntryInteractionComposition
+import mihon.feature.graph.ContributionOwner
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.chapter.model.NoChaptersException
 import tachiyomi.domain.entry.interactor.SyncEntryWithSource
@@ -84,10 +87,18 @@ class EntrySourceRefreshFeatureTest {
         sync: SyncEntryWithSource,
         updateTitles: (Long) -> Boolean,
     ): EntrySourceRefreshFeature {
-        val composition = refreshFeatureTestComposition()
+        val plugin = object : EntryInteractionPlugin {
+            override val type = EntryType.BOOK
+            override val owner = ContributionOwner("test.refresh.book")
+            override val providerBindings = emptyList<EntryInteractionProviderBinding<*>>()
+        }
+        val composition = createEntryInteractionComposition(
+            plugins = listOf(plugin),
+            featureContributors = listOf(EntrySourceRefreshFeatureContributor),
+        )
         return DefaultEntrySourceRefreshFeature(
             evaluation = composition.featureGraphEvaluation,
-            executions = composition.featureExecutions,
+            automaticDownloads = { mockk(relaxed = true) },
             sourceManager = sourceManager,
             syncEntryWithSource = sync,
             downloadRuntime = { mockk(relaxed = true) },
