@@ -14,8 +14,10 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.layout
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.CustomAccessibilityAction
@@ -34,7 +36,7 @@ import kotlin.math.roundToInt
 /**
  * Floats translate mode's toolbar over the page. The toolbar can be dragged anywhere clear of the reader's menus, as
  * [menuBounds] measures them; pushed past a side edge, it is tucked into that edge as a tab so it stays out of the way
- * while reading.
+ * while reading. [onBoundsChange] gets where the toolbar or tab is drawn, in this layer's coordinates.
  */
 @Composable
 internal fun MangaReaderTextFloatingControls(
@@ -43,8 +45,12 @@ internal fun MangaReaderTextFloatingControls(
     menuVisible: Boolean,
     menuBounds: ReaderMenuBounds,
     progress: MangaReaderTextProgress,
+    onBoundsChange: (Rect) -> Unit,
     toolbar: @Composable (Modifier) -> Unit,
 ) {
+    val reportBounds = Modifier.onGloballyPositioned { coordinates ->
+        coordinates.parentLayoutCoordinates?.let { layer -> onBoundsChange(layer.localBoundingBoxOf(coordinates)) }
+    }
     val density = LocalDensity.current
     val layoutDirection = LocalLayoutDirection.current
     val insets = WindowInsets.safeDrawing
@@ -82,6 +88,7 @@ internal fun MangaReaderTextFloatingControls(
                             placeable.place(dragged ?: placement.offsetIn(area, size))
                         }
                     }
+                    .then(reportBounds)
                     .pointerInput(Unit) {
                         detectDragGestures(
                             onDragStart = { dragged = currentPlacement.offsetIn(currentArea, size) },
@@ -124,6 +131,7 @@ internal fun MangaReaderTextFloatingControls(
                             placeable.place(x, y)
                         }
                     }
+                    .then(reportBounds)
                     .pointerInput(Unit) {
                         detectVerticalDragGestures { change, amount ->
                             change.consume()

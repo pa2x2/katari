@@ -28,6 +28,7 @@ internal class TranslationPopupPositionProvider(
     private val windowInsets: TranslationWindowInsets,
     private val edgeMargin: Int,
     private val anchorGap: Int,
+    private val avoid: IntRect?,
     private val onPlacementAvailabilityChanged: (TranslationPopupPlacementAvailability) -> Unit,
     private val onPopupBoundsChanged: (Rect?) -> Unit = {},
 ) : PopupPositionProvider {
@@ -68,6 +69,7 @@ internal class TranslationPopupPositionProvider(
                 viewport = viewport,
                 edgeMargin = edgeMargin,
                 anchorGap = anchorGap,
+                avoid = avoid,
             )
         } else {
             null
