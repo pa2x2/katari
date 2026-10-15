@@ -15,13 +15,11 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
 import mihon.entry.interactions.catalogue.EntryCatalogueFeature
-import mihon.entry.interactions.catalogue.EntryCatalogueFeatureContributor
 import mihon.entry.interactions.catalogue.EntryCatalogueFilterSuggestionsResult
 import mihon.entry.interactions.catalogue.EntryCatalogueSearchRequest
 import mihon.entry.interactions.catalogue.host.EntryCatalogueHostSource
 import mihon.entry.interactions.catalogue.host.EntryCatalogueHostSourceResolution
 import mihon.entry.interactions.catalogue.host.EntryCatalogueProviderHost
-import mihon.entry.interactions.validation.productionSubjectEvaluation
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import tachiyomi.domain.source.model.EntryCatalogueDescription
@@ -60,13 +58,8 @@ class EntryCatalogueFeatureTest {
     }
 
     private fun feature(host: EntryCatalogueProviderHost): EntryCatalogueFeature {
-        val evaluation = productionSubjectEvaluation(
-            EntryType.BOOK,
-            EntryCatalogueFeatureContributor,
-        )
         return DefaultEntryCatalogueFeature(
             host = host,
-            graphStateValidator = EntryCatalogueGraphStateValidator(evaluation),
             networkToLocalEntry = mockk(),
         )
     }

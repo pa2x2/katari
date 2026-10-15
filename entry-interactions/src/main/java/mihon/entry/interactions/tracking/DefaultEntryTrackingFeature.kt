@@ -6,25 +6,19 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import mihon.entry.interactions.tracking.host.EntryTrackingHost
 import mihon.entry.interactions.tracking.host.EntryTrackingHostEntrySnapshot
-import mihon.feature.graph.FeatureGraphEvaluation
 import tachiyomi.domain.entry.model.Entry
 
 internal class DefaultEntryTrackingFeature(
-    private val evaluation: FeatureGraphEvaluation,
     private val host: EntryTrackingHost,
-    private val automation: DefaultEntryTrackingAutomation = DefaultEntryTrackingAutomation(
-        evaluation,
-        host,
-    ),
+    private val automation: DefaultEntryTrackingAutomation = DefaultEntryTrackingAutomation(host),
 ) : EntryTrackingFeature,
-    EntryTrackingOperations by DefaultEntryTrackingOperations(evaluation, host, automation),
+    EntryTrackingOperations by DefaultEntryTrackingOperations(host, automation),
     EntryTrackingAutomation by automation,
     EntryTrackingAccounts by DefaultEntryTrackingAccounts(host),
     EntryTrackingCollection by DefaultEntryTrackingCollection(host) {
 
     override fun availability(entryType: EntryType): EntryTrackingAvailability {
         val services = host.registeredServices().filter { entryType in it.supportedEntryTypes }
-        evaluation.requireTrackingAvailability(entryType, services.isNotEmpty())
         return if (services.isEmpty()) {
             EntryTrackingAvailability.Unsupported
         } else {
@@ -42,12 +36,6 @@ internal class DefaultEntryTrackingFeature(
         val supported = services.filter { entryType in it.service.supportedEntryTypes }
         val authenticated = supported.filter { it.isLoggedIn }
         val accepted = authenticated.filter { it.acceptsSource }
-        evaluation.requireTrackingSession(
-            entryType = entryType,
-            registered = supported.isNotEmpty(),
-            authenticated = authenticated.isNotEmpty(),
-            sourceAccepted = accepted.isNotEmpty(),
-        )
         return when {
             supported.isEmpty() -> EntryTrackingSession.Unavailable(
                 setOf(EntryTrackingSessionUnavailableReason.UNSUPPORTED_ENTRY_TYPE),

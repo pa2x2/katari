@@ -4,7 +4,6 @@ import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
-import mihon.feature.graph.FeatureGraphEvaluation
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import java.util.concurrent.atomic.AtomicBoolean
@@ -28,11 +27,10 @@ internal interface EntryAutomaticDownloadBatch {
 }
 
 internal class DefaultEntryAutomaticDownloadFeature(
-    private val evaluation: FeatureGraphEvaluation,
+    private val applicableTypes: Set<EntryType>,
     private val interaction: EntryDownloadInteraction,
     private val sharedPolicy: EntryAutomaticDownloadPolicy,
 ) : EntryAutomaticDownloadCoordinator {
-    private val applicableTypes = evaluation.automaticDownloadTypes()
     private val mutableScheduled = MutableSharedFlow<EntryAutomaticDownloadScheduled>(extraBufferCapacity = 64)
 
     override val scheduled: Flow<EntryAutomaticDownloadScheduled> = mutableScheduled.asSharedFlow()
@@ -80,7 +78,6 @@ internal class DefaultEntryAutomaticDownloadFeature(
         }
 
         val decision = sharedPolicy.evaluate(entry, newChapters)
-        evaluation.requireAutomaticDownloadContext(entry.type, decision)
         val blocker = decision.blocker
         return if (blocker != null) {
             SelectedCandidates.Empty(EntryAutomaticDownloadResult.Blocked(setOf(blocker)))

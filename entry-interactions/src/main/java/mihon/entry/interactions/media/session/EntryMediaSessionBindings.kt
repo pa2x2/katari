@@ -3,13 +3,19 @@ package mihon.entry.interactions.media.session
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.ContributesTo
-import dev.zacsweers.metro.IntoSet
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
-import mihon.feature.graph.FeatureGraphContributor
-import mihon.feature.graph.execution.FeatureExecutionHandler
-import mihon.feature.graph.execution.FeatureExecutionParticipantBinding
-import mihon.feature.runtime.FeatureRuntimeComposition
+import eu.kanade.tachiyomi.source.entry.EntryType
+import mihon.entry.interactions.download.EntryDownloadLifecycleFeature
+import mihon.entry.interactions.download.EntryDownloadProcessor
+import mihon.entry.interactions.history.EntryHistoryFeature
+import mihon.entry.interactions.media.EntryMediaSessionProcessor
+import mihon.entry.interactions.state.EntryProgressFeature
+import mihon.entry.interactions.state.EntryProgressProcessor
+import mihon.entry.interactions.tracking.EntryTrackingFeature
+import mihon.entry.interactions.tracking.host.EntryTrackingHost
+import mihon.entry.interactions.translate.EntryTranslateProcessor
+import mihon.entry.interactions.translate.ahead.EntryTranslateAhead
 import tachiyomi.domain.entry.repository.EntryRepository
 
 @ContributesTo(AppScope::class)
@@ -24,41 +30,35 @@ object EntryMediaSessionBindings {
 
     @Provides
     @SingleIn(AppScope::class)
-    fun feature(composition: FeatureRuntimeComposition): EntryMediaSessionFeature = DefaultEntryMediaSessionFeature(
-        evaluation = composition.evaluation,
-        executions = composition.executions,
-    )
-
-    @Provides
-    @IntoSet
-    fun graphContributor(): FeatureGraphContributor = EntryMediaSessionFeatureContributor
-
-    @Provides
-    @IntoSet
-    fun incognitoGraphContributor(): FeatureGraphContributor = EntryMediaSessionIncognitoContributor
-
-    @Provides
-    @IntoSet
-    fun incognitoParticipant(
-        repository: () -> EntryRepository,
+    internal fun feature(
+        mediaSessionProcessors: Map<EntryType, EntryMediaSessionProcessor>,
+        progressProcessors: Map<EntryType, EntryProgressProcessor>,
+        downloadProcessors: Map<EntryType, EntryDownloadProcessor>,
+        translateProcessors: Map<EntryType, EntryTranslateProcessor>,
         incognitoState: EntryMediaSessionIncognitoState,
-    ): FeatureExecutionParticipantBinding<*> = entryMediaSessionIncognitoBinding(
-        repository = repository,
+        entryRepository: () -> EntryRepository,
+        progress: () -> EntryProgressFeature,
+        downloads: () -> EntryDownloadLifecycleFeature,
+        history: () -> EntryHistoryFeature,
+        tracking: () -> EntryTrackingFeature,
+        trackingHost: () -> EntryTrackingHost,
+        translateAhead: () -> EntryTranslateAhead,
+    ): EntryMediaSessionFeature = DefaultEntryMediaSessionFeature(
+        types = EntryMediaSessionTypes(
+            mediaSession = mediaSessionProcessors.keys,
+            progress = progressProcessors.keys,
+            download = downloadProcessors.keys,
+            translateAhead = translateProcessors.keys intersect downloadProcessors.keys,
+        ),
         incognitoState = incognitoState,
+        entryRepository = entryRepository,
+        progress = progress,
+        downloads = downloads,
+        history = history,
+        tracking = tracking,
+        automaticTrackingSynchronizationEnabled = {
+            trackingHost().automation.isAutomaticProgressSynchronizationEnabled()
+        },
+        translateAhead = translateAhead,
     )
 }
-
-internal fun entryMediaSessionIncognitoBinding(
-    repository: () -> EntryRepository,
-    incognitoState: EntryMediaSessionIncognitoState,
-) = FeatureExecutionParticipantBinding(
-    definition = ENTRY_MEDIA_SESSION_INCOGNITO_PARTICIPANT,
-    handler = FeatureExecutionHandler { execution ->
-        val event = execution.event
-        val owner = repository().getEntryById(event.child.entryId)
-        val sourceId = owner?.source ?: event.visibleEntry.source
-        if (incognitoState.isIncognito(sourceId)) {
-            execution.block(ENTRY_MEDIA_SESSION_RECORDING_CONSEQUENCES)
-        }
-    },
-)

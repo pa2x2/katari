@@ -1,6 +1,5 @@
 package mihon.entry.interactions.book.library
 
-import eu.kanade.tachiyomi.source.entry.EntryType
 import mihon.entry.interactions.book.runtime.requireBook
 import mihon.entry.interactions.library.EntryLibraryProgressEvidence
 import mihon.entry.interactions.library.EntryLibraryProgressProvider
@@ -12,7 +11,6 @@ import tachiyomi.domain.entry.repository.EntryProgressRepository
 internal class BookLibraryProgressProvider(
     private val entryProgressRepository: EntryProgressRepository,
 ) : EntryLibraryProgressProvider {
-    override val type = EntryType.BOOK
 
     override suspend fun evidence(entry: Entry, chapters: List<EntryChapter>): EntryLibraryProgressEvidence {
         entry.requireBook()

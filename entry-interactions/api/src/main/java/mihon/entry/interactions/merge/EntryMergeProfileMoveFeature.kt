@@ -1,6 +1,5 @@
 package mihon.entry.interactions.merge
 
-import mihon.entry.interactions.lifecycle.profile.EntryProfileMoveParticipantReference
 import tachiyomi.domain.entry.model.Entry
 
 interface EntryMergeProfileMoveFeature {
@@ -20,7 +19,7 @@ interface EntryMergeProfileMoveFeature {
     suspend fun complete(intent: EntryMergeProfileMoveIntent): EntryMergeProfileMoveExecutionResult
 }
 
-interface EntryMergeProfileMoveReference : EntryProfileMoveParticipantReference
+interface EntryMergeProfileMoveReference
 
 data class EntryMergeProfileMoveUnit(
     val entries: List<Entry>,

@@ -41,7 +41,6 @@ dependencies {
     testImplementation(libs.androidx.work.testing)
     testImplementation(libs.junit4)
     testImplementation(libs.robolectric)
-    testImplementation(projects.featureValidation)
     testImplementation(projects.tts.api)
     testRuntimeOnly(libs.junit.platform.launcher)
     testRuntimeOnly(libs.junit.vintage)
@@ -50,21 +49,8 @@ dependencies {
     testFixturesImplementation(libs.bundles.serialization)
     testFixturesImplementation(libs.kotlinx.coroutines.test)
     testFixturesImplementation(libs.unifile)
-    testFixturesImplementation(projects.featureValidation)
     testFixturesImplementation(projects.core.metro)
     testFixturesImplementation(projects.sourceLocal)
     testFixturesImplementation(platform(libs.androidx.compose.bom))
     testFixturesApi(projects.entryInteractions.spi)
-}
-
-val generateFeatureReport = tasks.register("generateFeatureReport") {
-    group = "reporting"
-    description = "Compatibility alias for :app:generateFeatureReport"
-    dependsOn(":app:generateFeatureReport")
-}
-
-tasks.register("generateEntryFeatureReport") {
-    group = "reporting"
-    description = "Compatibility alias for generateFeatureReport"
-    dependsOn(generateFeatureReport)
 }

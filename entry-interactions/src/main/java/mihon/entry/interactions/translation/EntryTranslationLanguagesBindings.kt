@@ -6,15 +6,14 @@ import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.IntoSet
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
-import mihon.entry.interactions.translation.backup.EntryTranslationLanguagesBackupContributor
-import mihon.entry.interactions.translation.backup.entryTranslationLanguagesBackupRestoreBinding
-import mihon.entry.interactions.translation.backup.entryTranslationLanguagesBackupSnapshotBinding
-import mihon.entry.interactions.translation.migration.EntryTranslationLanguagesMigrationContributor
-import mihon.entry.interactions.translation.migration.entryTranslationLanguagesMigrationBinding
-import mihon.feature.graph.FeatureGraphContributor
-import mihon.feature.graph.execution.FeatureDurableExecutionParticipantBinding
-import mihon.feature.graph.execution.FeatureExecutionParticipantBinding
-import mihon.feature.runtime.FeatureRuntimeComposition
+import eu.kanade.tachiyomi.source.entry.EntryType
+import mihon.entry.interactions.durable.EntryDurableParticipant
+import mihon.entry.interactions.migration.consequence.EntryMigrationDurableEvent
+import mihon.entry.interactions.persistence.backup.EntryBackupStateParticipant
+import mihon.entry.interactions.state.EntryMigrationProvider
+import mihon.entry.interactions.state.EntryTranslationLanguagesProvider
+import mihon.entry.interactions.translation.backup.EntryTranslationLanguagesBackupParticipant
+import mihon.entry.interactions.translation.migration.EntryTranslationLanguagesMigrationParticipant
 import tachiyomi.domain.entry.repository.EntryTranslationLanguagesRepository
 
 @ContributesTo(AppScope::class)
@@ -23,10 +22,12 @@ object EntryTranslationLanguagesBindings {
     @Provides
     @SingleIn(AppScope::class)
     internal fun defaultFeature(
-        composition: FeatureRuntimeComposition,
+        translationLanguagesProviders: Map<EntryType, EntryTranslationLanguagesProvider>,
+        migrationProviders: Map<EntryType, EntryMigrationProvider>,
         repository: EntryTranslationLanguagesRepository,
     ): DefaultEntryTranslationLanguagesFeature = DefaultEntryTranslationLanguagesFeature(
-        evaluation = composition.evaluation,
+        applicableTypes = translationLanguagesProviders.keys,
+        migrationTypes = translationLanguagesProviders.keys intersect migrationProviders.keys,
         repository = repository,
     )
 
@@ -35,31 +36,13 @@ object EntryTranslationLanguagesBindings {
 
     @Provides
     @IntoSet
-    fun graphContributor(): FeatureGraphContributor = EntryTranslationLanguagesFeatureContributor
-
-    @Provides
-    @IntoSet
-    fun backupGraphContributor(): FeatureGraphContributor = EntryTranslationLanguagesBackupContributor
-
-    @Provides
-    @IntoSet
-    fun migrationGraphContributor(): FeatureGraphContributor = EntryTranslationLanguagesMigrationContributor
-
-    @Provides
-    @IntoSet
     internal fun migrationDurableParticipant(
         feature: () -> DefaultEntryTranslationLanguagesFeature,
-    ): FeatureDurableExecutionParticipantBinding<*> = entryTranslationLanguagesMigrationBinding(feature)
+    ): EntryDurableParticipant<EntryMigrationDurableEvent> = EntryTranslationLanguagesMigrationParticipant(feature)
 
     @Provides
     @IntoSet
-    internal fun backupSnapshotParticipant(
+    internal fun backupState(
         feature: () -> DefaultEntryTranslationLanguagesFeature,
-    ): FeatureExecutionParticipantBinding<*> = entryTranslationLanguagesBackupSnapshotBinding(feature)
-
-    @Provides
-    @IntoSet
-    internal fun backupRestoreParticipant(
-        feature: () -> DefaultEntryTranslationLanguagesFeature,
-    ): FeatureExecutionParticipantBinding<*> = entryTranslationLanguagesBackupRestoreBinding(feature)
+    ): EntryBackupStateParticipant = EntryTranslationLanguagesBackupParticipant(feature)
 }

@@ -6,43 +6,33 @@ import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.IntoSet
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
+import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.plus
 import mihon.core.metro.AppCoroutineScope
 import mihon.core.metro.BasePreferenceStore
+import mihon.core.metro.StartupWarmup
 import mihon.entry.interactions.child.EntryChildListFeature
-import mihon.entry.interactions.media.backup.ENTRY_PLAYBACK_PREFERENCES_BACKUP_RESTORE_PARTICIPANT
-import mihon.entry.interactions.media.backup.ENTRY_PLAYBACK_PREFERENCES_BACKUP_SCHEMA_VERSION
-import mihon.entry.interactions.media.backup.ENTRY_PLAYBACK_PREFERENCES_BACKUP_SNAPSHOT_PARTICIPANT
-import mihon.entry.interactions.media.backup.ENTRY_PLAYBACK_PREFERENCES_BACKUP_STATE_ID
-import mihon.entry.interactions.media.backup.ENTRY_VIEWER_SETTINGS_BACKUP_RESTORE_PARTICIPANT
-import mihon.entry.interactions.media.backup.ENTRY_VIEWER_SETTINGS_BACKUP_SCHEMA_VERSION
-import mihon.entry.interactions.media.backup.ENTRY_VIEWER_SETTINGS_BACKUP_SNAPSHOT_PARTICIPANT
-import mihon.entry.interactions.media.backup.ENTRY_VIEWER_SETTINGS_BACKUP_STATE_ID
-import mihon.entry.interactions.media.backup.EntryPlaybackPreferencesBackupContributor
-import mihon.entry.interactions.media.backup.EntryViewerSettingBackupValue
-import mihon.entry.interactions.media.backup.EntryViewerSettingsBackupContributor
-import mihon.entry.interactions.media.backup.EntryViewerSettingsBackupState
-import mihon.entry.interactions.media.migration.EntryPlaybackPreferencesMigrationContributor
-import mihon.entry.interactions.media.migration.EntryViewerSettingsMigrationContributor
-import mihon.entry.interactions.media.migration.entryPlaybackPreferencesMigrationBinding
-import mihon.entry.interactions.media.migration.entryViewerSettingsMigrationBinding
-import mihon.entry.interactions.persistence.backup.decodeEntryBackupState
-import mihon.entry.interactions.persistence.backup.entryBackupStateEnvelope
+import mihon.entry.interactions.durable.EntryDurableParticipant
+import mihon.entry.interactions.media.backup.EntryPlaybackPreferencesBackupParticipant
+import mihon.entry.interactions.media.backup.EntryViewerSettingsBackupParticipant
+import mihon.entry.interactions.media.migration.EntryPlaybackPreferencesMigrationParticipant
+import mihon.entry.interactions.media.migration.EntryViewerSettingsMigrationParticipant
+import mihon.entry.interactions.migration.consequence.EntryMigrationDurableEvent
+import mihon.entry.interactions.navigation.EntryOpenProcessor
+import mihon.entry.interactions.persistence.backup.EntryBackupStateParticipant
+import mihon.entry.interactions.runtime.EntryChildListProcessor
+import mihon.entry.interactions.runtime.EntryImmersiveProcessor
 import mihon.entry.interactions.runtime.EntryInteractions
+import mihon.entry.interactions.runtime.EntryPreviewConfigurationProvider
+import mihon.entry.interactions.runtime.EntryPreviewProcessor
 import mihon.entry.interactions.settings.DefaultViewerSettingBinder
 import mihon.entry.interactions.source.EntrySourceRefreshFeature
+import mihon.entry.interactions.state.EntryMigrationProvider
+import mihon.entry.interactions.state.EntryPlaybackPreferencesProcessor
 import mihon.entry.viewer.settings.ViewerSettingBinder
-import mihon.entry.viewer.settings.ViewerSettingId
-import mihon.entry.viewer.settings.ViewerSettingOverride
 import mihon.entry.viewer.settings.ViewerSettingOverrideRepository
-import mihon.feature.graph.FeatureGraphContributor
-import mihon.feature.graph.execution.FeatureDurableExecutionParticipantBinding
-import mihon.feature.graph.execution.FeatureExecutionHandler
-import mihon.feature.graph.execution.FeatureExecutionParticipantBinding
-import mihon.feature.runtime.FeatureRuntimeComposition
-import mihon.feature.runtime.FeatureRuntimeWarmup
 import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.domain.entry.repository.EntryRepository
 
@@ -52,106 +42,60 @@ object EntryMediaBindings {
     @Provides
     @SingleIn(AppScope::class)
     fun playbackPreferencesFeature(
-        composition: FeatureRuntimeComposition,
+        playbackPreferencesProcessors: Map<EntryType, EntryPlaybackPreferencesProcessor>,
+        migrationProviders: Map<EntryType, EntryMigrationProvider>,
         interactions: EntryInteractions,
     ): EntryPlaybackPreferencesFeature = DefaultEntryPlaybackPreferencesFeature(
-        evaluation = composition.evaluation,
+        applicableTypes = playbackPreferencesProcessors.keys,
+        migrationTypes = playbackPreferencesProcessors.keys intersect migrationProviders.keys,
         interaction = interactions.playbackPreferences,
     )
 
     @Provides
     @IntoSet
-    fun playbackPreferencesGraphContributor(): FeatureGraphContributor = EntryPlaybackPreferencesFeatureContributor
-
-    @Provides
-    @IntoSet
-    fun playbackPreferencesBackupGraphContributor(): FeatureGraphContributor =
-        EntryPlaybackPreferencesBackupContributor
-
-    @Provides
-    @IntoSet
-    fun playbackPreferencesMigrationGraphContributor(): FeatureGraphContributor =
-        EntryPlaybackPreferencesMigrationContributor
-
-    @Provides
-    @IntoSet
-    fun playbackPreferencesMigrationParticipant(
+    internal fun playbackPreferencesMigrationParticipant(
         feature: () -> EntryPlaybackPreferencesFeature,
-    ): FeatureDurableExecutionParticipantBinding<*> = entryPlaybackPreferencesMigrationBinding(feature)
-
-    @Provides
-    @IntoSet
-    fun playbackPreferencesBackupSnapshotParticipant(
-        feature: () -> EntryPlaybackPreferencesFeature,
-    ): FeatureExecutionParticipantBinding<*> = FeatureExecutionParticipantBinding(
-        definition = ENTRY_PLAYBACK_PREFERENCES_BACKUP_SNAPSHOT_PARTICIPANT,
-        handler = FeatureExecutionHandler { event ->
-            when (val result = feature().snapshot(event.entry)) {
-                is EntryPlaybackPreferencesSnapshotResult.Captured -> event.contributions.add(
-                    entryBackupStateEnvelope(
-                        ENTRY_PLAYBACK_PREFERENCES_BACKUP_STATE_ID,
-                        ENTRY_PLAYBACK_PREFERENCES_BACKUP_SCHEMA_VERSION,
-                        EntryPlaybackPreferencesSnapshot.serializer(),
-                        result.snapshot,
-                    ),
-                )
-
-                is EntryPlaybackPreferencesSnapshotResult.Inapplicable,
-                EntryPlaybackPreferencesSnapshotResult.NoPreferences,
-                -> Unit
-            }
-        },
-    )
-
-    @Provides
-    @IntoSet
-    fun playbackPreferencesBackupRestoreParticipant(
-        feature: () -> EntryPlaybackPreferencesFeature,
-    ): FeatureExecutionParticipantBinding<*> = FeatureExecutionParticipantBinding(
-        definition = ENTRY_PLAYBACK_PREFERENCES_BACKUP_RESTORE_PARTICIPANT,
-        handler = FeatureExecutionHandler { event ->
-            val state = event.states.decodeEntryBackupState(
-                ENTRY_PLAYBACK_PREFERENCES_BACKUP_STATE_ID,
-                ENTRY_PLAYBACK_PREFERENCES_BACKUP_SCHEMA_VERSION,
-                EntryPlaybackPreferencesSnapshot.serializer(),
-            ) ?: return@FeatureExecutionHandler
-            feature().restore(event.entry, state)
-        },
-    )
+    ): EntryDurableParticipant<EntryMigrationDurableEvent> = EntryPlaybackPreferencesMigrationParticipant(feature)
 
     @Provides
     @SingleIn(AppScope::class)
-    fun previewFeature(
-        composition: FeatureRuntimeComposition,
+    internal fun previewFeature(
+        previewProcessors: Map<EntryType, EntryPreviewProcessor>,
+        previewConfigurationProviders: Map<EntryType, EntryPreviewConfigurationProvider>,
+        childListProcessors: Map<EntryType, EntryChildListProcessor>,
+        openProcessors: Map<EntryType, EntryOpenProcessor>,
         interactions: EntryInteractions,
         childList: EntryChildListFeature,
     ): EntryPreviewFeature = DefaultEntryPreviewFeature(
-        evaluation = composition.evaluation,
+        types = EntryPreviewTypes(
+            preview = previewProcessors.keys,
+            configured = previewProcessors.keys intersect previewConfigurationProviders.keys,
+            childList = previewProcessors.keys intersect childListProcessors.keys,
+            open = previewProcessors.keys intersect openProcessors.keys,
+        ),
         interaction = interactions.preview,
         childList = childList,
     )
 
     @Provides
-    @IntoSet
-    fun previewGraphContributor(): FeatureGraphContributor = EntryPreviewFeatureContributor
-
-    @Provides
     @SingleIn(AppScope::class)
-    fun immersiveFeature(
-        composition: FeatureRuntimeComposition,
+    internal fun immersiveFeature(
+        immersiveProcessors: Map<EntryType, EntryImmersiveProcessor>,
+        childListProcessors: Map<EntryType, EntryChildListProcessor>,
+        openProcessors: Map<EntryType, EntryOpenProcessor>,
         interactions: EntryInteractions,
         childList: EntryChildListFeature,
         sourceRefresh: EntrySourceRefreshFeature,
     ): EntryImmersiveFeature = DefaultEntryImmersiveFeature(
-        evaluation = composition.evaluation,
+        types = EntryImmersiveTypes(
+            immersive = immersiveProcessors.keys,
+            childList = immersiveProcessors.keys intersect childListProcessors.keys,
+            open = immersiveProcessors.keys intersect openProcessors.keys,
+        ),
         interaction = interactions.immersive,
         childList = childList,
         sourceRefresh = sourceRefresh,
     )
-
-    @Provides
-    @IntoSet
-    fun immersiveGraphContributor(): FeatureGraphContributor = EntryImmersiveFeatureContributor
 
     @Provides
     @SingleIn(AppScope::class)
@@ -166,13 +110,15 @@ object EntryMediaBindings {
     @Provides
     @SingleIn(AppScope::class)
     fun viewerSettingsFeature(
-        composition: FeatureRuntimeComposition,
+        viewerSettingsProviders: Map<EntryType, EntryViewerSettingsProvider>,
+        migrationProviders: Map<EntryType, EntryMigrationProvider>,
         interactions: EntryInteractions,
         projectionResolver: EntryViewerSettingsScreenProjectionResolver,
         overrideRepository: ViewerSettingOverrideRepository,
         entryRepository: () -> EntryRepository,
     ): EntryViewerSettingsFeature = DefaultEntryViewerSettingsFeature(
-        evaluation = composition.evaluation,
+        applicableTypes = viewerSettingsProviders.keys,
+        migrationTypes = viewerSettingsProviders.keys intersect migrationProviders.keys,
         interaction = interactions.viewerSettings,
         projectionResolver = projectionResolver,
         overrideRepository = overrideRepository,
@@ -194,97 +140,36 @@ object EntryMediaBindings {
 
     @Provides
     @IntoSet
-    fun viewerSettingsGraphContributor(): FeatureGraphContributor = EntryViewerSettingsFeatureContributor
-
-    @Provides
-    @IntoSet
-    fun viewerSettingsBackupGraphContributor(): FeatureGraphContributor = EntryViewerSettingsBackupContributor
-
-    @Provides
-    @IntoSet
-    fun viewerSettingsMigrationGraphContributor(): FeatureGraphContributor = EntryViewerSettingsMigrationContributor
-
-    @Provides
-    @IntoSet
-    fun viewerSettingsMigrationParticipant(
+    internal fun viewerSettingsMigrationParticipant(
         feature: () -> EntryViewerSettingsFeature,
-    ): FeatureDurableExecutionParticipantBinding<*> = entryViewerSettingsMigrationBinding(feature)
+    ): EntryDurableParticipant<EntryMigrationDurableEvent> = EntryViewerSettingsMigrationParticipant(feature)
 
     @Provides
     @IntoSet
-    fun viewerSettingsBackupSnapshotParticipant(
-        feature: () -> EntryViewerSettingsFeature,
-    ): FeatureExecutionParticipantBinding<*> = FeatureExecutionParticipantBinding(
-        definition = ENTRY_VIEWER_SETTINGS_BACKUP_SNAPSHOT_PARTICIPANT,
-        handler = FeatureExecutionHandler { event ->
-            val result = feature().snapshot(event.entry)
-            if (result is EntryViewerSettingsSnapshotResult.Available && result.overrides.isNotEmpty()) {
-                val state = EntryViewerSettingsBackupState(
-                    result.overrides.map { override ->
-                        EntryViewerSettingBackupValue(
-                            providerId = override.settingId.providerId,
-                            settingKey = override.settingId.key,
-                            encodedValue = override.encodedValue,
-                            updatedAt = override.updatedAt,
-                        )
-                    },
-                )
-                event.contributions.add(
-                    entryBackupStateEnvelope(
-                        ENTRY_VIEWER_SETTINGS_BACKUP_STATE_ID,
-                        ENTRY_VIEWER_SETTINGS_BACKUP_SCHEMA_VERSION,
-                        EntryViewerSettingsBackupState.serializer(),
-                        state,
-                    ),
-                )
-            }
-        },
-    )
-
-    @Provides
-    @IntoSet
-    fun viewerSettingsBackupRestoreParticipant(
-        feature: () -> EntryViewerSettingsFeature,
-    ): FeatureExecutionParticipantBinding<*> = FeatureExecutionParticipantBinding(
-        definition = ENTRY_VIEWER_SETTINGS_BACKUP_RESTORE_PARTICIPANT,
-        handler = FeatureExecutionHandler { event ->
-            val state = event.states.decodeEntryBackupState(
-                ENTRY_VIEWER_SETTINGS_BACKUP_STATE_ID,
-                ENTRY_VIEWER_SETTINGS_BACKUP_SCHEMA_VERSION,
-                EntryViewerSettingsBackupState.serializer(),
-            ) ?: return@FeatureExecutionHandler
-            feature().restore(
-                event.entry,
-                state.overrides.map { value ->
-                    ViewerSettingOverride(
-                        entryId = event.entry.id,
-                        settingId = ViewerSettingId(value.providerId, value.settingKey),
-                        encodedValue = value.encodedValue,
-                        updatedAt = value.updatedAt,
-                    )
-                },
-            )
-        },
-    )
-
-    @Provides
-    @IntoSet
-    fun viewerSettingsWarmup(feature: () -> EntryViewerSettingsFeature): FeatureRuntimeWarmup =
-        FeatureRuntimeWarmup { feature() }
+    fun viewerSettingsWarmup(feature: () -> EntryViewerSettingsFeature): StartupWarmup =
+        StartupWarmup { feature() }
 
     @Provides
     @SingleIn(AppScope::class)
     fun mediaCacheFeature(
-        composition: FeatureRuntimeComposition,
+        mediaCacheProviders: Map<EntryType, EntryMediaCacheProvider>,
         interactions: EntryInteractions,
         @BasePreferenceStore preferenceStore: PreferenceStore,
     ): EntryMediaCacheFeature = DefaultEntryMediaCacheFeature(
-        evaluation = composition.evaluation,
+        applicableTypes = mediaCacheProviders.keys,
         interaction = interactions.mediaCache,
         preferenceStore = preferenceStore,
     )
 
     @Provides
     @IntoSet
-    fun mediaCacheGraphContributor(): FeatureGraphContributor = EntryMediaCacheFeatureContributor
+    internal fun playbackPreferencesBackupState(
+        feature: () -> EntryPlaybackPreferencesFeature,
+    ): EntryBackupStateParticipant = EntryPlaybackPreferencesBackupParticipant(feature)
+
+    @Provides
+    @IntoSet
+    internal fun viewerSettingsBackupState(
+        feature: () -> EntryViewerSettingsFeature,
+    ): EntryBackupStateParticipant = EntryViewerSettingsBackupParticipant(feature)
 }

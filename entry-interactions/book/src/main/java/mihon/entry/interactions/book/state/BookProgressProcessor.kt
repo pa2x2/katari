@@ -1,6 +1,5 @@
 package mihon.entry.interactions.book.state
 
-import eu.kanade.tachiyomi.source.entry.EntryType
 import mihon.entry.interactions.book.migration.BOOK_PENDING_MIGRATION_CONTENT_KEY
 import mihon.entry.interactions.book.migration.bookPendingMigrationResourceKey
 import mihon.entry.interactions.book.runtime.requireBook
@@ -18,7 +17,6 @@ internal class BookProgressProcessor(
     private val entryProgressRepository: EntryProgressRepository,
     private val entryChapterRepository: EntryChapterRepository,
 ) : EntryProgressProcessor {
-    override val type = EntryType.BOOK
 
     override suspend fun snapshot(entry: Entry): EntryProgressSnapshot {
         entry.requireBook()

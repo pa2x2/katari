@@ -3,7 +3,6 @@ package mihon.entry.interactions.book.navigation
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import eu.kanade.tachiyomi.source.entry.EntryType
 import mihon.entry.interactions.book.reader.BookReaderHostActivity
 import mihon.entry.interactions.book.runtime.requireBook
 import mihon.entry.interactions.navigation.EntryOpenOptions
@@ -14,7 +13,6 @@ import tachiyomi.domain.entry.model.EntryChapter
 internal class BookOpenProcessor(
     private val createIntent: (Context, Entry, EntryChapter) -> Intent = BookReaderHostActivity::newIntent,
 ) : EntryOpenProcessor {
-    override val type: EntryType = EntryType.BOOK
 
     override fun open(context: Context, entry: Entry, chapter: EntryChapter, options: EntryOpenOptions) {
         context.startActivity(intent(context, entry, chapter, options))

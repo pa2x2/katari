@@ -26,10 +26,9 @@ import tachiyomi.domain.entry.model.EntryChapter
 internal class AnimePreviewInteraction(
     private val entryInteractionPreferences: EntryInteractionPreferences,
 ) : EntryPreviewProcessor, EntryPreviewConfigurationProvider {
-    override val type: EntryType = EntryType.ANIME
     override val loadMode = EntryPreviewLoadMode.ENTRY
     override val settings = EntryPreviewSettings(
-        type = type,
+        type = EntryType.ANIME,
         enabled = entryInteractionPreferences.enableAnimePreview,
         pageCount = entryInteractionPreferences.animePreviewPageCount,
         size = entryInteractionPreferences.animePreviewSize,

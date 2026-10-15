@@ -65,9 +65,9 @@ jobs:
         with:
           cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
 
-      - name: Verify Entry Feature architecture and every module's tests
+      - name: Run every module's tests
         id: unit_tests
-        run: ./gradlew verifyEntryFeatureArchitecture verifyTests
+        run: ./gradlew verifyTests
 
       - name: Upload test report
         if: failure() && steps.unit_tests.outcome == 'failure'

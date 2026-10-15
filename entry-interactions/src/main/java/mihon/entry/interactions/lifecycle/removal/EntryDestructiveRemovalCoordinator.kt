@@ -1,69 +1,47 @@
 package mihon.entry.interactions.lifecycle.removal
 
 import kotlinx.coroutines.CancellationException
-import mihon.entry.interactions.download.EntryDownloadRemovalPlan
-import mihon.entry.interactions.execute
-import mihon.entry.interactions.lifecycle.metadata.toLifecycleFailures
+import mihon.entry.interactions.download.EntryDownloadMaintenanceFeature
+import mihon.entry.interactions.download.maintenance.EntryDownloadRemovalCollector
+import mihon.entry.interactions.lifecycle.EntryLifecycleConsequenceFailure
+import mihon.entry.interactions.lifecycle.attempt
 import mihon.entry.interactions.lifecycle.removal.host.EntryDestructiveRemovalCommit
+import mihon.entry.interactions.lifecycle.removal.host.EntryDestructiveRemovalCustomCoverHost
 import mihon.entry.interactions.lifecycle.removal.host.EntryDestructiveRemovalHost
-import mihon.entry.interactions.runtime.toContentTypeId
-import mihon.feature.graph.execution.FeatureCommitExecutionResult
-import mihon.feature.graph.execution.FeatureExecutionRuntime
-import mihon.feature.graph.execution.coordinateFeatureCommit
+import mihon.entry.interactions.merge.EntryMergeLibraryLifecycleFeature
 import tachiyomi.domain.entry.model.Entry
 
+/**
+ * Deletes entries. Inside the delete transaction their downloads are collected and they leave their merge groups;
+ * custom covers and downloads are removed after the delete commits, and those failures are reported.
+ */
 internal class EntryDestructiveRemovalCoordinator(
     private val host: EntryDestructiveRemovalHost,
-    private val executions: FeatureExecutionRuntime,
+    private val mergeLibraryLifecycle: () -> EntryMergeLibraryLifecycleFeature,
+    private val downloads: () -> EntryDownloadMaintenanceFeature,
+    private val customCoverHost: EntryDestructiveRemovalCustomCoverHost,
 ) : EntryDestructiveRemovalFeature {
     override suspend fun remove(entries: List<Entry>): EntryDestructiveRemovalResult {
         val requested = entries.distinctBy { it.profileId to it.id }
         if (requested.isEmpty()) return EntryDestructiveRemovalResult.NoChange
         return try {
-            val collected = MutableEntryDestructiveRemovalOutcomes()
-            when (
-                val execution = executions.coordinateFeatureCommit(
-                    commit = {
-                        host.remove(
-                            requested = requested,
-                            beforeDelete = callback { persisted ->
-                                persisted.groupBy(Entry::type).forEach { (type, typedEntries) ->
-                                    val result = execute(
-                                        point = ENTRY_DESTRUCTIVE_REMOVING_EXECUTION_POINT,
-                                        contentType = type.toContentTypeId(),
-                                        event = EntryDestructiveRemovingEvent(typedEntries, collected),
-                                    )
-                                    check(result.isSuccessful) {
-                                        "Transactional destructive-removal participants failed: " +
-                                            result.failures.joinToString { it.participant.value }
-                                    }
-                                }
-                            },
-                        )
-                    },
-                    committed = { it is EntryDestructiveRemovalCommit.Applied },
-                    volatileConsequences = { commit ->
-                        val entries = (commit as EntryDestructiveRemovalCommit.Applied).entries
-                        val failures = entries.groupBy(Entry::type).flatMap { (type, typedEntries) ->
-                            execute(
-                                point = ENTRY_DESTRUCTIVE_REMOVED_EXECUTION_POINT,
-                                contentType = type.toContentTypeId(),
-                                event = EntryDestructiveRemovedEvent(typedEntries, collected.snapshot()),
-                            ).toLifecycleFailures()
-                        }
-                        EntryDestructiveRemovalResult.Removed(entries, failures)
-                    },
-                )
-            ) {
-                is FeatureCommitExecutionResult.Committed -> execution.volatileConsequences
-                is FeatureCommitExecutionResult.NotCommitted -> when (execution.commit) {
-                    EntryDestructiveRemovalCommit.NoChange -> EntryDestructiveRemovalResult.NoChange
-                    EntryDestructiveRemovalCommit.Conflict -> EntryDestructiveRemovalResult.Failed(
-                        requested,
-                        IllegalStateException("Entries changed before destructive removal"),
-                    )
-                    is EntryDestructiveRemovalCommit.Applied -> error("Applied destructive removal was not committed")
+            val removedDownloads = EntryDownloadRemovalCollector(downloads)
+            val commit = host.remove(requested = requested) { persisted ->
+                persisted.groupBy(Entry::type).values.forEach { typedEntries ->
+                    removedDownloads.prepare(typedEntries)
+                    val result = mergeLibraryLifecycle().entriesRemovedFromLibrary(typedEntries)
+                    check(result.unresolvedGroupCount == 0) {
+                        "Merge membership changed during destructive Entry removal"
+                    }
                 }
+            }
+            when (commit) {
+                is EntryDestructiveRemovalCommit.Applied -> removed(commit.entries, removedDownloads)
+                EntryDestructiveRemovalCommit.NoChange -> EntryDestructiveRemovalResult.NoChange
+                EntryDestructiveRemovalCommit.Conflict -> EntryDestructiveRemovalResult.Failed(
+                    requested,
+                    IllegalStateException("Entries changed before destructive removal"),
+                )
             }
         } catch (error: CancellationException) {
             throw error
@@ -71,27 +49,18 @@ internal class EntryDestructiveRemovalCoordinator(
             EntryDestructiveRemovalResult.Failed(requested, error)
         }
     }
-}
 
-private class MutableEntryDestructiveRemovalOutcomes : EntryDestructiveRemovalOutcomeSink {
-    private val downloadOwners = linkedMapOf<Pair<Long, Long>, Entry>()
-
-    override fun addDownloadPlan(plan: EntryDownloadRemovalPlan) {
-        plan.owners.forEach { owner -> downloadOwners[owner.profileId to owner.id] = owner }
-    }
-
-    fun snapshot(): EntryDestructiveRemovalOutcomes {
-        val owners = downloadOwners.values.toList()
-        return EntryDestructiveRemovalOutcomes(
-            downloadPlans = if (owners.isEmpty()) {
-                emptyList()
-            } else {
-                listOf(
-                    EntryDownloadRemovalPlan(
-                        owners,
-                    ),
-                )
-            },
-        )
+    private suspend fun removed(
+        entries: List<Entry>,
+        removedDownloads: EntryDownloadRemovalCollector,
+    ): EntryDestructiveRemovalResult.Removed {
+        val failures = mutableListOf<EntryLifecycleConsequenceFailure>()
+        entries.groupBy(Entry::type).forEach { (type, typedEntries) ->
+            failures.attempt("entry.custom-cover.destructive-removal") {
+                typedEntries.forEach { entry -> customCoverHost.removeCustomCover(entry) }
+            }
+            failures.attempt("entry.download.maintenance.destructive-removal") { removedDownloads.apply(type) }
+        }
+        return EntryDestructiveRemovalResult.Removed(entries, failures)
     }
 }

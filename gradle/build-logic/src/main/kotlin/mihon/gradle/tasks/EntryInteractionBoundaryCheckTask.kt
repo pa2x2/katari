@@ -18,20 +18,6 @@ abstract class EntryInteractionBoundaryCheckTask : DefaultTask() {
         val typeModules = TypeModule.discover(root)
         val sourceIndex = KotlinSourceIndex.create(root, sourceFiles(root, typeModules))
         val findings = EntryInteractionBoundaryRules(root, sourceIndex, typeModules).check().toMutableList()
-        findings += checkEntryContractValidationBoundaries(contractValidationSources(root)).map { finding ->
-            Finding(
-                relativePath = finding.relativePath,
-                lineNumber = finding.lineNumber,
-                reason = finding.reason,
-            )
-        }
-        findings += checkFeatureBehaviorIdBoundaries(featureBehaviorIdSources(root)).map { finding ->
-            Finding(
-                relativePath = finding.relativePath,
-                lineNumber = finding.lineNumber,
-                reason = finding.reason,
-            )
-        }
         findings += checkEntryViewerSettingsProjectionBoundaries(
             sourceIndex.files.map { source ->
                 EntryViewerSettingsProjectionBoundarySource(source.relativePath, source.content)
@@ -76,42 +62,6 @@ abstract class EntryInteractionBoundaryCheckTask : DefaultTask() {
                     .filterNot { it.invariantSeparatorsPath.contains("/build/") }
                     .toList()
             }
-    }
-
-    private fun contractValidationSources(root: File): List<EntryContractValidationBoundarySource> {
-        val entryInteractions = root.resolve("entry-interactions")
-        if (!entryInteractions.isDirectory) return emptyList()
-        val kotlinSources = entryInteractions.walkTopDown()
-            .filter { it.isFile && it.extension == "kt" }
-            .filter { it.invariantSeparatorsPath.contains("/src/test/") }
-            .filterNot { it.invariantSeparatorsPath.contains("/build/") }
-            .map { file ->
-                EntryContractValidationBoundarySource(
-                    relativePath = file.relativeTo(root).invariantSeparatorsPath,
-                    content = file.readText(),
-                )
-            }
-            .toList()
-        val serviceRegistry = root.resolve(FEATURE_VALIDATION_CONTRIBUTOR_SERVICE)
-        return kotlinSources + EntryContractValidationBoundarySource(
-            relativePath = FEATURE_VALIDATION_CONTRIBUTOR_SERVICE,
-            content = serviceRegistry.takeIf(File::isFile)?.readText().orEmpty(),
-        )
-    }
-
-    private fun featureBehaviorIdSources(root: File): List<FeatureBehaviorIdBoundarySource> {
-        val entryInteractions = root.resolve("entry-interactions")
-        if (!entryInteractions.isDirectory) return emptyList()
-        return entryInteractions.walkTopDown()
-            .filter { it.isFile && it.extension == "kt" }
-            .filterNot { it.invariantSeparatorsPath.contains("/build/") }
-            .map { file ->
-                FeatureBehaviorIdBoundarySource(
-                    relativePath = file.relativeTo(root).invariantSeparatorsPath,
-                    content = file.readText(),
-                )
-            }
-            .toList()
     }
 
     companion object {
@@ -268,7 +218,6 @@ private class EntryInteractionBoundaryRules(
         val findings = mutableListOf<Finding>()
 
         checkAppGradleDependencies(findings)
-        checkPublicApiGradleDependencies(findings)
         checkRootGradleDependencies(findings)
         checkTypeModuleGradleDependencies(findings)
 
@@ -404,8 +353,9 @@ private class EntryInteractionBoundaryRules(
                 findings += Finding(
                     relativePath = file.relativePath,
                     lineNumber = reference.lineNumber,
-                    reason = "media runtimes must emit EntryMediaSessionEvent facts; $operation belongs to an " +
-                        "independently contributed Feature consequence",
+                    reason =
+                    "media runtimes must emit EntryMediaSessionEvent facts; $operation belongs to the shared " +
+                        "media-session consequences",
                 )
             }
         }
@@ -460,7 +410,6 @@ private class EntryInteractionBoundaryRules(
             .map { "projects.entryInteractions.${it.gradleAccessor}" }
             .plus("projects.entryInteractions.api")
             .plus("projects.entryInteractions.spi")
-            .plus("projects.featureGraph")
 
         file.readLines().forEachIndexed { index, line ->
             forbiddenDependencies.forEach { dependency ->
@@ -472,21 +421,6 @@ private class EntryInteractionBoundaryRules(
                             dependency,
                     )
                 }
-            }
-        }
-    }
-
-    private fun checkPublicApiGradleDependencies(findings: MutableList<Finding>) {
-        val file = root.resolve("entry-interactions/api/build.gradle.kts")
-        if (!file.isFile) return
-
-        file.readLines().forEachIndexed { index, line ->
-            if (line.contains("api(projects.featureGraph)")) {
-                findings += Finding(
-                    relativePath = "entry-interactions/api/build.gradle.kts",
-                    lineNumber = index + 1,
-                    reason = "application-facing Entry feature API must not export the internal feature graph",
-                )
             }
         }
     }
@@ -756,7 +690,7 @@ private class EntryInteractionBoundaryRules(
         if (file.isTestPath()) return
         val allowedPaths = setOf(
             "domain/src/main/java/tachiyomi/domain/entry/interactor/SyncEntryWithSource.kt",
-            "entry-interactions/src/main/java/mihon/entry/interactions/source/EntrySourceRefreshFeature.kt",
+            "entry-interactions/src/main/java/mihon/entry/interactions/source/DefaultEntrySourceRefreshFeature.kt",
             "entry-interactions/src/main/java/mihon/entry/interactions/source/EntrySourceBindings.kt",
         )
         if (file.relativePath in allowedPaths || isAppGraphCompositionPath(file.relativePath)) return

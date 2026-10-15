@@ -10,27 +10,29 @@ import mihon.entry.interactions.download.EntryDownloadOwnerResolver
 import mihon.entry.interactions.download.EntryDownloadProcessor
 import mihon.entry.interactions.download.EntryDownloadQueueGroup
 import mihon.entry.interactions.download.EntryDownloadQueueItem
-import mihon.entry.interactions.download.EntryDownloadSettingProvider
 import mihon.entry.interactions.download.EntryDownloadState
 import mihon.entry.interactions.download.EntryDownloadStatus
 import mihon.entry.interactions.download.observeEntryDownloadQueue
 import mihon.entry.interactions.manga.download.model.DownloadState
-import mihon.entry.interactions.manga.runtime.MangaEntryInteractionRuntimeDependencies
 import mihon.entry.interactions.manga.runtime.requireManga
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
+import tachiyomi.domain.entry.repository.EntryChapterRepository
+import tachiyomi.domain.entry.repository.EntryRepository
+import tachiyomi.domain.source.service.SourceManager
 
 internal class MangaDownloadProcessor(
-    private val dependencies: MangaEntryInteractionRuntimeDependencies,
+    private val downloadManager: DownloadManager,
+    private val downloadCache: DownloadCache,
+    private val sourceManager: SourceManager,
+    private val entryChapterRepository: EntryChapterRepository,
+    entryRepository: EntryRepository,
 ) : EntryDownloadProcessor,
-    EntryDownloadSettingProvider,
     EntryBulkDownloadCandidateProcessor {
-    private val downloadManager = dependencies.downloadManager
-    private val ownerResolver = EntryDownloadOwnerResolver(dependencies.entryRepository)
+    private val ownerResolver = EntryDownloadOwnerResolver(entryRepository)
 
-    override val type: EntryType = EntryType.MANGA
-    override val changes: Flow<Unit> = dependencies.downloadCache.changes
-    override val isInitializing: Flow<Boolean> = dependencies.downloadCache.isInitializing
+    override val changes: Flow<Unit> = downloadCache.changes
+    override val isInitializing: Flow<Boolean> = downloadCache.isInitializing
     override val isRunning: Flow<Boolean> = downloadManager.isDownloaderRunning
     override val queueState: Flow<List<EntryDownloadQueueGroup>> = observeEntryDownloadQueue(
         queue = downloadManager.queueState,
@@ -65,7 +67,7 @@ internal class MangaDownloadProcessor(
     }
 
     override fun invalidateCache() {
-        dependencies.downloadCache.invalidateCache()
+        downloadCache.invalidateCache()
     }
 
     override fun renameSource(oldSource: UnifiedSource, newSource: UnifiedSource) {
@@ -120,7 +122,7 @@ internal class MangaDownloadProcessor(
     ): List<EntryChapter> {
         entry.requireManga()
         if (candidates != null) return candidates
-        val chapters = dependencies.entryChapterRepository.getChaptersByEntryIdAwait(
+        val chapters = entryChapterRepository.getChaptersByEntryIdAwait(
             entry.id,
             applyScanlatorFilter = true,
         )
@@ -130,7 +132,7 @@ internal class MangaDownloadProcessor(
 
     override suspend fun delete(entry: Entry, chapters: List<EntryChapter>) {
         entry.requireManga()
-        downloadManager.deleteChapters(chapters, entry, dependencies.sourceManager.getOrStub(entry.source))
+        downloadManager.deleteChapters(chapters, entry, sourceManager.getOrStub(entry.source))
     }
 
     override suspend fun cleanup(entry: Entry, chapters: List<EntryChapter>) {
@@ -140,7 +142,7 @@ internal class MangaDownloadProcessor(
 
     override suspend fun deleteEntryDownloads(entry: Entry): Boolean {
         entry.requireManga()
-        return downloadManager.deleteManga(entry, dependencies.sourceManager.getOrStub(entry.source))
+        return downloadManager.deleteManga(entry, sourceManager.getOrStub(entry.source))
     }
 
     override fun hasDownloads(entry: Entry): Boolean {

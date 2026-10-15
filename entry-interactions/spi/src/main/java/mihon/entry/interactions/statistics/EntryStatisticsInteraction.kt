@@ -10,9 +10,9 @@ interface EntryStatisticsInteraction {
 internal class ProviderBackedEntryStatisticsInteraction(
     providers: Map<EntryType, EntryStatisticsProvider>,
 ) : EntryStatisticsInteraction {
-    override val contributions = providers.values.map { provider ->
+    override val contributions = providers.map { (type, provider) ->
         EntryStatisticsContribution(
-            type = provider.type,
+            type = type,
             accent = provider.accent,
             consumedUnitLabel = provider.consumedUnitLabel,
             consumedUnitName = provider.consumedUnitName,

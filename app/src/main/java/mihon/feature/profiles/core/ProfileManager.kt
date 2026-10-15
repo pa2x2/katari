@@ -177,7 +177,7 @@ class ProfileManager(
             is EntryDestructiveRemovalResult.Removed -> {
                 result.failures.forEach { failure ->
                     logcat(LogPriority.ERROR, failure.cause) {
-                        "Profile deletion consequence ${failure.participantId} failed"
+                        "Profile deletion consequence ${failure.consequence} failed"
                     }
                 }
             }

@@ -8,15 +8,16 @@ import dev.zacsweers.metro.IntoSet
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import eu.kanade.tachiyomi.core.security.SecurityPreferences
+import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import mihon.core.metro.AppCoroutineScope
+import mihon.core.metro.StartupWarmup
 import mihon.entry.interactions.download.EntryAutomaticDownloadFeature
 import mihon.entry.interactions.download.EntryDownloadNotificationActions
+import mihon.entry.interactions.download.EntryDownloadProcessor
 import mihon.entry.interactions.runtime.EntryInteractions
 import mihon.entry.interactions.translate.ahead.EntryTranslateAhead
-import mihon.entry.interactions.translate.ahead.EntryTranslateAheadContributor
-import mihon.entry.interactions.translate.ahead.entryTranslateAheadMediaSessionBinding
 import mihon.entry.interactions.translate.download.EntryTranslateDownloadChaining
 import mihon.entry.interactions.translate.download.EntryTranslateDownloadRules
 import mihon.entry.interactions.translate.notification.EntryTranslateNotifier
@@ -26,10 +27,6 @@ import mihon.entry.interactions.translate.work.EntryTranslateConditions
 import mihon.entry.interactions.translate.work.EntryTranslateQueueRunner
 import mihon.entry.interactions.translate.work.EntryTranslateWorkController
 import mihon.entry.interactions.translation.EntryTranslationLanguagesFeature
-import mihon.feature.graph.FeatureGraphContributor
-import mihon.feature.graph.execution.FeatureExecutionParticipantBinding
-import mihon.feature.runtime.FeatureRuntimeComposition
-import mihon.feature.runtime.FeatureRuntimeWarmup
 import mihon.translation.api.host.TranslationHostActions
 import tachiyomi.domain.entry.interactor.GetEntryWithChapters
 import tachiyomi.domain.entry.repository.EntryChapterRepository
@@ -87,7 +84,8 @@ object EntryTranslateBindings {
     @Provides
     @SingleIn(AppScope::class)
     internal fun feature(
-        composition: FeatureRuntimeComposition,
+        translateProcessors: Map<EntryType, EntryTranslateProcessor>,
+        downloadProcessors: Map<EntryType, EntryDownloadProcessor>,
         repository: EntryTranslationQueueRepository,
         interactions: EntryInteractions,
         languages: EntryTranslationLanguagesFeature,
@@ -98,7 +96,7 @@ object EntryTranslateBindings {
         conditions: EntryTranslateConditions,
         preferences: EntryTranslatePreferences,
     ): EntryTranslateFeature = DefaultEntryTranslateFeature(
-        evaluation = composition.evaluation,
+        applicableTypes = translateProcessors.keys intersect downloadProcessors.keys,
         repository = repository,
         translate = interactions.translate,
         languages = languages,
@@ -179,26 +177,12 @@ object EntryTranslateBindings {
 
     @Provides
     @IntoSet
-    fun graphContributor(): FeatureGraphContributor = EntryTranslateFeatureContributor
-
-    @Provides
-    @IntoSet
-    fun aheadGraphContributor(): FeatureGraphContributor = EntryTranslateAheadContributor
-
-    @Provides
-    @IntoSet
-    internal fun aheadMediaSessionParticipant(
-        ahead: () -> EntryTranslateAhead,
-    ): FeatureExecutionParticipantBinding<*> = entryTranslateAheadMediaSessionBinding(ahead)
-
-    @Provides
-    @IntoSet
     internal fun backgroundWorkWarmup(
         @AppCoroutineScope scope: () -> CoroutineScope,
         downloadChaining: () -> EntryTranslateDownloadChaining,
         downloadRules: () -> EntryTranslateDownloadRules,
         pausedNotification: () -> EntryTranslatePausedNotification,
-    ): FeatureRuntimeWarmup = FeatureRuntimeWarmup {
+    ): StartupWarmup = StartupWarmup {
         val appScope = scope()
         appScope.launch { downloadChaining().run() }
         appScope.launch { downloadRules().run() }

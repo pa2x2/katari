@@ -1,6 +1,5 @@
 package mihon.entry.interactions.anime.state
 
-import eu.kanade.tachiyomi.source.entry.EntryType
 import mihon.entry.interactions.anime.runtime.requireAnime
 import mihon.entry.interactions.state.EntryConsumptionProcessor
 import mihon.entry.interactions.state.consumptionStatus
@@ -14,7 +13,6 @@ import tachiyomi.domain.entry.repository.EntryProgressRepository
 internal class AnimeConsumptionProcessor(
     private val entryProgressRepository: EntryProgressRepository,
 ) : EntryConsumptionProcessor {
-    override val type: EntryType = EntryType.ANIME
 
     override suspend fun setConsumed(
         entry: Entry,

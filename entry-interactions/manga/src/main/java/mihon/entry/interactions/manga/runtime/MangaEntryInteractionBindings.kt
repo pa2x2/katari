@@ -7,12 +7,11 @@ import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.IntoSet
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
-import eu.kanade.tachiyomi.source.entry.EntryType
-import eu.kanade.tachiyomi.ui.reader.loader.ReaderPageSessionLoader
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.serialization.json.Json
 import mihon.core.common.image.progressive.ProgressiveImageEngine
 import mihon.core.metro.AppCoroutineScope
+import mihon.core.metro.StartupWarmup
 import mihon.entry.interactions.download.EntryDownloadWorkController
 import mihon.entry.interactions.manga.download.DownloadCache
 import mihon.entry.interactions.manga.download.DownloadManager
@@ -30,17 +29,13 @@ import mihon.entry.interactions.manga.translation.background.MangaChapterTransla
 import mihon.entry.interactions.manga.translation.background.MangaChapterTranslator
 import mihon.entry.interactions.manga.translation.background.MangaEntryTranslateProcessor
 import mihon.entry.interactions.manga.translation.pages.MangaDownloadedChapterPages
-import mihon.entry.interactions.media.DefaultEntryViewerSettingsProvider
 import mihon.entry.interactions.media.ENTRY_VIEWER_SETTINGS_LEGACY_PREFERENCE_OWNER_GROUP_ID
 import mihon.entry.interactions.media.session.EntryMediaSessionEventSink
 import mihon.entry.interactions.reader.preparation.ReaderChapterPreparationPreferences
 import mihon.entry.interactions.reader.settings.MangaReaderSettings
 import mihon.entry.interactions.runtime.EntryImageComponentInstaller
-import mihon.entry.interactions.runtime.EntryInteractionPlugin
 import mihon.entry.interactions.runtime.EntryPageImageCache
 import mihon.entry.interactions.runtime.ReaderSettingsSurfaceCapabilities
-import mihon.entry.interactions.settings.EntryInteractionPreferences
-import mihon.feature.runtime.FeatureRuntimeWarmup
 import mihon.text.recognition.api.TextRecognitionFeature
 import mihon.translation.api.TranslationFeature
 import mihon.translation.api.host.TranslationHostActions
@@ -51,9 +46,7 @@ import tachiyomi.core.common.preference.ProfilePreferenceOwnerId
 import tachiyomi.core.common.preference.ProfilePreferenceOwnerInstaller
 import tachiyomi.domain.category.interactor.GetCategories
 import tachiyomi.domain.download.service.DownloadPreferences
-import tachiyomi.domain.entry.interactor.GetEntryWithChapters
 import tachiyomi.domain.entry.repository.EntryChapterRepository
-import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.library.service.GlobalLibraryPreferences
 import tachiyomi.domain.source.service.SourceManager
@@ -208,49 +201,8 @@ object MangaEntryInteractionBindings {
 
     @Provides
     @IntoSet
-    @SingleIn(AppScope::class)
-    internal fun plugin(
-        getEntryWithChapters: GetEntryWithChapters,
-        entryChapterRepository: EntryChapterRepository,
-        entryProgressRepository: EntryProgressRepository,
-        downloadPreferences: DownloadPreferences,
-        downloadManager: DownloadManager,
-        downloadCache: DownloadCache,
-        sourceManager: SourceManager,
-        entryRepository: EntryRepository,
-        mediaSession: MangaMediaSessionProcessor,
-        entryInteractionPreferences: EntryInteractionPreferences,
-        viewerSettingsProvider: MangaReaderSettingsProvider,
-        pageSessionLoader: Lazy<ReaderPageSessionLoader>,
-        translateProcessor: MangaEntryTranslateProcessor,
-        pageImageCache: () -> EntryPageImageCache,
-    ): EntryInteractionPlugin = mangaEntryInteractionPlugin(
-        MangaEntryInteractionRuntimeDependencies(
-            getEntryWithChapters = getEntryWithChapters,
-            entryChapterRepository = entryChapterRepository,
-            entryProgressRepository = entryProgressRepository,
-            downloadPreferences = downloadPreferences,
-            downloadManager = downloadManager,
-            downloadCache = downloadCache,
-            sourceManager = sourceManager,
-            entryRepository = entryRepository,
-            mediaSession = mediaSession,
-            entryInteractionPreferences = entryInteractionPreferences,
-        ),
-        pageSessionLoader = pageSessionLoader,
-        translateProcessor = translateProcessor,
-        pageImageCache = pageImageCache,
-        viewerSettingsProvider = DefaultEntryViewerSettingsProvider(
-            type = EntryType.MANGA,
-            surfaces = listOf(viewerSettingsProvider),
-            legacyViewerFlagsNormalization = { flags -> flags and LEGACY_MANGA_VIEWER_MASK.inv() },
-        ),
-    )
-
-    @Provides
-    @IntoSet
-    internal fun downloadManagerWarmup(downloadManager: () -> DownloadManager): FeatureRuntimeWarmup =
-        FeatureRuntimeWarmup { downloadManager() }
+    internal fun downloadManagerWarmup(downloadManager: () -> DownloadManager): StartupWarmup =
+        StartupWarmup { downloadManager() }
 
     @Provides
     @IntoSet
@@ -263,5 +215,3 @@ object MangaEntryInteractionBindings {
         capabilities = MangaReaderSettings.READER_CAPABILITIES,
     )
 }
-
-private const val LEGACY_MANGA_VIEWER_MASK = 0x3FL

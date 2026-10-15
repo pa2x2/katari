@@ -1,7 +1,6 @@
 package mihon.entry.interactions.manga.navigation
 
 import android.content.Context
-import eu.kanade.tachiyomi.source.entry.EntryType
 import mihon.entry.interactions.manga.runtime.requireManga
 import mihon.entry.interactions.manga.state.lastReadAt
 import mihon.entry.interactions.manga.state.pageIndex
@@ -19,7 +18,6 @@ internal class MangaContinueProcessor(
     private val entryProgressRepository: EntryProgressRepository,
     private val openProcessor: MangaOpenProcessor,
 ) : EntryContinueProcessor {
-    override val type: EntryType = EntryType.MANGA
 
     override suspend fun findNext(entry: Entry): EntryChapter? {
         entry.requireManga()

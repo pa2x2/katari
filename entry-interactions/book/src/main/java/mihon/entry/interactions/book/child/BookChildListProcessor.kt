@@ -1,6 +1,5 @@
 package mihon.entry.interactions.book.child
 
-import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOf
@@ -20,7 +19,6 @@ import kotlin.math.roundToInt
 internal class BookChildListProcessor(
     private val entryProgressRepository: EntryProgressRepository,
 ) : EntryChildListProcessor, EntryChildProgressProcessor {
-    override val type = EntryType.BOOK
 
     override fun sortedForReading(
         entry: Entry,

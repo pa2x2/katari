@@ -6,45 +6,38 @@ import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.IntoSet
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
+import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import mihon.core.metro.AppCoroutineScope
+import mihon.core.metro.StartupWarmup
+import mihon.entry.interactions.download.EntryDownloadMaintenanceFeature
+import mihon.entry.interactions.durable.EntryDurableConsequences
+import mihon.entry.interactions.durable.EntryDurableParticipant
 import mihon.entry.interactions.merge.EntryMergeMigrationFeature
 import mihon.entry.interactions.migration.consequence.EntryMigrationConsequenceDelivery
 import mihon.entry.interactions.migration.consequence.EntryMigrationConsequenceStatusCoordinator
-import mihon.entry.interactions.migration.consequence.EntryMigrationDurableConsequences
-import mihon.entry.interactions.migration.consequence.cover.EntryMigrationCustomCoverContributor
+import mihon.entry.interactions.migration.consequence.EntryMigrationDurableEvent
 import mihon.entry.interactions.migration.consequence.cover.EntryMigrationCustomCoverOrphanCleanup
-import mihon.entry.interactions.migration.consequence.cover.entryMigrationCustomCoverBinding
+import mihon.entry.interactions.migration.consequence.cover.EntryMigrationCustomCoverParticipant
 import mihon.entry.interactions.migration.host.EntryMigrationConsequenceHost
 import mihon.entry.interactions.migration.host.EntryMigrationCustomCoverHost
 import mihon.entry.interactions.migration.host.EntryMigrationExecutionHost
 import mihon.entry.interactions.migration.host.EntryMigrationPreparationHost
-import mihon.entry.interactions.migration.options.EntryMigrationOptionDiscovery
-import mihon.entry.interactions.migration.preparation.EntryMigrationTransitionPreparation
 import mihon.entry.interactions.source.EntrySourceRefreshFeature
-import mihon.feature.graph.FeatureGraphContributor
-import mihon.feature.graph.execution.FeatureDurableExecutionParticipantBinding
-import mihon.feature.runtime.FeatureRuntimeComposition
-import mihon.feature.runtime.FeatureRuntimeWarmup
+import mihon.entry.interactions.state.EntryBookmarkProcessor
+import mihon.entry.interactions.state.EntryConsumptionProcessor
+import mihon.entry.interactions.state.EntryMigrationProvider
+import mihon.entry.interactions.tracking.EntryTrackingFeature
 
 @ContributesTo(AppScope::class)
 @BindingContainer
 object EntryMigrationBindings {
     @Provides
     @SingleIn(AppScope::class)
-    internal fun durableConsequences(composition: FeatureRuntimeComposition): EntryMigrationDurableConsequences =
-        EntryMigrationDurableConsequences(composition.executions)
-
-    @Provides
-    @SingleIn(AppScope::class)
-    internal fun optionDiscovery(composition: FeatureRuntimeComposition): EntryMigrationOptionDiscovery =
-        EntryMigrationOptionDiscovery(composition.executions)
-
-    @Provides
-    @SingleIn(AppScope::class)
-    internal fun transitionPreparation(composition: FeatureRuntimeComposition): EntryMigrationTransitionPreparation =
-        EntryMigrationTransitionPreparation(composition.executions)
+    internal fun durableConsequences(
+        participants: Set<EntryDurableParticipant<EntryMigrationDurableEvent>>,
+    ): EntryDurableConsequences<EntryMigrationDurableEvent> = EntryDurableConsequences(participants)
 
     @Provides
     @SingleIn(AppScope::class)
@@ -60,7 +53,7 @@ object EntryMigrationBindings {
     @SingleIn(AppScope::class)
     internal fun consequenceDelivery(
         consequenceHost: EntryMigrationConsequenceHost,
-        consequences: EntryMigrationDurableConsequences,
+        consequences: EntryDurableConsequences<EntryMigrationDurableEvent>,
         coverOrphanCleanup: EntryMigrationCustomCoverOrphanCleanup,
     ): EntryMigrationConsequenceDelivery = EntryMigrationConsequenceDelivery(
         host = consequenceHost,
@@ -78,47 +71,46 @@ object EntryMigrationBindings {
     @Provides
     @SingleIn(AppScope::class)
     internal fun feature(
-        composition: FeatureRuntimeComposition,
+        migrationProviders: Map<EntryType, EntryMigrationProvider>,
+        consumptionProcessors: Map<EntryType, EntryConsumptionProcessor>,
+        bookmarkProcessors: Map<EntryType, EntryBookmarkProcessor>,
         preparationHost: EntryMigrationPreparationHost,
         executionHost: EntryMigrationExecutionHost,
         sourceRefresh: EntrySourceRefreshFeature,
         mergeMigration: EntryMergeMigrationFeature,
-        optionDiscovery: EntryMigrationOptionDiscovery,
-        transitionPreparation: EntryMigrationTransitionPreparation,
-        durableConsequences: EntryMigrationDurableConsequences,
+        downloads: () -> EntryDownloadMaintenanceFeature,
+        tracking: () -> EntryTrackingFeature,
+        durableConsequences: EntryDurableConsequences<EntryMigrationDurableEvent>,
         consequences: EntryMigrationConsequenceDelivery,
     ): EntryMigrationFeature = DefaultEntryMigrationFeature(
-        evaluation = composition.evaluation,
+        types = EntryMigrationTypes(
+            migration = migrationProviders.keys,
+            consumption = migrationProviders.keys intersect consumptionProcessors.keys,
+            bookmark = migrationProviders.keys intersect bookmarkProcessors.keys,
+            childStateOption = migrationProviders.keys intersect (consumptionProcessors.keys + bookmarkProcessors.keys),
+        ),
         preparationHost = preparationHost,
         executionHost = executionHost,
         sourceRefresh = sourceRefresh,
         mergeMigration = mergeMigration,
-        optionDiscovery = optionDiscovery,
-        transitionPreparation = transitionPreparation,
+        downloads = downloads,
+        tracking = tracking,
         durableConsequences = durableConsequences,
         consequences = consequences,
     )
 
     @Provides
     @IntoSet
-    fun graphContributor(): FeatureGraphContributor = EntryMigrationFeatureContributor
-
-    @Provides
-    @IntoSet
-    fun customCoverGraphContributor(): FeatureGraphContributor = EntryMigrationCustomCoverContributor
-
-    @Provides
-    @IntoSet
-    fun customCoverParticipant(
+    internal fun customCoverParticipant(
         customCoverHost: EntryMigrationCustomCoverHost,
-    ): FeatureDurableExecutionParticipantBinding<*> = entryMigrationCustomCoverBinding(customCoverHost)
+    ): EntryDurableParticipant<EntryMigrationDurableEvent> = EntryMigrationCustomCoverParticipant(customCoverHost)
 
     @Provides
     @IntoSet
     internal fun consequenceRetryWarmup(
         @AppCoroutineScope scope: CoroutineScope,
         delivery: () -> EntryMigrationConsequenceDelivery,
-    ): FeatureRuntimeWarmup = FeatureRuntimeWarmup {
+    ): StartupWarmup = StartupWarmup {
         scope.launch {
             delivery().runRetryLoop()
         }

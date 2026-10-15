@@ -1,6 +1,5 @@
 package mihon.entry.interactions.book.media
 
-import eu.kanade.tachiyomi.source.entry.EntryType
 import mihon.entry.interactions.book.content.BookMaterializationCache
 import mihon.entry.interactions.media.EntryMediaCacheArtifact
 import mihon.entry.interactions.media.EntryMediaCacheAutoClearPreference
@@ -11,7 +10,6 @@ import tachiyomi.i18n.*
 internal class BookMediaCacheProvider(
     cache: () -> BookMaterializationCache,
 ) : EntryMediaCacheProvider {
-    override val type = EntryType.BOOK
     override val artifacts: List<EntryMediaCacheArtifact> = listOf(BookMaterializationCacheArtifact(cache))
 }
 

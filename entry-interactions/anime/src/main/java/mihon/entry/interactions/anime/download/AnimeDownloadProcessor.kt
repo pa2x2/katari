@@ -11,7 +11,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import mihon.entry.interactions.anime.download.model.AnimeDownload
-import mihon.entry.interactions.anime.runtime.AnimeEntryInteractionRuntimeDependencies
 import mihon.entry.interactions.anime.runtime.requireAnime
 import mihon.entry.interactions.download.EntryBulkDownloadCandidateProcessor
 import mihon.entry.interactions.download.EntryDownloadOption
@@ -31,25 +30,32 @@ import tachiyomi.domain.entry.model.DownloadPreferences
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.VideoDownloadQualityMode
+import tachiyomi.domain.entry.repository.DownloadPreferencesRepository
+import tachiyomi.domain.entry.repository.EntryChapterRepository
+import tachiyomi.domain.entry.repository.EntryRepository
+import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.i18n.*
 
 internal class AnimeDownloadProcessor(
-    private val dependencies: AnimeEntryInteractionRuntimeDependencies,
+    private val animeDownloadManager: AnimeDownloadManager,
+    private val animeDownloadCache: AnimeDownloadCache,
+    private val downloadPreferencesRepository: DownloadPreferencesRepository,
+    private val sourceManager: SourceManager,
+    private val entryChapterRepository: EntryChapterRepository,
+    entryRepository: EntryRepository,
 ) : EntryDownloadProcessor,
     EntryDownloadOptionsProcessor,
     EntryBulkDownloadCandidateProcessor {
-    private val animeDownloadManager = dependencies.animeDownloadManager
-    private val ownerResolver = EntryDownloadOwnerResolver(dependencies.entryRepository)
+    private val ownerResolver = EntryDownloadOwnerResolver(entryRepository)
 
-    override val type: EntryType = EntryType.ANIME
     override val changes: Flow<Unit> = animeDownloadManager.cacheChanges
-    override val isInitializing: Flow<Boolean> = dependencies.animeDownloadCache.isInitializing
+    override val isInitializing: Flow<Boolean> = animeDownloadCache.isInitializing
     override val isRunning: Flow<Boolean> = animeDownloadManager.isRunning
     override val queueState: Flow<List<EntryDownloadQueueGroup>> = observeEntryDownloadQueue(
         queue = animeDownloadManager.queueState,
         statusUpdates = animeDownloadManager.statusFlow(),
         progressUpdates = animeDownloadManager.progressFlow(),
-    ) { downloads -> downloads.toAnimeEntryDownloadQueueGroups(dependencies.sourceManager).map { it.requireAnime() } }
+    ) { downloads -> downloads.toAnimeEntryDownloadQueueGroups(sourceManager).map { it.requireAnime() } }
     override val events = animeDownloadManager.events
 
     override fun updates(): Flow<EntryDownloadStatus> {
@@ -78,7 +84,7 @@ internal class AnimeDownloadProcessor(
     }
 
     override fun invalidateCache() {
-        dependencies.animeDownloadCache.invalidateCache()
+        animeDownloadCache.invalidateCache()
     }
 
     override fun renameSource(oldSource: UnifiedSource, newSource: UnifiedSource) {
@@ -141,7 +147,7 @@ internal class AnimeDownloadProcessor(
                     ?.let { runCatching { VideoDownloadQualityMode.valueOf(it) }.getOrNull() }
                     ?: currentPreferences.qualityMode,
                 updatedAt = System.currentTimeMillis(),
-            ).also { dependencies.downloadPreferencesRepository.upsert(it) }
+            ).also { downloadPreferencesRepository.upsert(it) }
         }
         startQueuedDownloads(chapters, startNow)
     }
@@ -153,7 +159,7 @@ internal class AnimeDownloadProcessor(
     ): EntryDownloadOptions {
         entry.requireAnime()
         val preferences = downloadPreferences(entry)
-        val source = dependencies.sourceManager.get(entry.source)
+        val source = sourceManager.get(entry.source)
             ?: return entryDownloadOptions(context, preferences)
         val media = runCatching {
             source.getMedia(
@@ -204,7 +210,7 @@ internal class AnimeDownloadProcessor(
     ): List<EntryChapter> {
         entry.requireAnime()
         if (candidates != null) return candidates
-        val episodes = dependencies.entryChapterRepository.getChaptersByEntryIdAwait(
+        val episodes = entryChapterRepository.getChaptersByEntryIdAwait(
             entry.id,
             applyScanlatorFilter = true,
         )
@@ -310,7 +316,7 @@ internal class AnimeDownloadProcessor(
     }
 
     private suspend fun downloadPreferences(entry: Entry): DownloadPreferences {
-        return dependencies.downloadPreferencesRepository.getByEntryId(entry.id)
+        return downloadPreferencesRepository.getByEntryId(entry.id)
             ?: createDefaultVideoDownloadPreferences(entry.id)
     }
 

@@ -9,11 +9,8 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import mihon.entry.interactions.media.session.EntryMediaSessionEvent
-import mihon.entry.interactions.runtime.EntryInteractionComposition
-import mihon.entry.interactions.runtime.EntryInteractionPlugin
-import mihon.entry.interactions.runtime.EntryInteractionProviderBinding
-import mihon.entry.interactions.runtime.createEntryInteractionComposition
-import mihon.feature.graph.ContributionOwner
+import mihon.entry.interactions.runtime.DefaultEntryInteractions
+import mihon.entry.interactions.runtime.EntryInteractions
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
@@ -51,7 +48,7 @@ class EntryProgressFeatureTest {
             coEvery { get(source.id, "", child.url) } returns current
             coEvery { mergeAndSyncChild(capture(recorded)) } answers { recorded.captured }
         }
-        val feature = featureFor(compositionFor(), repository)
+        val feature = featureFor(DefaultEntryInteractions(), repository)
 
         feature.recordMediaProgress(
             EntryMediaSessionEvent.Progressed(
@@ -71,28 +68,14 @@ class EntryProgressFeatureTest {
         )
     }
 
-    private fun compositionFor(
-        vararg bindings: EntryInteractionProviderBinding<*>,
-    ): EntryInteractionComposition {
-        return createEntryInteractionComposition(
-            plugins = listOf(
-                object : EntryInteractionPlugin {
-                    override val type = EntryType.BOOK
-                    override val owner = ContributionOwner("test.partial-progress-type")
-                    override val providerBindings = bindings.toList()
-                },
-            ),
-            featureContributors = listOf(EntryProgressFeatureContributor),
-        )
-    }
-
     private fun featureFor(
-        composition: EntryInteractionComposition,
+        interactions: EntryInteractions,
         repository: EntryProgressRepository = mockk(relaxed = true),
     ): EntryProgressFeature {
         return DefaultEntryProgressFeature(
-            evaluation = composition.featureGraphEvaluation,
-            interaction = composition.interactions.progress,
+            applicableTypes = emptySet(),
+            migrationTypes = emptySet(),
+            interaction = interactions.progress,
             repository = repository,
             getEntryWithChapters = mockk(relaxed = true),
             globalLibraryPreferences = mockk(relaxed = true),

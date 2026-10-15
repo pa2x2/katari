@@ -1,25 +1,41 @@
 package mihon.entry.interactions.lifecycle.profile
 
 import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.entry.interactions.download.EntryDownloadRemovalPlan
-import mihon.entry.interactions.execute
-import mihon.entry.interactions.executeInline
-import mihon.entry.interactions.lifecycle.metadata.toLifecycleFailures
+import mihon.entry.interactions.download.EntryDownloadMaintenanceFeature
+import mihon.entry.interactions.download.maintenance.EntryDownloadRemovalCollector
+import mihon.entry.interactions.lifecycle.EntryLifecycleConsequenceFailure
+import mihon.entry.interactions.lifecycle.attempt
+import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveChildGroupFilterStateHost
 import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveCommit
+import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveCoverHashStateHost
+import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveCustomCoverHost
 import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveHost
-import mihon.entry.interactions.runtime.toContentTypeId
-import mihon.feature.graph.execution.FeatureCommitExecutionResult
-import mihon.feature.graph.execution.FeatureExecutionResult
-import mihon.feature.graph.execution.FeatureExecutionRuntime
-import mihon.feature.graph.execution.FeatureTransactionalExecutionScope
-import mihon.feature.graph.execution.InlineFeatureExecutionPointDefinition
-import mihon.feature.graph.execution.TransactionalFeatureExecutionPointDefinition
-import mihon.feature.graph.execution.coordinateFeatureCommit
+import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveSourceVisibilityHost
+import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveTrackingStateHost
+import mihon.entry.interactions.merge.EntryMergeProfileMoveDestinationResult
+import mihon.entry.interactions.merge.EntryMergeProfileMoveExecutionResult
+import mihon.entry.interactions.merge.EntryMergeProfileMoveFeature
+import mihon.entry.interactions.merge.EntryMergeProfileMovePreparationResult
+import mihon.entry.interactions.merge.EntryMergeProfileMoveReference
+import mihon.entry.interactions.merge.lifecycle.toMergeIntent
 import tachiyomi.domain.entry.model.Entry
 
+/**
+ * Moves entries to another profile. Merge groups move as one unit, so preview expands the selection to whole groups.
+ * Inside the move transaction, downloads of replaced entries are collected and merge, child-group filter, cover hash
+ * and tracking state follow the entries; after commit, replaced custom covers and downloads are removed and the
+ * moved entries' sources become visible in the destination profile.
+ */
 internal class EntryProfileMoveCoordinator(
     private val host: EntryProfileMoveHost,
-    private val executions: FeatureExecutionRuntime,
+    private val mergeProfileMove: () -> EntryMergeProfileMoveFeature,
+    private val downloads: () -> EntryDownloadMaintenanceFeature,
+    private val childGroupFilterStateHost: EntryProfileMoveChildGroupFilterStateHost,
+    private val childGroupFilterTypes: Set<EntryType>,
+    private val coverHashStateHost: EntryProfileMoveCoverHashStateHost,
+    private val trackingStateHost: EntryProfileMoveTrackingStateHost,
+    private val customCoverHost: EntryProfileMoveCustomCoverHost,
+    private val sourceVisibilityHost: EntryProfileMoveSourceVisibilityHost,
 ) : EntryProfileMoveFeature {
     override suspend fun preview(request: EntryProfileMoveRequest): EntryProfileMovePreview {
         require(request.sourceProfileId != request.destinationProfileId)
@@ -27,35 +43,41 @@ internal class EntryProfileMoveCoordinator(
 
         val selected = host.selectedEntries(request)
         check(selected.isNotEmpty()) { "No selected entries still belong to the source profile" }
-        val contributions = MutableEntryProfileMovePreparation(request, selected)
+        val preparation = MutableEntryProfileMovePreparation(request, selected)
+        val mergeReferences = mutableMapOf<EntryType, EntryMergeProfileMoveReference>()
         selected.groupBy(Entry::type).forEach { (type, typedEntries) ->
-            executions.executeInlineOrThrow(
-                point = ENTRY_PROFILE_MOVE_PREPARING_EXECUTION_POINT,
-                type = type,
-                event = EntryProfileMovePreparingEvent(request, typedEntries, contributions),
-            )
+            val result = mergeProfileMove().prepare(request.sourceProfileId, typedEntries.map(Entry::id))
+            if (result is EntryMergeProfileMovePreparationResult.Ready) {
+                result.units.forEach { unit -> preparation.addAtomicUnit(unit.entries) }
+                mergeReferences[type] = result.reference
+            }
         }
 
-        val groups = contributions.groups()
+        val groups = preparation.groups()
         val conflicts = host.destinationConflicts(request, groups.flatMap(EntryProfileMoveGroup::entries))
+        val mergeAffectedIds = mutableSetOf<Long>()
         groups.flatMap(EntryProfileMoveGroup::entries).map(Entry::type).distinct().forEach { type ->
-            executions.executeInlineOrThrow(
-                point = ENTRY_PROFILE_MOVE_DESTINATION_INSPECTING_EXECUTION_POINT,
-                type = type,
-                event = EntryProfileMoveDestinationInspectingEvent(
-                    type,
-                    request,
-                    conflicts.filter { it.sourceEntry.type == type },
-                    contributions,
-                ),
+            val reference = mergeReferences[type] ?: return@forEach
+            val result = mergeProfileMove().inspectDestination(
+                reference,
+                request.destinationProfileId,
+                conflicts.filter { it.sourceEntry.type == type }.map { it.destinationEntry.id },
             )
+            when (result) {
+                is EntryMergeProfileMoveDestinationResult.Ready -> {
+                    mergeReferences[type] = result.reference
+                    mergeAffectedIds += result.mergeAffectedEntryIds
+                }
+                EntryMergeProfileMoveDestinationResult.InvalidReference ->
+                    error("Merge Profile-move destination changed during preparation")
+            }
         }
         return EntryProfileMovePreview(
             request = request,
-            reference = contributions.reference(),
+            reference = RuntimeEntryProfileMoveReference(mergeReferences.toMap()),
             groups = groups,
             conflicts = conflicts.map { conflict ->
-                conflict.copy(destinationMergeAffected = conflict.destinationEntry.id in contributions.affectedIds)
+                conflict.copy(destinationMergeAffected = conflict.destinationEntry.id in mergeAffectedIds)
             },
         )
     }
@@ -66,121 +88,69 @@ internal class EntryProfileMoveCoordinator(
     ): EntryProfileMoveResult {
         val conflictIds = preview.conflicts.map { it.sourceEntry.id }.toSet()
         require(resolutions.keys.containsAll(conflictIds)) { "Every conflict must be resolved" }
-        check(preview.reference is RuntimeEntryProfileMoveReference) { "Unknown Profile-move reference" }
+        val reference = checkNotNull(preview.reference as? RuntimeEntryProfileMoveReference) {
+            "Unknown Profile-move reference"
+        }
 
         val prepared = buildPlan(preview, resolutions)
-        val outcomes = MutableEntryProfileMoveOutcomes()
         val typedPlans = prepared.plan.byType()
-        val execution = executions.coordinateFeatureCommit(
-            commit = {
-                host.execute(
-                    preview = preview,
-                    plan = prepared.plan,
-                    beforeCoreMutation = callback {
-                        typedPlans.forEach { (type, plan) ->
-                            executeOrThrow(
-                                point = ENTRY_PROFILE_MOVING_EXECUTION_POINT,
-                                type = type,
-                                event = EntryProfileMovingEvent(
-                                    type,
-                                    plan,
-                                    preview.reference,
-                                    outcomes,
-                                ),
-                            )
-                        }
-                    },
-                    afterCoreMutation = callback {
-                        typedPlans.forEach { (type, plan) ->
-                            executeOrThrow(
-                                point = ENTRY_PROFILE_STATE_MOVED_EXECUTION_POINT,
-                                type = type,
-                                event = EntryProfileStateMovedEvent(type, plan, preview.reference),
-                            )
-                        }
-                    },
-                )
+        val replacedDownloads = EntryDownloadRemovalCollector(downloads)
+        val commit = host.execute(
+            preview = preview,
+            plan = prepared.plan,
+            beforeCoreMutation = {
+                typedPlans.forEach { (type, plan) ->
+                    replacedDownloads.prepare(plan.removedEntries)
+                    reference.merge[type]?.let { mergeProfileMove().begin(plan.toMergeIntent(it)).requireApplied() }
+                }
             },
-            committed = { it == EntryProfileMoveCommit.Applied },
-            volatileConsequences = {
-                typedPlans.flatMap { (type, plan) ->
-                    execute(
-                        point = ENTRY_PROFILE_MOVED_EXECUTION_POINT,
-                        contentType = type.toContentTypeId(),
-                        event = EntryProfileMovedEvent(type, plan, outcomes.snapshot()),
-                    ).toLifecycleFailures()
+            afterCoreMutation = {
+                typedPlans.forEach { (type, plan) ->
+                    if (type in childGroupFilterTypes) childGroupFilterStateHost.move(plan.stateRequest())
+                    coverHashStateHost.move(plan.stateRequest())
+                    reference.merge[type]?.let { mergeProfileMove().complete(plan.toMergeIntent(it)).requireApplied() }
+                    trackingStateHost.move(plan.stateRequest())
                 }
             },
         )
-        val failures = when (execution) {
-            is FeatureCommitExecutionResult.Committed -> execution.volatileConsequences
-            is FeatureCommitExecutionResult.NotCommitted -> when (execution.commit) {
-                EntryProfileMoveCommit.Conflict -> error("Entries changed before Profile movement could commit")
-                EntryProfileMoveCommit.Applied -> error("Applied Profile movement was not committed")
+        check(commit == EntryProfileMoveCommit.Applied) { "Entries changed before Profile movement could commit" }
+
+        val failures = mutableListOf<EntryLifecycleConsequenceFailure>()
+        typedPlans.forEach { (type, plan) ->
+            failures.attempt("entry.custom-cover.profile-move") {
+                customCoverHost.removeCustomCovers(plan.removedEntries)
+            }
+            failures.attempt("entry.download.maintenance.profile-move") { replacedDownloads.apply(type) }
+            failures.attempt("entry.profile-move.source-visibility") {
+                sourceVisibilityHost.makeSourcesVisible(
+                    plan.destinationProfileId,
+                    plan.movedEntries.mapTo(mutableSetOf()) { it.source },
+                )
             }
         }
-
         return prepared.result.copy(consequenceFailures = failures)
     }
 }
 
-private suspend fun <E : Any> FeatureExecutionRuntime.executeInlineOrThrow(
-    point: InlineFeatureExecutionPointDefinition<E>,
-    type: EntryType,
-    event: E,
-) {
-    val result = executeInline(point, type.toContentTypeId(), event)
-    check(result.isSuccessful) { result.failureMessage() }
-}
-
-private suspend fun <E : Any> FeatureTransactionalExecutionScope.executeOrThrow(
-    point: TransactionalFeatureExecutionPointDefinition<E>,
-    type: EntryType,
-    event: E,
-) {
-    val result = execute(point, type.toContentTypeId(), event)
-    check(result.isSuccessful) { result.failureMessage() }
-}
-
-private fun FeatureExecutionResult.failureMessage(): String {
-    return "Profile-move participant failure at ${point.value}: " +
-        failures.joinToString { "${it.participant.value} (${it.error.message})" }
+private fun EntryMergeProfileMoveExecutionResult.requireApplied() {
+    check(this == EntryMergeProfileMoveExecutionResult.Applied) { "Merge Profile-move participation failed: $this" }
 }
 
 private class MutableEntryProfileMovePreparation(
     private val request: EntryProfileMoveRequest,
     selected: List<Entry>,
-) : EntryProfileMovePreparationSink {
+) {
     private val entries = linkedMapOf<Pair<Long, Long>, Entry>()
     private val atomicUnits = mutableListOf<Set<Pair<Long, Long>>>()
-    private val references = linkedMapOf<Pair<String, EntryType>, EntryProfileMoveParticipantReference>()
-    val affectedIds = mutableSetOf<Long>()
 
     init {
         selected.forEach(::accept)
     }
 
-    override fun addAtomicUnit(entries: List<Entry>) {
+    fun addAtomicUnit(entries: List<Entry>) {
         if (entries.isEmpty()) return
         require(entries.map(Entry::type).distinct().size == 1) { "A Profile-move atomic unit cannot mix Entry types" }
         atomicUnits += entries.mapTo(linkedSetOf()) { entry -> accept(entry) }
-    }
-
-    override fun setParticipantReference(
-        participantId: String,
-        type: EntryType,
-        reference: EntryProfileMoveParticipantReference,
-    ) {
-        references[participantId to type] = reference
-    }
-
-    override fun participantReference(
-        participantId: String,
-        type: EntryType,
-    ): EntryProfileMoveParticipantReference? = references[participantId to type]
-
-    override fun markDestinationAffected(entryIds: Set<Long>) {
-        affectedIds += entryIds
     }
 
     fun groups(): List<EntryProfileMoveGroup> {
@@ -200,8 +170,6 @@ private class MutableEntryProfileMovePreparation(
         return components.map { component -> EntryProfileMoveGroup(component.map(entries::getValue)) }
     }
 
-    fun reference(): EntryProfileMoveReference = RuntimeEntryProfileMoveReference(references.toMap())
-
     private fun accept(entry: Entry): Pair<Long, Long> {
         require(entry.profileId == request.sourceProfileId) { "Profile-move contribution belongs to another profile" }
         val key = entry.profileId to entry.id
@@ -212,13 +180,8 @@ private class MutableEntryProfileMovePreparation(
 }
 
 private data class RuntimeEntryProfileMoveReference(
-    private val references: Map<Pair<String, EntryType>, EntryProfileMoveParticipantReference>,
-) : EntryProfileMoveReference {
-    override fun participantReference(
-        participantId: String,
-        type: EntryType,
-    ): EntryProfileMoveParticipantReference? = references[participantId to type]
-}
+    val merge: Map<EntryType, EntryMergeProfileMoveReference>,
+) : EntryProfileMoveReference
 
 private data class PreparedEntryProfileMove(
     val plan: EntryProfileMovePlan,
@@ -296,29 +259,6 @@ private fun EntryProfileMovePlan.byType(): Map<EntryType, EntryProfileMovePlan> 
             movedEntries = movedEntries.filter { it.type == type },
             removedEntries = removedEntries.filter { it.type == type },
             destinationEntryIdsToDetach = destinationEntryIdsToDetach.filterTo(mutableSetOf(), relevantIds::contains),
-        )
-    }
-}
-
-private class MutableEntryProfileMoveOutcomes : EntryProfileMoveOutcomeSink {
-    private val downloadOwners = linkedMapOf<Pair<Long, Long>, Entry>()
-
-    override fun addDownloadPlan(plan: EntryDownloadRemovalPlan) {
-        plan.owners.forEach { owner -> downloadOwners[owner.profileId to owner.id] = owner }
-    }
-
-    fun snapshot(): EntryProfileMoveOutcomes {
-        val owners = downloadOwners.values.toList()
-        return EntryProfileMoveOutcomes(
-            downloadPlans = if (owners.isEmpty()) {
-                emptyList()
-            } else {
-                listOf(
-                    EntryDownloadRemovalPlan(
-                        owners,
-                    ),
-                )
-            },
         )
     }
 }

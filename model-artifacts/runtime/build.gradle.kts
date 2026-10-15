@@ -13,8 +13,6 @@ dependencies {
     api(projects.modelArtifacts.api)
 
     implementation(projects.core.common)
-    implementation(projects.featureGraph)
-    implementation(projects.featureRuntime)
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.okhttp.core)

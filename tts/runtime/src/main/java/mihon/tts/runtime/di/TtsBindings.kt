@@ -11,17 +11,11 @@ import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import mihon.feature.graph.CapabilityProvider
-import mihon.feature.graph.FeatureGraphContributor
-import mihon.feature.runtime.FeatureGraphValidator
 import mihon.language.runtime.identification.createPlatformTextLanguageDetectors
 import mihon.tts.api.TtsFeature
 import mihon.tts.api.host.TtsHostActions
 import mihon.tts.runtime.audio.AndroidTtsAudioFocus
 import mihon.tts.runtime.feature.DefaultTtsFeature
-import mihon.tts.runtime.graph.TtsEngineRegistryCapability
-import mihon.tts.runtime.graph.TtsFeatureContributor
-import mihon.tts.runtime.graph.TtsFeatureGraphStateValidator
 import mihon.tts.runtime.host.DefaultTtsHostActions
 import mihon.tts.runtime.preference.ProfileTtsPreferences
 import mihon.tts.runtime.registry.DefaultTtsEngineRegistry
@@ -113,19 +107,4 @@ object TtsBindings {
         setupRegistry = registry,
         engineResolver = engineResolver,
     )
-
-    @Provides
-    @IntoSet
-    fun graphContributor(): FeatureGraphContributor = TtsFeatureContributor
-
-    @Provides
-    @IntoSet
-    fun engineRegistryCapability(registry: DefaultTtsEngineRegistry): CapabilityProvider<*> =
-        TtsEngineRegistryCapability.bind(registry)
-
-    @Provides
-    @IntoSet
-    fun graphValidator(): FeatureGraphValidator = FeatureGraphValidator { evaluation ->
-        TtsFeatureGraphStateValidator(evaluation).validate()
-    }
 }

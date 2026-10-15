@@ -4,16 +4,17 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
+import mihon.entry.interactions.durable.EntryDurableConsequences
+import mihon.entry.interactions.durable.EntryDurablePayload
+import mihon.entry.interactions.durable.EntryDurableRecord
 import mihon.entry.interactions.migration.EntryMigrationFollowUp
 import mihon.entry.interactions.migration.consequence.cover.EntryMigrationCustomCoverOrphanCleanup
 import mihon.entry.interactions.migration.host.EntryMigrationConsequenceHost
 import mihon.entry.interactions.migration.host.EntryMigrationPendingConsequence
-import mihon.feature.graph.FeatureExecutionParticipantId
-import mihon.feature.graph.execution.FeatureDurableExecutionEnvelope
 
 internal class EntryMigrationConsequenceDelivery(
     private val host: EntryMigrationConsequenceHost,
-    private val consequences: EntryMigrationDurableConsequences,
+    private val consequences: EntryDurableConsequences<EntryMigrationDurableEvent>,
     private val coverOrphanCleanup: EntryMigrationCustomCoverOrphanCleanup,
     private val clockMillis: () -> Long = System::currentTimeMillis,
 ) {
@@ -54,10 +55,10 @@ internal class EntryMigrationConsequenceDelivery(
 
     private suspend fun deliverSafely(consequence: EntryMigrationPendingConsequence) {
         try {
-            val envelope = consequence.envelope()
-            consequences.deliver(envelope)
+            val record = consequence.record()
+            consequences.deliver(record)
             host.acknowledgeConsequence(consequence.id)
-            consequences.discard(listOf(envelope))
+            consequences.discard(listOf(record))
         } catch (error: CancellationException) {
             throw error
         } catch (error: Exception) {
@@ -75,8 +76,7 @@ internal class EntryMigrationConsequenceDelivery(
     }
 }
 
-private fun EntryMigrationPendingConsequence.envelope() = FeatureDurableExecutionEnvelope(
-    participant = FeatureExecutionParticipantId(participantId),
-    schemaVersion = schemaVersion,
-    payload = payload,
+private fun EntryMigrationPendingConsequence.record() = EntryDurableRecord(
+    participantId = participantId,
+    payload = EntryDurablePayload(schemaVersion, payload),
 )

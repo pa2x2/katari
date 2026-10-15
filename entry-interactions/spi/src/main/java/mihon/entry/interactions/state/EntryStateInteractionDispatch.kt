@@ -2,7 +2,6 @@ package mihon.entry.interactions.state
 
 import eu.kanade.tachiyomi.source.entry.EntryType
 import mihon.entry.interactions.media.EntryPlaybackPreferencesSnapshot
-import mihon.entry.interactions.runtime.requireMatchingEntryType
 import mihon.entry.interactions.runtime.requireProcessor
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
@@ -16,7 +15,6 @@ internal class ProviderBackedEntryConsumptionInteraction(
         consumed: Boolean,
     ): List<EntryChapter> {
         val processor = consumptionProcessors.requireProcessor("consumption", entry.type)
-        processor.requireMatchingEntryType("consumption", entry, consumptionProcessors.keys)
         return processor.setConsumed(entry, chapters, consumed)
     }
 }
@@ -26,7 +24,6 @@ internal class ProviderBackedEntryBookmarkInteraction(
 ) : EntryBookmarkInteraction {
     override suspend fun setBookmarked(entry: Entry, chapters: List<EntryChapter>, bookmarked: Boolean) {
         val processor = bookmarkProcessors.requireProcessor("bookmark", entry.type)
-        processor.requireMatchingEntryType("bookmark", entry, bookmarkProcessors.keys)
         processor.setBookmarked(entry, chapters, bookmarked)
     }
 }
@@ -36,13 +33,11 @@ internal class ProviderBackedEntryProgressInteraction(
 ) : EntryProgressInteraction {
     override suspend fun snapshot(entry: Entry): EntryProgressSnapshot {
         val processor = processors.requireProcessor("progress", entry.type)
-        processor.requireMatchingEntryType("progress", entry, processors.keys)
         return processor.snapshot(entry)
     }
 
     override suspend fun restore(entry: Entry, snapshot: EntryProgressSnapshot) {
         val processor = processors.requireProcessor("progress", entry.type)
-        processor.requireMatchingEntryType("progress", entry, processors.keys)
         processor.restore(entry, snapshot)
     }
 
@@ -56,8 +51,6 @@ internal class ProviderBackedEntryProgressInteraction(
                 targetEntry.type
         }
         val processor = processors.requireProcessor("progress", sourceEntry.type)
-        processor.requireMatchingEntryType("progress", sourceEntry, processors.keys)
-        processor.requireMatchingEntryType("progress", targetEntry, processors.keys)
         processor.copy(sourceEntry, targetEntry, resourceMappings)
     }
 
@@ -71,8 +64,6 @@ internal class ProviderBackedEntryProgressInteraction(
                 targetEntry.type
         }
         val processor = processors.requireProcessor("progress", sourceEntry.type)
-        processor.requireMatchingEntryType("progress", sourceEntry, processors.keys)
-        processor.requireMatchingEntryType("progress", targetEntry, processors.keys)
         return processor.prepareMigration(sourceEntry, targetEntry, resourceMappings)
     }
 }
@@ -82,13 +73,11 @@ internal class ProviderBackedEntryPlaybackPreferencesInteraction(
 ) : EntryPlaybackPreferencesInteraction {
     override suspend fun snapshot(entry: Entry): EntryPlaybackPreferencesSnapshot? {
         val processor = processors.requireProcessor("playback preferences", entry.type)
-        processor.requireMatchingEntryType("playback preferences", entry, processors.keys)
         return processor.snapshot(entry)
     }
 
     override suspend fun restore(entry: Entry, snapshot: EntryPlaybackPreferencesSnapshot) {
         val processor = processors.requireProcessor("playback preferences", entry.type)
-        processor.requireMatchingEntryType("playback preferences", entry, processors.keys)
         processor.restore(entry, snapshot)
     }
 
@@ -98,8 +87,6 @@ internal class ProviderBackedEntryPlaybackPreferencesInteraction(
                 "${sourceEntry.type} and ${targetEntry.type}"
         }
         val processor = processors.requireProcessor("playback preferences", sourceEntry.type)
-        processor.requireMatchingEntryType("playback preferences", sourceEntry, processors.keys)
-        processor.requireMatchingEntryType("playback preferences", targetEntry, processors.keys)
         return processor.copy(sourceEntry, targetEntry)
     }
 }

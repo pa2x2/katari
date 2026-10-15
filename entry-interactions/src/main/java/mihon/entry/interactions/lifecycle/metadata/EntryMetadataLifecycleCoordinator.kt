@@ -1,14 +1,12 @@
 package mihon.entry.interactions.lifecycle.metadata
 
-import mihon.entry.interactions.execute
-import mihon.entry.interactions.runtime.toContentTypeId
-import mihon.feature.graph.execution.FeatureExecutionResult
-import mihon.feature.graph.execution.FeatureExecutionRuntime
-import mihon.feature.graph.execution.afterFeatureCommitVolatile
+import mihon.entry.interactions.download.EntryDownloadMaintenanceFeature
+import mihon.entry.interactions.lifecycle.EntryLifecycleConsequenceFailure
+import mihon.entry.interactions.lifecycle.attempt
 import tachiyomi.domain.entry.model.Entry
 
 internal class EntryMetadataLifecycleCoordinator(
-    private val executions: FeatureExecutionRuntime,
+    private val downloads: () -> EntryDownloadMaintenanceFeature,
 ) : EntryMetadataLifecycleFeature {
     override suspend fun changed(previous: Entry, current: Entry): EntryMetadataChangeResult {
         require(previous.profileId == current.profileId && previous.id == current.id) {
@@ -17,23 +15,12 @@ internal class EntryMetadataLifecycleCoordinator(
         require(previous.type == current.type) { "Metadata lifecycle cannot change Entry type" }
         if (previous == current) return EntryMetadataChangeResult.NoChange
 
-        val execution = executions.afterFeatureCommitVolatile {
-            execute(
-                point = ENTRY_METADATA_CHANGED_EXECUTION_POINT,
-                contentType = current.type.toContentTypeId(),
-                event = EntryMetadataChangedEvent(previous, current),
-            )
+        val failures = mutableListOf<EntryLifecycleConsequenceFailure>()
+        if (previous.title != current.title) {
+            failures.attempt("entry.download.maintenance.metadata-change") {
+                downloads().renameEntry(previous, current.title)
+            }
         }
-        return EntryMetadataChangeResult.Applied(execution.toLifecycleFailures())
-    }
-}
-
-internal fun FeatureExecutionResult.toLifecycleFailures(): List<EntryLifecycleConsequenceFailure> {
-    return failures.map { failure ->
-        EntryLifecycleConsequenceFailure(
-            participantId = failure.participant.value,
-            ownerId = failure.owner.value,
-            cause = failure.error,
-        )
+        return EntryMetadataChangeResult.Applied(failures)
     }
 }

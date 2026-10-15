@@ -1,0 +1,31 @@
+package mihon.entry.interactions.runtime
+
+import dev.icerock.moko.resources.PluralsResource
+import dev.icerock.moko.resources.StringResource
+import mihon.entry.interactions.statistics.EntryStatisticsAccent
+
+interface EntryStatisticsProvider {
+    val accent: EntryStatisticsAccent
+    val consumedUnitLabel: StringResource
+
+    /** [consumedUnitLabel]'s items as a lowercase plural noun, such as "chapters", for compact labels and lists. */
+    val consumedUnitName: StringResource
+
+    /** The average time spent per finished item, such as "~40m per chapter". */
+    val timePerItemLabel: StringResource
+
+    /** A count of [consumedUnitLabel]'s items, such as "3 chapters read". */
+    val consumedCountPlural: PluralsResource
+
+    /**
+     * Whether an item of one title takes about as long as an item of another, so a title without enough timed items
+     * of its own can be estimated from the type's usual pace. False where item length varies widely between titles.
+     */
+    val itemPaceCarriesAcrossTitles: Boolean
+
+    /** Names one item by its number, such as "Chapter 98". */
+    val itemNumberLabel: StringResource
+
+    /** Names a run of items by their first and last numbers, such as "chapters 412 to 506". */
+    val itemRangeLabel: StringResource
+}

@@ -220,7 +220,6 @@ dependencies {
     implementation(dependencies.project(mapOf("path" to projects.coreMetadata.path)))
     implementation(dependencies.project(mapOf("path" to projects.entryInteractions.path)))
     implementation(dependencies.project(mapOf("path" to projects.entrySourceApi.path)))
-    implementation(dependencies.project(mapOf("path" to projects.featureRuntime.path)))
     implementation(dependencies.project(mapOf("path" to projects.sourceApi.path)))
     implementation(dependencies.project(mapOf("path" to projects.sourceCompat.path)))
     implementation(dependencies.project(mapOf("path" to projects.sourceLocal.path)))
@@ -362,9 +361,6 @@ dependencies {
 
     // Tests
     testImplementation(libs.bundles.test)
-    testImplementation(projects.featureValidation)
-    testImplementation(testFixtures(projects.entryInteractions))
-    testImplementation(testFixtures(projects.translation.runtime))
     testRuntimeOnly(libs.junit.platform.launcher)
 
     // For detecting memory leaks; see https://square.github.io/leakcanary/
@@ -372,31 +368,6 @@ dependencies {
     implementation(libs.leakCanary.plumber)
 
     testImplementation(libs.kotlinx.coroutines.test)
-}
-
-val featureReportFile = layout.buildDirectory.file("reports/features/developer-report.txt")
-
-val generateFeatureReport = tasks.register<Test>("generateFeatureReport") {
-    group = "reporting"
-    description = "Renders the evaluated application and Entry Feature graph for developers"
-
-    testClassesDirs = files(
-        providers.provider { tasks.named<Test>("testFossUnitTest").get().testClassesDirs },
-    )
-    classpath = files(
-        providers.provider { tasks.named<Test>("testFossUnitTest").get().classpath },
-    )
-    filter {
-        includeTestsMatching(
-            "eu.kanade.tachiyomi.validation.ProductionFeatureDeveloperReportTest",
-        )
-    }
-    systemProperty(
-        "mihon.feature.report.output",
-        featureReportFile.get().asFile.absolutePath,
-    )
-    outputs.file(featureReportFile)
-    testLogging.showStandardStreams = true
 }
 
 apollo {

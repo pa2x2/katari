@@ -8,45 +8,27 @@ import dev.zacsweers.metro.IntoSet
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import eu.kanade.tachiyomi.core.security.SecurityPreferences
+import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.plus
 import mihon.core.metro.AppCoroutineScope
+import mihon.core.metro.StartupWarmup
 import mihon.entry.interactions.download.configuration.backup.DefaultEntryDownloadConfigurationBackupFeature
-import mihon.entry.interactions.download.configuration.backup.ENTRY_DOWNLOAD_CONFIGURATION_BACKUP_RESTORE_PARTICIPANT
-import mihon.entry.interactions.download.configuration.backup.ENTRY_DOWNLOAD_CONFIGURATION_BACKUP_SCHEMA_VERSION
-import mihon.entry.interactions.download.configuration.backup.ENTRY_DOWNLOAD_CONFIGURATION_BACKUP_SNAPSHOT_PARTICIPANT
-import mihon.entry.interactions.download.configuration.backup.ENTRY_DOWNLOAD_CONFIGURATION_BACKUP_STATE_ID
-import mihon.entry.interactions.download.configuration.backup.EntryDownloadConfigurationBackupContributor
 import mihon.entry.interactions.download.configuration.backup.EntryDownloadConfigurationBackupFeature
-import mihon.entry.interactions.download.configuration.backup.EntryDownloadConfigurationBackupState
+import mihon.entry.interactions.download.configuration.backup.EntryDownloadConfigurationBackupParticipant
 import mihon.entry.interactions.download.host.EntryDownloadSourceAccessResolver
 import mihon.entry.interactions.download.host.SourceManagerEntryDownloadSourceAccessResolver
-import mihon.entry.interactions.download.maintenance.ENTRY_DOWNLOAD_DESTRUCTIVE_REMOVAL_PARTICIPANT
-import mihon.entry.interactions.download.maintenance.ENTRY_DOWNLOAD_DESTRUCTIVE_REMOVAL_PREPARATION_PARTICIPANT
-import mihon.entry.interactions.download.maintenance.ENTRY_DOWNLOAD_METADATA_CHANGE_PARTICIPANT
-import mihon.entry.interactions.download.maintenance.ENTRY_DOWNLOAD_PROFILE_MOVE_PARTICIPANT
-import mihon.entry.interactions.download.maintenance.ENTRY_DOWNLOAD_PROFILE_MOVE_PREPARATION_PARTICIPANT
-import mihon.entry.interactions.download.maintenance.EntryDownloadDestructiveRemovalContributor
-import mihon.entry.interactions.download.maintenance.EntryDownloadMetadataLifecycleContributor
-import mihon.entry.interactions.download.maintenance.EntryDownloadProfileMoveContributor
-import mihon.entry.interactions.download.maintenance.merge.EntryDownloadMergeContributor
-import mihon.entry.interactions.download.maintenance.merge.entryDownloadMergeBinding
-import mihon.entry.interactions.download.maintenance.migration.EntryDownloadMigrationContributor
-import mihon.entry.interactions.download.maintenance.migration.entryDownloadMigrationBinding
-import mihon.entry.interactions.download.maintenance.migration.entryDownloadMigrationOptionBinding
+import mihon.entry.interactions.download.maintenance.merge.EntryDownloadMergeParticipant
+import mihon.entry.interactions.download.maintenance.migration.EntryDownloadMigrationParticipant
 import mihon.entry.interactions.download.notification.AndroidEntryDownloadNotifier
-import mihon.entry.interactions.media.session.EntryMediaSessionEvent
+import mihon.entry.interactions.durable.EntryDurableParticipant
 import mihon.entry.interactions.merge.EntryMergeDownloadOwnershipProjection
-import mihon.entry.interactions.persistence.backup.decodeEntryBackupState
-import mihon.entry.interactions.persistence.backup.entryBackupStateEnvelope
+import mihon.entry.interactions.merge.consequence.EntryMergeDurableEvent
+import mihon.entry.interactions.migration.consequence.EntryMigrationDurableEvent
+import mihon.entry.interactions.persistence.backup.EntryBackupStateParticipant
 import mihon.entry.interactions.runtime.EntryInteractions
-import mihon.feature.graph.FeatureGraphContributor
-import mihon.feature.graph.execution.FeatureDurableExecutionParticipantBinding
-import mihon.feature.graph.execution.FeatureExecutionHandler
-import mihon.feature.graph.execution.FeatureExecutionParticipantBinding
-import mihon.feature.runtime.FeatureRuntimeComposition
-import mihon.feature.runtime.FeatureRuntimeWarmup
+import mihon.entry.interactions.state.EntryBookmarkProcessor
 import tachiyomi.domain.category.interactor.GetCategories
 import tachiyomi.domain.download.service.DownloadPreferences
 import tachiyomi.domain.entry.interactor.GetEntryWithChapters
@@ -67,11 +49,11 @@ object EntryDownloadBindings {
     @Provides
     @SingleIn(AppScope::class)
     internal fun runtimeCoordinator(
-        composition: FeatureRuntimeComposition,
+        downloadProcessors: Map<EntryType, EntryDownloadProcessor>,
         interactions: EntryInteractions,
         @AppCoroutineScope scope: CoroutineScope,
     ): EntryDownloadRuntimeCoordinator = DefaultEntryDownloadRuntimeFeature(
-        evaluation = composition.evaluation,
+        applicableTypes = downloadProcessors.keys,
         interaction = interactions.download,
         scope = scope + Dispatchers.Default,
     )
@@ -81,10 +63,6 @@ object EntryDownloadBindings {
         coordinator
 
     @Provides
-    @IntoSet
-    fun runtimeGraphContributor(): FeatureGraphContributor = EntryDownloadRuntimeFeatureContributor
-
-    @Provides
     @SingleIn(AppScope::class)
     internal fun sourceAccessResolver(sourceManager: SourceManager): EntryDownloadSourceAccessResolver =
         SourceManagerEntryDownloadSourceAccessResolver(sourceManager)
@@ -92,11 +70,18 @@ object EntryDownloadBindings {
     @Provides
     @SingleIn(AppScope::class)
     internal fun actionFeature(
-        composition: FeatureRuntimeComposition,
+        downloadProcessors: Map<EntryType, EntryDownloadProcessor>,
+        bulkCandidateProcessors: Map<EntryType, EntryBulkDownloadCandidateProcessor>,
+        bookmarkProcessors: Map<EntryType, EntryBookmarkProcessor>,
         interactions: EntryInteractions,
         sourceAccessResolver: EntryDownloadSourceAccessResolver,
     ): EntryDownloadActionFeature = DefaultEntryDownloadActionFeature(
-        evaluation = composition.evaluation,
+        types = EntryDownloadActionTypes(
+            individual = downloadProcessors.keys,
+            bulk = downloadProcessors.keys intersect bulkCandidateProcessors.keys,
+            bookmarkedBulk = downloadProcessors.keys intersect bulkCandidateProcessors.keys intersect
+                bookmarkProcessors.keys,
+        ),
         interaction = interactions.download,
         sourceAccessResolver = sourceAccessResolver,
     )
@@ -141,12 +126,8 @@ object EntryDownloadBindings {
 
     @Provides
     @IntoSet
-    fun actionGraphContributor(): FeatureGraphContributor = EntryDownloadActionFeatureContributor
-
-    @Provides
-    @IntoSet
-    internal fun notificationManagerWarmup(manager: () -> EntryDownloadNotificationManager): FeatureRuntimeWarmup =
-        FeatureRuntimeWarmup { manager().start() }
+    internal fun notificationManagerWarmup(manager: () -> EntryDownloadNotificationManager): StartupWarmup =
+        StartupWarmup { manager().start() }
 
     @Provides
     @SingleIn(AppScope::class)
@@ -163,11 +144,11 @@ object EntryDownloadBindings {
     @Provides
     @SingleIn(AppScope::class)
     internal fun automaticDownloadCoordinator(
-        composition: FeatureRuntimeComposition,
+        downloadProcessors: Map<EntryType, EntryDownloadProcessor>,
         interactions: EntryInteractions,
         sharedPolicy: EntryAutomaticDownloadPolicy,
     ): EntryAutomaticDownloadCoordinator = DefaultEntryAutomaticDownloadFeature(
-        evaluation = composition.evaluation,
+        applicableTypes = downloadProcessors.keys,
         interaction = interactions.download,
         sharedPolicy = sharedPolicy,
     )
@@ -178,35 +159,15 @@ object EntryDownloadBindings {
     ): EntryAutomaticDownloadFeature = coordinator
 
     @Provides
-    @IntoSet
-    fun automaticDownloadGraphContributor(): FeatureGraphContributor = EntryAutomaticDownloadFeatureContributor
-
-    @Provides
-    @IntoSet
-    fun automaticDownloadRefreshGraphContributor(): FeatureGraphContributor =
-        EntryAutomaticDownloadRefreshContributor
-
-    @Provides
-    @IntoSet
-    internal fun automaticDownloadSourceRefreshParticipant(
-        coordinator: () -> EntryAutomaticDownloadCoordinator,
-    ): FeatureExecutionParticipantBinding<*> = entryAutomaticDownloadSourceRefreshBinding(coordinator)
-
-    @Provides
-    @IntoSet
-    internal fun automaticDownloadLibraryUpdateParticipant(
-        coordinator: () -> EntryAutomaticDownloadCoordinator,
-    ): FeatureExecutionParticipantBinding<*> = entryAutomaticDownloadLibraryUpdateBinding(coordinator)
-
-    @Provides
     @SingleIn(AppScope::class)
     fun lifecycleEventSink(feature: () -> EntryDownloadLifecycleFeature): EntryDownloadLifecycleEventSink =
         EntryDownloadLifecycleEventSink { event -> feature().onEvent(event) }
 
     @Provides
     @SingleIn(AppScope::class)
-    fun lifecycleFeature(
-        composition: FeatureRuntimeComposition,
+    internal fun lifecycleFeature(
+        downloadProcessors: Map<EntryType, EntryDownloadProcessor>,
+        bookmarkProcessors: Map<EntryType, EntryBookmarkProcessor>,
         downloadPreferences: DownloadPreferences,
         getCategories: GetCategories,
         getEntryWithChapters: GetEntryWithChapters,
@@ -214,7 +175,8 @@ object EntryDownloadBindings {
         interactions: EntryInteractions,
         globalLibraryPreferences: GlobalLibraryPreferences,
     ): EntryDownloadLifecycleFeature = DefaultEntryDownloadLifecycleFeature(
-        evaluation = composition.evaluation,
+        downloadTypes = downloadProcessors.keys,
+        bookmarkProtectedTypes = downloadProcessors.keys intersect bookmarkProcessors.keys,
         downloadPreferences = downloadPreferences,
         getCategories = getCategories,
         getEntryWithChapters = getEntryWithChapters,
@@ -224,311 +186,57 @@ object EntryDownloadBindings {
     )
 
     @Provides
-    @IntoSet
-    fun lifecycleGraphContributor(): FeatureGraphContributor = EntryDownloadLifecycleFeatureContributor
-
-    @Provides
-    @IntoSet
-    fun mediaSessionGraphContributor(): FeatureGraphContributor = EntryDownloadMediaSessionContributor
-
-    @Provides
-    @IntoSet
-    fun mediaSessionParticipant(
-        feature: () -> EntryDownloadLifecycleFeature,
-    ): FeatureExecutionParticipantBinding<*> = entryDownloadMediaSessionBinding(feature)
-
-    @Provides
     @SingleIn(AppScope::class)
     fun optionsFeature(
-        composition: FeatureRuntimeComposition,
+        optionsProcessors: Map<EntryType, EntryDownloadOptionsProcessor>,
         interactions: EntryInteractions,
     ): EntryDownloadOptionsFeature = DefaultEntryDownloadOptionsFeature(
-        evaluation = composition.evaluation,
+        applicableTypes = optionsProcessors.keys,
         interaction = interactions.download,
     )
 
     @Provides
     @SingleIn(AppScope::class)
-    fun settingsFeature(composition: FeatureRuntimeComposition): EntryDownloadSettingsFeature =
-        DefaultEntryDownloadSettingsFeature(composition.evaluation)
+    fun settingsFeature(availableSettings: Set<EntryDownloadSetting>): EntryDownloadSettingsFeature =
+        DefaultEntryDownloadSettingsFeature(availableSettings)
 
     @Provides
     @SingleIn(AppScope::class)
     fun configurationBackupFeature(
-        composition: FeatureRuntimeComposition,
+        optionsProcessors: Map<EntryType, EntryDownloadOptionsProcessor>,
         repository: DownloadPreferencesRepository,
     ): EntryDownloadConfigurationBackupFeature = DefaultEntryDownloadConfigurationBackupFeature(
-        evaluation = composition.evaluation,
+        applicableTypes = optionsProcessors.keys,
         repository = repository,
-    )
-
-    @Provides
-    @IntoSet
-    fun configurationGraphContributor(): FeatureGraphContributor = EntryDownloadConfigurationFeatureContributor
-
-    @Provides
-    @IntoSet
-    fun configurationBackupGraphContributor(): FeatureGraphContributor = EntryDownloadConfigurationBackupContributor
-
-    @Provides
-    @IntoSet
-    fun configurationBackupSnapshotParticipant(
-        feature: () -> EntryDownloadConfigurationBackupFeature,
-    ): FeatureExecutionParticipantBinding<*> = FeatureExecutionParticipantBinding(
-        definition = ENTRY_DOWNLOAD_CONFIGURATION_BACKUP_SNAPSHOT_PARTICIPANT,
-        handler = FeatureExecutionHandler { event ->
-            if (!event.selection.includeContentState) return@FeatureExecutionHandler
-            val state = feature().snapshot(event.entry)
-                ?: return@FeatureExecutionHandler
-            event.contributions.add(
-                entryBackupStateEnvelope(
-                    ENTRY_DOWNLOAD_CONFIGURATION_BACKUP_STATE_ID,
-                    ENTRY_DOWNLOAD_CONFIGURATION_BACKUP_SCHEMA_VERSION,
-                    EntryDownloadConfigurationBackupState.serializer(),
-                    state,
-                ),
-            )
-        },
-    )
-
-    @Provides
-    @IntoSet
-    fun configurationBackupRestoreParticipant(
-        feature: () -> EntryDownloadConfigurationBackupFeature,
-    ): FeatureExecutionParticipantBinding<*> = FeatureExecutionParticipantBinding(
-        definition = ENTRY_DOWNLOAD_CONFIGURATION_BACKUP_RESTORE_PARTICIPANT,
-        handler = FeatureExecutionHandler { event ->
-            val state = event.states.decodeEntryBackupState(
-                ENTRY_DOWNLOAD_CONFIGURATION_BACKUP_STATE_ID,
-                ENTRY_DOWNLOAD_CONFIGURATION_BACKUP_SCHEMA_VERSION,
-                EntryDownloadConfigurationBackupState.serializer(),
-            ) ?: return@FeatureExecutionHandler
-            feature().restore(event.entry, state)
-        },
     )
 
     @Provides
     @SingleIn(AppScope::class)
     internal fun maintenanceFeature(
-        composition: FeatureRuntimeComposition,
+        downloadProcessors: Map<EntryType, EntryDownloadProcessor>,
         interactions: EntryInteractions,
         ownership: EntryMergeDownloadOwnershipProjection,
     ): EntryDownloadMaintenanceFeature = DefaultEntryDownloadMaintenanceFeature(
-        evaluation = composition.evaluation,
+        types = downloadProcessors.keys,
         interaction = interactions.download,
         ownership = ownership,
     )
 
     @Provides
     @IntoSet
-    fun maintenanceGraphContributor(): FeatureGraphContributor = EntryDownloadMaintenanceFeatureContributor
-
-    @Provides
-    @IntoSet
-    fun libraryMembershipGraphContributor(): FeatureGraphContributor = EntryDownloadLibraryMembershipContributor
-
-    @Provides
-    @IntoSet
-    fun metadataLifecycleGraphContributor(): FeatureGraphContributor = EntryDownloadMetadataLifecycleContributor
-
-    @Provides
-    @IntoSet
-    fun destructiveRemovalGraphContributor(): FeatureGraphContributor = EntryDownloadDestructiveRemovalContributor
-
-    @Provides
-    @IntoSet
-    fun profileMoveGraphContributor(): FeatureGraphContributor = EntryDownloadProfileMoveContributor
-
-    @Provides
-    @IntoSet
-    fun migrationGraphContributor(): FeatureGraphContributor = EntryDownloadMigrationContributor
-
-    @Provides
-    @IntoSet
-    fun mergeGraphContributor(): FeatureGraphContributor = EntryDownloadMergeContributor
-
-    @Provides
-    @IntoSet
-    fun migrationDurableParticipant(
+    internal fun migrationDurableParticipant(
         feature: () -> EntryDownloadMaintenanceFeature,
-    ): FeatureDurableExecutionParticipantBinding<*> = entryDownloadMigrationBinding(feature)
+    ): EntryDurableParticipant<EntryMigrationDurableEvent> = EntryDownloadMigrationParticipant(feature)
 
     @Provides
     @IntoSet
-    fun mergeDurableParticipant(
+    internal fun mergeDurableParticipant(
         feature: () -> EntryDownloadMaintenanceFeature,
-    ): FeatureDurableExecutionParticipantBinding<*> = entryDownloadMergeBinding(feature)
+    ): EntryDurableParticipant<EntryMergeDurableEvent> = EntryDownloadMergeParticipant(feature)
 
     @Provides
     @IntoSet
-    fun migrationOptionParticipant(
-        feature: () -> EntryDownloadMaintenanceFeature,
-    ): FeatureExecutionParticipantBinding<*> = entryDownloadMigrationOptionBinding(feature)
-
-    @Provides
-    @IntoSet
-    fun libraryRemovalParticipant(
-        feature: () -> EntryDownloadMaintenanceFeature,
-    ): FeatureExecutionParticipantBinding<*> = FeatureExecutionParticipantBinding(
-        definition = ENTRY_DOWNLOAD_LIBRARY_REMOVAL_PARTICIPANT,
-        handler = FeatureExecutionHandler { event ->
-            event.entries.forEach { entry ->
-                if (feature().inspectEntry(entry) == EntryDownloadMaintenanceInspection.HasDownloads) {
-                    event.outcomes.requireDownloadDecision(entry)
-                }
-            }
-        },
-    )
-
-    @Provides
-    @IntoSet
-    fun metadataChangeParticipant(
-        feature: () -> EntryDownloadMaintenanceFeature,
-    ): FeatureExecutionParticipantBinding<*> = FeatureExecutionParticipantBinding(
-        definition = ENTRY_DOWNLOAD_METADATA_CHANGE_PARTICIPANT,
-        handler = FeatureExecutionHandler { event ->
-            if (event.previous.title != event.current.title) {
-                feature().renameEntry(
-                    event.previous,
-                    event.current.title,
-                )
-            }
-        },
-    )
-
-    @Provides
-    @IntoSet
-    fun destructiveRemovalPreparationParticipant(
-        feature: () -> EntryDownloadMaintenanceFeature,
-    ): FeatureExecutionParticipantBinding<*> = FeatureExecutionParticipantBinding(
-        definition = ENTRY_DOWNLOAD_DESTRUCTIVE_REMOVAL_PREPARATION_PARTICIPANT,
-        handler = FeatureExecutionHandler { event ->
-            event.entries.forEach { entry ->
-                when (val preparation = feature().prepareRemoval(entry)) {
-                    is EntryDownloadRemovalPreparation.Prepared -> event.outcomes.addDownloadPlan(
-                        preparation.plan,
-                    )
-
-                    EntryDownloadRemovalPreparation.NothingToRemove,
-                    is EntryDownloadRemovalPreparation.Inapplicable,
-                    -> Unit
-                }
-            }
-        },
-    )
-
-    @Provides
-    @IntoSet
-    fun destructiveRemovalParticipant(
-        feature: () -> EntryDownloadMaintenanceFeature,
-    ): FeatureExecutionParticipantBinding<*> = FeatureExecutionParticipantBinding(
-        definition = ENTRY_DOWNLOAD_DESTRUCTIVE_REMOVAL_PARTICIPANT,
-        handler = FeatureExecutionHandler { event ->
-            val type = event.entries.firstOrNull()?.type ?: return@FeatureExecutionHandler
-            val owners = event.outcomes.downloadPlans
-                .flatMap(EntryDownloadRemovalPlan::owners)
-                .filter { owner -> owner.type == type }
-                .distinctBy { owner -> owner.profileId to owner.id }
-            if (owners.isNotEmpty()) {
-                check(
-                    feature().applyRemoval(EntryDownloadRemovalPlan(owners)) ==
-                        EntryDownloadMaintenanceResult.Performed,
-                ) { "Download cleanup was incomplete after destructive Entry removal" }
-            }
-        },
-    )
-
-    @Provides
-    @IntoSet
-    fun profileMovePreparationParticipant(
-        feature: () -> EntryDownloadMaintenanceFeature,
-    ): FeatureExecutionParticipantBinding<*> = FeatureExecutionParticipantBinding(
-        definition = ENTRY_DOWNLOAD_PROFILE_MOVE_PREPARATION_PARTICIPANT,
-        handler = FeatureExecutionHandler { event ->
-            event.plan.removedEntries.forEach { entry ->
-                when (val preparation = feature().prepareRemoval(entry)) {
-                    is EntryDownloadRemovalPreparation.Prepared -> event.outcomes.addDownloadPlan(
-                        preparation.plan,
-                    )
-
-                    EntryDownloadRemovalPreparation.NothingToRemove,
-                    is EntryDownloadRemovalPreparation.Inapplicable,
-                    -> Unit
-                }
-            }
-        },
-    )
-
-    @Provides
-    @IntoSet
-    fun profileMoveParticipant(
-        feature: () -> EntryDownloadMaintenanceFeature,
-    ): FeatureExecutionParticipantBinding<*> = FeatureExecutionParticipantBinding(
-        definition = ENTRY_DOWNLOAD_PROFILE_MOVE_PARTICIPANT,
-        handler = FeatureExecutionHandler { event ->
-            val owners = event.outcomes.downloadPlans
-                .flatMap(EntryDownloadRemovalPlan::owners)
-                .filter { owner -> owner.type == event.type }
-                .distinctBy { owner -> owner.profileId to owner.id }
-            if (owners.isNotEmpty()) {
-                check(
-                    feature().applyRemoval(EntryDownloadRemovalPlan(owners)) ==
-                        EntryDownloadMaintenanceResult.Performed,
-                ) { "Download cleanup was incomplete after Profile movement" }
-            }
-        },
-    )
+    internal fun configurationBackupState(
+        feature: () -> EntryDownloadConfigurationBackupFeature,
+    ): EntryBackupStateParticipant = EntryDownloadConfigurationBackupParticipant(feature)
 }
-
-internal fun entryAutomaticDownloadSourceRefreshBinding(
-    feature: () -> EntryAutomaticDownloadCoordinator,
-) = FeatureExecutionParticipantBinding(
-    definition = ENTRY_AUTOMATIC_DOWNLOAD_SOURCE_REFRESH_PARTICIPANT,
-    handler = FeatureExecutionHandler { event ->
-        feature().downloadAfterEntryRefresh(event.entry, event.newChildren)
-    },
-)
-
-internal fun entryAutomaticDownloadLibraryUpdateBinding(
-    feature: () -> EntryAutomaticDownloadCoordinator,
-) = FeatureExecutionParticipantBinding(
-    definition = ENTRY_AUTOMATIC_DOWNLOAD_LIBRARY_UPDATE_PARTICIPANT,
-    handler = FeatureExecutionHandler { event ->
-        val batch = event.session.state(
-            participant = ENTRY_AUTOMATIC_DOWNLOAD_LIBRARY_UPDATE_PARTICIPANT.id,
-            create = feature()::newLibraryUpdateBatch,
-            complete = EntryAutomaticDownloadBatch::complete,
-        )
-        batch.enqueue(event.entry, event.newChildren)
-    },
-)
-
-internal fun entryDownloadMediaSessionBinding(
-    feature: () -> EntryDownloadLifecycleFeature,
-) = FeatureExecutionParticipantBinding(
-    definition = ENTRY_DOWNLOAD_MEDIA_SESSION_PARTICIPANT,
-    handler = FeatureExecutionHandler { execution ->
-        val event = execution.event as? EntryMediaSessionEvent.Progressed
-            ?: return@FeatureExecutionHandler
-        event.fraction?.let { fraction ->
-            feature().onEvent(
-                EntryDownloadLifecycleEvent.Progressed(
-                    visibleEntry = event.visibleEntry,
-                    child = event.child,
-                    fraction = fraction,
-                    deduplicateByNumber = event.deduplicateDownloadByNumber,
-                ),
-            )
-        }
-        if (execution.progressResult?.completedNow == true) {
-            feature().onEvent(
-                EntryDownloadLifecycleEvent.Completed(
-                    visibleEntry = event.visibleEntry,
-                    child = event.child,
-                    deduplicateByNumber = event.deduplicateDownloadByNumber,
-                    completeEquivalentChildrenByNumber = event.completeEquivalentChildrenByNumber,
-                ),
-            )
-        }
-    },
-)

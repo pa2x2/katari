@@ -2,20 +2,13 @@ package mihon.entry.interactions.download
 
 import android.content.Context
 import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.entry.interactions.runtime.applicableProviderTypes
-import mihon.feature.graph.FeatureGraphEvaluation
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 
 internal class DefaultEntryDownloadOptionsFeature(
-    evaluation: FeatureGraphEvaluation,
+    private val applicableTypes: Set<EntryType>,
     private val interaction: EntryDownloadInteraction,
 ) : EntryDownloadOptionsFeature {
-    private val applicableTypes = evaluation.applicableProviderTypes<EntryDownloadOptionsProcessor>(
-        feature = ENTRY_DOWNLOAD_CONFIGURATION_FEATURE_ID,
-        integration = ENTRY_DOWNLOAD_OPTIONS_INTEGRATION_ID,
-        behaviorProjection = ENTRY_DOWNLOAD_OPTIONS_BEHAVIOR_ID,
-    )
 
     override fun isApplicable(type: EntryType): Boolean = type in applicableTypes
 

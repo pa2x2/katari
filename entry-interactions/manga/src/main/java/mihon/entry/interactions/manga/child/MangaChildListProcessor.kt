@@ -1,6 +1,5 @@
 package mihon.entry.interactions.manga.child
 
-import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOf
@@ -27,7 +26,6 @@ import kotlin.math.floor
 internal class MangaChildListProcessor(
     private val entryProgressRepository: EntryProgressRepository,
 ) : EntryChildListProcessor, EntryChildProgressProcessor, EntryMissingChildGapProcessor {
-    override val type: EntryType = EntryType.MANGA
 
     override fun sortedForReading(
         entry: Entry,

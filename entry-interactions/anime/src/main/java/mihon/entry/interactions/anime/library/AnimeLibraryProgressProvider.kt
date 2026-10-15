@@ -1,6 +1,5 @@
 package mihon.entry.interactions.anime.library
 
-import eu.kanade.tachiyomi.source.entry.EntryType
 import mihon.entry.interactions.anime.runtime.requireAnime
 import mihon.entry.interactions.anime.state.durationMs
 import mihon.entry.interactions.anime.state.lastWatchedAt
@@ -15,7 +14,6 @@ import tachiyomi.domain.entry.repository.EntryProgressRepository
 internal class AnimeLibraryProgressProvider(
     private val entryProgressRepository: EntryProgressRepository,
 ) : EntryLibraryProgressProvider {
-    override val type = EntryType.ANIME
 
     override suspend fun evidence(entry: Entry, chapters: List<EntryChapter>): EntryLibraryProgressEvidence {
         entry.requireAnime()

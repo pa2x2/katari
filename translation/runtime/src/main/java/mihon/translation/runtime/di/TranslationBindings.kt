@@ -7,17 +7,11 @@ import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.IntoSet
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
-import mihon.feature.graph.CapabilityProvider
-import mihon.feature.graph.FeatureGraphContributor
-import mihon.feature.runtime.FeatureGraphValidator
 import mihon.language.runtime.identification.createPlatformTextLanguageDetectors
 import mihon.translation.api.TranslationFeature
 import mihon.translation.api.host.TranslationHostActions
 import mihon.translation.runtime.cache.TranslationResultCache
 import mihon.translation.runtime.feature.DefaultTranslationFeature
-import mihon.translation.runtime.graph.TranslationEngineRegistryCapability
-import mihon.translation.runtime.graph.TranslationFeatureContributor
-import mihon.translation.runtime.graph.TranslationFeatureGraphStateValidator
 import mihon.translation.runtime.host.DefaultTranslationHostActions
 import mihon.translation.runtime.language.ProfileTranslationDefaultTargetLanguageResolver
 import mihon.translation.runtime.preference.ProfileTranslationPreferences
@@ -120,21 +114,6 @@ object TranslationBindings {
         profileEngineResolver = engineResolver,
         defaultTargetResolver = defaultTargetResolver,
     )
-
-    @Provides
-    @IntoSet
-    fun graphContributor(): FeatureGraphContributor = TranslationFeatureContributor
-
-    @Provides
-    @IntoSet
-    fun engineRegistryCapability(registry: DefaultTranslationEngineRegistry): CapabilityProvider<*> =
-        TranslationEngineRegistryCapability.bind(registry)
-
-    @Provides
-    @IntoSet
-    fun graphValidator(): FeatureGraphValidator = FeatureGraphValidator { evaluation ->
-        TranslationFeatureGraphStateValidator(evaluation).validate()
-    }
 }
 
 private const val TRANSLATION_CACHE_DIRECTORY = "translation"

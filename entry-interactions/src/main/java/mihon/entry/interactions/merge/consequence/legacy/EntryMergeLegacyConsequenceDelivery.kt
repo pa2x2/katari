@@ -2,12 +2,12 @@ package mihon.entry.interactions.merge.consequence.legacy
 
 import mihon.entry.interactions.download.EntryDownloadMaintenanceFeature
 import mihon.entry.interactions.download.EntryDownloadMaintenanceResult
-import mihon.entry.interactions.download.maintenance.merge.ENTRY_DOWNLOAD_MERGE_PARTICIPANT
-import mihon.entry.interactions.merge.consequence.cover.ENTRY_MERGE_CUSTOM_COVER_PARTICIPANT
+import mihon.entry.interactions.download.maintenance.merge.ENTRY_DOWNLOAD_MERGE_PARTICIPANT_ID
+import mihon.entry.interactions.merge.consequence.cover.ENTRY_MERGE_CUSTOM_COVER_PARTICIPANT_ID
 import mihon.entry.interactions.merge.host.EntryMergeHost
 import mihon.entry.interactions.merge.host.EntryMergePendingConsequence
 import mihon.entry.interactions.tracking.EntryTrackingFeature
-import mihon.entry.interactions.tracking.merge.ENTRY_TRACKING_MERGE_PARTICIPANT
+import mihon.entry.interactions.tracking.merge.ENTRY_TRACKING_MERGE_PARTICIPANT_ID
 import tachiyomi.domain.entry.model.Entry
 
 /**
@@ -34,9 +34,9 @@ internal class EntryMergeLegacyConsequenceDelivery(
         val entry = host.profile(consequence.profileId).entries(listOf(consequence.entryId)).singleOrNull()
             ?: return
         when (consequence.participantId) {
-            ENTRY_TRACKING_MERGE_PARTICIPANT.id.value -> tracking().bindAutomatically(entry)
-            ENTRY_MERGE_CUSTOM_COVER_PARTICIPANT.id.value -> coverCleanup(entry)
-            ENTRY_DOWNLOAD_MERGE_PARTICIPANT.id.value -> {
+            ENTRY_TRACKING_MERGE_PARTICIPANT_ID -> tracking().bindAutomatically(entry)
+            ENTRY_MERGE_CUSTOM_COVER_PARTICIPANT_ID -> coverCleanup(entry)
+            ENTRY_DOWNLOAD_MERGE_PARTICIPANT_ID -> {
                 check(
                     downloadMaintenance().removeEntryDownloads(entry) == EntryDownloadMaintenanceResult.Performed,
                 ) { "Legacy Merge download removal was not verified" }
@@ -48,9 +48,9 @@ internal class EntryMergeLegacyConsequenceDelivery(
     private companion object {
         const val LEGACY_SCHEMA_VERSION = 1
         val LEGACY_PARTICIPANT_IDS = setOf(
-            ENTRY_TRACKING_MERGE_PARTICIPANT.id.value,
-            ENTRY_MERGE_CUSTOM_COVER_PARTICIPANT.id.value,
-            ENTRY_DOWNLOAD_MERGE_PARTICIPANT.id.value,
+            ENTRY_TRACKING_MERGE_PARTICIPANT_ID,
+            ENTRY_MERGE_CUSTOM_COVER_PARTICIPANT_ID,
+            ENTRY_DOWNLOAD_MERGE_PARTICIPANT_ID,
         )
     }
 }

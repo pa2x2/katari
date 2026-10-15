@@ -43,7 +43,6 @@ import mihon.entry.interactions.host.AppEntryHostBindings
 import mihon.feature.appupdate.ui.AppUpdateGraph
 import mihon.feature.migration.work.SourceMigrationWorkGraph
 import mihon.feature.profiles.ui.ProfilesGraph
-import mihon.feature.runtime.FeatureRuntimeGraph
 
 @DependencyGraph(
     AppScope::class,
@@ -56,7 +55,6 @@ import mihon.feature.runtime.FeatureRuntimeGraph
     ],
 )
 interface AppGraph :
-    FeatureRuntimeGraph,
     ViewModelGraph,
     AppStartupGraph,
     ExtensionInjektGraph,

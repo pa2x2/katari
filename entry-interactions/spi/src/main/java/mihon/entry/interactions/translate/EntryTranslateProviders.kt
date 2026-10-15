@@ -1,15 +1,12 @@
 package mihon.entry.interactions.translate
 
 import kotlinx.coroutines.flow.Flow
-import mihon.entry.interactions.runtime.EntryInteractionProvider
-import mihon.entry.interactions.runtime.entryInteractionCapability
 import mihon.entry.interactions.translation.EntryTranslationLanguageChoices
-import mihon.feature.graph.CapabilityId
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 
 /** Makes and keeps stored translations of one entry type's downloaded chapters. */
-interface EntryTranslateProcessor : EntryInteractionProvider {
+interface EntryTranslateProcessor {
     /** Emits when stored translations were written or deleted. */
     val changes: Flow<Unit>
 
@@ -40,7 +37,3 @@ sealed interface EntryTranslateResult {
 
     data class Failed(val failure: EntryTranslateFailure) : EntryTranslateResult
 }
-
-val EntryTranslateCapability = entryInteractionCapability<EntryTranslateProcessor>(
-    id = CapabilityId("entry.translate"),
-)

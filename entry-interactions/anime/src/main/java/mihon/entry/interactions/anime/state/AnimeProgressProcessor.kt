@@ -1,6 +1,5 @@
 package mihon.entry.interactions.anime.state
 
-import eu.kanade.tachiyomi.source.entry.EntryType
 import mihon.entry.interactions.anime.runtime.requireAnime
 import mihon.entry.interactions.state.EntryProgressProcessor
 import mihon.entry.interactions.state.EntryProgressResourceMapping
@@ -15,7 +14,6 @@ internal class AnimeProgressProcessor(
     private val entryProgressRepository: EntryProgressRepository,
     private val entryChapterRepository: EntryChapterRepository,
 ) : EntryProgressProcessor {
-    override val type: EntryType = EntryType.ANIME
 
     override suspend fun snapshot(entry: Entry): EntryProgressSnapshot {
         entry.requireAnime()
