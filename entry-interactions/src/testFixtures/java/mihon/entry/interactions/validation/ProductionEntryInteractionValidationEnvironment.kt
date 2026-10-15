@@ -46,8 +46,8 @@ import mihon.entry.interactions.tracking.host.EntryTrackingHost
 import mihon.entry.interactions.translate.EntryTranslatePreferences
 import mihon.entry.viewer.settings.ViewerSettingOverrideRepository
 import mihon.feature.runtime.FeatureRuntimeComposition
-import mihon.feature.runtime.FeatureRuntimeContributions
-import mihon.feature.runtime.FeatureRuntimeInputs
+import mihon.feature.runtime.FeatureRuntimeGraph
+import mihon.feature.runtime.addFeatureRuntimeGraph
 import mihon.feature.runtime.createFeatureRuntimeComposition
 import nl.adaptivity.xmlutil.serialization.XML
 import okhttp3.OkHttpClient
@@ -99,7 +99,7 @@ class ProductionEntryInteractionValidationEnvironment(
         every { application.getSystemService(any<Class<Any>>()) } returns null
     }
 
-    val networkHelper = mockk<NetworkHelper>(relaxed = true) {
+    private val networkHelper = mockk<NetworkHelper>(relaxed = true) {
         every { client } returns mockk<OkHttpClient>(relaxed = true)
     }
 
@@ -113,8 +113,9 @@ class ProductionEntryInteractionValidationEnvironment(
         Dispatchers.setMain(UnconfinedTestDispatcher())
     }
 
-    fun composition(graphContributions: FeatureRuntimeContributions? = null): EntryInteractionComposition {
+    fun composition(graph: FeatureRuntimeGraph): EntryInteractionComposition {
         installControlledRuntimeDependencies()
+        Injekt.addFeatureRuntimeGraph(graph)
         val runtimeInstallation = Injekt.addEntryInteractionRuntime(
             app = application,
             dependencies = EntryInteractionRuntimeDependencies(
@@ -149,13 +150,13 @@ class ProductionEntryInteractionValidationEnvironment(
             createFeatureRuntimeComposition(
                 listOf(
                     runtimeInstallation.featureRuntimeInputs,
-                    graphContributions?.featureRuntimeInputs ?: FeatureRuntimeInputs(),
+                    graph.featureRuntimeContributions.featureRuntimeInputs,
                 ),
             )
         }
         val installation = Injekt.get<EntryFeatureRuntimeInstallation>()
         validateInstalledEntryFeatureRuntimeModules(installation.modules)
-        graphContributions?.validate(Injekt.get<FeatureRuntimeComposition>().evaluation)
+        graph.featureRuntimeContributions.validate(Injekt.get<FeatureRuntimeComposition>().evaluation)
         return Injekt.get<EntryInteractionComposition>()
     }
 

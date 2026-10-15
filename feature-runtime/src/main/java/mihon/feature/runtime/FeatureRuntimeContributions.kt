@@ -11,6 +11,8 @@ import mihon.feature.graph.ContributionOwner
 import mihon.feature.graph.FeatureGraphContributor
 import mihon.feature.graph.FeatureGraphEvaluation
 import mihon.feature.graph.featureGraphContributor
+import mihon.feature.runtime.injekt.InjektExport
+import tachiyomi.core.common.preference.InstalledProfilePreferenceOwner
 
 /**
  * What Feature modules contribute to the Feature runtime through the dependency graph: their Feature declarations,
@@ -54,6 +56,12 @@ interface FeatureRuntimeMultibindings {
 
     @Multibinds(allowEmpty = true)
     fun graphValidators(): Set<FeatureGraphValidator>
+
+    @Multibinds(allowEmpty = true)
+    fun profilePreferenceOwners(): Set<InstalledProfilePreferenceOwner<*>>
+
+    @Multibinds(allowEmpty = true)
+    fun injektExports(): Set<InjektExport<*>>
 }
 
 private val APPLICATION_FEATURE_SUBJECT_OWNER = ContributionOwner("application-feature-runtime")

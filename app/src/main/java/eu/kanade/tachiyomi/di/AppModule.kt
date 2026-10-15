@@ -29,8 +29,6 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.protobuf.ProtoBuf
 import logcat.LogPriority
 import mihon.app.di.AppGraph
-import mihon.app.di.injekt.addApplicationFeatures
-import mihon.app.di.injekt.addEntryFeatures
 import mihon.data.database.DatabaseRepositoryImpl
 import mihon.data.database.createSqlDriver
 import mihon.domain.database.repository.DatabaseRepository
@@ -73,6 +71,7 @@ import mihon.feature.profiles.core.ProfileSourcePreferenceProvider
 import mihon.feature.profiles.core.ProfileStore
 import mihon.feature.runtime.FeatureRuntimeComposition
 import mihon.feature.runtime.FeatureRuntimeWarmup
+import mihon.feature.runtime.addFeatureRuntimeGraph
 import mihon.feature.runtime.createFeatureRuntimeComposition
 import mihon.telemetry.TelemetryConfig
 import nl.adaptivity.xmlutil.XmlDeclMode
@@ -264,6 +263,7 @@ class AppModule(val app: Application, private val graph: AppGraph) : InjektModul
             syncChapterProgress = { get() },
             trackPreferences = get(),
         )
+        addFeatureRuntimeGraph(graph)
         val entryRuntimeInstallation = addEntryInteractionRuntime(
             app = app,
             dependencies = EntryInteractionRuntimeDependencies(
@@ -300,8 +300,6 @@ class AppModule(val app: Application, private val graph: AppGraph) : InjektModul
                 trackingHost = trackingHost,
             ),
         )
-        addApplicationFeatures(graph)
-        addEntryFeatures(graph)
         addSingletonFactory<FeatureRuntimeComposition> {
             createFeatureRuntimeComposition(
                 listOf(

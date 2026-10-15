@@ -4,8 +4,7 @@ import android.app.Application
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.DependencyGraph
 import dev.zacsweers.metro.Provides
-import eu.kanade.tachiyomi.network.NetworkHelper
-import mihon.app.di.ApplicationFeatureGraph
+import mihon.feature.runtime.FeatureRuntimeGraph
 import mihon.tts.provider.android.AndroidTtsBindings
 import tachiyomi.core.common.preference.ProfilePreferenceOwnerInstaller
 
@@ -15,12 +14,11 @@ import tachiyomi.core.common.preference.ProfilePreferenceOwnerInstaller
  * engines are installed.
  */
 @DependencyGraph(AppScope::class, excludes = [AndroidTtsBindings::class])
-interface ProductionFeatureValidationGraph : ApplicationFeatureGraph {
+interface ProductionFeatureValidationGraph : FeatureRuntimeGraph {
     @DependencyGraph.Factory
     fun interface Factory {
         fun create(
             @Provides application: Application,
-            @Provides networkHelper: NetworkHelper,
             @Provides profilePreferenceOwners: ProfilePreferenceOwnerInstaller,
         ): ProductionFeatureValidationGraph
     }

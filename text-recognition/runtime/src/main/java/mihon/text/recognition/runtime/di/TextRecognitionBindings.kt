@@ -11,6 +11,8 @@ import kotlinx.coroutines.Dispatchers
 import mihon.feature.graph.CapabilityProvider
 import mihon.feature.graph.FeatureGraphContributor
 import mihon.feature.runtime.FeatureGraphValidator
+import mihon.feature.runtime.injekt.InjektExport
+import mihon.feature.runtime.injekt.injektExport
 import mihon.model.artifacts.api.ModelArtifactStore
 import mihon.text.recognition.api.TextRecognitionFeature
 import mihon.text.recognition.api.host.TextRecognitionHostActions
@@ -113,6 +115,14 @@ object TextRecognitionBindings {
     fun graphValidator(): FeatureGraphValidator = FeatureGraphValidator { evaluation ->
         TextRecognitionFeatureGraphStateValidator(evaluation).validate()
     }
+
+    @Provides
+    @IntoSet
+    fun exportFeature(feature: () -> TextRecognitionFeature): InjektExport<*> = injektExport(feature)
+
+    @Provides
+    @IntoSet
+    fun exportHostActions(hostActions: () -> TextRecognitionHostActions): InjektExport<*> = injektExport(hostActions)
 }
 
 private const val CACHE_DIRECTORY = "text-recognition"

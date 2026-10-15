@@ -2,10 +2,8 @@ package mihon.entry.interactions.validation
 
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.DependencyGraph
-import mihon.feature.runtime.FeatureRuntimeContributions
+import mihon.feature.runtime.FeatureRuntimeGraph
 
-/** The Entry Features this module contributes to the production graph. */
+/** The Entry Features this module contributes, with the host services the validation environment controls. */
 @DependencyGraph(AppScope::class)
-interface EntryInteractionValidationGraph {
-    val featureRuntimeContributions: FeatureRuntimeContributions
-}
+interface EntryInteractionValidationGraph : FeatureRuntimeGraph
