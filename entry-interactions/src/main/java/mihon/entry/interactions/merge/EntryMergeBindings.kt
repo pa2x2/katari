@@ -19,22 +19,10 @@ import mihon.entry.interactions.merge.consequence.cover.EntryMergeCustomCoverCon
 import mihon.entry.interactions.merge.consequence.cover.entryMergeCustomCoverBinding
 import mihon.entry.interactions.merge.consequence.legacy.EntryMergeLegacyConsequenceDelivery
 import mihon.entry.interactions.merge.host.EntryMergeHost
-import mihon.entry.interactions.merge.lifecycle.ENTRY_MERGE_DESTRUCTIVE_REMOVAL_PARTICIPANT
-import mihon.entry.interactions.merge.lifecycle.ENTRY_MERGE_PROFILE_MOVE_DESTINATION_PARTICIPANT
-import mihon.entry.interactions.merge.lifecycle.ENTRY_MERGE_PROFILE_MOVE_PARTICIPANT_ID
-import mihon.entry.interactions.merge.lifecycle.ENTRY_MERGE_PROFILE_MOVE_PREPARATION_PARTICIPANT
-import mihon.entry.interactions.merge.lifecycle.ENTRY_MERGE_PROFILE_MOVING_PARTICIPANT
-import mihon.entry.interactions.merge.lifecycle.ENTRY_MERGE_PROFILE_STATE_MOVED_PARTICIPANT
-import mihon.entry.interactions.merge.lifecycle.EntryMergeDestructiveRemovalContributor
-import mihon.entry.interactions.merge.lifecycle.EntryMergeProfileMoveContributor
-import mihon.entry.interactions.merge.lifecycle.mergeReference
-import mihon.entry.interactions.merge.lifecycle.toMergeIntent
 import mihon.entry.interactions.persistence.backup.EntryBackupStateParticipant
 import mihon.entry.interactions.tracking.EntryTrackingFeature
 import mihon.feature.graph.FeatureGraphContributor
 import mihon.feature.graph.execution.FeatureDurableExecutionParticipantBinding
-import mihon.feature.graph.execution.FeatureExecutionHandler
-import mihon.feature.graph.execution.FeatureExecutionParticipantBinding
 import mihon.feature.runtime.FeatureRuntimeComposition
 import mihon.feature.runtime.FeatureRuntimeWarmup
 import tachiyomi.domain.entry.service.EntryChildOwnershipResolutionPort
@@ -170,18 +158,6 @@ object EntryMergeBindings {
 
     @Provides
     @IntoSet
-    fun libraryMembershipGraphContributor(): FeatureGraphContributor = EntryMergeLibraryMembershipContributor
-
-    @Provides
-    @IntoSet
-    fun destructiveRemovalGraphContributor(): FeatureGraphContributor = EntryMergeDestructiveRemovalContributor
-
-    @Provides
-    @IntoSet
-    fun profileMoveGraphContributor(): FeatureGraphContributor = EntryMergeProfileMoveContributor
-
-    @Provides
-    @IntoSet
     fun customCoverGraphContributor(): FeatureGraphContributor = EntryMergeCustomCoverContributor
 
     @Provides
@@ -192,119 +168,6 @@ object EntryMergeBindings {
     ): FeatureDurableExecutionParticipantBinding<*> = entryMergeCustomCoverBinding(
         mergeHost,
         libraryCustomCoverHost::cleanupAfterLibraryRemoval,
-    )
-
-    @Provides
-    @IntoSet
-    fun libraryRemovalParticipant(
-        libraryLifecycle: () -> EntryMergeLibraryLifecycleFeature,
-    ): FeatureExecutionParticipantBinding<*> = FeatureExecutionParticipantBinding(
-        definition = ENTRY_MERGE_LIBRARY_REMOVAL_PARTICIPANT,
-        handler = FeatureExecutionHandler { event ->
-            val result = libraryLifecycle().entriesRemovedFromLibrary(event.entries)
-            check(result.unresolvedGroupCount == 0) {
-                "Merge membership changed while removing Library entries"
-            }
-        },
-    )
-
-    @Provides
-    @IntoSet
-    fun destructiveRemovalParticipant(
-        libraryLifecycle: () -> EntryMergeLibraryLifecycleFeature,
-    ): FeatureExecutionParticipantBinding<*> = FeatureExecutionParticipantBinding(
-        definition = ENTRY_MERGE_DESTRUCTIVE_REMOVAL_PARTICIPANT,
-        handler = FeatureExecutionHandler { event ->
-            val result = libraryLifecycle().entriesRemovedFromLibrary(event.entries)
-            check(result.unresolvedGroupCount == 0) {
-                "Merge membership changed during destructive Entry removal"
-            }
-        },
-    )
-
-    @Provides
-    @IntoSet
-    fun profileMovePreparationParticipant(
-        profileMove: () -> EntryMergeProfileMoveFeature,
-    ): FeatureExecutionParticipantBinding<*> = FeatureExecutionParticipantBinding(
-        definition = ENTRY_MERGE_PROFILE_MOVE_PREPARATION_PARTICIPANT,
-        handler = FeatureExecutionHandler { event ->
-            when (
-                val result = profileMove().prepare(
-                    event.request.sourceProfileId,
-                    event.selectedEntries.map { it.id },
-                )
-            ) {
-                is EntryMergeProfileMovePreparationResult.Ready -> {
-                    result.units.forEach { unit -> event.contributions.addAtomicUnit(unit.entries) }
-                    event.contributions.setParticipantReference(
-                        ENTRY_MERGE_PROFILE_MOVE_PARTICIPANT_ID,
-                        event.selectedEntries.first().type,
-                        result.reference,
-                    )
-                }
-
-                EntryMergeProfileMovePreparationResult.Empty -> Unit
-            }
-        },
-    )
-
-    @Provides
-    @IntoSet
-    fun profileMoveDestinationParticipant(
-        profileMove: () -> EntryMergeProfileMoveFeature,
-    ): FeatureExecutionParticipantBinding<*> = FeatureExecutionParticipantBinding(
-        definition = ENTRY_MERGE_PROFILE_MOVE_DESTINATION_PARTICIPANT,
-        handler = FeatureExecutionHandler { event ->
-            val reference = event.contributions.participantReference(
-                ENTRY_MERGE_PROFILE_MOVE_PARTICIPANT_ID,
-                event.type,
-            ) as? EntryMergeProfileMoveReference ?: return@FeatureExecutionHandler
-            when (
-                val result = profileMove().inspectDestination(
-                    reference,
-                    event.request.destinationProfileId,
-                    event.conflicts.map { it.destinationEntry.id },
-                )
-            ) {
-                is EntryMergeProfileMoveDestinationResult.Ready -> {
-                    event.contributions.setParticipantReference(
-                        ENTRY_MERGE_PROFILE_MOVE_PARTICIPANT_ID,
-                        event.type,
-                        result.reference,
-                    )
-                    event.contributions.markDestinationAffected(result.mergeAffectedEntryIds)
-                }
-
-                EntryMergeProfileMoveDestinationResult.InvalidReference -> {
-                    error("Merge Profile-move destination changed during preparation")
-                }
-            }
-        },
-    )
-
-    @Provides
-    @IntoSet
-    fun profileMovingParticipant(
-        profileMove: () -> EntryMergeProfileMoveFeature,
-    ): FeatureExecutionParticipantBinding<*> = FeatureExecutionParticipantBinding(
-        definition = ENTRY_MERGE_PROFILE_MOVING_PARTICIPANT,
-        handler = FeatureExecutionHandler { event ->
-            val reference = event.reference.mergeReference(event.type) ?: return@FeatureExecutionHandler
-            profileMove().begin(event.plan.toMergeIntent(reference)).requireApplied()
-        },
-    )
-
-    @Provides
-    @IntoSet
-    fun profileStateMovedParticipant(
-        profileMove: () -> EntryMergeProfileMoveFeature,
-    ): FeatureExecutionParticipantBinding<*> = FeatureExecutionParticipantBinding(
-        definition = ENTRY_MERGE_PROFILE_STATE_MOVED_PARTICIPANT,
-        handler = FeatureExecutionHandler { event ->
-            val reference = event.reference.mergeReference(event.type) ?: return@FeatureExecutionHandler
-            profileMove().complete(event.plan.toMergeIntent(reference)).requireApplied()
-        },
     )
 
     @Provides
@@ -324,10 +187,4 @@ object EntryMergeBindings {
         backupFeature: () -> EntryMergeBackupFeature,
         restoreParticipation: () -> EntryMergeBackupRestoreParticipation,
     ): EntryBackupStateParticipant = EntryMergeBackupParticipant(backupFeature, restoreParticipation)
-}
-
-private fun EntryMergeProfileMoveExecutionResult.requireApplied() {
-    check(this == EntryMergeProfileMoveExecutionResult.Applied) {
-        "Merge Profile-move participation failed: $this"
-    }
 }

@@ -7,14 +7,13 @@ import dev.zacsweers.metro.IntoSet
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import mihon.entry.interactions.download.EntryDownloadActionFeature
+import mihon.entry.interactions.download.EntryDownloadMaintenanceFeature
 import mihon.entry.interactions.library.membership.EntryLibraryMembershipCoordinator
 import mihon.entry.interactions.library.membership.EntryLibraryMembershipFeature
-import mihon.entry.interactions.library.membership.EntryLibraryMembershipFeatureContributor
-import mihon.entry.interactions.library.membership.consequence.ENTRY_LIBRARY_CUSTOM_COVER_REMOVAL_PARTICIPANT
-import mihon.entry.interactions.library.membership.consequence.EntryLibraryCustomCoverContributor
 import mihon.entry.interactions.library.membership.host.EntryLibraryCustomCoverHost
 import mihon.entry.interactions.library.membership.host.EntryLibraryMembershipHost
 import mihon.entry.interactions.merge.EntryMergeCandidateFeature
+import mihon.entry.interactions.merge.EntryMergeLibraryLifecycleFeature
 import mihon.entry.interactions.merge.EntryMergeNavigationFeature
 import mihon.entry.interactions.merge.EntryMergeSubject
 import mihon.entry.interactions.navigation.EntryContinueFeature
@@ -23,9 +22,8 @@ import mihon.entry.interactions.presentation.EntryTypePresentationFeature
 import mihon.entry.interactions.runtime.EntryInteractions
 import mihon.entry.interactions.source.EntrySourceRefreshFeature
 import mihon.entry.interactions.state.EntryConsumptionFeature
+import mihon.entry.interactions.tracking.EntryTrackingFeature
 import mihon.feature.graph.FeatureGraphContributor
-import mihon.feature.graph.execution.FeatureExecutionHandler
-import mihon.feature.graph.execution.FeatureExecutionParticipantBinding
 import mihon.feature.runtime.FeatureRuntimeComposition
 import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.entry.repository.EntryRepository
@@ -40,11 +38,17 @@ object EntryLibraryBindings {
     fun membershipFeature(
         host: EntryLibraryMembershipHost,
         mergeCandidates: EntryMergeCandidateFeature,
-        composition: FeatureRuntimeComposition,
+        mergeLibraryLifecycle: () -> EntryMergeLibraryLifecycleFeature,
+        tracking: () -> EntryTrackingFeature,
+        downloads: () -> EntryDownloadMaintenanceFeature,
+        customCoverHost: EntryLibraryCustomCoverHost,
     ): EntryLibraryMembershipFeature = EntryLibraryMembershipCoordinator(
         host = host,
         mergeCandidates = mergeCandidates,
-        executions = composition.executions,
+        mergeLibraryLifecycle = mergeLibraryLifecycle,
+        tracking = tracking,
+        downloads = downloads,
+        customCoverHost = customCoverHost,
     )
 
     @Provides
@@ -108,14 +112,6 @@ object EntryLibraryBindings {
 
     @Provides
     @IntoSet
-    fun membershipGraphContributor(): FeatureGraphContributor = EntryLibraryMembershipFeatureContributor
-
-    @Provides
-    @IntoSet
-    fun customCoverGraphContributor(): FeatureGraphContributor = EntryLibraryCustomCoverContributor
-
-    @Provides
-    @IntoSet
     fun filterGraphContributor(): FeatureGraphContributor = EntryLibraryFilterFeatureContributor
 
     @Provides
@@ -130,17 +126,4 @@ object EntryLibraryBindings {
     @IntoSet
     fun updateNotificationGraphContributor(): FeatureGraphContributor =
         EntryLibraryUpdateNotificationFeatureContributor
-
-    @Provides
-    @IntoSet
-    fun customCoverRemovalParticipant(
-        libraryCustomCoverHost: EntryLibraryCustomCoverHost,
-    ): FeatureExecutionParticipantBinding<*> = FeatureExecutionParticipantBinding(
-        definition = ENTRY_LIBRARY_CUSTOM_COVER_REMOVAL_PARTICIPANT,
-        handler = FeatureExecutionHandler { event ->
-            event.entries.forEach { entry ->
-                libraryCustomCoverHost.cleanupAfterLibraryRemoval(entry)
-            }
-        },
-    )
 }

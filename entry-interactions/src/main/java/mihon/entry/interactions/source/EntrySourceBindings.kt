@@ -7,13 +7,7 @@ import dev.zacsweers.metro.IntoSet
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import mihon.entry.interactions.download.EntryDownloadRuntimeFeature
-import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveCoverHashStateHost
-import mihon.entry.interactions.lifecycle.profile.stateRequest
-import mihon.entry.interactions.source.lifecycle.ENTRY_COVER_HASH_PROFILE_MOVE_PARTICIPANT
-import mihon.entry.interactions.source.lifecycle.EntryCoverHashProfileMoveContributor
 import mihon.feature.graph.FeatureGraphContributor
-import mihon.feature.graph.execution.FeatureExecutionHandler
-import mihon.feature.graph.execution.FeatureExecutionParticipantBinding
 import mihon.feature.runtime.FeatureRuntimeComposition
 import tachiyomi.domain.entry.interactor.NetworkToLocalEntry
 import tachiyomi.domain.entry.interactor.SyncEntryWithSource
@@ -64,21 +58,6 @@ object EntrySourceBindings {
     @Provides
     @IntoSet
     fun coverNetworkGraphContributor(): FeatureGraphContributor = EntryCoverNetworkFeatureContributor
-
-    @Provides
-    @IntoSet
-    fun coverHashProfileMoveGraphContributor(): FeatureGraphContributor = EntryCoverHashProfileMoveContributor
-
-    @Provides
-    @IntoSet
-    fun coverHashProfileMoveParticipant(
-        profileMoveCoverHashStateHost: EntryProfileMoveCoverHashStateHost,
-    ): FeatureExecutionParticipantBinding<*> = FeatureExecutionParticipantBinding(
-        definition = ENTRY_COVER_HASH_PROFILE_MOVE_PARTICIPANT,
-        handler = FeatureExecutionHandler { event ->
-            profileMoveCoverHashStateHost.move(event.plan.stateRequest())
-        },
-    )
 
     @Provides
     @SingleIn(AppScope::class)

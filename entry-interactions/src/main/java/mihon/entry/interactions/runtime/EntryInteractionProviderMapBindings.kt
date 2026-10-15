@@ -31,6 +31,11 @@ object EntryInteractionProviderMapBindings {
         plugins.providersOf(EntryDownloadCapability)
 
     @Provides
+    fun childGroupFilterProcessors(
+        plugins: Set<EntryInteractionPlugin>,
+    ): Map<EntryType, EntryChildGroupFilterProcessor> = plugins.providersOf(EntryChildGroupFilterCapability)
+
+    @Provides
     fun translateProcessors(plugins: Set<EntryInteractionPlugin>): Map<EntryType, EntryTranslateProcessor> =
         plugins.providersOf(EntryTranslateCapability)
 }

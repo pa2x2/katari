@@ -17,14 +17,6 @@ import mihon.entry.interactions.download.configuration.backup.EntryDownloadConfi
 import mihon.entry.interactions.download.configuration.backup.EntryDownloadConfigurationBackupParticipant
 import mihon.entry.interactions.download.host.EntryDownloadSourceAccessResolver
 import mihon.entry.interactions.download.host.SourceManagerEntryDownloadSourceAccessResolver
-import mihon.entry.interactions.download.maintenance.ENTRY_DOWNLOAD_DESTRUCTIVE_REMOVAL_PARTICIPANT
-import mihon.entry.interactions.download.maintenance.ENTRY_DOWNLOAD_DESTRUCTIVE_REMOVAL_PREPARATION_PARTICIPANT
-import mihon.entry.interactions.download.maintenance.ENTRY_DOWNLOAD_METADATA_CHANGE_PARTICIPANT
-import mihon.entry.interactions.download.maintenance.ENTRY_DOWNLOAD_PROFILE_MOVE_PARTICIPANT
-import mihon.entry.interactions.download.maintenance.ENTRY_DOWNLOAD_PROFILE_MOVE_PREPARATION_PARTICIPANT
-import mihon.entry.interactions.download.maintenance.EntryDownloadDestructiveRemovalContributor
-import mihon.entry.interactions.download.maintenance.EntryDownloadMetadataLifecycleContributor
-import mihon.entry.interactions.download.maintenance.EntryDownloadProfileMoveContributor
 import mihon.entry.interactions.download.maintenance.merge.EntryDownloadMergeContributor
 import mihon.entry.interactions.download.maintenance.merge.entryDownloadMergeBinding
 import mihon.entry.interactions.download.maintenance.migration.EntryDownloadMigrationContributor
@@ -267,22 +259,6 @@ object EntryDownloadBindings {
 
     @Provides
     @IntoSet
-    fun libraryMembershipGraphContributor(): FeatureGraphContributor = EntryDownloadLibraryMembershipContributor
-
-    @Provides
-    @IntoSet
-    fun metadataLifecycleGraphContributor(): FeatureGraphContributor = EntryDownloadMetadataLifecycleContributor
-
-    @Provides
-    @IntoSet
-    fun destructiveRemovalGraphContributor(): FeatureGraphContributor = EntryDownloadDestructiveRemovalContributor
-
-    @Provides
-    @IntoSet
-    fun profileMoveGraphContributor(): FeatureGraphContributor = EntryDownloadProfileMoveContributor
-
-    @Provides
-    @IntoSet
     fun migrationGraphContributor(): FeatureGraphContributor = EntryDownloadMigrationContributor
 
     @Provides
@@ -306,120 +282,6 @@ object EntryDownloadBindings {
     fun migrationOptionParticipant(
         feature: () -> EntryDownloadMaintenanceFeature,
     ): FeatureExecutionParticipantBinding<*> = entryDownloadMigrationOptionBinding(feature)
-
-    @Provides
-    @IntoSet
-    fun libraryRemovalParticipant(
-        feature: () -> EntryDownloadMaintenanceFeature,
-    ): FeatureExecutionParticipantBinding<*> = FeatureExecutionParticipantBinding(
-        definition = ENTRY_DOWNLOAD_LIBRARY_REMOVAL_PARTICIPANT,
-        handler = FeatureExecutionHandler { event ->
-            event.entries.forEach { entry ->
-                if (feature().inspectEntry(entry) == EntryDownloadMaintenanceInspection.HasDownloads) {
-                    event.outcomes.requireDownloadDecision(entry)
-                }
-            }
-        },
-    )
-
-    @Provides
-    @IntoSet
-    fun metadataChangeParticipant(
-        feature: () -> EntryDownloadMaintenanceFeature,
-    ): FeatureExecutionParticipantBinding<*> = FeatureExecutionParticipantBinding(
-        definition = ENTRY_DOWNLOAD_METADATA_CHANGE_PARTICIPANT,
-        handler = FeatureExecutionHandler { event ->
-            if (event.previous.title != event.current.title) {
-                feature().renameEntry(
-                    event.previous,
-                    event.current.title,
-                )
-            }
-        },
-    )
-
-    @Provides
-    @IntoSet
-    fun destructiveRemovalPreparationParticipant(
-        feature: () -> EntryDownloadMaintenanceFeature,
-    ): FeatureExecutionParticipantBinding<*> = FeatureExecutionParticipantBinding(
-        definition = ENTRY_DOWNLOAD_DESTRUCTIVE_REMOVAL_PREPARATION_PARTICIPANT,
-        handler = FeatureExecutionHandler { event ->
-            event.entries.forEach { entry ->
-                when (val preparation = feature().prepareRemoval(entry)) {
-                    is EntryDownloadRemovalPreparation.Prepared -> event.outcomes.addDownloadPlan(
-                        preparation.plan,
-                    )
-
-                    EntryDownloadRemovalPreparation.NothingToRemove,
-                    is EntryDownloadRemovalPreparation.Inapplicable,
-                    -> Unit
-                }
-            }
-        },
-    )
-
-    @Provides
-    @IntoSet
-    fun destructiveRemovalParticipant(
-        feature: () -> EntryDownloadMaintenanceFeature,
-    ): FeatureExecutionParticipantBinding<*> = FeatureExecutionParticipantBinding(
-        definition = ENTRY_DOWNLOAD_DESTRUCTIVE_REMOVAL_PARTICIPANT,
-        handler = FeatureExecutionHandler { event ->
-            val type = event.entries.firstOrNull()?.type ?: return@FeatureExecutionHandler
-            val owners = event.outcomes.downloadPlans
-                .flatMap(EntryDownloadRemovalPlan::owners)
-                .filter { owner -> owner.type == type }
-                .distinctBy { owner -> owner.profileId to owner.id }
-            if (owners.isNotEmpty()) {
-                check(
-                    feature().applyRemoval(EntryDownloadRemovalPlan(owners)) ==
-                        EntryDownloadMaintenanceResult.Performed,
-                ) { "Download cleanup was incomplete after destructive Entry removal" }
-            }
-        },
-    )
-
-    @Provides
-    @IntoSet
-    fun profileMovePreparationParticipant(
-        feature: () -> EntryDownloadMaintenanceFeature,
-    ): FeatureExecutionParticipantBinding<*> = FeatureExecutionParticipantBinding(
-        definition = ENTRY_DOWNLOAD_PROFILE_MOVE_PREPARATION_PARTICIPANT,
-        handler = FeatureExecutionHandler { event ->
-            event.plan.removedEntries.forEach { entry ->
-                when (val preparation = feature().prepareRemoval(entry)) {
-                    is EntryDownloadRemovalPreparation.Prepared -> event.outcomes.addDownloadPlan(
-                        preparation.plan,
-                    )
-
-                    EntryDownloadRemovalPreparation.NothingToRemove,
-                    is EntryDownloadRemovalPreparation.Inapplicable,
-                    -> Unit
-                }
-            }
-        },
-    )
-
-    @Provides
-    @IntoSet
-    fun profileMoveParticipant(
-        feature: () -> EntryDownloadMaintenanceFeature,
-    ): FeatureExecutionParticipantBinding<*> = FeatureExecutionParticipantBinding(
-        definition = ENTRY_DOWNLOAD_PROFILE_MOVE_PARTICIPANT,
-        handler = FeatureExecutionHandler { event ->
-            val owners = event.outcomes.downloadPlans
-                .flatMap(EntryDownloadRemovalPlan::owners)
-                .filter { owner -> owner.type == event.type }
-                .distinctBy { owner -> owner.profileId to owner.id }
-            if (owners.isNotEmpty()) {
-                check(
-                    feature().applyRemoval(EntryDownloadRemovalPlan(owners)) ==
-                        EntryDownloadMaintenanceResult.Performed,
-                ) { "Download cleanup was incomplete after Profile movement" }
-            }
-        },
-    )
 
     @Provides
     @IntoSet

@@ -1,6 +1,6 @@
 package mihon.entry.interactions.lifecycle.removal
 
-import mihon.entry.interactions.lifecycle.metadata.EntryLifecycleConsequenceFailure
+import mihon.entry.interactions.lifecycle.EntryLifecycleConsequenceFailure
 import tachiyomi.domain.entry.model.Entry
 
 interface EntryDestructiveRemovalFeature {
