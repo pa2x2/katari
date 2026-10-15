@@ -58,7 +58,6 @@ internal fun BookDocumentViewerList(
                         loadState = destination?.let { chapterLoadState(it.id) },
                         onAnchorClick = onAnchorClick,
                         onExternalLinkClick = onExternalLinkClick,
-                        onReaderTap = onReaderTap,
                         onTransitionRetry = onTransitionRetry,
                     )
                 }

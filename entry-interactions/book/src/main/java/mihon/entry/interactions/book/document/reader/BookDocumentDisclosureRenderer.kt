@@ -33,7 +33,6 @@ internal fun BookDocumentDisclosureRenderer(
     resourceLoader: BookPublicationResourceLoader?,
     onAnchorClick: (BookDocumentLinkTarget) -> Unit,
     onExternalLinkClick: (String) -> Unit,
-    onReaderTap: () -> Unit,
     preserveTerminalSpacing: Boolean,
 ) {
     val palette = LocalBookDocumentReaderPalette.current
@@ -73,7 +72,6 @@ internal fun BookDocumentDisclosureRenderer(
                 resourceLoader = resourceLoader,
                 onAnchorClick = onAnchorClick,
                 onExternalLinkClick = onExternalLinkClick,
-                onReaderTap = onReaderTap,
                 selectionIdentity = "$selectionIdentity:body:$index:${nested.id.value}",
                 preserveTerminalSpacing = index != content.body.blocks.lastIndex || preserveTerminalSpacing,
                 modifier = Modifier.padding(start = (12 * textScale).dp),

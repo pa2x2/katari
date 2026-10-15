@@ -77,7 +77,6 @@ internal fun BookDocumentPagedViewer(
                 loadStates,
                 onAnchorClick,
                 onExternalLinkClick,
-                onReaderTap,
                 onTransitionRetry,
                 modifier = Modifier.pointerInput(page.key, tapZones, tapInversion, vertical, rtl, animatePages) {
                     detectTapGestures { offset ->

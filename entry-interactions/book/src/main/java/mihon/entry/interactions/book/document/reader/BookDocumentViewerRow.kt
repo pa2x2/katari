@@ -22,7 +22,6 @@ internal fun BookDocumentViewerRow(
     loadState: BookDocumentChapterLoadState?,
     onAnchorClick: (BookDocumentSection<EntryChapter>, BookDocumentLinkTarget) -> Unit,
     onExternalLinkClick: (String) -> Unit,
-    onReaderTap: () -> Unit,
     onTransitionRetry: (EntryChapter) -> Unit,
     transitionVerticalPadding: Dp = ReadingMetrics.chapterBoundaryGap,
     preserveTerminalSpacing: Boolean = true,
@@ -35,7 +34,6 @@ internal fun BookDocumentViewerRow(
                     item = item,
                     onAnchorClick = onAnchorClick,
                     onExternalLinkClick = onExternalLinkClick,
-                    onReaderTap = onReaderTap,
                     preserveTerminalSpacing = preserveTerminalSpacing,
                 )
             } else {
@@ -44,7 +42,6 @@ internal fun BookDocumentViewerRow(
                         item = item,
                         onAnchorClick = onAnchorClick,
                         onExternalLinkClick = onExternalLinkClick,
-                        onReaderTap = onReaderTap,
                         preserveTerminalSpacing = preserveTerminalSpacing,
                     )
                 }
@@ -69,7 +66,6 @@ internal fun BookDocumentViewerBlock(
     item: BookDocumentViewerItem.Block<EntryChapter>,
     onAnchorClick: (BookDocumentSection<EntryChapter>, BookDocumentLinkTarget) -> Unit,
     onExternalLinkClick: (String) -> Unit,
-    onReaderTap: () -> Unit,
     preserveTerminalSpacing: Boolean = true,
 ) {
     CompositionLocalProvider(
@@ -84,7 +80,6 @@ internal fun BookDocumentViewerBlock(
             resourceLoader = item.section.resourceLoader,
             onAnchorClick = { target -> onAnchorClick(item.section, target) },
             onExternalLinkClick = onExternalLinkClick,
-            onReaderTap = onReaderTap,
             preserveTerminalSpacing =
             preserveTerminalSpacing && item.content.id != item.section.document.blocks.last().id,
             modifier = Modifier
