@@ -1,7 +1,5 @@
 package mihon.entry.interactions.migration
 
-import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.entry.interactions.runtime.requireEntryContextState
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.ContextInputId
 import mihon.feature.graph.ContributionOwner
@@ -9,10 +7,8 @@ import mihon.feature.graph.FeatureArtifactId
 import mihon.feature.graph.FeatureBehaviorProjection
 import mihon.feature.graph.FeatureContextBlocker
 import mihon.feature.graph.FeatureContextDecision
-import mihon.feature.graph.FeatureGraphEvaluation
 import mihon.feature.graph.FeatureIntegration
 import mihon.feature.graph.FeatureIntegrationId
-import mihon.feature.graph.contextEvidence
 import mihon.feature.graph.contextInputDefinition
 import mihon.feature.graph.featureContextRule
 
@@ -146,47 +142,3 @@ internal fun entryMigrationPreparationContextIntegrations(
         behavioralContracts = listOf(EntryMigrationBehaviorContract.INSPECTION_CONTEXT),
     ),
 )
-
-internal fun FeatureGraphEvaluation.requireMigrationPairContext(
-    sourceType: EntryType,
-    sourcePersisted: Boolean,
-    sourceInLibrary: Boolean,
-    targetPersisted: Boolean,
-    sameProfile: Boolean,
-    sameType: Boolean,
-    distinctEntry: Boolean,
-) {
-    requireEntryContextState(
-        type = sourceType,
-        feature = ENTRY_MIGRATION_FEATURE_ID,
-        integration = ENTRY_MIGRATION_PAIR_CONTEXT_INTEGRATION,
-        behaviorProjections = listOf(EntryMigrationPairBehavior.id),
-        evidence = listOf(
-            contextEvidence(ENTRY_MIGRATION_PERSISTED_CONTEXT, sourcePersisted),
-            contextEvidence(ENTRY_MIGRATION_LIBRARY_MEMBERSHIP_CONTEXT, sourceInLibrary),
-            contextEvidence(ENTRY_MIGRATION_TARGET_PERSISTED_CONTEXT, targetPersisted),
-            contextEvidence(ENTRY_MIGRATION_SAME_PROFILE_CONTEXT, sameProfile),
-            contextEvidence(ENTRY_MIGRATION_SAME_TYPE_CONTEXT, sameType),
-            contextEvidence(ENTRY_MIGRATION_DISTINCT_ENTRY_CONTEXT, distinctEntry),
-        ),
-        applicable = sourcePersisted && sourceInLibrary && targetPersisted && sameProfile && sameType && distinctEntry,
-    )
-}
-
-internal fun FeatureGraphEvaluation.requireMigrationInspectionContext(
-    sourceType: EntryType,
-    pairPresent: Boolean,
-    identityStable: Boolean,
-) {
-    requireEntryContextState(
-        type = sourceType,
-        feature = ENTRY_MIGRATION_FEATURE_ID,
-        integration = ENTRY_MIGRATION_INSPECTION_CONTEXT_INTEGRATION,
-        behaviorProjections = listOf(EntryMigrationInspectionBehavior.id),
-        evidence = listOf(
-            contextEvidence(ENTRY_MIGRATION_INSPECTED_PAIR_CONTEXT, pairPresent),
-            contextEvidence(ENTRY_MIGRATION_IDENTITY_STABLE_CONTEXT, identityStable),
-        ),
-        applicable = pairPresent && identityStable,
-    )
-}

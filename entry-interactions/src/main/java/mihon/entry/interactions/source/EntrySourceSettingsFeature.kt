@@ -12,11 +12,9 @@ import mihon.feature.graph.FeatureContextDecision
 import mihon.feature.graph.FeatureContribution
 import mihon.feature.graph.FeatureGraphContributionSink
 import mihon.feature.graph.FeatureGraphContributor
-import mihon.feature.graph.FeatureGraphEvaluation
 import mihon.feature.graph.FeatureId
 import mihon.feature.graph.FeatureIntegration
 import mihon.feature.graph.FeatureIntegrationId
-import mihon.feature.graph.contextEvidence
 import mihon.feature.graph.contextInputDefinition
 import mihon.feature.graph.featureContextRule
 import tachiyomi.domain.source.service.SourceManager
@@ -85,14 +83,12 @@ internal object EntrySourceSettingsFeatureContributor : FeatureGraphContributor 
 }
 
 internal class DefaultEntrySourceSettingsFeature(
-    private val evaluation: FeatureGraphEvaluation,
     private val sourceManager: SourceManager,
 ) : EntrySourceSettingsFeature {
 
     override fun resolve(sourceId: Long): EntrySourceSettingsResolution {
         val source = sourceManager.get(sourceId)
         val configurable = source as? ConfigurableSource
-        requireState(installed = source != null, configurable = configurable != null)
         if (source == null) return EntrySourceSettingsResolution.Missing(sourceId)
         if (configurable == null) return EntrySourceSettingsResolution.Unsupported(sourceId)
 
@@ -108,22 +104,7 @@ internal class DefaultEntrySourceSettingsFeature(
     override fun supportedSourceIds(): List<Long> {
         return sourceManager.getAll()
             .filterIsInstance<ConfigurableSource>()
-            .onEach { requireState(installed = true, configurable = true) }
             .map { it.id }
             .sorted()
-    }
-
-    private fun requireState(installed: Boolean, configurable: Boolean) {
-        SourceSettingsBehavior.entries.forEach { behavior ->
-            evaluation.requireSourceContextState(
-                feature = SOURCE_SETTINGS_FEATURE_ID,
-                integration = SOURCE_SETTINGS_INTEGRATION_ID,
-                behaviorProjection = behavior.id,
-                evidence = listOf(
-                    contextEvidence(SOURCE_SETTINGS_CONTEXT, SourceSettingsContext(installed, configurable)),
-                ),
-                applicable = installed && configurable,
-            )
-        }
     }
 }

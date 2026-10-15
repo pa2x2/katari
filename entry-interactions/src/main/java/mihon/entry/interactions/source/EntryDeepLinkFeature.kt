@@ -15,11 +15,9 @@ import mihon.feature.graph.FeatureContextDecision
 import mihon.feature.graph.FeatureContribution
 import mihon.feature.graph.FeatureGraphContributionSink
 import mihon.feature.graph.FeatureGraphContributor
-import mihon.feature.graph.FeatureGraphEvaluation
 import mihon.feature.graph.FeatureId
 import mihon.feature.graph.FeatureIntegration
 import mihon.feature.graph.FeatureIntegrationId
-import mihon.feature.graph.contextEvidence
 import mihon.feature.graph.contextInputDefinition
 import mihon.feature.graph.featureContextRule
 import tachiyomi.domain.chapter.model.NoChaptersException
@@ -108,7 +106,6 @@ internal object EntryDeepLinkFeatureContributor : FeatureGraphContributor {
 }
 
 internal class DefaultEntryDeepLinkFeature(
-    private val evaluation: FeatureGraphEvaluation,
     private val sourceManager: SourceManager,
     private val networkToLocalEntry: NetworkToLocalEntry,
     private val entryChapterRepository: EntryChapterRepository,
@@ -120,11 +117,6 @@ internal class DefaultEntryDeepLinkFeature(
         sourceManager.awaitInitialized()
         val resolvers = sourceManager.getAll().filterIsInstance<ResolvableSource>()
         if (resolvers.isEmpty()) {
-            requireState(
-                hasResolver = false,
-                matchState = EntryDeepLinkMatchState.NOT_MATCHED,
-                applicable = false,
-            )
             return EntryDeepLinkResolution.NoMatch
         }
 
@@ -134,22 +126,8 @@ internal class DefaultEntryDeepLinkFeature(
             }
         } catch (error: Throwable) {
             if (error is CancellationException) throw error
-            requireState(
-                hasResolver = true,
-                matchState = EntryDeepLinkMatchState.FAILED,
-                applicable = true,
-            )
             return EntryDeepLinkResolution.Failed(error)
         }
-        requireState(
-            hasResolver = true,
-            matchState = if (match == null) {
-                EntryDeepLinkMatchState.NOT_MATCHED
-            } else {
-                EntryDeepLinkMatchState.MATCHED
-            },
-            applicable = match != null,
-        )
         match ?: return EntryDeepLinkResolution.NoMatch
 
         return try {
@@ -194,23 +172,5 @@ internal class DefaultEntryDeepLinkFeature(
                     is EntrySourceRefreshFailure.Operation -> throw reason.error
                 }
             }
-    }
-
-    private fun requireState(
-        hasResolver: Boolean,
-        matchState: EntryDeepLinkMatchState,
-        applicable: Boolean,
-    ) {
-        EntryDeepLinkBehavior.entries.forEach { behavior ->
-            evaluation.requireSourceContextState(
-                feature = ENTRY_DEEP_LINK_FEATURE_ID,
-                integration = ENTRY_DEEP_LINK_INTEGRATION_ID,
-                behaviorProjection = behavior.id,
-                evidence = listOf(
-                    contextEvidence(ENTRY_DEEP_LINK_CONTEXT, EntryDeepLinkContext(hasResolver, matchState)),
-                ),
-                applicable = applicable,
-            )
-        }
     }
 }

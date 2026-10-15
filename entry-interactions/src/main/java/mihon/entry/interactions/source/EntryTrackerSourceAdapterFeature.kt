@@ -12,11 +12,9 @@ import mihon.feature.graph.FeatureContextDecision
 import mihon.feature.graph.FeatureContribution
 import mihon.feature.graph.FeatureGraphContributionSink
 import mihon.feature.graph.FeatureGraphContributor
-import mihon.feature.graph.FeatureGraphEvaluation
 import mihon.feature.graph.FeatureId
 import mihon.feature.graph.FeatureIntegration
 import mihon.feature.graph.FeatureIntegrationId
-import mihon.feature.graph.contextEvidence
 import mihon.feature.graph.contextInputDefinition
 import mihon.feature.graph.featureContextRule
 import tachiyomi.domain.source.service.SourceManager
@@ -107,7 +105,6 @@ internal object EntryTrackerSourceAdapterFeatureContributor : FeatureGraphContri
 }
 
 internal class DefaultEntryTrackerSourceAdapterFeature(
-    private val evaluation: FeatureGraphEvaluation,
     private val sourceManager: SourceManager,
     private val settings: EntrySourceSettingsFeature,
     private val home: EntrySourceHomeFeature,
@@ -119,23 +116,6 @@ internal class DefaultEntryTrackerSourceAdapterFeature(
         val imageSource = sourceManager.get(sourceId) as? EntryImageSource
         val applicable = settingsResult is EntrySourceSettingsResolution.Available &&
             homeResult is EntrySourceHomeResolution.Available && imageSource != null
-        evaluation.requireSourceContextState(
-            feature = TRACKER_SOURCE_ADAPTER_FEATURE_ID,
-            integration = TRACKER_SOURCE_ADAPTER_INTEGRATION_ID,
-            behaviorProjection = TrackerSourceAdapterBehavior.id,
-            evidence = listOf(
-                contextEvidence(
-                    TRACKER_SOURCE_SETTINGS_CONTEXT,
-                    settingsResult is EntrySourceSettingsResolution.Available,
-                ),
-                contextEvidence(
-                    TRACKER_SOURCE_HOME_CONTEXT,
-                    homeResult is EntrySourceHomeResolution.Available,
-                ),
-                contextEvidence(TRACKER_SOURCE_IMAGE_CLIENT_CONTEXT, imageSource != null),
-            ),
-            applicable = applicable,
-        )
 
         val failure = when {
             settingsResult is EntrySourceSettingsResolution.Failed -> settingsResult.cause

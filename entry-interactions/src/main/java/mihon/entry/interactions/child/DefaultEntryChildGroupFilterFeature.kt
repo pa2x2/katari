@@ -8,17 +8,14 @@ import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onStart
 import mihon.entry.interactions.runtime.EntryChildGroupFilterDataSource
-import mihon.feature.graph.FeatureGraphEvaluation
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 
 internal class DefaultEntryChildGroupFilterFeature(
-    evaluation: FeatureGraphEvaluation,
+    private val applicableTypes: Set<EntryType>,
     private val interaction: EntryChildGroupFilterInteraction,
     private val dataSource: EntryChildGroupFilterDataSource,
 ) : EntryChildGroupFilterFeature {
-    private val applicableTypes = evaluation.childGroupFilterProviderTypes()
-
     override fun isApplicable(type: EntryType): Boolean = type in applicableTypes
 
     override suspend fun state(scope: EntryChildGroupFilterScope): EntryChildGroupFilterStateResult {

@@ -1,8 +1,5 @@
 package mihon.entry.interactions.state
 
-import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.entry.interactions.runtime.applicableProviderTypes
-import mihon.entry.interactions.runtime.requireEntryContextState
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.ContextInputId
 import mihon.feature.graph.ContributionOwner
@@ -14,11 +11,9 @@ import mihon.feature.graph.FeatureContextDecision
 import mihon.feature.graph.FeatureContribution
 import mihon.feature.graph.FeatureGraphContributionSink
 import mihon.feature.graph.FeatureGraphContributor
-import mihon.feature.graph.FeatureGraphEvaluation
 import mihon.feature.graph.FeatureId
 import mihon.feature.graph.FeatureIntegration
 import mihon.feature.graph.FeatureIntegrationId
-import mihon.feature.graph.contextEvidence
 import mihon.feature.graph.contextInputDefinition
 import mihon.feature.graph.featureContextRule
 
@@ -167,53 +162,4 @@ internal object EntryConsumptionFeatureContributor : FeatureGraphContributor {
             ),
         )
     }
-}
-
-internal fun FeatureGraphEvaluation.consumptionTypes(): Set<EntryType> =
-    applicableProviderTypes<EntryConsumptionProcessor>(
-        feature = ENTRY_CONSUMPTION_FEATURE_ID,
-        integration = ENTRY_CONSUMPTION_PROVIDER_INTEGRATION,
-        behaviorProjection = EntryConsumptionProviderBehavior.PROVIDER_DISPATCH.id,
-    )
-
-internal fun FeatureGraphEvaluation.requireConsumptionEligibilityContext(type: EntryType, canChange: Boolean) {
-    requireEntryContextState(
-        type = type,
-        feature = ENTRY_CONSUMPTION_FEATURE_ID,
-        integration = ENTRY_CONSUMPTION_ELIGIBILITY_INTEGRATION,
-        behaviorProjections = EntryConsumptionEligibilityBehavior.entries.map(
-            EntryConsumptionEligibilityBehavior::id,
-        ),
-        evidence = listOf(contextEvidence(ENTRY_CONSUMPTION_STATE_CHANGE_CONTEXT, canChange)),
-        applicable = canChange,
-    )
-}
-
-internal fun FeatureGraphEvaluation.requireConsumptionLifecycleContext(
-    type: EntryType,
-    changed: Boolean,
-    consumed: Boolean,
-) {
-    requireEntryContextState(
-        type = type,
-        feature = ENTRY_CONSUMPTION_FEATURE_ID,
-        integration = ENTRY_CONSUMPTION_LIFECYCLE_INTEGRATION,
-        behaviorProjections = listOf(EntryConsumptionLifecycleBehavior.id),
-        evidence = listOf(
-            contextEvidence(ENTRY_CONSUMPTION_CHANGED_CHILDREN_CONTEXT, changed),
-            contextEvidence(ENTRY_CONSUMPTION_REQUESTED_CONSUMED_CONTEXT, consumed),
-        ),
-        applicable = changed && consumed,
-    )
-}
-
-internal fun FeatureGraphEvaluation.requireConsumptionMutationContext(type: EntryType, changed: Boolean) {
-    requireEntryContextState(
-        type = type,
-        feature = ENTRY_CONSUMPTION_FEATURE_ID,
-        integration = ENTRY_CONSUMPTION_MUTATION_RESULT_INTEGRATION,
-        behaviorProjections = listOf(EntryConsumptionMutationBehavior.id),
-        evidence = listOf(contextEvidence(ENTRY_CONSUMPTION_CHANGED_CHILDREN_CONTEXT, changed)),
-        applicable = changed,
-    )
 }

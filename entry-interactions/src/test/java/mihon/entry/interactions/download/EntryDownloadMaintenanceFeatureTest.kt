@@ -11,7 +11,8 @@ import kotlinx.coroutines.test.runTest
 import mihon.entry.interactions.merge.EntryMergeDownloadOwners
 import mihon.entry.interactions.runtime.EntryInteractionPlugin
 import mihon.entry.interactions.runtime.EntryInteractionProviderBinding
-import mihon.entry.interactions.runtime.createEntryInteractionComposition
+import mihon.entry.interactions.runtime.createEntryInteractions
+import mihon.entry.interactions.runtime.providersOf
 import mihon.feature.graph.ContributionOwner
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.model.Entry
@@ -42,13 +43,11 @@ class EntryDownloadMaintenanceFeatureTest {
         vararg bindings: EntryInteractionProviderBinding<*>,
         owners: List<Entry> = listOf(entry),
     ): EntryDownloadMaintenanceFeature {
-        val composition = createEntryInteractionComposition(
-            plugins = listOf(plugin(*bindings)),
-            featureContributors = listOf(EntryDownloadMaintenanceFeatureContributor),
-        )
+        val plugins = listOf(plugin(*bindings))
+        val interactions = createEntryInteractions(plugins)
         return DefaultEntryDownloadMaintenanceFeature(
-            evaluation = composition.featureGraphEvaluation,
-            interaction = composition.interactions.download,
+            types = plugins.providersOf(EntryDownloadCapability).keys,
+            interaction = interactions.download,
             ownership = mockk {
                 coEvery { resolveDownloadOwners(any()) } returns EntryMergeDownloadOwners(
                     profileId = entry.profileId,

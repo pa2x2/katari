@@ -1,15 +1,8 @@
 package mihon.entry.interactions.library
 
-import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.entry.interactions.entryContentType
 import mihon.entry.interactions.runtime.EntryOutsideReleasePeriodFilterCapability
-import mihon.entry.interactions.runtime.EntryOutsideReleasePeriodFilterProvider
-import mihon.entry.interactions.runtime.applicableProviderTypes
-import mihon.entry.interactions.runtime.requireEntryContextState
 import mihon.entry.interactions.state.EntryBookmarkCapability
-import mihon.entry.interactions.state.EntryBookmarkProcessor
 import mihon.feature.graph.CapabilityExpression
-import mihon.feature.graph.ContentTypeId
 import mihon.feature.graph.ContextInputId
 import mihon.feature.graph.ContributionOwner
 import mihon.feature.graph.FeatureArtifactId
@@ -19,12 +12,10 @@ import mihon.feature.graph.FeatureContextDecision
 import mihon.feature.graph.FeatureContribution
 import mihon.feature.graph.FeatureGraphContributionSink
 import mihon.feature.graph.FeatureGraphContributor
-import mihon.feature.graph.FeatureGraphEvaluation
 import mihon.feature.graph.FeatureId
 import mihon.feature.graph.FeatureIntegration
 import mihon.feature.graph.FeatureIntegrationId
 import mihon.feature.graph.allOf
-import mihon.feature.graph.contextEvidence
 import mihon.feature.graph.contextInputDefinition
 import mihon.feature.graph.featureContextRule
 
@@ -164,73 +155,4 @@ internal object EntryLibraryFilterFeatureContributor : FeatureGraphContributor {
             ),
         )
     }
-}
-
-internal data class EntryLibraryFilterGraphSelection(
-    val participatingContentTypes: Set<ContentTypeId>,
-    val bookmarkTypes: Set<EntryType>,
-    val progressTypes: Set<EntryType>,
-    val releasePeriodTypes: Set<EntryType>,
-)
-
-internal fun FeatureGraphEvaluation.libraryFilterSelection(): EntryLibraryFilterGraphSelection {
-    return EntryLibraryFilterGraphSelection(
-        participatingContentTypes = selectedContentTypes(
-            ENTRY_LIBRARY_FILTER_PARTICIPATION_INTEGRATION,
-            EntryLibraryFilterParticipationBehavior.id,
-        ),
-        bookmarkTypes = applicableProviderTypes<EntryBookmarkProcessor>(
-            feature = ENTRY_LIBRARY_FILTER_FEATURE_ID,
-            integration = ENTRY_LIBRARY_FILTER_BOOKMARK_INTEGRATION,
-            behaviorProjection = EntryLibraryFilterBookmarkControlBehavior.id,
-        ),
-        progressTypes = applicableProviderTypes<EntryLibraryProgressProvider>(
-            feature = ENTRY_LIBRARY_FILTER_FEATURE_ID,
-            integration = ENTRY_LIBRARY_FILTER_PROGRESS_INTEGRATION,
-            behaviorProjection = EntryLibraryFilterProgressControlBehavior.id,
-        ),
-        releasePeriodTypes = applicableProviderTypes<EntryOutsideReleasePeriodFilterProvider>(
-            feature = ENTRY_LIBRARY_FILTER_FEATURE_ID,
-            integration = ENTRY_LIBRARY_FILTER_RELEASE_PERIOD_INTEGRATION,
-            behaviorProjection = EntryLibraryFilterReleasePeriodBehavior.id,
-        ),
-    )
-}
-
-internal fun FeatureGraphEvaluation.requireLibraryFilterContext(
-    types: Set<EntryType>,
-    policy: EntryLibraryFilterPolicy,
-    state: EntryLibraryFilterStateContext,
-    tracking: EntryLibraryTrackingFilterContext,
-) {
-    types.forEach { type ->
-        requireEntryContextState(
-            type = type,
-            feature = ENTRY_LIBRARY_FILTER_FEATURE_ID,
-            integration = ENTRY_LIBRARY_FILTER_CONTEXT_INTEGRATION,
-            behaviorProjections = EntryLibraryFilterContextBehavior.entries.map(
-                EntryLibraryFilterContextBehavior::id,
-            ),
-            evidence = listOf(
-                contextEvidence(ENTRY_LIBRARY_FILTER_POLICY_CONTEXT, policy),
-                contextEvidence(ENTRY_LIBRARY_FILTER_STATE_CONTEXT, state),
-                contextEvidence(ENTRY_LIBRARY_FILTER_TRACKING_CONTEXT, tracking),
-            ),
-            applicable = true,
-        )
-    }
-}
-
-private fun FeatureGraphEvaluation.selectedContentTypes(
-    integration: FeatureIntegrationId,
-    behaviorProjection: FeatureArtifactId,
-): Set<ContentTypeId> {
-    return behaviorProjections
-        .asSequence()
-        .filter { applicability ->
-            applicability.subject.feature == ENTRY_LIBRARY_FILTER_FEATURE_ID &&
-                applicability.subject.integration == integration &&
-                applicability.projection.id == behaviorProjection
-        }
-        .mapTo(mutableSetOf()) { it.subject.entryContentType }
 }

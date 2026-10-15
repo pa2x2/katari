@@ -1,5 +1,6 @@
 package mihon.entry.interactions.migration
 
+import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.withContext
@@ -19,23 +20,18 @@ import mihon.entry.interactions.migration.host.EntryMigrationHostReplayResult
 import mihon.entry.interactions.migration.host.EntryMigrationHostTransition
 import mihon.entry.interactions.migration.host.EntryMigrationHostTransitionResult
 import mihon.entry.interactions.migration.host.EntryMigrationPreparationHost
-import mihon.entry.interactions.runtime.applicableProviderTypes
 import mihon.entry.interactions.source.EntrySourceRefreshFailure
 import mihon.entry.interactions.source.EntrySourceRefreshFeature
 import mihon.entry.interactions.source.EntrySourceRefreshRequest
 import mihon.entry.interactions.source.EntrySourceRefreshResult
-import mihon.entry.interactions.state.EntryBookmarkProcessor
-import mihon.entry.interactions.state.EntryConsumptionProcessor
-import mihon.entry.interactions.state.EntryMigrationProvider
 import mihon.entry.interactions.tracking.EntryTrackingFeature
 import mihon.entry.interactions.tracking.EntryTrackingMigrationPreparationResult
 import mihon.entry.interactions.tracking.toDomainTrack
 import mihon.entry.interactions.tracking.toTrackingRecord
-import mihon.feature.graph.FeatureGraphEvaluation
 import tachiyomi.domain.entry.model.Entry
 
 internal class DefaultEntryMigrationFeature(
-    private val evaluation: FeatureGraphEvaluation,
+    private val types: EntryMigrationTypes,
     private val preparationHost: EntryMigrationPreparationHost,
     private val executionHost: EntryMigrationExecutionHost,
     private val sourceRefresh: EntrySourceRefreshFeature,
@@ -46,35 +42,9 @@ internal class DefaultEntryMigrationFeature(
     private val consequences: EntryMigrationConsequenceDelivery,
     private val clockMillis: () -> Long = System::currentTimeMillis,
 ) : EntryMigrationFeature {
-    private val migrationTypes = evaluation.applicableProviderTypes<EntryMigrationProvider>(
-        feature = ENTRY_MIGRATION_FEATURE_ID,
-        integration = ENTRY_MIGRATION_BASE_INTEGRATION_ID,
-        behaviorProjection = EntryMigrationBaseBehavior.PROVIDER_DISPATCH.id,
-    )
-    private val consumptionTypes = evaluation.applicableProviderTypes<EntryConsumptionProcessor>(
-        feature = ENTRY_MIGRATION_FEATURE_ID,
-        integration = ENTRY_MIGRATION_CONSUMPTION_INTEGRATION_ID,
-        behaviorProjection = EntryMigrationConsumptionBehavior.TRANSFER.id,
-    )
-    private val bookmarkTypes = evaluation.applicableProviderTypes<EntryBookmarkProcessor>(
-        feature = ENTRY_MIGRATION_FEATURE_ID,
-        integration = ENTRY_MIGRATION_BOOKMARK_INTEGRATION_ID,
-        behaviorProjection = EntryMigrationBookmarkBehavior.TRANSFER.id,
-    )
-    private val childStateOptionTypes = evaluation.applicableProviderTypes<EntryMigrationProvider>(
-        feature = ENTRY_MIGRATION_FEATURE_ID,
-        integration = ENTRY_MIGRATION_CHILD_STATE_OPTION_INTEGRATION_ID,
-        behaviorProjection = EntryMigrationChildStateOptionBehavior.id,
-    )
+    private val migrationTypes = types.migration
     override fun availability(entry: Entry): EntryMigrationAvailability {
         val rejection = entry.sourceRejection()
-        if (entry.type in migrationTypes) {
-            evaluation.requireMigrationSourceContext(
-                type = entry.type,
-                persisted = entry.isPersisted(),
-                inLibrary = entry.favorite,
-            )
-        }
         return if (rejection == null) {
             EntryMigrationAvailability.Available
         } else {
@@ -85,21 +55,6 @@ internal class DefaultEntryMigrationFeature(
     override fun prepareSelection(entries: List<Entry>): EntryMigrationSelectionResult {
         if (entries.isEmpty()) return selectionRejected(EntryMigrationRejection.EMPTY_SELECTION)
         val singleProfile = entries.map(Entry::profileId).distinct().size == 1
-        entries
-            .filter { it.type in migrationTypes }
-            .forEach { entry ->
-                evaluation.requireMigrationSourceContext(
-                    type = entry.type,
-                    persisted = entry.isPersisted(),
-                    inLibrary = entry.favorite,
-                )
-                evaluation.requireMigrationSelectionContext(
-                    type = entry.type,
-                    persisted = entry.isPersisted(),
-                    inLibrary = entry.favorite,
-                    singleProfile = singleProfile,
-                )
-            }
         if (!singleProfile) {
             return selectionRejected(EntryMigrationRejection.MIXED_SELECTION_PROFILES)
         }
@@ -111,7 +66,6 @@ internal class DefaultEntryMigrationFeature(
     }
 
     override suspend fun refreshTarget(intent: EntryMigrationTargetRefreshIntent): EntryMigrationTargetRefreshResult {
-        requirePairContext(intent.source, intent.target)
         validatePair(intent.source, intent.target)?.let {
             return EntryMigrationTargetRefreshResult.Rejected(it)
         }
@@ -170,7 +124,6 @@ internal class DefaultEntryMigrationFeature(
     }
 
     override suspend fun prepare(intent: EntryMigrationPrepareIntent): EntryMigrationPreparationResult {
-        requirePairContext(intent.source, intent.target)
         validatePair(intent.source, intent.target)?.let { return preparationRejected(it) }
         return try {
             when (
@@ -179,19 +132,9 @@ internal class DefaultEntryMigrationFeature(
             ) {
                 is EntryMigrationHostInspectionResult.Ready -> prepare(inspection, intent)
                 EntryMigrationHostInspectionResult.SourceMissing -> {
-                    evaluation.requireMigrationInspectionContext(
-                        sourceType = intent.source.type,
-                        pairPresent = false,
-                        identityStable = false,
-                    )
                     preparationRejected(EntryMigrationRejection.UNPERSISTED_ENTRY)
                 }
                 EntryMigrationHostInspectionResult.TargetMissing -> {
-                    evaluation.requireMigrationInspectionContext(
-                        sourceType = intent.source.type,
-                        pairPresent = false,
-                        identityStable = false,
-                    )
                     preparationRejected(EntryMigrationRejection.UNPERSISTED_ENTRY)
                 }
                 is EntryMigrationHostInspectionResult.OperationalFailure -> {
@@ -226,32 +169,16 @@ internal class DefaultEntryMigrationFeature(
     ): EntryMigrationPreparationResult {
         val identityStable = inspection.source.sameMigrationIdentity(intent.source) &&
             inspection.target.sameMigrationIdentity(intent.target)
-        evaluation.requireMigrationInspectionContext(
-            sourceType = intent.source.type,
-            pairPresent = true,
-            identityStable = identityStable,
-        )
         if (!identityStable) {
             return preparationRejected(EntryMigrationRejection.ENTRY_IDENTITY_CHANGED)
         }
-        requirePairContext(inspection.source, inspection.target)
         validatePair(inspection.source, inspection.target)?.let { return preparationRejected(it) }
         val hasNotes = inspection.source.notes.isNotBlank()
         val hasCustomCover = inspection.sourceHasCustomCover
         val hasDownloads =
             downloads().inspectEntry(inspection.source) == EntryDownloadMaintenanceInspection.HasDownloads
-        evaluation.requireMigrationOptionContext(
-            inspection.source.type,
-            EntryMigrationContextualOption.NOTES,
-            hasNotes,
-        )
-        evaluation.requireMigrationOptionContext(
-            inspection.source.type,
-            EntryMigrationContextualOption.CUSTOM_COVER,
-            hasCustomCover,
-        )
         val options = buildSet {
-            if (inspection.source.type in childStateOptionTypes) {
+            if (inspection.source.type in types.childStateOption) {
                 add(EntryMigrationOption.CHILD_STATE)
             }
             add(EntryMigrationOption.CATEGORIES)
@@ -312,11 +239,6 @@ internal class DefaultEntryMigrationFeature(
             is EntryMigrationHostInspectionResult.Ready -> {
                 val authorizationStable = inspection.source.sameMigrationAuthorization(reference.source) &&
                     inspection.target.sameMigrationAuthorization(reference.target)
-                evaluation.requireMigrationExecutionContext(
-                    type = reference.source.type,
-                    pairPresent = true,
-                    authorizationStable = authorizationStable,
-                )
                 if (!authorizationStable) {
                     return EntryMigrationExecutionResult.Conflict
                 }
@@ -325,11 +247,6 @@ internal class DefaultEntryMigrationFeature(
             EntryMigrationHostInspectionResult.SourceMissing,
             EntryMigrationHostInspectionResult.TargetMissing,
             -> {
-                evaluation.requireMigrationExecutionContext(
-                    type = reference.source.type,
-                    pairPresent = false,
-                    authorizationStable = false,
-                )
                 return EntryMigrationExecutionResult.Conflict
             }
             is EntryMigrationHostInspectionResult.OperationalFailure -> {
@@ -352,11 +269,6 @@ internal class DefaultEntryMigrationFeature(
             EntryMigrationExecutionInspectionResult.SourceMissing,
             EntryMigrationExecutionInspectionResult.TargetMissing,
             -> {
-                evaluation.requireMigrationExecutionContext(
-                    type = reference.source.type,
-                    pairPresent = false,
-                    authorizationStable = false,
-                )
                 return EntryMigrationExecutionResult.Conflict
             }
             is EntryMigrationExecutionInspectionResult.OperationalFailure -> {
@@ -365,11 +277,6 @@ internal class DefaultEntryMigrationFeature(
         }
         val authorizationStable = inspected.source.sameMigrationAuthorization(reference.source) &&
             inspected.target.sameMigrationAuthorization(reference.target)
-        evaluation.requireMigrationExecutionContext(
-            type = reference.source.type,
-            pairPresent = true,
-            authorizationStable = authorizationStable,
-        )
         if (!authorizationStable) {
             return EntryMigrationExecutionResult.Conflict
         }
@@ -400,8 +307,8 @@ internal class DefaultEntryMigrationFeature(
             prepareMigrationChildUpdates(
                 sourceChildren = inspected.sourceChildren,
                 childMatches = durableEvent.childMatches,
-                transferConsumption = inspected.source.type in consumptionTypes,
-                transferBookmarks = inspected.source.type in bookmarkTypes,
+                transferConsumption = inspected.source.type in types.consumption,
+                transferBookmarks = inspected.source.type in types.bookmark,
             )
         } else {
             emptyList()
@@ -542,19 +449,6 @@ internal class DefaultEntryMigrationFeature(
         }
     }
 
-    private fun requirePairContext(source: Entry, target: Entry) {
-        if (source.type !in migrationTypes) return
-        evaluation.requireMigrationPairContext(
-            sourceType = source.type,
-            sourcePersisted = source.isPersisted(),
-            sourceInLibrary = source.favorite,
-            targetPersisted = target.isPersisted(),
-            sameProfile = source.profileId == target.profileId,
-            sameType = source.type == target.type,
-            distinctEntry = source.id != target.id,
-        )
-    }
-
     private fun Entry.sourceRejection(): EntryMigrationRejection? {
         if (!isPersisted()) return EntryMigrationRejection.UNPERSISTED_ENTRY
         if (!favorite) return EntryMigrationRejection.SOURCE_NOT_IN_LIBRARY
@@ -583,3 +477,11 @@ internal class DefaultEntryMigrationFeature(
 
     private fun executionRejected(reason: EntryMigrationRejection) = EntryMigrationExecutionResult.Rejected(reason)
 }
+
+/** The types each Migration capability applies to, read from the providers the type modules contribute. */
+internal class EntryMigrationTypes(
+    val migration: Set<EntryType>,
+    val consumption: Set<EntryType>,
+    val bookmark: Set<EntryType>,
+    val childStateOption: Set<EntryType>,
+)

@@ -16,7 +16,8 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import mihon.entry.interactions.runtime.EntryInteractionPlugin
 import mihon.entry.interactions.runtime.EntryInteractionProviderBinding
-import mihon.entry.interactions.runtime.createEntryInteractionComposition
+import mihon.entry.interactions.runtime.createEntryInteractions
+import mihon.entry.interactions.runtime.providersOf
 import mihon.feature.graph.ContributionOwner
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.model.Entry
@@ -46,13 +47,11 @@ class EntryDownloadRuntimeFeatureTest {
         scope: CoroutineScope,
         vararg bindings: EntryInteractionProviderBinding<*>,
     ): EntryDownloadRuntimeFeature {
-        val composition = createEntryInteractionComposition(
-            plugins = listOf(plugin(EntryType.BOOK, *bindings)),
-            featureContributors = listOf(EntryDownloadRuntimeFeatureContributor),
-        )
+        val plugins = listOf(plugin(EntryType.BOOK, *bindings))
+        val interactions = createEntryInteractions(plugins)
         return DefaultEntryDownloadRuntimeFeature(
-            evaluation = composition.featureGraphEvaluation,
-            interaction = composition.interactions.download,
+            applicableTypes = plugins.providersOf(EntryDownloadCapability).keys,
+            interaction = interactions.download,
             scope = scope,
         )
     }

@@ -1,12 +1,8 @@
 package mihon.entry.interactions.library
 
-import eu.kanade.tachiyomi.source.entry.EntryType
 import mihon.entry.interactions.download.EntryDownloadCapability
-import mihon.entry.interactions.entryContentType
 import mihon.entry.interactions.navigation.EntryOpenCapability
 import mihon.entry.interactions.runtime.EntryTypePresentationCapability
-import mihon.entry.interactions.runtime.requireEntryContextState
-import mihon.entry.interactions.runtime.toContentTypeId
 import mihon.entry.interactions.state.EntryConsumptionCapability
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.ContextInputId
@@ -19,11 +15,9 @@ import mihon.feature.graph.FeatureContextDecision
 import mihon.feature.graph.FeatureContribution
 import mihon.feature.graph.FeatureGraphContributionSink
 import mihon.feature.graph.FeatureGraphContributor
-import mihon.feature.graph.FeatureGraphEvaluation
 import mihon.feature.graph.FeatureId
 import mihon.feature.graph.FeatureIntegration
 import mihon.feature.graph.FeatureIntegrationId
-import mihon.feature.graph.contextEvidence
 import mihon.feature.graph.contextInputDefinition
 import mihon.feature.graph.featureContextRule
 
@@ -199,58 +193,4 @@ internal object EntryLibraryUpdateNotificationFeatureContributor : FeatureGraphC
             ),
         )
     }
-}
-
-internal fun FeatureGraphEvaluation.requireLibraryUpdateNotificationOpenContext(
-    type: EntryType,
-    hasChildren: Boolean,
-) {
-    requireLibraryUpdateNotificationActionContext(
-        type = type,
-        integration = ENTRY_LIBRARY_UPDATE_NOTIFICATION_OPEN_CONTEXT_INTEGRATION_ID,
-        behaviorProjection = ENTRY_LIBRARY_UPDATE_NOTIFICATION_OPEN_ACTION_BEHAVIOR_ID,
-        hasChildren = hasChildren,
-    )
-}
-
-internal fun FeatureGraphEvaluation.requireLibraryUpdateNotificationConsumptionContext(
-    type: EntryType,
-    hasChildren: Boolean,
-) {
-    requireLibraryUpdateNotificationActionContext(
-        type = type,
-        integration = ENTRY_LIBRARY_UPDATE_NOTIFICATION_CONSUMPTION_CONTEXT_INTEGRATION_ID,
-        behaviorProjection = ENTRY_LIBRARY_UPDATE_NOTIFICATION_CONSUMPTION_ACTION_BEHAVIOR_ID,
-        hasChildren = hasChildren,
-    )
-}
-
-private fun FeatureGraphEvaluation.requireLibraryUpdateNotificationActionContext(
-    type: EntryType,
-    integration: FeatureIntegrationId,
-    behaviorProjection: FeatureArtifactId,
-    hasChildren: Boolean,
-) {
-    requireEntryContextState(
-        type = type,
-        feature = ENTRY_LIBRARY_UPDATE_NOTIFICATION_FEATURE_ID,
-        integration = integration,
-        behaviorProjections = listOf(behaviorProjection),
-        evidence = listOf(contextEvidence(ENTRY_LIBRARY_UPDATE_NOTIFICATION_HAS_CHILDREN_CONTEXT, hasChildren)),
-        applicable = hasChildren,
-    )
-}
-
-internal fun FeatureGraphEvaluation.libraryUpdateNotificationTypes(
-    integration: FeatureIntegrationId,
-    behaviorProjection: FeatureArtifactId,
-): Set<EntryType> {
-    val contentTypes = behaviorProjections.asSequence()
-        .filter { applicability ->
-            applicability.subject.feature == ENTRY_LIBRARY_UPDATE_NOTIFICATION_FEATURE_ID &&
-                applicability.subject.integration == integration &&
-                applicability.projection.id == behaviorProjection
-        }
-        .mapTo(mutableSetOf()) { it.subject.entryContentType }
-    return EntryType.entries.filterTo(mutableSetOf()) { it.toContentTypeId() in contentTypes }
 }

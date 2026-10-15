@@ -1,13 +1,11 @@
 package mihon.entry.interactions.media
 
-import mihon.entry.interactions.runtime.applicableProviderTypes
-import mihon.feature.graph.FeatureArtifactId
-import mihon.feature.graph.FeatureGraphEvaluation
+import eu.kanade.tachiyomi.source.entry.EntryType
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.PreferenceStore
 
 internal class DefaultEntryMediaCacheFeature(
-    evaluation: FeatureGraphEvaluation,
+    applicableTypes: Set<EntryType>,
     interaction: EntryMediaCacheInteraction,
     preferenceStore: PreferenceStore,
 ) : EntryMediaCacheFeature {
@@ -16,29 +14,9 @@ internal class DefaultEntryMediaCacheFeature(
     private val preferencesById: Map<EntryMediaCacheId, Preference<Boolean>>
 
     init {
-        val typesByBehavior = listOf(
-            ENTRY_MEDIA_CACHE_DISCOVERY_BEHAVIOR_ID,
-            ENTRY_MEDIA_CACHE_SETTINGS_BEHAVIOR_ID,
-            ENTRY_MEDIA_CACHE_MANUAL_CLEAR_BEHAVIOR_ID,
-            ENTRY_MEDIA_CACHE_LAUNCH_CLEAR_BEHAVIOR_ID,
-            ENTRY_MEDIA_CACHE_PREFERENCES_BEHAVIOR_ID,
-            ENTRY_MEDIA_CACHE_INVALIDATION_BEHAVIOR_ID,
-            ENTRY_MEDIA_CACHE_ERRORS_BEHAVIOR_ID,
-        ).associateWith { behavior ->
-            evaluation.applicableProviderTypes<EntryMediaCacheProvider>(
-                feature = ENTRY_MEDIA_CACHE_FEATURE_ID,
-                integration = ENTRY_MEDIA_CACHE_INTEGRATION_ID,
-                behaviorProjection = behavior,
-            )
-        }
-        check(typesByBehavior.values.toSet().size == 1) {
-            "Media-cache behaviors selected different provider sets: ${typesByBehavior.describe()}"
-        }
-
-        val applicableTypes = typesByBehavior.getValue(ENTRY_MEDIA_CACHE_DISCOVERY_BEHAVIOR_ID)
         val providers = applicableTypes.sortedBy { it.ordinal }.map { type ->
             checkNotNull(interaction.provider(type)) {
-                "Media-cache graph selected $type without an operational provider"
+                "Media-cache type $type has no operational provider"
             }
         }
         providers.forEach { provider ->
@@ -100,9 +78,6 @@ internal class DefaultEntryMediaCacheFeature(
         }
     }
 }
-
-private fun Map<FeatureArtifactId, Set<*>>.describe(): String =
-    entries.joinToString { (behavior, types) -> "${behavior.value}=$types" }
 
 private fun Map<EntryMediaCacheId, Int>.duplicates(): Set<EntryMediaCacheId> =
     filterValues { it > 1 }.keys

@@ -6,13 +6,15 @@ import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.IntoSet
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
+import eu.kanade.tachiyomi.source.entry.EntryType
 import mihon.entry.interactions.durable.EntryDurableParticipant
 import mihon.entry.interactions.migration.consequence.EntryMigrationDurableEvent
 import mihon.entry.interactions.persistence.backup.EntryBackupStateParticipant
+import mihon.entry.interactions.state.EntryMigrationProvider
+import mihon.entry.interactions.state.EntryTranslationLanguagesProvider
 import mihon.entry.interactions.translation.backup.EntryTranslationLanguagesBackupParticipant
 import mihon.entry.interactions.translation.migration.EntryTranslationLanguagesMigrationParticipant
 import mihon.feature.graph.FeatureGraphContributor
-import mihon.feature.runtime.FeatureRuntimeComposition
 import tachiyomi.domain.entry.repository.EntryTranslationLanguagesRepository
 
 @ContributesTo(AppScope::class)
@@ -21,10 +23,12 @@ object EntryTranslationLanguagesBindings {
     @Provides
     @SingleIn(AppScope::class)
     internal fun defaultFeature(
-        composition: FeatureRuntimeComposition,
+        translationLanguagesProviders: Map<EntryType, EntryTranslationLanguagesProvider>,
+        migrationProviders: Map<EntryType, EntryMigrationProvider>,
         repository: EntryTranslationLanguagesRepository,
     ): DefaultEntryTranslationLanguagesFeature = DefaultEntryTranslationLanguagesFeature(
-        evaluation = composition.evaluation,
+        applicableTypes = translationLanguagesProviders.keys,
+        migrationTypes = translationLanguagesProviders.keys intersect migrationProviders.keys,
         repository = repository,
     )
 

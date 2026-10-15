@@ -16,7 +16,6 @@ import mihon.entry.interactions.tracking.backup.EntryTrackingBackupParticipant
 import mihon.entry.interactions.tracking.host.EntryTrackingHost
 import mihon.entry.interactions.tracking.merge.EntryTrackingMergeParticipant
 import mihon.feature.graph.FeatureGraphContributor
-import mihon.feature.runtime.FeatureRuntimeComposition
 import tachiyomi.domain.entry.model.Entry
 
 @ContributesTo(AppScope::class)
@@ -24,9 +23,8 @@ import tachiyomi.domain.entry.model.Entry
 object EntryTrackingBindings {
     @Provides
     @SingleIn(AppScope::class)
-    fun feature(composition: FeatureRuntimeComposition, trackingHost: EntryTrackingHost): EntryTrackingFeature =
+    fun feature(trackingHost: EntryTrackingHost): EntryTrackingFeature =
         DefaultEntryTrackingFeature(
-            evaluation = composition.evaluation,
             host = trackingHost,
         )
 

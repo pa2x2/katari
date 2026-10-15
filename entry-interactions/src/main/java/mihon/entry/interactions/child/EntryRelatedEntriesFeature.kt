@@ -4,7 +4,6 @@ import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.RelatedEntriesSource
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import kotlinx.coroutines.flow.Flow
-import mihon.entry.interactions.runtime.requireEntryContextState
 import mihon.entry.interactions.source.ENTRY_SOURCE_CONTEXT_OWNER
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.ContextInputId
@@ -17,11 +16,9 @@ import mihon.feature.graph.FeatureContextDecision
 import mihon.feature.graph.FeatureContribution
 import mihon.feature.graph.FeatureGraphContributionSink
 import mihon.feature.graph.FeatureGraphContributor
-import mihon.feature.graph.FeatureGraphEvaluation
 import mihon.feature.graph.FeatureId
 import mihon.feature.graph.FeatureIntegration
 import mihon.feature.graph.FeatureIntegrationId
-import mihon.feature.graph.contextEvidence
 import mihon.feature.graph.contextInputDefinition
 import mihon.feature.graph.featureContextRule
 import tachiyomi.domain.entry.adapter.toEntry
@@ -108,7 +105,6 @@ internal object EntryRelatedEntriesFeatureContributor : FeatureGraphContributor 
 }
 
 internal class DefaultEntryRelatedEntriesFeature(
-    private val evaluation: FeatureGraphEvaluation,
     private val sourceManager: SourceManager,
     private val networkToLocalEntry: NetworkToLocalEntry,
     private val getEntry: GetEntry,
@@ -146,19 +142,6 @@ internal class DefaultEntryRelatedEntriesFeature(
     }
 
     private fun availability(type: EntryType, source: UnifiedSource?): EntryRelatedEntriesAvailability {
-        val installed = source != null
-        val supported = source is RelatedEntriesSource
-        evaluation.requireEntryContextState(
-            type = type,
-            feature = ENTRY_RELATED_ENTRIES_FEATURE_ID,
-            integration = ENTRY_RELATED_ENTRIES_INTEGRATION_ID,
-            behaviorProjections = EntryRelatedEntriesBehavior.entries.map(EntryRelatedEntriesBehavior::id),
-            evidence = listOf(
-                contextEvidence(ENTRY_RELATED_ENTRIES_SOURCE_INSTALLED_CONTEXT, installed),
-                contextEvidence(ENTRY_RELATED_ENTRIES_SOURCE_SUPPORT_CONTEXT, supported),
-            ),
-            applicable = installed && supported,
-        )
         return if (source is RelatedEntriesSource) {
             EntryRelatedEntriesAvailability.Available(sourceDescription.describe(source).itemOrientation)
         } else {

@@ -1,10 +1,6 @@
 package mihon.entry.interactions.state
 
-import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.entry.interactions.entryContentType
-import mihon.entry.interactions.runtime.requireEntryContextState
 import mihon.feature.graph.CapabilityExpression
-import mihon.feature.graph.ContentTypeId
 import mihon.feature.graph.ContextInputId
 import mihon.feature.graph.ContributionOwner
 import mihon.feature.graph.FeatureArtifactId
@@ -15,11 +11,9 @@ import mihon.feature.graph.FeatureContextDecision
 import mihon.feature.graph.FeatureContribution
 import mihon.feature.graph.FeatureGraphContributionSink
 import mihon.feature.graph.FeatureGraphContributor
-import mihon.feature.graph.FeatureGraphEvaluation
 import mihon.feature.graph.FeatureId
 import mihon.feature.graph.FeatureIntegration
 import mihon.feature.graph.FeatureIntegrationId
-import mihon.feature.graph.contextEvidence
 import mihon.feature.graph.contextInputDefinition
 import mihon.feature.graph.featureContextRule
 import tachiyomi.domain.library.update.model.LibraryUpdateSkipRules
@@ -169,39 +163,4 @@ internal object EntryUpdateEligibilityFeatureContributor : FeatureGraphContribut
             ),
         )
     }
-}
-
-internal fun FeatureGraphEvaluation.updateEligibilityContentTypes(): Set<ContentTypeId> =
-    behaviorProjections
-        .asSequence()
-        .filter { applicability ->
-            applicability.subject.feature == ENTRY_UPDATE_ELIGIBILITY_FEATURE_ID &&
-                applicability.subject.integration == ENTRY_UPDATE_ELIGIBILITY_POLICY_INTEGRATION &&
-                applicability.projection.id == EntryUpdateEligibilityPolicyBehavior.TYPE_PARTICIPATION.id
-        }
-        .mapTo(mutableSetOf()) { it.subject.entryContentType }
-
-internal fun FeatureGraphEvaluation.requireUpdateEligibilityContext(
-    type: EntryType,
-    skipRules: LibraryUpdateSkipRules,
-    context: EntryUpdateEligibilityContext,
-    applicable: Boolean,
-) {
-    requireEntryContextState(
-        type = type,
-        feature = ENTRY_UPDATE_ELIGIBILITY_FEATURE_ID,
-        integration = ENTRY_UPDATE_ELIGIBILITY_DECISION_INTEGRATION,
-        behaviorProjections = EntryUpdateEligibilityDecisionBehavior.entries.map(
-            EntryUpdateEligibilityDecisionBehavior::id,
-        ),
-        evidence = listOf(
-            contextEvidence(ENTRY_UPDATE_ELIGIBILITY_POLICY_CONTEXT, skipRules),
-            contextEvidence(ENTRY_UPDATE_ELIGIBILITY_ONE_SHOT_CONTEXT, context.oneShotAlreadyFetched),
-            contextEvidence(ENTRY_UPDATE_ELIGIBILITY_COMPLETED_CONTEXT, context.completed),
-            contextEvidence(ENTRY_UPDATE_ELIGIBILITY_UNCONSUMED_CONTEXT, context.hasUnconsumed),
-            contextEvidence(ENTRY_UPDATE_ELIGIBILITY_NOT_STARTED_CONTEXT, context.notStartedWithChildren),
-            contextEvidence(ENTRY_UPDATE_ELIGIBILITY_RELEASE_PERIOD_CONTEXT, context.outsideReleasePeriod),
-        ),
-        applicable = applicable,
-    )
 }

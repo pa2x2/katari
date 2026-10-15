@@ -12,11 +12,9 @@ import mihon.feature.graph.FeatureContextDecision
 import mihon.feature.graph.FeatureContribution
 import mihon.feature.graph.FeatureGraphContributionSink
 import mihon.feature.graph.FeatureGraphContributor
-import mihon.feature.graph.FeatureGraphEvaluation
 import mihon.feature.graph.FeatureId
 import mihon.feature.graph.FeatureIntegration
 import mihon.feature.graph.FeatureIntegrationId
-import mihon.feature.graph.contextEvidence
 import mihon.feature.graph.contextInputDefinition
 import mihon.feature.graph.featureContextRule
 import tachiyomi.domain.source.service.SourceManager
@@ -100,7 +98,6 @@ internal object EntrySourceHomeFeatureContributor : FeatureGraphContributor {
 }
 
 internal class DefaultEntrySourceHomeFeature(
-    private val evaluation: FeatureGraphEvaluation,
     private val sourceManager: SourceManager,
 ) : EntrySourceHomeFeature {
 
@@ -112,12 +109,6 @@ internal class DefaultEntrySourceHomeFeature(
         val url = try {
             provider.getHomeUrl()
         } catch (error: Throwable) {
-            requireState(
-                installed = true,
-                supported = true,
-                urlState = SourceHomeUrlState.FAILED,
-                applicable = true,
-            )
             return EntrySourceHomeResolution.Failed(sourceId, error)
         }
         return result(sourceId, installed = true, provider = provider, url = url)
@@ -130,36 +121,11 @@ internal class DefaultEntrySourceHomeFeature(
         url: String?,
     ): EntrySourceHomeResolution {
         val hasUrl = !url.isNullOrBlank()
-        requireState(
-            installed = installed,
-            supported = provider != null,
-            urlState = if (hasUrl) SourceHomeUrlState.AVAILABLE else SourceHomeUrlState.ABSENT,
-            applicable = installed && provider != null && hasUrl,
-        )
         return when {
             !installed -> EntrySourceHomeResolution.Missing(sourceId)
             provider == null -> EntrySourceHomeResolution.Unsupported(sourceId)
             !hasUrl -> EntrySourceHomeResolution.NoUrl(sourceId)
             else -> EntrySourceHomeResolution.Available(sourceId, provider.name, url)
-        }
-    }
-
-    private fun requireState(
-        installed: Boolean,
-        supported: Boolean,
-        urlState: SourceHomeUrlState,
-        applicable: Boolean,
-    ) {
-        SourceHomeBehavior.entries.forEach { behavior ->
-            evaluation.requireSourceContextState(
-                feature = SOURCE_HOME_FEATURE_ID,
-                integration = SOURCE_HOME_INTEGRATION_ID,
-                behaviorProjection = behavior.id,
-                evidence = listOf(
-                    contextEvidence(SOURCE_HOME_CONTEXT, SourceHomeContext(installed, supported, urlState)),
-                ),
-                applicable = applicable,
-            )
         }
     }
 }

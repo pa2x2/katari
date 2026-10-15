@@ -6,9 +6,10 @@ import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.IntoSet
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
+import eu.kanade.tachiyomi.source.entry.EntryType
 import mihon.entry.interactions.runtime.EntryInteractions
+import mihon.entry.interactions.runtime.EntryTypePresentationProvider
 import mihon.feature.graph.FeatureGraphContributor
-import mihon.feature.runtime.FeatureRuntimeComposition
 
 @ContributesTo(AppScope::class)
 @BindingContainer
@@ -16,10 +17,10 @@ object EntryPresentationBindings {
     @Provides
     @SingleIn(AppScope::class)
     fun feature(
-        composition: FeatureRuntimeComposition,
+        typePresentationProviders: Map<EntryType, EntryTypePresentationProvider>,
         interactions: EntryInteractions,
     ): EntryTypePresentationFeature = DefaultEntryTypePresentationFeature(
-        evaluation = composition.evaluation,
+        applicableTypes = typePresentationProviders.keys,
         interaction = interactions.typePresentation,
     )
 

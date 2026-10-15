@@ -1,7 +1,5 @@
 package mihon.entry.interactions.merge
 
-import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.entry.interactions.runtime.requireEntryContextState
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.ContextInputId
 import mihon.feature.graph.ContributionOwner
@@ -9,10 +7,8 @@ import mihon.feature.graph.FeatureArtifactId
 import mihon.feature.graph.FeatureBehaviorProjection
 import mihon.feature.graph.FeatureContextBlocker
 import mihon.feature.graph.FeatureContextDecision
-import mihon.feature.graph.FeatureGraphEvaluation
 import mihon.feature.graph.FeatureIntegration
 import mihon.feature.graph.FeatureIntegrationId
-import mihon.feature.graph.contextEvidence
 import mihon.feature.graph.contextInputDefinition
 import mihon.feature.graph.featureContextRule
 
@@ -174,63 +170,3 @@ internal fun entryMergePreparationContextIntegrations(owner: ContributionOwner):
         behavioralContracts = listOf(EntryMergeBehaviorContract.PREPARATION_MEMBERSHIP),
     ),
 )
-
-internal fun FeatureGraphEvaluation.requireMergeSelectionContext(
-    types: Set<EntryType>,
-    homogeneousType: Boolean,
-    homogeneousProfile: Boolean,
-) {
-    types.forEach { type ->
-        requireEntryContextState(
-            type = type,
-            feature = ENTRY_MERGE_FEATURE_ID,
-            integration = ENTRY_MERGE_SELECTION_CONTEXT_INTEGRATION,
-            behaviorProjections = listOf(EntryMergeSelectionBehavior.id),
-            evidence = listOf(
-                contextEvidence(ENTRY_MERGE_HOMOGENEOUS_TYPE_CONTEXT, homogeneousType),
-                contextEvidence(ENTRY_MERGE_HOMOGENEOUS_PROFILE_CONTEXT, homogeneousProfile),
-            ),
-            applicable = homogeneousType && homogeneousProfile,
-        )
-    }
-}
-
-internal fun FeatureGraphEvaluation.requireMergeAuthorityContext(
-    type: EntryType,
-    authoritativeSelectionPresent: Boolean,
-    typeStable: Boolean,
-    profileStable: Boolean,
-) {
-    requireEntryContextState(
-        type = type,
-        feature = ENTRY_MERGE_FEATURE_ID,
-        integration = ENTRY_MERGE_AUTHORITY_CONTEXT_INTEGRATION,
-        behaviorProjections = listOf(EntryMergeAuthorityBehavior.id),
-        evidence = listOf(
-            contextEvidence(ENTRY_MERGE_AUTHORITATIVE_SELECTION_CONTEXT, authoritativeSelectionPresent),
-            contextEvidence(ENTRY_MERGE_AUTHORITATIVE_TYPE_CONTEXT, typeStable),
-            contextEvidence(ENTRY_MERGE_AUTHORITATIVE_PROFILE_CONTEXT, profileStable),
-        ),
-        applicable = authoritativeSelectionPresent && typeStable && profileStable,
-    )
-}
-
-internal fun FeatureGraphEvaluation.requireMergeMembershipContext(
-    type: EntryType,
-    singleExistingGroup: Boolean,
-    completeExistingGroup: Boolean,
-    sufficientEditorMembers: Boolean,
-) {
-    requireEntryContextState(
-        type = type,
-        feature = ENTRY_MERGE_FEATURE_ID,
-        integration = ENTRY_MERGE_MEMBERSHIP_CONTEXT_INTEGRATION,
-        behaviorProjections = listOf(EntryMergeEditorBehavior.id),
-        evidence = listOf(
-            contextEvidence(ENTRY_MERGE_SINGLE_EXISTING_GROUP_CONTEXT, singleExistingGroup),
-            contextEvidence(ENTRY_MERGE_COMPLETE_EXISTING_GROUP_CONTEXT, completeExistingGroup),
-            contextEvidence(ENTRY_MERGE_SUFFICIENT_EDITOR_MEMBERS_CONTEXT, sufficientEditorMembers),
-        ),
-        applicable = singleExistingGroup && completeExistingGroup && sufficientEditorMembers,
-    )
-}

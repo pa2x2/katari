@@ -2,15 +2,13 @@ package mihon.entry.interactions.tracking
 
 import kotlinx.coroutines.CancellationException
 import mihon.entry.interactions.tracking.host.EntryTrackingHost
-import mihon.feature.graph.FeatureGraphEvaluation
 import tachiyomi.domain.entry.model.Entry
 
 internal class DefaultEntryTrackingOperations(
-    evaluation: FeatureGraphEvaluation,
     private val host: EntryTrackingHost,
     private val automation: DefaultEntryTrackingAutomation,
 ) : EntryTrackingOperations {
-    private val resolver = EntryTrackingOperationResolver(evaluation, host)
+    private val resolver = EntryTrackingOperationResolver(host)
 
     override suspend fun refresh(entry: Entry): EntryTrackingRefreshResult {
         val available = resolver.resolveAvailableServices(entry)

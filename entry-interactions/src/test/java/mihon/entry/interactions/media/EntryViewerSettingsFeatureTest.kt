@@ -7,7 +7,7 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import mihon.entry.interactions.runtime.EntryInteractionPlugin
-import mihon.entry.interactions.runtime.createEntryInteractionComposition
+import mihon.entry.interactions.runtime.createEntryInteractions
 import mihon.entry.viewer.settings.ViewerSettingCodecs
 import mihon.entry.viewer.settings.ViewerSettingDefinition
 import mihon.entry.viewer.settings.ViewerSettingId
@@ -50,8 +50,8 @@ class EntryViewerSettingsFeatureTest {
         projections: List<EntryViewerSettingsScreenProjection>,
         repository: ViewerSettingOverrideRepository,
     ): EntryViewerSettingsFeature {
-        val composition = createEntryInteractionComposition(
-            plugins = listOf(
+        val interactions = createEntryInteractions(
+            listOf(
                 object : EntryInteractionPlugin {
                     override val type = EntryType.BOOK
                     override val owner = ContributionOwner("test.viewer-settings.book")
@@ -62,11 +62,11 @@ class EntryViewerSettingsFeatureTest {
                     )
                 },
             ),
-            featureContributors = listOf(EntryViewerSettingsFeatureContributor),
         )
         return DefaultEntryViewerSettingsFeature(
-            evaluation = composition.featureGraphEvaluation,
-            interaction = composition.interactions.viewerSettings,
+            applicableTypes = setOf(EntryType.BOOK),
+            migrationTypes = emptySet(),
+            interaction = interactions.viewerSettings,
             projectionResolver = EntryViewerSettingsScreenProjectionResolver { projections },
             overrideRepository = repository,
             legacyMangaViewerFlagsReset = EntryLegacyMangaViewerFlagsReset { true },

@@ -1,11 +1,9 @@
 package mihon.entry.interactions.media
 
 import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.entry.interactions.runtime.applicableProviderTypes
 import mihon.entry.interactions.state.EntryMigrationCapability
 import mihon.entry.interactions.state.EntryPlaybackPreferencesCapability
 import mihon.entry.interactions.state.EntryPlaybackPreferencesInteraction
-import mihon.entry.interactions.state.EntryPlaybackPreferencesProcessor
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.ContributionOwner
 import mihon.feature.graph.FeatureArtifactId
@@ -14,7 +12,6 @@ import mihon.feature.graph.FeatureBehaviorProjection
 import mihon.feature.graph.FeatureContribution
 import mihon.feature.graph.FeatureGraphContributionSink
 import mihon.feature.graph.FeatureGraphContributor
-import mihon.feature.graph.FeatureGraphEvaluation
 import mihon.feature.graph.FeatureId
 import mihon.feature.graph.FeatureIntegration
 import mihon.feature.graph.FeatureIntegrationId
@@ -73,32 +70,10 @@ internal object EntryPlaybackPreferencesFeatureContributor : FeatureGraphContrib
 }
 
 internal class DefaultEntryPlaybackPreferencesFeature(
-    evaluation: FeatureGraphEvaluation,
+    private val applicableTypes: Set<EntryType>,
+    private val migrationTypes: Set<EntryType>,
     private val interaction: EntryPlaybackPreferencesInteraction,
 ) : EntryPlaybackPreferencesFeature {
-    private val applicableTypesByBehavior =
-        EntryPlaybackPreferencesBehavior.entries.associateWith { behavior ->
-            evaluation.applicableProviderTypes<EntryPlaybackPreferencesProcessor>(
-                feature = ENTRY_PLAYBACK_PREFERENCES_FEATURE_ID,
-                integration = ENTRY_PLAYBACK_PREFERENCES_INTEGRATION_ID,
-                behaviorProjection = behavior.id,
-            )
-        }
-
-    private val applicableTypes = applicableTypesByBehavior.values
-        .also { selectedTypes ->
-            check(selectedTypes.distinct().size <= 1) {
-                "Playback-preference behaviors selected different provider sets: $applicableTypesByBehavior"
-            }
-        }
-        .firstOrNull()
-        .orEmpty()
-    private val migrationTypes = evaluation.applicableProviderTypes<EntryPlaybackPreferencesProcessor>(
-        feature = ENTRY_PLAYBACK_PREFERENCES_FEATURE_ID,
-        integration = ENTRY_PLAYBACK_PREFERENCES_MIGRATION_INTEGRATION_ID,
-        behaviorProjection = EntryPlaybackPreferencesMigrationBehavior.id,
-    )
-
     override fun isApplicable(type: EntryType): Boolean = type in applicableTypes
 
     override suspend fun snapshot(entry: Entry): EntryPlaybackPreferencesSnapshotResult {

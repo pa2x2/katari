@@ -4,7 +4,6 @@ import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import mihon.entry.interactions.merge.EntryMergeDownloadOwnershipProjection
 import mihon.entry.interactions.merge.EntryMergeSubject
-import mihon.entry.interactions.runtime.applicableProviderTypes
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.ContributionOwner
 import mihon.feature.graph.FeatureArtifactId
@@ -13,7 +12,6 @@ import mihon.feature.graph.FeatureBehaviorProjection
 import mihon.feature.graph.FeatureContribution
 import mihon.feature.graph.FeatureGraphContributionSink
 import mihon.feature.graph.FeatureGraphContributor
-import mihon.feature.graph.FeatureGraphEvaluation
 import mihon.feature.graph.FeatureId
 import mihon.feature.graph.FeatureIntegration
 import mihon.feature.graph.FeatureIntegrationId
@@ -80,39 +78,12 @@ internal object EntryDownloadMaintenanceFeatureContributor : FeatureGraphContrib
 }
 
 internal class DefaultEntryDownloadMaintenanceFeature(
-    evaluation: FeatureGraphEvaluation,
+    private val types: Set<EntryType>,
     private val interaction: EntryDownloadInteraction,
     private val ownership: EntryMergeDownloadOwnershipProjection,
 ) : EntryDownloadMaintenanceFeature {
-    private val cacheTypes = evaluation.applicableProviderTypes<EntryDownloadProcessor>(
-        feature = ENTRY_DOWNLOAD_MAINTENANCE_FEATURE_ID,
-        integration = ENTRY_DOWNLOAD_MAINTENANCE_INTEGRATION_ID,
-        behaviorProjection = ENTRY_DOWNLOAD_CACHE_MAINTENANCE_BEHAVIOR_ID,
-    )
-    private val sourceTypes = evaluation.applicableProviderTypes<EntryDownloadProcessor>(
-        feature = ENTRY_DOWNLOAD_MAINTENANCE_FEATURE_ID,
-        integration = ENTRY_DOWNLOAD_MAINTENANCE_INTEGRATION_ID,
-        behaviorProjection = ENTRY_DOWNLOAD_SOURCE_MAINTENANCE_BEHAVIOR_ID,
-    )
-    private val titleTypes = evaluation.applicableProviderTypes<EntryDownloadProcessor>(
-        feature = ENTRY_DOWNLOAD_MAINTENANCE_FEATURE_ID,
-        integration = ENTRY_DOWNLOAD_MAINTENANCE_INTEGRATION_ID,
-        behaviorProjection = ENTRY_DOWNLOAD_TITLE_MAINTENANCE_BEHAVIOR_ID,
-    )
-    private val removalTypes = evaluation.applicableProviderTypes<EntryDownloadProcessor>(
-        feature = ENTRY_DOWNLOAD_MAINTENANCE_FEATURE_ID,
-        integration = ENTRY_DOWNLOAD_MAINTENANCE_INTEGRATION_ID,
-        behaviorProjection = ENTRY_DOWNLOAD_REMOVAL_MAINTENANCE_BEHAVIOR_ID,
-    )
-
-    init {
-        check(setOf(cacheTypes, sourceTypes, titleTypes, removalTypes).size == 1) {
-            "Download maintenance behaviors selected different provider sets"
-        }
-    }
-
     override fun invalidateCaches(): EntryDownloadMaintenanceResult {
-        if (cacheTypes.isEmpty()) return EntryDownloadMaintenanceResult.NoParticipants
+        if (types.isEmpty()) return EntryDownloadMaintenanceResult.NoParticipants
         interaction.invalidateCaches()
         return EntryDownloadMaintenanceResult.Performed
     }
@@ -121,19 +92,19 @@ internal class DefaultEntryDownloadMaintenanceFeature(
         oldSource: UnifiedSource,
         newSource: UnifiedSource,
     ): EntryDownloadMaintenanceResult {
-        if (sourceTypes.isEmpty()) return EntryDownloadMaintenanceResult.NoParticipants
+        if (types.isEmpty()) return EntryDownloadMaintenanceResult.NoParticipants
         interaction.renameSource(oldSource, newSource)
         return EntryDownloadMaintenanceResult.Performed
     }
 
     override suspend fun renameEntry(entry: Entry, newTitle: String): EntryDownloadMaintenanceResult {
-        if (entry.type !in titleTypes) return inapplicable(entry.type)
+        if (entry.type !in types) return inapplicable(entry.type)
         interaction.renameEntry(entry, newTitle)
         return EntryDownloadMaintenanceResult.Performed
     }
 
     override suspend fun inspectEntry(entry: Entry): EntryDownloadMaintenanceInspection {
-        if (entry.type !in removalTypes) {
+        if (entry.type !in types) {
             return EntryDownloadMaintenanceInspection.Inapplicable(entry.type)
         }
         val owners = ownership.resolveDownloadOwners(entry.mergeSubject()).orderedOwners
@@ -153,7 +124,7 @@ internal class DefaultEntryDownloadMaintenanceFeature(
     }
 
     override suspend fun prepareRemoval(entry: Entry): EntryDownloadRemovalPreparation {
-        if (entry.type !in removalTypes) return EntryDownloadRemovalPreparation.Inapplicable(entry.type)
+        if (entry.type !in types) return EntryDownloadRemovalPreparation.Inapplicable(entry.type)
         val owners = ownership.resolveDownloadOwners(entry.mergeSubject()).orderedOwners
             .filter(interaction::hasDownloads)
         return if (owners.isEmpty()) {

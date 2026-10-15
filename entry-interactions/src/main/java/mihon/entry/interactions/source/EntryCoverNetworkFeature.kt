@@ -12,11 +12,9 @@ import mihon.feature.graph.FeatureContextDecision
 import mihon.feature.graph.FeatureContribution
 import mihon.feature.graph.FeatureGraphContributionSink
 import mihon.feature.graph.FeatureGraphContributor
-import mihon.feature.graph.FeatureGraphEvaluation
 import mihon.feature.graph.FeatureId
 import mihon.feature.graph.FeatureIntegration
 import mihon.feature.graph.FeatureIntegrationId
-import mihon.feature.graph.contextEvidence
 import mihon.feature.graph.contextInputDefinition
 import mihon.feature.graph.featureContextRule
 import tachiyomi.domain.source.service.SourceManager
@@ -87,14 +85,12 @@ internal object EntryCoverNetworkFeatureContributor : FeatureGraphContributor {
 }
 
 internal class DefaultEntryCoverNetworkFeature(
-    private val evaluation: FeatureGraphEvaluation,
     private val sourceManager: SourceManager,
 ) : EntryCoverNetworkFeature {
 
     override fun resolve(sourceId: Long): EntryCoverNetworkResolution {
         val source = sourceManager.get(sourceId)
         val provider = source as? EntryImageSource
-        requireState(installed = source != null, supported = provider != null)
         if (source == null) return EntryCoverNetworkResolution.Missing(sourceId)
         if (provider == null) return EntryCoverNetworkResolution.Unsupported(sourceId)
 
@@ -105,22 +101,5 @@ internal class DefaultEntryCoverNetworkFeature(
                 headers = provider.headers,
             )
         }.getOrElse { EntryCoverNetworkResolution.Failed(sourceId, it) }
-    }
-
-    private fun requireState(installed: Boolean, supported: Boolean) {
-        EntryCoverNetworkBehavior.entries.forEach { behavior ->
-            evaluation.requireSourceContextState(
-                feature = ENTRY_COVER_NETWORK_FEATURE_ID,
-                integration = ENTRY_COVER_NETWORK_INTEGRATION_ID,
-                behaviorProjection = behavior.id,
-                evidence = listOf(
-                    contextEvidence(
-                        ENTRY_COVER_NETWORK_CONTEXT,
-                        EntryCoverNetworkContext(installed, supported),
-                    ),
-                ),
-                applicable = installed && supported,
-            )
-        }
     }
 }

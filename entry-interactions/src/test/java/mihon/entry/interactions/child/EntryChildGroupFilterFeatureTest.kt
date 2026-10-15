@@ -9,7 +9,7 @@ import mihon.entry.interactions.runtime.EntryChildGroupFilterCapability
 import mihon.entry.interactions.runtime.EntryChildGroupFilterDataSource
 import mihon.entry.interactions.runtime.EntryChildGroupFilterProcessor
 import mihon.entry.interactions.runtime.EntryInteractionPlugin
-import mihon.entry.interactions.runtime.createEntryInteractionComposition
+import mihon.entry.interactions.runtime.createEntryInteractions
 import mihon.feature.graph.ContributionOwner
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.model.Entry
@@ -40,20 +40,19 @@ class EntryChildGroupFilterFeatureTest {
 
     private fun fixture(dataSource: FakeDataSource = FakeDataSource()): Fixture {
         val bindings = listOf(EntryChildGroupFilterCapability.bind(TestChildGroupFilterProcessor))
-        val composition = createEntryInteractionComposition(
-            plugins = listOf(
+        val interactions = createEntryInteractions(
+            listOf(
                 object : EntryInteractionPlugin {
                     override val type = EntryType.BOOK
                     override val owner = ContributionOwner("test.type.book")
                     override val providerBindings = bindings
                 },
             ),
-            featureContributors = listOf(EntryChildGroupFilterFeatureContributor),
         )
         return Fixture(
             feature = DefaultEntryChildGroupFilterFeature(
-                evaluation = composition.featureGraphEvaluation,
-                interaction = composition.interactions.childGroupFilter,
+                applicableTypes = setOf(EntryType.BOOK),
+                interaction = interactions.childGroupFilter,
                 dataSource = dataSource,
             ),
         )

@@ -30,22 +30,17 @@ import tachiyomi.domain.source.model.EntrySourceDescription
 
 internal class DefaultEntryCatalogueFeature(
     private val host: EntryCatalogueProviderHost,
-    private val graphStateValidator: EntryCatalogueGraphStateValidator,
     private val networkToLocalEntry: NetworkToLocalEntry,
 ) : EntryCatalogueFeature {
     override val isInitialized = host.isInitialized
 
     override fun sources(): List<EntryCatalogueSourceInfo> {
-        return host.sources().map { source ->
-            graphStateValidator.validate(source.description)
-            source.toInfo()
-        }
+        return host.sources().map { source -> source.toInfo() }
     }
 
     override fun source(sourceId: Long): EntryCatalogueSourceResolution {
         return when (val resolution = host.source(sourceId)) {
             is EntryCatalogueHostSourceResolution.Available -> {
-                graphStateValidator.validate(resolution.source.description)
                 EntryCatalogueSourceResolution.Available(resolution.source.toInfo())
             }
             EntryCatalogueHostSourceResolution.Missing -> EntryCatalogueSourceResolution.Missing(sourceId)
@@ -54,7 +49,7 @@ internal class DefaultEntryCatalogueFeature(
     }
 
     override fun description(sourceId: Long): EntrySourceDescription {
-        return host.describe(sourceId).also(graphStateValidator::validate)
+        return host.describe(sourceId)
     }
 
     override suspend fun filters(sourceId: Long): EntryCatalogueFiltersResult {

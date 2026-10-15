@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
 import mihon.entry.interactions.runtime.EntryInteractionPlugin
-import mihon.entry.interactions.runtime.createEntryInteractionComposition
+import mihon.entry.interactions.runtime.createEntryInteractions
 import mihon.feature.graph.ContributionOwner
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
@@ -100,13 +100,12 @@ internal class EntryDownloadQueueRunnerFixture(
 }
 
 internal fun downloadInteraction(vararg fixtures: EntryDownloadQueueRunnerFixture): EntryDownloadInteraction =
-    createEntryInteractionComposition(
-        plugins = fixtures.map { fixture ->
+    createEntryInteractions(
+        fixtures.map { fixture ->
             object : EntryInteractionPlugin {
                 override val type = fixture.type
                 override val owner = ContributionOwner("test.download.${type.name.lowercase()}")
                 override val providerBindings = listOf(EntryDownloadCapability.bind(fixture.processor))
             }
         },
-        featureContributors = listOf(EntryDownloadRuntimeFeatureContributor),
-    ).interactions.download
+    ).download

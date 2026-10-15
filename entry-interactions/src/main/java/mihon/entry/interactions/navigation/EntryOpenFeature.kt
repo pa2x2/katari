@@ -3,7 +3,6 @@ package mihon.entry.interactions.navigation
 import android.app.PendingIntent
 import android.content.Context
 import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.entry.interactions.runtime.applicableProviderTypes
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.ContributionOwner
 import mihon.feature.graph.FeatureArtifactId
@@ -12,7 +11,6 @@ import mihon.feature.graph.FeatureBehaviorProjection
 import mihon.feature.graph.FeatureContribution
 import mihon.feature.graph.FeatureGraphContributionSink
 import mihon.feature.graph.FeatureGraphContributor
-import mihon.feature.graph.FeatureGraphEvaluation
 import mihon.feature.graph.FeatureId
 import mihon.feature.graph.FeatureIntegration
 import mihon.feature.graph.FeatureIntegrationId
@@ -54,15 +52,9 @@ internal object EntryOpenFeatureContributor : FeatureGraphContributor {
 }
 
 internal class DefaultEntryOpenFeature(
-    evaluation: FeatureGraphEvaluation,
+    private val applicableTypes: Set<EntryType>,
     private val interaction: EntryOpenInteraction,
 ) : EntryOpenFeature {
-    private val applicableTypes = evaluation.applicableProviderTypes<EntryOpenProcessor>(
-        feature = ENTRY_OPEN_FEATURE_ID,
-        integration = ENTRY_OPEN_INTEGRATION_ID,
-        behaviorProjection = ENTRY_OPEN_DISPATCH_BEHAVIOR_ID,
-    )
-
     override fun isApplicable(type: EntryType): Boolean = type in applicableTypes
 
     override fun open(

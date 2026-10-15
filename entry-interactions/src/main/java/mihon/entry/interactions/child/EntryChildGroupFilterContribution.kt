@@ -1,8 +1,6 @@
 package mihon.entry.interactions.child
 
 import mihon.entry.interactions.runtime.EntryChildGroupFilterCapability
-import mihon.entry.interactions.runtime.EntryChildGroupFilterProcessor
-import mihon.entry.interactions.runtime.applicableProviderTypes
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.ContributionOwner
 import mihon.feature.graph.FeatureArtifactId
@@ -11,7 +9,6 @@ import mihon.feature.graph.FeatureBehaviorProjection
 import mihon.feature.graph.FeatureContribution
 import mihon.feature.graph.FeatureGraphContributionSink
 import mihon.feature.graph.FeatureGraphContributor
-import mihon.feature.graph.FeatureGraphEvaluation
 import mihon.feature.graph.FeatureId
 import mihon.feature.graph.FeatureIntegration
 import mihon.feature.graph.FeatureIntegrationId
@@ -54,15 +51,3 @@ internal object EntryChildGroupFilterFeatureContributor : FeatureGraphContributo
         )
     }
 }
-
-internal fun FeatureGraphEvaluation.childGroupFilterProviderTypes() =
-    EntryChildGroupFilterBehavior.entries
-        .mapTo(mutableSetOf()) { behavior ->
-            applicableProviderTypes<EntryChildGroupFilterProcessor>(
-                feature = ENTRY_CHILD_GROUP_FILTER_FEATURE_ID,
-                integration = ENTRY_CHILD_GROUP_FILTER_PROVIDER_INTEGRATION,
-                behaviorProjection = behavior.id,
-            )
-        }
-        .singleOrNull()
-        ?: error("Child-group filtering behaviors selected different provider sets")

@@ -5,7 +5,6 @@ import mihon.entry.interactions.navigation.EntryContinueBatchSeed
 import mihon.entry.interactions.navigation.EntryContinueFeature
 import mihon.entry.interactions.navigation.EntryContinueTargetResult
 import mihon.entry.interactions.navigation.SeededEntryContinueBatchFeature
-import mihon.feature.graph.FeatureGraphEvaluation
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.EntryProgressState
@@ -16,14 +15,12 @@ import tachiyomi.domain.entry.service.EntryLibraryProgressResolution
 import tachiyomi.domain.entry.service.EntryLibraryProgressSummary
 
 internal class DefaultEntryLibraryProgressFeature(
-    evaluation: FeatureGraphEvaluation,
+    private val types: EntryLibraryProgressTypes,
     private val interaction: EntryLibraryProgressInteraction,
     private val continueFeature: EntryContinueFeature,
     private val entryProgressRepository: EntryProgressRepository,
 ) : EntryLibraryProgressFeature {
-    private val selection = evaluation.libraryProgressSelection()
-
-    override fun isApplicable(type: EntryType): Boolean = type in selection.applicableTypes
+    override fun isApplicable(type: EntryType): Boolean = type in types.applicable
 
     override suspend fun calculate(
         entry: Entry,
@@ -32,7 +29,7 @@ internal class DefaultEntryLibraryProgressFeature(
     ): EntryLibraryProgressResolution {
         if (!isApplicable(entry.type)) return EntryLibraryProgressResolution.Inapplicable(entry.type)
         val evidence = interaction.evidence(entry, chapters)
-        val continueTarget = if (entry.type in selection.continueTypes) {
+        val continueTarget = if (entry.type in types.continueTarget) {
             continueFeature.nextTarget(entry).toLibraryTarget(entry.type)
         } else {
             EntryLibraryContinueTarget.Inapplicable
@@ -72,7 +69,7 @@ internal class DefaultEntryLibraryProgressFeature(
                         chapters = member.chapters,
                         progressStates = progressByEntryId[entry.id].orEmpty(),
                     )
-                    val continueTarget = if (entry.type in selection.continueTypes) {
+                    val continueTarget = if (entry.type in types.continueTarget) {
                         (continueTargets[entry.id] ?: continueFeature.nextTarget(entry))
                             .toLibraryTarget(entry.type)
                     } else {
@@ -100,7 +97,7 @@ internal class DefaultEntryLibraryProgressFeature(
                 consumedCount = chapters.count(EntryChapter::read).toLong(),
                 hasStarted = chapters.any(EntryChapter::read) || evidence.hasMediaProgress,
                 bookmarkCount = chapters.count(EntryChapter::bookmark).toLong()
-                    .takeIf { entry.type in selection.bookmarkTypes },
+                    .takeIf { entry.type in types.bookmark },
                 inProgressItemId = evidence.inProgressItemId,
                 inProgressFraction = evidence.inProgressFraction,
                 lastRead = maxOf(lastRead, evidence.lastActivityAt),
@@ -128,14 +125,14 @@ internal class DefaultEntryLibraryProgressFeature(
 
         val inProgress = members.firstOrNull { it.inProgressItemId != null }
         val continueTarget = when {
-            entryType !in selection.continueTypes -> EntryLibraryContinueTarget.Inapplicable
+            entryType !in types.continueTarget -> EntryLibraryContinueTarget.Inapplicable
             else -> members.asSequence()
                 .map(EntryLibraryProgressSummary::continueTarget)
                 .filterIsInstance<EntryLibraryContinueTarget.Available>()
                 .firstOrNull()
                 ?: EntryLibraryContinueTarget.NoNext
         }
-        val bookmarkCount = if (entryType in selection.bookmarkTypes) {
+        val bookmarkCount = if (entryType in types.bookmark) {
             members.sumOf { member ->
                 checkNotNull(member.bookmarkCount) {
                     "Library progress Bookmark behavior selected $entryType without bookmark summary evidence"
@@ -159,3 +156,10 @@ internal class DefaultEntryLibraryProgressFeature(
         )
     }
 }
+
+/** The types each Library progress capability applies to, read from the providers the type modules contribute. */
+internal class EntryLibraryProgressTypes(
+    val applicable: Set<EntryType>,
+    val continueTarget: Set<EntryType>,
+    val bookmark: Set<EntryType>,
+)

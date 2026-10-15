@@ -1,8 +1,6 @@
 package mihon.entry.interactions.library
 
-import eu.kanade.tachiyomi.source.entry.EntryType
 import mihon.entry.interactions.navigation.EntryContinueCapability
-import mihon.entry.interactions.runtime.applicableProviderTypes
 import mihon.entry.interactions.state.EntryBookmarkCapability
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.ContributionOwner
@@ -12,7 +10,6 @@ import mihon.feature.graph.FeatureBehaviorProjection
 import mihon.feature.graph.FeatureContribution
 import mihon.feature.graph.FeatureGraphContributionSink
 import mihon.feature.graph.FeatureGraphContributor
-import mihon.feature.graph.FeatureGraphEvaluation
 import mihon.feature.graph.FeatureId
 import mihon.feature.graph.FeatureIntegration
 import mihon.feature.graph.FeatureIntegrationId
@@ -93,37 +90,4 @@ internal object EntryLibraryProgressFeatureContributor : FeatureGraphContributor
             ),
         )
     }
-}
-
-internal data class EntryLibraryProgressGraphSelection(
-    val applicableTypes: Set<EntryType>,
-    val continueTypes: Set<EntryType>,
-    val bookmarkTypes: Set<EntryType>,
-)
-
-internal fun FeatureGraphEvaluation.libraryProgressSelection(): EntryLibraryProgressGraphSelection {
-    val baseProviderTypes = EntryLibraryProgressBehavior.entries
-        .mapTo(mutableSetOf()) { behavior ->
-            applicableProviderTypes<EntryLibraryProgressProvider>(
-                feature = ENTRY_LIBRARY_PROGRESS_FEATURE_ID,
-                integration = ENTRY_LIBRARY_PROGRESS_PROVIDER_INTEGRATION,
-                behaviorProjection = behavior.id,
-            )
-        }
-        .singleOrNull()
-        ?: error("Library progress behaviors selected different provider sets")
-
-    return EntryLibraryProgressGraphSelection(
-        applicableTypes = baseProviderTypes,
-        continueTypes = applicableProviderTypes<EntryLibraryProgressProvider>(
-            feature = ENTRY_LIBRARY_PROGRESS_FEATURE_ID,
-            integration = ENTRY_LIBRARY_PROGRESS_CONTINUE_INTEGRATION,
-            behaviorProjection = EntryLibraryProgressContinueBehavior.id,
-        ),
-        bookmarkTypes = applicableProviderTypes<EntryLibraryProgressProvider>(
-            feature = ENTRY_LIBRARY_PROGRESS_FEATURE_ID,
-            integration = ENTRY_LIBRARY_PROGRESS_BOOKMARK_INTEGRATION,
-            behaviorProjection = EntryLibraryProgressBookmarkBehavior.id,
-        ),
-    )
 }

@@ -30,17 +30,12 @@ import mihon.entry.interactions.migration.host.EntryMigrationHostTransition
 import mihon.entry.interactions.migration.host.EntryMigrationHostTransitionResult
 import mihon.entry.interactions.migration.host.EntryMigrationPreparationHost
 import mihon.entry.interactions.migration.host.EntryMigrationPreparationProfileHost
-import mihon.entry.interactions.runtime.EntryInteractionPlugin
-import mihon.entry.interactions.runtime.createEntryInteractionComposition
 import mihon.entry.interactions.source.EntrySourceRefreshFailure
 import mihon.entry.interactions.source.EntrySourceRefreshFeature
 import mihon.entry.interactions.source.EntrySourceRefreshResult
-import mihon.entry.interactions.state.EntryMigrationCapability
-import mihon.entry.interactions.state.EntryMigrationProvider
 import mihon.entry.interactions.tracking.EntryTrackingFeature
 import mihon.entry.interactions.tracking.EntryTrackingMigrationPreparationResult
 import mihon.entry.interactions.tracking.EntryTrackingRecord
-import mihon.feature.graph.ContributionOwner
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.model.Entry
 
@@ -146,21 +141,16 @@ class EntryMigrationFeatureTest {
                 )
             }
         }
-        val composition = createEntryInteractionComposition(
-            plugins = listOf(
-                object : EntryInteractionPlugin {
-                    override val type = EntryType.BOOK
-                    override val owner = ContributionOwner("test.migration-type")
-                    override val providerBindings = listOf(EntryMigrationCapability.bind(MigrationProvider()))
-                },
-            ),
-            featureContributors = listOf(EntryMigrationFeatureContributor),
-        )
         val delivery = mockk<EntryMigrationConsequenceDelivery>().also {
             coEvery { it.deliverOperation(any()) } returns EntryMigrationFollowUp.INCOMPLETE
         }
         return DefaultEntryMigrationFeature(
-            evaluation = composition.featureGraphEvaluation,
+            types = EntryMigrationTypes(
+                migration = setOf(EntryType.BOOK),
+                consumption = emptySet(),
+                bookmark = emptySet(),
+                childStateOption = emptySet(),
+            ),
             preparationHost = host,
             executionHost = host,
             sourceRefresh = sourceRefresh,
@@ -201,10 +191,6 @@ class EntryMigrationFeatureTest {
             dateAdded = dateAdded,
             type = EntryType.BOOK,
         )
-    }
-
-    private class MigrationProvider : EntryMigrationProvider {
-        override val type = EntryType.BOOK
     }
 }
 

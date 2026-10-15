@@ -1,8 +1,5 @@
 package mihon.entry.interactions.state
 
-import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.entry.interactions.runtime.applicableProviderTypes
-import mihon.entry.interactions.runtime.requireEntryContextState
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.ContextInputId
 import mihon.feature.graph.ContributionOwner
@@ -14,11 +11,9 @@ import mihon.feature.graph.FeatureContextDecision
 import mihon.feature.graph.FeatureContribution
 import mihon.feature.graph.FeatureGraphContributionSink
 import mihon.feature.graph.FeatureGraphContributor
-import mihon.feature.graph.FeatureGraphEvaluation
 import mihon.feature.graph.FeatureId
 import mihon.feature.graph.FeatureIntegration
 import mihon.feature.graph.FeatureIntegrationId
-import mihon.feature.graph.contextEvidence
 import mihon.feature.graph.contextInputDefinition
 import mihon.feature.graph.featureContextRule
 
@@ -122,33 +117,4 @@ internal object EntryBookmarkFeatureContributor : FeatureGraphContributor {
             ),
         )
     }
-}
-
-internal fun FeatureGraphEvaluation.bookmarkTypes(): Set<EntryType> =
-    applicableProviderTypes<EntryBookmarkProcessor>(
-        feature = ENTRY_BOOKMARK_FEATURE_ID,
-        integration = ENTRY_BOOKMARK_PROVIDER_INTEGRATION,
-        behaviorProjection = EntryBookmarkProviderBehavior.PROVIDER_DISPATCH.id,
-    )
-
-internal fun FeatureGraphEvaluation.requireBookmarkAvailabilityContext(type: EntryType, canChange: Boolean) {
-    requireEntryContextState(
-        type = type,
-        feature = ENTRY_BOOKMARK_FEATURE_ID,
-        integration = ENTRY_BOOKMARK_AVAILABILITY_INTEGRATION,
-        behaviorProjections = listOf(EntryBookmarkAvailabilityBehavior.id),
-        evidence = listOf(contextEvidence(ENTRY_BOOKMARK_SELECTION_CHANGE_CONTEXT, canChange)),
-        applicable = canChange,
-    )
-}
-
-internal fun FeatureGraphEvaluation.requireBookmarkMutationContext(type: EntryType, canChange: Boolean) {
-    requireEntryContextState(
-        type = type,
-        feature = ENTRY_BOOKMARK_FEATURE_ID,
-        integration = ENTRY_BOOKMARK_MUTATION_INTEGRATION,
-        behaviorProjections = listOf(EntryBookmarkMutationBehavior.id),
-        evidence = listOf(contextEvidence(ENTRY_BOOKMARK_MUTATION_CHANGE_CONTEXT, canChange)),
-        applicable = canChange,
-    )
 }

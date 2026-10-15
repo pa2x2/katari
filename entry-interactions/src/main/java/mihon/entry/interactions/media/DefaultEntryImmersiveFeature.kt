@@ -7,57 +7,30 @@ import eu.kanade.tachiyomi.source.entry.supportedEntryTypes
 import kotlinx.coroutines.CancellationException
 import mihon.entry.interactions.child.EntryChildListFeature
 import mihon.entry.interactions.child.EntryFirstChildResult
-import mihon.entry.interactions.navigation.EntryOpenProcessor
-import mihon.entry.interactions.runtime.EntryChildListProcessor
 import mihon.entry.interactions.runtime.EntryImmersiveLoadMode
-import mihon.entry.interactions.runtime.EntryImmersiveProcessor
-import mihon.entry.interactions.runtime.applicableProviderTypes
-import mihon.entry.interactions.runtime.requireEntryContextState
 import mihon.entry.interactions.source.EntrySourceRefreshFailure
 import mihon.entry.interactions.source.EntrySourceRefreshFeature
 import mihon.entry.interactions.source.EntrySourceRefreshRequest
 import mihon.entry.interactions.source.EntrySourceRefreshResult
-import mihon.feature.graph.FeatureGraphEvaluation
-import mihon.feature.graph.contextEvidence
 import tachiyomi.domain.entry.model.Entry
 
 internal class DefaultEntryImmersiveFeature(
-    private val evaluation: FeatureGraphEvaluation,
+    private val types: EntryImmersiveTypes,
     private val interaction: EntryImmersiveInteraction,
     private val childList: EntryChildListFeature,
     private val sourceRefresh: EntrySourceRefreshFeature,
 ) : EntryImmersiveFeature {
-    private val immersiveTypes = evaluation.applicableProviderTypes<EntryImmersiveProcessor>(
-        feature = ENTRY_IMMERSIVE_FEATURE_ID,
-        integration = ENTRY_IMMERSIVE_PROVIDER_INTEGRATION_ID,
-        behaviorProjection = EntryImmersiveProviderDispatchBehavior.id,
-    )
-    private val childTypes = evaluation.applicableProviderTypes<EntryChildListProcessor>(
-        feature = ENTRY_IMMERSIVE_FEATURE_ID,
-        integration = ENTRY_IMMERSIVE_CHILD_INTEGRATION_ID,
-        behaviorProjection = EntryImmersiveChildBehavior.id,
-    )
-    private val childRefreshTypes = evaluation.applicableProviderTypes<EntryChildListProcessor>(
-        feature = ENTRY_IMMERSIVE_FEATURE_ID,
-        integration = ENTRY_IMMERSIVE_CHILD_INTEGRATION_ID,
-        behaviorProjection = EntryImmersiveChildRefreshBehavior.id,
-    )
-    private val openTypes = evaluation.applicableProviderTypes<EntryOpenProcessor>(
-        feature = ENTRY_IMMERSIVE_FEATURE_ID,
-        integration = ENTRY_IMMERSIVE_OPEN_INTEGRATION_ID,
-        behaviorProjection = EntryImmersiveOpenBehavior.id,
-    )
+    private val immersiveTypes = types.immersive
+    private val openTypes = types.open
 
     init {
         val missingChildList = immersiveTypes.filter { type ->
-            interaction.processor(type)?.loadMode == EntryImmersiveLoadMode.FIRST_READING_CHILD && type !in childTypes
+            interaction.processor(type)?.loadMode == EntryImmersiveLoadMode.FIRST_READING_CHILD &&
+                type !in types.childList
         }
         check(missingChildList.isEmpty()) {
             "Child-backed Immersive providers require the Immersive + Child List relationship; " +
                 "missing EntryChildList providers for $missingChildList"
-        }
-        check(childTypes == childRefreshTypes) {
-            "Immersive child selection and refresh selected different content types"
         }
         immersiveTypes.forEach { type ->
             val radius = requireNotNull(interaction.processor(type)).preloadRadius
@@ -73,7 +46,6 @@ internal class DefaultEntryImmersiveFeature(
 
         val declaredTypes = source?.supportedEntryTypes()
         val declaredCompatible = declaredTypes == null || declaredTypes.any(immersiveTypes::contains)
-        requireSourceContextState(installed, optedIn, declaredTypes)
         return when {
             !installed -> EntryImmersiveSourceAvailability.SourceUnavailable
             !optedIn -> EntryImmersiveSourceAvailability.SourceOptedOut
@@ -87,7 +59,6 @@ internal class DefaultEntryImmersiveFeature(
     override fun availability(context: EntryImmersiveContext): EntryImmersiveAvailability {
         val processor = interaction.processor(context.entry.type)
             ?: return EntryImmersiveAvailability.Inapplicable(context.entry.type)
-        requireEntryContextState(context.entry.type, context.source)
         return when (val reason = sourceAvailabilityForEntry(context.source)) {
             null -> EntryImmersiveAvailability.Available(
                 preloadRadius = processor.preloadRadius,
@@ -106,7 +77,7 @@ internal class DefaultEntryImmersiveFeature(
     override suspend fun refreshChildren(entry: Entry): EntryImmersiveChildRefreshResult {
         val processor = interaction.processor(entry.type)
             ?: return EntryImmersiveChildRefreshResult.Inapplicable(entry.type)
-        if (processor.loadMode != EntryImmersiveLoadMode.FIRST_READING_CHILD || entry.type !in childRefreshTypes) {
+        if (processor.loadMode != EntryImmersiveLoadMode.FIRST_READING_CHILD || entry.type !in types.childList) {
             return EntryImmersiveChildRefreshResult.Inapplicable(entry.type)
         }
         return when (
@@ -137,7 +108,6 @@ internal class DefaultEntryImmersiveFeature(
     override suspend fun load(request: EntryImmersiveLoadRequest): EntryImmersiveLoadResult {
         val processor = interaction.processor(request.entry.type)
             ?: return EntryImmersiveLoadResult.Inapplicable(request.entry.type)
-        requireEntryContextState(request.entry.type, request.source)
         sourceAvailabilityForEntry(request.source)?.let {
             return EntryImmersiveLoadResult.ContextuallyUnavailable(it)
         }
@@ -209,44 +179,6 @@ internal class DefaultEntryImmersiveFeature(
             else -> null
         }
     }
-
-    private fun requireSourceContextState(
-        installed: Boolean,
-        optedIn: Boolean,
-        declaredTypes: Set<EntryType>?,
-    ) {
-        immersiveTypes.forEach { type ->
-            val declaredCompatible = declaredTypes == null || type in declaredTypes
-            evaluation.requireEntryContextState(
-                type = type,
-                feature = ENTRY_IMMERSIVE_FEATURE_ID,
-                integration = ENTRY_IMMERSIVE_SOURCE_CONTEXT_INTEGRATION_ID,
-                behaviorProjections = ENTRY_IMMERSIVE_SOURCE_BEHAVIORS.map(EntryImmersiveBehavior::id),
-                evidence = listOf(
-                    contextEvidence(ENTRY_IMMERSIVE_SOURCE_INSTALLED_CONTEXT, installed),
-                    contextEvidence(ENTRY_IMMERSIVE_SOURCE_OPT_IN_CONTEXT, optedIn),
-                    contextEvidence(ENTRY_IMMERSIVE_DECLARED_COMPATIBILITY_CONTEXT, declaredCompatible),
-                ),
-                applicable = installed && optedIn && declaredCompatible,
-            )
-        }
-    }
-
-    private fun requireEntryContextState(type: EntryType, source: UnifiedSource?) {
-        val installed = source != null
-        val optedIn = (source as? EntryCatalogueSource)?.supportsImmersiveFeed == true
-        evaluation.requireEntryContextState(
-            type = type,
-            feature = ENTRY_IMMERSIVE_FEATURE_ID,
-            integration = ENTRY_IMMERSIVE_ENTRY_CONTEXT_INTEGRATION_ID,
-            behaviorProjections = ENTRY_IMMERSIVE_ENTRY_BEHAVIORS.map(EntryImmersiveBehavior::id),
-            evidence = listOf(
-                contextEvidence(ENTRY_IMMERSIVE_SOURCE_INSTALLED_CONTEXT, installed),
-                contextEvidence(ENTRY_IMMERSIVE_SOURCE_OPT_IN_CONTEXT, optedIn),
-            ),
-            applicable = installed && optedIn,
-        )
-    }
 }
 
 private fun EntryImmersiveLoadMode.toChildRequirement(): EntryImmersiveChildRequirement {
@@ -255,3 +187,10 @@ private fun EntryImmersiveLoadMode.toChildRequirement(): EntryImmersiveChildRequ
         EntryImmersiveLoadMode.FIRST_READING_CHILD -> EntryImmersiveChildRequirement.FIRST_READING_CHILD
     }
 }
+
+/** The types each Immersive capability applies to, read from the providers the type modules contribute. */
+internal class EntryImmersiveTypes(
+    val immersive: Set<EntryType>,
+    val childList: Set<EntryType>,
+    val open: Set<EntryType>,
+)

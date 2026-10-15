@@ -6,6 +6,7 @@ import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.IntoSet
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
+import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import mihon.core.metro.AppCoroutineScope
@@ -23,9 +24,11 @@ import mihon.entry.interactions.migration.host.EntryMigrationCustomCoverHost
 import mihon.entry.interactions.migration.host.EntryMigrationExecutionHost
 import mihon.entry.interactions.migration.host.EntryMigrationPreparationHost
 import mihon.entry.interactions.source.EntrySourceRefreshFeature
+import mihon.entry.interactions.state.EntryBookmarkProcessor
+import mihon.entry.interactions.state.EntryConsumptionProcessor
+import mihon.entry.interactions.state.EntryMigrationProvider
 import mihon.entry.interactions.tracking.EntryTrackingFeature
 import mihon.feature.graph.FeatureGraphContributor
-import mihon.feature.runtime.FeatureRuntimeComposition
 import mihon.feature.runtime.FeatureRuntimeWarmup
 
 @ContributesTo(AppScope::class)
@@ -69,7 +72,9 @@ object EntryMigrationBindings {
     @Provides
     @SingleIn(AppScope::class)
     internal fun feature(
-        composition: FeatureRuntimeComposition,
+        migrationProviders: Map<EntryType, EntryMigrationProvider>,
+        consumptionProcessors: Map<EntryType, EntryConsumptionProcessor>,
+        bookmarkProcessors: Map<EntryType, EntryBookmarkProcessor>,
         preparationHost: EntryMigrationPreparationHost,
         executionHost: EntryMigrationExecutionHost,
         sourceRefresh: EntrySourceRefreshFeature,
@@ -79,7 +84,12 @@ object EntryMigrationBindings {
         durableConsequences: EntryDurableConsequences<EntryMigrationDurableEvent>,
         consequences: EntryMigrationConsequenceDelivery,
     ): EntryMigrationFeature = DefaultEntryMigrationFeature(
-        evaluation = composition.evaluation,
+        types = EntryMigrationTypes(
+            migration = migrationProviders.keys,
+            consumption = migrationProviders.keys intersect consumptionProcessors.keys,
+            bookmark = migrationProviders.keys intersect bookmarkProcessors.keys,
+            childStateOption = migrationProviders.keys intersect (consumptionProcessors.keys + bookmarkProcessors.keys),
+        ),
         preparationHost = preparationHost,
         executionHost = executionHost,
         sourceRefresh = sourceRefresh,

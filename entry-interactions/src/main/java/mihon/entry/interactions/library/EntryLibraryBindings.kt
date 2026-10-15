@@ -6,6 +6,7 @@ import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.IntoSet
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
+import eu.kanade.tachiyomi.source.entry.EntryType
 import mihon.entry.interactions.download.EntryAutomaticDownloadCoordinator
 import mihon.entry.interactions.download.EntryDownloadActionFeature
 import mihon.entry.interactions.download.EntryDownloadMaintenanceFeature
@@ -18,14 +19,17 @@ import mihon.entry.interactions.merge.EntryMergeLibraryLifecycleFeature
 import mihon.entry.interactions.merge.EntryMergeNavigationFeature
 import mihon.entry.interactions.merge.EntryMergeSubject
 import mihon.entry.interactions.navigation.EntryContinueFeature
+import mihon.entry.interactions.navigation.EntryContinueProcessor
 import mihon.entry.interactions.navigation.EntryOpenFeature
 import mihon.entry.interactions.presentation.EntryTypePresentationFeature
+import mihon.entry.interactions.runtime.EntryInteractionPlugin
 import mihon.entry.interactions.runtime.EntryInteractions
+import mihon.entry.interactions.runtime.EntryOutsideReleasePeriodFilterProvider
 import mihon.entry.interactions.source.EntrySourceRefreshFeature
+import mihon.entry.interactions.state.EntryBookmarkProcessor
 import mihon.entry.interactions.state.EntryConsumptionFeature
 import mihon.entry.interactions.tracking.EntryTrackingFeature
 import mihon.feature.graph.FeatureGraphContributor
-import mihon.feature.runtime.FeatureRuntimeComposition
 import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.entry.service.EntryLibraryProgressResolutionPort
@@ -54,18 +58,33 @@ object EntryLibraryBindings {
 
     @Provides
     @SingleIn(AppScope::class)
-    fun filterFeature(composition: FeatureRuntimeComposition): EntryLibraryFilterFeature =
-        DefaultEntryLibraryFilterFeature(composition.evaluation)
+    fun filterFeature(
+        libraryProgressProviders: Map<EntryType, EntryLibraryProgressProvider>,
+        bookmarkProcessors: Map<EntryType, EntryBookmarkProcessor>,
+        outsideReleasePeriodFilterProviders: Map<EntryType, EntryOutsideReleasePeriodFilterProvider>,
+    ): EntryLibraryFilterFeature = DefaultEntryLibraryFilterFeature(
+        EntryLibraryFilterTypes(
+            progress = libraryProgressProviders.keys,
+            bookmark = libraryProgressProviders.keys intersect bookmarkProcessors.keys,
+            releasePeriod = outsideReleasePeriodFilterProviders.keys,
+        ),
+    )
 
     @Provides
     @SingleIn(AppScope::class)
     fun progressFeature(
-        composition: FeatureRuntimeComposition,
+        libraryProgressProviders: Map<EntryType, EntryLibraryProgressProvider>,
+        continueProcessors: Map<EntryType, EntryContinueProcessor>,
+        bookmarkProcessors: Map<EntryType, EntryBookmarkProcessor>,
         interactions: EntryInteractions,
         continueFeature: EntryContinueFeature,
         entryProgressRepository: EntryProgressRepository,
     ): EntryLibraryProgressFeature = DefaultEntryLibraryProgressFeature(
-        evaluation = composition.evaluation,
+        types = EntryLibraryProgressTypes(
+            applicable = libraryProgressProviders.keys,
+            continueTarget = libraryProgressProviders.keys intersect continueProcessors.keys,
+            bookmark = libraryProgressProviders.keys intersect bookmarkProcessors.keys,
+        ),
         interaction = interactions.libraryProgress,
         continueFeature = continueFeature,
         entryProgressRepository = entryProgressRepository,
@@ -77,11 +96,9 @@ object EntryLibraryBindings {
     @Provides
     @SingleIn(AppScope::class)
     internal fun updateRefreshFeature(
-        composition: FeatureRuntimeComposition,
         sourceRefresh: EntrySourceRefreshFeature,
         automaticDownloads: () -> EntryAutomaticDownloadCoordinator,
     ): EntryLibraryUpdateRefreshFeature = DefaultEntryLibraryUpdateRefreshFeature(
-        evaluation = composition.evaluation,
         sourceRefresh = sourceRefresh,
         automaticDownloads = automaticDownloads,
     )
@@ -89,7 +106,7 @@ object EntryLibraryBindings {
     @Provides
     @SingleIn(AppScope::class)
     fun updateNotificationFeature(
-        composition: FeatureRuntimeComposition,
+        plugins: Set<EntryInteractionPlugin>,
         presentationFeature: EntryTypePresentationFeature,
         openFeature: EntryOpenFeature,
         consumptionFeature: EntryConsumptionFeature,
@@ -98,7 +115,7 @@ object EntryLibraryBindings {
         mergeNavigation: () -> EntryMergeNavigationFeature,
         entryRepository: () -> EntryRepository,
     ): EntryLibraryUpdateNotificationFeature = DefaultEntryLibraryUpdateNotificationFeature(
-        evaluation = composition.evaluation,
+        participatingTypes = plugins.mapTo(mutableSetOf(), EntryInteractionPlugin::type),
         presentationFeature = presentationFeature,
         openFeature = openFeature,
         consumptionFeature = consumptionFeature,

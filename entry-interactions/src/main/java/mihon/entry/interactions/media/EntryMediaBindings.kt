@@ -6,6 +6,7 @@ import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.IntoSet
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
+import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.plus
@@ -18,14 +19,20 @@ import mihon.entry.interactions.media.backup.EntryViewerSettingsBackupParticipan
 import mihon.entry.interactions.media.migration.EntryPlaybackPreferencesMigrationParticipant
 import mihon.entry.interactions.media.migration.EntryViewerSettingsMigrationParticipant
 import mihon.entry.interactions.migration.consequence.EntryMigrationDurableEvent
+import mihon.entry.interactions.navigation.EntryOpenProcessor
 import mihon.entry.interactions.persistence.backup.EntryBackupStateParticipant
+import mihon.entry.interactions.runtime.EntryChildListProcessor
+import mihon.entry.interactions.runtime.EntryImmersiveProcessor
 import mihon.entry.interactions.runtime.EntryInteractions
+import mihon.entry.interactions.runtime.EntryPreviewConfigurationProvider
+import mihon.entry.interactions.runtime.EntryPreviewProcessor
 import mihon.entry.interactions.settings.DefaultViewerSettingBinder
 import mihon.entry.interactions.source.EntrySourceRefreshFeature
+import mihon.entry.interactions.state.EntryMigrationProvider
+import mihon.entry.interactions.state.EntryPlaybackPreferencesProcessor
 import mihon.entry.viewer.settings.ViewerSettingBinder
 import mihon.entry.viewer.settings.ViewerSettingOverrideRepository
 import mihon.feature.graph.FeatureGraphContributor
-import mihon.feature.runtime.FeatureRuntimeComposition
 import mihon.feature.runtime.FeatureRuntimeWarmup
 import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.domain.entry.repository.EntryRepository
@@ -36,10 +43,12 @@ object EntryMediaBindings {
     @Provides
     @SingleIn(AppScope::class)
     fun playbackPreferencesFeature(
-        composition: FeatureRuntimeComposition,
+        playbackPreferencesProcessors: Map<EntryType, EntryPlaybackPreferencesProcessor>,
+        migrationProviders: Map<EntryType, EntryMigrationProvider>,
         interactions: EntryInteractions,
     ): EntryPlaybackPreferencesFeature = DefaultEntryPlaybackPreferencesFeature(
-        evaluation = composition.evaluation,
+        applicableTypes = playbackPreferencesProcessors.keys,
+        migrationTypes = playbackPreferencesProcessors.keys intersect migrationProviders.keys,
         interaction = interactions.playbackPreferences,
     )
 
@@ -55,12 +64,20 @@ object EntryMediaBindings {
 
     @Provides
     @SingleIn(AppScope::class)
-    fun previewFeature(
-        composition: FeatureRuntimeComposition,
+    internal fun previewFeature(
+        previewProcessors: Map<EntryType, EntryPreviewProcessor>,
+        previewConfigurationProviders: Map<EntryType, EntryPreviewConfigurationProvider>,
+        childListProcessors: Map<EntryType, EntryChildListProcessor>,
+        openProcessors: Map<EntryType, EntryOpenProcessor>,
         interactions: EntryInteractions,
         childList: EntryChildListFeature,
     ): EntryPreviewFeature = DefaultEntryPreviewFeature(
-        evaluation = composition.evaluation,
+        types = EntryPreviewTypes(
+            preview = previewProcessors.keys,
+            configured = previewProcessors.keys intersect previewConfigurationProviders.keys,
+            childList = previewProcessors.keys intersect childListProcessors.keys,
+            open = previewProcessors.keys intersect openProcessors.keys,
+        ),
         interaction = interactions.preview,
         childList = childList,
     )
@@ -71,13 +88,19 @@ object EntryMediaBindings {
 
     @Provides
     @SingleIn(AppScope::class)
-    fun immersiveFeature(
-        composition: FeatureRuntimeComposition,
+    internal fun immersiveFeature(
+        immersiveProcessors: Map<EntryType, EntryImmersiveProcessor>,
+        childListProcessors: Map<EntryType, EntryChildListProcessor>,
+        openProcessors: Map<EntryType, EntryOpenProcessor>,
         interactions: EntryInteractions,
         childList: EntryChildListFeature,
         sourceRefresh: EntrySourceRefreshFeature,
     ): EntryImmersiveFeature = DefaultEntryImmersiveFeature(
-        evaluation = composition.evaluation,
+        types = EntryImmersiveTypes(
+            immersive = immersiveProcessors.keys,
+            childList = immersiveProcessors.keys intersect childListProcessors.keys,
+            open = immersiveProcessors.keys intersect openProcessors.keys,
+        ),
         interaction = interactions.immersive,
         childList = childList,
         sourceRefresh = sourceRefresh,
@@ -100,13 +123,15 @@ object EntryMediaBindings {
     @Provides
     @SingleIn(AppScope::class)
     fun viewerSettingsFeature(
-        composition: FeatureRuntimeComposition,
+        viewerSettingsProviders: Map<EntryType, EntryViewerSettingsProvider>,
+        migrationProviders: Map<EntryType, EntryMigrationProvider>,
         interactions: EntryInteractions,
         projectionResolver: EntryViewerSettingsScreenProjectionResolver,
         overrideRepository: ViewerSettingOverrideRepository,
         entryRepository: () -> EntryRepository,
     ): EntryViewerSettingsFeature = DefaultEntryViewerSettingsFeature(
-        evaluation = composition.evaluation,
+        applicableTypes = viewerSettingsProviders.keys,
+        migrationTypes = viewerSettingsProviders.keys intersect migrationProviders.keys,
         interaction = interactions.viewerSettings,
         projectionResolver = projectionResolver,
         overrideRepository = overrideRepository,
@@ -144,11 +169,11 @@ object EntryMediaBindings {
     @Provides
     @SingleIn(AppScope::class)
     fun mediaCacheFeature(
-        composition: FeatureRuntimeComposition,
+        mediaCacheProviders: Map<EntryType, EntryMediaCacheProvider>,
         interactions: EntryInteractions,
         @BasePreferenceStore preferenceStore: PreferenceStore,
     ): EntryMediaCacheFeature = DefaultEntryMediaCacheFeature(
-        evaluation = composition.evaluation,
+        applicableTypes = mediaCacheProviders.keys,
         interaction = interactions.mediaCache,
         preferenceStore = preferenceStore,
     )

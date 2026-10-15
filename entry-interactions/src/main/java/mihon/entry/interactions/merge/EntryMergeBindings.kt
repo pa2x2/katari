@@ -24,7 +24,6 @@ import mihon.entry.interactions.merge.host.EntryMergeHost
 import mihon.entry.interactions.persistence.backup.EntryBackupStateParticipant
 import mihon.entry.interactions.tracking.EntryTrackingFeature
 import mihon.feature.graph.FeatureGraphContributor
-import mihon.feature.runtime.FeatureRuntimeComposition
 import mihon.feature.runtime.FeatureRuntimeWarmup
 import tachiyomi.domain.entry.service.EntryChildOwnershipResolutionPort
 import tachiyomi.domain.entry.service.EntryLibraryGroupingResolutionPort
@@ -67,12 +66,10 @@ object EntryMergeBindings {
     @Provides
     @SingleIn(AppScope::class)
     internal fun feature(
-        composition: FeatureRuntimeComposition,
         mergeHost: EntryMergeHost,
         durableConsequences: EntryMergeDurableConsequences,
         consequences: EntryMergeConsequenceDelivery,
     ): EntryMergeFeature = EntryMergeWorkflowCoordinator(
-        evaluation = composition.evaluation,
         host = mergeHost,
         durableConsequences = durableConsequences,
         consequences = consequences,

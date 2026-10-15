@@ -4,7 +4,6 @@ import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.serialization.json.JsonObject
 import mihon.entry.interactions.media.EntryMediaSessionCapability
 import mihon.entry.interactions.media.session.EntryMediaSessionEvent
-import mihon.entry.interactions.runtime.applicableProviderTypes
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.ContributionOwner
 import mihon.feature.graph.FeatureArtifactId
@@ -13,7 +12,6 @@ import mihon.feature.graph.FeatureBehaviorProjection
 import mihon.feature.graph.FeatureContribution
 import mihon.feature.graph.FeatureGraphContributionSink
 import mihon.feature.graph.FeatureGraphContributor
-import mihon.feature.graph.FeatureGraphEvaluation
 import mihon.feature.graph.FeatureId
 import mihon.feature.graph.FeatureIntegration
 import mihon.feature.graph.FeatureIntegrationId
@@ -95,32 +93,13 @@ internal object EntryProgressFeatureContributor : FeatureGraphContributor {
 }
 
 internal class DefaultEntryProgressFeature(
-    evaluation: FeatureGraphEvaluation,
+    private val applicableTypes: Set<EntryType>,
+    private val migrationTypes: Set<EntryType>,
     private val interaction: EntryProgressInteraction,
     private val repository: EntryProgressRepository,
     private val getEntryWithChapters: GetEntryWithChapters,
     private val globalLibraryPreferences: GlobalLibraryPreferences,
 ) : EntryProgressFeature {
-    private val applicableTypes = EntryProgressBehavior.entries
-        .map { behavior ->
-            evaluation.applicableProviderTypes<EntryProgressProcessor>(
-                feature = ENTRY_PROGRESS_FEATURE_ID,
-                integration = ENTRY_PROGRESS_INTEGRATION_ID,
-                behaviorProjection = behavior.id,
-            )
-        }
-        .also { selectedTypes ->
-            check(selectedTypes.distinct().size <= 1) {
-                "Progress-transfer behaviors selected different provider sets: $selectedTypes"
-            }
-        }
-        .firstOrNull()
-        .orEmpty()
-    private val migrationTypes = evaluation.applicableProviderTypes<EntryProgressProcessor>(
-        feature = ENTRY_PROGRESS_FEATURE_ID,
-        integration = ENTRY_PROGRESS_MIGRATION_INTEGRATION_ID,
-        behaviorProjection = EntryProgressMigrationBehavior.id,
-    )
 
     override fun isApplicable(type: EntryType): Boolean = type in applicableTypes
 

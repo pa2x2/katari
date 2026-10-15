@@ -8,6 +8,7 @@ import dev.zacsweers.metro.IntoSet
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import eu.kanade.tachiyomi.core.security.SecurityPreferences
+import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.plus
@@ -25,9 +26,11 @@ import mihon.entry.interactions.merge.EntryMergeDownloadOwnershipProjection
 import mihon.entry.interactions.merge.consequence.EntryMergeDurableEvent
 import mihon.entry.interactions.migration.consequence.EntryMigrationDurableEvent
 import mihon.entry.interactions.persistence.backup.EntryBackupStateParticipant
+import mihon.entry.interactions.runtime.EntryInteractionPlugin
 import mihon.entry.interactions.runtime.EntryInteractions
+import mihon.entry.interactions.runtime.providersOf
+import mihon.entry.interactions.state.EntryBookmarkProcessor
 import mihon.feature.graph.FeatureGraphContributor
-import mihon.feature.runtime.FeatureRuntimeComposition
 import mihon.feature.runtime.FeatureRuntimeWarmup
 import tachiyomi.domain.category.interactor.GetCategories
 import tachiyomi.domain.download.service.DownloadPreferences
@@ -49,11 +52,11 @@ object EntryDownloadBindings {
     @Provides
     @SingleIn(AppScope::class)
     internal fun runtimeCoordinator(
-        composition: FeatureRuntimeComposition,
+        downloadProcessors: Map<EntryType, EntryDownloadProcessor>,
         interactions: EntryInteractions,
         @AppCoroutineScope scope: CoroutineScope,
     ): EntryDownloadRuntimeCoordinator = DefaultEntryDownloadRuntimeFeature(
-        evaluation = composition.evaluation,
+        applicableTypes = downloadProcessors.keys,
         interaction = interactions.download,
         scope = scope + Dispatchers.Default,
     )
@@ -74,11 +77,18 @@ object EntryDownloadBindings {
     @Provides
     @SingleIn(AppScope::class)
     internal fun actionFeature(
-        composition: FeatureRuntimeComposition,
+        downloadProcessors: Map<EntryType, EntryDownloadProcessor>,
+        bulkCandidateProcessors: Map<EntryType, EntryBulkDownloadCandidateProcessor>,
+        bookmarkProcessors: Map<EntryType, EntryBookmarkProcessor>,
         interactions: EntryInteractions,
         sourceAccessResolver: EntryDownloadSourceAccessResolver,
     ): EntryDownloadActionFeature = DefaultEntryDownloadActionFeature(
-        evaluation = composition.evaluation,
+        types = EntryDownloadActionTypes(
+            individual = downloadProcessors.keys,
+            bulk = downloadProcessors.keys intersect bulkCandidateProcessors.keys,
+            bookmarkedBulk = downloadProcessors.keys intersect bulkCandidateProcessors.keys intersect
+                bookmarkProcessors.keys,
+        ),
         interaction = interactions.download,
         sourceAccessResolver = sourceAccessResolver,
     )
@@ -145,11 +155,11 @@ object EntryDownloadBindings {
     @Provides
     @SingleIn(AppScope::class)
     internal fun automaticDownloadCoordinator(
-        composition: FeatureRuntimeComposition,
+        downloadProcessors: Map<EntryType, EntryDownloadProcessor>,
         interactions: EntryInteractions,
         sharedPolicy: EntryAutomaticDownloadPolicy,
     ): EntryAutomaticDownloadCoordinator = DefaultEntryAutomaticDownloadFeature(
-        evaluation = composition.evaluation,
+        applicableTypes = downloadProcessors.keys,
         interaction = interactions.download,
         sharedPolicy = sharedPolicy,
     )
@@ -170,8 +180,9 @@ object EntryDownloadBindings {
 
     @Provides
     @SingleIn(AppScope::class)
-    fun lifecycleFeature(
-        composition: FeatureRuntimeComposition,
+    internal fun lifecycleFeature(
+        downloadProcessors: Map<EntryType, EntryDownloadProcessor>,
+        bookmarkProcessors: Map<EntryType, EntryBookmarkProcessor>,
         downloadPreferences: DownloadPreferences,
         getCategories: GetCategories,
         getEntryWithChapters: GetEntryWithChapters,
@@ -179,7 +190,8 @@ object EntryDownloadBindings {
         interactions: EntryInteractions,
         globalLibraryPreferences: GlobalLibraryPreferences,
     ): EntryDownloadLifecycleFeature = DefaultEntryDownloadLifecycleFeature(
-        evaluation = composition.evaluation,
+        downloadTypes = downloadProcessors.keys,
+        bookmarkProtectedTypes = downloadProcessors.keys intersect bookmarkProcessors.keys,
         downloadPreferences = downloadPreferences,
         getCategories = getCategories,
         getEntryWithChapters = getEntryWithChapters,
@@ -195,25 +207,40 @@ object EntryDownloadBindings {
     @Provides
     @SingleIn(AppScope::class)
     fun optionsFeature(
-        composition: FeatureRuntimeComposition,
+        optionsProcessors: Map<EntryType, EntryDownloadOptionsProcessor>,
         interactions: EntryInteractions,
     ): EntryDownloadOptionsFeature = DefaultEntryDownloadOptionsFeature(
-        evaluation = composition.evaluation,
+        applicableTypes = optionsProcessors.keys,
         interaction = interactions.download,
     )
 
     @Provides
     @SingleIn(AppScope::class)
-    fun settingsFeature(composition: FeatureRuntimeComposition): EntryDownloadSettingsFeature =
-        DefaultEntryDownloadSettingsFeature(composition.evaluation)
+    fun settingsFeature(plugins: Set<EntryInteractionPlugin>): EntryDownloadSettingsFeature =
+        DefaultEntryDownloadSettingsFeature(
+            availableSettings = buildSet {
+                if (plugins.providersOf(EntryDownloadArchivePackagingCapability).isNotEmpty()) {
+                    add(EntryDownloadSetting.ARCHIVE_PACKAGING)
+                }
+                if (plugins.providersOf(EntryDownloadTallImageSplittingCapability).isNotEmpty()) {
+                    add(EntryDownloadSetting.TALL_IMAGE_SPLITTING)
+                }
+                if (plugins.providersOf(EntryDownloadParallelSourceTransfersCapability).isNotEmpty()) {
+                    add(EntryDownloadSetting.PARALLEL_SOURCE_TRANSFERS)
+                }
+                if (plugins.providersOf(EntryDownloadParallelItemTransfersCapability).isNotEmpty()) {
+                    add(EntryDownloadSetting.PARALLEL_ITEM_TRANSFERS)
+                }
+            },
+        )
 
     @Provides
     @SingleIn(AppScope::class)
     fun configurationBackupFeature(
-        composition: FeatureRuntimeComposition,
+        optionsProcessors: Map<EntryType, EntryDownloadOptionsProcessor>,
         repository: DownloadPreferencesRepository,
     ): EntryDownloadConfigurationBackupFeature = DefaultEntryDownloadConfigurationBackupFeature(
-        evaluation = composition.evaluation,
+        applicableTypes = optionsProcessors.keys,
         repository = repository,
     )
 
@@ -224,11 +251,11 @@ object EntryDownloadBindings {
     @Provides
     @SingleIn(AppScope::class)
     internal fun maintenanceFeature(
-        composition: FeatureRuntimeComposition,
+        downloadProcessors: Map<EntryType, EntryDownloadProcessor>,
         interactions: EntryInteractions,
         ownership: EntryMergeDownloadOwnershipProjection,
     ): EntryDownloadMaintenanceFeature = DefaultEntryDownloadMaintenanceFeature(
-        evaluation = composition.evaluation,
+        types = downloadProcessors.keys,
         interaction = interactions.download,
         ownership = ownership,
     )

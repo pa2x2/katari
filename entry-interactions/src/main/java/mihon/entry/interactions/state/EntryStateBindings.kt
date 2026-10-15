@@ -6,6 +6,7 @@ import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.IntoSet
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
+import eu.kanade.tachiyomi.source.entry.EntryType
 import mihon.entry.interactions.download.EntryDownloadLifecycleEventSink
 import mihon.entry.interactions.durable.EntryDurableParticipant
 import mihon.entry.interactions.history.EntryHistoryFeature
@@ -15,7 +16,6 @@ import mihon.entry.interactions.runtime.EntryInteractions
 import mihon.entry.interactions.state.backup.EntryProgressBackupParticipant
 import mihon.entry.interactions.state.migration.EntryProgressMigrationParticipant
 import mihon.feature.graph.FeatureGraphContributor
-import mihon.feature.runtime.FeatureRuntimeComposition
 import tachiyomi.domain.entry.interactor.GetEntryWithChapters
 import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.library.service.GlobalLibraryPreferences
@@ -26,12 +26,12 @@ object EntryStateBindings {
     @Provides
     @SingleIn(AppScope::class)
     fun consumptionFeature(
-        composition: FeatureRuntimeComposition,
+        consumptionProcessors: Map<EntryType, EntryConsumptionProcessor>,
         interactions: EntryInteractions,
         downloadLifecycle: EntryDownloadLifecycleEventSink,
         history: EntryHistoryFeature,
     ): EntryConsumptionFeature = DefaultEntryConsumptionFeature(
-        evaluation = composition.evaluation,
+        applicableTypes = consumptionProcessors.keys,
         interaction = interactions.consumption,
         downloadLifecycle = downloadLifecycle,
         history = history,
@@ -39,27 +39,31 @@ object EntryStateBindings {
 
     @Provides
     @SingleIn(AppScope::class)
-    fun bookmarkFeature(composition: FeatureRuntimeComposition, interactions: EntryInteractions): EntryBookmarkFeature =
+    fun bookmarkFeature(
+        bookmarkProcessors: Map<EntryType, EntryBookmarkProcessor>,
+        interactions: EntryInteractions,
+    ): EntryBookmarkFeature =
         DefaultEntryBookmarkFeature(
-            evaluation = composition.evaluation,
+            applicableTypes = bookmarkProcessors.keys,
             interaction = interactions.bookmark,
         )
 
     @Provides
     @SingleIn(AppScope::class)
-    fun updateEligibilityFeature(composition: FeatureRuntimeComposition): EntryUpdateEligibilityFeature =
-        DefaultEntryUpdateEligibilityFeature(evaluation = composition.evaluation)
+    fun updateEligibilityFeature(): EntryUpdateEligibilityFeature = DefaultEntryUpdateEligibilityFeature()
 
     @Provides
     @SingleIn(AppScope::class)
     fun progressFeature(
-        composition: FeatureRuntimeComposition,
+        progressProcessors: Map<EntryType, EntryProgressProcessor>,
+        migrationProviders: Map<EntryType, EntryMigrationProvider>,
         interactions: EntryInteractions,
         repository: EntryProgressRepository,
         getEntryWithChapters: GetEntryWithChapters,
         globalLibraryPreferences: GlobalLibraryPreferences,
     ): EntryProgressFeature = DefaultEntryProgressFeature(
-        evaluation = composition.evaluation,
+        applicableTypes = progressProcessors.keys,
+        migrationTypes = progressProcessors.keys intersect migrationProviders.keys,
         interaction = interactions.progress,
         repository = repository,
         getEntryWithChapters = getEntryWithChapters,

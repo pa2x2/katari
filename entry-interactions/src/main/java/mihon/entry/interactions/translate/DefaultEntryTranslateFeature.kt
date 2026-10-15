@@ -10,14 +10,12 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.onStart
 import mihon.entry.interactions.download.EntryDownloadInteraction
-import mihon.entry.interactions.runtime.applicableProviderTypes
 import mihon.entry.interactions.translate.queue.EntryTranslateFailureCodec
 import mihon.entry.interactions.translate.queue.EntryTranslateSetupCodec
 import mihon.entry.interactions.translate.work.EntryTranslateConditions
 import mihon.entry.interactions.translate.work.EntryTranslateQueueRunner
 import mihon.entry.interactions.translate.work.EntryTranslateWorkController
 import mihon.entry.interactions.translation.EntryTranslationLanguagesFeature
-import mihon.feature.graph.FeatureGraphEvaluation
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.EntryTranslationQueueItem
@@ -27,7 +25,7 @@ import tachiyomi.domain.entry.repository.EntryTranslationQueueRepository
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class DefaultEntryTranslateFeature(
-    evaluation: FeatureGraphEvaluation,
+    private val applicableTypes: Set<EntryType>,
     private val repository: EntryTranslationQueueRepository,
     private val translate: EntryTranslateInteraction,
     private val languages: EntryTranslationLanguagesFeature,
@@ -40,12 +38,6 @@ internal class DefaultEntryTranslateFeature(
     private val preferences: EntryTranslatePreferences,
     private val clock: () -> Long = System::currentTimeMillis,
 ) : EntryTranslateFeature {
-    private val applicableTypes = evaluation.applicableProviderTypes<EntryTranslateProcessor>(
-        feature = ENTRY_TRANSLATE_FEATURE_ID,
-        integration = ENTRY_TRANSLATE_INTEGRATION_ID,
-        behaviorProjection = EntryTranslateBehavior.id,
-    )
-
     override fun isApplicable(type: EntryType): Boolean = type in applicableTypes
 
     override val waiting: Flow<EntryTranslateWaiting?> = conditions.waiting

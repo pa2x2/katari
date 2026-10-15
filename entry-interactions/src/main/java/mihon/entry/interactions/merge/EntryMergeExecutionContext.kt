@@ -1,7 +1,5 @@
 package mihon.entry.interactions.merge
 
-import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.entry.interactions.runtime.requireEntryContextState
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.ContextInputId
 import mihon.feature.graph.ContributionOwner
@@ -9,10 +7,8 @@ import mihon.feature.graph.FeatureArtifactId
 import mihon.feature.graph.FeatureBehaviorProjection
 import mihon.feature.graph.FeatureContextBlocker
 import mihon.feature.graph.FeatureContextDecision
-import mihon.feature.graph.FeatureGraphEvaluation
 import mihon.feature.graph.FeatureIntegration
 import mihon.feature.graph.FeatureIntegrationId
-import mihon.feature.graph.contextEvidence
 import mihon.feature.graph.contextInputDefinition
 import mihon.feature.graph.featureContextRule
 
@@ -60,23 +56,3 @@ internal fun entryMergeExecutionContextIntegrations(owner: ContributionOwner): L
         behavioralContracts = listOf(EntryMergeBehaviorContract.EXISTING_GROUP),
     ),
 )
-
-internal fun FeatureGraphEvaluation.requireMergeExistingGroupContext(
-    types: Set<EntryType>,
-    completeOrderedMembership: Boolean,
-    homogeneousMembershipType: Boolean,
-) {
-    types.forEach { type ->
-        requireEntryContextState(
-            type = type,
-            feature = ENTRY_MERGE_FEATURE_ID,
-            integration = ENTRY_MERGE_EXISTING_GROUP_CONTEXT_INTEGRATION,
-            behaviorProjections = listOf(EntryMergeExistingGroupBehavior.id),
-            evidence = listOf(
-                contextEvidence(ENTRY_MERGE_COMPLETE_ORDERED_MEMBERSHIP_CONTEXT, completeOrderedMembership),
-                contextEvidence(ENTRY_MERGE_HOMOGENEOUS_MEMBERSHIP_TYPE_CONTEXT, homogeneousMembershipType),
-            ),
-            applicable = completeOrderedMembership && homogeneousMembershipType,
-        )
-    }
-}

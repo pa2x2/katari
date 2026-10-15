@@ -1,7 +1,5 @@
 package mihon.entry.interactions.migration
 
-import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.entry.interactions.runtime.requireEntryContextState
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.ContextInputId
 import mihon.feature.graph.ContributionOwner
@@ -9,10 +7,8 @@ import mihon.feature.graph.FeatureArtifactId
 import mihon.feature.graph.FeatureBehaviorProjection
 import mihon.feature.graph.FeatureContextBlocker
 import mihon.feature.graph.FeatureContextDecision
-import mihon.feature.graph.FeatureGraphEvaluation
 import mihon.feature.graph.FeatureIntegration
 import mihon.feature.graph.FeatureIntegrationId
-import mihon.feature.graph.contextEvidence
 import mihon.feature.graph.contextInputDefinition
 import mihon.feature.graph.featureContextRule
 
@@ -107,41 +103,3 @@ internal fun entryMigrationSelectionContextIntegration(
     behaviorProjections = listOf(EntryMigrationSelectionBehavior),
     behavioralContracts = listOf(EntryMigrationBehaviorContract.SELECTION_CONTEXT),
 )
-
-internal fun FeatureGraphEvaluation.requireMigrationSourceContext(
-    type: EntryType,
-    persisted: Boolean,
-    inLibrary: Boolean,
-) {
-    requireEntryContextState(
-        type = type,
-        feature = ENTRY_MIGRATION_FEATURE_ID,
-        integration = ENTRY_MIGRATION_SOURCE_CONTEXT_INTEGRATION,
-        behaviorProjections = EntryMigrationSourceBehavior.entries.map(EntryMigrationSourceBehavior::id),
-        evidence = listOf(
-            contextEvidence(ENTRY_MIGRATION_PERSISTED_CONTEXT, persisted),
-            contextEvidence(ENTRY_MIGRATION_LIBRARY_MEMBERSHIP_CONTEXT, inLibrary),
-        ),
-        applicable = persisted && inLibrary,
-    )
-}
-
-internal fun FeatureGraphEvaluation.requireMigrationSelectionContext(
-    type: EntryType,
-    persisted: Boolean,
-    inLibrary: Boolean,
-    singleProfile: Boolean,
-) {
-    requireEntryContextState(
-        type = type,
-        feature = ENTRY_MIGRATION_FEATURE_ID,
-        integration = ENTRY_MIGRATION_SELECTION_CONTEXT_INTEGRATION,
-        behaviorProjections = listOf(EntryMigrationSelectionBehavior.id),
-        evidence = listOf(
-            contextEvidence(ENTRY_MIGRATION_PERSISTED_CONTEXT, persisted),
-            contextEvidence(ENTRY_MIGRATION_LIBRARY_MEMBERSHIP_CONTEXT, inLibrary),
-            contextEvidence(ENTRY_MIGRATION_SINGLE_PROFILE_CONTEXT, singleProfile),
-        ),
-        applicable = singleProfile && persisted && inLibrary,
-    )
-}

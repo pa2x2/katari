@@ -1,7 +1,6 @@
 package mihon.entry.interactions.source
 
 import eu.kanade.tachiyomi.source.entry.ChapterWebViewSource
-import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.WebViewSource
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.ContextInputId
@@ -14,11 +13,9 @@ import mihon.feature.graph.FeatureContextDecision
 import mihon.feature.graph.FeatureContribution
 import mihon.feature.graph.FeatureGraphContributionSink
 import mihon.feature.graph.FeatureGraphContributor
-import mihon.feature.graph.FeatureGraphEvaluation
 import mihon.feature.graph.FeatureId
 import mihon.feature.graph.FeatureIntegration
 import mihon.feature.graph.FeatureIntegrationId
-import mihon.feature.graph.contextEvidence
 import mihon.feature.graph.contextInputDefinition
 import mihon.feature.graph.featureContextRule
 import tachiyomi.domain.entry.adapter.toSEntry
@@ -143,14 +140,12 @@ internal object EntryWebViewFeatureContributor : FeatureGraphContributor {
 }
 
 internal class DefaultEntryWebViewFeature(
-    private val evaluation: FeatureGraphEvaluation,
     private val sourceManager: SourceManager,
 ) : EntryWebViewFeature {
 
     override fun resolveEntry(entry: Entry): EntryWebViewResolution {
         val source = sourceManager.get(entry.source)
         val provider = source as? WebViewSource
-        requireState(source != null, provider != null)
         if (source == null) return EntryWebViewResolution.Missing(entry.source)
         if (provider == null) return EntryWebViewResolution.Unsupported(entry.source)
 
@@ -166,7 +161,6 @@ internal class DefaultEntryWebViewFeature(
     override fun resolveChild(owner: Entry, child: EntryChapter): EntryChildWebViewResolution {
         val source = sourceManager.get(owner.source)
         val provider = source as? ChapterWebViewSource
-        requireChildState(owner.type, source != null, provider != null)
         if (source == null) return EntryChildWebViewResolution.Missing(owner.source)
         if (provider == null) return EntryChildWebViewResolution.Unsupported(owner.source)
 
@@ -181,40 +175,9 @@ internal class DefaultEntryWebViewFeature(
     override fun resolveHeaders(sourceId: Long): EntryWebViewHeadersResolution {
         val source = sourceManager.get(sourceId)
         val provider = source as? WebViewSource
-        requireState(source != null, provider != null)
         if (source == null) return EntryWebViewHeadersResolution.Missing
         if (provider == null) return EntryWebViewHeadersResolution.Unsupported
         return runCatching { EntryWebViewHeadersResolution.Available(provider.getWebViewHeaders()) }
             .getOrElse(EntryWebViewHeadersResolution::Failed)
-    }
-
-    private fun requireState(installed: Boolean, supported: Boolean) {
-        EntryWebViewBehavior.entries.forEach { behavior ->
-            evaluation.requireSourceContextState(
-                feature = ENTRY_WEB_VIEW_FEATURE_ID,
-                integration = ENTRY_WEB_VIEW_INTEGRATION_ID,
-                behaviorProjection = behavior.id,
-                evidence = listOf(contextEvidence(ENTRY_WEB_VIEW_CONTEXT, EntryWebViewContext(installed, supported))),
-                applicable = installed && supported,
-            )
-        }
-    }
-
-    private fun requireChildState(ownerType: EntryType, installed: Boolean, supported: Boolean) {
-        EntryChildWebViewBehavior.entries.forEach { behavior ->
-            evaluation.requireSourceContextState(
-                feature = ENTRY_WEB_VIEW_FEATURE_ID,
-                integration = ENTRY_CHILD_WEB_VIEW_INTEGRATION_ID,
-                behaviorProjection = behavior.id,
-                evidence = listOf(
-                    contextEvidence(
-                        ENTRY_CHILD_WEB_VIEW_CONTEXT,
-                        EntryChildWebViewContext(installed, supported),
-                    ),
-                ),
-                applicable = installed && supported,
-                contentType = ownerType,
-            )
-        }
     }
 }

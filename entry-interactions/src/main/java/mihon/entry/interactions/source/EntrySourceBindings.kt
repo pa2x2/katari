@@ -9,7 +9,6 @@ import dev.zacsweers.metro.SingleIn
 import mihon.entry.interactions.download.EntryAutomaticDownloadCoordinator
 import mihon.entry.interactions.download.EntryDownloadRuntimeFeature
 import mihon.feature.graph.FeatureGraphContributor
-import mihon.feature.runtime.FeatureRuntimeComposition
 import tachiyomi.domain.entry.interactor.NetworkToLocalEntry
 import tachiyomi.domain.entry.interactor.SyncEntryWithSource
 import tachiyomi.domain.entry.repository.EntryChapterRepository
@@ -21,10 +20,8 @@ object EntrySourceBindings {
     @Provides
     @SingleIn(AppScope::class)
     fun settingsFeature(
-        composition: FeatureRuntimeComposition,
         sourceManager: SourceManager,
     ): EntrySourceSettingsFeature = DefaultEntrySourceSettingsFeature(
-        evaluation = composition.evaluation,
         sourceManager = sourceManager,
     )
 
@@ -35,10 +32,8 @@ object EntrySourceBindings {
     @Provides
     @SingleIn(AppScope::class)
     fun homeFeature(
-        composition: FeatureRuntimeComposition,
         sourceManager: SourceManager,
     ): EntrySourceHomeFeature = DefaultEntrySourceHomeFeature(
-        evaluation = composition.evaluation,
         sourceManager = sourceManager,
     )
 
@@ -49,10 +44,8 @@ object EntrySourceBindings {
     @Provides
     @SingleIn(AppScope::class)
     fun coverNetworkFeature(
-        composition: FeatureRuntimeComposition,
         sourceManager: SourceManager,
     ): EntryCoverNetworkFeature = DefaultEntryCoverNetworkFeature(
-        evaluation = composition.evaluation,
         sourceManager = sourceManager,
     )
 
@@ -63,14 +56,12 @@ object EntrySourceBindings {
     @Provides
     @SingleIn(AppScope::class)
     internal fun refreshFeature(
-        composition: FeatureRuntimeComposition,
         sourceManager: SourceManager,
         syncEntryWithSource: SyncEntryWithSource,
         downloadRuntime: () -> EntryDownloadRuntimeFeature,
         titlePolicy: EntryLibraryTitleUpdatePolicy,
         automaticDownloads: () -> EntryAutomaticDownloadCoordinator,
     ): EntrySourceRefreshFeature = DefaultEntrySourceRefreshFeature(
-        evaluation = composition.evaluation,
         automaticDownloads = automaticDownloads,
         sourceManager = sourceManager,
         syncEntryWithSource = syncEntryWithSource,
@@ -85,10 +76,8 @@ object EntrySourceBindings {
     @Provides
     @SingleIn(AppScope::class)
     fun webViewFeature(
-        composition: FeatureRuntimeComposition,
         sourceManager: SourceManager,
     ): EntryWebViewFeature = DefaultEntryWebViewFeature(
-        evaluation = composition.evaluation,
         sourceManager = sourceManager,
     )
 
@@ -99,13 +88,11 @@ object EntrySourceBindings {
     @Provides
     @SingleIn(AppScope::class)
     fun deepLinkFeature(
-        composition: FeatureRuntimeComposition,
         sourceManager: SourceManager,
         networkToLocalEntry: NetworkToLocalEntry,
         entryChapterRepository: EntryChapterRepository,
         sourceRefresh: EntrySourceRefreshFeature,
     ): EntryDeepLinkFeature = DefaultEntryDeepLinkFeature(
-        evaluation = composition.evaluation,
         sourceManager = sourceManager,
         networkToLocalEntry = networkToLocalEntry,
         entryChapterRepository = entryChapterRepository,
@@ -119,12 +106,10 @@ object EntrySourceBindings {
     @Provides
     @SingleIn(AppScope::class)
     fun trackerSourceAdapterFeature(
-        composition: FeatureRuntimeComposition,
         sourceManager: SourceManager,
         settings: EntrySourceSettingsFeature,
         home: EntrySourceHomeFeature,
     ): EntryTrackerSourceAdapterFeature = DefaultEntryTrackerSourceAdapterFeature(
-        evaluation = composition.evaluation,
         sourceManager = sourceManager,
         settings = settings,
         home = home,

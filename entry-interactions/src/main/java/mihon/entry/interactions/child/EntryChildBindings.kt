@@ -6,12 +6,16 @@ import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.IntoSet
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
+import eu.kanade.tachiyomi.source.entry.EntryType
 import mihon.entry.interactions.child.backup.EntryChildGroupFilterBackupParticipant
 import mihon.entry.interactions.persistence.backup.EntryBackupStateParticipant
 import mihon.entry.interactions.runtime.EntryChildGroupFilterDataSource
+import mihon.entry.interactions.runtime.EntryChildGroupFilterProcessor
+import mihon.entry.interactions.runtime.EntryChildListProcessor
+import mihon.entry.interactions.runtime.EntryChildProgressProcessor
 import mihon.entry.interactions.runtime.EntryInteractions
+import mihon.entry.interactions.runtime.EntryMissingChildGapProcessor
 import mihon.feature.graph.FeatureGraphContributor
-import mihon.feature.runtime.FeatureRuntimeComposition
 import tachiyomi.domain.entry.interactor.GetEntry
 import tachiyomi.domain.entry.interactor.NetworkToLocalEntry
 import tachiyomi.domain.source.service.EntrySourceDescriptionResolutionPort
@@ -23,10 +27,16 @@ object EntryChildBindings {
     @Provides
     @SingleIn(AppScope::class)
     fun childListFeature(
-        composition: FeatureRuntimeComposition,
+        childListProcessors: Map<EntryType, EntryChildListProcessor>,
+        childProgressProcessors: Map<EntryType, EntryChildProgressProcessor>,
+        missingChildGapProcessors: Map<EntryType, EntryMissingChildGapProcessor>,
         interactions: EntryInteractions,
     ): EntryChildListFeature = DefaultEntryChildListFeature(
-        evaluation = composition.evaluation,
+        types = EntryChildListTypes(
+            childList = childListProcessors.keys,
+            progress = childListProcessors.keys intersect childProgressProcessors.keys,
+            missingGap = childListProcessors.keys intersect missingChildGapProcessors.keys,
+        ),
         childList = interactions.childList,
         childProgress = interactions.childProgress,
         missingChildGap = interactions.missingChildGap,
@@ -35,11 +45,11 @@ object EntryChildBindings {
     @Provides
     @SingleIn(AppScope::class)
     fun childGroupFilterFeature(
-        composition: FeatureRuntimeComposition,
+        childGroupFilterProcessors: Map<EntryType, EntryChildGroupFilterProcessor>,
         interactions: EntryInteractions,
         dataSource: EntryChildGroupFilterDataSource,
     ): EntryChildGroupFilterFeature = DefaultEntryChildGroupFilterFeature(
-        evaluation = composition.evaluation,
+        applicableTypes = childGroupFilterProcessors.keys,
         interaction = interactions.childGroupFilter,
         dataSource = dataSource,
     )
@@ -47,13 +57,11 @@ object EntryChildBindings {
     @Provides
     @SingleIn(AppScope::class)
     fun relatedEntriesFeature(
-        composition: FeatureRuntimeComposition,
         sourceManager: SourceManager,
         networkToLocalEntry: NetworkToLocalEntry,
         getEntry: GetEntry,
         sourceDescription: EntrySourceDescriptionResolutionPort,
     ): EntryRelatedEntriesFeature = DefaultEntryRelatedEntriesFeature(
-        evaluation = composition.evaluation,
         sourceManager = sourceManager,
         networkToLocalEntry = networkToLocalEntry,
         getEntry = getEntry,

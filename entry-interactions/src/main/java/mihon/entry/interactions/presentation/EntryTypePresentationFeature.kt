@@ -2,8 +2,6 @@ package mihon.entry.interactions.presentation
 
 import eu.kanade.tachiyomi.source.entry.EntryType
 import mihon.entry.interactions.runtime.EntryTypePresentationCapability
-import mihon.entry.interactions.runtime.EntryTypePresentationProvider
-import mihon.entry.interactions.runtime.applicableProviderTypes
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.ContributionOwner
 import mihon.feature.graph.FeatureArtifactId
@@ -12,7 +10,6 @@ import mihon.feature.graph.FeatureBehaviorProjection
 import mihon.feature.graph.FeatureContribution
 import mihon.feature.graph.FeatureGraphContributionSink
 import mihon.feature.graph.FeatureGraphContributor
-import mihon.feature.graph.FeatureGraphEvaluation
 import mihon.feature.graph.FeatureId
 import mihon.feature.graph.FeatureIntegration
 import mihon.feature.graph.FeatureIntegrationId
@@ -52,15 +49,9 @@ internal object EntryTypePresentationFeatureContributor : FeatureGraphContributo
 }
 
 internal class DefaultEntryTypePresentationFeature(
-    evaluation: FeatureGraphEvaluation,
+    private val applicableTypes: Set<EntryType>,
     private val interaction: EntryTypePresentationInteraction,
 ) : EntryTypePresentationFeature {
-    private val applicableTypes = evaluation.applicableProviderTypes<EntryTypePresentationProvider>(
-        feature = ENTRY_TYPE_PRESENTATION_FEATURE_ID,
-        integration = ENTRY_TYPE_PRESENTATION_INTEGRATION_ID,
-        behaviorProjection = ENTRY_TYPE_PRESENTATION_BEHAVIOR_ID,
-    )
-
     override val genericPresentation: EntryTypePresentation = genericEntryTypePresentation
 
     override fun presentation(type: EntryType?): EntryTypePresentationResult {

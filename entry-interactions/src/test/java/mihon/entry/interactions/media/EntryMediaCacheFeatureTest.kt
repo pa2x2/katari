@@ -6,7 +6,7 @@ import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.mockk.mockk
 import mihon.entry.interactions.runtime.EntryInteractionPlugin
-import mihon.entry.interactions.runtime.createEntryInteractionComposition
+import mihon.entry.interactions.runtime.createEntryInteractions
 import mihon.feature.graph.ContributionOwner
 import org.junit.jupiter.api.Test
 import tachiyomi.core.common.preference.InMemoryPreferenceStore
@@ -68,13 +68,10 @@ class EntryMediaCacheFeatureTest {
         plugin: EntryInteractionPlugin,
         store: InMemoryPreferenceStore = InMemoryPreferenceStore(),
     ): EntryMediaCacheFeature {
-        val composition = createEntryInteractionComposition(
-            plugins = listOf(plugin),
-            featureContributors = listOf(EntryMediaCacheFeatureContributor),
-        )
+        val interactions = createEntryInteractions(listOf(plugin))
         return DefaultEntryMediaCacheFeature(
-            evaluation = composition.featureGraphEvaluation,
-            interaction = composition.interactions.mediaCache,
+            applicableTypes = setOf(plugin.type),
+            interaction = interactions.mediaCache,
             preferenceStore = store,
         )
     }

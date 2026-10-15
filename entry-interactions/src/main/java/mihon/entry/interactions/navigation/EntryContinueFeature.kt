@@ -2,7 +2,6 @@ package mihon.entry.interactions.navigation
 
 import android.content.Context
 import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.entry.interactions.runtime.applicableProviderTypes
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.ContributionOwner
 import mihon.feature.graph.FeatureArtifactId
@@ -11,7 +10,6 @@ import mihon.feature.graph.FeatureBehaviorProjection
 import mihon.feature.graph.FeatureContribution
 import mihon.feature.graph.FeatureGraphContributionSink
 import mihon.feature.graph.FeatureGraphContributor
-import mihon.feature.graph.FeatureGraphEvaluation
 import mihon.feature.graph.FeatureId
 import mihon.feature.graph.FeatureIntegration
 import mihon.feature.graph.FeatureIntegrationId
@@ -60,38 +58,21 @@ internal object EntryContinueFeatureContributor : FeatureGraphContributor {
 }
 
 internal class DefaultEntryContinueFeature(
-    evaluation: FeatureGraphEvaluation,
+    private val applicableTypes: Set<EntryType>,
     private val interaction: EntryContinueInteraction,
     private val batchPreparation: EntryContinueBatchPreparation,
 ) : EntryContinueFeature, SeededEntryContinueBatchFeature {
-    private val applicableTypes = evaluation.applicableProviderTypes<EntryContinueProcessor>(
-        feature = ENTRY_CONTINUE_FEATURE_ID,
-        integration = ENTRY_CONTINUE_INTEGRATION_ID,
-        behaviorProjection = ENTRY_CONTINUE_DISPATCH_BEHAVIOR_ID,
-    )
-    private val targetTypes = evaluation.applicableProviderTypes<EntryContinueProcessor>(
-        feature = ENTRY_CONTINUE_FEATURE_ID,
-        integration = ENTRY_CONTINUE_INTEGRATION_ID,
-        behaviorProjection = ENTRY_CONTINUE_TARGET_BEHAVIOR_ID,
-    )
-
-    init {
-        check(applicableTypes == targetTypes) {
-            "Continue dispatch and target behaviors selected different provider sets"
-        }
-    }
-
     override fun isApplicable(type: EntryType): Boolean = type in applicableTypes
 
     override suspend fun nextTarget(entry: Entry): EntryContinueTargetResult {
-        if (entry.type !in targetTypes) return EntryContinueTargetResult.Inapplicable
+        if (entry.type !in applicableTypes) return EntryContinueTargetResult.Inapplicable
         return interaction.findNext(entry)
             ?.let(EntryContinueTargetResult::Available)
             ?: EntryContinueTargetResult.NoNext
     }
 
     override suspend fun nextTargets(entries: List<Entry>): Map<Long, EntryContinueTargetResult> {
-        val applicableEntries = entries.filter { it.type in targetTypes }
+        val applicableEntries = entries.filter { it.type in applicableTypes }
         val preparedByEntryId = batchPreparation.prepare(applicableEntries)
         return resolvePreparedTargets(entries, preparedByEntryId)
     }
@@ -100,7 +81,7 @@ internal class DefaultEntryContinueFeature(
         entries: List<Entry>,
         seed: EntryContinueBatchSeed,
     ): Map<Long, EntryContinueTargetResult> {
-        val applicableEntries = entries.filter { it.type in targetTypes }
+        val applicableEntries = entries.filter { it.type in applicableTypes }
         val preparedByEntryId = batchPreparation.prepare(applicableEntries, seed)
         return resolvePreparedTargets(entries, preparedByEntryId)
     }
@@ -111,7 +92,7 @@ internal class DefaultEntryContinueFeature(
     ): Map<Long, EntryContinueTargetResult> {
         return entries.associate { entry ->
             entry.id to when {
-                entry.type !in targetTypes -> EntryContinueTargetResult.Inapplicable
+                entry.type !in applicableTypes -> EntryContinueTargetResult.Inapplicable
                 else -> preparedByEntryId[entry.id]?.let { prepared ->
                     interaction.findNext(entry, prepared.chapters, prepared.progressStates)
                         ?.let(EntryContinueTargetResult::Available)

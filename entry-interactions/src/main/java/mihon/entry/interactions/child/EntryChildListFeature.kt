@@ -2,12 +2,8 @@ package mihon.entry.interactions.child
 
 import eu.kanade.tachiyomi.source.entry.EntryType
 import mihon.entry.interactions.runtime.EntryChildListCapability
-import mihon.entry.interactions.runtime.EntryChildListProcessor
 import mihon.entry.interactions.runtime.EntryChildProgressCapability
-import mihon.entry.interactions.runtime.EntryChildProgressProcessor
 import mihon.entry.interactions.runtime.EntryMissingChildGapCapability
-import mihon.entry.interactions.runtime.EntryMissingChildGapProcessor
-import mihon.entry.interactions.runtime.applicableProviderTypes
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.ContributionOwner
 import mihon.feature.graph.FeatureArtifactId
@@ -16,7 +12,6 @@ import mihon.feature.graph.FeatureBehaviorProjection
 import mihon.feature.graph.FeatureContribution
 import mihon.feature.graph.FeatureGraphContributionSink
 import mihon.feature.graph.FeatureGraphContributor
-import mihon.feature.graph.FeatureGraphEvaluation
 import mihon.feature.graph.FeatureId
 import mihon.feature.graph.FeatureIntegration
 import mihon.feature.graph.FeatureIntegrationId
@@ -101,51 +96,19 @@ internal object EntryChildListFeatureContributor : FeatureGraphContributor {
 }
 
 internal class DefaultEntryChildListFeature(
-    evaluation: FeatureGraphEvaluation,
+    private val types: EntryChildListTypes,
     private val childList: EntryChildListInteraction,
     private val childProgress: EntryChildProgressInteraction,
     private val missingChildGap: EntryMissingChildGapInteraction,
 ) : EntryChildListFeature {
-    private val orderTypes = evaluation.applicableProviderTypes<EntryChildListProcessor>(
-        feature = ENTRY_CHILD_LIST_FEATURE_ID,
-        integration = ENTRY_CHILD_LIST_INTEGRATION_ID,
-        behaviorProjection = ENTRY_CHILD_LIST_ORDER_BEHAVIOR_ID,
-    )
-    private val displayTypes = evaluation.applicableProviderTypes<EntryChildListProcessor>(
-        feature = ENTRY_CHILD_LIST_FEATURE_ID,
-        integration = ENTRY_CHILD_LIST_INTEGRATION_ID,
-        behaviorProjection = ENTRY_CHILD_LIST_DISPLAY_BEHAVIOR_ID,
-    )
-    private val firstChildTypes = evaluation.applicableProviderTypes<EntryChildListProcessor>(
-        feature = ENTRY_CHILD_LIST_FEATURE_ID,
-        integration = ENTRY_CHILD_LIST_INTEGRATION_ID,
-        behaviorProjection = ENTRY_CHILD_LIST_FIRST_CHILD_BEHAVIOR_ID,
-    )
-    private val progressTypes = evaluation.applicableProviderTypes<EntryChildProgressProcessor>(
-        feature = ENTRY_CHILD_LIST_FEATURE_ID,
-        integration = ENTRY_CHILD_PROGRESS_INTEGRATION_ID,
-        behaviorProjection = ENTRY_CHILD_PROGRESS_BEHAVIOR_ID,
-    )
-    private val missingGapTypes = evaluation.applicableProviderTypes<EntryMissingChildGapProcessor>(
-        feature = ENTRY_CHILD_LIST_FEATURE_ID,
-        integration = ENTRY_MISSING_CHILD_GAP_INTEGRATION_ID,
-        behaviorProjection = ENTRY_MISSING_CHILD_GAP_BEHAVIOR_ID,
-    )
-
-    init {
-        check(setOf(orderTypes, firstChildTypes, displayTypes).size == 1) {
-            "Child-list order, first-child, and display behaviors selected different provider sets"
-        }
-    }
-
-    override fun isApplicable(type: EntryType): Boolean = type in orderTypes
+    override fun isApplicable(type: EntryType): Boolean = type in types.childList
 
     override fun readingOrder(
         entry: Entry,
         chapters: List<EntryChapter>,
         memberIds: List<Long>,
     ): EntryChildOrderResult {
-        if (entry.type !in orderTypes) return EntryChildOrderResult.Inapplicable(entry.type)
+        if (entry.type !in types.childList) return EntryChildOrderResult.Inapplicable(entry.type)
         return EntryChildOrderResult.Available(childList.sortedForReading(entry, chapters, memberIds))
     }
 
@@ -154,7 +117,7 @@ internal class DefaultEntryChildListFeature(
         chapters: List<EntryChapter>,
         memberIds: List<Long>,
     ): EntryChildOrderResult {
-        if (entry.type !in orderTypes) return EntryChildOrderResult.Inapplicable(entry.type)
+        if (entry.type !in types.childList) return EntryChildOrderResult.Inapplicable(entry.type)
         return EntryChildOrderResult.Available(childList.sortedForDisplay(entry, chapters, memberIds))
     }
 
@@ -163,15 +126,15 @@ internal class DefaultEntryChildListFeature(
         chapters: List<EntryChapter>,
         memberIds: List<Long>,
     ): EntryFirstChildResult {
-        if (entry.type !in firstChildTypes) return EntryFirstChildResult.Inapplicable(entry.type)
+        if (entry.type !in types.childList) return EntryFirstChildResult.Inapplicable(entry.type)
         return EntryFirstChildResult.Available(
             childList.sortedForReading(entry, chapters, memberIds).firstOrNull(),
         )
     }
 
     override fun displayList(request: EntryChildListRequest): EntryChildListResult {
-        if (request.entry.type !in displayTypes) return EntryChildListResult.Inapplicable(request.entry.type)
-        val display = if (request.entry.type in missingGapTypes) {
+        if (request.entry.type !in types.childList) return EntryChildListResult.Inapplicable(request.entry.type)
+        val display = if (request.entry.type in types.missingGap) {
             missingChildGap.buildDisplayList(request)
         } else {
             buildDefaultDisplayList(request)
@@ -180,7 +143,7 @@ internal class DefaultEntryChildListFeature(
     }
 
     override fun progressLabels(request: EntryChildProgressRequest): EntryChildProgressResult {
-        if (request.entry.type !in progressTypes) return EntryChildProgressResult.Inapplicable(request.entry.type)
+        if (request.entry.type !in types.progress) return EntryChildProgressResult.Inapplicable(request.entry.type)
         return EntryChildProgressResult.Available(childProgress.progressLabels(request))
     }
 
@@ -206,3 +169,10 @@ internal class DefaultEntryChildListFeature(
         return EntryChildListDisplay(rows = rows, aggregateMissingCount = 0)
     }
 }
+
+/** The types each Child List capability applies to, read from the providers the type modules contribute. */
+internal class EntryChildListTypes(
+    val childList: Set<EntryType>,
+    val progress: Set<EntryType>,
+    val missingGap: Set<EntryType>,
+)

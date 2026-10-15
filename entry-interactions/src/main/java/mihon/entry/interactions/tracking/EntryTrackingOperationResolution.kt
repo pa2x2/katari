@@ -3,11 +3,9 @@ package mihon.entry.interactions.tracking
 import kotlinx.coroutines.flow.first
 import mihon.entry.interactions.tracking.host.EntryTrackingHost
 import mihon.entry.interactions.tracking.host.EntryTrackingHostEntryService
-import mihon.feature.graph.FeatureGraphEvaluation
 import tachiyomi.domain.entry.model.Entry
 
 internal class EntryTrackingOperationResolver(
-    private val evaluation: FeatureGraphEvaluation,
     private val host: EntryTrackingHost,
 ) {
     suspend fun resolveService(
@@ -15,7 +13,6 @@ internal class EntryTrackingOperationResolver(
         serviceId: EntryTrackingServiceId,
     ): ResolvedTrackingService {
         val services = host.observeEntry(entry).first().services
-        evaluateSession(entry, services)
         val service = services.firstOrNull { it.service.id == serviceId.value }
             ?: return ResolvedTrackingService.Unavailable(
                 EntryTrackingOperationUnavailableReason.SERVICE_NOT_REGISTERED,
@@ -36,7 +33,6 @@ internal class EntryTrackingOperationResolver(
 
     suspend fun resolveAvailableServices(entry: Entry): ResolvedTrackingServices {
         val services = host.observeEntry(entry).first().services
-        evaluateSession(entry, services)
         val supported = services.filter { entry.type in it.service.supportedEntryTypes }
         val authenticated = supported.filter { it.isLoggedIn }
         val accepted = authenticated.filter { it.acceptsSource }
@@ -75,18 +71,6 @@ internal class EntryTrackingOperationResolver(
                     .takeUnless { capabilities.supportsPrivateTracking }
             is EntryTrackingMutation.Progress -> null
         }
-    }
-
-    private fun evaluateSession(entry: Entry, services: List<EntryTrackingHostEntryService>) {
-        val supported = services.filter { entry.type in it.service.supportedEntryTypes }
-        val authenticated = supported.filter { it.isLoggedIn }
-        val accepted = authenticated.filter { it.acceptsSource }
-        evaluation.requireTrackingSession(
-            entryType = entry.type,
-            registered = supported.isNotEmpty(),
-            authenticated = authenticated.isNotEmpty(),
-            sourceAccepted = accepted.isNotEmpty(),
-        )
     }
 }
 

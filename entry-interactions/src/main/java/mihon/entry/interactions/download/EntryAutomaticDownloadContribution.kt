@@ -1,8 +1,5 @@
 package mihon.entry.interactions.download
 
-import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.entry.interactions.runtime.applicableProviderTypes
-import mihon.entry.interactions.runtime.requireEntryContextState
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.ContextInputId
 import mihon.feature.graph.ContributionOwner
@@ -14,11 +11,9 @@ import mihon.feature.graph.FeatureContextDecision
 import mihon.feature.graph.FeatureContribution
 import mihon.feature.graph.FeatureGraphContributionSink
 import mihon.feature.graph.FeatureGraphContributor
-import mihon.feature.graph.FeatureGraphEvaluation
 import mihon.feature.graph.FeatureId
 import mihon.feature.graph.FeatureIntegration
 import mihon.feature.graph.FeatureIntegrationId
-import mihon.feature.graph.contextEvidence
 import mihon.feature.graph.contextInputDefinition
 import mihon.feature.graph.featureContextRule
 
@@ -151,32 +146,4 @@ internal object EntryAutomaticDownloadFeatureContributor : FeatureGraphContribut
             ),
         )
     }
-}
-
-internal fun FeatureGraphEvaluation.automaticDownloadTypes(): Set<EntryType> =
-    applicableProviderTypes<EntryDownloadProcessor>(
-        feature = ENTRY_AUTOMATIC_DOWNLOAD_FEATURE_ID,
-        integration = ENTRY_AUTOMATIC_DOWNLOAD_PROVIDER_INTEGRATION,
-        behaviorProjection = EntryAutomaticDownloadProviderBehavior.id,
-    )
-
-internal fun FeatureGraphEvaluation.requireAutomaticDownloadContext(
-    type: EntryType,
-    decision: EntryAutomaticDownloadPolicyDecision,
-) {
-    requireEntryContextState(
-        type = type,
-        feature = ENTRY_AUTOMATIC_DOWNLOAD_FEATURE_ID,
-        integration = ENTRY_AUTOMATIC_DOWNLOAD_CONTEXT_INTEGRATION,
-        behaviorProjections = EntryAutomaticDownloadBehavior.entries.map(EntryAutomaticDownloadBehavior::id),
-        evidence = listOf(
-            contextEvidence(ENTRY_AUTOMATIC_DOWNLOAD_NEW_CHILDREN_CONTEXT, decision.hasNewChapters),
-            contextEvidence(ENTRY_AUTOMATIC_DOWNLOAD_ENABLED_CONTEXT, decision.enabled),
-            contextEvidence(ENTRY_AUTOMATIC_DOWNLOAD_FAVORITE_CONTEXT, decision.favorite),
-            contextEvidence(ENTRY_AUTOMATIC_DOWNLOAD_CATEGORY_ALLOWED_CONTEXT, decision.categoryAllowed),
-            contextEvidence(ENTRY_AUTOMATIC_DOWNLOAD_UNREAD_ONLY_CONTEXT, decision.unreadOnly),
-            contextEvidence(ENTRY_AUTOMATIC_DOWNLOAD_CANDIDATES_CONTEXT, decision.candidates.isNotEmpty()),
-        ),
-        applicable = decision.blocker == null,
-    )
 }

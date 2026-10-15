@@ -14,11 +14,9 @@ import mihon.feature.graph.FeatureContextDecision
 import mihon.feature.graph.FeatureContribution
 import mihon.feature.graph.FeatureGraphContributionSink
 import mihon.feature.graph.FeatureGraphContributor
-import mihon.feature.graph.FeatureGraphEvaluation
 import mihon.feature.graph.FeatureId
 import mihon.feature.graph.FeatureIntegration
 import mihon.feature.graph.FeatureIntegrationId
-import mihon.feature.graph.contextEvidence
 import mihon.feature.graph.contextInputDefinition
 import mihon.feature.graph.featureContextRule
 import tachiyomi.domain.chapter.model.NoChaptersException
@@ -83,7 +81,6 @@ internal object EntrySourceRefreshFeatureContributor : FeatureGraphContributor {
 }
 
 internal class DefaultEntrySourceRefreshFeature(
-    private val evaluation: FeatureGraphEvaluation,
     private val automaticDownloads: () -> EntryAutomaticDownloadCoordinator,
     private val sourceManager: SourceManager,
     private val syncEntryWithSource: SyncEntryWithSource,
@@ -99,7 +96,6 @@ internal class DefaultEntrySourceRefreshFeature(
         // A library update starting with the process would otherwise fail every entry as having no source
         sourceManager.awaitInitialized()
         val sourceInstalled = sourceManager.get(request.entry.source) != null
-        requireState(request, sourceInstalled)
         if (!sourceInstalled) return EntrySourceRefreshResult.SourceUnavailable(request.entry.source)
 
         return try {
@@ -125,19 +121,6 @@ internal class DefaultEntrySourceRefreshFeature(
             EntrySourceRefreshResult.Failed(EntrySourceRefreshFailure.NoChildren)
         } catch (error: Throwable) {
             EntrySourceRefreshResult.Failed(EntrySourceRefreshFailure.Operation(error))
-        }
-    }
-
-    private fun requireState(request: EntrySourceRefreshRequest, sourceInstalled: Boolean) {
-        EntrySourceRefreshBehavior.entries.forEach { behavior ->
-            evaluation.requireSourceContextState(
-                feature = ENTRY_SOURCE_REFRESH_FEATURE_ID,
-                integration = ENTRY_SOURCE_REFRESH_INTEGRATION_ID,
-                behaviorProjection = behavior.id,
-                evidence = listOf(contextEvidence(ENTRY_SOURCE_REFRESH_SOURCE_CONTEXT, sourceInstalled)),
-                applicable = sourceInstalled,
-                contentType = request.entry.type,
-            )
         }
     }
 }

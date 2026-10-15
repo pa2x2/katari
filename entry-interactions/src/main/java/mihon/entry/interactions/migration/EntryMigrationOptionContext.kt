@@ -1,7 +1,5 @@
 package mihon.entry.interactions.migration
 
-import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.entry.interactions.runtime.requireEntryContextState
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.ContextInputDefinition
 import mihon.feature.graph.ContextInputId
@@ -10,10 +8,8 @@ import mihon.feature.graph.FeatureArtifactId
 import mihon.feature.graph.FeatureBehaviorProjection
 import mihon.feature.graph.FeatureContextBlocker
 import mihon.feature.graph.FeatureContextDecision
-import mihon.feature.graph.FeatureGraphEvaluation
 import mihon.feature.graph.FeatureIntegration
 import mihon.feature.graph.FeatureIntegrationId
-import mihon.feature.graph.contextEvidence
 import mihon.feature.graph.contextInputDefinition
 import mihon.feature.graph.featureContextRule
 
@@ -102,20 +98,5 @@ internal fun entryMigrationOptionContextIntegrations(
             },
         ),
         behavioralContracts = listOf(option.contract),
-    )
-}
-
-internal fun FeatureGraphEvaluation.requireMigrationOptionContext(
-    type: EntryType,
-    option: EntryMigrationContextualOption,
-    available: Boolean,
-) {
-    requireEntryContextState(
-        type = type,
-        feature = ENTRY_MIGRATION_FEATURE_ID,
-        integration = option.integration,
-        behaviorProjections = listOf(option.behaviorProjection),
-        evidence = listOf(contextEvidence(option.input, available)),
-        applicable = available,
     )
 }

@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import mihon.entry.interactions.runtime.EntryInteractionPlugin
 import mihon.entry.interactions.runtime.EntryInteractionProviderBinding
-import mihon.entry.interactions.runtime.createEntryInteractionComposition
+import mihon.entry.interactions.runtime.providersOf
 import mihon.entry.interactions.state.EntryTranslationLanguagesCapability
 import mihon.entry.interactions.state.EntryTranslationLanguagesProvider
 import mihon.feature.graph.ContributionOwner
@@ -34,18 +34,16 @@ class EntryTranslationLanguagesFeatureTest {
         repository: InMemoryEntryTranslationLanguagesRepository,
         vararg bindings: EntryInteractionProviderBinding<*>,
     ): DefaultEntryTranslationLanguagesFeature {
-        val composition = createEntryInteractionComposition(
-            plugins = listOf(
-                object : EntryInteractionPlugin {
-                    override val type = EntryType.BOOK
-                    override val owner = ContributionOwner("test.translation-languages-type")
-                    override val providerBindings = bindings.toList()
-                },
-            ),
-            featureContributors = listOf(EntryTranslationLanguagesFeatureContributor),
+        val plugins = listOf(
+            object : EntryInteractionPlugin {
+                override val type = EntryType.BOOK
+                override val owner = ContributionOwner("test.translation-languages-type")
+                override val providerBindings = bindings.toList()
+            },
         )
         return DefaultEntryTranslationLanguagesFeature(
-            evaluation = composition.featureGraphEvaluation,
+            applicableTypes = plugins.providersOf(EntryTranslationLanguagesCapability).keys,
+            migrationTypes = emptySet(),
             repository = repository,
             clock = { 1L },
         )

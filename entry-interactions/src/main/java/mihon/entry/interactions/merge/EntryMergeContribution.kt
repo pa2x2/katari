@@ -1,9 +1,6 @@
 package mihon.entry.interactions.merge
 
-import eu.kanade.tachiyomi.source.entry.EntryType
 import mihon.entry.interactions.download.EntryDownloadCapability
-import mihon.entry.interactions.entryContentType
-import mihon.entry.interactions.runtime.toContentTypeId
 import mihon.entry.interactions.state.EntryMigrationCapability
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.ContributionOwner
@@ -13,7 +10,6 @@ import mihon.feature.graph.FeatureBehaviorProjection
 import mihon.feature.graph.FeatureContribution
 import mihon.feature.graph.FeatureGraphContributionSink
 import mihon.feature.graph.FeatureGraphContributor
-import mihon.feature.graph.FeatureGraphEvaluation
 import mihon.feature.graph.FeatureId
 import mihon.feature.graph.FeatureIntegration
 import mihon.feature.graph.FeatureIntegrationId
@@ -99,18 +95,4 @@ internal object EntryMergeFeatureContributor : FeatureGraphContributor {
             ),
         )
     }
-}
-
-internal fun FeatureGraphEvaluation.mergeTypes(
-    integration: FeatureIntegrationId,
-    behaviorProjection: FeatureArtifactId,
-): Set<EntryType> {
-    val contentTypes = behaviorProjections.asSequence()
-        .filter { applicability ->
-            applicability.subject.feature == ENTRY_MERGE_FEATURE_ID &&
-                applicability.subject.integration == integration &&
-                applicability.projection.id == behaviorProjection
-        }
-        .mapTo(mutableSetOf()) { it.subject.entryContentType }
-    return EntryType.entries.filterTo(mutableSetOf()) { it.toContentTypeId() in contentTypes }
 }

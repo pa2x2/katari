@@ -8,41 +8,17 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import mihon.entry.interactions.child.EntryChildListFeature
 import mihon.entry.interactions.child.EntryFirstChildResult
-import mihon.entry.interactions.navigation.EntryOpenProcessor
-import mihon.entry.interactions.runtime.EntryChildListProcessor
-import mihon.entry.interactions.runtime.EntryPreviewConfigurationProvider
 import mihon.entry.interactions.runtime.EntryPreviewLoadMode
 import mihon.entry.interactions.runtime.EntryPreviewProcessor
-import mihon.entry.interactions.runtime.applicableProviderTypes
-import mihon.entry.interactions.runtime.requireEntryContextState
-import mihon.feature.graph.FeatureGraphEvaluation
-import mihon.feature.graph.contextEvidence
 
 internal class DefaultEntryPreviewFeature(
-    private val evaluation: FeatureGraphEvaluation,
+    private val types: EntryPreviewTypes,
     private val interaction: EntryPreviewInteraction,
     private val childList: EntryChildListFeature,
 ) : EntryPreviewFeature {
-    private val previewTypes = evaluation.applicableProviderTypes<EntryPreviewProcessor>(
-        feature = ENTRY_PREVIEW_FEATURE_ID,
-        integration = ENTRY_PREVIEW_PROVIDER_INTEGRATION_ID,
-        behaviorProjection = EntryPreviewProviderDispatchBehavior.id,
-    )
-    private val configuredTypes = evaluation.applicableProviderTypes<EntryPreviewConfigurationProvider>(
-        feature = ENTRY_PREVIEW_FEATURE_ID,
-        integration = ENTRY_PREVIEW_CONFIGURATION_INTEGRATION_ID,
-        behaviorProjection = EntryPreviewConfigurationBehavior.id,
-    )
-    private val childTypes = evaluation.applicableProviderTypes<EntryChildListProcessor>(
-        feature = ENTRY_PREVIEW_FEATURE_ID,
-        integration = ENTRY_PREVIEW_CHILD_INTEGRATION_ID,
-        behaviorProjection = EntryPreviewChildBehavior.id,
-    )
-    private val openTypes = evaluation.applicableProviderTypes<EntryOpenProcessor>(
-        feature = ENTRY_PREVIEW_FEATURE_ID,
-        integration = ENTRY_PREVIEW_OPEN_INTEGRATION_ID,
-        behaviorProjection = EntryPreviewOpenBehavior.id,
-    )
+    private val previewTypes = types.preview
+    private val configuredTypes = types.configured
+    private val openTypes = types.open
 
     override val settings: List<EntryPreviewSettings> = configuredTypes
         .sortedBy(EntryType::name)
@@ -54,7 +30,8 @@ internal class DefaultEntryPreviewFeature(
 
     init {
         val missingChildList = previewTypes.filter { type ->
-            interaction.processor(type)?.loadMode == EntryPreviewLoadMode.FIRST_READING_CHILD && type !in childTypes
+            interaction.processor(type)?.loadMode == EntryPreviewLoadMode.FIRST_READING_CHILD &&
+                type !in types.childList
         }
         check(missingChildList.isEmpty()) {
             "Child-backed Preview providers require the Preview + Child List relationship; " +
@@ -185,21 +162,6 @@ internal class DefaultEntryPreviewFeature(
         config: EntryPreviewConfig,
     ): EntryPreviewUnavailableReason? {
         val sourceSupported = source is EntryPreviewSource
-        val applicable = (
-            processor.sourceRequirement == EntryPreviewSourceRequirement.NONE || sourceSupported
-            ) && config.enabled
-        evaluation.requireEntryContextState(
-            type = processor.type,
-            feature = ENTRY_PREVIEW_FEATURE_ID,
-            integration = ENTRY_PREVIEW_CONTEXT_INTEGRATION_ID,
-            behaviorProjections = EntryPreviewBehavior.entries.map(EntryPreviewBehavior::id),
-            evidence = listOf(
-                contextEvidence(ENTRY_PREVIEW_SOURCE_REQUIREMENT_CONTEXT, processor.sourceRequirement),
-                contextEvidence(ENTRY_PREVIEW_SOURCE_SUPPORT_CONTEXT, sourceSupported),
-                contextEvidence(ENTRY_PREVIEW_ENABLED_CONTEXT, config.enabled),
-            ),
-            applicable = applicable,
-        )
         return if (
             config.enabled &&
             processor.sourceRequirement == EntryPreviewSourceRequirement.PREVIEW_CAPABILITY &&
@@ -211,3 +173,11 @@ internal class DefaultEntryPreviewFeature(
         }
     }
 }
+
+/** The types each Preview capability applies to, read from the providers the type modules contribute. */
+internal class EntryPreviewTypes(
+    val preview: Set<EntryType>,
+    val configured: Set<EntryType>,
+    val childList: Set<EntryType>,
+    val open: Set<EntryType>,
+)

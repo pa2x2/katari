@@ -2,9 +2,7 @@ package mihon.entry.interactions.statistics
 
 import eu.kanade.tachiyomi.source.entry.EntryType
 import mihon.entry.interactions.runtime.EntryStatisticsCapability
-import mihon.entry.interactions.runtime.EntryStatisticsProvider
 import mihon.entry.interactions.runtime.EntryTypePresentationCapability
-import mihon.entry.interactions.runtime.applicableProviderTypes
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.ContributionOwner
 import mihon.feature.graph.FeatureArtifactId
@@ -13,7 +11,6 @@ import mihon.feature.graph.FeatureBehaviorProjection
 import mihon.feature.graph.FeatureContribution
 import mihon.feature.graph.FeatureGraphContributionSink
 import mihon.feature.graph.FeatureGraphContributor
-import mihon.feature.graph.FeatureGraphEvaluation
 import mihon.feature.graph.FeatureId
 import mihon.feature.graph.FeatureIntegration
 import mihon.feature.graph.FeatureIntegrationId
@@ -57,15 +54,9 @@ internal object EntryStatisticsFeatureContributor : FeatureGraphContributor {
 }
 
 internal class DefaultEntryStatisticsFeature(
-    evaluation: FeatureGraphEvaluation,
+    private val applicableTypes: Set<EntryType>,
     interaction: EntryStatisticsInteraction,
 ) : EntryStatisticsFeature {
-    private val applicableTypes = evaluation.applicableProviderTypes<EntryStatisticsProvider>(
-        feature = ENTRY_STATISTICS_FEATURE_ID,
-        integration = ENTRY_STATISTICS_INTEGRATION_ID,
-        behaviorProjection = ENTRY_STATISTICS_BEHAVIOR_ID,
-    )
-
     override val contributions = interaction.contributions
         .filter { it.type in applicableTypes }
         .sortedBy { EntryType.entries.indexOf(it.type) }

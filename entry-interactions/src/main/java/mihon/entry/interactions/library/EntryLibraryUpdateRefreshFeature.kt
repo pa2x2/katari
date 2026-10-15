@@ -2,15 +2,12 @@ package mihon.entry.interactions.library
 
 import mihon.entry.interactions.download.EntryAutomaticDownloadBatch
 import mihon.entry.interactions.download.EntryAutomaticDownloadCoordinator
-import mihon.entry.interactions.entryContentType
-import mihon.entry.interactions.runtime.toContentTypeId
 import mihon.entry.interactions.source.EntrySourceRefreshFailure
 import mihon.entry.interactions.source.EntrySourceRefreshFeature
 import mihon.entry.interactions.source.EntrySourceRefreshRequest
 import mihon.entry.interactions.source.EntrySourceRefreshResult
 import mihon.entry.interactions.source.EntrySourceRefreshWindow
 import mihon.feature.graph.CapabilityExpression
-import mihon.feature.graph.ContentTypeId
 import mihon.feature.graph.ContributionOwner
 import mihon.feature.graph.FeatureArtifactId
 import mihon.feature.graph.FeatureBehaviorContract
@@ -18,7 +15,6 @@ import mihon.feature.graph.FeatureBehaviorProjection
 import mihon.feature.graph.FeatureContribution
 import mihon.feature.graph.FeatureGraphContributionSink
 import mihon.feature.graph.FeatureGraphContributor
-import mihon.feature.graph.FeatureGraphEvaluation
 import mihon.feature.graph.FeatureId
 import mihon.feature.graph.FeatureIntegration
 import mihon.feature.graph.FeatureIntegrationId
@@ -61,12 +57,9 @@ internal object EntryLibraryUpdateRefreshFeatureContributor : FeatureGraphContri
 }
 
 internal class DefaultEntryLibraryUpdateRefreshFeature(
-    evaluation: FeatureGraphEvaluation,
     private val sourceRefresh: EntrySourceRefreshFeature,
     private val automaticDownloads: () -> EntryAutomaticDownloadCoordinator,
 ) : EntryLibraryUpdateRefreshFeature {
-    private val selectedTypes = evaluation.libraryUpdateRefreshContentTypes()
-
     override fun newSession(): EntryLibraryUpdateRefreshSession {
         return DefaultEntryLibraryUpdateRefreshSession(this)
     }
@@ -75,9 +68,6 @@ internal class DefaultEntryLibraryUpdateRefreshFeature(
         request: EntryLibraryUpdateRefreshRequest,
         automaticDownloadBatch: EntryAutomaticDownloadBatch,
     ): EntryLibraryUpdateRefreshResult {
-        check(request.entry.type.toContentTypeId() in selectedTypes) {
-            "Entry type ${request.entry.type} was not contributed to Library Update Refresh"
-        }
         return when (
             val result = sourceRefresh.refresh(
                 EntrySourceRefreshRequest(
@@ -127,13 +117,3 @@ internal class DefaultEntryLibraryUpdateRefreshFeature(
         }
     }
 }
-
-private fun FeatureGraphEvaluation.libraryUpdateRefreshContentTypes(): Set<ContentTypeId> =
-    behaviorProjections
-        .asSequence()
-        .filter { applicability ->
-            applicability.subject.feature == ENTRY_LIBRARY_UPDATE_REFRESH_FEATURE_ID &&
-                applicability.subject.integration == ENTRY_LIBRARY_UPDATE_REFRESH_INTEGRATION &&
-                applicability.projection.id == EntryLibraryUpdateRefreshBehavior.SOURCE_REFRESH.id
-        }
-        .mapTo(mutableSetOf()) { it.subject.entryContentType }
