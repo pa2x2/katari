@@ -6,8 +6,6 @@ import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.IntoSet
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
-import mihon.feature.runtime.injekt.InjektExport
-import mihon.feature.runtime.injekt.injektExport
 import tachiyomi.core.common.preference.InstalledProfilePreferenceOwner
 import tachiyomi.core.common.preference.ProfilePreferenceOwnerId
 import tachiyomi.core.common.preference.ProfilePreferenceOwnerInstaller
@@ -35,8 +33,4 @@ object EntryInteractionPreferencesBindings {
     @SingleIn(AppScope::class)
     fun preferences(owner: InstalledProfilePreferenceOwner<EntryInteractionPreferences>): EntryInteractionPreferences =
         owner.create()
-
-    @Provides
-    @IntoSet
-    fun exportPreferences(preferences: () -> EntryInteractionPreferences): InjektExport<*> = injektExport(preferences)
 }

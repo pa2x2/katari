@@ -13,8 +13,6 @@ import mihon.entry.interactions.catalogue.runtime.DefaultEntryCatalogueFeature
 import mihon.entry.interactions.catalogue.runtime.EntryCatalogueGraphStateValidator
 import mihon.feature.graph.FeatureGraphContributor
 import mihon.feature.runtime.FeatureRuntimeComposition
-import mihon.feature.runtime.injekt.InjektExport
-import mihon.feature.runtime.injekt.injektExport
 import tachiyomi.domain.entry.interactor.NetworkToLocalEntry
 import tachiyomi.domain.source.service.EntrySourceDescriptionResolutionPort
 import tachiyomi.domain.source.service.SourceManager
@@ -50,22 +48,4 @@ object EntryCatalogueBindings {
     @Provides
     @IntoSet
     fun graphContributor(): FeatureGraphContributor = EntryCatalogueFeatureContributor
-
-    @Provides
-    @IntoSet
-    internal fun exportProviderHost(host: () -> EntryCatalogueProviderHost): InjektExport<*> = injektExport(host)
-
-    @Provides
-    @IntoSet
-    internal fun exportGraphStateValidator(validator: () -> EntryCatalogueGraphStateValidator): InjektExport<*> =
-        injektExport(validator)
-
-    @Provides
-    @IntoSet
-    fun exportFeature(feature: () -> EntryCatalogueFeature): InjektExport<*> = injektExport(feature)
-
-    @Provides
-    @IntoSet
-    fun exportSourceDescription(sourceDescription: () -> EntrySourceDescriptionResolutionPort): InjektExport<*> =
-        injektExport(sourceDescription)
 }

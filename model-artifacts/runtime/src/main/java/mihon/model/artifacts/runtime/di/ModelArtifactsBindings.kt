@@ -14,8 +14,6 @@ import kotlinx.coroutines.SupervisorJob
 import mihon.feature.graph.CapabilityProvider
 import mihon.feature.graph.FeatureGraphContributor
 import mihon.feature.runtime.FeatureGraphValidator
-import mihon.feature.runtime.injekt.InjektExport
-import mihon.feature.runtime.injekt.injektExport
 import mihon.model.artifacts.api.ModelArtifactStore
 import mihon.model.artifacts.runtime.download.ModelArtifactFileDownloader
 import mihon.model.artifacts.runtime.graph.ModelArtifactStoreCapability
@@ -57,10 +55,6 @@ object ModelArtifactsBindings {
     fun graphValidator(): FeatureGraphValidator = FeatureGraphValidator { evaluation ->
         ModelArtifactsFeatureGraphStateValidator(evaluation).validate()
     }
-
-    @Provides
-    @IntoSet
-    fun exportStore(store: () -> ModelArtifactStore): InjektExport<*> = injektExport(store)
 }
 
 private const val STORAGE_DIRECTORY = "model-artifacts"

@@ -53,7 +53,7 @@ import tachiyomi.domain.updates.service.UpdatesPreferences
 /**
  * The app's preference stores and the preference classes built on them. Profile-owned preferences register their
  * owner with the registry, which needs every owner before backup or profile code first asks it for ownership;
- * `addFeatureRuntimeGraph` resolves the registration set at startup for that.
+ * `registerProfilePreferenceOwners` resolves the registration set when the graph is built for that.
  */
 @BindingContainer
 interface PreferenceBindings {

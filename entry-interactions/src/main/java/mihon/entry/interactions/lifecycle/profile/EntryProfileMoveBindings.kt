@@ -17,8 +17,6 @@ import mihon.feature.graph.FeatureGraphContributor
 import mihon.feature.graph.execution.FeatureExecutionHandler
 import mihon.feature.graph.execution.FeatureExecutionParticipantBinding
 import mihon.feature.runtime.FeatureRuntimeComposition
-import mihon.feature.runtime.injekt.InjektExport
-import mihon.feature.runtime.injekt.injektExport
 
 @ContributesTo(AppScope::class)
 @BindingContainer
@@ -69,8 +67,4 @@ object EntryProfileMoveBindings {
             customCoverHost.removeCustomCovers(event.plan.removedEntries)
         },
     )
-
-    @Provides
-    @IntoSet
-    fun exportFeature(feature: () -> EntryProfileMoveFeature): InjektExport<*> = injektExport(feature)
 }

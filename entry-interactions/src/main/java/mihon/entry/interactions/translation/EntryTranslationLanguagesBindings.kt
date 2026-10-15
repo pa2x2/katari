@@ -15,8 +15,6 @@ import mihon.feature.graph.FeatureGraphContributor
 import mihon.feature.graph.execution.FeatureDurableExecutionParticipantBinding
 import mihon.feature.graph.execution.FeatureExecutionParticipantBinding
 import mihon.feature.runtime.FeatureRuntimeComposition
-import mihon.feature.runtime.injekt.InjektExport
-import mihon.feature.runtime.injekt.injektExport
 import tachiyomi.domain.entry.repository.EntryTranslationLanguagesRepository
 
 @ContributesTo(AppScope::class)
@@ -64,13 +62,4 @@ object EntryTranslationLanguagesBindings {
     internal fun backupRestoreParticipant(
         feature: () -> DefaultEntryTranslationLanguagesFeature,
     ): FeatureExecutionParticipantBinding<*> = entryTranslationLanguagesBackupRestoreBinding(feature)
-
-    @Provides
-    @IntoSet
-    internal fun exportDefaultFeature(feature: () -> DefaultEntryTranslationLanguagesFeature): InjektExport<*> =
-        injektExport(feature)
-
-    @Provides
-    @IntoSet
-    fun exportFeature(feature: () -> EntryTranslationLanguagesFeature): InjektExport<*> = injektExport(feature)
 }

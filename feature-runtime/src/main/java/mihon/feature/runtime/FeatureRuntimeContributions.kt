@@ -13,7 +13,6 @@ import mihon.feature.graph.FeatureGraphEvaluation
 import mihon.feature.graph.execution.FeatureDurableExecutionParticipantBinding
 import mihon.feature.graph.execution.FeatureExecutionParticipantBinding
 import mihon.feature.graph.featureGraphContributor
-import mihon.feature.runtime.injekt.InjektExport
 import tachiyomi.core.common.preference.InstalledProfilePreferenceOwner
 
 /**
@@ -80,9 +79,6 @@ interface FeatureRuntimeMultibindings {
 
     @Multibinds(allowEmpty = true)
     fun profilePreferenceOwners(): Set<InstalledProfilePreferenceOwner<*>>
-
-    @Multibinds(allowEmpty = true)
-    fun injektExports(): Set<InjektExport<*>>
 }
 
 private val APPLICATION_FEATURE_SUBJECT_OWNER = ContributionOwner("application-feature-runtime")

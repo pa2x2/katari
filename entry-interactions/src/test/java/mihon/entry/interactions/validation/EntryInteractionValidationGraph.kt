@@ -1,12 +1,11 @@
 package mihon.entry.interactions.validation
 
-import android.app.Application
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.DependencyGraph
+import dev.zacsweers.metro.Includes
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metrox.viewmodel.ViewModelGraph
 import io.mockk.mockk
-import mihon.feature.runtime.FeatureRuntimeGraph
 import mihon.model.artifacts.api.ModelArtifactStore
 import mihon.text.recognition.api.TextRecognitionFeature
 import mihon.text.recognition.api.host.TextRecognitionHostActions
@@ -20,12 +19,12 @@ import tachiyomi.core.common.preference.ProfilePreferenceOwnerInstaller
     AppScope::class,
     bindingContainers = [
         ControlledEntryHostBindings::class,
-        ControlledInjektBindings::class,
         ControlledEntryPointBindings::class,
     ],
 )
-interface EntryInteractionValidationGraph : FeatureRuntimeGraph, ViewModelGraph {
-    // The translation, text recognition, speech and model artifact runtimes are app modules, so only the app graph has the real ones.
+interface EntryInteractionValidationGraph : ProductionValidationGraph, ViewModelGraph {
+    // The translation, text recognition, speech and model artifact runtimes are app modules, so only the app graph
+    // has the real ones.
     @Provides
     fun translationHostActions(): TranslationHostActions = mockk(relaxed = true)
 
@@ -47,7 +46,7 @@ interface EntryInteractionValidationGraph : FeatureRuntimeGraph, ViewModelGraph 
     @DependencyGraph.Factory
     fun interface Factory {
         fun create(
-            @Provides application: Application,
+            @Includes appServices: ControlledAppServiceBindings,
             @Provides profilePreferenceOwners: ProfilePreferenceOwnerInstaller,
         ): EntryInteractionValidationGraph
     }

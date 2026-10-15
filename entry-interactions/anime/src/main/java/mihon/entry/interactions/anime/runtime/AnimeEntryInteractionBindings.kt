@@ -31,8 +31,6 @@ import mihon.entry.interactions.runtime.EntryPlayerCache
 import mihon.entry.interactions.settings.AnimePlayerPreferences
 import mihon.entry.interactions.settings.EntryInteractionPreferences
 import mihon.feature.runtime.FeatureRuntimeWarmup
-import mihon.feature.runtime.injekt.InjektExport
-import mihon.feature.runtime.injekt.injektExport
 import tachiyomi.core.common.preference.InstalledProfilePreferenceOwner
 import tachiyomi.core.common.preference.ProfilePreferenceOwnerGroupId
 import tachiyomi.core.common.preference.ProfilePreferenceOwnerId
@@ -192,30 +190,4 @@ object AnimeEntryInteractionBindings {
     @IntoSet
     internal fun downloadManagerWarmup(downloadManager: () -> AnimeDownloadManager): FeatureRuntimeWarmup =
         FeatureRuntimeWarmup { downloadManager() }
-
-    @Provides
-    @IntoSet
-    internal fun exportDownloadProvider(provider: () -> AnimeDownloadProvider): InjektExport<*> =
-        injektExport(provider)
-
-    @Provides
-    @IntoSet
-    internal fun exportDownloadCache(cache: () -> AnimeDownloadCache): InjektExport<*> = injektExport(cache)
-
-    @Provides
-    @IntoSet
-    internal fun exportDownloader(downloader: () -> AnimeDownloader): InjektExport<*> = injektExport(downloader)
-
-    @Provides
-    @IntoSet
-    internal fun exportDownloadManager(manager: () -> AnimeDownloadManager): InjektExport<*> = injektExport(manager)
-
-    @Provides
-    @IntoSet
-    fun exportViewerSettingsProvider(provider: () -> AnimePlayerPreferences): InjektExport<*> = injektExport(provider)
-
-    @Provides
-    @IntoSet
-    internal fun exportMediaSession(mediaSession: () -> AnimeMediaSessionProcessor): InjektExport<*> =
-        injektExport(mediaSession)
 }

@@ -14,8 +14,6 @@ import mihon.feature.graph.FeatureGraphContributor
 import mihon.feature.graph.execution.FeatureExecutionHandler
 import mihon.feature.graph.execution.FeatureExecutionParticipantBinding
 import mihon.feature.runtime.FeatureRuntimeComposition
-import mihon.feature.runtime.injekt.InjektExport
-import mihon.feature.runtime.injekt.injektExport
 
 @ContributesTo(AppScope::class)
 @BindingContainer
@@ -50,8 +48,4 @@ object EntryDestructiveRemovalBindings {
             }
         },
     )
-
-    @Provides
-    @IntoSet
-    fun exportFeature(feature: () -> EntryDestructiveRemovalFeature): InjektExport<*> = injektExport(feature)
 }

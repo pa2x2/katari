@@ -9,8 +9,6 @@ import dev.zacsweers.metro.SingleIn
 import mihon.entry.interactions.runtime.EntryInteractions
 import mihon.feature.graph.FeatureGraphContributor
 import mihon.feature.runtime.FeatureRuntimeComposition
-import mihon.feature.runtime.injekt.InjektExport
-import mihon.feature.runtime.injekt.injektExport
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.entry.service.EntryChildOwnershipResolutionPort
@@ -51,12 +49,4 @@ object EntryNavigationBindings {
     @Provides
     @IntoSet
     fun continueGraphContributor(): FeatureGraphContributor = EntryContinueFeatureContributor
-
-    @Provides
-    @IntoSet
-    fun exportOpenFeature(feature: () -> EntryOpenFeature): InjektExport<*> = injektExport(feature)
-
-    @Provides
-    @IntoSet
-    fun exportContinueFeature(feature: () -> EntryContinueFeature): InjektExport<*> = injektExport(feature)
 }

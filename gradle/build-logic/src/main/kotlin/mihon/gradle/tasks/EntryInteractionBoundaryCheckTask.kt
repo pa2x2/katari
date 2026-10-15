@@ -758,7 +758,6 @@ private class EntryInteractionBoundaryRules(
             "domain/src/main/java/tachiyomi/domain/entry/interactor/SyncEntryWithSource.kt",
             "entry-interactions/src/main/java/mihon/entry/interactions/source/EntrySourceRefreshFeature.kt",
             "entry-interactions/src/main/java/mihon/entry/interactions/source/EntrySourceBindings.kt",
-            "entry-interactions/src/main/java/mihon/entry/interactions/runtime/production/EntryHostInjektBindings.kt",
         )
         if (file.relativePath in allowedPaths || isAppGraphCompositionPath(file.relativePath)) return
 

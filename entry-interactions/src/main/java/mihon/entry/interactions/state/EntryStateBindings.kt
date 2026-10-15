@@ -27,8 +27,6 @@ import mihon.feature.graph.execution.FeatureExecutionContextResolver
 import mihon.feature.graph.execution.FeatureExecutionHandler
 import mihon.feature.graph.execution.FeatureExecutionParticipantBinding
 import mihon.feature.runtime.FeatureRuntimeComposition
-import mihon.feature.runtime.injekt.InjektExport
-import mihon.feature.runtime.injekt.injektExport
 import tachiyomi.domain.entry.interactor.GetEntryWithChapters
 import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.library.service.GlobalLibraryPreferences
@@ -155,23 +153,6 @@ object EntryStateBindings {
             feature().restore(event.entry, state)
         },
     )
-
-    @Provides
-    @IntoSet
-    fun exportConsumptionFeature(feature: () -> EntryConsumptionFeature): InjektExport<*> = injektExport(feature)
-
-    @Provides
-    @IntoSet
-    fun exportBookmarkFeature(feature: () -> EntryBookmarkFeature): InjektExport<*> = injektExport(feature)
-
-    @Provides
-    @IntoSet
-    fun exportUpdateEligibilityFeature(feature: () -> EntryUpdateEligibilityFeature): InjektExport<*> =
-        injektExport(feature)
-
-    @Provides
-    @IntoSet
-    fun exportProgressFeature(feature: () -> EntryProgressFeature): InjektExport<*> = injektExport(feature)
 }
 
 internal fun entryProgressMediaSessionBinding(

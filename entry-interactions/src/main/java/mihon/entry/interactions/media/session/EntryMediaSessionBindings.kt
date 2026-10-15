@@ -10,8 +10,6 @@ import mihon.feature.graph.FeatureGraphContributor
 import mihon.feature.graph.execution.FeatureExecutionHandler
 import mihon.feature.graph.execution.FeatureExecutionParticipantBinding
 import mihon.feature.runtime.FeatureRuntimeComposition
-import mihon.feature.runtime.injekt.InjektExport
-import mihon.feature.runtime.injekt.injektExport
 import tachiyomi.domain.entry.repository.EntryRepository
 
 @ContributesTo(AppScope::class)
@@ -48,14 +46,6 @@ object EntryMediaSessionBindings {
         repository = repository,
         incognitoState = incognitoState,
     )
-
-    @Provides
-    @IntoSet
-    fun exportEventSink(sink: () -> EntryMediaSessionEventSink): InjektExport<*> = injektExport(sink)
-
-    @Provides
-    @IntoSet
-    fun exportFeature(feature: () -> EntryMediaSessionFeature): InjektExport<*> = injektExport(feature)
 }
 
 internal fun entryMediaSessionIncognitoBinding(

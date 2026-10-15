@@ -43,8 +43,6 @@ import mihon.feature.graph.execution.FeatureExecutionHandler
 import mihon.feature.graph.execution.FeatureExecutionParticipantBinding
 import mihon.feature.runtime.FeatureRuntimeComposition
 import mihon.feature.runtime.FeatureRuntimeWarmup
-import mihon.feature.runtime.injekt.InjektExport
-import mihon.feature.runtime.injekt.injektExport
 import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.domain.entry.repository.EntryRepository
 
@@ -289,30 +287,4 @@ object EntryMediaBindings {
     @Provides
     @IntoSet
     fun mediaCacheGraphContributor(): FeatureGraphContributor = EntryMediaCacheFeatureContributor
-
-    @Provides
-    @IntoSet
-    fun exportPlaybackPreferencesFeature(feature: () -> EntryPlaybackPreferencesFeature): InjektExport<*> =
-        injektExport(feature)
-
-    @Provides
-    @IntoSet
-    fun exportPreviewFeature(feature: () -> EntryPreviewFeature): InjektExport<*> = injektExport(feature)
-
-    @Provides
-    @IntoSet
-    fun exportImmersiveFeature(feature: () -> EntryImmersiveFeature): InjektExport<*> = injektExport(feature)
-
-    @Provides
-    @IntoSet
-    fun exportViewerSettingBinder(binder: () -> ViewerSettingBinder): InjektExport<*> = injektExport(binder)
-
-    @Provides
-    @IntoSet
-    fun exportViewerSettingsFeature(feature: () -> EntryViewerSettingsFeature): InjektExport<*> =
-        injektExport(feature)
-
-    @Provides
-    @IntoSet
-    fun exportMediaCacheFeature(feature: () -> EntryMediaCacheFeature): InjektExport<*> = injektExport(feature)
 }

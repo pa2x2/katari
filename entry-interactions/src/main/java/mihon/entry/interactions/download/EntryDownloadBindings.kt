@@ -47,8 +47,6 @@ import mihon.feature.graph.execution.FeatureExecutionHandler
 import mihon.feature.graph.execution.FeatureExecutionParticipantBinding
 import mihon.feature.runtime.FeatureRuntimeComposition
 import mihon.feature.runtime.FeatureRuntimeWarmup
-import mihon.feature.runtime.injekt.InjektExport
-import mihon.feature.runtime.injekt.injektExport
 import tachiyomi.domain.category.interactor.GetCategories
 import tachiyomi.domain.download.service.DownloadPreferences
 import tachiyomi.domain.entry.interactor.GetEntryWithChapters
@@ -85,20 +83,6 @@ object EntryDownloadBindings {
     @Provides
     @IntoSet
     fun runtimeGraphContributor(): FeatureGraphContributor = EntryDownloadRuntimeFeatureContributor
-
-    @Provides
-    @IntoSet
-    fun exportWorkController(controller: () -> EntryDownloadWorkController): InjektExport<*> =
-        injektExport(controller)
-
-    @Provides
-    @IntoSet
-    internal fun exportRuntimeCoordinator(coordinator: () -> EntryDownloadRuntimeCoordinator): InjektExport<*> =
-        injektExport(coordinator)
-
-    @Provides
-    @IntoSet
-    fun exportRuntimeFeature(feature: () -> EntryDownloadRuntimeFeature): InjektExport<*> = injektExport(feature)
 
     @Provides
     @SingleIn(AppScope::class)
@@ -165,26 +149,6 @@ object EntryDownloadBindings {
         FeatureRuntimeWarmup { manager().start() }
 
     @Provides
-    @IntoSet
-    internal fun exportSourceAccessResolver(resolver: () -> EntryDownloadSourceAccessResolver): InjektExport<*> =
-        injektExport(resolver)
-
-    @Provides
-    @IntoSet
-    fun exportActionFeature(feature: () -> EntryDownloadActionFeature): InjektExport<*> = injektExport(feature)
-
-    @Provides
-    @IntoSet
-    internal fun exportNotificationManager(manager: () -> EntryDownloadNotificationManager): InjektExport<*> =
-        injektExport(manager)
-
-    @Provides
-    @IntoSet
-    fun exportForegroundNotificationProvider(
-        provider: () -> EntryDownloadForegroundNotificationProvider,
-    ): InjektExport<*> = injektExport(provider)
-
-    @Provides
     @SingleIn(AppScope::class)
     internal fun automaticDownloadPolicy(
         entryChapterRepository: EntryChapterRepository,
@@ -235,22 +199,6 @@ object EntryDownloadBindings {
     ): FeatureExecutionParticipantBinding<*> = entryAutomaticDownloadLibraryUpdateBinding(coordinator)
 
     @Provides
-    @IntoSet
-    internal fun exportAutomaticDownloadPolicy(policy: () -> EntryAutomaticDownloadPolicy): InjektExport<*> =
-        injektExport(policy)
-
-    @Provides
-    @IntoSet
-    internal fun exportAutomaticDownloadCoordinator(
-        coordinator: () -> EntryAutomaticDownloadCoordinator,
-    ): InjektExport<*> = injektExport(coordinator)
-
-    @Provides
-    @IntoSet
-    fun exportAutomaticDownloadFeature(feature: () -> EntryAutomaticDownloadFeature): InjektExport<*> =
-        injektExport(feature)
-
-    @Provides
     @SingleIn(AppScope::class)
     fun lifecycleEventSink(feature: () -> EntryDownloadLifecycleFeature): EntryDownloadLifecycleEventSink =
         EntryDownloadLifecycleEventSink { event -> feature().onEvent(event) }
@@ -288,14 +236,6 @@ object EntryDownloadBindings {
     fun mediaSessionParticipant(
         feature: () -> EntryDownloadLifecycleFeature,
     ): FeatureExecutionParticipantBinding<*> = entryDownloadMediaSessionBinding(feature)
-
-    @Provides
-    @IntoSet
-    fun exportLifecycleEventSink(sink: () -> EntryDownloadLifecycleEventSink): InjektExport<*> = injektExport(sink)
-
-    @Provides
-    @IntoSet
-    fun exportLifecycleFeature(feature: () -> EntryDownloadLifecycleFeature): InjektExport<*> = injektExport(feature)
 
     @Provides
     @SingleIn(AppScope::class)
@@ -366,20 +306,6 @@ object EntryDownloadBindings {
             feature().restore(event.entry, state)
         },
     )
-
-    @Provides
-    @IntoSet
-    fun exportOptionsFeature(feature: () -> EntryDownloadOptionsFeature): InjektExport<*> = injektExport(feature)
-
-    @Provides
-    @IntoSet
-    fun exportSettingsFeature(feature: () -> EntryDownloadSettingsFeature): InjektExport<*> = injektExport(feature)
-
-    @Provides
-    @IntoSet
-    fun exportConfigurationBackupFeature(
-        feature: () -> EntryDownloadConfigurationBackupFeature,
-    ): InjektExport<*> = injektExport(feature)
 
     @Provides
     @SingleIn(AppScope::class)
@@ -552,11 +478,6 @@ object EntryDownloadBindings {
             }
         },
     )
-
-    @Provides
-    @IntoSet
-    fun exportMaintenanceFeature(feature: () -> EntryDownloadMaintenanceFeature): InjektExport<*> =
-        injektExport(feature)
 }
 
 internal fun entryAutomaticDownloadSourceRefreshBinding(

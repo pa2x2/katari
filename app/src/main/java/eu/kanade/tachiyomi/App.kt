@@ -20,7 +20,6 @@ import coil3.network.okhttp.OkHttpNetworkFetcherFactory
 import coil3.request.allowRgb565
 import coil3.request.crossfade
 import coil3.util.DebugLogger
-import dev.mihon.injekt.patchInjekt
 import dev.zacsweers.metro.createGraphFactory
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.domain.ui.model.setAppCompatDelegateThemeMode
@@ -36,7 +35,6 @@ import eu.kanade.tachiyomi.data.coil.ExtensionIconFetcher
 import eu.kanade.tachiyomi.data.coil.InstalledExtensionIconKeyer
 import eu.kanade.tachiyomi.data.coil.InstalledSourceIconKeyer
 import eu.kanade.tachiyomi.data.notification.Notifications
-import eu.kanade.tachiyomi.di.AppModule
 import eu.kanade.tachiyomi.network.NetworkPreferences
 import eu.kanade.tachiyomi.ui.base.delegate.SecureActivityDelegate
 import eu.kanade.tachiyomi.util.system.DeviceUtil
@@ -52,11 +50,13 @@ import logcat.AndroidLogcatLogger
 import logcat.LogPriority
 import logcat.LogcatLogger
 import mihon.app.di.AppGraph
+import mihon.app.di.injekt.MetroInjektRegistrar
 import mihon.app.localnetwork.LocalNetworkPermissionPrompter
 import mihon.core.metro.GraphProvider
 import mihon.core.migration.Migrator
 import mihon.core.migration.migrations.migrations
 import mihon.entry.interactions.runtime.addEntryInteractionImageComponents
+import mihon.feature.runtime.registerProfilePreferenceOwners
 import mihon.telemetry.TelemetryConfig
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.preference.Preference
@@ -65,14 +65,21 @@ import tachiyomi.core.common.util.system.logcat
 import tachiyomi.i18n.*
 import tachiyomi.presentation.widget.WidgetManager
 import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
+import uy.kohesive.injekt.api.InjektScope
 import kotlin.concurrent.thread
 import mihon.icons.materialsymbols.R as MaterialSymbolsR
 
 class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factory, GraphProvider<AppGraph> {
 
     // Built on first use rather than in onCreate: WorkManager and content providers can reach it before onCreate runs.
-    override val graph: AppGraph by lazy { createGraphFactory<AppGraph.Factory>().create(this) }
+    override val graph: AppGraph by lazy {
+        createGraphFactory<AppGraph.Factory>().create(this).also { it.registerProfilePreferenceOwners() }
+    }
+
+    init {
+        // Extensions resolve their services through Injekt, and the graph can load them before onCreate runs
+        Injekt = InjektScope(MetroInjektRegistrar(application = this, graphProvider = this))
+    }
 
     private val basePreferences: BasePreferences by lazy { graph.basePreferences }
     private val privacyPreferences: PrivacyPreferences by lazy { graph.privacyPreferences }
@@ -83,7 +90,6 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
     @SuppressLint("LaunchActivityFromNotification")
     override fun onCreate() {
         super<Application>.onCreate()
-        patchInjekt()
         TelemetryConfig.init(applicationContext)
 
         GlobalExceptionHandler.initialize(applicationContext, CrashActivity::class.java)
@@ -97,8 +103,6 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
         thread(name = "PreferencesPreload") { PreferenceManager.getDefaultSharedPreferences(this) }
         // The first use of Dispatchers.Main finds its factory with a ServiceLoader, which reads the APK
         thread(name = "MainDispatcherPreload") { Dispatchers.Main }
-
-        Injekt.importModule(AppModule(this, graph))
 
         // Asynchronously init expensive components for a faster cold start
         ContextCompat.getMainExecutor(this).execute {

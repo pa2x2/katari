@@ -27,8 +27,6 @@ import mihon.feature.graph.FeatureGraphContributor
 import mihon.feature.graph.execution.FeatureExecutionHandler
 import mihon.feature.graph.execution.FeatureExecutionParticipantBinding
 import mihon.feature.runtime.FeatureRuntimeComposition
-import mihon.feature.runtime.injekt.InjektExport
-import mihon.feature.runtime.injekt.injektExport
 import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.entry.service.EntryLibraryProgressResolutionPort
@@ -145,32 +143,4 @@ object EntryLibraryBindings {
             }
         },
     )
-
-    @Provides
-    @IntoSet
-    fun exportMembershipFeature(feature: () -> EntryLibraryMembershipFeature): InjektExport<*> =
-        injektExport(feature)
-
-    @Provides
-    @IntoSet
-    fun exportFilterFeature(feature: () -> EntryLibraryFilterFeature): InjektExport<*> = injektExport(feature)
-
-    @Provides
-    @IntoSet
-    fun exportProgressFeature(feature: () -> EntryLibraryProgressFeature): InjektExport<*> = injektExport(feature)
-
-    @Provides
-    @IntoSet
-    fun exportProgressResolutionPort(port: () -> EntryLibraryProgressResolutionPort): InjektExport<*> =
-        injektExport(port)
-
-    @Provides
-    @IntoSet
-    fun exportUpdateRefreshFeature(feature: () -> EntryLibraryUpdateRefreshFeature): InjektExport<*> =
-        injektExport(feature)
-
-    @Provides
-    @IntoSet
-    fun exportUpdateNotificationFeature(feature: () -> EntryLibraryUpdateNotificationFeature): InjektExport<*> =
-        injektExport(feature)
 }

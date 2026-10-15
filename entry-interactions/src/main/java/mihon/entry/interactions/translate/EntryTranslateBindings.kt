@@ -30,8 +30,6 @@ import mihon.feature.graph.FeatureGraphContributor
 import mihon.feature.graph.execution.FeatureExecutionParticipantBinding
 import mihon.feature.runtime.FeatureRuntimeComposition
 import mihon.feature.runtime.FeatureRuntimeWarmup
-import mihon.feature.runtime.injekt.InjektExport
-import mihon.feature.runtime.injekt.injektExport
 import mihon.translation.api.host.TranslationHostActions
 import tachiyomi.domain.entry.interactor.GetEntryWithChapters
 import tachiyomi.domain.entry.repository.EntryChapterRepository
@@ -206,45 +204,4 @@ object EntryTranslateBindings {
         appScope.launch { downloadRules().run() }
         appScope.launch { pausedNotification().run() }
     }
-
-    @Provides
-    @IntoSet
-    internal fun exportWorkController(controller: () -> EntryTranslateWorkController): InjektExport<*> =
-        injektExport(controller)
-
-    @Provides
-    @IntoSet
-    internal fun exportQueueRunner(runner: () -> EntryTranslateQueueRunner): InjektExport<*> = injektExport(runner)
-
-    @Provides
-    @IntoSet
-    internal fun exportNotifier(notifier: () -> EntryTranslateNotifier): InjektExport<*> = injektExport(notifier)
-
-    @Provides
-    @IntoSet
-    internal fun exportConditions(conditions: () -> EntryTranslateConditions): InjektExport<*> =
-        injektExport(conditions)
-
-    @Provides
-    @IntoSet
-    fun exportFeature(feature: () -> EntryTranslateFeature): InjektExport<*> = injektExport(feature)
-
-    @Provides
-    @IntoSet
-    internal fun exportDownloadChaining(chaining: () -> EntryTranslateDownloadChaining): InjektExport<*> =
-        injektExport(chaining)
-
-    @Provides
-    @IntoSet
-    internal fun exportDownloadRules(rules: () -> EntryTranslateDownloadRules): InjektExport<*> = injektExport(rules)
-
-    @Provides
-    @IntoSet
-    internal fun exportPausedNotification(
-        notification: () -> EntryTranslatePausedNotification,
-    ): InjektExport<*> = injektExport(notification)
-
-    @Provides
-    @IntoSet
-    internal fun exportAhead(ahead: () -> EntryTranslateAhead): InjektExport<*> = injektExport(ahead)
 }

@@ -8,8 +8,6 @@ import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import mihon.entry.interactions.runtime.ReaderSettingsSurfaceCapabilities
 import mihon.feature.runtime.FeatureRuntimeWarmup
-import mihon.feature.runtime.injekt.InjektExport
-import mihon.feature.runtime.injekt.injektExport
 import tachiyomi.core.common.preference.InstalledProfilePreferenceOwner
 import tachiyomi.core.common.preference.ProfilePreferenceKeyPattern
 import tachiyomi.core.common.preference.ProfilePreferenceOwnerId
@@ -60,14 +58,4 @@ object ReaderChapterPreparationBindings {
     @IntoSet
     fun settingsProviderWarmup(provider: () -> ReaderChapterPreparationSettingsProvider): FeatureRuntimeWarmup =
         FeatureRuntimeWarmup { provider() }
-
-    @Provides
-    @IntoSet
-    fun exportPreferences(preferences: () -> ReaderChapterPreparationPreferences): InjektExport<*> =
-        injektExport(preferences)
-
-    @Provides
-    @IntoSet
-    fun exportSettingsProvider(provider: () -> ReaderChapterPreparationSettingsProvider): InjektExport<*> =
-        injektExport(provider)
 }

@@ -35,8 +35,6 @@ import mihon.feature.graph.execution.FeatureExecutionContextResolver
 import mihon.feature.graph.execution.FeatureExecutionHandler
 import mihon.feature.graph.execution.FeatureExecutionParticipantBinding
 import mihon.feature.runtime.FeatureRuntimeComposition
-import mihon.feature.runtime.injekt.InjektExport
-import mihon.feature.runtime.injekt.injektExport
 import tachiyomi.domain.entry.model.Entry
 
 @ContributesTo(AppScope::class)
@@ -177,15 +175,6 @@ object EntryTrackingBindings {
             profileMoveTrackingStateHost.move(event.plan.stateRequest())
         },
     )
-
-    @Provides
-    @IntoSet
-    fun exportFeature(feature: () -> EntryTrackingFeature): InjektExport<*> = injektExport(feature)
-
-    @Provides
-    @IntoSet
-    fun exportBackupFeature(backupFeature: () -> EntryTrackingBackupFeature): InjektExport<*> =
-        injektExport(backupFeature)
 }
 
 internal fun entryTrackingMediaSessionBinding(

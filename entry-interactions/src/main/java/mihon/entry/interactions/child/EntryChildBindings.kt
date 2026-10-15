@@ -24,8 +24,6 @@ import mihon.feature.graph.FeatureGraphContributor
 import mihon.feature.graph.execution.FeatureExecutionHandler
 import mihon.feature.graph.execution.FeatureExecutionParticipantBinding
 import mihon.feature.runtime.FeatureRuntimeComposition
-import mihon.feature.runtime.injekt.InjektExport
-import mihon.feature.runtime.injekt.injektExport
 import tachiyomi.domain.entry.interactor.GetEntry
 import tachiyomi.domain.entry.interactor.NetworkToLocalEntry
 import tachiyomi.domain.source.service.EntrySourceDescriptionResolutionPort
@@ -142,18 +140,4 @@ object EntryChildBindings {
             profileMoveChildGroupFilterStateHost.move(event.plan.stateRequest())
         },
     )
-
-    @Provides
-    @IntoSet
-    fun exportChildListFeature(feature: () -> EntryChildListFeature): InjektExport<*> = injektExport(feature)
-
-    @Provides
-    @IntoSet
-    fun exportChildGroupFilterFeature(feature: () -> EntryChildGroupFilterFeature): InjektExport<*> =
-        injektExport(feature)
-
-    @Provides
-    @IntoSet
-    fun exportRelatedEntriesFeature(feature: () -> EntryRelatedEntriesFeature): InjektExport<*> =
-        injektExport(feature)
 }

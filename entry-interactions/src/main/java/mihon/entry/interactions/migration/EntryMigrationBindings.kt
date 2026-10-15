@@ -27,8 +27,6 @@ import mihon.feature.graph.FeatureGraphContributor
 import mihon.feature.graph.execution.FeatureDurableExecutionParticipantBinding
 import mihon.feature.runtime.FeatureRuntimeComposition
 import mihon.feature.runtime.FeatureRuntimeWarmup
-import mihon.feature.runtime.injekt.InjektExport
-import mihon.feature.runtime.injekt.injektExport
 
 @ContributesTo(AppScope::class)
 @BindingContainer
@@ -125,41 +123,4 @@ object EntryMigrationBindings {
             delivery().runRetryLoop()
         }
     }
-
-    @Provides
-    @IntoSet
-    internal fun exportDurableConsequences(
-        consequences: () -> EntryMigrationDurableConsequences,
-    ): InjektExport<*> = injektExport(consequences)
-
-    @Provides
-    @IntoSet
-    internal fun exportOptionDiscovery(optionDiscovery: () -> EntryMigrationOptionDiscovery): InjektExport<*> =
-        injektExport(optionDiscovery)
-
-    @Provides
-    @IntoSet
-    internal fun exportTransitionPreparation(
-        transitionPreparation: () -> EntryMigrationTransitionPreparation,
-    ): InjektExport<*> = injektExport(transitionPreparation)
-
-    @Provides
-    @IntoSet
-    internal fun exportCustomCoverOrphanCleanup(
-        cleanup: () -> EntryMigrationCustomCoverOrphanCleanup,
-    ): InjektExport<*> = injektExport(cleanup)
-
-    @Provides
-    @IntoSet
-    internal fun exportConsequenceDelivery(delivery: () -> EntryMigrationConsequenceDelivery): InjektExport<*> =
-        injektExport(delivery)
-
-    @Provides
-    @IntoSet
-    fun exportConsequenceStatusFeature(feature: () -> EntryMigrationConsequenceStatusFeature): InjektExport<*> =
-        injektExport(feature)
-
-    @Provides
-    @IntoSet
-    fun exportFeature(feature: () -> EntryMigrationFeature): InjektExport<*> = injektExport(feature)
 }

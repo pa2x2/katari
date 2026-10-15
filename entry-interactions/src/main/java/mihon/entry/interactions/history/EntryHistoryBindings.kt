@@ -13,8 +13,6 @@ import mihon.feature.graph.contextEvidence
 import mihon.feature.graph.execution.FeatureExecutionContextResolver
 import mihon.feature.graph.execution.FeatureExecutionHandler
 import mihon.feature.graph.execution.FeatureExecutionParticipantBinding
-import mihon.feature.runtime.injekt.InjektExport
-import mihon.feature.runtime.injekt.injektExport
 import tachiyomi.domain.history.repository.HistoryRepository
 
 @ContributesTo(AppScope::class)
@@ -32,10 +30,6 @@ object EntryHistoryBindings {
     @IntoSet
     fun mediaSessionParticipant(feature: () -> EntryHistoryFeature): FeatureExecutionParticipantBinding<*> =
         entryHistoryMediaSessionBinding(feature)
-
-    @Provides
-    @IntoSet
-    fun exportFeature(feature: () -> EntryHistoryFeature): InjektExport<*> = injektExport(feature)
 }
 
 internal fun entryHistoryMediaSessionBinding(

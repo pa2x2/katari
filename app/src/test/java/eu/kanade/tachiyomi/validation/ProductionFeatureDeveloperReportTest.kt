@@ -32,7 +32,7 @@ class ProductionFeatureDeveloperReportTest {
     @Test
     fun `production composition renders the evaluated developer report`() = runTest {
         val graph = createGraphFactory<ProductionFeatureValidationGraph.Factory>().create(
-            application = environment.application,
+            appServices = environment.appServices,
             profilePreferenceOwners = environment.profilePreferenceOwners,
         )
         val composition = environment.composition(graph)

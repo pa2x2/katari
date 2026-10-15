@@ -10,8 +10,6 @@ import mihon.core.metro.BasePreferenceStore
 import mihon.entry.interactions.reader.preparation.ReaderChapterPreparationSettingsProvider
 import mihon.entry.viewer.settings.shared.ReaderSharedSettingsProvider
 import mihon.entry.viewer.settings.shared.ReaderSharedSettingsRegistry
-import mihon.feature.runtime.injekt.InjektExport
-import mihon.feature.runtime.injekt.injektExport
 import tachiyomi.core.common.preference.PreferenceStore
 
 @ContributesTo(AppScope::class)
@@ -29,13 +27,4 @@ object ReaderSettingsBindings {
         chapterPreparation: ReaderChapterPreparationSettingsProvider,
         typeProviders: Set<ReaderSharedSettingsProvider>,
     ): ReaderSharedSettingsRegistry = ReaderSharedSettingsRegistry(listOf(chapterPreparation) + typeProviders)
-
-    @Provides
-    @IntoSet
-    fun exportBasePreferences(preferences: () -> ReaderBasePreferences): InjektExport<*> = injektExport(preferences)
-
-    @Provides
-    @IntoSet
-    fun exportSharedSettingsRegistry(registry: () -> ReaderSharedSettingsRegistry): InjektExport<*> =
-        injektExport(registry)
 }

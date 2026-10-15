@@ -11,8 +11,6 @@ import mihon.entry.interactions.download.EntryDownloadNotificationActions
 import mihon.entry.interactions.media.session.EntryMediaSessionIncognitoState
 import mihon.feature.graph.FeatureGraphContributor
 import mihon.feature.runtime.FeatureRuntimeComposition
-import mihon.feature.runtime.injekt.InjektExport
-import mihon.feature.runtime.injekt.injektExport
 
 /**
  * Assembles the Entry interactions from the plugins the Entry type modules contribute. Each plugin also declares its
@@ -42,37 +40,4 @@ object EntryInteractionRuntimeBindings {
     @SingleIn(AppScope::class)
     fun imageComponentInstallers(installers: Set<EntryImageComponentInstaller>): EntryImageComponentInstallers =
         EntryImageComponentInstallers(installers.toList())
-
-    @Provides
-    @IntoSet
-    fun exportInteractions(interactions: () -> EntryInteractions): InjektExport<*> = injektExport(interactions)
-
-    @Provides
-    @IntoSet
-    fun exportComposition(composition: () -> EntryInteractionComposition): InjektExport<*> =
-        injektExport(composition)
-
-    @Provides
-    @IntoSet
-    fun exportImageComponentInstallers(installers: () -> EntryImageComponentInstallers): InjektExport<*> =
-        injektExport(installers)
-
-    @Provides
-    @IntoSet
-    fun exportActivityTheme(theme: () -> EntryInteractionActivityTheme): InjektExport<*> = injektExport(theme)
-
-    @Provides
-    @IntoSet
-    fun exportNotificationActions(actions: () -> EntryDownloadNotificationActions): InjektExport<*> =
-        injektExport(actions)
-
-    @Provides
-    @IntoSet
-    fun exportMediaSessionIncognitoState(state: () -> EntryMediaSessionIncognitoState): InjektExport<*> =
-        injektExport(state)
-
-    @Provides
-    @IntoSet
-    fun exportChildGroupFilterDataSource(dataSource: () -> EntryChildGroupFilterDataSource): InjektExport<*> =
-        injektExport(dataSource)
 }

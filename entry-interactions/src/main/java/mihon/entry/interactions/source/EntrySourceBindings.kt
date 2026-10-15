@@ -15,8 +15,6 @@ import mihon.feature.graph.FeatureGraphContributor
 import mihon.feature.graph.execution.FeatureExecutionHandler
 import mihon.feature.graph.execution.FeatureExecutionParticipantBinding
 import mihon.feature.runtime.FeatureRuntimeComposition
-import mihon.feature.runtime.injekt.InjektExport
-import mihon.feature.runtime.injekt.injektExport
 import tachiyomi.domain.entry.interactor.NetworkToLocalEntry
 import tachiyomi.domain.entry.interactor.SyncEntryWithSource
 import tachiyomi.domain.entry.repository.EntryChapterRepository
@@ -154,33 +152,4 @@ object EntrySourceBindings {
     @Provides
     @IntoSet
     fun trackerSourceAdapterGraphContributor(): FeatureGraphContributor = EntryTrackerSourceAdapterFeatureContributor
-
-    @Provides
-    @IntoSet
-    fun exportSettingsFeature(feature: () -> EntrySourceSettingsFeature): InjektExport<*> = injektExport(feature)
-
-    @Provides
-    @IntoSet
-    fun exportHomeFeature(feature: () -> EntrySourceHomeFeature): InjektExport<*> = injektExport(feature)
-
-    @Provides
-    @IntoSet
-    fun exportCoverNetworkFeature(feature: () -> EntryCoverNetworkFeature): InjektExport<*> = injektExport(feature)
-
-    @Provides
-    @IntoSet
-    fun exportRefreshFeature(feature: () -> EntrySourceRefreshFeature): InjektExport<*> = injektExport(feature)
-
-    @Provides
-    @IntoSet
-    fun exportWebViewFeature(feature: () -> EntryWebViewFeature): InjektExport<*> = injektExport(feature)
-
-    @Provides
-    @IntoSet
-    fun exportDeepLinkFeature(feature: () -> EntryDeepLinkFeature): InjektExport<*> = injektExport(feature)
-
-    @Provides
-    @IntoSet
-    fun exportTrackerSourceAdapterFeature(feature: () -> EntryTrackerSourceAdapterFeature): InjektExport<*> =
-        injektExport(feature)
 }

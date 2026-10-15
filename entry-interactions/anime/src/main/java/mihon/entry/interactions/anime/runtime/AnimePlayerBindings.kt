@@ -22,8 +22,6 @@ import mihon.entry.interactions.anime.download.AnimeDownloadProvider
 import mihon.entry.interactions.anime.media.session.AnimeMediaSessionProcessor
 import mihon.entry.interactions.runtime.EntryPlayerCache
 import mihon.entry.interactions.source.EntryWebViewFeature
-import mihon.feature.runtime.injekt.InjektExport
-import mihon.feature.runtime.injekt.injektExport
 import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.domain.entry.interactor.GetEntryWithChapters
 import tachiyomi.domain.entry.repository.EntryChapterRepository
@@ -103,27 +101,4 @@ object AnimePlayerBindings {
             webViewFeature = webViewFeature,
         )
     }
-
-    @Provides
-    @IntoSet
-    internal fun exportResolveVideoStream(resolveVideoStream: () -> ResolveVideoStream): InjektExport<*> =
-        injektExport(resolveVideoStream)
-
-    @Provides
-    @IntoSet
-    internal fun exportVideoStreamResolver(resolver: () -> VideoStreamResolver): InjektExport<*> =
-        injektExport(resolver)
-
-    @Provides
-    @IntoSet
-    internal fun exportMediaCache(cache: () -> VideoPlayerMediaCache): InjektExport<*> = injektExport(cache)
-
-    @Provides
-    @IntoSet
-    fun exportPlayerCache(cache: () -> EntryPlayerCache): InjektExport<*> = injektExport(cache)
-
-    @Provides
-    @IntoSet
-    internal fun exportBasePreferences(preferences: () -> AnimePlayerBasePreferences): InjektExport<*> =
-        injektExport(preferences)
 }

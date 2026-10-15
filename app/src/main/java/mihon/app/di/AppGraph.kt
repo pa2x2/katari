@@ -37,8 +37,7 @@ import eu.kanade.tachiyomi.ui.webview.WebViewGraph
 import eu.kanade.tachiyomi.util.CrashLogGraph
 import eu.kanade.tachiyomi.util.system.TabletUiGraph
 import eu.kanade.tachiyomi.widget.WidgetGraph
-import mihon.app.di.injekt.AppInjektExports
-import mihon.app.di.injekt.DomainInjektExports
+import mihon.app.di.injekt.ExtensionInjektGraph
 import mihon.core.migration.MigrationGraph
 import mihon.entry.interactions.host.AppEntryHostBindings
 import mihon.feature.appupdate.ui.AppUpdateGraph
@@ -54,14 +53,13 @@ import mihon.feature.runtime.FeatureRuntimeGraph
         PreferenceBindings::class,
         DataBindings::class,
         AppEntryHostBindings::class,
-        AppInjektExports::class,
-        DomainInjektExports::class,
     ],
 )
 interface AppGraph :
     FeatureRuntimeGraph,
     ViewModelGraph,
     AppStartupGraph,
+    ExtensionInjektGraph,
     ActivityDelegateGraph,
     AppMigratingGraph,
     AppUpdateGraph,

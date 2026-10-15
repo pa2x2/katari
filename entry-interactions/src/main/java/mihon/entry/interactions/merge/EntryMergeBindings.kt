@@ -41,8 +41,6 @@ import mihon.feature.graph.execution.FeatureExecutionHandler
 import mihon.feature.graph.execution.FeatureExecutionParticipantBinding
 import mihon.feature.runtime.FeatureRuntimeComposition
 import mihon.feature.runtime.FeatureRuntimeWarmup
-import mihon.feature.runtime.injekt.InjektExport
-import mihon.feature.runtime.injekt.injektExport
 import tachiyomi.domain.entry.service.EntryChildOwnershipResolutionPort
 import tachiyomi.domain.entry.service.EntryLibraryGroupingResolutionPort
 
@@ -375,101 +373,6 @@ object EntryMergeBindings {
             delivery().runRetryLoop()
         }
     }
-
-    @Provides
-    @IntoSet
-    internal fun exportDurableConsequences(consequences: () -> EntryMergeDurableConsequences): InjektExport<*> =
-        injektExport(consequences)
-
-    @Provides
-    @IntoSet
-    internal fun exportLegacyConsequenceDelivery(
-        delivery: () -> EntryMergeLegacyConsequenceDelivery,
-    ): InjektExport<*> = injektExport(delivery)
-
-    @Provides
-    @IntoSet
-    internal fun exportConsequenceDelivery(delivery: () -> EntryMergeConsequenceDelivery): InjektExport<*> =
-        injektExport(delivery)
-
-    @Provides
-    @IntoSet
-    fun exportFeature(feature: () -> EntryMergeFeature): InjektExport<*> = injektExport(feature)
-
-    @Provides
-    @IntoSet
-    fun exportCandidateFeature(feature: () -> EntryMergeCandidateFeature): InjektExport<*> = injektExport(feature)
-
-    @Provides
-    @IntoSet
-    fun exportNavigationFeature(feature: () -> EntryMergeNavigationFeature): InjektExport<*> = injektExport(feature)
-
-    @Provides
-    @IntoSet
-    internal fun exportLibraryGroupingCoordinator(
-        coordinator: () -> EntryMergeLibraryGroupingCoordinator,
-    ): InjektExport<*> = injektExport(coordinator)
-
-    @Provides
-    @IntoSet
-    fun exportLibraryGroupingFeature(feature: () -> EntryMergeLibraryGroupingFeature): InjektExport<*> =
-        injektExport(feature)
-
-    @Provides
-    @IntoSet
-    fun exportLibraryGroupingResolutionPort(port: () -> EntryLibraryGroupingResolutionPort): InjektExport<*> =
-        injektExport(port)
-
-    @Provides
-    @IntoSet
-    fun exportBackupFeature(feature: () -> EntryMergeBackupFeature): InjektExport<*> = injektExport(feature)
-
-    @Provides
-    @IntoSet
-    internal fun exportBackupRestoreParticipation(
-        participation: () -> EntryMergeBackupRestoreParticipation,
-    ): InjektExport<*> = injektExport(participation)
-
-    @Provides
-    @IntoSet
-    fun exportLibraryLifecycleFeature(feature: () -> EntryMergeLibraryLifecycleFeature): InjektExport<*> =
-        injektExport(feature)
-
-    @Provides
-    @IntoSet
-    fun exportMetadataRefreshFeature(feature: () -> EntryMergeMetadataRefreshFeature): InjektExport<*> =
-        injektExport(feature)
-
-    @Provides
-    @IntoSet
-    fun exportProfileMoveFeature(feature: () -> EntryMergeProfileMoveFeature): InjektExport<*> =
-        injektExport(feature)
-
-    @Provides
-    @IntoSet
-    fun exportConsequenceStatusFeature(feature: () -> EntryMergeConsequenceStatusFeature): InjektExport<*> =
-        injektExport(feature)
-
-    @Provides
-    @IntoSet
-    fun exportMigrationFeature(feature: () -> EntryMergeMigrationFeature): InjektExport<*> = injektExport(feature)
-
-    @Provides
-    @IntoSet
-    internal fun exportChildOwnershipProjection(
-        projection: () -> EntryMergeChildOwnershipProjection,
-    ): InjektExport<*> = injektExport(projection)
-
-    @Provides
-    @IntoSet
-    fun exportChildOwnershipResolutionPort(port: () -> EntryChildOwnershipResolutionPort): InjektExport<*> =
-        injektExport(port)
-
-    @Provides
-    @IntoSet
-    internal fun exportDownloadOwnershipProjection(
-        projection: () -> EntryMergeDownloadOwnershipProjection,
-    ): InjektExport<*> = injektExport(projection)
 }
 
 private fun EntryMergeProfileMoveExecutionResult.requireApplied() {

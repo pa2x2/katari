@@ -9,8 +9,6 @@ import dev.zacsweers.metro.SingleIn
 import mihon.entry.interactions.runtime.EntryInteractions
 import mihon.feature.graph.FeatureGraphContributor
 import mihon.feature.runtime.FeatureRuntimeComposition
-import mihon.feature.runtime.injekt.InjektExport
-import mihon.feature.runtime.injekt.injektExport
 
 @ContributesTo(AppScope::class)
 @BindingContainer
@@ -28,8 +26,4 @@ object EntryPresentationBindings {
     @Provides
     @IntoSet
     fun graphContributor(): FeatureGraphContributor = EntryTypePresentationFeatureContributor
-
-    @Provides
-    @IntoSet
-    fun exportFeature(feature: () -> EntryTypePresentationFeature): InjektExport<*> = injektExport(feature)
 }

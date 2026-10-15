@@ -41,8 +41,6 @@ import mihon.entry.interactions.runtime.EntryPageImageCache
 import mihon.entry.interactions.runtime.ReaderSettingsSurfaceCapabilities
 import mihon.entry.interactions.settings.EntryInteractionPreferences
 import mihon.feature.runtime.FeatureRuntimeWarmup
-import mihon.feature.runtime.injekt.InjektExport
-import mihon.feature.runtime.injekt.injektExport
 import mihon.text.recognition.api.TextRecognitionFeature
 import mihon.translation.api.TranslationFeature
 import mihon.translation.api.host.TranslationHostActions
@@ -264,51 +262,6 @@ object MangaEntryInteractionBindings {
         surfaceId = MangaReaderSettings.PROVIDER_ID,
         capabilities = MangaReaderSettings.READER_CAPABILITIES,
     )
-
-    @Provides
-    @IntoSet
-    internal fun exportPageStore(store: () -> MangaPageStore): InjektExport<*> = injektExport(store)
-
-    @Provides
-    @IntoSet
-    internal fun exportPageAcquisitionCoordinator(
-        coordinator: () -> MangaPageAcquisitionCoordinator,
-    ): InjektExport<*> = injektExport(coordinator)
-
-    @Provides
-    @IntoSet
-    fun exportPageImageCache(cache: () -> EntryPageImageCache): InjektExport<*> = injektExport(cache)
-
-    @Provides
-    @IntoSet
-    internal fun exportDownloadProvider(provider: () -> DownloadProvider): InjektExport<*> = injektExport(provider)
-
-    @Provides
-    @IntoSet
-    internal fun exportDownloadManager(manager: () -> DownloadManager): InjektExport<*> = injektExport(manager)
-
-    @Provides
-    @IntoSet
-    internal fun exportDownloadCache(cache: () -> DownloadCache): InjektExport<*> = injektExport(cache)
-
-    @Provides
-    @IntoSet
-    internal fun exportChapterTranslationStore(store: () -> MangaChapterTranslationStore): InjektExport<*> =
-        injektExport(store)
-
-    @Provides
-    @IntoSet
-    internal fun exportViewerSettingsProvider(provider: () -> MangaReaderSettingsProvider): InjektExport<*> =
-        injektExport(provider)
-
-    @Provides
-    @IntoSet
-    fun exportReaderSettings(settings: () -> MangaReaderSettings): InjektExport<*> = injektExport(settings)
-
-    @Provides
-    @IntoSet
-    internal fun exportMediaSession(mediaSession: () -> MangaMediaSessionProcessor): InjektExport<*> =
-        injektExport(mediaSession)
 }
 
 private const val LEGACY_MANGA_VIEWER_MASK = 0x3FL
