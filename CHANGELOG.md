@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.16.1] - 2026-10-15
+
+### 🐛 Fixed
+
+- Source headers in global search show their arrow again.
+- In the manga reader's translate mode, the translation popup no longer covers the floating toolbar.
+
 ## [1.16.0] - 2026-10-15
 
 This is a technical release. Metro replaces Injekt for dependency injection, the Feature graph is gone, and every screen now uses one UI kit.
@@ -768,7 +775,8 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v1.16.0...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/v1.16.1...HEAD
+[1.16.1]: https://github.com/pa2x2/katari/releases/tag/v1.16.1
 [1.16.0]: https://github.com/pa2x2/katari/releases/tag/v1.16.0
 [1.15.1]: https://github.com/pa2x2/katari/releases/tag/v1.15.1
 [1.15.0]: https://github.com/pa2x2/katari/releases/tag/v1.15.0
