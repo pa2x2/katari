@@ -24,13 +24,13 @@ internal class EntryTranslateAhead(
     private val download: EntryDownloadInteraction,
     private val getEntryWithChapters: GetEntryWithChapters,
     private val entries: EntryRepository,
-) : EntryTranslateAheadTrigger {
+) {
     private val mutex = Mutex()
 
     /** Chapters whose progress already triggered translation ahead in this process. */
     private val triggered = mutableSetOf<Long>()
 
-    override suspend fun onProgressed(
+    suspend fun onProgressed(
         visibleEntry: Entry,
         child: EntryChapter,
         fraction: Double,

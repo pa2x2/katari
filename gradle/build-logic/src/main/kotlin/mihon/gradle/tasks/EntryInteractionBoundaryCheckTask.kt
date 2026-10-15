@@ -376,8 +376,9 @@ private class EntryInteractionBoundaryRules(
                 findings += Finding(
                     relativePath = file.relativePath,
                     lineNumber = reference.lineNumber,
-                    reason = "media runtimes must emit EntryMediaSessionEvent facts; $operation belongs to an " +
-                        "independently contributed Feature consequence",
+                    reason =
+                    "media runtimes must emit EntryMediaSessionEvent facts; $operation belongs to the shared " +
+                        "media-session consequences",
                 )
             }
         }

@@ -36,7 +36,6 @@ import mihon.entry.interactions.download.maintenance.migration.EntryDownloadMigr
 import mihon.entry.interactions.download.maintenance.migration.entryDownloadMigrationBinding
 import mihon.entry.interactions.download.maintenance.migration.entryDownloadMigrationOptionBinding
 import mihon.entry.interactions.download.notification.AndroidEntryDownloadNotifier
-import mihon.entry.interactions.media.session.EntryMediaSessionEvent
 import mihon.entry.interactions.merge.EntryMergeDownloadOwnershipProjection
 import mihon.entry.interactions.persistence.backup.decodeEntryBackupState
 import mihon.entry.interactions.persistence.backup.entryBackupStateEnvelope
@@ -226,16 +225,6 @@ object EntryDownloadBindings {
     @Provides
     @IntoSet
     fun lifecycleGraphContributor(): FeatureGraphContributor = EntryDownloadLifecycleFeatureContributor
-
-    @Provides
-    @IntoSet
-    fun mediaSessionGraphContributor(): FeatureGraphContributor = EntryDownloadMediaSessionContributor
-
-    @Provides
-    @IntoSet
-    fun mediaSessionParticipant(
-        feature: () -> EntryDownloadLifecycleFeature,
-    ): FeatureExecutionParticipantBinding<*> = entryDownloadMediaSessionBinding(feature)
 
     @Provides
     @SingleIn(AppScope::class)
@@ -500,35 +489,5 @@ internal fun entryAutomaticDownloadLibraryUpdateBinding(
             complete = EntryAutomaticDownloadBatch::complete,
         )
         batch.enqueue(event.entry, event.newChildren)
-    },
-)
-
-internal fun entryDownloadMediaSessionBinding(
-    feature: () -> EntryDownloadLifecycleFeature,
-) = FeatureExecutionParticipantBinding(
-    definition = ENTRY_DOWNLOAD_MEDIA_SESSION_PARTICIPANT,
-    handler = FeatureExecutionHandler { execution ->
-        val event = execution.event as? EntryMediaSessionEvent.Progressed
-            ?: return@FeatureExecutionHandler
-        event.fraction?.let { fraction ->
-            feature().onEvent(
-                EntryDownloadLifecycleEvent.Progressed(
-                    visibleEntry = event.visibleEntry,
-                    child = event.child,
-                    fraction = fraction,
-                    deduplicateByNumber = event.deduplicateDownloadByNumber,
-                ),
-            )
-        }
-        if (execution.progressResult?.completedNow == true) {
-            feature().onEvent(
-                EntryDownloadLifecycleEvent.Completed(
-                    visibleEntry = event.visibleEntry,
-                    child = event.child,
-                    deduplicateByNumber = event.deduplicateDownloadByNumber,
-                    completeEquivalentChildrenByNumber = event.completeEquivalentChildrenByNumber,
-                ),
-            )
-        }
     },
 )

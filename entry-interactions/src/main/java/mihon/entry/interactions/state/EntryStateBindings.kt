@@ -8,8 +8,6 @@ import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import mihon.entry.interactions.download.EntryDownloadLifecycleEventSink
 import mihon.entry.interactions.history.EntryHistoryFeature
-import mihon.entry.interactions.media.session.EntryMediaSessionConsequence
-import mihon.entry.interactions.media.session.EntryMediaSessionEvent
 import mihon.entry.interactions.persistence.backup.decodeEntryBackupState
 import mihon.entry.interactions.persistence.backup.entryBackupStateEnvelope
 import mihon.entry.interactions.runtime.EntryInteractions
@@ -21,9 +19,7 @@ import mihon.entry.interactions.state.backup.EntryProgressBackupContributor
 import mihon.entry.interactions.state.migration.EntryProgressMigrationContributor
 import mihon.entry.interactions.state.migration.entryProgressMigrationBinding
 import mihon.feature.graph.FeatureGraphContributor
-import mihon.feature.graph.contextEvidence
 import mihon.feature.graph.execution.FeatureDurableExecutionParticipantBinding
-import mihon.feature.graph.execution.FeatureExecutionContextResolver
 import mihon.feature.graph.execution.FeatureExecutionHandler
 import mihon.feature.graph.execution.FeatureExecutionParticipantBinding
 import mihon.feature.runtime.FeatureRuntimeComposition
@@ -103,18 +99,9 @@ object EntryStateBindings {
 
     @Provides
     @IntoSet
-    fun progressMediaSessionGraphContributor(): FeatureGraphContributor = EntryProgressMediaSessionContributor
-
-    @Provides
-    @IntoSet
     fun progressMigrationParticipant(
         feature: () -> EntryProgressFeature,
     ): FeatureDurableExecutionParticipantBinding<*> = entryProgressMigrationBinding(feature)
-
-    @Provides
-    @IntoSet
-    fun progressMediaSessionParticipant(feature: () -> EntryProgressFeature): FeatureExecutionParticipantBinding<*> =
-        entryProgressMediaSessionBinding(feature)
 
     @Provides
     @IntoSet
@@ -154,22 +141,3 @@ object EntryStateBindings {
         },
     )
 }
-
-internal fun entryProgressMediaSessionBinding(
-    feature: () -> EntryProgressFeature,
-) = FeatureExecutionParticipantBinding(
-    definition = ENTRY_PROGRESS_MEDIA_SESSION_PARTICIPANT,
-    contextResolver = FeatureExecutionContextResolver { execution ->
-        listOf(
-            contextEvidence(
-                ENTRY_MEDIA_SESSION_PROGRESS_ALLOWED,
-                execution.permits(EntryMediaSessionConsequence.RECORD_PROGRESS),
-            ),
-        )
-    },
-    handler = FeatureExecutionHandler { execution ->
-        val event = execution.event as? EntryMediaSessionEvent.Progressed
-            ?: return@FeatureExecutionHandler
-        execution.progressResult = feature().recordMediaProgress(event)
-    },
-)

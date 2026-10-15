@@ -15,8 +15,6 @@ import mihon.entry.interactions.download.EntryAutomaticDownloadFeature
 import mihon.entry.interactions.download.EntryDownloadNotificationActions
 import mihon.entry.interactions.runtime.EntryInteractions
 import mihon.entry.interactions.translate.ahead.EntryTranslateAhead
-import mihon.entry.interactions.translate.ahead.EntryTranslateAheadContributor
-import mihon.entry.interactions.translate.ahead.entryTranslateAheadMediaSessionBinding
 import mihon.entry.interactions.translate.download.EntryTranslateDownloadChaining
 import mihon.entry.interactions.translate.download.EntryTranslateDownloadRules
 import mihon.entry.interactions.translate.notification.EntryTranslateNotifier
@@ -27,7 +25,6 @@ import mihon.entry.interactions.translate.work.EntryTranslateQueueRunner
 import mihon.entry.interactions.translate.work.EntryTranslateWorkController
 import mihon.entry.interactions.translation.EntryTranslationLanguagesFeature
 import mihon.feature.graph.FeatureGraphContributor
-import mihon.feature.graph.execution.FeatureExecutionParticipantBinding
 import mihon.feature.runtime.FeatureRuntimeComposition
 import mihon.feature.runtime.FeatureRuntimeWarmup
 import mihon.translation.api.host.TranslationHostActions
@@ -180,16 +177,6 @@ object EntryTranslateBindings {
     @Provides
     @IntoSet
     fun graphContributor(): FeatureGraphContributor = EntryTranslateFeatureContributor
-
-    @Provides
-    @IntoSet
-    fun aheadGraphContributor(): FeatureGraphContributor = EntryTranslateAheadContributor
-
-    @Provides
-    @IntoSet
-    internal fun aheadMediaSessionParticipant(
-        ahead: () -> EntryTranslateAhead,
-    ): FeatureExecutionParticipantBinding<*> = entryTranslateAheadMediaSessionBinding(ahead)
 
     @Provides
     @IntoSet

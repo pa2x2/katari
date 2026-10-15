@@ -138,6 +138,11 @@ fun createEntryInteractions(plugins: List<EntryInteractionPlugin>): EntryInterac
     )
 }
 
+/** One capability's providers, keyed by the type that contributes each. */
+fun <P : EntryInteractionProvider> Collection<EntryInteractionPlugin>.providersOf(
+    capability: EntryInteractionCapability<P>,
+): Map<EntryType, P> = EntryInteractionProviderIndex(toList())[capability]
+
 private fun validateEntryInteractionPlugins(plugins: List<EntryInteractionPlugin>) {
     plugins.forEach(EntryInteractionPlugin::validateContribution)
     plugins.groupBy(EntryInteractionPlugin::type)

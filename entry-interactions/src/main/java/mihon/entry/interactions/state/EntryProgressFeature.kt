@@ -3,20 +3,14 @@ package mihon.entry.interactions.state
 import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.serialization.json.JsonObject
 import mihon.entry.interactions.media.EntryMediaSessionCapability
-import mihon.entry.interactions.media.session.ENTRY_MEDIA_SESSION_CONSEQUENCE_EXECUTION_POINT
-import mihon.entry.interactions.media.session.ENTRY_MEDIA_SESSION_INCOGNITO_OWNER
 import mihon.entry.interactions.media.session.EntryMediaSessionEvent
 import mihon.entry.interactions.runtime.applicableProviderTypes
 import mihon.feature.graph.CapabilityExpression
-import mihon.feature.graph.ContextInputId
 import mihon.feature.graph.ContributionOwner
 import mihon.feature.graph.FeatureArtifactId
 import mihon.feature.graph.FeatureBehaviorContract
 import mihon.feature.graph.FeatureBehaviorProjection
-import mihon.feature.graph.FeatureContextBlocker
-import mihon.feature.graph.FeatureContextDecision
 import mihon.feature.graph.FeatureContribution
-import mihon.feature.graph.FeatureExecutionParticipantId
 import mihon.feature.graph.FeatureGraphContributionSink
 import mihon.feature.graph.FeatureGraphContributor
 import mihon.feature.graph.FeatureGraphEvaluation
@@ -24,9 +18,6 @@ import mihon.feature.graph.FeatureId
 import mihon.feature.graph.FeatureIntegration
 import mihon.feature.graph.FeatureIntegrationId
 import mihon.feature.graph.allOf
-import mihon.feature.graph.contextInputDefinition
-import mihon.feature.graph.execution.FeatureExecutionParticipantDefinition
-import mihon.feature.graph.featureContextRule
 import tachiyomi.domain.entry.interactor.GetEntryWithChapters
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryProgressState
@@ -65,35 +56,6 @@ internal object EntryProgressMediaSessionBehaviorContract : FeatureBehaviorContr
     override val id = FeatureArtifactId("entry.progress.media-session.behavior")
 }
 
-internal val ENTRY_MEDIA_SESSION_PROGRESS_ALLOWED = contextInputDefinition<Boolean>(
-    ContextInputId("entry.media-session.progress-allowed"),
-    ENTRY_MEDIA_SESSION_INCOGNITO_OWNER,
-)
-private val ENTRY_MEDIA_SESSION_PROGRESS_BLOCKED = FeatureContextBlocker(
-    FeatureArtifactId("entry.media-session.progress-blocked"),
-    listOf(ENTRY_MEDIA_SESSION_PROGRESS_ALLOWED),
-)
-
-internal val ENTRY_PROGRESS_MEDIA_SESSION_PARTICIPANT = FeatureExecutionParticipantDefinition(
-    id = FeatureExecutionParticipantId("entry.progress.media-session"),
-    owner = ENTRY_PROGRESS_FEATURE_OWNER,
-    point = ENTRY_MEDIA_SESSION_CONSEQUENCE_EXECUTION_POINT,
-    prerequisites = allOf(
-        CapabilityExpression.Provided(EntryMediaSessionCapability.definition),
-        CapabilityExpression.Provided(EntryProgressCapability.definition),
-    ),
-    contextInputs = listOf(ENTRY_MEDIA_SESSION_PROGRESS_ALLOWED),
-    contextRule = featureContextRule(ENTRY_PROGRESS_FEATURE_OWNER) { evidence ->
-        if (evidence.value(ENTRY_MEDIA_SESSION_PROGRESS_ALLOWED)) {
-            FeatureContextDecision.Applicable
-        } else {
-            FeatureContextDecision.Blocked(listOf(ENTRY_MEDIA_SESSION_PROGRESS_BLOCKED))
-        }
-    },
-    contextBlockers = listOf(ENTRY_MEDIA_SESSION_PROGRESS_BLOCKED),
-    behavioralContracts = listOf(EntryProgressMediaSessionBehaviorContract),
-)
-
 internal object EntryProgressFeatureContributor : FeatureGraphContributor {
     override val owner = ENTRY_PROGRESS_FEATURE_OWNER
 
@@ -129,14 +91,6 @@ internal object EntryProgressFeatureContributor : FeatureGraphContributor {
                 ),
             ),
         )
-    }
-}
-
-internal object EntryProgressMediaSessionContributor : FeatureGraphContributor {
-    override val owner = ENTRY_PROGRESS_FEATURE_OWNER
-
-    override fun contributeTo(sink: FeatureGraphContributionSink) {
-        sink.add(ENTRY_PROGRESS_MEDIA_SESSION_PARTICIPANT)
     }
 }
 

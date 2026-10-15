@@ -8,8 +8,6 @@ import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveTrackingStateHost
 import mihon.entry.interactions.lifecycle.profile.stateRequest
-import mihon.entry.interactions.media.session.EntryMediaSessionConsequence
-import mihon.entry.interactions.media.session.EntryMediaSessionEvent
 import mihon.entry.interactions.merge.host.EntryMergeHost
 import mihon.entry.interactions.persistence.backup.decodeEntryBackupState
 import mihon.entry.interactions.persistence.backup.entryBackupStateEnvelope
@@ -29,9 +27,7 @@ import mihon.entry.interactions.tracking.merge.entryTrackingMergeBinding
 import mihon.entry.interactions.tracking.migration.EntryTrackingMigrationContributor
 import mihon.entry.interactions.tracking.migration.entryTrackingMigrationBinding
 import mihon.feature.graph.FeatureGraphContributor
-import mihon.feature.graph.contextEvidence
 import mihon.feature.graph.execution.FeatureDurableExecutionParticipantBinding
-import mihon.feature.graph.execution.FeatureExecutionContextResolver
 import mihon.feature.graph.execution.FeatureExecutionHandler
 import mihon.feature.graph.execution.FeatureExecutionParticipantBinding
 import mihon.feature.runtime.FeatureRuntimeComposition
@@ -79,10 +75,6 @@ object EntryTrackingBindings {
 
     @Provides
     @IntoSet
-    fun mediaSessionGraphContributor(): FeatureGraphContributor = EntryTrackingMediaSessionContributor
-
-    @Provides
-    @IntoSet
     fun mergeParticipant(
         mergeHost: EntryMergeHost,
         feature: () -> EntryTrackingFeature,
@@ -98,18 +90,6 @@ object EntryTrackingBindings {
             )
         },
         feature = feature,
-    )
-
-    @Provides
-    @IntoSet
-    fun mediaSessionParticipant(
-        trackingHost: EntryTrackingHost,
-        feature: () -> EntryTrackingFeature,
-    ): FeatureExecutionParticipantBinding<*> = entryTrackingMediaSessionBinding(
-        feature = feature,
-        automaticSynchronizationEnabled = {
-            trackingHost.automation.isAutomaticProgressSynchronizationEnabled()
-        },
     )
 
     @Provides
@@ -176,29 +156,3 @@ object EntryTrackingBindings {
         },
     )
 }
-
-internal fun entryTrackingMediaSessionBinding(
-    feature: () -> EntryTrackingFeature,
-    automaticSynchronizationEnabled: () -> Boolean,
-) = FeatureExecutionParticipantBinding(
-    definition = ENTRY_TRACKING_MEDIA_SESSION_PARTICIPANT,
-    contextResolver = FeatureExecutionContextResolver { execution ->
-        listOf(
-            contextEvidence(
-                ENTRY_MEDIA_SESSION_TRACKING_ALLOWED,
-                execution.permits(EntryMediaSessionConsequence.SYNCHRONIZE_TRACKING),
-            ),
-        )
-    },
-    handler = FeatureExecutionHandler { execution ->
-        val event = execution.event as? EntryMediaSessionEvent.Progressed
-            ?: return@FeatureExecutionHandler
-        if (execution.progressResult?.completedNow != true) return@FeatureExecutionHandler
-        if (event.child.chapterNumber < 0.0) return@FeatureExecutionHandler
-        if (!automaticSynchronizationEnabled()) return@FeatureExecutionHandler
-        feature().synchronizeProgress(
-            entry = event.visibleEntry,
-            progress = event.child.chapterNumber,
-        )
-    },
-)
