@@ -18,13 +18,6 @@ abstract class EntryInteractionBoundaryCheckTask : DefaultTask() {
         val typeModules = TypeModule.discover(root)
         val sourceIndex = KotlinSourceIndex.create(root, sourceFiles(root, typeModules))
         val findings = EntryInteractionBoundaryRules(root, sourceIndex, typeModules).check().toMutableList()
-        findings += checkEntryContractValidationBoundaries(contractValidationSources(root)).map { finding ->
-            Finding(
-                relativePath = finding.relativePath,
-                lineNumber = finding.lineNumber,
-                reason = finding.reason,
-            )
-        }
         findings += checkFeatureBehaviorIdBoundaries(featureBehaviorIdSources(root)).map { finding ->
             Finding(
                 relativePath = finding.relativePath,
@@ -76,27 +69,6 @@ abstract class EntryInteractionBoundaryCheckTask : DefaultTask() {
                     .filterNot { it.invariantSeparatorsPath.contains("/build/") }
                     .toList()
             }
-    }
-
-    private fun contractValidationSources(root: File): List<EntryContractValidationBoundarySource> {
-        val entryInteractions = root.resolve("entry-interactions")
-        if (!entryInteractions.isDirectory) return emptyList()
-        val kotlinSources = entryInteractions.walkTopDown()
-            .filter { it.isFile && it.extension == "kt" }
-            .filter { it.invariantSeparatorsPath.contains("/src/test/") }
-            .filterNot { it.invariantSeparatorsPath.contains("/build/") }
-            .map { file ->
-                EntryContractValidationBoundarySource(
-                    relativePath = file.relativeTo(root).invariantSeparatorsPath,
-                    content = file.readText(),
-                )
-            }
-            .toList()
-        val serviceRegistry = root.resolve(FEATURE_VALIDATION_CONTRIBUTOR_SERVICE)
-        return kotlinSources + EntryContractValidationBoundarySource(
-            relativePath = FEATURE_VALIDATION_CONTRIBUTOR_SERVICE,
-            content = serviceRegistry.takeIf(File::isFile)?.readText().orEmpty(),
-        )
     }
 
     private fun featureBehaviorIdSources(root: File): List<FeatureBehaviorIdBoundarySource> {

@@ -256,28 +256,6 @@ tasks.register("publishEntrySdkToMavenLocal") {
     )
 }
 
-val verifyFeatureArchitecture = tasks.register("verifyFeatureArchitecture") {
-    group = "verification"
-    description = "Verifies application and Entry Feature boundaries, contracts, and reporting"
-    dependsOn(
-        "checkFeatureArchitectureBoundaries",
-        ":feature-graph:testReleaseUnitTest",
-        ":feature-runtime:testReleaseUnitTest",
-        ":feature-validation:testReleaseUnitTest",
-        ":translation:api:testReleaseUnitTest",
-        ":translation:runtime:testReleaseUnitTest",
-        ":entry-interactions:testReleaseUnitTest",
-        ":book-api:testAndroidHostTest",
-        ":app:generateFeatureReport",
-    )
-}
-
-tasks.register("verifyEntryFeatureArchitecture") {
-    group = "verification"
-    description = "Compatibility alias for verifyFeatureArchitecture"
-    dependsOn(verifyFeatureArchitecture)
-}
-
 tasks.register(VERIFY_TESTS_TASK_NAME) {
     group = "verification"
     description = "Runs the build logic tests; running the task by name also verifies every module's tests"

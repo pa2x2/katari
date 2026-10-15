@@ -15,44 +15,8 @@ import mihon.feature.graph.execution.FeatureExecutionParticipantBinding
 import mihon.feature.graph.execution.FeatureExecutionParticipantDefinition
 import mihon.feature.graph.execution.FeatureExecutionPhase
 import mihon.feature.graph.featureGraphContributor
-import mihon.feature.graph.validation.FeatureContractFailure
-import mihon.feature.graph.validation.FeatureContractVerificationResult
 
-/**
- * Builds the smallest owner graph needed to execute a shared Feature coordinator for an already selected production
- * provider. The verifier cannot name or enroll a content type; production graph selection supplied the binding first.
- */
-internal fun productionSubjectEvaluation(
-    binding: EntryInteractionProviderBinding<*>,
-    feature: FeatureGraphContributor,
-): FeatureGraphEvaluation = productionSubjectEvaluation(listOf(binding), feature)
-
-/** Multi-provider equivalent for a selected integration whose prerequisite expression joins capabilities. */
-internal fun productionSubjectEvaluation(
-    bindings: List<EntryInteractionProviderBinding<*>>,
-    feature: FeatureGraphContributor,
-): FeatureGraphEvaluation {
-    require(bindings.isNotEmpty()) { "A provider-backed contract subject needs at least one binding" }
-    val type = bindings.first().implementation.type
-    require(bindings.all { it.implementation.type == type }) {
-        "A contract subject cannot combine providers from different entry types"
-    }
-    val plugin = object : EntryInteractionPlugin {
-        override val type = type
-        override val owner = ContributionOwner("contract-subject.${type.name.lowercase()}")
-        override val providerBindings = bindings
-    }
-    val contributors = validationContributors(feature)
-    val executionBindings = validationExecutionBindings(contributors)
-    return createEntryInteractionComposition(
-        plugins = listOf(plugin),
-        featureContributors = contributors,
-        executionBindings = executionBindings.immediate,
-        durableExecutionBindings = executionBindings.durable,
-    ).featureGraphEvaluation
-}
-
-/** Provider-free equivalent for an unconditional Feature and an already selected production subject. */
+/** Evaluates [feature] against one content type that contributes no providers. */
 internal fun productionSubjectEvaluation(
     type: EntryType,
     feature: FeatureGraphContributor,
@@ -128,18 +92,3 @@ private data class ValidationExecutionBindings(
     val immediate: List<FeatureExecutionParticipantBinding<*>>,
     val durable: List<FeatureDurableExecutionParticipantBinding<*>>,
 )
-
-internal suspend fun verifyFeatureContract(block: suspend () -> Unit): FeatureContractVerificationResult {
-    return try {
-        block()
-        FeatureContractVerificationResult.Passed
-    } catch (mismatch: FeatureContractMismatch) {
-        FeatureContractVerificationResult.Failed(listOf(FeatureContractFailure(mismatch.message.orEmpty())))
-    }
-}
-
-internal fun contractExpectation(condition: Boolean, message: String) {
-    if (!condition) throw FeatureContractMismatch(message)
-}
-
-private class FeatureContractMismatch(message: String) : IllegalStateException(message)

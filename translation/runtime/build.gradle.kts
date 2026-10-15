@@ -7,10 +7,6 @@ plugins {
 
 android {
     namespace = "mihon.translation.runtime"
-
-    testFixtures {
-        enable = true
-    }
 }
 
 dependencies {
@@ -24,13 +20,7 @@ dependencies {
     implementation(libs.androidx.appCompat)
     implementation(libs.diskLruCache)
 
-    testImplementation(projects.featureValidation)
     testImplementation(libs.bundles.test)
     testImplementation(libs.kotlinx.coroutines.test)
     testRuntimeOnly(libs.junit.platform.launcher)
-
-    testFixturesImplementation(projects.featureValidation)
-    testFixturesImplementation(projects.featureGraph)
-    testFixturesImplementation(projects.translation.spi)
-    testFixturesImplementation(libs.bundles.test)
 }
