@@ -65,13 +65,21 @@ abstract class BaseUpdatesGridGlanceWidget(
     abstract val bottomPadding: Dp
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
-        val locked = preferences.useAuthenticator.get()
         val containerModifier = GlanceModifier
             .fillMaxSize()
             .background(background)
             .appWidgetBackground()
             .padding(top = topPadding, bottom = bottomPadding)
             .appWidgetBackgroundRadius()
+
+        if (preferences.useAuthenticator.get()) {
+            provideContent {
+                LockedWidget(
+                    foreground = foreground,
+                    modifier = containerModifier,
+                )
+            }
+        }
 
         val manager = GlanceAppWidgetManager(context)
         val ids = manager.getGlanceIds(javaClass)
@@ -81,15 +89,6 @@ abstract class BaseUpdatesGridGlanceWidget(
             .calculateRowAndColumnCount(topPadding, bottomPadding)
 
         provideContent {
-            // If app lock enabled, don't do anything
-            if (locked) {
-                LockedWidget(
-                    foreground = foreground,
-                    modifier = containerModifier,
-                )
-                return@provideContent
-            }
-
             val flow = remember {
                 getUpdates
                     .subscribe(false, DateLimit.toEpochMilliseconds())
