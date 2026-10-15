@@ -11,14 +11,10 @@ import mihon.feature.graph.FeatureIntegrationId
 import mihon.feature.graph.FeatureIntegrationSubject
 import mihon.feature.graph.FeatureSubjectId
 import mihon.feature.graph.execution.AfterCommitVolatileFeatureExecutionPointDefinition
-import mihon.feature.graph.execution.DurableFeatureExecutionPointDefinition
 import mihon.feature.graph.execution.FeatureAfterCommitVolatileExecutionScope
-import mihon.feature.graph.execution.FeatureDurableExecutionPreparationResult
 import mihon.feature.graph.execution.FeatureExecutionParticipantSubject
 import mihon.feature.graph.execution.FeatureExecutionResult
-import mihon.feature.graph.execution.FeatureExecutionRuntime
 import mihon.feature.graph.execution.FeatureTransactionalExecutionScope
-import mihon.feature.graph.execution.InlineFeatureExecutionPointDefinition
 import mihon.feature.graph.execution.TransactionalFeatureExecutionPointDefinition
 import mihon.feature.graph.resolveFeatureContext as resolveSubjectFeatureContext
 
@@ -47,19 +43,6 @@ fun resolveFeatureContext(
     integration = integration,
     evidence = evidence,
 )
-
-suspend fun <E : Any> FeatureExecutionRuntime.executeInline(
-    point: InlineFeatureExecutionPointDefinition<E>,
-    contentType: ContentTypeId,
-    event: E,
-): FeatureExecutionResult = executeInline(point, FeatureSubjectId.EntryContentType(contentType), event)
-
-suspend fun <E : Any> FeatureExecutionRuntime.prepareDurable(
-    point: DurableFeatureExecutionPointDefinition<E>,
-    contentType: ContentTypeId,
-    event: E,
-): FeatureDurableExecutionPreparationResult =
-    prepareDurable(point, FeatureSubjectId.EntryContentType(contentType), event)
 
 suspend fun <E : Any> FeatureTransactionalExecutionScope.execute(
     point: TransactionalFeatureExecutionPointDefinition<E>,

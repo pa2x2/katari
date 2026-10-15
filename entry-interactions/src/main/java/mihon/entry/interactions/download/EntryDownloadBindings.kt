@@ -17,17 +17,16 @@ import mihon.entry.interactions.download.configuration.backup.EntryDownloadConfi
 import mihon.entry.interactions.download.configuration.backup.EntryDownloadConfigurationBackupParticipant
 import mihon.entry.interactions.download.host.EntryDownloadSourceAccessResolver
 import mihon.entry.interactions.download.host.SourceManagerEntryDownloadSourceAccessResolver
-import mihon.entry.interactions.download.maintenance.merge.EntryDownloadMergeContributor
-import mihon.entry.interactions.download.maintenance.merge.entryDownloadMergeBinding
-import mihon.entry.interactions.download.maintenance.migration.EntryDownloadMigrationContributor
-import mihon.entry.interactions.download.maintenance.migration.entryDownloadMigrationBinding
-import mihon.entry.interactions.download.maintenance.migration.entryDownloadMigrationOptionBinding
+import mihon.entry.interactions.download.maintenance.merge.EntryDownloadMergeParticipant
+import mihon.entry.interactions.download.maintenance.migration.EntryDownloadMigrationParticipant
 import mihon.entry.interactions.download.notification.AndroidEntryDownloadNotifier
+import mihon.entry.interactions.durable.EntryDurableParticipant
 import mihon.entry.interactions.merge.EntryMergeDownloadOwnershipProjection
+import mihon.entry.interactions.merge.consequence.EntryMergeDurableEvent
+import mihon.entry.interactions.migration.consequence.EntryMigrationDurableEvent
 import mihon.entry.interactions.persistence.backup.EntryBackupStateParticipant
 import mihon.entry.interactions.runtime.EntryInteractions
 import mihon.feature.graph.FeatureGraphContributor
-import mihon.feature.graph.execution.FeatureDurableExecutionParticipantBinding
 import mihon.feature.graph.execution.FeatureExecutionHandler
 import mihon.feature.graph.execution.FeatureExecutionParticipantBinding
 import mihon.feature.runtime.FeatureRuntimeComposition
@@ -259,29 +258,15 @@ object EntryDownloadBindings {
 
     @Provides
     @IntoSet
-    fun migrationGraphContributor(): FeatureGraphContributor = EntryDownloadMigrationContributor
-
-    @Provides
-    @IntoSet
-    fun mergeGraphContributor(): FeatureGraphContributor = EntryDownloadMergeContributor
-
-    @Provides
-    @IntoSet
-    fun migrationDurableParticipant(
+    internal fun migrationDurableParticipant(
         feature: () -> EntryDownloadMaintenanceFeature,
-    ): FeatureDurableExecutionParticipantBinding<*> = entryDownloadMigrationBinding(feature)
+    ): EntryDurableParticipant<EntryMigrationDurableEvent> = EntryDownloadMigrationParticipant(feature)
 
     @Provides
     @IntoSet
-    fun mergeDurableParticipant(
+    internal fun mergeDurableParticipant(
         feature: () -> EntryDownloadMaintenanceFeature,
-    ): FeatureDurableExecutionParticipantBinding<*> = entryDownloadMergeBinding(feature)
-
-    @Provides
-    @IntoSet
-    fun migrationOptionParticipant(
-        feature: () -> EntryDownloadMaintenanceFeature,
-    ): FeatureExecutionParticipantBinding<*> = entryDownloadMigrationOptionBinding(feature)
+    ): EntryDurableParticipant<EntryMergeDurableEvent> = EntryDownloadMergeParticipant(feature)
 
     @Provides
     @IntoSet

@@ -3,7 +3,6 @@ package mihon.entry.interactions.merge
 import eu.kanade.tachiyomi.source.entry.EntryType
 import mihon.entry.interactions.download.EntryDownloadCapability
 import mihon.entry.interactions.entryContentType
-import mihon.entry.interactions.merge.consequence.ENTRY_MERGE_DURABLE_EXECUTION_POINT
 import mihon.entry.interactions.runtime.toContentTypeId
 import mihon.entry.interactions.state.EntryMigrationCapability
 import mihon.feature.graph.CapabilityExpression
@@ -73,7 +72,6 @@ internal object EntryMergeFeatureContributor : FeatureGraphContributor {
     override val owner = ENTRY_MERGE_FEATURE_OWNER
 
     override fun contributeTo(sink: FeatureGraphContributionSink) {
-        sink.add(ENTRY_MERGE_DURABLE_EXECUTION_POINT)
         sink.add(
             FeatureContribution(
                 feature = ENTRY_MERGE_FEATURE_ID,

@@ -10,19 +10,20 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import mihon.core.metro.AppCoroutineScope
 import mihon.entry.interactions.download.EntryDownloadMaintenanceFeature
+import mihon.entry.interactions.durable.EntryDurableConsequences
+import mihon.entry.interactions.durable.EntryDurableParticipant
 import mihon.entry.interactions.library.membership.host.EntryLibraryCustomCoverHost
 import mihon.entry.interactions.merge.backup.EntryMergeBackupParticipant
 import mihon.entry.interactions.merge.backup.EntryMergeBackupRestoreParticipation
 import mihon.entry.interactions.merge.consequence.EntryMergeConsequenceDelivery
 import mihon.entry.interactions.merge.consequence.EntryMergeDurableConsequences
-import mihon.entry.interactions.merge.consequence.cover.EntryMergeCustomCoverContributor
-import mihon.entry.interactions.merge.consequence.cover.entryMergeCustomCoverBinding
+import mihon.entry.interactions.merge.consequence.EntryMergeDurableEvent
+import mihon.entry.interactions.merge.consequence.cover.EntryMergeCustomCoverParticipant
 import mihon.entry.interactions.merge.consequence.legacy.EntryMergeLegacyConsequenceDelivery
 import mihon.entry.interactions.merge.host.EntryMergeHost
 import mihon.entry.interactions.persistence.backup.EntryBackupStateParticipant
 import mihon.entry.interactions.tracking.EntryTrackingFeature
 import mihon.feature.graph.FeatureGraphContributor
-import mihon.feature.graph.execution.FeatureDurableExecutionParticipantBinding
 import mihon.feature.runtime.FeatureRuntimeComposition
 import mihon.feature.runtime.FeatureRuntimeWarmup
 import tachiyomi.domain.entry.service.EntryChildOwnershipResolutionPort
@@ -33,8 +34,9 @@ import tachiyomi.domain.entry.service.EntryLibraryGroupingResolutionPort
 object EntryMergeBindings {
     @Provides
     @SingleIn(AppScope::class)
-    internal fun durableConsequences(composition: FeatureRuntimeComposition): EntryMergeDurableConsequences =
-        EntryMergeDurableConsequences(composition.executions)
+    internal fun durableConsequences(
+        participants: Set<EntryDurableParticipant<EntryMergeDurableEvent>>,
+    ): EntryMergeDurableConsequences = EntryMergeDurableConsequences(EntryDurableConsequences(participants))
 
     @Provides
     @SingleIn(AppScope::class)
@@ -158,14 +160,10 @@ object EntryMergeBindings {
 
     @Provides
     @IntoSet
-    fun customCoverGraphContributor(): FeatureGraphContributor = EntryMergeCustomCoverContributor
-
-    @Provides
-    @IntoSet
-    fun customCoverParticipant(
+    internal fun customCoverParticipant(
         mergeHost: EntryMergeHost,
         libraryCustomCoverHost: EntryLibraryCustomCoverHost,
-    ): FeatureDurableExecutionParticipantBinding<*> = entryMergeCustomCoverBinding(
+    ): EntryDurableParticipant<EntryMergeDurableEvent> = EntryMergeCustomCoverParticipant(
         mergeHost,
         libraryCustomCoverHost::cleanupAfterLibraryRemoval,
     )

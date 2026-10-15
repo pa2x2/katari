@@ -1,8 +1,5 @@
 package mihon.entry.interactions.migration
 
-import mihon.entry.interactions.migration.consequence.ENTRY_MIGRATION_DURABLE_EXECUTION_POINT
-import mihon.entry.interactions.migration.options.ENTRY_MIGRATION_OPTION_DISCOVERY_POINT
-import mihon.entry.interactions.migration.preparation.ENTRY_MIGRATION_TRANSITION_PREPARING_POINT
 import mihon.entry.interactions.state.EntryBookmarkCapability
 import mihon.entry.interactions.state.EntryConsumptionCapability
 import mihon.entry.interactions.state.EntryMigrationCapability
@@ -116,8 +113,5 @@ internal object EntryMigrationFeatureContributor : FeatureGraphContributor {
                     listOf(entryMigrationExecutionContextIntegration(owner, migration)),
             ),
         )
-        sink.add(ENTRY_MIGRATION_DURABLE_EXECUTION_POINT)
-        sink.add(ENTRY_MIGRATION_OPTION_DISCOVERY_POINT)
-        sink.add(ENTRY_MIGRATION_TRANSITION_PREPARING_POINT)
     }
 }

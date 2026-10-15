@@ -3,10 +3,12 @@ package mihon.entry.interactions.migration
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.withContext
+import mihon.entry.interactions.download.EntryDownloadMaintenanceFeature
+import mihon.entry.interactions.download.EntryDownloadMaintenanceInspection
+import mihon.entry.interactions.durable.EntryDurableConsequences
 import mihon.entry.interactions.merge.EntryMergeMigrationFeature
 import mihon.entry.interactions.merge.EntryMergeMigrationReplacementIntent
 import mihon.entry.interactions.migration.consequence.EntryMigrationConsequenceDelivery
-import mihon.entry.interactions.migration.consequence.EntryMigrationDurableConsequences
 import mihon.entry.interactions.migration.consequence.EntryMigrationDurableEvent
 import mihon.entry.interactions.migration.host.EntryMigrationConsequenceRequest
 import mihon.entry.interactions.migration.host.EntryMigrationExecutionHost
@@ -17,9 +19,6 @@ import mihon.entry.interactions.migration.host.EntryMigrationHostReplayResult
 import mihon.entry.interactions.migration.host.EntryMigrationHostTransition
 import mihon.entry.interactions.migration.host.EntryMigrationHostTransitionResult
 import mihon.entry.interactions.migration.host.EntryMigrationPreparationHost
-import mihon.entry.interactions.migration.options.EntryMigrationOptionDiscovery
-import mihon.entry.interactions.migration.preparation.EntryMigrationTransitionPreparation
-import mihon.entry.interactions.migration.preparation.EntryMigrationTransitionPreparationResult
 import mihon.entry.interactions.runtime.applicableProviderTypes
 import mihon.entry.interactions.source.EntrySourceRefreshFailure
 import mihon.entry.interactions.source.EntrySourceRefreshFeature
@@ -28,6 +27,10 @@ import mihon.entry.interactions.source.EntrySourceRefreshResult
 import mihon.entry.interactions.state.EntryBookmarkProcessor
 import mihon.entry.interactions.state.EntryConsumptionProcessor
 import mihon.entry.interactions.state.EntryMigrationProvider
+import mihon.entry.interactions.tracking.EntryTrackingFeature
+import mihon.entry.interactions.tracking.EntryTrackingMigrationPreparationResult
+import mihon.entry.interactions.tracking.toDomainTrack
+import mihon.entry.interactions.tracking.toTrackingRecord
 import mihon.feature.graph.FeatureGraphEvaluation
 import tachiyomi.domain.entry.model.Entry
 
@@ -37,9 +40,9 @@ internal class DefaultEntryMigrationFeature(
     private val executionHost: EntryMigrationExecutionHost,
     private val sourceRefresh: EntrySourceRefreshFeature,
     private val mergeMigration: EntryMergeMigrationFeature,
-    private val optionDiscovery: EntryMigrationOptionDiscovery,
-    private val transitionPreparation: EntryMigrationTransitionPreparation,
-    private val durableConsequences: EntryMigrationDurableConsequences,
+    private val downloads: () -> EntryDownloadMaintenanceFeature,
+    private val tracking: () -> EntryTrackingFeature,
+    private val durableConsequences: EntryDurableConsequences<EntryMigrationDurableEvent>,
     private val consequences: EntryMigrationConsequenceDelivery,
     private val clockMillis: () -> Long = System::currentTimeMillis,
 ) : EntryMigrationFeature {
@@ -235,7 +238,8 @@ internal class DefaultEntryMigrationFeature(
         validatePair(inspection.source, inspection.target)?.let { return preparationRejected(it) }
         val hasNotes = inspection.source.notes.isNotBlank()
         val hasCustomCover = inspection.sourceHasCustomCover
-        val contributedOptions = optionDiscovery.discover(inspection.source)
+        val hasDownloads =
+            downloads().inspectEntry(inspection.source) == EntryDownloadMaintenanceInspection.HasDownloads
         evaluation.requireMigrationOptionContext(
             inspection.source.type,
             EntryMigrationContextualOption.NOTES,
@@ -253,7 +257,7 @@ internal class DefaultEntryMigrationFeature(
             add(EntryMigrationOption.CATEGORIES)
             if (hasNotes) add(EntryMigrationOption.NOTES)
             if (hasCustomCover) add(EntryMigrationOption.CUSTOM_COVER)
-            addAll(contributedOptions)
+            if (hasDownloads) add(EntryMigrationOption.REMOVE_SOURCE_DOWNLOADS)
         }
         val reference = FeatureEntryMigrationReference(
             sessionId = intent.operationKey.operationId(),
@@ -371,14 +375,14 @@ internal class DefaultEntryMigrationFeature(
         }
 
         val preparedTracks = when (
-            val result = transitionPreparation.prepare(
+            val result = tracking().prepareMigrationTracks(
                 source = inspected.source,
                 target = inspected.target,
-                sourceTracks = inspected.sourceTracks,
+                tracks = inspected.sourceTracks.map { it.toTrackingRecord() },
             )
         ) {
-            is EntryMigrationTransitionPreparationResult.Prepared -> result.tracks
-            EntryMigrationTransitionPreparationResult.Failed -> {
+            is EntryTrackingMigrationPreparationResult.Prepared -> result.tracks.map { it.toDomainTrack() }
+            is EntryTrackingMigrationPreparationResult.Failed -> {
                 return EntryMigrationExecutionResult.OperationalFailure(retryable = true)
             }
         }
@@ -403,16 +407,18 @@ internal class DefaultEntryMigrationFeature(
             emptyList()
         }
         val replace = intent.mode == EntryMigrationMode.REPLACE
-        val preparedConsequences = durableConsequences.prepare(durableEvent)
-        if (!preparedConsequences.isSuccessful) {
-            durableConsequences.discard(preparedConsequences.envelopes)
+        val preparedConsequences = try {
+            durableConsequences.prepare(durableEvent)
+        } catch (error: CancellationException) {
+            throw error
+        } catch (_: Exception) {
             return EntryMigrationExecutionResult.OperationalFailure(retryable = true)
         }
-        val consequenceRequests = preparedConsequences.envelopes.map { envelope ->
+        val consequenceRequests = preparedConsequences.map { record ->
             EntryMigrationConsequenceRequest(
-                participantId = envelope.participant.value,
-                schemaVersion = envelope.schemaVersion,
-                payload = envelope.payload,
+                participantId = record.participantId,
+                schemaVersion = record.payload.schemaVersion,
+                payload = record.payload.value,
             )
         }
         val targetUpdate = inspected.target.copy(
@@ -462,12 +468,12 @@ internal class DefaultEntryMigrationFeature(
             profile.applyTransition(transition, mergeReplacement)
         } catch (error: CancellationException) {
             withContext(NonCancellable) {
-                runCatching { durableConsequences.discard(preparedConsequences.envelopes) }
+                runCatching { durableConsequences.discard(preparedConsequences) }
             }
             throw error
         }
         if (result !is EntryMigrationHostTransitionResult.Applied) {
-            durableConsequences.discard(preparedConsequences.envelopes)
+            durableConsequences.discard(preparedConsequences)
         }
         return when (result) {
             is EntryMigrationHostTransitionResult.Applied -> {

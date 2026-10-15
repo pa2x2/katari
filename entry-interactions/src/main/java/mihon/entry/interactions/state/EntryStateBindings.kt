@@ -7,14 +7,14 @@ import dev.zacsweers.metro.IntoSet
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import mihon.entry.interactions.download.EntryDownloadLifecycleEventSink
+import mihon.entry.interactions.durable.EntryDurableParticipant
 import mihon.entry.interactions.history.EntryHistoryFeature
+import mihon.entry.interactions.migration.consequence.EntryMigrationDurableEvent
 import mihon.entry.interactions.persistence.backup.EntryBackupStateParticipant
 import mihon.entry.interactions.runtime.EntryInteractions
 import mihon.entry.interactions.state.backup.EntryProgressBackupParticipant
-import mihon.entry.interactions.state.migration.EntryProgressMigrationContributor
-import mihon.entry.interactions.state.migration.entryProgressMigrationBinding
+import mihon.entry.interactions.state.migration.EntryProgressMigrationParticipant
 import mihon.feature.graph.FeatureGraphContributor
-import mihon.feature.graph.execution.FeatureDurableExecutionParticipantBinding
 import mihon.feature.runtime.FeatureRuntimeComposition
 import tachiyomi.domain.entry.interactor.GetEntryWithChapters
 import tachiyomi.domain.entry.repository.EntryProgressRepository
@@ -84,13 +84,9 @@ object EntryStateBindings {
 
     @Provides
     @IntoSet
-    fun progressMigrationGraphContributor(): FeatureGraphContributor = EntryProgressMigrationContributor
-
-    @Provides
-    @IntoSet
-    fun progressMigrationParticipant(
+    internal fun progressMigrationParticipant(
         feature: () -> EntryProgressFeature,
-    ): FeatureDurableExecutionParticipantBinding<*> = entryProgressMigrationBinding(feature)
+    ): EntryDurableParticipant<EntryMigrationDurableEvent> = EntryProgressMigrationParticipant(feature)
 
     @Provides
     @IntoSet

@@ -3,17 +3,11 @@ package mihon.entry.interactions.merge.consequence
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.withContext
-import mihon.entry.interactions.merge.ENTRY_MERGE_FEATURE_OWNER
+import mihon.entry.interactions.durable.EntryDurableConsequences
+import mihon.entry.interactions.durable.EntryDurablePayload
+import mihon.entry.interactions.durable.EntryDurableRecord
 import mihon.entry.interactions.merge.host.EntryMergeConsequenceRequest
 import mihon.entry.interactions.merge.host.EntryMergeHostMemberKey
-import mihon.entry.interactions.prepareDurable
-import mihon.entry.interactions.runtime.toContentTypeId
-import mihon.feature.graph.FeatureExecutionParticipantId
-import mihon.feature.graph.FeatureExecutionPointId
-import mihon.feature.graph.execution.FeatureDurableExecutionEnvelope
-import mihon.feature.graph.execution.FeatureExecutionFailurePolicy
-import mihon.feature.graph.execution.FeatureExecutionRuntime
-import mihon.feature.graph.execution.durableFeatureExecutionPointDefinition
 import tachiyomi.domain.entry.model.Entry
 
 internal enum class EntryMergeDurableChange {
@@ -28,13 +22,6 @@ internal data class EntryMergeDurableEvent(
     val changes: Set<EntryMergeDurableChange>,
     val downloadRemovalRequested: Boolean,
 )
-
-internal val ENTRY_MERGE_DURABLE_EXECUTION_POINT =
-    durableFeatureExecutionPointDefinition<EntryMergeDurableEvent>(
-        id = FeatureExecutionPointId("entry.merge.durable-consequences"),
-        owner = ENTRY_MERGE_FEATURE_OWNER,
-        failurePolicy = FeatureExecutionFailurePolicy.FAIL_FAST,
-    )
 
 internal sealed interface EntryMergeConsequenceTarget {
     data class EditorMember(
@@ -68,7 +55,7 @@ internal interface EntryMergeDurablePreparationGateway {
 }
 
 internal class EntryMergeDurableConsequences(
-    private val executions: FeatureExecutionRuntime,
+    private val consequences: EntryDurableConsequences<EntryMergeDurableEvent>,
 ) : EntryMergeDurablePreparationGateway {
     override suspend fun prepare(
         preparations: List<EntryMergeDurablePreparation>,
@@ -76,54 +63,42 @@ internal class EntryMergeDurableConsequences(
         val prepared = mutableListOf<EntryMergeConsequenceRequest>()
         try {
             preparations.forEach { preparation ->
-                val result = executions.prepareDurable(
-                    point = ENTRY_MERGE_DURABLE_EXECUTION_POINT,
-                    contentType = preparation.event.entry.type.toContentTypeId(),
-                    event = preparation.event,
-                )
-                val requests = result.envelopes.map { envelope ->
-                    envelope.toRequest(preparation.target)
-                }
-                prepared += requests
-                if (!result.isSuccessful) {
-                    discard(prepared)
-                    return EntryMergeDurablePreparationResult.Failed
-                }
+                prepared += consequences.prepare(preparation.event).map { it.toRequest(preparation.target) }
             }
         } catch (error: CancellationException) {
-            withContext(NonCancellable) {
-                runCatching { discard(prepared) }
-            }
+            withContext(NonCancellable) { discard(prepared) }
             throw error
+        } catch (_: Exception) {
+            discard(prepared)
+            return EntryMergeDurablePreparationResult.Failed
         }
         return EntryMergeDurablePreparationResult.Prepared(prepared)
     }
 
-    suspend fun deliver(envelope: FeatureDurableExecutionEnvelope) {
-        executions.deliverDurable(envelope)
+    suspend fun deliver(record: EntryDurableRecord) {
+        consequences.deliver(record)
     }
 
     override suspend fun discard(requests: List<EntryMergeConsequenceRequest>) {
-        executions.discardDurable(requests.map(EntryMergeConsequenceRequest::envelope))
+        consequences.discard(requests.map(EntryMergeConsequenceRequest::record))
     }
 
-    suspend fun discardEnvelope(envelope: FeatureDurableExecutionEnvelope) {
-        executions.discardDurable(listOf(envelope))
+    suspend fun discardRecord(record: EntryDurableRecord) {
+        consequences.discard(listOf(record))
     }
 }
 
-private fun FeatureDurableExecutionEnvelope.toRequest(
+private fun EntryDurableRecord.toRequest(
     target: EntryMergeConsequenceTarget,
 ) = EntryMergeConsequenceRequest(
     memberKey = (target as? EntryMergeConsequenceTarget.EditorMember)?.key,
     entryId = (target as? EntryMergeConsequenceTarget.PersistedEntry)?.id,
-    participantId = participant.value,
-    schemaVersion = schemaVersion,
-    payload = payload,
+    participantId = participantId,
+    schemaVersion = payload.schemaVersion,
+    payload = payload.value,
 )
 
-private fun EntryMergeConsequenceRequest.envelope() = FeatureDurableExecutionEnvelope(
-    participant = FeatureExecutionParticipantId(participantId),
-    schemaVersion = schemaVersion,
-    payload = payload,
+private fun EntryMergeConsequenceRequest.record() = EntryDurableRecord(
+    participantId = participantId,
+    payload = EntryDurablePayload(schemaVersion, payload),
 )

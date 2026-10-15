@@ -15,7 +15,7 @@ class EntryMigrationCustomCoverOrphanCleanupTest {
     @Test
     fun `cleanup decodes only the custom-cover participant's active stages`() = runTest {
         val consequenceHost = mockk<EntryMigrationConsequenceHost> {
-            coEvery { participantPayloads(ENTRY_MIGRATION_CUSTOM_COVER_PARTICIPANT.id.value) } returns listOf(
+            coEvery { participantPayloads(ENTRY_MIGRATION_CUSTOM_COVER_PARTICIPANT_ID) } returns listOf(
                 EntryMigrationPersistedPayload(
                     schemaVersion = 1,
                     payload = Json.encodeToString(

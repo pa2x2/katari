@@ -4,12 +4,12 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
+import mihon.entry.interactions.durable.EntryDurablePayload
+import mihon.entry.interactions.durable.EntryDurableRecord
 import mihon.entry.interactions.merge.EntryMergeFollowUp
 import mihon.entry.interactions.merge.consequence.legacy.EntryMergeLegacyConsequenceDelivery
 import mihon.entry.interactions.merge.host.EntryMergeHost
 import mihon.entry.interactions.merge.host.EntryMergePendingConsequence
-import mihon.feature.graph.FeatureExecutionParticipantId
-import mihon.feature.graph.execution.FeatureDurableExecutionEnvelope
 
 internal class EntryMergeConsequenceDelivery(
     private val host: EntryMergeHost,
@@ -45,14 +45,14 @@ internal class EntryMergeConsequenceDelivery(
 
     private suspend fun deliverSafely(consequence: EntryMergePendingConsequence) {
         try {
-            val envelope = if (legacy?.handles(consequence) == true) {
+            val record = if (legacy?.handles(consequence) == true) {
                 legacy.deliver(consequence)
                 null
             } else {
-                consequence.envelope().also { consequences.deliver(it) }
+                consequence.record().also { consequences.deliver(it) }
             }
             host.acknowledgeConsequence(consequence.id)
-            envelope?.let { consequences.discardEnvelope(it) }
+            record?.let { consequences.discardRecord(it) }
         } catch (error: CancellationException) {
             throw error
         } catch (error: Exception) {
@@ -70,8 +70,7 @@ internal class EntryMergeConsequenceDelivery(
     }
 }
 
-private fun EntryMergePendingConsequence.envelope() = FeatureDurableExecutionEnvelope(
-    participant = FeatureExecutionParticipantId(participantId),
-    schemaVersion = schemaVersion,
-    payload = payload,
+private fun EntryMergePendingConsequence.record() = EntryDurableRecord(
+    participantId = participantId,
+    payload = EntryDurablePayload(schemaVersion, payload),
 )

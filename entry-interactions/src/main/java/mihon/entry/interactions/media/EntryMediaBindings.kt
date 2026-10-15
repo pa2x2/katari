@@ -12,12 +12,12 @@ import kotlinx.coroutines.plus
 import mihon.core.metro.AppCoroutineScope
 import mihon.core.metro.BasePreferenceStore
 import mihon.entry.interactions.child.EntryChildListFeature
+import mihon.entry.interactions.durable.EntryDurableParticipant
 import mihon.entry.interactions.media.backup.EntryPlaybackPreferencesBackupParticipant
 import mihon.entry.interactions.media.backup.EntryViewerSettingsBackupParticipant
-import mihon.entry.interactions.media.migration.EntryPlaybackPreferencesMigrationContributor
-import mihon.entry.interactions.media.migration.EntryViewerSettingsMigrationContributor
-import mihon.entry.interactions.media.migration.entryPlaybackPreferencesMigrationBinding
-import mihon.entry.interactions.media.migration.entryViewerSettingsMigrationBinding
+import mihon.entry.interactions.media.migration.EntryPlaybackPreferencesMigrationParticipant
+import mihon.entry.interactions.media.migration.EntryViewerSettingsMigrationParticipant
+import mihon.entry.interactions.migration.consequence.EntryMigrationDurableEvent
 import mihon.entry.interactions.persistence.backup.EntryBackupStateParticipant
 import mihon.entry.interactions.runtime.EntryInteractions
 import mihon.entry.interactions.settings.DefaultViewerSettingBinder
@@ -25,7 +25,6 @@ import mihon.entry.interactions.source.EntrySourceRefreshFeature
 import mihon.entry.viewer.settings.ViewerSettingBinder
 import mihon.entry.viewer.settings.ViewerSettingOverrideRepository
 import mihon.feature.graph.FeatureGraphContributor
-import mihon.feature.graph.execution.FeatureDurableExecutionParticipantBinding
 import mihon.feature.runtime.FeatureRuntimeComposition
 import mihon.feature.runtime.FeatureRuntimeWarmup
 import tachiyomi.core.common.preference.PreferenceStore
@@ -50,14 +49,9 @@ object EntryMediaBindings {
 
     @Provides
     @IntoSet
-    fun playbackPreferencesMigrationGraphContributor(): FeatureGraphContributor =
-        EntryPlaybackPreferencesMigrationContributor
-
-    @Provides
-    @IntoSet
-    fun playbackPreferencesMigrationParticipant(
+    internal fun playbackPreferencesMigrationParticipant(
         feature: () -> EntryPlaybackPreferencesFeature,
-    ): FeatureDurableExecutionParticipantBinding<*> = entryPlaybackPreferencesMigrationBinding(feature)
+    ): EntryDurableParticipant<EntryMigrationDurableEvent> = EntryPlaybackPreferencesMigrationParticipant(feature)
 
     @Provides
     @SingleIn(AppScope::class)
@@ -138,13 +132,9 @@ object EntryMediaBindings {
 
     @Provides
     @IntoSet
-    fun viewerSettingsMigrationGraphContributor(): FeatureGraphContributor = EntryViewerSettingsMigrationContributor
-
-    @Provides
-    @IntoSet
-    fun viewerSettingsMigrationParticipant(
+    internal fun viewerSettingsMigrationParticipant(
         feature: () -> EntryViewerSettingsFeature,
-    ): FeatureDurableExecutionParticipantBinding<*> = entryViewerSettingsMigrationBinding(feature)
+    ): EntryDurableParticipant<EntryMigrationDurableEvent> = EntryViewerSettingsMigrationParticipant(feature)
 
     @Provides
     @IntoSet

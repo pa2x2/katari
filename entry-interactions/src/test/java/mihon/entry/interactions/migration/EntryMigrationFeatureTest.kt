@@ -12,16 +12,13 @@ import kotlinx.coroutines.test.runTest
 import mihon.entry.interactions.download.EntryDownloadMaintenanceFeature
 import mihon.entry.interactions.download.EntryDownloadMaintenanceInspection
 import mihon.entry.interactions.download.EntryDownloadRemovalPreparation
-import mihon.entry.interactions.download.maintenance.migration.ENTRY_DOWNLOAD_MIGRATION_OPTION_PARTICIPANT
-import mihon.entry.interactions.download.maintenance.migration.EntryDownloadMigrationContributor
-import mihon.entry.interactions.download.maintenance.migration.entryDownloadMigrationBinding
+import mihon.entry.interactions.download.maintenance.migration.EntryDownloadMigrationParticipant
+import mihon.entry.interactions.durable.EntryDurableConsequences
 import mihon.entry.interactions.merge.EntryMergeMigrationFeature
 import mihon.entry.interactions.merge.EntryMergeMigrationReplacementIntent
 import mihon.entry.interactions.merge.EntryMergeMigrationReplacementResult
 import mihon.entry.interactions.migration.consequence.EntryMigrationConsequenceDelivery
-import mihon.entry.interactions.migration.consequence.EntryMigrationDurableConsequences
-import mihon.entry.interactions.migration.consequence.cover.EntryMigrationCustomCoverContributor
-import mihon.entry.interactions.migration.consequence.cover.entryMigrationCustomCoverBinding
+import mihon.entry.interactions.migration.consequence.cover.EntryMigrationCustomCoverParticipant
 import mihon.entry.interactions.migration.host.EntryMigrationCustomCoverHost
 import mihon.entry.interactions.migration.host.EntryMigrationExecutionHost
 import mihon.entry.interactions.migration.host.EntryMigrationExecutionInspectionResult
@@ -33,8 +30,6 @@ import mihon.entry.interactions.migration.host.EntryMigrationHostTransition
 import mihon.entry.interactions.migration.host.EntryMigrationHostTransitionResult
 import mihon.entry.interactions.migration.host.EntryMigrationPreparationHost
 import mihon.entry.interactions.migration.host.EntryMigrationPreparationProfileHost
-import mihon.entry.interactions.migration.options.EntryMigrationOptionDiscovery
-import mihon.entry.interactions.migration.preparation.EntryMigrationTransitionPreparation
 import mihon.entry.interactions.runtime.EntryInteractionPlugin
 import mihon.entry.interactions.runtime.createEntryInteractionComposition
 import mihon.entry.interactions.source.EntrySourceRefreshFailure
@@ -45,11 +40,7 @@ import mihon.entry.interactions.state.EntryMigrationProvider
 import mihon.entry.interactions.tracking.EntryTrackingFeature
 import mihon.entry.interactions.tracking.EntryTrackingMigrationPreparationResult
 import mihon.entry.interactions.tracking.EntryTrackingRecord
-import mihon.entry.interactions.tracking.migration.EntryTrackingMigrationContributor
-import mihon.entry.interactions.tracking.migration.entryTrackingMigrationBinding
 import mihon.feature.graph.ContributionOwner
-import mihon.feature.graph.execution.FeatureExecutionHandler
-import mihon.feature.graph.execution.FeatureExecutionParticipantBinding
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.model.Entry
 
@@ -163,29 +154,7 @@ class EntryMigrationFeatureTest {
                     override val providerBindings = listOf(EntryMigrationCapability.bind(MigrationProvider()))
                 },
             ),
-            featureContributors = listOf(
-                EntryMigrationFeatureContributor,
-                EntryDownloadMigrationContributor,
-                EntryMigrationCustomCoverContributor,
-                EntryTrackingMigrationContributor,
-            ),
-            executionBindings = listOf(
-                entryTrackingMigrationBinding { trackingFeature },
-                FeatureExecutionParticipantBinding(
-                    definition = ENTRY_DOWNLOAD_MIGRATION_OPTION_PARTICIPANT,
-                    handler = FeatureExecutionHandler { event ->
-                        if (downloadFeature.inspectEntry(event.source) ==
-                            EntryDownloadMaintenanceInspection.HasDownloads
-                        ) {
-                            event.options.add(EntryMigrationOption.REMOVE_SOURCE_DOWNLOADS)
-                        }
-                    },
-                ),
-            ),
-            durableExecutionBindings = listOf(
-                entryDownloadMigrationBinding { downloadFeature },
-                entryMigrationCustomCoverBinding(customCoverHost),
-            ),
+            featureContributors = listOf(EntryMigrationFeatureContributor),
         )
         val delivery = mockk<EntryMigrationConsequenceDelivery>().also {
             coEvery { it.deliverOperation(any()) } returns EntryMigrationFollowUp.INCOMPLETE
@@ -196,9 +165,14 @@ class EntryMigrationFeatureTest {
             executionHost = host,
             sourceRefresh = sourceRefresh,
             mergeMigration = NoOpMergeMigrationFeature,
-            optionDiscovery = EntryMigrationOptionDiscovery(composition.featureExecutions),
-            transitionPreparation = EntryMigrationTransitionPreparation(composition.featureExecutions),
-            durableConsequences = EntryMigrationDurableConsequences(composition.featureExecutions),
+            downloads = { downloadFeature },
+            tracking = { trackingFeature },
+            durableConsequences = EntryDurableConsequences(
+                setOf(
+                    EntryDownloadMigrationParticipant { downloadFeature },
+                    EntryMigrationCustomCoverParticipant(customCoverHost),
+                ),
+            ),
             consequences = delivery,
             clockMillis = { 999 },
         )

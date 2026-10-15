@@ -1,9 +1,9 @@
 package mihon.entry.interactions.migration.consequence.cover
 
 import kotlinx.serialization.json.Json
+import mihon.entry.interactions.durable.EntryDurablePayload
 import mihon.entry.interactions.migration.host.EntryMigrationConsequenceHost
 import mihon.entry.interactions.migration.host.EntryMigrationCustomCoverHost
-import mihon.feature.graph.execution.FeatureDurableExecutionPayload
 
 internal class EntryMigrationCustomCoverOrphanCleanup(
     private val consequenceHost: EntryMigrationConsequenceHost,
@@ -13,10 +13,10 @@ internal class EntryMigrationCustomCoverOrphanCleanup(
     private val json = Json { ignoreUnknownKeys = true }
 
     suspend fun cleanup() {
-        val activeStageIds = consequenceHost.participantPayloads(ENTRY_MIGRATION_CUSTOM_COVER_PARTICIPANT.id.value)
+        val activeStageIds = consequenceHost.participantPayloads(ENTRY_MIGRATION_CUSTOM_COVER_PARTICIPANT_ID)
             .mapNotNull { persisted ->
                 runCatching {
-                    FeatureDurableExecutionPayload(persisted.schemaVersion, persisted.payload)
+                    EntryDurablePayload(persisted.schemaVersion, persisted.payload)
                         .decodeCustomCover(json)
                         .stageId
                 }.getOrNull()
