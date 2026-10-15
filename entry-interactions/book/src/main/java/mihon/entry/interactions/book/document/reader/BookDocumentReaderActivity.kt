@@ -93,7 +93,7 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
     private val startupRequest by lazy {
         BookReaderRequest(
             entryId = intent.getLongExtra(EXTRA_ENTRY_ID, -1L),
-            chapterId = intent.getLongExtra(EXTRA_CHAPTER_ID, -1L),
+            chapterId = retainedSessions.restoredChapterId ?: intent.getLongExtra(EXTRA_CHAPTER_ID, -1L),
         )
     }
 
