@@ -191,6 +191,8 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
                         onInternalLinkClick = chapterCoordinator::navigateLink,
                         onExternalLinkClick = ::confirmExternalLink,
                         onAuxiliaryDismiss = chapterCoordinator::dismissAuxiliarySection,
+                        onChapterSelectionRetry = chapterCoordinator::retryChapterSelection,
+                        onChapterSelectionDismiss = chapterCoordinator::dismissChapterSelection,
                         onTranslationPopupBoundsChanged = selectionActionModeAvoidance::updateBounds,
                         onClose = ::finish,
                     )

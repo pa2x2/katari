@@ -21,6 +21,8 @@ internal data class BookDocumentReaderState(
     val publicationNavigation: Map<Long, List<BookNavigationItem>> = emptyMap(),
     val navigationLocator: BookLocator? = null,
     val loadStates: Map<Long, BookDocumentChapterLoadState> = emptyMap(),
+    /** A chapter the reader asked to open that is still loading or failed to; null once it opens. */
+    val chapterSelection: BookDocumentChapterSelectionLoad? = null,
     val chromeVisible: Boolean = false,
     val navigationVisible: Boolean = false,
     val settingsVisible: Boolean = false,
@@ -34,3 +36,8 @@ internal sealed interface BookDocumentChapterLoadState {
 
     data class Failed(val message: String) : BookDocumentChapterLoadState
 }
+
+internal data class BookDocumentChapterSelectionLoad(
+    val chapter: EntryChapter,
+    val loadState: BookDocumentChapterLoadState,
+)

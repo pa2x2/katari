@@ -57,6 +57,9 @@ internal class BookDocumentChapterCoordinator(
     private var navigationRequestId = 0L
     private var pendingNavigationTarget: BookDocumentNavigationTarget? = null
 
+    /** A selected chapter whose opening records a return point; nothing moves until it opens. */
+    private var originRecordingChapterId: Long? = null
+
     fun startReading() {
         if (retainedSessions.currentSession() != null && readingStartedAt == null) {
             readingStartedAt = SystemClock.elapsedRealtime()
@@ -97,7 +100,7 @@ internal class BookDocumentChapterCoordinator(
         }
         if (chapterLoadJobs[chapter.id]?.isActive == true) return
         if (!retry && state.loadStates[chapter.id] is BookDocumentChapterLoadState.Failed) return
-        setLoadState(chapter.id, BookDocumentChapterLoadState.Loading)
+        setLoadState(chapter, BookDocumentChapterLoadState.Loading)
         chapterLoadJobs[chapter.id] = scope.launch {
             try {
                 val current = retainedSessions.currentSession() ?: return@launch
@@ -108,13 +111,11 @@ internal class BookDocumentChapterCoordinator(
                         BookDocumentReaderProcessor.PROCESSOR_ID,
                     )
                 ) {
-                    is BookReaderOpenResult.Failure -> {
-                        chapterSelectionRequests.remove(chapter.id)
-                        setLoadState(
-                            chapter.id,
-                            BookDocumentChapterLoadState.Failed(result.failure.message),
-                        )
-                    }
+                    is BookReaderOpenResult.Failure -> setLoadState(
+                        chapter,
+                        BookDocumentChapterLoadState.Failed(result.failure.message),
+                        selected = chapterSelectionRequests.remove(chapter.id),
+                    )
                     is BookReaderOpenResult.Success -> {
                         if (!retainedSessions.cache(result.session)) result.session.close()
                         addLoadedSession(
@@ -126,13 +127,13 @@ internal class BookDocumentChapterCoordinator(
             } catch (error: CancellationException) {
                 throw error
             } catch (error: Exception) {
-                chapterSelectionRequests.remove(chapter.id)
                 logcat(LogPriority.ERROR, error) { "Failed to load adjacent BOOK chapter" }
                 setLoadState(
-                    chapter.id,
+                    chapter,
                     BookDocumentChapterLoadState.Failed(
                         error.message ?: context.getString(R.string.book_document_chapter_unavailable),
                     ),
+                    selected = chapterSelectionRequests.remove(chapter.id),
                 )
             } finally {
                 chapterLoadJobs.remove(chapter.id)
@@ -140,8 +141,10 @@ internal class BookDocumentChapterCoordinator(
         }
     }
 
-    fun selectChapter(chapter: EntryChapter, retry: Boolean) {
+    fun selectChapter(chapter: EntryChapter, retry: Boolean, rememberOrigin: Boolean = false) {
+        dismissChapterSelection()
         chapterSelectionRequests += chapter.id
+        originRecordingChapterId = chapter.id.takeIf { rememberOrigin }
         loadChapter(chapter, activate = true, retry = retry)
     }
 
@@ -165,6 +168,7 @@ internal class BookDocumentChapterCoordinator(
     }
 
     fun selectNavigationTarget(target: BookDocumentNavigationTarget) {
+        dismissChapterSelection()
         pendingNavigationTarget = null
         val locator = target.locator
         if (locator != null && retainedSessions.session(target.chapter.id) != null) {
@@ -177,9 +181,8 @@ internal class BookDocumentChapterCoordinator(
             )
             return
         }
-        if (!target.returnToOrigin) retainedSessions.jumpHistory.rememberOrigin()
         if (locator != null) pendingNavigationTarget = target
-        selectChapter(target.chapter, retry = true)
+        selectChapter(target.chapter, retry = true, rememberOrigin = !target.returnToOrigin)
     }
 
     private fun navigateWithinPublication(
@@ -227,6 +230,21 @@ internal class BookDocumentChapterCoordinator(
                 returnToOrigin = returnToOrigin,
             )
         }
+    }
+
+    fun retryChapterSelection() {
+        val selection = currentState()?.chapterSelection ?: return
+        chapterSelectionRequests += selection.chapter.id
+        loadChapter(selection.chapter, activate = true, retry = true)
+    }
+
+    /** Drops the feedback of a pending chapter selection; the reader stays where it is. */
+    fun dismissChapterSelection() {
+        val state = currentState() ?: return
+        val selection = state.chapterSelection ?: return
+        if (pendingNavigationTarget?.chapter?.id == selection.chapter.id) pendingNavigationTarget = null
+        originRecordingChapterId = null
+        updateState(state.copy(chapterSelection = null))
     }
 
     fun dismissAuxiliarySection() {
@@ -322,6 +340,7 @@ internal class BookDocumentChapterCoordinator(
         chapterLoadJobs.clear()
         chapterSelectionRequests.clear()
         pendingNavigationTarget = null
+        originRecordingChapterId = null
         persistLocationJob?.cancel()
         activityCheckpointJob?.cancel()
         activityCheckpointJob = null
@@ -331,8 +350,9 @@ internal class BookDocumentChapterCoordinator(
         val explicitSelection = chapterSelectionRequests.remove(session.chapter.id)
         val restoredSections = session.toDocumentSections(retainedSessions.locator(session.chapter.id)) ?: run {
             setLoadState(
-                session.chapter.id,
+                session.chapter,
                 BookDocumentChapterLoadState.Failed(context.getString(R.string.book_document_incompatible)),
+                selected = explicitSelection,
             )
             return
         }
@@ -350,6 +370,10 @@ internal class BookDocumentChapterCoordinator(
                     (session.chapter.id to session.preparedPublication.publication.navigation),
             ),
         )
+        if (explicitSelection && originRecordingChapterId == session.chapter.id) {
+            originRecordingChapterId = null
+            retainedSessions.jumpHistory.rememberOrigin()
+        }
         if (activate) activateChapter(session.chapter.id, completeForwardCrossing = false)
         val pending = pendingNavigationTarget?.takeIf { it.chapter.id == session.chapter.id }
         if (pending != null) {
@@ -431,6 +455,10 @@ internal class BookDocumentChapterCoordinator(
                 window = window,
                 loadedSections = current.loadedSections.filterKeys(retainedIds::contains),
                 loadStates = current.loadStates.filterKeys(retainedIds::contains),
+                // Leaving the window cancels a selected chapter's load, so its feedback goes too.
+                chapterSelection = current.chapterSelection?.takeIf {
+                    it.chapter.id != chapterId && it.chapter.id in retainedIds
+                },
                 childWebView = null,
                 navigationRequest = current.navigationRequest.afterAcceptedLocation(
                     observedRequest = observedNavigationRequest,
@@ -461,9 +489,22 @@ internal class BookDocumentChapterCoordinator(
         }
     }
 
-    private fun setLoadState(chapterId: Long, loadState: BookDocumentChapterLoadState) {
+    private fun setLoadState(
+        chapter: EntryChapter,
+        loadState: BookDocumentChapterLoadState,
+        selected: Boolean = chapter.id in chapterSelectionRequests,
+    ) {
         val state = currentState() ?: return
-        updateState(state.copy(loadStates = state.loadStates + (chapterId to loadState)))
+        updateState(
+            state.copy(
+                loadStates = state.loadStates + (chapter.id to loadState),
+                chapterSelection = if (selected) {
+                    BookDocumentChapterSelectionLoad(chapter, loadState)
+                } else {
+                    state.chapterSelection
+                },
+            ),
+        )
     }
 
     private fun recordElapsedFor(chapterId: Long) {
