@@ -165,23 +165,21 @@ internal class BookDocumentChapterCoordinator(
     }
 
     fun selectNavigationTarget(target: BookDocumentNavigationTarget) {
-        if (!target.returnToOrigin) retainedSessions.jumpHistory.rememberOrigin()
         pendingNavigationTarget = null
         val locator = target.locator
-        if (locator == null) {
-            selectChapter(target.chapter, retry = true)
-        } else if (retainedSessions.session(target.chapter.id) == null) {
-            pendingNavigationTarget = target
-            selectChapter(target.chapter, retry = true)
-        } else {
+        if (locator != null && retainedSessions.session(target.chapter.id) != null) {
             navigateWithinPublication(
                 target.chapter.id,
                 locator,
                 restorePosition = target.restorePosition,
                 returnToOrigin = target.returnToOrigin,
-                rememberOrigin = false,
+                rememberOrigin = !target.returnToOrigin,
             )
+            return
         }
+        if (!target.returnToOrigin) retainedSessions.jumpHistory.rememberOrigin()
+        if (locator != null) pendingNavigationTarget = target
+        selectChapter(target.chapter, retry = true)
     }
 
     private fun navigateWithinPublication(
@@ -219,7 +217,7 @@ internal class BookDocumentChapterCoordinator(
                 onNavigationMissing()
                 return
             }
-            if (rememberOrigin) retainedSessions.jumpHistory.rememberOrigin()
+            if (rememberOrigin) retainedSessions.jumpHistory.rememberOrigin(section.key, destination.position)
             if (chapterId != state.currentChapterId) activateChapter(chapterId, completeForwardCrossing = false)
             dismissAuxiliarySection()
             requestNavigation(
