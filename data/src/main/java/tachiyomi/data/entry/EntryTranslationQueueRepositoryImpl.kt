@@ -1,6 +1,9 @@
 package tachiyomi.data.entry
 
 import app.cash.sqldelight.async.coroutines.awaitAsOne
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
@@ -10,6 +13,8 @@ import tachiyomi.domain.entry.model.EntryTranslationQueueItem
 import tachiyomi.domain.entry.repository.EntryTranslationQueueRepository
 
 @OptIn(ExperimentalCoroutinesApi::class)
+@Inject
+@SingleIn(AppScope::class)
 class EntryTranslationQueueRepositoryImpl(
     private val handler: DatabaseHandler,
     private val profileProvider: ActiveProfileProvider,

@@ -1,7 +1,9 @@
 package tachiyomi.domain.entry.interactor
 
+import dev.zacsweers.metro.Inject
 import tachiyomi.domain.entry.repository.EntryRepository
 
+@Inject
 class SetLibraryPinned(
     private val entryRepository: EntryRepository,
 ) {

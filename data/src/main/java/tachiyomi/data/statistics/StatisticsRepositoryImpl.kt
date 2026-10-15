@@ -1,5 +1,8 @@
 package tachiyomi.data.statistics
 
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
@@ -17,6 +20,8 @@ import tachiyomi.domain.statistics.model.StatisticsTopEntry
 import tachiyomi.domain.statistics.repository.StatisticsRepository
 import tachiyomi.domain.statistics.service.StatisticsActivityPolicy
 
+@Inject
+@SingleIn(AppScope::class)
 class StatisticsRepositoryImpl(
     private val handler: DatabaseHandler,
 ) : StatisticsRepository {

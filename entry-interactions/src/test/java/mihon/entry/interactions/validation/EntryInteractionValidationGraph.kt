@@ -10,7 +10,10 @@ import mihon.translation.api.host.TranslationHostActions
 import tachiyomi.core.common.preference.ProfilePreferenceOwnerInstaller
 
 /** The Entry Features this module contributes, with the host services the validation environment controls. */
-@DependencyGraph(AppScope::class, bindingContainers = [ControlledEntryHostBindings::class])
+@DependencyGraph(
+    AppScope::class,
+    bindingContainers = [ControlledEntryHostBindings::class, ControlledInjektBindings::class],
+)
 interface EntryInteractionValidationGraph : FeatureRuntimeGraph {
     // The translation runtime is an app module, so only the app graph has the real host actions.
     @Provides

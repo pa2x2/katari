@@ -13,3 +13,10 @@ internal const val APP_ENTRY_HOST_BINDINGS_PATH =
     "app/src/main/java/mihon/entry/interactions/host/AppEntryHostBindings.kt"
 
 private const val ENTRY_FEATURE_SOURCE_ROOT = "entry-interactions/src/main/java/mihon/entry/interactions/"
+
+/** The app's dependency graph declaration and the binding containers it composes. */
+internal fun isAppGraphCompositionPath(relativePath: String): Boolean {
+    return relativePath.startsWith(APP_GRAPH_SOURCE_ROOT) || relativePath == APP_ENTRY_HOST_BINDINGS_PATH
+}
+
+private const val APP_GRAPH_SOURCE_ROOT = "app/src/main/java/mihon/app/di/"

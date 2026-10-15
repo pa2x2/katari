@@ -6,13 +6,19 @@ import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.Binds
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
+import eu.kanade.domain.source.interactor.GetIncognitoState
+import eu.kanade.domain.track.interactor.AddTracks
+import eu.kanade.domain.track.interactor.RefreshTracks
+import eu.kanade.domain.track.interactor.SyncChapterProgressWithTrack
+import eu.kanade.domain.track.interactor.TrackChapter
+import eu.kanade.domain.track.service.TrackPreferences
 import eu.kanade.presentation.more.settings.screen.productionEntryViewerSettingsScreenProjectionResolver
 import eu.kanade.tachiyomi.data.cache.CoverCache
 import eu.kanade.tachiyomi.data.entry.AppEntryChildGroupFilterDataSource
+import eu.kanade.tachiyomi.data.track.TrackerManager
 import eu.kanade.tachiyomi.entry.AppEntryDownloadNotificationActions
 import eu.kanade.tachiyomi.entry.AppMediaSessionIncognitoState
 import eu.kanade.tachiyomi.ui.base.delegate.ThemingDelegateImpl
-import mihon.core.metro.BasePreferenceStore
 import mihon.entry.interactions.download.EntryDownloadNotificationActions
 import mihon.entry.interactions.host.library.AppEntryLibraryCustomCoverHost
 import mihon.entry.interactions.host.library.AppEntryLibraryMembershipHost
@@ -49,16 +55,20 @@ import mihon.entry.interactions.runtime.EntryInteractionActivityTheme
 import mihon.entry.interactions.source.EntryLibraryTitleUpdatePolicy
 import mihon.entry.interactions.tracking.host.EntryTrackingHost
 import mihon.feature.profiles.core.ProfileStore
-import tachiyomi.core.common.preference.PreferenceStore
+import tachiyomi.data.ActiveProfileProvider
+import tachiyomi.data.DatabaseHandler
 import tachiyomi.domain.entry.model.Entry
+import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.library.service.DuplicatePreferences
 import tachiyomi.domain.library.service.LibraryPreferences
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
+import tachiyomi.domain.source.service.SourceManager
+import tachiyomi.domain.track.interactor.DeleteTrack
+import tachiyomi.domain.track.interactor.GetTracks
+import tachiyomi.domain.track.interactor.GetTracksPerEntry
 
 /**
- * The app's implementations of the services Entry Features need from their host. The app services they wrap are
- * still read from Injekt until those move into the graph.
+ * The app's implementations of the services Entry Features need from their host. Validation graphs supply controlled
+ * ones instead, so these are not contributed.
  */
 @BindingContainer
 abstract class AppEntryHostBindings {
@@ -74,93 +84,108 @@ abstract class AppEntryHostBindings {
     companion object {
         @Provides
         @SingleIn(AppScope::class)
-        fun mergeHost(): EntryMergeHost = AppEntryMergeHost(
-            handler = Injekt.get(),
-            duplicateCandidates = AppEntryMergeDuplicateCandidateHost(Injekt.get(), Injekt.get<DuplicatePreferences>()),
+        fun mergeHost(
+            handler: DatabaseHandler,
+            duplicatePreferences: DuplicatePreferences,
+            libraryPreferences: LibraryPreferences,
+        ): EntryMergeHost = AppEntryMergeHost(
+            handler = handler,
+            duplicateCandidates = AppEntryMergeDuplicateCandidateHost(handler, duplicatePreferences),
             defaultChildFlags = {
-                val preferences = Injekt.get<LibraryPreferences>()
                 Entry.SHOW_ALL or
-                    preferences.sortChapterBySourceOrNumber.get() or
-                    preferences.displayChapterByNameOrNumber.get() or
-                    preferences.sortChapterByAscendingOrDescending.get()
+                    libraryPreferences.sortChapterBySourceOrNumber.get() or
+                    libraryPreferences.displayChapterByNameOrNumber.get() or
+                    libraryPreferences.sortChapterByAscendingOrDescending.get()
             },
         )
 
         @Provides
         @SingleIn(AppScope::class)
-        internal fun migrationHost(): AppEntryMigrationHost = AppEntryMigrationHost(
-            handler = Injekt.get(),
-            hasCustomCover = { entryId -> Injekt.get<CoverCache>().hasCustomCover(entryId) },
-        )
+        internal fun migrationHost(handler: DatabaseHandler, coverCache: CoverCache): AppEntryMigrationHost =
+            AppEntryMigrationHost(handler = handler, hasCustomCover = coverCache::hasCustomCover)
 
         @Provides
         @SingleIn(AppScope::class)
-        fun migrationCustomCoverHost(application: Application): EntryMigrationCustomCoverHost =
-            AppEntryMigrationCustomCoverHost(application, Injekt.get())
+        fun migrationCustomCoverHost(application: Application, coverCache: CoverCache): EntryMigrationCustomCoverHost =
+            AppEntryMigrationCustomCoverHost(application, coverCache)
 
         @Provides
         @SingleIn(AppScope::class)
-        fun libraryMembershipHost(): EntryLibraryMembershipHost =
-            AppEntryLibraryMembershipHost(Injekt.get(), Injekt.get<ProfileStore>())
+        fun libraryMembershipHost(handler: DatabaseHandler, profileStore: ProfileStore): EntryLibraryMembershipHost =
+            AppEntryLibraryMembershipHost(handler, profileStore)
 
         @Provides
         @SingleIn(AppScope::class)
-        fun libraryCustomCoverHost(): EntryLibraryCustomCoverHost =
-            AppEntryLibraryCustomCoverHost(Injekt.get(), Injekt.get())
+        fun libraryCustomCoverHost(coverCache: CoverCache, handler: DatabaseHandler): EntryLibraryCustomCoverHost =
+            AppEntryLibraryCustomCoverHost(coverCache, handler)
 
         @Provides
         @SingleIn(AppScope::class)
-        fun destructiveRemovalHost(): EntryDestructiveRemovalHost = AppEntryDestructiveRemovalHost(Injekt.get())
+        fun destructiveRemovalHost(handler: DatabaseHandler): EntryDestructiveRemovalHost =
+            AppEntryDestructiveRemovalHost(handler)
 
         @Provides
         @SingleIn(AppScope::class)
-        fun destructiveRemovalCustomCoverHost(): EntryDestructiveRemovalCustomCoverHost =
-            AppEntryDestructiveRemovalCustomCoverHost(Injekt.get())
+        fun destructiveRemovalCustomCoverHost(coverCache: CoverCache): EntryDestructiveRemovalCustomCoverHost =
+            AppEntryDestructiveRemovalCustomCoverHost(coverCache)
 
         @Provides
         @SingleIn(AppScope::class)
-        fun profileMoveHost(): EntryProfileMoveHost = AppEntryProfileMoveHost(Injekt.get())
+        fun profileMoveHost(handler: DatabaseHandler): EntryProfileMoveHost = AppEntryProfileMoveHost(handler)
 
         @Provides
         @SingleIn(AppScope::class)
-        fun profileMoveSourceVisibilityHost(): EntryProfileMoveSourceVisibilityHost =
-            AppEntryProfileMoveSourceVisibilityHost(Injekt.get())
+        fun profileMoveSourceVisibilityHost(profileStore: ProfileStore): EntryProfileMoveSourceVisibilityHost =
+            AppEntryProfileMoveSourceVisibilityHost(profileStore)
 
         @Provides
         @SingleIn(AppScope::class)
-        fun profileMoveCustomCoverHost(): EntryProfileMoveCustomCoverHost =
-            AppEntryProfileMoveCustomCoverHost(Injekt.get())
+        fun profileMoveCustomCoverHost(coverCache: CoverCache): EntryProfileMoveCustomCoverHost =
+            AppEntryProfileMoveCustomCoverHost(coverCache)
 
         @Provides
         @SingleIn(AppScope::class)
-        fun profileMoveTrackingStateHost(): EntryProfileMoveTrackingStateHost =
-            AppEntryProfileMoveTrackingStateHost(Injekt.get())
+        fun profileMoveTrackingStateHost(handler: DatabaseHandler): EntryProfileMoveTrackingStateHost =
+            AppEntryProfileMoveTrackingStateHost(handler)
 
         @Provides
         @SingleIn(AppScope::class)
-        fun profileMoveChildGroupFilterStateHost(): EntryProfileMoveChildGroupFilterStateHost =
-            AppEntryProfileMoveChildGroupFilterStateHost(Injekt.get())
+        fun profileMoveChildGroupFilterStateHost(handler: DatabaseHandler): EntryProfileMoveChildGroupFilterStateHost =
+            AppEntryProfileMoveChildGroupFilterStateHost(handler)
 
         @Provides
         @SingleIn(AppScope::class)
-        fun profileMoveCoverHashStateHost(): EntryProfileMoveCoverHashStateHost =
-            AppEntryProfileMoveCoverHashStateHost(Injekt.get())
+        fun profileMoveCoverHashStateHost(handler: DatabaseHandler): EntryProfileMoveCoverHashStateHost =
+            AppEntryProfileMoveCoverHashStateHost(handler)
 
         @Provides
         @SingleIn(AppScope::class)
-        fun trackingHost(application: Application): EntryTrackingHost = AppEntryTrackingHost(
-            trackerManager = Injekt.get(),
-            sourceManager = Injekt.get(),
-            getTracks = Injekt.get(),
-            handler = Injekt.get(),
-            getTracksPerEntry = Injekt.get(),
-            refreshTracks = Injekt.get(),
-            deleteTrack = Injekt.get(),
+        fun trackingHost(
+            application: Application,
+            trackerManager: TrackerManager,
+            sourceManager: SourceManager,
+            getTracks: GetTracks,
+            handler: DatabaseHandler,
+            getTracksPerEntry: GetTracksPerEntry,
+            refreshTracks: RefreshTracks,
+            deleteTrack: DeleteTrack,
+            addTracks: AddTracks,
+            trackChapter: TrackChapter,
+            syncChapterProgress: () -> SyncChapterProgressWithTrack,
+            trackPreferences: TrackPreferences,
+        ): EntryTrackingHost = AppEntryTrackingHost(
+            trackerManager = trackerManager,
+            sourceManager = sourceManager,
+            getTracks = getTracks,
+            handler = handler,
+            getTracksPerEntry = getTracksPerEntry,
+            refreshTracks = refreshTracks,
+            deleteTrack = deleteTrack,
             app = application,
-            addTracks = Injekt.get(),
-            trackChapter = Injekt.get(),
-            syncChapterProgress = { Injekt.get() },
-            trackPreferences = Injekt.get(),
+            addTracks = addTracks,
+            trackChapter = trackChapter,
+            syncChapterProgress = syncChapterProgress,
+            trackPreferences = trackPreferences,
         )
 
         @Provides
@@ -168,13 +193,10 @@ abstract class AppEntryHostBindings {
             productionEntryViewerSettingsScreenProjectionResolver()
 
         @Provides
-        fun libraryTitleUpdatePolicy(): EntryLibraryTitleUpdatePolicy = EntryLibraryTitleUpdatePolicy { profileId ->
-            LibraryPreferences(Injekt.get<ProfileStore>().profileStore(profileId)).updateMangaTitles.get()
-        }
-
-        @Provides
-        @BasePreferenceStore
-        fun basePreferenceStore(): PreferenceStore = Injekt.get<ProfileStore>().basePreferenceStore()
+        fun libraryTitleUpdatePolicy(profileStore: ProfileStore): EntryLibraryTitleUpdatePolicy =
+            EntryLibraryTitleUpdatePolicy { profileId ->
+                LibraryPreferences(profileStore.profileStore(profileId)).updateMangaTitles.get()
+            }
 
         @Provides
         @SingleIn(AppScope::class)
@@ -187,11 +209,16 @@ abstract class AppEntryHostBindings {
 
         @Provides
         @SingleIn(AppScope::class)
-        fun childGroupFilterDataSource(): EntryChildGroupFilterDataSource =
-            AppEntryChildGroupFilterDataSource(Injekt.get(), Injekt.get(), Injekt.get())
+        fun childGroupFilterDataSource(
+            entryChapterRepository: EntryChapterRepository,
+            handler: DatabaseHandler,
+            profileProvider: ActiveProfileProvider,
+        ): EntryChildGroupFilterDataSource =
+            AppEntryChildGroupFilterDataSource(entryChapterRepository, handler, profileProvider)
 
         @Provides
         @SingleIn(AppScope::class)
-        fun mediaSessionIncognitoState(): EntryMediaSessionIncognitoState = AppMediaSessionIncognitoState(Injekt.get())
+        fun mediaSessionIncognitoState(getIncognitoState: GetIncognitoState): EntryMediaSessionIncognitoState =
+            AppMediaSessionIncognitoState(getIncognitoState)
     }
 }

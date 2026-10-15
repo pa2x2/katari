@@ -1,5 +1,6 @@
 package eu.kanade.domain.track.interactor
 
+import dev.zacsweers.metro.Inject
 import eu.kanade.domain.track.model.toDbTrack
 import eu.kanade.domain.track.model.toDomainTrack
 import eu.kanade.tachiyomi.data.database.models.Track
@@ -15,6 +16,7 @@ import tachiyomi.domain.track.model.EntryTrack
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
+@Inject
 class AddTracks(
     private val insertTrack: InsertTrack,
     private val entryChapterRepository: EntryChapterRepository,

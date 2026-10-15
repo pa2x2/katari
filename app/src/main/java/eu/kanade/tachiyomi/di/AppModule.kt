@@ -1,219 +1,24 @@
 package eu.kanade.tachiyomi.di
 
 import android.app.Application
-import android.content.Context
 import androidx.core.content.ContextCompat
-import app.cash.sqldelight.db.SqlDriver
-import eu.kanade.domain.track.store.DelayedTrackingStore
-import eu.kanade.tachiyomi.data.cache.CoverCache
-import eu.kanade.tachiyomi.data.saver.ImageSaver
-import eu.kanade.tachiyomi.data.track.TrackerManager
-import eu.kanade.tachiyomi.entry.AppEntryMetadataChangeNotifier
-import eu.kanade.tachiyomi.extension.ExtensionManager
-import eu.kanade.tachiyomi.network.JavaScriptEngine
 import eu.kanade.tachiyomi.network.NetworkHelper
-import eu.kanade.tachiyomi.source.AndroidSourceManager
-import eu.kanade.tachiyomi.source.entry.EntryPreferenceProvider
-import eu.kanade.tachiyomi.source.getDisplayNameForEntryInfo
-import eu.kanade.tachiyomi.util.system.isDebugBuildType
-import kotlinx.coroutines.CoroutineExceptionHandler
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.protobuf.ProtoBuf
-import logcat.LogPriority
 import mihon.app.di.AppGraph
-import mihon.data.database.DatabaseRepositoryImpl
-import mihon.data.database.createSqlDriver
-import mihon.domain.database.repository.DatabaseRepository
 import mihon.entry.interactions.download.markEntryDownloadRuntimeDependenciesRegistered
 import mihon.entry.interactions.translate.markEntryTranslateRuntimeDependenciesRegistered
-import mihon.feature.appupdate.AppUpdateController
-import mihon.feature.appupdate.check.GithubReleaseSource
-import mihon.feature.appupdate.install.AppUpdateInstaller
-import mihon.feature.appupdate.install.UpdateApkDownloader
-import mihon.feature.appupdate.install.UpdateApkVerifier
-import mihon.feature.migration.discovery.SourceMigrationCandidateDiscovery
-import mihon.feature.migration.discovery.SourceMigrationDiscoveryRunner
-import mihon.feature.migration.execution.SourceMigrationExecutionPlanner
-import mihon.feature.migration.execution.SourceMigrationExecutionRunner
-import mihon.feature.migration.review.SourceMigrationCandidateEntryResolver
-import mihon.feature.migration.review.SourceMigrationTargetSelector
-import mihon.feature.migration.session.SourceMigrationSessionStore
-import mihon.feature.migration.work.SourceMigrationWorkScheduler
-import mihon.feature.profiles.core.ProfileDatabase
-import mihon.feature.profiles.core.ProfileManager
-import mihon.feature.profiles.core.ProfileSourcePreferenceProvider
 import mihon.feature.runtime.FeatureRuntimeComposition
-import mihon.feature.runtime.FeatureRuntimeWarmup
 import mihon.feature.runtime.addFeatureRuntimeGraph
-import mihon.telemetry.TelemetryConfig
-import nl.adaptivity.xmlutil.XmlDeclMode
-import nl.adaptivity.xmlutil.core.XmlVersion
-import nl.adaptivity.xmlutil.serialization.XML
-import tachiyomi.core.common.storage.AndroidStorageFolderProvider
-import tachiyomi.core.common.util.system.logcat
-import tachiyomi.data.AndroidDatabaseHandler
-import tachiyomi.data.Chapters
 import tachiyomi.data.Database
-import tachiyomi.data.DatabaseHandler
-import tachiyomi.data.DateColumnAdapter
-import tachiyomi.data.Entries
-import tachiyomi.data.History
-import tachiyomi.data.MemoColumnAdapter
-import tachiyomi.data.StringListColumnAdapter
-import tachiyomi.data.UpdateStrategyColumnAdapter
-import tachiyomi.domain.entry.service.EntryCustomCoverWriter
-import tachiyomi.domain.entry.service.EntryMetadataChangeNotifier
-import tachiyomi.domain.source.service.SourceInfoNames
 import tachiyomi.domain.source.service.SourceManager
-import tachiyomi.domain.storage.service.StorageManager
-import tachiyomi.source.local.image.LocalCoverManager
-import tachiyomi.source.local.io.LocalSourceFileSystem
 import uy.kohesive.injekt.api.InjektModule
 import uy.kohesive.injekt.api.InjektRegistrar
-import uy.kohesive.injekt.api.addSingleton
-import uy.kohesive.injekt.api.addSingletonFactory
 import uy.kohesive.injekt.api.get
-import java.lang.ref.WeakReference
 
-private val lock = Any()
-
+/** Hands the app graph's services to code that still resolves them through Injekt. */
 class AppModule(val app: Application, private val graph: AppGraph) : InjektModule {
 
-    private var sqlDriverRef: WeakReference<SqlDriver>? = null
-
     override fun InjektRegistrar.registerInjectables() {
-        addSingleton(app)
-        addSingleton<Context>(app)
-
-        addSingletonFactory { DatabaseRepositoryImpl(lazy { get<SqlDriver>() }) }
-        addSingletonFactory<DatabaseRepository> { get<DatabaseRepositoryImpl>() }
-        addSingletonFactory<SqlDriver> {
-            synchronized(lock) {
-                sqlDriverRef?.get()?.let { return@synchronized it }
-
-                createSqlDriver(app, get()).also { sqlDriverRef = WeakReference(it) }
-            }
-        }
-        addSingletonFactory {
-            Database(
-                driver = get(),
-                entriesAdapter = Entries.Adapter(
-                    genreAdapter = StringListColumnAdapter,
-                    update_strategyAdapter = UpdateStrategyColumnAdapter,
-                    memoAdapter = MemoColumnAdapter,
-                ),
-                chaptersAdapter = Chapters.Adapter(
-                    memoAdapter = MemoColumnAdapter,
-                ),
-                historyAdapter = History.Adapter(
-                    last_readAdapter = DateColumnAdapter,
-                ),
-            )
-        }
-        addSingletonFactory<DatabaseHandler> { AndroidDatabaseHandler(get(), get()) }
-        addSingletonFactory { SourceMigrationCandidateDiscovery(get()) }
-        addSingletonFactory { SourceMigrationDiscoveryRunner(get(), get(), get(), get(), get()) }
-        addSingletonFactory { SourceMigrationExecutionPlanner(get(), get()) }
-        addSingletonFactory { SourceMigrationExecutionRunner(get(), get(), get()) }
-        addSingletonFactory { SourceMigrationSessionStore(get()) }
-        addSingletonFactory { SourceMigrationCandidateEntryResolver(get(), get()) }
-        addSingletonFactory { SourceMigrationTargetSelector(get(), get(), get()) }
-        addSingletonFactory { SourceMigrationWorkScheduler(app, get(), get()) }
-        addSingletonFactory { ProfileDatabase(get()) }
-        addSingletonFactory { mihon.feature.profiles.core.ProfilePreferenceOwnership(get()) }
-        addSingletonFactory {
-            ProfileManager(
-                application = app,
-                profileDatabase = get(),
-                profileStore = get(),
-                profilesPreferences = get(),
-                extensionManager = get(),
-                preferenceOwnership = get(),
-                entryRepository = get(),
-                destructiveRemoval = get(),
-                appScope = get(),
-            )
-        }
-        addSingletonFactory<EntryPreferenceProvider> { ProfileSourcePreferenceProvider(app, get()) }
-
-        addSingletonFactory {
-            Json {
-                ignoreUnknownKeys = true
-                explicitNulls = false
-            }
-        }
-        addSingletonFactory<XML> {
-            XML.v1 {
-                policy {
-                    ignoreUnknownChildren()
-                    autoPolymorphic = true
-                }
-                xmlDeclMode = XmlDeclMode.Charset
-                xmlVersion = XmlVersion.XML10
-                setIndent(2)
-            }
-        }
-        addSingletonFactory<ProtoBuf> {
-            ProtoBuf
-        }
-        addSingletonFactory<CoroutineScope> {
-            // Work here outlives the screen that started it, so a failure would crash the app on whatever screen is
-            // open by then. Debug builds still crash so the bug gets noticed.
-            val handler = CoroutineExceptionHandler { _, throwable ->
-                if (isDebugBuildType) {
-                    val thread = Thread.currentThread()
-                    thread.uncaughtExceptionHandler?.uncaughtException(thread, throwable)
-                } else {
-                    logcat(LogPriority.ERROR, throwable) { "Uncaught exception in the app scope" }
-                    TelemetryConfig.recordException(throwable)
-                }
-            }
-            CoroutineScope(SupervisorJob() + Dispatchers.IO + handler)
-        }
-
-        addSingletonFactory { CoverCache(get(), app) }
-        addSingletonFactory<EntryCustomCoverWriter> { get<CoverCache>() }
-        addSingletonFactory<EntryMetadataChangeNotifier> { AppEntryMetadataChangeNotifier(get()) }
-        addSingletonFactory { NetworkHelper(app, get()) }
-        addSingletonFactory { JavaScriptEngine(app) }
-
-        addSingletonFactory { AndroidStorageFolderProvider(app) }
-        addSingletonFactory { LocalSourceFileSystem(get()) }
-        addSingletonFactory { LocalCoverManager(app, get()) }
-        addSingletonFactory { StorageManager(app, get(), get()) }
-
-        addSingletonFactory<SourceManager> { AndroidSourceManager(app, get(), get(), get()) }
-        addSingletonFactory<SourceInfoNames> {
-            val sourceManager = get<SourceManager>()
-            SourceInfoNames { sourceId -> sourceManager.getDisplayInfo(sourceId).getDisplayNameForEntryInfo() }
-        }
-        addSingletonFactory { ExtensionManager(app) }
-        addSingletonFactory { TrackerManager(get(), get()) }
-        addSingletonFactory { DelayedTrackingStore(app) }
-
         addFeatureRuntimeGraph(graph)
-        addSingletonFactory {
-            FeatureRuntimeWarmup {
-                graph.featureRuntimeContributions.validate(get<FeatureRuntimeComposition>().evaluation)
-                graph.featureRuntimeContributions.warmUp()
-            }
-        }
-
-        addSingletonFactory { ImageSaver(app) }
-
-        addSingletonFactory {
-            AppUpdateController(
-                preferences = get(),
-                source = GithubReleaseSource(get(), get()),
-                downloader = UpdateApkDownloader(app, get()),
-                verifier = UpdateApkVerifier(app),
-                installer = AppUpdateInstaller(app),
-                scope = get(),
-            )
-        }
 
         markEntryDownloadRuntimeDependenciesRegistered()
         markEntryTranslateRuntimeDependenciesRegistered()
@@ -226,7 +31,8 @@ class AppModule(val app: Application, private val graph: AppGraph) : InjektModul
 
             get<Database>()
 
-            get<FeatureRuntimeWarmup>().warmup()
+            graph.featureRuntimeContributions.validate(get<FeatureRuntimeComposition>().evaluation)
+            graph.featureRuntimeContributions.warmUp()
         }
     }
 }

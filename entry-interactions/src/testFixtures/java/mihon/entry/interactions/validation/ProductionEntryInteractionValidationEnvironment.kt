@@ -27,6 +27,7 @@ import tachiyomi.core.common.preference.InMemoryPreferenceStore
 import tachiyomi.core.common.preference.ProfilePreferenceOwnerInstaller
 import tachiyomi.core.common.preference.ProfilePreferenceOwnerRegistry
 import tachiyomi.domain.category.interactor.GetCategories
+import tachiyomi.domain.category.repository.CategoryRepository
 import tachiyomi.domain.download.service.DownloadPreferences
 import tachiyomi.domain.entry.interactor.GetEntry
 import tachiyomi.domain.entry.interactor.GetEntryWithChapters
@@ -113,9 +114,6 @@ class ProductionEntryInteractionValidationEnvironment(
             }
         }
         Injekt.addSingletonFactory<ViewerSettingOverrideRepository> { mockk(relaxed = true) }
-        Injekt.addSingletonFactory<GetEntryWithChapters> { mockk(relaxed = true) }
-        Injekt.addSingletonFactory<GetEntry> { mockk(relaxed = true) }
-        Injekt.addSingletonFactory<NetworkToLocalEntry> { mockk(relaxed = true) }
         Injekt.addSingletonFactory<SyncEntryWithSource> { mockk(relaxed = true) }
         Injekt.addSingletonFactory<EntryChapterRepository> { mockk(relaxed = true) }
         Injekt.addSingletonFactory<EntryProgressRepository> { mockk(relaxed = true) }
@@ -127,6 +125,10 @@ class ProductionEntryInteractionValidationEnvironment(
         Injekt.addSingletonFactory<EntryTranslationQueueRepository> { mockk(relaxed = true) }
         Injekt.addSingletonFactory { EntryTranslatePreferences(InMemoryPreferenceStore()) }
         Injekt.addSingletonFactory<HistoryRepository> { mockk(relaxed = true) }
+        Injekt.addSingletonFactory<CategoryRepository> { mockk(relaxed = true) }
+        Injekt.addSingletonFactory<GetEntryWithChapters> { mockk(relaxed = true) }
+        Injekt.addSingletonFactory<GetEntry> { mockk(relaxed = true) }
+        Injekt.addSingletonFactory<NetworkToLocalEntry> { mockk(relaxed = true) }
         Injekt.addSingletonFactory<GetCategories> { mockk(relaxed = true) }
         Injekt.addSingletonFactory<GetTracks> { mockk(relaxed = true) }
     }

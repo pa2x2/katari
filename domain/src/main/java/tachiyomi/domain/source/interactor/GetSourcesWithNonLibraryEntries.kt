@@ -1,11 +1,13 @@
 package tachiyomi.domain.source.interactor
 
+import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import tachiyomi.domain.source.model.SourceWithCount
 import tachiyomi.domain.source.repository.SourceRepository
 import tachiyomi.domain.source.service.HiddenSourceIds
 
+@Inject
 class GetSourcesWithNonLibraryEntries(
     private val repository: SourceRepository,
     private val hiddenSourceIds: HiddenSourceIds,

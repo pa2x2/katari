@@ -22,7 +22,6 @@ import coil3.request.crossfade
 import coil3.util.DebugLogger
 import dev.mihon.injekt.patchInjekt
 import dev.zacsweers.metro.createGraphFactory
-import eu.kanade.domain.DomainModule
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.domain.ui.model.setAppCompatDelegateThemeMode
@@ -39,7 +38,6 @@ import eu.kanade.tachiyomi.data.coil.InstalledExtensionIconKeyer
 import eu.kanade.tachiyomi.data.coil.InstalledSourceIconKeyer
 import eu.kanade.tachiyomi.data.notification.Notifications
 import eu.kanade.tachiyomi.di.AppModule
-import eu.kanade.tachiyomi.di.PreferenceModule
 import eu.kanade.tachiyomi.extension.ExtensionManager
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.network.NetworkPreferences
@@ -97,14 +95,12 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
         val process = getProcessName()
         if (packageName != process) WebView.setDataDirectorySuffix(process)
 
-        // The modules and the code after them read the default preferences straight away. Loading them takes a disk
-        // read, so start it on another thread while the modules are set up; the first read then waits less or not at all
+        // The graph and the code after it read the default preferences straight away. Loading them takes a disk
+        // read, so start it on another thread while the graph is set up; the first read then waits less or not at all
         thread(name = "PreferencesPreload") { PreferenceManager.getDefaultSharedPreferences(this) }
         // The first use of Dispatchers.Main finds its factory with a ServiceLoader, which reads the APK
         thread(name = "MainDispatcherPreload") { Dispatchers.Main }
 
-        Injekt.importModule(PreferenceModule(this))
-        Injekt.importModule(DomainModule())
         Injekt.importModule(AppModule(this, createGraphFactory<AppGraph.Factory>().create(this)))
 
         setupNotificationChannels()

@@ -1,5 +1,8 @@
 package tachiyomi.data.history.activity
 
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import eu.kanade.tachiyomi.source.entry.EntryType
 import tachiyomi.data.DatabaseHandler
 import tachiyomi.domain.entry.model.EntryCover
@@ -10,6 +13,8 @@ import tachiyomi.domain.history.model.activity.HistoryActivitySessionDetail
 import tachiyomi.domain.history.repository.HistoryActivityRepository
 import tachiyomi.domain.statistics.service.StatisticsActivityPolicy
 
+@Inject
+@SingleIn(AppScope::class)
 class HistoryActivityRepositoryImpl(
     private val handler: DatabaseHandler,
 ) : HistoryActivityRepository {

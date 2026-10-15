@@ -756,12 +756,11 @@ private class EntryInteractionBoundaryRules(
         if (file.isTestPath()) return
         val allowedPaths = setOf(
             "domain/src/main/java/tachiyomi/domain/entry/interactor/SyncEntryWithSource.kt",
-            "app/src/main/java/eu/kanade/domain/DomainModule.kt",
             "entry-interactions/src/main/java/mihon/entry/interactions/source/EntrySourceRefreshFeature.kt",
             "entry-interactions/src/main/java/mihon/entry/interactions/source/EntrySourceBindings.kt",
             "entry-interactions/src/main/java/mihon/entry/interactions/runtime/production/EntryHostInjektBindings.kt",
         )
-        if (file.relativePath in allowedPaths) return
+        if (file.relativePath in allowedPaths || isAppGraphCompositionPath(file.relativePath)) return
 
         file.findReference("SyncEntryWithSource")?.let { reference ->
             findings += Finding(
@@ -1146,7 +1145,7 @@ private class EntryInteractionBoundaryRules(
             packageName == DOMAIN_TRACKER_PACKAGE ||
             packageName.startsWith("$DOMAIN_TRACKER_PACKAGE.") ||
             relativePath.startsWith("app/src/main/java/mihon/entry/interactions/host/tracking/") ||
-            relativePath == "app/src/main/java/eu/kanade/tachiyomi/di/AppModule.kt"
+            isAppGraphCompositionPath(relativePath)
     }
 
     private fun KotlinSourceFile.isTypeBranchAllowedPath(): Boolean {

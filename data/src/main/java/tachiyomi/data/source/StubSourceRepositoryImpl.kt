@@ -1,12 +1,17 @@
 package tachiyomi.data.source
 
 import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.flow.Flow
 import tachiyomi.data.Database
 import tachiyomi.data.subscribeToList
 import tachiyomi.domain.source.model.StubSource
 import tachiyomi.domain.source.repository.StubSourceRepository
 
+@Inject
+@SingleIn(AppScope::class)
 class StubSourceRepositoryImpl(
     private val database: Database,
 ) : StubSourceRepository {

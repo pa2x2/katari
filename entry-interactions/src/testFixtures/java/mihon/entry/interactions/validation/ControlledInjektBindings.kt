@@ -1,8 +1,6 @@
-package mihon.entry.interactions.runtime.production
+package mihon.entry.interactions.validation
 
-import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.BindingContainer
-import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Provides
 import eu.kanade.tachiyomi.core.security.SecurityPreferences
 import eu.kanade.tachiyomi.network.NetworkHelper
@@ -13,11 +11,8 @@ import mihon.core.metro.AppCoroutineScope
 import mihon.entry.interactions.translate.EntryTranslatePreferences
 import mihon.entry.viewer.settings.ViewerSettingOverrideRepository
 import tachiyomi.core.common.preference.PreferenceStore
-import tachiyomi.domain.category.interactor.GetCategories
+import tachiyomi.domain.category.repository.CategoryRepository
 import tachiyomi.domain.download.service.DownloadPreferences
-import tachiyomi.domain.entry.interactor.GetEntry
-import tachiyomi.domain.entry.interactor.GetEntryWithChapters
-import tachiyomi.domain.entry.interactor.NetworkToLocalEntry
 import tachiyomi.domain.entry.interactor.SyncEntryWithSource
 import tachiyomi.domain.entry.repository.DownloadPreferencesRepository
 import tachiyomi.domain.entry.repository.EntryChapterRepository
@@ -34,16 +29,17 @@ import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
 /**
- * Services the Entry Features and type modules read from Injekt until they move into the graph. Production registers
- * them in the app modules; production validation registers controlled ones. Injekt factories (the domain interactors)
- * stay unscoped here so each lookup still gets a new instance.
+ * App services the validation graphs read from the controlled Injekt registrations the validation environment
+ * installs. Production provides them from the app graph's own bindings; the graph builds the domain interactors on
+ * top of these.
  */
-@ContributesTo(AppScope::class)
 @BindingContainer
-object EntryHostInjektBindings {
-
+object ControlledInjektBindings {
     @Provides
     fun networkHelper(): NetworkHelper = Injekt.get()
+
+    @Provides
+    fun categoryRepository(): CategoryRepository = Injekt.get()
 
     @Provides
     fun preferenceStore(): PreferenceStore = Injekt.get()
@@ -86,15 +82,6 @@ object EntryHostInjektBindings {
     fun globalLibraryPreferences(): GlobalLibraryPreferences = Injekt.get()
 
     @Provides
-    fun getEntry(): GetEntry = Injekt.get()
-
-    @Provides
-    fun getEntryWithChapters(): GetEntryWithChapters = Injekt.get()
-
-    @Provides
-    fun networkToLocalEntry(): NetworkToLocalEntry = Injekt.get()
-
-    @Provides
     fun syncEntryWithSource(): SyncEntryWithSource = Injekt.get()
 
     @Provides
@@ -114,7 +101,4 @@ object EntryHostInjektBindings {
 
     @Provides
     fun securityPreferences(): SecurityPreferences = Injekt.get()
-
-    @Provides
-    fun getCategories(): GetCategories = Injekt.get()
 }
