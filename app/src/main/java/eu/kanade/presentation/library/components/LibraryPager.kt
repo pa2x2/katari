@@ -1,6 +1,7 @@
 package eu.kanade.presentation.library.components
 
 import android.content.res.Configuration
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -13,15 +14,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.unit.dp
 import eu.kanade.core.preference.PreferenceMutableState
 import eu.kanade.tachiyomi.ui.library.LibraryPage
+import mihon.presentation.kit.feedback.EmptyScreen
+import mihon.presentation.kit.feedback.NoResults
+import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.domain.library.model.LibraryItem
 import tachiyomi.domain.library.model.LibraryItemKey
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.FastScrollLazyColumn
-import tachiyomi.presentation.core.screens.EmptyScreen
+import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.plus
 
 @Composable
@@ -145,18 +148,22 @@ fun LibraryPageEmptyScreen(
     hasActiveFilters: Boolean,
     contentPadding: PaddingValues,
 ) {
-    val msg = if (hasActiveFilters) MR.strings.error_no_match else MR.strings.information_no_manga_group
-
     // A lazy column so an empty page still drives pull-to-refresh and the collapsing group header.
     FastScrollLazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = contentPadding + PaddingValues(8.dp),
+        contentPadding = contentPadding + PaddingValues(KatariTheme.spacing.s),
     ) {
         item {
-            EmptyScreen(
-                stringRes = msg,
-                modifier = Modifier.fillParentMaxSize(),
-            )
+            if (hasActiveFilters) {
+                Box(modifier = Modifier.fillParentMaxSize(), contentAlignment = Alignment.Center) {
+                    NoResults(message = stringResource(MR.strings.error_no_match))
+                }
+            } else {
+                EmptyScreen(
+                    stringRes = MR.strings.information_no_manga_group,
+                    modifier = Modifier.fillParentMaxSize(),
+                )
+            }
         }
     }
 }

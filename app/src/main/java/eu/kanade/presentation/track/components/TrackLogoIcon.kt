@@ -2,15 +2,14 @@ package eu.kanade.presentation.track.components
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewParameter
-import androidx.compose.ui.unit.dp
-import eu.kanade.presentation.theme.TachiyomiPreviewTheme
+import mihon.presentation.kit.theme.KatariPreviewTheme
+import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.presentation.core.util.clickableNoIndication
 
 @Composable
@@ -30,8 +29,8 @@ fun TrackLogoIcon(
         painter = painterResource(logoResource),
         contentDescription = name,
         modifier = modifier
-            .size(48.dp)
-            .clip(MaterialTheme.shapes.medium),
+            .size(KatariTheme.sizes.touchTarget)
+            .clip(KatariTheme.shapes.medium),
     )
 }
 
@@ -41,7 +40,7 @@ private fun TrackLogoIconPreviews(
     @PreviewParameter(TrackLogoIconPreviewProvider::class)
     data: TrackLogoIconPreviewData,
 ) {
-    TachiyomiPreviewTheme {
+    KatariPreviewTheme {
         TrackLogoIcon(
             name = data.name,
             logoResource = data.logoResource,

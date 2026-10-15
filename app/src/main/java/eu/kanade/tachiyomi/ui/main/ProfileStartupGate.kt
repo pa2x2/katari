@@ -1,20 +1,6 @@
 package eu.kanade.tachiyomi.ui.main
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import mihon.feature.profiles.core.Profile
-import mihon.feature.profiles.ui.ProfilePickerScene
-import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.LoadingIndicator
-import tachiyomi.presentation.core.i18n.stringResource
 
 internal data class ProfileStartupDecision(
     val allowAppUnlockPrompt: Boolean,
@@ -92,61 +78,4 @@ internal enum class ProfileStartupGateState {
     Picker,
     Authenticating,
     Ready,
-}
-
-@Composable
-internal fun ProfileGateContent(
-    state: ProfileStartupGateState,
-    profiles: List<Profile>,
-    activeProfileId: Long?,
-    authProfileName: String?,
-    onProfileSelected: (Profile) -> Unit,
-) {
-    when {
-        state == ProfileStartupGateState.Loading -> {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center,
-            ) {
-                LoadingIndicator()
-            }
-        }
-        state == ProfileStartupGateState.Authenticating -> {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center,
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    LoadingIndicator()
-                    authProfileName?.let {
-                        Text(
-                            text = stringResource(MR.strings.unlock_app_title, it),
-                            style = MaterialTheme.typography.bodyLarge,
-                        )
-                    }
-                }
-            }
-        }
-        state == ProfileStartupGateState.Picker -> {
-            if (profiles.isEmpty()) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    LoadingIndicator()
-                }
-            } else {
-                ProfilePickerScene(
-                    profiles = profiles,
-                    activeProfileId = activeProfileId,
-                    onProfileSelected = onProfileSelected,
-                    onOpenManagement = null,
-                )
-            }
-        }
-        else -> Unit
-    }
 }

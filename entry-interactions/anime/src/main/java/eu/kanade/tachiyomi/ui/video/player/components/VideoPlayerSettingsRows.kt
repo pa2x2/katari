@@ -4,16 +4,19 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.tachiyomi.source.entry.VideoPlaybackOption
-import tachiyomi.presentation.core.components.LoadingIndicator
-import tachiyomi.presentation.core.components.SettingsChipRow
+import mihon.presentation.kit.chip.FilterChip
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.list.ChipsRow
+import mihon.presentation.kit.progress.LoadingIndicator
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
+import tachiyomi.i18n.*
+import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable
 internal fun PlaybackOptionRow(
@@ -23,13 +26,13 @@ internal fun PlaybackOptionRow(
     enabled: Boolean = true,
     onSelect: (String?) -> Unit,
 ) {
-    SettingsChipRow(titleRes) {
+    ChipsRow(title = stringResource(titleRes)) {
         options.forEach { option ->
             FilterChip(
-                enabled = enabled,
+                label = option.label,
                 selected = option.key == selectedKey,
                 onClick = { onSelect(option.key) },
-                label = { Text(option.label) },
+                enabled = enabled,
             )
         }
     }
@@ -39,14 +42,14 @@ internal fun PlaybackOptionRow(
 internal fun LoadingPlaybackOptionRow(
     titleRes: StringResource,
 ) {
-    SettingsChipRow(titleRes) {
+    ChipsRow(title = stringResource(titleRes)) {
         Row(
-            modifier = Modifier.padding(vertical = 6.dp),
+            modifier = Modifier.padding(vertical = KatariTheme.spacing.xs),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.m),
         ) {
-            LoadingIndicator(modifier = Modifier.size(18.dp))
-            Text(text = "Loading...")
+            LoadingIndicator(modifier = Modifier.size(KatariTheme.sizes.iconSmall))
+            Text(text = stringResource(MR.strings.loading), role = TextRole.Supporting)
         }
     }
 }

@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.ui.browse.migration.entry.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -10,9 +11,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TriStateCheckbox
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -22,16 +20,20 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.toggleableState
 import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.Dp
 import eu.kanade.presentation.entry.components.EntryCover
 import eu.kanade.presentation.entry.components.presentation
 import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
+import mihon.presentation.kit.content.BrowseMetrics
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.control.TriStateCheckbox
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.util.selectedBackground
 
 @Composable
 fun MigrateEntrySelectionItem(
@@ -54,9 +56,15 @@ fun MigrateEntrySelectionItem(
     val resolvedSelectionState = selectionState ?: if (isSelected) ToggleableState.On else ToggleableState.Off
     Row(
         modifier = modifier
-            .selectedBackground(isSelectable && resolvedSelectionState != ToggleableState.Off)
+            .then(
+                if (isSelectable && resolvedSelectionState != ToggleableState.Off) {
+                    Modifier.background(KatariTheme.colors.selected)
+                } else {
+                    Modifier
+                },
+            )
             .fillMaxWidth()
-            .heightIn(min = 96.dp)
+            .heightIn(min = BrowseMetrics.listCoverRowMinHeight)
             .then(
                 if (isSelectable && !handlesExpansion) {
                     Modifier.semantics {
@@ -71,9 +79,9 @@ fun MigrateEntrySelectionItem(
                 onClick = onToggleExpanded ?: onToggleSelection,
                 onLongClick = onLongClick?.takeIf { isSelectable },
             )
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+            .padding(horizontal = KatariTheme.spacing.contentInset, vertical = KatariTheme.spacing.s),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.l),
     ) {
         MigrateEntrySelectionCover(
             entry = entry,
@@ -83,13 +91,13 @@ fun MigrateEntrySelectionItem(
 
         Column(
             modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(2.dp),
+            verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xxs),
         ) {
             Text(
                 text = entry.displayTitle,
+                role = TextRole.ItemTitle,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
-                style = MaterialTheme.typography.bodyLarge,
             )
 
             val creator = listOfNotNull(entry.author, entry.artist)
@@ -107,10 +115,9 @@ fun MigrateEntrySelectionItem(
                 ?.let { identity ->
                     Text(
                         text = identity,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        role = TextRole.Supporting,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
-                        style = MaterialTheme.typography.bodySmall,
                     )
                 }
 
@@ -126,10 +133,9 @@ fun MigrateEntrySelectionItem(
             }.joinToString(separator = " • ")
             Text(
                 text = metadata,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                role = TextRole.Supporting,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                style = MaterialTheme.typography.labelMedium,
             )
         }
 
@@ -153,14 +159,11 @@ internal fun MigrateEntrySelectionCover(
         EntryItemOrientation.VERTICAL -> EntryCover.Book
         EntryItemOrientation.HORIZONTAL -> EntryCover.Wide
     }
-    val coverHeight = when (itemOrientation) {
-        EntryItemOrientation.VERTICAL -> 80.dp
-        EntryItemOrientation.HORIZONTAL -> 40.dp
-    }
+    val coverHeight = migrationCoverHeight(itemOrientation)
     Box(
         modifier = Modifier
-            .width(72.dp)
-            .height(80.dp),
+            .width(BrowseMetrics.listCoverSlotWidth)
+            .height(BrowseMetrics.listCoverHeight),
         contentAlignment = Alignment.Center,
     ) {
         coverType(
@@ -173,4 +176,10 @@ internal fun MigrateEntrySelectionCover(
             onClick = onInspect,
         )
     }
+}
+
+/** Landscape covers keep the slot's width, so they are drawn at half the portrait height. */
+internal fun migrationCoverHeight(itemOrientation: EntryItemOrientation): Dp = when (itemOrientation) {
+    EntryItemOrientation.VERTICAL -> BrowseMetrics.listCoverHeight
+    EntryItemOrientation.HORIZONTAL -> BrowseMetrics.listCoverHeight / 2
 }

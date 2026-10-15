@@ -2,32 +2,36 @@ package eu.kanade.presentation.history.activity
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.more.stats.data.StatsType
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.ui.history.activity.HistoryActivitySummary
 import eu.kanade.tachiyomi.ui.history.activity.HistoryActivityViewModel
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Refresh
+import mihon.presentation.kit.button.Button
+import mihon.presentation.kit.button.ButtonStyle
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.feedback.EmptyScreen
+import mihon.presentation.kit.feedback.EmptyScreenAction
+import mihon.presentation.kit.feedback.LoadingScreen
+import mihon.presentation.kit.progress.LoadingIndicator
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.LoadingIndicator
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.screens.LoadingScreen
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
@@ -64,12 +68,17 @@ fun HistoryActivityScreenContent(
 
 @Composable
 private fun ActivityLoadFailed(paddingValues: PaddingValues, onRetry: () -> Unit) {
-    Box(Modifier.fillMaxSize().padding(paddingValues), contentAlignment = Alignment.Center) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(stringResource(MR.strings.statistics_could_not_load_activity))
-            TextButton(onClick = onRetry) { Text(stringResource(MR.strings.action_retry)) }
-        }
-    }
+    EmptyScreen(
+        stringRes = MR.strings.statistics_could_not_load_activity,
+        modifier = Modifier.padding(paddingValues),
+        actions = listOf(
+            EmptyScreenAction(
+                stringRes = MR.strings.action_retry,
+                icon = MaterialSymbols.Rounded.Refresh,
+                onClick = onRetry,
+            ),
+        ),
+    )
 }
 
 @Composable
@@ -87,23 +96,21 @@ private fun ActivitySessionList(
     val dateFormatter = remember { DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM) }
 
     if (state.sessions.isEmpty()) {
-        Box(Modifier.fillMaxSize().padding(paddingValues), contentAlignment = Alignment.Center) {
-            Text(
-                text = stringResource(MR.strings.statistics_no_activity),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
+        EmptyScreen(
+            stringRes = MR.strings.statistics_no_activity,
+            modifier = Modifier.padding(paddingValues),
+        )
         return
     }
 
     LazyColumn(
         contentPadding = PaddingValues(
-            start = 16.dp,
-            top = paddingValues.calculateTopPadding() + 12.dp,
-            end = 16.dp,
-            bottom = paddingValues.calculateBottomPadding() + 20.dp,
+            start = KatariTheme.spacing.contentInset,
+            top = paddingValues.calculateTopPadding() + KatariTheme.spacing.m,
+            end = KatariTheme.spacing.contentInset,
+            bottom = paddingValues.calculateBottomPadding() + KatariTheme.spacing.xl,
         ),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.m),
     ) {
         // Always present so the list stays anchored at the top when the summary arrives after the first page.
         item("summary") { summary?.let { HistoryActivitySummaryCard(it, type, types) } }
@@ -114,11 +121,11 @@ private fun ActivitySessionList(
             if (index == 0 || state.sessions[index - 1].localDate != session.localDate) {
                 Text(
                     text = LocalDate.parse(session.localDate).format(dateFormatter),
-                    modifier = Modifier.padding(top = 8.dp),
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = KatariTheme.spacing.s),
+                    role = TextRole.GroupLabel,
+                    tone = ContentTone.Secondary,
                 )
-                Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(KatariTheme.spacing.s))
             }
             ActivitySessionCard(
                 session = session,
@@ -133,17 +140,17 @@ private fun ActivitySessionList(
                     if (state.loadingMore) {
                         LoadingIndicator()
                     } else {
-                        TextButton(onClick = onLoadMore) {
-                            Text(
-                                stringResource(
-                                    if (state.loadMoreFailed) {
-                                        MR.strings.action_retry
-                                    } else {
-                                        MR.strings.statistics_show_more_activity
-                                    },
-                                ),
-                            )
-                        }
+                        Button(
+                            label = stringResource(
+                                if (state.loadMoreFailed) {
+                                    MR.strings.action_retry
+                                } else {
+                                    MR.strings.statistics_show_more_activity
+                                },
+                            ),
+                            onClick = onLoadMore,
+                            style = ButtonStyle.Text,
+                        )
                     }
                 }
             }

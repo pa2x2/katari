@@ -78,13 +78,13 @@ object SettingsBookDocumentReaderScreen : AppEntryViewerSettingsScreenProjection
                     Preference.PreferenceItem.ListPreference(
                         preference = tapZones,
                         title = stringResource(MR.strings.pref_viewer_nav),
-                        entries = tachiyomi.presentation.core.components.reader.navigation.readerTapZoneLabels
+                        entries = mihon.entry.viewer.chrome.ui.navigation.readerTapZoneLabels
                             .mapIndexed { index, label -> index to stringResource(label) }.toMap(),
                     ),
                     Preference.PreferenceItem.ListPreference(
                         preference = tapInversion,
                         title = stringResource(MR.strings.pref_read_with_tapping_inverted),
-                        entries = tachiyomi.presentation.core.components.reader.navigation.readerTapInversionLabels
+                        entries = mihon.entry.viewer.chrome.ui.navigation.readerTapInversionLabels
                             .mapIndexed { index, label -> index to stringResource(label) }.toMap(),
                     ),
                     Preference.PreferenceItem.SwitchPreference(

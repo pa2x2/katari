@@ -1,42 +1,34 @@
 package eu.kanade.presentation.more.settings.screen.translation.series
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
-import eu.kanade.presentation.components.AppBar
-import eu.kanade.presentation.components.AppBarActions
 import eu.kanade.presentation.entry.components.EntryCover
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Close
 import mihon.icons.materialsymbols.rounded.DeleteSweep
+import mihon.presentation.kit.button.IconButton
+import mihon.presentation.kit.dialog.ConfirmDialog
+import mihon.presentation.kit.feedback.EmptyScreen
+import mihon.presentation.kit.feedback.LoadingScreen
+import mihon.presentation.kit.list.SettingsRow
+import mihon.presentation.kit.navigation.AppBar
+import mihon.presentation.kit.navigation.AppBarActions
+import mihon.presentation.kit.navigation.Scaffold
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import mihon.translation.ui.picker.language.displayName
 import mihon.translation.ui.presentation.language.TranslationDirectionText
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.ScrollbarLazyColumn
-import tachiyomi.presentation.core.components.material.Scaffold
-import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.screens.EmptyScreen
-import tachiyomi.presentation.core.screens.LoadingScreen
 
 /** Series that use their own translation languages, each of which can go back to the defaults. */
 @Composable
@@ -83,25 +75,16 @@ internal fun SeriesTranslationLanguagesContent(
         }
     }
     if (confirmingClearAll) {
-        AlertDialog(
+        ConfirmDialog(
+            title = stringResource(MR.strings.translation_series_languages_clear_all_title),
+            text = stringResource(MR.strings.translation_series_languages_clear_all_message),
+            confirmLabel = stringResource(MR.strings.translation_series_languages_clear_all),
+            onConfirm = {
+                confirmingClearAll = false
+                onClearAll()
+            },
             onDismissRequest = { confirmingClearAll = false },
-            title = { Text(stringResource(MR.strings.translation_series_languages_clear_all_title)) },
-            text = { Text(stringResource(MR.strings.translation_series_languages_clear_all_message)) },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        confirmingClearAll = false
-                        onClearAll()
-                    },
-                ) {
-                    Text(stringResource(MR.strings.translation_series_languages_clear_all))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { confirmingClearAll = false }) {
-                    Text(stringResource(MR.strings.action_cancel))
-                }
-            },
+            destructive = true,
         )
     }
 }
@@ -111,44 +94,25 @@ private fun SeriesTranslationLanguagesRow(
     item: SeriesTranslationLanguages,
     onClear: () -> Unit,
 ) {
-    Row(
-        modifier = Modifier
-            .height(64.dp)
-            .padding(
-                start = MaterialTheme.padding.medium,
-                top = MaterialTheme.padding.small,
-                bottom = MaterialTheme.padding.small,
-            ),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        EntryCover.Square(data = item.cover, modifier = Modifier.fillMaxHeight())
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .padding(horizontal = MaterialTheme.padding.medium),
-        ) {
-            Text(
-                text = item.title,
-                fontWeight = FontWeight.SemiBold,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                style = MaterialTheme.typography.bodyMedium,
+    SettingsRow(
+        title = item.title,
+        leading = { EntryCover.Square(data = item.cover, modifier = Modifier.size(KatariTheme.sizes.artwork)) },
+        trailing = {
+            IconButton(
+                icon = MaterialSymbols.Rounded.Close,
+                contentDescription = stringResource(MR.strings.translation_series_languages_clear),
+                onClick = onClear,
             )
+        },
+        below = {
             TranslationDirectionText(
                 text = seriesLanguagesSummary(item),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                role = TextRole.Supporting,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                style = MaterialTheme.typography.bodySmall,
             )
-        }
-        IconButton(onClick = onClear) {
-            Icon(
-                MaterialSymbols.Rounded.Close,
-                contentDescription = stringResource(MR.strings.translation_series_languages_clear),
-            )
-        }
-    }
+        },
+    )
 }
 
 /** Both languages as a pair, or the one the series keeps. */

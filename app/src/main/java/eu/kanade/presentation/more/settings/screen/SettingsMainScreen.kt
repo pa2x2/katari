@@ -1,35 +1,24 @@
 package eu.kanade.presentation.more.settings.screen
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.LocalContentColor
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.unit.dp
 import androidx.core.graphics.ColorUtils
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import dev.icerock.moko.resources.StringResource
-import eu.kanade.presentation.components.AppBar
-import eu.kanade.presentation.components.AppBarActions
 import eu.kanade.presentation.more.settings.screen.about.AboutScreen
 import eu.kanade.presentation.more.settings.widget.TextPreferenceWidget
 import eu.kanade.presentation.util.LocalBackPress
@@ -53,8 +42,14 @@ import mihon.icons.materialsymbols.rounded.Storage
 import mihon.icons.materialsymbols.rounded.Sync
 import mihon.icons.materialsymbols.rounded.Translate
 import mihon.icons.materialsymbols.rounded.Update
+import mihon.presentation.kit.navigation.AppBar
+import mihon.presentation.kit.navigation.AppBarActions
+import mihon.presentation.kit.navigation.Scaffold
+import mihon.presentation.kit.navigation.rememberPinnedAppBarScrollBehavior
+import mihon.presentation.kit.surface.Surface
+import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
@@ -68,33 +63,18 @@ object SettingsMainScreen : Screen() {
     }
 
     @Composable
-    private fun getPalerSurface(): Color {
-        val surface = MaterialTheme.colorScheme.surface
-        val dark = isSystemInDarkTheme()
-        return remember(surface, dark) {
-            val arr = FloatArray(3)
-            ColorUtils.colorToHSL(surface.toArgb(), arr)
-            arr[2] = if (dark) {
-                arr[2] - 0.05f
-            } else {
-                arr[2] + 0.02f
-            }.coerceIn(0f, 1f)
-            Color.hsl(arr[0], arr[1], arr[2])
-        }
-    }
-
-    @Composable
     fun Content(twoPane: Boolean) {
         val navigator = LocalNavigator.currentOrThrow
         val backPress = LocalBackPress.currentOrThrow
         val items = remember {
             allItems().filter { isSettingsScreenVisible(it.screen) }
         }
-        val containerColor = if (twoPane) getPalerSurface() else MaterialTheme.colorScheme.surface
-        val topBarState = rememberTopAppBarState()
+        // In two panes the list sits on a paler container than the screen beside it.
+        val container = if (twoPane) SurfaceContainer.Lowest else SurfaceContainer.Surface
+        val topBarScrollBehavior = rememberPinnedAppBarScrollBehavior()
 
         Scaffold(
-            topBarScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(topBarState),
+            topBarScrollBehavior = topBarScrollBehavior,
             topBar = { scrollBehavior ->
                 AppBar(
                     title = stringResource(MR.strings.label_settings),
@@ -113,7 +93,7 @@ object SettingsMainScreen : Screen() {
                     scrollBehavior = scrollBehavior,
                 )
             },
-            containerColor = containerColor,
+            container = container,
             content = { contentPadding ->
                 val state = rememberLazyListState()
                 val indexSelected = if (twoPane) {
@@ -132,7 +112,8 @@ object SettingsMainScreen : Screen() {
                                 }
                                 if (it > 0) {
                                     // Lift scroll
-                                    topBarState.contentOffset = topBarState.heightOffsetLimit
+                                    topBarScrollBehavior.state.contentOffset =
+                                        topBarScrollBehavior.state.heightOffsetLimit
                                 }
                             }
                         }
@@ -148,32 +129,29 @@ object SettingsMainScreen : Screen() {
                         items = items,
                         key = { _, item -> item.hashCode() },
                     ) { index, item ->
-                        val selected = indexSelected == index
-                        var modifier: Modifier = Modifier
-                        var contentColor = LocalContentColor.current
-                        if (twoPane) {
-                            modifier = Modifier
-                                .padding(horizontal = 8.dp)
-                                .clip(RoundedCornerShape(24.dp))
-                                .then(
-                                    if (selected) {
-                                        Modifier.background(MaterialTheme.colorScheme.surfaceVariant)
-                                    } else {
-                                        Modifier
-                                    },
-                                )
-                            if (selected) {
-                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                            }
-                        }
-                        CompositionLocalProvider(LocalContentColor provides contentColor) {
+                        val row = @Composable {
                             TextPreferenceWidget(
-                                modifier = modifier,
                                 title = stringResource(item.titleRes),
                                 subtitle = item.formatSubtitle(),
                                 icon = item.icon,
                                 onPreferenceClick = { navigator.navigate(item.screen, twoPane) },
                             )
+                        }
+                        if (twoPane) {
+                            Surface(
+                                modifier = Modifier.padding(horizontal = KatariTheme.spacing.s),
+                                container = if (indexSelected ==
+                                    index
+                                ) {
+                                    SurfaceContainer.Selected
+                                } else {
+                                    SurfaceContainer.None
+                                },
+                                shape = KatariTheme.shapes.extraLarge,
+                                content = row,
+                            )
+                        } else {
+                            row()
                         }
                     }
                 }

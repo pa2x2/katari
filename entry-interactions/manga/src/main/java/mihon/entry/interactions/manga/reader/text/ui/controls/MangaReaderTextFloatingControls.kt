@@ -24,21 +24,24 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.unit.IntSize
-import androidx.compose.ui.unit.dp
+import eu.kanade.presentation.reader.appbars.ReaderMenuBounds
 import mihon.entry.interactions.manga.reader.text.session.MangaReaderTextProgress
+import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import kotlin.math.roundToInt
 
 /**
- * Floats translate mode's toolbar over the page. The toolbar can be dragged anywhere clear of the reader's menus;
- * pushed past a side edge, it is tucked into that edge as a tab so it stays out of the way while reading.
+ * Floats translate mode's toolbar over the page. The toolbar can be dragged anywhere clear of the reader's menus, as
+ * [menuBounds] measures them; pushed past a side edge, it is tucked into that edge as a tab so it stays out of the way
+ * while reading.
  */
 @Composable
 internal fun MangaReaderTextFloatingControls(
     placement: MangaReaderTextControlsPlacement,
     onPlacementChange: (MangaReaderTextControlsPlacement) -> Unit,
     menuVisible: Boolean,
+    menuBounds: ReaderMenuBounds,
     progress: MangaReaderTextProgress,
     toolbar: @Composable (Modifier) -> Unit,
 ) {
@@ -46,16 +49,15 @@ internal fun MangaReaderTextFloatingControls(
     val layoutDirection = LocalLayoutDirection.current
     val insets = WindowInsets.safeDrawing
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-        val area = with(density) {
-            val margin = MARGIN.roundToPx()
-            IntRect(
-                left = insets.getLeft(this, layoutDirection) + margin,
-                top = insets.getTop(this) + (if (menuVisible) TOP_MENU_CLEARANCE else MARGIN).roundToPx(),
-                right = constraints.maxWidth - insets.getRight(this, layoutDirection) - margin,
-                bottom = constraints.maxHeight - insets.getBottom(this) -
-                    (if (menuVisible) BOTTOM_MENU_CLEARANCE else MARGIN).roundToPx(),
-            )
-        }
+        val margin = with(density) { KatariTheme.spacing.l.roundToPx() }
+        val topMenuBottom = menuBounds.topMenuBottom?.takeIf { menuVisible }?.roundToInt() ?: 0
+        val bottomMenuTop = menuBounds.bottomMenuTop?.takeIf { menuVisible }?.roundToInt() ?: constraints.maxHeight
+        val area = IntRect(
+            left = insets.getLeft(density, layoutDirection) + margin,
+            top = maxOf(insets.getTop(density), topMenuBottom) + margin,
+            right = constraints.maxWidth - insets.getRight(density, layoutDirection) - margin,
+            bottom = minOf(constraints.maxHeight - insets.getBottom(density), bottomMenuTop) - margin,
+        )
         val currentPlacement by rememberUpdatedState(placement)
         val currentArea by rememberUpdatedState(area)
         val currentOnPlacementChange by rememberUpdatedState(onPlacementChange)
@@ -140,11 +142,3 @@ private fun IntOffset.moved(amount: Offset, area: IntRect, size: IntSize): IntOf
         y = (y + amount.y.roundToInt()).coerceIn(vertical),
     )
 }
-
-private val MARGIN = 16.dp
-
-/** Room the reader's top bar takes while its menu is shown. */
-private val TOP_MENU_CLEARANCE = 72.dp
-
-/** Room the reader's bottom menu takes while it is shown. */
-private val BOTTOM_MENU_CLEARANCE = 136.dp

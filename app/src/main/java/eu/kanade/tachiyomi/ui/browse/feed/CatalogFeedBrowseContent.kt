@@ -1,15 +1,10 @@
 package eu.kanade.tachiyomi.ui.browse.feed
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -20,13 +15,6 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SnackbarDuration
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SnackbarResult
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -35,23 +23,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
 import eu.kanade.domain.source.model.FeedItemRef
 import eu.kanade.domain.source.model.FilterPresetRepairException
 import eu.kanade.presentation.browse.components.BrowseSourceLoadingItem
-import eu.kanade.presentation.browse.components.CatalogBadges
-import eu.kanade.presentation.entry.components.toGridCoverType
-import eu.kanade.presentation.entry.components.toListCoverType
 import eu.kanade.presentation.library.components.CommonEntryItemDefaults
-import eu.kanade.presentation.library.components.EntryComfortableGridItem
-import eu.kanade.presentation.library.components.EntryCompactGridItem
-import eu.kanade.presentation.library.components.EntryListItem
 import eu.kanade.presentation.util.formattedMessage
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import eu.kanade.tachiyomi.source.entry.filter.EntryFilterValidationException
@@ -65,18 +44,25 @@ import mihon.icons.materialsymbols.automirroredrounded.Help
 import mihon.icons.materialsymbols.rounded.KeyboardArrowUp
 import mihon.icons.materialsymbols.rounded.OpenInBrowser
 import mihon.icons.materialsymbols.rounded.Refresh
+import mihon.presentation.kit.content.Icon
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.feedback.EmptyScreen
+import mihon.presentation.kit.feedback.EmptyScreenAction
+import mihon.presentation.kit.feedback.LoadingScreen
+import mihon.presentation.kit.feedback.SnackbarDuration
+import mihon.presentation.kit.feedback.SnackbarHostState
+import mihon.presentation.kit.feedback.SnackbarResult
+import mihon.presentation.kit.progress.LoadingIndicator
+import mihon.presentation.kit.surface.Surface
+import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.domain.source.model.CatalogListItem
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.LoadingIndicator
-import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.screens.EmptyScreen
-import tachiyomi.presentation.core.screens.EmptyScreenAction
-import tachiyomi.presentation.core.screens.LoadingScreen
 import tachiyomi.presentation.core.util.plus
 import tachiyomi.source.local.LocalSource
-import eu.kanade.presentation.entry.components.EntryCover as CoverType
 import tachiyomi.core.common.i18n.stringResource as coreStringResource
 
 @Composable
@@ -336,8 +322,8 @@ fun CatalogFeedBrowseContent(
                 },
                 modifier = Modifier
                     .padding(
-                        end = 16.dp,
-                        bottom = contentPadding.calculateBottomPadding() + 16.dp,
+                        end = KatariTheme.spacing.l,
+                        bottom = contentPadding.calculateBottomPadding() + KatariTheme.spacing.l,
                     )
                     .align(androidx.compose.ui.Alignment.BottomEnd),
             )
@@ -372,121 +358,9 @@ fun CatalogFeedBrowseContent(
                 }
             },
             modifier = Modifier
-                .padding(top = 16.dp)
+                .padding(top = KatariTheme.spacing.l)
                 .align(androidx.compose.ui.Alignment.TopCenter),
         )
-    }
-}
-
-@Composable
-internal fun FeedNewItemsIndicator(
-    state: FeedViewModel.State,
-    viewModel: FeedViewModel<*>,
-    viewportKey: Any?,
-    viewport: () -> FeedViewport,
-    onScrollToNewest: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    LaunchedEffect(viewportKey, state.newItemsAvailableCount, state.pendingRefresh, state.itemRefs.size) {
-        if (state.newItemsAvailableCount == 0) return@LaunchedEffect
-        if (state.pendingRefresh != null) return@LaunchedEffect
-
-        snapshotFlow(viewport)
-            .distinctUntilChanged()
-            .collectLatest { currentViewport ->
-                if (shouldConsumeNewItemsIndicator(currentViewport, state.itemRefs.size)) {
-                    viewModel.consumeNewItemsIndicator()
-                }
-            }
-    }
-
-    // Reading the viewport directly would recompose on every scrolled frame through layout info.
-    val currentViewport by rememberUpdatedState(viewport)
-    val canScrollBackward by remember { derivedStateOf { currentViewport().canScrollBackward } }
-    if (!shouldShowNewItemsChip(state, canScrollBackward)) return
-
-    NewItemsChip(
-        count = state.newItemsAvailableCount,
-        countIsLowerBound = state.newItemsCountIsLowerBound,
-        isBridging = state.isBridgingRefresh,
-        onClick = {
-            viewModel.showNewItems()
-            onScrollToNewest()
-        },
-        modifier = modifier,
-    )
-}
-
-internal fun shouldShowNewItemsChip(
-    state: FeedViewModel.State,
-    canScrollBackward: Boolean,
-): Boolean {
-    return state.newItemsAvailableCount > 0 &&
-        !state.isRefreshing &&
-        (state.pendingRefresh != null || canScrollBackward)
-}
-
-internal data class FeedViewport(
-    val canScrollBackward: Boolean,
-    val isScrollInProgress: Boolean,
-    val lastScrolledBackward: Boolean,
-    val totalItemsCount: Int,
-)
-
-internal fun shouldConsumeNewItemsIndicator(
-    viewport: FeedViewport,
-    itemCount: Int,
-): Boolean {
-    if (viewport.totalItemsCount < itemCount) return false
-
-    return !viewport.canScrollBackward ||
-        (viewport.isScrollInProgress && viewport.lastScrolledBackward)
-}
-
-@Composable
-internal fun NewItemsChip(
-    count: Int,
-    countIsLowerBound: Boolean,
-    isBridging: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Surface(
-        modifier = modifier.clickable(onClick = onClick),
-        color = MaterialTheme.colorScheme.secondaryContainer,
-        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-        shape = MaterialTheme.shapes.extraLarge,
-        tonalElevation = 3.dp,
-        shadowElevation = 3.dp,
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
-            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
-        ) {
-            if (isBridging) {
-                LoadingIndicator(
-                    modifier = Modifier.size(18.dp),
-                )
-            } else {
-                Icon(
-                    imageVector = MaterialSymbols.Rounded.KeyboardArrowUp,
-                    contentDescription = null,
-                )
-            }
-            Text(
-                style = MaterialTheme.typography.labelLarge,
-                text = pluralStringResource(
-                    if (countIsLowerBound) {
-                        MR.plurals.browse_feed_new_items_at_least
-                    } else {
-                        MR.plurals.browse_feed_new_items
-                    },
-                    count,
-                    count,
-                ),
-            )
-        }
     }
 }
 
@@ -496,16 +370,15 @@ private fun FeedBackToTopButton(
     modifier: Modifier = Modifier,
 ) {
     Surface(
-        modifier = modifier.clickable(onClick = onClick),
-        color = MaterialTheme.colorScheme.secondaryContainer,
-        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-        shape = MaterialTheme.shapes.extraLarge,
-        tonalElevation = 3.dp,
-        shadowElevation = 3.dp,
+        onClick = onClick,
+        modifier = modifier,
+        container = SurfaceContainer.SecondaryContainer,
+        shape = KatariTheme.shapes.extraLarge,
+        shadow = true,
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            modifier = Modifier.padding(horizontal = KatariTheme.spacing.m, vertical = KatariTheme.spacing.s),
+            horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
             verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
         ) {
             Icon(
@@ -513,7 +386,7 @@ private fun FeedBackToTopButton(
                 contentDescription = null,
             )
             Text(
-                style = MaterialTheme.typography.labelLarge,
+                role = TextRole.Label,
                 text = stringResource(MR.strings.action_move_to_top),
             )
         }
@@ -534,7 +407,7 @@ private fun CatalogFeedList(
 ) {
     LazyColumn(
         state = listState,
-        contentPadding = contentPadding + PaddingValues(vertical = 8.dp),
+        contentPadding = contentPadding + PaddingValues(vertical = KatariTheme.spacing.s),
     ) {
         if (isBridgingRefresh) {
             item(key = BRIDGE_LOADING_ITEM_KEY) {
@@ -579,7 +452,7 @@ private fun CatalogFeedCompactGrid(
     LazyVerticalGrid(
         columns = columns,
         state = gridState,
-        contentPadding = contentPadding + PaddingValues(8.dp),
+        contentPadding = contentPadding + PaddingValues(KatariTheme.spacing.s),
         verticalArrangement = Arrangement.spacedBy(CommonEntryItemDefaults.GridVerticalSpacer),
         horizontalArrangement = Arrangement.spacedBy(CommonEntryItemDefaults.GridHorizontalSpacer),
     ) {
@@ -629,7 +502,7 @@ private fun CatalogFeedComfortableGrid(
     LazyVerticalGrid(
         columns = columns,
         state = gridState,
-        contentPadding = contentPadding + PaddingValues(8.dp),
+        contentPadding = contentPadding + PaddingValues(KatariTheme.spacing.s),
         verticalArrangement = Arrangement.spacedBy(CommonEntryItemDefaults.GridVerticalSpacer),
         horizontalArrangement = Arrangement.spacedBy(CommonEntryItemDefaults.GridHorizontalSpacer),
     ) {
@@ -668,16 +541,20 @@ private fun FeedBridgeLoadingItem() {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 64.dp, bottom = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp, androidx.compose.ui.Alignment.CenterHorizontally),
+            // The top leaves room for the new-items chip that floats over the start of the feed.
+            .padding(top = KatariTheme.spacing.xxl * 2, bottom = KatariTheme.spacing.l),
+        horizontalArrangement = Arrangement.spacedBy(
+            KatariTheme.spacing.s,
+            androidx.compose.ui.Alignment.CenterHorizontally,
+        ),
         verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
     ) {
         LoadingIndicator(
-            modifier = Modifier.size(20.dp),
+            modifier = Modifier.size(KatariTheme.sizes.iconSmall),
         )
         Text(
             text = stringResource(MR.strings.browse_feed_loading_newer_items),
-            style = MaterialTheme.typography.labelLarge,
+            role = TextRole.Label,
         )
     }
 }
@@ -686,148 +563,6 @@ private const val BRIDGE_LOADING_ITEM_KEY = "feed-bridge-loading"
 
 private fun FeedItemRef.saveableKey(): String {
     return "feed-${type.name}-$id"
-}
-
-@Composable
-private fun CatalogFeedListItem(
-    ref: FeedItemRef,
-    viewModel: FeedViewModel<CatalogListItem>,
-    sourceItemOrientation: EntryItemOrientation,
-    onItemClick: (CatalogListItem) -> Unit,
-    onItemLongClick: (CatalogListItem) -> Unit,
-) {
-    val item = rememberCatalogItem(ref, viewModel)
-    if (item == null) {
-        CatalogFeedListItemPlaceholder(sourceItemOrientation.toListCoverType())
-        return
-    }
-
-    EntryListItem(
-        title = item.title,
-        coverData = item.cover,
-        coverType = sourceItemOrientation.toListCoverType(),
-        coverAlpha = browseCoverAlpha(item.favorite),
-        badge = {
-            CatalogBadges(isFavorite = item.favorite, entryType = item.entryType)
-        },
-        onLongClick = { onItemLongClick(item) },
-        onClick = { onItemClick(item) },
-    )
-}
-
-@Composable
-private fun CatalogFeedCompactGridItem(
-    ref: FeedItemRef,
-    viewModel: FeedViewModel<CatalogListItem>,
-    sourceItemOrientation: EntryItemOrientation,
-    onItemClick: (CatalogListItem) -> Unit,
-    onItemLongClick: (CatalogListItem) -> Unit,
-) {
-    val item = rememberCatalogItem(ref, viewModel)
-    if (item == null) {
-        CatalogFeedCompactGridItemPlaceholder(sourceItemOrientation.toGridCoverType())
-        return
-    }
-
-    EntryCompactGridItem(
-        title = item.title,
-        coverData = item.cover,
-        coverType = sourceItemOrientation.toGridCoverType(),
-        coverAlpha = browseCoverAlpha(item.favorite),
-        coverBadgeStart = {
-            CatalogBadges(isFavorite = item.favorite, entryType = item.entryType)
-        },
-        onLongClick = { onItemLongClick(item) },
-        onClick = { onItemClick(item) },
-    )
-}
-
-@Composable
-private fun CatalogFeedComfortableGridItem(
-    ref: FeedItemRef,
-    viewModel: FeedViewModel<CatalogListItem>,
-    sourceItemOrientation: EntryItemOrientation,
-    onItemClick: (CatalogListItem) -> Unit,
-    onItemLongClick: (CatalogListItem) -> Unit,
-) {
-    val item = rememberCatalogItem(ref, viewModel)
-    if (item == null) {
-        CatalogFeedComfortableGridItemPlaceholder(sourceItemOrientation.toGridCoverType())
-        return
-    }
-
-    EntryComfortableGridItem(
-        title = item.title,
-        coverData = item.cover,
-        coverType = sourceItemOrientation.toGridCoverType(),
-        coverAlpha = browseCoverAlpha(item.favorite),
-        coverBadgeStart = {
-            CatalogBadges(isFavorite = item.favorite, entryType = item.entryType)
-        },
-        onLongClick = { onItemLongClick(item) },
-        onClick = { onItemClick(item) },
-    )
-}
-
-@Composable
-private fun rememberCatalogItem(
-    ref: FeedItemRef,
-    viewModel: FeedViewModel<CatalogListItem>,
-): CatalogListItem? {
-    return remember(ref, viewModel) { viewModel.itemState(ref) }.collectAsState().value
-}
-
-@Composable
-private fun CatalogFeedListItemPlaceholder(coverType: CoverType) {
-    Box(
-        modifier = Modifier
-            .height(56.dp)
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-    ) {
-        CatalogFeedPlaceholderBlock(
-            modifier = Modifier
-                .fillMaxHeight()
-                .aspectRatio(coverType.ratio),
-        )
-    }
-}
-
-@Composable
-private fun CatalogFeedCompactGridItemPlaceholder(coverType: CoverType) {
-    CatalogFeedPlaceholderBlock(
-        modifier = Modifier
-            .padding(4.dp)
-            .fillMaxWidth()
-            .aspectRatio(coverType.ratio),
-    )
-}
-
-@Composable
-private fun CatalogFeedComfortableGridItemPlaceholder(coverType: CoverType) {
-    Box(
-        modifier = Modifier.padding(4.dp),
-    ) {
-        CatalogFeedPlaceholderBlock(
-            modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(coverType.ratio),
-        )
-    }
-}
-
-@Composable
-private fun CatalogFeedPlaceholderBlock(
-    modifier: Modifier = Modifier,
-) {
-    Box(
-        modifier = modifier
-            .clip(MaterialTheme.shapes.extraSmall)
-            .background(MaterialTheme.colorScheme.surfaceContainerHighest),
-    )
-}
-
-private fun browseCoverAlpha(favorite: Boolean): Float {
-    return if (favorite) CommonEntryItemDefaults.BrowseFavoriteCoverAlpha else 1f
 }
 
 private fun shouldLoadMore(

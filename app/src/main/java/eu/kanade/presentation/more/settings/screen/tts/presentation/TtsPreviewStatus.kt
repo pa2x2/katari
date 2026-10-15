@@ -2,17 +2,19 @@ package eu.kanade.presentation.more.settings.screen.tts.presentation
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import mihon.presentation.kit.button.Button
+import mihon.presentation.kit.button.ButtonStyle
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import mihon.tts.api.playback.TtsPlaybackFailureReason
 import mihon.tts.api.preparation.TtsPreparation
 import mihon.tts.api.preparation.TtsSystemSetupReason
 import mihon.tts.api.provider.TtsProviderDisclosure
 import mihon.tts.ui.settings.TtsPreviewState
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable
@@ -71,14 +73,8 @@ private fun TtsPreviewAction(
     action: String,
     onClick: () -> Unit,
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.extraSmall)) {
-        Text(
-            text = message,
-            color = MaterialTheme.colorScheme.error,
-            style = MaterialTheme.typography.bodyMedium,
-        )
-        TextButton(onClick = onClick) {
-            Text(action)
-        }
+    Column(verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xs)) {
+        Text(text = message, role = TextRole.Body, tone = ContentTone.Error)
+        Button(label = action, onClick = onClick, style = ButtonStyle.Text)
     }
 }

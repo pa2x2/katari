@@ -17,7 +17,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.unit.dp
 import eu.kanade.core.preference.PreferenceMutableState
 import eu.kanade.presentation.library.search.LibrarySearchResults
 import eu.kanade.presentation.library.search.LibrarySearchTips
@@ -25,10 +24,11 @@ import eu.kanade.tachiyomi.data.library.LibraryUpdateProgress
 import eu.kanade.tachiyomi.ui.library.LibraryPage
 import eu.kanade.tachiyomi.ui.library.LibraryPageTab
 import kotlinx.coroutines.launch
+import mihon.presentation.kit.progress.PullRefresh
+import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.domain.library.model.LibraryItem
 import tachiyomi.domain.library.model.LibraryItemKey
-import tachiyomi.presentation.core.components.material.PullRefresh
 
 @Composable
 fun SharedLibraryContent(
@@ -181,7 +181,7 @@ fun SharedLibraryContent(
                         LibraryGroupChipRows(
                             levels = chipLevels,
                             showItemCounts = showItemCounts,
-                            modifier = Modifier.padding(vertical = 8.dp),
+                            modifier = Modifier.padding(vertical = KatariTheme.spacing.s),
                         )
                     }
                 },
@@ -307,9 +307,9 @@ fun LibraryContent(
             LibrarySearchTips(
                 onInsertToken = onSearchQueryChange,
                 modifier = Modifier.padding(
-                    top = contentPadding.calculateTopPadding() + 8.dp,
-                    start = 12.dp,
-                    end = 12.dp,
+                    top = contentPadding.calculateTopPadding() + KatariTheme.spacing.s,
+                    start = KatariTheme.spacing.m,
+                    end = KatariTheme.spacing.m,
                 ),
             )
         }

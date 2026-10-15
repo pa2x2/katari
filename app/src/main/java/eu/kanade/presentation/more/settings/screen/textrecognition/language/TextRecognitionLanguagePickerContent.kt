@@ -5,12 +5,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import eu.kanade.presentation.components.AppBar
 import mihon.language.api.tag.LanguageTag
+import mihon.presentation.kit.navigation.AppBar
+import mihon.presentation.kit.navigation.Scaffold
 import mihon.translation.ui.picker.language.TranslationLanguagePickerList
 import mihon.translation.ui.picker.language.translationLanguageOptionsOf
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
 
 /** A full-screen, searchable choice among the languages text recognition can read, like Translation's pickers. */

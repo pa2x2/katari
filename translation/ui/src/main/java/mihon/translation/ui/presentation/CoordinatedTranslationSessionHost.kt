@@ -2,7 +2,6 @@ package mihon.translation.ui.presentation
 
 import android.content.Intent
 import android.net.Uri
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -13,7 +12,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.window.DialogProperties
+import mihon.presentation.kit.feedback.SnackbarHostState
 import mihon.translation.api.host.TranslationHostActionResult
 import mihon.translation.api.host.TranslationSetupDestination
 import mihon.translation.ui.presentation.language.TranslationKeptTargetSnackbar
@@ -30,7 +29,6 @@ import tachiyomi.presentation.core.i18n.stringResource
 @Composable
 fun CoordinatedTranslationSessionHost(
     coordinator: TranslationSessionHostCoordinator,
-    isTabletUi: Boolean,
     modifier: Modifier = Modifier,
     onDismiss: () -> Unit = coordinator.controller::dismiss,
     onPopupBoundsChanged: (Rect?) -> Unit = {},
@@ -46,7 +44,6 @@ fun CoordinatedTranslationSessionHost(
 
     TranslationSessionHost(
         controller = coordinator.controller,
-        isTabletUi = isTabletUi,
         onExternalAction = { action ->
             if (action == TranslationSessionExternalAction.ChooseSourceLanguage && onChooseSourceLanguage != null) {
                 onChooseSourceLanguage()
@@ -99,15 +96,9 @@ fun CoordinatedTranslationSessionHost(
         resultMessage?.let { android.widget.Toast.makeText(context, it, android.widget.Toast.LENGTH_LONG).show() }
     }
     picker?.let { selectedPicker ->
-        TranslationSessionPickerDialog(
+        TranslationSessionPickerSheet(
             coordinator = coordinator,
             picker = selectedPicker,
-            isTabletUi = isTabletUi,
         )
     }
 }
-
-internal val translationSessionDialogProperties = DialogProperties(
-    usePlatformDefaultWidth = false,
-    decorFitsSystemWindows = true,
-)

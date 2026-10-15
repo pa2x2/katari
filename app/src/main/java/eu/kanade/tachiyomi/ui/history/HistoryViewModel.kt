@@ -1,6 +1,5 @@
 package eu.kanade.tachiyomi.ui.history
 
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.viewModelScope
 import eu.kanade.core.util.insertSeparators
@@ -36,6 +35,7 @@ import mihon.entry.interactions.merge.EntryMergeNavigationFeature
 import mihon.entry.interactions.merge.EntryMergeSubject
 import mihon.feature.profiles.core.ProfileScopedStateEvent
 import mihon.feature.profiles.core.observeProfileScopedState
+import mihon.presentation.kit.feedback.SnackbarHostState
 import tachiyomi.core.common.preference.CheckboxState
 import tachiyomi.core.common.preference.mapAsCheckboxState
 import tachiyomi.core.common.util.lang.launchIO

@@ -9,12 +9,13 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
 import mihon.book.api.document.BookDocumentBlockKind
 import mihon.entry.interactions.book.document.reader.BOOK_DOCUMENT_BASE_TEXT_SIZE_SP
-import mihon.entry.interactions.book.document.reader.BOOK_DOCUMENT_BLOCK_HORIZONTAL_PADDING
 import mihon.entry.interactions.book.document.reader.BookDocumentViewerItem
 import mihon.entry.interactions.book.document.reader.bookDocumentFontSize
 import mihon.entry.interactions.book.document.reader.bookDocumentTextPresentation
 import mihon.entry.interactions.book.document.reader.bookDocumentTextStyle
 import mihon.entry.interactions.book.document.reader.toSelectableAnnotatedString
+import mihon.presentation.kit.content.ReadingMetrics
+import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.domain.entry.model.EntryChapter
 
 /** Retains only geometry, without composing hidden selectable text for every candidate page break. */
@@ -65,9 +66,15 @@ internal class BookDocumentPageTextMeasurer(
         )
         return with(density) {
             val authoredPadding = (block.style.paddingEm * BOOK_DOCUMENT_BASE_TEXT_SIZE_SP * textScale).dp
-            val quotePadding = if (block.role.kind == BookDocumentBlockKind.QUOTE) 12.dp.roundToPx() else 0
+            val quotePadding = if (block.role.kind ==
+                BookDocumentBlockKind.QUOTE
+            ) {
+                KatariTheme.spacing.m.roundToPx()
+            } else {
+                0
+            }
             val width = (
-                measuredWidth - BOOK_DOCUMENT_BLOCK_HORIZONTAL_PADDING.roundToPx() * 2 -
+                measuredWidth - ReadingMetrics.blockInset.roundToPx() * 2 -
                     authoredPadding.roundToPx() * 2 - quotePadding
                 ).coerceAtLeast(0)
             val layout = textMeasurer.measure(
@@ -81,7 +88,7 @@ internal class BookDocumentPageTextMeasurer(
             } else {
                 0
             }
-            val height = layout.size.height + 6.dp.roundToPx() * 2 + terminalSpacing +
+            val height = layout.size.height + ReadingMetrics.blockGap.roundToPx() * 2 + terminalSpacing +
                 (authoredPadding + (block.style.spacingBeforeEm * BOOK_DOCUMENT_BASE_TEXT_SIZE_SP * textScale).dp)
                     .roundToPx() +
                 (authoredPadding + (block.style.spacingAfterEm * BOOK_DOCUMENT_BASE_TEXT_SIZE_SP * textScale).dp)

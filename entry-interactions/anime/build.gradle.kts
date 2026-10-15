@@ -14,8 +14,6 @@ kotlin {
         freeCompilerArgs.addAll(
             "-opt-in=androidx.compose.foundation.ExperimentalFoundationApi",
             "-opt-in=androidx.compose.foundation.layout.ExperimentalLayoutApi",
-            "-opt-in=androidx.compose.material3.ExperimentalMaterial3Api",
-            "-opt-in=androidx.compose.material3.ExperimentalMaterial3ExpressiveApi",
             "-opt-in=androidx.compose.ui.ExperimentalComposeUiApi",
             "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi",
             "-opt-in=kotlinx.coroutines.FlowPreview",
@@ -31,6 +29,7 @@ dependencies {
     implementation(projects.core.common)
     implementation(projects.i18n)
     implementation(projects.icons.materialSymbols)
+    implementation(projects.entryViewerChromeUi)
     implementation(projects.presentationCore)
     implementation(projects.sourceApi)
 
@@ -39,7 +38,6 @@ dependencies {
     implementation(libs.androidx.appCompat)
     implementation(libs.androidx.compose.animation)
     implementation(libs.androidx.compose.foundation)
-    implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.uiToolingPreview)
     implementation(libs.androidx.core)
     implementation(libs.androidx.media3.datasourceOkhttp)

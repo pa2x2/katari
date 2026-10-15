@@ -3,11 +3,10 @@ package mihon.tts.ui.picker.voice
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
@@ -17,16 +16,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import mihon.language.api.tag.LanguageTag
+import mihon.presentation.kit.feedback.NoResults
+import mihon.presentation.kit.progress.LoadingIndicator
+import mihon.presentation.kit.theme.KatariTheme
 import mihon.tts.api.provider.TtsVoiceProcessing
 import mihon.tts.api.voice.TtsDefaultVoiceSelection
 import mihon.tts.api.voice.TtsVoice
 import mihon.tts.api.voice.TtsVoiceId
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.LoadingIndicator
 import tachiyomi.presentation.core.i18n.stringResource
 import java.util.Locale
 
@@ -118,14 +118,19 @@ private fun TtsVoicePickerContent(
 
     LazyColumn(
         modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp),
+        contentPadding = PaddingValues(vertical = KatariTheme.spacing.s),
     ) {
         item(key = "search") {
-            TtsVoiceSearchField(onSearchQueryChange = { searchQuery = it })
+            TtsVoiceSearchField(
+                onSearchQueryChange = { searchQuery = it },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = KatariTheme.spacing.rowInset, vertical = KatariTheme.spacing.s),
+            )
         }
         if (showEngineDefault) {
             item(key = "engine-default") {
-                TtsRadioRow(
+                TtsVoiceRow(
                     title = engineDefaultTitle,
                     subtitle = stringResource(
                         MR.strings.tts_settings_voice_engine_default_summary,
@@ -169,7 +174,7 @@ private fun TtsVoicePickerContent(
                     val entry = row.entry
                     val voice = entry.voice
                     val selection = TtsDefaultVoiceSelection.Explicit(voice.id)
-                    TtsRadioRow(
+                    TtsVoiceRow(
                         title = voice.name,
                         subtitle = stringResource(
                             MR.strings.tts_settings_voice_summary,
@@ -185,16 +190,14 @@ private fun TtsVoicePickerContent(
         }
         if (!showEngineDefault && groups.isEmpty()) {
             item(key = "empty") {
-                Text(
-                    text = stringResource(
+                NoResults(
+                    message = stringResource(
                         if (searchQuery.isBlank()) {
                             MR.strings.tts_settings_no_compatible_voices
                         } else {
                             MR.strings.no_results_found
                         },
                     ),
-                    modifier = Modifier.padding(16.dp),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }

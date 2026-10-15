@@ -1,50 +1,29 @@
 package eu.kanade.presentation.more.settings.screen.translation.presentation
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import eu.kanade.presentation.components.AppBar
-import eu.kanade.presentation.components.AppBarTitle
 import eu.kanade.presentation.components.GuideButton
 import eu.kanade.presentation.more.settings.screen.translation.TranslationPlaygroundState
-import eu.kanade.presentation.more.settings.screen.translation.engine.translationEngineLabel
 import eu.kanade.presentation.more.settings.screen.translation.series.SeriesTranslationLanguagesEntry
 import eu.kanade.presentation.more.settings.widget.ProfileSpecificChip
 import eu.kanade.presentation.more.settings.widget.draft.SettingsDraftSaveBar
 import eu.kanade.presentation.more.settings.widget.draft.rememberSettingsDraftLeaveGuard
 import kotlinx.coroutines.delay
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.automirroredrounded.OpenInNew
+import mihon.presentation.kit.list.SectionHeader
+import mihon.presentation.kit.navigation.AppBar
+import mihon.presentation.kit.navigation.AppBarTitle
+import mihon.presentation.kit.navigation.Scaffold
+import mihon.presentation.kit.surface.pulsingHighlight
 import mihon.translation.api.engine.TranslationEngineState
-import mihon.translation.ui.picker.engine.TranslationEngineSelectorRow
-import mihon.translation.ui.picker.language.TranslationLanguagePairSelector
-import mihon.translation.ui.picker.language.TranslationLanguagePairSelectorStyle
-import mihon.translation.ui.picker.language.displayName
 import mihon.translation.ui.picker.language.supportsPair
-import mihon.translation.ui.presentation.TranslationResultSpeechState
 import mihon.translation.ui.presentation.TranslationSessionExternalAction
-import mihon.translation.ui.presentation.TranslationWorkbench
 import mihon.translation.ui.session.TranslationLanguageSupportState
 import mihon.translation.ui.session.TranslationSessionController
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.ScrollbarLazyColumn
-import tachiyomi.presentation.core.components.material.Scaffold
-import tachiyomi.presentation.core.components.material.padding
-import tachiyomi.presentation.core.components.pulsingHighlightBackground
 import tachiyomi.presentation.core.i18n.stringResource
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -74,6 +53,7 @@ internal fun TranslationSettingsContent(
     val engineTitle = stringResource(MR.strings.translation_settings_engine)
     val targetTitle = stringResource(MR.strings.translation_settings_target)
     val listState = rememberLazyListState()
+    val seriesLanguagesTitle = stringResource(MR.strings.translation_series_languages)
     val highlightPlayground = searchHighlightKey == playgroundTitle ||
         searchHighlightKey == engineTitle ||
         searchHighlightKey == targetTitle
@@ -125,10 +105,17 @@ internal fun TranslationSettingsContent(
             modifier = Modifier.fillMaxSize(),
             state = listState,
             contentPadding = contentPadding,
-            verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.medium),
         ) {
             item {
-                TranslationPlayground(
+                SeriesTranslationLanguagesEntry(
+                    count = seriesLanguageCount,
+                    onClick = onOpenSeriesLanguages,
+                    modifier = Modifier.pulsingHighlight(Unit.takeIf { searchHighlightKey == seriesLanguagesTitle }),
+                )
+            }
+            item { SectionHeader(playgroundTitle) }
+            item {
+                TranslationPlaygroundCard(
                     state = playground,
                     engines = engines,
                     languageSupport = languageSupport,
@@ -144,124 +131,10 @@ internal fun TranslationSettingsContent(
                     highlighted = highlightPlayground,
                 )
             }
-            item {
-                SeriesTranslationLanguagesEntry(count = seriesLanguageCount, onClick = onOpenSeriesLanguages)
-            }
         }
     }
 }
 
-@Composable
-private fun TranslationPlayground(
-    state: TranslationPlaygroundState,
-    engines: List<TranslationEngineState>,
-    languageSupport: TranslationLanguageSupportState,
-    controller: TranslationSessionController,
-    onTextChange: (String) -> Unit,
-    onChooseSource: () -> Unit,
-    onChooseTarget: () -> Unit,
-    onSwapLanguages: () -> Unit,
-    onChooseEngine: () -> Unit,
-    canOpenSetup: Boolean,
-    onOpenSetup: () -> Unit,
-    onExternalAction: (TranslationSessionExternalAction) -> Unit,
-    highlighted: Boolean,
-) {
-    val selectedProviderName = engines
-        .firstOrNull { it.engine.id == state.engine }
-        ?.engine
-        ?.providerName
-    val availableLanguageSupport = (languageSupport as? TranslationLanguageSupportState.Available)
-        ?.takeIf { it.engine == state.engine }
-        ?.support
-    val hasSupportedPair = availableLanguageSupport?.supportsPair(
-        state.sourceLanguage,
-        state.targetLanguage,
-    ) == true
-    val canSwapLanguages = availableLanguageSupport?.supportsPair(
-        state.targetLanguage,
-        state.sourceLanguage,
-    ) == true
-    val session by controller.state.collectAsState()
-
-    ElevatedCard(
-        modifier = Modifier
-            .padding(horizontal = MaterialTheme.padding.medium)
-            .fillMaxWidth(),
-        shape = MaterialTheme.shapes.extraLarge,
-    ) {
-        Column(
-            modifier = Modifier
-                .pulsingHighlightBackground(Unit.takeIf { highlighted })
-                .padding(MaterialTheme.padding.large),
-            verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.medium),
-        ) {
-            TranslationLanguagePairSelector(
-                source = state.sourceLanguage.displayName(),
-                target = state.targetLanguage.displayName(),
-                canSwap = canSwapLanguages,
-                onChooseSource = onChooseSource,
-                onChooseTarget = onChooseTarget,
-                onSwap = onSwapLanguages,
-                style = TranslationLanguagePairSelectorStyle.Bar,
-            )
-            TranslationEngineSelectorRow(
-                engineName = when {
-                    !state.engineSelectionResolved ->
-                        stringResource(MR.strings.translation_engine_status_checking)
-                    state.engine == null ->
-                        stringResource(MR.strings.translation_choose_engine)
-                    else -> translationEngineLabel(state.engine, engines.map { it.engine })
-                },
-                onClick = onChooseEngine,
-            )
-            TranslationWorkbench(
-                text = state.text,
-                session = session,
-                sourceSpeechTarget = null,
-                speechState = TranslationResultSpeechState(),
-                onTextChange = onTextChange,
-                onClear = { onTextChange("") },
-                onSpeechToggle = {},
-                onExecute = controller::execute,
-                onRetry = controller::retry,
-                onSelectSource = controller::selectSourceLanguage,
-                onSelectEngine = controller::selectEngine,
-                onExternalAction = onExternalAction,
-                modifier = Modifier.fillMaxWidth(),
-                inputPlaceholder = stringResource(MR.strings.translation_settings_test_input),
-            )
-            if (
-                languageSupport is TranslationLanguageSupportState.Available &&
-                !hasSupportedPair
-            ) {
-                Text(
-                    text = stringResource(MR.strings.translation_language_pair_required),
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodyMedium,
-                )
-            }
-            if (canOpenSetup && selectedProviderName != null) {
-                TextButton(
-                    onClick = onOpenSetup,
-                    modifier = Modifier.align(Alignment.CenterHorizontally),
-                ) {
-                    Icon(
-                        imageVector = MaterialSymbols.AutoMirroredRounded.OpenInNew,
-                        contentDescription = null,
-                    )
-                    Text(
-                        text = stringResource(
-                            MR.strings.translation_settings_open_provider_settings,
-                            selectedProviderName,
-                        ),
-                        modifier = Modifier.padding(start = MaterialTheme.padding.small),
-                    )
-                }
-            }
-        }
-    }
-}
-
-private const val PLAYGROUND_ITEM_INDEX = 0
+// The playground section header, so the scroll shows it above the card.
+private const val PLAYGROUND_ITEM_INDEX = 1
 private val SEARCH_HIGHLIGHT_SCROLL_DELAY = 500.milliseconds

@@ -5,18 +5,17 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.unit.dp
-import eu.kanade.tachiyomi.ui.browse.source.browse.filter.control.FilterSheetInsets
+import mihon.presentation.kit.chip.FilterChip
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.content.TonedSpan
+import mihon.presentation.kit.content.TonedText
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -39,57 +38,57 @@ internal fun SourceFilterRootHeader(
     onChangedOnlyChange: (Boolean) -> Unit,
     presetChip: (@Composable () -> Unit)?,
 ) {
-    val horizontal = FilterSheetInsets.Horizontal
+    val spacing = KatariTheme.spacing
     Column(Modifier.fillMaxWidth()) {
         Row(
-            modifier = Modifier.padding(start = horizontal, end = horizontal, top = 16.dp),
+            modifier = Modifier.padding(start = spacing.rowInset, end = spacing.rowInset, top = spacing.l),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(spacing.m),
         ) {
-            Text(stringResource(MR.strings.filter_title), style = MaterialTheme.typography.headlineSmall)
+            Text(stringResource(MR.strings.filter_title), role = TextRole.SheetTitle)
             presetChip?.invoke()
         }
-        SourceFilterStatusLine(status, Modifier.padding(horizontal = horizontal, vertical = 4.dp))
+        SourceFilterStatusLine(status, Modifier.padding(horizontal = spacing.rowInset, vertical = spacing.xs))
         Row(
-            modifier = Modifier.padding(horizontal = horizontal),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.padding(horizontal = spacing.rowInset),
+            horizontalArrangement = Arrangement.spacedBy(spacing.s),
         ) {
             FilterChip(
+                label = stringResource(MR.strings.filter_view_all),
                 selected = !changedOnly,
                 onClick = { onChangedOnlyChange(false) },
-                label = { Text(stringResource(MR.strings.filter_view_all)) },
             )
             FilterChip(
+                label = stringResource(MR.strings.filter_view_changed, status.changedCount),
                 selected = changedOnly,
                 onClick = { onChangedOnlyChange(true) },
-                label = { Text(stringResource(MR.strings.filter_view_changed, status.changedCount)) },
             )
         }
     }
 }
 
+/** The draft's state on one line: its changes or that it is updating, whether it is applied, and the search query. */
 @Composable
 private fun SourceFilterStatusLine(status: SourceFilterSheetStatus, modifier: Modifier) {
-    val muted = MaterialTheme.colorScheme.onSurfaceVariant
-    val accent = MaterialTheme.colorScheme.primary
-    val updating = stringResource(MR.strings.filter_updating)
     val changed = if (status.changedCount > 0) {
         stringResource(MR.strings.filter_status_changed, status.changedCount)
     } else {
         stringResource(MR.strings.filter_status_defaults)
     }
+    val updating = stringResource(MR.strings.filter_updating)
     val notApplied = stringResource(MR.strings.filter_status_not_applied)
     val query = status.query?.takeIf { it.isNotBlank() }?.let { stringResource(MR.strings.filter_query, it) }
-    Text(
-        text = buildAnnotatedString {
-            withStyle(SpanStyle(color = muted)) { append(if (status.updating) updating else changed) }
-            if (status.unapplied) withStyle(SpanStyle(color = accent)) { append(" · $notApplied") }
-            if (query != null) withStyle(SpanStyle(color = muted)) { append(" · $query") }
-        },
-        style = MaterialTheme.typography.labelMedium,
+    TonedText(
+        spans = listOfNotNull(
+            TonedSpan(if (status.updating) updating else changed),
+            TonedSpan(notApplied, ContentTone.Primary).takeIf { status.unapplied },
+            query?.let(::TonedSpan),
+        ),
+        modifier = modifier,
+        role = TextRole.Supporting,
+        separator = " · ",
         maxLines = 1,
         minLines = 1,
         overflow = TextOverflow.Ellipsis,
-        modifier = modifier,
     )
 }

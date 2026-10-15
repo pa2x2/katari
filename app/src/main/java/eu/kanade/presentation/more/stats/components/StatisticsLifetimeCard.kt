@@ -2,19 +2,13 @@ package eu.kanade.presentation.more.stats.components
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -24,10 +18,15 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.ChevronRight
+import mihon.presentation.kit.content.Icon
+import mihon.presentation.kit.content.LegendSwatch
+import mihon.presentation.kit.content.StatisticsMetrics
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import java.time.LocalDate
@@ -50,30 +49,31 @@ internal fun StatisticsLifetimeCard(
     val locale = LocalConfiguration.current.locales[0]
     val dateFormatter = remember(locale) { DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(locale) }
     val total = trackedDurationMillis + earlierDurationMillis
-    val earlierColor = MaterialTheme.colorScheme.outline
-    StatisticsSectionCard(title = stringResource(MR.strings.statistics_lifetime), contentSpacing = 8.dp) {
-        Text(
-            text = formatDuration(total),
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold,
-        )
+    val earlierColor = KatariTheme.colors.outline
+    val earlierFill = KatariTheme.colors.chart.untrackedFill
+    val hatchStroke = KatariTheme.sizes.border
+    StatisticsSectionCard(
+        title = stringResource(MR.strings.statistics_lifetime),
+        contentSpacing = KatariTheme.spacing.s,
+    ) {
+        Text(text = formatDuration(total), role = TextRole.Metric)
         if (total > 0L) {
             val trackedShare = trackedDurationMillis.toFloat() / total
             Canvas(
                 Modifier
                     .fillMaxWidth()
-                    .padding(top = 12.dp, bottom = 4.dp)
-                    .height(10.dp)
-                    .clip(RoundedCornerShape(5.dp)),
+                    .padding(top = KatariTheme.spacing.m, bottom = KatariTheme.spacing.xs)
+                    .height(StatisticsMetrics.stageBar)
+                    .clip(KatariTheme.shapes.full),
             ) {
                 val trackedWidth = size.width * trackedShare
                 drawRect(color, size = Size(trackedWidth, size.height))
                 drawRect(
-                    earlierColor.copy(alpha = 0.35f),
+                    earlierFill,
                     topLeft = Offset(trackedWidth, 0f),
                     size = Size(size.width - trackedWidth, size.height),
                 )
-                drawUntrackedHatch(trackedWidth, size.width, 0f, size.height, earlierColor)
+                drawUntrackedHatch(trackedWidth, size.width, 0f, size.height, earlierColor, hatchStroke)
             }
         }
         LifetimeRow(
@@ -109,29 +109,25 @@ private fun LifetimeRow(
         modifier = Modifier
             .fillMaxWidth()
             .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
-            .padding(vertical = 8.dp),
+            .padding(vertical = KatariTheme.spacing.s),
         verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.m),
     ) {
-        Canvas(Modifier.size(10.dp).clip(CircleShape)) { drawRect(swatch) }
-        Spacer(Modifier.width(12.dp))
+        LegendSwatch(swatch)
         Column(Modifier.weight(1f)) {
-            Text(label, style = MaterialTheme.typography.bodyMedium)
-            detail?.let {
-                Text(
-                    text = it,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+            Text(label, role = TextRole.Body)
+            detail?.let { Text(text = it, role = TextRole.Supporting) }
+        }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(duration, role = TextRole.Label)
+            if (onClick != null) {
+                Icon(
+                    imageVector = MaterialSymbols.Rounded.ChevronRight,
+                    contentDescription = null,
+                    modifier = Modifier.padding(start = KatariTheme.spacing.xs).size(KatariTheme.sizes.iconSmall),
+                    tone = ContentTone.Secondary,
                 )
             }
-        }
-        Text(duration, style = MaterialTheme.typography.labelLarge)
-        if (onClick != null) {
-            Icon(
-                imageVector = MaterialSymbols.Rounded.ChevronRight,
-                contentDescription = null,
-                modifier = Modifier.padding(start = 4.dp).size(20.dp),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
         }
     }
 }

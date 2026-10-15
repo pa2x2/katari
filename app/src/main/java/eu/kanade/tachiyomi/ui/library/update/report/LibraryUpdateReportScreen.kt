@@ -1,7 +1,5 @@
 package eu.kanade.tachiyomi.ui.library.update.report
 
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -11,7 +9,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.library.update.report.LibraryUpdateReportActions
 import eu.kanade.presentation.library.update.report.LibraryUpdateReportContent
 import eu.kanade.presentation.util.Screen
@@ -19,12 +16,15 @@ import eu.kanade.tachiyomi.ui.entry.EntryScreen
 import eu.kanade.tachiyomi.ui.webview.WebViewScreen
 import kotlinx.coroutines.launch
 import mihon.feature.migration.config.MigrationConfigScreen
+import mihon.presentation.kit.feedback.EmptyScreen
+import mihon.presentation.kit.feedback.LoadingScreen
+import mihon.presentation.kit.feedback.SnackbarHost
+import mihon.presentation.kit.feedback.SnackbarHostState
+import mihon.presentation.kit.navigation.AppBar
+import mihon.presentation.kit.navigation.Scaffold
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.screens.EmptyScreen
-import tachiyomi.presentation.core.screens.LoadingScreen
 
 /** The latest library update: what failed and why, what came in, and what was skipped or left out. */
 class LibraryUpdateReportScreen : Screen() {

@@ -1,7 +1,6 @@
 package eu.kanade.tachiyomi.ui.updates
 
 import android.app.Application
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
@@ -65,6 +64,7 @@ import mihon.feature.library.update.report.LibraryUpdateRunSummary
 import mihon.feature.library.update.report.subscribeLatestSummary
 import mihon.feature.profiles.core.ProfileScopedStateEvent
 import mihon.feature.profiles.core.observeProfileScopedState
+import mihon.presentation.kit.feedback.SnackbarHostState
 import tachiyomi.core.common.preference.TriState
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.launchNonCancellable

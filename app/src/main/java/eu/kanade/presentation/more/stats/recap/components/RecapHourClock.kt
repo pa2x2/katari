@@ -12,11 +12,13 @@ import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.more.stats.recap.motion.LocalRecapClock
 import eu.kanade.presentation.more.stats.recap.motion.RECAP_GROW_MILLIS
 import eu.kanade.presentation.more.stats.recap.motion.ambientWave
 import eu.kanade.presentation.more.stats.recap.motion.rememberRecapEntrance
+import mihon.presentation.kit.content.StoryMetrics
+import mihon.presentation.kit.content.drawingStyle
+import mihon.presentation.kit.theme.TextRole
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -42,6 +44,8 @@ internal fun RecapHourClock(
     val grow = rememberRecapEntrance(order, RECAP_GROW_MILLIS)
     val clock = LocalRecapClock.current
     val measurer = rememberTextMeasurer()
+    val hourStyle = TextRole.Badge.drawingStyle
+    val centerStyle = TextRole.SheetTitle.drawingStyle
     val max = hourlyDurationMillis.max().coerceAtLeast(1L).toFloat()
     Canvas(modifier.size(size)) {
         val center = this.center
@@ -65,24 +69,25 @@ internal fun RecapHourClock(
                     TOP_BRIGHTEN * ambientWave(clock.storyMillis, TOP_PULSE_MILLIS),
                 )
                 share >= BUSY_SHARE -> palette.accent
-                else -> palette.accent.copy(alpha = 0.45f)
+                else -> palette.accentMuted
             }
             drawPath(path, color = color)
         }
         listOf(0, 6, 12, 18).forEach { hour ->
             val angle = Math.toRadians(angleOf(hour).toDouble())
-            val layout = measurer.measure(hourLabel(hour), RecapTypography.Tiny.copy(color = palette.muted))
+            val layout = measurer.measure(hourLabel(hour), hourStyle)
             val distance = outer + LABEL_SPACE.toPx() / 2f
             drawText(
                 layout,
+                color = palette.muted,
                 topLeft = Offset(
                     center.x + (distance * cos(angle)).toFloat() - layout.size.width / 2f,
                     center.y + (distance * sin(angle)).toFloat() - layout.size.height / 2f,
                 ),
             )
         }
-        val label = measurer.measure(centerLabel, RecapTypography.Title.copy(color = palette.ink))
-        drawText(label, topLeft = center - Offset(label.size.width / 2f, label.size.height / 2f))
+        val label = measurer.measure(centerLabel, centerStyle)
+        drawText(label, color = palette.ink, topLeft = center - Offset(label.size.width / 2f, label.size.height / 2f))
     }
 }
 
@@ -97,7 +102,7 @@ private fun circleBounds(center: Offset, radius: Float) = Rect(
     ),
 )
 
-private val LABEL_SPACE = 22.dp
+private val LABEL_SPACE = StoryMetrics.hourClockLabelSpace
 private const val INNER_RATIO = 0.36f
 private const val WEDGE_DEGREES = 15f
 private const val TOP_HOUR = 12

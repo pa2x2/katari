@@ -1,9 +1,7 @@
 package mihon.feature.migration.list.components
 
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import mihon.presentation.kit.dialog.ConfirmDialog
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -12,20 +10,13 @@ fun MigrationExitDialog(
     onDismissRequest: () -> Unit,
     exitMigration: () -> Unit,
 ) {
-    AlertDialog(
+    ConfirmDialog(
+        title = stringResource(MR.strings.migrationListScreen_exitDialogTitle),
+        text = null,
+        confirmLabel = stringResource(MR.strings.migrationListScreen_exitDialog_stopLabel),
+        onConfirm = exitMigration,
         onDismissRequest = onDismissRequest,
-        title = {
-            Text(text = stringResource(MR.strings.migrationListScreen_exitDialogTitle))
-        },
-        confirmButton = {
-            TextButton(onClick = exitMigration) {
-                Text(text = stringResource(MR.strings.migrationListScreen_exitDialog_stopLabel))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismissRequest) {
-                Text(text = stringResource(MR.strings.migrationListScreen_exitDialog_cancelLabel))
-            }
-        },
+        destructive = true,
+        dismissLabel = stringResource(MR.strings.migrationListScreen_exitDialog_cancelLabel),
     )
 }

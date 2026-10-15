@@ -15,7 +15,7 @@ import eu.kanade.presentation.more.settings.screen.browse.components.ExtensionSt
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.util.system.copyToClipboard
 import eu.kanade.tachiyomi.util.system.openInBrowser
-import tachiyomi.presentation.core.screens.LoadingScreen
+import mihon.presentation.kit.feedback.LoadingScreen
 
 class ExtensionStoresScreen(
     private val url: String? = null,

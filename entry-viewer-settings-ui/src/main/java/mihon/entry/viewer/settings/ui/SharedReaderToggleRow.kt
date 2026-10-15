@@ -9,7 +9,7 @@ import kotlinx.coroutines.launch
 import mihon.entry.viewer.settings.ViewerSettingBinding
 import mihon.entry.viewer.settings.shared.ReaderSharedSettingAvailability
 import mihon.entry.viewer.settings.shared.ResolvedReaderSharedToggleSetting
-import tachiyomi.presentation.core.components.CheckboxItem
+import mihon.presentation.kit.list.ToggleRow
 
 @Composable
 internal fun SharedReaderToggleRow(
@@ -25,8 +25,8 @@ internal fun SharedReaderToggleRow(
     val availability = rememberReaderSharedSettingAvailability(setting)
     val enabled = availability == ReaderSharedSettingAvailability.Available
     val disabledAction = (availability as? ReaderSharedSettingAvailability.Disabled)?.action
-    CheckboxItem(
-        label = setting.title.resolve(context),
+    ToggleRow(
+        title = setting.title.resolve(context),
         subtitle = when (availability) {
             is ReaderSharedSettingAvailability.Disabled -> listOfNotNull(
                 availability.reason.resolve(context),
@@ -38,9 +38,8 @@ internal fun SharedReaderToggleRow(
         },
         checked = checked,
         enabled = enabled,
-        onClick = {
+        onCheckedChange = { target ->
             scope.launch {
-                val target = !checked
                 if (target == profileDefault) {
                     binding.clearEntryOverride()
                 } else {

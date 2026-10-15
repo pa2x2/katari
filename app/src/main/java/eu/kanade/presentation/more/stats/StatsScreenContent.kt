@@ -6,12 +6,8 @@ import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.PrimaryScrollableTabRow
-import androidx.compose.material3.Tab
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.key
@@ -21,7 +17,6 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.more.stats.data.StatsActivity
 import eu.kanade.presentation.more.stats.data.StatsRange
 import eu.kanade.presentation.more.stats.data.StatsRecapNotifications
@@ -33,9 +28,10 @@ import eu.kanade.presentation.more.stats.recap.StatisticsYearRecapBanner
 import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
+import mihon.presentation.kit.navigation.Tab
+import mihon.presentation.kit.navigation.TabRow
 import tachiyomi.domain.statistics.model.StatisticsCardLayout
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.material.TabText
 import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable
@@ -107,10 +103,7 @@ fun StatsScreenContent(
             ),
     ) {
         newYearRecapTitle?.let { StatisticsYearRecapBanner(title = it, onOpen = onOpenNewYearRecap) }
-        PrimaryScrollableTabRow(
-            selectedTabIndex = pagerState.currentPage,
-            edgePadding = 0.dp,
-        ) {
+        TabRow(selectedIndex = pagerState.currentPage, scrollable = true) {
             pages.forEachIndexed { index, type ->
                 val label = if (type == null) {
                     stringResource(MR.strings.label_overview_section)
@@ -118,10 +111,9 @@ fun StatsScreenContent(
                     stringResource(state.types.first { it.type == type }.displayName)
                 }
                 Tab(
+                    title = label,
                     selected = pagerState.currentPage == index,
                     onClick = { scope.launch { pagerState.animateScrollToPage(index) } },
-                    text = { TabText(label) },
-                    unselectedContentColor = MaterialTheme.colorScheme.onSurface,
                 )
             }
         }

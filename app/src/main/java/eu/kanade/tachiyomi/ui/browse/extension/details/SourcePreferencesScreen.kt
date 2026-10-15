@@ -32,7 +32,6 @@ import androidx.preference.getOnBindEditTextListener
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.core.util.ifSourcesLoaded
-import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.data.preference.SharedPreferencesDataStore
 import eu.kanade.tachiyomi.widget.TachiyomiTextInputEditText.Companion.setIncognito
@@ -40,10 +39,11 @@ import logcat.LogPriority
 import mihon.entry.interactions.source.EntrySourceSettingsFeature
 import mihon.entry.interactions.source.EntrySourceSettingsPopulateResult
 import mihon.entry.interactions.source.EntrySourceSettingsResolution
+import mihon.presentation.kit.feedback.LoadingScreen
+import mihon.presentation.kit.navigation.AppBar
+import mihon.presentation.kit.navigation.Scaffold
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.source.service.SourceManager
-import tachiyomi.presentation.core.components.material.Scaffold
-import tachiyomi.presentation.core.screens.LoadingScreen
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 

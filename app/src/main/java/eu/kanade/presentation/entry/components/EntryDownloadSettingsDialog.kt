@@ -1,17 +1,11 @@
 package eu.kanade.presentation.entry.components
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -19,13 +13,21 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import eu.kanade.presentation.components.AdaptiveSheet
 import mihon.entry.interactions.download.EntryDownloadOptionGroup
 import mihon.entry.interactions.download.EntryDownloadOptionSelection
 import mihon.entry.interactions.download.EntryDownloadOptions
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.dialog.DialogAction
+import mihon.presentation.kit.list.ChoiceRow
+import mihon.presentation.kit.list.SectionHeader
+import mihon.presentation.kit.progress.LoadingIndicator
+import mihon.presentation.kit.sheet.Sheet
+import mihon.presentation.kit.sheet.SheetActions
+import mihon.presentation.kit.sheet.SheetHeader
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.LoadingIndicator
 import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable
@@ -39,40 +41,38 @@ fun EntryDownloadSettingsDialog(
         mutableStateOf(options?.groups?.associate { it.key to it.selectedKey }.orEmpty())
     }
 
-    AdaptiveSheet(onDismissRequest = onDismissRequest) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
+    Sheet(onDismissRequest = onDismissRequest) {
+        Column(modifier = Modifier.fillMaxWidth()) {
+            SheetHeader(title = stringResource(MR.strings.action_download))
             Column(
                 modifier = Modifier
                     .weight(1f, fill = false)
-                    .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
+                    .verticalScroll(rememberScrollState())
+                    .padding(vertical = KatariTheme.spacing.s),
             ) {
-                Text(stringResource(MR.strings.action_download), style = MaterialTheme.typography.titleLarge)
-                Text(
-                    text = stringResource(MR.strings.download_apply_to_selected, selectedCount),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                if (selectedCount >= 5) {
+                Column(
+                    modifier = Modifier.padding(horizontal = KatariTheme.spacing.rowInset),
+                    verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
+                ) {
                     Text(
-                        text = stringResource(MR.strings.download_storage_warning),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.error,
+                        text = stringResource(MR.strings.download_apply_to_selected, selectedCount),
+                        role = TextRole.Supporting,
                     )
+                    if (selectedCount >= 5) {
+                        Text(
+                            text = stringResource(MR.strings.download_storage_warning),
+                            role = TextRole.Supporting,
+                            tone = ContentTone.Error,
+                        )
+                    }
                 }
 
                 if (options == null) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Center,
-                    ) {
-                        LoadingIndicator()
-                    }
+                    LoadingIndicator(
+                        modifier = Modifier
+                            .align(Alignment.CenterHorizontally)
+                            .padding(KatariTheme.spacing.l),
+                    )
                 } else {
                     options.groups.forEach { group ->
                         DownloadChoiceGroup(
@@ -84,20 +84,14 @@ fun EntryDownloadSettingsDialog(
                 }
             }
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
-            ) {
-                Button(onClick = onDismissRequest) {
-                    Text(stringResource(MR.strings.action_cancel))
-                }
-                Button(
-                    enabled = isEntryDownloadSelectionValid(options, selections),
+            SheetActions(
+                confirm = DialogAction(
+                    label = stringResource(MR.strings.action_download),
                     onClick = { onConfirm(EntryDownloadOptionSelection(selections)) },
-                ) {
-                    Text(stringResource(MR.strings.action_download))
-                }
-            }
+                    enabled = isEntryDownloadSelectionValid(options, selections),
+                ),
+                dismiss = DialogAction(stringResource(MR.strings.action_cancel), onDismissRequest),
+            )
         }
     }
 }
@@ -109,12 +103,12 @@ private fun DownloadChoiceGroup(
     onSelected: (String?) -> Unit,
 ) {
     if (group.options.isEmpty() && group.defaultLabel == null) return
-    Text(group.label, style = MaterialTheme.typography.titleMedium)
+    SectionHeader(text = group.label)
     group.defaultLabel?.let { defaultLabel ->
-        DownloadChoiceRow(defaultLabel, selectedKey == null) { onSelected(null) }
+        ChoiceRow(title = defaultLabel, selected = selectedKey == null, onClick = { onSelected(null) })
     }
     group.options.forEach { option ->
-        DownloadChoiceRow(option.label, selectedKey == option.key) { onSelected(option.key) }
+        ChoiceRow(title = option.label, selected = selectedKey == option.key, onClick = { onSelected(option.key) })
     }
 }
 
@@ -125,22 +119,4 @@ internal fun isEntryDownloadSelectionValid(
     return options != null && options.groups
         .filter(EntryDownloadOptionGroup::required)
         .all { !selections[it.key].isNullOrBlank() }
-}
-
-@Composable
-private fun DownloadChoiceRow(
-    label: String,
-    selected: Boolean,
-    onClick: () -> Unit,
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(vertical = 2.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        RadioButton(selected = selected, onClick = onClick)
-        Text(label, modifier = Modifier.padding(start = 8.dp))
-    }
 }

@@ -3,17 +3,12 @@ package mihon.entry.interactions.anime.media
 import android.view.ViewGroup
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -24,11 +19,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
@@ -46,15 +41,21 @@ import eu.kanade.tachiyomi.ui.video.player.resolveVideoPlayerSeekPosition
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import mihon.entry.viewer.chrome.ui.ReaderMediaLoadOverlay
+import mihon.entry.viewer.chrome.ui.ReaderMediaLoadState
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.automirroredrounded.VolumeOff
 import mihon.icons.materialsymbols.automirroredrounded.VolumeUp
 import mihon.icons.materialsymbols.roundedfilled.Pause
 import mihon.icons.materialsymbols.roundedfilled.PlayArrow
+import mihon.presentation.kit.content.Icon
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.progress.LoadingIndicator
+import mihon.presentation.kit.surface.Surface
+import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.LoadingIndicator
-import tachiyomi.presentation.core.components.reader.ReaderMediaLoadOverlay
-import tachiyomi.presentation.core.components.reader.ReaderMediaLoadState
 import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable
@@ -109,6 +110,7 @@ internal fun AnimeImmersivePlayerSurface(
         animationSpec = tween(durationMillis = 180),
         label = "immersiveVideoAlpha",
     )
+    val spacing = KatariTheme.spacing
     LaunchedEffect(
         active,
         controlsVisible,
@@ -124,6 +126,7 @@ internal fun AnimeImmersivePlayerSurface(
         latestOnToggleControls()
     }
 
+    val mediaColor = KatariTheme.colors.media.toArgb()
     Box(modifier = modifier) {
         AndroidView(
             factory = { androidContext ->
@@ -133,8 +136,8 @@ internal fun AnimeImmersivePlayerSurface(
                     this.player = player
                     setKeepContentOnPlayerReset(true)
                     setEnableComposeSurfaceSyncWorkaround(true)
-                    setShutterBackgroundColor(android.graphics.Color.BLACK)
-                    setBackgroundColor(android.graphics.Color.BLACK)
+                    setShutterBackgroundColor(mediaColor)
+                    setBackgroundColor(mediaColor)
                     layoutParams = ViewGroup.LayoutParams(
                         ViewGroup.LayoutParams.MATCH_PARENT,
                         ViewGroup.LayoutParams.MATCH_PARENT,
@@ -210,17 +213,19 @@ internal fun AnimeImmersivePlayerSurface(
         )
 
         if (speedBoostActive) {
-            Text(
-                text = "2x",
-                color = Color.White,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
+            Surface(
                 modifier = Modifier
                     .align(Alignment.TopCenter)
-                    .padding(top = 84.dp)
-                    .background(Color.Black.copy(alpha = 0.48f), CircleShape)
-                    .padding(horizontal = 14.dp, vertical = 6.dp),
-            )
+                    .padding(top = spacing.xxl * 2 + spacing.xl),
+                container = SurfaceContainer.MediaScrim,
+                shape = KatariTheme.shapes.full,
+            ) {
+                Text(
+                    text = "2x",
+                    modifier = Modifier.padding(horizontal = spacing.l, vertical = spacing.s),
+                    role = TextRole.SectionTitle,
+                )
+            }
         }
 
         if (active && controlsVisible) {
@@ -237,9 +242,9 @@ internal fun AnimeImmersivePlayerSurface(
                 },
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .padding(bottom = controlsBottomInset + 4.dp),
+                    .padding(bottom = controlsBottomInset + spacing.xs),
             )
-            IconButton(
+            Surface(
                 onClick = {
                     controllerInteractionSequence += 1L
                     if (playbackSnapshot.playbackEnded) player.seekTo(0L)
@@ -252,22 +257,19 @@ internal fun AnimeImmersivePlayerSurface(
                     }
                     onPlaybackSnapshotChange(player.capturePlaybackSnapshot())
                 },
+                modifier = Modifier.align(Alignment.Center),
+                container = SurfaceContainer.MediaScrim,
+                shape = KatariTheme.shapes.full,
                 enabled = !isBuffering,
-                modifier = Modifier
-                    .align(Alignment.Center)
-                    .size(56.dp),
             ) {
                 Box(
                     modifier = Modifier
-                        .size(48.dp)
-                        .background(Color.Black.copy(alpha = 0.48f), CircleShape),
+                        .padding(spacing.s)
+                        .size(KatariTheme.sizes.iconLarge),
                     contentAlignment = Alignment.Center,
                 ) {
                     if (isBuffering) {
-                        LoadingIndicator(
-                            modifier = Modifier.size(28.dp),
-                            color = Color.White,
-                        )
+                        LoadingIndicator(modifier = Modifier.fillMaxSize(), color = KatariTheme.colors.onMedia)
                     } else {
                         Icon(
                             imageVector = if (playbackSnapshot.isPlaying) {
@@ -276,37 +278,26 @@ internal fun AnimeImmersivePlayerSurface(
                                 MaterialSymbols.RoundedFilled.PlayArrow
                             },
                             contentDescription = stringResource(
-                                if (playbackSnapshot.isPlaying) {
-                                    MR.strings.action_pause
-                                } else {
-                                    MR.strings.action_play
-                                },
+                                if (playbackSnapshot.isPlaying) MR.strings.action_pause else MR.strings.action_play,
                             ),
-                            modifier = Modifier.size(28.dp),
-                            tint = Color.White,
+                            modifier = Modifier.fillMaxSize(),
                         )
                     }
                 }
             }
-            IconButton(
-                onClick = {
-                    controllerInteractionSequence += 1L
-                    onMutedChange(!muted)
-                },
+            Box(
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
-                    .padding(
-                        end = 12.dp,
-                        bottom = controlsBottomInset + 36.dp,
-                    )
-                    .size(48.dp),
+                    .padding(end = spacing.m, bottom = controlsBottomInset + spacing.xxl)
+                    .size(KatariTheme.sizes.touchTarget)
+                    .clip(KatariTheme.shapes.full)
+                    .clickable(role = Role.Button) {
+                        controllerInteractionSequence += 1L
+                        onMutedChange(!muted)
+                    },
+                contentAlignment = Alignment.Center,
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(36.dp)
-                        .background(Color.Black.copy(alpha = 0.48f), CircleShape),
-                    contentAlignment = Alignment.Center,
-                ) {
+                Surface(container = SurfaceContainer.MediaScrim, shape = KatariTheme.shapes.full) {
                     Icon(
                         imageVector = if (muted) {
                             MaterialSymbols.AutoMirroredRounded.VolumeOff
@@ -316,8 +307,9 @@ internal fun AnimeImmersivePlayerSurface(
                         contentDescription = stringResource(
                             if (muted) MR.strings.action_unmute else MR.strings.action_mute,
                         ),
-                        modifier = Modifier.size(20.dp),
-                        tint = Color.White,
+                        modifier = Modifier
+                            .padding(spacing.s)
+                            .size(KatariTheme.sizes.iconSmall),
                     )
                 }
             }

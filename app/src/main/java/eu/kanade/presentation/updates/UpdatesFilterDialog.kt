@@ -1,37 +1,28 @@
 package eu.kanade.presentation.updates
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.presentation.category.visualName
-import eu.kanade.presentation.components.TabbedDialog
-import eu.kanade.presentation.components.TabbedDialogPaddings
 import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.ui.updates.UpdatesSettingsViewModel
+import mihon.presentation.kit.feedback.LoadingScreen
+import mihon.presentation.kit.list.InfoRow
+import mihon.presentation.kit.list.TriStateRow
+import mihon.presentation.kit.sheet.TabbedSheet
+import mihon.presentation.kit.surface.HorizontalDivider
+import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.TriState
 import tachiyomi.domain.updates.model.UpdatesFeedFilter
 import tachiyomi.domain.updates.service.UpdatesPreferences
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.SettingsItemsPaddings
-import tachiyomi.presentation.core.components.TriStateItem
-import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.screens.LoadingScreen
 import tachiyomi.presentation.core.util.collectAsState
 
 /**
@@ -56,39 +47,33 @@ fun UpdatesFilterDialog(
         if (entryTypes.size > 1 || filter.types.isActive) add(UpdatesFilterTab.Types)
         if (sources.size > 1 || filter.sources.isActive) add(UpdatesFilterTab.Sources)
     }
-    TabbedDialog(
+    TabbedSheet(
         onDismissRequest = onDismissRequest,
         tabTitles = tabs.map { stringResource(it.title) },
     ) { page ->
-        Column(
-            modifier = Modifier
-                .padding(vertical = TabbedDialogPaddings.Vertical)
-                .verticalScroll(rememberScrollState()),
-        ) {
-            when (tabs[page]) {
-                UpdatesFilterTab.Filter -> FilterSheet(
-                    viewModel = viewModel,
-                    options = options,
+        when (tabs[page]) {
+            UpdatesFilterTab.Filter -> FilterSheet(
+                viewModel = viewModel,
+                options = options,
+            )
+            UpdatesFilterTab.Categories -> CategoryFilterSheet(viewModel = viewModel)
+            UpdatesFilterTab.Types -> entryTypes.forEach { type ->
+                TriStateRow(
+                    title = stringResource(type.entryTypePresentation().displayNameLabel),
+                    state = filter.types.stateOf(type),
+                    onStateChange = { viewModel.cycleEntryType(type) },
                 )
-                UpdatesFilterTab.Categories -> CategoryFilterSheet(viewModel = viewModel)
-                UpdatesFilterTab.Types -> entryTypes.forEach { type ->
-                    TriStateItem(
-                        label = stringResource(type.entryTypePresentation().displayNameLabel),
-                        state = filter.types.stateOf(type),
-                        onClick = { viewModel.cycleEntryType(type) },
-                    )
-                }
-                UpdatesFilterTab.Sources ->
-                    sources.entries
-                        .sortedBy { it.value.lowercase() }
-                        .forEach { (sourceId, name) ->
-                            TriStateItem(
-                                label = name,
-                                state = filter.sources.stateOf(sourceId),
-                                onClick = { viewModel.cycleSource(sourceId) },
-                            )
-                        }
             }
+            UpdatesFilterTab.Sources ->
+                sources.entries
+                    .sortedBy { it.value.lowercase() }
+                    .forEach { (sourceId, name) ->
+                        TriStateRow(
+                            title = name,
+                            state = filter.sources.stateOf(sourceId),
+                            onStateChange = { viewModel.cycleSource(sourceId) },
+                        )
+                    }
         }
     }
 }
@@ -128,10 +113,10 @@ private fun FilterSheet(
 ) {
     options.forEach { option ->
         val state by option.preference(viewModel.updatesPreferences).collectAsState()
-        TriStateItem(
-            label = stringResource(option.label),
+        TriStateRow(
+            title = stringResource(option.label),
             state = state,
-            onClick = { viewModel.toggleFilter(option.preference) },
+            onStateChange = { viewModel.toggleFilter(option.preference) },
         )
     }
 }
@@ -142,46 +127,33 @@ data class UpdatesFilterOption(
 )
 
 @Composable
-private fun ColumnScope.CategoryFilterSheet(
+private fun CategoryFilterSheet(
     viewModel: UpdatesSettingsViewModel,
 ) {
-    Text(
-        stringResource(MR.strings.pref_filter_update_categories_details),
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(
-                horizontal = SettingsItemsPaddings.Horizontal,
-                vertical = SettingsItemsPaddings.Vertical,
-            ),
-    )
-
-    HorizontalDivider(modifier = Modifier.padding(MaterialTheme.padding.extraSmall))
+    InfoRow(text = stringResource(MR.strings.pref_filter_update_categories_details), showIcon = false)
+    HorizontalDivider()
 
     val allCategories by viewModel.getCategories.subscribe().collectAsState(initial = emptyList())
 
     if (allCategories.isEmpty()) {
         // since it includes the system category, this should only happen when loading is required
-        LoadingScreen(modifier = Modifier.padding(16.dp))
+        LoadingScreen(modifier = Modifier.padding(KatariTheme.spacing.l))
         return
     }
 
     val excluded by viewModel.updatesPreferences.filterExcludedCategories.collectAsState()
     val included by viewModel.updatesPreferences.filterIncludedCategories.collectAsState()
 
-    Column {
-        allCategories.fastForEach { category ->
-            val state = when (category.id) {
-                in excluded -> TriState.ENABLED_NOT
-                in included -> TriState.ENABLED_IS
-                else -> TriState.DISABLED
-            }
-            TriStateItem(
-                label = category.visualName,
-                state = state,
-                onClick = {
-                    viewModel.cycleCategory(category)
-                },
-            )
+    allCategories.fastForEach { category ->
+        val state = when (category.id) {
+            in excluded -> TriState.ENABLED_NOT
+            in included -> TriState.ENABLED_IS
+            else -> TriState.DISABLED
         }
+        TriStateRow(
+            title = category.visualName,
+            state = state,
+            onStateChange = { viewModel.cycleCategory(category) },
+        )
     }
 }

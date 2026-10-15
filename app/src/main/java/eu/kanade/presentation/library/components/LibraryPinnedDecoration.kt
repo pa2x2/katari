@@ -3,17 +3,17 @@ package eu.kanade.presentation.library.components
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.grid.LazyGridState
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.drawscope.DrawScope
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.drawscope.translate
+import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.domain.library.model.LibraryItem
 import tachiyomi.domain.library.model.LibraryPinnedDisplayStyle
 
@@ -26,7 +26,8 @@ internal fun Modifier.libraryPinnedGridDecoration(
 ): Modifier {
     if (items.isEmpty() || style == LibraryPinnedDisplayStyle.Shelf) return this
     val keys = rememberPinnedSectionKeys(items)
-    val tonalColor = MaterialTheme.colorScheme.surfaceContainer
+    val tonalColor = KatariTheme.colors.surfaceContainer
+    val tonalShape = KatariTheme.shapes.large
     return drawBehind {
         val visibleItems = state.layoutInfo.visibleItemsInfo.filter { it.key in keys }
         if (visibleItems.isEmpty()) return@drawBehind
@@ -40,10 +41,10 @@ internal fun Modifier.libraryPinnedGridDecoration(
         } else {
             size.height
         }
-        val gridInset = 8.dp
+        val gridInset = KatariTheme.spacing.s
         val left = (contentPadding.calculateLeftPadding(layoutDirection) + gridInset).toPx()
         val right = size.width - (contentPadding.calculateRightPadding(layoutDirection) + gridInset).toPx()
-        drawPinnedDecoration(style, tonalColor, left, right, top, bottom)
+        drawPinnedDecoration(style, tonalColor, tonalShape, left, right, top, bottom)
     }
 }
 
@@ -56,7 +57,8 @@ internal fun Modifier.libraryPinnedListDecoration(
 ): Modifier {
     if (items.isEmpty() || style == LibraryPinnedDisplayStyle.Shelf) return this
     val keys = rememberPinnedSectionKeys(items)
-    val tonalColor = MaterialTheme.colorScheme.surfaceContainer
+    val tonalColor = KatariTheme.colors.surfaceContainer
+    val tonalShape = KatariTheme.shapes.large
     return drawBehind {
         val visibleItems = state.layoutInfo.visibleItemsInfo.filter { it.key in keys }
         if (visibleItems.isEmpty()) return@drawBehind
@@ -72,7 +74,7 @@ internal fun Modifier.libraryPinnedListDecoration(
         }
         val left = contentPadding.calculateLeftPadding(layoutDirection).toPx()
         val right = size.width - contentPadding.calculateRightPadding(layoutDirection).toPx()
-        drawPinnedDecoration(style, tonalColor, left, right, top, bottom)
+        drawPinnedDecoration(style, tonalColor, tonalShape, left, right, top, bottom)
     }
 }
 
@@ -90,6 +92,7 @@ private fun rememberPinnedSectionKeys(items: List<LibraryItem>): Set<String> {
 private fun DrawScope.drawPinnedDecoration(
     style: LibraryPinnedDisplayStyle,
     tonalColor: Color,
+    tonalShape: Shape,
     left: Float,
     right: Float,
     top: Float,
@@ -98,13 +101,12 @@ private fun DrawScope.drawPinnedDecoration(
     if (right <= left || bottom <= top) return
     when (style) {
         LibraryPinnedDisplayStyle.TonalGroup -> {
-            val radius = 16.dp.toPx()
-            drawRoundRect(
-                color = tonalColor,
-                topLeft = Offset(left, top),
-                size = Size(right - left, bottom - top),
-                cornerRadius = CornerRadius(radius, radius),
-            )
+            translate(left = left, top = top) {
+                drawOutline(
+                    outline = tonalShape.createOutline(Size(right - left, bottom - top), layoutDirection, this),
+                    color = tonalColor,
+                )
+            }
         }
         LibraryPinnedDisplayStyle.Shelf -> Unit
     }

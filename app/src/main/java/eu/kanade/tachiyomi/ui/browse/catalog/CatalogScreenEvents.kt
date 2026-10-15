@@ -1,10 +1,10 @@
 package eu.kanade.tachiyomi.ui.browse.catalog
 
-import androidx.compose.material3.SnackbarDuration
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import mihon.presentation.kit.feedback.SnackbarDuration
+import mihon.presentation.kit.feedback.SnackbarHostState
+import mihon.presentation.kit.feedback.SnackbarResult
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

@@ -7,24 +7,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.ListItemDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import mihon.feature.migration.review.SourceMigrationReviewGroup
 import mihon.feature.migration.review.SourceMigrationReviewMapping
 import mihon.feature.migration.review.SourceMigrationReviewMember
@@ -32,11 +18,21 @@ import mihon.feature.migration.session.model.SourceMigrationItemState
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.AddCircle
 import mihon.icons.materialsymbols.rounded.ArrowDownward
+import mihon.presentation.kit.button.Button
+import mihon.presentation.kit.button.ButtonStyle
+import mihon.presentation.kit.content.Icon
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.control.Checkbox
+import mihon.presentation.kit.list.SectionHeader
+import mihon.presentation.kit.surface.Card
+import mihon.presentation.kit.surface.CardStyle
+import mihon.presentation.kit.surface.HorizontalDivider
+import mihon.presentation.kit.surface.Surface
+import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.Badge
-import tachiyomi.presentation.core.components.BadgeGroup
-import tachiyomi.presentation.core.components.ListGroupHeader
-import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable
@@ -52,117 +48,91 @@ internal fun SourceMigrationReviewGroupCard(
     val replacements = group.mappings.filter { mapping -> mapping.item.targetTitle != null }
     val unresolved = group.mappings.filter { mapping -> mapping.item.targetTitle == null }
 
-    ElevatedCard(modifier = modifier.fillMaxWidth()) {
-        Column {
-            if (group.memberCount > 1) {
-                Column(
-                    modifier = Modifier.padding(
-                        horizontal = MaterialTheme.padding.medium,
-                        vertical = MaterialTheme.padding.small,
-                    ),
-                    verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.extraSmall),
-                ) {
-                    Text(
-                        text = group.title,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                        style = MaterialTheme.typography.titleMedium,
-                    )
-                    Text(
-                        text = stringResource(
-                            MR.strings.migrationEntriesScreen_selectedCount,
-                            group.mappings.size,
-                            group.memberCount,
-                        ),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        style = MaterialTheme.typography.bodySmall,
-                    )
-                }
-            }
-
-            if (replacements.isNotEmpty()) {
-                SourceMigrationSectionHeader(
-                    title = stringResource(MR.strings.sourceMigrationReview_replacements, replacements.size),
-                    action = if (group.readyMappings.isNotEmpty()) {
-                        if (group.allReadyMappingsIncluded) {
-                            stringResource(MR.strings.migrationConfigScreen_selectNoneLabel)
-                        } else {
-                            stringResource(MR.strings.action_select_all)
-                        }
-                    } else {
-                        null
-                    },
-                    onActionClick = { onToggleGroup(group.id) },
-                )
-                replacements.forEachIndexed { index, mapping ->
-                    if (index > 0) HorizontalDivider()
-                    SourceMigrationMapping(
-                        mapping = mapping,
-                        onIncludedChange = onIncludedChange,
-                        onTargetClick = onTargetClick,
-                        onSourceDetailsClick = onSourceDetailsClick,
-                        onTargetDetailsClick = onTargetDetailsClick,
-                    )
-                }
-            }
-
-            if (unresolved.isNotEmpty()) {
-                SourceMigrationSectionHeader(
-                    title = stringResource(MR.strings.sourceMigrationReview_noMatch, unresolved.size),
-                )
-                unresolved.forEachIndexed { index, mapping ->
-                    if (index > 0) HorizontalDivider()
-                    SourceMigrationMapping(
-                        mapping = mapping,
-                        onIncludedChange = onIncludedChange,
-                        onTargetClick = onTargetClick,
-                        onSourceDetailsClick = onSourceDetailsClick,
-                        onTargetDetailsClick = onTargetDetailsClick,
-                    )
-                }
-            }
-
-            if (group.notSelectedMembers.isNotEmpty()) {
-                SourceMigrationSectionHeader(
-                    title = stringResource(
-                        MR.strings.sourceMigrationReview_notSelected,
-                        group.notSelectedMembers.size,
-                    ),
-                )
-                group.notSelectedMembers.forEachIndexed { index, member ->
-                    if (index > 0) HorizontalDivider()
-                    SourceMigrationNotSelectedMember(member, onSourceDetailsClick)
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun SourceMigrationSectionHeader(
-    title: String,
-    action: String? = null,
-    onActionClick: () -> Unit = {},
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        ListGroupHeader(
-            text = title,
-            modifier = Modifier.weight(1f),
-        )
-        action?.let {
-            TextButton(
-                onClick = onActionClick,
-                modifier = Modifier.padding(end = MaterialTheme.padding.small),
+    Card(modifier = modifier.fillMaxWidth(), style = CardStyle.Elevated) {
+        if (group.memberCount > 1) {
+            Column(
+                modifier = Modifier.padding(
+                    start = KatariTheme.spacing.rowInset,
+                    end = KatariTheme.spacing.rowInset,
+                    top = KatariTheme.spacing.m,
+                ),
+                verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xs),
             ) {
-                Text(text = it)
+                Text(
+                    text = group.title,
+                    role = TextRole.SectionTitle,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Text(
+                    text = stringResource(
+                        MR.strings.migrationEntriesScreen_selectedCount,
+                        group.mappings.size,
+                        group.memberCount,
+                    ),
+                    role = TextRole.Supporting,
+                )
+            }
+        }
+
+        if (replacements.isNotEmpty()) {
+            SectionHeader(
+                text = stringResource(MR.strings.sourceMigrationReview_replacements, replacements.size),
+                actions = if (group.readyMappings.isNotEmpty()) {
+                    {
+                        Button(
+                            label = if (group.allReadyMappingsIncluded) {
+                                stringResource(MR.strings.migrationConfigScreen_selectNoneLabel)
+                            } else {
+                                stringResource(MR.strings.action_select_all)
+                            },
+                            onClick = { onToggleGroup(group.id) },
+                            style = ButtonStyle.Text,
+                        )
+                    }
+                } else {
+                    null
+                },
+            )
+            replacements.forEachIndexed { index, mapping ->
+                if (index > 0) HorizontalDivider()
+                SourceMigrationMapping(
+                    mapping = mapping,
+                    onIncludedChange = onIncludedChange,
+                    onTargetClick = onTargetClick,
+                    onSourceDetailsClick = onSourceDetailsClick,
+                    onTargetDetailsClick = onTargetDetailsClick,
+                )
+            }
+        }
+
+        if (unresolved.isNotEmpty()) {
+            SectionHeader(text = stringResource(MR.strings.sourceMigrationReview_noMatch, unresolved.size))
+            unresolved.forEachIndexed { index, mapping ->
+                if (index > 0) HorizontalDivider()
+                SourceMigrationMapping(
+                    mapping = mapping,
+                    onIncludedChange = onIncludedChange,
+                    onTargetClick = onTargetClick,
+                    onSourceDetailsClick = onSourceDetailsClick,
+                    onTargetDetailsClick = onTargetDetailsClick,
+                )
+            }
+        }
+
+        if (group.notSelectedMembers.isNotEmpty()) {
+            SectionHeader(
+                text = stringResource(MR.strings.sourceMigrationReview_notSelected, group.notSelectedMembers.size),
+            )
+            group.notSelectedMembers.forEachIndexed { index, member ->
+                if (index > 0) HorizontalDivider()
+                SourceMigrationNotSelectedMember(member, onSourceDetailsClick)
             }
         }
     }
 }
 
+/** One source entry over its replacement, or over the prompt to choose one when the search found none. */
 @Composable
 private fun SourceMigrationMapping(
     mapping: SourceMigrationReviewMapping,
@@ -173,23 +143,16 @@ private fun SourceMigrationMapping(
 ) {
     val item = mapping.item
     Column(
-        modifier = Modifier.padding(vertical = MaterialTheme.padding.small),
-        verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
+        modifier = Modifier.padding(vertical = KatariTheme.spacing.s),
+        verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
     ) {
         SourceMigrationEntryListItem(
             title = item.sourceTitle,
             thumbnailUrl = item.sourceThumbnailUrl,
-            supportingContent = {
-                Text(
-                    text = mapping.sourceName,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            },
+            supportingText = mapping.sourceName,
             trailingContent = {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    SourceMigrationStateBadge(item.state)
+                    SourceMigrationItemStatusPill(item.state)
                     if (item.state == SourceMigrationItemState.READY) {
                         Checkbox(
                             checked = item.included,
@@ -208,34 +171,28 @@ private fun SourceMigrationMapping(
         Icon(
             imageVector = MaterialSymbols.Rounded.ArrowDownward,
             contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier
-                .padding(start = MaterialTheme.padding.medium)
-                .size(20.dp),
+                .padding(start = KatariTheme.spacing.rowInset)
+                .size(KatariTheme.sizes.iconSmall),
+            tone = ContentTone.Secondary,
         )
 
         Surface(
-            color = MaterialTheme.colorScheme.surfaceContainerHigh,
-            shape = MaterialTheme.shapes.medium,
             modifier = Modifier
-                .padding(horizontal = MaterialTheme.padding.medium)
+                .padding(horizontal = KatariTheme.spacing.l)
                 .fillMaxWidth(),
+            container = SurfaceContainer.High,
+            shape = KatariTheme.shapes.medium,
         ) {
             if (item.targetTitle != null) {
                 SourceMigrationEntryListItem(
                     title = item.targetTitle,
                     thumbnailUrl = item.targetThumbnailUrl,
+                    inset = KatariTheme.spacing.s,
                     onClick = onTargetClick?.let { onClick ->
                         { onClick(item.sourceEntryId) }
                     },
-                    supportingContent = {
-                        Text(
-                            text = mapping.targetSourceName.orEmpty(),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                    },
+                    supportingText = mapping.targetSourceName.orEmpty(),
                     trailingContent = item.selectedTargetEntryId?.let { targetEntryId ->
                         {
                             SourceMigrationEntryDetailsButton {
@@ -245,68 +202,31 @@ private fun SourceMigrationMapping(
                     },
                 )
             } else {
-                ListItem(
-                    modifier = onTargetClick?.let { onClick ->
-                        Modifier.clickable { onClick(item.sourceEntryId) }
-                    } ?: Modifier,
-                    leadingContent = {
-                        Icon(
-                            imageVector = MaterialSymbols.Rounded.AddCircle,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
+                Row(
+                    modifier = Modifier
+                        .then(
+                            onTargetClick?.let { onClick ->
+                                Modifier.clickable { onClick(item.sourceEntryId) }
+                            } ?: Modifier,
                         )
-                    },
-                    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                        .fillMaxWidth()
+                        .padding(horizontal = KatariTheme.spacing.s, vertical = KatariTheme.spacing.l),
+                    horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.l),
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
+                    Icon(
+                        imageVector = MaterialSymbols.Rounded.AddCircle,
+                        contentDescription = null,
+                        tone = ContentTone.Primary,
+                    )
                     Text(
                         text = stringResource(MR.strings.sourceMigrationReview_chooseReplacement),
-                        color = MaterialTheme.colorScheme.primary,
+                        role = TextRole.ItemTitle,
+                        tone = ContentTone.Primary,
                     )
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun SourceMigrationStateBadge(state: SourceMigrationItemState) {
-    val label = when (state) {
-        SourceMigrationItemState.DISCOVERY_QUEUED,
-        SourceMigrationItemState.DISCOVERING,
-        -> stringResource(MR.strings.sourceMigrationReview_searching)
-        SourceMigrationItemState.READY -> stringResource(MR.strings.sourceMigrationReview_ready)
-        SourceMigrationItemState.NEEDS_REVIEW,
-        SourceMigrationItemState.CONFLICT,
-        -> stringResource(MR.strings.sourceMigrationReview_needsReview)
-        SourceMigrationItemState.NO_MATCH -> stringResource(MR.strings.sourceMigrationReview_noMatchStatus)
-        SourceMigrationItemState.DISCOVERY_FAILED,
-        SourceMigrationItemState.EXECUTION_FAILED,
-        SourceMigrationItemState.CANCELLED,
-        -> stringResource(MR.strings.sourceMigrationReview_failed)
-        SourceMigrationItemState.EXECUTION_QUEUED,
-        SourceMigrationItemState.EXECUTING,
-        -> stringResource(MR.strings.sourceMigrationReview_migrating)
-        SourceMigrationItemState.APPLIED -> stringResource(MR.strings.sourceMigrationReview_migrated)
-        SourceMigrationItemState.APPLIED_INCOMPLETE -> stringResource(MR.strings.sourceMigrationReview_incomplete)
-    }
-    val containerColor = when (state) {
-        SourceMigrationItemState.READY,
-        SourceMigrationItemState.APPLIED,
-        -> MaterialTheme.colorScheme.primary
-        SourceMigrationItemState.NO_MATCH,
-        SourceMigrationItemState.DISCOVERY_FAILED,
-        SourceMigrationItemState.CONFLICT,
-        SourceMigrationItemState.EXECUTION_FAILED,
-        SourceMigrationItemState.APPLIED_INCOMPLETE,
-        -> MaterialTheme.colorScheme.error
-        else -> MaterialTheme.colorScheme.secondary
-    }
-    BadgeGroup {
-        Badge(
-            text = label,
-            color = containerColor,
-            textColor = contentColorFor(containerColor),
-        )
     }
 }
 
@@ -318,17 +238,8 @@ private fun SourceMigrationNotSelectedMember(
     SourceMigrationEntryListItem(
         title = member.member.title,
         thumbnailUrl = member.member.thumbnailUrl,
-        modifier = Modifier
-            .fillMaxWidth()
-            .alpha(0.6f),
-        supportingContent = {
-            Text(
-                text = member.sourceName,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-        },
+        dimmed = true,
+        supportingText = member.sourceName,
         trailingContent = {
             SourceMigrationEntryDetailsButton {
                 onDetailsClick(member.member.entryId)

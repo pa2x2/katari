@@ -3,23 +3,20 @@ package mihon.translation.ui.presentation.language
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.foundation.text.appendInlineContent
-import androidx.compose.material3.Icon
-import androidx.compose.material3.LocalContentColor
-import androidx.compose.material3.LocalTextStyle
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.takeOrElse
 import androidx.compose.ui.text.Placeholder
 import androidx.compose.ui.text.PlaceholderVerticalAlign
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.em
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.automirroredrounded.ArrowForward
+import mihon.presentation.kit.content.Icon
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.TextRole
 
 /**
  * [text] with each translation-direction arrow drawn as an icon centred on the line.
@@ -31,8 +28,8 @@ import mihon.icons.materialsymbols.automirroredrounded.ArrowForward
 fun TranslationDirectionText(
     text: String,
     modifier: Modifier = Modifier,
-    style: TextStyle = LocalTextStyle.current,
-    color: Color = Color.Unspecified,
+    role: TextRole? = null,
+    tone: ContentTone = ContentTone.Inherit,
     maxLines: Int = Int.MAX_VALUE,
     overflow: TextOverflow = TextOverflow.Clip,
 ) {
@@ -44,9 +41,14 @@ fun TranslationDirectionText(
             }
         }
     }
-    val arrowColor = color.takeOrElse { style.color.takeOrElse { LocalContentColor.current } }
+    val arrowTone = arrowTone(role, tone)
     Text(
         text = annotated,
+        modifier = modifier,
+        role = role,
+        tone = tone,
+        maxLines = maxLines,
+        overflow = overflow,
         inlineContent = mapOf(
             DIRECTION_ARROW_ID to InlineTextContent(
                 Placeholder(
@@ -59,16 +61,19 @@ fun TranslationDirectionText(
                     imageVector = MaterialSymbols.AutoMirroredRounded.ArrowForward,
                     contentDescription = null,
                     modifier = Modifier.fillMaxSize(),
-                    tint = arrowColor,
+                    tone = arrowTone,
                 )
             },
         ),
-        modifier = modifier,
-        style = style,
-        color = color,
-        maxLines = maxLines,
-        overflow = overflow,
     )
+}
+
+// Inline content does not inherit the text's colour, so an inherited tone takes the colour the role gives its text.
+private fun arrowTone(role: TextRole?, tone: ContentTone): ContentTone = when {
+    tone != ContentTone.Inherit -> tone
+    role == TextRole.Supporting -> ContentTone.Secondary
+    role == TextRole.GroupLabel -> ContentTone.Primary
+    else -> ContentTone.Inherit
 }
 
 private const val DIRECTION_ARROW_ID = "translation-direction-arrow"

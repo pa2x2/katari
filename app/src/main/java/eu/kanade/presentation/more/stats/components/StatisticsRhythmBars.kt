@@ -3,7 +3,6 @@ package eu.kanade.presentation.more.stats.components
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
@@ -15,7 +14,10 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
+import mihon.presentation.kit.content.StatisticsMetrics
+import mihon.presentation.kit.content.drawingStyle
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 
 /**
  * Evenly spaced vertical bars with optional labels centered under individual bars. The [highlightIndex] bar
@@ -33,26 +35,28 @@ internal fun StatisticsRhythmBars(
     modifier: Modifier = Modifier,
 ) {
     val textMeasurer = rememberTextMeasurer()
-    val labelStyle = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
-    val trackColor = MaterialTheme.colorScheme.surfaceVariant
+    val labelStyle = TextRole.Badge.drawingStyle
+    val labelColor = KatariTheme.colors.onSurfaceVariant
+    val trackColor = KatariTheme.colors.surfaceVariant
+    val mutedColor = KatariTheme.colors.chart.seriesMuted(color)
     val maxValue = values.maxOrNull()?.takeIf { it > 0L } ?: 1L
     Canvas(
         modifier
             .fillMaxWidth()
-            .height(barAreaHeight + LABEL_AREA_HEIGHT)
+            .height(barAreaHeight + StatisticsMetrics.rhythmLabelArea)
             .semantics { contentDescription = description },
     ) {
         val slot = size.width / values.size
-        val barWidth = minOf(slot * BAR_WIDTH_FRACTION, MAX_BAR_WIDTH.toPx())
+        val barWidth = minOf(slot * BAR_WIDTH_FRACTION, StatisticsMetrics.barMaxWidth.toPx())
         val barBottom = barAreaHeight.toPx()
-        val radius = CornerRadius(2.dp.toPx())
+        val radius = CornerRadius(StatisticsMetrics.rhythmBarCorner.toPx())
         values.forEachIndexed { index, value ->
             val left = slot * index + (slot - barWidth) / 2f
             drawRoundRect(trackColor, Offset(left, 0f), Size(barWidth, barBottom), radius)
             if (value > 0L) {
-                val height = (barBottom * value / maxValue).coerceAtLeast(2.dp.toPx())
+                val height = (barBottom * value / maxValue).coerceAtLeast(StatisticsMetrics.rhythmBarMinHeight.toPx())
                 drawRoundRect(
-                    color = if (index == highlightIndex) color else color.copy(alpha = MUTED_ALPHA),
+                    color = if (index == highlightIndex) color else mutedColor,
                     topLeft = Offset(left, barBottom - height),
                     size = Size(barWidth, height),
                     cornerRadius = radius,
@@ -62,14 +66,11 @@ internal fun StatisticsRhythmBars(
                 val layout = textMeasurer.measure(label, labelStyle)
                 val x = (slot * index + slot / 2f - layout.size.width / 2f)
                     .coerceIn(0f, (size.width - layout.size.width).coerceAtLeast(0f))
-                drawText(layout, topLeft = Offset(x, barBottom + LABEL_GAP.toPx()))
+                drawText(layout, color = labelColor, topLeft = Offset(x, barBottom + LABEL_GAP.toPx()))
             }
         }
     }
 }
 
 private const val BAR_WIDTH_FRACTION = 0.7f
-private const val MUTED_ALPHA = 0.5f
-private val MAX_BAR_WIDTH = 24.dp
-private val LABEL_GAP = 4.dp
-private val LABEL_AREA_HEIGHT = 20.dp
+private val LABEL_GAP = KatariTheme.spacing.xs

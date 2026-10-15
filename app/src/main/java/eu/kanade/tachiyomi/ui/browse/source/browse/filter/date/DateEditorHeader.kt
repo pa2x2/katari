@@ -1,33 +1,24 @@
 package eu.kanade.tachiyomi.ui.browse.source.browse.filter.date
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.heading
-import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.unit.dp
 import eu.kanade.tachiyomi.source.entry.filter.EntryDateFilter
 import eu.kanade.tachiyomi.source.entry.filter.EntryDatePrecision
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Close
+import mihon.presentation.kit.button.IconButton
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.control.SegmentedButtons
+import mihon.presentation.kit.surface.SelectableCard
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import java.time.Month
@@ -42,33 +33,34 @@ internal fun DateEditorHeader(
 ) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Text(
-            filter.name,
-            Modifier.weight(1f).semantics { heading() },
-            style = MaterialTheme.typography.headlineSmall,
+            text = filter.name,
+            modifier = Modifier
+                .weight(1f)
+                .semantics { heading() },
+            role = TextRole.SheetTitle,
         )
-        IconButton(onClick = onCancel) { Icon(MaterialSymbols.Rounded.Close, stringResource(MR.strings.action_cancel)) }
+        IconButton(
+            icon = MaterialSymbols.Rounded.Close,
+            contentDescription = stringResource(MR.strings.action_cancel),
+            onClick = onCancel,
+        )
     }
     filter.filterMetadata.description?.takeIf { it.isNotBlank() }?.let {
-        Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(it, role = TextRole.Body, tone = ContentTone.Secondary)
     }
     if (filter.allowedPrecisions.size > 1) {
-        val precisions = EntryDatePrecision.entries.filter { it in filter.allowedPrecisions }
-        SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth().height(IntrinsicSize.Min)) {
-            precisions.forEachIndexed { index, precision ->
-                SegmentedButton(
-                    modifier = Modifier.fillMaxHeight(),
-                    selected = state.precision == precision,
-                    onClick = { onChange(state.choosePrecision(precision)) },
-                    shape = SegmentedButtonDefaults.itemShape(index, precisions.size),
-                    icon = {},
-                ) { Text(precisionLabel(precision)) }
-            }
-        }
+        SegmentedButtons(
+            options = EntryDatePrecision.entries.filter { it in filter.allowedPrecisions },
+            selected = state.precision,
+            onSelect = { onChange(state.choosePrecision(it)) },
+            label = { precisionLabel(it) },
+            modifier = Modifier.fillMaxWidth(),
+        )
     }
 
     if (!state.typing) {
         val locale = datePickerLocale()
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s)) {
             EntryDatePrecision.entries.take(state.precision.ordinal + 1).forEach { component ->
                 val value = when (component) {
                     EntryDatePrecision.YEAR -> state.year?.toString()
@@ -77,44 +69,26 @@ internal fun DateEditorHeader(
                     }
                     EntryDatePrecision.DAY -> state.day?.toString()
                 }
-                OutlinedButton(
+                SelectableCard(
+                    selected = state.step == component,
                     onClick = { onChange(state.editComponent(component)) },
+                    modifier = Modifier.weight(1f),
                     enabled = when (component) {
                         EntryDatePrecision.YEAR -> true
                         EntryDatePrecision.MONTH -> state.year != null
                         EntryDatePrecision.DAY -> state.year != null && state.month != null
                     },
-                    modifier = Modifier.weight(1f).semantics { selected = state.step == component },
-                    shape = MaterialTheme.shapes.medium,
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        containerColor = if (state.step == component) {
-                            MaterialTheme.colorScheme.surfaceContainerHigh
-                        } else {
-                            Color.Transparent
-                        },
-                    ),
-                    contentPadding = androidx.compose.foundation.layout.PaddingValues(
-                        horizontal = 8.dp,
-                        vertical = 8.dp,
-                    ),
                 ) {
-                    Column(Modifier.fillMaxWidth()) {
-                        Text(
-                            if (component ==
-                                EntryDatePrecision.DAY
-                            ) {
-                                stringResource(MR.strings.filter_day)
-                            } else {
-                                precisionLabel(component)
-                            },
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                        Text(
-                            value ?: stringResource(MR.strings.filter_choose),
-                            style = MaterialTheme.typography.titleMedium,
-                        )
-                    }
+                    Text(
+                        text = if (component == EntryDatePrecision.DAY) {
+                            stringResource(MR.strings.filter_day)
+                        } else {
+                            precisionLabel(component)
+                        },
+                        role = TextRole.Badge,
+                        tone = ContentTone.Secondary,
+                    )
+                    Text(value ?: stringResource(MR.strings.filter_choose), role = TextRole.SectionTitle)
                 }
             }
         }

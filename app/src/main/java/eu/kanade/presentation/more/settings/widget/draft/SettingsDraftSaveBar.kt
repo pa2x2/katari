@@ -10,18 +10,17 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.CornerSize
-import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
+import mihon.presentation.kit.button.Button
+import mihon.presentation.kit.button.ButtonStyle
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.surface.Surface
+import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
 
 /** Shown while a settings screen holds edits that are not stored yet, offering to store or drop them. */
@@ -40,29 +39,33 @@ fun SettingsDraftSaveBar(
         modifier = modifier,
     ) {
         Surface(
-            color = MaterialTheme.colorScheme.surfaceContainerHigh,
-            shape = MaterialTheme.shapes.extraLarge.copy(bottomStart = CornerSize(0.dp), bottomEnd = CornerSize(0.dp)),
-            shadowElevation = 3.dp,
+            container = SurfaceContainer.High,
+            shape = KatariTheme.shapes.extraLargeTop,
+            shadow = true,
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .navigationBarsPadding()
-                    .padding(horizontal = MaterialTheme.padding.medium, vertical = MaterialTheme.padding.small),
-                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
+                    .padding(horizontal = KatariTheme.spacing.l, vertical = KatariTheme.spacing.s),
+                horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
                     text = stringResource(MR.strings.settings_draft_unsaved_changes),
-                    style = MaterialTheme.typography.bodyLarge,
                     modifier = Modifier.weight(1f),
+                    role = TextRole.ItemTitle,
                 )
-                TextButton(onClick = onDiscard) {
-                    Text(stringResource(MR.strings.action_discard))
-                }
-                Button(onClick = onSave, enabled = saveEnabled) {
-                    Text(stringResource(MR.strings.action_save))
-                }
+                Button(
+                    label = stringResource(MR.strings.action_discard),
+                    onClick = onDiscard,
+                    style = ButtonStyle.Text,
+                )
+                Button(
+                    label = stringResource(MR.strings.action_save),
+                    onClick = onSave,
+                    enabled = saveEnabled,
+                )
             }
         }
     }

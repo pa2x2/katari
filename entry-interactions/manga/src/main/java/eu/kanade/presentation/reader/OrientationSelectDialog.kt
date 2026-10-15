@@ -3,7 +3,6 @@ package eu.kanade.presentation.reader
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -13,14 +12,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import dev.icerock.moko.resources.StringResource
-import eu.kanade.presentation.reader.components.AdaptiveSheet
-import eu.kanade.presentation.theme.TachiyomiPreviewTheme
 import eu.kanade.tachiyomi.ui.reader.setting.ReaderSettingsScreenModel
 import mihon.entry.interactions.reader.settings.ReaderOrientation
+import mihon.entry.viewer.chrome.ui.ModeSelectionDialog
+import mihon.presentation.kit.list.IconChoiceGrid
+import mihon.presentation.kit.sheet.Sheet
+import mihon.presentation.kit.surface.Surface
+import mihon.presentation.kit.theme.KatariPreviewTheme
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.SettingsIconGrid
-import tachiyomi.presentation.core.components.material.IconToggleButton
-import tachiyomi.presentation.core.components.reader.ModeSelectionDialog
 import tachiyomi.presentation.core.i18n.stringResource
 
 private val ReaderOrientationsWithoutDefault = ReaderOrientation.entries - ReaderOrientation.DEFAULT
@@ -33,7 +32,7 @@ internal fun OrientationSelectDialog(
 ) {
     val orientation by screenModel.orientationFlow.collectAsState()
 
-    AdaptiveSheet(onDismissRequest = onDismissRequest) {
+    Sheet(onDismissRequest = onDismissRequest) {
         DialogContent(
             orientation = orientation,
             onChangeOrientation = {
@@ -60,26 +59,21 @@ private fun DialogContent(
         }.takeIf { orientation != ReaderOrientation.DEFAULT },
         onApply = { onChangeOrientation(selected) },
     ) {
-        SettingsIconGrid(MR.strings.rotation_type) {
-            items(ReaderOrientationsWithoutDefault) { mode ->
-                IconToggleButton(
-                    checked = mode == selected,
-                    onCheckedChange = {
-                        selected = mode
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    imageVector = mode.icon,
-                    title = stringResource(mode.stringRes),
-                )
-            }
-        }
+        IconChoiceGrid(
+            title = stringResource(MR.strings.rotation_type),
+            options = ReaderOrientationsWithoutDefault,
+            selected = selected,
+            onSelect = { selected = it },
+            icon = { it.icon },
+            label = { stringResource(it.stringRes) },
+        )
     }
 }
 
 @PreviewLightDark
 @Composable
 private fun DialogContentPreview() {
-    TachiyomiPreviewTheme {
+    KatariPreviewTheme {
         Surface {
             Column {
                 DialogContent(

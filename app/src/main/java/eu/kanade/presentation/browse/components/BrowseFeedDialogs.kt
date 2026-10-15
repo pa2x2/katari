@@ -2,25 +2,20 @@ package eu.kanade.presentation.browse.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Switch
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import dev.icerock.moko.resources.StringResource
+import mihon.presentation.kit.dialog.ConfirmDialog
+import mihon.presentation.kit.dialog.Dialog
+import mihon.presentation.kit.dialog.DialogAction
+import mihon.presentation.kit.field.TextField
+import mihon.presentation.kit.list.ToggleRow
+import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -38,70 +33,38 @@ fun BrowseFeedNameDialog(
     val trimmedValue = value.trim()
     val isDuplicate = trimmedValue.isNotEmpty() && duplicateName(trimmedValue)
 
-    AlertDialog(
+    Dialog(
         onDismissRequest = onDismissRequest,
-        title = { Text(text = stringResource(title)) },
-        text = {
-            Column(
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                OutlinedTextField(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(min = 56.dp),
-                    value = value,
-                    onValueChange = { value = it },
-                    label = { Text(text = stringResource(MR.strings.name)) },
-                    supportingText = {
-                        Text(
-                            text = if (isDuplicate) {
-                                stringResource(MR.strings.browse_feed_preset_exists)
-                            } else {
-                                stringResource(MR.strings.information_required_plain)
-                            },
-                        )
-                    },
-                    isError = isDuplicate,
-                    singleLine = true,
-                )
+        title = stringResource(title),
+        confirm = DialogAction(
+            label = stringResource(MR.strings.action_save),
+            onClick = { onConfirm(trimmedValue, chronological) },
+            enabled = trimmedValue.isNotEmpty() && !isDuplicate,
+        ),
+        dismiss = DialogAction(stringResource(MR.strings.action_cancel), onDismissRequest),
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.m)) {
+            TextField(
+                value = value,
+                onValueChange = { value = it },
+                modifier = Modifier.fillMaxWidth(),
+                label = stringResource(MR.strings.name),
+                supportingText = if (isDuplicate) {
+                    stringResource(MR.strings.browse_feed_preset_exists)
+                } else {
+                    stringResource(MR.strings.information_required_plain)
+                },
+                isError = isDuplicate,
+            )
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    Text(
-                        text = stringResource(MR.strings.browse_feed_chronological),
-                        modifier = Modifier.weight(1f),
-                        style = MaterialTheme.typography.bodyMedium,
-                    )
-                    Switch(
-                        checked = chronological,
-                        onCheckedChange = { chronological = it },
-                    )
-                }
-
-                Text(
-                    text = stringResource(MR.strings.browse_feed_chronological_summary),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-        },
-        confirmButton = {
-            TextButton(
-                enabled = trimmedValue.isNotEmpty() && !isDuplicate,
-                onClick = { onConfirm(trimmedValue, chronological) },
-            ) {
-                Text(text = stringResource(MR.strings.action_save))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismissRequest) {
-                Text(text = stringResource(MR.strings.action_cancel))
-            }
-        },
-    )
+            ToggleRow(
+                title = stringResource(MR.strings.browse_feed_chronological),
+                subtitle = stringResource(MR.strings.browse_feed_chronological_summary),
+                checked = chronological,
+                onCheckedChange = { chronological = it },
+            )
+        }
+    }
 }
 
 @Composable
@@ -110,28 +73,15 @@ fun DeleteBrowsePresetDialog(
     onDismissRequest: () -> Unit,
     onConfirm: () -> Unit,
 ) {
-    AlertDialog(
+    ConfirmDialog(
+        title = stringResource(MR.strings.are_you_sure),
+        text = stringResource(MR.strings.browse_delete_preset_confirmation, presetName),
+        confirmLabel = stringResource(MR.strings.action_delete),
+        onConfirm = {
+            onDismissRequest()
+            onConfirm()
+        },
         onDismissRequest = onDismissRequest,
-        dismissButton = {
-            TextButton(onClick = onDismissRequest) {
-                Text(text = stringResource(MR.strings.action_cancel))
-            }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    onDismissRequest()
-                    onConfirm()
-                },
-            ) {
-                Text(text = stringResource(MR.strings.action_delete))
-            }
-        },
-        title = {
-            Text(text = stringResource(MR.strings.are_you_sure))
-        },
-        text = {
-            Text(text = stringResource(MR.strings.browse_delete_preset_confirmation, presetName))
-        },
+        destructive = true,
     )
 }

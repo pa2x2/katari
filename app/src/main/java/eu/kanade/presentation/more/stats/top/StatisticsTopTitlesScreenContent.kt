@@ -9,15 +9,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.more.stats.components.StatisticsTopTitleRow
 import eu.kanade.presentation.more.stats.components.color
 import eu.kanade.presentation.more.stats.components.rememberStatisticsDurationFormatter
@@ -26,10 +22,14 @@ import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.ui.stats.top.StatisticsTopTitlesViewModel
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
+import mihon.presentation.kit.button.Button
+import mihon.presentation.kit.button.ButtonStyle
+import mihon.presentation.kit.feedback.EmptyScreen
+import mihon.presentation.kit.feedback.LoadingScreen
+import mihon.presentation.kit.progress.LoadingIndicator
+import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.LoadingIndicator
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.screens.LoadingScreen
 
 @Composable
 fun StatisticsTopTitlesScreenContent(
@@ -45,12 +45,7 @@ fun StatisticsTopTitlesScreenContent(
         when {
             state.failed -> LoadFailed(onLoadMore, Modifier.fillMaxSize().padding(paddingValues))
             state.loading || !state.endReached -> LoadingScreen(Modifier.padding(paddingValues))
-            else -> Box(Modifier.fillMaxSize().padding(paddingValues), contentAlignment = Alignment.Center) {
-                Text(
-                    text = stringResource(MR.strings.statistics_empty_period),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
+            else -> EmptyScreen(MR.strings.statistics_empty_period, Modifier.padding(paddingValues))
         }
         return
     }
@@ -67,10 +62,10 @@ fun StatisticsTopTitlesScreenContent(
     LazyColumn(
         state = listState,
         contentPadding = PaddingValues(
-            start = 16.dp,
-            top = paddingValues.calculateTopPadding() + 4.dp,
-            end = 16.dp,
-            bottom = paddingValues.calculateBottomPadding() + 20.dp,
+            start = KatariTheme.spacing.contentInset,
+            top = paddingValues.calculateTopPadding() + KatariTheme.spacing.xs,
+            end = KatariTheme.spacing.contentInset,
+            bottom = paddingValues.calculateBottomPadding() + KatariTheme.spacing.xl,
         ),
     ) {
         itemsIndexed(state.titles, key = { _, entry -> entry.entryId }) { index, entry ->
@@ -84,7 +79,7 @@ fun StatisticsTopTitlesScreenContent(
                 completionCount = entry.completionCount,
                 durationMillis = entry.durationMillis,
                 shareOf = totalDurationMillis,
-                color = type?.accent?.color() ?: MaterialTheme.colorScheme.primary,
+                color = type?.accent?.color() ?: KatariTheme.colors.primary,
                 formatDuration = formatDuration,
                 onClick = { onEntryClick(entry.entryId) },
             )
@@ -92,8 +87,8 @@ fun StatisticsTopTitlesScreenContent(
         when {
             state.failed -> item(key = "failed") { LoadFailed(onLoadMore, Modifier.fillMaxWidth()) }
             state.loading -> item(key = "loading") {
-                Box(Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
-                    LoadingIndicator(Modifier.size(24.dp))
+                Box(Modifier.fillMaxWidth().padding(KatariTheme.spacing.l), contentAlignment = Alignment.Center) {
+                    LoadingIndicator(Modifier.size(KatariTheme.sizes.icon))
                 }
             }
         }
@@ -102,12 +97,12 @@ fun StatisticsTopTitlesScreenContent(
 
 @Composable
 private fun LoadFailed(onRetry: () -> Unit, modifier: Modifier) {
-    Box(modifier.padding(16.dp), contentAlignment = Alignment.Center) {
-        TextButton(onClick = onRetry) {
-            Text(
-                stringResource(MR.strings.statistics_could_not_load_activity) + " · " +
-                    stringResource(MR.strings.action_retry),
-            )
-        }
+    Box(modifier.padding(KatariTheme.spacing.l), contentAlignment = Alignment.Center) {
+        Button(
+            label = stringResource(MR.strings.statistics_could_not_load_activity) + " · " +
+                stringResource(MR.strings.action_retry),
+            onClick = onRetry,
+            style = ButtonStyle.Text,
+        )
     }
 }

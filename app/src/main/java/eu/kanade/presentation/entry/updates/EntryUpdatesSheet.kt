@@ -3,24 +3,15 @@ package eu.kanade.presentation.entry.updates
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.category.visualName
-import eu.kanade.presentation.components.AdaptiveSheet
 import eu.kanade.presentation.library.update.labelRes
 import eu.kanade.presentation.library.update.sourcePauseEndText
 import eu.kanade.presentation.util.relativeTimeSpanString
@@ -29,6 +20,19 @@ import eu.kanade.tachiyomi.ui.entry.updates.EntryUpdatesViewModel
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Info
 import mihon.icons.materialsymbols.rounded.PauseCircle
+import mihon.presentation.kit.button.Button
+import mihon.presentation.kit.button.ButtonStyle
+import mihon.presentation.kit.content.Icon
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.list.ChoiceRow
+import mihon.presentation.kit.list.SettingsRow
+import mihon.presentation.kit.sheet.Sheet
+import mihon.presentation.kit.sheet.SheetHeader
+import mihon.presentation.kit.surface.Surface
+import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.library.update.model.EntryUpdateDecisionReason
@@ -36,8 +40,6 @@ import tachiyomi.domain.library.update.model.EntryUpdateMode
 import tachiyomi.domain.library.update.model.EntryUpdateOutcome
 import tachiyomi.domain.library.update.model.EntryUpdateStatus
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.NavigationItem
-import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -59,133 +61,116 @@ fun EntryUpdatesSheet(
     onReleaseEstimateClicked: (() -> Unit)?,
     onDismissRequest: () -> Unit,
 ) {
-    AdaptiveSheet(onDismissRequest = onDismissRequest) {
-        Column(
-            modifier = Modifier
-                .verticalScroll(rememberScrollState())
-                .padding(vertical = MaterialTheme.padding.medium),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
-        ) {
-            Text(
-                text = stringResource(MR.strings.entry_updates_title),
-                style = MaterialTheme.typography.titleLarge,
-                modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
-            )
-            if (mode == EntryUpdateMode.FOLLOW_RULES) {
-                DecisionCard(text = decisionText(status, categories))
-                // Always check overrides a paused source, so the pause only matters while the entry follows the rules.
-                pausedSources.forEach { source ->
-                    PausedSourceCard(source = source, onResume = { onResumeSource(source.id) })
+    Sheet(onDismissRequest = onDismissRequest) {
+        Column {
+            SheetHeader(title = stringResource(MR.strings.entry_updates_title))
+            Column(
+                modifier = Modifier
+                    .weight(1f, fill = false)
+                    .verticalScroll(rememberScrollState())
+                    .padding(vertical = KatariTheme.spacing.s),
+                verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xs),
+            ) {
+                if (mode == EntryUpdateMode.FOLLOW_RULES) {
+                    DecisionCard(text = decisionText(status, categories))
+                    // Always check overrides a paused source, so the pause only matters while the entry follows the rules.
+                    pausedSources.forEach { source ->
+                        PausedSourceCard(source = source, onResume = { onResumeSource(source.id) })
+                    }
+                }
+                if (entry.updateStrategy == EntryUpdateStrategy.ONLY_FETCH_ONCE) {
+                    DecisionCard(text = stringResource(MR.strings.entry_updates_fetch_once))
+                }
+                EntryUpdateMode.entries.forEach { option ->
+                    ChoiceRow(
+                        title = stringResource(option.titleRes),
+                        selected = option == mode,
+                        onClick = { onModeSelected(option) },
+                        subtitle = stringResource(option.summaryRes),
+                    )
+                }
+                if (onReleaseEstimateClicked != null) {
+                    SettingsRow(
+                        title = stringResource(MR.strings.entry_updates_release_estimate),
+                        subtitle = releaseEstimate,
+                        onClick = onReleaseEstimateClicked,
+                    )
+                } else {
+                    Text(
+                        text = releaseEstimate,
+                        role = TextRole.Supporting,
+                        modifier = Modifier.padding(
+                            horizontal = KatariTheme.spacing.rowInset,
+                            vertical = KatariTheme.spacing.s,
+                        ),
+                    )
                 }
             }
-            if (entry.updateStrategy == EntryUpdateStrategy.ONLY_FETCH_ONCE) {
-                DecisionCard(text = stringResource(MR.strings.entry_updates_fetch_once))
-            }
-            EntryUpdateMode.entries.forEach { option ->
-                ModeOption(
-                    mode = option,
-                    selected = option == mode,
-                    onClick = { onModeSelected(option) },
-                )
-            }
-            if (onReleaseEstimateClicked != null) {
-                NavigationItem(
-                    label = stringResource(MR.strings.entry_updates_release_estimate),
-                    subtitle = releaseEstimate,
-                    onClick = onReleaseEstimateClicked,
-                )
-            } else {
-                Text(
-                    text = releaseEstimate,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
-                )
-            }
         }
+    }
+}
+
+@Composable
+private fun UpdatesNoticeCard(content: @Composable RowScope.() -> Unit) {
+    Surface(
+        container = SurfaceContainer.Highest,
+        shape = KatariTheme.shapes.medium,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = KatariTheme.spacing.contentInset, vertical = KatariTheme.spacing.xs),
+    ) {
+        Row(
+            modifier = Modifier.padding(start = KatariTheme.spacing.m),
+            horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
+            verticalAlignment = Alignment.CenterVertically,
+            content = content,
+        )
     }
 }
 
 @Composable
 private fun DecisionCard(text: String) {
-    Surface(
-        color = MaterialTheme.colorScheme.surfaceContainerHighest,
-        shape = MaterialTheme.shapes.medium,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 4.dp),
-    ) {
-        Row(
-            modifier = Modifier.padding(12.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            Icon(
-                imageVector = MaterialSymbols.Rounded.Info,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-            )
-            Text(text = text, style = MaterialTheme.typography.bodyMedium)
-        }
+    UpdatesNoticeCard {
+        Icon(
+            imageVector = MaterialSymbols.Rounded.Info,
+            contentDescription = null,
+            tone = ContentTone.Primary,
+        )
+        Text(
+            text = text,
+            role = TextRole.Body,
+            modifier = Modifier.padding(vertical = KatariTheme.spacing.m).padding(end = KatariTheme.spacing.m),
+        )
     }
 }
 
 @Composable
 private fun PausedSourceCard(source: EntryUpdatesViewModel.PausedSource, onResume: () -> Unit) {
-    Surface(
-        color = MaterialTheme.colorScheme.surfaceContainerHighest,
-        shape = MaterialTheme.shapes.medium,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 4.dp),
-    ) {
-        Row(
-            modifier = Modifier.padding(start = 12.dp, top = 4.dp, bottom = 4.dp, end = 4.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Icon(
-                imageVector = MaterialSymbols.Rounded.PauseCircle,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-            )
-            Text(
-                text = if (source.until == null) {
-                    stringResource(MR.strings.entry_updates_source_paused, source.name)
-                } else {
-                    stringResource(
-                        MR.strings.entry_updates_source_paused_until,
-                        source.name,
-                        sourcePauseEndText(source.until),
-                    )
-                },
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.weight(1f),
-            )
-            TextButton(onClick = onResume) {
-                Text(stringResource(MR.strings.library_update_report_resume))
-            }
-        }
-    }
-}
-
-@Composable
-private fun ModeOption(mode: EntryUpdateMode, selected: Boolean, onClick: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .selectable(selected = selected, role = Role.RadioButton, onClick = onClick)
-            .padding(horizontal = 12.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        RadioButton(selected = selected, onClick = null, modifier = Modifier.padding(end = 12.dp))
-        Column {
-            Text(text = stringResource(mode.titleRes), style = MaterialTheme.typography.bodyLarge)
-            Text(
-                text = stringResource(mode.summaryRes),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
+    UpdatesNoticeCard {
+        Icon(
+            imageVector = MaterialSymbols.Rounded.PauseCircle,
+            contentDescription = null,
+            tone = ContentTone.Primary,
+        )
+        Text(
+            text = if (source.until == null) {
+                stringResource(MR.strings.entry_updates_source_paused, source.name)
+            } else {
+                stringResource(
+                    MR.strings.entry_updates_source_paused_until,
+                    source.name,
+                    sourcePauseEndText(source.until),
+                )
+            },
+            role = TextRole.Body,
+            modifier = Modifier.weight(1f),
+        )
+        Button(
+            label = stringResource(MR.strings.library_update_report_resume),
+            onClick = onResume,
+            modifier = Modifier.padding(KatariTheme.spacing.xs),
+            style = ButtonStyle.Text,
+        )
     }
 }
 

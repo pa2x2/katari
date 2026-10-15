@@ -1,13 +1,15 @@
 package mihon.entry.interactions.book.document.reader
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -21,6 +23,7 @@ import mihon.entry.interactions.book.R
 import mihon.entry.interactions.book.document.reader.table.BookDocumentTableRenderer
 import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentReaderPalette
 import mihon.entry.interactions.book.preparation.BookPublicationResourceLoader
+import mihon.presentation.kit.theme.KatariTheme
 
 /** Projects and renders one composed semantic block without retaining chapter-wide Android spans. */
 @Composable
@@ -119,13 +122,14 @@ internal fun BookDocumentBlockRenderer(
                 onReaderTap = onReaderTap,
                 preserveTerminalSpacing = preserveTerminalSpacing,
             )
-            BookDocumentBlockContent.ThematicBreak -> HorizontalDivider(
+            BookDocumentBlockContent.ThematicBreak -> Spacer(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable {
                         selection?.handleReaderTap(onReaderTap) ?: onReaderTap()
-                    },
-                color = palette.outline,
+                    }
+                    .height(KatariTheme.sizes.border)
+                    .background(palette.outline),
             )
             is BookDocumentBlockContent.Unsupported -> BookDocumentSelectableText(
                 text = stringResource(R.string.book_document_unsupported, content.elementType),
@@ -136,7 +140,7 @@ internal fun BookDocumentBlockRenderer(
                 separatorAfter = "\n\n",
                 onAnchorClick = onAnchorClick,
                 onExternalLinkClick = onExternalLinkClick,
-                contentAlpha = 0.72f,
+                standIn = true,
             )
         }
     }

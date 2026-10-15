@@ -9,8 +9,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -19,9 +17,14 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
-import androidx.compose.ui.unit.dp
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.content.drawingStyle
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import mihon.text.recognition.api.result.TextRecognitionResult
 
 /**
@@ -34,15 +37,21 @@ fun TextRecognitionPlaygroundResult(
     result: TextRecognitionResult?,
     modifier: Modifier = Modifier,
 ) {
-    val color = MaterialTheme.colorScheme.primary
-    val badgeText = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.onPrimary)
+    val color = KatariTheme.colors.primary
+    val badgeTextColor = KatariTheme.colors.onPrimary
+    val badgeText = TextRole.Badge.drawingStyle
+    val outlineWidth = KatariTheme.sizes.selectedBorder
+    val badgeRadius = KatariTheme.sizes.iconSmall / 2
+    val maxImageHeight = with(LocalDensity.current) {
+        LocalWindowInfo.current.containerSize.height.toDp() * MAX_IMAGE_WINDOW_FRACTION
+    }
     val textMeasurer = rememberTextMeasurer()
     val imageBitmap = remember(image) { image.asImageBitmap() }
-    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s)) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(max = 480.dp)
+                .heightIn(max = maxImageHeight)
                 .aspectRatio(image.width.toFloat() / image.height, matchHeightConstraintsFirst = true),
         ) {
             Image(
@@ -55,24 +64,25 @@ fun TextRecognitionPlaygroundResult(
                 Canvas(modifier = Modifier.matchParentSize()) {
                     val scaleX = size.width / result.imageSize.width
                     val scaleY = size.height / result.imageSize.height
-                    val badgeRadius = BADGE_RADIUS.toPx()
+                    val badgeRadiusPx = badgeRadius.toPx()
                     result.regions.forEachIndexed { index, region ->
                         val topLeft = Offset(region.bounds.left * scaleX, region.bounds.top * scaleY)
                         drawRect(
                             color = color,
                             topLeft = topLeft,
                             size = Size(region.bounds.width * scaleX, region.bounds.height * scaleY),
-                            style = Stroke(width = 2.dp.toPx()),
+                            style = Stroke(width = outlineWidth.toPx()),
                         )
                         // Kept whole inside the image even for regions at its edges.
                         val center = Offset(
-                            topLeft.x.coerceIn(badgeRadius, size.width - badgeRadius),
-                            topLeft.y.coerceIn(badgeRadius, size.height - badgeRadius),
+                            topLeft.x.coerceIn(badgeRadiusPx, size.width - badgeRadiusPx),
+                            topLeft.y.coerceIn(badgeRadiusPx, size.height - badgeRadiusPx),
                         )
-                        drawCircle(color = color, radius = badgeRadius, center = center)
+                        drawCircle(color = color, radius = badgeRadiusPx, center = center)
                         val number = textMeasurer.measure((index + 1).toString(), badgeText)
                         drawText(
                             textLayoutResult = number,
+                            color = badgeTextColor,
                             topLeft = center - Offset(number.size.width / 2f, number.size.height / 2f),
                         )
                     }
@@ -80,12 +90,10 @@ fun TextRecognitionPlaygroundResult(
             }
         }
         result?.regions?.forEachIndexed { index, region ->
-            Text(
-                text = "${index + 1}. ${region.text}",
-                style = MaterialTheme.typography.bodyMedium,
-            )
+            Text(text = "${index + 1}. ${region.text}", role = TextRole.Body)
         }
     }
 }
 
-private val BADGE_RADIUS = 9.dp
+// Tall pages such as webtoon strips stay small enough to see whole, with their recognized text below.
+private const val MAX_IMAGE_WINDOW_FRACTION = 0.6f

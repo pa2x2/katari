@@ -1,6 +1,5 @@
 package eu.kanade.presentation.more.settings.screen.libraryupdates
 
-import androidx.compose.material3.Switch
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -8,15 +7,16 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.category.visualName
-import eu.kanade.presentation.components.AppBar
-import eu.kanade.presentation.components.AppBarTitle
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.PreferenceScreen
 import eu.kanade.presentation.more.settings.widget.ProfileSpecificChip
 import eu.kanade.presentation.util.Screen
 import mihon.feature.library.update.planning.LibraryUpdateSkipRule
+import mihon.presentation.kit.control.Switch
+import mihon.presentation.kit.navigation.AppBar
+import mihon.presentation.kit.navigation.AppBarTitle
+import mihon.presentation.kit.navigation.Scaffold
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
 
 /** One category's switch, and the skip rules and interval it can use instead of the library's. */

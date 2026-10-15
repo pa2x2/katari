@@ -9,10 +9,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.PrimaryTabRow
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Tab
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -23,8 +19,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import dev.icerock.moko.resources.StringResource
 import kotlinx.coroutines.launch
-import tachiyomi.presentation.core.components.material.Scaffold
-import tachiyomi.presentation.core.components.material.TabText
+import mihon.presentation.kit.feedback.SnackbarHost
+import mihon.presentation.kit.feedback.SnackbarHostState
+import mihon.presentation.kit.navigation.AppBar
+import mihon.presentation.kit.navigation.AppBarActions
+import mihon.presentation.kit.navigation.AppBarTitle
+import mihon.presentation.kit.navigation.Scaffold
+import mihon.presentation.kit.navigation.SearchToolbar
+import mihon.presentation.kit.navigation.Tab
+import mihon.presentation.kit.navigation.TabRow
 import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable
@@ -56,7 +59,7 @@ fun TabbedScreen(
                 )
             }
         },
-        snackbarHost = { AppSnackbarHost(hostState = snackbarHostState) },
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
     ) { contentPadding ->
         Column(
             modifier = Modifier.padding(
@@ -66,20 +69,21 @@ fun TabbedScreen(
             ),
         ) {
             if (chromeVisible) {
-                PrimaryTabRow(
-                    selectedTabIndex = state.currentPage,
-                    modifier = Modifier.zIndex(1f),
-                ) {
+                TabRow(selectedIndex = state.currentPage, modifier = Modifier.zIndex(1f)) {
                     tabs.forEachIndexed { index, tab ->
-                        Tab(
-                            selected = state.currentPage == index,
-                            onClick = { scope.launch { state.animateScrollToPage(index) } },
-                            text = {
-                                tab.tabLabel?.invoke()
-                                    ?: TabText(text = stringResource(tab.titleRes), badgeCount = tab.badgeNumber)
-                            },
-                            unselectedContentColor = MaterialTheme.colorScheme.onSurface,
-                        )
+                        val selected = state.currentPage == index
+                        val onClick: () -> Unit = { scope.launch { state.animateScrollToPage(index) } }
+                        val label = tab.tabLabel
+                        if (label != null) {
+                            Tab(selected = selected, onClick = onClick, label = label)
+                        } else {
+                            Tab(
+                                title = stringResource(tab.titleRes),
+                                selected = selected,
+                                onClick = onClick,
+                                count = tab.badgeNumber,
+                            )
+                        }
                     }
                 }
             }

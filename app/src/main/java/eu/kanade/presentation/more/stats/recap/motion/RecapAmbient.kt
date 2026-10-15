@@ -3,7 +3,7 @@ package eu.kanade.presentation.more.stats.recap.motion
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.unit.dp
+import mihon.presentation.kit.content.StoryMetrics
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
@@ -25,7 +25,7 @@ internal fun ambientSwing(millis: Long, periodMillis: Long): Float =
 @Composable
 internal fun Modifier.recapFloat(): Modifier {
     val clock = LocalRecapClock.current
-    val lift = 7.dp
+    val lift = StoryMetrics.floatLift
     return graphicsLayer {
         val millis = clock.storyMillis
         translationY = -lift.toPx() * ambientWave(millis, FLOAT_MILLIS)

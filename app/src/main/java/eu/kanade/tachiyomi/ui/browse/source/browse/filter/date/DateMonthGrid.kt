@@ -3,16 +3,17 @@ package eu.kanade.tachiyomi.ui.browse.source.browse.filter.date
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import eu.kanade.tachiyomi.source.entry.filter.EntryDateFilter
 import eu.kanade.tachiyomi.source.entry.filter.EntryDatePrecision
 import eu.kanade.tachiyomi.source.entry.filter.EntryPartialDate
+import mihon.presentation.kit.button.Button
+import mihon.presentation.kit.button.ButtonStyle
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import java.time.Month
@@ -26,15 +27,17 @@ internal fun DateMonthGrid(
 ) {
     val year = state.year ?: return
     val locale = datePickerLocale()
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(year.toString(), Modifier.weight(1f), style = MaterialTheme.typography.titleSmall)
-            TextButton(onClick = { onChange(state.editComponent(EntryDatePrecision.YEAR)) }) {
-                Text(stringResource(MR.strings.filter_change_year))
-            }
+            Text(year.toString(), Modifier.weight(1f), role = TextRole.Label)
+            Button(
+                label = stringResource(MR.strings.filter_change_year),
+                onClick = { onChange(state.editComponent(EntryDatePrecision.YEAR)) },
+                style = ButtonStyle.Text,
+            )
         }
         Month.entries.chunked(3).forEach { row ->
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s)) {
                 row.forEach { month ->
                     DatePickerCell(
                         label = month.getDisplayName(TextStyle.SHORT_STANDALONE, locale),

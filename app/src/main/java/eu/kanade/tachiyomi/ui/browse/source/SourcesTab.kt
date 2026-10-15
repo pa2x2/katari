@@ -17,7 +17,6 @@ import eu.kanade.domain.source.model.CATALOGUE_POPULAR_QUERY
 import eu.kanade.presentation.browse.SourceOptionsDialog
 import eu.kanade.presentation.browse.SourcesFilterSheet
 import eu.kanade.presentation.browse.SourcesScreen
-import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.TabContent
 import eu.kanade.tachiyomi.ui.browse.catalog.CatalogScreen
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchScreen
@@ -26,6 +25,7 @@ import kotlinx.coroutines.launch
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.FilterList
 import mihon.icons.materialsymbols.rounded.TravelExplore
+import mihon.presentation.kit.navigation.AppBar
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

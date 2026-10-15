@@ -16,7 +16,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.WarningBanner
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.data.backup.create.BackupCreateJob
@@ -28,11 +27,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import mihon.presentation.kit.list.CheckRow
+import mihon.presentation.kit.navigation.AppBar
+import mihon.presentation.kit.navigation.Scaffold
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.LabeledCheckbox
 import tachiyomi.presentation.core.components.LazyColumnWithAction
-import tachiyomi.presentation.core.components.SectionCard
-import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
 
 class CreateBackupScreen : Screen() {
@@ -93,13 +92,13 @@ class CreateBackupScreen : Screen() {
                 }
 
                 item {
-                    SectionCard(MR.strings.label_library) {
+                    BackupSectionCard(stringResource(MR.strings.label_library)) {
                         Options(BackupOptions.libraryOptions, state, model)
                     }
                 }
 
                 item {
-                    SectionCard(MR.strings.label_settings) {
+                    BackupSectionCard(stringResource(MR.strings.label_settings)) {
                         Options(BackupOptions.settingsOptions, state, model)
                     }
                 }
@@ -114,8 +113,8 @@ class CreateBackupScreen : Screen() {
         model: CreateBackupViewModel,
     ) {
         options.forEach { option ->
-            LabeledCheckbox(
-                label = stringResource(option.label),
+            CheckRow(
+                title = stringResource(option.label),
                 checked = option.getter(state.options),
                 onCheckedChange = {
                     model.toggle(option.setter, it)

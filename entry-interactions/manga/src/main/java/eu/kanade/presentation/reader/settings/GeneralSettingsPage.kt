@@ -2,9 +2,6 @@ package eu.kanade.presentation.reader.settings
 
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -16,9 +13,10 @@ import mihon.entry.interactions.reader.settings.ChapterTransitionMode
 import mihon.entry.interactions.reader.settings.MangaReaderSettings
 import mihon.entry.interactions.reader.settings.ReadingMode
 import mihon.entry.viewer.settings.updateEntry
+import mihon.presentation.kit.chip.FilterChip
+import mihon.presentation.kit.list.ChipsRow
+import mihon.presentation.kit.list.SliderRow
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.SettingsChipRow
-import tachiyomi.presentation.core.components.SliderItem
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
@@ -51,24 +49,24 @@ internal fun ColumnScope.GeneralPage(screenModel: ReaderSettingsScreenModel) {
 
     val flashColor by settings.flashColor.state.collectAsState()
 
-    SettingsChipRow(MR.strings.pref_reader_theme) {
+    ChipsRow(title = stringResource(MR.strings.pref_reader_theme)) {
         themes.forEach { (labelRes, value) ->
             FilterChip(
                 selected = readerTheme.effectiveValue == value,
                 onClick = { scope.launch { settings.readerTheme.updateEntry(value) } },
-                label = { Text(stringResource(labelRes)) },
+                label = stringResource(labelRes),
             )
         }
     }
 
-    BindingCheckboxItem(
+    BindingToggleRow(
         label = stringResource(MR.strings.pref_show_page_number),
         binding = settings.showPageNumber,
     )
 
     val verticalNavigatorModes by settings.verticalNavigator.state.collectAsState()
 
-    SettingsChipRow(MR.strings.pref_vertical_navigator) {
+    ChipsRow(title = stringResource(MR.strings.pref_vertical_navigator)) {
         ReadingMode.entries.filter { it != ReadingMode.DEFAULT }.forEach { mode ->
             FilterChip(
                 selected = verticalNavigatorModes.effectiveValue.contains(mode),
@@ -80,7 +78,7 @@ internal fun ColumnScope.GeneralPage(screenModel: ReaderSettingsScreenModel) {
                     }
                     scope.launch { settings.verticalNavigator.updateEntry(newModes) }
                 },
-                label = { Text(stringResource(mode.stringRes)) },
+                label = stringResource(mode.stringRes),
             )
         }
     }
@@ -88,101 +86,99 @@ internal fun ColumnScope.GeneralPage(screenModel: ReaderSettingsScreenModel) {
     if (verticalNavigatorModes.effectiveValue.isNotEmpty()) {
         val verticalNavigatorHeight by settings.verticalNavigatorHeight.state.collectAsState()
 
-        BindingCheckboxItem(
+        BindingToggleRow(
             label = stringResource(MR.strings.pref_webtoon_vertical_navigator_on_left),
             binding = settings.verticalNavigatorOnLeft,
         )
 
-        SliderItem(
-            label = stringResource(MR.strings.pref_vertical_navigator_height),
+        SliderRow(
+            title = stringResource(MR.strings.pref_vertical_navigator_height),
             value = verticalNavigatorHeight.effectiveValue,
             valueRange = 65..100,
             steps = 6,
-            onChange = { value -> scope.launch { settings.verticalNavigatorHeight.updateEntry(value) } },
+            onValueChange = { value -> scope.launch { settings.verticalNavigatorHeight.updateEntry(value) } },
         )
     }
 
-    BindingCheckboxItem(
+    BindingToggleRow(
         label = stringResource(MR.strings.pref_reader_show_status_bar),
         binding = settings.showStatusBar,
     )
 
-    BindingCheckboxItem(
+    BindingToggleRow(
         label = stringResource(MR.strings.pref_reader_show_navigation_bar),
         binding = settings.showNavigationBar,
     )
 
     if (LocalActivity.current?.hasDisplayCutout() == true) {
-        BindingCheckboxItem(
+        BindingToggleRow(
             label = stringResource(MR.strings.pref_cutout_short),
             binding = settings.drawUnderCutout,
         )
     }
 
-    BindingCheckboxItem(
+    BindingToggleRow(
         label = stringResource(MR.strings.pref_keep_screen_on),
         binding = settings.keepScreenOn,
     )
 
-    BindingCheckboxItem(
+    BindingToggleRow(
         label = stringResource(MR.strings.pref_read_with_long_tap),
         binding = settings.readWithLongTap,
     )
 
     val chapterTransitionMode by settings.chapterTransition.state.collectAsState()
 
-    SettingsChipRow(MR.strings.pref_chapter_transition) {
+    ChipsRow(title = stringResource(MR.strings.pref_chapter_transition)) {
         ChapterTransitionMode.entries.forEach { mode ->
             FilterChip(
                 selected = chapterTransitionMode.effectiveValue == mode,
                 onClick = { scope.launch { settings.chapterTransition.updateEntry(mode) } },
-                label = { Text(stringResource(mode.titleRes)) },
+                label = stringResource(mode.titleRes),
             )
         }
     }
 
-    BindingCheckboxItem(
+    BindingToggleRow(
         label = stringResource(MR.strings.pref_page_transitions),
         binding = settings.pageTransitions,
     )
 
-    BindingCheckboxItem(
+    BindingToggleRow(
         label = stringResource(MR.strings.pref_flash_page),
         binding = settings.flashOnPageChange,
     )
     if (flashPageState.effectiveValue) {
-        SliderItem(
+        SliderRow(
             value = flashMillis.effectiveValue / MangaReaderSettings.MILLI_CONVERSION,
             valueRange = 1..15,
-            label = stringResource(MR.strings.pref_flash_duration),
-            valueString = stringResource(MR.strings.pref_flash_duration_summary, flashMillis.effectiveValue),
-            onChange = {
+            title = stringResource(MR.strings.pref_flash_duration),
+            valueText = stringResource(MR.strings.pref_flash_duration_summary, flashMillis.effectiveValue),
+            onValueChange = {
                 scope.launch {
                     settings.flashDurationMillis.updateEntry(it * MangaReaderSettings.MILLI_CONVERSION)
                 }
             },
-            pillColor = MaterialTheme.colorScheme.surfaceContainerHighest,
         )
-        SliderItem(
+        SliderRow(
             value = flashInterval.effectiveValue,
             valueRange = 1..10,
-            label = stringResource(MR.strings.pref_flash_page_interval),
-            valueString = pluralStringResource(
+            title = stringResource(MR.strings.pref_flash_page_interval),
+            valueText = pluralStringResource(
                 MR.plurals.pref_pages,
                 flashInterval.effectiveValue,
                 flashInterval.effectiveValue,
             ),
-            onChange = { value ->
+            onValueChange = { value ->
                 scope.launch { settings.flashPageInterval.updateEntry(value) }
             },
-            pillColor = MaterialTheme.colorScheme.surfaceContainerHighest,
         )
-        SettingsChipRow(MR.strings.pref_flash_with) {
+        ChipsRow(title = stringResource(MR.strings.pref_flash_with)) {
             flashColors.forEach { (labelRes, value) ->
                 FilterChip(
                     selected = flashColor.effectiveValue == value,
                     onClick = { scope.launch { settings.flashColor.updateEntry(value) } },
-                    label = { Text(stringResource(labelRes)) },
+                    label = stringResource(labelRes),
                 )
             }
         }

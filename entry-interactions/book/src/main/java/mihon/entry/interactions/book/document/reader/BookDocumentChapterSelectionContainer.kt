@@ -41,10 +41,7 @@ internal fun BookDocumentChapterSelectionContainer(
     val interaction = LocalBookDocumentTextInteraction.current
     val palette = LocalBookDocumentReaderPalette.current
     val selectionColors = remember(palette.accent) {
-        TextSelectionColors(
-            handleColor = palette.accent,
-            backgroundColor = palette.accent.copy(alpha = 0.4f),
-        )
+        TextSelectionColors(handleColor = palette.accent, backgroundColor = palette.selection)
     }
     val clipboard = LocalClipboard.current
     val coroutineScope = rememberCoroutineScope()

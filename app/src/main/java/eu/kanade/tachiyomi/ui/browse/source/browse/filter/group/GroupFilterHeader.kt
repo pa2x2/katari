@@ -7,13 +7,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -22,9 +15,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import eu.kanade.tachiyomi.source.entry.EntryFilter
 import eu.kanade.tachiyomi.source.entry.filter.EntryFilterGroupSummary
 import eu.kanade.tachiyomi.source.entry.filter.validationIssues
@@ -33,13 +24,23 @@ import eu.kanade.tachiyomi.ui.browse.source.browse.filter.canClear
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.change.FilterChangeBadges
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.change.FilterChanges
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.clearSelection
-import eu.kanade.tachiyomi.ui.browse.source.browse.filter.control.FilterSheetInsets
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.metadata
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.KeyboardArrowDown
 import mihon.icons.materialsymbols.rounded.KeyboardArrowUp
 import mihon.icons.materialsymbols.rounded.MoreVert
 import mihon.icons.materialsymbols.rounded.RestartAlt
+import mihon.presentation.kit.button.IconButton
+import mihon.presentation.kit.content.Icon
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.content.TonedSpan
+import mihon.presentation.kit.content.TonedText
+import mihon.presentation.kit.menu.DropdownMenu
+import mihon.presentation.kit.menu.DropdownMenuItem
+import mihon.presentation.kit.surface.HorizontalDivider
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -67,33 +68,33 @@ internal fun GroupFilterHeader(
     val sourceSummary = (filter as? EntryFilterGroupSummary)
         ?.selectionSummary(filter.state.filterIsInstance<EntryFilter<*>>())
         ?.takeIf { it.isNotBlank() }
-    val hostSummary = filter.selectionSummary(changes).takeUnless { it.isEmpty }?.text()
-    val subtitle = sourceSummary?.let(::AnnotatedString)
+    val hostSummary = filter.selectionSummary(changes).takeUnless { it.isEmpty }?.spans()
+    val subtitle = sourceSummary?.let { listOf(TonedSpan(it)) }
         ?: hostSummary
-        ?: filter.metadata?.description?.takeIf { it.isNotBlank() }?.let(::AnnotatedString)
+        ?: filter.metadata?.description?.takeIf { it.isNotBlank() }?.let { listOf(TonedSpan(it)) }
     val clearDiffersFromReset = filter.canClear() && !changes.hasEmptyDefault(filter) && filter.activeCount() != 0
+    val spacing = KatariTheme.spacing
     Column {
-        if (leadingDivider) HorizontalDivider(Modifier.padding(horizontal = FilterSheetInsets.Horizontal))
+        if (leadingDivider) HorizontalDivider(Modifier.padding(horizontal = spacing.rowInset))
         Row(
             Modifier
                 .fillMaxWidth()
                 .clickable { state.expanded = !state.expanded }
-                .padding(start = FilterSheetInsets.Horizontal, end = 8.dp, top = 8.dp, bottom = 8.dp)
-                .padding(vertical = 4.dp),
+                .padding(start = spacing.rowInset, end = spacing.s, top = spacing.m, bottom = spacing.m),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            horizontalArrangement = Arrangement.spacedBy(spacing.xs),
         ) {
             Column(Modifier.weight(1f)) {
                 Text(
-                    filter.name,
-                    style = MaterialTheme.typography.titleSmall,
-                    color = if (hasIssues) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
+                    text = filter.name,
+                    role = TextRole.Label,
+                    tone = if (hasIssues) ContentTone.Error else ContentTone.Inherit,
                 )
                 subtitle?.let {
-                    Text(
-                        it,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    TonedText(
+                        spans = it,
+                        role = TextRole.Supporting,
+                        separator = " · ",
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
                     )
@@ -101,16 +102,15 @@ internal fun GroupFilterHeader(
             }
             FilterChangeBadges(change, hasIssues = hasIssues)
             if (change.isChanged) {
-                IconButton(onClick = {
-                    onReset(filter)
-                    onUpdate()
-                }) {
-                    Icon(
-                        MaterialSymbols.Rounded.RestartAlt,
-                        contentDescription = stringResource(MR.strings.filter_reset_group, filter.name),
-                        tint = MaterialTheme.colorScheme.primary,
-                    )
-                }
+                IconButton(
+                    icon = MaterialSymbols.Rounded.RestartAlt,
+                    contentDescription = stringResource(MR.strings.filter_reset_group, filter.name),
+                    onClick = {
+                        onReset(filter)
+                        onUpdate()
+                    },
+                    tone = ContentTone.Primary,
+                )
             }
             if (clearDiffersFromReset) {
                 GroupClearMenu(filter.name) {
@@ -119,13 +119,13 @@ internal fun GroupFilterHeader(
                 }
             }
             Icon(
-                if (state.expanded) {
+                imageVector = if (state.expanded) {
                     MaterialSymbols.Rounded.KeyboardArrowUp
                 } else {
                     MaterialSymbols.Rounded.KeyboardArrowDown
                 },
                 contentDescription = null,
-                modifier = Modifier.padding(horizontal = 4.dp),
+                modifier = Modifier.padding(horizontal = spacing.xs),
             )
         }
     }
@@ -135,15 +135,14 @@ internal fun GroupFilterHeader(
 private fun GroupClearMenu(groupName: String, onClear: () -> Unit) {
     var expanded by remember { mutableStateOf(false) }
     Box {
-        IconButton(onClick = { expanded = true }) {
-            Icon(
-                MaterialSymbols.Rounded.MoreVert,
-                contentDescription = stringResource(MR.strings.filter_group_actions, groupName),
-            )
-        }
+        IconButton(
+            icon = MaterialSymbols.Rounded.MoreVert,
+            contentDescription = stringResource(MR.strings.filter_group_actions, groupName),
+            onClick = { expanded = true },
+        )
         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
             DropdownMenuItem(
-                text = { Text(stringResource(MR.strings.filter_clear)) },
+                label = stringResource(MR.strings.filter_clear),
                 onClick = {
                     expanded = false
                     onClear()

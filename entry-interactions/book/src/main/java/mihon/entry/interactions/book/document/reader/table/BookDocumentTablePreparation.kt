@@ -18,11 +18,12 @@ import mihon.book.api.document.BookDocumentBlock
 import mihon.book.api.document.BookDocumentBlockContent
 import mihon.book.api.document.layoutBookDocumentTable
 import mihon.entry.interactions.book.document.reader.BOOK_DOCUMENT_BASE_TEXT_SIZE_SP
-import mihon.entry.interactions.book.document.reader.BOOK_DOCUMENT_BLOCK_HORIZONTAL_PADDING
 import mihon.entry.interactions.book.document.reader.BookDocumentSection
 import mihon.entry.interactions.book.document.reader.LocalBookDocumentResourceLoader
 import mihon.entry.interactions.book.document.reader.LocalBookDocumentTextScale
 import mihon.entry.interactions.book.document.reader.rememberBookDocumentFonts
+import mihon.presentation.kit.content.ReadingMetrics
+import mihon.presentation.kit.theme.KatariTheme
 
 /** Prepares table geometry when sections arrive, before lazy scrolling needs their cells. */
 @Composable
@@ -53,7 +54,7 @@ internal fun <T> BookDocumentTablePreparation(
                     val width = with(density) {
                         val authoredPadding = (block.style.paddingEm * BOOK_DOCUMENT_BASE_TEXT_SIZE_SP * textScale).dp
                         (
-                            constraints.maxWidth - BOOK_DOCUMENT_BLOCK_HORIZONTAL_PADDING.roundToPx() * 2 -
+                            constraints.maxWidth - ReadingMetrics.blockInset.roundToPx() * 2 -
                                 authoredPadding.roundToPx() * 2
                             ).coerceAtLeast(1)
                     }
@@ -85,7 +86,7 @@ private fun PrepareTable(block: BookDocumentBlock, width: Int, cache: BookDocume
                 texts,
                 BookDocumentTableTextMeasurer(density, layoutDirection, localeList, fontFamilyResolver),
                 width,
-                with(density) { 8.dp.roundToPx() },
+                with(density) { KatariTheme.spacing.s.roundToPx() },
             )
             ensureActive()
             cache.put(block, width, fonts, geometry)

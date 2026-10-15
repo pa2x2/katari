@@ -17,6 +17,12 @@
 - Avoid catch-all directories such as `common`, `misc`, or `utils`. Name structural groups after concrete ownership, and place narrowly shared helpers with the feature that owns their semantics.
 - Before finishing a change, inspect every touched source file and directory. If responsibilities or ownership are not clear from the tree alone, reorganize that area before committing rather than leaving cleanup for a follow-up.
 
+## UI kit
+- `presentation-core` is the UI kit: `mihon.presentation.kit` owns colour, typography, spacing, sizes, shape and every component. Build screens from kit components and `KatariTheme` tokens only.
+- Outside `presentation-core`, Compose Material, raw `Dialog`/`Popup`, numeric dp/sp, `Color(…)`, text styles, font weights, corner shapes and literal alphas are rejected by `checkUiKitBoundaries`, which runs with `spotlessCheck`. No other module may depend on or opt into Material.
+- Pick text by its job (`Text(role = TextRole.…)`), colour by role (`tone = ContentTone.…`, `SurfaceContainer.…`), and emphasis by colour role or `enabled`, never alpha. Rows come from the kit `list` package and pick their control from `LocalRowDensity`; sheets, dialogs, menus, app bars and empty states have one kit component each.
+- When a screen needs something the kit lacks, add it to the matching kit package as a semantic component, parameter or token (enums such as `ButtonStyle` or `StatusTone`, never colour, shape or text-style parameters). Values that come from data, such as user-picked or document colours, go through the narrow content APIs in `kit/content` and `kit/theme`.
+
 ## Comments
 A comment earns its place by telling the reader something the code can't: why it's done this way, a constraint or platform quirk it works around, a bug it prevents, or what a non-obvious value means. If deleting the comment loses nothing a careful reader couldn't get from the code, delete it.
 

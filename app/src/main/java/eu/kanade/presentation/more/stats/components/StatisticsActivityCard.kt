@@ -2,19 +2,10 @@ package eu.kanade.presentation.more.stats.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -28,9 +19,6 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.more.stats.ActivityState
 import eu.kanade.presentation.more.stats.data.StatsActivity
 import eu.kanade.presentation.more.stats.data.StatsActivityWindow
@@ -38,9 +26,13 @@ import eu.kanade.presentation.more.stats.data.StatsRange
 import eu.kanade.presentation.more.stats.data.StatsTrendGranularity
 import eu.kanade.presentation.more.stats.data.StatsTrendPoint
 import eu.kanade.presentation.more.stats.data.StatsType
-import kotlinx.coroutines.delay
+import mihon.presentation.kit.button.Button
+import mihon.presentation.kit.button.ButtonStyle
+import mihon.presentation.kit.content.StatisticsMetrics
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.progress.LoadingIndicator
+import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.LoadingIndicator
 import tachiyomi.presentation.core.i18n.stringResource
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
@@ -93,12 +85,15 @@ private fun InitialActivityCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(stringResource(MR.strings.statistics_could_not_load_period, targetLabel))
-                TextButton(onClick = onRetry) { Text(stringResource(MR.strings.action_retry)) }
+                Text(
+                    text = stringResource(MR.strings.statistics_could_not_load_period, targetLabel),
+                    modifier = Modifier.weight(1f),
+                )
+                Button(label = stringResource(MR.strings.action_retry), onClick = onRetry, style = ButtonStyle.Text)
             }
         } else {
             Row(
-                modifier = Modifier.fillMaxWidth().height(180.dp),
+                modifier = Modifier.fillMaxWidth().height(StatisticsMetrics.chartHeight),
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -189,7 +184,7 @@ private fun SettledActivityCard(
 
     StatisticsSectionCard(
         title = cardTitle,
-        contentSpacing = 0.dp,
+        contentSpacing = KatariTheme.sizes.none,
     ) {
         if (isAllRange) {
             drilledYear?.let { year ->
@@ -212,7 +207,17 @@ private fun SettledActivityCard(
                 onToday = onShowToday,
             )
         }
-        Spacer(Modifier.height(if (isAllRange && drilledYear == null) 0.dp else 16.dp))
+        Spacer(
+            Modifier.height(
+                if (isAllRange &&
+                    drilledYear == null
+                ) {
+                    KatariTheme.sizes.none
+                } else {
+                    KatariTheme.spacing.l
+                },
+            ),
+        )
         val labels = types.associate { it.type to stringResource(it.displayName) }
         val typeColors = types.associate { it.type to it.accent.color() }
         val trackedStart = activity.trackingStartDate
@@ -298,7 +303,7 @@ private fun SettledActivityCard(
                         )
                     },
                 )
-                ActivityRequestStatus(
+                StatisticsActivityRequestStatus(
                     state = state,
                     onRetry = onRetry,
                     modifier = Modifier.align(Alignment.TopCenter),
@@ -313,87 +318,3 @@ private fun SettledActivityCard(
         }
     }
 }
-
-@Composable
-private fun ActivityRequestStatus(
-    state: ActivityState.Available,
-    onRetry: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val loadingTarget = state.loadingTarget
-    var visibleLoadingTarget by remember(loadingTarget) {
-        mutableStateOf<StatsActivityWindow?>(null)
-    }
-    LaunchedEffect(loadingTarget) {
-        if (loadingTarget != null) {
-            delay(LOADING_STATUS_DELAY_MILLIS)
-            visibleLoadingTarget = loadingTarget
-        }
-    }
-
-    Box(
-        modifier = modifier.fillMaxWidth().height(40.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        visibleLoadingTarget?.let { target ->
-            Surface(
-                shape = MaterialTheme.shapes.small,
-                tonalElevation = 2.dp,
-            ) {
-                Row(
-                    modifier = Modifier
-                        .semantics { liveRegion = LiveRegionMode.Polite }
-                        .padding(horizontal = 12.dp, vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    LoadingIndicator(Modifier.size(14.dp))
-                    Text(
-                        text = stringResource(
-                            MR.strings.statistics_loading_period,
-                            formatStatisticsWindow(target),
-                        ),
-                        modifier = Modifier.padding(start = 8.dp),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-            }
-        }
-        state.failedTarget?.let { target ->
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                shape = MaterialTheme.shapes.small,
-                tonalElevation = 2.dp,
-            ) {
-                Row(
-                    modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        text = stringResource(
-                            MR.strings.statistics_could_not_load_period,
-                            formatStatisticsWindow(target),
-                        ),
-                        modifier = Modifier.weight(1f).padding(start = 12.dp),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.error,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                    TextButton(
-                        onClick = onRetry,
-                        modifier = Modifier.height(36.dp),
-                        contentPadding = PaddingValues(horizontal = 12.dp),
-                    ) {
-                        Text(stringResource(MR.strings.action_retry))
-                    }
-                }
-            }
-        }
-    }
-}
-
-private const val LOADING_STATUS_DELAY_MILLIS = 500L

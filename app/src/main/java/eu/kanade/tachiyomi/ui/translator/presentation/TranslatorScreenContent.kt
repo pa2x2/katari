@@ -10,10 +10,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -21,15 +17,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.toClipEntry
-import androidx.compose.ui.unit.dp
-import eu.kanade.presentation.components.AppBar
-import eu.kanade.presentation.components.AppSnackbarHost
 import eu.kanade.tachiyomi.ui.translator.session.TranslatorPicker
 import eu.kanade.tachiyomi.ui.translator.session.TranslatorState
 import kotlinx.coroutines.launch
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Settings
 import mihon.language.api.tag.LanguageTag
+import mihon.presentation.kit.feedback.SnackbarHost
+import mihon.presentation.kit.feedback.SnackbarHostState
+import mihon.presentation.kit.navigation.AppBar
+import mihon.presentation.kit.navigation.AppBarActions
+import mihon.presentation.kit.navigation.Scaffold
+import mihon.presentation.kit.theme.KatariTheme
 import mihon.translation.api.engine.TranslationEngineId
 import mihon.translation.api.engine.TranslationEngineSelection
 import mihon.translation.api.request.TranslationSourceLanguageSelection
@@ -38,7 +37,6 @@ import mihon.translation.ui.picker.engine.TranslationEnginePickerList
 import mihon.translation.ui.picker.engine.TranslationEngineSelectorRow
 import mihon.translation.ui.picker.language.TranslationLanguageDefaultOption
 import mihon.translation.ui.picker.language.TranslationLanguagePairSelector
-import mihon.translation.ui.picker.language.TranslationLanguagePairSelectorStyle
 import mihon.translation.ui.picker.language.TranslationLanguageRole
 import mihon.translation.ui.picker.language.TranslationLanguageSupportPicker
 import mihon.translation.ui.picker.language.displayName
@@ -51,8 +49,6 @@ import mihon.translation.ui.presentation.TranslationWorkbench
 import mihon.translation.ui.session.TranslationLanguageSupportState
 import mihon.translation.ui.session.displayedSessionResult
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.material.Scaffold
-import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable
@@ -100,27 +96,30 @@ internal fun TranslatorScreenContent(
                 title = stringResource(MR.strings.translator_title),
                 navigateUp = onNavigateUp,
                 actions = {
-                    IconButton(onClick = onOpenSettings) {
-                        Icon(
-                            imageVector = MaterialSymbols.Rounded.Settings,
-                            contentDescription = stringResource(MR.strings.translator_open_settings),
-                        )
-                    }
+                    AppBarActions(
+                        listOf(
+                            AppBar.Action(
+                                title = stringResource(MR.strings.translator_open_settings),
+                                icon = MaterialSymbols.Rounded.Settings,
+                                onClick = onOpenSettings,
+                            ),
+                        ),
+                    )
                 },
                 scrollBehavior = scrollBehavior,
             )
         },
-        snackbarHost = { AppSnackbarHost(hostState = snackbarHostState) },
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
     ) { contentPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
                 .padding(contentPadding)
-                .padding(horizontal = MaterialTheme.padding.medium, vertical = MaterialTheme.padding.small)
+                .padding(horizontal = KatariTheme.spacing.contentInset, vertical = KatariTheme.spacing.s)
                 .fillMaxWidth()
-                .widthIn(max = 840.dp),
-            verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
+                .widthIn(max = KatariTheme.sizes.readableWidth),
+            verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             TranslationLanguagePairSelector(
@@ -132,7 +131,6 @@ internal fun TranslatorScreenContent(
                 onChooseSource = { onShowPicker(TranslatorPicker.SourceLanguage) },
                 onChooseTarget = { onShowPicker(TranslatorPicker.TargetLanguage) },
                 onSwap = onSwap,
-                style = TranslationLanguagePairSelectorStyle.Bar,
             )
             TranslationEngineSelectorRow(
                 engineName = when {

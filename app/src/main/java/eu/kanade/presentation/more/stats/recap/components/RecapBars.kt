@@ -8,16 +8,17 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.more.stats.recap.motion.RECAP_GROW_MILLIS
 import eu.kanade.presentation.more.stats.recap.motion.rememberRecapEntrance
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 
 /**
  * Vertical bars that grow in at step [order] of the page's entrance, the [highlight] one in full accent and the rest
@@ -36,13 +37,13 @@ internal fun RecapBars(
     val grow by rememberRecapEntrance(order, RECAP_GROW_MILLIS)
     val max = values.maxOrNull()?.coerceAtLeast(1L) ?: 1L
     Row(
-        horizontalArrangement = Arrangement.spacedBy(5.dp),
+        horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xs),
         modifier = modifier.fillMaxWidth().height(height),
     ) {
         values.forEachIndexed { index, value ->
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.Bottom),
+                verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xs, Alignment.Bottom),
                 modifier = Modifier.weight(1f).fillMaxHeight(),
             ) {
                 Box(
@@ -56,20 +57,16 @@ internal fun RecapBars(
                                 .fillMaxWidth()
                                 .fillMaxHeight(share.coerceIn(0.001f, 1f))
                                 .background(
-                                    color = if (index == highlight) {
-                                        palette.accent
-                                    } else {
-                                        palette.accent.copy(alpha = 0.4f)
-                                    },
-                                    shape = RoundedCornerShape(4.dp),
+                                    color = if (index == highlight) palette.accent else palette.accentMuted,
+                                    shape = KatariTheme.shapes.extraSmall,
                                 ),
                         )
                     }
                 }
                 RecapText(
                     text = labels[index],
-                    style = RecapTypography.Tiny,
-                    color = palette.muted,
+                    role = TextRole.Badge,
+                    tone = ContentTone.Secondary,
                     textAlign = TextAlign.Center,
                     maxLines = 1,
                 )

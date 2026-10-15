@@ -1,31 +1,21 @@
 package mihon.tts.ui.picker.engine
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
+import mihon.presentation.kit.theme.KatariTheme
 import mihon.tts.api.engine.TtsEngineId
 import mihon.tts.api.engine.TtsEngineInspection
-import tachiyomi.i18n.*
-import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable
 fun TtsEnginePickerList(
@@ -45,31 +35,29 @@ fun TtsEnginePickerList(
     var detailsEngineId by remember { mutableStateOf<TtsEngineId?>(null) }
     val detailsModel = cards.firstOrNull { it.state.engine.id == detailsEngineId }
 
-    Box(modifier = modifier.fillMaxSize()) {
-        LazyColumn(
-            modifier = Modifier
-                .align(Alignment.TopCenter)
-                .fillMaxWidth()
-                .widthIn(max = 720.dp),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+    LazyColumn(
+        modifier = modifier
+            .fillMaxSize()
+            .wrapContentWidth()
+            .widthIn(max = KatariTheme.sizes.readableWidth),
+        contentPadding = PaddingValues(KatariTheme.spacing.contentInset),
+        verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.m),
+    ) {
+        if (
+            selectedEngine != null &&
+            inspection.engines.none { it.engine.id == selectedEngine }
         ) {
-            if (
-                selectedEngine != null &&
-                inspection.engines.none { it.engine.id == selectedEngine }
-            ) {
-                item(key = "missing-selection") {
-                    TtsMissingEngineCard(selectedEngine)
-                }
+            item(key = "missing-selection") {
+                TtsMissingEngineCard(selectedEngine)
             }
-            items(cards, key = { it.state.engine.id.value }) { model ->
-                TtsEngineCard(
-                    model = model,
-                    onSelect = onSelect,
-                    onOpenSetup = onOpenSetup,
-                    onOpenDetails = { detailsEngineId = model.state.engine.id },
-                )
-            }
+        }
+        items(cards, key = { it.state.engine.id.value }) { model ->
+            TtsEngineCard(
+                model = model,
+                onSelect = onSelect,
+                onOpenSetup = onOpenSetup,
+                onOpenDetails = { detailsEngineId = model.state.engine.id },
+            )
         }
     }
     detailsModel?.let { model ->
@@ -78,34 +66,5 @@ fun TtsEnginePickerList(
             onDismissRequest = { detailsEngineId = null },
             onOpenUrl = onOpenDocumentation,
         )
-    }
-}
-
-@Composable
-private fun TtsMissingEngineCard(selected: TtsEngineId) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.errorContainer,
-            contentColor = MaterialTheme.colorScheme.onErrorContainer,
-        ),
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp),
-        ) {
-            Text(
-                text = stringResource(MR.strings.tts_settings_engine_unavailable),
-                style = MaterialTheme.typography.titleMedium,
-            )
-            Text(
-                text = stringResource(MR.strings.tts_settings_engine_missing_id, selected.value),
-                style = MaterialTheme.typography.bodyMedium,
-            )
-            Text(
-                text = stringResource(MR.strings.tts_settings_engine_missing_explanation),
-                style = MaterialTheme.typography.bodyMedium,
-            )
-        }
     }
 }

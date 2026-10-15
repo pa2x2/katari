@@ -38,11 +38,10 @@ import kotlinx.coroutines.withContext
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.minus
+import mihon.presentation.kit.widget.WidgetMetrics
 import tachiyomi.domain.entry.model.EntryCover
 import tachiyomi.domain.updates.interactor.GetUpdates
 import tachiyomi.domain.updates.model.UpdatesWithRelations
-import tachiyomi.presentation.widget.components.CoverHeight
-import tachiyomi.presentation.widget.components.CoverWidth
 import tachiyomi.presentation.widget.components.LockedWidget
 import tachiyomi.presentation.widget.components.UpdatesWidget
 import tachiyomi.presentation.widget.util.appWidgetBackgroundRadius
@@ -115,8 +114,8 @@ abstract class BaseUpdatesGridGlanceWidget(
         columnCount: Int,
     ): List<Pair<Long, Bitmap?>> {
         // Resize to cover size
-        val widthPx = CoverWidth.value.toInt().dpToPx
-        val heightPx = CoverHeight.value.toInt().dpToPx
+        val widthPx = WidgetMetrics.coverWidth.value.toInt().dpToPx
+        val heightPx = WidgetMetrics.coverHeight.value.toInt().dpToPx
         val roundPx = context.resources.getDimension(R.dimen.appwidget_inner_radius)
         return withContext(Dispatchers.Default) {
             this@prepareData

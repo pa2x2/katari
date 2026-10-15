@@ -1,22 +1,6 @@
 package eu.kanade.tachiyomi.ui.entry.track
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.systemBars
-import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SelectableDates
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextAlign
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -24,6 +8,7 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.track.TrackDateSelector
+import eu.kanade.presentation.track.TrackRemovalConfirmation
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.util.lang.convertEpochMillisZone
 import eu.kanade.tachiyomi.util.lang.toLocalDate
@@ -34,13 +19,10 @@ import mihon.entry.interactions.tracking.EntryTrackingFeature
 import mihon.entry.interactions.tracking.EntryTrackingMutation
 import mihon.entry.interactions.tracking.EntryTrackingRecord
 import mihon.entry.interactions.tracking.EntryTrackingServiceDescriptor
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.Delete
+import mihon.presentation.kit.field.SelectableDates
 import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.material.AlertDialogContent
-import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
@@ -154,49 +136,22 @@ private data class TrackDateRemoverScreen(
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
         val viewModel = viewModel { Model(entry, service, start) }
-        AlertDialogContent(
-            modifier = Modifier.windowInsetsPadding(WindowInsets.systemBars),
-            icon = { Icon(MaterialSymbols.Rounded.Delete, contentDescription = null) },
-            title = {
-                Text(
-                    text = stringResource(MR.strings.track_remove_date_conf_title),
-                    textAlign = TextAlign.Center,
-                )
+        TrackRemovalConfirmation(
+            title = stringResource(MR.strings.track_remove_date_conf_title),
+            text = stringResource(
+                if (start) {
+                    MR.strings.track_remove_start_date_conf_text
+                } else {
+                    MR.strings.track_remove_finish_date_conf_text
+                },
+                service.name,
+            ),
+            confirmLabel = stringResource(MR.strings.action_remove),
+            onConfirm = {
+                viewModel.removeDate()
+                navigator.popUntil { it is TrackInfoDialogHomeScreen }
             },
-            text = {
-                Text(
-                    text = stringResource(
-                        if (start) {
-                            MR.strings.track_remove_start_date_conf_text
-                        } else {
-                            MR.strings.track_remove_finish_date_conf_text
-                        },
-                        service.name,
-                    ),
-                )
-            },
-            buttons = {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small, Alignment.End),
-                ) {
-                    TextButton(onClick = navigator::pop) {
-                        Text(text = stringResource(MR.strings.action_cancel))
-                    }
-                    FilledTonalButton(
-                        onClick = {
-                            viewModel.removeDate()
-                            navigator.popUntil { it is TrackInfoDialogHomeScreen }
-                        },
-                        colors = ButtonDefaults.filledTonalButtonColors(
-                            containerColor = MaterialTheme.colorScheme.errorContainer,
-                            contentColor = MaterialTheme.colorScheme.onErrorContainer,
-                        ),
-                    ) {
-                        Text(text = stringResource(MR.strings.action_remove))
-                    }
-                }
-            },
+            onDismissRequest = navigator::pop,
         )
     }
 

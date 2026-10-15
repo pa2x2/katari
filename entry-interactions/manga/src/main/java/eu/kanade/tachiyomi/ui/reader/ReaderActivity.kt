@@ -6,7 +6,6 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
-import android.graphics.Color
 import android.graphics.ColorMatrix
 import android.graphics.ColorMatrixColorFilter
 import android.graphics.Paint
@@ -26,8 +25,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -36,7 +33,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.core.content.getSystemService
 import androidx.core.graphics.Insets
 import androidx.core.net.toUri
@@ -54,6 +50,7 @@ import eu.kanade.presentation.reader.ReaderContentOverlay
 import eu.kanade.presentation.reader.ReaderPageActionsDialog
 import eu.kanade.presentation.reader.ReadingModeSelectDialog
 import eu.kanade.presentation.reader.appbars.ReaderAppBars
+import eu.kanade.presentation.reader.appbars.ReaderMenuBounds
 import eu.kanade.presentation.reader.components.ChapterNavigatorType
 import eu.kanade.presentation.reader.settings.ReaderSettingsDialog
 import eu.kanade.tachiyomi.data.coil.TachiyomiImageDecoder
@@ -99,7 +96,12 @@ import mihon.entry.interactions.runtime.EntryInteractionActivity
 import mihon.entry.interactions.source.EntryChildWebViewAction
 import mihon.entry.interactions.source.EntryChildWebViewResolution
 import mihon.entry.interactions.source.launchEntryChildWebViewAction
+import mihon.entry.viewer.chrome.ui.ReaderPageIndicator
 import mihon.entry.viewer.settings.navigation.openViewerSettings
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.dialog.Dialog
+import mihon.presentation.kit.progress.LoadingIndicator
+import mihon.presentation.kit.theme.KatariTheme
 import mihon.text.recognition.api.host.openTextRecognitionPipelineChoice
 import mihon.translation.api.host.openTranslationSettings
 import mihon.tts.ui.playback.ShortFormSpeechFailure
@@ -111,8 +113,6 @@ import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.LoadingIndicator
-import tachiyomi.presentation.core.components.reader.ReaderPageIndicator
 import tachiyomi.presentation.core.util.collectAsState
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
@@ -359,6 +359,7 @@ class ReaderActivity : EntryInteractionActivity() {
             )
         }
 
+        val menuBounds = remember { ReaderMenuBounds() }
         Box(modifier = Modifier.fillMaxSize()) {
             if (!state.menuVisible && showPageNumber.effectiveValue) {
                 ReaderPageIndicator(
@@ -372,27 +373,27 @@ class ReaderActivity : EntryInteractionActivity() {
 
             ContentOverlay(state = state)
 
-            AppBars(state = state)
+            AppBars(state = state, menuBounds = menuBounds)
 
-            TextLayer(menuVisible = state.menuVisible)
+            TextLayer(menuVisible = state.menuVisible, menuBounds = menuBounds)
         }
 
         val onDismissRequest = viewModel::closeDialog
         when (val dialog = state.dialog) {
             is ReaderViewModel.Dialog.Loading -> {
-                AlertDialog(
+                Dialog(
                     onDismissRequest = {},
-                    confirmButton = {},
-                    text = {
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(16.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            LoadingIndicator()
-                            Text(stringResource(MR.strings.loading))
-                        }
-                    },
-                )
+                    title = null,
+                    confirm = null,
+                ) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.l),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        LoadingIndicator()
+                        Text(stringResource(MR.strings.loading))
+                    }
+                }
             }
             is ReaderViewModel.Dialog.Settings -> {
                 ReaderSettingsDialog(
@@ -583,7 +584,7 @@ class ReaderActivity : EntryInteractionActivity() {
     }
 
     @Composable
-    internal fun AppBars(state: ReaderViewModel.State) {
+    internal fun AppBars(state: ReaderViewModel.State, menuBounds: ReaderMenuBounds) {
         if (!ifSourcesLoaded()) {
             return
         }
@@ -679,17 +680,19 @@ class ReaderActivity : EntryInteractionActivity() {
             textTranslationActive = textState.active,
             onClickTextTranslation = { textInteraction.setActive(!textState.active) },
             onClickSettings = viewModel::openSettingsDialog,
+            menuBounds = menuBounds,
         )
     }
 
     @Composable
-    private fun TextLayer(menuVisible: Boolean) {
+    private fun TextLayer(menuVisible: Boolean, menuBounds: ReaderMenuBounds) {
         val textState by viewModel.textSession.state.collectAsState()
         val areaResult by textInteraction.areaResult.collectAsState()
         val translationSpeechState by viewModel.textTranslationSpeech.state.collectAsState()
         MangaReaderTextLayer(
             state = textState,
             menuVisible = menuVisible,
+            menuBounds = menuBounds,
             translationCoordinator = viewModel.textTranslation.hostCoordinator,
             translateDownloads = viewModel.translateDownloads,
             recognitionLanguages = viewModel.textRecognitionLanguages,
@@ -1167,8 +1170,6 @@ class ReaderActivity : EntryInteractionActivity() {
             }
         }
 
-        private val grayBackgroundColor = Color.rgb(0x20, 0x21, 0x25)
-
         /*
          * Initializes the reader subscriptions.
          */
@@ -1177,12 +1178,7 @@ class ReaderActivity : EntryInteractionActivity() {
                 .map { it.effectiveValue }
                 .distinctUntilChanged()
                 .onEach { theme ->
-                    val backgroundColor = when (theme) {
-                        0 -> Color.WHITE
-                        2 -> grayBackgroundColor
-                        3 -> automaticBackgroundColor()
-                        else -> Color.BLACK
-                    }
+                    val backgroundColor = baseContext.readerPageBackgroundColor(theme)
                     binding.readerContainer.setBackgroundColor(backgroundColor)
                     readerBackgroundColor = backgroundColor
                     applySystemBars()
@@ -1226,17 +1222,6 @@ class ReaderActivity : EntryInteractionActivity() {
             ) { _, _ -> }
                 .onEach { applySystemBars() }
                 .launchIn(lifecycleScope)
-        }
-
-        /**
-         * Picks background color for [ReaderActivity] based on light/dark theme preference
-         */
-        private fun automaticBackgroundColor(): Int {
-            return if (baseContext.isNightMode()) {
-                grayBackgroundColor
-            } else {
-                Color.WHITE
-            }
         }
 
         /**

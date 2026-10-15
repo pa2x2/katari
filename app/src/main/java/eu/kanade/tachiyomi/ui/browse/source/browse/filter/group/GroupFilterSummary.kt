@@ -1,16 +1,13 @@
 package eu.kanade.tachiyomi.ui.browse.source.browse.filter.group
 
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.withStyle
 import eu.kanade.tachiyomi.source.entry.EntryFilter
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.change.FilterChangeLabel
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.change.FilterChanges
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.change.changeLabel
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.change.displayText
+import mihon.presentation.kit.content.TonedSpan
+import mihon.presentation.kit.theme.ContentTone
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -49,24 +46,14 @@ internal fun EntryFilter.Group<*>.selectionSummary(changes: FilterChanges): Grou
 
 /** Included names in the accent color, then excluded names in the error color, then the remaining values. */
 @Composable
-internal fun GroupSelectionSummary.text(): AnnotatedString {
-    val colors = MaterialTheme.colorScheme
+internal fun GroupSelectionSummary.spans(): List<TonedSpan> {
     val notText = excluded.takeIf { it.isNotEmpty() }?.let {
         stringResource(MR.strings.filter_summary_excluded, it.joinToString())
     }
     val valueTexts = values.map { it.displayText() }
-    return buildAnnotatedString {
-        fun separate() {
-            if (length > 0) append(" · ")
-        }
-        if (included.isNotEmpty()) withStyle(SpanStyle(color = colors.primary)) { append(included.joinToString()) }
-        if (notText != null) {
-            separate()
-            withStyle(SpanStyle(color = colors.error)) { append(notText) }
-        }
-        valueTexts.forEach {
-            separate()
-            append(it)
-        }
+    return buildList {
+        if (included.isNotEmpty()) add(TonedSpan(included.joinToString(), ContentTone.Primary))
+        if (notText != null) add(TonedSpan(notText, ContentTone.Error))
+        valueTexts.forEach { add(TonedSpan(it)) }
     }
 }

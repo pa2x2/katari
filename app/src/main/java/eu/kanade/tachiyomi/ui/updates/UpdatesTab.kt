@@ -46,13 +46,13 @@ import eu.kanade.tachiyomi.ui.main.MainActivity
 import mihon.entry.interactions.download.EntryDownloadState
 import mihon.entry.interactions.navigation.EntryOpenFeature
 import mihon.feature.upcoming.UpcomingScreen
+import mihon.presentation.kit.feedback.EmptyScreen
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.updates.model.UpdateItem
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.screens.EmptyScreen
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 

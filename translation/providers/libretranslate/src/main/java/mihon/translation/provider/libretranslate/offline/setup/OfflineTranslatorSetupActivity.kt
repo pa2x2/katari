@@ -6,8 +6,6 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -21,9 +19,12 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
-import eu.kanade.presentation.theme.TachiyomiPreviewTheme
-import eu.kanade.presentation.theme.TachiyomiTheme
 import kotlinx.coroutines.launch
+import mihon.presentation.kit.button.Button
+import mihon.presentation.kit.button.ButtonStyle
+import mihon.presentation.kit.field.TextField
+import mihon.presentation.kit.theme.KatariPreviewTheme
+import mihon.presentation.kit.theme.KatariTheme
 import mihon.translation.provider.libretranslate.R
 import mihon.translation.provider.libretranslate.offline.OfflineTranslatorApplication
 import mihon.translation.provider.libretranslate.offline.OfflineTranslatorConfiguration
@@ -31,9 +32,7 @@ import mihon.translation.provider.libretranslate.offline.OfflineTranslatorNetwor
 import mihon.translation.provider.libretranslate.protocol.LibreTranslateHttpClient
 import mihon.translation.provider.server.setup.components.ProviderInformationCard
 import mihon.translation.provider.server.setup.components.ProviderSetupHeader
-import mihon.translation.provider.server.setup.components.ProviderSetupPrimaryButton
 import mihon.translation.provider.server.setup.components.ProviderSetupScaffold
-import mihon.translation.provider.server.setup.components.ProviderSetupSecondaryButton
 import mihon.translation.provider.server.setup.components.ProviderSetupStatus
 import mihon.translation.provider.server.setup.components.ProviderSetupStatusPanel
 import mihon.translation.provider.server.R as ServerConnectionR
@@ -51,7 +50,7 @@ internal class OfflineTranslatorSetupActivity : AppCompatActivity() {
             )
         }
         setContent {
-            TachiyomiTheme {
+            KatariTheme {
                 OfflineTranslatorSetupRoute(
                     initialPort = configuration.port.toString(),
                     coordinator = coordinator,
@@ -131,11 +130,7 @@ private fun OfflineTranslatorSetupScreen(
     onBack: () -> Unit,
     onDone: () -> Unit,
 ) {
-    ProviderSetupScaffold(
-        title = stringResource(R.string.offline_translator_setup_title),
-        backContentDescription = stringResource(ServerConnectionR.string.translation_provider_back),
-        onBack = onBack,
-    ) {
+    ProviderSetupScaffold(title = stringResource(R.string.offline_translator_setup_title), onBack = onBack) {
         ProviderSetupHeader(
             artworkResourceId = R.drawable.ic_offline_translator,
             title = stringResource(R.string.offline_translator_setup_title),
@@ -148,25 +143,20 @@ private fun OfflineTranslatorSetupScreen(
                 stringResource(R.string.offline_translator_step_port),
             ),
         )
-        OutlinedTextField(
+        TextField(
             value = port,
             onValueChange = onPortChange,
             modifier = Modifier.fillMaxWidth(),
             enabled = !testing,
-            label = { Text(stringResource(R.string.offline_translator_port_label)) },
-            supportingText = {
-                Text(
-                    stringResource(
-                        if (portInvalid) {
-                            R.string.offline_translator_invalid_port
-                        } else {
-                            R.string.offline_translator_port_supporting
-                        },
-                    ),
-                )
-            },
+            label = stringResource(R.string.offline_translator_port_label),
+            supportingText = stringResource(
+                if (portInvalid) {
+                    R.string.offline_translator_invalid_port
+                } else {
+                    R.string.offline_translator_port_supporting
+                },
+            ),
             isError = portInvalid,
-            singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
         )
         status?.let {
@@ -178,22 +168,25 @@ private fun OfflineTranslatorSetupScreen(
             )
         }
         if (status is ProviderSetupStatus.Success) {
-            ProviderSetupPrimaryButton(
+            Button(
                 label = stringResource(ServerConnectionR.string.translation_provider_done),
-                enabled = true,
                 onClick = onDone,
+                modifier = Modifier.fillMaxWidth(),
             )
         } else {
-            ProviderSetupPrimaryButton(
+            Button(
                 label = stringResource(R.string.offline_translator_save_and_test),
-                enabled = !testing,
                 onClick = onTest,
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !testing,
             )
         }
-        ProviderSetupSecondaryButton(
+        Button(
             label = stringResource(R.string.offline_translator_open_app),
-            enabled = !testing,
             onClick = onOpenProvider,
+            modifier = Modifier.fillMaxWidth(),
+            style = ButtonStyle.Outlined,
+            enabled = !testing,
         )
     }
 }
@@ -204,7 +197,7 @@ private fun OfflineTranslatorSetupScreen(
 private fun OfflineTranslatorSetupPreview(
     @PreviewParameter(OfflineSetupPreviewStateProvider::class) status: ProviderSetupStatus?,
 ) {
-    TachiyomiPreviewTheme {
+    KatariPreviewTheme {
         OfflineTranslatorSetupScreen(
             port = "5000",
             portInvalid = false,

@@ -1,17 +1,16 @@
 package eu.kanade.presentation.reader.appbars
 
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import mihon.entry.interactions.source.EntryChildWebViewAction
 import mihon.entry.interactions.source.EntryChildWebViewActionsMenu
 import mihon.entry.interactions.source.EntryChildWebViewResolution
+import mihon.entry.viewer.chrome.ui.ReaderChromeTopBar
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Bookmark
 import mihon.icons.materialsymbols.roundedfilled.Bookmark
+import mihon.presentation.kit.button.IconButton
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.reader.ReaderChromeTopBar
 import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable
@@ -31,22 +30,21 @@ fun ReaderTopBar(
         subtitle = chapterTitle,
         navigateUp = navigateUp,
         actions = {
-            IconButton(onClick = onToggleBookmarked) {
-                Icon(
-                    imageVector = if (bookmarked) {
-                        MaterialSymbols.RoundedFilled.Bookmark
+            IconButton(
+                icon = if (bookmarked) {
+                    MaterialSymbols.RoundedFilled.Bookmark
+                } else {
+                    MaterialSymbols.Rounded.Bookmark
+                },
+                contentDescription = stringResource(
+                    if (bookmarked) {
+                        MR.strings.action_remove_bookmark
                     } else {
-                        MaterialSymbols.Rounded.Bookmark
+                        MR.strings.action_bookmark
                     },
-                    contentDescription = stringResource(
-                        if (bookmarked) {
-                            MR.strings.action_remove_bookmark
-                        } else {
-                            MR.strings.action_bookmark
-                        },
-                    ),
-                )
-            }
+                ),
+                onClick = onToggleBookmarked,
+            )
 
             EntryChildWebViewActionsMenu(
                 resolution = childWebView,

@@ -1,30 +1,22 @@
 package eu.kanade.presentation.library.grouping
 
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.toMutableStateList
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.unit.dp
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.DragHandle
+import mihon.presentation.kit.content.Icon
+import mihon.presentation.kit.content.LibraryMetrics
+import mihon.presentation.kit.list.CheckRow
+import mihon.presentation.kit.list.InfoRow
+import mihon.presentation.kit.theme.ContentTone
 import sh.calvin.reorderable.ReorderableCollectionItemScope
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
@@ -32,9 +24,7 @@ import tachiyomi.domain.library.model.LibraryGrouping
 import tachiyomi.domain.library.model.LibraryGroupingDimension
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.ScrollbarLazyColumn
-import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.util.secondaryItemAlpha
 
 @Composable
 fun LibraryGroupingEditor(
@@ -77,43 +67,37 @@ fun LibraryGroupingEditor(
         commitGrouping()
     }
 
-    Column(
-        modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
-    ) {
-        Text(
+    Column(modifier = modifier) {
+        InfoRow(
             text = stringResource(MR.strings.library_grouping_hierarchy_summary),
-            style = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier.secondaryItemAlpha(),
+            showIcon = false,
         )
-        Box {
-            ScrollbarLazyColumn(
-                modifier = Modifier.heightIn(max = 280.dp),
-                state = listState,
-            ) {
-                items(
-                    items = orderedDimensions,
-                    key = LibraryGroupingDimension::name,
-                ) { dimension ->
-                    ReorderableItem(reorderableState, dimension.name) {
-                        LibraryGroupingDimensionItem(
+        ScrollbarLazyColumn(
+            modifier = Modifier.heightIn(max = LibraryMetrics.groupingEditorMaxHeight),
+            state = listState,
+        ) {
+            items(
+                items = orderedDimensions,
+                key = LibraryGroupingDimension::name,
+            ) { dimension ->
+                ReorderableItem(reorderableState, dimension.name) {
+                    LibraryGroupingDimensionItem(
+                        dimension = dimension,
+                        checked = dimension in enabledDimensions,
+                        roleLabel = groupingRoleLabel(
                             dimension = dimension,
-                            checked = dimension in enabledDimensions,
-                            roleLabel = groupingRoleLabel(
-                                dimension = dimension,
-                                orderedDimensions = orderedDimensions,
-                                enabledDimensions = enabledDimensions,
-                            ),
-                            onCheckedChange = { checked ->
-                                if (checked) {
-                                    if (dimension !in enabledDimensions) enabledDimensions += dimension
-                                } else {
-                                    enabledDimensions -= dimension
-                                }
-                                commitGrouping()
-                            },
-                        )
-                    }
+                            orderedDimensions = orderedDimensions,
+                            enabledDimensions = enabledDimensions,
+                        ),
+                        onCheckedChange = { checked ->
+                            if (checked) {
+                                if (dimension !in enabledDimensions) enabledDimensions += dimension
+                            } else {
+                                enabledDimensions -= dimension
+                            }
+                            commitGrouping()
+                        },
+                    )
                 }
             }
         }
@@ -142,45 +126,18 @@ private fun ReorderableCollectionItemScope.LibraryGroupingDimensionItem(
     roleLabel: String?,
     onCheckedChange: (Boolean) -> Unit,
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = MaterialTheme.padding.small),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
-    ) {
-        Row(
-            modifier = Modifier
-                .weight(1f)
-                .clickable(role = Role.Checkbox) { onCheckedChange(!checked) },
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
-        ) {
-            Checkbox(
-                checked = checked,
-                onCheckedChange = null,
+    CheckRow(
+        title = libraryGroupingDimensionLabel(dimension),
+        checked = checked,
+        onCheckedChange = onCheckedChange,
+        subtitle = roleLabel,
+        trailing = {
+            Icon(
+                imageVector = MaterialSymbols.Rounded.DragHandle,
+                contentDescription = null,
+                modifier = Modifier.draggableHandle(),
+                tone = ContentTone.Secondary,
             )
-            Column {
-                Text(
-                    text = libraryGroupingDimensionLabel(dimension),
-                    style = MaterialTheme.typography.bodyLarge,
-                )
-                if (roleLabel != null) {
-                    Text(
-                        text = roleLabel,
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.secondaryItemAlpha(),
-                    )
-                }
-            }
-        }
-        Icon(
-            imageVector = MaterialSymbols.Rounded.DragHandle,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier
-                .draggableHandle()
-                .padding(MaterialTheme.padding.small),
-        )
-    }
+        },
+    )
 }

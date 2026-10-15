@@ -7,6 +7,6 @@ import androidx.compose.ui.unit.dp
  *
  * @see androidx.compose.material3.tokens.IconButtonTokens
  */
-object IconButtonTokens {
+internal object IconButtonTokens {
     val StateLayerSize = 40.0.dp
 }

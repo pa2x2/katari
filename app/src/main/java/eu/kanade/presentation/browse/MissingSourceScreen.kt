@@ -3,13 +3,13 @@ package eu.kanade.presentation.browse
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import eu.kanade.presentation.components.AppBar
 import eu.kanade.tachiyomi.source.sourceNotInstalledName
+import mihon.presentation.kit.feedback.EmptyScreen
+import mihon.presentation.kit.navigation.AppBar
+import mihon.presentation.kit.navigation.Scaffold
 import tachiyomi.domain.source.model.SourceDisplayInfo
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.screens.EmptyScreen
 
 @Composable
 internal fun MissingSourceScreen(

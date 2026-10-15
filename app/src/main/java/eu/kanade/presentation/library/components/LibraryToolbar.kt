@@ -1,31 +1,29 @@
 package eu.kanade.presentation.library.components
 
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Row
-import androidx.compose.material3.LocalContentColor
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarScrollBehavior
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.sp
-import eu.kanade.presentation.components.AppBar
-import eu.kanade.presentation.components.AppBarActions
-import eu.kanade.presentation.components.SearchToolbar
 import kotlinx.collections.immutable.toPersistentList
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Deselect
 import mihon.icons.materialsymbols.rounded.FilterList
 import mihon.icons.materialsymbols.rounded.SelectAll
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.navigation.AppBar
+import mihon.presentation.kit.navigation.AppBarActions
+import mihon.presentation.kit.navigation.AppBarScrollBehavior
+import mihon.presentation.kit.navigation.SearchToolbar
+import mihon.presentation.kit.surface.Pill
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.domain.library.model.LibraryGrouping
 import tachiyomi.domain.library.model.LibraryGroupingDimension
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.Pill
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.theme.active
 
 @Composable
 fun LibraryToolbar(
@@ -42,7 +40,7 @@ fun LibraryToolbar(
     onClickOpenRandomEntry: () -> Unit,
     searchQuery: String?,
     onSearchQueryChange: (String?) -> Unit,
-    scrollBehavior: TopAppBarScrollBehavior?,
+    scrollBehavior: AppBarScrollBehavior?,
 ) = when {
     selectedCount > 0 -> LibrarySelectionToolbar(
         selectedCount = selectedCount,
@@ -75,9 +73,8 @@ private fun LibraryRegularToolbar(
     onClickRefresh: (() -> Unit)?,
     onClickGlobalUpdate: (() -> Unit)?,
     onClickOpenRandomEntry: () -> Unit,
-    scrollBehavior: TopAppBarScrollBehavior?,
+    scrollBehavior: AppBarScrollBehavior?,
 ) {
-    val pillAlpha = if (isSystemInDarkTheme()) 0.12f else 0.08f
     val updateCurrentGroupTitle = when (currentGrouping.dimensions.singleOrNull()) {
         LibraryGroupingDimension.Category -> stringResource(MR.strings.action_update_category)
         LibraryGroupingDimension.EntryType -> stringResource(MR.strings.action_update_type)
@@ -100,8 +97,7 @@ private fun LibraryRegularToolbar(
                 if (title.numberOfEntries != null) {
                     Pill(
                         text = "${title.numberOfEntries}",
-                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = pillAlpha),
-                        fontSize = 14.sp,
+                        modifier = Modifier.padding(start = KatariTheme.spacing.xs),
                     )
                 }
             }
@@ -109,14 +105,14 @@ private fun LibraryRegularToolbar(
         searchQuery = searchQuery,
         onChangeSearchQuery = onSearchQueryChange,
         actions = {
-            val filterTint = if (hasFilters) MaterialTheme.colorScheme.active else LocalContentColor.current
+            val filterTone = if (hasFilters) ContentTone.Active else ContentTone.Inherit
             AppBarActions(
                 buildList<AppBar.AppBarAction> {
                     add(
                         AppBar.Action(
                             title = stringResource(MR.strings.action_filter),
                             icon = MaterialSymbols.Rounded.FilterList,
-                            iconTint = filterTint,
+                            tone = filterTone,
                             onClick = onClickFilter,
                         ),
                     )

@@ -1,8 +1,5 @@
 package eu.kanade.tachiyomi.ui.browse.catalog
 
-import androidx.compose.material3.SnackbarDuration
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -18,13 +15,16 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.StateFlow
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Refresh
+import mihon.presentation.kit.feedback.EmptyScreen
+import mihon.presentation.kit.feedback.EmptyScreenAction
+import mihon.presentation.kit.feedback.LoadingScreen
+import mihon.presentation.kit.feedback.SnackbarDuration
+import mihon.presentation.kit.feedback.SnackbarHostState
+import mihon.presentation.kit.feedback.SnackbarResult
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.source.model.CatalogListItem
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.screens.EmptyScreen
-import tachiyomi.presentation.core.screens.EmptyScreenAction
-import tachiyomi.presentation.core.screens.LoadingScreen
 
 @Composable
 internal fun CatalogImmersiveContent(

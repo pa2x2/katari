@@ -17,10 +17,6 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridScope
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,10 +31,19 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.Velocity
-import androidx.compose.ui.unit.dp
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.roundedfilled.Keep
+import mihon.presentation.kit.content.BrowseMetrics
+import mihon.presentation.kit.content.Icon
+import mihon.presentation.kit.content.LibraryMetrics
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.surface.Surface
+import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariSpacing
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.domain.library.model.LibraryItem
 import tachiyomi.domain.library.model.LibraryPinnedDisplayStyle
 import tachiyomi.i18n.*
@@ -49,7 +54,7 @@ import androidx.compose.foundation.lazy.grid.items as gridItems
 internal const val LIBRARY_PINNED_HEADER_KEY = "library_pinned_header"
 internal const val LIBRARY_PINNED_FOOTER_KEY = "library_pinned_footer"
 
-private val SHELF_HORIZONTAL_PADDING = 8.dp
+private val SHELF_HORIZONTAL_PADDING = KatariSpacing.s
 private const val SHELF_NEXT_ITEM_PEEK_FRACTION = 0.18f
 
 internal fun libraryPinnedItemKey(item: LibraryItem): String = item.key.toString()
@@ -161,13 +166,13 @@ internal fun LibraryPinnedGridShelf(
     itemContent: @Composable (LibraryItem, Modifier) -> Unit,
 ) {
     Surface(
-        color = MaterialTheme.colorScheme.surfaceContainer,
-        shape = MaterialTheme.shapes.large,
+        container = SurfaceContainer.Default,
+        shape = KatariTheme.shapes.large,
     ) {
-        Column(modifier = Modifier.padding(vertical = 8.dp)) {
+        Column(modifier = Modifier.padding(vertical = KatariTheme.spacing.s)) {
             LibraryPinnedHeading(items.size)
             BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
-                val contentWidth = (maxWidth - SHELF_HORIZONTAL_PADDING * 2).coerceAtLeast(0.dp)
+                val contentWidth = (maxWidth - SHELF_HORIZONTAL_PADDING * 2).coerceAtLeast(KatariTheme.sizes.none)
                 val resolvedColumns = resolveColumnCount(columns, contentWidth)
                 val hasOverflow = items.sumOf { it.gridSpan(resolvedColumns) } > resolvedColumns
                 val itemWidth = gridItemWidth(contentWidth, resolvedColumns, hasOverflow)
@@ -202,18 +207,18 @@ internal fun LibraryPinnedListShelf(
     itemContent: @Composable (LibraryItem, Modifier) -> Unit,
 ) {
     Surface(
-        color = MaterialTheme.colorScheme.surfaceContainer,
-        shape = MaterialTheme.shapes.large,
+        container = SurfaceContainer.Default,
+        shape = KatariTheme.shapes.large,
     ) {
-        Column(modifier = Modifier.padding(vertical = 4.dp)) {
+        Column(modifier = Modifier.padding(vertical = KatariTheme.spacing.xs)) {
             LibraryPinnedHeading(items.size)
             BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
-                val contentWidth = (maxWidth - SHELF_HORIZONTAL_PADDING * 2).coerceAtLeast(0.dp)
+                val contentWidth = (maxWidth - SHELF_HORIZONTAL_PADDING * 2).coerceAtLeast(KatariTheme.sizes.none)
                 val itemWidth = listShelfItemWidth(contentWidth, items.size)
                 LazyRow(
                     modifier = Modifier.shelfInputIsolation(),
                     contentPadding = PaddingValues(horizontal = SHELF_HORIZONTAL_PADDING),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
                 ) {
                     items(items, key = { libraryPinnedItemKey(it) }) { item ->
                         val pinnedStateDescription = stringResource(MR.strings.label_pinned)
@@ -237,26 +242,25 @@ internal fun LibraryPinnedHeading(count: Int) {
         modifier = Modifier
             .fillMaxWidth()
             .semantics { heading() }
-            .padding(horizontal = 8.dp, vertical = 8.dp),
+            .padding(KatariTheme.spacing.s),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
     ) {
         Icon(
             imageVector = MaterialSymbols.RoundedFilled.Keep,
             contentDescription = null,
-            modifier = Modifier.size(16.dp),
-            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(KatariTheme.sizes.iconSmall),
+            tone = ContentTone.Primary,
         )
         Text(
             text = stringResource(MR.strings.label_pinned),
             modifier = Modifier.weight(1f),
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.primary,
+            role = TextRole.Label,
+            tone = ContentTone.Primary,
         )
         Text(
             text = count.toString(),
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            role = TextRole.Supporting,
         )
     }
 }
@@ -266,7 +270,7 @@ internal fun LibraryPinnedFooter() {
     Spacer(
         modifier = Modifier
             .fillMaxWidth()
-            .height(8.dp),
+            .height(KatariTheme.spacing.s),
     )
 }
 
@@ -276,7 +280,7 @@ private fun LibraryItem.gridSpan(columns: Int): Int {
 
 private fun resolveColumnCount(columns: Int, availableWidth: Dp): Int {
     if (columns > 0) return columns
-    val minimumWidth = 128.dp
+    val minimumWidth = BrowseMetrics.coverGridMinCellWidth
     val spacing = CommonEntryItemDefaults.GridHorizontalSpacer
     return floor((availableWidth + spacing) / (minimumWidth + spacing)).toInt().coerceAtLeast(1)
 }
@@ -291,8 +295,8 @@ private fun gridItemWidth(availableWidth: Dp, columns: Int, hasOverflow: Boolean
 }
 
 private fun listShelfItemWidth(availableWidth: Dp, itemCount: Int): Dp {
-    val preferredWidth = 280.dp
-    val spacing = 8.dp
+    val preferredWidth = LibraryMetrics.pinnedShelfRowWidth
+    val spacing = KatariSpacing.s
     val fullyVisibleItems = floor((availableWidth + spacing) / (preferredWidth + spacing))
         .toInt()
         .coerceAtLeast(1)

@@ -19,7 +19,6 @@ dependencies {
     implementation(libs.androidx.appCompat)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.foundation)
-    implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.uiToolingPreview)
     implementation(libs.androidx.lifecycle.runtime)
     implementation(libs.kotlinx.serialization.json)

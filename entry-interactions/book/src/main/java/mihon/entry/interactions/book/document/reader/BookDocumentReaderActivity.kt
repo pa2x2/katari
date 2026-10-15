@@ -11,7 +11,6 @@ import androidx.activity.OnBackPressedCallback
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.annotation.StringRes
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -64,6 +63,7 @@ import mihon.entry.interactions.source.launchEntryChildWebViewAction
 import mihon.entry.interactions.translation.EntryTranslationLanguagesFeature
 import mihon.entry.viewer.settings.ViewerSettingBinder
 import mihon.entry.viewer.settings.navigation.openViewerSettings
+import mihon.presentation.kit.feedback.SnackbarHostState
 import mihon.translation.api.TranslationFeature
 import mihon.translation.api.host.TranslationHostActions
 import mihon.tts.api.TtsFeature

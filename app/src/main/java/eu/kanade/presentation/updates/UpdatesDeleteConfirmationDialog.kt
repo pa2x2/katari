@@ -1,11 +1,11 @@
 package eu.kanade.presentation.updates
 
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import eu.kanade.presentation.entry.selectionEntryTypePresentation
 import eu.kanade.tachiyomi.source.entry.EntryType
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.dialog.Dialog
+import mihon.presentation.kit.dialog.DialogAction
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -17,23 +17,19 @@ fun UpdatesDeleteConfirmationDialog(
 ) {
     val presentation = entryTypes.selectionEntryTypePresentation()
 
-    AlertDialog(
-        text = {
-            Text(text = stringResource(presentation.deleteChildrenConfirmationLabel))
-        },
+    Dialog(
         onDismissRequest = onDismissRequest,
-        confirmButton = {
-            TextButton(onClick = {
+        title = null,
+        confirm = DialogAction(
+            label = stringResource(MR.strings.action_ok),
+            onClick = {
                 onConfirm()
                 onDismissRequest()
-            }) {
-                Text(text = stringResource(MR.strings.action_ok))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismissRequest) {
-                Text(text = stringResource(MR.strings.action_cancel))
-            }
-        },
-    )
+            },
+            destructive = true,
+        ),
+        dismiss = DialogAction(stringResource(MR.strings.action_cancel), onDismissRequest),
+    ) {
+        Text(text = stringResource(presentation.deleteChildrenConfirmationLabel))
+    }
 }

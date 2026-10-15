@@ -1,23 +1,24 @@
 package eu.kanade.tachiyomi.ui.browse.source.browse.filter.validation
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
-import eu.kanade.tachiyomi.ui.browse.source.browse.filter.control.FilterSheetInsets
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Error
+import mihon.presentation.kit.button.Button
+import mihon.presentation.kit.button.ButtonStyle
+import mihon.presentation.kit.content.Icon
+import mihon.presentation.kit.content.ProvideTextRole
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.surface.Surface
+import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
@@ -30,31 +31,32 @@ import tachiyomi.presentation.core.i18n.stringResource
 internal fun FilterValidationBar(validation: FilterValidation, onShow: () -> Unit) {
     val first = validation.issues.firstOrNull() ?: return
     val count = validation.issues.size
-    val colors = MaterialTheme.colorScheme
-    Row(
+    Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = FilterSheetInsets.Horizontal, vertical = 4.dp)
-            .background(colors.errorContainer, RoundedCornerShape(12.dp))
-            .padding(start = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+            .padding(horizontal = KatariTheme.spacing.rowInset, vertical = KatariTheme.spacing.xs),
+        container = SurfaceContainer.ErrorContainer,
+        shape = KatariTheme.shapes.medium,
     ) {
-        Icon(MaterialSymbols.Rounded.Error, contentDescription = null, tint = colors.onErrorContainer)
-        Text(
-            text = stringResource(
-                MR.strings.filter_problem_summary,
-                pluralStringResource(MR.plurals.filter_problem_count, count, count),
-                first.displayMessage(),
-            ),
-            style = MaterialTheme.typography.bodySmall,
-            color = colors.onErrorContainer,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(1f),
-        )
-        TextButton(onClick = onShow) {
-            Text(stringResource(MR.strings.filter_problem_show), color = colors.onErrorContainer)
+        Row(
+            modifier = Modifier.padding(start = KatariTheme.spacing.m),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
+        ) {
+            Icon(MaterialSymbols.Rounded.Error, contentDescription = null)
+            ProvideTextRole(TextRole.Supporting) {
+                Text(
+                    text = stringResource(
+                        MR.strings.filter_problem_summary,
+                        pluralStringResource(MR.plurals.filter_problem_count, count, count),
+                        first.displayMessage(),
+                    ),
+                    modifier = Modifier.weight(1f),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+            Button(label = stringResource(MR.strings.filter_problem_show), onClick = onShow, style = ButtonStyle.Text)
         }
     }
 }

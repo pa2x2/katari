@@ -7,20 +7,21 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.more.stats.components.rememberStatisticsDurationFormatter
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.automirroredrounded.KeyboardArrowRight
 import mihon.icons.materialsymbols.rounded.Timer
+import mihon.presentation.kit.content.Icon
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.domain.statistics.entry.EntryActivitySummary
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -45,15 +46,15 @@ fun EntryActivityLine(
         modifier = modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+            .padding(horizontal = KatariTheme.spacing.contentInset, vertical = KatariTheme.spacing.s),
+        horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.m),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
             imageVector = MaterialSymbols.Rounded.Timer,
             contentDescription = null,
-            modifier = Modifier.size(20.dp),
-            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(KatariTheme.sizes.iconSmall),
+            tone = ContentTone.Primary,
         )
         Text(
             text = listOfNotNull(
@@ -61,16 +62,16 @@ fun EntryActivityLine(
                 started?.let { stringResource(MR.strings.entry_activity_since, it) },
             ).joinToString(" · "),
             modifier = Modifier.weight(1f),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            role = TextRole.Body,
+            tone = ContentTone.Secondary,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
         Icon(
             imageVector = MaterialSymbols.AutoMirroredRounded.KeyboardArrowRight,
             contentDescription = stringResource(MR.strings.entry_activity_title),
-            modifier = Modifier.size(20.dp),
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(KatariTheme.sizes.iconSmall),
+            tone = ContentTone.Secondary,
         )
     }
 }

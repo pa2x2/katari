@@ -1,22 +1,22 @@
 package eu.kanade.tachiyomi.ui.reader.startup
 
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Error
+import mihon.presentation.kit.feedback.InfoScreen
+import mihon.presentation.kit.feedback.LoadingScreen
+import mihon.presentation.kit.surface.Surface
+import mihon.presentation.kit.surface.SurfaceContainer
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.screens.InfoScreen
-import tachiyomi.presentation.core.screens.LoadingScreen
 
 @Composable
 internal fun ReaderStartupLoadingScreen() {
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background,
+        container = SurfaceContainer.Background,
     ) {
         LoadingScreen()
     }
@@ -30,7 +30,7 @@ internal fun ReaderStartupErrorScreen(
 ) {
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background,
+        container = SurfaceContainer.Background,
     ) {
         InfoScreen(
             icon = MaterialSymbols.Rounded.Error,

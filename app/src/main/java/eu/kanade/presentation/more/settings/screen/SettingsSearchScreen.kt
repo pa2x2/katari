@@ -1,63 +1,44 @@
 package eu.kanade.presentation.more.settings.screen
 
 import androidx.compose.animation.Crossfade
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.paddingFromBaseline
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.text.input.TextFieldLineLimits
-import androidx.compose.foundation.text.input.clearText
-import androidx.compose.foundation.text.input.rememberTextFieldState
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.NonRestartableComposable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.LayoutDirection
-import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import eu.kanade.presentation.components.UpIcon
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.util.Screen
 import kotlinx.coroutines.flow.collectLatest
 import mihon.entry.interactions.media.EntryViewerSettingsFeature
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.Close
+import mihon.presentation.kit.feedback.NoResults
+import mihon.presentation.kit.list.SettingsRow
+import mihon.presentation.kit.navigation.Scaffold
+import mihon.presentation.kit.navigation.SearchToolbar
+import mihon.presentation.kit.surface.HorizontalDivider
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.screens.EmptyScreen
-import tachiyomi.presentation.core.util.runOnEnterKeyPressed
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import cafe.adriel.voyager.core.screen.Screen as VoyagerScreen
@@ -69,7 +50,6 @@ class SettingsSearchScreen : Screen() {
         val navigator = LocalNavigator.currentOrThrow
         val softKeyboardController = LocalSoftwareKeyboardController.current
         val focusManager = LocalFocusManager.current
-        val focusRequester = remember { FocusRequester() }
         val listState = rememberLazyListState()
 
         // Hide keyboard on change screen
@@ -86,59 +66,19 @@ class SettingsSearchScreen : Screen() {
             }
         }
 
-        // Request text field focus on launch
-        LaunchedEffect(focusRequester) {
-            focusRequester.requestFocus()
-        }
-
-        val textFieldState = rememberTextFieldState()
+        var query by rememberSaveable { mutableStateOf("") }
         Scaffold(
             topBar = {
                 Column {
-                    TopAppBar(
-                        navigationIcon = {
-                            val canPop = remember { navigator.canPop }
-                            if (canPop) {
-                                IconButton(onClick = navigator::pop) {
-                                    UpIcon()
-                                }
-                            }
-                        },
-                        title = {
-                            BasicTextField(
-                                state = textFieldState,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .focusRequester(focusRequester)
-                                    .runOnEnterKeyPressed(action = focusManager::clearFocus),
-                                textStyle = MaterialTheme.typography.bodyLarge
-                                    .copy(color = MaterialTheme.colorScheme.onSurface),
-                                lineLimits = TextFieldLineLimits.SingleLine,
-                                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                                onKeyboardAction = { focusManager.clearFocus() },
-                                cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
-                                decorator = {
-                                    if (textFieldState.text.isEmpty()) {
-                                        Text(
-                                            text = stringResource(MR.strings.action_search_settings),
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            style = MaterialTheme.typography.bodyLarge,
-                                        )
-                                    }
-                                    it()
-                                },
-                            )
-                        },
-                        actions = {
-                            if (textFieldState.text.isNotEmpty()) {
-                                IconButton(onClick = { textFieldState.clearText() }) {
-                                    Icon(
-                                        imageVector = MaterialSymbols.Rounded.Close,
-                                        contentDescription = stringResource(MR.strings.action_reset),
-                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    )
-                                }
-                            }
+                    val canPop = remember { navigator.canPop }
+                    SearchToolbar(
+                        searchQuery = query,
+                        onChangeSearchQuery = { query = it.orEmpty() },
+                        placeholderText = stringResource(MR.strings.action_search_settings),
+                        onClickCloseSearch = if (canPop) {
+                            { navigator.pop() }
+                        } else {
+                            null
                         },
                     )
                     HorizontalDivider()
@@ -146,7 +86,7 @@ class SettingsSearchScreen : Screen() {
             },
         ) { contentPadding ->
             SearchResult(
-                searchKey = { textFieldState.text.toString() },
+                searchKey = { query },
                 listState = listState,
                 contentPadding = contentPadding,
             ) { result ->
@@ -182,9 +122,7 @@ private fun SearchResult(
     ) {
         when {
             it == null -> {}
-            it.isEmpty() -> {
-                EmptyScreen(stringResource(MR.strings.no_results_found))
-            }
+            it.isEmpty() -> NoResults(modifier = Modifier.padding(contentPadding))
             else -> {
                 LazyColumn(
                     modifier = modifier.fillMaxSize(),
@@ -196,27 +134,12 @@ private fun SearchResult(
                         items = it,
                         key = { i -> i.hashCode() },
                     ) { item ->
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { onItemClick(item) }
-                                .padding(horizontal = 24.dp, vertical = 14.dp),
-                        ) {
-                            Text(
-                                text = item.title,
-                                overflow = TextOverflow.Ellipsis,
-                                maxLines = 1,
-                                fontWeight = FontWeight.Normal,
-                                style = MaterialTheme.typography.titleMedium,
-                            )
-                            Text(
-                                text = item.breadcrumbs,
-                                modifier = Modifier.paddingFromBaseline(top = 16.dp),
-                                maxLines = 1,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                style = MaterialTheme.typography.bodySmall,
-                            )
-                        }
+                        SettingsRow(
+                            title = item.title,
+                            subtitle = item.breadcrumbs,
+                            subtitleMaxLines = 1,
+                            onClick = { onItemClick(item) },
+                        )
                     }
                 }
             }

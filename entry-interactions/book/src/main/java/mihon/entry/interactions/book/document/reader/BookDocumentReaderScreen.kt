@@ -10,9 +10,6 @@ import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.material3.Icon
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.FloatState
@@ -32,7 +29,6 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.semantics.clearAndSetSemantics
-import androidx.compose.ui.unit.dp
 import mihon.entry.interactions.book.R
 import mihon.entry.interactions.book.document.reader.navigation.BookDocumentJumpHistory
 import mihon.entry.interactions.book.document.reader.navigation.BookDocumentNavigationTarget
@@ -47,9 +43,9 @@ import mihon.entry.interactions.book.document.reader.settings.BookDocumentReader
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderStatusBarSettings
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderTextSelectionMenuSettings
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderTextSizeSettings
+import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderThemeMode
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderThemeSettings
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReadingModeShortcut
-import mihon.entry.interactions.book.document.reader.theme.BookDocumentReaderMaterialTheme
 import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentReaderPalette
 import mihon.entry.interactions.book.document.reader.theme.bookDocumentReaderPalette
 import mihon.entry.interactions.book.document.reader.transition.LocalBookDocumentChapterTransitionMode
@@ -66,18 +62,22 @@ import mihon.entry.interactions.reader.settings.ChapterTransitionMode
 import mihon.entry.interactions.source.EntryChildWebViewAction
 import mihon.entry.interactions.source.EntryChildWebViewActionsMenu
 import mihon.entry.interactions.source.EntryChildWebViewResolution
+import mihon.entry.viewer.chrome.ui.ReaderChrome
+import mihon.entry.viewer.chrome.ui.ReaderChromeBottomBar
+import mihon.entry.viewer.chrome.ui.ReaderChromeBottomBarAction
+import mihon.entry.viewer.chrome.ui.ReaderChromeTopBar
 import mihon.entry.viewer.settings.ui.ReaderSettingsDialogHost
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.automirroredrounded.ViewList
 import mihon.icons.materialsymbols.rounded.Settings
+import mihon.presentation.kit.feedback.SnackbarHost
+import mihon.presentation.kit.feedback.SnackbarHostState
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.ReadingPaletteTheme
 import mihon.translation.ui.presentation.TranslationResultSpeechPhase
 import mihon.translation.ui.presentation.TranslationResultSpeechState
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.reader.ReaderChrome
-import tachiyomi.presentation.core.components.reader.ReaderChromeBottomBar
-import tachiyomi.presentation.core.components.reader.ReaderChromeBottomBarAction
-import tachiyomi.presentation.core.components.reader.ReaderChromeTopBar
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
 import androidx.compose.ui.res.stringResource as androidStringResource
@@ -200,9 +200,8 @@ internal fun BookDocumentReaderScreen(
         LocalBookDocumentReaderPalette provides readerPalette,
         LocalBookDocumentChapterTransitionMode provides chapterTransitionModeSetting.effectiveValue,
     ) {
-        BookDocumentReaderMaterialTheme(
-            mode = themeSetting.effectiveValue,
-            palette = readerPalette,
+        ReadingPaletteTheme(
+            palette = readerPalette.takeUnless { themeSetting.effectiveValue == BookDocumentReaderThemeMode.APP },
         ) {
             BookReaderScaffold(
                 progress = if (showReadingProgressSetting.effectiveValue) {
@@ -214,8 +213,8 @@ internal fun BookDocumentReaderScreen(
                         BookReaderProgress.Chapter(
                             value = visualChapterProgression,
                             style = readingProgressStyleSetting.effectiveValue,
-                            activeColor = readerPalette.accent.copy(alpha = 0.75f),
-                            trackColor = readerPalette.surfaceVariant,
+                            activeColor = readerPalette.progress,
+                            trackColor = readerPalette.fill,
                         )
                     }
                 } else {
@@ -312,18 +311,16 @@ internal fun BookDocumentReaderScreen(
                                 )
                                 ReaderChromeBottomBar {
                                     BookDocumentReadingModeShortcut(settingBindings.readingMode)
-                                    ReaderChromeBottomBarAction(onClick = { onNavigationVisibilityChange(true) }) {
-                                        Icon(
-                                            MaterialSymbols.AutoMirroredRounded.ViewList,
-                                            stringResource(MR.strings.reader_table_of_contents),
-                                        )
-                                    }
-                                    ReaderChromeBottomBarAction(onClick = { onSettingsVisibilityChange(true) }) {
-                                        Icon(
-                                            MaterialSymbols.Rounded.Settings,
-                                            stringResource(MR.strings.action_settings),
-                                        )
-                                    }
+                                    ReaderChromeBottomBarAction(
+                                        icon = MaterialSymbols.AutoMirroredRounded.ViewList,
+                                        contentDescription = stringResource(MR.strings.reader_table_of_contents),
+                                        onClick = { onNavigationVisibilityChange(true) },
+                                    )
+                                    ReaderChromeBottomBarAction(
+                                        icon = MaterialSymbols.Rounded.Settings,
+                                        contentDescription = stringResource(MR.strings.action_settings),
+                                        onClick = { onSettingsVisibilityChange(true) },
+                                    )
                                 }
                             }
                         },
@@ -332,7 +329,7 @@ internal fun BookDocumentReaderScreen(
                         hostState = snackbarHostState,
                         modifier = Modifier
                             .align(Alignment.BottomCenter)
-                            .padding(bottom = 56.dp)
+                            .padding(bottom = KatariTheme.sizes.touchTarget + KatariTheme.spacing.s)
                             .windowInsetsPadding(
                                 WindowInsets.safeDrawing.only(
                                     WindowInsetsSides.Bottom + WindowInsetsSides.Horizontal,

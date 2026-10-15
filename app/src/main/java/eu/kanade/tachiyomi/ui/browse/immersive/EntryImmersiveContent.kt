@@ -20,7 +20,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import eu.kanade.presentation.browse.immersive.EntryImmersivePositionState
@@ -33,12 +32,13 @@ import mihon.entry.interactions.media.EntryImmersivePreloadRadiusResult
 import mihon.entry.interactions.media.EntryImmersiveRendererResult
 import mihon.entry.interactions.media.EntryImmersiveUnavailableReason
 import mihon.entry.interactions.navigation.EntryOpenFeature
+import mihon.entry.viewer.chrome.ui.ReaderMediaLoadOverlay
+import mihon.entry.viewer.chrome.ui.ReaderMediaLoadState
+import mihon.entry.viewer.chrome.ui.ReaderMediaLoadingBackground
+import mihon.presentation.kit.progress.PullRefresh
+import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.material.PullRefresh
-import tachiyomi.presentation.core.components.reader.ReaderMediaLoadOverlay
-import tachiyomi.presentation.core.components.reader.ReaderMediaLoadState
-import tachiyomi.presentation.core.components.reader.ReaderMediaLoadingBackground
 import tachiyomi.presentation.core.i18n.stringResource
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
@@ -128,7 +128,7 @@ internal fun EntryImmersiveContent(
                 state = pagerState,
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color.Black),
+                    .background(KatariTheme.colors.media),
                 key = { page ->
                     itemIdentity(page)?.let(::entryImmersiveItemKey) ?: "immersive:$page"
                 },
@@ -225,7 +225,7 @@ private fun EntryImmersivePage(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black),
+            .background(KatariTheme.colors.media),
     ) {
         ReaderMediaLoadingBackground(modifier = Modifier.fillMaxSize())
 

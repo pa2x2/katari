@@ -7,7 +7,6 @@ import android.view.ViewGroup
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.WindowInsets
@@ -19,7 +18,6 @@ import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.SideEffect
@@ -38,9 +36,10 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.semantics.hideFromAccessibility
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.unit.dp
 import mihon.entry.interactions.book.reader.layout.BookReaderRoundedCornerSafeArea
 import mihon.entry.interactions.book.reader.translation.BookSelectionTranslationController
+import mihon.presentation.kit.feedback.SnackbarHostState
+import mihon.presentation.kit.theme.KatariTheme
 import mihon.translation.ui.presentation.CoordinatedTranslationSessionHost
 import mihon.translation.ui.presentation.TranslationResultSpeechState
 import mihon.translation.ui.presentation.TranslationResultSpeechTarget
@@ -131,7 +130,7 @@ internal fun BookReaderScaffold(
                     BookReaderFooterProgressIndicator(
                         progress = it,
                         modifier = Modifier
-                            .padding(vertical = 2.dp)
+                            .padding(vertical = KatariTheme.spacing.xxs)
                             .graphicsLayer { alpha = 0f }
                             .semantics {
                                 hideFromAccessibility()
@@ -155,7 +154,7 @@ internal fun BookReaderScaffold(
                     ) {
                         BookReaderFooterProgressIndicator(
                             progress = it,
-                            modifier = Modifier.padding(vertical = 2.dp),
+                            modifier = Modifier.padding(vertical = KatariTheme.spacing.xxs),
                         )
                     }
                 }
@@ -163,18 +162,15 @@ internal fun BookReaderScaffold(
         }
         translationController?.let { controller ->
             translationTheme {
-                BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-                    CoordinatedTranslationSessionHost(
-                        coordinator = controller.hostCoordinator,
-                        isTabletUi = maxWidth >= 720.dp,
-                        modifier = Modifier.fillMaxSize(),
-                        onDismiss = controller::dismissTranslation,
-                        onPopupBoundsChanged = onTranslationPopupBoundsChanged,
-                        speechState = translationSpeechState,
-                        onSpeechToggle = onTranslationSpeechToggle,
-                        snackbarHostState = translationSnackbarHostState,
-                    )
-                }
+                CoordinatedTranslationSessionHost(
+                    coordinator = controller.hostCoordinator,
+                    modifier = Modifier.fillMaxSize(),
+                    onDismiss = controller::dismissTranslation,
+                    onPopupBoundsChanged = onTranslationPopupBoundsChanged,
+                    speechState = translationSpeechState,
+                    onSpeechToggle = onTranslationSpeechToggle,
+                    snackbarHostState = translationSnackbarHostState,
+                )
             }
         }
     }

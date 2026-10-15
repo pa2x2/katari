@@ -9,7 +9,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import mihon.book.api.document.BookDocumentLinkTarget
 import mihon.entry.interactions.book.document.reader.paging.BookDocumentPage
 import mihon.entry.interactions.book.document.reader.paging.BookDocumentPagedViewer
@@ -22,6 +21,7 @@ import mihon.entry.interactions.book.document.reader.transition.LocalBookDocumen
 import mihon.entry.interactions.book.reader.BookReaderProgress
 import mihon.entry.interactions.reader.settings.BookDocumentReadingMode
 import mihon.entry.interactions.viewer.EntryChildWindow
+import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.domain.entry.model.EntryChapter
 
 /** Switches rendering modes around the first visible line, independently of reading-progress observations. */
@@ -119,7 +119,7 @@ internal fun BookDocumentModeViewport(
             }.distinctBy { it.key },
             modifier,
         ) {
-            BookDocumentPaginationLayout(pageItems, Modifier.padding(vertical = 12.dp)) { pages ->
+            BookDocumentPaginationLayout(pageItems, Modifier.padding(vertical = KatariTheme.spacing.m)) { pages ->
                 SideEffect { onSeekPages(pages) }
                 BookDocumentPagedViewer(
                     pages, mode, initialLocation, navigationRequest, loadStates,

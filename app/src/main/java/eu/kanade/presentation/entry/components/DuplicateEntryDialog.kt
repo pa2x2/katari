@@ -1,6 +1,5 @@
 package eu.kanade.presentation.entry.components
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -9,40 +8,22 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.LocalContentColor
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedCard
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import coil3.request.ImageRequest
 import coil3.request.crossfade
-import eu.kanade.presentation.components.AdaptiveSheet
-import eu.kanade.presentation.components.TabbedDialogPaddings
 import eu.kanade.presentation.entry.entryTypePresentation
-import eu.kanade.presentation.more.settings.LocalPreferenceMinHeight
-import eu.kanade.presentation.more.settings.widget.TextPreferenceWidget
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.sourceNotInstalledName
 import mihon.entry.interactions.migration.EntryMigrationAvailability
@@ -53,6 +34,23 @@ import mihon.icons.materialsymbols.rounded.Brush
 import mihon.icons.materialsymbols.rounded.Description
 import mihon.icons.materialsymbols.rounded.Person
 import mihon.icons.materialsymbols.rounded.Public
+import mihon.presentation.kit.button.Button
+import mihon.presentation.kit.button.ButtonStyle
+import mihon.presentation.kit.content.Badge
+import mihon.presentation.kit.content.BadgeGroup
+import mihon.presentation.kit.content.BadgeTone
+import mihon.presentation.kit.content.EntryMetrics
+import mihon.presentation.kit.content.Icon
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.list.SettingsRow
+import mihon.presentation.kit.sheet.Sheet
+import mihon.presentation.kit.sheet.SheetHeader
+import mihon.presentation.kit.surface.HorizontalDivider
+import mihon.presentation.kit.surface.Surface
+import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.domain.entry.model.DuplicateEntryCandidate
 import tachiyomi.domain.entry.model.DuplicateMatchReason
 import tachiyomi.domain.entry.model.Entry
@@ -60,13 +58,9 @@ import tachiyomi.domain.library.service.DuplicatePreferences
 import tachiyomi.domain.source.model.SourceDisplayInfo
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.Badge
-import tachiyomi.presentation.core.components.BadgeGroup
-import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
-import tachiyomi.presentation.core.util.secondaryItemAlpha
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
@@ -81,41 +75,31 @@ fun DuplicateEntryDialog(
 ) {
     val sourceManager = remember { Injekt.get<SourceManager>() }
     val migration = remember { Injekt.get<EntryMigrationFeature>() }
-    val minHeight = LocalPreferenceMinHeight.current
-    val horizontalPadding = PaddingValues(horizontal = TabbedDialogPaddings.Horizontal)
+    val horizontalPadding = PaddingValues(horizontal = KatariTheme.spacing.rowInset)
     val horizontalPaddingModifier = Modifier.padding(horizontalPadding)
 
-    AdaptiveSheet(
+    Sheet(
         modifier = modifier,
         onDismissRequest = onDismissRequest,
+        capHeight = true,
     ) {
-        Column(
-            modifier = Modifier
-                .padding(vertical = TabbedDialogPaddings.Vertical)
-                .fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.medium),
-        ) {
-            Text(
-                text = stringResource(MR.strings.possible_duplicates_title),
-                style = MaterialTheme.typography.headlineMedium,
-                modifier = Modifier
-                    .then(horizontalPaddingModifier)
-                    .padding(top = MaterialTheme.padding.small),
-            )
+        Column(modifier = Modifier.fillMaxWidth()) {
+            SheetHeader(title = stringResource(MR.strings.possible_duplicates_title))
 
             Text(
                 text = stringResource(MR.strings.possible_duplicates_summary),
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.then(horizontalPaddingModifier),
+                role = TextRole.Body,
+                modifier = Modifier
+                    .then(horizontalPaddingModifier)
+                    .padding(vertical = KatariTheme.spacing.m),
             )
 
             LazyColumn(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(1f, fill = false)
-                    .heightIn(max = 520.dp),
+                    .weight(1f, fill = false),
                 contentPadding = horizontalPadding,
-                verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
+                verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
             ) {
                 items(
                     items = duplicates,
@@ -135,35 +119,26 @@ fun DuplicateEntryDialog(
                 }
             }
 
-            Column(modifier = horizontalPaddingModifier) {
-                HorizontalDivider()
+            HorizontalDivider(modifier = Modifier.padding(top = KatariTheme.spacing.m))
 
-                TextPreferenceWidget(
-                    title = stringResource(MR.strings.action_add_anyway),
-                    icon = MaterialSymbols.Rounded.Add,
-                    onPreferenceClick = {
-                        onDismissRequest()
-                        onConfirm()
-                    },
-                    modifier = Modifier.padding(top = MaterialTheme.padding.small).clip(CircleShape),
-                )
-            }
+            SettingsRow(
+                title = stringResource(MR.strings.action_add_anyway),
+                icon = MaterialSymbols.Rounded.Add,
+                onClick = {
+                    onDismissRequest()
+                    onConfirm()
+                },
+            )
 
-            OutlinedButton(
+            Button(
+                label = stringResource(MR.strings.action_cancel),
                 onClick = onDismissRequest,
                 modifier = Modifier
                     .then(horizontalPaddingModifier)
-                    .padding(bottom = MaterialTheme.padding.medium)
-                    .heightIn(min = minHeight)
+                    .padding(bottom = KatariTheme.spacing.l)
                     .fillMaxWidth(),
-            ) {
-                Text(
-                    modifier = Modifier.padding(vertical = MaterialTheme.padding.extraSmall),
-                    text = stringResource(MR.strings.action_cancel),
-                    color = MaterialTheme.colorScheme.primary,
-                    style = MaterialTheme.typography.bodyLarge,
-                )
-            }
+                style = ButtonStyle.Outlined,
+            )
         }
     }
 }
@@ -183,25 +158,21 @@ private fun DuplicateEntryListItem(
     val duplicatePreferences = remember { Injekt.get<DuplicatePreferences>() }
     val extendedEnabled by duplicatePreferences.extendedDuplicateDetectionEnabled.collectAsState()
 
-    OutlinedCard(
+    // A strong match is filled with the error container, so it stands out even without its score badge.
+    Surface(
         modifier = Modifier.fillMaxWidth(),
-        border = BorderStroke(
-            width = 1.dp,
-            color = if (duplicate.isStrongMatch) {
-                MaterialTheme.colorScheme.error.copy(alpha = 0.35f)
-            } else {
-                MaterialTheme.colorScheme.outlineVariant
-            },
-        ),
+        container = if (duplicate.isStrongMatch) SurfaceContainer.ErrorContainer else SurfaceContainer.Surface,
+        shape = KatariTheme.shapes.medium,
+        outlined = true,
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(MaterialTheme.padding.small),
-            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
+                .padding(KatariTheme.spacing.s),
+            horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
             verticalAlignment = Alignment.Top,
         ) {
-            Box(modifier = Modifier.width(DuplicateCoverWidth)) {
+            Box(modifier = Modifier.width(EntryMetrics.duplicateCoverWidth)) {
                 EntryCover.Book(
                     data = ImageRequest.Builder(LocalContext.current)
                         .data(entry)
@@ -211,12 +182,10 @@ private fun DuplicateEntryListItem(
                 )
                 BadgeGroup(
                     modifier = Modifier
-                        .padding(4.dp)
+                        .padding(KatariTheme.spacing.xs)
                         .align(Alignment.TopStart),
                 ) {
                     Badge(
-                        color = MaterialTheme.colorScheme.secondary,
-                        textColor = MaterialTheme.colorScheme.onSecondary,
                         text = duplicate.count.countLabel(entry.type),
                     )
                 }
@@ -224,11 +193,11 @@ private fun DuplicateEntryListItem(
 
             Column(
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.extraSmall),
+                verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xs),
             ) {
                 Text(
                     text = entry.displayTitle,
-                    style = MaterialTheme.typography.titleMedium,
+                    role = TextRole.SectionTitle,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -236,8 +205,7 @@ private fun DuplicateEntryListItem(
                 if (!entry.displayName.isNullOrBlank() && entry.displayName != entry.title) {
                     Text(
                         text = entry.title,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        role = TextRole.Supporting,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
@@ -250,7 +218,7 @@ private fun DuplicateEntryListItem(
                         sourceInfo.name
                     },
                     iconImageVector = MaterialSymbols.Rounded.Public,
-                    iconTint = if (sourceInfo.isMissing) MaterialTheme.colorScheme.error else LocalContentColor.current,
+                    iconTone = if (sourceInfo.isMissing) ContentTone.Error else ContentTone.Secondary,
                     maxLines = 2,
                 )
 
@@ -290,20 +258,18 @@ private fun DuplicateEntryListItem(
 
                 if (extendedEnabled) {
                     FlowRow(
-                        modifier = Modifier.padding(top = MaterialTheme.padding.extraSmall),
-                        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.extraSmall),
-                        verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.extraSmall),
+                        modifier = Modifier.padding(top = KatariTheme.spacing.xs),
+                        horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xs),
+                        verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xs),
                     ) {
                         Badge(
                             text = stringResource(MR.strings.possible_duplicates_score, duplicate.scorePercent),
-                            color = duplicate.scoreBadgeColor(),
-                            textColor = duplicate.scoreBadgeTextColor(),
+                            tone = duplicate.scoreBadgeTone,
                         )
                         duplicate.reasons.forEach { reason ->
                             Badge(
                                 text = reason.label(entry.type),
-                                color = MaterialTheme.colorScheme.secondaryContainer,
-                                textColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                                tone = BadgeTone.Muted,
                             )
                         }
                     }
@@ -312,45 +278,30 @@ private fun DuplicateEntryListItem(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = MaterialTheme.padding.extraSmall),
-                    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
+                        .padding(top = KatariTheme.spacing.xs),
+                    horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
                 ) {
-                    FilledTonalButton(
+                    Button(
+                        label = stringResource(MR.strings.action_open),
                         onClick = {
                             onDismissRequest()
                             onOpenEntry()
                         },
                         modifier = Modifier.weight(1f),
-                    ) {
-                        Icon(
-                            imageVector = EntryActionIcons.openFullEntry,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp),
-                        )
-                        Text(
-                            text = stringResource(MR.strings.action_open),
-                            modifier = Modifier.padding(start = MaterialTheme.padding.extraSmall),
-                        )
-                    }
+                        style = ButtonStyle.Tonal,
+                        icon = EntryActionIcons.openFullEntry,
+                    )
 
                     if (onMigrate != null) {
                         Button(
+                            label = stringResource(MR.strings.action_migrate),
                             onClick = {
                                 onDismissRequest()
                                 onMigrate()
                             },
                             modifier = Modifier.weight(1f),
-                        ) {
-                            Icon(
-                                imageVector = EntryActionIcons.migrate,
-                                contentDescription = null,
-                                modifier = Modifier.size(18.dp),
-                            )
-                            Text(
-                                text = stringResource(MR.strings.action_migrate),
-                                modifier = Modifier.padding(start = MaterialTheme.padding.extraSmall),
-                            )
-                        }
+                            icon = EntryActionIcons.migrate,
+                        )
                     }
                 }
             }
@@ -367,24 +318,22 @@ private fun DuplicateMetaRow(
     text: String,
     iconImageVector: ImageVector,
     maxLines: Int = 1,
-    iconTint: Color = Color.Unspecified,
+    iconTone: ContentTone = ContentTone.Secondary,
 ) {
     Row(
-        modifier = Modifier
-            .secondaryItemAlpha()
-            .fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.extraSmall),
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xs),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
             imageVector = iconImageVector,
             contentDescription = null,
-            modifier = Modifier.size(EntryDetailsIconWidth),
-            tint = if (iconTint == Color.Unspecified) LocalContentColor.current else iconTint,
+            modifier = Modifier.size(KatariTheme.sizes.iconSmall),
+            tone = iconTone,
         )
         Text(
             text = text,
-            style = MaterialTheme.typography.bodySmall,
+            role = TextRole.Supporting,
             overflow = TextOverflow.Ellipsis,
             maxLines = maxLines,
         )
@@ -411,29 +360,11 @@ private fun DuplicateMatchReason.label(entryType: EntryType): String {
     }
 }
 
-@Composable
-private fun DuplicateEntryCandidate.scoreBadgeColor(): Color {
-    return if (isStrongMatch) {
-        MaterialTheme.colorScheme.error
-    } else {
-        MaterialTheme.colorScheme.tertiary
-    }
-}
-
-@Composable
-private fun DuplicateEntryCandidate.scoreBadgeTextColor(): Color {
-    return if (isStrongMatch) {
-        MaterialTheme.colorScheme.onError
-    } else {
-        MaterialTheme.colorScheme.onTertiary
-    }
-}
+private val DuplicateEntryCandidate.scoreBadgeTone: BadgeTone
+    get() = if (isStrongMatch) BadgeTone.Error else BadgeTone.Tertiary
 
 private fun String.normalizedPreview(): String {
     return replace(Regex("<[^>]+>"), " ")
         .replace(Regex("\\s+"), " ")
         .trim()
 }
-
-private val DuplicateCoverWidth = 96.dp
-private val EntryDetailsIconWidth = 16.dp

@@ -11,9 +11,6 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.SnackbarDuration
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -21,7 +18,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
 import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
 import eu.kanade.presentation.browse.components.BrowseSourceLoadingItem
@@ -41,13 +37,17 @@ import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.OpenInBrowser
 import mihon.icons.materialsymbols.rounded.Refresh
 import mihon.icons.materialsymbols.rounded.Settings
+import mihon.presentation.kit.feedback.EmptyScreen
+import mihon.presentation.kit.feedback.EmptyScreenAction
+import mihon.presentation.kit.feedback.LoadingScreen
+import mihon.presentation.kit.feedback.SnackbarDuration
+import mihon.presentation.kit.feedback.SnackbarHostState
+import mihon.presentation.kit.feedback.SnackbarResult
+import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.domain.source.model.CatalogListItem
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.screens.EmptyScreen
-import tachiyomi.presentation.core.screens.EmptyScreenAction
-import tachiyomi.presentation.core.screens.LoadingScreen
 import tachiyomi.presentation.core.util.plus
 import tachiyomi.core.common.i18n.stringResource as coreStringResource
 
@@ -196,7 +196,7 @@ private fun CatalogList(
 
     LazyColumn(
         state = listState,
-        contentPadding = contentPadding + PaddingValues(vertical = 8.dp),
+        contentPadding = contentPadding + PaddingValues(vertical = KatariTheme.spacing.s),
     ) {
         if (prependItemCount > 0) {
             item {
@@ -261,7 +261,7 @@ private fun CatalogComfortableGrid(
     LazyVerticalGrid(
         columns = columns,
         state = gridState,
-        contentPadding = contentPadding + PaddingValues(8.dp),
+        contentPadding = contentPadding + PaddingValues(KatariTheme.spacing.s),
         verticalArrangement = Arrangement.spacedBy(CommonEntryItemDefaults.GridVerticalSpacer),
         horizontalArrangement = Arrangement.spacedBy(CommonEntryItemDefaults.GridHorizontalSpacer),
     ) {
@@ -326,7 +326,7 @@ private fun CatalogCompactGrid(
     LazyVerticalGrid(
         columns = columns,
         state = gridState,
-        contentPadding = contentPadding + PaddingValues(8.dp),
+        contentPadding = contentPadding + PaddingValues(KatariTheme.spacing.s),
         verticalArrangement = Arrangement.spacedBy(CommonEntryItemDefaults.GridVerticalSpacer),
         horizontalArrangement = Arrangement.spacedBy(CommonEntryItemDefaults.GridHorizontalSpacer),
     ) {

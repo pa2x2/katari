@@ -1,39 +1,23 @@
 package mihon.entry.interactions.reader.navigation
 
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.selected
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import mihon.entry.interactions.child.EntryChildProgressLabel
 import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.automirroredroundedfilled.ViewList
-import mihon.icons.materialsymbols.rounded.Close
 import mihon.icons.materialsymbols.roundedfilled.PlayArrow
+import mihon.presentation.kit.content.Icon
+import mihon.presentation.kit.list.ChapterRow
+import mihon.presentation.kit.sheet.Sheet
+import mihon.presentation.kit.sheet.SheetHeader
+import mihon.presentation.kit.theme.ContentTone
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.AdaptiveSheet
-import tachiyomi.presentation.core.components.EntryChildListItemContent
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.util.selectedBackground
 
 data class EntryReaderNavigationRow<T>(
     val item: T,
@@ -60,89 +44,46 @@ fun <T> EntryReaderNavigationSheet(
         if (visible && selectedIndex >= 0) listState.scrollToItem(selectedIndex)
     }
 
-    Dialog(
+    Sheet(
         onDismissRequest = onDismissRequest,
-        properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = true),
+        capHeight = true,
     ) {
-        BoxWithConstraints {
-            AdaptiveSheet(
-                isTabletUi = false,
-                enableImplicitDismiss = true,
-                onDismissRequest = onDismissRequest,
-                modifier = Modifier.heightIn(max = maxHeight * 0.85f),
+        Column {
+            SheetHeader(title = stringResource(MR.strings.reader_table_of_contents))
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f, fill = false),
+                state = listState,
             ) {
-                Column {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(start = 24.dp, end = 8.dp, top = 8.dp, bottom = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Icon(
-                            imageVector = MaterialSymbols.AutoMirroredRoundedFilled.ViewList,
-                            contentDescription = null,
-                        )
-                        Text(
-                            text = stringResource(MR.strings.reader_table_of_contents),
-                            modifier = Modifier
-                                .weight(1f)
-                                .padding(horizontal = 16.dp),
-                            style = MaterialTheme.typography.titleLarge,
-                        )
-                        IconButton(onClick = onDismissRequest) {
-                            Icon(
-                                imageVector = MaterialSymbols.Rounded.Close,
-                                contentDescription = stringResource(MR.strings.action_close),
-                            )
-                        }
-                    }
-                    HorizontalDivider()
-                    LazyColumn(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(1f, fill = false),
-                        state = listState,
-                    ) {
-                        itemsIndexed(rows) { index, row ->
-                            val selected = index == selectedIndex
-                            EntryChildListItemContent(
-                                title = row.title,
-                                date = null,
-                                readProgress = row.progressLabel?.let { label ->
-                                    stringResource(label.resource, *label.args.toTypedArray())
-                                },
-                                scanlator = null,
-                                read = row.read,
-                                bookmark = row.bookmark,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .selectedBackground(selected)
-                                    .semantics { this.selected = selected }
-                                    .clickable {
-                                        onItemClick(row.item)
-                                        onDismissRequest()
-                                    }
-                                    .padding(
-                                        start = 16.dp + (row.depth * 16).dp,
-                                        top = 12.dp,
-                                        end = 16.dp,
-                                        bottom = 12.dp,
-                                    ),
-                                trailingContent = if (selected) {
-                                    {
-                                        Icon(
-                                            imageVector = MaterialSymbols.RoundedFilled.PlayArrow,
-                                            contentDescription = null,
-                                            modifier = Modifier.padding(start = 12.dp),
-                                            tint = MaterialTheme.colorScheme.primary,
-                                        )
-                                    }
-                                } else {
-                                    null
-                                },
-                            )
-                        }
-                    }
+                itemsIndexed(rows) { index, row ->
+                    val selected = index == selectedIndex
+                    ChapterRow(
+                        title = row.title,
+                        read = row.read,
+                        bookmark = row.bookmark,
+                        onClick = {
+                            onItemClick(row.item)
+                            onDismissRequest()
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        progress = row.progressLabel?.let { label ->
+                            stringResource(label.resource, *label.args.toTypedArray())
+                        },
+                        selected = selected,
+                        depth = row.depth,
+                        trailing = if (selected) {
+                            {
+                                Icon(
+                                    imageVector = MaterialSymbols.RoundedFilled.PlayArrow,
+                                    contentDescription = null,
+                                    tone = ContentTone.Primary,
+                                )
+                            }
+                        } else {
+                            null
+                        },
+                    )
                 }
             }
         }

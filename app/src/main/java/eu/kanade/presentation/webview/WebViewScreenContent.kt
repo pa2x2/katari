@@ -17,9 +17,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -32,7 +29,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalUriHandler
-import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.stack.mutableStateStackOf
 import com.kevinnzou.web.AccompanistWebChromeClient
 import com.kevinnzou.web.AccompanistWebViewClient
@@ -41,8 +37,6 @@ import com.kevinnzou.web.WebContent
 import com.kevinnzou.web.WebView
 import com.kevinnzou.web.WebViewNavigator
 import com.kevinnzou.web.WebViewState
-import eu.kanade.presentation.components.AppBar
-import eu.kanade.presentation.components.AppBarActions
 import eu.kanade.presentation.components.WarningBanner
 import eu.kanade.tachiyomi.BuildConfig
 import eu.kanade.tachiyomi.util.system.getHtml
@@ -56,10 +50,15 @@ import mihon.icons.materialsymbols.automirroredrounded.ArrowBack
 import mihon.icons.materialsymbols.automirroredrounded.ArrowForward
 import mihon.icons.materialsymbols.rounded.Close
 import mihon.icons.materialsymbols.rounded.TabClose
+import mihon.presentation.kit.navigation.AppBar
+import mihon.presentation.kit.navigation.AppBarActions
+import mihon.presentation.kit.navigation.Scaffold
+import mihon.presentation.kit.progress.LinearProgressIndicator
+import mihon.presentation.kit.surface.Surface
+import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.core.common.Constants
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
 
 class WebViewWindow(webContent: WebContent, val navigator: WebViewNavigator) {
@@ -317,12 +316,12 @@ fun WebViewScreenContent(
 
                     if (showCloudflareHelp) {
                         Surface(
-                            modifier = Modifier.padding(8.dp),
+                            modifier = Modifier.padding(KatariTheme.spacing.s),
                         ) {
                             WarningBanner(
                                 textRes = MR.strings.information_cloudflare_help,
                                 modifier = Modifier
-                                    .clip(MaterialTheme.shapes.small)
+                                    .clip(KatariTheme.shapes.small)
                                     .clickable {
                                         uriHandler.openUri(
                                             "${Constants.URL_HELP_TROUBLESHOOTING}#verify",

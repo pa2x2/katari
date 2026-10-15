@@ -13,12 +13,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
@@ -34,7 +29,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.graphicsLayer
@@ -48,13 +42,16 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.more.stats.data.StatsTrendPoint
 import eu.kanade.presentation.more.stats.data.StatsType
 import eu.kanade.tachiyomi.source.entry.EntryType
+import mihon.presentation.kit.content.StatisticsMetrics
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
-import java.time.LocalDate
 import kotlin.math.roundToInt
 
 @Composable
@@ -83,12 +80,13 @@ internal fun StatisticsTrendChart(
         buildDisplayedNavigationTrend(points, navigationPoints)
     }
     val typeColors = types.associate { it.type to it.accent.color() }
-    val outlineVariant = MaterialTheme.colorScheme.outlineVariant
-    val surfaceColor = MaterialTheme.colorScheme.surface
-    val primaryColor = MaterialTheme.colorScheme.primary
-    val onSurfaceVariant = MaterialTheme.colorScheme.onSurfaceVariant
+    val chartColors = KatariTheme.colors.chart
+    val surfaceColor = KatariTheme.colors.surface
+    val primaryColor = KatariTheme.colors.primary
+    val onSurfaceVariant = KatariTheme.colors.onSurfaceVariant
+    val gridStroke = KatariTheme.sizes.border
     val dataHorizontalInsetPx = with(LocalDensity.current) {
-        (CHART_HORIZONTAL_INSET + CHART_EDGE_POINT_INSET).toPx()
+        DATA_INSET.toPx()
     }
     val selectionKey = buildString {
         append(points.firstOrNull()?.startDate)
@@ -272,45 +270,28 @@ internal fun StatisticsTrendChart(
         Text(
             text = bucketLabel,
             modifier = Modifier.fillMaxWidth(),
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            style = MaterialTheme.typography.labelSmall,
+            role = TextRole.Badge,
+            tone = ContentTone.Secondary,
             textAlign = TextAlign.Center,
         )
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(KatariTheme.spacing.m))
         if (types.size > 1) {
-            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                types.forEach { type ->
-                    Row {
-                        Surface(
-                            modifier = Modifier.padding(top = 5.dp).width(10.dp).height(10.dp),
-                            color = typeColors.getValue(type.type),
-                            shape = CircleShape,
-                            content = {},
-                        )
-                        Spacer(Modifier.width(6.dp))
-                        Text(
-                            text = typeLabels.getValue(type.type),
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                }
-            }
-            Spacer(Modifier.height(12.dp))
+            StatisticsTrendLegend(types, typeLabels, typeColors)
+            Spacer(Modifier.height(KatariTheme.spacing.m))
         }
 
-        Row(Modifier.fillMaxWidth().height(CHART_HEIGHT)) {
+        Row(Modifier.fillMaxWidth().height(StatisticsMetrics.chartHeight)) {
             Column(
-                modifier = Modifier.width(Y_AXIS_WIDTH).height(CHART_HEIGHT),
+                modifier = Modifier.width(StatisticsMetrics.chartAxisWidth).height(StatisticsMetrics.chartHeight),
                 verticalArrangement = Arrangement.SpaceBetween,
                 horizontalAlignment = Alignment.End,
             ) {
                 durationAxis.ticksDescending.forEach { tick ->
-                    Text(formatDuration(tick), style = MaterialTheme.typography.labelSmall)
+                    Text(formatDuration(tick), role = TextRole.Badge)
                 }
             }
             Box(
-                modifier = Modifier.weight(1f).height(CHART_HEIGHT),
+                modifier = Modifier.weight(1f).height(StatisticsMetrics.chartHeight),
             ) {
                 Canvas(
                     modifier = Modifier
@@ -338,9 +319,7 @@ internal fun StatisticsTrendChart(
                                         positionX = position.x - displayedPlotOffsetPx,
                                         width = size.width.toFloat(),
                                         pointCount = points.size,
-                                        horizontalInset = (
-                                            CHART_HORIZONTAL_INSET + CHART_EDGE_POINT_INSET
-                                            ).toPx(),
+                                        horizontalInset = DATA_INSET.toPx(),
                                     )
                                     val tapped = points[index].startDate.toString()
                                     selectedStartDate = tapped.takeUnless { it == selectedStartDate }
@@ -348,11 +327,11 @@ internal fun StatisticsTrendChart(
                             }
                         },
                 ) {
-                    val plotTop = CHART_VERTICAL_INSET.toPx()
-                    val plotBottom = size.height - CHART_VERTICAL_INSET.toPx()
+                    val plotTop = StatisticsMetrics.chartVerticalInset.toPx()
+                    val plotBottom = size.height - StatisticsMetrics.chartVerticalInset.toPx()
                     val plotHeight = (plotBottom - plotTop).coerceAtLeast(1f)
-                    val horizontalInset = CHART_HORIZONTAL_INSET.toPx().coerceAtMost(size.width / 2f)
-                    val dataHorizontalInset = (horizontalInset + CHART_EDGE_POINT_INSET.toPx())
+                    val horizontalInset = StatisticsMetrics.chartSideInset.toPx().coerceAtMost(size.width / 2f)
+                    val dataHorizontalInset = (horizontalInset + StatisticsMetrics.chartEdgePointInset.toPx())
                         .coerceAtMost(size.width / 2f)
                     val dataWidth = (size.width - dataHorizontalInset * 2f).coerceAtLeast(0f)
                     val y = { value: Long ->
@@ -360,18 +339,18 @@ internal fun StatisticsTrendChart(
                     }
                     durationAxis.ticksDescending.forEach { value ->
                         drawLine(
-                            color = Color(outlineVariant.value).copy(alpha = 0.45f),
+                            color = chartColors.gridLine,
                             start = Offset(horizontalInset, y(value)),
                             end = Offset(size.width - horizontalInset, y(value)),
-                            strokeWidth = 1.dp.toPx(),
+                            strokeWidth = gridStroke.toPx(),
                         )
                     }
                     listOf(horizontalInset, size.width - horizontalInset).forEach { x ->
                         drawLine(
-                            color = Color(outlineVariant.value).copy(alpha = 0.45f),
+                            color = chartColors.gridLine,
                             start = Offset(x, plotTop),
                             end = Offset(x, plotBottom),
-                            strokeWidth = 1.dp.toPx(),
+                            strokeWidth = gridStroke.toPx(),
                         )
                     }
                     if (points.isEmpty()) return@Canvas
@@ -383,10 +362,10 @@ internal fun StatisticsTrendChart(
                             horizontalInset = dataHorizontalInset,
                         )
                         drawLine(
-                            color = Color(outlineVariant.value).copy(alpha = 0.2f),
+                            color = chartColors.tickLine,
                             start = Offset(tickX + axisOffsetPx, plotTop),
                             end = Offset(tickX + axisOffsetPx, plotBottom),
-                            strokeWidth = 1.dp.toPx(),
+                            strokeWidth = gridStroke.toPx(),
                         )
                     }
                     val pointSpacing = if (points.size <= 1) {
@@ -395,8 +374,8 @@ internal fun StatisticsTrendChart(
                         dataWidth / points.lastIndex
                     }
                     val barWidth = (pointSpacing * 0.62f).coerceIn(
-                        MINIMUM_BAR_WIDTH.toPx(),
-                        MAXIMUM_BAR_WIDTH.toPx(),
+                        StatisticsMetrics.barMinWidth.toPx(),
+                        StatisticsMetrics.barMaxWidth.toPx(),
                     )
                     val navigationX = { index: Int ->
                         dataHorizontalInset + pointSpacing * (index - visibleStartIndex)
@@ -411,7 +390,8 @@ internal fun StatisticsTrendChart(
                                     right = navigationX(index) + pointSpacing / 2f,
                                     top = plotTop,
                                     bottom = plotBottom,
-                                    color = Color(outlineVariant.value).copy(alpha = 0.55f),
+                                    color = chartColors.hatch,
+                                    stroke = gridStroke,
                                 )
                             }
                             displayedNavigationPoints.forEachIndexed { index, point ->
@@ -424,7 +404,7 @@ internal fun StatisticsTrendChart(
                                         cumulative += duration
                                         val top = y(cumulative)
                                         drawRect(
-                                            color = typeColors.getValue(type.type).copy(alpha = 0.78f),
+                                            color = chartColors.seriesFill(typeColors.getValue(type.type)),
                                             topLeft = Offset(navigationX(index) - barWidth / 2f, top),
                                             size = Size(barWidth, (bottom - top).coerceAtLeast(1f)),
                                         )
@@ -442,15 +422,19 @@ internal fun StatisticsTrendChart(
                                 )
                                 val selectedY = y(selected.totalDurationMillis)
                                 drawLine(
-                                    color = onSurfaceVariant.copy(alpha = 0.55f),
+                                    color = chartColors.selectionGuide,
                                     start = Offset(selectedX, plotTop),
                                     end = Offset(selectedX, plotBottom),
-                                    strokeWidth = 1.dp.toPx(),
+                                    strokeWidth = gridStroke.toPx(),
                                 )
-                                drawCircle(surfaceColor, 6.dp.toPx(), Offset(selectedX, selectedY))
+                                drawCircle(
+                                    surfaceColor,
+                                    StatisticsMetrics.selectionHaloRadius.toPx(),
+                                    Offset(selectedX, selectedY),
+                                )
                                 drawCircle(
                                     color = if (selected.isTracked) primaryColor else onSurfaceVariant,
-                                    radius = 4.dp.toPx(),
+                                    radius = StatisticsMetrics.selectionDotRadius.toPx(),
                                     center = Offset(selectedX, selectedY),
                                 )
                             }
@@ -462,7 +446,7 @@ internal fun StatisticsTrendChart(
 
         if (points.isNotEmpty()) {
             Row(Modifier.fillMaxWidth()) {
-                Spacer(Modifier.width(Y_AXIS_WIDTH))
+                Spacer(Modifier.width(StatisticsMetrics.chartAxisWidth))
                 Box(Modifier.weight(1f).clipToBounds()) {
                     TrendAxisLabels(
                         labels = liveTickPoints.map(formatAxisDate),
@@ -507,10 +491,7 @@ private fun TrendAxisLabels(
         modifier = modifier,
         content = {
             labels.forEach { label ->
-                Text(
-                    text = label,
-                    style = MaterialTheme.typography.labelSmall,
-                )
+                Text(text = label, role = TextRole.Badge)
             }
         },
     ) { measurables, constraints ->
@@ -518,7 +499,7 @@ private fun TrendAxisLabels(
             measurable.measure(constraints.copy(minWidth = 0, minHeight = 0))
         }
         val height = placeables.maxOfOrNull { it.height } ?: 0
-        val horizontalInset = (CHART_HORIZONTAL_INSET + CHART_EDGE_POINT_INSET).roundToPx().toFloat()
+        val horizontalInset = DATA_INSET.roundToPx().toFloat()
         layout(constraints.maxWidth, height) {
             placeables.forEachIndexed { index, placeable ->
                 val centerX = trendPointCenterX(
@@ -536,38 +517,5 @@ private fun TrendAxisLabels(
     }
 }
 
-internal data class SettledTrendOffset(
-    val bucketShift: Int,
-    val residualOffsetPx: Float,
-)
-
-internal fun settleTrendOffset(
-    offsetPx: Float,
-    pointSpacingPx: Float,
-    olderBucketCount: Int,
-    newerBucketCount: Int,
-): SettledTrendOffset {
-    if (pointSpacingPx <= 0f) return SettledTrendOffset(0, offsetPx)
-    val bucketShift = (offsetPx / pointSpacingPx).roundToInt()
-        .coerceIn(-newerBucketCount, olderBucketCount)
-    return SettledTrendOffset(
-        bucketShift = bucketShift,
-        residualOffsetPx = offsetPx - bucketShift * pointSpacingPx,
-    )
-}
-
-private data class PendingTrendNavigation(
-    val sourceWindowStart: LocalDate?,
-    val requestedBucketShift: Int,
-    val restingOffsetBuckets: Float,
-)
-
-private val CHART_HORIZONTAL_INSET = 12.dp
-
-// Keeps the widest edge bars 4 dp clear of the vertical plot borders.
-private val CHART_EDGE_POINT_INSET = 16.dp
-private val CHART_VERTICAL_INSET = 6.dp
-private val CHART_HEIGHT = 180.dp
-private val Y_AXIS_WIDTH = 48.dp
-private val MINIMUM_BAR_WIDTH = 1.dp
-private val MAXIMUM_BAR_WIDTH = 24.dp
+/** Distance from the chart's edge to the first and last bar centres. */
+private val DATA_INSET = StatisticsMetrics.chartSideInset + StatisticsMetrics.chartEdgePointInset

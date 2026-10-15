@@ -1,6 +1,5 @@
 package mihon.entry.interactions.manga.media
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsDraggedAsState
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -8,10 +7,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SliderDefaults
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -23,11 +18,15 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.unit.dp
-import tachiyomi.presentation.core.components.material.Slider
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.control.Slider
+import mihon.presentation.kit.surface.Surface
+import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 
 @Composable
 internal fun MangaImmersivePageScrubber(
@@ -63,54 +62,44 @@ internal fun MangaImmersivePageScrubber(
         onDispose { latestOnScrubbingChange(false) }
     }
 
-    val contentColor = Color.White
-    Row(
+    Surface(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 12.dp)
-            .background(Color.Black.copy(alpha = 0.52f), CircleShape)
-            .padding(horizontal = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
+            .padding(horizontal = KatariTheme.spacing.m),
+        container = SurfaceContainer.MediaScrim,
+        shape = KatariTheme.shapes.full,
     ) {
-        Box(contentAlignment = Alignment.CenterEnd) {
-            Text(
-                text = (targetPageIndex + 1).toString(),
-                color = contentColor,
-                style = MaterialTheme.typography.labelMedium,
+        Row(
+            modifier = Modifier.padding(horizontal = KatariTheme.spacing.m),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(contentAlignment = Alignment.CenterEnd) {
+                Text(text = (targetPageIndex + 1).toString(), role = TextRole.Badge)
+                // Not drawn: reserves the widest page number so the slider does not shift while scrubbing.
+                Text(
+                    text = pageCount.toString(),
+                    modifier = Modifier.drawWithContent {},
+                    role = TextRole.Badge,
+                )
+            }
+            Slider(
+                value = targetPageIndex,
+                onValueChange = {
+                    targetPageIndex = it
+                    hasPendingSelection = true
+                },
+                valueRange = 0 until pageCount,
+                onValueChangeFinished = {
+                    if (hasPendingSelection) latestOnPageSelected(targetPageIndex)
+                    hasPendingSelection = false
+                },
+                onMedia = true,
+                interactionSource = interactionSource,
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = KatariTheme.spacing.s),
             )
-            Text(
-                text = pageCount.toString(),
-                color = Color.Transparent,
-                style = MaterialTheme.typography.labelMedium,
-            )
+            Text(text = pageCount.toString(), role = TextRole.Badge)
         }
-        Slider(
-            value = targetPageIndex,
-            onValueChange = {
-                targetPageIndex = it
-                hasPendingSelection = true
-            },
-            valueRange = 0 until pageCount,
-            onValueChangeFinished = {
-                if (hasPendingSelection) latestOnPageSelected(targetPageIndex)
-                hasPendingSelection = false
-            },
-            colors = SliderDefaults.colors(
-                thumbColor = contentColor,
-                activeTrackColor = contentColor,
-                inactiveTrackColor = contentColor.copy(alpha = 0.32f),
-                activeTickColor = Color.Transparent,
-                inactiveTickColor = Color.Transparent,
-            ),
-            interactionSource = interactionSource,
-            modifier = Modifier
-                .weight(1f)
-                .padding(horizontal = 8.dp),
-        )
-        Text(
-            text = pageCount.toString(),
-            color = contentColor,
-            style = MaterialTheme.typography.labelMedium,
-        )
     }
 }

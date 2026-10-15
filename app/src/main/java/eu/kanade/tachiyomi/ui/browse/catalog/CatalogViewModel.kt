@@ -6,7 +6,6 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.Pager
@@ -102,6 +101,7 @@ import mihon.entry.interactions.source.EntrySourceHomeFeature
 import mihon.entry.interactions.source.EntrySourceHomeResolution
 import mihon.entry.interactions.source.EntrySourceSettingsFeature
 import mihon.entry.interactions.source.EntrySourceSettingsResolution
+import mihon.presentation.kit.content.BrowseMetrics
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.preference.CheckboxState
 import tachiyomi.core.common.preference.mapAsCheckboxState
@@ -278,7 +278,9 @@ class CatalogViewModel(
         }.get()
         val isHorizontal = sourceItemOrientation == EntryItemOrientation.HORIZONTAL
         return if (columns == 0) {
-            GridCells.Adaptive(if (isHorizontal) 180.dp else 128.dp)
+            GridCells.Adaptive(
+                if (isHorizontal) BrowseMetrics.wideCoverGridMinCellWidth else BrowseMetrics.coverGridMinCellWidth,
+            )
         } else {
             GridCells.Fixed(if (isHorizontal) (columns - 1).coerceAtLeast(1) else columns)
         }

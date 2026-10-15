@@ -1,11 +1,10 @@
 package eu.kanade.presentation.more.stats.components
 
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.more.stats.data.StatsTopTitle
 import eu.kanade.presentation.more.stats.data.StatsType
 import eu.kanade.tachiyomi.source.entry.EntryType
+import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -25,7 +24,7 @@ internal fun StatisticsTopTitlesCard(
         // The snapshot only ranks the top five, so a full list is the signal that more titles may exist.
         actionLabel = stringResource(MR.strings.statistics_see_all).takeIf { titles.size >= DASHBOARD_TITLE_COUNT },
         onActionClick = onSeeAll,
-        contentSpacing = 8.dp,
+        contentSpacing = KatariTheme.spacing.s,
     ) {
         titles.take(DASHBOARD_TITLE_COUNT).forEachIndexed { index, title ->
             val type = typesById[title.type]
@@ -38,7 +37,7 @@ internal fun StatisticsTopTitlesCard(
                 completionCount = title.completionCount,
                 durationMillis = title.durationMillis,
                 shareOf = totalDurationMillis,
-                color = type?.accent?.color() ?: MaterialTheme.colorScheme.primary,
+                color = type?.accent?.color() ?: KatariTheme.colors.primary,
                 formatDuration = formatDuration,
                 onClick = { onTitleClick(title.entryId) },
             )

@@ -1,0 +1,120 @@
+@file:OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+
+package mihon.entry.viewer.chrome.ui
+
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateInt
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.updateTransition
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsIgnoringVisibility
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.IntOffset
+
+private val readerBarsSlideAnimationSpec = tween<IntOffset>(200)
+private val readerPersistentContentSlideAnimationSpec = tween<Int>(200)
+private val readerBarsFadeAnimationSpec = tween<Float>(150)
+
+/** Animated reader chrome shared by processor-owned reader implementations. */
+@Composable
+fun ReaderChrome(
+    visible: Boolean,
+    topBar: @Composable () -> Unit,
+    bottomBar: @Composable () -> Unit,
+    modifier: Modifier = Modifier,
+    middleContent: @Composable BoxScope.() -> Unit = {},
+    persistentBottomContent: @Composable () -> Unit = {},
+    // Retained bars keep middleContent's layout size fixed while their layers slide offscreen.
+    retainBars: Boolean = false,
+) {
+    var bottomBarHeight by remember { mutableIntStateOf(0) }
+    val navigationBarHeight = WindowInsets.navigationBarsIgnoringVisibility.getBottom(LocalDensity.current)
+    val chromeTransition = updateTransition(
+        targetState = visible,
+        label = "readerChrome",
+    )
+    val persistentBottomContentOffset by chromeTransition.animateInt(
+        transitionSpec = { readerPersistentContentSlideAnimationSpec },
+        label = "readerPersistentBottomContentOffset",
+    ) { chromeVisible ->
+        if (chromeVisible) {
+            (bottomBarHeight - navigationBarHeight).coerceAtLeast(0)
+        } else {
+            0
+        }
+    }
+
+    Box(modifier = modifier.fillMaxHeight()) {
+        Column(modifier = Modifier.fillMaxHeight()) {
+            if (retainBars) {
+                ReaderChromeRetainedBar(chromeTransition, fromTop = true, content = topBar)
+            } else {
+                chromeTransition.AnimatedVisibility(
+                    visible = { it },
+                    enter =
+                    slideInVertically(readerBarsSlideAnimationSpec) { -it } + fadeIn(readerBarsFadeAnimationSpec),
+                    exit =
+                    slideOutVertically(readerBarsSlideAnimationSpec) { -it } + fadeOut(readerBarsFadeAnimationSpec),
+                    content = { topBar() },
+                )
+            }
+
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
+                content = middleContent,
+            )
+
+            if (retainBars) {
+                ReaderChromeRetainedBar(
+                    chromeTransition,
+                    fromTop = false,
+                    modifier = Modifier.onSizeChanged { bottomBarHeight = it.height },
+                    content = bottomBar,
+                )
+            } else {
+                chromeTransition.AnimatedVisibility(
+                    visible = { it },
+                    enter = slideInVertically(readerBarsSlideAnimationSpec) {
+                        it
+                    } + fadeIn(readerBarsFadeAnimationSpec),
+                    exit =
+                    slideOutVertically(readerBarsSlideAnimationSpec) { it } + fadeOut(readerBarsFadeAnimationSpec),
+                    content = {
+                        Box(modifier = Modifier.onSizeChanged { bottomBarHeight = it.height }) {
+                            bottomBar()
+                        }
+                    },
+                )
+            }
+        }
+
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .graphicsLayer { translationY = -persistentBottomContentOffset.toFloat() },
+            contentAlignment = Alignment.Center,
+        ) {
+            persistentBottomContent()
+        }
+    }
+}

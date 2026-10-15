@@ -1,18 +1,18 @@
 package eu.kanade.presentation.library.components
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import eu.kanade.presentation.browse.components.CatalogTypeBadge
 import eu.kanade.presentation.entry.components.EntryActionIcons
-import eu.kanade.presentation.theme.TachiyomiPreviewTheme
 import eu.kanade.tachiyomi.source.entry.EntryType
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Download
 import mihon.icons.materialsymbols.rounded.Folder
+import mihon.presentation.kit.content.Badge
+import mihon.presentation.kit.content.BadgeTone
+import mihon.presentation.kit.theme.KatariPreviewTheme
 import tachiyomi.domain.library.model.LibraryItem
-import tachiyomi.presentation.core.components.Badge
 
 @Composable
 internal fun DownloadsBadge(count: Int) {
@@ -20,8 +20,7 @@ internal fun DownloadsBadge(count: Int) {
         Badge(
             text = "$count",
             icon = MaterialSymbols.Rounded.Download,
-            color = MaterialTheme.colorScheme.surfaceContainerHighest,
-            textColor = MaterialTheme.colorScheme.onSurface,
+            tone = BadgeTone.Neutral,
         )
     }
 }
@@ -31,8 +30,7 @@ internal fun UnreadBadge(count: Long) {
     if (count > 0) {
         Badge(
             text = "$count",
-            color = MaterialTheme.colorScheme.primary,
-            textColor = MaterialTheme.colorScheme.onPrimary,
+            tone = BadgeTone.Primary,
         )
     }
 }
@@ -41,9 +39,8 @@ internal fun UnreadBadge(count: Long) {
 internal fun LocalBadge(isLocal: Boolean) {
     if (isLocal) {
         Badge(
-            imageVector = MaterialSymbols.Rounded.Folder,
-            color = MaterialTheme.colorScheme.tertiary,
-            iconColor = MaterialTheme.colorScheme.onTertiary,
+            icon = MaterialSymbols.Rounded.Folder,
+            tone = BadgeTone.Tertiary,
         )
     }
 }
@@ -53,8 +50,7 @@ internal fun LanguageBadge(languages: List<String>) {
     if (languages.isNotEmpty()) {
         Badge(
             text = languageBadgeText(languages),
-            color = MaterialTheme.colorScheme.tertiary,
-            textColor = MaterialTheme.colorScheme.onTertiary,
+            tone = BadgeTone.Tertiary,
         )
     }
 }
@@ -112,7 +108,7 @@ internal fun LibraryItemOriginBadges(item: LibraryItem, settings: LibraryDisplay
 @PreviewLightDark
 @Composable
 private fun BadgePreview() {
-    TachiyomiPreviewTheme {
+    KatariPreviewTheme {
         Column {
             DownloadsBadge(count = 10)
             UnreadBadge(count = 10)

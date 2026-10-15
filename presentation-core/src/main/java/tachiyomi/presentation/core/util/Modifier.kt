@@ -24,17 +24,6 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.LocalFocusManager
-import tachiyomi.presentation.core.components.material.SECONDARY_ALPHA
-
-@Composable
-fun Modifier.selectedBackground(isSelected: Boolean): Modifier {
-    if (!isSelected) return this
-    val alpha = if (isSystemInDarkTheme()) 0.16f else 0.22f
-    val color = MaterialTheme.colorScheme.secondary.copy(alpha = alpha)
-    return this.drawBehind { drawRect(color) }
-}
-
-fun Modifier.secondaryItemAlpha(): Modifier = this.alpha(SECONDARY_ALPHA)
 
 fun Modifier.clickableNoIndication(
     onLongClick: (() -> Unit)? = null,

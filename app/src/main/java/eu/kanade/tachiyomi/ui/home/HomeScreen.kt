@@ -56,9 +56,9 @@ import mihon.feature.profiles.core.ProfileManager
 import mihon.feature.profiles.core.ProfileStore
 import mihon.feature.profiles.ui.ProfilePickerScreen
 import mihon.feature.profiles.ui.handleProfileShortcut
+import mihon.presentation.kit.navigation.Scaffold
 import soup.compose.material.motion.animation.materialFadeThroughIn
 import soup.compose.material.motion.animation.materialFadeThroughOut
-import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.util.collectAsState
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get

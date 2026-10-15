@@ -4,16 +4,14 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import mihon.language.api.tag.LanguageTag
+import mihon.presentation.kit.chip.FilterChip
+import mihon.presentation.kit.list.SectionHeader
+import mihon.presentation.kit.theme.KatariTheme
 
 /** The [options] among [recentLanguages], most recent first, so recents never offer a language the list lacks. */
 fun translationRecentLanguageOptions(
@@ -35,21 +33,16 @@ fun TranslationLanguageShortcutsRow(
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
-        Text(
-            text = title,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            style = MaterialTheme.typography.labelMedium,
-        )
+        SectionHeader(title)
         LazyRow(
-            contentPadding = PaddingValues(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            contentPadding = PaddingValues(horizontal = KatariTheme.spacing.rowInset),
+            horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
         ) {
             items(shortcuts, key = { it.tag.value }) { option ->
                 FilterChip(
+                    label = option.nativeName,
                     selected = option.tag == selected,
                     onClick = { onSelect(option.tag) },
-                    label = { Text(option.nativeName) },
                 )
             }
         }

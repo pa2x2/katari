@@ -2,15 +2,15 @@ package eu.kanade.presentation.entry.components
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import eu.kanade.presentation.components.DownloadIndicator
-import eu.kanade.presentation.components.DownloadIndicatorAction
-import eu.kanade.presentation.components.DownloadIndicatorMenuItem
-import eu.kanade.presentation.components.DownloadIndicatorState
 import eu.kanade.presentation.entry.translation.ChapterTranslateAction
 import eu.kanade.presentation.entry.translation.ChapterTranslationBadge
 import eu.kanade.presentation.entry.translation.chapterTranslateActions
 import mihon.entry.interactions.download.EntryDownloadState
 import mihon.entry.interactions.translate.EntryTranslateStatus
+import mihon.presentation.kit.button.DownloadIndicator
+import mihon.presentation.kit.button.DownloadIndicatorAction
+import mihon.presentation.kit.button.DownloadIndicatorMenuItem
+import mihon.presentation.kit.button.DownloadIndicatorState
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

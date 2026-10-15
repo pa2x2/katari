@@ -6,54 +6,36 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.paging.LoadState
 import androidx.paging.PagingSource
-import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import eu.kanade.tachiyomi.source.entry.EntryFilter
-import eu.kanade.tachiyomi.source.entry.EntryFilterNavigationTarget
 import eu.kanade.tachiyomi.source.entry.EntryFilterPageItem
 import eu.kanade.tachiyomi.source.entry.EntryFilterPageLoadReason
 import eu.kanade.tachiyomi.source.entry.EntryFilterPageScope
 import eu.kanade.tachiyomi.source.entry.EntryFilterTextInput
-import eu.kanade.tachiyomi.source.filter.withProjectedState
 import eu.kanade.tachiyomi.ui.browse.source.browse.SourceFilterSheetFooter
-import eu.kanade.tachiyomi.ui.browse.source.browse.filter.FilterItem
-import eu.kanade.tachiyomi.ui.browse.source.browse.filter.change.FilterChanges
-import eu.kanade.tachiyomi.ui.browse.source.browse.filter.control.FilterSheetInsets
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.launch
 import mihon.entry.interactions.catalogue.EntryCatalogueFilterNavigationResult
 import mihon.entry.interactions.catalogue.EntryCatalogueFilterSuggestionsResult
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.Close
-import mihon.icons.materialsymbols.rounded.Search
+import mihon.presentation.kit.chip.FilterChip
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.field.SearchField
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.LoadingIndicator
-import tachiyomi.presentation.core.components.material.PullRefresh
 import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable
@@ -173,47 +155,31 @@ internal fun PagedGroupFilterContent(
         banner()
 
         if (searchOptions != null) {
-            OutlinedTextField(
-                value = query,
-                onValueChange = { browseSession.query = it },
+            SearchField(
+                query = query,
+                onQueryChange = { browseSession.query = it },
+                placeholder = stringResource(MR.strings.action_search_hint),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = FilterSheetInsets.Horizontal, vertical = 4.dp),
-                placeholder = { Text(stringResource(MR.strings.action_search_hint)) },
-                leadingIcon = { Icon(MaterialSymbols.Rounded.Search, contentDescription = null) },
-                trailingIcon = {
-                    if (query.isNotEmpty()) {
-                        IconButton(onClick = { browseSession.query = "" }) {
-                            Icon(MaterialSymbols.Rounded.Close, stringResource(MR.strings.action_reset))
-                        }
-                    }
-                },
-                singleLine = true,
+                    .padding(horizontal = KatariTheme.spacing.rowInset, vertical = KatariTheme.spacing.xs),
             )
         }
 
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = FilterSheetInsets.Horizontal),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                .padding(horizontal = KatariTheme.spacing.rowInset),
+            horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
         ) {
             FilterChip(
+                label = stringResource(MR.strings.browse_filter_available),
                 selected = scope == EntryFilterPageScope.AVAILABLE,
                 onClick = { browseSession.scope = EntryFilterPageScope.AVAILABLE },
-                label = { Text(stringResource(MR.strings.browse_filter_available)) },
             )
             FilterChip(
+                label = stringResource(MR.strings.browse_filter_selected_count, filter.currentSelectedItemCount()),
                 selected = scope == EntryFilterPageScope.SELECTED,
                 onClick = { browseSession.scope = EntryFilterPageScope.SELECTED },
-                label = {
-                    Text(
-                        stringResource(
-                            MR.strings.browse_filter_selected_count,
-                            filter.currentSelectedItemCount(),
-                        ),
-                    )
-                },
             )
         }
 
@@ -225,7 +191,9 @@ internal fun PagedGroupFilterContent(
                 ),
                 modifier = Modifier
                     .weight(1f)
-                    .padding(FilterSheetInsets.Horizontal),
+                    .padding(horizontal = KatariTheme.spacing.rowInset, vertical = KatariTheme.spacing.l),
+                role = TextRole.Body,
+                tone = ContentTone.Secondary,
             )
         } else {
             PagedGroupItemList(
@@ -256,207 +224,4 @@ internal fun PagedGroupFilterContent(
             applyLabel = stringResource(MR.strings.action_done),
         )
     }
-}
-
-@Composable
-private fun PagedGroupItemList(
-    filter: EntryFilter.PagedGroup<*>,
-    items: LazyPagingItems<EntryFilterPageItem>,
-    listState: LazyListState,
-    scope: EntryFilterPageScope,
-    refreshing: Boolean,
-    encodedState: String?,
-    navigationTargets: List<EntryFilterNavigationTarget>,
-    usesNavigationRail: Boolean,
-    currentNavigationTargetId: String?,
-    onRefresh: () -> Unit,
-    onJump: (EntryFilterNavigationTarget) -> Unit,
-    onEditItem: (EntryFilterPageItem, EntryFilter<*>, (Boolean) -> Unit) -> Unit,
-    onRequestSuggestions: suspend (
-        EntryFilter.Autocomplete,
-        EntryFilterTextInput,
-    ) -> EntryCatalogueFilterSuggestionsResult,
-    modifier: Modifier,
-) {
-    Column(modifier) {
-        if (navigationTargets.isNotEmpty() && !usesNavigationRail) {
-            PagedFilterNavigationMenu(
-                targets = navigationTargets,
-                onJump = onJump,
-            )
-        }
-
-        Row(modifier = Modifier.fillMaxSize()) {
-            PullRefresh(
-                refreshing = refreshing,
-                enabled = items.loadState.refresh !is LoadState.Loading,
-                onRefresh = onRefresh,
-                modifier = Modifier.weight(1f),
-            ) {
-                LazyColumn(
-                    state = listState,
-                    modifier = Modifier.fillMaxSize(),
-                ) {
-                    if (items.loadState.refresh is LoadState.Loading && items.itemCount == 0) {
-                        item {
-                            Row(
-                                modifier = Modifier.fillMaxWidth().padding(FilterSheetInsets.Horizontal),
-                                horizontalArrangement = Arrangement.Center,
-                            ) {
-                                LoadingIndicator()
-                            }
-                        }
-                    } else if (items.loadState.refresh is LoadState.Error && items.itemCount == 0) {
-                        item { RetryItem(onRetry = items::retry) }
-                    } else if (items.itemCount == 0) {
-                        item {
-                            Text(
-                                text = stringResource(
-                                    if (scope == EntryFilterPageScope.SELECTED) {
-                                        MR.strings.browse_filter_no_selected
-                                    } else {
-                                        MR.strings.no_results_found
-                                    },
-                                ),
-                                modifier = Modifier.padding(FilterSheetInsets.Horizontal),
-                            )
-                        }
-                    }
-
-                    items(count = items.itemCount, key = { index -> items[index]?.id ?: index }) { index ->
-                        val item = items[index] ?: return@items
-                        ProjectedFilterItem(
-                            group = filter,
-                            item = item,
-                            encodedState = encodedState,
-                            onEditItem = onEditItem,
-                            onSelectedItemUpdate = items::refresh,
-                            selectedScope = scope == EntryFilterPageScope.SELECTED,
-                            onRequestSuggestions = onRequestSuggestions,
-                        )
-                    }
-
-                    if (items.loadState.append is LoadState.Loading) {
-                        item {
-                            Row(
-                                modifier = Modifier.fillMaxWidth().padding(FilterSheetInsets.Horizontal),
-                                horizontalArrangement = Arrangement.Center,
-                            ) {
-                                LoadingIndicator()
-                            }
-                        }
-                    } else if (items.loadState.append is LoadState.Error) {
-                        item { RetryItem(onRetry = items::retry) }
-                    }
-                }
-            }
-            if (usesNavigationRail) {
-                PagedFilterNavigationRail(
-                    targets = navigationTargets,
-                    currentTargetId = currentNavigationTargetId,
-                    onJump = onJump,
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun ProjectedFilterItem(
-    group: EntryFilter.PagedGroup<*>,
-    item: EntryFilterPageItem,
-    encodedState: String?,
-    onEditItem: (EntryFilterPageItem, EntryFilter<*>, (Boolean) -> Unit) -> Unit,
-    onSelectedItemUpdate: () -> Unit,
-    selectedScope: Boolean,
-    onRequestSuggestions: suspend (
-        EntryFilter.Autocomplete,
-        EntryFilterTextInput,
-    ) -> EntryCatalogueFilterSuggestionsResult,
-) {
-    val scope = rememberCoroutineScope()
-    var projection by remember(group, item.id) {
-        mutableStateOf<ProjectedFilterItemState>(ProjectedFilterItemState.Loading)
-    }
-    LaunchedEffect(group, encodedState, item) {
-        projection = projectFilterItemState(group, item, projection.filterOrNull())
-    }
-
-    when (val current = projection) {
-        ProjectedFilterItemState.Loading -> LoadingIndicator(modifier = Modifier.padding(16.dp))
-        ProjectedFilterItemState.Failed -> RetryItem {
-            scope.launch { projection = projectFilterItemState(group, item, null) }
-        }
-        // Sources may update and return the previous leaf to preserve focus. It is the same
-        // mutable instance, so FilterItem would otherwise be skipped as equal and keep showing
-        // the previous visual. Keying on the durable encoded state forces a fresh FilterItem
-        // composition that reads the current leaf state.
-        is ProjectedFilterItemState.Ready -> key(encodedState) {
-            FilterItem(
-                filter = current.filter,
-                changes = FilterChanges.Empty,
-                onUpdate = {
-                    onEditItem(item, current.filter) { success ->
-                        if (!success) projection = ProjectedFilterItemState.Failed
-                        if (success && selectedScope) onSelectedItemUpdate()
-                    }
-                },
-                onOpenPagedGroup = {},
-                onRequestSuggestions = onRequestSuggestions,
-                changedOnly = false,
-                onReset = {},
-            )
-        }
-    }
-}
-
-@Composable
-private fun RetryItem(onRetry: () -> Unit) {
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(FilterSheetInsets.Horizontal),
-        horizontalArrangement = Arrangement.Center,
-    ) {
-        TextButton(onClick = onRetry) {
-            Text(stringResource(MR.strings.action_retry))
-        }
-    }
-}
-
-private sealed interface ProjectedFilterItemState {
-    data object Loading : ProjectedFilterItemState
-    data class Ready(val filter: EntryFilter<*>) : ProjectedFilterItemState
-
-    data object Failed : ProjectedFilterItemState
-}
-
-private fun ProjectedFilterItemState.filterOrNull(): EntryFilter<*>? =
-    (this as? ProjectedFilterItemState.Ready)?.filter
-
-private suspend fun projectFilterItemState(
-    group: EntryFilter.PagedGroup<*>,
-    item: EntryFilterPageItem,
-    previous: EntryFilter<*>?,
-): ProjectedFilterItemState {
-    return runCatching { projectFilterItem(group, item, previous) }
-        .fold(
-            onSuccess = ProjectedFilterItemState::Ready,
-            onFailure = { ProjectedFilterItemState.Failed },
-        )
-}
-
-private suspend fun projectFilterItem(
-    group: EntryFilter.PagedGroup<*>,
-    item: EntryFilterPageItem,
-    previous: EntryFilter<*>?,
-): EntryFilter<*> {
-    val projected = group.withProjectedState { it.projectItem(item, previous) }
-    require(
-        projected !is EntryFilter.Header &&
-            projected !is EntryFilter.Separator &&
-            projected !is EntryFilter.Group<*> &&
-            projected !is EntryFilter.PagedGroup<*>,
-    ) {
-        "Paged filter items must project to interactive leaf controls"
-    }
-    return projected
 }

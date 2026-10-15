@@ -12,14 +12,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.LocalTextStyle
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -36,7 +28,6 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import eu.kanade.domain.source.model.SourceFeed
 import eu.kanade.domain.source.model.SourceFeedPreset
 import eu.kanade.presentation.browse.components.SourceIcon
@@ -50,9 +41,17 @@ import mihon.icons.materialsymbols.rounded.Add
 import mihon.icons.materialsymbols.rounded.ArrowDropDown
 import mihon.icons.materialsymbols.rounded.Check
 import mihon.icons.materialsymbols.rounded.DragHandle
+import mihon.presentation.kit.content.Icon
+import mihon.presentation.kit.menu.DropdownMenu
+import mihon.presentation.kit.menu.DropdownMenuItem
+import mihon.presentation.kit.surface.HorizontalDivider
+import mihon.presentation.kit.surface.Surface
+import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.domain.source.model.Source
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
 
 /**
@@ -120,7 +119,7 @@ internal fun FeedSwitcher(
             state = pagerState,
             modifier = Modifier.nestedScroll(edgeOverscroll),
             overscrollEffect = edgeOverscroll,
-            pageSpacing = MaterialTheme.padding.small,
+            pageSpacing = KatariTheme.spacing.s,
             key = { feeds[it].id },
         ) { page ->
             val feed = feeds[page]
@@ -141,21 +140,18 @@ internal fun FeedSwitcher(
             feeds.forEach { feed ->
                 val source = sourceFor(feed.sourceId) ?: return@forEach
                 val preset = presetFor(feed) ?: return@forEach
+                val label = rememberFeedLabel(feed, source, preset)
                 DropdownMenuItem(
-                    text = {
-                        FeedLabelText(
-                            label = rememberFeedLabel(feed, source, preset),
-                            titleStyle = LocalTextStyle.current,
-                        )
-                    },
+                    label = label.title,
+                    supportingLabel = label.subtitle,
                     onClick = { onFeedSelect(feed.id) },
-                    leadingIcon = { FeedSourceIcon(source, size = 24.dp) },
-                    trailingIcon = if (feed.id == selectedFeed.id) {
+                    leading = { FeedSourceIcon(source, size = KatariTheme.sizes.icon) },
+                    trailing = if (feed.id == selectedFeed.id) {
                         {
                             Icon(
                                 imageVector = MaterialSymbols.Rounded.Check,
                                 contentDescription = stringResource(MR.strings.selected),
-                                tint = MaterialTheme.colorScheme.primary,
+                                tone = ContentTone.Primary,
                             )
                         }
                     } else {
@@ -165,14 +161,14 @@ internal fun FeedSwitcher(
             }
             HorizontalDivider()
             DropdownMenuItem(
-                text = { Text(text = stringResource(MR.strings.browse_feed_add)) },
+                label = stringResource(MR.strings.browse_feed_add),
                 onClick = onAddFeed,
-                leadingIcon = { Icon(imageVector = MaterialSymbols.Rounded.Add, contentDescription = null) },
+                icon = MaterialSymbols.Rounded.Add,
             )
             DropdownMenuItem(
-                text = { Text(text = stringResource(MR.strings.browse_manage_feeds)) },
+                label = stringResource(MR.strings.browse_manage_feeds),
                 onClick = onManageFeeds,
-                leadingIcon = { Icon(imageVector = MaterialSymbols.Rounded.DragHandle, contentDescription = null) },
+                icon = MaterialSymbols.Rounded.DragHandle,
             )
         }
     }
@@ -188,27 +184,26 @@ private fun FeedSwitcherChip(
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(min = 48.dp)
-            .clip(MaterialTheme.shapes.large)
+            .heightIn(min = KatariTheme.sizes.touchTarget)
+            .clip(KatariTheme.shapes.large)
             .combinedClickable(
                 onClick = onClick,
                 onLongClick = onLongClick,
                 onLongClickLabel = stringResource(MR.strings.browse_feed_rename),
             ),
-        shape = MaterialTheme.shapes.large,
-        color = MaterialTheme.colorScheme.secondaryContainer,
-        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+        container = SurfaceContainer.SecondaryContainer,
+        shape = KatariTheme.shapes.large,
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.padding(horizontal = KatariTheme.spacing.m, vertical = KatariTheme.spacing.xs),
+            horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            FeedSourceIcon(source, size = 24.dp)
+            FeedSourceIcon(source, size = KatariTheme.sizes.icon)
             FeedLabelText(
                 label = label,
-                titleStyle = MaterialTheme.typography.labelLarge,
-                subtitleColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                titleRole = TextRole.Label,
+                subtitleTone = ContentTone.Inherit,
                 modifier = Modifier.weight(1f),
             )
             Icon(imageVector = MaterialSymbols.Rounded.ArrowDropDown, contentDescription = null)
@@ -222,6 +217,6 @@ internal fun FeedSourceIcon(source: Source, size: Dp) {
         source = source,
         modifier = Modifier
             .size(size)
-            .clip(MaterialTheme.shapes.extraSmall),
+            .clip(KatariTheme.shapes.extraSmall),
     )
 }

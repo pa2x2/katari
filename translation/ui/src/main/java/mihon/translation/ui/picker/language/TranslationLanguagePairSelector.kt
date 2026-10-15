@@ -1,17 +1,10 @@
 package mihon.translation.ui.picker.language
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedCard
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -19,10 +12,18 @@ import androidx.compose.ui.text.style.TextOverflow
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.ArrowDropDown
 import mihon.icons.materialsymbols.rounded.SwapHoriz
+import mihon.presentation.kit.button.IconButton
+import mihon.presentation.kit.content.Icon
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.surface.Surface
+import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
 
+/** A rounded bar naming the source and target languages, each opening its picker, with a swap button between. */
 @Composable
 fun TranslationLanguagePairSelector(
     source: String,
@@ -32,146 +33,57 @@ fun TranslationLanguagePairSelector(
     onChooseTarget: () -> Unit,
     onSwap: () -> Unit,
     modifier: Modifier = Modifier,
-    style: TranslationLanguagePairSelectorStyle = TranslationLanguagePairSelectorStyle.Cards,
-) {
-    if (style == TranslationLanguagePairSelectorStyle.Bar) {
-        TranslationLanguagePairBar(
-            source = source,
-            target = target,
-            canSwap = canSwap,
-            onChooseSource = onChooseSource,
-            onChooseTarget = onChooseTarget,
-            onSwap = onSwap,
-            modifier = modifier,
-        )
-        return
-    }
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        TranslationLanguageSelector(
-            label = stringResource(MR.strings.translation_settings_from),
-            value = source,
-            onClick = onChooseSource,
-            modifier = Modifier.weight(1f),
-        )
-        IconButton(
-            onClick = onSwap,
-            enabled = canSwap,
-        ) {
-            Icon(
-                imageVector = MaterialSymbols.Rounded.SwapHoriz,
-                contentDescription = stringResource(MR.strings.translation_settings_swap_languages),
-            )
-        }
-        TranslationLanguageSelector(
-            label = stringResource(MR.strings.translation_settings_to),
-            value = target,
-            onClick = onChooseTarget,
-            modifier = Modifier.weight(1f),
-        )
-    }
-}
-
-enum class TranslationLanguagePairSelectorStyle {
-    Cards,
-    Bar,
-}
-
-@Composable
-private fun TranslationLanguagePairBar(
-    source: String,
-    target: String,
-    canSwap: Boolean,
-    onChooseSource: () -> Unit,
-    onChooseTarget: () -> Unit,
-    onSwap: () -> Unit,
-    modifier: Modifier,
 ) {
     Surface(
         modifier = modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.extraLarge,
-        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        container = SurfaceContainer.High,
+        shape = KatariTheme.shapes.extraLarge,
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = MaterialTheme.padding.small),
+            modifier = Modifier.padding(horizontal = KatariTheme.spacing.s),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            TranslationLanguageBarButton(
-                value = source,
-                onClick = onChooseSource,
-                modifier = Modifier.weight(1f),
-            )
+            LanguageButton(value = source, onClick = onChooseSource, modifier = Modifier.weight(1f))
             IconButton(
+                icon = MaterialSymbols.Rounded.SwapHoriz,
+                contentDescription = stringResource(MR.strings.translation_settings_swap_languages),
                 onClick = onSwap,
                 enabled = canSwap,
-            ) {
-                Icon(
-                    imageVector = MaterialSymbols.Rounded.SwapHoriz,
-                    contentDescription = stringResource(MR.strings.translation_settings_swap_languages),
-                )
-            }
-            TranslationLanguageBarButton(
-                value = target,
-                onClick = onChooseTarget,
-                modifier = Modifier.weight(1f),
             )
+            LanguageButton(value = target, onClick = onChooseTarget, modifier = Modifier.weight(1f))
         }
     }
 }
 
+// A text button with a trailing drop-down arrow, whose label shortens rather than pushing the arrow out.
 @Composable
-private fun TranslationLanguageBarButton(
+private fun LanguageButton(
     value: String,
     onClick: () -> Unit,
     modifier: Modifier,
 ) {
-    TextButton(
+    Surface(
         onClick = onClick,
         modifier = modifier,
+        container = SurfaceContainer.None,
+        shape = KatariTheme.shapes.full,
     ) {
-        Text(
-            text = value,
-            modifier = Modifier.weight(1f, fill = false),
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-        Icon(
-            imageVector = MaterialSymbols.Rounded.ArrowDropDown,
-            contentDescription = null,
-        )
-    }
-}
-
-@Composable
-private fun TranslationLanguageSelector(
-    label: String,
-    value: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    OutlinedCard(
-        onClick = onClick,
-        modifier = modifier,
-    ) {
-        Column(
+        Row(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(MaterialTheme.padding.medium),
+                .heightIn(min = KatariTheme.sizes.touchTarget)
+                .padding(horizontal = KatariTheme.spacing.m),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                text = label,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                style = MaterialTheme.typography.labelSmall,
-            )
-            Text(
                 text = value,
+                modifier = Modifier.weight(1f, fill = false),
+                role = TextRole.Label,
+                tone = ContentTone.Primary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                style = MaterialTheme.typography.bodyLarge,
             )
+            Icon(MaterialSymbols.Rounded.ArrowDropDown, contentDescription = null, tone = ContentTone.Primary)
         }
     }
 }

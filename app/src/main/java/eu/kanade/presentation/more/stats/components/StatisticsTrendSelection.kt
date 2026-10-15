@@ -7,23 +7,25 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.more.stats.data.StatsTrendPoint
 import eu.kanade.presentation.more.stats.data.StatsType
 import eu.kanade.tachiyomi.source.entry.EntryType
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.ChevronRight
 import mihon.icons.materialsymbols.rounded.Close
+import mihon.presentation.kit.button.IconButton
+import mihon.presentation.kit.content.Icon
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.surface.Surface
+import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -50,51 +52,48 @@ internal fun StatisticsTrendSelection(
 
     Surface(
         onClick = { onOpenActivity(selected) },
-        modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
+        modifier = Modifier.fillMaxWidth().padding(top = KatariTheme.spacing.m),
         enabled = isActionable,
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f),
-        shape = MaterialTheme.shapes.medium,
+        container = SurfaceContainer.High,
+        shape = KatariTheme.shapes.medium,
     ) {
-        Column(Modifier.padding(start = 14.dp, end = 4.dp, top = 6.dp, bottom = 10.dp)) {
+        Column(
+            Modifier.padding(
+                start = KatariTheme.spacing.l,
+                end = KatariTheme.spacing.xs,
+                top = KatariTheme.spacing.xs,
+                bottom = KatariTheme.spacing.m,
+            ),
+        ) {
             Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = formattedDate,
                     modifier = Modifier.weight(1f),
-                    style = MaterialTheme.typography.titleSmall,
+                    role = TextRole.Label,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
-                Spacer(Modifier.width(12.dp))
-                Text(
-                    text = if (selected.isTracked) formattedDuration else notTrackedLabel,
-                    style = MaterialTheme.typography.titleSmall,
-                )
+                Spacer(Modifier.width(KatariTheme.spacing.m))
+                Text(text = if (selected.isTracked) formattedDuration else notTrackedLabel, role = TextRole.Label)
                 if (isActionable) {
-                    Spacer(Modifier.width(4.dp))
+                    Spacer(Modifier.width(KatariTheme.spacing.xs))
                     actionLabel?.let { label ->
-                        Text(
-                            text = label,
-                            color = MaterialTheme.colorScheme.primary,
-                            style = MaterialTheme.typography.labelLarge,
-                            maxLines = 1,
-                        )
-                        Spacer(Modifier.width(2.dp))
+                        Text(text = label, role = TextRole.Label, tone = ContentTone.Primary, maxLines = 1)
+                        Spacer(Modifier.width(KatariTheme.spacing.xxs))
                     }
                     Icon(
                         imageVector = MaterialSymbols.Rounded.ChevronRight,
                         contentDescription = null,
-                        modifier = Modifier.size(20.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(KatariTheme.sizes.iconSmall),
+                        tone = ContentTone.Secondary,
                     )
                 }
-                IconButton(onClick = onClearSelection, modifier = Modifier.size(36.dp)) {
-                    Icon(
-                        imageVector = MaterialSymbols.Rounded.Close,
-                        contentDescription = stringResource(MR.strings.statistics_show_whole_period),
-                        modifier = Modifier.size(18.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
+                IconButton(
+                    icon = MaterialSymbols.Rounded.Close,
+                    contentDescription = stringResource(MR.strings.statistics_show_whole_period),
+                    onClick = onClearSelection,
+                    tone = ContentTone.Secondary,
+                )
             }
             StatisticsTypeBreakdown(shares, reserveLine = types.size > 1)
         }

@@ -1,7 +1,5 @@
 package eu.kanade.presentation.entry.components
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,10 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -24,20 +18,13 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.font.FontStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.unit.dp
 import com.mohamedrejeb.richeditor.model.rememberRichTextState
-import com.mohamedrejeb.richeditor.ui.material3.RichTextEditor
-import com.mohamedrejeb.richeditor.ui.material3.RichTextEditorDefaults.richTextEditorColors
 import eu.kanade.presentation.entry.EntryNotesScreen
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -50,8 +37,18 @@ import mihon.icons.materialsymbols.rounded.FormatBold
 import mihon.icons.materialsymbols.rounded.FormatItalic
 import mihon.icons.materialsymbols.rounded.FormatListNumbered
 import mihon.icons.materialsymbols.rounded.FormatUnderlined
+import mihon.presentation.kit.content.Icon
+import mihon.presentation.kit.content.ProvideTextRole
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.content.documentSpanStyle
+import mihon.presentation.kit.field.RichTextField
+import mihon.presentation.kit.surface.Surface
+import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.surface.VerticalDivider
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
 import kotlin.time.Duration.Companion.seconds
 
@@ -64,7 +61,7 @@ fun EntryNotesTextArea(
 ) {
     val scope = rememberCoroutineScope()
     val richTextState = rememberRichTextState()
-    val primaryColor = MaterialTheme.colorScheme.primary
+    val primaryColor = KatariTheme.colors.primary
 
     DisposableEffect(scope, richTextState) {
         snapshotFlow { richTextState.annotatedString }
@@ -94,23 +91,12 @@ fun EntryNotesTextArea(
 
     Column(
         modifier = modifier
-            .padding(horizontal = MaterialTheme.padding.small)
+            .padding(horizontal = KatariTheme.spacing.s)
             .fillMaxSize(),
     ) {
-        RichTextEditor(
+        RichTextField(
             state = richTextState,
-            textStyle = MaterialTheme.typography.bodyLarge,
-            placeholder = {
-                Text(text = stringResource(MR.strings.notes_placeholder))
-            },
-            colors = richTextEditorColors(
-                containerColor = Color.Transparent,
-                focusedIndicatorColor = Color.Transparent,
-                unfocusedIndicatorColor = Color.Transparent,
-            ),
-            contentPadding = PaddingValues(
-                horizontal = MaterialTheme.padding.medium,
-            ),
+            placeholder = stringResource(MR.strings.notes_placeholder),
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth()
@@ -120,32 +106,30 @@ fun EntryNotesTextArea(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
             modifier = Modifier
-                .padding(vertical = MaterialTheme.padding.small)
+                .padding(vertical = KatariTheme.spacing.s)
                 .fillMaxWidth(),
         ) {
             LazyRow(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(2.dp),
+                horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xxs),
             ) {
                 item {
                     EntryNotesTextAreaButton(
-                        onClick = { richTextState.toggleSpanStyle(SpanStyle(fontWeight = FontWeight.Bold)) },
-                        isSelected = richTextState.currentSpanStyle.fontWeight == FontWeight.Bold,
+                        onClick = { richTextState.toggleSpanStyle(BoldSpan) },
+                        isSelected = richTextState.currentSpanStyle.includes(BoldSpan),
                         icon = MaterialSymbols.Rounded.FormatBold,
                     )
                 }
                 item {
                     EntryNotesTextAreaButton(
-                        onClick = { richTextState.toggleSpanStyle(SpanStyle(fontStyle = FontStyle.Italic)) },
-                        isSelected = richTextState.currentSpanStyle.fontStyle == FontStyle.Italic,
+                        onClick = { richTextState.toggleSpanStyle(ItalicSpan) },
+                        isSelected = richTextState.currentSpanStyle.includes(ItalicSpan),
                         icon = MaterialSymbols.Rounded.FormatItalic,
                     )
                 }
                 item {
                     EntryNotesTextAreaButton(
-                        onClick = {
-                            richTextState.toggleSpanStyle(SpanStyle(textDecoration = TextDecoration.Underline))
-                        },
+                        onClick = { richTextState.toggleSpanStyle(UnderlineSpan) },
                         isSelected = richTextState.currentSpanStyle.textDecoration
                             ?.contains(TextDecoration.Underline)
                             ?: false,
@@ -155,8 +139,8 @@ fun EntryNotesTextArea(
                 item {
                     VerticalDivider(
                         modifier = Modifier
-                            .padding(horizontal = MaterialTheme.padding.extraSmall)
-                            .height(MaterialTheme.padding.large),
+                            .padding(horizontal = KatariTheme.spacing.xs)
+                            .height(KatariTheme.spacing.l),
                     )
                 }
                 item {
@@ -180,7 +164,7 @@ fun EntryNotesTextArea(
             ) {
                 Text(
                     text = textLength.toString(),
-                    modifier = Modifier.padding(MaterialTheme.padding.extraSmall),
+                    modifier = Modifier.padding(KatariTheme.spacing.xs),
                 )
             }
         }
@@ -194,23 +178,24 @@ fun EntryNotesTextAreaButton(
     isSelected: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    Box(
-        modifier = modifier
-            .clip(MaterialTheme.shapes.small)
-            .clickable(
-                onClick = onClick,
-                enabled = true,
-                role = Role.Button,
-            ),
-        contentAlignment = Alignment.Center,
+    Surface(
+        onClick = onClick,
+        modifier = modifier,
+        container = if (isSelected) SurfaceContainer.Inverse else SurfaceContainer.None,
+        shape = KatariTheme.shapes.small,
     ) {
         Icon(
             imageVector = icon,
             contentDescription = icon.name,
-            tint = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary,
-            modifier = Modifier
-                .background(color = if (isSelected) MaterialTheme.colorScheme.onBackground else Color.Transparent)
-                .padding(MaterialTheme.padding.extraSmall),
+            modifier = Modifier.padding(KatariTheme.spacing.xs),
+            tone = if (isSelected) ContentTone.Inherit else ContentTone.Primary,
         )
     }
 }
+
+/** Whether the style already applies [toggle], so adding it would change nothing. */
+private fun SpanStyle.includes(toggle: SpanStyle): Boolean = merge(toggle) == this
+
+private val BoldSpan = documentSpanStyle(bold = true)
+private val ItalicSpan = documentSpanStyle(italic = true)
+private val UnderlineSpan = documentSpanStyle(textDecoration = TextDecoration.Underline)

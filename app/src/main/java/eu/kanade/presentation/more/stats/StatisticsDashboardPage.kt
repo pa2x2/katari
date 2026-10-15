@@ -6,8 +6,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -16,7 +14,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.presentation.more.stats.components.StatisticsActivityCard
 import eu.kanade.presentation.more.stats.components.StatisticsActivityFeedback
@@ -43,6 +40,9 @@ import eu.kanade.presentation.more.stats.layout.StatisticsCardGroup
 import eu.kanade.presentation.more.stats.layout.statisticsLayoutTab
 import eu.kanade.presentation.more.stats.layout.visibleSections
 import eu.kanade.tachiyomi.source.entry.EntryType
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.domain.statistics.model.StatisticsCard
 import tachiyomi.domain.statistics.model.StatisticsCardLayout
 import tachiyomi.i18n.*
@@ -73,7 +73,7 @@ internal fun StatisticsDashboardPage(
     val formatter = rememberStatisticsDurationFormatter()
     val visibleActivity = activity?.forType(selectedType)
     val selectedStatsType = state.types.firstOrNull { it.type == selectedType }
-    val accentColor = selectedStatsType?.accent?.color() ?: MaterialTheme.colorScheme.primary
+    val accentColor = selectedStatsType?.accent?.color() ?: KatariTheme.colors.primary
     val layout = state.cardLayouts[statisticsLayoutTab(selectedType)] ?: StatisticsCardLayout()
     val sections = layout.visibleSections(isOverview, state.range)
     val listState = rememberLazyListState()
@@ -89,8 +89,13 @@ internal fun StatisticsDashboardPage(
 
     LazyColumn(
         state = listState,
-        contentPadding = PaddingValues(start = 16.dp, top = 12.dp, end = 16.dp, bottom = bottomPadding + 20.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp),
+        contentPadding = PaddingValues(
+            start = KatariTheme.spacing.contentInset,
+            top = KatariTheme.spacing.m,
+            end = KatariTheme.spacing.contentInset,
+            bottom = bottomPadding + KatariTheme.spacing.xl,
+        ),
+        verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.m),
     ) {
         item(key = "range") { StatisticsRangeSelector(state.range, onRangeSelected) }
         if (StatisticsCard.ACTIVITY in layout.hidden) {
@@ -109,24 +114,21 @@ internal fun StatisticsDashboardPage(
         }
         if (state.incognito) {
             item(key = "incognito") {
-                Text(
-                    stringResource(MR.strings.statistics_incognito_active),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                Text(stringResource(MR.strings.statistics_incognito_active), tone = ContentTone.Secondary)
             }
         }
         if (sections.isEmpty() && layout.order.all { it in layout.hidden }) {
             item(key = "hidden") {
                 Text(
                     stringResource(MR.strings.statistics_all_cards_hidden),
-                    modifier = Modifier.padding(vertical = 24.dp),
+                    modifier = Modifier.padding(vertical = KatariTheme.spacing.xl),
                 )
             }
         }
         sections.forEach { (group, cards) ->
             if (group == StatisticsCardGroup.LIBRARY) {
                 item(key = "library-header") {
-                    StatisticsCurrentLibraryHeader(titleCount, Modifier.padding(top = 6.dp))
+                    StatisticsCurrentLibraryHeader(titleCount, Modifier.padding(top = KatariTheme.spacing.s))
                 }
             }
             cards.forEach { card ->

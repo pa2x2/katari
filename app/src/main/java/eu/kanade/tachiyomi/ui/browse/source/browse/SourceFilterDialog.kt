@@ -18,7 +18,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.paging.PagingSource
 import eu.kanade.domain.source.model.FilterRestoreIssue
-import eu.kanade.presentation.components.AdaptiveSheet
 import eu.kanade.tachiyomi.source.entry.EntryFilter
 import eu.kanade.tachiyomi.source.entry.EntryFilterList
 import eu.kanade.tachiyomi.source.entry.EntryFilterPageItem
@@ -40,6 +39,7 @@ import eu.kanade.tachiyomi.ui.browse.source.browse.preset.SourceFilterPresetActi
 import eu.kanade.tachiyomi.ui.browse.source.browse.preset.SourceFilterPresetChip
 import mihon.entry.interactions.catalogue.EntryCatalogueFilterNavigationResult
 import mihon.entry.interactions.catalogue.EntryCatalogueFilterSuggestionsResult
+import mihon.presentation.kit.sheet.Sheet
 import soup.compose.material.motion.animation.materialSharedAxisX
 import soup.compose.material.motion.animation.rememberSlideDistance
 
@@ -131,7 +131,7 @@ fun SourceFilterDialog(
 
     BackHandler(enabled = route is SourceFilterRoute.PagedGroup, onBack = leavePagedGroup)
 
-    AdaptiveSheet(
+    Sheet(
         onDismissRequest = dismissOrLeavePagedGroup,
         enableImplicitDismiss = dateEditor.editing == null && route is SourceFilterRoute.Root,
         modifier = if (route is SourceFilterRoute.PagedGroup) Modifier.fillMaxHeight(0.9f) else Modifier,

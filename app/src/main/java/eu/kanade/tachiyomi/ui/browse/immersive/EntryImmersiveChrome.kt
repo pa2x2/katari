@@ -5,7 +5,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,29 +15,28 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsIgnoringVisibility
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsIgnoringVisibility
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.entry.components.EntryActionIcons
 import eu.kanade.presentation.entry.entryTypePresentation
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.FullscreenExit
 import mihon.icons.materialsymbols.rounded.Info
 import mihon.icons.materialsymbols.rounded.KeyboardArrowUp
+import mihon.presentation.kit.button.IconButton
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.surface.MediaScrim
+import mihon.presentation.kit.surface.MediaScrimEdge
+import mihon.presentation.kit.surface.Surface
+import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -67,31 +65,28 @@ internal fun ImmersiveOverlay(
             exit = fadeOut() + slideOutVertically { -it / 5 },
             modifier = Modifier.align(Alignment.TopCenter),
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(
-                        Brush.verticalGradient(
-                            listOf(Color.Black.copy(alpha = 0.72f), Color.Transparent),
+            MediaScrim(edge = MediaScrimEdge.Top, modifier = Modifier.fillMaxWidth()) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(
+                            start = KatariTheme.spacing.m,
+                            top = WindowInsets.statusBarsIgnoringVisibility
+                                .asPaddingValues()
+                                .calculateTopPadding() + KatariTheme.spacing.m,
+                            end = KatariTheme.spacing.m,
+                            bottom = KatariTheme.spacing.xxl,
                         ),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    ImmersiveContextPill(
+                        label = contextLabel,
+                        supportingLabel = contextSupportingLabel,
+                        leadingContent = contextLeadingContent,
+                        onClick = onContextClick,
+                        modifier = Modifier.weight(1f, fill = false),
                     )
-                    .padding(
-                        start = 12.dp,
-                        top = WindowInsets.statusBarsIgnoringVisibility
-                            .asPaddingValues()
-                            .calculateTopPadding() + 12.dp,
-                        end = 12.dp,
-                        bottom = 36.dp,
-                    ),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                ImmersiveContextPill(
-                    label = contextLabel,
-                    supportingLabel = contextSupportingLabel,
-                    leadingContent = contextLeadingContent,
-                    onClick = onContextClick,
-                    modifier = Modifier.weight(1f, fill = false),
-                )
+                }
             }
         }
 
@@ -101,85 +96,108 @@ internal fun ImmersiveOverlay(
             exit = fadeOut() + slideOutVertically { it / 5 },
             modifier = Modifier.align(Alignment.BottomCenter),
         ) {
-            Row(
+            MediaScrim(
+                edge = MediaScrimEdge.Bottom,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .onSizeChanged { onBottomOverlaySize(it.height) }
-                    .background(
-                        Brush.verticalGradient(
-                            listOf(Color.Transparent, Color.Black.copy(alpha = 0.88f)),
-                        ),
-                    )
-                    .padding(
-                        start = 16.dp,
-                        top = 40.dp,
-                        end = 16.dp,
-                        bottom = WindowInsets.navigationBarsIgnoringVisibility
-                            .asPaddingValues()
-                            .calculateBottomPadding() + 8.dp,
-                    ),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.Bottom,
+                    .onSizeChanged { onBottomOverlaySize(it.height) },
             ) {
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(2.dp),
-                ) {
-                    Text(
-                        text = entry.displayTitle,
-                        color = Color.White,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                    chapterName?.let {
-                        Text(
-                            text = it,
-                            color = Color.White.copy(alpha = 0.72f),
-                            style = MaterialTheme.typography.bodySmall,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                    }
-                }
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(2.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    if (showBackToTop) {
-                        ImmersiveActionButton(
-                            label = stringResource(MR.strings.action_move_to_top),
-                            icon = MaterialSymbols.Rounded.KeyboardArrowUp,
-                            onClick = onBackToTop,
-                        )
-                    }
-                    ImmersiveActionButton(
-                        label = stringResource(MR.strings.browse_exit_immersive),
-                        icon = MaterialSymbols.Rounded.FullscreenExit,
-                        onClick = onExitImmersive,
-                    )
-                    ImmersiveActionButton(
-                        label = stringResource(
-                            if (entry.favorite) MR.strings.remove_from_library else MR.strings.add_to_library,
-                        ),
-                        icon = EntryActionIcons.library(entry.favorite),
-                        onClick = onLibraryAction,
-                    )
-                    ImmersiveActionButton(
-                        label = stringResource(MR.strings.action_details),
-                        icon = MaterialSymbols.Rounded.Info,
-                        onClick = onEntryClick,
-                    )
-                    val presentation = entry.type.entryTypePresentation()
-                    ImmersiveActionButton(
-                        label = stringResource(presentation.immersiveOpenLabel),
-                        icon = presentation.immersiveOpenIcon,
-                        onClick = { onOpenChapter?.invoke() },
-                        enabled = onOpenChapter != null,
-                    )
-                }
+                ImmersiveBottomBar(
+                    entry = entry,
+                    chapterName = chapterName,
+                    onExitImmersive = onExitImmersive,
+                    onEntryClick = onEntryClick,
+                    onLibraryAction = onLibraryAction,
+                    showBackToTop = showBackToTop,
+                    onBackToTop = onBackToTop,
+                    onOpenChapter = onOpenChapter,
+                )
             }
+        }
+    }
+}
+
+@Composable
+private fun ImmersiveBottomBar(
+    entry: Entry,
+    chapterName: String?,
+    onExitImmersive: () -> Unit,
+    onEntryClick: () -> Unit,
+    onLibraryAction: () -> Unit,
+    showBackToTop: Boolean,
+    onBackToTop: () -> Unit,
+    onOpenChapter: (() -> Unit)?,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(
+                start = KatariTheme.spacing.l,
+                top = KatariTheme.spacing.xxl,
+                end = KatariTheme.spacing.l,
+                bottom = WindowInsets.navigationBarsIgnoringVisibility
+                    .asPaddingValues()
+                    .calculateBottomPadding() + KatariTheme.spacing.s,
+            ),
+        horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
+        verticalAlignment = Alignment.Bottom,
+    ) {
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xxs),
+        ) {
+            Text(
+                text = entry.displayTitle,
+                role = TextRole.SectionTitle,
+                tone = ContentTone.OnMedia,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+            chapterName?.let {
+                Text(
+                    text = it,
+                    role = TextRole.Supporting,
+                    tone = ContentTone.OnMediaVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xxs),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            if (showBackToTop) {
+                ImmersiveActionButton(
+                    label = stringResource(MR.strings.action_move_to_top),
+                    icon = MaterialSymbols.Rounded.KeyboardArrowUp,
+                    onClick = onBackToTop,
+                )
+            }
+            ImmersiveActionButton(
+                label = stringResource(MR.strings.browse_exit_immersive),
+                icon = MaterialSymbols.Rounded.FullscreenExit,
+                onClick = onExitImmersive,
+            )
+            ImmersiveActionButton(
+                label = stringResource(
+                    if (entry.favorite) MR.strings.remove_from_library else MR.strings.add_to_library,
+                ),
+                icon = EntryActionIcons.library(entry.favorite),
+                onClick = onLibraryAction,
+            )
+            ImmersiveActionButton(
+                label = stringResource(MR.strings.action_details),
+                icon = MaterialSymbols.Rounded.Info,
+                onClick = onEntryClick,
+            )
+            val presentation = entry.type.entryTypePresentation()
+            ImmersiveActionButton(
+                label = stringResource(presentation.immersiveOpenLabel),
+                icon = presentation.immersiveOpenIcon,
+                onClick = { onOpenChapter?.invoke() },
+                enabled = onOpenChapter != null,
+            )
         }
     }
 }
@@ -194,23 +212,23 @@ private fun ImmersiveContextPill(
 ) {
     val content: @Composable () -> Unit = {
         Row(
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 9.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.padding(horizontal = KatariTheme.spacing.m, vertical = KatariTheme.spacing.s),
+            horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             leadingContent?.invoke()
             Column {
                 Text(
                     text = label,
-                    style = MaterialTheme.typography.labelLarge,
+                    role = TextRole.Label,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
                 supportingLabel?.let {
                     Text(
                         text = it,
-                        color = Color.White.copy(alpha = 0.72f),
-                        style = MaterialTheme.typography.labelSmall,
+                        role = TextRole.Badge,
+                        tone = ContentTone.OnMediaVariant,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
@@ -222,40 +240,27 @@ private fun ImmersiveContextPill(
         Surface(
             onClick = onClick,
             modifier = modifier,
-            shape = CircleShape,
-            color = Color.Black.copy(alpha = 0.52f),
-            contentColor = Color.White,
+            container = SurfaceContainer.MediaScrim,
+            shape = KatariTheme.shapes.full,
             content = content,
         )
     } else {
         Surface(
             modifier = modifier,
-            shape = CircleShape,
-            color = Color.Black.copy(alpha = 0.52f),
-            contentColor = Color.White,
+            container = SurfaceContainer.MediaScrim,
+            shape = KatariTheme.shapes.full,
             content = content,
         )
     }
 }
 
+// The bottom scrim already gives these buttons their contrast, so they are bare icons in the media content colour.
 @Composable
 private fun ImmersiveActionButton(
     label: String,
     icon: ImageVector,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier,
     enabled: Boolean = true,
 ) {
-    Surface(
-        onClick = onClick,
-        enabled = enabled,
-        modifier = modifier.size(44.dp),
-        shape = CircleShape,
-        color = Color.White.copy(alpha = if (enabled) 0.12f else 0.05f),
-        contentColor = Color.White.copy(alpha = if (enabled) 1f else 0.38f),
-    ) {
-        Box(contentAlignment = Alignment.Center) {
-            Icon(imageVector = icon, contentDescription = label, modifier = Modifier.size(21.dp))
-        }
-    }
+    IconButton(icon = icon, contentDescription = label, onClick = onClick, enabled = enabled)
 }

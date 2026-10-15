@@ -11,9 +11,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentWidth
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -35,7 +32,6 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -46,7 +42,6 @@ import eu.kanade.domain.source.model.SourceFeedContentMode
 import eu.kanade.domain.source.model.toListing
 import eu.kanade.domain.source.service.ProfileSourcePreferences
 import eu.kanade.presentation.browse.components.SourceIcon
-import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.TabContent
 import eu.kanade.presentation.more.settings.screen.BrowseLongPressActionsScreen
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
@@ -73,17 +68,22 @@ import mihon.entry.interactions.source.EntrySourceHomeResolution
 import mihon.feature.profiles.core.ProfileManager
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Add
+import mihon.presentation.kit.content.BrowseMetrics
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.feedback.EmptyScreen
+import mihon.presentation.kit.feedback.EmptyScreenAction
+import mihon.presentation.kit.feedback.LoadingScreen
+import mihon.presentation.kit.feedback.SnackbarHostState
+import mihon.presentation.kit.navigation.AppBar
+import mihon.presentation.kit.progress.PullRefresh
+import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.core.common.Constants
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.domain.source.model.CatalogListItem
 import tachiyomi.domain.source.model.Source
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.material.PullRefresh
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.screens.EmptyScreen
-import tachiyomi.presentation.core.screens.EmptyScreenAction
-import tachiyomi.presentation.core.screens.LoadingScreen
 import tachiyomi.source.local.LocalSource
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
@@ -172,20 +172,19 @@ private fun SingleFeedTabLabel(
     Row(
         modifier = Modifier.wrapContentWidth(),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
     ) {
         SourceIcon(
             source = source,
             modifier = Modifier
-                .size(18.dp)
-                .clip(MaterialTheme.shapes.extraSmall),
+                .size(KatariTheme.sizes.iconSmall)
+                .clip(KatariTheme.shapes.extraSmall),
         )
         // A fixed-width tab has no room for the subtitle; the feed bar below shows the full label.
         Text(
             text = label.title,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            style = MaterialTheme.typography.labelLarge,
         )
     }
 }
@@ -321,7 +320,11 @@ private fun Screen.FeedsTabContent(
                     val columns = if (isLandscape) landscapeColumns else portraitColumns
                     if (columns == 0) {
                         androidx.compose.foundation.lazy.grid.GridCells.Adaptive(
-                            if (sourceItemOrientation == EntryItemOrientation.HORIZONTAL) 180.dp else 128.dp,
+                            if (sourceItemOrientation == EntryItemOrientation.HORIZONTAL) {
+                                BrowseMetrics.wideCoverGridMinCellWidth
+                            } else {
+                                BrowseMetrics.coverGridMinCellWidth
+                            },
                         )
                     } else {
                         androidx.compose.foundation.lazy.grid.GridCells.Fixed(

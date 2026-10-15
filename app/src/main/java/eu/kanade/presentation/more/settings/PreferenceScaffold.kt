@@ -3,10 +3,10 @@ package eu.kanade.presentation.more.settings
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.runtime.Composable
 import dev.icerock.moko.resources.StringResource
-import eu.kanade.presentation.components.AppBar
-import eu.kanade.presentation.components.AppBarTitle
 import eu.kanade.presentation.more.settings.widget.ProfileSpecificChip
-import tachiyomi.presentation.core.components.material.Scaffold
+import mihon.presentation.kit.navigation.AppBar
+import mihon.presentation.kit.navigation.AppBarTitle
+import mihon.presentation.kit.navigation.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable

@@ -1,18 +1,11 @@
 package eu.kanade.presentation.updates
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.material3.LocalContentColor
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.TopAppBarScrollBehavior
-import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -20,11 +13,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import dev.icerock.moko.resources.StringResource
-import eu.kanade.presentation.components.AppBar
-import eu.kanade.presentation.components.AppBarActions
-import eu.kanade.presentation.components.AppSnackbarHost
 import eu.kanade.presentation.entry.components.EntryBottomActionMenu
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.delay
@@ -35,14 +24,21 @@ import mihon.icons.materialsymbols.rounded.Deselect
 import mihon.icons.materialsymbols.rounded.FilterList
 import mihon.icons.materialsymbols.rounded.Refresh
 import mihon.icons.materialsymbols.rounded.SelectAll
+import mihon.presentation.kit.feedback.EmptyScreen
+import mihon.presentation.kit.feedback.LoadingScreen
+import mihon.presentation.kit.feedback.SnackbarHost
+import mihon.presentation.kit.feedback.SnackbarHostState
+import mihon.presentation.kit.navigation.AppBar
+import mihon.presentation.kit.navigation.AppBarActions
+import mihon.presentation.kit.navigation.AppBarScrollBehavior
+import mihon.presentation.kit.navigation.Scaffold
+import mihon.presentation.kit.progress.PullRefresh
+import mihon.presentation.kit.surface.Surface
+import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.theme.ContentTone
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.FastScrollLazyColumn
-import tachiyomi.presentation.core.components.material.PullRefresh
-import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.screens.EmptyScreen
-import tachiyomi.presentation.core.screens.LoadingScreen
-import tachiyomi.presentation.core.theme.active
 import kotlin.time.Duration.Companion.seconds
 
 @Composable
@@ -87,12 +83,8 @@ fun <T> UpdatesScreen(
                 )
                 if (filterSummary != null) {
                     // The feed scrolls under the bar, so it takes the app bar's colour, raised in action mode.
-                    Box(
-                        modifier = Modifier.background(
-                            MaterialTheme.colorScheme.surfaceColorAtElevation(
-                                if (state.selectionMode) 3.dp else 0.dp,
-                            ),
-                        ),
+                    Surface(
+                        container = if (state.selectionMode) SurfaceContainer.Default else SurfaceContainer.Surface,
                     ) {
                         filterSummary()
                     }
@@ -104,7 +96,7 @@ fun <T> UpdatesScreen(
                 UpdatesBottomBar(config = bottomBarConfig)
             }
         },
-        snackbarHost = { AppSnackbarHost(hostState = snackbarHostState) },
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
     ) { contentPadding ->
         when {
             state.isLoading -> loadingContent(Modifier.padding(contentPadding))
@@ -170,7 +162,7 @@ private fun UpdatesAppBar(
     onSelectAll: () -> Unit,
     onInvertSelection: () -> Unit,
     onCancelActionMode: () -> Unit,
-    scrollBehavior: TopAppBarScrollBehavior,
+    scrollBehavior: AppBarScrollBehavior,
     modifier: Modifier = Modifier,
 ) {
     AppBar(
@@ -183,7 +175,7 @@ private fun UpdatesAppBar(
                         AppBar.Action(
                             title = stringResource(MR.strings.action_filter),
                             icon = MaterialSymbols.Rounded.FilterList,
-                            iconTint = if (hasFilters) MaterialTheme.colorScheme.active else LocalContentColor.current,
+                            tone = if (hasFilters) ContentTone.Active else ContentTone.Inherit,
                             onClick = onFilterClicked,
                         ),
                     )

@@ -1,28 +1,31 @@
 package mihon.translation.ui.presentation
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.selection.SelectionContainer
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.automirroredrounded.VolumeUp
 import mihon.icons.materialsymbols.rounded.Stop
+import mihon.presentation.kit.content.Icon
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.progress.LoadingIndicator
+import mihon.presentation.kit.surface.Surface
+import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import mihon.translation.ui.presentation.language.TranslationSourceLanguageChip
 import mihon.translation.ui.presentation.language.TranslationTargetLanguageChip
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.LoadingIndicator
 import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable
@@ -44,10 +47,7 @@ internal fun TranslationSpeechSection(
         onChooseLanguage = onChooseLanguage,
     )
     SelectionContainer {
-        Text(
-            text = text,
-            style = MaterialTheme.typography.bodyLarge,
-        )
+        Text(text = text, role = TextRole.ItemTitle)
     }
 }
 
@@ -65,13 +65,9 @@ internal fun TranslationSpeechSectionHeader(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(modifier = Modifier.weight(1f)) {
-            Text(text = title, style = MaterialTheme.typography.titleSmall)
+            Text(text = title, role = TextRole.SectionTitle)
             when {
-                onChooseLanguage == null -> Text(
-                    text = language,
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                onChooseLanguage == null -> Text(text = language, role = TextRole.Supporting)
                 target.side == TranslationResultSpeechSide.Source ->
                     TranslationSourceLanguageChip(language, onChooseLanguage)
                 else -> TranslationTargetLanguageChip(language, onChooseLanguage)
@@ -85,17 +81,22 @@ internal fun TranslationSpeechSectionHeader(
     }
 }
 
+// An icon button whose icon turns into a loading indicator while the speech is prepared.
 @Composable
 fun TranslationSpeechActionButton(
     target: TranslationResultSpeechTarget,
     speechState: TranslationResultSpeechState,
     onSpeechToggle: (TranslationResultSpeechTarget) -> Unit,
 ) {
-    IconButton(
+    Surface(
         onClick = { onSpeechToggle(target) },
-        modifier = Modifier.size(48.dp),
+        modifier = Modifier.size(KatariTheme.sizes.touchTarget),
+        container = SurfaceContainer.None,
+        shape = KatariTheme.shapes.full,
     ) {
-        TranslationSpeechIndicator(target, speechState, iconSize = 24.dp)
+        Box(contentAlignment = Alignment.Center) {
+            TranslationSpeechIndicator(target, speechState, iconSize = KatariTheme.sizes.icon)
+        }
     }
 }
 
@@ -124,7 +125,7 @@ internal fun TranslationSpeechIndicator(
     if (active && speechState.phase == TranslationResultSpeechPhase.Preparing) {
         LoadingIndicator(
             modifier = Modifier
-                .size(iconSize - 2.dp)
+                .size(iconSize)
                 .semantics { this.contentDescription = contentDescription },
         )
     } else {
@@ -132,11 +133,7 @@ internal fun TranslationSpeechIndicator(
             imageVector = if (active) MaterialSymbols.Rounded.Stop else MaterialSymbols.AutoMirroredRounded.VolumeUp,
             contentDescription = contentDescription,
             modifier = Modifier.size(iconSize),
-            tint = if (active) {
-                MaterialTheme.colorScheme.primary
-            } else {
-                MaterialTheme.colorScheme.onSurfaceVariant
-            },
+            tone = if (active) ContentTone.Primary else ContentTone.Secondary,
         )
     }
 }

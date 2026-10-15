@@ -1,20 +1,20 @@
 package eu.kanade.presentation.components
 
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import eu.kanade.presentation.theme.TachiyomiPreviewTheme
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.automirroredrounded.Help
 import mihon.icons.materialsymbols.rounded.Refresh
+import mihon.presentation.kit.feedback.EmptyScreen
+import mihon.presentation.kit.feedback.EmptyScreenAction
+import mihon.presentation.kit.surface.Surface
+import mihon.presentation.kit.theme.KatariPreviewTheme
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.screens.EmptyScreen
-import tachiyomi.presentation.core.screens.EmptyScreenAction
 
 @PreviewLightDark
 @Composable
 private fun NoActionPreview() {
-    TachiyomiPreviewTheme {
+    KatariPreviewTheme {
         Surface {
             EmptyScreen(
                 stringRes = MR.strings.empty_screen,
@@ -26,7 +26,7 @@ private fun NoActionPreview() {
 @PreviewLightDark
 @Composable
 private fun WithActionPreview() {
-    TachiyomiPreviewTheme {
+    KatariPreviewTheme {
         Surface {
             EmptyScreen(
                 stringRes = MR.strings.empty_screen,

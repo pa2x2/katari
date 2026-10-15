@@ -6,12 +6,12 @@ import androidx.compose.runtime.getValue
 import mihon.entry.interactions.book.R
 import mihon.entry.viewer.settings.ui.ReaderSharedSettingDetails
 import mihon.language.api.tag.LanguageTag
+import mihon.presentation.kit.list.SettingsRow
 import mihon.translation.ui.picker.language.displayName
 import mihon.translation.ui.presentation.TranslationSessionExternalAction
 import mihon.translation.ui.presentation.language.translationEffectiveTargetSummary
 import mihon.translation.ui.session.TranslationSessionHostCoordinator
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.NavigationItem
 import tachiyomi.presentation.core.i18n.stringResource
 import androidx.compose.ui.res.stringResource as androidStringResource
 
@@ -34,13 +34,13 @@ internal fun bookTranslationLanguageDetails(
             androidStringResource(R.string.book_reader_automatic_translation_target, it.language.displayName())
         },
     ) {
-        NavigationItem(
-            label = stringResource(MR.strings.translation_translate_to),
+        SettingsRow(
+            title = stringResource(MR.strings.translation_translate_to),
             subtitle = targetSummary,
             onClick = { coordinator.handleExternalAction(TranslationSessionExternalAction.ChooseTargetLanguage) {} },
         )
-        NavigationItem(
-            label = androidStringResource(R.string.book_reader_book_language),
+        SettingsRow(
+            title = androidStringResource(R.string.book_reader_book_language),
             subtitle = bookLanguageSummary,
             onClick = { coordinator.handleExternalAction(TranslationSessionExternalAction.ChooseSourceLanguage) {} },
         )

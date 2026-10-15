@@ -2,12 +2,8 @@ package eu.kanade.tachiyomi.ui.browse.source.browse.filter
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import eu.kanade.tachiyomi.source.entry.EntryFilter
 import eu.kanade.tachiyomi.source.entry.EntryFilterTextInput
 import eu.kanade.tachiyomi.source.entry.filter.EntryDateFilter
@@ -17,7 +13,6 @@ import eu.kanade.tachiyomi.ui.browse.source.browse.filter.change.FilterChanges
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.control.FilterCheckboxRow
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.control.FilterOrderingSelectRow
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.control.FilterSelectControl
-import eu.kanade.tachiyomi.ui.browse.source.browse.filter.control.FilterSheetInsets
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.control.FilterSortRow
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.control.FilterTextField
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.control.FilterTriStateRow
@@ -29,6 +24,12 @@ import eu.kanade.tachiyomi.ui.browse.source.browse.filter.paged.PagedGroupSummar
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.validation.LocalFilterValidation
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.validation.displayMessage
 import mihon.entry.interactions.catalogue.EntryCatalogueFilterSuggestionsResult
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.list.SectionHeader
+import mihon.presentation.kit.surface.HorizontalDivider
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -55,8 +56,9 @@ internal fun FilterItem(
     val invalid = LocalFilterValidation.current.isInvalid(filter)
     Column {
         when (filter) {
-            is EntryFilter.Header -> FilterSourceHeader(filter.name)
-            is EntryFilter.Separator -> HorizontalDivider(Modifier.padding(horizontal = FilterSheetInsets.Horizontal))
+            // The source's own label for the filters that follow, kept where the source placed it.
+            is EntryFilter.Header -> SectionHeader(filter.name)
+            is EntryFilter.Separator -> HorizontalDivider(Modifier.padding(horizontal = KatariTheme.spacing.rowInset))
             is EntryFilter.CheckBox -> FilterCheckboxRow(label = filter.name, checked = filter.state) {
                 filter.state = !filter.state
                 onUpdate()
@@ -105,55 +107,31 @@ internal fun FilterItem(
         }
         // A group shows its description in its header.
         filter.metadata?.description?.takeIf { it.isNotBlank() && filter !is EntryFilter.Group<*> }?.let {
-            Text(
-                it,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(
-                    start = FilterSheetInsets.Horizontal,
-                    end = FilterSheetInsets.Horizontal,
-                    bottom = 12.dp,
-                ),
-            )
+            FilterNote(it, ContentTone.Secondary, Modifier.padding(bottom = KatariTheme.spacing.m))
         }
         // Groups list their issues under their options and date filters under their value.
         if (filter !is EntryFilter.Group<*> && filter !is EntryDateFilter) {
             filter.validationIssues().forEach {
-                Text(
-                    it.displayMessage(),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.padding(horizontal = FilterSheetInsets.Horizontal),
-                )
+                FilterNote(it.displayMessage(), ContentTone.Error)
             }
         }
         if (filter.hasFailedSourceCallback()) {
-            Text(
+            FilterNote(
                 stringResource(MR.strings.filter_source_callback_failed),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.error,
-                modifier = Modifier.padding(
-                    start = FilterSheetInsets.Horizontal,
-                    end = FilterSheetInsets.Horizontal,
-                    bottom = 12.dp,
-                ),
+                ContentTone.Error,
+                Modifier.padding(bottom = KatariTheme.spacing.m),
             )
         }
     }
 }
 
-/** A source header: the source's own label for the filters that follow, kept where the source placed it. */
+/** A line of supporting text under a filter, such as its description or what is wrong with its value. */
 @Composable
-private fun FilterSourceHeader(text: String) {
+private fun FilterNote(text: String, tone: ContentTone, modifier: Modifier = Modifier) {
     Text(
         text = text,
-        style = MaterialTheme.typography.labelLarge,
-        color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.padding(
-            start = FilterSheetInsets.Horizontal,
-            end = FilterSheetInsets.Horizontal,
-            top = 12.dp,
-            bottom = 4.dp,
-        ),
+        modifier = modifier.padding(horizontal = KatariTheme.spacing.rowInset),
+        role = TextRole.Supporting,
+        tone = tone,
     )
 }

@@ -3,6 +3,7 @@ import mihon.gradle.extensions.alias
 import mihon.gradle.extensions.libs
 import mihon.gradle.extensions.plugins
 import mihon.gradle.tasks.EntryInteractionBoundaryCheckTask
+import mihon.gradle.tasks.UiKitBoundaryCheckTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.configure
@@ -65,10 +66,16 @@ class PluginSpotless : Plugin<Project> {
                 group = "verification"
                 repositoryRoot.set(layout.projectDirectory)
             }
+            val uiKitBoundaryCheck = tasks.register<UiKitBoundaryCheckTask>("checkUiKitBoundaries") {
+                description = "Checks that UI is built only from presentation-core kit components and tokens."
+                group = "verification"
+                repositoryRoot.set(layout.projectDirectory)
+                report.set(layout.buildDirectory.file("reports/ui-kit-boundaries.txt"))
+            }
             val featureBoundaryCheck = tasks.register("checkFeatureArchitectureBoundaries") {
                 description = "Checks all Feature architecture boundary hardening rules."
                 group = "verification"
-                dependsOn(boundaryCheck)
+                dependsOn(boundaryCheck, uiKitBoundaryCheck)
             }
 
             tasks.named("spotlessCheck") {

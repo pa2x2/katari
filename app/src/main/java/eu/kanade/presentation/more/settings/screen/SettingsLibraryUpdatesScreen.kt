@@ -1,16 +1,7 @@
 package eu.kanade.presentation.more.settings.screen
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Switch
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
@@ -20,7 +11,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -30,17 +20,20 @@ import eu.kanade.presentation.library.update.libraryUpdateRunSummaryText
 import eu.kanade.presentation.library.update.sourcePauseStateText
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.screen.libraryupdates.CategoryUpdateRulesScreen
+import eu.kanade.presentation.more.settings.screen.libraryupdates.LibraryUpdateNextRunCard
 import eu.kanade.presentation.more.settings.screen.libraryupdates.LibraryUpdatesSettingsViewModel
 import eu.kanade.presentation.more.settings.screen.libraryupdates.libraryUpdateIntervalLabel
 import eu.kanade.presentation.more.settings.screen.libraryupdates.libraryUpdateIntervals
 import eu.kanade.presentation.more.settings.screen.libraryupdates.titleRes
-import eu.kanade.presentation.util.relativeTimeSpanString
 import eu.kanade.tachiyomi.ui.library.update.report.LibraryUpdateReportScreen
-import mihon.feature.library.update.planning.LibraryUpdatePreview
 import mihon.feature.library.update.planning.LibraryUpdateSettings
 import mihon.feature.library.update.planning.LibraryUpdateSkipRule
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Tune
+import mihon.presentation.kit.content.Icon
+import mihon.presentation.kit.control.Switch
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.library.service.LibraryPreferences.Companion.DEVICE_CHARGING
 import tachiyomi.domain.library.service.LibraryPreferences.Companion.DEVICE_NETWORK_NOT_METERED
@@ -87,7 +80,7 @@ object SettingsLibraryUpdatesScreen : SearchableSettings {
                 title = stringResource(MR.strings.library_updates_next_automatic),
                 isProfileSpecific = true,
             ) {
-                NextUpdateCard(nextRunAt = state.nextRunAt, preview = state.preview)
+                LibraryUpdateNextRunCard(nextRunAt = state.nextRunAt, preview = state.preview)
             },
             getScheduleGroup(viewModel, state, libraryPreferences),
             getCategoriesGroup(state, viewModel, onOpenCategory = { navigator.push(CategoryUpdateRulesScreen(it)) })
@@ -110,49 +103,6 @@ object SettingsLibraryUpdatesScreen : SearchableSettings {
                 ),
             ),
         )
-    }
-
-    @Composable
-    private fun NextUpdateCard(nextRunAt: Long?, preview: LibraryUpdatePreview?) {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-            ),
-        ) {
-            Column(
-                modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(2.dp),
-            ) {
-                Text(
-                    text = if (nextRunAt != null) {
-                        "${stringResource(MR.strings.library_updates_next_automatic)} · " +
-                            relativeTimeSpanString(nextRunAt)
-                    } else {
-                        stringResource(MR.strings.library_updates_automatic_off)
-                    },
-                    style = MaterialTheme.typography.titleSmall,
-                )
-                if (preview != null) {
-                    Text(
-                        text = pluralStringResource(
-                            if (nextRunAt != null) {
-                                MR.plurals.library_updates_checks_of
-                            } else {
-                                MR.plurals.library_updates_manual_checks_of
-                            },
-                            preview.librarySize,
-                            preview.checks,
-                            preview.librarySize,
-                        ),
-                        style = MaterialTheme.typography.bodyMedium,
-                    )
-                }
-            }
-        }
     }
 
     @Composable
@@ -224,8 +174,8 @@ object SettingsLibraryUpdatesScreen : SearchableSettings {
                                 Icon(
                                     imageVector = MaterialSymbols.Rounded.Tune,
                                     contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.padding(end = 12.dp),
+                                    modifier = Modifier.padding(end = KatariTheme.spacing.m),
+                                    tone = ContentTone.Primary,
                                 )
                             }
                             Switch(

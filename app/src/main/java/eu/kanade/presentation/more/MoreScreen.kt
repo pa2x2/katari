@@ -1,9 +1,6 @@
 package eu.kanade.presentation.more
 
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Badge
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -12,7 +9,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.more.settings.widget.SwitchPreferenceWidget
 import eu.kanade.presentation.more.settings.widget.TextPreferenceWidget
 import eu.kanade.tachiyomi.ui.more.DownloadQueueState
@@ -29,10 +25,13 @@ import mihon.icons.materialsymbols.rounded.QueryStats
 import mihon.icons.materialsymbols.rounded.Settings
 import mihon.icons.materialsymbols.rounded.Storage
 import mihon.icons.materialsymbols.rounded.Sync
+import mihon.presentation.kit.content.NotificationBadge
+import mihon.presentation.kit.navigation.Scaffold
+import mihon.presentation.kit.surface.HorizontalDivider
+import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.core.common.Constants
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.ScrollbarLazyColumn
-import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 import uy.kohesive.injekt.Injekt
@@ -63,7 +62,7 @@ fun MoreScreen(
         ScrollbarLazyColumn(contentPadding = contentPadding) {
             item {
                 LogoHeader(
-                    iconPadding = PaddingValues(vertical = 32.dp),
+                    iconPadding = PaddingValues(vertical = KatariTheme.spacing.xxl),
                 )
             }
             item {
@@ -137,10 +136,8 @@ fun MoreScreen(
                     widget = if (hasNewRecap) {
                         {
                             val description = stringResource(MR.strings.statistics_recap_new)
-                            Badge(
-                                modifier = Modifier
-                                    .padding(end = 8.dp)
-                                    .semantics { contentDescription = description },
+                            NotificationBadge(
+                                modifier = Modifier.semantics { contentDescription = description },
                             )
                         }
                     } else {

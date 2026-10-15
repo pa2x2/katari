@@ -6,16 +6,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SnackbarDuration
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
@@ -30,9 +24,7 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.unit.dp
-import eu.kanade.presentation.components.AppBar
-import eu.kanade.presentation.components.AppSnackbarHost
+import androidx.compose.ui.platform.LocalDensity
 import eu.kanade.tachiyomi.ui.home.navigation.HomeNavigationBar
 import kotlinx.coroutines.launch
 import mihon.core.common.HomeScreenTabs
@@ -40,8 +32,18 @@ import mihon.core.common.homeScreenTabOrder
 import mihon.core.common.navigation.HomeNavigationMoveResult
 import mihon.core.common.navigation.HomeNavigationSection
 import mihon.core.common.navigation.move
+import mihon.presentation.kit.button.Button
+import mihon.presentation.kit.button.ButtonStyle
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.feedback.SnackbarDuration
+import mihon.presentation.kit.feedback.SnackbarHost
+import mihon.presentation.kit.feedback.SnackbarHostState
+import mihon.presentation.kit.navigation.AppBar
+import mihon.presentation.kit.navigation.Scaffold
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable
@@ -77,11 +79,9 @@ internal fun HomeNavigationEditorContent(
         -> false
         else -> true
     }
-    val dropIndicatorColor = if (dropIsValid) {
-        MaterialTheme.colorScheme.primary
-    } else {
-        MaterialTheme.colorScheme.error
-    }
+    val dropIndicatorColor = if (dropIsValid) KatariTheme.colors.primary else KatariTheme.colors.error
+    // Lets the last unused destination scroll clear of the overflow panel floating over the list.
+    val overflowClearance = with(LocalDensity.current) { overflowBounds.height.toDp() } + KatariTheme.spacing.l
 
     fun showValidationMessage(message: String) {
         snackbarHostState.currentSnackbarData?.dismiss()
@@ -179,18 +179,18 @@ internal fun HomeNavigationEditorContent(
                     title = stringResource(MR.strings.home_navigation_editor_title),
                     navigateUp = onNavigateUp,
                     actions = {
-                        TextButton(
+                        Button(
+                            label = stringResource(MR.strings.action_reset),
                             onClick = onReset,
+                            style = ButtonStyle.Text,
                             enabled = resetEnabled,
-                        ) {
-                            Text(stringResource(MR.strings.action_reset))
-                        }
-                        TextButton(
+                        )
+                        Button(
+                            label = stringResource(MR.strings.action_save),
                             onClick = onSave,
+                            style = ButtonStyle.Text,
                             enabled = saveEnabled,
-                        ) {
-                            Text(stringResource(MR.strings.action_save))
-                        }
+                        )
                     },
                     scrollBehavior = scrollBehavior,
                 )
@@ -233,14 +233,10 @@ internal fun HomeNavigationEditorContent(
                         .fillMaxSize()
                         .onGloballyPositioned { hiddenBounds = it.boundsInRoot() }
                         .background(
-                            if (dropTarget?.section == HomeNavigationSection.Hidden) {
-                                if (dropIsValid) {
-                                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
-                                } else {
-                                    MaterialTheme.colorScheme.surface
-                                }
+                            if (dropTarget?.section == HomeNavigationSection.Hidden && dropIsValid) {
+                                KatariTheme.colors.surfaceContainer
                             } else {
-                                MaterialTheme.colorScheme.surface
+                                KatariTheme.colors.surface
                             },
                         ),
                 ) {
@@ -248,17 +244,18 @@ internal fun HomeNavigationEditorContent(
                         modifier = Modifier
                             .fillMaxSize()
                             .verticalScroll(rememberScrollState())
-                            .padding(horizontal = 16.dp)
-                            .padding(bottom = 280.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                            .padding(bottom = overflowClearance),
+                        verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.m),
                     ) {
                         Text(
                             text = stringResource(MR.strings.home_navigation_editor_instructions),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(horizontal = KatariTheme.spacing.rowInset),
+                            role = TextRole.Body,
+                            tone = ContentTone.Secondary,
                         )
                         StartupTabSelector(draft = draft, onDraftChange = onDraftChange)
                         UnusedDestinations(
+                            modifier = Modifier.padding(horizontal = KatariTheme.spacing.contentInset),
                             tabs = homeScreenTabOrder.filter { tab ->
                                 tab in draft.configuration.hiddenTabs ||
                                     (dropTarget?.section == HomeNavigationSection.Hidden && tab == draggedTab)
@@ -291,19 +288,19 @@ internal fun HomeNavigationEditorContent(
                             ?.index,
                         modifier = Modifier
                             .align(Alignment.BottomEnd)
-                            .padding(horizontal = 12.dp, vertical = 8.dp)
-                            .width(224.dp)
+                            .padding(horizontal = KatariTheme.spacing.m, vertical = KatariTheme.spacing.s)
+                            .fillMaxWidth(OVERFLOW_PANEL_WIDTH_FRACTION)
                             .onGloballyPositioned { overflowBounds = it.boundsInRoot() },
                         dragModifier = { tab -> Modifier.navigationDragSource(tab) },
                         onClick = { onDraftChange(draft.copy(previewTab = it)) },
                     )
                 }
 
-                AppSnackbarHost(
+                SnackbarHost(
                     hostState = snackbarHostState,
                     modifier = Modifier
                         .align(Alignment.CenterStart)
-                        .widthIn(max = 280.dp),
+                        .fillMaxWidth(1f - OVERFLOW_PANEL_WIDTH_FRACTION),
                 )
             }
         }
@@ -322,3 +319,6 @@ private data class HomeNavigationDropTarget(
     val section: HomeNavigationSection,
     val index: Int,
 )
+
+// The overflow panel mirrors the navigation bar's overflow menu at the bottom end; the snackbar uses the space beside it.
+private const val OVERFLOW_PANEL_WIDTH_FRACTION = 0.55f

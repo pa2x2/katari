@@ -8,17 +8,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -30,7 +23,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import eu.kanade.core.preference.PreferenceMutableState
 import eu.kanade.presentation.library.components.BindScrollToTop
 import eu.kanade.presentation.library.components.CommonEntryItemDefaults
@@ -45,15 +37,20 @@ import eu.kanade.tachiyomi.ui.library.LibraryPage
 import eu.kanade.tachiyomi.ui.library.displayTitle
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.TravelExplore
+import mihon.presentation.kit.button.Button
+import mihon.presentation.kit.button.ButtonStyle
+import mihon.presentation.kit.content.BrowseMetrics
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.feedback.EmptyScreen
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.domain.library.model.LibraryItem
 import tachiyomi.domain.library.model.LibraryItemKey
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.FastScrollLazyVerticalGrid
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.screens.EmptyScreen
 import tachiyomi.presentation.core.util.plus
-import tachiyomi.presentation.core.util.secondaryItemAlpha
 import kotlin.math.floor
 
 /**
@@ -96,7 +93,7 @@ internal fun LibrarySearchResults(
     val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
     val columnsPreference = remember(isLandscape) { getColumnsForOrientation(isLandscape) }
     val preferredColumns by columnsPreference
-    val gridPadding = if (displayMode == LibraryDisplayMode.List) 0.dp else 8.dp
+    val gridPadding = if (displayMode == LibraryDisplayMode.List) KatariTheme.sizes.none else KatariTheme.spacing.s
     val defaultCategoryTitle = stringResource(MR.strings.label_default)
 
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
@@ -196,29 +193,17 @@ private fun LibrarySearchNoResults(
         message = stringResource(MR.strings.library_search_no_match, searchQuery),
         modifier = modifier.padding(contentPadding),
     ) {
-        FilledTonalButton(
+        Button(
+            label = stringResource(MR.strings.library_search_sources_for, searchQuery),
             onClick = onGlobalSearchClicked,
-            modifier = Modifier.padding(top = 24.dp),
-        ) {
-            Icon(
-                imageVector = MaterialSymbols.Rounded.TravelExplore,
-                contentDescription = null,
-                modifier = Modifier
-                    .padding(end = ButtonDefaults.IconSpacing)
-                    .size(ButtonDefaults.IconSize),
-            )
-            Text(
-                text = stringResource(MR.strings.library_search_sources_for, searchQuery),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-        }
+            modifier = Modifier.padding(top = KatariTheme.spacing.xl),
+            style = ButtonStyle.Tonal,
+            icon = MaterialSymbols.Rounded.TravelExplore,
+        )
         Text(
             text = stringResource(MR.strings.library_search_no_match_tip),
-            modifier = Modifier
-                .padding(top = 16.dp)
-                .secondaryItemAlpha(),
-            style = MaterialTheme.typography.bodySmall,
+            modifier = Modifier.padding(top = KatariTheme.spacing.l),
+            role = TextRole.Supporting,
             textAlign = TextAlign.Center,
         )
     }
@@ -234,32 +219,32 @@ private fun LibrarySearchSectionHeader(
         modifier = Modifier
             .fillMaxWidth()
             .semantics { heading() }
-            .padding(start = 8.dp, top = 8.dp),
+            .padding(start = KatariTheme.spacing.s, top = KatariTheme.spacing.s),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Row(
             modifier = Modifier.weight(1f),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
         ) {
             Text(
                 text = title,
                 modifier = Modifier.weight(1f, fill = false),
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.primary,
+                role = TextRole.GroupLabel,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
             Text(
                 text = count.toString(),
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                role = TextRole.Supporting,
             )
         }
         if (onSeeAll != null) {
-            TextButton(onClick = onSeeAll) {
-                Text(stringResource(MR.strings.library_search_see_all))
-            }
+            Button(
+                label = stringResource(MR.strings.library_search_see_all),
+                onClick = onSeeAll,
+                style = ButtonStyle.Text,
+            )
         }
     }
 }
@@ -281,9 +266,8 @@ private fun LibraryItem.gridSpan(columns: Int): Int {
 
 private fun adaptiveColumnCount(availableWidth: Dp): Int {
     val spacing = CommonEntryItemDefaults.GridHorizontalSpacer
-    return floor((availableWidth + spacing) / (AdaptiveMinimumCellWidth + spacing)).toInt().coerceAtLeast(1)
+    return floor((availableWidth + spacing) / (BrowseMetrics.coverGridMinCellWidth + spacing)).toInt().coerceAtLeast(1)
 }
 
-private val AdaptiveMinimumCellWidth = 128.dp
 private const val GRID_PREVIEW_ROWS = 2
 private const val LIST_PREVIEW_ROWS = 4

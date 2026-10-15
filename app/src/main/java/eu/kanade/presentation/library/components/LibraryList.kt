@@ -5,14 +5,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.entry.components.toListCoverType
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
+import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.domain.entry.model.asEntryCover
 import tachiyomi.domain.library.model.LibraryItem
 import tachiyomi.domain.library.model.LibraryItemKey
@@ -45,7 +44,7 @@ internal fun LibraryList(
                 contentPadding = contentPadding,
             ),
         state = listState,
-        contentPadding = contentPadding + PaddingValues(vertical = 8.dp),
+        contentPadding = contentPadding + PaddingValues(vertical = KatariTheme.spacing.s),
     ) {
         libraryPinnedListItems(
             items = pinnedItems,
@@ -107,7 +106,7 @@ internal fun LibraryListEntry(
         coverType = libraryItem.sourceItemOrientation.toListCoverType(),
         coverContentScale = if (useFitCover) ContentScale.Fit else ContentScale.Crop,
         coverBackgroundColor = if (useFitCover) {
-            MaterialTheme.colorScheme.surfaceContainerHigh
+            KatariTheme.colors.surfaceContainerHigh
         } else {
             Color.Transparent
         },

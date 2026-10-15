@@ -1,0 +1,37 @@
+package mihon.presentation.kit.content
+
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+
+/**
+ * Fixed geometry of a reading page that the spacing scale has no step for, for content renderers such as the book and
+ * manga readers. Paginated readers measure text off-screen with the same values they draw with, so both read them here.
+ */
+object ReadingMetrics {
+    /** Side inset of every block of text on the page. */
+    val blockInset: Dp = 20.dp
+
+    /** Space above and below every block of text on the page. */
+    val blockGap: Dp = 6.dp
+
+    /** Width of the rule beside a quotation. */
+    val quoteRuleWidth: Dp = 3.dp
+
+    /** Space above and below the boundary between two chapters of a scrolled document. */
+    val chapterBoundaryGap: Dp = 28.dp
+
+    /** Space above and below the boundary between two chapters of a continuous image strip, such as a webtoon. */
+    val stripChapterBoundaryGap: Dp = 128.dp
+
+    /** That space while only a progress indicator stands in for the boundary, before the next chapter has loaded. */
+    val stripChapterLoadingGap: Dp = 64.dp
+
+    /** Width of the filled part of a progress rail along the page edge. */
+    val progressFillWidth: Dp = 2.dp
+
+    /** Width of the position marker on a progress rail. */
+    val progressMarkerWidth: Dp = 4.dp
+
+    /** Length of the position marker on a progress rail. */
+    val progressMarkerLength: Dp = 32.dp
+}

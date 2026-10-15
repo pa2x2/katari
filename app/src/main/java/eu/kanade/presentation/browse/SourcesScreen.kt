@@ -1,22 +1,12 @@
 package eu.kanade.presentation.browse
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LocalTextStyle
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
 import eu.kanade.domain.source.interactor.SourceListListing
 import eu.kanade.domain.source.interactor.SourceListState
 import eu.kanade.presentation.browse.components.BaseSourceItem
@@ -26,17 +16,21 @@ import eu.kanade.tachiyomi.util.system.LocaleHelper
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Keep
 import mihon.icons.materialsymbols.roundedfilled.Keep
+import mihon.presentation.kit.button.Button
+import mihon.presentation.kit.button.ButtonStyle
+import mihon.presentation.kit.button.IconButton
+import mihon.presentation.kit.dialog.Dialog
+import mihon.presentation.kit.feedback.EmptyScreen
+import mihon.presentation.kit.feedback.LoadingScreen
+import mihon.presentation.kit.list.SectionHeader
+import mihon.presentation.kit.list.SettingsRow
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.domain.source.model.Pin
 import tachiyomi.domain.source.model.Source
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.ScrollbarLazyColumn
-import tachiyomi.presentation.core.components.material.SECONDARY_ALPHA
-import tachiyomi.presentation.core.components.material.padding
-import tachiyomi.presentation.core.components.material.topSmallPaddingValues
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.screens.EmptyScreen
-import tachiyomi.presentation.core.screens.LoadingScreen
-import tachiyomi.presentation.core.theme.header
 import tachiyomi.presentation.core.util.plus
 import tachiyomi.source.local.isLocal
 
@@ -62,7 +56,7 @@ fun SourcesScreen(
         )
         else -> {
             ScrollbarLazyColumn(
-                contentPadding = contentPadding + topSmallPaddingValues,
+                contentPadding = contentPadding + PaddingValues(top = KatariTheme.spacing.s),
             ) {
                 if (contentTypeFilter.isActive) {
                     item(key = "source-content-type-filter-summary") {
@@ -113,11 +107,9 @@ private fun SourceHeader(
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
-    Text(
+    SectionHeader(
         text = LocaleHelper.getSourceDisplayName(language, context),
-        modifier = modifier
-            .padding(horizontal = MaterialTheme.padding.medium, vertical = MaterialTheme.padding.small),
-        style = MaterialTheme.typography.header,
+        modifier = modifier,
     )
 }
 
@@ -141,14 +133,11 @@ private fun SourceItem(
         onLongClickItem = { onLongClickItem(source) },
         action = {
             if (itemClicksEnabled && source.catalogue?.supportsLatest == true) {
-                TextButton(onClick = { onClickItem(source, SourceListListing.Latest) }) {
-                    Text(
-                        text = stringResource(MR.strings.latest),
-                        style = LocalTextStyle.current.copy(
-                            color = MaterialTheme.colorScheme.primary,
-                        ),
-                    )
-                }
+                Button(
+                    label = stringResource(MR.strings.latest),
+                    onClick = { onClickItem(source, SourceListListing.Latest) },
+                    style = ButtonStyle.Text,
+                )
             }
             SourcePinButton(
                 isPinned = Pin.Pinned in source.pin,
@@ -163,22 +152,13 @@ private fun SourcePinButton(
     isPinned: Boolean,
     onClick: () -> Unit,
 ) {
-    val icon = if (isPinned) MaterialSymbols.RoundedFilled.Keep else MaterialSymbols.Rounded.Keep
-    val tint = if (isPinned) {
-        MaterialTheme.colorScheme.primary
-    } else {
-        MaterialTheme.colorScheme.onBackground.copy(
-            alpha = SECONDARY_ALPHA,
-        )
-    }
     val description = if (isPinned) MR.strings.action_unpin else MR.strings.action_pin
-    IconButton(onClick = onClick) {
-        Icon(
-            imageVector = icon,
-            tint = tint,
-            contentDescription = stringResource(description),
-        )
-    }
+    IconButton(
+        icon = if (isPinned) MaterialSymbols.RoundedFilled.Keep else MaterialSymbols.Rounded.Keep,
+        contentDescription = stringResource(description),
+        onClick = onClick,
+        tone = if (isPinned) ContentTone.Primary else ContentTone.Secondary,
+    )
 }
 
 @Composable
@@ -188,34 +168,19 @@ fun SourceOptionsDialog(
     onClickDisable: () -> Unit,
     onDismiss: () -> Unit,
 ) {
-    AlertDialog(
-        title = {
-            Text(text = source.visualName)
-        },
-        text = {
-            Column {
-                val textId = if (Pin.Pinned in source.pin) MR.strings.action_unpin else MR.strings.action_pin
-                Text(
-                    text = stringResource(textId),
-                    modifier = Modifier
-                        .clickable(onClick = onClickPin)
-                        .fillMaxWidth()
-                        .padding(vertical = 16.dp),
-                )
-                if (!source.isLocal()) {
-                    Text(
-                        text = stringResource(MR.strings.action_disable),
-                        modifier = Modifier
-                            .clickable(onClick = onClickDisable)
-                            .fillMaxWidth()
-                            .padding(vertical = 16.dp),
-                    )
-                }
-            }
-        },
+    Dialog(
         onDismissRequest = onDismiss,
-        confirmButton = {},
-    )
+        title = source.visualName,
+        confirm = null,
+    ) {
+        Column {
+            val textId = if (Pin.Pinned in source.pin) MR.strings.action_unpin else MR.strings.action_pin
+            SettingsRow(title = stringResource(textId), onClick = onClickPin)
+            if (!source.isLocal()) {
+                SettingsRow(title = stringResource(MR.strings.action_disable), onClick = onClickDisable)
+            }
+        }
+    }
 }
 
 sealed interface SourceUiModel {

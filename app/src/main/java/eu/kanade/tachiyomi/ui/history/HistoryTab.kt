@@ -3,7 +3,6 @@ package eu.kanade.tachiyomi.ui.history
 import androidx.compose.animation.graphics.res.animatedVectorResource
 import androidx.compose.animation.graphics.res.rememberAnimatedVectorPainter
 import androidx.compose.animation.graphics.vector.AnimatedImageVector
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -36,6 +35,7 @@ import kotlinx.coroutines.launch
 import mihon.entry.interactions.navigation.EntryContinueFeature
 import mihon.entry.interactions.navigation.EntryContinueResult
 import mihon.feature.migration.dialog.MigrateEntryDialog
+import mihon.presentation.kit.feedback.SnackbarHostState
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource

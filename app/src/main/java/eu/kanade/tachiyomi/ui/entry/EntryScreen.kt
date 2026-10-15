@@ -39,9 +39,9 @@ import eu.kanade.presentation.entry.components.EditDisplayNameDialog
 import eu.kanade.presentation.entry.components.EntryCoverDialog
 import eu.kanade.presentation.entry.components.EntryDownloadSettingsDialog
 import eu.kanade.presentation.entry.components.ManageMergeDialog
-import eu.kanade.presentation.entry.components.PreviewSizeUi
 import eu.kanade.presentation.entry.components.ScanlatorFilterDialog
 import eu.kanade.presentation.entry.components.SetIntervalDialog
+import eu.kanade.presentation.entry.components.preview.PreviewSizeUi
 import eu.kanade.presentation.entry.translation.EntryChapterTranslationUi
 import eu.kanade.presentation.entry.translation.EntryTranslateSetupSheet
 import eu.kanade.presentation.entry.translation.TranslatableChapter
@@ -91,13 +91,13 @@ import mihon.entry.interactions.state.EntryBookmarkFeature
 import mihon.entry.interactions.state.EntryConsumptionFeature
 import mihon.feature.migration.config.MigrationConfigScreen
 import mihon.feature.migration.dialog.MigrateEntryDialog
+import mihon.presentation.kit.feedback.LoadingScreen
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.screens.LoadingScreen
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.time.LocalDate

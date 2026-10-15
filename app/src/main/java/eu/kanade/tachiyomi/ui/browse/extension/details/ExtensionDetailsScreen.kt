@@ -10,9 +10,9 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.browse.ExtensionDetailsScreen
 import eu.kanade.presentation.util.Screen
+import mihon.presentation.kit.feedback.EmptyScreen
+import mihon.presentation.kit.feedback.LoadingScreen
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.screens.EmptyScreen
-import tachiyomi.presentation.core.screens.LoadingScreen
 
 data class ExtensionDetailsScreen(
     private val pkgName: String,

@@ -5,18 +5,19 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import eu.kanade.tachiyomi.source.entry.EntryFilter
 import eu.kanade.tachiyomi.source.entry.filter.validationIssues
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.activeCount
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.change.FilterChanges
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.control.FilterOptionChip
-import eu.kanade.tachiyomi.ui.browse.source.browse.filter.control.FilterSheetInsets
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.validation.displayMessage
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.feedback.NoResults
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -46,27 +47,28 @@ internal fun GroupFilterBody(
     val focusedChild = focus?.firstOrNull()?.let { children.getOrNull(it) }
     Column {
         if (visible.isEmpty()) {
-            Text(
-                stringResource(
+            NoResults(
+                message = stringResource(
                     if (state.query.isNotBlank()) MR.strings.no_results_found else MR.strings.browse_filter_no_selected,
                 ),
-                modifier = Modifier.padding(FilterSheetInsets.Horizontal),
             )
         } else if (children.all { it.isOptionToggle() }) {
             FlowRow(
                 Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = FilterSheetInsets.Horizontal),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    .padding(horizontal = KatariTheme.spacing.rowInset),
+                horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
             ) {
                 visible.forEach { FilterOptionChip(it, onUpdate) }
             }
             if (children.any { it is EntryFilter.TriState }) {
                 Text(
-                    stringResource(MR.strings.filter_tristate_chip_hint),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(horizontal = FilterSheetInsets.Horizontal, vertical = 4.dp),
+                    text = stringResource(MR.strings.filter_tristate_chip_hint),
+                    modifier = Modifier.padding(
+                        horizontal = KatariTheme.spacing.rowInset,
+                        vertical = KatariTheme.spacing.xs,
+                    ),
+                    role = TextRole.Supporting,
                 )
             }
         } else {
@@ -76,10 +78,13 @@ internal fun GroupFilterBody(
         val childIssues = children.flatMapTo(HashSet()) { it.validationIssues() }
         filter.validationIssues().filterNot { it in childIssues }.forEach {
             Text(
-                it.displayMessage(),
-                color = MaterialTheme.colorScheme.error,
-                style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.padding(horizontal = FilterSheetInsets.Horizontal, vertical = 4.dp),
+                text = it.displayMessage(),
+                modifier = Modifier.padding(
+                    horizontal = KatariTheme.spacing.rowInset,
+                    vertical = KatariTheme.spacing.xs,
+                ),
+                role = TextRole.Supporting,
+                tone = ContentTone.Error,
             )
         }
     }

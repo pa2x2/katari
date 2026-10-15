@@ -1,20 +1,16 @@
 package eu.kanade.presentation.library.update.report.components
 
 import androidx.compose.foundation.layout.Box
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import dev.icerock.moko.resources.StringResource
-import eu.kanade.presentation.components.DropdownMenu
 import eu.kanade.presentation.library.update.sourcePauseEndText
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.Check
+import mihon.presentation.kit.chip.FilterChip
+import mihon.presentation.kit.menu.DropdownMenu
+import mihon.presentation.kit.menu.DropdownMenuItem
 import tachiyomi.domain.library.update.model.SourceUpdatePause
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -40,30 +36,21 @@ internal fun SourcePauseChip(
     val until = pause?.until
     Box {
         FilterChip(
-            selected = pause != null,
-            onClick = { if (pause != null) onResume() else menuOpen = true },
-            label = {
-                Text(
-                    when {
-                        pause == null -> stringResource(MR.strings.library_update_report_pause_source)
-                        until == null -> stringResource(MR.strings.library_update_source_paused)
-                        else -> stringResource(
-                            MR.strings.library_update_source_paused_until_short,
-                            sourcePauseEndText(until),
-                        )
-                    },
+            label = when {
+                pause == null -> stringResource(MR.strings.library_update_report_pause_source)
+                until == null -> stringResource(MR.strings.library_update_source_paused)
+                else -> stringResource(
+                    MR.strings.library_update_source_paused_until_short,
+                    sourcePauseEndText(until),
                 )
             },
-            leadingIcon = if (pause != null) {
-                { Icon(imageVector = MaterialSymbols.Rounded.Check, contentDescription = null) }
-            } else {
-                null
-            },
+            selected = pause != null,
+            onClick = { if (pause != null) onResume() else menuOpen = true },
         )
         DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
             PausePreset.entries.forEach { preset ->
                 DropdownMenuItem(
-                    text = { Text(stringResource(preset.labelRes)) },
+                    label = stringResource(preset.labelRes),
                     onClick = {
                         menuOpen = false
                         onPause(preset.length?.let { Clock.System.now().plus(it).toEpochMilliseconds() })
@@ -71,7 +58,7 @@ internal fun SourcePauseChip(
                 )
             }
             DropdownMenuItem(
-                text = { Text(stringResource(MR.strings.library_update_pause_pick)) },
+                label = stringResource(MR.strings.library_update_pause_pick),
                 onClick = {
                     menuOpen = false
                     pickingEnd = true

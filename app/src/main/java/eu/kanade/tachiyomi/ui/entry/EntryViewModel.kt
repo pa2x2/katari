@@ -1,9 +1,6 @@
 package eu.kanade.tachiyomi.ui.entry
 
 import android.content.Context
-import androidx.compose.material3.SnackbarDuration
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.ui.util.fastAny
@@ -134,6 +131,9 @@ import mihon.entry.interactions.tracking.EntryTrackingProgressSynchronizationRes
 import mihon.entry.interactions.tracking.EntryTrackingRefreshResult
 import mihon.entry.interactions.tracking.EntryTrackingSession
 import mihon.feature.library.search.librarySearchQuery
+import mihon.presentation.kit.feedback.SnackbarDuration
+import mihon.presentation.kit.feedback.SnackbarHostState
+import mihon.presentation.kit.feedback.SnackbarResult
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.preference.CheckboxState
 import tachiyomi.core.common.preference.TriState

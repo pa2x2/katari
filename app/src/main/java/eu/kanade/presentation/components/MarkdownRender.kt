@@ -5,21 +5,14 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.InlineTextContent
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.FirstBaseline
 import androidx.compose.ui.text.Placeholder
 import androidx.compose.ui.text.PlaceholderVerticalAlign
-import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLinkStyles
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.mikepenz.markdown.coil3.Coil3ImageTransformerImpl
@@ -48,6 +41,12 @@ import com.mikepenz.markdown.model.markdownAnnotator
 import com.mikepenz.markdown.model.rememberMarkdownState
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Image
+import mihon.presentation.kit.content.Icon
+import mihon.presentation.kit.content.MarkdownStyle
+import mihon.presentation.kit.content.markdownStyle
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariSpacing
+import mihon.presentation.kit.theme.KatariTheme
 import org.intellij.markdown.MarkdownTokenTypes.Companion.HTML_TAG
 import org.intellij.markdown.flavours.MarkdownFlavourDescriptor
 import org.intellij.markdown.flavours.commonmark.CommonMarkFlavourDescriptor
@@ -66,7 +65,6 @@ import org.intellij.markdown.parser.markerblocks.providers.CodeFenceProvider
 import org.intellij.markdown.parser.markerblocks.providers.HorizontalRuleProvider
 import org.intellij.markdown.parser.markerblocks.providers.ListMarkerProvider
 import org.intellij.markdown.parser.markerblocks.providers.SetextHeaderProvider
-import tachiyomi.presentation.core.components.material.padding
 
 const val MARKDOWN_INLINE_IMAGE_TAG = "MARKDOWN_INLINE_IMAGE"
 
@@ -80,8 +78,11 @@ fun MarkdownRender(
     listBlockSpacing: Dp = 0.dp,
     listItemSpacing: Dp = 0.dp,
     listSectionSpacing: Dp = 0.dp,
+    /** Renders body text in the secondary content colour, for text that supports a screen, such as a description. */
+    secondary: Boolean = false,
 ) {
     val normalizedContent = remember(content) { normalizeMarkdownLineEndings(content) }
+    val style = markdownStyle(secondary)
     val padding = remember(listBlockSpacing, listItemSpacing) {
         getMarkdownPadding(listBlockSpacing, listItemSpacing)
     }
@@ -94,76 +95,64 @@ fun MarkdownRender(
             immediate = false,
         ),
         annotator = annotator,
-        colors = getMarkdownColors(),
-        typography = getMarkdownTypography(),
+        colors = getMarkdownColors(style),
+        typography = getMarkdownTypography(style),
         padding = padding,
         components = components,
         imageTransformer = remember(loadImages) {
             if (loadImages) Coil3ImageTransformerImpl else NoOpImageTransformerImpl()
         },
-        inlineContent = getMarkdownInlineContent(),
+        inlineContent = getMarkdownInlineContent(style),
         modifier = modifier,
     )
 }
 
-@Composable
-@ReadOnlyComposable
-private fun getMarkdownColors(): MarkdownColors {
-    val codeBackground = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
+private fun getMarkdownColors(style: MarkdownStyle): MarkdownColors {
     return DefaultMarkdownColors(
-        text = MaterialTheme.colorScheme.onSurface,
-        codeBackground = codeBackground,
-        inlineCodeBackground = codeBackground,
-        dividerColor = MaterialTheme.colorScheme.outlineVariant,
-        tableBackground = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
+        text = style.textColor,
+        codeBackground = style.codeBackground,
+        inlineCodeBackground = style.codeBackground,
+        dividerColor = style.dividerColor,
+        tableBackground = style.tableBackground,
     )
 }
 
-@Composable
-@ReadOnlyComposable
-fun getMarkdownLinkStyle() = MaterialTheme.typography.bodyMedium.copy(
-    color = MaterialTheme.colorScheme.primary,
-    fontWeight = FontWeight.Bold,
-)
-
-@Composable
-@ReadOnlyComposable
-private fun getMarkdownTypography(): MarkdownTypography {
-    val link = getMarkdownLinkStyle()
+private fun getMarkdownTypography(style: MarkdownStyle): MarkdownTypography {
+    val (h1, h2, h3, h4, h5) = style.headings
     return DefaultMarkdownTypography(
-        h1 = MaterialTheme.typography.headlineMedium,
-        h2 = MaterialTheme.typography.headlineSmall,
-        h3 = MaterialTheme.typography.titleLarge,
-        h4 = MaterialTheme.typography.titleMedium,
-        h5 = MaterialTheme.typography.titleSmall,
-        h6 = MaterialTheme.typography.bodyLarge,
-        text = MaterialTheme.typography.bodyMedium,
-        code = MaterialTheme.typography.bodyMedium.copy(fontFamily = FontFamily.Monospace),
-        inlineCode = MaterialTheme.typography.bodyMedium.copy(fontFamily = FontFamily.Monospace),
-        quote = MaterialTheme.typography.bodyMedium.plus(SpanStyle(fontStyle = FontStyle.Italic)),
-        paragraph = MaterialTheme.typography.bodyMedium,
-        ordered = MaterialTheme.typography.bodyMedium,
-        bullet = MaterialTheme.typography.bodyMedium,
-        list = MaterialTheme.typography.bodyMedium,
-        textLink = TextLinkStyles(style = link.toSpanStyle()),
-        table = MaterialTheme.typography.bodyMedium,
+        h1 = h1,
+        h2 = h2,
+        h3 = h3,
+        h4 = h4,
+        h5 = h5,
+        h6 = style.headings[5],
+        text = style.body,
+        code = style.code,
+        inlineCode = style.code,
+        quote = style.quote,
+        paragraph = style.body,
+        ordered = style.body,
+        bullet = style.body,
+        list = style.body,
+        textLink = TextLinkStyles(style = style.link),
+        table = style.body,
     )
 }
 
 private fun getMarkdownPadding(listBlockSpacing: Dp, listItemSpacing: Dp) = object : MarkdownPadding {
-    override val block: Dp = 2.dp
-    override val blockQuote: PaddingValues = PaddingValues(horizontal = 16.dp, vertical = 0.dp)
+    override val block: Dp = KatariSpacing.xxs
+    override val blockQuote: PaddingValues = PaddingValues(horizontal = KatariSpacing.l)
     override val blockQuoteBar: PaddingValues.Absolute = PaddingValues.Absolute(
-        left = 4.dp,
-        top = 2.dp,
-        right = 4.dp,
-        bottom = 2.dp,
+        left = KatariSpacing.xs,
+        top = KatariSpacing.xxs,
+        right = KatariSpacing.xs,
+        bottom = KatariSpacing.xxs,
     )
-    override val blockQuoteText: PaddingValues = PaddingValues(vertical = 4.dp)
-    override val codeBlock: PaddingValues = PaddingValues(8.dp)
+    override val blockQuoteText: PaddingValues = PaddingValues(vertical = KatariSpacing.xs)
+    override val codeBlock: PaddingValues = PaddingValues(KatariSpacing.s)
     override val alert: MarkdownAlertPadding = markdownAlertPadding()
     override val list: Dp = listBlockSpacing
-    override val listIndent: Dp = 8.dp
+    override val listIndent: Dp = KatariSpacing.s
     override val listItemBottom: Dp = listItemSpacing
     override val listItemTop: Dp = 0.dp
 }
@@ -176,14 +165,14 @@ private fun getMarkdownComponents(listSectionSpacing: Dp) = markdownComponents(
     horizontalRule = {
         MarkdownDivider(
             modifier = Modifier
-                .padding(vertical = MaterialTheme.padding.extraSmall)
+                .padding(vertical = KatariTheme.spacing.xs)
                 .fillMaxWidth(),
         )
     },
     orderedList = { ol ->
         Column(
             modifier = Modifier.padding(
-                start = MaterialTheme.padding.small,
+                start = KatariTheme.spacing.s,
                 bottom = listSectionSpacing,
             ),
         ) {
@@ -205,7 +194,7 @@ private fun getMarkdownComponents(listSectionSpacing: Dp) = markdownComponents(
         ) {
             Column(
                 modifier = Modifier.padding(
-                    start = MaterialTheme.padding.small,
+                    start = KatariTheme.spacing.s,
                     bottom = listSectionSpacing,
                 ),
             ) {
@@ -255,21 +244,19 @@ private fun getMarkdownComponents(listSectionSpacing: Dp) = markdownComponents(
     },
 )
 
-@Composable
-@ReadOnlyComposable
-private fun getMarkdownInlineContent() = DefaultMarkdownInlineContent(
+private fun getMarkdownInlineContent(style: MarkdownStyle) = DefaultMarkdownInlineContent(
     inlineContent = mapOf(
         MARKDOWN_INLINE_IMAGE_TAG to InlineTextContent(
             placeholder = Placeholder(
-                width = MaterialTheme.typography.bodyMedium.fontSize * 1.25,
-                height = MaterialTheme.typography.bodyMedium.fontSize * 1.25,
+                width = style.inlineImageSize,
+                height = style.inlineImageSize,
                 placeholderVerticalAlign = PlaceholderVerticalAlign.TextCenter,
             ),
             children = {
                 Icon(
                     imageVector = MaterialSymbols.Rounded.Image,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
+                    tone = ContentTone.Primary,
                 )
             },
         ),

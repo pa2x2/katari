@@ -7,8 +7,6 @@ import androidx.compose.ui.text.LinkInteractionListener
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLinkStyles
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.text.intl.LocaleList
 import androidx.compose.ui.text.style.BaselineShift
@@ -18,6 +16,7 @@ import mihon.book.api.document.BookDocumentInlineStyle
 import mihon.book.api.document.BookDocumentInlineStyleRange
 import mihon.book.api.document.BookDocumentLink
 import mihon.book.api.document.BookDocumentLinkTarget
+import mihon.presentation.kit.content.documentSpanStyle
 
 internal fun BookDocumentTextPresentation.toSelectableAnnotatedString(
     fonts: Map<String, FontFamily>,
@@ -44,7 +43,7 @@ internal fun BookDocumentTextPresentation.toSelectableAnnotatedString(
             LinkAnnotation.Clickable(
                 tag = "book-document-link-$index",
                 styles = TextLinkStyles(
-                    style = SpanStyle(color = linkColor, textDecoration = TextDecoration.Underline),
+                    style = documentSpanStyle(color = linkColor, textDecoration = TextDecoration.Underline),
                 ),
                 linkInteractionListener = LinkInteractionListener { onLinkClick(link.target) },
             ),
@@ -63,10 +62,10 @@ private fun BookDocumentInlineStyle.toComposeSpanStyle(
         if (strikethrough) add(TextDecoration.LineThrough)
     }
     val scale = fontSizeScale ?: if (small) SMALL_TEXT_SCALE else 1f
-    return SpanStyle(
+    return documentSpanStyle(
         fontSize = (baseFontSize * scale).sp,
-        fontWeight = if (bold) FontWeight.Bold else null,
-        fontStyle = if (italic) FontStyle.Italic else null,
+        bold = bold,
+        italic = italic,
         fontFamily = fontFamily.toComposeFontFamily(fonts).takeUnless { it == FontFamily.Default }
             ?: if (code) FontFamily.Monospace else null,
         textDecoration = decorations.takeIf(List<TextDecoration>::isNotEmpty)

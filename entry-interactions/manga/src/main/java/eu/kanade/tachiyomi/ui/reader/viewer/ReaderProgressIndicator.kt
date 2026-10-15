@@ -15,7 +15,7 @@ import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.core.view.isVisible
 import com.google.android.material.progressindicator.CircularProgressIndicator
 import mihon.entry.interactions.runtime.EntryInteractionTheme
-import tachiyomi.presentation.core.components.CombinedCircularProgressIndicator
+import mihon.presentation.kit.progress.CombinedCircularProgressIndicator
 
 /**
  * A wrapper for [CircularProgressIndicator] that always rotates.

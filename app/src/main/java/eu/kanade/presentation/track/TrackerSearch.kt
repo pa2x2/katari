@@ -6,39 +6,19 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.paddingFromBaseline
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.clearText
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -47,11 +27,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.Clipboard
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
@@ -59,33 +36,40 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.platform.toClipEntry
 import androidx.compose.ui.text.capitalize
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.toLowerCase
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewParameter
-import androidx.compose.ui.unit.dp
-import eu.kanade.presentation.components.DropdownMenu
 import eu.kanade.presentation.entry.components.EntryCover
-import eu.kanade.presentation.theme.TachiyomiPreviewTheme
 import eu.kanade.tachiyomi.util.system.openInBrowser
 import kotlinx.coroutines.launch
 import mihon.entry.interactions.tracking.EntryTrackingSearchCandidate
 import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.automirroredrounded.ArrowBack
 import mihon.icons.materialsymbols.rounded.Close
-import mihon.icons.materialsymbols.roundedfilled.CheckCircle
 import mihon.icons.materialsymbols.roundedfilled.VisibilityOff
+import mihon.presentation.kit.button.Button
+import mihon.presentation.kit.button.IconButton
+import mihon.presentation.kit.button.IconButtonStyle
+import mihon.presentation.kit.content.EntryMetrics
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.feedback.EmptyScreen
+import mihon.presentation.kit.feedback.LoadingScreen
+import mihon.presentation.kit.field.PlainTextField
+import mihon.presentation.kit.menu.DropdownMenu
+import mihon.presentation.kit.menu.DropdownMenuItem
+import mihon.presentation.kit.navigation.AppBar
+import mihon.presentation.kit.navigation.Scaffold
+import mihon.presentation.kit.surface.HorizontalDivider
+import mihon.presentation.kit.surface.SelectableCard
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariPreviewTheme
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.ScrollbarLazyColumn
-import tachiyomi.presentation.core.components.material.Scaffold
-import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.screens.EmptyScreen
-import tachiyomi.presentation.core.screens.LoadingScreen
 import tachiyomi.presentation.core.util.plus
 import tachiyomi.presentation.core.util.runOnEnterKeyPressed
-import tachiyomi.presentation.core.util.secondaryItemAlpha
 
 @Composable
 fun TrackerSearch(
@@ -108,55 +92,30 @@ fun TrackerSearch(
     Scaffold(
         topBar = {
             Column {
-                TopAppBar(
-                    navigationIcon = {
-                        IconButton(onClick = onDismissRequest) {
-                            Icon(
-                                imageVector = MaterialSymbols.AutoMirroredRounded.ArrowBack,
-                                contentDescription = stringResource(MR.strings.action_close),
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
-                    },
-                    title = {
-                        BasicTextField(
+                AppBar(
+                    titleContent = {
+                        PlainTextField(
                             state = state,
+                            placeholder = stringResource(MR.strings.action_search_hint),
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .focusRequester(focusRequester)
                                 .runOnEnterKeyPressed(action = dispatchQueryAndClearFocus),
-                            textStyle = MaterialTheme.typography.bodyLarge
-                                .copy(color = MaterialTheme.colorScheme.onSurface),
-                            lineLimits = TextFieldLineLimits.SingleLine,
-                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                            onKeyboardAction = { dispatchQueryAndClearFocus() },
-                            cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
-                            decorator = {
-                                if (state.text.isEmpty()) {
-                                    Text(
-                                        text = stringResource(MR.strings.action_search_hint),
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        style = MaterialTheme.typography.bodyLarge,
-                                    )
-                                }
-                                it()
-                            },
+                            onSearch = dispatchQueryAndClearFocus,
                         )
                     },
+                    navigateUp = onDismissRequest,
                     actions = {
                         if (state.text.isNotEmpty()) {
                             IconButton(
+                                icon = MaterialSymbols.Rounded.Close,
+                                contentDescription = stringResource(MR.strings.action_reset),
                                 onClick = {
                                     state.clearText()
                                     focusRequester.requestFocus()
                                 },
-                            ) {
-                                Icon(
-                                    imageVector = MaterialSymbols.Rounded.Close,
-                                    contentDescription = stringResource(MR.strings.action_reset),
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                            }
+                                tone = ContentTone.Secondary,
+                            )
                         }
                     },
                 )
@@ -171,28 +130,24 @@ fun TrackerSearch(
             ) {
                 Row(
                     modifier = Modifier
-                        .padding(MaterialTheme.padding.small)
+                        .padding(KatariTheme.spacing.s)
                         .windowInsetsPadding(WindowInsets.navigationBars)
                         .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
+                    horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Button(
+                        label = stringResource(MR.strings.action_track),
                         onClick = { onConfirmSelection(false) },
                         modifier = Modifier.weight(1f),
-                        elevation = ButtonDefaults.elevatedButtonElevation(),
-                    ) {
-                        Text(text = stringResource(MR.strings.action_track))
-                    }
+                    )
                     if (supportsPrivateTracking) {
-                        Button(
+                        IconButton(
+                            icon = MaterialSymbols.RoundedFilled.VisibilityOff,
+                            contentDescription = stringResource(MR.strings.action_toggle_private_on),
                             onClick = { onConfirmSelection(true) },
-                            elevation = ButtonDefaults.elevatedButtonElevation(),
-                        ) {
-                            Icon(
-                                imageVector = MaterialSymbols.RoundedFilled.VisibilityOff,
-                                contentDescription = stringResource(MR.strings.action_toggle_private_on),
-                            )
-                        }
+                            style = IconButtonStyle.Filled,
+                        )
                     }
                 }
             }
@@ -210,8 +165,8 @@ fun TrackerSearch(
                     )
                 } else {
                     ScrollbarLazyColumn(
-                        contentPadding = innerPadding + PaddingValues(vertical = 12.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                        contentPadding = innerPadding + PaddingValues(vertical = KatariTheme.spacing.m),
+                        verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.m),
                     ) {
                         items(
                             items = availableTracks,
@@ -249,118 +204,89 @@ private fun SearchResultItem(
     val type = trackSearch.publishingType.toLowerCase(locale).capitalize(locale)
     val status = trackSearch.publishingStatus.toLowerCase(locale).capitalize(locale)
     val description = trackSearch.summary.trim()
-    val shape = RoundedCornerShape(16.dp)
-    val borderColor = if (selected) MaterialTheme.colorScheme.outline else Color.Transparent
     var dropDownMenuExpanded by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 12.dp)
-            .clip(shape)
-            .background(MaterialTheme.colorScheme.surface)
-            .border(
-                width = 2.dp,
-                color = borderColor,
-                shape = shape,
-            )
-            .combinedClickable(
-                onLongClick = { dropDownMenuExpanded = true },
-                onClick = {
-                    focusManager.clearFocus()
-                    onClick()
-                },
-            )
-            .padding(12.dp),
+    SelectableCard(
+        selected = selected,
+        onClick = {
+            focusManager.clearFocus()
+            onClick()
+        },
+        modifier = Modifier.padding(horizontal = KatariTheme.spacing.contentInset),
+        onLongClick = { dropDownMenuExpanded = true },
     ) {
-        if (selected) {
-            Icon(
-                imageVector = MaterialSymbols.RoundedFilled.CheckCircle,
-                contentDescription = null,
-                modifier = Modifier.align(Alignment.TopEnd),
-                tint = MaterialTheme.colorScheme.primary,
+        Row(horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.m)) {
+            EntryCover.Book(
+                data = trackSearch.coverUrl,
+                modifier = Modifier.height(EntryMetrics.trackerResultCoverHeight),
             )
-        }
-        Column {
-            Row {
-                EntryCover.Book(
-                    data = trackSearch.coverUrl,
-                    modifier = Modifier.height(96.dp),
+            Column {
+                Text(
+                    text = trackSearch.title,
+                    role = TextRole.SectionTitle,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
                 )
-                Spacer(modifier = Modifier.width(12.dp))
-                Column {
+                SearchResultItemDropDownMenu(
+                    expanded = dropDownMenuExpanded,
+                    onCollapseMenu = { dropDownMenuExpanded = false },
+                    onCopyName = {
+                        scope.launch {
+                            val clipEntry = ClipData.newPlainText(
+                                trackSearch.title,
+                                trackSearch.title,
+                            ).toClipEntry()
+                            clipboard.setClipEntry(clipEntry)
+                        }
+                    },
+                    onOpenInBrowser = {
+                        val url = trackSearch.remoteUrl
+                        if (url.isNotBlank()) {
+                            context.openInBrowser(url)
+                        }
+                    },
+                )
+                if (trackSearch.authors.isNotEmpty() || trackSearch.artists.isNotEmpty()) {
                     Text(
-                        text = trackSearch.title,
-                        modifier = Modifier.padding(end = 28.dp),
-                        maxLines = 2,
+                        text = (trackSearch.authors + trackSearch.artists).distinct().joinToString(),
+                        role = TextRole.Supporting,
+                        maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
-                        style = MaterialTheme.typography.titleMedium,
                     )
-                    SearchResultItemDropDownMenu(
-                        expanded = dropDownMenuExpanded,
-                        onCollapseMenu = { dropDownMenuExpanded = false },
-                        onCopyName = {
-                            scope.launch {
-                                val clipEntry = ClipData.newPlainText(
-                                    trackSearch.title,
-                                    trackSearch.title,
-                                ).toClipEntry()
-                                clipboard.setClipEntry(clipEntry)
-                            }
-                        },
-                        onOpenInBrowser = {
-                            val url = trackSearch.remoteUrl
-                            if (url.isNotBlank()) {
-                                context.openInBrowser(url)
-                            }
-                        },
+                }
+                if (type.isNotBlank()) {
+                    SearchResultItemDetails(
+                        title = stringResource(MR.strings.track_type),
+                        text = type,
                     )
-                    if (trackSearch.authors.isNotEmpty() || trackSearch.artists.isNotEmpty()) {
-                        Text(
-                            text = (trackSearch.authors + trackSearch.artists).distinct().joinToString(),
-                            modifier = Modifier.secondaryItemAlpha(),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            style = MaterialTheme.typography.bodySmall,
-                        )
-                    }
-                    if (type.isNotBlank()) {
-                        SearchResultItemDetails(
-                            title = stringResource(MR.strings.track_type),
-                            text = type,
-                        )
-                    }
-                    if (trackSearch.publicationStartDate.isNotBlank()) {
-                        SearchResultItemDetails(
-                            title = stringResource(MR.strings.label_started),
-                            text = trackSearch.publicationStartDate,
-                        )
-                    }
-                    if (status.isNotBlank()) {
-                        SearchResultItemDetails(
-                            title = stringResource(MR.strings.track_status),
-                            text = status,
-                        )
-                    }
-                    if (trackSearch.score != -1.0) {
-                        SearchResultItemDetails(
-                            title = stringResource(MR.strings.score),
-                            text = trackSearch.score.toString(),
-                        )
-                    }
+                }
+                if (trackSearch.publicationStartDate.isNotBlank()) {
+                    SearchResultItemDetails(
+                        title = stringResource(MR.strings.label_started),
+                        text = trackSearch.publicationStartDate,
+                    )
+                }
+                if (status.isNotBlank()) {
+                    SearchResultItemDetails(
+                        title = stringResource(MR.strings.track_status),
+                        text = status,
+                    )
+                }
+                if (trackSearch.score != -1.0) {
+                    SearchResultItemDetails(
+                        title = stringResource(MR.strings.score),
+                        text = trackSearch.score.toString(),
+                    )
                 }
             }
-            if (description.isNotBlank()) {
-                Text(
-                    text = description,
-                    modifier = Modifier
-                        .paddingFromBaseline(top = 24.dp)
-                        .secondaryItemAlpha(),
-                    maxLines = 4,
-                    overflow = TextOverflow.Ellipsis,
-                    style = MaterialTheme.typography.bodySmall,
-                )
-            }
+        }
+        if (description.isNotBlank()) {
+            Text(
+                text = description,
+                role = TextRole.Supporting,
+                maxLines = 4,
+                overflow = TextOverflow.Ellipsis,
+            )
         }
     }
 }
@@ -377,14 +303,14 @@ private fun SearchResultItemDropDownMenu(
         onDismissRequest = onCollapseMenu,
     ) {
         DropdownMenuItem(
-            text = { Text(stringResource(MR.strings.action_copy_to_clipboard)) },
+            label = stringResource(MR.strings.action_copy_to_clipboard),
             onClick = {
                 onCopyName()
                 onCollapseMenu()
             },
         )
         DropdownMenuItem(
-            text = { Text(stringResource(MR.strings.action_open_in_browser)) },
+            label = stringResource(MR.strings.action_open_in_browser),
             onClick = {
                 onOpenInBrowser()
             },
@@ -397,20 +323,19 @@ private fun SearchResultItemDetails(
     title: String,
     text: String,
 ) {
-    Row(horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.extraSmall)) {
+    Row(horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xs)) {
         Text(
             text = title,
+            role = TextRole.Label,
             maxLines = 1,
-            style = MaterialTheme.typography.titleSmall,
         )
         Text(
             text = text,
-            modifier = Modifier
-                .weight(1f)
-                .secondaryItemAlpha(),
+            modifier = Modifier.weight(1f),
+            role = TextRole.Body,
+            tone = ContentTone.Secondary,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            style = MaterialTheme.typography.bodyMedium,
         )
     }
 }
@@ -421,5 +346,5 @@ private fun TrackerSearchPreviews(
     @PreviewParameter(TrackerSearchPreviewProvider::class)
     content: @Composable () -> Unit,
 ) {
-    TachiyomiPreviewTheme { content() }
+    KatariPreviewTheme { content() }
 }

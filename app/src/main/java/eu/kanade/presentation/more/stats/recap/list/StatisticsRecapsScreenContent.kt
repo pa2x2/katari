@@ -1,14 +1,9 @@
 package eu.kanade.presentation.more.stats.recap.list
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Badge
-import androidx.compose.material3.Icon
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import eu.kanade.tachiyomi.ui.stats.recap.list.StatisticsRecapsViewModel
@@ -16,10 +11,13 @@ import eu.kanade.tachiyomi.ui.stats.recap.period.StatisticsRecapPeriod
 import eu.kanade.tachiyomi.ui.stats.recap.recapPeriodTitle
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.AutoStories
+import mihon.presentation.kit.content.Badge
+import mihon.presentation.kit.content.BadgeTone
+import mihon.presentation.kit.feedback.EmptyScreen
+import mihon.presentation.kit.list.SectionHeader
+import mihon.presentation.kit.list.SettingsRow
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.ListGroupHeader
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.screens.EmptyScreen
 
 @Composable
 fun StatisticsRecapsScreenContent(
@@ -33,7 +31,7 @@ fun StatisticsRecapsScreenContent(
     }
     LazyColumn(contentPadding = paddingValues) {
         if (state.years.isNotEmpty()) {
-            item(key = "years") { ListGroupHeader(stringResource(MR.strings.statistics_recaps_years)) }
+            item(key = "years") { SectionHeader(stringResource(MR.strings.statistics_recaps_years)) }
             items(state.years, key = { "year-${it.year}" }) { year ->
                 RecapRow(
                     title = recapPeriodTitle(year),
@@ -43,7 +41,7 @@ fun StatisticsRecapsScreenContent(
             }
         }
         if (state.months.isNotEmpty()) {
-            item(key = "months") { ListGroupHeader(stringResource(MR.strings.statistics_recaps_months)) }
+            item(key = "months") { SectionHeader(stringResource(MR.strings.statistics_recaps_months)) }
             items(state.months, key = { "month-${it.month}" }) { month ->
                 RecapRow(title = recapPeriodTitle(month), isNew = false, onClick = { onOpen(month) })
             }
@@ -53,15 +51,14 @@ fun StatisticsRecapsScreenContent(
 
 @Composable
 private fun RecapRow(title: String, isNew: Boolean, onClick: () -> Unit) {
-    ListItem(
-        leadingContent = { Icon(MaterialSymbols.Rounded.AutoStories, contentDescription = null) },
-        trailingContent = if (isNew) {
-            { Badge { Text(stringResource(MR.strings.statistics_recap_new)) } }
+    SettingsRow(
+        title = title,
+        icon = MaterialSymbols.Rounded.AutoStories,
+        trailing = if (isNew) {
+            { Badge(text = stringResource(MR.strings.statistics_recap_new), tone = BadgeTone.Primary) }
         } else {
             null
         },
-        modifier = Modifier.clickable(onClick = onClick),
-    ) {
-        Text(title)
-    }
+        onClick = onClick,
+    )
 }

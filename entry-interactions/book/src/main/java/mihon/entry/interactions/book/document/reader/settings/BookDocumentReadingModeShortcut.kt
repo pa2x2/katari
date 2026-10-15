@@ -1,7 +1,6 @@
 package mihon.entry.interactions.book.document.reader.settings
 
 import androidx.compose.foundation.layout.RowScope
-import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -14,10 +13,10 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import kotlinx.coroutines.launch
 import mihon.entry.interactions.reader.settings.BookDocumentReadingMode
+import mihon.entry.viewer.chrome.ui.ReaderChromeBottomBarAction
+import mihon.entry.viewer.chrome.ui.ReaderReadingModeDialog
 import mihon.entry.viewer.settings.ViewerSettingBinding
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.reader.ReaderChromeBottomBarAction
-import tachiyomi.presentation.core.components.reader.ReaderReadingModeDialog
 import tachiyomi.presentation.core.i18n.stringResource
 
 /** Chrome entry point for changing this book's mode or returning to the profile default. */
@@ -28,14 +27,11 @@ internal fun RowScope.BookDocumentReadingModeShortcut(binding: ViewerSettingBind
     val description = stringResource(mode.effectiveValue.stringRes)
     val scope = rememberCoroutineScope()
     ReaderChromeBottomBarAction(
+        icon = mode.effectiveValue.icon,
+        contentDescription = stringResource(MR.strings.viewer),
         onClick = { open = true },
         modifier = Modifier.semantics { stateDescription = description },
-    ) {
-        Icon(
-            imageVector = mode.effectiveValue.icon,
-            contentDescription = stringResource(MR.strings.viewer),
-        )
-    }
+    )
     if (open) {
         val useDefault: () -> Unit = {
             scope.launch {

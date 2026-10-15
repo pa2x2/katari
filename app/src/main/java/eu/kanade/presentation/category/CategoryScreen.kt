@@ -8,7 +8,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -16,17 +15,16 @@ import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Modifier
 import eu.kanade.presentation.category.components.CategoryFloatingActionButton
 import eu.kanade.presentation.category.components.CategoryListItem
-import eu.kanade.presentation.components.AppBar
 import eu.kanade.tachiyomi.ui.category.CategoryScreenState
+import mihon.presentation.kit.feedback.EmptyScreen
+import mihon.presentation.kit.navigation.AppBar
+import mihon.presentation.kit.navigation.Scaffold
+import mihon.presentation.kit.theme.KatariTheme
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
 import tachiyomi.domain.category.model.Category
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.material.Scaffold
-import tachiyomi.presentation.core.components.material.padding
-import tachiyomi.presentation.core.components.material.topSmallPaddingValues
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.screens.EmptyScreen
 import tachiyomi.presentation.core.util.plus
 
 @Composable
@@ -100,9 +98,12 @@ private fun CategoryContent(
         modifier = Modifier.fillMaxSize(),
         state = lazyListState,
         contentPadding = paddingValues +
-            topSmallPaddingValues +
-            PaddingValues(horizontal = MaterialTheme.padding.medium),
-        verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
+            PaddingValues(
+                start = KatariTheme.spacing.contentInset,
+                top = KatariTheme.spacing.s,
+                end = KatariTheme.spacing.contentInset,
+            ),
+        verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
     ) {
         items(
             items = categoriesState,

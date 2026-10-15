@@ -47,7 +47,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import tachiyomi.presentation.core.components.material.padding
+import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.presentation.core.util.clearFocusOnSoftKeyboardHide
 import tachiyomi.presentation.core.util.clickableNoIndication
 import tachiyomi.presentation.core.util.showSoftKeyboard
@@ -58,7 +58,7 @@ fun WheelNumberPicker(
     items: List<Number>,
     modifier: Modifier = Modifier,
     startIndex: Int = 0,
-    size: DpSize = DpSize(128.dp, 128.dp),
+    size: DpSize = WheelPickerDefaults.Size,
     onSelectionChanged: (index: Int) -> Unit = {},
     backgroundContent: (@Composable (size: DpSize) -> Unit)? = {
         WheelPickerDefaults.Background(size = it)
@@ -82,7 +82,7 @@ fun WheelTextPicker(
     items: List<String>,
     modifier: Modifier = Modifier,
     startIndex: Int = 0,
-    size: DpSize = DpSize(128.dp, 128.dp),
+    size: DpSize = WheelPickerDefaults.Size,
     onSelectionChanged: (index: Int) -> Unit = {},
     backgroundContent: (@Composable (size: DpSize) -> Unit)? = {
         WheelPickerDefaults.Background(size = it)
@@ -105,7 +105,7 @@ private fun <T> WheelPicker(
     items: List<T>,
     modifier: Modifier = Modifier,
     startIndex: Int = 0,
-    size: DpSize = DpSize(128.dp, 128.dp),
+    size: DpSize = WheelPickerDefaults.Size,
     onSelectionChanged: (index: Int) -> Unit = {},
     manualInputType: KeyboardType? = null,
     backgroundContent: (@Composable (size: DpSize) -> Unit)? = {
@@ -250,12 +250,15 @@ private fun calculateSnappedItemIndex(lazyListState: LazyListState): Int {
 }
 
 object WheelPickerDefaults {
+    /** Room a picker takes when its caller does not size it: three rows of a short value. */
+    val Size: DpSize = DpSize(128.dp, 128.dp)
+
     @Composable
     fun Background(size: DpSize) {
         androidx.compose.material3.Surface(
             modifier = Modifier
                 .size(size.width, size.height / ROW_COUNT),
-            shape = RoundedCornerShape(MaterialTheme.padding.medium),
+            shape = RoundedCornerShape(KatariTheme.spacing.l),
             color = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
             border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
             content = {},

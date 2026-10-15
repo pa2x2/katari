@@ -4,10 +4,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
@@ -15,21 +11,24 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Close
+import mihon.presentation.kit.button.IconButton
+import mihon.presentation.kit.field.TextField
+import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
-internal fun Modifier.filterField(): Modifier = fillMaxWidth()
-    .padding(horizontal = FilterSheetInsets.Horizontal, vertical = FilterSheetInsets.FieldVertical)
+/** Text fields line up with the sheet's rows. */
+private fun Modifier.filterField(): Modifier = fillMaxWidth()
+    .padding(horizontal = KatariTheme.spacing.rowInset, vertical = KatariTheme.spacing.s)
 
 /** A free-form text filter. */
 @Composable
 internal fun FilterTextField(label: String, value: String, isError: Boolean, onValueChange: (String) -> Unit) {
-    OutlinedTextField(
-        modifier = Modifier.filterField(),
-        label = { Text(text = label) },
+    TextField(
         value = value,
         onValueChange = onValueChange,
-        singleLine = true,
+        modifier = Modifier.filterField(),
+        label = label,
         isError = isError,
         trailingIcon = { FilterFieldClearButton(label, visible = value.isNotEmpty()) { onValueChange("") } },
         keyboardOptions = FilterFieldKeyboardOptions,
@@ -49,7 +48,9 @@ internal fun filterFieldKeyboardActions(): KeyboardActions {
 @Composable
 internal fun FilterFieldClearButton(label: String, visible: Boolean, onClear: () -> Unit) {
     if (!visible) return
-    IconButton(onClick = onClear) {
-        Icon(MaterialSymbols.Rounded.Close, contentDescription = stringResource(MR.strings.filter_clear_value, label))
-    }
+    IconButton(
+        icon = MaterialSymbols.Rounded.Close,
+        contentDescription = stringResource(MR.strings.filter_clear_value, label),
+        onClick = onClear,
+    )
 }

@@ -5,18 +5,17 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.presentation.more.stats.components.rememberStatisticsDurationFormatter
 import eu.kanade.tachiyomi.source.entry.EntryType
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.material.SECONDARY_ALPHA
-import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -41,8 +40,8 @@ fun EntryChapterHeader(
                 enabled = enabled,
                 onClick = onClick,
             )
-            .padding(horizontal = 16.dp, vertical = 4.dp),
-        verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.extraSmall),
+            .padding(horizontal = KatariTheme.spacing.contentInset, vertical = KatariTheme.spacing.xs),
+        verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xs),
     ) {
         Text(
             text = if (chapterCount == null) {
@@ -50,8 +49,7 @@ fun EntryChapterHeader(
             } else {
                 pluralStringResource(presentation.childCountPlural, count = chapterCount, chapterCount)
             },
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onBackground,
+            role = TextRole.SectionTitle,
         )
 
         if (unreadCount > 0 && catchUpMillis != null) {
@@ -65,8 +63,7 @@ fun EntryChapterHeader(
                 ),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                role = TextRole.Supporting,
             )
         }
 
@@ -84,7 +81,7 @@ private fun MissingChaptersWarning(count: Int, entryType: EntryType) {
         text = pluralStringResource(entryType.entryTypePresentation().missingChildCountPlural, count = count, count),
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
-        style = MaterialTheme.typography.bodySmall,
-        color = MaterialTheme.colorScheme.error.copy(alpha = SECONDARY_ALPHA),
+        role = TextRole.Supporting,
+        tone = ContentTone.Error,
     )
 }

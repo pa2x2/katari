@@ -1,9 +1,6 @@
 package eu.kanade.presentation.library.update
 
 import android.content.Context
-import androidx.compose.material3.SnackbarDuration
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -19,6 +16,9 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import mihon.feature.library.update.report.LibraryUpdateRunSummary
 import mihon.feature.library.update.report.subscribeLatestSummary
+import mihon.presentation.kit.feedback.SnackbarDuration
+import mihon.presentation.kit.feedback.SnackbarHostState
+import mihon.presentation.kit.feedback.SnackbarResult
 import tachiyomi.core.common.i18n.pluralStringResource
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.domain.library.update.repository.LibraryUpdateReportRepository

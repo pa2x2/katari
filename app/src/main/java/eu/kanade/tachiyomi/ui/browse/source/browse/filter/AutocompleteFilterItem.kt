@@ -3,14 +3,6 @@ package eu.kanade.tachiyomi.ui.browse.source.browse.filter
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExposedDropdownMenu
-import androidx.compose.material3.ExposedDropdownMenuAnchorType
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -23,16 +15,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.unit.dp
 import eu.kanade.tachiyomi.source.entry.EntryFilter
 import eu.kanade.tachiyomi.source.entry.EntryFilterTextInput
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.control.FilterFieldClearButton
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.control.FilterFieldKeyboardOptions
-import eu.kanade.tachiyomi.ui.browse.source.browse.filter.control.FilterSheetInsets
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.control.filterFieldKeyboardActions
 import mihon.entry.interactions.catalogue.EntryCatalogueFilterSuggestionsResult
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.field.AutocompleteTextField
+import mihon.presentation.kit.menu.DropdownMenuItem
+import mihon.presentation.kit.progress.LoadingIndicator
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.LoadingIndicator
 import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable
@@ -89,7 +84,9 @@ internal fun AutocompleteFilterItem(
         if (textChanged) onUpdate()
     }
 
-    ExposedDropdownMenuBox(
+    AutocompleteTextField(
+        value = fieldValue,
+        onValueChange = ::updateField,
         expanded = expanded,
         onExpandedChange = { shouldExpand ->
             if (shouldExpand) {
@@ -98,80 +95,51 @@ internal fun AutocompleteFilterItem(
                 controller.dismissSuggestions()
             }
         },
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = KatariTheme.spacing.rowInset, vertical = KatariTheme.spacing.s)
+            .onFocusChanged { controller.updateFocus(it.isFocused) },
+        label = filter.name,
+        isError = isError,
+        trailingIcon = {
+            FilterFieldClearButton(filter.name, visible = fieldValue.text.isNotEmpty()) {
+                updateField(TextFieldValue())
+            }
+        },
+        keyboardOptions = FilterFieldKeyboardOptions,
+        keyboardActions = filterFieldKeyboardActions(),
     ) {
-        OutlinedTextField(
-            modifier = Modifier
-                .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryEditable)
-                .fillMaxWidth()
-                .padding(horizontal = FilterSheetInsets.Horizontal, vertical = FilterSheetInsets.FieldVertical)
-                .onFocusChanged { controller.updateFocus(it.isFocused) },
-            label = { Text(text = filter.name) },
-            isError = isError,
-            value = fieldValue,
-            onValueChange = ::updateField,
-            trailingIcon = {
-                FilterFieldClearButton(filter.name, visible = fieldValue.text.isNotEmpty()) {
-                    updateField(TextFieldValue())
-                }
-            },
-            keyboardOptions = FilterFieldKeyboardOptions,
-            keyboardActions = filterFieldKeyboardActions(),
-            singleLine = true,
-        )
-
-        ExposedDropdownMenu(
-            modifier = Modifier.exposedDropdownSize(matchAnchorWidth = true),
-            expanded = expanded,
-            onDismissRequest = controller::dismissSuggestions,
-        ) {
-            when (val state = autocompleteState) {
-                FilterAutocompleteUiState.Idle -> Unit
-                FilterAutocompleteUiState.Loading -> {
+        when (val state = autocompleteState) {
+            FilterAutocompleteUiState.Idle -> Unit
+            FilterAutocompleteUiState.Loading -> {
+                DropdownMenuItem(
+                    label = stringResource(MR.strings.loading),
+                    onClick = {},
+                    enabled = false,
+                    trailing = { LoadingIndicator(modifier = Modifier.size(KatariTheme.sizes.icon)) },
+                )
+            }
+            is FilterAutocompleteUiState.Suggestions -> {
+                state.items.forEach { suggestion ->
                     DropdownMenuItem(
-                        text = { Text(stringResource(MR.strings.loading)) },
-                        onClick = {},
-                        enabled = false,
-                        leadingIcon = {
-                            LoadingIndicator(modifier = Modifier.size(24.dp))
+                        label = suggestion.label,
+                        onClick = {
+                            val edit = controller.applySuggestion(suggestion) ?: return@DropdownMenuItem
+                            fieldValue = TextFieldValue(
+                                text = edit.text,
+                                selection = TextRange(edit.selectionStart, edit.selectionEnd),
+                            )
+                            onUpdate()
                         },
-                        contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
                     )
                 }
-                is FilterAutocompleteUiState.Suggestions -> {
-                    state.items.forEach { suggestion ->
-                        DropdownMenuItem(
-                            text = { Text(suggestion.label) },
-                            onClick = {
-                                val edit = controller.applySuggestion(suggestion)
-                                    ?: return@DropdownMenuItem
-                                fieldValue = TextFieldValue(
-                                    text = edit.text,
-                                    selection = TextRange(edit.selectionStart, edit.selectionEnd),
-                                )
-                                onUpdate()
-                            },
-                            contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
-                        )
-                    }
-                }
-                is FilterAutocompleteUiState.Error -> {
-                    DropdownMenuItem(
-                        text = {
-                            Text(
-                                text = stringResource(MR.strings.filter_suggestions_failed),
-                                color = MaterialTheme.colorScheme.error,
-                            )
-                        },
-                        onClick = controller::retry,
-                        trailingIcon = {
-                            Text(
-                                text = stringResource(MR.strings.action_retry),
-                                color = MaterialTheme.colorScheme.primary,
-                            )
-                        },
-                        contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
-                    )
-                }
+            }
+            is FilterAutocompleteUiState.Error -> {
+                DropdownMenuItem(
+                    label = stringResource(MR.strings.filter_suggestions_failed),
+                    onClick = controller::retry,
+                    trailing = { Text(text = stringResource(MR.strings.action_retry), tone = ContentTone.Primary) },
+                )
             }
         }
     }

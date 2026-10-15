@@ -1,24 +1,21 @@
 package mihon.entry.interactions.manga.reader.text.ui.controls
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.unit.dp
 import mihon.entry.interactions.manga.reader.text.session.MangaReaderTextProgress
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Translate
+import mihon.presentation.kit.content.Icon
+import mihon.presentation.kit.content.NotificationBadge
+import mihon.presentation.kit.progress.LoadingIndicator
+import mihon.presentation.kit.surface.Surface
+import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.LoadingIndicator
 import tachiyomi.presentation.core.i18n.stringResource
 
 /**
@@ -35,32 +32,32 @@ internal fun MangaReaderTextEdgeTab(
     val expandLabel = stringResource(MR.strings.reader_text_controls_expand)
     Surface(
         onClick = onExpand,
-        modifier = modifier
-            .size(width = TAB_WIDTH, height = TAB_HEIGHT)
-            .alpha(TAB_ALPHA),
+        modifier = modifier,
+        container = SurfaceContainer.Chrome,
         shape = when (edge) {
-            MangaReaderTextControlsEdge.Left -> RoundedCornerShape(topEnd = TAB_RADIUS, bottomEnd = TAB_RADIUS)
-            MangaReaderTextControlsEdge.Right -> RoundedCornerShape(topStart = TAB_RADIUS, bottomStart = TAB_RADIUS)
+            MangaReaderTextControlsEdge.Left -> KatariTheme.shapes.extraLargeEnd
+            MangaReaderTextControlsEdge.Right -> KatariTheme.shapes.extraLargeStart
         },
-        tonalElevation = 6.dp,
-        shadowElevation = 6.dp,
     ) {
-        Box(contentAlignment = Alignment.Center) {
-            if (progress.isWorking) {
-                LoadingIndicator(modifier = Modifier.size(32.dp))
+        Box(
+            modifier = Modifier.padding(horizontal = KatariTheme.spacing.xs, vertical = KatariTheme.spacing.m),
+            contentAlignment = Alignment.Center,
+        ) {
+            Box(modifier = Modifier.size(KatariTheme.sizes.iconLarge), contentAlignment = Alignment.Center) {
+                if (progress.isWorking) {
+                    LoadingIndicator(modifier = Modifier.size(KatariTheme.sizes.iconLarge))
+                }
+                Icon(
+                    imageVector = MaterialSymbols.Rounded.Translate,
+                    contentDescription = expandLabel,
+                    modifier = Modifier.size(KatariTheme.sizes.iconSmall),
+                )
             }
-            Icon(
-                imageVector = MaterialSymbols.Rounded.Translate,
-                contentDescription = expandLabel,
-                modifier = Modifier.size(20.dp),
-            )
             if (progress.needsAttention) {
-                Box(
+                NotificationBadge(
                     modifier = Modifier
                         .align(Alignment.TopEnd)
-                        .padding(6.dp)
-                        .size(8.dp)
-                        .background(MaterialTheme.colorScheme.error, CircleShape),
+                        .padding(top = KatariTheme.spacing.xxs),
                 )
             }
         }
@@ -74,8 +71,3 @@ private val MangaReaderTextProgress.needsAttention: Boolean
     get() = this is MangaReaderTextProgress.Blocked ||
         this is MangaReaderTextProgress.Failed ||
         this is MangaReaderTextProgress.TranslationUnavailable
-
-private val TAB_WIDTH = 40.dp
-private val TAB_HEIGHT = 56.dp
-private val TAB_RADIUS = 28.dp
-private const val TAB_ALPHA = 0.85f

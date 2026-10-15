@@ -2,13 +2,10 @@ package mihon.entry.interactions.manga.reader.text.ui
 
 import android.graphics.RectF
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -21,7 +18,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
+import eu.kanade.presentation.reader.appbars.ReaderMenuBounds
 import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.flow.Flow
 import mihon.entry.interactions.manga.reader.text.interaction.MangaReaderTextInteraction
@@ -38,6 +35,8 @@ import mihon.model.artifacts.api.descriptor.ModelArtifactDescriptor
 import mihon.model.artifacts.api.download.ModelArtifactDownloadApproval
 import mihon.model.artifacts.api.state.ModelArtifactState
 import mihon.model.artifacts.ui.approval.ModelArtifactDownloadApprovalDialog
+import mihon.presentation.kit.feedback.SnackbarHost
+import mihon.presentation.kit.feedback.SnackbarHostState
 import mihon.text.recognition.ui.approval.TextRecognitionPlatformModelsDialog
 import mihon.translation.ui.picker.language.displayName
 import mihon.translation.ui.presentation.CoordinatedTranslationSessionHost
@@ -54,6 +53,7 @@ import tachiyomi.presentation.core.i18n.stringResource
 internal fun MangaReaderTextLayer(
     state: MangaReaderTextState,
     menuVisible: Boolean,
+    menuBounds: ReaderMenuBounds,
     translationCoordinator: TranslationSessionHostCoordinator,
     translateDownloads: MangaReaderTranslateDownloads,
     recognitionLanguages: List<LanguageTag>,
@@ -113,6 +113,7 @@ internal fun MangaReaderTextLayer(
                 placement = controlsPlacement,
                 onPlacementChange = { controlsPlacement = it },
                 menuVisible = menuVisible,
+                menuBounds = menuBounds,
                 progress = state.progress,
             ) { toolbarModifier ->
                 MangaReaderTextToolbar(
@@ -162,18 +163,15 @@ internal fun MangaReaderTextLayer(
             }
         }
 
-        BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-            CoordinatedTranslationSessionHost(
-                coordinator = translationCoordinator,
-                isTabletUi = maxWidth >= 720.dp,
-                modifier = Modifier.fillMaxSize(),
-                onDismiss = onDismissTranslation,
-                speechState = translationSpeechState,
-                onSpeechToggle = onTranslationSpeechToggle,
-                snackbarHostState = snackbarHostState,
-                onChooseSourceLanguage = { choosingLanguage = true },
-            )
-        }
+        CoordinatedTranslationSessionHost(
+            coordinator = translationCoordinator,
+            modifier = Modifier.fillMaxSize(),
+            onDismiss = onDismissTranslation,
+            speechState = translationSpeechState,
+            onSpeechToggle = onTranslationSpeechToggle,
+            snackbarHostState = snackbarHostState,
+            onChooseSourceLanguage = { choosingLanguage = true },
+        )
         SnackbarHost(
             hostState = snackbarHostState,
             modifier = Modifier

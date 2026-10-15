@@ -8,14 +8,10 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.more.stats.components.StatisticsInsightTile
 import eu.kanade.presentation.more.stats.components.StatisticsRhythmBars
 import eu.kanade.presentation.more.stats.components.StatisticsSectionCard
@@ -28,6 +24,10 @@ import eu.kanade.presentation.more.stats.components.statisticsTypeShares
 import eu.kanade.presentation.more.stats.data.StatsType
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.ui.history.activity.HistoryActivitySummary
+import mihon.presentation.kit.content.StatisticsMetrics
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import java.text.NumberFormat
@@ -45,12 +45,11 @@ internal fun HistoryActivitySummaryCard(
     val numbers = NumberFormat.getIntegerInstance()
     val locale = LocalConfiguration.current.locales[0]
     val selectedType = types.firstOrNull { it.type == type }
-    val color = selectedType?.accent?.color() ?: MaterialTheme.colorScheme.primary
-    StatisticsSectionCard(contentSpacing = 0.dp) {
+    val color = selectedType?.accent?.color() ?: KatariTheme.colors.primary
+    StatisticsSectionCard(contentSpacing = KatariTheme.sizes.none) {
         Text(
             text = formatDuration(summary.totalDurationMillis),
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold,
+            role = TextRole.Metric,
         )
         if (type == null) {
             StatisticsTypeBreakdown(
@@ -65,8 +64,8 @@ internal fun HistoryActivitySummaryCard(
             )
         }
         Row(
-            modifier = Modifier.fillMaxWidth().padding(top = 14.dp).height(IntrinsicSize.Min),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.fillMaxWidth().padding(top = KatariTheme.spacing.m).height(IntrinsicSize.Min),
+            horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
         ) {
             StatisticsInsightTile(
                 value = numbers.format(summary.sessionCount),
@@ -94,8 +93,8 @@ internal fun HistoryActivitySummaryCard(
                 highlightIndex = peak,
                 color = color,
                 description = peak?.let { stringResource(MR.strings.statistics_peak_hour, formatHour(it)) }.orEmpty(),
-                barAreaHeight = 56.dp,
-                modifier = Modifier.padding(top = 16.dp),
+                barAreaHeight = StatisticsMetrics.rhythmHeight,
+                modifier = Modifier.padding(top = KatariTheme.spacing.l),
             )
         }
         if (summary.buckets.isNotEmpty()) {
@@ -122,8 +121,8 @@ internal fun HistoryActivitySummaryCard(
                         formatDuration(values[it]),
                     )
                 }.orEmpty(),
-                barAreaHeight = 56.dp,
-                modifier = Modifier.padding(top = 16.dp),
+                barAreaHeight = StatisticsMetrics.rhythmCompactHeight,
+                modifier = Modifier.padding(top = KatariTheme.spacing.l),
             )
         }
     }

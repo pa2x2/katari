@@ -7,7 +7,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.lerp
 import eu.kanade.presentation.more.stats.recap.motion.ambientSwing
-import eu.kanade.presentation.more.stats.recap.palette.RecapPalette
+import mihon.presentation.kit.content.StoryMetrics
+import mihon.presentation.kit.theme.StoryPalette
 
 /**
  * What a page is drawn over: its gradient, with soft glows in its colours drifting across it on loops of 17 to 53
@@ -16,7 +17,7 @@ import eu.kanade.presentation.more.stats.recap.palette.RecapPalette
  *
  * @param millis how long the glows have drifted; at 0 they're at rest.
  */
-internal fun DrawScope.drawRecapBackdrop(palette: RecapPalette, millis: Long, page: Rect) {
+internal fun DrawScope.drawRecapBackdrop(palette: StoryPalette, millis: Long, page: Rect) {
     drawRect(
         Brush.verticalGradient(
             listOf(palette.background, palette.backgroundEnd),
@@ -24,18 +25,18 @@ internal fun DrawScope.drawRecapBackdrop(palette: RecapPalette, millis: Long, pa
             endY = page.bottom,
         ),
     )
-    val unit = page.width / PAGE_WIDTH.value
+    val unit = page.width / StoryMetrics.pageWidth.value
     Glows.forEach { glow ->
         val center = page.topLeft + Offset(
             glow.x + glow.driftX * ambientSwing(millis, glow.periodX),
             glow.y + glow.driftY * ambientSwing(millis, glow.periodY),
         ) * unit
         val radius = glow.radius * (1f + BREATH * ambientSwing(millis, glow.periodBreath)) * unit
-        val color = glow.color(palette).copy(alpha = glow.alpha)
+        val glowColor = glow.color(palette)
         drawCircle(
             brush = Brush.radialGradient(
-                0f to color,
-                0.45f to color.copy(alpha = glow.alpha * 0.55f),
+                0f to palette.glow(glowColor, glow.strength),
+                GLOW_MID_STOP to palette.glow(glowColor, glow.strength * GLOW_MID_STRENGTH),
                 1f to Color.Transparent,
                 center = center,
                 radius = radius,
@@ -51,28 +52,28 @@ private class Glow(
     val x: Float,
     val y: Float,
     val radius: Float,
-    val alpha: Float,
+    val strength: Float,
     val driftX: Float,
     val driftY: Float,
     val periodX: Long,
     val periodY: Long,
     val periodBreath: Long,
-    val color: (RecapPalette) -> Color,
+    val color: (StoryPalette) -> Color,
 )
 
 private val Glows = listOf(
     Glow(
-        x = 70f, y = 290f, radius = 230f, alpha = 0.3f,
+        x = 70f, y = 290f, radius = 230f, strength = 0.3f,
         driftX = 110f, driftY = 150f, periodX = 19_000L, periodY = 29_000L, periodBreath = 23_000L,
         color = { it.accent },
     ),
     Glow(
-        x = 300f, y = 120f, radius = 220f, alpha = 0.85f,
+        x = 300f, y = 120f, radius = 220f, strength = 0.85f,
         driftX = 120f, driftY = 160f, periodX = 37_000L, periodY = 53_000L, periodBreath = 31_000L,
         color = { it.faint },
     ),
     Glow(
-        x = 220f, y = 560f, radius = 160f, alpha = 0.35f,
+        x = 220f, y = 560f, radius = 160f, strength = 0.35f,
         driftX = 100f, driftY = 80f, periodX = 17_000L, periodY = 41_000L, periodBreath = 27_000L,
         color = { lerp(it.accent, it.backgroundEnd, 0.45f) },
     ),
@@ -80,3 +81,7 @@ private val Glows = listOf(
 
 /** How much a glow grows and shrinks as it drifts. */
 private const val BREATH = 0.12f
+
+/** Where a glow's falloff eases, and how strong it still is there against its centre. */
+private const val GLOW_MID_STOP = 0.45f
+private const val GLOW_MID_STRENGTH = 0.55f

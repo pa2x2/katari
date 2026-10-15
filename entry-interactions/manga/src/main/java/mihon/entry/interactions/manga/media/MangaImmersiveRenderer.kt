@@ -19,14 +19,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import mihon.entry.interactions.media.EntryImmersiveActiveSessionEffect
 import mihon.entry.interactions.media.EntryImmersiveProgress
 import mihon.entry.interactions.media.EntryImmersiveRenderer
+import mihon.presentation.kit.theme.KatariTheme
 
 internal class MangaImmersiveRenderer(
     private val media: MangaImmersiveMedia,
@@ -77,7 +76,7 @@ internal class MangaImmersiveRenderer(
         }
 
         Box(
-            modifier = modifier.background(Color.Black),
+            modifier = modifier.background(KatariTheme.colors.media),
         ) {
             HorizontalPager(
                 state = pagerState,
@@ -104,7 +103,7 @@ internal class MangaImmersiveRenderer(
                     onScrubbingChange = { isScrubbing = it },
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
-                        .padding(bottom = controlsBottomInset + 4.dp),
+                        .padding(bottom = controlsBottomInset + KatariTheme.spacing.xs),
                 )
             }
         }

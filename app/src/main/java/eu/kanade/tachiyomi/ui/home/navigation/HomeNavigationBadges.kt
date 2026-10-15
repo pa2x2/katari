@@ -1,7 +1,5 @@
 package eu.kanade.tachiyomi.ui.home.navigation
 
-import androidx.compose.material3.Badge
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -16,6 +14,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import mihon.core.common.HomeScreenTabs
+import mihon.presentation.kit.content.NotificationBadge
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.pluralStringResource
@@ -53,13 +52,11 @@ internal fun rememberAnyHomeTabBadged(tabs: List<HomeScreenTabs>): Boolean {
 @Composable
 internal fun HomeTabBadgeContent(badge: HomeTabBadge, modifier: Modifier = Modifier) {
     when (badge) {
-        is HomeTabBadge.Count -> Badge(modifier) {
-            Text(
-                text = badge.count.toString(),
-                modifier = Modifier.semantics { contentDescription = badge.description },
-            )
-        }
-        is HomeTabBadge.Dot -> Badge(modifier.semantics { contentDescription = badge.description })
+        is HomeTabBadge.Count -> NotificationBadge(
+            modifier = modifier.semantics { contentDescription = badge.description },
+            count = badge.count,
+        )
+        is HomeTabBadge.Dot -> NotificationBadge(modifier.semantics { contentDescription = badge.description })
     }
 }
 

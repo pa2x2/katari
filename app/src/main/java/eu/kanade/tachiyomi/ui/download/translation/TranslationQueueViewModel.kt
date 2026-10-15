@@ -1,7 +1,6 @@
 package eu.kanade.tachiyomi.ui.download.translation
 
 import android.app.Application
-import androidx.compose.material3.SnackbarHostState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import eu.kanade.presentation.entry.translation.ChapterTranslateAction
@@ -19,6 +18,7 @@ import mihon.entry.interactions.download.EntryDownloadState
 import mihon.entry.interactions.translate.EntryTranslateFeature
 import mihon.entry.interactions.translate.EntryTranslateQueueItem
 import mihon.entry.interactions.translate.EntryTranslateWaiting
+import mihon.presentation.kit.feedback.SnackbarHostState
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.repository.EntryChapterRepository

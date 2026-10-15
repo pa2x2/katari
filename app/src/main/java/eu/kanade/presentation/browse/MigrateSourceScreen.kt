@@ -1,50 +1,41 @@
 package eu.kanade.presentation.browse
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.ListItemDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import eu.kanade.domain.source.interactor.SetMigrateSorting
 import eu.kanade.presentation.browse.components.BaseSourceItem
-import eu.kanade.presentation.browse.components.SourceIcon
 import eu.kanade.tachiyomi.ui.browse.migration.sources.MigrateSourceViewModel
 import eu.kanade.tachiyomi.util.system.copyToClipboard
 import mihon.feature.migration.session.model.SourceMigrationSessionStage
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.ArrowDownward
 import mihon.icons.materialsymbols.rounded.ArrowUpward
-import mihon.icons.materialsymbols.rounded.ChevronRight
 import mihon.icons.materialsymbols.rounded.Numbers
 import mihon.icons.materialsymbols.rounded.SortByAlpha
+import mihon.presentation.kit.button.IconButton
+import mihon.presentation.kit.content.Badge
+import mihon.presentation.kit.content.BadgeGroup
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.feedback.EmptyScreen
+import mihon.presentation.kit.feedback.LoadingScreen
+import mihon.presentation.kit.list.SectionHeader
+import mihon.presentation.kit.list.SettingsRow
+import mihon.presentation.kit.surface.Surface
+import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.domain.source.model.Source
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.Badge
-import tachiyomi.presentation.core.components.BadgeGroup
 import tachiyomi.presentation.core.components.ScrollbarLazyColumn
 import tachiyomi.presentation.core.components.Scroller.STICKY_HEADER_KEY_PREFIX
-import tachiyomi.presentation.core.components.material.padding
-import tachiyomi.presentation.core.components.material.topSmallPaddingValues
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.screens.EmptyScreen
-import tachiyomi.presentation.core.screens.LoadingScreen
-import tachiyomi.presentation.core.theme.header
 import tachiyomi.presentation.core.util.plus
-import tachiyomi.presentation.core.util.secondaryItemAlpha
 
 @Composable
 fun MigrateSourceScreen(
@@ -95,77 +86,56 @@ private fun MigrateSourceList(
     onToggleSortingDirection: () -> Unit,
 ) {
     ScrollbarLazyColumn(
-        contentPadding = contentPadding + topSmallPaddingValues,
+        contentPadding = contentPadding + PaddingValues(top = KatariTheme.spacing.s),
     ) {
         if (activeSessions.isNotEmpty()) {
             item(key = "active-migrations-header") {
-                Text(
-                    text = stringResource(MR.strings.sourceMigration_activeHeader),
-                    style = MaterialTheme.typography.header,
-                    modifier = Modifier.padding(MaterialTheme.padding.medium),
-                )
+                SectionHeader(stringResource(MR.strings.sourceMigration_activeHeader))
             }
             items(
                 items = activeSessions,
                 key = { session -> "active-migration-${session.id.value}" },
             ) { session ->
-                ListItem(
-                    modifier = Modifier.clickable { onClickActiveSession(session) },
-                    supportingContent = {
-                        Text(text = sourceMigrationStageLabel(session.stage))
-                    },
-                    trailingContent = {
-                        Icon(imageVector = MaterialSymbols.Rounded.ChevronRight, contentDescription = null)
-                    },
-                    colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.background),
-                ) {
-                    Text(
-                        text = session.sourceName,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
+                SettingsRow(
+                    title = session.sourceName,
+                    subtitle = sourceMigrationStageLabel(session.stage),
+                    onClick = { onClickActiveSession(session) },
+                )
             }
         }
 
         if (list.isNotEmpty()) {
             stickyHeader(key = STICKY_HEADER_KEY_PREFIX) {
-                Row(
-                    modifier = Modifier
-                        .background(MaterialTheme.colorScheme.background)
-                        .padding(start = MaterialTheme.padding.medium),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
+                Surface(container = SurfaceContainer.Background) {
+                    SectionHeader(
                         text = stringResource(MR.strings.migration_selection_prompt),
-                        modifier = Modifier.weight(1f),
-                        style = MaterialTheme.typography.header,
+                        actions = {
+                            when (sortingMode) {
+                                SetMigrateSorting.Mode.ALPHABETICAL -> IconButton(
+                                    icon = MaterialSymbols.Rounded.SortByAlpha,
+                                    contentDescription = stringResource(MR.strings.action_sort_alpha),
+                                    onClick = onToggleSortingMode,
+                                )
+                                SetMigrateSorting.Mode.TOTAL -> IconButton(
+                                    icon = MaterialSymbols.Rounded.Numbers,
+                                    contentDescription = stringResource(MR.strings.action_sort_count),
+                                    onClick = onToggleSortingMode,
+                                )
+                            }
+                            when (sortingDirection) {
+                                SetMigrateSorting.Direction.ASCENDING -> IconButton(
+                                    icon = MaterialSymbols.Rounded.ArrowUpward,
+                                    contentDescription = stringResource(MR.strings.action_asc),
+                                    onClick = onToggleSortingDirection,
+                                )
+                                SetMigrateSorting.Direction.DESCENDING -> IconButton(
+                                    icon = MaterialSymbols.Rounded.ArrowDownward,
+                                    contentDescription = stringResource(MR.strings.action_desc),
+                                    onClick = onToggleSortingDirection,
+                                )
+                            }
+                        },
                     )
-
-                    IconButton(onClick = onToggleSortingMode) {
-                        when (sortingMode) {
-                            SetMigrateSorting.Mode.ALPHABETICAL -> Icon(
-                                MaterialSymbols.Rounded.SortByAlpha,
-                                contentDescription = stringResource(MR.strings.action_sort_alpha),
-                            )
-                            SetMigrateSorting.Mode.TOTAL -> Icon(
-                                MaterialSymbols.Rounded.Numbers,
-                                contentDescription = stringResource(MR.strings.action_sort_count),
-                            )
-                        }
-                    }
-                    IconButton(onClick = onToggleSortingDirection) {
-                        when (sortingDirection) {
-                            SetMigrateSorting.Direction.ASCENDING -> Icon(
-                                MaterialSymbols.Rounded.ArrowUpward,
-                                contentDescription = stringResource(MR.strings.action_asc),
-                            )
-                            SetMigrateSorting.Direction.DESCENDING -> Icon(
-                                MaterialSymbols.Rounded.ArrowDownward,
-                                contentDescription = stringResource(MR.strings.action_desc),
-                            )
-                        }
-                    }
                 }
             }
 
@@ -217,51 +187,26 @@ private fun MigrateSourceItem(
     BaseSourceItem(
         modifier = modifier,
         source = source,
+        title = source.name.ifBlank { source.id.toString() },
         showLanguageInContent = source.lang != "",
         onClickItem = onClickItem,
         onLongClickItem = onLongClickItem,
-        icon = { SourceIcon(source = source) },
+        below = if (source.isStub) {
+            {
+                Text(
+                    text = stringResource(MR.strings.not_installed),
+                    role = TextRole.Supporting,
+                    tone = ContentTone.Error,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        } else {
+            null
+        },
         action = {
             BadgeGroup {
                 Badge(text = "$count")
-            }
-        },
-        content = { _, sourceLangString ->
-            Column(
-                modifier = Modifier
-                    .padding(horizontal = MaterialTheme.padding.medium)
-                    .weight(1f),
-            ) {
-                Text(
-                    text = source.name.ifBlank { source.id.toString() },
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    style = MaterialTheme.typography.bodyMedium,
-                )
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    if (sourceLangString != null) {
-                        Text(
-                            modifier = Modifier.secondaryItemAlpha(),
-                            text = sourceLangString,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            style = MaterialTheme.typography.bodySmall,
-                        )
-                    }
-                    if (source.isStub) {
-                        Text(
-                            modifier = Modifier.secondaryItemAlpha(),
-                            text = stringResource(MR.strings.not_installed),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.error,
-                        )
-                    }
-                }
             }
         },
     )

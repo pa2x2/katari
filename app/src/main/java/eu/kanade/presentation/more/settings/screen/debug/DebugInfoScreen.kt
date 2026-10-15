@@ -1,9 +1,6 @@
 package eu.kanade.presentation.more.settings.screen.debug
 
 import android.os.Build
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
@@ -28,6 +25,8 @@ import kotlinx.coroutines.withContext
 import mihon.core.common.FeatureFlags
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Autorenew
+import mihon.presentation.kit.button.IconButton
+import mihon.presentation.kit.theme.ContentTone
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.util.collectAsState
 import uy.kohesive.injekt.Injekt
@@ -86,18 +85,15 @@ class DebugInfoScreen : Screen() {
                     subtitle = installationId,
                     widget = {
                         IconButton(
+                            icon = MaterialSymbols.Rounded.Autorenew,
+                            contentDescription = "Regenerate installation ID",
                             onClick = {
                                 scope.launch {
                                     installationIdPref.set(FeatureFlags.newInstallationId())
                                 }
                             },
-                        ) {
-                            Icon(
-                                imageVector = MaterialSymbols.Rounded.Autorenew,
-                                tint = MaterialTheme.colorScheme.primary,
-                                contentDescription = "Regenerate installation ID",
-                            )
-                        }
+                            tone = ContentTone.Primary,
+                        )
                     },
                     onClick = {
                         context.copyToClipboard(installationId, installationId)

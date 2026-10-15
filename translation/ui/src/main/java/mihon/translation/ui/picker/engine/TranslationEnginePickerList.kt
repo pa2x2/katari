@@ -4,21 +4,11 @@ import android.R
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -27,8 +17,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import eu.kanade.presentation.theme.TachiyomiPreviewTheme
+import mihon.presentation.kit.button.Button
+import mihon.presentation.kit.button.ButtonStyle
+import mihon.presentation.kit.surface.Surface
+import mihon.presentation.kit.theme.KatariPreviewTheme
+import mihon.presentation.kit.theme.KatariTheme
 import mihon.translation.api.engine.KnownTranslationEngine
 import mihon.translation.api.engine.TranslationEngineAction
 import mihon.translation.api.engine.TranslationEngineArtwork
@@ -38,8 +31,6 @@ import mihon.translation.api.engine.TranslationEngineId
 import mihon.translation.api.engine.TranslationEngineState
 import mihon.translation.api.engine.TranslationEngineStatus
 import mihon.translation.api.engine.TranslationProviderId
-import tachiyomi.i18n.*
-import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable
 fun TranslationEnginePickerList(
@@ -69,9 +60,9 @@ fun TranslationEnginePickerList(
             modifier = Modifier
                 .align(Alignment.TopCenter)
                 .fillMaxWidth()
-                .widthIn(max = 720.dp),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+                .widthIn(max = KatariTheme.sizes.readableWidth),
+            contentPadding = PaddingValues(KatariTheme.spacing.contentInset),
+            verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.m),
         ) {
             if (
                 showMissingSelectionNotice &&
@@ -79,7 +70,7 @@ fun TranslationEnginePickerList(
                 isTranslationEngineSelectionMissing(engines, selected)
             ) {
                 item(key = "missing-selection") {
-                    MissingTranslationEngineCard(selected)
+                    TranslationMissingEngineCard(selected)
                 }
             }
             items(visibleCards, key = { it.state.engine.id.value }) { model ->
@@ -93,12 +84,12 @@ fun TranslationEnginePickerList(
             }
             if (footerLabel != null && onFooterClick != null) {
                 item(key = "footer") {
-                    TextButton(
+                    Button(
+                        label = footerLabel,
                         onClick = onFooterClick,
                         modifier = Modifier.fillMaxWidth(),
-                    ) {
-                        Text(footerLabel)
-                    }
+                        style = ButtonStyle.Text,
+                    )
                 }
             }
         }
@@ -112,40 +103,11 @@ fun TranslationEnginePickerList(
     }
 }
 
-@Composable
-private fun MissingTranslationEngineCard(selected: TranslationEngineId) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.errorContainer,
-            contentColor = MaterialTheme.colorScheme.onErrorContainer,
-        ),
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp),
-        ) {
-            Text(
-                text = stringResource(MR.strings.translation_engine_missing_title),
-                style = MaterialTheme.typography.titleMedium,
-            )
-            Text(
-                text = stringResource(MR.strings.translation_engine_missing_id, selected.value),
-                style = MaterialTheme.typography.bodyMedium,
-            )
-            Text(
-                text = stringResource(MR.strings.translation_engine_missing_explanation),
-                style = MaterialTheme.typography.bodyMedium,
-            )
-        }
-    }
-}
-
 @Preview(name = "Full picker")
 @Preview(name = "Full picker dark", uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun TranslationEnginePickerPreview() {
-    TachiyomiPreviewTheme {
+    KatariPreviewTheme {
         Surface {
             TranslationEnginePickerList(
                 engines = previewEngineStates(),
@@ -162,7 +124,7 @@ private fun TranslationEnginePickerPreview() {
 @Preview(name = "Large font", widthDp = 360, heightDp = 800, fontScale = 2f)
 @Composable
 private fun TranslationEngineSessionPickerPreview() {
-    TachiyomiPreviewTheme {
+    KatariPreviewTheme {
         Surface {
             TranslationEnginePickerList(
                 engines = previewEngineStates(),
@@ -177,7 +139,7 @@ private fun TranslationEngineSessionPickerPreview() {
 @Preview(name = "Missing stored engine", widthDp = 400, heightDp = 720)
 @Composable
 private fun TranslationEngineMissingSelectionPreview() {
-    TachiyomiPreviewTheme {
+    KatariPreviewTheme {
         Surface {
             TranslationEnginePickerList(
                 engines = previewEngineStates(),

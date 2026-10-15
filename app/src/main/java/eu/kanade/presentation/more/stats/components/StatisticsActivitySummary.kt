@@ -12,19 +12,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.more.stats.data.StatsActivity
 import eu.kanade.presentation.more.stats.data.StatsActivityWindow
 import eu.kanade.presentation.more.stats.data.StatsDailyGoal
@@ -33,6 +25,15 @@ import eu.kanade.presentation.more.stats.data.StatsType
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.ArrowDownward
 import mihon.icons.materialsymbols.rounded.ArrowUpward
+import mihon.presentation.kit.content.Icon
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.content.lineHeight
+import mihon.presentation.kit.progress.CircularProgressIndicator
+import mihon.presentation.kit.surface.Surface
+import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
@@ -62,8 +63,11 @@ internal fun StatisticsActivitySummaryCards(
     val isLatest = activity?.window?.isLatest != false
     val shownGoal = goal?.takeIf { selectedType == null && isLatest }
     val completionTypes = selectedType?.let(::listOf) ?: types
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s)) {
+        Row(
+            Modifier.fillMaxWidth().height(IntrinsicSize.Min),
+            horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
+        ) {
             SummaryTile(
                 label = stringResource(MR.strings.statistics_time_spent),
                 value = activity?.let { formatDuration(it.totalDurationMillis) } ?: dash,
@@ -94,7 +98,10 @@ internal fun StatisticsActivitySummaryCards(
                 )
             }
         }
-        Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(
+            Modifier.fillMaxWidth().height(IntrinsicSize.Min),
+            horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
+        ) {
             SummaryTile(
                 label = stringResource(
                     if (isLatest) MR.strings.statistics_streak else MR.strings.statistics_ending_streak,
@@ -155,28 +162,19 @@ private fun TodayGoalTile(goal: StatsDailyGoal, formatDuration: (Long) -> String
     val fraction = (goal.todayMillis.toFloat() / goal.goalMillis).coerceIn(0f, 1f)
     Surface(
         modifier = modifier.fillMaxHeight(),
-        color = MaterialTheme.colorScheme.surfaceVariant,
-        shape = MaterialTheme.shapes.medium,
+        container = SurfaceContainer.Highest,
+        shape = KatariTheme.shapes.medium,
     ) {
         Row(
-            modifier = Modifier.padding(14.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.padding(KatariTheme.spacing.l),
+            horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(Modifier.weight(1f)) {
-                Text(
-                    text = stringResource(MR.strings.statistics_today),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Spacer(Modifier.height(4.dp))
-                Text(
-                    text = formatDuration(goal.todayMillis),
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 1,
-                )
-                Spacer(Modifier.height(2.dp))
+                Text(text = stringResource(MR.strings.statistics_today), role = TextRole.Supporting)
+                Spacer(Modifier.height(KatariTheme.spacing.xs))
+                Text(text = formatDuration(goal.todayMillis), role = TextRole.Metric, maxLines = 1)
+                Spacer(Modifier.height(KatariTheme.spacing.xxs))
                 TileDetail(
                     if (goal.todayMillis >= goal.goalMillis) {
                         stringResource(MR.strings.statistics_goal_met, formatDuration(goal.goalMillis))
@@ -189,14 +187,7 @@ private fun TodayGoalTile(goal: StatsDailyGoal, formatDuration: (Long) -> String
                     },
                 )
             }
-            CircularProgressIndicator(
-                progress = { fraction },
-                modifier = Modifier.size(40.dp),
-                // The tile's own surface tones are too close to each other in dark themes to show an empty ring.
-                trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.24f),
-                strokeWidth = 5.dp,
-                gapSize = 0.dp,
-            )
+            CircularProgressIndicator(progress = { fraction }, onContainer = true)
         }
     }
 }
@@ -229,10 +220,10 @@ private fun PeriodComparison(activity: StatsActivity, formatDuration: (Long) -> 
         formatDuration(abs(delta))
     }
     val period = formatCompactWindow(LocalContext.current, previousWindow)
-    val color = when {
-        delta > 0L -> MaterialTheme.colorScheme.primary
-        delta < 0L -> MaterialTheme.colorScheme.error
-        else -> MaterialTheme.colorScheme.onSurfaceVariant
+    val tone = when {
+        delta > 0L -> ContentTone.Primary
+        delta < 0L -> ContentTone.Error
+        else -> ContentTone.Secondary
     }
     Row(verticalAlignment = Alignment.CenterVertically) {
         if (delta != 0L) {
@@ -243,11 +234,11 @@ private fun PeriodComparison(activity: StatsActivity, formatDuration: (Long) -> 
                     MaterialSymbols.Rounded.ArrowDownward
                 },
                 contentDescription = null,
-                modifier = Modifier.size(12.dp),
-                tint = color,
+                modifier = Modifier.size(TextRole.Badge.lineHeight),
+                tone = tone,
             )
         }
-        TileDetail(stringResource(MR.strings.statistics_change_vs_period, change, period), color = color)
+        TileDetail(stringResource(MR.strings.statistics_change_vs_period, change, period), tone = tone)
     }
 }
 
@@ -264,11 +255,11 @@ private fun formatCompactWindow(context: Context, window: StatsActivityWindow): 
 }
 
 @Composable
-private fun TileDetail(text: String, color: Color = MaterialTheme.colorScheme.onSurfaceVariant) {
+private fun TileDetail(text: String, tone: ContentTone = ContentTone.Secondary) {
     Text(
         text = text,
-        style = MaterialTheme.typography.labelSmall,
-        color = color,
+        role = TextRole.Badge,
+        tone = tone,
         maxLines = 2,
         overflow = TextOverflow.Ellipsis,
     )
@@ -283,23 +274,14 @@ private fun SummaryTile(
 ) {
     Surface(
         modifier = modifier.fillMaxHeight(),
-        color = MaterialTheme.colorScheme.surfaceVariant,
-        shape = MaterialTheme.shapes.medium,
+        container = SurfaceContainer.Highest,
+        shape = KatariTheme.shapes.medium,
     ) {
-        Column(Modifier.padding(14.dp)) {
-            Text(
-                text = label,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Spacer(Modifier.height(4.dp))
-            Text(
-                text = value,
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
-                maxLines = 1,
-            )
-            Spacer(Modifier.height(2.dp))
+        Column(Modifier.padding(KatariTheme.spacing.l)) {
+            Text(text = label, role = TextRole.Supporting)
+            Spacer(Modifier.height(KatariTheme.spacing.xs))
+            Text(text = value, role = TextRole.Metric, maxLines = 1)
+            Spacer(Modifier.height(KatariTheme.spacing.xxs))
             detail()
         }
     }

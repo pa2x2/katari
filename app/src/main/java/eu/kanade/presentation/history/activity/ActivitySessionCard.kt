@@ -9,11 +9,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -23,10 +18,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.text.font.FontStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.entry.InlineEntryTypeIndicator
 import eu.kanade.presentation.entry.components.EntryCover
 import eu.kanade.presentation.entry.entryTypePresentation
@@ -35,6 +27,16 @@ import eu.kanade.presentation.more.stats.components.rememberStatisticsDurationFo
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.KeyboardArrowDown
 import mihon.icons.materialsymbols.rounded.KeyboardArrowUp
+import mihon.presentation.kit.content.BrowseMetrics
+import mihon.presentation.kit.content.Icon
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.surface.HorizontalDivider
+import mihon.presentation.kit.surface.Pill
+import mihon.presentation.kit.surface.Surface
+import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.domain.history.model.activity.HistoryActivitySegmentDetail
 import tachiyomi.domain.history.model.activity.HistoryActivitySessionDetail
 import tachiyomi.i18n.*
@@ -80,25 +82,25 @@ internal fun ActivitySessionCard(
 
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
-        shape = MaterialTheme.shapes.large,
+        container = SurfaceContainer.Low,
+        shape = KatariTheme.shapes.large,
     ) {
         Column {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .then(if (showEntry) Modifier.clickable { onClick(session.entryId) } else Modifier)
-                    .padding(12.dp),
+                    .padding(KatariTheme.spacing.m),
                 verticalAlignment = Alignment.Top,
             ) {
                 if (showEntry) {
                     EntryCover.Book(
                         data = session.coverData,
                         contentDescription = "",
-                        modifier = Modifier.width(64.dp),
-                        shape = MaterialTheme.shapes.small,
+                        modifier = Modifier.height(BrowseMetrics.listCoverHeight),
+                        shape = KatariTheme.shapes.small,
                     )
-                    Spacer(Modifier.width(12.dp))
+                    Spacer(Modifier.width(KatariTheme.spacing.m))
                 }
                 Column(Modifier.weight(1f)) {
                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
@@ -112,42 +114,30 @@ internal fun ActivitySessionCard(
                                     .joinToString(" – ")
                             },
                             modifier = Modifier.weight(1f),
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = if (isUndetailedHeadline) FontWeight.Normal else FontWeight.SemiBold,
-                            fontStyle = if (isUndetailedHeadline) FontStyle.Italic else FontStyle.Normal,
+                            role = if (isUndetailedHeadline) TextRole.Body else TextRole.SectionTitle,
+                            tone = if (isUndetailedHeadline) ContentTone.Secondary else ContentTone.Inherit,
                             maxLines = 2,
                             overflow = TextOverflow.Ellipsis,
                         )
-                        Spacer(Modifier.width(8.dp))
-                        Surface(
-                            color = MaterialTheme.colorScheme.primaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                            shape = MaterialTheme.shapes.small,
-                        ) {
-                            Text(
-                                text = formatDuration(session.durationMillis),
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
-                                style = MaterialTheme.typography.labelMedium,
-                                fontWeight = FontWeight.SemiBold,
-                                maxLines = 1,
-                            )
-                        }
+                        Spacer(Modifier.width(KatariTheme.spacing.s))
+                        Pill(
+                            text = formatDuration(session.durationMillis),
+                            container = SurfaceContainer.PrimaryContainer,
+                        )
                     }
                     when {
                         // Without the title, the headline already names a lone chapter or a missing breakdown.
                         !showEntry && childDurations.size <= 1 -> Unit
                         childDurations.isEmpty() -> {
-                            Spacer(Modifier.height(8.dp))
+                            Spacer(Modifier.height(KatariTheme.spacing.s))
                             Text(
                                 text = stringResource(MR.strings.statistics_no_child_activity_details),
-                                style = MaterialTheme.typography.bodySmall,
-                                fontStyle = FontStyle.Italic,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                role = TextRole.Supporting,
                             )
                         }
                         !hasLongChildList -> {
                             childDurations.forEach { (title, duration) ->
-                                Spacer(Modifier.height(8.dp))
+                                Spacer(Modifier.height(KatariTheme.spacing.s))
                                 ActivityChildRow(
                                     title = title,
                                     duration = duration.takeIf { childDurations.size > 1 }?.let(formatDuration),
@@ -155,41 +145,31 @@ internal fun ActivitySessionCard(
                             }
                         }
                     }
-                    Spacer(Modifier.height(8.dp))
+                    Spacer(Modifier.height(KatariTheme.spacing.s))
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         if (showType) {
                             session.entryType.InlineEntryTypeIndicator()
-                            Spacer(Modifier.width(4.dp))
+                            Spacer(Modifier.width(KatariTheme.spacing.xs))
                             Text(
-                                text = stringResource(typePresentation.displayNameLabel),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                            Text(
-                                text = " · ",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                text = stringResource(typePresentation.displayNameLabel) + " · ",
+                                role = TextRole.Supporting,
                             )
                         }
                         Text(
                             text = "$startedAt – $endedAt",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            role = TextRole.Supporting,
                         )
                     }
                 }
             }
             if (hasLongChildList) {
-                HorizontalDivider(
-                    modifier = Modifier.padding(horizontal = 12.dp),
-                    color = MaterialTheme.colorScheme.outlineVariant,
-                )
+                HorizontalDivider(modifier = Modifier.padding(horizontal = KatariTheme.spacing.m))
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable { childrenExpanded = !childrenExpanded }
-                        .heightIn(min = 48.dp)
-                        .padding(horizontal = 12.dp),
+                        .heightIn(min = KatariTheme.sizes.touchTarget)
+                        .padding(horizontal = KatariTheme.spacing.m),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
@@ -199,14 +179,13 @@ internal fun ActivitySessionCard(
                             childDurations.size,
                         ),
                         modifier = Modifier.weight(1f),
-                        style = MaterialTheme.typography.labelLarge,
+                        role = TextRole.Label,
                     )
                     Text(
                         text = formatDuration(childDurations.sumOf { it.second }),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        role = TextRole.Supporting,
                     )
-                    Spacer(Modifier.width(8.dp))
+                    Spacer(Modifier.width(KatariTheme.spacing.s))
                     Icon(
                         imageVector = if (childrenExpanded) {
                             MaterialSymbols.Rounded.KeyboardArrowUp
@@ -219,15 +198,21 @@ internal fun ActivitySessionCard(
                     )
                 }
                 if (childrenExpanded) {
-                    Column(Modifier.padding(start = 12.dp, end = 12.dp, bottom = 8.dp)) {
+                    Column(
+                        Modifier.padding(
+                            start = KatariTheme.spacing.m,
+                            end = KatariTheme.spacing.m,
+                            bottom = KatariTheme.spacing.s,
+                        ),
+                    ) {
                         childDurations.forEachIndexed { index, (title, duration) ->
                             if (index > 0) {
-                                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                                HorizontalDivider()
                             }
                             ActivityChildRow(
                                 title = title,
                                 duration = formatDuration(duration),
-                                modifier = Modifier.padding(vertical = 8.dp),
+                                modifier = Modifier.padding(vertical = KatariTheme.spacing.s),
                             )
                         }
                     }
@@ -247,16 +232,16 @@ private fun ActivityChildRow(
         Text(
             text = title,
             modifier = Modifier.weight(1f),
-            style = MaterialTheme.typography.bodySmall,
+            role = TextRole.Supporting,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
         )
         duration?.let {
-            Spacer(Modifier.width(12.dp))
+            Spacer(Modifier.width(KatariTheme.spacing.m))
             Text(
                 text = it,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                role = TextRole.Badge,
+                tone = ContentTone.Secondary,
             )
         }
     }

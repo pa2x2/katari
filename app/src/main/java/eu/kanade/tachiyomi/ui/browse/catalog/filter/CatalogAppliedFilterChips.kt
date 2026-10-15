@@ -1,24 +1,14 @@
 package eu.kanade.tachiyomi.ui.browse.catalog
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Icon
-import androidx.compose.material3.InputChip
-import androidx.compose.material3.InputChipDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.style.TextDecoration
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.change.FilterChangeKind
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.change.FilterChangeLabel
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.change.description
@@ -27,11 +17,9 @@ import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.ArrowDownward
 import mihon.icons.materialsymbols.rounded.ArrowUpward
 import mihon.icons.materialsymbols.rounded.Check
-import mihon.icons.materialsymbols.rounded.Close
 import mihon.icons.materialsymbols.rounded.Remove
-import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.material.padding
-import tachiyomi.presentation.core.i18n.stringResource
+import mihon.presentation.kit.chip.InputChip
+import mihon.presentation.kit.theme.KatariTheme
 
 /**
  * The applied filter values of the current search, each removable on its own.
@@ -47,8 +35,8 @@ internal fun CatalogAppliedFilterChips(
     Row(
         modifier = Modifier
             .horizontalScroll(rememberScrollState())
-            .padding(horizontal = MaterialTheme.padding.small),
-        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
+            .padding(horizontal = KatariTheme.spacing.s),
+        horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
     ) {
         labels.forEach { label -> AppliedFilterChip(label, onOpenFilters, onRemove) }
     }
@@ -60,47 +48,20 @@ private fun AppliedFilterChip(
     onOpenFilters: (FilterChangeLabel) -> Unit,
     onRemove: (FilterChangeLabel) -> Unit,
 ) {
-    val excluded = label.kind == FilterChangeKind.Excluded
     val description = label.description()
-    val removeDescription = stringResource(MR.strings.action_remove)
     InputChip(
-        selected = true,
+        label = label.displayText(),
         onClick = { onOpenFilters(label) },
         modifier = Modifier.semantics { contentDescription = description },
-        label = {
-            Text(
-                text = label.displayText(),
-                textDecoration = if (excluded) TextDecoration.LineThrough else null,
-            )
-        },
-        leadingIcon = when (label.kind) {
+        selected = true,
+        icon = when (label.kind) {
             FilterChangeKind.Included -> MaterialSymbols.Rounded.Check
             FilterChangeKind.Excluded -> MaterialSymbols.Rounded.Remove
             FilterChangeKind.Ascending -> MaterialSymbols.Rounded.ArrowUpward
             FilterChangeKind.Descending -> MaterialSymbols.Rounded.ArrowDownward
             FilterChangeKind.Value, FilterChangeKind.SelectedCount -> null
-        }?.let { icon ->
-            { Icon(icon, contentDescription = null, modifier = Modifier.size(InputChipDefaults.IconSize)) }
         },
-        trailingIcon = {
-            Icon(
-                imageVector = MaterialSymbols.Rounded.Close,
-                contentDescription = removeDescription,
-                modifier = Modifier
-                    .size(InputChipDefaults.IconSize)
-                    .clip(CircleShape)
-                    .clickable { onRemove(label) },
-            )
-        },
-        colors = if (excluded) {
-            InputChipDefaults.inputChipColors(
-                selectedContainerColor = MaterialTheme.colorScheme.errorContainer,
-                selectedLabelColor = MaterialTheme.colorScheme.onErrorContainer,
-                selectedLeadingIconColor = MaterialTheme.colorScheme.onErrorContainer,
-                selectedTrailingIconColor = MaterialTheme.colorScheme.onErrorContainer,
-            )
-        } else {
-            InputChipDefaults.inputChipColors()
-        },
+        onRemove = { onRemove(label) },
+        excluded = label.kind == FilterChangeKind.Excluded,
     )
 }

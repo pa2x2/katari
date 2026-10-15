@@ -11,17 +11,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.SheetValue
-import androidx.compose.material3.Switch
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.rememberBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -31,16 +20,27 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.CustomAccessibilityAction
-import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.components.GuideButton
 import eu.kanade.presentation.more.stats.components.rememberStatisticsDurationFormatter
 import eu.kanade.presentation.more.stats.data.StatsRecapNotifications
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.DragHandle
+import mihon.presentation.kit.button.Button
+import mihon.presentation.kit.button.ButtonStyle
+import mihon.presentation.kit.button.IconButton
+import mihon.presentation.kit.chip.FilterChip
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.control.Switch
+import mihon.presentation.kit.list.SectionHeader
+import mihon.presentation.kit.list.SettingsRow
+import mihon.presentation.kit.sheet.Sheet
+import mihon.presentation.kit.surface.HorizontalDivider
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
 import tachiyomi.domain.statistics.model.StatisticsCard
@@ -48,7 +48,6 @@ import tachiyomi.domain.statistics.model.StatisticsCardLayout
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun StatisticsLayoutEditor(
     initial: StatisticsCardLayout,
@@ -77,52 +76,54 @@ internal fun StatisticsLayoutEditor(
     }
     val moveUp = stringResource(MR.strings.statistics_move_up)
     val moveDown = stringResource(MR.strings.statistics_move_down)
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = rememberBottomSheetState(
-            initialValue = SheetValue.Hidden,
-            enabledValues = setOf(SheetValue.Hidden, SheetValue.Expanded),
-        ),
-    ) {
-        Column(Modifier.fillMaxWidth().fillMaxHeight(0.9f).padding(horizontal = 16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+    Sheet(onDismissRequest = onDismiss) {
+        Column(Modifier.fillMaxWidth().fillMaxHeight(SHEET_HEIGHT_FRACTION)) {
+            Row(
+                modifier = Modifier.padding(start = KatariTheme.spacing.rowInset, end = KatariTheme.spacing.xs),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
                 Text(
-                    stringResource(MR.strings.statistics_customize),
-                    style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.weight(1f),
+                    text = stringResource(MR.strings.statistics_customize),
+                    modifier = Modifier.weight(1f).padding(vertical = KatariTheme.spacing.l),
+                    role = TextRole.SheetTitle,
                 )
                 GuideButton(page = "statistics/")
             }
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                TextButton(onClick = { draft = StatisticsCardLayout() }) {
-                    Text(stringResource(MR.strings.statistics_reset_layout))
-                }
-                TextButton(onClick = {
-                    onSave(draft, goalMinutes, recapNotifications)
-                }) { Text(stringResource(MR.strings.action_save)) }
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = KatariTheme.spacing.s),
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Button(
+                    label = stringResource(MR.strings.statistics_reset_layout),
+                    onClick = { draft = StatisticsCardLayout() },
+                    style = ButtonStyle.Text,
+                )
+                Button(
+                    label = stringResource(MR.strings.action_save),
+                    onClick = { onSave(draft, goalMinutes, recapNotifications) },
+                    style = ButtonStyle.Text,
+                )
             }
+            HorizontalDivider()
             LazyColumn(
                 state = listState,
                 modifier = Modifier.weight(1f),
-                contentPadding = PaddingValues(bottom = 24.dp),
+                contentPadding = PaddingValues(bottom = KatariTheme.spacing.xl),
             ) {
                 StatisticsCardGroup.entries.forEach { group ->
                     val section = sectionCards(group)
                     if (section.isEmpty()) return@forEach
                     item(key = "section-${group.name}") {
-                        Text(
-                            text = stringResource(group.label),
-                            modifier = Modifier.padding(top = 16.dp, bottom = 4.dp).semantics { heading() },
-                            style = MaterialTheme.typography.titleSmall,
-                            color = MaterialTheme.colorScheme.primary,
-                        )
+                        SectionHeader(stringResource(group.label), Modifier.semantics { heading() })
                     }
                     items(section, key = { it.id }) { card ->
                         ReorderableItem(reorderState, card.id) {
                             val label = stringResource(card.label())
                             val index = section.indexOf(card)
-                            Row(
-                                modifier = Modifier.fillMaxWidth().semantics {
+                            val shown = card !in draft.hidden
+                            SettingsRow(
+                                title = label,
+                                modifier = Modifier.semantics {
                                     customActions = buildList {
                                         section.getOrNull(index - 1)?.let { previous ->
                                             add(
@@ -141,44 +142,28 @@ internal fun StatisticsLayoutEditor(
                                             )
                                         }
                                     }
-                                }.padding(vertical = 4.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                IconButton(onClick = {}, modifier = Modifier.draggableHandle()) {
-                                    Icon(
-                                        MaterialSymbols.Rounded.DragHandle,
-                                        stringResource(MR.strings.statistics_reorder),
+                                },
+                                subtitle = card.availabilityHint()?.let { stringResource(it) },
+                                leading = {
+                                    IconButton(
+                                        icon = MaterialSymbols.Rounded.DragHandle,
+                                        contentDescription = stringResource(MR.strings.statistics_reorder),
+                                        onClick = {},
+                                        modifier = Modifier.draggableHandle(),
                                     )
-                                }
-                                Column(Modifier.weight(1f).padding(horizontal = 8.dp)) {
-                                    Text(label)
-                                    card.availabilityHint()?.let { hint ->
-                                        Text(
-                                            text = stringResource(hint),
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        )
-                                    }
-                                }
-                                Switch(
-                                    modifier = Modifier.semantics { contentDescription = label },
-                                    checked = card !in draft.hidden,
-                                    onCheckedChange = { checked ->
-                                        val hidden = if (checked) draft.hidden - card else draft.hidden + card
-                                        draft = draft.copy(hidden = hidden)
-                                    },
-                                )
-                            }
+                                },
+                                trailing = { Switch(checked = shown, onCheckedChange = null) },
+                                role = Role.Switch,
+                                onClick = {
+                                    val hidden = if (shown) draft.hidden + card else draft.hidden - card
+                                    draft = draft.copy(hidden = hidden)
+                                },
+                            )
                         }
                     }
                 }
                 item(key = "section-goal") {
-                    Text(
-                        text = stringResource(MR.strings.statistics_goal_section),
-                        modifier = Modifier.padding(top = 16.dp, bottom = 4.dp).semantics { heading() },
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.primary,
-                    )
+                    SectionHeader(stringResource(MR.strings.statistics_goal_section), Modifier.semantics { heading() })
                 }
                 item(key = "daily-goal") {
                     DailyGoalSetting(goalMinutes = goalMinutes, onGoalMinutesChange = { goalMinutes = it })
@@ -207,34 +192,28 @@ internal fun StatisticsLayoutEditor(
 @Composable
 private fun DailyGoalSetting(goalMinutes: Int, onGoalMinutesChange: (Int) -> Unit) {
     val formatDuration = rememberStatisticsDurationFormatter()
-    Column(Modifier.padding(vertical = 4.dp)) {
-        Text(stringResource(MR.strings.statistics_daily_goal))
-        Text(
-            text = stringResource(MR.strings.statistics_daily_goal_summary),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        FlowRow(
-            modifier = Modifier.padding(top = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            DAILY_GOAL_MINUTES.forEach { minutes ->
-                FilterChip(
-                    selected = minutes == goalMinutes,
-                    onClick = { onGoalMinutesChange(minutes) },
-                    label = {
-                        Text(
-                            if (minutes == 0) {
-                                stringResource(MR.strings.statistics_goal_off)
-                            } else {
-                                formatDuration(minutes * 60_000L)
-                            },
-                        )
-                    },
-                )
+    SettingsRow(
+        title = stringResource(MR.strings.statistics_daily_goal),
+        subtitle = stringResource(MR.strings.statistics_daily_goal_summary),
+        below = {
+            FlowRow(
+                modifier = Modifier.padding(top = KatariTheme.spacing.s),
+                horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
+            ) {
+                DAILY_GOAL_MINUTES.forEach { minutes ->
+                    FilterChip(
+                        label = if (minutes == 0) {
+                            stringResource(MR.strings.statistics_goal_off)
+                        } else {
+                            formatDuration(minutes * 60_000L)
+                        },
+                        selected = minutes == goalMinutes,
+                        onClick = { onGoalMinutesChange(minutes) },
+                    )
+                }
             }
-        }
-    }
+        },
+    )
 }
 
 @Composable
@@ -244,24 +223,16 @@ private fun RecapNotificationSetting(
     enabled: Boolean,
     onEnabledChange: (Boolean) -> Unit,
 ) {
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Column(Modifier.weight(1f).padding(end = 8.dp)) {
-            Text(label)
-            Text(
-                text = summary,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-        Switch(
-            modifier = Modifier.semantics { contentDescription = label },
-            checked = enabled,
-            onCheckedChange = onEnabledChange,
-        )
-    }
+    SettingsRow(
+        title = label,
+        subtitle = summary,
+        trailing = { Switch(checked = enabled, onCheckedChange = null) },
+        role = Role.Switch,
+        onClick = { onEnabledChange(!enabled) },
+    )
 }
 
 private val DAILY_GOAL_MINUTES = listOf(0, 15, 30, 45, 60, 120)
+
+/** How much of the window the sheet takes, so the card list scrolls inside it rather than growing with it. */
+private const val SHEET_HEIGHT_FRACTION = 0.9f

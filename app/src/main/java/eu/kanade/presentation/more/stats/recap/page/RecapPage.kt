@@ -4,8 +4,8 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import eu.kanade.presentation.more.stats.recap.palette.RecapPalette
 import eu.kanade.tachiyomi.ui.stats.recap.story.StatisticsRecapPage
+import mihon.presentation.kit.theme.StoryPalette
 
 /**
  * One recap page in its frame.
@@ -16,7 +16,7 @@ import eu.kanade.tachiyomi.ui.stats.recap.story.StatisticsRecapPage
 @Composable
 internal fun RecapPage(
     page: StatisticsRecapPage,
-    palette: RecapPalette,
+    palette: StoryPalette,
     periodTitle: String,
     footer: String,
     modifier: Modifier = Modifier,

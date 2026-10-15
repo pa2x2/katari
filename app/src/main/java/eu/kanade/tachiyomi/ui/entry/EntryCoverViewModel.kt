@@ -2,7 +2,6 @@ package eu.kanade.tachiyomi.ui.entry
 
 import android.content.Context
 import android.net.Uri
-import androidx.compose.material3.SnackbarHostState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import coil3.asDrawable
@@ -24,6 +23,7 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import logcat.LogPriority
+import mihon.presentation.kit.feedback.SnackbarHostState
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.withIOContext

@@ -1,25 +1,11 @@
 package eu.kanade.presentation.library.update.report.components
 
-import android.text.format.DateFormat
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
-import androidx.compose.material3.SelectableDates
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TimePicker
-import androidx.compose.material3.rememberDatePickerState
-import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
@@ -29,6 +15,13 @@ import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.plus
 import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
+import mihon.presentation.kit.dialog.Dialog
+import mihon.presentation.kit.dialog.DialogAction
+import mihon.presentation.kit.field.DatePickerDialog
+import mihon.presentation.kit.field.SelectableDates
+import mihon.presentation.kit.field.TimePicker
+import mihon.presentation.kit.field.rememberDatePickerState
+import mihon.presentation.kit.field.rememberTimePickerState
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import kotlin.time.Clock
@@ -58,59 +51,27 @@ internal fun SourcePauseUntilDialog(onConfirm: (Long) -> Unit, onDismissRequest:
             },
         )
         DatePickerDialog(
+            title = stringResource(MR.strings.library_update_pause_until_title),
+            state = dateState,
+            onConfirm = { pickedDay = dateState.selectedDateMillis },
             onDismissRequest = onDismissRequest,
-            confirmButton = {
-                TextButton(
-                    onClick = { pickedDay = dateState.selectedDateMillis },
-                    enabled = dateState.selectedDateMillis != null,
-                ) {
-                    Text(stringResource(MR.strings.action_ok))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = onDismissRequest) {
-                    Text(stringResource(MR.strings.action_cancel))
-                }
-            },
-        ) {
-            DatePicker(
-                state = dateState,
-                // The padding Material gives its default title, which this one replaces.
-                title = {
-                    Text(
-                        text = stringResource(MR.strings.library_update_pause_until_title),
-                        modifier = Modifier.padding(start = 24.dp, end = 12.dp, top = 16.dp),
-                    )
-                },
-                showModeToggle = false,
-            )
-        }
-    } else {
-        val timeState = rememberTimePickerState(
-            initialHour = now.hour,
-            initialMinute = now.minute,
-            is24Hour = DateFormat.is24HourFormat(LocalContext.current),
         )
+    } else {
+        val timeState = rememberTimePickerState(initialHour = now.hour, initialMinute = now.minute)
         val date = Instant.fromEpochMilliseconds(day).toLocalDateTime(TimeZone.UTC).date
         val until = LocalDateTime(date, LocalTime(timeState.hour, timeState.minute)).toInstant(timeZone)
-        AlertDialog(
+        Dialog(
             onDismissRequest = onDismissRequest,
-            title = { Text(stringResource(MR.strings.library_update_pause_until_title)) },
-            text = { TimePicker(state = timeState) },
-            confirmButton = {
-                TextButton(
-                    onClick = { onConfirm(until.toEpochMilliseconds()) },
-                    enabled = until > Clock.System.now(),
-                ) {
-                    Text(stringResource(MR.strings.action_ok))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { pickedDay = null }) {
-                    Text(stringResource(MR.strings.action_back))
-                }
-            },
-        )
+            title = stringResource(MR.strings.library_update_pause_until_title),
+            confirm = DialogAction(
+                label = stringResource(MR.strings.action_ok),
+                onClick = { onConfirm(until.toEpochMilliseconds()) },
+                enabled = until > Clock.System.now(),
+            ),
+            dismiss = DialogAction(label = stringResource(MR.strings.action_back), onClick = { pickedDay = null }),
+        ) {
+            TimePicker(state = timeState)
+        }
     }
 }
 

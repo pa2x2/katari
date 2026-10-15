@@ -15,15 +15,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
-import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.more.stats.recap.components.LocalRecapPalette
 import eu.kanade.presentation.more.stats.recap.components.RecapText
-import eu.kanade.presentation.more.stats.recap.components.RecapTypography
-import eu.kanade.presentation.more.stats.recap.palette.RecapPalette
+import mihon.presentation.kit.content.StoryMetrics
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.StoryPalette
+import mihon.presentation.kit.theme.StoryTheme
+import mihon.presentation.kit.theme.TextRole
 
 /**
- * A page at the size it's shared at: 360 by 640 dp drawn at three pixels per dp, so the image is always 1080 by 1920
- * whatever the screen. The screen scales it to fit; [modifier] applies to the page itself, as captured.
+ * A page at the size it's shared at: [StoryMetrics.pageWidth] by [StoryMetrics.pageHeight] drawn at three pixels per
+ * dp, so the image is always 1080 by 1920 whatever the screen. The screen scales it to fit; [modifier] applies to the
+ * page itself, as captured.
  *
  * The page has no background of its own: the story draws [drawRecapBackdrop] across the whole screen, so pages run
  * edge to edge, and draws it into a page it shares.
@@ -33,35 +37,44 @@ import eu.kanade.presentation.more.stats.recap.palette.RecapPalette
  */
 @Composable
 internal fun RecapPageFrame(
-    palette: RecapPalette,
+    palette: StoryPalette,
     footer: String,
     modifier: Modifier = Modifier,
     behind: @Composable BoxScope.() -> Unit = {},
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    CompositionLocalProvider(
-        LocalDensity provides Density(PAGE_DENSITY, fontScale = 1f),
-        LocalRecapPalette provides palette,
-    ) {
-        Box(modifier.requiredSize(PAGE_WIDTH, PAGE_HEIGHT).clipToBounds()) {
-            behind()
-            Column(Modifier.fillMaxSize().padding(start = 28.dp, end = 28.dp, top = 40.dp, bottom = 22.dp)) {
+    StoryTheme(palette, page = true) {
+        CompositionLocalProvider(
+            LocalDensity provides Density(PAGE_DENSITY, fontScale = 1f),
+            LocalRecapPalette provides palette,
+        ) {
+            Box(modifier.requiredSize(StoryMetrics.pageWidth, StoryMetrics.pageHeight).clipToBounds()) {
+                behind()
                 Column(
-                    modifier = Modifier.weight(1f).fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                    content = content,
-                )
-                RecapText(
-                    text = footer.uppercase(),
-                    style = RecapTypography.Tiny,
-                    color = palette.muted,
-                    modifier = Modifier.padding(top = 16.dp),
-                )
+                    Modifier
+                        .fillMaxSize()
+                        .padding(
+                            start = StoryMetrics.pageSideMargin,
+                            end = StoryMetrics.pageSideMargin,
+                            top = StoryMetrics.pageTopMargin,
+                            bottom = StoryMetrics.pageBottomMargin,
+                        ),
+                ) {
+                    Column(
+                        modifier = Modifier.weight(1f).fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.l),
+                        content = content,
+                    )
+                    RecapText(
+                        text = footer.uppercase(),
+                        role = TextRole.Badge,
+                        tone = ContentTone.Secondary,
+                        modifier = Modifier.padding(top = KatariTheme.spacing.l),
+                    )
+                }
             }
         }
     }
 }
 
 private const val PAGE_DENSITY = 3f
-internal val PAGE_WIDTH = 360.dp
-private val PAGE_HEIGHT = 640.dp

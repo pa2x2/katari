@@ -1,23 +1,18 @@
 package eu.kanade.presentation.browse
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import eu.kanade.presentation.browse.components.BrowseFilterSheet
 import eu.kanade.presentation.browse.components.ContentTypeFilterSection
-import eu.kanade.presentation.more.settings.widget.SwitchPreferenceWidget
+import eu.kanade.presentation.browse.components.FilterSectionHeading
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.ui.browse.extension.ExtensionFilterState
 import eu.kanade.tachiyomi.util.system.LocaleHelper
+import mihon.presentation.kit.list.ToggleRow
+import mihon.presentation.kit.surface.HorizontalDivider
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable
@@ -48,79 +43,49 @@ fun ExtensionFilterSheet(
             }
 
             item(key = "divider") {
-                HorizontalDivider(
-                    modifier = Modifier.padding(horizontal = MaterialTheme.padding.medium),
-                )
+                HorizontalDivider()
             }
 
             if (state.stores.stores.isNotEmpty()) {
                 item(key = "stores-heading") {
-                    Column(
-                        modifier = Modifier.padding(
-                            horizontal = MaterialTheme.padding.medium,
-                            vertical = MaterialTheme.padding.medium,
-                        ),
-                    ) {
-                        Text(
-                            text = stringResource(MR.strings.extensionStores),
-                            style = MaterialTheme.typography.titleMedium,
-                        )
-                        Text(
-                            text = stringResource(MR.strings.extension_filter_stores_summary),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(top = MaterialTheme.padding.extraSmall),
-                        )
-                    }
+                    FilterSectionHeading(
+                        title = stringResource(MR.strings.extensionStores),
+                        summary = stringResource(MR.strings.extension_filter_stores_summary),
+                    )
                 }
 
                 items(
                     items = state.stores.stores,
                     key = { it.indexUrl },
                 ) { store ->
-                    SwitchPreferenceWidget(
+                    ToggleRow(
                         title = store.name,
                         subtitle = store.indexUrl,
                         checked = state.stores.isEnabled(store),
-                        onCheckedChanged = { onToggleStore(store.indexUrl) },
+                        onCheckedChange = { onToggleStore(store.indexUrl) },
                     )
                 }
 
                 item(key = "stores-divider") {
-                    HorizontalDivider(
-                        modifier = Modifier.padding(horizontal = MaterialTheme.padding.medium),
-                    )
+                    HorizontalDivider()
                 }
             }
 
             item(key = "languages-heading") {
-                Column(
-                    modifier = Modifier.padding(
-                        horizontal = MaterialTheme.padding.medium,
-                        vertical = MaterialTheme.padding.medium,
-                    ),
-                ) {
-                    Text(
-                        text = stringResource(MR.strings.extension_filter_languages),
-                        style = MaterialTheme.typography.titleMedium,
-                    )
-                    Text(
-                        text = stringResource(MR.strings.extension_filter_languages_summary),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(top = MaterialTheme.padding.extraSmall),
-                    )
-                }
+                FilterSectionHeading(
+                    title = stringResource(MR.strings.extension_filter_languages),
+                    summary = stringResource(MR.strings.extension_filter_languages_summary),
+                )
             }
 
             items(
                 items = state.languages,
                 key = { it },
             ) { language ->
-                SwitchPreferenceWidget(
+                ToggleRow(
                     title = LocaleHelper.getSourceDisplayName(language, LocalContext.current),
                     checked = language in state.enabledLanguages,
-                    onCheckedChanged = { onToggleLanguage(language) },
+                    onCheckedChange = { onToggleLanguage(language) },
                 )
             }
         }

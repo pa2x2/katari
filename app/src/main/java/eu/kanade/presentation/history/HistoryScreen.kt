@@ -2,35 +2,35 @@ package eu.kanade.presentation.history
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewParameter
-import eu.kanade.presentation.components.AppBar
-import eu.kanade.presentation.components.AppBarActions
-import eu.kanade.presentation.components.AppBarTitle
-import eu.kanade.presentation.components.AppSnackbarHost
-import eu.kanade.presentation.components.SearchToolbar
 import eu.kanade.presentation.components.relativeDateText
 import eu.kanade.presentation.history.components.HistoryListItem
 import eu.kanade.presentation.more.stats.components.rememberStatisticsDurationFormatter
-import eu.kanade.presentation.theme.TachiyomiPreviewTheme
 import eu.kanade.tachiyomi.ui.history.HistoryViewModel
 import kotlinx.datetime.LocalDate
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.DeleteSweep
+import mihon.presentation.kit.feedback.EmptyScreen
+import mihon.presentation.kit.feedback.LoadingScreen
+import mihon.presentation.kit.feedback.NoResults
+import mihon.presentation.kit.feedback.SnackbarHost
+import mihon.presentation.kit.feedback.SnackbarHostState
+import mihon.presentation.kit.list.SectionHeader
+import mihon.presentation.kit.navigation.AppBar
+import mihon.presentation.kit.navigation.AppBarActions
+import mihon.presentation.kit.navigation.AppBarTitle
+import mihon.presentation.kit.navigation.Scaffold
+import mihon.presentation.kit.navigation.SearchToolbar
+import mihon.presentation.kit.theme.KatariPreviewTheme
 import tachiyomi.domain.history.model.HistoryItem
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.FastScrollLazyColumn
-import tachiyomi.presentation.core.components.ListGroupHeader
-import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.screens.EmptyScreen
-import tachiyomi.presentation.core.screens.LoadingScreen
 
 @Composable
 fun HistoryScreen(
@@ -68,21 +68,20 @@ fun HistoryScreen(
                 scrollBehavior = scrollBehavior,
             )
         },
-        snackbarHost = { AppSnackbarHost(hostState = snackbarHostState) },
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
     ) { contentPadding ->
         state.list.let {
             if (it == null) {
                 LoadingScreen(Modifier.padding(contentPadding))
             } else if (it.isEmpty()) {
-                val msg = if (!state.searchQuery.isNullOrEmpty()) {
-                    MR.strings.no_results_found
+                if (!state.searchQuery.isNullOrEmpty()) {
+                    NoResults(modifier = Modifier.padding(contentPadding))
                 } else {
-                    MR.strings.information_no_recent_history
+                    EmptyScreen(
+                        stringRes = MR.strings.information_no_recent_history,
+                        modifier = Modifier.padding(contentPadding),
+                    )
                 }
-                EmptyScreen(
-                    stringRes = msg,
-                    modifier = Modifier.padding(contentPadding),
-                )
             } else {
                 HistoryScreenContent(
                     history = it,
@@ -129,13 +128,12 @@ private fun HistoryScreenContent(
             when (item) {
                 is HistoryUiModel.Header -> {
                     val duration = dayDurations[item.date]?.takeIf { it > 0L }
-                    ListGroupHeader(
-                        modifier = Modifier
-                            .animateItem()
-                            .fillMaxWidth()
-                            .clickable(enabled = duration != null) { onClickDay(item.date) },
+                    SectionHeader(
                         text = listOfNotNull(relativeDateText(item.date), duration?.let(formatDuration))
                             .joinToString(" · "),
+                        modifier = Modifier
+                            .animateItem()
+                            .clickable(enabled = duration != null) { onClickDay(item.date) },
                     )
                 }
                 is HistoryUiModel.Item -> {
@@ -167,7 +165,7 @@ internal fun HistoryScreenPreviews(
     @PreviewParameter(HistoryViewModelStateProvider::class)
     historyState: HistoryViewModel.State,
 ) {
-    TachiyomiPreviewTheme {
+    KatariPreviewTheme {
         HistoryScreen(
             state = historyState,
             dayDurations = emptyMap(),

@@ -6,22 +6,11 @@ import android.net.Uri
 import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MultiChoiceSegmentedButtonRow
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.ReadOnlyComposable
@@ -32,7 +21,6 @@ import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
@@ -42,10 +30,9 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import com.hippo.unifile.UniFile
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.screen.data.CreateBackupScreen
+import eu.kanade.presentation.more.settings.screen.data.LibraryExportColumnsDialog
 import eu.kanade.presentation.more.settings.screen.data.StorageInfo
 import eu.kanade.presentation.more.settings.screen.data.rememberRestoreBackupLauncher
-import eu.kanade.presentation.more.settings.widget.BasePreferenceWidget
-import eu.kanade.presentation.more.settings.widget.PrefsHorizontalPadding
 import eu.kanade.presentation.util.relativeTimeSpanString
 import eu.kanade.tachiyomi.data.backup.create.BackupCreateJob
 import eu.kanade.tachiyomi.data.export.LibraryExporter
@@ -60,6 +47,10 @@ import mihon.entry.interactions.media.EntryMediaCacheFeature
 import mihon.entry.interactions.media.EntryMediaCacheId
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.automirroredrounded.Help
+import mihon.presentation.kit.button.Button
+import mihon.presentation.kit.button.ButtonStyle
+import mihon.presentation.kit.button.IconButton
+import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.core.common.Constants
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.storage.displayablePath
@@ -71,7 +62,6 @@ import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.storage.service.StoragePreferences
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.material.TextButton
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
 import uy.kohesive.injekt.Injekt
@@ -89,12 +79,11 @@ object SettingsDataScreen : SearchableSettings {
     @Composable
     override fun RowScope.AppBarAction() {
         val uriHandler = LocalUriHandler.current
-        IconButton(onClick = { uriHandler.openUri(HELP_URL) }) {
-            Icon(
-                imageVector = MaterialSymbols.AutoMirroredRounded.Help,
-                contentDescription = stringResource(MR.strings.onboarding_storage_help_action),
-            )
-        }
+        IconButton(
+            icon = MaterialSymbols.AutoMirroredRounded.Help,
+            contentDescription = stringResource(MR.strings.onboarding_storage_help_action),
+            onClick = { uriHandler.openUri(HELP_URL) },
+        )
     }
 
     @Composable
@@ -201,33 +190,25 @@ object SettingsDataScreen : SearchableSettings {
                 Preference.PreferenceItem.CustomPreference(
                     title = stringResource(restorePreferenceKeyString),
                 ) {
-                    BasePreferenceWidget(
-                        subcomponent = {
-                            MultiChoiceSegmentedButtonRow(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(intrinsicSize = IntrinsicSize.Min)
-                                    .padding(horizontal = PrefsHorizontalPadding),
-                            ) {
-                                SegmentedButton(
-                                    modifier = Modifier.fillMaxHeight(),
-                                    checked = false,
-                                    onCheckedChange = { navigator.push(CreateBackupScreen()) },
-                                    shape = SegmentedButtonDefaults.itemShape(0, 2),
-                                ) {
-                                    Text(stringResource(MR.strings.pref_create_backup))
-                                }
-                                SegmentedButton(
-                                    modifier = Modifier.fillMaxHeight(),
-                                    checked = false,
-                                    onCheckedChange = { restoreBackup() },
-                                    shape = SegmentedButtonDefaults.itemShape(1, 2),
-                                ) {
-                                    Text(stringResource(MR.strings.pref_restore_backup))
-                                }
-                            }
-                        },
-                    )
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = KatariTheme.spacing.rowInset, vertical = KatariTheme.spacing.l),
+                        horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
+                    ) {
+                        Button(
+                            label = stringResource(MR.strings.pref_create_backup),
+                            onClick = { navigator.push(CreateBackupScreen()) },
+                            modifier = Modifier.weight(1f),
+                            style = ButtonStyle.Outlined,
+                        )
+                        Button(
+                            label = stringResource(MR.strings.pref_restore_backup),
+                            onClick = { restoreBackup() },
+                            modifier = Modifier.weight(1f),
+                            style = ButtonStyle.Outlined,
+                        )
+                    }
                 },
 
                 // Automatic backups
@@ -277,12 +258,11 @@ object SettingsDataScreen : SearchableSettings {
                     Preference.PreferenceItem.CustomPreference(
                         title = stringResource(MR.strings.pref_storage_usage),
                     ) {
-                        BasePreferenceWidget(
-                            subcomponent = {
-                                StorageInfo(
-                                    modifier = Modifier.padding(horizontal = PrefsHorizontalPadding),
-                                )
-                            },
+                        StorageInfo(
+                            modifier = Modifier.padding(
+                                horizontal = KatariTheme.spacing.rowInset,
+                                vertical = KatariTheme.spacing.l,
+                            ),
                         )
                     },
                 )
@@ -371,7 +351,7 @@ object SettingsDataScreen : SearchableSettings {
         }
 
         if (showDialog) {
-            ColumnSelectionDialog(
+            LibraryExportColumnsDialog(
                 options = exportOptions,
                 onConfirm = { options ->
                     exportOptions = options
@@ -389,80 +369,6 @@ object SettingsDataScreen : SearchableSettings {
                     onClick = { showDialog = true },
                 ),
             ),
-        )
-    }
-
-    @Composable
-    private fun ColumnSelectionDialog(
-        options: ExportOptions,
-        onConfirm: (ExportOptions) -> Unit,
-        onDismissRequest: () -> Unit,
-    ) {
-        var titleSelected by remember { mutableStateOf(options.includeTitle) }
-        var authorSelected by remember { mutableStateOf(options.includeAuthor) }
-        var artistSelected by remember { mutableStateOf(options.includeArtist) }
-
-        AlertDialog(
-            onDismissRequest = onDismissRequest,
-            title = {
-                Text(text = stringResource(MR.strings.migration_dialog_what_to_include))
-            },
-            text = {
-                Column {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Checkbox(
-                            checked = titleSelected,
-                            onCheckedChange = { checked ->
-                                titleSelected = checked
-                                if (!checked) {
-                                    authorSelected = false
-                                    artistSelected = false
-                                }
-                            },
-                        )
-                        Text(text = stringResource(MR.strings.title))
-                    }
-
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Checkbox(
-                            checked = authorSelected,
-                            onCheckedChange = { authorSelected = it },
-                            enabled = titleSelected,
-                        )
-                        Text(text = stringResource(MR.strings.author))
-                    }
-
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Checkbox(
-                            checked = artistSelected,
-                            onCheckedChange = { artistSelected = it },
-                            enabled = titleSelected,
-                        )
-                        Text(text = stringResource(MR.strings.artist))
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        onConfirm(
-                            ExportOptions(
-                                includeTitle = titleSelected,
-                                includeAuthor = authorSelected,
-                                includeArtist = artistSelected,
-                            ),
-                        )
-                        onDismissRequest()
-                    },
-                ) {
-                    Text(text = stringResource(MR.strings.action_save))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = onDismissRequest) {
-                    Text(text = stringResource(MR.strings.action_cancel))
-                }
-            },
         )
     }
 }

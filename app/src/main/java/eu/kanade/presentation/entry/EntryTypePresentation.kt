@@ -1,22 +1,19 @@
 package eu.kanade.presentation.entry
 
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.Icon
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.util.formatChapterNumber
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.util.lang.toTimestampString
 import mihon.entry.interactions.presentation.EntryHistorySubtitlePresentation
 import mihon.entry.interactions.presentation.EntryPartialProgressPresentation
 import mihon.entry.interactions.presentation.EntryTypePresentationFeature
+import mihon.presentation.kit.content.Icon
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.material.DISABLED_ALPHA
 import tachiyomi.presentation.core.i18n.stringResource
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
@@ -25,10 +22,6 @@ import kotlin.time.Duration.Companion.milliseconds
 import eu.kanade.presentation.util.toDurationString as durationToString
 
 typealias EntryTypePresentation = mihon.entry.interactions.presentation.EntryTypePresentation
-
-object EntryTypeIconDefaults {
-    val InlineSize = 16.dp
-}
 
 /**
  * Resolves contributed type vocabulary. Generic resolution retains the requested type so missing projection evidence
@@ -50,27 +43,26 @@ fun Iterable<EntryType>.selectionEntryTypePresentation(
 fun EntryType.EntryTypeIcon(
     modifier: Modifier = Modifier,
     contentDescription: String? = null,
-    tint: Color = LocalContentColor.current,
+    tone: ContentTone = ContentTone.Inherit,
 ) {
     Icon(
         imageVector = entryTypePresentation().badgeIcon,
         contentDescription = contentDescription,
         modifier = modifier,
-        tint = tint,
+        tone = tone,
     )
 }
 
+/** The entry type's icon at text size, receding so it labels a row without competing with its title. */
 @Composable
 fun EntryType.InlineEntryTypeIndicator(
     modifier: Modifier = Modifier,
-    size: Dp = EntryTypeIconDefaults.InlineSize,
     contentDescription: String? = null,
-    tint: Color = LocalContentColor.current.copy(alpha = DISABLED_ALPHA),
 ) {
     EntryTypeIcon(
         contentDescription = contentDescription,
-        modifier = modifier.size(size),
-        tint = tint,
+        modifier = modifier.size(KatariTheme.sizes.iconSmall),
+        tone = ContentTone.Disabled,
     )
 }
 

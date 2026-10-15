@@ -5,8 +5,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.selection.DisableSelection
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -18,6 +18,10 @@ import mihon.book.api.document.BookDocumentBlockContent
 import mihon.book.api.document.BookDocumentLinkTarget
 import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentReaderPalette
 import mihon.entry.interactions.book.preparation.BookPublicationResourceLoader
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.LocalContentColor
+import mihon.presentation.kit.theme.TextRole
 
 /** Expandable recursive semantic disclosure renderer. */
 @Composable
@@ -42,13 +46,12 @@ internal fun BookDocumentDisclosureRenderer(
             .clickable {
                 selection?.handleReaderTap { expanded = !expanded } ?: run { expanded = !expanded }
             }
-            .padding(vertical = 8.dp),
+            .padding(vertical = KatariTheme.spacing.s),
     ) {
         DisableSelection {
-            Text(
-                text = if (expanded) "▾ " else "▸ ",
-                color = palette.foreground,
-            )
+            CompositionLocalProvider(LocalContentColor provides palette.foreground) {
+                Text(text = if (expanded) "▾ " else "▸ ", role = TextRole.ItemTitle)
+            }
         }
         BookDocumentRichTextRenderer(
             value = content.summary,

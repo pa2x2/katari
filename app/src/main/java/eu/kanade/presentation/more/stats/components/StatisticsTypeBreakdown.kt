@@ -4,23 +4,19 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.more.stats.data.StatsType
 import eu.kanade.tachiyomi.source.entry.EntryType
+import mihon.presentation.kit.content.LegendSwatch
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.content.lineHeight
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 
 internal data class StatisticsTypeShare(
     val label: String,
@@ -60,22 +56,18 @@ internal fun StatisticsTypeBreakdown(
     modifier: Modifier = Modifier,
 ) {
     if (!reserveLine && shares.isEmpty()) return
-    val lineHeight = with(LocalDensity.current) { MaterialTheme.typography.bodySmall.lineHeight.toDp() }
     FlowRow(
-        modifier = modifier.padding(top = 6.dp).heightIn(min = lineHeight),
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp),
+        modifier = modifier.padding(top = KatariTheme.spacing.s).heightIn(min = TextRole.Supporting.lineHeight),
+        horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.l),
+        verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xs),
     ) {
         shares.forEach { share ->
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Surface(modifier = Modifier.size(8.dp), color = share.color, shape = CircleShape, content = {})
-                Spacer(Modifier.width(6.dp))
-                Text(
-                    text = "${share.label} · ${share.duration}",
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.bodySmall,
-                    maxLines = 1,
-                )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
+            ) {
+                LegendSwatch(share.color)
+                Text(text = "${share.label} · ${share.duration}", role = TextRole.Supporting, maxLines = 1)
             }
         }
     }

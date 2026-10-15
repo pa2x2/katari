@@ -2,12 +2,13 @@ package mihon.text.recognition.ui.approval
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.unit.dp
 import mihon.model.artifacts.ui.state.formatModelArtifactSize
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.dialog.Dialog
+import mihon.presentation.kit.dialog.DialogAction
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -22,26 +23,20 @@ fun TextRecognitionPlatformModelsDialog(
     onApprove: () -> Unit,
     onDismiss: () -> Unit,
 ) {
-    AlertDialog(
+    Dialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(MR.strings.model_artifacts_approval_title)) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text(description)
-                approximateSizeBytes?.let {
-                    Text(stringResource(MR.strings.model_artifacts_approval_total, formatModelArtifactSize(it)))
-                }
+        title = stringResource(MR.strings.model_artifacts_approval_title),
+        confirm = DialogAction(stringResource(MR.strings.action_download), onApprove),
+        dismiss = DialogAction(stringResource(MR.strings.action_cancel), onDismiss),
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.m)) {
+            Text(description, role = TextRole.Body)
+            approximateSizeBytes?.let {
+                Text(
+                    text = stringResource(MR.strings.model_artifacts_approval_total, formatModelArtifactSize(it)),
+                    role = TextRole.Body,
+                )
             }
-        },
-        confirmButton = {
-            TextButton(onClick = onApprove) {
-                Text(stringResource(MR.strings.action_download))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(MR.strings.action_cancel))
-            }
-        },
-    )
+        }
+    }
 }

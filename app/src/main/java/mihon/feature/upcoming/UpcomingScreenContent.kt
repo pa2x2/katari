@@ -1,26 +1,16 @@
 package mihon.feature.upcoming
 
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.Badge
-import androidx.compose.material3.LocalContentColor
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
-import androidx.compose.ui.text.font.FontWeight
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import eu.kanade.presentation.components.AppBar
-import eu.kanade.presentation.components.AppBarActions
 import eu.kanade.presentation.components.relativeDateText
 import eu.kanade.presentation.util.isTabletUi
 import kotlinx.coroutines.launch
@@ -31,15 +21,19 @@ import mihon.feature.upcoming.components.calendar.Calendar
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.automirroredrounded.Help
 import mihon.icons.materialsymbols.rounded.FilterList
+import mihon.presentation.kit.content.Badge
+import mihon.presentation.kit.content.BadgeTone
+import mihon.presentation.kit.list.SectionHeader
+import mihon.presentation.kit.navigation.AppBar
+import mihon.presentation.kit.navigation.AppBarActions
+import mihon.presentation.kit.navigation.Scaffold
+import mihon.presentation.kit.theme.ContentTone
 import tachiyomi.core.common.Constants
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.FastScrollLazyColumn
 import tachiyomi.presentation.core.components.TwoPanelBox
-import tachiyomi.presentation.core.components.material.Scaffold
-import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.theme.active
 
 @Composable
 fun UpcomingScreenContent(
@@ -111,7 +105,7 @@ private fun UpcomingToolbar(
                     AppBar.Action(
                         title = stringResource(MR.strings.action_filter),
                         icon = MaterialSymbols.Rounded.FilterList,
-                        iconTint = if (hasFilters) MaterialTheme.colorScheme.active else LocalContentColor.current,
+                        tone = if (hasFilters) ContentTone.Active else ContentTone.Inherit,
                         onClick = onClickFilter,
                     ),
                     AppBar.Action(
@@ -130,26 +124,10 @@ private fun DateHeading(
     date: LocalDate,
     entryCount: Int,
 ) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.fillMaxWidth(),
-    ) {
-        Text(
-            text = relativeDateText(date),
-            modifier = Modifier
-                .padding(MaterialTheme.padding.small)
-                .padding(start = MaterialTheme.padding.small),
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            fontWeight = FontWeight.SemiBold,
-            style = MaterialTheme.typography.bodyMedium,
-        )
-        Badge(
-            containerColor = MaterialTheme.colorScheme.primary,
-            contentColor = MaterialTheme.colorScheme.onPrimary,
-        ) {
-            Text("$entryCount")
-        }
-    }
+    SectionHeader(
+        text = relativeDateText(date),
+        trailing = { Badge(text = entryCount.toString(), tone = BadgeTone.Primary) },
+    )
 }
 
 @Composable

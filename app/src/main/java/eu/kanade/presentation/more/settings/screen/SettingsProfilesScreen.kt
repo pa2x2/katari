@@ -1,10 +1,5 @@
 package eu.kanade.presentation.more.settings.screen
 
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
@@ -19,6 +14,10 @@ import mihon.feature.profiles.core.ProfilesPreferences
 import mihon.feature.profiles.ui.ProfilesSettingsScreen
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Info
+import mihon.presentation.kit.button.IconButton
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.dialog.Dialog
+import mihon.presentation.kit.dialog.DialogAction
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import uy.kohesive.injekt.Injekt
@@ -37,16 +36,13 @@ object SettingsProfilesScreen : SearchableSettings {
         var showProfilesInfo by rememberSaveable { mutableStateOf(false) }
 
         if (showProfilesInfo) {
-            AlertDialog(
+            Dialog(
                 onDismissRequest = { showProfilesInfo = false },
-                title = { Text(text = stringResource(MR.strings.profiles_info_title)) },
-                text = { Text(text = stringResource(MR.strings.profiles_info_description)) },
-                confirmButton = {
-                    TextButton(onClick = { showProfilesInfo = false }) {
-                        Text(text = stringResource(MR.strings.action_close))
-                    }
-                },
-            )
+                title = stringResource(MR.strings.profiles_info_title),
+                confirm = DialogAction(stringResource(MR.strings.action_close), onClick = { showProfilesInfo = false }),
+            ) {
+                Text(stringResource(MR.strings.profiles_info_description))
+            }
         }
 
         return listOf(
@@ -57,12 +53,11 @@ object SettingsProfilesScreen : SearchableSettings {
                         title = stringResource(MR.strings.profiles_manage_title),
                         subtitle = stringResource(MR.strings.profiles_manage_summary),
                         widget = {
-                            IconButton(onClick = { showProfilesInfo = true }) {
-                                Icon(
-                                    imageVector = MaterialSymbols.Rounded.Info,
-                                    contentDescription = stringResource(MR.strings.profiles_info_title),
-                                )
-                            }
+                            IconButton(
+                                icon = MaterialSymbols.Rounded.Info,
+                                contentDescription = stringResource(MR.strings.profiles_info_title),
+                                onClick = { showProfilesInfo = true },
+                            )
                         },
                         onClick = {
                             navigator.push(ProfilesSettingsScreen())

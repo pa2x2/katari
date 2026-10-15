@@ -1,28 +1,19 @@
 package eu.kanade.presentation.entry.components
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import androidx.compose.ui.unit.dp
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.EditNote
+import mihon.presentation.kit.button.Button
+import mihon.presentation.kit.button.ButtonStyle
+import mihon.presentation.kit.surface.HorizontalDivider
+import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.material.Button
-import tachiyomi.presentation.core.components.material.ButtonDefaults
-import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable
@@ -43,37 +34,19 @@ fun EntryNotesSection(
         )
         if (expanded) {
             Button(
+                label = stringResource(MR.strings.action_edit_notes),
                 onClick = onEditNotes,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Transparent,
-                    contentColor = MaterialTheme.colorScheme.primary,
-                ),
-                shape = RoundedCornerShape(8.dp),
-                modifier = Modifier
-                    .padding(horizontal = 16.dp, vertical = 4.dp),
-            ) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.extraSmall),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Icon(
-                        imageVector = MaterialSymbols.Rounded.EditNote,
-                        contentDescription = null,
-                        modifier = Modifier
-                            .size(16.dp),
-                    )
-                    Text(
-                        stringResource(MR.strings.action_edit_notes),
-                    )
-                }
-            }
+                modifier = Modifier.padding(horizontal = KatariTheme.spacing.l, vertical = KatariTheme.spacing.xs),
+                style = ButtonStyle.Text,
+                icon = MaterialSymbols.Rounded.EditNote,
+            )
         }
 
         HorizontalDivider(
             modifier = Modifier
                 .padding(
-                    top = if (expanded) 0.dp else 12.dp,
-                    bottom = if (expanded) 16.dp else 12.dp,
+                    top = if (expanded) KatariTheme.sizes.none else KatariTheme.spacing.m,
+                    bottom = if (expanded) KatariTheme.spacing.l else KatariTheme.spacing.m,
                 ),
         )
     }

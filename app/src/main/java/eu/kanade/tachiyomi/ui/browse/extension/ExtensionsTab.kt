@@ -1,9 +1,6 @@
 package eu.kanade.tachiyomi.ui.browse.extension
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -16,7 +13,6 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.browse.ExtensionFilterSheet
 import eu.kanade.presentation.browse.ExtensionScreen
-import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.TabContent
 import eu.kanade.presentation.more.settings.screen.browse.ExtensionStoresScreen
 import eu.kanade.tachiyomi.extension.model.Extension
@@ -25,6 +21,8 @@ import eu.kanade.tachiyomi.ui.webview.WebViewScreen
 import eu.kanade.tachiyomi.util.system.isPackageInstalled
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.FilterList
+import mihon.presentation.kit.dialog.ConfirmDialog
+import mihon.presentation.kit.navigation.AppBar
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -140,28 +138,15 @@ private fun ExtensionUninstallConfirmation(
     onClickConfirm: () -> Unit,
     onDismissRequest: () -> Unit,
 ) {
-    AlertDialog(
-        title = {
-            Text(text = stringResource(MR.strings.ext_confirm_remove))
-        },
-        text = {
-            Text(text = stringResource(MR.strings.remove_private_extension_message, extensionName))
-        },
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    onClickConfirm()
-                    onDismissRequest()
-                },
-            ) {
-                Text(text = stringResource(MR.strings.ext_remove))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismissRequest) {
-                Text(text = stringResource(MR.strings.action_cancel))
-            }
+    ConfirmDialog(
+        title = stringResource(MR.strings.ext_confirm_remove),
+        text = stringResource(MR.strings.remove_private_extension_message, extensionName),
+        confirmLabel = stringResource(MR.strings.ext_remove),
+        onConfirm = {
+            onClickConfirm()
+            onDismissRequest()
         },
         onDismissRequest = onDismissRequest,
+        destructive = true,
     )
 }

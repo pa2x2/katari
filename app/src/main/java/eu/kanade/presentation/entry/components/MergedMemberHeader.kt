@@ -6,20 +6,20 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.tachiyomi.source.entry.EntryType
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.KeyboardArrowDown
 import mihon.icons.materialsymbols.rounded.KeyboardArrowUp
+import mihon.presentation.kit.content.Icon
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -51,22 +51,13 @@ internal fun MergedMemberHeader(
         modifier = modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(horizontal = MaterialTheme.padding.medium, vertical = MaterialTheme.padding.small),
-        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
+            .padding(horizontal = KatariTheme.spacing.contentInset, vertical = KatariTheme.spacing.s),
+        horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Text(
-                text = summary,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            Text(text = title, role = TextRole.Label, tone = ContentTone.Secondary)
+            Text(text = summary, role = TextRole.Supporting)
         }
         Icon(
             imageVector = if (expanded) {
@@ -75,7 +66,7 @@ internal fun MergedMemberHeader(
                 MaterialSymbols.Rounded.KeyboardArrowDown
             },
             contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            tone = ContentTone.Secondary,
         )
     }
 }

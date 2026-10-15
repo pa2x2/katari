@@ -1,7 +1,6 @@
 package eu.kanade.presentation.track
 
 import androidx.compose.animation.animateContentSize
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -10,54 +9,50 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.absoluteOffset
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Badge
-import androidx.compose.material3.BadgedBox
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewParameter
-import androidx.compose.ui.unit.dp
 import dev.icerock.moko.resources.StringResource
-import eu.kanade.presentation.components.DropdownMenu
-import eu.kanade.presentation.theme.TachiyomiPreviewTheme
 import eu.kanade.presentation.track.components.TrackLogoIcon
 import eu.kanade.tachiyomi.util.lang.toJavaLocalDate
 import eu.kanade.tachiyomi.util.system.copyToClipboard
 import mihon.entry.interactions.tracking.EntryTrackingServiceDescriptor
 import mihon.entry.interactions.tracking.EntryTrackingSessionService
 import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.MoreVert
 import mihon.icons.materialsymbols.roundedfilled.VisibilityOff
+import mihon.presentation.kit.button.Button
+import mihon.presentation.kit.button.ButtonStyle
+import mihon.presentation.kit.content.Badge
+import mihon.presentation.kit.content.BadgeGroup
+import mihon.presentation.kit.content.BadgeTone
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.menu.DropdownMenuItem
+import mihon.presentation.kit.menu.OverflowMenu
+import mihon.presentation.kit.surface.HorizontalDivider
+import mihon.presentation.kit.surface.Surface
+import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.surface.VerticalDivider
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariPreviewTheme
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import java.time.format.DateTimeFormatter
@@ -82,9 +77,9 @@ fun TrackInfoDialogHome(
             .animateContentSize()
             .fillMaxWidth()
             .verticalScroll(rememberScrollState())
-            .padding(16.dp)
+            .padding(KatariTheme.spacing.contentInset)
             .windowInsetsPadding(WindowInsets.systemBars),
-        verticalArrangement = Arrangement.spacedBy(24.dp),
+        verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xl),
     ) {
         trackItems.forEach { item ->
             val track = item.track
@@ -165,37 +160,33 @@ private fun TrackInfoItem(
     onTogglePrivate: (() -> Unit)?,
 ) {
     val context = LocalContext.current
+    val privateDescription = stringResource(MR.strings.tracked_privately)
     Column {
         Row(
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            BadgedBox(
-                badge = {
-                    if (private) {
-                        Badge(
-                            containerColor = MaterialTheme.colorScheme.primary,
-                            contentColor = MaterialTheme.colorScheme.onPrimary,
-                            modifier = Modifier.absoluteOffset(x = (-5).dp),
-                        ) {
-                            Icon(
-                                imageVector = MaterialSymbols.RoundedFilled.VisibilityOff,
-                                contentDescription = stringResource(MR.strings.tracked_privately),
-                                modifier = Modifier.size(14.dp),
-                            )
-                        }
-                    }
-                },
-            ) {
+            Box {
                 TrackLogoIcon(
                     name = service.name,
                     logoResource = service.logoResource,
                     onClick = onOpenInBrowser,
                     onLongClick = onCopyLink,
                 )
+                if (private) {
+                    BadgeGroup(modifier = Modifier.align(Alignment.TopEnd)) {
+                        Badge(
+                            icon = MaterialSymbols.RoundedFilled.VisibilityOff,
+                            modifier = Modifier.semantics {
+                                contentDescription = privateDescription
+                            },
+                            tone = BadgeTone.Primary,
+                        )
+                    }
+                }
             }
             Box(
                 modifier = Modifier
-                    .height(48.dp)
+                    .height(KatariTheme.sizes.touchTarget)
                     .weight(1f)
                     .combinedClickable(
                         onClick = onNewSearch,
@@ -203,15 +194,14 @@ private fun TrackInfoItem(
                             context.copyToClipboard(title, title)
                         },
                     )
-                    .padding(start = 16.dp),
+                    .padding(start = KatariTheme.spacing.l),
                 contentAlignment = Alignment.CenterStart,
             ) {
                 Text(
                     text = title,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    role = TextRole.SectionTitle,
                 )
             }
             VerticalDivider()
@@ -224,15 +214,16 @@ private fun TrackInfoItem(
             )
         }
 
-        Box(
-            modifier = Modifier
-                .padding(top = 12.dp)
-                .clip(MaterialTheme.shapes.medium)
-                .background(MaterialTheme.colorScheme.surfaceContainerHighest)
-                .padding(8.dp)
-                .clip(RoundedCornerShape(6.dp)),
+        Surface(
+            modifier = Modifier.padding(top = KatariTheme.spacing.m),
+            container = SurfaceContainer.Highest,
+            shape = KatariTheme.shapes.medium,
         ) {
-            Column {
+            Column(
+                modifier = Modifier
+                    .padding(KatariTheme.spacing.s)
+                    .clip(KatariTheme.shapes.small),
+            ) {
                 Row(modifier = Modifier.height(IntrinsicSize.Min)) {
                     TrackDetailsItem(
                         modifier = Modifier.weight(1f),
@@ -279,8 +270,6 @@ private fun TrackInfoItem(
     }
 }
 
-private const val UNSET_TEXT_ALPHA = 0.5F
-
 @Composable
 private fun TrackDetailsItem(
     text: String?,
@@ -292,16 +281,16 @@ private fun TrackDetailsItem(
         modifier = modifier
             .clickable(onClick = onClick)
             .fillMaxHeight()
-            .padding(12.dp),
+            .padding(KatariTheme.spacing.m),
         contentAlignment = Alignment.Center,
     ) {
         Text(
             text = text ?: placeholder,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
-            style = MaterialTheme.typography.bodyMedium,
+            role = TextRole.Body,
+            tone = if (text == null) ContentTone.Secondary else ContentTone.Inherit,
             textAlign = TextAlign.Center,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = if (text == null) UNSET_TEXT_ALPHA else 1f),
         )
     }
 }
@@ -315,14 +304,14 @@ private fun TrackInfoItemEmpty(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         TrackLogoIcon(name = service.name, logoResource = service.logoResource)
-        TextButton(
+        Button(
+            label = stringResource(MR.strings.add_tracking),
             onClick = onNewSearch,
             modifier = Modifier
-                .padding(start = 16.dp)
+                .padding(start = KatariTheme.spacing.l)
                 .weight(1f),
-        ) {
-            Text(text = stringResource(MR.strings.add_tracking))
-        }
+            style = ButtonStyle.Text,
+        )
     }
 }
 
@@ -334,59 +323,39 @@ private fun TrackInfoItemMenu(
     private: Boolean,
     onTogglePrivate: (() -> Unit)?,
 ) {
-    var expanded by remember { mutableStateOf(false) }
-    Box(modifier = Modifier.wrapContentSize(Alignment.TopStart)) {
-        IconButton(onClick = { expanded = true }) {
-            Icon(
-                imageVector = MaterialSymbols.Rounded.MoreVert,
-                contentDescription = stringResource(MR.strings.label_more),
-            )
-        }
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false },
-        ) {
+    OverflowMenu { close ->
+        DropdownMenuItem(
+            label = stringResource(MR.strings.action_open_in_browser),
+            onClick = {
+                onOpenInBrowser()
+                close()
+            },
+        )
+        DropdownMenuItem(
+            label = stringResource(MR.strings.action_copy_link),
+            onClick = {
+                onCopyLink()
+                close()
+            },
+        )
+        if (onTogglePrivate != null) {
             DropdownMenuItem(
-                text = { Text(stringResource(MR.strings.action_open_in_browser)) },
+                label = stringResource(
+                    if (private) MR.strings.action_toggle_private_off else MR.strings.action_toggle_private_on,
+                ),
                 onClick = {
-                    onOpenInBrowser()
-                    expanded = false
-                },
-            )
-            DropdownMenuItem(
-                text = { Text(stringResource(MR.strings.action_copy_link)) },
-                onClick = {
-                    onCopyLink()
-                    expanded = false
-                },
-            )
-            if (onTogglePrivate != null) {
-                DropdownMenuItem(
-                    text = {
-                        Text(
-                            stringResource(
-                                if (private) {
-                                    MR.strings.action_toggle_private_off
-                                } else {
-                                    MR.strings.action_toggle_private_on
-                                },
-                            ),
-                        )
-                    },
-                    onClick = {
-                        onTogglePrivate()
-                        expanded = false
-                    },
-                )
-            }
-            DropdownMenuItem(
-                text = { Text(stringResource(MR.strings.action_remove)) },
-                onClick = {
-                    onRemoved()
-                    expanded = false
+                    onTogglePrivate()
+                    close()
                 },
             )
         }
+        DropdownMenuItem(
+            label = stringResource(MR.strings.action_remove),
+            onClick = {
+                onRemoved()
+                close()
+            },
+        )
     }
 }
 
@@ -396,7 +365,7 @@ private fun TrackInfoDialogHomePreviews(
     @PreviewParameter(TrackInfoDialogHomePreviewProvider::class)
     content: @Composable () -> Unit,
 ) {
-    TachiyomiPreviewTheme {
+    KatariPreviewTheme {
         Surface {
             content()
         }

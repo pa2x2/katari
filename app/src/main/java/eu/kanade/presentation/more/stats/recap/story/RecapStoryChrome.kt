@@ -8,27 +8,29 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
-import eu.kanade.presentation.more.stats.recap.palette.RecapPalette
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Close
 import mihon.icons.materialsymbols.rounded.MoreVert
 import mihon.icons.materialsymbols.rounded.Share
+import mihon.presentation.kit.button.Button
+import mihon.presentation.kit.button.ButtonStyle
+import mihon.presentation.kit.button.IconButton
+import mihon.presentation.kit.content.StoryMetrics
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.StoryPalette
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
+
+/*
+ * The controls around a recap story. They sit inside the story's StoryTheme, so they take the current page's colours.
+ */
 
 /**
  * One bar per page: pages already seen are full, the current one fills as it plays.
@@ -40,24 +42,27 @@ internal fun RecapProgressBars(
     count: Int,
     index: Int,
     progress: () -> Float,
-    color: Color,
+    palette: StoryPalette,
     modifier: Modifier = Modifier,
 ) {
-    Row(horizontalArrangement = Arrangement.spacedBy(3.dp), modifier = modifier.fillMaxWidth().height(3.dp)) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xxs),
+        modifier = modifier.fillMaxWidth().height(StoryMetrics.progressHeight),
+    ) {
         repeat(count) { page ->
             Box(
                 Modifier
                     .weight(1f)
                     .fillMaxHeight()
-                    .clip(RoundedCornerShape(2.dp))
-                    .background(color.copy(alpha = 0.3f))
+                    .clip(KatariTheme.shapes.full)
+                    .background(palette.inkTrack)
                     .drawBehind {
                         val filled = when {
                             page < index -> 1f
                             page == index -> progress().coerceIn(0f, 1f)
                             else -> 0f
                         }
-                        drawRect(color, size = size.copy(width = size.width * filled))
+                        drawRect(palette.ink, size = size.copy(width = size.width * filled))
                     },
             )
         }
@@ -67,7 +72,6 @@ internal fun RecapProgressBars(
 @Composable
 internal fun RecapTopBar(
     title: String,
-    palette: RecapPalette,
     onMore: () -> Unit,
     onClose: () -> Unit,
     moreMenu: @Composable () -> Unit,
@@ -75,18 +79,22 @@ internal fun RecapTopBar(
     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
         Text(
             text = title,
-            color = palette.muted,
-            modifier = Modifier.weight(1f).padding(start = 16.dp),
+            tone = ContentTone.Secondary,
+            modifier = Modifier.weight(1f).padding(start = KatariTheme.spacing.l),
         )
         Box {
-            IconButton(onClick = onMore) {
-                Icon(MaterialSymbols.Rounded.MoreVert, stringResource(MR.strings.action_menu), tint = palette.ink)
-            }
+            IconButton(
+                icon = MaterialSymbols.Rounded.MoreVert,
+                contentDescription = stringResource(MR.strings.action_menu),
+                onClick = onMore,
+            )
             moreMenu()
         }
-        IconButton(onClick = onClose) {
-            Icon(MaterialSymbols.Rounded.Close, stringResource(MR.strings.action_close), tint = palette.ink)
-        }
+        IconButton(
+            icon = MaterialSymbols.Rounded.Close,
+            contentDescription = stringResource(MR.strings.action_close),
+            onClick = onClose,
+        )
     }
 }
 
@@ -95,38 +103,39 @@ internal fun RecapTopBar(
 internal fun RecapBottomBar(
     isLastPage: Boolean,
     canReplay: Boolean,
-    palette: RecapPalette,
     onShare: () -> Unit,
     onReplay: () -> Unit,
 ) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(
-            12.dp,
+            KatariTheme.spacing.m,
             if (isLastPage) Alignment.CenterHorizontally else Alignment.End,
         ),
         verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.fillMaxWidth().height(64.dp).padding(horizontal = 8.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(StoryMetrics.controlsHeight)
+            .padding(horizontal = KatariTheme.spacing.s),
     ) {
         if (isLastPage) {
             Button(
+                label = stringResource(MR.strings.action_share),
                 onClick = onShare,
-                colors = ButtonDefaults.buttonColors(containerColor = palette.ink, contentColor = palette.background),
-            ) {
-                Icon(MaterialSymbols.Rounded.Share, contentDescription = null, modifier = Modifier.padding(end = 8.dp))
-                Text(stringResource(MR.strings.action_share))
-            }
+                icon = MaterialSymbols.Rounded.Share,
+            )
             if (canReplay) {
-                OutlinedButton(
+                Button(
+                    label = stringResource(MR.strings.statistics_recap_watch_again),
                     onClick = onReplay,
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = palette.ink),
-                ) {
-                    Text(stringResource(MR.strings.statistics_recap_watch_again))
-                }
+                    style = ButtonStyle.Outlined,
+                )
             }
         } else {
-            IconButton(onClick = onShare) {
-                Icon(MaterialSymbols.Rounded.Share, stringResource(MR.strings.action_share), tint = palette.ink)
-            }
+            IconButton(
+                icon = MaterialSymbols.Rounded.Share,
+                contentDescription = stringResource(MR.strings.action_share),
+                onClick = onShare,
+            )
         }
     }
 }

@@ -8,7 +8,6 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
@@ -20,22 +19,21 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.media3.exoplayer.ExoPlayer
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerEpisodeListEntry
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerPlaybackSnapshot
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerSeekFeedbackState
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerSeekPreviewState
+import eu.kanade.tachiyomi.ui.video.player.VideoPlayerSideGestureFeedbackState
 import mihon.entry.interactions.source.EntryChildWebViewAction
 import mihon.entry.interactions.source.EntryChildWebViewResolution
+import mihon.presentation.kit.progress.LoadingIndicator
+import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.EntryProgressState
-import tachiyomi.presentation.core.components.LoadingIndicator
 
 private val overlayBarsSlideAnimationSpec = tween<IntOffset>(190)
 private val overlayBarsFadeAnimationSpec = tween<Float>(125)
@@ -63,7 +61,7 @@ internal fun VideoPlayerOverlay(
     seekPreviewState: VideoPlayerSeekPreviewState?,
     seekPreviewPlayer: ExoPlayer?,
     seekPreviewAspectRatio: Float?,
-    sideGestureFeedbackState: eu.kanade.tachiyomi.ui.video.player.VideoPlayerSideGestureFeedbackState?,
+    sideGestureFeedbackState: VideoPlayerSideGestureFeedbackState?,
     hideChromeForSeekFeedback: Boolean,
     onSeekFeedbackDismissed: () -> Unit,
     onSideGestureFeedbackDismissed: () -> Unit,
@@ -176,38 +174,21 @@ internal fun VideoPlayerOverlay(
                     targetScale = 0.97f,
                 ),
         ) {
-            Box(
-                modifier = Modifier
-                    .background(
-                        brush = Brush.radialGradient(
-                            colors = listOf(
-                                Color.Black.copy(alpha = 0.24f),
-                                Color.Black.copy(alpha = 0.1f),
-                                Color.Transparent,
-                            ),
-                            radius = 380f,
-                        ),
-                    )
-                    .fillMaxSize(),
-                contentAlignment = Alignment.Center,
+            VideoPlayerChromeContainer(
+                modifier = Modifier.fillMaxSize(),
+                matchParentHeight = true,
             ) {
-                VideoPlayerChromeContainer(
-                    modifier = Modifier.fillMaxSize(),
-                    matchParentHeight = true,
-                ) {
-                    VideoPlayerCenterControls(
-                        isPlaying = playbackSnapshot.isPlaying,
-                        isLoading = playbackSnapshot.isLoading,
-                        hasPreviousEpisode = hasPreviousEpisode,
-                        hasNextEpisode = hasNextEpisode,
-                        onPreviousEpisode = onPreviousEpisode,
-                        onSeekBackward = onSeekBackward,
-                        onTogglePlayback = onTogglePlayback,
-                        onSeekForward = onSeekForward,
-                        onNextEpisode = onNextEpisode,
-                        modifier = Modifier.background(Color.Transparent),
-                    )
-                }
+                VideoPlayerCenterControls(
+                    isPlaying = playbackSnapshot.isPlaying,
+                    isLoading = playbackSnapshot.isLoading,
+                    hasPreviousEpisode = hasPreviousEpisode,
+                    hasNextEpisode = hasNextEpisode,
+                    onPreviousEpisode = onPreviousEpisode,
+                    onSeekBackward = onSeekBackward,
+                    onTogglePlayback = onTogglePlayback,
+                    onSeekForward = onSeekForward,
+                    onNextEpisode = onNextEpisode,
+                )
             }
         }
 
@@ -243,29 +224,8 @@ internal fun VideoPlayerOverlay(
             exit = fadeOut(animationSpec = overlayCenterFadeAnimationSpec),
         ) {
             LoadingIndicator(
-                modifier = Modifier.size(30.dp),
-                color = Color.White,
-            )
-        }
-
-        AnimatedVisibility(
-            visible = chromeVisible,
-            modifier = Modifier.align(Alignment.BottomCenter),
-            enter = fadeIn(animationSpec = overlayBarsFadeAnimationSpec),
-            exit = fadeOut(animationSpec = overlayBarsFadeAnimationSpec),
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        brush = Brush.verticalGradient(
-                            colors = listOf(
-                                Color.Transparent,
-                                Color.Black.copy(alpha = 0.03f),
-                                Color.Black.copy(alpha = 0.18f),
-                            ),
-                        ),
-                    ),
+                modifier = Modifier.size(KatariTheme.sizes.iconLarge),
+                color = KatariTheme.colors.onMedia,
             )
         }
 

@@ -6,14 +6,14 @@ import androidx.compose.runtime.getValue
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.more.stats.recap.list.StatisticsRecapsScreenContent
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.ui.stats.recap.StatisticsRecapScreen
+import mihon.presentation.kit.feedback.LoadingScreen
+import mihon.presentation.kit.navigation.AppBar
+import mihon.presentation.kit.navigation.Scaffold
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.screens.LoadingScreen
 
 class StatisticsRecapsScreen : Screen() {
 

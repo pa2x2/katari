@@ -2,20 +2,19 @@ package eu.kanade.presentation.library
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import dev.icerock.moko.resources.StringResource
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.dialog.Dialog
+import mihon.presentation.kit.dialog.DialogAction
+import mihon.presentation.kit.list.CheckRow
+import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.core.common.preference.CheckboxState
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.LabeledCheckbox
-import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable
@@ -35,52 +34,43 @@ fun DeleteLibraryEntriesDialog(
             },
         )
     }
-    AlertDialog(
+    Dialog(
         onDismissRequest = onDismissRequest,
-        dismissButton = {
-            TextButton(onClick = onDismissRequest) {
-                Text(text = stringResource(MR.strings.action_cancel))
+        title = stringResource(MR.strings.action_remove),
+        confirm = DialogAction(
+            label = stringResource(MR.strings.action_ok),
+            onClick = {
+                onDismissRequest()
+                onConfirm(
+                    list[0].isChecked,
+                    list.getOrElse(1) { CheckboxState.State.None(0) }.isChecked,
+                )
+            },
+            enabled = list.any { it.isChecked },
+            destructive = true,
+        ),
+        dismiss = DialogAction(stringResource(MR.strings.action_cancel), onDismissRequest),
+    ) {
+        Column(
+            verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
+        ) {
+            if (containsMergedEntries) {
+                Text(text = stringResource(MR.strings.remove_merged_manga_warning))
             }
-        },
-        confirmButton = {
-            TextButton(
-                enabled = list.any { it.isChecked },
-                onClick = {
-                    onDismissRequest()
-                    onConfirm(
-                        list[0].isChecked,
-                        list.getOrElse(1) { CheckboxState.State.None(0) }.isChecked,
-                    )
-                },
-            ) {
-                Text(text = stringResource(MR.strings.action_ok))
+            list.forEach { state ->
+                CheckRow(
+                    title = stringResource(state.value),
+                    checked = state.isChecked,
+                    onCheckedChange = {
+                        val index = list.indexOf(state)
+                        if (index != -1) {
+                            val mutableList = list.toMutableList()
+                            mutableList[index] = state.next() as CheckboxState.State<StringResource>
+                            list = mutableList.toList()
+                        }
+                    },
+                )
             }
-        },
-        title = {
-            Text(text = stringResource(MR.strings.action_remove))
-        },
-        text = {
-            Column(
-                verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
-            ) {
-                if (containsMergedEntries) {
-                    Text(text = stringResource(MR.strings.remove_merged_manga_warning))
-                }
-                list.forEach { state ->
-                    LabeledCheckbox(
-                        label = stringResource(state.value),
-                        checked = state.isChecked,
-                        onCheckedChange = {
-                            val index = list.indexOf(state)
-                            if (index != -1) {
-                                val mutableList = list.toMutableList()
-                                mutableList[index] = state.next() as CheckboxState.State<StringResource>
-                                list = mutableList.toList()
-                            }
-                        },
-                    )
-                }
-            }
-        },
-    )
+        }
+    }
 }

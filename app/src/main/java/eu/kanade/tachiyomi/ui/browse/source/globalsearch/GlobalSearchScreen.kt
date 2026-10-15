@@ -17,7 +17,7 @@ import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.ui.browse.catalog.CatalogScreen
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
 import kotlinx.coroutines.launch
-import tachiyomi.presentation.core.screens.LoadingScreen
+import mihon.presentation.kit.feedback.LoadingScreen
 
 class GlobalSearchScreen(
     val searchQuery: String = "",

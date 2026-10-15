@@ -1,37 +1,32 @@
 package eu.kanade.presentation.category.components
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Switch
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TriStateCheckbox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.semantics.Role
 import eu.kanade.core.preference.asToggleableState
 import eu.kanade.presentation.category.visualName
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.control.Checkbox
+import mihon.presentation.kit.control.TriStateCheckbox
+import mihon.presentation.kit.dialog.ConfirmDialog
+import mihon.presentation.kit.dialog.Dialog
+import mihon.presentation.kit.dialog.DialogAction
+import mihon.presentation.kit.field.TextField
+import mihon.presentation.kit.list.SettingsRow
+import mihon.presentation.kit.list.ToggleRow
 import tachiyomi.core.common.preference.CheckboxState
 import tachiyomi.domain.category.model.Category
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable
@@ -45,49 +40,34 @@ fun CategoryCreateDialog(
     val focusRequester = remember { FocusRequester() }
     val nameAlreadyExists = remember(name) { categories.contains(name) }
 
-    AlertDialog(
+    Dialog(
         onDismissRequest = onDismissRequest,
-        confirmButton = {
-            TextButton(
-                enabled = name.isNotEmpty() && !nameAlreadyExists,
-                onClick = {
-                    onCreate(name)
-                    onDismissRequest()
+        title = stringResource(MR.strings.action_add_category),
+        confirm = DialogAction(
+            label = stringResource(MR.strings.action_add),
+            onClick = {
+                onCreate(name)
+                onDismissRequest()
+            },
+            enabled = name.isNotEmpty() && !nameAlreadyExists,
+        ),
+        dismiss = DialogAction(stringResource(MR.strings.action_cancel), onDismissRequest),
+    ) {
+        TextField(
+            value = name,
+            onValueChange = { name = it },
+            modifier = Modifier.focusRequester(focusRequester),
+            label = stringResource(MR.strings.name),
+            supportingText = stringResource(
+                if (name.isNotEmpty() && nameAlreadyExists) {
+                    MR.strings.error_category_exists
+                } else {
+                    MR.strings.information_required_plain
                 },
-            ) {
-                Text(text = stringResource(MR.strings.action_add))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismissRequest) {
-                Text(text = stringResource(MR.strings.action_cancel))
-            }
-        },
-        title = {
-            Text(text = stringResource(MR.strings.action_add_category))
-        },
-        text = {
-            OutlinedTextField(
-                modifier = Modifier
-                    .focusRequester(focusRequester),
-                value = name,
-                onValueChange = { name = it },
-                label = {
-                    Text(text = stringResource(MR.strings.name))
-                },
-                supportingText = {
-                    val msgRes = if (name.isNotEmpty() && nameAlreadyExists) {
-                        MR.strings.error_category_exists
-                    } else {
-                        MR.strings.information_required_plain
-                    }
-                    Text(text = stringResource(msgRes))
-                },
-                isError = name.isNotEmpty() && nameAlreadyExists,
-                singleLine = true,
-            )
-        },
-    )
+            ),
+            isError = name.isNotEmpty() && nameAlreadyExists,
+        )
+    }
 
     LaunchedEffect(focusRequester) {
         focusRequester.requestFocus()
@@ -110,72 +90,44 @@ fun CategoryEditDialog(
     val focusRequester = remember { FocusRequester() }
     val nameAlreadyExists = remember(name) { categories.contains(name) }
 
-    AlertDialog(
+    Dialog(
         onDismissRequest = onDismissRequest,
-        confirmButton = {
-            TextButton(
-                enabled = (nameHasChanged || checked != autoUpdate) &&
-                    name.isNotEmpty() &&
-                    !(nameHasChanged && nameAlreadyExists),
-                onClick = {
-                    onConfirm(name, checked)
-                    onDismissRequest()
-                },
-            ) {
-                Text(text = stringResource(MR.strings.action_ok))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismissRequest) {
-                Text(text = stringResource(MR.strings.action_cancel))
-            }
-        },
-        title = {
-            Text(text = stringResource(MR.strings.action_edit_category))
-        },
-        text = {
-            Column {
-                OutlinedTextField(
-                    modifier = Modifier.focusRequester(focusRequester),
-                    value = name,
-                    onValueChange = { name = it },
-                    label = { Text(text = stringResource(MR.strings.name)) },
-                    supportingText = {
-                        val msgRes = if (nameHasChanged && nameAlreadyExists) {
-                            MR.strings.error_category_exists
-                        } else {
-                            MR.strings.information_required_plain
-                        }
-                        Text(text = stringResource(msgRes))
+        title = stringResource(MR.strings.action_edit_category),
+        confirm = DialogAction(
+            label = stringResource(MR.strings.action_ok),
+            onClick = {
+                onConfirm(name, checked)
+                onDismissRequest()
+            },
+            enabled = (nameHasChanged || checked != autoUpdate) &&
+                name.isNotEmpty() &&
+                !(nameHasChanged && nameAlreadyExists),
+        ),
+        dismiss = DialogAction(stringResource(MR.strings.action_cancel), onDismissRequest),
+    ) {
+        Column {
+            TextField(
+                value = name,
+                onValueChange = { name = it },
+                modifier = Modifier.focusRequester(focusRequester),
+                label = stringResource(MR.strings.name),
+                supportingText = stringResource(
+                    if (nameHasChanged && nameAlreadyExists) {
+                        MR.strings.error_category_exists
+                    } else {
+                        MR.strings.information_required_plain
                     },
-                    isError = nameHasChanged && nameAlreadyExists,
-                    singleLine = true,
-                )
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { checked = !checked }
-                        .padding(vertical = MaterialTheme.padding.small),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = stringResource(MR.strings.library_updates_check_automatically),
-                            style = MaterialTheme.typography.bodyLarge,
-                        )
-                        if (!checked) {
-                            Text(
-                                text = stringResource(MR.strings.library_updates_category_off_summary),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
-                    }
-                    Switch(checked = checked, onCheckedChange = { checked = it })
-                }
-            }
-        },
-    )
+                ),
+                isError = nameHasChanged && nameAlreadyExists,
+            )
+            ToggleRow(
+                title = stringResource(MR.strings.library_updates_check_automatically),
+                checked = checked,
+                onCheckedChange = { checked = it },
+                subtitle = if (checked) null else stringResource(MR.strings.library_updates_category_off_summary),
+            )
+        }
+    }
 
     LaunchedEffect(focusRequester) {
         focusRequester.requestFocus()
@@ -188,27 +140,16 @@ fun CategoryDeleteDialog(
     onDelete: () -> Unit,
     category: String,
 ) {
-    AlertDialog(
+    ConfirmDialog(
+        title = stringResource(MR.strings.delete_category),
+        text = stringResource(MR.strings.delete_category_confirmation, category),
+        confirmLabel = stringResource(MR.strings.action_ok),
+        onConfirm = {
+            onDelete()
+            onDismissRequest()
+        },
         onDismissRequest = onDismissRequest,
-        confirmButton = {
-            TextButton(onClick = {
-                onDelete()
-                onDismissRequest()
-            }) {
-                Text(text = stringResource(MR.strings.action_ok))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismissRequest) {
-                Text(text = stringResource(MR.strings.action_cancel))
-            }
-        },
-        title = {
-            Text(text = stringResource(MR.strings.delete_category))
-        },
-        text = {
-            Text(text = stringResource(MR.strings.delete_category_confirmation, category))
-        },
+        destructive = true,
     )
 }
 
@@ -220,103 +161,71 @@ fun ChangeCategoryDialog(
     onConfirm: (List<Long>, List<Long>) -> Unit,
 ) {
     if (initialSelection.isEmpty()) {
-        AlertDialog(
+        Dialog(
             onDismissRequest = onDismissRequest,
-            confirmButton = {
-                tachiyomi.presentation.core.components.material.TextButton(
-                    onClick = {
-                        onDismissRequest()
-                        onEditCategories()
-                    },
-                ) {
-                    Text(text = stringResource(MR.strings.action_edit_categories))
-                }
-            },
-            title = {
-                Text(text = stringResource(MR.strings.action_move_category))
-            },
-            text = {
-                Text(text = stringResource(MR.strings.information_empty_category_dialog))
-            },
-        )
+            title = stringResource(MR.strings.action_move_category),
+            confirm = DialogAction(
+                label = stringResource(MR.strings.action_edit_categories),
+                onClick = {
+                    onDismissRequest()
+                    onEditCategories()
+                },
+            ),
+        ) {
+            Text(text = stringResource(MR.strings.information_empty_category_dialog))
+        }
         return
     }
     var selection by remember { mutableStateOf(initialSelection) }
-    AlertDialog(
+    Dialog(
         onDismissRequest = onDismissRequest,
-        confirmButton = {
-            Row {
-                tachiyomi.presentation.core.components.material.TextButton(onClick = {
-                    onDismissRequest()
-                    onEditCategories()
-                }) {
-                    Text(text = stringResource(MR.strings.action_edit))
-                }
-                Spacer(modifier = Modifier.weight(1f))
-                tachiyomi.presentation.core.components.material.TextButton(onClick = onDismissRequest) {
-                    Text(text = stringResource(MR.strings.action_cancel))
-                }
-                tachiyomi.presentation.core.components.material.TextButton(
-                    onClick = {
-                        onDismissRequest()
-                        onConfirm(
-                            selection
-                                .filter { it is CheckboxState.State.Checked || it is CheckboxState.TriState.Include }
-                                .map { it.value.id },
-                            selection
-                                .filter { it is CheckboxState.State.None || it is CheckboxState.TriState.None }
-                                .map { it.value.id },
-                        )
-                    },
-                ) {
-                    Text(text = stringResource(MR.strings.action_ok))
-                }
-            }
-        },
-        title = {
-            Text(text = stringResource(MR.strings.action_move_category))
-        },
-        text = {
-            Column(
-                modifier = Modifier.verticalScroll(rememberScrollState()),
-            ) {
-                selection.forEach { checkbox ->
-                    val onChange: (CheckboxState<Category>) -> Unit = {
-                        val index = selection.indexOf(it)
-                        if (index != -1) {
-                            val mutableList = selection.toMutableList()
-                            mutableList[index] = it.next()
-                            selection = mutableList.toList()
-                        }
+        title = stringResource(MR.strings.action_move_category),
+        confirm = DialogAction(
+            label = stringResource(MR.strings.action_ok),
+            onClick = {
+                onDismissRequest()
+                onConfirm(
+                    selection
+                        .filter { it is CheckboxState.State.Checked || it is CheckboxState.TriState.Include }
+                        .map { it.value.id },
+                    selection
+                        .filter { it is CheckboxState.State.None || it is CheckboxState.TriState.None }
+                        .map { it.value.id },
+                )
+            },
+        ),
+        dismiss = DialogAction(stringResource(MR.strings.action_cancel), onDismissRequest),
+        neutral = DialogAction(
+            label = stringResource(MR.strings.action_edit),
+            onClick = {
+                onDismissRequest()
+                onEditCategories()
+            },
+        ),
+    ) {
+        Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+            selection.forEach { checkbox ->
+                val onChange = {
+                    val index = selection.indexOf(checkbox)
+                    if (index != -1) {
+                        selection = selection.toMutableList().apply { this[index] = checkbox.next() }
                     }
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onChange(checkbox) },
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
+                }
+                SettingsRow(
+                    title = checkbox.value.visualName,
+                    leading = {
                         when (checkbox) {
-                            is CheckboxState.TriState -> {
-                                TriStateCheckbox(
-                                    state = checkbox.asToggleableState(),
-                                    onClick = { onChange(checkbox) },
-                                )
-                            }
-                            is CheckboxState.State -> {
-                                Checkbox(
-                                    checked = checkbox.isChecked,
-                                    onCheckedChange = { onChange(checkbox) },
-                                )
-                            }
+                            is CheckboxState.TriState -> TriStateCheckbox(
+                                state = checkbox.asToggleableState(),
+                                onClick = null,
+                            )
+                            is CheckboxState.State -> Checkbox(checked = checkbox.isChecked, onCheckedChange = null)
                         }
-
-                        Text(
-                            text = checkbox.value.visualName,
-                            modifier = Modifier.padding(horizontal = MaterialTheme.padding.medium),
-                        )
-                    }
-                }
+                    },
+                    role = Role.Checkbox,
+                    onClick = onChange,
+                )
             }
-        },
-    )
+        }
+    }
 }

@@ -8,9 +8,6 @@ import android.webkit.WebStorage
 import android.webkit.WebView
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.collectAsState
@@ -63,6 +60,7 @@ import mihon.entry.interactions.media.EntryViewerSettingsFeature
 import mihon.entry.interactions.media.EntryViewerSettingsResetResult
 import mihon.entry.interactions.merge.EntryMergeConsequenceStatus
 import mihon.entry.interactions.merge.EntryMergeConsequenceStatusFeature
+import mihon.presentation.kit.dialog.ConfirmDialog
 import okhttp3.Headers
 import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.core.common.util.lang.withUIContext
@@ -473,25 +471,15 @@ object SettingsAdvancedScreen : SearchableSettings {
 
         if (shizukuMissing) {
             val dismiss = { shizukuMissing = false }
-            AlertDialog(
+            ConfirmDialog(
+                title = stringResource(MR.strings.ext_installer_shizuku),
+                text = stringResource(MR.strings.ext_installer_shizuku_unavailable_dialog),
+                confirmLabel = stringResource(MR.strings.action_ok),
+                onConfirm = {
+                    dismiss()
+                    uriHandler.openUri("https://shizuku.rikka.app/download")
+                },
                 onDismissRequest = dismiss,
-                title = { Text(text = stringResource(MR.strings.ext_installer_shizuku)) },
-                text = { Text(text = stringResource(MR.strings.ext_installer_shizuku_unavailable_dialog)) },
-                dismissButton = {
-                    TextButton(onClick = dismiss) {
-                        Text(text = stringResource(MR.strings.action_cancel))
-                    }
-                },
-                confirmButton = {
-                    TextButton(
-                        onClick = {
-                            dismiss()
-                            uriHandler.openUri("https://shizuku.rikka.app/download")
-                        },
-                    ) {
-                        Text(text = stringResource(MR.strings.action_ok))
-                    }
-                },
             )
         }
         return Preference.PreferenceGroup(

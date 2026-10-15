@@ -1,0 +1,199 @@
+package mihon.feature.migration.config
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import eu.kanade.domain.source.service.SourcePreferences
+import eu.kanade.tachiyomi.source.entry.EntryType
+import eu.kanade.tachiyomi.util.system.LocaleHelper
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
+import mihon.entry.interactions.catalogue.EntryCatalogueFeature
+import mihon.entry.interactions.migration.EntryMigrationOption
+import mihon.feature.migration.session.SourceMigrationSessionStore
+import mihon.feature.migration.session.model.SourceMigrationDiscoveryDepth
+import mihon.feature.migration.session.model.SourceMigrationSessionDraft
+import mihon.feature.migration.session.model.SourceMigrationSessionGroupDraft
+import mihon.feature.migration.session.model.SourceMigrationSessionId
+import tachiyomi.core.common.util.lang.launchIO
+import tachiyomi.domain.source.model.EntryCatalogueDescription
+import tachiyomi.domain.source.model.Source
+import tachiyomi.domain.source.service.SourceManager
+import uy.kohesive.injekt.Injekt
+import uy.kohesive.injekt.api.get
+
+internal class MigrationConfigViewModel(
+    private val requiredEntryTypes: Set<EntryType>,
+    private val excludedSourceId: Long?,
+    private val persistSourceSelection: Boolean,
+    val sourcePreferences: SourcePreferences = Injekt.get(),
+    private val sourceManager: SourceManager = Injekt.get(),
+    private val catalogueFeature: EntryCatalogueFeature = Injekt.get(),
+    private val sessionStore: SourceMigrationSessionStore = Injekt.get(),
+) : ViewModel() {
+
+    val state: StateFlow<MigrationConfigViewModel.State>
+        field = MutableStateFlow<MigrationConfigViewModel.State>(State())
+
+    private val sourcesComparator = { includedSources: List<Long> ->
+        compareBy<MigrationSource>(
+            { !it.isSelected },
+            { includedSources.indexOf(it.id) },
+            { with(it) { "$name ($shortLanguage)" } },
+        )
+    }
+
+    init {
+        viewModelScope.launchIO {
+            initSources()
+            state.update { it.copy(isLoading = false) }
+        }
+    }
+
+    private fun updateSources(action: (List<MigrationSource>) -> List<MigrationSource>) {
+        state.update { state ->
+            val updatedSources = action(state.sources)
+            val includedSources = updatedSources.mapNotNull { if (!it.isSelected) null else it.id }
+            state.copy(sources = updatedSources.sortedWith(sourcesComparator(includedSources)))
+        }
+        if (persistSourceSelection) saveSources()
+    }
+
+    private fun initSources() {
+        val languages = sourcePreferences.enabledLanguages.get()
+        val pinnedSources = sourcePreferences.pinnedSources.get().mapNotNull { it.toLongOrNull() }
+        val includedSources = sourcePreferences.migrationSources.get()
+        val disabledSources = sourcePreferences.disabledSources.get()
+            .mapNotNull { it.toLongOrNull() }
+        val sources = catalogueFeature.sources()
+            .asSequence()
+            .mapNotNull {
+                if (it.language !in languages) return@mapNotNull null
+                if (it.id == excludedSourceId) return@mapNotNull null
+                val supportedEntryTypes = it.supportedEntryTypes
+                if (supportedEntryTypes != null && !supportedEntryTypes.containsAll(requiredEntryTypes)) {
+                    return@mapNotNull null
+                }
+                val source = Source(
+                    id = it.id,
+                    lang = it.language,
+                    name = it.name,
+                    catalogue = EntryCatalogueDescription(it.supportsLatest),
+                    isStub = false,
+                )
+                MigrationSource(
+                    source = source,
+                    isSelected = when {
+                        includedSources.isNotEmpty() -> source.id in includedSources
+                        pinnedSources.isNotEmpty() -> source.id in pinnedSources
+                        else -> source.id !in disabledSources
+                    },
+                )
+            }
+            .toList()
+
+        state.update { state ->
+            state.copy(sources = sources.sortedWith(sourcesComparator(includedSources)))
+        }
+    }
+
+    fun toggleSelection(id: Long) {
+        updateSources { sources ->
+            sources.map { source ->
+                source.copy(isSelected = if (source.source.id == id) !source.isSelected else source.isSelected)
+            }
+        }
+    }
+
+    fun toggleSelection(config: SelectionConfig) {
+        val pinnedSources = sourcePreferences.pinnedSources.get().mapNotNull { it.toLongOrNull() }
+        val disabledSources = sourcePreferences.disabledSources.get().mapNotNull { it.toLongOrNull() }
+        val isSelected: (Long) -> Boolean = {
+            when (config) {
+                SelectionConfig.All -> true
+                SelectionConfig.None -> false
+                SelectionConfig.Pinned -> it in pinnedSources
+                SelectionConfig.Enabled -> it !in disabledSources
+            }
+        }
+        updateSources { sources ->
+            sources.map { source ->
+                source.copy(isSelected = isSelected(source.source.id))
+            }
+        }
+    }
+
+    fun orderSource(from: Int, to: Int) {
+        updateSources {
+            it.toMutableList()
+                .apply {
+                    add(to, removeAt(from))
+                }
+                .toList()
+        }
+    }
+
+    fun saveSources() {
+        if (!persistSourceSelection) return
+        state.value.sources
+            .filter { source -> source.isSelected }
+            .map { source -> source.source.id }
+            .let { sources -> sourcePreferences.migrationSources.set(sources) }
+    }
+
+    fun startSession(
+        groups: List<SourceMigrationSessionGroupDraft>,
+        originSourceId: Long,
+        selectedOptions: Set<EntryMigrationOption>,
+        initialDiscoveryDepth: SourceMigrationDiscoveryDepth,
+    ) {
+        if (state.value.isStarting) return
+        val profileId = groups.first().members.first().profileId
+        val targetSourceIds = state.value.selectedSourceIds
+        if (targetSourceIds.isEmpty()) return
+        state.update { it.copy(isStarting = true) }
+        viewModelScope.launchIO {
+            val sessionId = sessionStore.create(
+                SourceMigrationSessionDraft(
+                    profileId = profileId,
+                    originSourceId = originSourceId,
+                    groups = groups,
+                    targetSourceIds = targetSourceIds,
+                    selectedOptions = selectedOptions,
+                    initialDiscoveryDepth = initialDiscoveryDepth,
+                ),
+            )
+            state.update { it.copy(createdSessionId = sessionId) }
+        }
+    }
+
+    data class State(
+        val isLoading: Boolean = true,
+        val sources: List<MigrationSource> = emptyList(),
+        val isStarting: Boolean = false,
+        val createdSessionId: SourceMigrationSessionId? = null,
+    ) {
+        val selectedSourceIds: List<Long>
+            get() = sources.filter(MigrationSource::isSelected).map(MigrationSource::id)
+    }
+
+    enum class SelectionConfig {
+        All,
+        None,
+        Pinned,
+        Enabled,
+    }
+}
+
+data class MigrationSource(
+    val source: Source,
+    val isSelected: Boolean,
+) {
+    val id: Long
+        inline get() = source.id
+
+    val name: String
+        inline get() = source.name
+
+    val shortLanguage: String = LocaleHelper.getShortDisplayName(source.lang)
+}

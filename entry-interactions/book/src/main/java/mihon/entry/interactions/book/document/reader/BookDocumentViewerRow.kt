@@ -7,13 +7,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import mihon.book.api.document.BookDocumentLinkTarget
 import mihon.entry.interactions.book.document.reader.transition.BookDocumentChapterTransition
 import mihon.entry.interactions.viewer.EntryChildDirection
+import mihon.presentation.kit.content.ReadingMetrics
+import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.domain.entry.model.EntryChapter
-
-internal val BOOK_DOCUMENT_BLOCK_HORIZONTAL_PADDING = 20.dp
 
 /** Renders one stable-key row without invalidating unchanged prose when the chapter window moves. */
 @Composable
@@ -25,7 +24,7 @@ internal fun BookDocumentViewerRow(
     onExternalLinkClick: (String) -> Unit,
     onReaderTap: () -> Unit,
     onTransitionRetry: (EntryChapter) -> Unit,
-    transitionVerticalPadding: Dp = 28.dp,
+    transitionVerticalPadding: Dp = ReadingMetrics.chapterBoundaryGap,
     preserveTerminalSpacing: Boolean = true,
 ) {
     when (item) {
@@ -59,7 +58,7 @@ internal fun BookDocumentViewerRow(
                 onRetry = item.transition.to?.let { chapter -> { onTransitionRetry(chapter) } },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 24.dp, vertical = transitionVerticalPadding),
+                    .padding(horizontal = KatariTheme.spacing.xl, vertical = transitionVerticalPadding),
             )
         }
     }
@@ -90,7 +89,7 @@ internal fun BookDocumentViewerBlock(
             preserveTerminalSpacing && item.content.id != item.section.document.blocks.last().id,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = BOOK_DOCUMENT_BLOCK_HORIZONTAL_PADDING, vertical = 6.dp),
+                .padding(horizontal = ReadingMetrics.blockInset, vertical = ReadingMetrics.blockGap),
         )
     }
 }

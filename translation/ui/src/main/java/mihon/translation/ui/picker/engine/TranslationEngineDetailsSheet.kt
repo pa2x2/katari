@@ -2,30 +2,21 @@ package mihon.translation.ui.picker.engine
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.automirroredrounded.OpenInNew
+import mihon.presentation.kit.button.Button
+import mihon.presentation.kit.button.ButtonStyle
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.sheet.DetailsSection
+import mihon.presentation.kit.sheet.DetailsSheet
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
-@OptIn(ExperimentalMaterial3Api::class)
+/** Who provides an engine, its state, where it processes text, how it handles privacy, and artwork credits. */
 @Composable
 internal fun TranslationEngineDetailsSheet(
     model: TranslationEngineCardModel,
@@ -33,112 +24,41 @@ internal fun TranslationEngineDetailsSheet(
     onOpenUrl: (String) -> Unit,
 ) {
     val engine = model.state.engine
-    ModalBottomSheet(onDismissRequest = onDismissRequest) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
-                .navigationBarsPadding()
-                .padding(horizontal = 24.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                TranslationEngineArtwork(
-                    artwork = engine.artwork,
-                    size = 72.dp,
-                )
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                ) {
-                    Text(
-                        text = engine.engineName,
-                        style = MaterialTheme.typography.headlineSmall,
-                    )
-                    Text(
-                        text = stringResource(
-                            MR.strings.translation_engine_provided_by,
-                            engine.providerName,
-                        ),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
+    DetailsSheet(
+        title = engine.engineName,
+        onDismissRequest = onDismissRequest,
+        subtitle = stringResource(MR.strings.translation_engine_provided_by, engine.providerName),
+        artwork = { TranslationEngineArtwork(engine.artwork, size = KatariTheme.sizes.artworkLarge) },
+        status = {
+            Column(verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s)) {
+                TranslationEngineStatusPill(model.status)
+                model.status.explanation?.let {
+                    Text(it.text(), role = TextRole.Body, tone = ContentTone.Secondary)
                 }
             }
-            TranslationEngineStatusPill(model.status)
-            model.status.explanation?.let {
-                Text(
-                    text = it.text(),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+        },
+    ) {
+        DetailsSection(stringResource(MR.strings.translation_engine_about), engine.details.description)
+        DetailsSection(stringResource(MR.strings.translation_engine_processing), engine.details.processingLocation)
+        DetailsSection(stringResource(MR.strings.translation_engine_privacy), engine.details.privacyDescription)
+        engine.details.artworkAttribution?.let { attribution ->
+            DetailsSection(stringResource(MR.strings.translation_engine_artwork_attribution), attribution)
+            engine.details.artworkAttributionUrl?.let { url ->
+                Button(
+                    label = stringResource(MR.strings.translation_engine_open_attribution),
+                    onClick = { onOpenUrl(url) },
+                    style = ButtonStyle.Text,
+                    icon = MaterialSymbols.AutoMirroredRounded.OpenInNew,
                 )
-            }
-            HorizontalDivider()
-            DetailsSection(
-                title = stringResource(MR.strings.translation_engine_about),
-                body = engine.details.description,
-            )
-            DetailsSection(
-                title = stringResource(MR.strings.translation_engine_processing),
-                body = engine.details.processingLocation,
-            )
-            DetailsSection(
-                title = stringResource(MR.strings.translation_engine_privacy),
-                body = engine.details.privacyDescription,
-            )
-            engine.details.artworkAttribution?.let { attribution ->
-                DetailsSection(
-                    title = stringResource(MR.strings.translation_engine_artwork_attribution),
-                    body = attribution,
-                )
-                engine.details.artworkAttributionUrl?.let { url ->
-                    TextButton(onClick = { onOpenUrl(url) }) {
-                        Text(stringResource(MR.strings.translation_engine_open_attribution))
-                        Icon(
-                            imageVector = MaterialSymbols.AutoMirroredRounded.OpenInNew,
-                            contentDescription = null,
-                            modifier = Modifier.padding(start = 8.dp),
-                        )
-                    }
-                }
-            }
-            engine.documentationUrl?.let { url ->
-                TextButton(onClick = { onOpenUrl(url) }) {
-                    Text(stringResource(MR.strings.translation_engine_open_documentation))
-                    Icon(
-                        imageVector = MaterialSymbols.AutoMirroredRounded.OpenInNew,
-                        contentDescription = null,
-                        modifier = Modifier.padding(start = 8.dp),
-                    )
-                }
-            }
-            Button(
-                onClick = onDismissRequest,
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Text(stringResource(MR.strings.translation_engine_close))
             }
         }
-    }
-}
-
-@Composable
-private fun DetailsSection(
-    title: String,
-    body: String,
-) {
-    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleMedium,
-        )
-        Text(
-            text = body,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+        engine.documentationUrl?.let { url ->
+            Button(
+                label = stringResource(MR.strings.translation_engine_open_documentation),
+                onClick = { onOpenUrl(url) },
+                style = ButtonStyle.Text,
+                icon = MaterialSymbols.AutoMirroredRounded.OpenInNew,
+            )
+        }
     }
 }

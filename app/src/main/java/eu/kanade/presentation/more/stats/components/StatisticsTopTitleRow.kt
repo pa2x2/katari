@@ -1,28 +1,26 @@
 package eu.kanade.presentation.more.stats.components
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.entry.components.EntryCover
 import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.tachiyomi.source.entry.EntryType
+import mihon.presentation.kit.content.StatisticsMetrics
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
@@ -55,50 +53,39 @@ internal fun StatisticsTopTitleRow(
         },
     ).joinToString(" · ")
     Row(
-        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick).padding(vertical = 8.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(vertical = KatariTheme.spacing.s),
         verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.m),
     ) {
         rank?.let {
             Text(
                 text = it.toString(),
-                modifier = Modifier.width(24.dp),
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.width(StatisticsMetrics.rankWidth),
+                role = TextRole.Supporting,
             )
         }
-        EntryCover.Book(data = cover, modifier = Modifier.width(40.dp), shape = MaterialTheme.shapes.extraSmall)
-        Spacer(Modifier.width(12.dp))
+        EntryCover.Book(
+            data = cover,
+            modifier = Modifier.width(StatisticsMetrics.rankedCoverWidth),
+            shape = KatariTheme.shapes.extraSmall,
+        )
         Column(Modifier.weight(1f)) {
-            Text(
-                text = title,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Medium,
-            )
+            Text(text = title, role = TextRole.Body, maxLines = 1, overflow = TextOverflow.Ellipsis)
             if (details.isNotEmpty()) {
-                Text(
-                    text = details,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                Text(text = details, role = TextRole.Supporting, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
-            LinearProgressIndicator(
-                progress = { share.coerceIn(0f, 1f) },
-                modifier = Modifier.fillMaxWidth().padding(top = 6.dp).height(4.dp),
+            StatisticsShareBar(
+                fraction = share,
                 color = color,
-                trackColor = MaterialTheme.colorScheme.surfaceVariant,
-                strokeCap = StrokeCap.Round,
-                gapSize = 0.dp,
-                drawStopIndicator = {},
+                modifier = Modifier.padding(top = KatariTheme.spacing.s),
             )
         }
-        Spacer(Modifier.width(12.dp))
         // A fixed width keeps every share bar on the same scale regardless of the duration text.
-        Column(Modifier.widthIn(min = TRAILING_COLUMN_WIDTH), horizontalAlignment = Alignment.End) {
-            Text(formatDuration(durationMillis), style = MaterialTheme.typography.labelLarge)
+        Column(Modifier.widthIn(min = StatisticsMetrics.rankedTrailingWidth), horizontalAlignment = Alignment.End) {
+            Text(formatDuration(durationMillis), role = TextRole.Label)
             if (shareOf > 0L) {
                 val percent = (share * 100).roundToInt()
                 Text(
@@ -107,12 +94,10 @@ internal fun StatisticsTopTitleRow(
                     } else {
                         stringResource(MR.strings.statistics_share_of_time, percent)
                     },
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    role = TextRole.Badge,
+                    tone = ContentTone.Secondary,
                 )
             }
         }
     }
 }
-
-private val TRAILING_COLUMN_WIDTH = 64.dp

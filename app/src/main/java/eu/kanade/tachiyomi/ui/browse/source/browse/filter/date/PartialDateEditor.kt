@@ -9,8 +9,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -26,10 +24,11 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.unit.dp
 import eu.kanade.tachiyomi.source.entry.filter.EntryDateFilter
 import eu.kanade.tachiyomi.source.entry.filter.EntryDatePrecision
 import eu.kanade.tachiyomi.source.entry.filter.EntryPartialDate
+import mihon.presentation.kit.field.TextField
+import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -46,13 +45,16 @@ internal fun PartialDateEditor(filter: EntryDateFilter, onCancel: () -> Unit, on
     LaunchedEffect(state.step, state.typing) { scroll.scrollTo(0) }
     Column(Modifier.fillMaxHeight(0.9f)) {
         Column(
-            Modifier.weight(1f).verticalScroll(scroll).padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            Modifier
+                .weight(1f)
+                .verticalScroll(scroll)
+                .padding(horizontal = KatariTheme.spacing.rowInset, vertical = KatariTheme.spacing.m),
+            verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.l),
         ) {
             DateEditorHeader(filter, state, onChange, onCancel)
             if (state.typing) {
                 LaunchedEffect(Unit) { focusRequester.requestFocus() }
-                OutlinedTextField(
+                TextField(
                     value = state.raw,
                     onValueChange = { raw ->
                         state = state.copy(
@@ -61,19 +63,16 @@ internal fun PartialDateEditor(filter: EntryDateFilter, onCancel: () -> Unit, on
                                 ?.takeIf { it in filter.allowedPrecisions } ?: state.precision,
                         )
                     },
-                    label = { Text(stringResource(MR.strings.filter_type_date)) },
-                    placeholder = {
-                        Text(
-                            EntryDatePrecision.entries.filter { it in filter.allowedPrecisions }.joinToString(" / ") {
-                                when (it) {
-                                    EntryDatePrecision.YEAR -> "YYYY"
-                                    EntryDatePrecision.MONTH -> "YYYY-MM"
-                                    EntryDatePrecision.DAY -> "YYYY-MM-DD"
-                                }
-                            },
-                        )
-                    },
-                    singleLine = true,
+                    label = stringResource(MR.strings.filter_type_date),
+                    placeholder = EntryDatePrecision.entries
+                        .filter { it in filter.allowedPrecisions }
+                        .joinToString(" / ") {
+                            when (it) {
+                                EntryDatePrecision.YEAR -> "YYYY"
+                                EntryDatePrecision.MONTH -> "YYYY-MM"
+                                EntryDatePrecision.DAY -> "YYYY-MM-DD"
+                            }
+                        },
                     modifier = Modifier.fillMaxWidth().focusRequester(focusRequester).onFocusChanged {
                         if (inputFocused && !it.isFocused) state = state.copy(showErrors = true)
                         inputFocused = it.isFocused

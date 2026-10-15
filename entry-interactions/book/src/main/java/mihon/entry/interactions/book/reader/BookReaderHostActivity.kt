@@ -3,33 +3,11 @@ package mihon.entry.interactions.book.reader
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.selection.toggleable
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
@@ -233,79 +211,6 @@ private fun BookReaderHostContent(
             onClose = onClose,
         )
         is BookReaderHostState.ReaderSelected -> Unit
-    }
-}
-
-@Composable
-private fun BookProcessorChooserDialog(
-    state: BookReaderHostState.ChoiceRequired,
-    onChoose: (BookReaderHostState.ChoiceRequired, String, Boolean) -> Unit,
-    onClose: () -> Unit,
-) {
-    var selectedId by remember(state) { mutableStateOf(state.choices.first().id) }
-    var rememberChoice by remember(state) { mutableStateOf(false) }
-
-    Box {
-        BookReaderDialogBackground()
-        AlertDialog(
-            onDismissRequest = onClose,
-            title = { Text(stringResource(R.string.book_reader_choose_title)) },
-            text = {
-                Column(
-                    modifier = Modifier.verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    state.choices.forEach { choice ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .selectable(
-                                    selected = selectedId == choice.id,
-                                    role = Role.RadioButton,
-                                    onClick = { selectedId = choice.id },
-                                )
-                                .padding(vertical = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            RadioButton(
-                                selected = selectedId == choice.id,
-                                onClick = null,
-                            )
-                            Spacer(Modifier.width(12.dp))
-                            Text(choice.displayName)
-                        }
-                    }
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .toggleable(
-                                value = rememberChoice,
-                                role = Role.Checkbox,
-                                onValueChange = { rememberChoice = it },
-                            )
-                            .padding(top = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Checkbox(
-                            checked = rememberChoice,
-                            onCheckedChange = null,
-                        )
-                        Spacer(Modifier.width(12.dp))
-                        Text(stringResource(R.string.book_reader_remember_choice))
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = { onChoose(state, selectedId, rememberChoice) }) {
-                    Text(stringResource(R.string.book_reader_confirm))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = onClose) {
-                    Text(stringResource(R.string.book_reader_close))
-                }
-            },
-        )
     }
 }
 

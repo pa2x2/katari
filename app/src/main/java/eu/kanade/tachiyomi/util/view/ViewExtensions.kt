@@ -13,27 +13,24 @@ import androidx.activity.compose.setContent
 import androidx.annotation.MenuRes
 import androidx.appcompat.R
 import androidx.appcompat.widget.PopupMenu
-import androidx.compose.material3.LocalContentColor
-import androidx.compose.material3.LocalTextStyle
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionContext
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
-import eu.kanade.presentation.theme.TachiyomiTheme
+import mihon.presentation.kit.content.ProvideTextRole
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.LocalContentColor
+import mihon.presentation.kit.theme.TextRole
 
 inline fun ComponentActivity.setComposeContent(
     parent: CompositionContext? = null,
     crossinline content: @Composable () -> Unit,
 ) {
     setContent(parent) {
-        TachiyomiTheme {
-            CompositionLocalProvider(
-                LocalTextStyle provides MaterialTheme.typography.bodySmall,
-                LocalContentColor provides MaterialTheme.colorScheme.onBackground,
-            ) {
-                content()
+        KatariTheme {
+            CompositionLocalProvider(LocalContentColor provides KatariTheme.colors.onBackground) {
+                ProvideTextRole(TextRole.Supporting) { content() }
             }
         }
     }
@@ -44,12 +41,9 @@ fun ComposeView.setComposeContent(
 ) {
     setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
     setContent {
-        TachiyomiTheme {
-            CompositionLocalProvider(
-                LocalTextStyle provides MaterialTheme.typography.bodySmall,
-                LocalContentColor provides MaterialTheme.colorScheme.onBackground,
-            ) {
-                content()
+        KatariTheme {
+            CompositionLocalProvider(LocalContentColor provides KatariTheme.colors.onBackground) {
+                ProvideTextRole(TextRole.Supporting) { content() }
             }
         }
     }

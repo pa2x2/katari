@@ -4,12 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.rememberTextFieldState
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -19,7 +14,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.unit.dp
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.dialog.ConfirmDialog
+import mihon.presentation.kit.dialog.Dialog
+import mihon.presentation.kit.dialog.DialogAction
+import mihon.presentation.kit.field.TextField
+import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -41,55 +41,33 @@ fun ExtensionStoreCreateDialog(
 
     val focusRequester = remember { FocusRequester() }
 
-    AlertDialog(
+    Dialog(
         onDismissRequest = onDismissRequest,
-        title = {
-            Text(text = stringResource(MR.strings.extensionStoresScreen_addStore_title))
-        },
-        text = {
-            OutlinedTextField(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .focusRequester(focusRequester),
-                state = state,
-                label = {
-                    Text(text = stringResource(MR.strings.extensionStoresScreen_addStoreInput_inputLabel))
+        title = stringResource(MR.strings.extensionStoresScreen_addStore_title),
+        confirm = DialogAction(
+            label = stringResource(addLabel(processing)),
+            onClick = { onCreate(state.text.toString()) },
+            enabled = !processing && state.text.isNotEmpty() && !storeAlreadyExists,
+        ),
+        dismiss = DialogAction(stringResource(MR.strings.action_cancel), onClick = onDismissRequest),
+    ) {
+        TextField(
+            state = state,
+            modifier = Modifier
+                .fillMaxWidth()
+                .focusRequester(focusRequester),
+            label = stringResource(MR.strings.extensionStoresScreen_addStoreInput_inputLabel),
+            supportingText = errorMessage ?: stringResource(
+                if (storeAlreadyExists) {
+                    MR.strings.extensionStoresScreen_addStore_alreadyExists
+                } else {
+                    MR.strings.information_required_plain
                 },
-                supportingText = {
-                    val msgRes = if (storeAlreadyExists) {
-                        MR.strings.extensionStoresScreen_addStore_alreadyExists
-                    } else {
-                        MR.strings.information_required_plain
-                    }
-                    Text(text = errorMessage ?: stringResource(msgRes))
-                },
-                isError = errorMessage != null || storeAlreadyExists,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
-                lineLimits = TextFieldLineLimits.SingleLine,
-            )
-        },
-        confirmButton = {
-            TextButton(
-                onClick = { onCreate(state.text.toString()) },
-                enabled = !processing && state.text.isNotEmpty() && !storeAlreadyExists,
-            ) {
-                Text(
-                    text = stringResource(
-                        resource = if (processing) {
-                            MR.strings.extensionStoresScreen_addStore_processing
-                        } else {
-                            MR.strings.action_add
-                        },
-                    ),
-                )
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismissRequest) {
-                Text(text = stringResource(MR.strings.action_cancel))
-            }
-        },
-    )
+            ),
+            isError = errorMessage != null || storeAlreadyExists,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
+        )
+    }
 
     LaunchedEffect(focusRequester) {
         focusRequester.requestFocus()
@@ -103,27 +81,16 @@ fun ExtensionStoreDeleteDialog(
     storeName: String,
     storeIndexUrl: String,
 ) {
-    AlertDialog(
+    ConfirmDialog(
+        title = stringResource(MR.strings.extensionStoresScreen_deleteStore_title),
+        text = stringResource(MR.strings.extensionStoresScreen_deleteStore_body, storeName, storeIndexUrl),
+        confirmLabel = stringResource(MR.strings.action_ok),
+        onConfirm = {
+            onDelete()
+            onDismissRequest()
+        },
         onDismissRequest = onDismissRequest,
-        title = {
-            Text(text = stringResource(MR.strings.extensionStoresScreen_deleteStore_title))
-        },
-        text = {
-            Text(text = stringResource(MR.strings.extensionStoresScreen_deleteStore_body, storeName, storeIndexUrl))
-        },
-        confirmButton = {
-            TextButton(onClick = {
-                onDelete()
-                onDismissRequest()
-            }) {
-                Text(text = stringResource(MR.strings.action_ok))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismissRequest) {
-                Text(text = stringResource(MR.strings.action_cancel))
-            }
-        },
+        destructive = true,
     )
 }
 
@@ -136,53 +103,35 @@ fun ExtensionStoreConfirmDialog(
     processing: Boolean,
     errorMessage: String?,
 ) {
-    val state = rememberTextFieldState(initialText = storeIndexUrl)
-    AlertDialog(
+    Dialog(
         onDismissRequest = onDismissRequest,
-        title = {
-            Text(text = stringResource(MR.strings.extensionStoresScreen_addStore_title))
-        },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(text = stringResource(MR.strings.extensionStoresScreen_addStoreDeeplink_bodyText))
-                OutlinedTextField(
-                    modifier = Modifier.fillMaxWidth(),
-                    state = state,
-                    readOnly = true,
-                    supportingText = when {
-                        storeAlreadyExists -> {
-                            {
-                                Text(text = stringResource(MR.strings.extensionStoresScreen_addStore_alreadyExists))
-                            }
-                        }
-                        errorMessage != null -> {
-                            {
-                                Text(text = errorMessage)
-                            }
-                        }
-                        else -> null
-                    },
-                    isError = errorMessage != null || storeAlreadyExists,
-                )
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = onCreate, enabled = !storeAlreadyExists && !processing) {
-                Text(
-                    text = stringResource(
-                        resource = if (processing) {
-                            MR.strings.extensionStoresScreen_addStore_processing
-                        } else {
-                            MR.strings.action_add
-                        },
-                    ),
-                )
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismissRequest) {
-                Text(text = stringResource(MR.strings.action_cancel))
-            }
-        },
-    )
+        title = stringResource(MR.strings.extensionStoresScreen_addStore_title),
+        confirm = DialogAction(
+            label = stringResource(addLabel(processing)),
+            onClick = onCreate,
+            enabled = !storeAlreadyExists && !processing,
+        ),
+        dismiss = DialogAction(stringResource(MR.strings.action_cancel), onClick = onDismissRequest),
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xs)) {
+            Text(stringResource(MR.strings.extensionStoresScreen_addStoreDeeplink_bodyText))
+            TextField(
+                value = storeIndexUrl,
+                onValueChange = {},
+                modifier = Modifier.fillMaxWidth(),
+                supportingText = when {
+                    storeAlreadyExists -> stringResource(MR.strings.extensionStoresScreen_addStore_alreadyExists)
+                    else -> errorMessage
+                },
+                isError = errorMessage != null || storeAlreadyExists,
+                readOnly = true,
+            )
+        }
+    }
+}
+
+private fun addLabel(processing: Boolean) = if (processing) {
+    MR.strings.extensionStoresScreen_addStore_processing
+} else {
+    MR.strings.action_add
 }

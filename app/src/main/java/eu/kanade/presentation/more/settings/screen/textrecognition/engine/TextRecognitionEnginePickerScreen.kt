@@ -9,13 +9,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.more.settings.screen.rememberTextRecognitionSettingsViewModel
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.util.system.openInBrowser
+import mihon.presentation.kit.navigation.AppBar
+import mihon.presentation.kit.navigation.Scaffold
 import mihon.text.recognition.ui.picker.engine.TextRecognitionEnginePickerList
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
 
 internal class TextRecognitionEnginePickerScreen : Screen() {

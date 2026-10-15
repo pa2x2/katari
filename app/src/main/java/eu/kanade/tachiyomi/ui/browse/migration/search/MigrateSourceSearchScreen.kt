@@ -1,16 +1,10 @@
 package eu.kanade.tachiyomi.ui.browse.migration.search
 
-import androidx.compose.material3.Icon
-import androidx.compose.material3.SmallExtendedFloatingActionButton
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
-import androidx.compose.material3.animateFloatingActionButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -18,8 +12,6 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.core.util.ifSourcesLoaded
 import eu.kanade.presentation.browse.CatalogContent
-import eu.kanade.presentation.components.AppSnackbarHost
-import eu.kanade.presentation.components.SearchToolbar
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.ui.browse.catalog.CatalogScreenEventsEffect
 import eu.kanade.tachiyomi.ui.browse.catalog.CatalogViewModel
@@ -40,12 +32,16 @@ import mihon.feature.migration.list.MigrationListScreen
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.FilterList
 import mihon.presentation.core.util.collectAsLazyPagingItems
+import mihon.presentation.kit.button.FloatingActionButton
+import mihon.presentation.kit.feedback.LoadingScreen
+import mihon.presentation.kit.feedback.SnackbarHost
+import mihon.presentation.kit.feedback.SnackbarHostState
+import mihon.presentation.kit.navigation.Scaffold
+import mihon.presentation.kit.navigation.SearchToolbar
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.source.model.CatalogListItem
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.screens.LoadingScreen
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
@@ -91,17 +87,14 @@ data class MigrateSourceSearchScreen(
                 )
             },
             floatingActionButton = {
-                SmallExtendedFloatingActionButton(
-                    text = { Text(text = stringResource(MR.strings.action_filter)) },
-                    icon = { Icon(MaterialSymbols.Rounded.FilterList, contentDescription = null) },
+                FloatingActionButton(
+                    label = stringResource(MR.strings.action_filter),
+                    icon = MaterialSymbols.Rounded.FilterList,
                     onClick = viewModel::openFilterSheet,
-                    modifier = Modifier.animateFloatingActionButton(
-                        visible = state.filters.isNotEmpty() || viewModel.hasFilterCapability,
-                        alignment = Alignment.BottomEnd,
-                    ),
+                    visible = state.filters.isNotEmpty() || viewModel.hasFilterCapability,
                 )
             },
-            snackbarHost = { AppSnackbarHost(hostState = snackbarHostState) },
+            snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         ) { paddingValues ->
             val openMigrateDialog: (Entry) -> Unit = openMigrateDialog@{ target ->
                 if (target.type != currentEntry.type) return@openMigrateDialog

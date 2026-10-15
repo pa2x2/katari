@@ -5,14 +5,11 @@ import android.app.SearchManager
 import android.app.assist.AssistContent
 import android.content.Context
 import android.content.Intent
-import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
 import android.os.SystemClock
 import android.view.View
 import androidx.activity.ComponentActivity
-import androidx.activity.SystemBarStyle
-import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -27,7 +24,6 @@ import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.windowInsetsBottomHeight
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -39,7 +35,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.animation.doOnEnd
@@ -117,6 +112,8 @@ import mihon.feature.migration.session.model.SourceMigrationSessionId
 import mihon.feature.migration.work.SourceMigrationNotifier
 import mihon.feature.profiles.core.Profile
 import mihon.feature.profiles.core.ProfileManager
+import mihon.presentation.kit.navigation.Scaffold
+import mihon.presentation.kit.theme.KatariTheme
 import mihon.translation.api.host.TranslationSettingsNavigation
 import tachiyomi.core.common.Constants
 import tachiyomi.core.common.i18n.stringResource
@@ -124,8 +121,6 @@ import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.material.Scaffold
-import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
 import uy.kohesive.injekt.injectLazy
@@ -248,15 +243,12 @@ class MainActivity : BaseActivity() {
                 indexing -> IndexingBannerBackgroundColor
                 downloadOnly -> DownloadedOnlyBannerBackgroundColor
                 incognito -> IncognitoModeBannerBackgroundColor
-                else -> MaterialTheme.colorScheme.surface
+                else -> KatariTheme.colors.surface
             }
             LaunchedEffect(isSystemInDarkTheme, statusBarBackgroundColor) {
-                // Draw edge-to-edge and set system bars color to transparent
-                val lightStyle = SystemBarStyle.light(Color.TRANSPARENT, Color.BLACK)
-                val darkStyle = SystemBarStyle.dark(Color.TRANSPARENT)
-                enableEdgeToEdge(
-                    statusBarStyle = if (statusBarBackgroundColor.luminance() > 0.5) lightStyle else darkStyle,
-                    navigationBarStyle = if (isSystemInDarkTheme) darkStyle else lightStyle,
+                applyMainSystemBarStyle(
+                    lightStatusBar = statusBarBackgroundColor.luminance() > 0.5,
+                    darkTheme = isSystemInDarkTheme,
                 )
             }
 
@@ -405,8 +397,7 @@ class MainActivity : BaseActivity() {
                                         .align(Alignment.BottomCenter)
                                         .fillMaxWidth()
                                         .windowInsetsBottomHeight(WindowInsets.navigationBars)
-                                        .alpha(0.8f)
-                                        .background(MaterialTheme.colorScheme.surfaceContainer),
+                                        .background(KatariTheme.colors.chrome),
                                 )
                             }
                         }
@@ -536,12 +527,10 @@ class MainActivity : BaseActivity() {
      * When custom animation is used, status and navigation bar color will be set to transparent and will be restored
      * after the animation is finished.
      */
-    @Suppress("Deprecation")
     private fun setSplashScreenExitAnimation(splashScreen: SplashScreen?) {
         val root = findViewById<View>(android.R.id.content)
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S && splashScreen != null) {
-            window.statusBarColor = Color.TRANSPARENT
-            window.navigationBarColor = Color.TRANSPARENT
+            window.clearSystemBarColors()
 
             splashScreen.setOnExitAnimationListener { splashProvider ->
                 // For some reason the SplashScreen applies (incorrect) Y translation to the iconView

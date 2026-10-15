@@ -1,37 +1,24 @@
 package eu.kanade.presentation.entry.components
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.LocalContentColor
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.DialogProperties
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.CheckBoxOutlineBlank
-import mihon.icons.materialsymbols.roundedfilled.DisabledByDefault
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.dialog.Dialog
+import mihon.presentation.kit.dialog.DialogAction
+import mihon.presentation.kit.list.TriStateRow
+import mihon.presentation.kit.surface.HorizontalDivider
+import tachiyomi.core.common.preference.TriState
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.material.TextButton
-import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
 
+/** Picks the scanlators whose chapters are hidden; each row toggles between shown and excluded. */
 @Composable
 fun ScanlatorFilterDialog(
     availableScanlators: Set<String>,
@@ -43,94 +30,55 @@ fun ScanlatorFilterDialog(
         availableScanlators.sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it })
     }
     val mutableExcludedScanlators = remember(excludedScanlators) { excludedScanlators.toMutableStateList() }
-    AlertDialog(
+    val hasScanlators = sortedAvailableScanlators.isNotEmpty()
+    Dialog(
         onDismissRequest = onDismissRequest,
-        title = { Text(text = stringResource(MR.strings.exclude_scanlators)) },
-        text = textFunc@{
-            if (sortedAvailableScanlators.isEmpty()) {
-                Text(text = stringResource(MR.strings.no_scanlators_found))
-                return@textFunc
-            }
-            Box {
-                val state = rememberLazyListState()
-                LazyColumn(state = state) {
-                    sortedAvailableScanlators.forEach { scanlator ->
-                        item {
-                            val isExcluded = mutableExcludedScanlators.contains(scanlator)
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier
-                                    .clickable {
-                                        if (isExcluded) {
-                                            mutableExcludedScanlators.remove(scanlator)
-                                        } else {
-                                            mutableExcludedScanlators.add(scanlator)
-                                        }
-                                    }
-                                    .minimumInteractiveComponentSize()
-                                    .clip(MaterialTheme.shapes.small)
-                                    .fillMaxWidth()
-                                    .padding(horizontal = MaterialTheme.padding.small),
-                            ) {
-                                Icon(
-                                    imageVector = if (isExcluded) {
-                                        MaterialSymbols.RoundedFilled.DisabledByDefault
-                                    } else {
-                                        MaterialSymbols.Rounded.CheckBoxOutlineBlank
-                                    },
-                                    tint = if (isExcluded) {
-                                        MaterialTheme.colorScheme.primary
-                                    } else {
-                                        LocalContentColor.current
-                                    },
-                                    contentDescription = null,
-                                )
-                                Text(
-                                    text = scanlator,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    modifier = Modifier.padding(start = 24.dp),
-                                )
+        title = stringResource(MR.strings.exclude_scanlators),
+        confirm = if (hasScanlators) {
+            DialogAction(stringResource(MR.strings.action_ok), onClick = {
+                onConfirm(mutableExcludedScanlators.toSet())
+                onDismissRequest()
+            })
+        } else {
+            null
+        },
+        dismiss = DialogAction(stringResource(MR.strings.action_cancel), onDismissRequest),
+        neutral = when {
+            !hasScanlators -> null
+            mutableExcludedScanlators.isEmpty() -> DialogAction(
+                stringResource(MR.strings.action_select_all),
+                onClick = { mutableExcludedScanlators.addAll(availableScanlators) },
+            )
+            else -> DialogAction(
+                stringResource(MR.strings.action_reset),
+                onClick = mutableExcludedScanlators::clear,
+            )
+        },
+    ) {
+        if (!hasScanlators) {
+            Text(text = stringResource(MR.strings.no_scanlators_found))
+            return@Dialog
+        }
+        Box {
+            val state = rememberLazyListState()
+            LazyColumn(state = state) {
+                items(sortedAvailableScanlators) { scanlator ->
+                    val isExcluded = scanlator in mutableExcludedScanlators
+                    TriStateRow(
+                        title = scanlator,
+                        state = if (isExcluded) TriState.ENABLED_NOT else TriState.DISABLED,
+                        onStateChange = {
+                            if (isExcluded) {
+                                mutableExcludedScanlators.remove(scanlator)
+                            } else {
+                                mutableExcludedScanlators.add(scanlator)
                             }
-                        }
-                    }
-                }
-                if (state.canScrollBackward) HorizontalDivider(modifier = Modifier.align(Alignment.TopCenter))
-                if (state.canScrollForward) HorizontalDivider(modifier = Modifier.align(Alignment.BottomCenter))
-            }
-        },
-        properties = DialogProperties(
-            usePlatformDefaultWidth = true,
-        ),
-        confirmButton = {
-            if (sortedAvailableScanlators.isEmpty()) {
-                TextButton(onClick = onDismissRequest) {
-                    Text(text = stringResource(MR.strings.action_cancel))
-                }
-            } else {
-                FlowRow {
-                    if (mutableExcludedScanlators.isEmpty()) {
-                        TextButton(onClick = { mutableExcludedScanlators.addAll(availableScanlators) }) {
-                            Text(text = stringResource(MR.strings.action_select_all))
-                        }
-                    } else {
-                        TextButton(onClick = mutableExcludedScanlators::clear) {
-                            Text(text = stringResource(MR.strings.action_reset))
-                        }
-                    }
-                    Spacer(modifier = Modifier.weight(1f))
-                    TextButton(onClick = onDismissRequest) {
-                        Text(text = stringResource(MR.strings.action_cancel))
-                    }
-                    TextButton(
-                        onClick = {
-                            onConfirm(mutableExcludedScanlators.toSet())
-                            onDismissRequest()
                         },
-                    ) {
-                        Text(text = stringResource(MR.strings.action_ok))
-                    }
+                    )
                 }
             }
-        },
-    )
+            if (state.canScrollBackward) HorizontalDivider(modifier = Modifier.align(Alignment.TopCenter))
+            if (state.canScrollForward) HorizontalDivider(modifier = Modifier.align(Alignment.BottomCenter))
+        }
+    }
 }

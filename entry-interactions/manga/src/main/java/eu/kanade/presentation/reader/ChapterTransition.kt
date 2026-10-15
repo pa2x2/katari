@@ -6,20 +6,21 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import eu.kanade.tachiyomi.data.database.models.toDomainChapter
 import eu.kanade.tachiyomi.ui.reader.model.ReaderChapter
 import mihon.entry.interactions.reader.settings.ChapterTransitionMode
 import mihon.entry.interactions.viewer.EntryChildDirection
 import mihon.entry.interactions.viewer.EntryChildTransition
+import mihon.entry.viewer.chrome.ui.ReaderEntryChildTransition
+import mihon.entry.viewer.chrome.ui.ReaderEntryChildTransitionDestinationSlot
+import mihon.entry.viewer.chrome.ui.ReaderEntryChildTransitionItem
+import mihon.entry.viewer.chrome.ui.ReaderEntryChildTransitionLoadState
+import mihon.entry.viewer.chrome.ui.ReaderEntryChildTransitionLoadingIndicator
+import mihon.entry.viewer.chrome.ui.ReaderEntryChildTransitionUiModel
+import mihon.presentation.kit.content.ReadingMetrics
+import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.domain.entry.service.calculateChapterGap
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.reader.ReaderEntryChildTransition
-import tachiyomi.presentation.core.components.reader.ReaderEntryChildTransitionDestinationSlot
-import tachiyomi.presentation.core.components.reader.ReaderEntryChildTransitionItem
-import tachiyomi.presentation.core.components.reader.ReaderEntryChildTransitionLoadState
-import tachiyomi.presentation.core.components.reader.ReaderEntryChildTransitionLoadingIndicator
-import tachiyomi.presentation.core.components.reader.ReaderEntryChildTransitionUiModel
 import tachiyomi.presentation.core.i18n.stringResource
 
 /**
@@ -120,7 +121,10 @@ internal fun ChapterTransition(
         onRetry = onRetry,
         modifier = when (placement) {
             ChapterTransitionPlacement.PAGER -> Modifier
-            ChapterTransitionPlacement.WEBTOON -> Modifier.padding(horizontal = 32.dp, vertical = 128.dp)
+            ChapterTransitionPlacement.WEBTOON -> Modifier.padding(
+                horizontal = KatariTheme.spacing.xxl,
+                vertical = ReadingMetrics.stripChapterBoundaryGap,
+            )
         },
     )
 }
@@ -137,8 +141,8 @@ private fun ChapterTransitionLoadingIndicator(placement: ChapterTransitionPlacem
         modifier = Modifier
             .fillMaxWidth()
             .padding(
-                horizontal = if (isWebtoon) 32.dp else 0.dp,
-                vertical = if (isWebtoon) 64.dp else 0.dp,
+                horizontal = if (isWebtoon) KatariTheme.spacing.xxl else KatariTheme.sizes.none,
+                vertical = if (isWebtoon) ReadingMetrics.stripChapterLoadingGap else KatariTheme.sizes.none,
             ),
         contentAlignment = Alignment.Center,
     ) {

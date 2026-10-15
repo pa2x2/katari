@@ -1,58 +1,44 @@
 package eu.kanade.tachiyomi.ui.browse.feed.manage
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SnackbarDuration
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SnackbarResult
-import androidx.compose.material3.Switch
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.unit.dp
 import eu.kanade.domain.source.model.SourceFeed
 import eu.kanade.domain.source.model.SourceFeedPreset
 import eu.kanade.domain.source.service.BrowseFeedService
-import eu.kanade.presentation.browse.components.SourceIcon
-import eu.kanade.presentation.components.AdaptiveSheet
-import eu.kanade.presentation.components.AppSnackbarHost
-import eu.kanade.tachiyomi.ui.browse.feed.FeedLabelText
 import eu.kanade.tachiyomi.ui.browse.feed.rememberFeedLabel
+import eu.kanade.tachiyomi.ui.browse.feed.switcher.FeedSourceIcon
 import kotlinx.coroutines.launch
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Add
 import mihon.icons.materialsymbols.rounded.Delete
 import mihon.icons.materialsymbols.rounded.DragHandle
 import mihon.icons.materialsymbols.rounded.Edit
-import mihon.icons.materialsymbols.rounded.MoreVert
+import mihon.presentation.kit.content.Icon
+import mihon.presentation.kit.control.Switch
+import mihon.presentation.kit.feedback.SnackbarDuration
+import mihon.presentation.kit.feedback.SnackbarHostState
+import mihon.presentation.kit.feedback.SnackbarResult
+import mihon.presentation.kit.list.SettingsRow
+import mihon.presentation.kit.menu.DropdownMenuItem
+import mihon.presentation.kit.menu.OverflowMenu
+import mihon.presentation.kit.sheet.Sheet
+import mihon.presentation.kit.sheet.SheetHeader
+import mihon.presentation.kit.theme.KatariTheme
 import sh.calvin.reorderable.ReorderableCollectionItemScope
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
 import tachiyomi.domain.source.model.Source
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.ScrollbarLazyColumn
-import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
 
 /** Reorders, enables, renames and removes feeds. A removal can be undone from the snackbar it shows. */
@@ -76,7 +62,7 @@ internal fun ManageFeedsSheet(
     val listState = rememberLazyListState()
     val reorderableState = rememberReorderableLazyListState(
         listState,
-        PaddingValues(vertical = MaterialTheme.padding.small),
+        PaddingValues(vertical = KatariTheme.spacing.s),
     ) { from, to ->
         onReorder(from.key as String, to.key as String)
     }
@@ -95,56 +81,33 @@ internal fun ManageFeedsSheet(
         }
     }
 
-    AdaptiveSheet(onDismissRequest = onDismissRequest) {
-        Box {
-            Column(modifier = Modifier.padding(top = MaterialTheme.padding.medium)) {
-                Text(
-                    text = stringResource(MR.strings.browse_manage_feeds),
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(horizontal = MaterialTheme.padding.medium),
-                )
-                ScrollbarLazyColumn(
-                    state = listState,
-                    modifier = Modifier.weight(1f, fill = false),
-                    contentPadding = PaddingValues(vertical = MaterialTheme.padding.small),
-                ) {
-                    items(items = feeds, key = { it.id }) { feed ->
-                        val source = sourceFor(feed.sourceId) ?: return@items
-                        val preset = presetFor(feed) ?: return@items
-                        ReorderableItem(state = reorderableState, key = feed.id) {
-                            ManageFeedRow(
-                                feed = feed,
-                                source = source,
-                                preset = preset,
-                                onToggle = { onToggle(feed.id, it) },
-                                onRename = { onRename(feed) },
-                                onRemove = { removeFeed(feed.id) },
-                            )
-                        }
+    Sheet(onDismissRequest = onDismissRequest, snackbarHostState = snackbarHostState) {
+        Column {
+            SheetHeader(title = stringResource(MR.strings.browse_manage_feeds))
+            ScrollbarLazyColumn(
+                state = listState,
+                modifier = Modifier.weight(1f, fill = false),
+                contentPadding = PaddingValues(vertical = KatariTheme.spacing.s),
+            ) {
+                items(items = feeds, key = { it.id }) { feed ->
+                    val source = sourceFor(feed.sourceId) ?: return@items
+                    val preset = presetFor(feed) ?: return@items
+                    ReorderableItem(state = reorderableState, key = feed.id) {
+                        ManageFeedRow(
+                            feed = feed,
+                            source = source,
+                            preset = preset,
+                            onToggle = { onToggle(feed.id, it) },
+                            onRename = { onRename(feed) },
+                            onRemove = { removeFeed(feed.id) },
+                        )
                     }
                 }
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable(onClick = onAddFeed)
-                        .padding(horizontal = MaterialTheme.padding.medium, vertical = 14.dp),
-                    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.medium),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Icon(
-                        imageVector = MaterialSymbols.Rounded.Add,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                    )
-                    Text(
-                        text = stringResource(MR.strings.browse_feed_add),
-                        color = MaterialTheme.colorScheme.primary,
-                    )
-                }
             }
-            AppSnackbarHost(
-                hostState = snackbarHostState,
-                modifier = Modifier.align(Alignment.BottomCenter),
+            SettingsRow(
+                title = stringResource(MR.strings.browse_feed_add),
+                icon = MaterialSymbols.Rounded.Add,
+                onClick = onAddFeed,
             )
         }
     }
@@ -159,55 +122,46 @@ private fun ReorderableCollectionItemScope.ManageFeedRow(
     onRename: () -> Unit,
     onRemove: () -> Unit,
 ) {
-    var menuExpanded by remember { mutableStateOf(false) }
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(start = MaterialTheme.padding.medium, top = 6.dp, bottom = 6.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Icon(
-            imageVector = MaterialSymbols.Rounded.DragHandle,
-            contentDescription = null,
-            modifier = Modifier.draggableHandle(),
-        )
-        SourceIcon(
-            source = source,
-            modifier = Modifier
-                .size(32.dp)
-                .clip(MaterialTheme.shapes.extraSmall),
-        )
-        FeedLabelText(
-            label = rememberFeedLabel(feed, source, preset),
-            modifier = Modifier.weight(1f),
-        )
-        Switch(checked = feed.enabled, onCheckedChange = onToggle)
-        Box {
-            IconButton(onClick = { menuExpanded = true }) {
+    val label = rememberFeedLabel(feed, source, preset)
+    SettingsRow(
+        title = label.title,
+        subtitle = label.subtitle,
+        subtitleMaxLines = 1,
+        leading = {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.m),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
                 Icon(
-                    imageVector = MaterialSymbols.Rounded.MoreVert,
-                    contentDescription = stringResource(MR.strings.label_more),
+                    imageVector = MaterialSymbols.Rounded.DragHandle,
+                    contentDescription = null,
+                    modifier = Modifier.draggableHandle(),
                 )
+                FeedSourceIcon(source, size = KatariTheme.sizes.iconLarge)
             }
-            DropdownMenu(expanded = menuExpanded, onDismissRequest = { menuExpanded = false }) {
-                DropdownMenuItem(
-                    text = { Text(text = stringResource(MR.strings.browse_feed_rename)) },
-                    leadingIcon = { Icon(imageVector = MaterialSymbols.Rounded.Edit, contentDescription = null) },
-                    onClick = {
-                        menuExpanded = false
-                        onRename()
-                    },
-                )
-                DropdownMenuItem(
-                    text = { Text(text = stringResource(MR.strings.action_delete)) },
-                    leadingIcon = { Icon(imageVector = MaterialSymbols.Rounded.Delete, contentDescription = null) },
-                    onClick = {
-                        menuExpanded = false
-                        onRemove()
-                    },
-                )
+        },
+        trailing = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Switch(checked = feed.enabled, onCheckedChange = onToggle)
+                OverflowMenu { close ->
+                    DropdownMenuItem(
+                        label = stringResource(MR.strings.browse_feed_rename),
+                        icon = MaterialSymbols.Rounded.Edit,
+                        onClick = {
+                            close()
+                            onRename()
+                        },
+                    )
+                    DropdownMenuItem(
+                        label = stringResource(MR.strings.action_delete),
+                        icon = MaterialSymbols.Rounded.Delete,
+                        onClick = {
+                            close()
+                            onRemove()
+                        },
+                    )
+                }
             }
-        }
-    }
+        },
+    )
 }

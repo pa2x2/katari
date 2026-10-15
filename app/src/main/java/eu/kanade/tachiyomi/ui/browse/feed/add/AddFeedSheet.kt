@@ -1,20 +1,13 @@
 package eu.kanade.tachiyomi.ui.browse.feed.add
 
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -26,32 +19,37 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import eu.kanade.domain.source.model.BUILTIN_LATEST_PRESET_ID
 import eu.kanade.domain.source.model.BUILTIN_POPULAR_PRESET_ID
 import eu.kanade.domain.source.model.SourceFeed
 import eu.kanade.domain.source.model.SourceFeedPreset
 import eu.kanade.presentation.browse.SourceUiModel
 import eu.kanade.presentation.browse.components.BaseSourceItem
-import eu.kanade.presentation.components.AdaptiveSheet
 import eu.kanade.tachiyomi.ui.browse.source.browse.preset.displayName
 import eu.kanade.tachiyomi.util.system.LocaleHelper
 import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.automirroredrounded.KeyboardArrowRight
 import mihon.icons.materialsymbols.rounded.Check
 import mihon.icons.materialsymbols.rounded.FilterList
 import mihon.icons.materialsymbols.rounded.KeyboardArrowDown
-import mihon.icons.materialsymbols.rounded.Search
 import mihon.icons.materialsymbols.rounded.Verified
 import mihon.icons.materialsymbols.roundedfilled.Favorite
+import mihon.presentation.kit.content.Badge
+import mihon.presentation.kit.content.BrowseMetrics
+import mihon.presentation.kit.content.Icon
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.field.SearchField
+import mihon.presentation.kit.list.SectionHeader
+import mihon.presentation.kit.list.SettingsRow
+import mihon.presentation.kit.sheet.Sheet
+import mihon.presentation.kit.sheet.SheetHeader
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.domain.source.model.Source
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.ScrollbarLazyColumn
-import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.theme.header
 
 /**
  * Picks a source and one of its presets for a new feed in one sheet: a source row expands in place to list its
@@ -71,22 +69,16 @@ internal fun AddFeedSheet(
     val listItems = remember(sources, query) { addFeedSourceList(sources, query) }
     val feedCounts = remember(feeds) { feeds.groupingBy { it.sourceId }.eachCount() }
 
-    AdaptiveSheet(onDismissRequest = onDismissRequest) {
-        Column(modifier = Modifier.padding(top = MaterialTheme.padding.medium)) {
-            Text(
-                text = stringResource(MR.strings.browse_feed_add),
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(horizontal = MaterialTheme.padding.medium),
-            )
-            OutlinedTextField(
-                value = query,
-                onValueChange = { query = it },
+    Sheet(onDismissRequest = onDismissRequest) {
+        Column {
+            SheetHeader(title = stringResource(MR.strings.browse_feed_add))
+            SearchField(
+                query = query,
+                onQueryChange = { query = it },
+                placeholder = stringResource(MR.strings.browse_feed_search_sources),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = MaterialTheme.padding.medium, vertical = MaterialTheme.padding.small),
-                placeholder = { Text(text = stringResource(MR.strings.browse_feed_search_sources)) },
-                leadingIcon = { Icon(imageVector = MaterialSymbols.Rounded.Search, contentDescription = null) },
-                singleLine = true,
+                    .padding(horizontal = KatariTheme.spacing.rowInset, vertical = KatariTheme.spacing.s),
             )
             ScrollbarLazyColumn {
                 listItems.forEach { item ->
@@ -134,12 +126,7 @@ internal fun AddFeedSheet(
 
 @Composable
 private fun SourceSectionHeader(language: String) {
-    val context = LocalContext.current
-    Text(
-        text = LocaleHelper.getSourceDisplayName(language, context),
-        modifier = Modifier.padding(horizontal = MaterialTheme.padding.medium, vertical = MaterialTheme.padding.small),
-        style = MaterialTheme.typography.header,
-    )
+    SectionHeader(text = LocaleHelper.getSourceDisplayName(language, LocalContext.current))
 }
 
 @Composable
@@ -152,29 +139,15 @@ private fun AddFeedSourceRow(
     val arrowRotation by animateFloatAsState(targetValue = if (expanded) 180f else 0f, label = "expand")
     BaseSourceItem(
         source = source,
-        modifier = Modifier.padding(vertical = MaterialTheme.padding.extraSmall),
         onClickItem = onClick,
         action = {
             if (feedCount > 0) {
-                Surface(
-                    shape = MaterialTheme.shapes.small,
-                    color = MaterialTheme.colorScheme.secondaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                    modifier = Modifier.padding(start = MaterialTheme.padding.small),
-                ) {
-                    Text(
-                        text = pluralStringResource(MR.plurals.browse_feed_count, feedCount, feedCount),
-                        style = MaterialTheme.typography.labelSmall,
-                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                    )
-                }
+                Badge(text = pluralStringResource(MR.plurals.browse_feed_count, feedCount, feedCount))
             }
             Icon(
                 imageVector = MaterialSymbols.Rounded.KeyboardArrowDown,
                 contentDescription = null,
-                modifier = Modifier
-                    .padding(start = MaterialTheme.padding.small)
-                    .rotate(arrowRotation),
+                modifier = Modifier.rotate(arrowRotation),
             )
         },
     )
@@ -186,30 +159,32 @@ private fun AddFeedPresetRow(
     added: Boolean,
     onClick: () -> Unit,
 ) {
-    PresetRow(
-        icon = preset.listingIcon(),
-        onClick = onClick,
-        content = {
-            Text(
-                text = preset.displayName(),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f),
-            )
-            if (added) {
-                Icon(
-                    imageVector = MaterialSymbols.Rounded.Check,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(18.dp),
-                )
-                Text(
-                    text = stringResource(MR.strings.browse_feed_added),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.primary,
-                )
+    SettingsRow(
+        title = preset.displayName(),
+        leading = { PresetIcon(preset.listingIcon()) },
+        trailing = if (added) {
+            {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xs),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(
+                        imageVector = MaterialSymbols.Rounded.Check,
+                        contentDescription = null,
+                        modifier = Modifier.size(KatariTheme.sizes.iconSmall),
+                        tone = ContentTone.Primary,
+                    )
+                    Text(
+                        text = stringResource(MR.strings.browse_feed_added),
+                        role = TextRole.Supporting,
+                        tone = ContentTone.Primary,
+                    )
+                }
             }
+        } else {
+            null
         },
+        onClick = onClick,
     )
 }
 
@@ -218,44 +193,23 @@ private fun FilteredFeedRow(
     sourceName: String,
     onClick: () -> Unit,
 ) {
-    PresetRow(
-        icon = MaterialSymbols.Rounded.FilterList,
+    SettingsRow(
+        title = stringResource(MR.strings.browse_feed_filtered),
+        subtitle = stringResource(MR.strings.browse_feed_filtered_summary, sourceName),
+        leading = { PresetIcon(MaterialSymbols.Rounded.FilterList) },
         onClick = onClick,
-        content = {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(text = stringResource(MR.strings.browse_feed_filtered))
-                Text(
-                    text = stringResource(MR.strings.browse_feed_filtered_summary, sourceName),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-            Icon(
-                imageVector = MaterialSymbols.AutoMirroredRounded.KeyboardArrowRight,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        },
     )
 }
 
+// Preset rows sit under their source's row, with the icon indented to the source name so they read as its children.
 @Composable
-private fun PresetRow(
-    icon: ImageVector,
-    onClick: () -> Unit,
-    content: @Composable RowScope.() -> Unit,
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(start = 72.dp, end = MaterialTheme.padding.medium, top = 12.dp, bottom = 12.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Icon(imageVector = icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-        content()
-    }
+private fun PresetIcon(icon: ImageVector) {
+    Icon(
+        imageVector = icon,
+        contentDescription = null,
+        modifier = Modifier.padding(start = BrowseMetrics.sourceIcon + KatariTheme.spacing.l),
+        tone = ContentTone.Primary,
+    )
 }
 
 private fun SourceFeedPreset.listingIcon(): ImageVector {

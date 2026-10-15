@@ -1,22 +1,12 @@
 package eu.kanade.tachiyomi.ui.browse.catalog
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.size
-import androidx.compose.material3.Badge
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.clearAndSetSemantics
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.FilterList
+import mihon.presentation.kit.chip.FilterChip
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -27,33 +17,13 @@ internal fun CatalogFilterChip(
     changedCount: Int,
     onClick: () -> Unit,
 ) {
+    val description = stringResource(MR.strings.filter_changed_count_description, changedCount)
     FilterChip(
+        label = stringResource(MR.strings.action_filter),
         selected = selected,
         onClick = onClick,
-        leadingIcon = {
-            Icon(
-                imageVector = MaterialSymbols.Rounded.FilterList,
-                contentDescription = null,
-                modifier = Modifier.size(FilterChipDefaults.IconSize),
-            )
-        },
-        label = {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(text = stringResource(MR.strings.action_filter))
-                if (changedCount > 0) {
-                    val description = stringResource(MR.strings.filter_changed_count_description, changedCount)
-                    Badge(
-                        modifier = Modifier.clearAndSetSemantics { contentDescription = description },
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary,
-                    ) {
-                        Text(changedCount.toString())
-                    }
-                }
-            }
-        },
+        modifier = if (changedCount > 0) Modifier.semantics { stateDescription = description } else Modifier,
+        icon = MaterialSymbols.Rounded.FilterList,
+        count = changedCount.takeIf { it > 0 },
     )
 }

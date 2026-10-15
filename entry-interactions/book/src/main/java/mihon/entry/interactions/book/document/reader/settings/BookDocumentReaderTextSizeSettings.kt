@@ -9,7 +9,7 @@ import kotlinx.coroutines.launch
 import mihon.entry.interactions.book.R
 import mihon.entry.interactions.reader.settings.BookDocumentReaderSettings
 import mihon.entry.viewer.settings.ViewerSettingBinding
-import tachiyomi.presentation.core.components.SettingsStepperItem
+import mihon.presentation.kit.list.StepperRow
 
 @Composable
 internal fun BookDocumentReaderTextSizeSettings(
@@ -30,8 +30,8 @@ internal fun BookDocumentReaderTextSizeSettings(
         }
     }
 
-    SettingsStepperItem(
-        label = stringResource(R.string.book_document_reader_text_size),
+    StepperRow(
+        title = stringResource(R.string.book_document_reader_text_size),
         value = value,
         valueRange = BookDocumentReaderSettings.TEXT_SIZE_RANGE,
         step = BookDocumentReaderSettings.TEXT_SIZE_STEP_PERCENT,
