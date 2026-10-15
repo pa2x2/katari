@@ -692,7 +692,7 @@
     <string name="pref_category_readers">Readers</string>
     <string name="reader_shared_settings">Common</string>
     <string name="pref_prepare_next_chapter">Prepare next chapter</string>
-    <string name="pref_prepare_next_chapter_summary">At 75% progress, prepares the next chapter and preloads its first Manga images</string>
+    <string name="pref_prepare_next_chapter_summary">At 75% progress, prepares the next chapter so it opens without waiting</string>
     <string name="pref_manga_reader">Manga reader</string>
     <string name="pref_book_document_reader">Book reader</string>
     <string name="pref_book_document_reader_theme">Theme</string>
