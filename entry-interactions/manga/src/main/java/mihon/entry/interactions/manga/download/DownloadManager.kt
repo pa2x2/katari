@@ -30,8 +30,6 @@ import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.i18n.*
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -41,13 +39,13 @@ import java.util.concurrent.ConcurrentHashMap
  */
 internal class DownloadManager(
     private val context: Context,
-    private val provider: DownloadProvider = Injekt.get(),
-    private val cache: DownloadCache = Injekt.get(),
-    private val sourceManager: SourceManager = Injekt.get(),
-    private val downloader: Downloader = Downloader(context, provider, cache),
-    private val pendingDeleter: DownloadPendingDeleter = DownloadPendingDeleter(context),
-    private val workController: EntryDownloadWorkController = Injekt.get(),
-    private val scope: CoroutineScope = Injekt.get(),
+    private val provider: DownloadProvider,
+    private val cache: DownloadCache,
+    private val sourceManager: SourceManager,
+    private val downloader: Downloader,
+    private val pendingDeleter: DownloadPendingDeleter,
+    private val workController: EntryDownloadWorkController,
+    private val scope: CoroutineScope,
 ) {
 
     init {

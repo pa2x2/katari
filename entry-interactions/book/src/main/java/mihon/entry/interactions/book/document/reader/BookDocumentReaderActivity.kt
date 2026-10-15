@@ -26,24 +26,22 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import logcat.LogPriority
+import mihon.core.metro.metroGraph
 import mihon.entry.interactions.book.R
 import mihon.entry.interactions.book.document.reader.navigation.BookDocumentNavigationTarget
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderSettingBindings
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderSettingsProvider
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderThemeMode
 import mihon.entry.interactions.book.document.resource.BookRemoteResourceConsentCoordinator
-import mihon.entry.interactions.book.document.resource.BookRemoteResourceConsentPreferences
 import mihon.entry.interactions.book.document.resource.PendingBookRemoteResourceConsent
-import mihon.entry.interactions.book.navigation.BookChapterNavigationResolver
 import mihon.entry.interactions.book.navigation.BookChapterReadingOrder
 import mihon.entry.interactions.book.preparation.BookRemoteResourceAuthorization
 import mihon.entry.interactions.book.processor.BookReaderRequest
 import mihon.entry.interactions.book.reader.BookChildWebViewResolver
 import mihon.entry.interactions.book.reader.BookReaderErrorScreen
+import mihon.entry.interactions.book.reader.BookReaderGraph
 import mihon.entry.interactions.book.reader.BookReaderLoadingScreen
 import mihon.entry.interactions.book.reader.BookReaderOpenResult
-import mihon.entry.interactions.book.reader.BookReaderSessionFactory
-import mihon.entry.interactions.book.reader.BookReaderSessionRegistry
 import mihon.entry.interactions.book.reader.OpenedBookReaderSession
 import mihon.entry.interactions.book.reader.language.BookSelectionLanguageSession
 import mihon.entry.interactions.book.reader.selection.BookSelectionActionCoordinator
@@ -51,28 +49,19 @@ import mihon.entry.interactions.book.reader.speech.BookShortFormSpeechController
 import mihon.entry.interactions.book.reader.speech.BookShortFormSpeechFailure
 import mihon.entry.interactions.book.reader.translation.BookSelectionTranslationController
 import mihon.entry.interactions.book.reader.translation.BookTranslationLanguageStore
-import mihon.entry.interactions.child.EntryChildListFeature
 import mihon.entry.interactions.reader.navigation.EntryReaderNavigationPresenter
 import mihon.entry.interactions.runtime.EntryInteractionActivity
+import mihon.entry.interactions.runtime.EntryInteractionActivityGraph
 import mihon.entry.interactions.runtime.registerEntryInteractionSecureScreen
 import mihon.entry.interactions.runtime.setEntryInteractionContent
 import mihon.entry.interactions.source.EntryChildWebViewAction
 import mihon.entry.interactions.source.EntryChildWebViewResolution
-import mihon.entry.interactions.source.EntryWebViewFeature
 import mihon.entry.interactions.source.launchEntryChildWebViewAction
-import mihon.entry.interactions.translation.EntryTranslationLanguagesFeature
-import mihon.entry.viewer.settings.ViewerSettingBinder
 import mihon.entry.viewer.settings.navigation.openViewerSettings
 import mihon.presentation.kit.feedback.SnackbarHostState
-import mihon.translation.api.TranslationFeature
-import mihon.translation.api.host.TranslationHostActions
-import mihon.tts.api.TtsFeature
 import tachiyomi.core.common.util.system.logcat
-import tachiyomi.domain.entry.interactor.GetEntryWithChapters
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
 /** Native endless-scroll host for semantic BOOK documents. */
 internal class BookDocumentReaderActivity : EntryInteractionActivity() {
@@ -91,13 +80,14 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
     private var navigationPresentationJob: Job? = null
     private var pendingExternalLink by mutableStateOf<String?>(null)
     private var pendingRemoteResourceConsent by mutableStateOf<PendingBookRemoteResourceConsent?>(null)
+    private val dependencies by lazy { metroGraph<BookReaderGraph>().bookReaderDependencies }
     private val remoteResourceConsentCoordinator by lazy {
-        BookRemoteResourceConsentCoordinator(Injekt.get<BookRemoteResourceConsentPreferences>())
+        BookRemoteResourceConsentCoordinator(dependencies.remoteResourceConsentPreferences)
     }
     private val navigationPresenter by lazy {
         EntryReaderNavigationPresenter(
-            getEntryWithChapters = Injekt.get<GetEntryWithChapters>(),
-            childListFeature = Injekt.get<EntryChildListFeature>(),
+            getEntryWithChapters = dependencies.getEntryWithChapters,
+            childListFeature = dependencies.childListFeature,
         )
     }
     private val startupRequest by lazy {
@@ -112,10 +102,11 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
         readerSystemBars = BookDocumentReaderSystemBars(window)
-        registerEntryInteractionSecureScreen()
+        val activityGraph = metroGraph<EntryInteractionActivityGraph>()
+        registerEntryInteractionSecureScreen(activityGraph.readerBasePreferences, activityGraph.securityPreferences)
         childWebViewResolver = BookChildWebViewResolver(
             scope = lifecycleScope,
-            feature = Injekt.get<EntryWebViewFeature>(),
+            feature = dependencies.webViewFeature,
             currentChapterId = { retainedSessions.currentChapterId },
             onResolution = { resolution -> readerState = readerState?.copy(childWebView = resolution) },
             onFailure = { error ->
@@ -126,7 +117,7 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
             context = this,
             scope = lifecycleScope,
             retainedSessions = retainedSessions,
-            sessionFactory = Injekt.get<BookReaderSessionFactory>(),
+            sessionFactory = dependencies.sessionFactory,
             isNextChapterPreparationEnabled = {
                 settingBindings?.prepareNextChapter?.state?.value?.effectiveValue == true
             },
@@ -291,8 +282,8 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
     private suspend fun installSettingBindings(entryId: Long) {
         if (settingBindings != null) return
         val bindings = BookDocumentReaderSettingBindings.create(
-            provider = Injekt.get<BookDocumentReaderSettingsProvider>(),
-            binder = Injekt.get<ViewerSettingBinder>(),
+            provider = dependencies.settingsProvider,
+            binder = dependencies.viewerSettingBinder,
             entryId = entryId,
         )
         settingBindings = bindings
@@ -357,12 +348,12 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
         val retained = retainedSessions.currentSession()
         val token = intent.getStringExtra(EXTRA_SESSION_TOKEN)
         val handedOff = if (retained == null && !token.isNullOrBlank()) {
-            Injekt.get<BookReaderSessionRegistry>().claim(token, startupRequest)
+            dependencies.sessionRegistry.claim(token, startupRequest)
         } else {
             null
         }
         val result = when (val existing = retained ?: handedOff) {
-            null -> Injekt.get<BookReaderSessionFactory>().open(
+            null -> dependencies.sessionFactory.open(
                 this,
                 startupRequest,
                 BookDocumentReaderProcessor.PROCESSOR_ID,
@@ -390,7 +381,7 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
 
     private suspend fun showAuthorizedInitialSession(session: OpenedBookReaderSession) {
         val readingOrder = BookChapterReadingOrder(
-            Injekt.get<BookChapterNavigationResolver>().resolveAll(session.entry),
+            dependencies.chapterNavigationResolver.resolveAll(session.entry),
         )
         val window = readingOrder.window(session.chapter.id)
             ?: return showError(getString(R.string.book_document_chapter_missing))
@@ -473,21 +464,21 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
         val automaticTranslation = settingBindings?.automaticTranslation ?: return
         val languageSession = BookSelectionLanguageSession(session.preparedPublication.publication.languages)
         val translationController = BookSelectionTranslationController(
-            feature = Injekt.get<TranslationFeature>(),
-            hostActions = Injekt.get<TranslationHostActions>(),
+            feature = dependencies.translationFeature,
+            hostActions = dependencies.translationHostActions,
             automaticSelectionSetting = automaticTranslation.state,
             languageSession = languageSession,
             scope = lifecycleScope,
             initialCapabilities = session.readerCapabilities,
             languageStore = BookTranslationLanguageStore(
-                feature = Injekt.get<EntryTranslationLanguagesFeature>(),
+                feature = dependencies.translationLanguagesFeature,
                 book = retainedSessions.currentOwner,
             ),
         )
         selectionCoordinator = BookSelectionActionCoordinator(
             translationController = translationController,
             speechController = BookShortFormSpeechController(
-                feature = Injekt.get<TtsFeature>(),
+                feature = dependencies.ttsFeature,
                 scope = lifecycleScope,
                 onFailure = ::showSpeechFailure,
                 onLanguageResolved = languageSession::record,

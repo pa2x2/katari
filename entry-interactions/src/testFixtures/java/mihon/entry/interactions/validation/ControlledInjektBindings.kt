@@ -10,6 +10,7 @@ import mihon.core.common.image.progressive.ProgressiveImageEngine
 import mihon.core.metro.AppCoroutineScope
 import mihon.entry.interactions.translate.EntryTranslatePreferences
 import mihon.entry.viewer.settings.ViewerSettingOverrideRepository
+import nl.adaptivity.xmlutil.serialization.XML
 import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.domain.category.repository.CategoryRepository
 import tachiyomi.domain.download.service.DownloadPreferences
@@ -49,6 +50,9 @@ object ControlledInjektBindings {
 
     @Provides
     fun json(): Json = Injekt.get()
+
+    @Provides
+    fun xml(): XML = Injekt.get()
 
     @Provides
     fun progressiveImageEngine(): ProgressiveImageEngine = Injekt.get()

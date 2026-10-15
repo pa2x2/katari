@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.data.backup.create.creators
 
+import dev.zacsweers.metro.Inject
 import eu.kanade.tachiyomi.data.backup.models.BackupCategory
 import eu.kanade.tachiyomi.data.backup.models.BackupCategoryUpdateRules
 import eu.kanade.tachiyomi.data.backup.models.toBackupCategoryUpdateRules
@@ -7,13 +8,12 @@ import tachiyomi.data.ActiveProfileProvider
 import tachiyomi.data.DatabaseHandler
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.library.update.repository.LibraryUpdateRulesRepository
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
+@Inject
 class CategoriesBackupCreator(
-    private val handler: DatabaseHandler = Injekt.get(),
-    private val profileProvider: ActiveProfileProvider = Injekt.get(),
-    private val updateRulesRepository: LibraryUpdateRulesRepository = Injekt.get(),
+    private val handler: DatabaseHandler,
+    private val profileProvider: ActiveProfileProvider,
+    private val updateRulesRepository: LibraryUpdateRulesRepository,
 ) {
 
     suspend operator fun invoke(): List<BackupCategory> {

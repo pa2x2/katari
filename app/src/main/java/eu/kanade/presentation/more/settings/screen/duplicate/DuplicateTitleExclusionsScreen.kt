@@ -12,11 +12,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.category.components.CategoryFloatingActionButton
 import eu.kanade.presentation.components.WarningBanner
 import eu.kanade.presentation.util.Screen
+import mihon.app.di.appGraph
 import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.dialog.ConfirmDialog
@@ -24,21 +26,19 @@ import mihon.presentation.kit.feedback.EmptyScreen
 import mihon.presentation.kit.navigation.AppBar
 import mihon.presentation.kit.navigation.Scaffold
 import mihon.presentation.kit.theme.KatariTheme
-import tachiyomi.domain.library.service.DuplicatePreferences
 import tachiyomi.domain.library.service.DuplicateTitleExclusions
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
 import tachiyomi.presentation.core.util.plus
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
 class DuplicateTitleExclusionsScreen : Screen() {
 
     @Composable
     override fun Content() {
+        val context = LocalContext.current
         val navigator = LocalNavigator.currentOrThrow
-        val duplicatePreferences = remember { Injekt.get<DuplicatePreferences>() }
+        val duplicatePreferences = remember { context.appGraph.duplicatePreferences }
         val patterns by duplicatePreferences.titleExclusionPatterns.collectAsState()
         val lazyListState = rememberLazyListState()
         var dialog by remember { mutableStateOf<DuplicateTitleExclusionDialog?>(null) }

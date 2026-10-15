@@ -7,14 +7,16 @@ import eu.kanade.tachiyomi.data.database.models.Track
 import eu.kanade.tachiyomi.data.track.BaseTracker
 import eu.kanade.tachiyomi.data.track.DeletableTracker
 import eu.kanade.tachiyomi.data.track.ExternalLoginTracker
+import eu.kanade.tachiyomi.data.track.TrackerDependencies
 import eu.kanade.tachiyomi.data.track.model.TrackSearch
 import eu.kanade.tachiyomi.data.track.shikimori.dto.SMOAuth
-import kotlinx.serialization.json.Json
 import tachiyomi.i18n.*
-import uy.kohesive.injekt.injectLazy
 import tachiyomi.domain.track.model.EntryTrack as DomainTrack
 
-class Shikimori(id: Long) : BaseTracker(id, "Shikimori"), DeletableTracker, ExternalLoginTracker {
+class Shikimori(
+    id: Long,
+    dependencies: TrackerDependencies,
+) : BaseTracker(id, "Shikimori", dependencies), DeletableTracker, ExternalLoginTracker {
 
     override val accountOrder = 5
 
@@ -32,11 +34,9 @@ class Shikimori(id: Long) : BaseTracker(id, "Shikimori"), DeletableTracker, Exte
         private const val SEARCH_ID_PREFIX = "id:"
     }
 
-    private val json: Json by injectLazy()
+    private val interceptor by lazy { ShikimoriInterceptor(this, json) }
 
-    private val interceptor by lazy { ShikimoriInterceptor(this) }
-
-    private val api by lazy { ShikimoriApi(id, client, interceptor) }
+    private val api by lazy { ShikimoriApi(id, client, interceptor, json) }
 
     override fun authorizationUri() = ShikimoriApi.authUrl()
 

@@ -25,11 +25,10 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import logcat.LogPriority
+import mihon.app.di.appGraph
 import mihon.domain.extension.model.ContentWarning
 import mihon.domain.extension.model.ExtensionStore
-import mihon.domain.extension.repository.ExtensionStoreRepository
 import tachiyomi.core.common.util.system.logcat
-import uy.kohesive.injekt.injectLazy
 import java.io.File
 
 /**
@@ -47,10 +46,6 @@ import java.io.File
  * one with higher version code will be used.
  */
 internal object ExtensionLoader {
-
-    private val preferences: SourcePreferences by injectLazy()
-    private val trustExtension: TrustExtension by injectLazy()
-    private val extensionStoreRepository: ExtensionStoreRepository by injectLazy()
 
     private const val EXTENSION_FEATURE = "tachiyomi.extension"
     private const val METADATA_SOURCE_CLASS = "tachiyomi.extension.class"
@@ -138,7 +133,9 @@ internal object ExtensionLoader {
         context: Context,
         alreadyLoaded: Map<String, Extension.Loaded> = emptyMap(),
     ): List<Extension.Installed> = withContext(Dispatchers.IO) {
-        val policy = loadPolicy(stores = extensionStoreRepository.getAllAsFlow().first())
+        val graph = context.appGraph
+        val policy = loadPolicy(graph.sourcePreferences, graph.extensionStoreRepository.getAllAsFlow().first())
+        val trustExtension = graph.trustExtension
         val pkgManager = context.packageManager
 
         val installedPkgs = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -183,7 +180,17 @@ internal object ExtensionLoader {
 
         // Load each extension concurrently and wait for completion
         extPkgs
-            .map { async { loadExtensionCatching(context, it, policy, alreadyLoaded[it.packageInfo.packageName]) } }
+            .map {
+                async {
+                    loadExtensionCatching(
+                        context,
+                        it,
+                        policy,
+                        trustExtension,
+                        alreadyLoaded[it.packageInfo.packageName],
+                    )
+                }
+            }
             .awaitAll()
     }
 
@@ -197,10 +204,12 @@ internal object ExtensionLoader {
             logcat(LogPriority.ERROR) { "Extension package is not found ($pkgName)" }
             return null
         }
-        return loadExtensionCatching(context, extensionPackage, loadPolicy(stores = extensionStoreRepository.getAll()))
+        val graph = context.appGraph
+        val policy = loadPolicy(graph.sourcePreferences, graph.extensionStoreRepository.getAll())
+        return loadExtensionCatching(context, extensionPackage, policy, graph.trustExtension)
     }
 
-    private fun loadPolicy(stores: List<ExtensionStore>) = LoadPolicy(
+    private fun loadPolicy(preferences: SourcePreferences, stores: List<ExtensionStore>) = LoadPolicy(
         stores = stores,
         enabledContentWarnings = preferences.enabledContentWarnings.get(),
         applyContentWarningsToInstalled = preferences.applyContentWarningsToInstalled.get(),
@@ -251,10 +260,11 @@ internal object ExtensionLoader {
         context: Context,
         extensionInfo: ExtensionInfo,
         policy: LoadPolicy,
+        trustExtension: TrustExtension,
         alreadyLoaded: Extension.Loaded? = null,
     ): Extension.Installed {
         return try {
-            loadExtension(context, extensionInfo, policy, alreadyLoaded)
+            loadExtension(context, extensionInfo, policy, trustExtension, alreadyLoaded)
         } catch (e: Throwable) {
             val pkgInfo = extensionInfo.packageInfo
             logcat(LogPriority.ERROR, e) { "Extension load error: ${pkgInfo.packageName}" }
@@ -281,6 +291,7 @@ internal object ExtensionLoader {
         context: Context,
         extensionInfo: ExtensionInfo,
         policy: LoadPolicy,
+        trustExtension: TrustExtension,
         alreadyLoaded: Extension.Loaded?,
     ): Extension.Installed {
         val pkgManager = context.packageManager

@@ -7,22 +7,28 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.Assisted
+import dev.zacsweers.metro.AssistedFactory
+import dev.zacsweers.metro.AssistedInject
+import dev.zacsweers.metro.ContributesIntoMap
+import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
+import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
+import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 import eu.kanade.presentation.track.TrackChapterSelector
 import eu.kanade.presentation.util.Screen
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
+import mihon.app.di.AppUiScope
 import mihon.entry.interactions.tracking.EntryTrackingFeature
 import mihon.entry.interactions.tracking.EntryTrackingMutation
 import mihon.entry.interactions.tracking.EntryTrackingRecord
 import mihon.entry.interactions.tracking.EntryTrackingServiceId
 import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.domain.entry.model.Entry
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
 internal data class TrackProgressSelectorScreen(
     private val entry: Entry,
@@ -33,7 +39,7 @@ internal data class TrackProgressSelectorScreen(
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val viewModel = viewModel { Model(entry, track, serviceId) }
+        val viewModel = assistedMetroViewModel<Model, Model.Factory> { create(entry, track, serviceId) }
         val state by viewModel.state.collectAsState()
         TrackChapterSelector(
             entryType = entry.type,
@@ -48,12 +54,20 @@ internal data class TrackProgressSelectorScreen(
         )
     }
 
-    private class Model(
-        private val entry: Entry,
-        track: EntryTrackingRecord,
-        private val serviceId: EntryTrackingServiceId,
-        private val trackingFeature: EntryTrackingFeature = Injekt.get(),
+    @AssistedInject
+    class Model(
+        @Assisted private val entry: Entry,
+        @Assisted track: EntryTrackingRecord,
+        @Assisted private val serviceId: EntryTrackingServiceId,
+        private val trackingFeature: EntryTrackingFeature,
     ) : ViewModel() {
+
+        @AssistedFactory
+        @ManualViewModelAssistedFactoryKey
+        @ContributesIntoMap(AppUiScope::class)
+        interface Factory : ManualViewModelAssistedFactory {
+            fun create(entry: Entry, track: EntryTrackingRecord, serviceId: EntryTrackingServiceId): Model
+        }
 
         val state: StateFlow<Model.State>
             field = MutableStateFlow<Model.State>(State(track.progress.toInt()))

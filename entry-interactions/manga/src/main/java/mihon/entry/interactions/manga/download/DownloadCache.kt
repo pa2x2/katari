@@ -1,5 +1,4 @@
 package mihon.entry.interactions.manga.download
-import android.app.Application
 import android.content.Context
 import androidx.core.net.toUri
 import androidx.core.util.AtomicFile
@@ -27,9 +26,11 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withTimeoutOrNull
+import kotlinx.serialization.Contextual
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.decodeFromByteArray
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
@@ -37,6 +38,7 @@ import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encodeToByteArray
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.protobuf.ProtoBuf
 import logcat.LogPriority
 import tachiyomi.core.common.storage.extension
@@ -49,8 +51,6 @@ import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.domain.storage.service.StorageManager
 import tachiyomi.source.local.LocalSource
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 import java.io.File
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.seconds
@@ -64,11 +64,15 @@ import kotlin.time.Duration.Companion.seconds
 @OptIn(ExperimentalSerializationApi::class)
 internal class DownloadCache(
     private val context: Context,
-    private val provider: DownloadProvider = Injekt.get(),
-    private val sourceManager: SourceManager = Injekt.get(),
-    private val storageManager: StorageManager = Injekt.get(),
-    private val scope: CoroutineScope = Injekt.get(),
+    private val provider: DownloadProvider,
+    private val sourceManager: SourceManager,
+    private val storageManager: StorageManager,
+    private val scope: CoroutineScope,
 ) {
+
+    private val protoBuf = ProtoBuf {
+        serializersModule = SerializersModule { contextual(UniFile::class, UniFileAsStringSerializer(context)) }
+    }
 
     private val _changes: Channel<Unit> = Channel(Channel.UNLIMITED)
     val changes = _changes.receiveAsFlow()
@@ -109,7 +113,7 @@ internal class DownloadCache(
                 try {
                     if (diskCacheFile.baseFile.exists()) {
                         val diskCache = diskCacheFile.openRead().use {
-                            ProtoBuf.decodeFromByteArray<RootDirectory>(it.readBytes())
+                            protoBuf.decodeFromByteArray<RootDirectory>(it.readBytes())
                         }
                         rootDownloadsDir = diskCache
                         lastRenew = System.currentTimeMillis()
@@ -467,7 +471,7 @@ internal class DownloadCache(
         updateDiskCacheJob = scope.launchIO {
             delay(1.seconds)
             val bytes = rootDownloadsDirMutex.withLock {
-                ProtoBuf.encodeToByteArray(rootDownloadsDir)
+                protoBuf.encodeToByteArray(rootDownloadsDir)
             }
             ensureActive()
             try {
@@ -488,7 +492,7 @@ internal class DownloadCache(
  */
 @Serializable
 private class RootDirectory(
-    @Serializable(with = UniFileAsStringSerializer::class)
+    @Contextual
     val dir: UniFile?,
     @Volatile
     var sourceDirs: Map<Long, SourceDirectory> = mapOf(),
@@ -499,7 +503,7 @@ private class RootDirectory(
  */
 @Serializable
 private class SourceDirectory(
-    @Serializable(with = UniFileAsStringSerializer::class)
+    @Contextual
     val dir: UniFile?,
     @Volatile
     var mangaDirs: Map<String, MangaDirectory> = mapOf(),
@@ -510,31 +514,23 @@ private class SourceDirectory(
  */
 @Serializable
 private class MangaDirectory(
-    @Serializable(with = UniFileAsStringSerializer::class)
+    @Contextual
     val dir: UniFile?,
     // Replaced rather than changed in place, so the lock-free lookups always read a consistent set
     @Volatile
     var chapterDirs: Set<String> = emptySet(),
 )
 
-@OptIn(ExperimentalSerializationApi::class)
-private object UniFileAsStringSerializer : KSerializer<UniFile?> {
+private class UniFileAsStringSerializer(private val context: Context) : KSerializer<UniFile> {
     override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("UniFile", PrimitiveKind.STRING)
 
-    override fun serialize(encoder: Encoder, value: UniFile?) {
-        return if (value == null) {
-            encoder.encodeNull()
-        } else {
-            encoder.encodeString(value.uri.toString())
-        }
+    override fun serialize(encoder: Encoder, value: UniFile) {
+        encoder.encodeString(value.uri.toString())
     }
 
-    override fun deserialize(decoder: Decoder): UniFile? {
-        return if (decoder.decodeNotNullMark()) {
-            UniFile.fromUri(Injekt.get<Application>(), decoder.decodeString().toUri())
-        } else {
-            decoder.decodeNull()
-        }
+    override fun deserialize(decoder: Decoder): UniFile {
+        val uri = decoder.decodeString().toUri()
+        return UniFile.fromUri(context, uri) ?: throw SerializationException("Unsupported directory URI: $uri")
     }
 }
 

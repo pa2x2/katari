@@ -3,6 +3,13 @@ package eu.kanade.tachiyomi.ui.browse.feed
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.Assisted
+import dev.zacsweers.metro.AssistedFactory
+import dev.zacsweers.metro.AssistedInject
+import dev.zacsweers.metro.ContributesIntoMap
+import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
+import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
 import eu.kanade.domain.source.interactor.GetEnabledCatalogSources
 import eu.kanade.domain.source.model.BUILTIN_LATEST_PRESET_ID
 import eu.kanade.domain.source.model.BUILTIN_POPULAR_PRESET_ID
@@ -26,23 +33,30 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.update
+import mihon.app.di.AppUiScope
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.data.ActiveProfileProvider
 import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.domain.source.model.Source
 import tachiyomi.domain.source.service.SourceManager
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 import java.util.UUID
 
+@AssistedInject
 class FeedsViewModel(
-    private val contentMode: SourceFeedContentMode = SourceFeedContentMode.Browse,
-    private val browseFeedService: BrowseFeedService = Injekt.get(),
-    private val profileSourcePreferences: ProfileSourcePreferences = Injekt.get(),
-    private val getEnabledCatalogSources: GetEnabledCatalogSources = Injekt.get(),
-    private val sourceManager: SourceManager = Injekt.get(),
-    private val activeProfileProvider: ActiveProfileProvider = Injekt.get(),
+    @Assisted private val contentMode: SourceFeedContentMode,
+    private val browseFeedService: BrowseFeedService,
+    private val profileSourcePreferences: ProfileSourcePreferences,
+    private val getEnabledCatalogSources: GetEnabledCatalogSources,
+    private val sourceManager: SourceManager,
+    private val activeProfileProvider: ActiveProfileProvider,
 ) : ViewModel() {
+
+    @AssistedFactory
+    @ManualViewModelAssistedFactoryKey
+    @ContributesIntoMap(AppUiScope::class)
+    interface Factory : ManualViewModelAssistedFactory {
+        fun create(contentMode: SourceFeedContentMode): FeedsViewModel
+    }
 
     val state: StateFlow<FeedsViewModel.State>
         field = MutableStateFlow<FeedsViewModel.State>(State())

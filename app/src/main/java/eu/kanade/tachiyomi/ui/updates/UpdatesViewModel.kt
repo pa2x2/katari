@@ -1,10 +1,17 @@
 package eu.kanade.tachiyomi.ui.updates
 
 import android.app.Application
+import android.content.Context
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.ContributesIntoMap
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.binding
+import dev.zacsweers.metrox.viewmodel.ViewModelKey
 import eu.kanade.core.preference.asState
 import eu.kanade.core.util.addOrRemove
 import eu.kanade.presentation.entry.components.ChapterDownloadAction
@@ -41,6 +48,7 @@ import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.minus
 import logcat.LogPriority
+import mihon.app.di.AppUiScope
 import mihon.entry.interactions.download.EntryDownloadActionAvailability
 import mihon.entry.interactions.download.EntryDownloadActionFeature
 import mihon.entry.interactions.download.EntryDownloadActionRequest
@@ -51,20 +59,26 @@ import mihon.entry.interactions.download.EntryDownloadStatus
 import mihon.entry.interactions.download.sampleProgress
 import mihon.entry.interactions.merge.EntryMergeNavigationFeature
 import mihon.entry.interactions.merge.EntryMergeSubject
+import mihon.entry.interactions.navigation.EntryOpenFeature
 import mihon.entry.interactions.state.EntryBookmarkAvailability
 import mihon.entry.interactions.state.EntryBookmarkFeature
 import mihon.entry.interactions.state.EntryBookmarkStatus
 import mihon.entry.interactions.state.EntryBookmarkTarget
 import mihon.entry.interactions.state.EntryConsumptionFeature
 import mihon.entry.interactions.state.EntryConsumptionStatus
+import mihon.entry.interactions.translate.EntryTranslateFeature
 import mihon.entry.interactions.translate.EntryTranslateStatus
+import mihon.entry.interactions.translation.EntryTranslationLanguagesFeature
 import mihon.feature.library.update.pause.LibrarySourcePauses
 import mihon.feature.library.update.pause.PausedLibrarySources
 import mihon.feature.library.update.report.LibraryUpdateRunSummary
 import mihon.feature.library.update.report.subscribeLatestSummary
 import mihon.feature.profiles.core.ProfileScopedStateEvent
 import mihon.feature.profiles.core.observeProfileScopedState
+import mihon.model.artifacts.api.ModelArtifactStore
 import mihon.presentation.kit.feedback.SnackbarHostState
+import mihon.text.recognition.api.host.TextRecognitionHostActions
+import mihon.translation.api.host.TranslationHostActions
 import tachiyomi.core.common.preference.TriState
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.launchNonCancellable
@@ -77,9 +91,11 @@ import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.EntryCover
 import tachiyomi.domain.entry.model.asEntryCover
 import tachiyomi.domain.entry.repository.EntryChapterRepository
+import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.library.model.LibraryItemKey
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.library.update.repository.LibraryUpdateReportRepository
+import tachiyomi.domain.source.repository.SourceRepository
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.domain.updates.interactor.GetUpdates
 import tachiyomi.domain.updates.model.UpdateItem
@@ -88,28 +104,38 @@ import tachiyomi.domain.updates.model.UpdatesFeedFilter
 import tachiyomi.domain.updates.model.UpdatesWithRelations
 import tachiyomi.domain.updates.model.toUpdateItem
 import tachiyomi.domain.updates.service.UpdatesPreferences
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.milliseconds
 
+@Inject
+@ViewModelKey
+@ContributesIntoMap(AppUiScope::class, binding = binding<ViewModel>())
 class UpdatesViewModel(
-    private val downloadRuntime: EntryDownloadRuntimeFeature = Injekt.get(),
-    private val entryDownloadActionFeature: EntryDownloadActionFeature = Injekt.get(),
-    private val entryConsumptionFeature: EntryConsumptionFeature = Injekt.get(),
-    private val entryBookmarkFeature: EntryBookmarkFeature = Injekt.get(),
-    private val getUpdates: GetUpdates = Injekt.get(),
-    private val getEntry: GetEntry = Injekt.get(),
-    private val entryMergeNavigationFeature: EntryMergeNavigationFeature = Injekt.get(),
-    private val entryChapterRepository: EntryChapterRepository = Injekt.get(),
-    private val libraryPreferences: LibraryPreferences = Injekt.get(),
-    private val updatesPreferences: UpdatesPreferences = Injekt.get(),
-    private val sourceManager: SourceManager = Injekt.get(),
-    private val activeProfileProvider: ActiveProfileProvider = Injekt.get(),
-    private val application: Application = Injekt.get(),
-    reportRepository: LibraryUpdateReportRepository = Injekt.get(),
-    val snackbarHostState: SnackbarHostState = SnackbarHostState(),
+    private val downloadRuntime: EntryDownloadRuntimeFeature,
+    private val entryDownloadActionFeature: EntryDownloadActionFeature,
+    private val entryConsumptionFeature: EntryConsumptionFeature,
+    private val entryBookmarkFeature: EntryBookmarkFeature,
+    private val getUpdates: GetUpdates,
+    private val getEntry: GetEntry,
+    private val entryMergeNavigationFeature: EntryMergeNavigationFeature,
+    private val entryChapterRepository: EntryChapterRepository,
+    private val entryRepository: EntryRepository,
+    private val entryOpenFeature: EntryOpenFeature,
+    private val libraryPreferences: LibraryPreferences,
+    private val updatesPreferences: UpdatesPreferences,
+    private val sourceManager: SourceManager,
+    private val activeProfileProvider: ActiveProfileProvider,
+    private val application: Application,
+    reportRepository: LibraryUpdateReportRepository,
+    sourceRepository: SourceRepository,
+    translateFeature: EntryTranslateFeature,
+    translationLanguages: EntryTranslationLanguagesFeature,
+    recognitionHost: TextRecognitionHostActions,
+    translationHost: TranslationHostActions,
+    modelStore: ModelArtifactStore,
 ) : GatedStateViewModel<UpdatesViewModel.State>(State()) {
+
+    val snackbarHostState = SnackbarHostState()
 
     /** Translation of listed chapters; chapters to translate that are not downloaded yet are downloaded. */
     val translation = ChapterTranslationModel(
@@ -123,11 +149,11 @@ class UpdatesViewModel(
                 }
             }
         },
-        feature = Injekt.get(),
-        languages = Injekt.get(),
-        recognitionHost = Injekt.get(),
-        translationHost = Injekt.get(),
-        modelStore = Injekt.get(),
+        feature = translateFeature,
+        languages = translationLanguages,
+        recognitionHost = recognitionHost,
+        translationHost = translationHost,
+        modelStore = modelStore,
     )
 
     /**
@@ -161,7 +187,7 @@ class UpdatesViewModel(
 
     val pausedSourceNames: StateFlow<List<String>> = PausedLibrarySources(
         sourcePauses = LibrarySourcePauses(libraryPreferences),
-        sourceRepository = Injekt.get(),
+        sourceRepository = sourceRepository,
         sourceManager = sourceManager,
     )
         .subscribe()
@@ -386,6 +412,17 @@ class UpdatesViewModel(
             }
             toggleAllSelection(false)
         }
+    }
+
+    fun isOpenApplicable(item: UpdatesItem): Boolean = entryOpenFeature.isApplicable(item.update.entryType)
+
+    suspend fun openUpdate(context: Context, item: UpdatesItem) {
+        val entry = entryRepository.getEntryById(item.visibleEntryId) ?: return
+        val chapterId = when (val update = item.update) {
+            is UpdateItem.EntryUpdate -> update.update.chapterId
+        }
+        val chapter = entryChapterRepository.getChapterById(chapterId) ?: return
+        entryOpenFeature.open(context, entry, chapter)
     }
 
     fun translateChapter(item: UpdatesItem, action: ChapterTranslateAction) {

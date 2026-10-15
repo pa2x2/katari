@@ -11,9 +11,10 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.ui.platform.LocalContext
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import dev.zacsweers.metrox.viewmodel.metroViewModel
 import eu.kanade.presentation.category.visualName
 import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.presentation.library.update.libraryUpdateRunSummaryText
@@ -26,6 +27,7 @@ import eu.kanade.presentation.more.settings.screen.libraryupdates.libraryUpdateI
 import eu.kanade.presentation.more.settings.screen.libraryupdates.libraryUpdateIntervals
 import eu.kanade.presentation.more.settings.screen.libraryupdates.titleRes
 import eu.kanade.tachiyomi.ui.library.update.report.LibraryUpdateReportScreen
+import mihon.app.di.appGraph
 import mihon.feature.library.update.planning.LibraryUpdateSettings
 import mihon.feature.library.update.planning.LibraryUpdateSkipRule
 import mihon.icons.materialsymbols.MaterialSymbols
@@ -42,8 +44,6 @@ import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 import androidx.compose.runtime.collectAsState as collectFlowAsState
 
 /**
@@ -64,8 +64,9 @@ object SettingsLibraryUpdatesScreen : SearchableSettings {
     @Composable
     override fun getPreferences(): List<Preference> {
         val navigator = LocalNavigator.currentOrThrow
-        val libraryPreferences = remember { Injekt.get<LibraryPreferences>() }
-        val viewModel = viewModel { LibraryUpdatesSettingsViewModel() }
+        val context = LocalContext.current
+        val libraryPreferences = remember { context.appGraph.libraryPreferences }
+        val viewModel = metroViewModel<LibraryUpdatesSettingsViewModel>()
         val state by viewModel.state.collectFlowAsState()
 
         return listOfNotNull(

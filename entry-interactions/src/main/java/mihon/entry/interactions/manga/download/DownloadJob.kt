@@ -3,9 +3,8 @@ package mihon.entry.interactions.manga.download
 import android.content.Context
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import mihon.entry.interactions.download.EntryDownloadWorkController
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
+import mihon.core.metro.metroGraph
+import mihon.entry.interactions.download.EntryDownloadWorkerGraph
 
 /**
  * Compatibility worker for Manga work persisted before download execution was unified.
@@ -19,7 +18,7 @@ import uy.kohesive.injekt.api.get
  */
 class DownloadJob(context: Context, workerParams: WorkerParameters) : CoroutineWorker(context, workerParams) {
     override suspend fun doWork(): Result {
-        Injekt.get<EntryDownloadWorkController>().start()
+        applicationContext.metroGraph<EntryDownloadWorkerGraph>().entryDownloadWorkController.start()
         return Result.success()
     }
 }

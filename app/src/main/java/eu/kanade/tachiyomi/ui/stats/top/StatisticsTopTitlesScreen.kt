@@ -3,9 +3,9 @@ package eu.kanade.tachiyomi.ui.stats.top
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 import eu.kanade.presentation.more.stats.top.StatisticsTopTitlesScreenContent
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
@@ -29,8 +29,8 @@ data class StatisticsTopTitlesScreen(
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val viewModel = viewModel {
-            StatisticsTopTitlesViewModel(typeName, startLocalDate, endLocalDate)
+        val viewModel = assistedMetroViewModel<StatisticsTopTitlesViewModel, StatisticsTopTitlesViewModel.Factory> {
+            create(typeName, startLocalDate, endLocalDate)
         }
         val state by viewModel.state.collectAsState()
 

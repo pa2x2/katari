@@ -27,17 +27,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
+import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 import eu.kanade.presentation.entry.components.preview.PreviewContent
 import eu.kanade.presentation.entry.components.preview.PreviewSizeUi
 import eu.kanade.tachiyomi.ui.entry.EntryViewModel
 import eu.kanade.tachiyomi.util.system.copyToClipboard
 import kotlinx.coroutines.launch
+import mihon.app.di.appGraph
 import mihon.entry.interactions.media.EntryPreviewOpenTargetResult
 import mihon.entry.interactions.media.EntryPreviewSize
 import mihon.entry.interactions.navigation.EntryOpenFeature
 import mihon.entry.interactions.navigation.EntryOpenOptions
-import mihon.feature.profiles.core.ProfileManager
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.feedback.SnackbarHost
 import mihon.presentation.kit.feedback.SnackbarHostState
@@ -53,8 +53,6 @@ import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.clickableNoIndication
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
 @Composable
 fun BrowseEntryPreviewSheet(
@@ -66,17 +64,15 @@ fun BrowseEntryPreviewSheet(
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val profileManager = remember { Injekt.get<ProfileManager>() }
-    val entryOpenFeature = remember { Injekt.get<EntryOpenFeature>() }
+    val profileManager = remember { context.appGraph.profileManager }
+    val entryOpenFeature = remember { context.appGraph.entryOpenFeature }
     val activeProfile by profileManager.activeProfile.collectAsStateWithLifecycle()
     var previousProfileId by remember(entryId) { mutableStateOf(activeProfile?.id) }
     var hasRequestedPreview by rememberSaveable(entryId) { mutableStateOf(false) }
-    val viewModel = viewModel(key = "browse-entry-preview-$entryId") {
-        EntryViewModel(
-            context = context,
-            entryId = entryId,
-            isFromSource = true,
-        )
+    val viewModel = assistedMetroViewModel<EntryViewModel, EntryViewModel.Factory>(
+        key = "browse-entry-preview-$entryId",
+    ) {
+        create(context = context, entryId = entryId, isFromSource = true, bypassMerge = false)
     }
 
     val state by viewModel.state.collectAsStateWithLifecycle()

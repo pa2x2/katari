@@ -8,9 +8,9 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.ui.browse.migration.search.MigrateSearchScreen
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
@@ -37,8 +37,8 @@ class MigrationListScreen(
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val viewModel = viewModel {
-            MigrationListViewModel(subjects, extraSearchQuery, selectedOptions)
+        val viewModel = assistedMetroViewModel<MigrationListViewModel, MigrationListViewModel.Factory> {
+            create(subjects, extraSearchQuery, selectedOptions)
         }
         val state by viewModel.state.collectAsState()
         val context = LocalContext.current

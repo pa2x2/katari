@@ -14,9 +14,13 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.util.fastMap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.ContributesIntoMap
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metrox.viewmodel.ViewModelKey
+import dev.zacsweers.metrox.viewmodel.metroViewModel
 import eu.kanade.presentation.browse.components.SourceIcon
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.util.system.toast
@@ -27,6 +31,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
+import mihon.app.di.AppUiScope
 import mihon.entry.interactions.lifecycle.removal.EntryDestructiveRemovalFeature
 import mihon.entry.interactions.lifecycle.removal.EntryDestructiveRemovalResult
 import mihon.icons.materialsymbols.MaterialSymbols
@@ -49,8 +54,6 @@ import tachiyomi.domain.source.model.SourceWithCount
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.LazyColumnWithAction
 import tachiyomi.presentation.core.i18n.stringResource
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
 class ClearDatabaseScreen : Screen() {
 
@@ -58,7 +61,7 @@ class ClearDatabaseScreen : Screen() {
     override fun Content() {
         val context = LocalContext.current
         val navigator = LocalNavigator.currentOrThrow
-        val model = viewModel { ClearDatabaseViewModel() }
+        val model = metroViewModel<ClearDatabaseViewModel>()
         val state by model.state.collectAsState()
         val scope = rememberCoroutineScope()
 
@@ -152,14 +155,17 @@ class ClearDatabaseScreen : Screen() {
     }
 }
 
-private class ClearDatabaseViewModel : ViewModel() {
+@Inject
+@ViewModelKey
+@ContributesIntoMap(AppUiScope::class)
+internal class ClearDatabaseViewModel(
+    private val getSourcesWithNonLibraryEntries: GetSourcesWithNonLibraryEntries,
+    private val entryRepository: EntryRepository,
+    private val destructiveRemoval: EntryDestructiveRemovalFeature,
+) : ViewModel() {
 
     val state: StateFlow<ClearDatabaseViewModel.State>
         field = MutableStateFlow<ClearDatabaseViewModel.State>(State.Loading)
-
-    private val getSourcesWithNonLibraryEntries: GetSourcesWithNonLibraryEntries = Injekt.get()
-    private val entryRepository: EntryRepository = Injekt.get()
-    private val destructiveRemoval: EntryDestructiveRemovalFeature = Injekt.get()
 
     init {
         viewModelScope.launchIO {

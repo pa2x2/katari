@@ -1060,6 +1060,7 @@ private class EntryInteractionBoundaryRules(
 
                         if (file.isPublicTypeModuleApiPath()) return@forEach
                         if (declaration.isBindingContainer(file)) return@forEach
+                        if (declaration.isGraphEntryPoint(file)) return@forEach
 
                         findings += Finding(
                             relativePath = file.relativePath,
@@ -1080,6 +1081,16 @@ private class EntryInteractionBoundaryRules(
         return kind == KotlinDeclarationKind.OBJECT &&
             name.endsWith("Bindings") &&
             file.relativePath.endsWith("/$name.kt")
+    }
+
+    // Android-constructed components of a type module reach the graph through a contributed `<Owner>Graph`
+    // interface. Its members must be public, so internal services travel in an `<Owner>Dependencies` holder whose
+    // constructor and members stay internal.
+    private fun KotlinDeclaration.isGraphEntryPoint(file: KotlinSourceFile): Boolean {
+        val owner = file.relativePath.substringAfterLast('/').removeSuffix("Graph.kt")
+        if (!file.relativePath.endsWith("/${owner}Graph.kt")) return false
+        return (kind == KotlinDeclarationKind.INTERFACE && name == "${owner}Graph") ||
+            (kind == KotlinDeclarationKind.CLASS && name == "${owner}Dependencies")
     }
 
     private fun KotlinDeclaration.isRuntimeMediaResolutionInternal(): Boolean {

@@ -3,6 +3,10 @@ package eu.kanade.tachiyomi.ui.browse.immersive
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.ContributesIntoMap
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metrox.viewmodel.ViewModelKey
 import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineStart
@@ -14,6 +18,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import mihon.app.di.AppUiScope
 import mihon.entry.interactions.media.EntryImmersiveAvailability
 import mihon.entry.interactions.media.EntryImmersiveChildRefreshResult
 import mihon.entry.interactions.media.EntryImmersiveChildRequirement
@@ -28,14 +33,15 @@ import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.source.service.SourceManager
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 import java.util.concurrent.ConcurrentHashMap
 
+@Inject
+@ViewModelKey
+@ContributesIntoMap(AppUiScope::class)
 class EntryImmersiveViewModel(
-    private val entryChapterRepository: EntryChapterRepository = Injekt.get(),
-    private val immersiveFeature: EntryImmersiveFeature = Injekt.get(),
-    private val sourceManager: SourceManager = Injekt.get(),
+    private val entryChapterRepository: EntryChapterRepository,
+    private val immersiveFeature: EntryImmersiveFeature,
+    private val sourceManager: SourceManager,
 ) : ViewModel() {
 
     val state: StateFlow<EntryImmersiveViewModel.State>

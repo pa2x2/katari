@@ -11,13 +11,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.components.GuideButton
 import eu.kanade.presentation.util.Screen
 import kotlinx.coroutines.launch
+import mihon.app.di.appGraph
 import mihon.feature.profiles.core.Profile
-import mihon.feature.profiles.core.ProfileManager
 import mihon.feature.profiles.ui.components.ProfileNameDialog
 import mihon.feature.profiles.ui.components.ProfileRow
 import mihon.icons.materialsymbols.MaterialSymbols
@@ -29,8 +30,6 @@ import mihon.presentation.kit.navigation.AppBar
 import mihon.presentation.kit.navigation.Scaffold
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
 class ProfilesSettingsScreen : Screen() {
 
@@ -38,7 +37,8 @@ class ProfilesSettingsScreen : Screen() {
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
         val scope = rememberCoroutineScope()
-        val profileManager = remember { Injekt.get<ProfileManager>() }
+        val context = LocalContext.current
+        val profileManager = remember { context.appGraph.profileManager }
 
         val profiles by profileManager.profiles.collectAsState()
         val activeProfile by profileManager.activeProfile.collectAsState()

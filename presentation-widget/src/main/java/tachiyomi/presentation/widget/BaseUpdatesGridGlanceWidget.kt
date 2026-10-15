@@ -1,6 +1,5 @@
 package tachiyomi.presentation.widget
 
-import android.app.Application
 import android.content.Context
 import android.graphics.Bitmap
 import android.os.Build
@@ -30,7 +29,6 @@ import coil3.request.transformations
 import coil3.size.Precision
 import coil3.size.Scale
 import coil3.transform.RoundedCornersTransformation
-import eu.kanade.tachiyomi.core.security.SecurityPreferences
 import eu.kanade.tachiyomi.util.system.dpToPx
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.map
@@ -38,24 +36,18 @@ import kotlinx.coroutines.withContext
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.minus
+import mihon.core.metro.metroGraph
 import mihon.presentation.kit.widget.WidgetMetrics
 import tachiyomi.domain.entry.model.EntryCover
-import tachiyomi.domain.updates.interactor.GetUpdates
 import tachiyomi.domain.updates.model.UpdatesWithRelations
 import tachiyomi.presentation.widget.components.LockedWidget
 import tachiyomi.presentation.widget.components.UpdatesWidget
 import tachiyomi.presentation.widget.util.appWidgetBackgroundRadius
 import tachiyomi.presentation.widget.util.calculateRowAndColumnCount
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 import kotlin.time.Clock
 import kotlin.time.Instant
 
-abstract class BaseUpdatesGridGlanceWidget(
-    private val context: Context = Injekt.get<Application>(),
-    private val getUpdates: GetUpdates = Injekt.get(),
-    private val preferences: SecurityPreferences = Injekt.get(),
-) : GlanceAppWidget() {
+abstract class BaseUpdatesGridGlanceWidget : GlanceAppWidget() {
 
     override val sizeMode = SizeMode.Exact
 
@@ -71,8 +63,9 @@ abstract class BaseUpdatesGridGlanceWidget(
             .appWidgetBackground()
             .padding(top = topPadding, bottom = bottomPadding)
             .appWidgetBackgroundRadius()
+        val graph = context.metroGraph<UpdatesWidgetGraph>()
 
-        if (preferences.useAuthenticator.get()) {
+        if (graph.securityPreferences.useAuthenticator.get()) {
             provideContent {
                 LockedWidget(
                     foreground = foreground,
@@ -90,10 +83,10 @@ abstract class BaseUpdatesGridGlanceWidget(
 
         provideContent {
             val flow = remember {
-                getUpdates
+                graph.getUpdates
                     .subscribe(false, DateLimit.toEpochMilliseconds())
                     .map { rawData ->
-                        rawData.prepareData(rowCount, columnCount)
+                        rawData.prepareData(context.applicationContext, rowCount, columnCount)
                     }
             }
             val data by flow.collectAsState(initial = null)
@@ -109,6 +102,7 @@ abstract class BaseUpdatesGridGlanceWidget(
 
     @OptIn(ExperimentalCoilApi::class)
     private suspend fun List<UpdatesWithRelations>.prepareData(
+        context: Context,
         rowCount: Int,
         columnCount: Int,
     ): List<Pair<Long, Bitmap?>> {

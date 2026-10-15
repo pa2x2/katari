@@ -9,21 +9,21 @@ import eu.kanade.tachiyomi.data.database.models.Track
 import eu.kanade.tachiyomi.data.track.BaseTracker
 import eu.kanade.tachiyomi.data.track.DeletableTracker
 import eu.kanade.tachiyomi.data.track.ExternalLoginTracker
+import eu.kanade.tachiyomi.data.track.TrackerDependencies
 import eu.kanade.tachiyomi.data.track.hikka.dto.HKOAuth
 import eu.kanade.tachiyomi.data.track.model.TrackSearch
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
-import kotlinx.serialization.json.Json
 import mihon.feature.profiles.core.ProfileStore
 import tachiyomi.i18n.*
-import uy.kohesive.injekt.injectLazy
 import tachiyomi.domain.track.model.EntryTrack as DomainTrack
 
 class Hikka(
     id: Long,
+    dependencies: TrackerDependencies,
     private val profileStore: ProfileStore? = null,
     private val globalTrackPreferences: GlobalTrackPreferences? = null,
-) : BaseTracker(id, "Hikka"), DeletableTracker, ExternalLoginTracker {
+) : BaseTracker(id, "Hikka", dependencies), DeletableTracker, ExternalLoginTracker {
 
     override val accountOrder = 7
 
@@ -42,11 +42,9 @@ class Hikka(
         private const val SEARCH_ID_PREFIX = "id:"
     }
 
-    private val json: Json by injectLazy()
+    private val interceptor by lazy { HikkaInterceptor(this, json) }
 
-    private val interceptor by lazy { HikkaInterceptor(this) }
-
-    private val api by lazy { HikkaApi(id, client, interceptor) }
+    private val api by lazy { HikkaApi(id, client, interceptor, json) }
 
     override val supportsReadingDates: Boolean = true
 

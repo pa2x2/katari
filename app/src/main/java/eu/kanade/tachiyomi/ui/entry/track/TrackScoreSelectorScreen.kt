@@ -6,21 +6,27 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.Assisted
+import dev.zacsweers.metro.AssistedFactory
+import dev.zacsweers.metro.AssistedInject
+import dev.zacsweers.metro.ContributesIntoMap
+import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
+import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
+import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 import eu.kanade.presentation.track.TrackScoreSelector
 import eu.kanade.presentation.util.Screen
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
+import mihon.app.di.AppUiScope
 import mihon.entry.interactions.tracking.EntryTrackingFeature
 import mihon.entry.interactions.tracking.EntryTrackingMutation
 import mihon.entry.interactions.tracking.EntryTrackingServiceDescriptor
 import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.domain.entry.model.Entry
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
 internal data class TrackScoreSelectorScreen(
     private val entry: Entry,
@@ -31,7 +37,7 @@ internal data class TrackScoreSelectorScreen(
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val viewModel = viewModel { Model(entry, service, displayScore) }
+        val viewModel = assistedMetroViewModel<Model, Model.Factory> { create(entry, service, displayScore) }
         val state by viewModel.state.collectAsState()
         TrackScoreSelector(
             selection = state.selection,
@@ -45,12 +51,20 @@ internal data class TrackScoreSelectorScreen(
         )
     }
 
-    private class Model(
-        private val entry: Entry,
-        private val service: EntryTrackingServiceDescriptor,
-        displayScore: String,
-        private val trackingFeature: EntryTrackingFeature = Injekt.get(),
+    @AssistedInject
+    class Model(
+        @Assisted private val entry: Entry,
+        @Assisted private val service: EntryTrackingServiceDescriptor,
+        @Assisted displayScore: String,
+        private val trackingFeature: EntryTrackingFeature,
     ) : ViewModel() {
+
+        @AssistedFactory
+        @ManualViewModelAssistedFactoryKey
+        @ContributesIntoMap(AppUiScope::class)
+        interface Factory : ManualViewModelAssistedFactory {
+            fun create(entry: Entry, service: EntryTrackingServiceDescriptor, displayScore: String): Model
+        }
 
         val state: StateFlow<Model.State>
             field = MutableStateFlow<Model.State>(State(displayScore))

@@ -3,7 +3,12 @@ package eu.kanade.presentation.more.settings.screen.tts
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.ContributesIntoMap
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metrox.viewmodel.ViewModelKey
 import kotlinx.coroutines.launch
+import mihon.app.di.AppUiScope
 import mihon.language.api.tag.LanguageTag
 import mihon.tts.api.TtsFeature
 import mihon.tts.api.engine.TtsEngineId
@@ -14,13 +19,14 @@ import mihon.tts.api.voice.TtsDefaultVoiceSelection
 import mihon.tts.api.voice.TtsVoice
 import mihon.tts.api.voice.TtsVoiceId
 import mihon.tts.ui.settings.TtsSettingsController
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 import java.util.Locale
 
+@Inject
+@ViewModelKey
+@ContributesIntoMap(AppUiScope::class)
 internal class TtsSettingsViewModel(
-    feature: TtsFeature = Injekt.get(),
-    hostActions: TtsHostActions = Injekt.get(),
+    feature: TtsFeature,
+    hostActions: TtsHostActions,
 ) : ViewModel() {
     val controller = TtsSettingsController(
         feature = feature,

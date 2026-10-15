@@ -14,6 +14,7 @@ import androidx.compose.ui.platform.LocalContext
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import mihon.app.di.appGraph
 import mihon.feature.library.update.report.LibraryUpdateRunSummary
 import mihon.feature.library.update.report.subscribeLatestSummary
 import mihon.presentation.kit.feedback.SnackbarDuration
@@ -21,10 +22,7 @@ import mihon.presentation.kit.feedback.SnackbarHostState
 import mihon.presentation.kit.feedback.SnackbarResult
 import tachiyomi.core.common.i18n.pluralStringResource
 import tachiyomi.core.common.i18n.stringResource
-import tachiyomi.domain.library.update.repository.LibraryUpdateReportRepository
 import tachiyomi.i18n.*
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 import kotlin.time.Clock
 
 /**
@@ -97,7 +95,7 @@ private fun LibraryUpdateResultSnackbar(
     onCheckSkipped: () -> Unit,
 ) {
     val context = LocalContext.current
-    val reportRepository = remember { Injekt.get<LibraryUpdateReportRepository>() }
+    val reportRepository = remember { context.appGraph.libraryUpdateReportRepository }
     val currentOnShown by rememberUpdatedState(onShown)
     val currentOnCheckSkipped by rememberUpdatedState(onCheckSkipped)
     LaunchedEffect(requestedAt) {

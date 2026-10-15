@@ -36,7 +36,6 @@ dependencies {
     implementation(libs.androidsvg)
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.bundles.serialization)
-    implementation(libs.injekt)
     implementation(libs.jsoup)
     implementation(libs.unifile)
 

@@ -34,6 +34,7 @@ dependencies {
 
     implementation(projects.core.archive)
     implementation(projects.core.common)
+    implementation(projects.core.metro)
     implementation(projects.coreMetadata)
     implementation(projects.entryViewerSettingsUi)
     implementation(projects.i18n)
@@ -70,8 +71,8 @@ dependencies {
     implementation(libs.bundles.serialization)
     implementation(libs.diskLruCache)
     implementation(libs.image.decoder)
-    implementation(libs.injekt)
     implementation(libs.material)
+    api(libs.metrox.viewmodel)
     implementation(libs.photoView)
     implementation(libs.directionalViewPager) {
         exclude(group = "androidx.viewpager", module = "viewpager")

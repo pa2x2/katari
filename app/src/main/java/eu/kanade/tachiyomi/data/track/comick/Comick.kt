@@ -8,13 +8,12 @@ import eu.kanade.tachiyomi.data.database.models.Track
 import eu.kanade.tachiyomi.data.track.BaseTracker
 import eu.kanade.tachiyomi.data.track.DeletableTracker
 import eu.kanade.tachiyomi.data.track.ExternalLoginTracker
+import eu.kanade.tachiyomi.data.track.TrackerDependencies
 import eu.kanade.tachiyomi.data.track.comick.dto.ComickOAuth
 import eu.kanade.tachiyomi.data.track.model.TrackSearch
 import eu.kanade.tachiyomi.util.PkceUtil
-import kotlinx.serialization.json.Json
 import mihon.feature.profiles.core.ProfileStore
 import tachiyomi.i18n.*
-import uy.kohesive.injekt.injectLazy
 import java.security.SecureRandom
 import java.util.Base64
 import kotlin.time.Clock
@@ -22,15 +21,14 @@ import tachiyomi.domain.track.model.EntryTrack as DomainTrack
 
 class Comick(
     id: Long,
+    dependencies: TrackerDependencies,
     private val profileStore: ProfileStore? = null,
-) : BaseTracker(id, "Comick"), DeletableTracker, ExternalLoginTracker {
+) : BaseTracker(id, "Comick", dependencies), DeletableTracker, ExternalLoginTracker {
 
     override val accountOrder = 8
 
-    private val json: Json by injectLazy()
-
-    private val interceptor by lazy { ComickInterceptor(this) }
-    private val api by lazy { ComickApi(id, client, interceptor) }
+    private val interceptor by lazy { ComickInterceptor(this, json) }
+    private val api by lazy { ComickApi(id, client, interceptor, json) }
 
     override fun getLogo() = R.drawable.brand_comick
 

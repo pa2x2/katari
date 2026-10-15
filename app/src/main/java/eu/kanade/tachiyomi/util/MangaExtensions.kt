@@ -4,12 +4,10 @@ import eu.kanade.tachiyomi.data.cache.CoverCache
 import tachiyomi.domain.entry.interactor.UpdateEntry
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.source.local.image.LocalCoverManager
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 import java.io.InputStream
 import kotlin.time.Clock
 
-fun Entry.removeCovers(coverCache: CoverCache = Injekt.get()): Entry {
+fun Entry.removeCovers(coverCache: CoverCache): Entry {
     if (isLocalEntry()) return this
     return if (coverCache.deleteFromCache(this, true) > 0) {
         copy(coverLastModified = Clock.System.now().toEpochMilliseconds())
@@ -21,8 +19,8 @@ fun Entry.removeCovers(coverCache: CoverCache = Injekt.get()): Entry {
 suspend fun Entry.editCover(
     coverManager: LocalCoverManager,
     stream: InputStream,
-    updateEntry: UpdateEntry = Injekt.get(),
-    coverCache: CoverCache = Injekt.get(),
+    updateEntry: UpdateEntry,
+    coverCache: CoverCache,
 ) {
     if (isLocalEntry()) {
         coverManager.update(url, stream)

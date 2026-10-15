@@ -14,9 +14,9 @@ import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
 import mihon.feature.migration.review.components.SourceMigrationDiscardDialog
@@ -47,7 +47,9 @@ class SourceMigrationReviewScreen(
         val navigator = LocalNavigator.currentOrThrow
         val context = LocalContext.current
         val lifecycleOwner = LocalLifecycleOwner.current
-        val viewModel = viewModel { SourceMigrationReviewViewModel(sessionId) }
+        val viewModel = assistedMetroViewModel<SourceMigrationReviewViewModel, SourceMigrationReviewViewModel.Factory> {
+            create(sessionId)
+        }
         val state by viewModel.state.collectAsState()
         val session = state.session
         val discoveryActive = session?.stage in DISCOVERY_STAGES

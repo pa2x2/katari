@@ -4,12 +4,10 @@ import android.os.Bundle
 import eu.kanade.tachiyomi.ui.base.activity.BaseActivity
 import eu.kanade.tachiyomi.ui.base.delegate.SecureActivityDelegate
 import logcat.LogPriority
-import mihon.feature.profiles.core.ProfileManager
+import mihon.app.di.appGraph
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.i18n.*
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
 /**
  * Blank activity with a BiometricPrompt.
@@ -31,7 +29,7 @@ class UnlockActivity : BaseActivity() {
     override fun onUnclaimedAuthenticationResult(result: BiometricAuthenticationResult) {
         when (result) {
             BiometricAuthenticationResult.Success -> {
-                val profileManager = Injekt.get<ProfileManager>()
+                val profileManager = appGraph.profileManager
                 profileManager.markProfileAuthenticated(profileManager.activeProfileId)
                 SecureActivityDelegate.unlock()
                 finish()

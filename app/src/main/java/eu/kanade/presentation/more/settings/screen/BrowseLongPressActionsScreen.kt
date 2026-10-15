@@ -3,23 +3,21 @@ package eu.kanade.presentation.more.settings.screen
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.more.settings.screen.browse.longpress.LongPressActionsOverview
 import eu.kanade.presentation.more.settings.screen.browse.longpress.SourceLongPressActions
 import eu.kanade.presentation.util.Screen
+import mihon.app.di.appGraph
 import mihon.core.common.CustomPreferences
 import mihon.core.common.sanitizeBrowseLongPressActionPriority
 import mihon.presentation.kit.navigation.AppBar
 import mihon.presentation.kit.navigation.Scaffold
 import tachiyomi.domain.source.model.Source
-import tachiyomi.domain.source.repository.SourceRepository
-import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 import androidx.compose.runtime.collectAsState as collectFlowAsState
 
 data class BrowseLongPressActionsScreen(
@@ -28,10 +26,11 @@ data class BrowseLongPressActionsScreen(
 
     @Composable
     override fun Content() {
+        val context = LocalContext.current
         val navigator = LocalNavigator.currentOrThrow
-        val customPreferences = remember { Injekt.get<CustomPreferences>() }
-        val sourceRepository = remember { Injekt.get<SourceRepository>() }
-        val sourceManager = remember { Injekt.get<SourceManager>() }
+        val customPreferences = remember { context.appGraph.customPreferences }
+        val sourceRepository = remember { context.appGraph.sourceRepository }
+        val sourceManager = remember { context.appGraph.sourceManager }
         val defaultPriority by customPreferences.browseLongPressActionPriority.collectAsState()
         val overrides by customPreferences.browseLongPressActionOverrides.collectAsState()
         val allSources by sourceRepository.getSources().collectFlowAsState(initial = emptyList())

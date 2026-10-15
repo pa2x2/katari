@@ -22,6 +22,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -31,6 +32,7 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.util.Screen
 import kotlinx.coroutines.flow.collectLatest
+import mihon.app.di.appGraph
 import mihon.entry.interactions.media.EntryViewerSettingsFeature
 import mihon.presentation.kit.feedback.NoResults
 import mihon.presentation.kit.list.SettingsRow
@@ -39,8 +41,6 @@ import mihon.presentation.kit.navigation.SearchToolbar
 import mihon.presentation.kit.surface.HorizontalDivider
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 import cafe.adriel.voyager.core.screen.Screen as VoyagerScreen
 
 class SettingsSearchScreen : Screen() {
@@ -105,9 +105,10 @@ private fun SearchResult(
     contentPadding: PaddingValues = PaddingValues(),
     onItemClick: (SearchResultItem) -> Unit,
 ) {
+    val context = LocalContext.current
     val isLtr = LocalLayoutDirection.current == LayoutDirection.Ltr
 
-    val viewerSettingsFeature = remember { Injekt.get<EntryViewerSettingsFeature>() }
+    val viewerSettingsFeature = remember { context.appGraph.entryViewerSettingsFeature }
     val index = getIndex(viewerSettingsFeature)
     // The query is read here rather than in composition, so typing doesn't rebuild the index on every key
     val result by produceState<List<SearchResultItem>?>(initialValue = null, index) {

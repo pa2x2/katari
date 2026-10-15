@@ -1,5 +1,8 @@
 package eu.kanade.tachiyomi.data.track
 
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import eu.kanade.domain.track.service.GlobalTrackPreferences
 import eu.kanade.tachiyomi.data.track.anilist.Anilist
 import eu.kanade.tachiyomi.data.track.bangumi.Bangumi
@@ -14,25 +17,32 @@ import eu.kanade.tachiyomi.data.track.myanimelist.MyAnimeList
 import eu.kanade.tachiyomi.data.track.shikimori.Shikimori
 import eu.kanade.tachiyomi.data.track.suwayomi.Suwayomi
 import kotlinx.coroutines.flow.combine
+import mihon.entry.interactions.source.EntrySourceSettingsFeature
+import mihon.entry.interactions.source.EntryTrackerSourceAdapterFeature
 import mihon.feature.profiles.core.ProfileStore
 
+@Inject
+@SingleIn(AppScope::class)
 class TrackerManager(
-    profileStore: ProfileStore? = null,
-    globalTrackPreferences: GlobalTrackPreferences? = null,
+    profileStore: ProfileStore,
+    globalTrackPreferences: GlobalTrackPreferences,
+    dependencies: TrackerDependencies,
+    sourceSettingsFeature: Lazy<EntrySourceSettingsFeature>,
+    sourceAdapterFeature: Lazy<EntryTrackerSourceAdapterFeature>,
 ) {
 
-    val myAnimeList = MyAnimeList(1L)
-    val aniList = Anilist(2L)
-    val kitsu = Kitsu(3L)
-    val shikimori = Shikimori(4L)
-    val bangumi = Bangumi(5L)
-    val komga = Komga(6L)
-    val mangaUpdates = MangaUpdates(7L)
-    val kavita = Kavita(8L)
-    val suwayomi = Suwayomi(9L)
-    val hikka = Hikka(10L, profileStore, globalTrackPreferences)
-    val mangaBaka = MangaBaka(11L, profileStore)
-    val comick = Comick(12L, profileStore)
+    val myAnimeList = MyAnimeList(1L, dependencies)
+    val aniList = Anilist(2L, dependencies)
+    val kitsu = Kitsu(3L, dependencies)
+    val shikimori = Shikimori(4L, dependencies)
+    val bangumi = Bangumi(5L, dependencies)
+    val komga = Komga(6L, dependencies)
+    val mangaUpdates = MangaUpdates(7L, dependencies)
+    val kavita = Kavita(8L, dependencies, sourceSettingsFeature)
+    val suwayomi = Suwayomi(9L, dependencies, sourceAdapterFeature)
+    val hikka = Hikka(10L, dependencies, profileStore, globalTrackPreferences)
+    val mangaBaka = MangaBaka(11L, dependencies, profileStore)
+    val comick = Comick(12L, dependencies, profileStore)
 
     val trackers = listOf(
         mangaBaka,

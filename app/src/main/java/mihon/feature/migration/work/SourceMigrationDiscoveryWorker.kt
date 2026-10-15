@@ -10,18 +10,16 @@ import androidx.work.workDataOf
 import eu.kanade.tachiyomi.util.system.setForegroundSafely
 import kotlinx.coroutines.CancellationException
 import logcat.LogPriority
+import mihon.app.di.appGraph
 import mihon.feature.migration.discovery.SourceMigrationDiscoveryRunResult
-import mihon.feature.migration.discovery.SourceMigrationDiscoveryRunner
 import mihon.feature.migration.session.model.SourceMigrationSessionId
 import tachiyomi.core.common.util.system.logcat
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
 class SourceMigrationDiscoveryWorker(
     private val context: Context,
     workerParameters: WorkerParameters,
 ) : CoroutineWorker(context, workerParameters) {
-    private val runner: SourceMigrationDiscoveryRunner = Injekt.get()
+    private val runner = context.appGraph.sourceMigrationDiscoveryRunner
     private val notifier = SourceMigrationNotifier(context)
 
     override suspend fun doWork(): Result {

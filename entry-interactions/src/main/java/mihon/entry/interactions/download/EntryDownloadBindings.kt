@@ -7,6 +7,7 @@ import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.IntoSet
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
+import eu.kanade.tachiyomi.core.security.SecurityPreferences
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.plus
@@ -34,6 +35,7 @@ import mihon.entry.interactions.download.maintenance.merge.entryDownloadMergeBin
 import mihon.entry.interactions.download.maintenance.migration.EntryDownloadMigrationContributor
 import mihon.entry.interactions.download.maintenance.migration.entryDownloadMigrationBinding
 import mihon.entry.interactions.download.maintenance.migration.entryDownloadMigrationOptionBinding
+import mihon.entry.interactions.download.notification.AndroidEntryDownloadNotifier
 import mihon.entry.interactions.media.session.EntryMediaSessionEvent
 import mihon.entry.interactions.merge.EntryMergeDownloadOwnershipProjection
 import mihon.entry.interactions.persistence.backup.decodeEntryBackupState
@@ -122,13 +124,30 @@ object EntryDownloadBindings {
         downloads: EntryDownloadRuntimeCoordinator,
         actions: EntryDownloadNotificationActions,
         ownership: EntryMergeDownloadOwnershipProjection,
+        securityPreferences: () -> SecurityPreferences,
         @AppCoroutineScope scope: CoroutineScope,
     ): EntryDownloadNotificationManager = EntryDownloadNotificationManager(
         context = application,
         downloads = downloads,
         actions = actions,
         ownership = ownership,
+        presenter = AndroidEntryDownloadNotifier(
+            context = application,
+            actions = actions,
+            hideNotificationContent = { securityPreferences().hideNotificationContent.get() },
+        ),
         scope = scope,
+    )
+
+    @Provides
+    internal fun workerDependencies(
+        downloads: EntryDownloadRuntimeCoordinator,
+        downloadPreferences: DownloadPreferences,
+        notificationProvider: EntryDownloadForegroundNotificationProvider,
+    ): EntryDownloadWorkerDependencies = EntryDownloadWorkerDependencies(
+        downloads = downloads,
+        downloadPreferences = downloadPreferences,
+        notificationProvider = notificationProvider,
     )
 
     @Provides

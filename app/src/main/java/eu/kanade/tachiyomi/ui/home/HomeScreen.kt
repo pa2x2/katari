@@ -26,7 +26,6 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
 import cafe.adriel.voyager.navigator.tab.TabNavigator
-import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.presentation.util.Screen
 import eu.kanade.presentation.util.isTabletUi
 import eu.kanade.tachiyomi.ui.browse.BrowseTab
@@ -44,6 +43,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import mihon.app.di.appGraph
 import mihon.core.common.CustomPreferences
 import mihon.core.common.HomeScreenTabs
 import mihon.core.common.homeScreenContentTabOrder
@@ -52,16 +52,12 @@ import mihon.core.common.navigation.withVisibleProfiles
 import mihon.core.common.resolveHomeScreenTab
 import mihon.core.common.resolveVisibleHomeScreenTabs
 import mihon.core.common.toHomeScreenTabs
-import mihon.feature.profiles.core.ProfileManager
-import mihon.feature.profiles.core.ProfileStore
 import mihon.feature.profiles.ui.ProfilePickerScreen
 import mihon.feature.profiles.ui.handleProfileShortcut
 import mihon.presentation.kit.navigation.Scaffold
 import soup.compose.material.motion.animation.materialFadeThroughIn
 import soup.compose.material.motion.animation.materialFadeThroughOut
 import tachiyomi.presentation.core.util.collectAsState
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 import androidx.compose.runtime.collectAsState as collectFlowAsState
 import cafe.adriel.voyager.navigator.tab.Tab as VoyagerTab
 
@@ -80,9 +76,9 @@ object HomeScreen : Screen() {
     @Composable
     override fun Content() {
         val context = LocalContext.current
-        val profileManager = remember { Injekt.get<ProfileManager>() }
-        val profileStore = remember { Injekt.get<ProfileStore>() }
-        val uiPreferences = remember { Injekt.get<UiPreferences>() }
+        val profileManager = remember { context.appGraph.profileManager }
+        val profileStore = remember { context.appGraph.profileStore }
+        val uiPreferences = remember { context.appGraph.uiPreferences }
         val activeProfile by profileManager.activeProfile.collectFlowAsState()
         val activeProfileId = activeProfile?.id ?: profileStore.currentProfileId
         val customPreferences = remember(activeProfileId) {

@@ -6,16 +6,20 @@ import eu.kanade.tachiyomi.data.database.models.Track
 import eu.kanade.tachiyomi.data.track.BaseTracker
 import eu.kanade.tachiyomi.data.track.EnhancedTracker
 import eu.kanade.tachiyomi.data.track.EntryTrackingSource
+import eu.kanade.tachiyomi.data.track.TrackerDependencies
 import eu.kanade.tachiyomi.data.track.model.TrackSearch
 import mihon.entry.interactions.source.EntrySourceSettingsFeature
 import mihon.entry.interactions.source.EntrySourceSettingsResolution
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.track.model.EntryTrack
 import tachiyomi.i18n.*
-import uy.kohesive.injekt.injectLazy
 import java.security.MessageDigest
 
-class Kavita(id: Long) : BaseTracker(id, "Kavita"), EnhancedTracker {
+class Kavita(
+    id: Long,
+    dependencies: TrackerDependencies,
+    private val sourceSettingsFeature: Lazy<EntrySourceSettingsFeature>,
+) : BaseTracker(id, "Kavita", dependencies), EnhancedTracker {
 
     companion object {
         const val UNREAD = 1L
@@ -26,9 +30,7 @@ class Kavita(id: Long) : BaseTracker(id, "Kavita"), EnhancedTracker {
     var authentications: OAuth? = null
 
     private val interceptor by lazy { KavitaInterceptor(this) }
-    val api by lazy { KavitaApi(id, client, interceptor) }
-
-    private val sourceSettingsFeature: EntrySourceSettingsFeature by injectLazy()
+    val api by lazy { KavitaApi(id, client, interceptor, json) }
 
     override fun getLogo(): Int = R.drawable.brand_kavita
 
@@ -118,7 +120,7 @@ class Kavita(id: Long) : BaseTracker(id, "Kavita"), EnhancedTracker {
                 (0..7).map { bytes[it].toLong() and 0xff shl 8 * (7 - it) }
                     .reduce(Long::or) and Long.MAX_VALUE
             }
-            val settings = sourceSettingsFeature.resolve(sourceId) as? EntrySourceSettingsResolution.Available
+            val settings = sourceSettingsFeature.value.resolve(sourceId) as? EntrySourceSettingsResolution.Available
                 ?: continue
             val preferences = settings.preferences
 

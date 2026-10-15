@@ -21,17 +21,15 @@ import mihon.entry.interactions.book.state.progressIdentity
 import tachiyomi.domain.entry.adapter.toSEntryChapter
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.domain.source.service.awaitInitialized
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
 internal class BookDownloader(
-    private val application: Application = Injekt.get(),
-    private val provider: BookDownloadProvider = Injekt.get(),
-    private val cache: BookDownloadCache = Injekt.get(),
-    private val sourceManager: SourceManager = Injekt.get(),
-    private val networkHelper: NetworkHelper = Injekt.get(),
-    private val materializationStore: BookMaterializationStore = Injekt.get(),
-    private val preparerRegistry: BookContentPreparerRegistry = Injekt.get(),
+    private val application: Application,
+    private val provider: BookDownloadProvider,
+    private val cache: BookDownloadCache,
+    private val sourceManager: SourceManager,
+    private val networkHelper: NetworkHelper,
+    private val materializationStore: BookMaterializationStore,
+    private val preparerRegistry: BookContentPreparerRegistry,
     private val resourceBudget: BookDownloadResourceBudget = BookDownloadResourceBudget(),
     private val now: () -> Long = System::currentTimeMillis,
 ) {

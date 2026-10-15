@@ -4,10 +4,13 @@ import android.content.Context
 import eu.kanade.tachiyomi.source.entry.EntryImageSource
 import eu.kanade.tachiyomi.ui.reader.model.ReaderChapter
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
 import mihon.core.archive.archiveReader
 import mihon.core.archive.epubReader
 import mihon.entry.interactions.manga.download.DownloadManager
 import mihon.entry.interactions.manga.download.DownloadProvider
+import mihon.entry.interactions.manga.page.MangaPageStore
+import mihon.entry.interactions.manga.page.acquisition.MangaPageAcquisitionCoordinator
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.core.common.util.system.logcat
@@ -27,6 +30,9 @@ internal class ChapterLoader(
     private val downloadProvider: DownloadProvider,
     private val manga: Entry,
     private val sourceManager: SourceManager,
+    private val pageStore: MangaPageStore,
+    private val pageAcquisition: MangaPageAcquisitionCoordinator,
+    private val appScope: CoroutineScope,
 ) {
 
     /**
@@ -111,6 +117,7 @@ internal class ChapterLoader(
         )
         return when {
             isDownloaded -> DownloadPageLoader(
+                context.applicationContext,
                 chapter,
                 chapterManga,
                 chapterUnifiedSource,
@@ -136,7 +143,13 @@ internal class ChapterLoader(
                     )
                 }
             }
-            chapterUnifiedSource is EntryImageSource -> EntryPageLoader(chapter, chapterUnifiedSource)
+            chapterUnifiedSource is EntryImageSource -> EntryPageLoader(
+                chapter,
+                chapterUnifiedSource,
+                pageStore,
+                pageAcquisition,
+                appScope,
+            )
             chapterUnifiedSource is UnifiedStubSource -> throw ReaderLoadException(
                 message = context.stringResource(MR.strings.source_not_installed, chapterUnifiedSource.toString()),
                 canRetry = false,

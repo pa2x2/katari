@@ -29,7 +29,6 @@ dependencies {
     implementation(libs.androidx.compose.foundation)
     implementation(libs.androidx.compose.uiUtil)
     implementation(libs.bundles.androidx.lifecycle)
-    implementation(libs.injekt)
     implementation(libs.kotlinx.coroutines.core)
 
     testImplementation(libs.bundles.test)

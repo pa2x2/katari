@@ -9,6 +9,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
+import mihon.app.di.appGraph
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Group
 import mihon.presentation.kit.content.Icon
@@ -26,11 +28,8 @@ import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.core.common.preference.TriState
 import tachiyomi.domain.entry.model.Entry
-import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
 @Composable
 fun EntryChapterSettingsDialog(
@@ -47,6 +46,7 @@ fun EntryChapterSettingsDialog(
     onSetAsDefault: (applyToExisting: Boolean) -> Unit,
     onResetToDefault: () -> Unit,
 ) {
+    val context = LocalContext.current
     val presentation = entry?.type.entryTypePresentation()
     var showSetAsDefaultDialog by rememberSaveable { mutableStateOf(false) }
     if (showSetAsDefaultDialog) {
@@ -57,7 +57,7 @@ fun EntryChapterSettingsDialog(
         )
     }
 
-    val downloadedOnly = remember { Injekt.get<LibraryPreferences>().downloadedOnly.get() }
+    val downloadedOnly = remember { context.appGraph.libraryPreferences.downloadedOnly.get() }
 
     TabbedSheet(
         onDismissRequest = onDismissRequest,

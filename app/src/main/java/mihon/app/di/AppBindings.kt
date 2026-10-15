@@ -8,11 +8,14 @@ import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.Binds
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
-import eu.kanade.domain.track.service.GlobalTrackPreferences
+import eu.kanade.domain.base.BasePreferences
+import eu.kanade.domain.extension.interactor.TrustExtension
+import eu.kanade.domain.source.service.GlobalSourcePreferences
+import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.domain.track.store.DelayedTrackingStore
+import eu.kanade.tachiyomi.core.security.SecurityPreferences
 import eu.kanade.tachiyomi.data.cache.CoverCache
 import eu.kanade.tachiyomi.data.saver.ImageSaver
-import eu.kanade.tachiyomi.data.track.TrackerManager
 import eu.kanade.tachiyomi.entry.AppEntryMetadataChangeNotifier
 import eu.kanade.tachiyomi.extension.ExtensionManager
 import eu.kanade.tachiyomi.network.NetworkHelper
@@ -28,13 +31,17 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.protobuf.ProtoBuf
 import logcat.LogPriority
+import mihon.core.common.GlobalCustomPreferences
 import mihon.core.common.image.progressive.ProgressiveImageEngine
 import mihon.core.common.image.progressive.ProgressiveImagePreferences
 import mihon.core.metro.AppCoroutineScope
 import mihon.data.database.DatabaseRepositoryImpl
 import mihon.data.database.createSqlDriver
 import mihon.domain.database.repository.DatabaseRepository
+import mihon.domain.extension.interactor.UpdateExtensionStores
+import mihon.domain.extension.repository.ExtensionStoreRepository
 import mihon.entry.interactions.catalogue.EntryCatalogueFeature
+import mihon.entry.interactions.download.EntryDownloadMaintenanceFeature
 import mihon.entry.interactions.lifecycle.metadata.EntryMetadataLifecycleFeature
 import mihon.entry.interactions.lifecycle.removal.EntryDestructiveRemovalFeature
 import mihon.entry.interactions.merge.EntryMergeLibraryGroupingFeature
@@ -53,6 +60,7 @@ import mihon.feature.migration.review.SourceMigrationCandidateEntryResolver
 import mihon.feature.migration.review.SourceMigrationTargetSelector
 import mihon.feature.migration.session.SourceMigrationSessionStore
 import mihon.feature.migration.work.SourceMigrationWorkScheduler
+import mihon.feature.profiles.core.ProfileAwareStore
 import mihon.feature.profiles.core.ProfileDatabase
 import mihon.feature.profiles.core.ProfileManager
 import mihon.feature.profiles.core.ProfilePreferenceOwnership
@@ -345,21 +353,57 @@ interface AppBindings {
             extensionManager: ExtensionManager,
             sourceRepository: StubSourceRepository,
             @AppCoroutineScope scope: CoroutineScope,
-        ): AndroidSourceManager = AndroidSourceManager(context, extensionManager, sourceRepository, scope)
+            downloadMaintenance: Lazy<EntryDownloadMaintenanceFeature>,
+            localSourceFileSystem: Lazy<LocalSourceFileSystem>,
+            localCoverManager: Lazy<LocalCoverManager>,
+        ): AndroidSourceManager = AndroidSourceManager(
+            context = context,
+            extensionManager = extensionManager,
+            sourceRepository = sourceRepository,
+            scope = scope,
+            downloadMaintenance = downloadMaintenance,
+            localSourceFileSystem = localSourceFileSystem,
+            localCoverManager = localCoverManager,
+        )
 
         @Provides
         @SingleIn(AppScope::class)
-        fun sourceInfoNames(sourceManager: SourceManager): SourceInfoNames =
-            SourceInfoNames { sourceId -> sourceManager.getDisplayInfo(sourceId).getDisplayNameForEntryInfo() }
+        fun sourceInfoNames(sourceManager: SourceManager, preferences: SourcePreferences): SourceInfoNames =
+            SourceInfoNames { sourceId ->
+                sourceManager.getDisplayInfo(sourceId).getDisplayNameForEntryInfo(preferences)
+            }
 
         @Provides
         @SingleIn(AppScope::class)
-        fun extensionManager(context: Context): ExtensionManager = ExtensionManager(context)
-
-        @Provides
-        @SingleIn(AppScope::class)
-        fun trackerManager(profileStore: ProfileStore, globalTrackPreferences: GlobalTrackPreferences): TrackerManager =
-            TrackerManager(profileStore, globalTrackPreferences)
+        fun extensionManager(
+            context: Context,
+            preferences: SourcePreferences,
+            globalPreferences: GlobalSourcePreferences,
+            trustExtension: TrustExtension,
+            profileDatabase: ProfileDatabase,
+            profileStore: ProfileAwareStore,
+            extensionStoreRepository: ExtensionStoreRepository,
+            updateExtensionStores: UpdateExtensionStores,
+            customPreferences: GlobalCustomPreferences,
+            basePreferences: BasePreferences,
+            securityPreferences: SecurityPreferences,
+            networkHelper: Lazy<NetworkHelper>,
+            @AppCoroutineScope scope: CoroutineScope,
+        ): ExtensionManager = ExtensionManager(
+            context = context,
+            preferences = preferences,
+            globalPreferences = globalPreferences,
+            trustExtension = trustExtension,
+            profileDatabase = profileDatabase,
+            profileStore = profileStore,
+            extensionStoreRepository = extensionStoreRepository,
+            updateExtensionStores = updateExtensionStores,
+            customPreferences = customPreferences,
+            basePreferences = basePreferences,
+            securityPreferences = securityPreferences,
+            networkHelper = networkHelper,
+            scope = scope,
+        )
 
         @Provides
         @SingleIn(AppScope::class)

@@ -2,25 +2,18 @@ package eu.kanade.tachiyomi.ui.browse.extension
 
 import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.source.entry.EntryType
-import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import eu.kanade.tachiyomi.ui.browse.ContentTypeFilter
 import mihon.entry.interactions.catalogue.EntryCatalogueFeature
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
-internal fun ContentTypeFilter.matches(extension: Extension): Boolean {
-    return matches(extension.supportedEntryTypesForDisplay())
+internal fun ContentTypeFilter.matches(extension: Extension, catalogue: EntryCatalogueFeature): Boolean {
+    return matches(extension.supportedEntryTypesForDisplay(catalogue))
 }
 
-internal fun Extension.supportedEntryTypesForDisplay(
-    installedSourceTypes: (UnifiedSource) -> Set<EntryType>? = { source ->
-        Injekt.get<EntryCatalogueFeature>().description(source.id).supportedEntryTypes
-    },
-): Set<EntryType>? {
+internal fun Extension.supportedEntryTypesForDisplay(catalogue: EntryCatalogueFeature): Set<EntryType>? {
     val advertisedTypes = when (this) {
         is Extension.Loaded ->
             sources
-                .flatMapTo(linkedSetOf()) { installedSourceTypes(it).orEmpty() }
+                .flatMapTo(linkedSetOf()) { catalogue.description(it.id).supportedEntryTypes.orEmpty() }
         is Extension.Available ->
             sources
                 .flatMapTo(linkedSetOf()) { it.supportedEntryTypes.orEmpty() }

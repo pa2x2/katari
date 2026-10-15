@@ -1,19 +1,14 @@
 package eu.kanade.tachiyomi.ui.download
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
-import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import dev.zacsweers.metrox.viewmodel.metroViewModel
 import eu.kanade.presentation.components.TabbedScreen
 import eu.kanade.presentation.util.Screen
-import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.ui.download.translation.TranslationQueueViewModel
 import eu.kanade.tachiyomi.ui.download.translation.translationQueueTab
-import mihon.entry.interactions.translate.EntryTranslateFeature
 import tachiyomi.i18n.*
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
 /** The download queue, and the translation queue beside it when chapters can be translated in the background. */
 object DownloadQueueScreen : Screen() {
@@ -22,16 +17,13 @@ object DownloadQueueScreen : Screen() {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val downloads = viewModel { DownloadQueueViewModel() }
-        val translations = viewModel { TranslationQueueViewModel() }
-        val translationAvailable = remember {
-            Injekt.get<EntryTranslateFeature>().let { feature -> EntryType.entries.any(feature::isApplicable) }
-        }
+        val downloads = metroViewModel<DownloadQueueViewModel>()
+        val translations = metroViewModel<TranslationQueueViewModel>()
         TabbedScreen(
             titleRes = MR.strings.label_download_queue,
             tabs = listOfNotNull(
                 downloadQueueDownloadsTab(downloads),
-                if (translationAvailable) translationQueueTab(translations) else null,
+                if (translations.isAvailable) translationQueueTab(translations) else null,
             ),
             navigateUp = navigator::pop,
             snackbarHostState = translations.snackbarHostState,

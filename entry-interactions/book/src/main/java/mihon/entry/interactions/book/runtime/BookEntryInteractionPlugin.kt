@@ -2,7 +2,7 @@ package mihon.entry.interactions.book.runtime
 
 import eu.kanade.tachiyomi.source.entry.EntryType
 import mihon.entry.interactions.book.child.BookChildListProcessor
-import mihon.entry.interactions.book.download.BookDownloadManager
+import mihon.entry.interactions.book.content.BookMaterializationCache
 import mihon.entry.interactions.book.download.BookDownloadProcessor
 import mihon.entry.interactions.book.download.BookDownloadProcessorDependencies
 import mihon.entry.interactions.book.library.BookLibraryProgressProvider
@@ -43,11 +43,11 @@ import mihon.feature.graph.ContributionOwner
 import tachiyomi.domain.entry.interactor.GetEntryWithChapters
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryProgressRepository
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
 internal fun bookEntryInteractionPlugin(
     dependencies: BookEntryInteractionDependencies,
+    downloadProcessorDependencies: () -> BookDownloadProcessorDependencies,
+    materializationCache: () -> BookMaterializationCache,
     viewerSettingsProvider: EntryViewerSettingsProvider? = null,
 ): EntryInteractionPlugin {
     val openProcessor = BookOpenProcessor()
@@ -65,15 +65,7 @@ internal fun bookEntryInteractionPlugin(
         entryChapterRepository = dependencies.entryChapterRepository,
     )
     val downloadProcessor = if (dependencies.downloadsEnabled) {
-        BookDownloadProcessor(
-            BookDownloadProcessorDependencies(
-                manager = Injekt.get<BookDownloadManager>(),
-                cache = Injekt.get(),
-                sourceManager = Injekt.get(),
-                entryRepository = Injekt.get(),
-                getEntryWithChapters = dependencies.getEntryWithChapters,
-            ),
-        )
+        BookDownloadProcessor(downloadProcessorDependencies())
     } else {
         null
     }
@@ -95,7 +87,7 @@ internal fun bookEntryInteractionPlugin(
             add(EntryOutsideReleasePeriodFilterCapability.bind(outsideReleasePeriodFilterProvider))
             add(EntryTypePresentationCapability.bind(BookEntryTypePresentationProvider))
             add(EntryStatisticsCapability.bind(BookEntryStatisticsProvider))
-            add(EntryMediaCacheCapability.bind(BookMediaCacheProvider { Injekt.get() }))
+            add(EntryMediaCacheCapability.bind(BookMediaCacheProvider(materializationCache)))
             add(EntryMediaSessionCapability.bind(dependencies.mediaSession))
             add(EntryMigrationCapability.bind(migrationProvider))
             add(EntryTranslationLanguagesCapability.bind(BookTranslationLanguagesProvider))

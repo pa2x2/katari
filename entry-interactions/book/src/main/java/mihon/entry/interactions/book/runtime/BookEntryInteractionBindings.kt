@@ -11,6 +11,7 @@ import dev.zacsweers.metro.SingleIn
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.serialization.json.Json
 import mihon.core.metro.AppCoroutineScope
 import mihon.entry.interactions.book.content.BookMaterializationCache
 import mihon.entry.interactions.book.content.BookMaterializationStore
@@ -23,6 +24,7 @@ import mihon.entry.interactions.book.document.resource.BookRemoteResourceConsent
 import mihon.entry.interactions.book.download.BookDownloadCache
 import mihon.entry.interactions.book.download.BookDownloadIndexStore
 import mihon.entry.interactions.book.download.BookDownloadManager
+import mihon.entry.interactions.book.download.BookDownloadProcessorDependencies
 import mihon.entry.interactions.book.download.BookDownloadProvider
 import mihon.entry.interactions.book.download.BookDownloadStore
 import mihon.entry.interactions.book.download.BookDownloader
@@ -39,6 +41,7 @@ import mihon.entry.interactions.book.reader.BookReaderSessionFactory
 import mihon.entry.interactions.book.reader.BookReaderSessionRegistry
 import mihon.entry.interactions.book.reader.translation.BookAutomaticTranslationPreferences
 import mihon.entry.interactions.book.reader.translation.BookAutomaticTranslationSettingsProvider
+import mihon.entry.interactions.download.EntryDownloadWorkController
 import mihon.entry.interactions.media.DefaultEntryViewerSettingsProvider
 import mihon.entry.interactions.media.session.EntryMediaSessionEventSink
 import mihon.entry.interactions.reader.preparation.ReaderChapterPreparationPreferences
@@ -74,6 +77,11 @@ object BookEntryInteractionBindings {
         preparerRegistry: BookContentPreparerRegistry,
         mediaSession: BookMediaSessionProcessor,
         viewerSettingsProvider: BookDocumentReaderSettingsProvider,
+        downloadManager: () -> BookDownloadManager,
+        downloadCache: () -> BookDownloadCache,
+        sourceManager: SourceManager,
+        entryRepository: EntryRepository,
+        materializationCache: () -> BookMaterializationCache,
     ): EntryInteractionPlugin = bookEntryInteractionPlugin(
         BookEntryInteractionDependencies(
             getEntryWithChapters = getEntryWithChapters,
@@ -82,6 +90,16 @@ object BookEntryInteractionBindings {
             downloadsEnabled = preparerRegistry.canPrepareContent,
             mediaSession = mediaSession,
         ),
+        downloadProcessorDependencies = {
+            BookDownloadProcessorDependencies(
+                manager = downloadManager(),
+                cache = downloadCache(),
+                sourceManager = sourceManager,
+                entryRepository = entryRepository,
+                getEntryWithChapters = getEntryWithChapters,
+            )
+        },
+        materializationCache = materializationCache,
         viewerSettingsProvider = DefaultEntryViewerSettingsProvider(
             type = EntryType.BOOK,
             surfaces = listOf(viewerSettingsProvider),
@@ -293,7 +311,12 @@ object BookEntryInteractionBindings {
 
     @Provides
     @SingleIn(AppScope::class)
-    internal fun downloadStore(application: Application): BookDownloadStore = BookDownloadStore(application)
+    internal fun downloadStore(
+        application: Application,
+        json: Json,
+        entryRepository: EntryRepository,
+        entryChapterRepository: EntryChapterRepository,
+    ): BookDownloadStore = BookDownloadStore(application, json, entryRepository, entryChapterRepository)
 
     @Provides
     @SingleIn(AppScope::class)
@@ -318,19 +341,25 @@ object BookEntryInteractionBindings {
     @Provides
     @SingleIn(AppScope::class)
     internal fun downloadManager(
-        application: Application,
         cache: BookDownloadCache,
         provider: BookDownloadProvider,
         downloader: BookDownloader,
+        preparedDocumentCache: BookDocumentPreparedCache,
+        resourceGatewayFactory: BookPublicationResourceGatewayFactory,
         sourceManager: SourceManager,
         store: BookDownloadStore,
+        workController: EntryDownloadWorkController,
+        @AppCoroutineScope scope: CoroutineScope,
     ): BookDownloadManager = BookDownloadManager(
-        context = application,
         cache = cache,
         provider = provider,
         downloader = downloader,
+        preparedDocumentCache = preparedDocumentCache,
+        resourceGatewayFactory = resourceGatewayFactory,
         sourceManager = sourceManager,
         store = store,
+        workController = workController,
+        scope = scope,
     )
 
     @Provides

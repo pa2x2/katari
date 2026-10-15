@@ -11,8 +11,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.util.fastForEach
-import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.core.screen.Screen
+import dev.zacsweers.metrox.viewmodel.metroViewModel
 import eu.kanade.presentation.entry.entryTypePresentation
 import mihon.entry.interactions.migration.EntryMigrationMode
 import mihon.entry.interactions.migration.EntryMigrationOption
@@ -41,7 +41,7 @@ internal fun Screen.MigrateEntryDialog(
 ) {
     val scope = rememberCoroutineScope()
 
-    val viewModel = viewModel { MigrateEntryDialogViewModel() }
+    val viewModel = metroViewModel<MigrateEntryDialogViewModel>()
     LaunchedEffect(current, target) {
         viewModel.init(current, target)
     }

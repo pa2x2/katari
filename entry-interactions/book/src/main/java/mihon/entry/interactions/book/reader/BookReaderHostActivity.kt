@@ -15,6 +15,7 @@ import kotlinx.coroutines.launch
 import logcat.LogPriority
 import mihon.book.api.BookFailure
 import mihon.book.api.BookFailureReason
+import mihon.core.metro.metroGraph
 import mihon.entry.interactions.book.R
 import mihon.entry.interactions.book.processor.BookReaderRequest
 import mihon.entry.interactions.book.runtime.requireBook
@@ -23,14 +24,13 @@ import mihon.entry.interactions.runtime.setEntryInteractionContent
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
 /** Generic BOOK host for processor selection, launch, and structured unsupported-content failures. */
 internal class BookReaderHostActivity : EntryInteractionActivity() {
     private var hostState by mutableStateOf<BookReaderHostState?>(null)
     private var launchJob: Job? = null
     private var retrySelection: BookReaderHostState.ReaderSelected? = null
+    private val dependencies by lazy { metroGraph<BookReaderGraph>().bookReaderDependencies }
     private val request by lazy {
         BookReaderRequest(
             entryId = intent.getLongExtra(EXTRA_ENTRY_ID, -1L),
@@ -58,7 +58,7 @@ internal class BookReaderHostActivity : EntryInteractionActivity() {
         remember: Boolean,
     ) {
         open(
-            state = Injekt.get<BookReaderHostResolver>().choose(
+            state = dependencies.hostResolver.choose(
                 state,
                 processorId,
                 remember,
@@ -85,7 +85,7 @@ internal class BookReaderHostActivity : EntryInteractionActivity() {
         }
         runStartup(retrySelection = null) {
             when (
-                val state = Injekt.get<BookReaderHostResolver>().resolve(
+                val state = dependencies.hostResolver.resolve(
                     request.entryId,
                     request.chapterId,
                 )
@@ -102,7 +102,7 @@ internal class BookReaderHostActivity : EntryInteractionActivity() {
     }
 
     private suspend fun openSelected(state: BookReaderHostState.ReaderSelected) {
-        val result = Injekt.get<BookReaderSessionFactory>().openPrepared(
+        val result = dependencies.sessionFactory.openPrepared(
             context = this@BookReaderHostActivity,
             prepared = state.prepared,
             processorId = state.processor.id,
@@ -117,7 +117,7 @@ internal class BookReaderHostActivity : EntryInteractionActivity() {
                 )
             }
             is BookReaderOpenResult.Success -> {
-                val registry = Injekt.get<BookReaderSessionRegistry>()
+                val registry = dependencies.sessionRegistry
                 val token = registry.register(result.session)
                 try {
                     startActivity(

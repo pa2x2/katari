@@ -3,17 +3,17 @@ package eu.kanade.core.util
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
-import mihon.entry.interactions.catalogue.EntryCatalogueFeature
-import tachiyomi.domain.source.service.SourceManager
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
+import androidx.compose.ui.platform.LocalContext
+import mihon.app.di.appGraph
 
 @Composable
 fun ifSourcesLoaded(): Boolean {
-    return remember { Injekt.get<SourceManager>().isInitialized }.collectAsState().value
+    val context = LocalContext.current
+    return remember { context.appGraph.sourceManager.isInitialized }.collectAsState().value
 }
 
 @Composable
 fun ifCatalogSourcesLoaded(): Boolean {
-    return remember { Injekt.get<EntryCatalogueFeature>().isInitialized }.collectAsState().value
+    val context = LocalContext.current
+    return remember { context.appGraph.entryCatalogueFeature.isInitialized }.collectAsState().value
 }

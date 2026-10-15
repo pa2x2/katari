@@ -5,22 +5,19 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.produceState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.util.fastForEach
-import eu.kanade.tachiyomi.extension.ExtensionManager
-import eu.kanade.tachiyomi.ui.stats.recap.delivery.subscribeUnopenedYearRecap
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
+import mihon.app.di.appGraph
 import mihon.core.common.HomeScreenTabs
 import mihon.presentation.kit.content.NotificationBadge
-import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
 /** What a tab's icon is marked with: a count, or a dot when there's something new without a number. */
 internal sealed interface HomeTabBadge {
@@ -62,8 +59,9 @@ internal fun HomeTabBadgeContent(badge: HomeTabBadge, modifier: Modifier = Modif
 
 @Composable
 private fun rememberUpdatesBadge(): HomeTabBadge? {
+    val context = LocalContext.current
     val count by produceState(initialValue = 0) {
-        val preferences = Injekt.get<LibraryPreferences>()
+        val preferences = context.appGraph.libraryPreferences
         combine(
             preferences.newShowUpdatesCount.changes(),
             preferences.newUpdatesCount.changes(),
@@ -79,8 +77,9 @@ private fun rememberUpdatesBadge(): HomeTabBadge? {
 
 @Composable
 private fun rememberBrowseBadge(): HomeTabBadge? {
+    val context = LocalContext.current
     val count by produceState(initialValue = 0) {
-        val extensionManager = Injekt.get<ExtensionManager>()
+        val extensionManager = context.appGraph.extensionManager
         combine(
             extensionManager.pendingUpdatesCount,
             extensionManager.isAutoUpdateInProgress,
@@ -96,8 +95,9 @@ private fun rememberBrowseBadge(): HomeTabBadge? {
 
 @Composable
 private fun rememberYearRecapBadge(): HomeTabBadge? {
+    val context = LocalContext.current
     val unopened by produceState(initialValue = false) {
-        subscribeUnopenedYearRecap().map { it != null }.collectLatest { value = it }
+        context.appGraph.statisticsUnopenedYearRecap.subscribe().map { it != null }.collectLatest { value = it }
     }
     if (!unopened) return null
     return HomeTabBadge.Dot(stringResource(MR.strings.statistics_recap_new))

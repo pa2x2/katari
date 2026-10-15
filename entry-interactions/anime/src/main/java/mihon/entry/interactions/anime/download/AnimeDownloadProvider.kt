@@ -16,16 +16,14 @@ import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.library.service.GlobalLibraryPreferences
 import tachiyomi.domain.storage.service.StorageManager
 import tachiyomi.i18n.*
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 import java.io.IOException
 import java.io.InputStream
 
 internal class AnimeDownloadProvider(
     private val context: Context,
-    private val storageManager: StorageManager = Injekt.get(),
-    private val libraryPreferences: GlobalLibraryPreferences = Injekt.get(),
-    private val json: Json = Injekt.get(),
+    private val storageManager: StorageManager,
+    private val libraryPreferences: GlobalLibraryPreferences,
+    private val json: Json,
 ) {
 
     private val downloadsDir: UniFile?

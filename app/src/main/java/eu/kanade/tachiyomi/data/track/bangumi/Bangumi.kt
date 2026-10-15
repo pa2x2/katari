@@ -5,22 +5,22 @@ import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.database.models.Track
 import eu.kanade.tachiyomi.data.track.BaseTracker
 import eu.kanade.tachiyomi.data.track.ExternalLoginTracker
+import eu.kanade.tachiyomi.data.track.TrackerDependencies
 import eu.kanade.tachiyomi.data.track.bangumi.dto.BGMOAuth
 import eu.kanade.tachiyomi.data.track.model.TrackSearch
-import kotlinx.serialization.json.Json
 import tachiyomi.i18n.*
-import uy.kohesive.injekt.injectLazy
 import tachiyomi.domain.track.model.EntryTrack as DomainTrack
 
-class Bangumi(id: Long) : BaseTracker(id, "Bangumi"), ExternalLoginTracker {
+class Bangumi(
+    id: Long,
+    dependencies: TrackerDependencies,
+) : BaseTracker(id, "Bangumi", dependencies), ExternalLoginTracker {
 
     override val accountOrder = 6
 
-    private val json: Json by injectLazy()
+    private val interceptor by lazy { BangumiInterceptor(this, json) }
 
-    private val interceptor by lazy { BangumiInterceptor(this) }
-
-    private val api by lazy { BangumiApi(id, client, interceptor) }
+    private val api by lazy { BangumiApi(id, client, interceptor, json) }
 
     override val supportsPrivateTracking: Boolean = true
 

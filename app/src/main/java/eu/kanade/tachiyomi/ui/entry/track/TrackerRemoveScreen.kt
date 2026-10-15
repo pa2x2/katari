@@ -7,11 +7,19 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.Assisted
+import dev.zacsweers.metro.AssistedFactory
+import dev.zacsweers.metro.AssistedInject
+import dev.zacsweers.metro.ContributesIntoMap
+import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
+import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
+import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 import eu.kanade.presentation.track.TrackRemovalConfirmation
 import eu.kanade.presentation.util.Screen
+import mihon.app.di.AppUiScope
 import mihon.entry.interactions.tracking.EntryTrackingFeature
 import mihon.entry.interactions.tracking.EntryTrackingServiceDescriptor
 import mihon.presentation.kit.list.CheckRow
@@ -19,8 +27,6 @@ import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
 internal data class TrackerRemoveScreen(
     private val entry: Entry,
@@ -30,7 +36,7 @@ internal data class TrackerRemoveScreen(
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val viewModel = viewModel { Model(entry, service) }
+        val viewModel = assistedMetroViewModel<Model, Model.Factory> { create(entry, service) }
         var removeRemoteTrack by remember { mutableStateOf(false) }
         TrackRemovalConfirmation(
             title = stringResource(MR.strings.track_delete_title, service.name),
@@ -55,11 +61,19 @@ internal data class TrackerRemoveScreen(
         )
     }
 
-    private class Model(
-        private val entry: Entry,
-        private val service: EntryTrackingServiceDescriptor,
-        private val trackingFeature: EntryTrackingFeature = Injekt.get(),
+    @AssistedInject
+    class Model(
+        @Assisted private val entry: Entry,
+        @Assisted private val service: EntryTrackingServiceDescriptor,
+        private val trackingFeature: EntryTrackingFeature,
     ) : ViewModel() {
+
+        @AssistedFactory
+        @ManualViewModelAssistedFactoryKey
+        @ContributesIntoMap(AppUiScope::class)
+        interface Factory : ManualViewModelAssistedFactory {
+            fun create(entry: Entry, service: EntryTrackingServiceDescriptor): Model
+        }
 
         fun remove(removeRemote: Boolean) {
             viewModelScope.launchNonCancellable {

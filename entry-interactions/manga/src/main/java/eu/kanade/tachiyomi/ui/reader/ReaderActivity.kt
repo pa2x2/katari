@@ -43,6 +43,7 @@ import androidx.lifecycle.lifecycleScope
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView
 import com.google.android.material.transition.platform.MaterialContainerTransform
 import com.hippo.unifile.UniFile
+import dev.zacsweers.metrox.viewmodel.ViewModelGraph
 import eu.kanade.presentation.reader.DisplayRefreshHost
 import eu.kanade.presentation.reader.OrientationSelectDialog
 import eu.kanade.presentation.reader.ReaderChapterNavigationSheet
@@ -82,6 +83,7 @@ import kotlinx.coroutines.flow.sample
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import logcat.LogPriority
+import mihon.core.metro.metroGraph
 import mihon.entry.interactions.manga.R
 import mihon.entry.interactions.manga.databinding.ReaderActivityBinding
 import mihon.entry.interactions.manga.reader.settings.MangaReaderSettingsBindings
@@ -89,10 +91,10 @@ import mihon.entry.interactions.manga.reader.text.interaction.MangaReaderTextInt
 import mihon.entry.interactions.manga.reader.text.session.MangaTextProcessAheadPolicy
 import mihon.entry.interactions.manga.reader.text.ui.MangaReaderTextLayer
 import mihon.entry.interactions.reader.settings.MangaReaderSettings
-import mihon.entry.interactions.reader.settings.ReaderBasePreferences
 import mihon.entry.interactions.reader.settings.ReaderOrientation
 import mihon.entry.interactions.reader.settings.ReadingMode
 import mihon.entry.interactions.runtime.EntryInteractionActivity
+import mihon.entry.interactions.runtime.EntryInteractionActivityGraph
 import mihon.entry.interactions.source.EntryChildWebViewAction
 import mihon.entry.interactions.source.EntryChildWebViewResolution
 import mihon.entry.interactions.source.launchEntryChildWebViewAction
@@ -114,8 +116,6 @@ import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.util.collectAsState
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 import java.io.ByteArrayOutputStream
 import kotlin.time.Duration.Companion.seconds
 
@@ -137,11 +137,13 @@ class ReaderActivity : EntryInteractionActivity() {
         }
     }
 
-    private val preferences = Injekt.get<ReaderBasePreferences>()
+    private val preferences by lazy { metroGraph<EntryInteractionActivityGraph>().readerBasePreferences }
+
+    internal val uiPreferences by lazy { metroGraph<MangaReaderGraph>().uiPreferences }
 
     lateinit var binding: ReaderActivityBinding
 
-    internal val viewModel by viewModels<ReaderViewModel>()
+    internal val viewModel by viewModels<ReaderViewModel> { metroGraph<ViewModelGraph>().metroViewModelFactory }
     private var chapterWebView by mutableStateOf<EntryChildWebViewResolution.Available?>(null)
 
     /** Settings for the opened entry; available once the entry is loaded. */
@@ -198,7 +200,8 @@ class ReaderActivity : EntryInteractionActivity() {
      * Called when the activity is created. Initializes the presenter and configuration.
      */
     override fun onCreate(savedInstanceState: Bundle?) {
-        registerReaderSecureScreen()
+        val activityGraph = metroGraph<EntryInteractionActivityGraph>()
+        registerReaderSecureScreen(activityGraph.readerBasePreferences, activityGraph.securityPreferences)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             overrideActivityTransition(
                 OVERRIDE_TRANSITION_OPEN,
@@ -585,7 +588,7 @@ class ReaderActivity : EntryInteractionActivity() {
 
     @Composable
     internal fun AppBars(state: ReaderViewModel.State, menuBounds: ReaderMenuBounds) {
-        if (!ifSourcesLoaded()) {
+        if (!viewModel.sourcesInitialized.collectAsState().value) {
             return
         }
         val settings = viewModel.settingsBindings.collectAsState().value ?: return

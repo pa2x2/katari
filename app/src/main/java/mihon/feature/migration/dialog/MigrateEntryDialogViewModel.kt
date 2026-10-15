@@ -1,10 +1,15 @@
 package mihon.feature.migration.dialog
 
 import androidx.lifecycle.ViewModel
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.ContributesIntoMap
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metrox.viewmodel.ViewModelKey
 import eu.kanade.domain.source.service.SourcePreferences
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
+import mihon.app.di.AppUiScope
 import mihon.entry.interactions.migration.EntryMigrationExecuteIntent
 import mihon.entry.interactions.migration.EntryMigrationExecutionResult
 import mihon.entry.interactions.migration.EntryMigrationFeature
@@ -16,12 +21,13 @@ import mihon.entry.interactions.migration.EntryMigrationReference
 import mihon.feature.migration.options.toEntryMigrationOptions
 import mihon.feature.migration.options.toMigrationFlags
 import tachiyomi.domain.entry.model.Entry
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
+@Inject
+@ViewModelKey
+@ContributesIntoMap(AppUiScope::class)
 internal class MigrateEntryDialogViewModel(
-    private val sourcePreference: SourcePreferences = Injekt.get(),
-    private val migration: EntryMigrationFeature = Injekt.get(),
+    private val sourcePreference: SourcePreferences,
+    private val migration: EntryMigrationFeature,
 ) : ViewModel() {
 
     val state: StateFlow<MigrateEntryDialogViewModel.State>

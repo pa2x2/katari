@@ -1,6 +1,5 @@
 package mihon.entry.interactions.book.download
 
-import android.content.Context
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -87,10 +86,6 @@ class BookDownloadManagerTest {
         downloader: BookDownloader,
         workController: EntryDownloadWorkController = mockk(relaxed = true),
     ): BookDownloadManager {
-        val appContext = mockk<Context>(relaxed = true)
-        val context = mockk<Context> {
-            every { applicationContext } returns appContext
-        }
         val cache = mockk<BookDownloadCache> {
             coEvery { ensureInitialized() } returns Unit
             every { isDownloaded(any()) } returns false
@@ -100,7 +95,6 @@ class BookDownloadManagerTest {
             coEvery { restore() } returns emptyList()
         }
         return BookDownloadManager(
-            context = context,
             cache = cache,
             provider = mockk(relaxed = true),
             downloader = downloader,

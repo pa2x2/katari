@@ -8,13 +8,12 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import mihon.entry.interactions.reader.settings.ReaderBasePreferences
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
 /** Applies the app's secure-screen policy to a reader or player owned by an entry interaction. */
-fun AppCompatActivity.registerEntryInteractionSecureScreen() {
-    val readerPreferences = Injekt.get<ReaderBasePreferences>()
-    val securityPreferences = Injekt.get<SecurityPreferences>()
+fun AppCompatActivity.registerEntryInteractionSecureScreen(
+    readerPreferences: ReaderBasePreferences,
+    securityPreferences: SecurityPreferences,
+) {
     combine(
         securityPreferences.secureScreen.changes(),
         readerPreferences.incognitoMode.changes(),

@@ -31,7 +31,6 @@ import okio.source
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryCover
-import uy.kohesive.injekt.injectLazy
 import java.io.File
 import java.io.IOException
 
@@ -321,20 +320,19 @@ class EntryCoverFetcher(
 
     class EntryFactory(
         private val callFactoryLazy: Lazy<Call.Factory>,
+        private val coverCacheLazy: Lazy<CoverCache>,
+        private val coverNetworkFeatureLazy: Lazy<EntryCoverNetworkFeature>,
     ) : Fetcher.Factory<Entry> {
-
-        private val coverCache: CoverCache by injectLazy()
-        private val coverNetworkFeature: EntryCoverNetworkFeature by injectLazy()
 
         override fun create(data: Entry, options: Options, imageLoader: ImageLoader): Fetcher {
             return EntryCoverFetcher(
                 url = data.thumbnailUrl,
                 isLibraryEntry = data.favorite,
                 options = options,
-                coverFileLazy = lazy { coverCache.getCoverFile(data.thumbnailUrl) },
-                customCoverFileLazy = lazy { coverCache.getCustomCoverFile(data.id) },
+                coverFileLazy = lazy { coverCacheLazy.value.getCoverFile(data.thumbnailUrl) },
+                customCoverFileLazy = lazy { coverCacheLazy.value.getCustomCoverFile(data.id) },
                 diskCacheKeyLazy = lazy { imageLoader.components.key(data, options)!! },
-                sourceNetworkResolutionLazy = lazy { coverNetworkFeature.resolve(data.source) },
+                sourceNetworkResolutionLazy = lazy { coverNetworkFeatureLazy.value.resolve(data.source) },
                 callFactoryLazy = callFactoryLazy,
                 imageLoader = imageLoader,
             )
@@ -343,20 +341,19 @@ class EntryCoverFetcher(
 
     class EntryCoverFactory(
         private val callFactoryLazy: Lazy<Call.Factory>,
+        private val coverCacheLazy: Lazy<CoverCache>,
+        private val coverNetworkFeatureLazy: Lazy<EntryCoverNetworkFeature>,
     ) : Fetcher.Factory<EntryCover> {
-
-        private val coverCache: CoverCache by injectLazy()
-        private val coverNetworkFeature: EntryCoverNetworkFeature by injectLazy()
 
         override fun create(data: EntryCover, options: Options, imageLoader: ImageLoader): Fetcher {
             return EntryCoverFetcher(
                 url = data.url,
                 isLibraryEntry = data.isFavorite,
                 options = options,
-                coverFileLazy = lazy { coverCache.getCoverFile(data.url) },
-                customCoverFileLazy = lazy { coverCache.getCustomCoverFile(data.entryId) },
+                coverFileLazy = lazy { coverCacheLazy.value.getCoverFile(data.url) },
+                customCoverFileLazy = lazy { coverCacheLazy.value.getCustomCoverFile(data.entryId) },
                 diskCacheKeyLazy = lazy { imageLoader.components.key(data, options)!! },
-                sourceNetworkResolutionLazy = lazy { coverNetworkFeature.resolve(data.sourceId) },
+                sourceNetworkResolutionLazy = lazy { coverNetworkFeatureLazy.value.resolve(data.sourceId) },
                 callFactoryLazy = callFactoryLazy,
                 imageLoader = imageLoader,
             )

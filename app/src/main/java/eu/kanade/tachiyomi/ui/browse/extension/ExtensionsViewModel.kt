@@ -3,6 +3,10 @@ package eu.kanade.tachiyomi.ui.browse.extension
 import android.app.Application
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.ContributesIntoMap
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metrox.viewmodel.ViewModelKey
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.domain.extension.interactor.GetExtensionLanguages
 import eu.kanade.domain.extension.interactor.GetExtensionsByType
@@ -31,31 +35,32 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import logcat.LogPriority
+import mihon.app.di.AppUiScope
+import mihon.entry.interactions.catalogue.EntryCatalogueFeature
 import mihon.entry.interactions.source.EntrySourceHomeFeature
 import mihon.entry.interactions.source.EntrySourceHomeResolution
 import tachiyomi.core.common.preference.getAndSet
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.i18n.*
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 import kotlin.time.Duration.Companion.seconds
 
+@Inject
+@ViewModelKey
+@ContributesIntoMap(AppUiScope::class)
 class ExtensionsViewModel(
-    basePreferences: BasePreferences = Injekt.get(),
-    private val extensionManager: ExtensionManager = Injekt.get(),
-    private val getExtensions: GetExtensionsByType = Injekt.get(),
-    private val preferences: SourcePreferences = Injekt.get(),
-    private val getExtensionLanguages: GetExtensionLanguages = Injekt.get(),
-    private val toggleLanguage: ToggleLanguage = Injekt.get(),
-    private val sourceHomeFeature: EntrySourceHomeFeature = Injekt.get(),
-    private val contentTypeFilterController: BrowseContentTypeFilterController =
-        BrowseContentTypeFilterController(preferences),
-    private val storeFilterController: ExtensionStoreFilterController =
-        ExtensionStoreFilterController(preferences),
+    basePreferences: BasePreferences,
+    private val context: Application,
+    private val extensionManager: ExtensionManager,
+    private val getExtensions: GetExtensionsByType,
+    private val preferences: SourcePreferences,
+    private val getExtensionLanguages: GetExtensionLanguages,
+    private val toggleLanguage: ToggleLanguage,
+    private val sourceHomeFeature: EntrySourceHomeFeature,
+    private val catalogueFeature: EntryCatalogueFeature,
+    private val contentTypeFilterController: BrowseContentTypeFilterController,
+    private val storeFilterController: ExtensionStoreFilterController,
 ) : ViewModel() {
-
-    private val context = Injekt.get<Application>()
 
     private val _searchQuery = MutableStateFlow<String?>(null)
 
@@ -104,7 +109,7 @@ class ExtensionsViewModel(
     ) { searchPredicate, contentTypeFilter, storeFilter, downloads, extensions ->
         val (_updates, _loaded, _available, _notLoaded) = extensions
         val predicate: (Extension) -> Boolean = {
-            searchPredicate(it) && contentTypeFilter.matches(it) && storeFilter.matches(it)
+            searchPredicate(it) && contentTypeFilter.matches(it, catalogueFeature) && storeFilter.matches(it)
         }
         buildMap {
             val updates = _updates.filter(predicate).map(extensionMapper(downloads))

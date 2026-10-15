@@ -49,9 +49,6 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.NavigatorDisposeBehavior
 import cafe.adriel.voyager.navigator.currentOrThrow
-import eu.kanade.domain.base.BasePreferences
-import eu.kanade.domain.source.interactor.GetIncognitoState
-import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.domain.ui.model.setAppCompatDelegateThemeMode
 import eu.kanade.presentation.components.AppStateBanners
 import eu.kanade.presentation.components.DownloadedOnlyBannerBackgroundColor
@@ -62,10 +59,8 @@ import eu.kanade.presentation.more.settings.screen.browse.ExtensionStoresScreen
 import eu.kanade.presentation.more.settings.screen.data.RestoreBackupScreen
 import eu.kanade.presentation.util.AssistContentScreen
 import eu.kanade.presentation.util.DefaultNavigatorScreenTransition
-import eu.kanade.tachiyomi.core.security.SecurityPreferences
 import eu.kanade.tachiyomi.data.library.LibraryUpdateJob
 import eu.kanade.tachiyomi.data.notification.NotificationReceiver
-import eu.kanade.tachiyomi.extension.ExtensionManager
 import eu.kanade.tachiyomi.ui.base.activity.BaseActivity
 import eu.kanade.tachiyomi.ui.base.delegate.SecureActivityDelegate
 import eu.kanade.tachiyomi.ui.base.delegate.requestAppUnlock
@@ -100,18 +95,14 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import logcat.LogPriority
-import mihon.entry.interactions.download.EntryDownloadRuntimeFeature
+import mihon.app.di.appGraph
 import mihon.entry.interactions.media.EntryMediaCacheClearResult
-import mihon.entry.interactions.media.EntryMediaCacheFeature
-import mihon.entry.interactions.merge.EntryMergeNavigationFeature
 import mihon.entry.viewer.settings.navigation.ViewerSettingsNavigation
 import mihon.feature.appupdate.ui.AppUpdatePrompt
 import mihon.feature.migration.review.SourceMigrationReviewScreen
-import mihon.feature.migration.session.SourceMigrationSessionStore
 import mihon.feature.migration.session.model.SourceMigrationSessionId
 import mihon.feature.migration.work.SourceMigrationNotifier
 import mihon.feature.profiles.core.Profile
-import mihon.feature.profiles.core.ProfileManager
 import mihon.presentation.kit.navigation.Scaffold
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.translation.api.host.TranslationSettingsNavigation
@@ -119,27 +110,25 @@ import tachiyomi.core.common.Constants
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.system.logcat
-import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
-import uy.kohesive.injekt.injectLazy
 
 class MainActivity : BaseActivity() {
 
-    private val libraryPreferences: LibraryPreferences by injectLazy()
-    private val preferences: BasePreferences by injectLazy()
-    private val uiPreferences: UiPreferences by injectLazy()
-    private val securityPreferences: SecurityPreferences by injectLazy()
-    private val profileManager: ProfileManager by injectLazy()
-    private val sourceMigrationSessionStore: SourceMigrationSessionStore by injectLazy()
+    private val libraryPreferences by lazy { appGraph.libraryPreferences }
+    private val preferences by lazy { appGraph.basePreferences }
+    private val uiPreferences by lazy { appGraph.uiPreferences }
+    private val securityPreferences by lazy { appGraph.securityPreferences }
+    private val profileManager by lazy { appGraph.profileManager }
+    private val sourceMigrationSessionStore by lazy { appGraph.sourceMigrationSessionStore }
 
-    private val downloadRuntime: EntryDownloadRuntimeFeature by injectLazy()
-    private val mediaCacheFeature: EntryMediaCacheFeature by injectLazy()
-    private val entryMergeNavigationFeature: EntryMergeNavigationFeature by injectLazy()
-    private val extensionManager: ExtensionManager by injectLazy()
+    private val downloadRuntime by lazy { appGraph.entryDownloadRuntimeFeature }
+    private val mediaCacheFeature by lazy { appGraph.entryMediaCacheFeature }
+    private val entryMergeNavigationFeature by lazy { appGraph.entryMergeNavigationFeature }
+    private val extensionManager by lazy { appGraph.extensionManager }
 
-    private val getIncognitoState: GetIncognitoState by injectLazy()
+    private val getIncognitoState by lazy { appGraph.getIncognitoState }
 
     // To be checked by splash screen. If true then splash screen will be removed.
     var ready = false

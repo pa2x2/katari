@@ -65,6 +65,7 @@ import eu.kanade.tachiyomi.ui.entry.EntryViewModel
 import eu.kanade.tachiyomi.ui.entry.activity.EntryActivityViewModel
 import eu.kanade.tachiyomi.ui.entry.entrySelectionActionLabels
 import eu.kanade.tachiyomi.util.system.copyToClipboard
+import mihon.app.di.appGraph
 import mihon.entry.interactions.child.EntryChildProgressLabel
 import mihon.entry.interactions.download.EntryDownloadState
 import mihon.entry.interactions.translate.EntryTranslateStatus
@@ -871,9 +872,14 @@ private fun SharedEntryBottomActionMenu(
     fillFraction: Float,
     modifier: Modifier = Modifier,
 ) {
+    val presentationFeature = LocalContext.current.appGraph.entryTypePresentationFeature
     val selectionTypes = remember(selected) { selected.fastMap { it.entry.type } }
-    val selectionPresentation = remember(selectionTypes) { selectionTypes.selectionEntryTypePresentation() }
-    val selectionActionLabels = remember(selectionTypes) { selectionTypes.entrySelectionActionLabels() }
+    val selectionPresentation = remember(selectionTypes) {
+        selectionTypes.selectionEntryTypePresentation(presentationFeature)
+    }
+    val selectionActionLabels = remember(selectionTypes) {
+        selectionTypes.entrySelectionActionLabels(presentationFeature)
+    }
     EntryBottomActionMenu(
         visible = selected.isNotEmpty(),
         modifier = modifier.fillMaxWidth(fillFraction),

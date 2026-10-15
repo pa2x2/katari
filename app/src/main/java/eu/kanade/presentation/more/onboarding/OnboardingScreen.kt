@@ -11,6 +11,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import mihon.app.di.appGraph
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.RocketLaunch
 import mihon.presentation.kit.feedback.InfoScreen
@@ -32,12 +34,14 @@ fun OnboardingScreen(
 ) {
     val slideDistance = rememberSlideDistance()
 
+    val context = LocalContext.current
     var currentStep by rememberSaveable { mutableIntStateOf(0) }
     val steps = remember(showMihonMigration, onRestoreBackup, onOpenMihon, onMigrateFromMihon) {
+        val graph = context.appGraph
         listOf(
-            ThemeStep(),
-            StorageStep(migratingFromMihon = showMihonMigration),
-            PermissionStep(),
+            ThemeStep(graph.uiPreferences),
+            StorageStep(graph.storagePreferences, migratingFromMihon = showMihonMigration),
+            PermissionStep(graph.privacyPreferences),
             GuidesStep(
                 onRestoreBackup = onRestoreBackup,
                 showMihonMigration = showMihonMigration,

@@ -7,10 +7,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.more.settings.Preference
-import mihon.feature.profiles.core.ProfilesPreferences
+import mihon.app.di.appGraph
 import mihon.feature.profiles.ui.ProfilesSettingsScreen
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Info
@@ -20,8 +21,6 @@ import mihon.presentation.kit.dialog.Dialog
 import mihon.presentation.kit.dialog.DialogAction
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
 object SettingsProfilesScreen : SearchableSettings {
 
@@ -31,8 +30,9 @@ object SettingsProfilesScreen : SearchableSettings {
 
     @Composable
     override fun getPreferences(): List<Preference> {
+        val context = LocalContext.current
         val navigator = LocalNavigator.currentOrThrow
-        val profilesPreferences = remember { Injekt.get<ProfilesPreferences>() }
+        val profilesPreferences = remember { context.appGraph.profilesPreferences }
         var showProfilesInfo by rememberSaveable { mutableStateOf(false) }
 
         if (showProfilesInfo) {

@@ -3,11 +3,14 @@ package eu.kanade.presentation.browse.components
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.extension.model.InstallStep
 import eu.kanade.tachiyomi.ui.browse.extension.supportedEntryTypesForDisplay
+import mihon.app.di.appGraph
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Close
 import mihon.icons.materialsymbols.rounded.Download
@@ -32,13 +35,15 @@ internal fun ExtensionItemActions(
     onClickItemSecondaryAction: (Extension) -> Unit = {},
 ) {
     val isIdle = installStep.isCompleted()
+    val context = LocalContext.current
+    val catalogue = remember { context.appGraph.entryCatalogueFeature }
 
     Row(
         modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        SourceEntryTypeIndicators(extension.supportedEntryTypesForDisplay())
+        SourceEntryTypeIndicators(extension.supportedEntryTypesForDisplay(catalogue))
         when {
             !isIdle -> {
                 IconButton(

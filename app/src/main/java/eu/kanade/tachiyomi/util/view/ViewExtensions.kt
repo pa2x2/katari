@@ -18,6 +18,8 @@ import androidx.compose.runtime.CompositionContext
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
+import dev.zacsweers.metrox.viewmodel.LocalMetroViewModelFactory
+import mihon.app.di.appGraph
 import mihon.presentation.kit.content.ProvideTextRole
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.LocalContentColor
@@ -29,7 +31,10 @@ inline fun ComponentActivity.setComposeContent(
 ) {
     setContent(parent) {
         KatariTheme {
-            CompositionLocalProvider(LocalContentColor provides KatariTheme.colors.onBackground) {
+            CompositionLocalProvider(
+                LocalContentColor provides KatariTheme.colors.onBackground,
+                LocalMetroViewModelFactory provides appGraph.viewModelFactory,
+            ) {
                 ProvideTextRole(TextRole.Supporting) { content() }
             }
         }
@@ -42,7 +47,10 @@ fun ComposeView.setComposeContent(
     setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
     setContent {
         KatariTheme {
-            CompositionLocalProvider(LocalContentColor provides KatariTheme.colors.onBackground) {
+            CompositionLocalProvider(
+                LocalContentColor provides KatariTheme.colors.onBackground,
+                LocalMetroViewModelFactory provides context.appGraph.viewModelFactory,
+            ) {
                 ProvideTextRole(TextRole.Supporting) { content() }
             }
         }

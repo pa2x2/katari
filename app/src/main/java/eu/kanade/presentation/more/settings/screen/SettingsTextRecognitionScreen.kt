@@ -64,4 +64,4 @@ object SettingsTextRecognitionScreen : SearchableSettings {
 
 @Composable
 internal fun rememberTextRecognitionSettingsViewModel(): TextRecognitionSettingsViewModel =
-    SettingsTextRecognitionScreen.rememberScreenViewModel { TextRecognitionSettingsViewModel() }
+    SettingsTextRecognitionScreen.rememberScreenViewModel<TextRecognitionSettingsViewModel>()

@@ -16,20 +16,19 @@ import mihon.presentation.kit.menu.DropdownMenuItem
 import mihon.presentation.kit.sheet.TabbedSheet
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
 /**
  * Common in-reader settings host. Reset is part of this host so a reader cannot add a settings surface without also
  * defining how it returns to its defaults.
  *
- * Applicable shared settings are projected from [ReaderSharedSettingsRegistry] so a reader cannot omit them,
+ * Applicable shared settings are projected from [sharedSettingsRegistry] so a reader cannot omit them,
  * while processor-owned pages are contributed by the caller in [content]. [sharedSettingDetails] adds what the open
  * entry shows with a shared setting, and [snackbarHostState] shows messages about changes made while the dialog covers
  * the reader. Reset clears processor and shared entry overrides so an in-reader reset only drops this entry's overrides.
  */
 @Composable
 fun ReaderSettingsDialogHost(
+    sharedSettingsRegistry: ReaderSharedSettingsRegistry,
     settingsSurfaceId: String,
     capabilities: Set<ReaderCapabilityId>,
     sharedSettingBindings: Map<ReaderSharedSettingId, ViewerSettingBinding<Boolean>>,
@@ -43,9 +42,8 @@ fun ReaderSettingsDialogHost(
     snackbarHostState: SnackbarHostState? = null,
     content: @Composable ColumnScope.(processorPage: Int) -> Unit,
 ) {
-    val registry = remember { Injekt.get<ReaderSharedSettingsRegistry>() }
-    val sharedSettings = remember(registry, capabilities, settingsSurfaceId) {
-        registry.settingsFor(capabilities, settingsSurfaceId)
+    val sharedSettings = remember(sharedSettingsRegistry, capabilities, settingsSurfaceId) {
+        sharedSettingsRegistry.settingsFor(capabilities, settingsSurfaceId)
     }
     val processorTabOffset = if (sharedSettings.isEmpty()) 0 else 1
     val tabTitles = if (processorTabOffset == 0) {

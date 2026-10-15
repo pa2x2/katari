@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.data.backup.create.creators
 
+import dev.zacsweers.metro.Inject
 import eu.kanade.tachiyomi.data.backup.models.BackupPreference
 import eu.kanade.tachiyomi.data.backup.models.BackupSourcePreferences
 import eu.kanade.tachiyomi.data.backup.models.BooleanPreferenceValue
@@ -14,13 +15,12 @@ import mihon.feature.profiles.core.ProfileAwarePreferenceStore
 import mihon.feature.profiles.core.ProfileStore
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.PreferenceStore
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
+@Inject
 class PreferenceBackupCreator(
-    private val sourceSettingsFeature: EntrySourceSettingsFeature = Injekt.get(),
-    private val preferenceStore: PreferenceStore = Injekt.get(),
-    private val profileStore: ProfileStore = Injekt.get(),
+    private val sourceSettingsFeature: EntrySourceSettingsFeature,
+    private val preferenceStore: PreferenceStore,
+    private val profileStore: ProfileStore,
 ) {
 
     fun createApp(includePrivatePreferences: Boolean): List<BackupPreference> {

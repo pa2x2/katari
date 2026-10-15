@@ -1,10 +1,13 @@
 package mihon.entry.interactions.anime.media
 
 import android.content.Context
+import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
+import eu.kanade.tachiyomi.ui.video.player.AnimePlayerBasePreferences
 import eu.kanade.tachiyomi.ui.video.player.ResolveVideoStream
 import eu.kanade.tachiyomi.ui.video.player.VideoPlaybackSession
+import eu.kanade.tachiyomi.ui.video.player.VideoPlayerMediaCache
 import eu.kanade.tachiyomi.ui.video.player.VideoStreamResolver
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -25,6 +28,9 @@ internal class AnimeImmersiveProcessor(
     private val entryProgressRepository: EntryProgressRepository,
     private val resolveVideoStream: () -> VideoStreamResolver,
     private val mediaSession: EntryMediaSessionProcessor,
+    private val networkHelper: () -> NetworkHelper,
+    private val mediaCache: () -> VideoPlayerMediaCache,
+    private val basePreferences: () -> AnimePlayerBasePreferences,
 ) : EntryImmersiveProcessor {
     override val type: EntryType = EntryType.ANIME
     override val loadMode = EntryImmersiveLoadMode.FIRST_READING_CHILD
@@ -66,7 +72,7 @@ internal class AnimeImmersiveProcessor(
     override fun renderer(handle: EntryImmersiveHandle): EntryImmersiveRenderer {
         val playback = handle as? EntryImmersiveHandle.Playback
             ?: error("Anime immersive feed received non-playback media")
-        return AnimeImmersiveRenderer(playback)
+        return AnimeImmersiveRenderer(playback, networkHelper, mediaCache, basePreferences)
     }
 
     override suspend fun persistProgress(

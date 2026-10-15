@@ -36,11 +36,12 @@ import mihon.entry.interactions.media.EntryImmersiveProgress
 import mihon.entry.interactions.media.EntryImmersiveRenderer
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
 internal class AnimeImmersiveRenderer(
     private val handle: EntryImmersiveHandle.Playback,
+    private val networkHelperProvider: () -> NetworkHelper,
+    private val mediaCacheProvider: () -> VideoPlayerMediaCache,
+    private val basePreferencesProvider: () -> AnimePlayerBasePreferences,
 ) : EntryImmersiveRenderer {
 
     @OptIn(UnstableApi::class)
@@ -55,9 +56,9 @@ internal class AnimeImmersiveRenderer(
         onProgress: (EntryImmersiveProgress) -> Unit,
     ) {
         val context = LocalContext.current
-        val networkHelper = remember { Injekt.get<NetworkHelper>() }
-        val mediaCache = remember { Injekt.get<VideoPlayerMediaCache>() }
-        val preferences = remember { Injekt.get<AnimePlayerBasePreferences>() }
+        val networkHelper = remember { networkHelperProvider() }
+        val mediaCache = remember { mediaCacheProvider() }
+        val preferences = remember { basePreferencesProvider() }
         val unknownError = stringResource(MR.strings.unknown_error)
         var playerErrorMessage by remember(handle.chapterId, handle.stream.request.url) {
             mutableStateOf<String?>(null)

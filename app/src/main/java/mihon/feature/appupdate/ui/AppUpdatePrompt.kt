@@ -10,12 +10,9 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
-import eu.kanade.domain.base.BasePreferences
 import kotlinx.coroutines.flow.first
+import mihon.app.di.appGraph
 import mihon.feature.appupdate.AppUpdateBuild
-import mihon.feature.appupdate.AppUpdateController
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
 /**
  * Hosts the update prompt in MainActivity and starts the automatic checks once onboarding is done, so a found update
@@ -24,9 +21,9 @@ import uy.kohesive.injekt.api.get
 @Composable
 fun AppUpdatePrompt() {
     if (!AppUpdateBuild.isSupported) return
-    val controller = remember { Injekt.get<AppUpdateController>() }
-    val basePreferences = remember { Injekt.get<BasePreferences>() }
     val context = LocalContext.current
+    val controller = remember { context.appGraph.appUpdateServices.controller }
+    val basePreferences = remember { context.appGraph.basePreferences }
     val uriHandler = LocalUriHandler.current
     val lifecycleOwner = LocalLifecycleOwner.current
 

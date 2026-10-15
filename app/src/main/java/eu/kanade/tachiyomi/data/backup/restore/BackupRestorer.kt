@@ -2,6 +2,9 @@ package eu.kanade.tachiyomi.data.backup.restore
 
 import android.content.Context
 import android.net.Uri
+import dev.zacsweers.metro.Assisted
+import dev.zacsweers.metro.AssistedFactory
+import dev.zacsweers.metro.AssistedInject
 import eu.kanade.tachiyomi.core.security.SecurityPreferences
 import eu.kanade.tachiyomi.data.backup.BackupDecoder
 import eu.kanade.tachiyomi.data.backup.BackupNotifier
@@ -39,8 +42,6 @@ import tachiyomi.core.common.util.system.logcat
 import tachiyomi.data.Database
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.i18n.*
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -51,23 +52,28 @@ import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.concurrent.atomics.incrementAndFetch
 
 @OptIn(ExperimentalAtomicApi::class)
+@AssistedInject
 class BackupRestorer(
+    @Assisted private val notifier: BackupNotifier,
+    @Assisted private val isSync: Boolean,
     private val context: Context,
-    private val notifier: BackupNotifier,
-    private val isSync: Boolean,
-
-    private val database: Database = Injekt.get(),
-    private val categoriesRestorer: CategoriesRestorer = CategoriesRestorer(),
-    private val preferenceRestorer: PreferenceRestorer = PreferenceRestorer(context),
-    private val extensionStoreRestorer: ExtensionStoreRestorer = ExtensionStoreRestorer(),
-    private val entryRestorer: EntryRestorer = EntryRestorer(),
-    private val sourceNamesRestorer: SourceNamesRestorer = SourceNamesRestorer(),
-    private val profileDatabase: ProfileDatabase = Injekt.get(),
-    private val profileManager: ProfileManager = Injekt.get(),
-    private val profileStore: ProfileStore = Injekt.get(),
-    private val libraryPreferences: LibraryPreferences = Injekt.get(),
-    private val downloadMaintenance: EntryDownloadMaintenanceFeature = Injekt.get(),
+    private val database: Database,
+    private val backupDecoder: BackupDecoder,
+    private val categoriesRestorer: CategoriesRestorer,
+    private val preferenceRestorer: PreferenceRestorer,
+    private val extensionStoreRestorer: ExtensionStoreRestorer,
+    private val entryRestorer: EntryRestorer,
+    private val sourceNamesRestorer: SourceNamesRestorer,
+    private val profileDatabase: ProfileDatabase,
+    private val profileManager: ProfileManager,
+    private val profileStore: ProfileStore,
+    private val libraryPreferences: LibraryPreferences,
+    private val downloadMaintenance: EntryDownloadMaintenanceFeature,
 ) {
+    @AssistedFactory
+    fun interface Factory {
+        fun create(notifier: BackupNotifier, isSync: Boolean): BackupRestorer
+    }
 
     private var restoreAmount = 0
     private val restoreProgress = AtomicInt(0)
@@ -109,7 +115,7 @@ class BackupRestorer(
     }
 
     private suspend fun restoreFromFile(uri: Uri, options: RestoreOptions) {
-        val backup = BackupDecoder(context).decode(uri)
+        val backup = backupDecoder.decode(uri)
 
         // Store source mapping for error messages
         val backupMaps = backup.backupSources

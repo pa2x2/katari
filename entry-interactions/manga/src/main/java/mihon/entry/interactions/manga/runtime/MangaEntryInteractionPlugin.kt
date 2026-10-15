@@ -1,6 +1,7 @@
 package mihon.entry.interactions.manga.runtime
 
 import eu.kanade.tachiyomi.source.entry.EntryType
+import eu.kanade.tachiyomi.ui.reader.loader.ReaderPageSessionLoader
 import mihon.entry.interactions.download.EntryBulkDownloadCandidateCapability
 import mihon.entry.interactions.download.EntryDownloadArchivePackagingCapability
 import mihon.entry.interactions.download.EntryDownloadCapability
@@ -27,10 +28,7 @@ import mihon.entry.interactions.manga.state.MangaConsumptionProcessor
 import mihon.entry.interactions.manga.state.MangaProgressProcessor
 import mihon.entry.interactions.manga.state.MangaTranslationLanguagesProvider
 import mihon.entry.interactions.manga.statistics.MangaEntryStatisticsProvider
-import mihon.entry.interactions.manga.translation.background.MangaChapterTranslationPreparer
-import mihon.entry.interactions.manga.translation.background.MangaChapterTranslator
 import mihon.entry.interactions.manga.translation.background.MangaEntryTranslateProcessor
-import mihon.entry.interactions.manga.translation.pages.MangaDownloadedChapterPages
 import mihon.entry.interactions.media.EntryMediaCacheCapability
 import mihon.entry.interactions.media.EntryMediaSessionCapability
 import mihon.entry.interactions.media.EntryMediaSessionProcessor
@@ -45,6 +43,7 @@ import mihon.entry.interactions.runtime.EntryImmersiveCapability
 import mihon.entry.interactions.runtime.EntryInteractionPlugin
 import mihon.entry.interactions.runtime.EntryMissingChildGapCapability
 import mihon.entry.interactions.runtime.EntryOutsideReleasePeriodFilterCapability
+import mihon.entry.interactions.runtime.EntryPageImageCache
 import mihon.entry.interactions.runtime.EntryPreviewCapability
 import mihon.entry.interactions.runtime.EntryPreviewConfigurationCapability
 import mihon.entry.interactions.runtime.EntryStatisticsCapability
@@ -58,18 +57,18 @@ import mihon.entry.interactions.state.EntryProgressCapability
 import mihon.entry.interactions.state.EntryTranslationLanguagesCapability
 import mihon.entry.interactions.translate.EntryTranslateCapability
 import mihon.feature.graph.ContributionOwner
-import mihon.translation.api.host.TranslationHostActions
 import tachiyomi.domain.download.service.DownloadPreferences
 import tachiyomi.domain.entry.interactor.GetEntryWithChapters
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.source.service.SourceManager
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
 internal fun mangaEntryInteractionPlugin(
     dependencies: MangaEntryInteractionRuntimeDependencies,
+    pageSessionLoader: Lazy<ReaderPageSessionLoader>,
+    translateProcessor: MangaEntryTranslateProcessor,
+    pageImageCache: () -> EntryPageImageCache,
     viewerSettingsProvider: EntryViewerSettingsProvider? = null,
 ): EntryInteractionPlugin {
     val openProcessor = MangaOpenProcessor()
@@ -92,21 +91,11 @@ internal fun mangaEntryInteractionPlugin(
     val libraryProgressProvider = MangaLibraryProgressProvider(dependencies.entryProgressRepository)
     val childGroupFilterProcessor = MangaChildGroupFilterProcessor
     val outsideReleasePeriodFilterProvider = MangaOutsideReleasePeriodFilterProvider()
-    val previewProcessor = MangaPreviewInteraction(dependencies.entryInteractionPreferences)
-    val translateProcessor = MangaEntryTranslateProcessor(
-        sourceManager = dependencies.sourceManager,
-        store = { Injekt.get() },
-        pages = { MangaDownloadedChapterPages(Injekt.get(), Injekt.get()) },
-        translator = { MangaChapterTranslator(Injekt.get(), Injekt.get()) },
-        preparer = {
-            MangaChapterTranslationPreparer(Injekt.get(), Injekt.get()) {
-                Injekt.get<TranslationHostActions>().defaultTarget()?.language
-            }
-        },
-    )
+    val previewProcessor = MangaPreviewInteraction(dependencies.entryInteractionPreferences, pageSessionLoader)
     val immersiveProcessor = MangaImmersiveProcessor(
         entryProgressRepository = dependencies.entryProgressRepository,
         mediaSession = dependencies.mediaSession,
+        loadPageSession = { context, entry, chapter -> pageSessionLoader.value.load(context, entry, chapter) },
     )
     return object : EntryInteractionPlugin {
         override val type = EntryType.MANGA
@@ -140,7 +129,7 @@ internal fun mangaEntryInteractionPlugin(
                     EntryMediaSessionCapability.bind(dependencies.mediaSession),
                     EntryTypePresentationCapability.bind(MangaEntryTypePresentationProvider),
                     EntryStatisticsCapability.bind(MangaEntryStatisticsProvider),
-                    EntryMediaCacheCapability.bind(MangaMediaCacheProvider { Injekt.get() }),
+                    EntryMediaCacheCapability.bind(MangaMediaCacheProvider(pageImageCache)),
                 ),
             )
             viewerSettingsProvider?.let { add(EntryViewerSettingsCapability.bind(it)) }

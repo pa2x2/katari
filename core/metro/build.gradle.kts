@@ -8,3 +8,7 @@ plugins {
 android {
     namespace = "mihon.core.metro"
 }
+
+dependencies {
+    api(libs.metrox.viewmodel)
+}

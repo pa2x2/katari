@@ -23,7 +23,6 @@ import coil3.util.DebugLogger
 import dev.mihon.injekt.patchInjekt
 import dev.zacsweers.metro.createGraphFactory
 import eu.kanade.domain.base.BasePreferences
-import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.domain.ui.model.setAppCompatDelegateThemeMode
 import eu.kanade.tachiyomi.core.security.PrivacyPreferences
 import eu.kanade.tachiyomi.crash.CrashActivity
@@ -38,8 +37,6 @@ import eu.kanade.tachiyomi.data.coil.InstalledExtensionIconKeyer
 import eu.kanade.tachiyomi.data.coil.InstalledSourceIconKeyer
 import eu.kanade.tachiyomi.data.notification.Notifications
 import eu.kanade.tachiyomi.di.AppModule
-import eu.kanade.tachiyomi.extension.ExtensionManager
-import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.network.NetworkPreferences
 import eu.kanade.tachiyomi.ui.base.delegate.SecureActivityDelegate
 import eu.kanade.tachiyomi.util.system.DeviceUtil
@@ -48,7 +45,6 @@ import eu.kanade.tachiyomi.util.system.WebViewUtil
 import eu.kanade.tachiyomi.util.system.animatorDurationScale
 import eu.kanade.tachiyomi.util.system.cancelNotification
 import eu.kanade.tachiyomi.util.system.notify
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -57,29 +53,30 @@ import logcat.LogPriority
 import logcat.LogcatLogger
 import mihon.app.di.AppGraph
 import mihon.app.localnetwork.LocalNetworkPermissionPrompter
+import mihon.core.metro.GraphProvider
 import mihon.core.migration.Migrator
 import mihon.core.migration.migrations.migrations
-import mihon.entry.interactions.library.EntryLibraryUpdateNotificationFeature
 import mihon.entry.interactions.runtime.addEntryInteractionImageComponents
 import mihon.telemetry.TelemetryConfig
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.preference.Preference
-import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.core.common.util.system.ImageUtil
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.i18n.*
 import tachiyomi.presentation.widget.WidgetManager
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
-import uy.kohesive.injekt.injectLazy
 import kotlin.concurrent.thread
 import mihon.icons.materialsymbols.R as MaterialSymbolsR
 
-class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factory {
+class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factory, GraphProvider<AppGraph> {
 
-    private val basePreferences: BasePreferences by injectLazy()
-    private val privacyPreferences: PrivacyPreferences by injectLazy()
-    private val networkPreferences: NetworkPreferences by injectLazy()
+    // Built on first use rather than in onCreate: WorkManager and content providers can reach it before onCreate runs.
+    override val graph: AppGraph by lazy { createGraphFactory<AppGraph.Factory>().create(this) }
+
+    private val basePreferences: BasePreferences by lazy { graph.basePreferences }
+    private val privacyPreferences: PrivacyPreferences by lazy { graph.privacyPreferences }
+    private val networkPreferences: NetworkPreferences by lazy { graph.networkPreferences }
 
     private val disableIncognitoReceiver = DisableIncognitoReceiver()
 
@@ -101,13 +98,22 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
         // The first use of Dispatchers.Main finds its factory with a ServiceLoader, which reads the APK
         thread(name = "MainDispatcherPreload") { Dispatchers.Main }
 
-        Injekt.importModule(AppModule(this, createGraphFactory<AppGraph.Factory>().create(this)))
+        Injekt.importModule(AppModule(this, graph))
+
+        // Asynchronously init expensive components for a faster cold start
+        ContextCompat.getMainExecutor(this).execute {
+            graph.networkHelper
+            graph.sourceManager
+            graph.database
+            graph.featureRuntimeContributions.validate(graph.featureRuntimeComposition.evaluation)
+            graph.featureRuntimeContributions.warmUp()
+        }
 
         setupNotificationChannels()
 
         ProcessLifecycleOwner.get().lifecycle.addObserver(this)
 
-        val scope = Injekt.get<CoroutineScope>()
+        val scope = graph.appScope
 
         LocalNetworkPermissionPrompter(this).install(scope)
 
@@ -158,10 +164,10 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
             .onEach { ImageUtil.hardwareBitmapThreshold = it }
             .launchIn(scope)
 
-        setAppCompatDelegateThemeMode(Injekt.get<UiPreferences>().themeMode.get())
+        setAppCompatDelegateThemeMode(graph.uiPreferences.themeMode.get())
 
         // Updates widget update
-        WidgetManager(Injekt.get(), Injekt.get()).apply { init(scope) }
+        WidgetManager(graph.getUpdates, graph.securityPreferences).apply { init(scope) }
 
         if (!LogcatLogger.isInstalled) {
             val minLogPriority = when {
@@ -177,13 +183,14 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
     }
 
     private fun initializeMigrator() {
-        val preferenceStore = Injekt.get<PreferenceStore>()
+        val preferenceStore = graph.preferenceStore
         val preference = preferenceStore.getInt(Preference.appStateKey("last_version_code"), 0)
         logcat { "Migration from ${preference.get()} to ${BuildConfig.VERSION_CODE}" }
         Migrator.initialize(
             old = preference.get(),
             new = BuildConfig.VERSION_CODE,
             migrations = migrations,
+            graph = graph,
             onMigrationComplete = {
                 logcat { "Updating last version to ${BuildConfig.VERSION_CODE}" }
                 preference.set(BuildConfig.VERSION_CODE)
@@ -193,20 +200,22 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
 
     override fun newImageLoader(context: Context): ImageLoader {
         return ImageLoader.Builder(this).apply {
-            val callFactoryLazy = lazy { Injekt.get<NetworkHelper>().client }
+            val callFactoryLazy = lazy { graph.networkHelper.client }
+            val coverCacheLazy = lazy { graph.coverCache }
+            val coverNetworkFeatureLazy = lazy { graph.entryCoverNetworkFeature }
             components {
                 // NetworkFetcher.Factory
                 add(OkHttpNetworkFetcherFactory(callFactoryLazy::value))
                 // Fetcher.Factory
                 add(BufferedSourceFetcher.Factory())
-                add(EntryCoverFetcher.EntryCoverFactory(callFactoryLazy))
-                add(EntryCoverFetcher.EntryFactory(callFactoryLazy))
+                add(EntryCoverFetcher.EntryCoverFactory(callFactoryLazy, coverCacheLazy, coverNetworkFeatureLazy))
+                add(EntryCoverFetcher.EntryFactory(callFactoryLazy, coverCacheLazy, coverNetworkFeatureLazy))
                 add(ExtensionIconFetcher.ExtensionFactory(context))
-                add(ExtensionIconFetcher.SourceFactory(context, lazy { Injekt.get<ExtensionManager>() }))
-                addEntryInteractionImageComponents()
+                add(ExtensionIconFetcher.SourceFactory(context, lazy { graph.extensionManager }))
+                addEntryInteractionImageComponents(this@App)
                 // Keyer
-                add(EntryCoverKeyer())
-                add(EntryKeyer())
+                add(EntryCoverKeyer(graph.coverCache))
+                add(EntryKeyer(graph.coverCache))
                 add(InstalledExtensionIconKeyer())
                 add(InstalledSourceIconKeyer())
                 // Interceptor
@@ -231,11 +240,11 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
     }
 
     override fun onStart(owner: LifecycleOwner) {
-        SecureActivityDelegate.onApplicationStart()
+        SecureActivityDelegate.onApplicationStart(graph.securityPreferences)
     }
 
     override fun onStop(owner: LifecycleOwner) {
-        SecureActivityDelegate.onApplicationStopped()
+        SecureActivityDelegate.onApplicationStopped(graph.securityPreferences)
     }
 
     override fun getPackageName(): String {
@@ -258,7 +267,7 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
         try {
             Notifications.createChannels(
                 context = this,
-                libraryUpdateRoutes = Injekt.get<EntryLibraryUpdateNotificationFeature>().routes(),
+                libraryUpdateRoutes = graph.libraryUpdateNotificationFeature.routes(),
             )
         } catch (e: Exception) {
             logcat(LogPriority.ERROR, e) { "Failed to modify notification channels" }

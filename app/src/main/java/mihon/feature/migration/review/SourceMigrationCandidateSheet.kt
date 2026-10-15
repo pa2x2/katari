@@ -14,10 +14,10 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
 import mihon.feature.migration.review.components.SourceMigrationEntryDetailsButton
 import mihon.feature.migration.review.components.SourceMigrationEntryListItem
@@ -50,8 +50,10 @@ internal fun Screen.SourceMigrationCandidateSheet(
     onDismissRequest: () -> Unit,
 ) {
     val navigator = LocalNavigator.currentOrThrow
-    val viewModel = viewModel(key = item.sourceEntryId.toString()) {
-        SourceMigrationCandidateSheetViewModel(sessionId, item.sourceEntryId)
+    val viewModel = assistedMetroViewModel<_, SourceMigrationCandidateSheetViewModel.Factory>(
+        key = item.sourceEntryId.toString(),
+    ) {
+        create(sessionId, item.sourceEntryId)
     }
     val state by viewModel.state.collectAsState()
 

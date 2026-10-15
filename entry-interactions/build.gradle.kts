@@ -30,7 +30,6 @@ dependencies {
     implementation(projects.sourceLocal)
     implementation(libs.androidx.core)
     implementation(libs.androidx.work)
-    implementation(libs.injekt)
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.bundles.serialization)
     implementation(libs.bundles.coil)
@@ -43,6 +42,7 @@ dependencies {
     testImplementation(libs.junit4)
     testImplementation(libs.robolectric)
     testImplementation(projects.featureValidation)
+    testImplementation(projects.tts.api)
     testRuntimeOnly(libs.junit.platform.launcher)
     testRuntimeOnly(libs.junit.vintage)
 
@@ -52,6 +52,7 @@ dependencies {
     testFixturesImplementation(libs.unifile)
     testFixturesImplementation(projects.featureValidation)
     testFixturesImplementation(projects.core.metro)
+    testFixturesImplementation(projects.sourceLocal)
     testFixturesImplementation(platform(libs.androidx.compose.bom))
     testFixturesApi(projects.entryInteractions.spi)
 }

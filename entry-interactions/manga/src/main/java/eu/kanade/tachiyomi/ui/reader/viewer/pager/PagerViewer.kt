@@ -28,7 +28,6 @@ import mihon.entry.interactions.reader.settings.ChapterTransitionMode
 import mihon.entry.interactions.viewer.EntryChildDirection
 import mihon.entry.interactions.viewer.EntryChildTransition
 import tachiyomi.core.common.util.system.logcat
-import uy.kohesive.injekt.injectLazy
 import kotlin.math.min
 
 /**
@@ -37,7 +36,8 @@ import kotlin.math.min
 @Suppress("LeakingThis")
 internal abstract class PagerViewer(val activity: ReaderActivity) : Viewer {
 
-    internal val downloadManager: DownloadManager by injectLazy()
+    internal val downloadManager: DownloadManager
+        get() = activity.viewModel.downloadManager
 
     private val scope = MainScope()
 

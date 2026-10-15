@@ -99,7 +99,6 @@ class AnimeDownloadManagerTest {
         },
     ): AnimeDownloadManager {
         return AnimeDownloadManager(
-            context = mockk(relaxed = true),
             cache = mockk { every { changes } returns MutableSharedFlow<Unit>() },
             provider = mockk(relaxed = true),
             downloader = downloader,

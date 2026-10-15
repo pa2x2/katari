@@ -46,13 +46,14 @@ import eu.kanade.tachiyomi.ui.reader.viewer.webtoon.WebtoonStripImageView
 import eu.kanade.tachiyomi.ui.reader.viewer.webtoon.WebtoonSubsamplingImageView
 import mihon.core.common.image.progressive.ProgressiveImageState
 import mihon.core.common.image.progressive.ProgressiveImageVisual
+import mihon.core.metro.metroGraph
 import mihon.entry.interactions.manga.reader.text.geometry.MangaPageTransform
 import mihon.entry.interactions.manga.reader.text.image.DisplayedStillImage
 import mihon.entry.interactions.manga.reader.text.overlay.MangaPageTextOverlayPainter
 import mihon.entry.interactions.manga.reader.text.surface.MangaPageTextDecoration
 import mihon.entry.interactions.manga.reader.text.surface.imageToView
 import mihon.entry.interactions.manga.reader.text.surface.viewToImage
-import mihon.entry.interactions.reader.settings.ReaderBasePreferences
+import mihon.entry.interactions.runtime.EntryInteractionActivityGraph
 import mihon.text.recognition.api.image.ImageContentKey
 import mihon.text.recognition.api.image.ImageRect
 import mihon.text.recognition.api.image.ImageSize
@@ -60,8 +61,6 @@ import okio.Buffer
 import okio.BufferedSource
 import okio.ByteString
 import tachiyomi.core.common.util.system.ImageUtil
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
 /**
  * A wrapper view for showing page image.
@@ -81,7 +80,7 @@ internal open class ReaderPageImageView @JvmOverloads constructor(
 ) : FrameLayout(context, attrs, defStyleAttrs, defStyleRes) {
 
     private val alwaysDecodeLongStripWithSSIV by lazy {
-        Injekt.get<ReaderBasePreferences>().alwaysDecodeLongStripWithSSIV.get()
+        context.metroGraph<EntryInteractionActivityGraph>().readerBasePreferences.alwaysDecodeLongStripWithSSIV.get()
     }
 
     private var pageView: View? = null

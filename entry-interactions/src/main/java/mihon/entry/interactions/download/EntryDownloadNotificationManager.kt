@@ -4,7 +4,6 @@ import android.content.Context
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
-import mihon.entry.interactions.download.notification.AndroidEntryDownloadNotifier
 import mihon.entry.interactions.download.notification.EntryDownloadErrorNotification
 import mihon.entry.interactions.download.notification.EntryDownloadNotificationPresenter
 import mihon.entry.interactions.download.notification.EntryDownloadProgressNotification
@@ -19,7 +18,7 @@ internal class EntryDownloadNotificationManager(
     private val downloads: EntryDownloadRuntimeCoordinator,
     private val actions: EntryDownloadNotificationActions,
     private val ownership: EntryMergeDownloadOwnershipProjection,
-    private val presenter: EntryDownloadNotificationPresenter = AndroidEntryDownloadNotifier(context),
+    private val presenter: EntryDownloadNotificationPresenter,
     private val scope: CoroutineScope,
     private val messageResolver: (EntryDownloadMessage) -> String = { it.resolve(context) },
 ) : EntryDownloadForegroundNotificationProvider {

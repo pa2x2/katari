@@ -7,11 +7,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
 import kotlinx.coroutines.delay
+import mihon.app.di.appGraph
 import mihon.core.migration.Migrator
-import mihon.domain.database.repository.DatabaseRepository
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TimeSource
 
@@ -22,7 +21,8 @@ import kotlin.time.TimeSource
  */
 @Composable
 fun rememberAppMigrating(): Boolean {
-    val databaseRepository = remember { Injekt.get<DatabaseRepository>() }
+    val context = LocalContext.current
+    val databaseRepository = remember { context.appGraph.databaseRepository }
     var appMigrating by remember { mutableStateOf(Migrator.isRunning) }
     LaunchedEffect(Unit) {
         Migrator.awaitAndRelease()

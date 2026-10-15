@@ -10,9 +10,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import mihon.app.di.appGraph
 import mihon.core.common.CustomPreferences
 import mihon.core.common.sanitizeBrowseLongPressActionPriority
-import mihon.entry.interactions.media.EntryImmersiveFeature
 import mihon.entry.interactions.media.EntryImmersiveSourceAvailability
 import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.button.ButtonStyle
@@ -24,8 +25,6 @@ import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.ScrollbarLazyColumn
 import tachiyomi.presentation.core.i18n.stringResource
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
 /** One source's long-press priority: the profile default until customized, then its own reorderable list. */
 @Composable
@@ -38,6 +37,7 @@ internal fun SourceLongPressActions(
     onUseDefault: () -> Unit,
     contentPadding: PaddingValues,
 ) {
+    val context = LocalContext.current
     val displayedPriority = overridePriority ?: defaultPriority
     val priority = remember(sourceId, displayedPriority) {
         sanitizeBrowseLongPressActionPriority(displayedPriority).toMutableStateList()
@@ -50,7 +50,7 @@ internal fun SourceLongPressActions(
         priority.add(toIndex, priority.removeAt(fromIndex))
         onPriorityChange(priority.toList())
     }
-    val immersiveFeature = remember { Injekt.get<EntryImmersiveFeature>() }
+    val immersiveFeature = remember { context.appGraph.entryImmersiveFeature }
     val immersiveAvailable = immersiveFeature.sourceAvailability(sourceManager.get(sourceId)) is
         EntryImmersiveSourceAvailability.Available
 

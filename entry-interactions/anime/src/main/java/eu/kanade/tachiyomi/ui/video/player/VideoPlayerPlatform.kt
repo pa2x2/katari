@@ -8,12 +8,12 @@ import androidx.activity.ComponentActivity
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.runtime.Composable
 import androidx.core.content.getSystemService
+import eu.kanade.tachiyomi.core.security.SecurityPreferences
+import mihon.entry.interactions.reader.settings.ReaderBasePreferences
 import mihon.entry.interactions.runtime.registerEntryInteractionSecureScreen
 import mihon.entry.interactions.runtime.setEntryInteractionContent
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.PreferenceStore
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
 internal class AnimePlayerBasePreferences(
     preferenceStore: PreferenceStore,
@@ -24,8 +24,11 @@ internal class AnimePlayerBasePreferences(
     var immersiveFeedMuted = true
 }
 
-internal fun AppCompatActivity.registerAnimePlayerSecureScreen() {
-    registerEntryInteractionSecureScreen()
+internal fun AppCompatActivity.registerAnimePlayerSecureScreen(
+    readerPreferences: ReaderBasePreferences,
+    securityPreferences: SecurityPreferences,
+) {
+    registerEntryInteractionSecureScreen(readerPreferences, securityPreferences)
 }
 
 internal inline fun ComponentActivity.setPlayerComposeContent(

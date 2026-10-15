@@ -9,6 +9,7 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkInfo
 import androidx.work.WorkQuery
 import androidx.work.WorkerParameters
+import dev.zacsweers.metro.Inject
 import eu.kanade.tachiyomi.data.notification.Notifications
 import eu.kanade.tachiyomi.util.system.isRunning
 import eu.kanade.tachiyomi.util.system.setForegroundSafely
@@ -22,6 +23,7 @@ import kotlinx.coroutines.guava.await
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import logcat.LogPriority
+import mihon.app.di.appGraph
 import mihon.entry.interactions.merge.EntryMergeMetadataRefreshFeature
 import mihon.entry.interactions.source.EntrySourceRefreshFailure
 import mihon.entry.interactions.source.EntrySourceRefreshFeature
@@ -33,8 +35,6 @@ import tachiyomi.domain.entry.interactor.GetLibraryEntries
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.library.model.LibraryItem
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.concurrent.atomics.AtomicInt
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
@@ -44,12 +44,24 @@ import kotlin.concurrent.atomics.fetchAndIncrement
 class MetadataUpdateJob(private val context: Context, workerParams: WorkerParameters) :
     CoroutineWorker(context, workerParams) {
 
-    private val getLibraryEntries: GetLibraryEntries = Injekt.get()
-    private val entryRepository: EntryRepository = Injekt.get()
-    private val sourceRefreshFeature: EntrySourceRefreshFeature = Injekt.get()
-    private val mergeMetadataRefreshFeature: EntryMergeMetadataRefreshFeature = Injekt.get()
+    @Inject
+    private lateinit var getLibraryEntries: GetLibraryEntries
 
-    private val notifier = LibraryUpdateNotifier(context)
+    @Inject
+    private lateinit var entryRepository: EntryRepository
+
+    @Inject
+    private lateinit var sourceRefreshFeature: EntrySourceRefreshFeature
+
+    @Inject
+    private lateinit var mergeMetadataRefreshFeature: EntryMergeMetadataRefreshFeature
+
+    @Inject
+    private lateinit var notifier: LibraryUpdateNotifier
+
+    init {
+        context.appGraph.inject(this)
+    }
 
     private var entriesToUpdate: List<Entry> = mutableListOf()
 
@@ -77,7 +89,6 @@ class MetadataUpdateJob(private val context: Context, workerParams: WorkerParame
     }
 
     override suspend fun getForegroundInfo(): ForegroundInfo {
-        val notifier = LibraryUpdateNotifier(context)
         return ForegroundInfo(
             Notifications.ID_LIBRARY_PROGRESS,
             notifier.progressNotificationBuilder.build(),

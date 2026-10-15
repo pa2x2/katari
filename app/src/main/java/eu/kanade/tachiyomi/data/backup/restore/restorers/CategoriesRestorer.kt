@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.data.backup.restore.restorers
 
 import app.cash.sqldelight.async.coroutines.awaitAsOne
+import dev.zacsweers.metro.Inject
 import eu.kanade.tachiyomi.data.backup.models.BackupCategory
 import eu.kanade.tachiyomi.data.backup.models.BackupCategoryUpdateRules
 import tachiyomi.data.ActiveProfileProvider
@@ -9,15 +10,14 @@ import tachiyomi.domain.category.interactor.GetCategories
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.library.update.repository.LibraryUpdateRulesRepository
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
+@Inject
 class CategoriesRestorer(
-    private val handler: DatabaseHandler = Injekt.get(),
-    private val profileProvider: ActiveProfileProvider = Injekt.get(),
-    private val getCategories: GetCategories = Injekt.get(),
-    private val libraryPreferences: LibraryPreferences = Injekt.get(),
-    private val updateRulesRepository: LibraryUpdateRulesRepository = Injekt.get(),
+    private val handler: DatabaseHandler,
+    private val profileProvider: ActiveProfileProvider,
+    private val getCategories: GetCategories,
+    private val libraryPreferences: LibraryPreferences,
+    private val updateRulesRepository: LibraryUpdateRulesRepository,
 ) {
 
     suspend operator fun invoke(
