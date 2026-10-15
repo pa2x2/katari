@@ -11,10 +11,7 @@ import kotlinx.coroutines.launch
 import mihon.core.metro.AppCoroutineScope
 import mihon.entry.interactions.download.EntryDownloadMaintenanceFeature
 import mihon.entry.interactions.library.membership.host.EntryLibraryCustomCoverHost
-import mihon.entry.interactions.merge.backup.ENTRY_MERGE_BACKUP_FINALIZE_PARTICIPANT
-import mihon.entry.interactions.merge.backup.ENTRY_MERGE_BACKUP_RESTORE_PARTICIPANT
-import mihon.entry.interactions.merge.backup.ENTRY_MERGE_BACKUP_SNAPSHOT_PARTICIPANT
-import mihon.entry.interactions.merge.backup.EntryMergeBackupContributor
+import mihon.entry.interactions.merge.backup.EntryMergeBackupParticipant
 import mihon.entry.interactions.merge.backup.EntryMergeBackupRestoreParticipation
 import mihon.entry.interactions.merge.consequence.EntryMergeConsequenceDelivery
 import mihon.entry.interactions.merge.consequence.EntryMergeDurableConsequences
@@ -32,8 +29,7 @@ import mihon.entry.interactions.merge.lifecycle.EntryMergeDestructiveRemovalCont
 import mihon.entry.interactions.merge.lifecycle.EntryMergeProfileMoveContributor
 import mihon.entry.interactions.merge.lifecycle.mergeReference
 import mihon.entry.interactions.merge.lifecycle.toMergeIntent
-import mihon.entry.interactions.persistence.backup.decodeEntryBackupState
-import mihon.entry.interactions.persistence.backup.entryBackupStateEnvelope
+import mihon.entry.interactions.persistence.backup.EntryBackupStateParticipant
 import mihon.entry.interactions.tracking.EntryTrackingFeature
 import mihon.feature.graph.FeatureGraphContributor
 import mihon.feature.graph.execution.FeatureDurableExecutionParticipantBinding
@@ -186,10 +182,6 @@ object EntryMergeBindings {
 
     @Provides
     @IntoSet
-    fun backupGraphContributor(): FeatureGraphContributor = EntryMergeBackupContributor
-
-    @Provides
-    @IntoSet
     fun customCoverGraphContributor(): FeatureGraphContributor = EntryMergeCustomCoverContributor
 
     @Provides
@@ -200,54 +192,6 @@ object EntryMergeBindings {
     ): FeatureDurableExecutionParticipantBinding<*> = entryMergeCustomCoverBinding(
         mergeHost,
         libraryCustomCoverHost::cleanupAfterLibraryRemoval,
-    )
-
-    @Provides
-    @IntoSet
-    fun backupSnapshotParticipant(
-        backupFeature: () -> EntryMergeBackupFeature,
-    ): FeatureExecutionParticipantBinding<*> = FeatureExecutionParticipantBinding(
-        definition = ENTRY_MERGE_BACKUP_SNAPSHOT_PARTICIPANT,
-        handler = FeatureExecutionHandler { event ->
-            val state = backupFeature().snapshotForBackup(
-                EntryMergeSubject(event.profileId, event.entry.id),
-            ) ?: return@FeatureExecutionHandler
-            event.contributions.add(
-                entryBackupStateEnvelope(
-                    ENTRY_MERGE_BACKUP_STATE_ID,
-                    ENTRY_MERGE_BACKUP_SCHEMA_VERSION,
-                    EntryMergeBackupMember.serializer(),
-                    state,
-                ),
-            )
-        },
-    )
-
-    @Provides
-    @IntoSet
-    internal fun backupRestoreParticipant(
-        restoreParticipation: () -> EntryMergeBackupRestoreParticipation,
-    ): FeatureExecutionParticipantBinding<*> = FeatureExecutionParticipantBinding(
-        definition = ENTRY_MERGE_BACKUP_RESTORE_PARTICIPANT,
-        handler = FeatureExecutionHandler { event ->
-            val state = event.states.decodeEntryBackupState(
-                ENTRY_MERGE_BACKUP_STATE_ID,
-                ENTRY_MERGE_BACKUP_SCHEMA_VERSION,
-                EntryMergeBackupMember.serializer(),
-            ) ?: return@FeatureExecutionHandler
-            restoreParticipation().enqueue(event, state)
-        },
-    )
-
-    @Provides
-    @IntoSet
-    internal fun backupFinalizeParticipant(
-        restoreParticipation: () -> EntryMergeBackupRestoreParticipation,
-    ): FeatureExecutionParticipantBinding<*> = FeatureExecutionParticipantBinding(
-        definition = ENTRY_MERGE_BACKUP_FINALIZE_PARTICIPANT,
-        handler = FeatureExecutionHandler { event ->
-            restoreParticipation().finalize(event)
-        },
     )
 
     @Provides
@@ -373,6 +317,13 @@ object EntryMergeBindings {
             delivery().runRetryLoop()
         }
     }
+
+    @Provides
+    @IntoSet
+    internal fun backupState(
+        backupFeature: () -> EntryMergeBackupFeature,
+        restoreParticipation: () -> EntryMergeBackupRestoreParticipation,
+    ): EntryBackupStateParticipant = EntryMergeBackupParticipant(backupFeature, restoreParticipation)
 }
 
 private fun EntryMergeProfileMoveExecutionResult.requireApplied() {

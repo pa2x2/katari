@@ -1,26 +1,22 @@
 package mihon.entry.interactions.persistence.backup
 
 import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.entry.interactions.executeInline
-import mihon.entry.interactions.runtime.toContentTypeId
-import mihon.feature.graph.execution.FeatureExecutionResult
-import mihon.feature.graph.execution.FeatureExecutionRuntime
 import tachiyomi.domain.entry.model.Entry
 
 internal class EntryBackupCoordinator(
-    private val executions: FeatureExecutionRuntime,
+    participants: Set<EntryBackupStateParticipant>,
 ) : EntryBackupFeature {
+    // Ordered by state id so every backup lists its states in the same order.
+    private val participants = participants.sortedBy(EntryBackupStateParticipant::stateId)
+
     override suspend fun snapshot(
         profileId: Long,
         entry: Entry,
         selection: EntryBackupSelection,
     ): List<EntryFeatureStateEnvelope> {
         val states = MutableEntryBackupStates()
-        executions.executeInline(
-            point = ENTRY_BACKUP_SNAPSHOT_EXECUTION_POINT,
-            contentType = entry.type.toContentTypeId(),
-            event = EntryBackupSnapshotEvent(profileId, entry, selection, states),
-        ).requireSuccessful("snapshot")
+        val event = EntryBackupSnapshotEvent(profileId, entry, selection, states)
+        participants.forEach { it.snapshot(event) }
         return states.values()
     }
 
@@ -30,12 +26,8 @@ internal class EntryBackupCoordinator(
         entry: Entry,
         states: List<EntryFeatureStateEnvelope>,
     ) {
-        val source = ImmutableEntryBackupStates(states)
-        executions.executeInline(
-            point = ENTRY_BACKUP_RESTORE_EXECUTION_POINT,
-            contentType = entry.type.toContentTypeId(),
-            event = EntryBackupRestoreEvent(session, profileId, entry, source),
-        ).requireSuccessful("restore")
+        val event = EntryBackupRestoreEvent(session, profileId, entry, ImmutableEntryBackupStates(states))
+        participants.forEach { it.restore(event) }
     }
 
     override suspend fun finalizeRestore(
@@ -44,13 +36,9 @@ internal class EntryBackupCoordinator(
         restoredTypes: Set<EntryType>,
     ): EntryBackupRestoreFinalization {
         val issues = MutableEntryBackupRestoreIssues()
-        // Execute only for types actually restored in this session/profile. This remains open to future Entry types.
         for (type in restoredTypes) {
-            executions.executeInline(
-                point = ENTRY_BACKUP_RESTORE_FINALIZING_EXECUTION_POINT,
-                contentType = type.toContentTypeId(),
-                event = EntryBackupRestoreFinalizingEvent(session, profileId, type, issues),
-            ).requireSuccessful("restore finalization")
+            val event = EntryBackupRestoreFinalizingEvent(session, profileId, type, issues)
+            participants.forEach { it.finalizeRestore(event) }
         }
         return EntryBackupRestoreFinalization(issues.values())
     }
@@ -101,10 +89,4 @@ private fun <T, K> List<T>.associateByUnique(keySelector: (T) -> K): Map<K, T> {
         check(result.putIfAbsent(key, value) == null) { "Duplicate backup state from participant $key" }
     }
     return result
-}
-
-private fun FeatureExecutionResult.requireSuccessful(operation: String) {
-    check(isSuccessful) {
-        "Entry backup $operation participants failed: ${failures.joinToString { it.participant.value }}"
-    }
 }

@@ -9,16 +9,10 @@ import dev.zacsweers.metro.SingleIn
 import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveTrackingStateHost
 import mihon.entry.interactions.lifecycle.profile.stateRequest
 import mihon.entry.interactions.merge.host.EntryMergeHost
-import mihon.entry.interactions.persistence.backup.decodeEntryBackupState
-import mihon.entry.interactions.persistence.backup.entryBackupStateEnvelope
+import mihon.entry.interactions.persistence.backup.EntryBackupStateParticipant
 import mihon.entry.interactions.tracking.backup.DefaultEntryTrackingBackupFeature
-import mihon.entry.interactions.tracking.backup.ENTRY_TRACKING_BACKUP_RESTORE_PARTICIPANT
-import mihon.entry.interactions.tracking.backup.ENTRY_TRACKING_BACKUP_SCHEMA_VERSION
-import mihon.entry.interactions.tracking.backup.ENTRY_TRACKING_BACKUP_SNAPSHOT_PARTICIPANT
-import mihon.entry.interactions.tracking.backup.ENTRY_TRACKING_BACKUP_STATE_ID
-import mihon.entry.interactions.tracking.backup.EntryTrackingBackupContributor
 import mihon.entry.interactions.tracking.backup.EntryTrackingBackupFeature
-import mihon.entry.interactions.tracking.backup.EntryTrackingBackupState
+import mihon.entry.interactions.tracking.backup.EntryTrackingBackupParticipant
 import mihon.entry.interactions.tracking.host.EntryTrackingHost
 import mihon.entry.interactions.tracking.lifecycle.ENTRY_TRACKING_PROFILE_MOVE_PARTICIPANT
 import mihon.entry.interactions.tracking.lifecycle.EntryTrackingProfileMoveContributor
@@ -63,10 +57,6 @@ object EntryTrackingBindings {
 
     @Provides
     @IntoSet
-    fun backupGraphContributor(): FeatureGraphContributor = EntryTrackingBackupContributor
-
-    @Provides
-    @IntoSet
     fun migrationGraphContributor(): FeatureGraphContributor = EntryTrackingMigrationContributor
 
     @Provides
@@ -99,44 +89,6 @@ object EntryTrackingBindings {
 
     @Provides
     @IntoSet
-    fun backupSnapshotParticipant(
-        backupFeature: () -> EntryTrackingBackupFeature,
-    ): FeatureExecutionParticipantBinding<*> = FeatureExecutionParticipantBinding(
-        definition = ENTRY_TRACKING_BACKUP_SNAPSHOT_PARTICIPANT,
-        handler = FeatureExecutionHandler { event ->
-            if (!event.selection.includeTrackingState) return@FeatureExecutionHandler
-            val state =
-                backupFeature().snapshot(event.profileId, event.entry)
-                    ?: return@FeatureExecutionHandler
-            event.contributions.add(
-                entryBackupStateEnvelope(
-                    ENTRY_TRACKING_BACKUP_STATE_ID,
-                    ENTRY_TRACKING_BACKUP_SCHEMA_VERSION,
-                    EntryTrackingBackupState.serializer(),
-                    state,
-                ),
-            )
-        },
-    )
-
-    @Provides
-    @IntoSet
-    fun backupRestoreParticipant(
-        backupFeature: () -> EntryTrackingBackupFeature,
-    ): FeatureExecutionParticipantBinding<*> = FeatureExecutionParticipantBinding(
-        definition = ENTRY_TRACKING_BACKUP_RESTORE_PARTICIPANT,
-        handler = FeatureExecutionHandler { event ->
-            val state = event.states.decodeEntryBackupState(
-                ENTRY_TRACKING_BACKUP_STATE_ID,
-                ENTRY_TRACKING_BACKUP_SCHEMA_VERSION,
-                EntryTrackingBackupState.serializer(),
-            ) ?: return@FeatureExecutionHandler
-            backupFeature().restore(event.profileId, event.entry, state)
-        },
-    )
-
-    @Provides
-    @IntoSet
     fun libraryAdditionParticipant(feature: () -> EntryTrackingFeature): FeatureExecutionParticipantBinding<*> =
         FeatureExecutionParticipantBinding(
             definition = ENTRY_TRACKING_LIBRARY_ADDITION_PARTICIPANT,
@@ -155,4 +107,10 @@ object EntryTrackingBindings {
             profileMoveTrackingStateHost.move(event.plan.stateRequest())
         },
     )
+
+    @Provides
+    @IntoSet
+    internal fun backupState(
+        backupFeature: () -> EntryTrackingBackupFeature,
+    ): EntryBackupStateParticipant = EntryTrackingBackupParticipant(backupFeature)
 }

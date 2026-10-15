@@ -8,20 +8,13 @@ import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import mihon.entry.interactions.download.EntryDownloadLifecycleEventSink
 import mihon.entry.interactions.history.EntryHistoryFeature
-import mihon.entry.interactions.persistence.backup.decodeEntryBackupState
-import mihon.entry.interactions.persistence.backup.entryBackupStateEnvelope
+import mihon.entry.interactions.persistence.backup.EntryBackupStateParticipant
 import mihon.entry.interactions.runtime.EntryInteractions
-import mihon.entry.interactions.state.backup.ENTRY_PROGRESS_BACKUP_RESTORE_PARTICIPANT
-import mihon.entry.interactions.state.backup.ENTRY_PROGRESS_BACKUP_SCHEMA_VERSION
-import mihon.entry.interactions.state.backup.ENTRY_PROGRESS_BACKUP_SNAPSHOT_PARTICIPANT
-import mihon.entry.interactions.state.backup.ENTRY_PROGRESS_BACKUP_STATE_ID
-import mihon.entry.interactions.state.backup.EntryProgressBackupContributor
+import mihon.entry.interactions.state.backup.EntryProgressBackupParticipant
 import mihon.entry.interactions.state.migration.EntryProgressMigrationContributor
 import mihon.entry.interactions.state.migration.entryProgressMigrationBinding
 import mihon.feature.graph.FeatureGraphContributor
 import mihon.feature.graph.execution.FeatureDurableExecutionParticipantBinding
-import mihon.feature.graph.execution.FeatureExecutionHandler
-import mihon.feature.graph.execution.FeatureExecutionParticipantBinding
 import mihon.feature.runtime.FeatureRuntimeComposition
 import tachiyomi.domain.entry.interactor.GetEntryWithChapters
 import tachiyomi.domain.entry.repository.EntryProgressRepository
@@ -91,10 +84,6 @@ object EntryStateBindings {
 
     @Provides
     @IntoSet
-    fun progressBackupGraphContributor(): FeatureGraphContributor = EntryProgressBackupContributor
-
-    @Provides
-    @IntoSet
     fun progressMigrationGraphContributor(): FeatureGraphContributor = EntryProgressMigrationContributor
 
     @Provides
@@ -105,39 +94,7 @@ object EntryStateBindings {
 
     @Provides
     @IntoSet
-    fun progressBackupSnapshotParticipant(
+    internal fun progressBackupState(
         feature: () -> EntryProgressFeature,
-    ): FeatureExecutionParticipantBinding<*> = FeatureExecutionParticipantBinding(
-        definition = ENTRY_PROGRESS_BACKUP_SNAPSHOT_PARTICIPANT,
-        handler = FeatureExecutionHandler { event ->
-            if (!event.selection.includeContentState) return@FeatureExecutionHandler
-            val result = feature().snapshot(event.entry)
-            if (result is EntryProgressSnapshotResult.Available && result.snapshot.states.isNotEmpty()) {
-                event.contributions.add(
-                    entryBackupStateEnvelope(
-                        ENTRY_PROGRESS_BACKUP_STATE_ID,
-                        ENTRY_PROGRESS_BACKUP_SCHEMA_VERSION,
-                        EntryProgressSnapshot.serializer(),
-                        result.snapshot,
-                    ),
-                )
-            }
-        },
-    )
-
-    @Provides
-    @IntoSet
-    fun progressBackupRestoreParticipant(
-        feature: () -> EntryProgressFeature,
-    ): FeatureExecutionParticipantBinding<*> = FeatureExecutionParticipantBinding(
-        definition = ENTRY_PROGRESS_BACKUP_RESTORE_PARTICIPANT,
-        handler = FeatureExecutionHandler { event ->
-            val state = event.states.decodeEntryBackupState(
-                ENTRY_PROGRESS_BACKUP_STATE_ID,
-                ENTRY_PROGRESS_BACKUP_SCHEMA_VERSION,
-                EntryProgressSnapshot.serializer(),
-            ) ?: return@FeatureExecutionHandler
-            feature().restore(event.entry, state)
-        },
-    )
+    ): EntryBackupStateParticipant = EntryProgressBackupParticipant(feature)
 }

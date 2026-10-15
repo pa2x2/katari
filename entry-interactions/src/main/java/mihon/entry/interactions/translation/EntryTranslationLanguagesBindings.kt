@@ -6,14 +6,12 @@ import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.IntoSet
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
-import mihon.entry.interactions.translation.backup.EntryTranslationLanguagesBackupContributor
-import mihon.entry.interactions.translation.backup.entryTranslationLanguagesBackupRestoreBinding
-import mihon.entry.interactions.translation.backup.entryTranslationLanguagesBackupSnapshotBinding
+import mihon.entry.interactions.persistence.backup.EntryBackupStateParticipant
+import mihon.entry.interactions.translation.backup.EntryTranslationLanguagesBackupParticipant
 import mihon.entry.interactions.translation.migration.EntryTranslationLanguagesMigrationContributor
 import mihon.entry.interactions.translation.migration.entryTranslationLanguagesMigrationBinding
 import mihon.feature.graph.FeatureGraphContributor
 import mihon.feature.graph.execution.FeatureDurableExecutionParticipantBinding
-import mihon.feature.graph.execution.FeatureExecutionParticipantBinding
 import mihon.feature.runtime.FeatureRuntimeComposition
 import tachiyomi.domain.entry.repository.EntryTranslationLanguagesRepository
 
@@ -39,10 +37,6 @@ object EntryTranslationLanguagesBindings {
 
     @Provides
     @IntoSet
-    fun backupGraphContributor(): FeatureGraphContributor = EntryTranslationLanguagesBackupContributor
-
-    @Provides
-    @IntoSet
     fun migrationGraphContributor(): FeatureGraphContributor = EntryTranslationLanguagesMigrationContributor
 
     @Provides
@@ -53,13 +47,7 @@ object EntryTranslationLanguagesBindings {
 
     @Provides
     @IntoSet
-    internal fun backupSnapshotParticipant(
+    internal fun backupState(
         feature: () -> DefaultEntryTranslationLanguagesFeature,
-    ): FeatureExecutionParticipantBinding<*> = entryTranslationLanguagesBackupSnapshotBinding(feature)
-
-    @Provides
-    @IntoSet
-    internal fun backupRestoreParticipant(
-        feature: () -> DefaultEntryTranslationLanguagesFeature,
-    ): FeatureExecutionParticipantBinding<*> = entryTranslationLanguagesBackupRestoreBinding(feature)
+    ): EntryBackupStateParticipant = EntryTranslationLanguagesBackupParticipant(feature)
 }

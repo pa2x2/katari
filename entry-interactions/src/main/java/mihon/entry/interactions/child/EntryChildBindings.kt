@@ -6,18 +6,12 @@ import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.IntoSet
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
-import mihon.entry.interactions.child.backup.ENTRY_CHILD_GROUP_FILTER_BACKUP_RESTORE_PARTICIPANT
-import mihon.entry.interactions.child.backup.ENTRY_CHILD_GROUP_FILTER_BACKUP_SCHEMA_VERSION
-import mihon.entry.interactions.child.backup.ENTRY_CHILD_GROUP_FILTER_BACKUP_SNAPSHOT_PARTICIPANT
-import mihon.entry.interactions.child.backup.ENTRY_CHILD_GROUP_FILTER_BACKUP_STATE_ID
-import mihon.entry.interactions.child.backup.EntryChildGroupFilterBackupContributor
-import mihon.entry.interactions.child.backup.EntryChildGroupFilterBackupState
+import mihon.entry.interactions.child.backup.EntryChildGroupFilterBackupParticipant
 import mihon.entry.interactions.child.lifecycle.ENTRY_CHILD_GROUP_FILTER_PROFILE_MOVE_PARTICIPANT
 import mihon.entry.interactions.child.lifecycle.EntryChildGroupFilterProfileMoveContributor
 import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveChildGroupFilterStateHost
 import mihon.entry.interactions.lifecycle.profile.stateRequest
-import mihon.entry.interactions.persistence.backup.decodeEntryBackupState
-import mihon.entry.interactions.persistence.backup.entryBackupStateEnvelope
+import mihon.entry.interactions.persistence.backup.EntryBackupStateParticipant
 import mihon.entry.interactions.runtime.EntryChildGroupFilterDataSource
 import mihon.entry.interactions.runtime.EntryInteractions
 import mihon.feature.graph.FeatureGraphContributor
@@ -87,48 +81,7 @@ object EntryChildBindings {
 
     @Provides
     @IntoSet
-    fun childGroupFilterBackupGraphContributor(): FeatureGraphContributor = EntryChildGroupFilterBackupContributor
-
-    @Provides
-    @IntoSet
     fun relatedEntriesGraphContributor(): FeatureGraphContributor = EntryRelatedEntriesFeatureContributor
-
-    @Provides
-    @IntoSet
-    fun childGroupFilterBackupSnapshotParticipant(
-        feature: () -> EntryChildGroupFilterFeature,
-    ): FeatureExecutionParticipantBinding<*> = FeatureExecutionParticipantBinding(
-        definition = ENTRY_CHILD_GROUP_FILTER_BACKUP_SNAPSHOT_PARTICIPANT,
-        handler = FeatureExecutionHandler { event ->
-            val result = feature().snapshot(event.profileId, event.entry)
-            if (result is EntryChildGroupFilterSnapshotResult.Available && result.excludedGroups.isNotEmpty()) {
-                event.contributions.add(
-                    entryBackupStateEnvelope(
-                        ENTRY_CHILD_GROUP_FILTER_BACKUP_STATE_ID,
-                        ENTRY_CHILD_GROUP_FILTER_BACKUP_SCHEMA_VERSION,
-                        EntryChildGroupFilterBackupState.serializer(),
-                        EntryChildGroupFilterBackupState(result.excludedGroups),
-                    ),
-                )
-            }
-        },
-    )
-
-    @Provides
-    @IntoSet
-    fun childGroupFilterBackupRestoreParticipant(
-        feature: () -> EntryChildGroupFilterFeature,
-    ): FeatureExecutionParticipantBinding<*> = FeatureExecutionParticipantBinding(
-        definition = ENTRY_CHILD_GROUP_FILTER_BACKUP_RESTORE_PARTICIPANT,
-        handler = FeatureExecutionHandler { event ->
-            val state = event.states.decodeEntryBackupState(
-                ENTRY_CHILD_GROUP_FILTER_BACKUP_STATE_ID,
-                ENTRY_CHILD_GROUP_FILTER_BACKUP_SCHEMA_VERSION,
-                EntryChildGroupFilterBackupState.serializer(),
-            ) ?: return@FeatureExecutionHandler
-            feature().restore(event.entry, state.excludedGroups)
-        },
-    )
 
     @Provides
     @IntoSet
@@ -140,4 +93,10 @@ object EntryChildBindings {
             profileMoveChildGroupFilterStateHost.move(event.plan.stateRequest())
         },
     )
+
+    @Provides
+    @IntoSet
+    internal fun childGroupFilterBackupState(
+        feature: () -> EntryChildGroupFilterFeature,
+    ): EntryBackupStateParticipant = EntryChildGroupFilterBackupParticipant(feature)
 }

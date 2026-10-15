@@ -13,13 +13,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.plus
 import mihon.core.metro.AppCoroutineScope
 import mihon.entry.interactions.download.configuration.backup.DefaultEntryDownloadConfigurationBackupFeature
-import mihon.entry.interactions.download.configuration.backup.ENTRY_DOWNLOAD_CONFIGURATION_BACKUP_RESTORE_PARTICIPANT
-import mihon.entry.interactions.download.configuration.backup.ENTRY_DOWNLOAD_CONFIGURATION_BACKUP_SCHEMA_VERSION
-import mihon.entry.interactions.download.configuration.backup.ENTRY_DOWNLOAD_CONFIGURATION_BACKUP_SNAPSHOT_PARTICIPANT
-import mihon.entry.interactions.download.configuration.backup.ENTRY_DOWNLOAD_CONFIGURATION_BACKUP_STATE_ID
-import mihon.entry.interactions.download.configuration.backup.EntryDownloadConfigurationBackupContributor
 import mihon.entry.interactions.download.configuration.backup.EntryDownloadConfigurationBackupFeature
-import mihon.entry.interactions.download.configuration.backup.EntryDownloadConfigurationBackupState
+import mihon.entry.interactions.download.configuration.backup.EntryDownloadConfigurationBackupParticipant
 import mihon.entry.interactions.download.host.EntryDownloadSourceAccessResolver
 import mihon.entry.interactions.download.host.SourceManagerEntryDownloadSourceAccessResolver
 import mihon.entry.interactions.download.maintenance.ENTRY_DOWNLOAD_DESTRUCTIVE_REMOVAL_PARTICIPANT
@@ -37,8 +32,7 @@ import mihon.entry.interactions.download.maintenance.migration.entryDownloadMigr
 import mihon.entry.interactions.download.maintenance.migration.entryDownloadMigrationOptionBinding
 import mihon.entry.interactions.download.notification.AndroidEntryDownloadNotifier
 import mihon.entry.interactions.merge.EntryMergeDownloadOwnershipProjection
-import mihon.entry.interactions.persistence.backup.decodeEntryBackupState
-import mihon.entry.interactions.persistence.backup.entryBackupStateEnvelope
+import mihon.entry.interactions.persistence.backup.EntryBackupStateParticipant
 import mihon.entry.interactions.runtime.EntryInteractions
 import mihon.feature.graph.FeatureGraphContributor
 import mihon.feature.graph.execution.FeatureDurableExecutionParticipantBinding
@@ -256,47 +250,6 @@ object EntryDownloadBindings {
     fun configurationGraphContributor(): FeatureGraphContributor = EntryDownloadConfigurationFeatureContributor
 
     @Provides
-    @IntoSet
-    fun configurationBackupGraphContributor(): FeatureGraphContributor = EntryDownloadConfigurationBackupContributor
-
-    @Provides
-    @IntoSet
-    fun configurationBackupSnapshotParticipant(
-        feature: () -> EntryDownloadConfigurationBackupFeature,
-    ): FeatureExecutionParticipantBinding<*> = FeatureExecutionParticipantBinding(
-        definition = ENTRY_DOWNLOAD_CONFIGURATION_BACKUP_SNAPSHOT_PARTICIPANT,
-        handler = FeatureExecutionHandler { event ->
-            if (!event.selection.includeContentState) return@FeatureExecutionHandler
-            val state = feature().snapshot(event.entry)
-                ?: return@FeatureExecutionHandler
-            event.contributions.add(
-                entryBackupStateEnvelope(
-                    ENTRY_DOWNLOAD_CONFIGURATION_BACKUP_STATE_ID,
-                    ENTRY_DOWNLOAD_CONFIGURATION_BACKUP_SCHEMA_VERSION,
-                    EntryDownloadConfigurationBackupState.serializer(),
-                    state,
-                ),
-            )
-        },
-    )
-
-    @Provides
-    @IntoSet
-    fun configurationBackupRestoreParticipant(
-        feature: () -> EntryDownloadConfigurationBackupFeature,
-    ): FeatureExecutionParticipantBinding<*> = FeatureExecutionParticipantBinding(
-        definition = ENTRY_DOWNLOAD_CONFIGURATION_BACKUP_RESTORE_PARTICIPANT,
-        handler = FeatureExecutionHandler { event ->
-            val state = event.states.decodeEntryBackupState(
-                ENTRY_DOWNLOAD_CONFIGURATION_BACKUP_STATE_ID,
-                ENTRY_DOWNLOAD_CONFIGURATION_BACKUP_SCHEMA_VERSION,
-                EntryDownloadConfigurationBackupState.serializer(),
-            ) ?: return@FeatureExecutionHandler
-            feature().restore(event.entry, state)
-        },
-    )
-
-    @Provides
     @SingleIn(AppScope::class)
     internal fun maintenanceFeature(
         composition: FeatureRuntimeComposition,
@@ -467,6 +420,12 @@ object EntryDownloadBindings {
             }
         },
     )
+
+    @Provides
+    @IntoSet
+    internal fun configurationBackupState(
+        feature: () -> EntryDownloadConfigurationBackupFeature,
+    ): EntryBackupStateParticipant = EntryDownloadConfigurationBackupParticipant(feature)
 }
 
 internal fun entryAutomaticDownloadSourceRefreshBinding(
