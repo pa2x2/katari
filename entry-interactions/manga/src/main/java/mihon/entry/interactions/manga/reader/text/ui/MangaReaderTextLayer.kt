@@ -17,6 +17,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.platform.LocalContext
 import eu.kanade.presentation.reader.appbars.ReaderMenuBounds
 import eu.kanade.tachiyomi.util.system.toast
@@ -90,6 +91,8 @@ internal fun MangaReaderTextLayer(
     var controlsPlacement by rememberSaveable(stateSaver = MangaReaderTextControlsPlacementSaver) {
         mutableStateOf(MangaReaderTextControlsPlacement())
     }
+    var controlsBounds by remember { mutableStateOf<Rect?>(null) }
+    val controlsShown = state.active && !selectingArea
 
     LaunchedEffect(areaResult) {
         if (areaResult == MangaReaderTextInteraction.AreaResult.NoText) context.toast(MR.strings.reader_text_area_empty)
@@ -108,13 +111,14 @@ internal fun MangaReaderTextLayer(
                 },
                 onCancel = { selectingArea = false },
             )
-        } else if (state.active) {
+        } else if (controlsShown) {
             MangaReaderTextFloatingControls(
                 placement = controlsPlacement,
                 onPlacementChange = { controlsPlacement = it },
                 menuVisible = menuVisible,
                 menuBounds = menuBounds,
                 progress = state.progress,
+                onBoundsChange = { controlsBounds = it },
             ) { toolbarModifier ->
                 MangaReaderTextToolbar(
                     progress = state.progress,
@@ -167,6 +171,7 @@ internal fun MangaReaderTextLayer(
             coordinator = translationCoordinator,
             modifier = Modifier.fillMaxSize(),
             onDismiss = onDismissTranslation,
+            popupAvoids = controlsBounds.takeIf { controlsShown },
             speechState = translationSpeechState,
             onSpeechToggle = onTranslationSpeechToggle,
             snackbarHostState = snackbarHostState,

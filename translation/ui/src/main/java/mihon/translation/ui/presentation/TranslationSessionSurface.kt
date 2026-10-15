@@ -1,5 +1,6 @@
 package mihon.translation.ui.presentation
 
+import androidx.compose.ui.unit.IntRect
 import mihon.translation.ui.session.TranslationSelectionAnchor
 import mihon.translation.ui.session.TranslationSessionState
 import kotlin.math.roundToInt
@@ -48,12 +49,14 @@ internal data class TranslationPopupPlacement(
     val y: Int,
 )
 
+/** Places the popup below or above [anchor]; null when neither side fits or both would cover [avoid]. */
 internal fun calculateTranslationPopupPlacement(
     anchor: TranslationSelectionAnchor,
     popup: TranslationPopupSize,
     viewport: TranslationViewportBounds,
     edgeMargin: Int,
     anchorGap: Int,
+    avoid: IntRect? = null,
 ): TranslationPopupPlacement? {
     require(edgeMargin >= 0)
     require(anchorGap >= 0)
@@ -69,15 +72,18 @@ internal fun calculateTranslationPopupPlacement(
     val safeWidth = safeRight - safeLeft
     if (popup.width > safeWidth) return null
 
+    val centeredX = ((anchor.left + anchor.right) / 2f).roundToInt() - popup.width / 2
+    val x = centeredX.coerceIn(safeLeft, safeRight - popup.width)
+    val keptClear = avoid?.inflate(edgeMargin)
+    fun clearAt(y: Int) = keptClear == null || !keptClear.overlaps(IntRect(x, y, x + popup.width, y + popup.height))
+
     val belowY = anchor.bottom.roundToInt() + anchorGap
     val aboveY = anchor.top.roundToInt() - anchorGap - popup.height
     val y = when {
-        belowY + popup.height <= safeBottom -> belowY
-        aboveY >= safeTop -> aboveY
+        belowY + popup.height <= safeBottom && clearAt(belowY) -> belowY
+        aboveY >= safeTop && clearAt(aboveY) -> aboveY
         else -> return null
     }
-    val centeredX = ((anchor.left + anchor.right) / 2f).roundToInt() - popup.width / 2
-    val x = centeredX.coerceIn(safeLeft, safeRight - popup.width)
     return TranslationPopupPlacement(x, y)
 }
 

@@ -22,6 +22,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.toClipEntry
 import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.roundToIntRect
 import kotlinx.coroutines.launch
 import mihon.language.api.tag.LanguageTag
 import mihon.presentation.kit.theme.KatariTheme
@@ -36,7 +37,8 @@ import tachiyomi.presentation.core.i18n.stringResource
  * Full-viewport Translation overlay.
  *
  * Selection anchors must use the same root-coordinate space as this host. Empty space around an anchored popup has no
- * pointer handler, so reader interaction remains non-modal.
+ * pointer handler, so reader interaction remains non-modal. [popupAvoids] is reader chrome drawn over the content in
+ * that space, such as a floating toolbar, which the popup must not cover.
  */
 @Composable
 fun TranslationSessionHost(
@@ -45,6 +47,7 @@ fun TranslationSessionHost(
     modifier: Modifier = Modifier,
     onDismiss: () -> Unit = controller::dismiss,
     onPopupBoundsChanged: (Rect?) -> Unit = {},
+    popupAvoids: Rect? = null,
     speechState: TranslationResultSpeechState = TranslationResultSpeechState(),
     onSpeechToggle: ((TranslationResultSpeechTarget) -> Unit)? = null,
     onSelectSource: (LanguageTag) -> Unit = controller::selectSourceLanguage,
@@ -87,6 +90,7 @@ fun TranslationSessionHost(
         speechState = speechState,
         onSpeechToggle = onSpeechToggle,
         onPopupBoundsChanged = onPopupBoundsChanged,
+        popupAvoids = popupAvoids,
         modifier = modifier,
     )
 }
@@ -109,6 +113,7 @@ internal fun TranslationSessionOverlay(
     speechState: TranslationResultSpeechState = TranslationResultSpeechState(),
     onSpeechToggle: ((TranslationResultSpeechTarget) -> Unit)? = null,
     onPopupBoundsChanged: (Rect?) -> Unit = {},
+    popupAvoids: Rect? = null,
     modifier: Modifier = Modifier,
 ) {
     val currentOnPopupBoundsChanged = rememberUpdatedState(onPopupBoundsChanged)
@@ -208,6 +213,7 @@ internal fun TranslationSessionOverlay(
             bottomInset,
             edgeMargin,
             anchorGap,
+            popupAvoids,
         ) {
             TranslationPopupPositionProvider(
                 anchor = anchor,
@@ -220,6 +226,7 @@ internal fun TranslationSessionOverlay(
                 ),
                 edgeMargin = edgeMargin,
                 anchorGap = anchorGap,
+                avoid = popupAvoids?.roundToIntRect(),
                 onPlacementAvailabilityChanged = { availability ->
                     if (placementAvailability != availability) {
                         placementAvailability = availability
