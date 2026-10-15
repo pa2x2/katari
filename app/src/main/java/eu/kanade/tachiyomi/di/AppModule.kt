@@ -30,6 +30,7 @@ import kotlinx.serialization.protobuf.ProtoBuf
 import logcat.LogPriority
 import mihon.app.di.AppGraph
 import mihon.app.di.injekt.addApplicationFeatures
+import mihon.app.di.injekt.addEntryFeatures
 import mihon.data.database.DatabaseRepositoryImpl
 import mihon.data.database.createSqlDriver
 import mihon.domain.database.repository.DatabaseRepository
@@ -300,17 +301,18 @@ class AppModule(val app: Application, private val graph: AppGraph) : InjektModul
             ),
         )
         addApplicationFeatures(graph)
+        addEntryFeatures(graph)
         addSingletonFactory<FeatureRuntimeComposition> {
             createFeatureRuntimeComposition(
                 listOf(
                     entryRuntimeInstallation.featureRuntimeInputs,
-                    graph.applicationFeatureRuntime.featureRuntimeInputs,
+                    graph.featureRuntimeContributions.featureRuntimeInputs,
                 ),
             )
         }
         addSingletonFactory {
             FeatureRuntimeWarmup {
-                graph.applicationFeatureRuntime.validate(get<FeatureRuntimeComposition>().evaluation)
+                graph.featureRuntimeContributions.validate(get<FeatureRuntimeComposition>().evaluation)
                 entryRuntimeInstallation.warmups.forEach { it() }
             }
         }

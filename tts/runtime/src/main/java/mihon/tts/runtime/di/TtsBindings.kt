@@ -13,7 +13,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import mihon.feature.graph.CapabilityProvider
 import mihon.feature.graph.FeatureGraphContributor
-import mihon.feature.runtime.application.ApplicationFeatureGraphValidator
+import mihon.feature.runtime.FeatureGraphValidator
 import mihon.language.runtime.identification.createPlatformTextLanguageDetectors
 import mihon.tts.api.TtsFeature
 import mihon.tts.api.host.TtsHostActions
@@ -125,7 +125,7 @@ object TtsBindings {
 
     @Provides
     @IntoSet
-    fun graphValidator(): ApplicationFeatureGraphValidator = ApplicationFeatureGraphValidator { evaluation ->
+    fun graphValidator(): FeatureGraphValidator = FeatureGraphValidator { evaluation ->
         TtsFeatureGraphStateValidator(evaluation).validate()
     }
 }

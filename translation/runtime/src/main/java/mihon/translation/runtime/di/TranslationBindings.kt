@@ -9,7 +9,7 @@ import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import mihon.feature.graph.CapabilityProvider
 import mihon.feature.graph.FeatureGraphContributor
-import mihon.feature.runtime.application.ApplicationFeatureGraphValidator
+import mihon.feature.runtime.FeatureGraphValidator
 import mihon.language.runtime.identification.createPlatformTextLanguageDetectors
 import mihon.translation.api.TranslationFeature
 import mihon.translation.api.host.TranslationHostActions
@@ -132,7 +132,7 @@ object TranslationBindings {
 
     @Provides
     @IntoSet
-    fun graphValidator(): ApplicationFeatureGraphValidator = ApplicationFeatureGraphValidator { evaluation ->
+    fun graphValidator(): FeatureGraphValidator = FeatureGraphValidator { evaluation ->
         TranslationFeatureGraphStateValidator(evaluation).validate()
     }
 }

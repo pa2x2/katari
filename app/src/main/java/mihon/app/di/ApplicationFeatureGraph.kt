@@ -1,6 +1,6 @@
 package mihon.app.di
 
-import mihon.feature.runtime.application.ApplicationFeatureRuntime
+import mihon.feature.runtime.FeatureRuntimeContributions
 import mihon.model.artifacts.api.ModelArtifactStore
 import mihon.text.recognition.api.TextRecognitionFeature
 import mihon.text.recognition.api.host.TextRecognitionHostActions
@@ -15,7 +15,7 @@ import tachiyomi.core.common.preference.InstalledProfilePreferenceOwner
  * validation graph both expose this, so validation sees the same Features the app installs.
  */
 interface ApplicationFeatureGraph {
-    val applicationFeatureRuntime: ApplicationFeatureRuntime
+    val featureRuntimeContributions: FeatureRuntimeContributions
 
     /** Reading this registers every Feature's profile preference owner. */
     val profilePreferenceOwners: Set<InstalledProfilePreferenceOwner<*>>

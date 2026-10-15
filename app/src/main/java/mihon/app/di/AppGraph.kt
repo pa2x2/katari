@@ -7,7 +7,7 @@ import dev.zacsweers.metro.Provides
 import mihon.app.di.injekt.InjektHostBindings
 
 @DependencyGraph(AppScope::class, bindingContainers = [InjektHostBindings::class])
-interface AppGraph : ApplicationFeatureGraph {
+interface AppGraph : ApplicationFeatureGraph, EntryFeatureGraph {
     @DependencyGraph.Factory
     fun interface Factory {
         fun create(@Provides application: Application): AppGraph

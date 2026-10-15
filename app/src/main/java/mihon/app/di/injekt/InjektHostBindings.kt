@@ -6,6 +6,7 @@ import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import eu.kanade.tachiyomi.network.NetworkHelper
 import mihon.feature.profiles.core.ProfileStore
+import mihon.feature.runtime.FeatureRuntimeComposition
 import tachiyomi.core.common.preference.ProfilePreferenceOwnerInstaller
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
@@ -15,6 +16,9 @@ import uy.kohesive.injekt.api.get
 object InjektHostBindings {
     @Provides
     fun networkHelper(): NetworkHelper = Injekt.get()
+
+    @Provides
+    fun featureRuntimeComposition(): FeatureRuntimeComposition = Injekt.get()
 
     @Provides
     @SingleIn(AppScope::class)

@@ -39,7 +39,7 @@ class ProductionFeatureDeveloperReportTest {
             profilePreferenceOwners = environment.profilePreferenceOwners,
         )
         Injekt.addApplicationFeatures(graph)
-        val composition = environment.composition(graph.applicationFeatureRuntime)
+        val composition = environment.composition(graph.featureRuntimeContributions)
         val result = validateAndBuildFeatureDeveloperReport(
             graph = composition.featureGraph,
             evaluation = composition.featureGraphEvaluation,

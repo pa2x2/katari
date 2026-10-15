@@ -13,7 +13,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import mihon.feature.graph.CapabilityProvider
 import mihon.feature.graph.FeatureGraphContributor
-import mihon.feature.runtime.application.ApplicationFeatureGraphValidator
+import mihon.feature.runtime.FeatureGraphValidator
 import mihon.model.artifacts.api.ModelArtifactStore
 import mihon.model.artifacts.runtime.download.ModelArtifactFileDownloader
 import mihon.model.artifacts.runtime.graph.ModelArtifactStoreCapability
@@ -52,7 +52,7 @@ object ModelArtifactsBindings {
 
     @Provides
     @IntoSet
-    fun graphValidator(): ApplicationFeatureGraphValidator = ApplicationFeatureGraphValidator { evaluation ->
+    fun graphValidator(): FeatureGraphValidator = FeatureGraphValidator { evaluation ->
         ModelArtifactsFeatureGraphStateValidator(evaluation).validate()
     }
 }

@@ -10,7 +10,7 @@ import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.Dispatchers
 import mihon.feature.graph.CapabilityProvider
 import mihon.feature.graph.FeatureGraphContributor
-import mihon.feature.runtime.application.ApplicationFeatureGraphValidator
+import mihon.feature.runtime.FeatureGraphValidator
 import mihon.model.artifacts.api.ModelArtifactStore
 import mihon.text.recognition.api.TextRecognitionFeature
 import mihon.text.recognition.api.host.TextRecognitionHostActions
@@ -110,7 +110,7 @@ object TextRecognitionBindings {
 
     @Provides
     @IntoSet
-    fun graphValidator(): ApplicationFeatureGraphValidator = ApplicationFeatureGraphValidator { evaluation ->
+    fun graphValidator(): FeatureGraphValidator = FeatureGraphValidator { evaluation ->
         TextRecognitionFeatureGraphStateValidator(evaluation).validate()
     }
 }

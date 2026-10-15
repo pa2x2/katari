@@ -4,6 +4,7 @@ plugins {
     alias(mihonx.plugins.android.library)
     alias(mihonx.plugins.spotless)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.metro)
 }
 
 android {

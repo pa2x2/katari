@@ -1,4 +1,4 @@
-package mihon.feature.runtime.application
+package mihon.feature.runtime
 
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesTo
@@ -11,19 +11,18 @@ import mihon.feature.graph.ContributionOwner
 import mihon.feature.graph.FeatureGraphContributor
 import mihon.feature.graph.FeatureGraphEvaluation
 import mihon.feature.graph.featureGraphContributor
-import mihon.feature.runtime.FeatureRuntimeInputs
 
 /**
- * The application-scoped Features' share of the Feature runtime, aggregated from what each Feature module contributes
- * to the graph: its Feature declarations, the capabilities it provides on the application subject, and checks of the
- * evaluated graph that only the owning Feature can make.
+ * What Feature modules contribute to the Feature runtime through the dependency graph: their Feature declarations,
+ * the capabilities application Features provide on the application subject, and checks of the evaluated graph that
+ * only the owning Feature can make.
  */
 @Inject
 @SingleIn(AppScope::class)
-class ApplicationFeatureRuntime(
+class FeatureRuntimeContributions(
     graphContributors: Set<FeatureGraphContributor>,
     capabilityProviders: Set<CapabilityProvider<*>>,
-    private val graphValidators: Set<ApplicationFeatureGraphValidator>,
+    private val graphValidators: Set<FeatureGraphValidator>,
 ) {
     val featureRuntimeInputs: FeatureRuntimeInputs = FeatureRuntimeInputs(
         graphContributors = graphContributors.toList() + featureGraphContributor(APPLICATION_FEATURE_SUBJECT_OWNER) {
@@ -41,12 +40,12 @@ class ApplicationFeatureRuntime(
     }
 }
 
-fun interface ApplicationFeatureGraphValidator {
+fun interface FeatureGraphValidator {
     fun validate(evaluation: FeatureGraphEvaluation)
 }
 
 @ContributesTo(AppScope::class)
-interface ApplicationFeatureRuntimeMultibindings {
+interface FeatureRuntimeMultibindings {
     @Multibinds(allowEmpty = true)
     fun graphContributors(): Set<FeatureGraphContributor>
 
@@ -54,7 +53,7 @@ interface ApplicationFeatureRuntimeMultibindings {
     fun capabilityProviders(): Set<CapabilityProvider<*>>
 
     @Multibinds(allowEmpty = true)
-    fun graphValidators(): Set<ApplicationFeatureGraphValidator>
+    fun graphValidators(): Set<FeatureGraphValidator>
 }
 
 private val APPLICATION_FEATURE_SUBJECT_OWNER = ContributionOwner("application-feature-runtime")
