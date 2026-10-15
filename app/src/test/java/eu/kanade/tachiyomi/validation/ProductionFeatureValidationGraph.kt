@@ -4,6 +4,7 @@ import android.app.Application
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.DependencyGraph
 import dev.zacsweers.metro.Provides
+import mihon.entry.interactions.validation.ControlledEntryHostBindings
 import mihon.feature.runtime.FeatureRuntimeGraph
 import mihon.tts.provider.android.AndroidTtsBindings
 import tachiyomi.core.common.preference.ProfilePreferenceOwnerInstaller
@@ -13,7 +14,11 @@ import tachiyomi.core.common.preference.ProfilePreferenceOwnerInstaller
  * engine discovery reads system settings the environment doesn't have; the Feature graph doesn't depend on which
  * engines are installed.
  */
-@DependencyGraph(AppScope::class, excludes = [AndroidTtsBindings::class])
+@DependencyGraph(
+    AppScope::class,
+    bindingContainers = [ControlledEntryHostBindings::class],
+    excludes = [AndroidTtsBindings::class],
+)
 interface ProductionFeatureValidationGraph : FeatureRuntimeGraph {
     @DependencyGraph.Factory
     fun interface Factory {

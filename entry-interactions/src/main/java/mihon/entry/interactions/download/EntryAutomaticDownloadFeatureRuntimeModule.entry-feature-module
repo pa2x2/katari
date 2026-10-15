@@ -1,2 +1,0 @@
-id=entry.download.automatic
-module=mihon.entry.interactions.download.EntryAutomaticDownloadFeatureRuntimeModule

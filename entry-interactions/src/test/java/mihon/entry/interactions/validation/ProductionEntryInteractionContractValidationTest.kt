@@ -1,6 +1,6 @@
 package mihon.entry.interactions.validation
 
-import dev.zacsweers.metro.createGraph
+import dev.zacsweers.metro.createGraphFactory
 import io.kotest.assertions.withClue
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.test.runTest
@@ -31,7 +31,9 @@ class ProductionEntryInteractionContractValidationTest {
 
     @Test
     fun `production composition executes every discovered contract without unresolved work`() = runTest {
-        val composition = environment.composition(createGraph<EntryInteractionValidationGraph>())
+        val composition = environment.composition(
+            createGraphFactory<EntryInteractionValidationGraph.Factory>().create(environment.application),
+        )
 
         val result = validateEntryInteractionContracts(composition)
         val unexpectedContractExecutions = result.executions.filterNot { execution ->

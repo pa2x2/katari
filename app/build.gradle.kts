@@ -216,6 +216,7 @@ dependencies {
     implementation(dependencies.project(mapOf("path" to projects.i18n.path)))
     implementation(dependencies.project(mapOf("path" to projects.core.archive.path)))
     implementation(dependencies.project(mapOf("path" to projects.core.common.path)))
+    implementation(dependencies.project(mapOf("path" to projects.core.metro.path)))
     implementation(dependencies.project(mapOf("path" to projects.coreMetadata.path)))
     implementation(dependencies.project(mapOf("path" to projects.entryInteractions.path)))
     implementation(dependencies.project(mapOf("path" to projects.entrySourceApi.path)))

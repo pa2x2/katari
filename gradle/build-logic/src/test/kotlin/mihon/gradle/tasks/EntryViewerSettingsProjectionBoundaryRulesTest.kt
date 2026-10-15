@@ -24,7 +24,7 @@ class EntryViewerSettingsProjectionBoundaryRulesTest {
 
     private fun check(
         registry: String,
-        appModule: String = "productionEntryViewerSettingsScreenProjectionResolver()",
+        hostBindings: String = "productionEntryViewerSettingsScreenProjectionResolver()",
     ): List<EntryViewerSettingsProjectionBoundaryFinding> {
         return checkEntryViewerSettingsProjectionBoundaries(
             listOf(
@@ -42,8 +42,8 @@ class EntryViewerSettingsProjectionBoundaryRulesTest {
                     registry,
                 ),
                 EntryViewerSettingsProjectionBoundarySource(
-                    "app/src/main/java/eu/kanade/tachiyomi/di/AppModule.kt",
-                    appModule,
+                    "app/src/main/java/mihon/entry/interactions/host/AppEntryHostBindings.kt",
+                    hostBindings,
                 ),
             ),
         )

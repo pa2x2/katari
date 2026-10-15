@@ -89,7 +89,7 @@ private fun EntryMigrationBoundarySource.isAllowedMigrationHostReference(name: S
     val fileName = relativePath.substringAfterLast("/")
     if (relativePath.startsWith(ENTRY_MIGRATION_HOST_API_ROOT)) return true
     if (relativePath.startsWith(ENTRY_MIGRATION_IMPLEMENTATION_ROOT)) return true
-    if (relativePath == ENTRY_INTERACTION_RUNTIME_PATH) return true
+    if (isEntryHostCompositionPath(relativePath)) return true
     return relativePath.startsWith(APPLICATION_ENTRY_INTERACTION_HOST_ROOT) &&
         fileName.startsWith("AppEntryMigration") &&
         fileName.endsWith("Host.kt")
@@ -141,9 +141,6 @@ private const val ENTRY_MIGRATION_HOST_API_ROOT =
 
 private const val ENTRY_MIGRATION_IMPLEMENTATION_ROOT =
     "entry-interactions/src/main/java/mihon/entry/interactions/migration/"
-
-private const val ENTRY_INTERACTION_RUNTIME_PATH =
-    "entry-interactions/src/main/java/mihon/entry/interactions/runtime/EntryInteractionRuntime.kt"
 
 private const val APPLICATION_ENTRY_INTERACTION_HOST_ROOT =
     "app/src/main/java/mihon/entry/interactions/host/"

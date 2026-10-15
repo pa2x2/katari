@@ -18,31 +18,11 @@ import kotlinx.serialization.json.Json
 import mihon.entry.interactions.download.EntryDownloadLifecycleEventSink
 import mihon.entry.interactions.download.EntryDownloadNotificationActions
 import mihon.entry.interactions.download.EntryDownloadWorkController
-import mihon.entry.interactions.library.membership.host.EntryLibraryCustomCoverHost
-import mihon.entry.interactions.library.membership.host.EntryLibraryMembershipHost
-import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveChildGroupFilterStateHost
-import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveCoverHashStateHost
-import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveCustomCoverHost
-import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveHost
-import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveSourceVisibilityHost
-import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveTrackingStateHost
-import mihon.entry.interactions.lifecycle.removal.host.EntryDestructiveRemovalCustomCoverHost
-import mihon.entry.interactions.lifecycle.removal.host.EntryDestructiveRemovalHost
-import mihon.entry.interactions.media.EntryViewerSettingsScreenProjection
-import mihon.entry.interactions.media.EntryViewerSettingsScreenProjectionResolver
 import mihon.entry.interactions.media.session.EntryMediaSessionIncognitoState
-import mihon.entry.interactions.merge.host.EntryMergeHost
-import mihon.entry.interactions.migration.host.EntryMigrationConsequenceHost
-import mihon.entry.interactions.migration.host.EntryMigrationCustomCoverHost
-import mihon.entry.interactions.migration.host.EntryMigrationExecutionHost
-import mihon.entry.interactions.migration.host.EntryMigrationPreparationHost
 import mihon.entry.interactions.runtime.EntryInteractionComposition
 import mihon.entry.interactions.runtime.EntryInteractionRuntimeDependencies
 import mihon.entry.interactions.runtime.addEntryInteractionRuntime
-import mihon.entry.interactions.runtime.production.EntryFeatureRuntimeInstallation
-import mihon.entry.interactions.runtime.production.validateInstalledEntryFeatureRuntimeModules
 import mihon.entry.interactions.settings.EntryInteractionPreferences
-import mihon.entry.interactions.tracking.host.EntryTrackingHost
 import mihon.entry.interactions.translate.EntryTranslatePreferences
 import mihon.entry.viewer.settings.ViewerSettingOverrideRepository
 import mihon.feature.runtime.FeatureRuntimeComposition
@@ -83,10 +63,6 @@ import java.io.File
 @OptIn(ExperimentalCoroutinesApi::class)
 class ProductionEntryInteractionValidationEnvironment(
     private val temporaryDirectory: File,
-    private val viewerSettingsScreenProjectionResolver: EntryViewerSettingsScreenProjectionResolver =
-        EntryViewerSettingsScreenProjectionResolver { surfaceIds ->
-            surfaceIds.map(::viewerSettingsProjection)
-        },
 ) : AutoCloseable {
     private val previousInjekt: InjektScope = Injekt
     private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -125,25 +101,6 @@ class ProductionEntryInteractionValidationEnvironment(
                 mediaSessionIncognitoState = mockk(relaxed = true),
                 basePreferenceStore = InMemoryPreferenceStore(),
                 profilePreferenceOwners = profilePreferenceOwners,
-                viewerSettingsScreenProjectionResolver = viewerSettingsScreenProjectionResolver,
-                sourceRefreshUpdateLibraryTitles = { false },
-                libraryMembershipHost = mockk<EntryLibraryMembershipHost>(relaxed = true),
-                libraryCustomCoverHost = mockk<EntryLibraryCustomCoverHost>(relaxed = true),
-                destructiveRemovalHost = mockk<EntryDestructiveRemovalHost>(relaxed = true),
-                destructiveRemovalCustomCoverHost = mockk<EntryDestructiveRemovalCustomCoverHost>(relaxed = true),
-                profileMoveHost = mockk<EntryProfileMoveHost>(relaxed = true),
-                profileMoveSourceVisibilityHost = mockk<EntryProfileMoveSourceVisibilityHost>(relaxed = true),
-                profileMoveCustomCoverHost = mockk<EntryProfileMoveCustomCoverHost>(relaxed = true),
-                profileMoveTrackingStateHost = mockk<EntryProfileMoveTrackingStateHost>(relaxed = true),
-                profileMoveChildGroupFilterStateHost = mockk<EntryProfileMoveChildGroupFilterStateHost>(relaxed = true),
-                profileMoveCoverHashStateHost = mockk<EntryProfileMoveCoverHashStateHost>(relaxed = true),
-                mergeHost = mockk<EntryMergeHost>(relaxed = true),
-                mergeCoverCleanup = {},
-                migrationPreparationHost = mockk<EntryMigrationPreparationHost>(relaxed = true),
-                migrationExecutionHost = mockk<EntryMigrationExecutionHost>(relaxed = true),
-                migrationConsequenceHost = mockk<EntryMigrationConsequenceHost>(relaxed = true),
-                migrationCustomCoverHost = mockk<EntryMigrationCustomCoverHost>(relaxed = true),
-                trackingHost = mockk<EntryTrackingHost>(relaxed = true),
             ),
         )
         Injekt.addSingletonFactory<FeatureRuntimeComposition> {
@@ -154,8 +111,6 @@ class ProductionEntryInteractionValidationEnvironment(
                 ),
             )
         }
-        val installation = Injekt.get<EntryFeatureRuntimeInstallation>()
-        validateInstalledEntryFeatureRuntimeModules(installation.modules)
         graph.featureRuntimeContributions.validate(Injekt.get<FeatureRuntimeComposition>().evaluation)
         return Injekt.get<EntryInteractionComposition>()
     }
@@ -205,11 +160,5 @@ class ProductionEntryInteractionValidationEnvironment(
         Injekt.addSingletonFactory<HistoryRepository> { mockk(relaxed = true) }
         Injekt.addSingletonFactory<GetCategories> { mockk(relaxed = true) }
         Injekt.addSingletonFactory<GetTracks> { mockk(relaxed = true) }
-    }
-}
-
-private fun viewerSettingsProjection(id: String): EntryViewerSettingsScreenProjection {
-    return object : EntryViewerSettingsScreenProjection {
-        override val surfaceId = id
     }
 }

@@ -23,14 +23,6 @@ androidComponents {
             "generate${variantName}EntryInteractionTopology",
         ) {
             this.variantName.set(variant.name)
-            featureModuleDescriptors.from(
-                fileTree(layout.projectDirectory.dir("src/main")) {
-                    include("**/*.entry-feature-module")
-                },
-                fileTree(layout.projectDirectory.dir("src/${variant.name}")) {
-                    include("**/*.entry-feature-module")
-                },
-            )
             typeModuleDescriptors.from(
                 fileTree(layout.projectDirectory) {
                     include("*/src/main/**/*.entry-type-module")
@@ -50,6 +42,7 @@ dependencies {
     api(projects.entryViewerSettingsApi)
 
     implementation(projects.core.common)
+    implementation(projects.core.metro)
     implementation(projects.entryInteractions.spi)
     implementation(projects.entryInteractions.downloadNotification)
     implementation(projects.entryInteractions.manga)
@@ -80,6 +73,7 @@ dependencies {
     testFixturesImplementation(libs.kotlinx.coroutines.test)
     testFixturesImplementation(libs.unifile)
     testFixturesImplementation(projects.featureValidation)
+    testFixturesImplementation(projects.core.metro)
     testFixturesImplementation(platform(libs.androidx.compose.bom))
     testFixturesApi(projects.entryInteractions.spi)
 }

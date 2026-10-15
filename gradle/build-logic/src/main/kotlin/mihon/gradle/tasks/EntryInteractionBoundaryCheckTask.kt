@@ -25,7 +25,7 @@ abstract class EntryInteractionBoundaryCheckTask : DefaultTask() {
                 reason = finding.reason,
             )
         }
-        findings += checkEntryFeatureRuntimeModuleBoundaries(featureRuntimeModuleSources(root)).map { finding ->
+        findings += checkFeatureBehaviorIdBoundaries(featureBehaviorIdSources(root)).map { finding ->
             Finding(
                 relativePath = finding.relativePath,
                 lineNumber = finding.lineNumber,
@@ -99,14 +99,14 @@ abstract class EntryInteractionBoundaryCheckTask : DefaultTask() {
         )
     }
 
-    private fun featureRuntimeModuleSources(root: File): List<EntryFeatureRuntimeModuleBoundarySource> {
+    private fun featureBehaviorIdSources(root: File): List<FeatureBehaviorIdBoundarySource> {
         val entryInteractions = root.resolve("entry-interactions")
         if (!entryInteractions.isDirectory) return emptyList()
         return entryInteractions.walkTopDown()
             .filter { it.isFile && it.extension == "kt" }
             .filterNot { it.invariantSeparatorsPath.contains("/build/") }
             .map { file ->
-                EntryFeatureRuntimeModuleBoundarySource(
+                FeatureBehaviorIdBoundarySource(
                     relativePath = file.relativeTo(root).invariantSeparatorsPath,
                     content = file.readText(),
                 )
@@ -613,7 +613,7 @@ private class EntryInteractionBoundaryRules(
             "domain/src/main/java/tachiyomi/domain/entry/service/EntryLibraryProgressResolution.kt",
             "domain/src/main/java/tachiyomi/domain/entry/interactor/GetLibraryEntries.kt",
             "entry-interactions/api/src/main/java/mihon/entry/interactions/library/EntryLibraryProgressFeature.kt",
-            "entry-interactions/src/main/java/mihon/entry/interactions/library/EntryLibraryRuntimeModules.kt",
+            "entry-interactions/src/main/java/mihon/entry/interactions/library/EntryLibraryBindings.kt",
         )
         if (file.relativePath in allowedPaths) return
 
@@ -772,6 +772,8 @@ private class EntryInteractionBoundaryRules(
             "domain/src/main/java/tachiyomi/domain/entry/interactor/SyncEntryWithSource.kt",
             "app/src/main/java/eu/kanade/domain/DomainModule.kt",
             "entry-interactions/src/main/java/mihon/entry/interactions/source/EntrySourceRefreshFeature.kt",
+            "entry-interactions/src/main/java/mihon/entry/interactions/source/EntrySourceBindings.kt",
+            "entry-interactions/src/main/java/mihon/entry/interactions/runtime/production/EntryHostInjektBindings.kt",
         )
         if (file.relativePath in allowedPaths) return
 
@@ -832,9 +834,7 @@ private class EntryInteractionBoundaryRules(
             "entry-interactions/src/main/java/mihon/entry/interactions/tracking/",
         ) || file.relativePath.startsWith(
             "app/src/main/java/mihon/entry/interactions/host/tracking/",
-        ) || file.relativePath ==
-            "entry-interactions/src/main/java/mihon/entry/interactions/runtime/EntryInteractionRuntime.kt" ||
-            file.relativePath == "app/src/main/java/eu/kanade/tachiyomi/di/AppModule.kt"
+        ) || isEntryHostCompositionPath(file.relativePath)
         if (ownsTrackingHost) return
 
         trackingHostApiNames.forEach { name ->
