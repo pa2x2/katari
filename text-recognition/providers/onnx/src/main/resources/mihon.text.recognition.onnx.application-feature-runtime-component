@@ -1,2 +1,0 @@
-id=text-recognition.onnx
-component=mihon.text.recognition.provider.onnx.onnxTextRecognitionRuntimeComponent

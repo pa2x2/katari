@@ -21,6 +21,7 @@ import coil3.request.allowRgb565
 import coil3.request.crossfade
 import coil3.util.DebugLogger
 import dev.mihon.injekt.patchInjekt
+import dev.zacsweers.metro.createGraphFactory
 import eu.kanade.domain.DomainModule
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.domain.ui.UiPreferences
@@ -56,6 +57,7 @@ import kotlinx.coroutines.flow.onEach
 import logcat.AndroidLogcatLogger
 import logcat.LogPriority
 import logcat.LogcatLogger
+import mihon.app.di.AppGraph
 import mihon.app.localnetwork.LocalNetworkPermissionPrompter
 import mihon.core.migration.Migrator
 import mihon.core.migration.migrations.migrations
@@ -103,7 +105,7 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
 
         Injekt.importModule(PreferenceModule(this))
         Injekt.importModule(DomainModule())
-        Injekt.importModule(AppModule(this))
+        Injekt.importModule(AppModule(this, createGraphFactory<AppGraph.Factory>().create(this)))
 
         setupNotificationChannels()
 

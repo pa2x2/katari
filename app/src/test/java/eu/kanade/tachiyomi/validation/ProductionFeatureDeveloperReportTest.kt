@@ -1,16 +1,18 @@
 package eu.kanade.tachiyomi.validation
 
+import dev.zacsweers.metro.createGraphFactory
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import kotlinx.coroutines.test.runTest
+import mihon.app.di.injekt.addApplicationFeatures
 import mihon.entry.interactions.validation.ProductionEntryInteractionValidationEnvironment
 import mihon.feature.graph.validation.reporting.renderFeatureDeveloperReport
 import mihon.feature.graph.validation.reporting.validateAndBuildFeatureDeveloperReport
-import mihon.feature.runtime.productionApplicationFeatureRuntimeModules
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
+import uy.kohesive.injekt.Injekt
 import java.io.File
 
 class ProductionFeatureDeveloperReportTest {
@@ -31,7 +33,13 @@ class ProductionFeatureDeveloperReportTest {
 
     @Test
     fun `production composition renders the evaluated developer report`() = runTest {
-        val composition = environment.composition(productionApplicationFeatureRuntimeModules())
+        val graph = createGraphFactory<ProductionFeatureValidationGraph.Factory>().create(
+            application = environment.application,
+            networkHelper = environment.networkHelper,
+            profilePreferenceOwners = environment.profilePreferenceOwners,
+        )
+        Injekt.addApplicationFeatures(graph)
+        val composition = environment.composition(graph.applicationFeatureRuntime)
         val result = validateAndBuildFeatureDeveloperReport(
             graph = composition.featureGraph,
             evaluation = composition.featureGraphEvaluation,

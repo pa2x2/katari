@@ -46,12 +46,8 @@ import mihon.entry.interactions.tracking.host.EntryTrackingHost
 import mihon.entry.interactions.translate.EntryTranslatePreferences
 import mihon.entry.viewer.settings.ViewerSettingOverrideRepository
 import mihon.feature.runtime.FeatureRuntimeComposition
-import mihon.feature.runtime.application.ApplicationFeatureRuntimeDependencies
-import mihon.feature.runtime.application.ApplicationFeatureRuntimeInstallationContext
-import mihon.feature.runtime.application.ApplicationFeatureRuntimeModule
-import mihon.feature.runtime.application.installApplicationFeatureRuntimeModules
-import mihon.feature.runtime.application.validateInstalledApplicationFeatureRuntimeGraph
-import mihon.feature.runtime.application.validateInstalledApplicationFeatureRuntimeModules
+import mihon.feature.runtime.FeatureRuntimeInputs
+import mihon.feature.runtime.application.ApplicationFeatureRuntime
 import mihon.feature.runtime.createFeatureRuntimeComposition
 import nl.adaptivity.xmlutil.serialization.XML
 import okhttp3.OkHttpClient
@@ -95,20 +91,30 @@ class ProductionEntryInteractionValidationEnvironment(
     private val previousInjekt: InjektScope = Injekt
     private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
+    val application: Application = mockk<Application>(relaxed = true).also { application ->
+        every { application.cacheDir } returns temporaryDirectory.resolve("cache").also(File::mkdirs)
+        every { application.filesDir } returns temporaryDirectory.resolve("files").also(File::mkdirs)
+        // Production graph validation runs without Android system services. Keep that boundary
+        // explicit so generic service lookups return absence instead of relaxed mock placeholders.
+        every { application.getSystemService(any<Class<Any>>()) } returns null
+    }
+
+    val networkHelper = mockk<NetworkHelper>(relaxed = true) {
+        every { client } returns mockk<OkHttpClient>(relaxed = true)
+    }
+
+    val profilePreferenceOwners = ProfilePreferenceOwnerInstaller(
+        owners = ProfilePreferenceOwnerRegistry(),
+        preferenceStore = ::InMemoryPreferenceStore,
+    )
+
     init {
         Injekt = InjektScope(DefaultRegistrar())
         Dispatchers.setMain(UnconfinedTestDispatcher())
     }
 
-    fun composition(
-        applicationFeatureRuntimeModules: List<ApplicationFeatureRuntimeModule> = emptyList(),
-    ): EntryInteractionComposition {
-        val application = application()
-        val preferenceOwners = ProfilePreferenceOwnerInstaller(
-            owners = ProfilePreferenceOwnerRegistry(),
-            preferenceStore = ::InMemoryPreferenceStore,
-        )
-        installControlledRuntimeDependencies(application)
+    fun composition(applicationFeatures: ApplicationFeatureRuntime? = null): EntryInteractionComposition {
+        installControlledRuntimeDependencies()
         val runtimeInstallation = Injekt.addEntryInteractionRuntime(
             app = application,
             dependencies = EntryInteractionRuntimeDependencies(
@@ -117,7 +123,7 @@ class ProductionEntryInteractionValidationEnvironment(
                 childGroupFilterDataSource = mockk(relaxed = true),
                 mediaSessionIncognitoState = mockk(relaxed = true),
                 basePreferenceStore = InMemoryPreferenceStore(),
-                profilePreferenceOwners = preferenceOwners,
+                profilePreferenceOwners = profilePreferenceOwners,
                 viewerSettingsScreenProjectionResolver = viewerSettingsScreenProjectionResolver,
                 sourceRefreshUpdateLibraryTitles = { false },
                 libraryMembershipHost = mockk<EntryLibraryMembershipHost>(relaxed = true),
@@ -139,31 +145,17 @@ class ProductionEntryInteractionValidationEnvironment(
                 trackingHost = mockk<EntryTrackingHost>(relaxed = true),
             ),
         )
-        val applicationRuntimeInstallation = installApplicationFeatureRuntimeModules(
-            registrar = Injekt,
-            modules = applicationFeatureRuntimeModules,
-            context = ApplicationFeatureRuntimeInstallationContext(
-                application = application,
-                dependencies = ApplicationFeatureRuntimeDependencies(
-                    profilePreferenceOwners = preferenceOwners,
-                ),
-            ),
-        )
         Injekt.addSingletonFactory<FeatureRuntimeComposition> {
             createFeatureRuntimeComposition(
                 listOf(
                     runtimeInstallation.featureRuntimeInputs,
-                    applicationRuntimeInstallation.featureRuntimeInputs,
+                    applicationFeatures?.featureRuntimeInputs ?: FeatureRuntimeInputs(),
                 ),
             )
         }
         val installation = Injekt.get<EntryFeatureRuntimeInstallation>()
         validateInstalledEntryFeatureRuntimeModules(installation.modules)
-        validateInstalledApplicationFeatureRuntimeModules(applicationRuntimeInstallation)
-        validateInstalledApplicationFeatureRuntimeGraph(
-            applicationRuntimeInstallation,
-            Injekt.get<FeatureRuntimeComposition>().evaluation,
-        )
+        applicationFeatures?.validate(Injekt.get<FeatureRuntimeComposition>().evaluation)
         return Injekt.get<EntryInteractionComposition>()
     }
 
@@ -173,23 +165,10 @@ class ProductionEntryInteractionValidationEnvironment(
         Injekt = previousInjekt
     }
 
-    private fun application(): Application {
-        return mockk<Application>(relaxed = true).also { application ->
-            every { application.cacheDir } returns temporaryDirectory.resolve("cache").also(File::mkdirs)
-            every { application.filesDir } returns temporaryDirectory.resolve("files").also(File::mkdirs)
-            // Production graph validation runs without Android system services. Keep that boundary
-            // explicit so generic service lookups return absence instead of relaxed mock placeholders.
-            every { application.getSystemService(any<Class<Any>>()) } returns null
-        }
-    }
-
-    private fun installControlledRuntimeDependencies(application: Application) {
+    private fun installControlledRuntimeDependencies() {
         val storageManager = mockk<StorageManager>(relaxed = true) {
             every { changes } returns MutableSharedFlow()
             every { getDownloadsDirectory() } returns null
-        }
-        val networkHelper = mockk<NetworkHelper>(relaxed = true) {
-            every { client } returns mockk<OkHttpClient>(relaxed = true)
         }
         Injekt.addSingletonFactory<Application> { application }
         Injekt.addSingletonFactory<CoroutineScope> { appScope }

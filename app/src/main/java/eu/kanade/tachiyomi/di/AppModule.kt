@@ -28,6 +28,8 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.protobuf.ProtoBuf
 import logcat.LogPriority
+import mihon.app.di.AppGraph
+import mihon.app.di.injekt.addApplicationFeatures
 import mihon.data.database.DatabaseRepositoryImpl
 import mihon.data.database.createSqlDriver
 import mihon.domain.database.repository.DatabaseRepository
@@ -70,14 +72,7 @@ import mihon.feature.profiles.core.ProfileSourcePreferenceProvider
 import mihon.feature.profiles.core.ProfileStore
 import mihon.feature.runtime.FeatureRuntimeComposition
 import mihon.feature.runtime.FeatureRuntimeWarmup
-import mihon.feature.runtime.application.ApplicationFeatureRuntimeDependencies
-import mihon.feature.runtime.application.ApplicationFeatureRuntimeInstallationContext
-import mihon.feature.runtime.application.installApplicationFeatureRuntimeModules
-import mihon.feature.runtime.application.validateInstalledApplicationFeatureRuntimeGraph
-import mihon.feature.runtime.application.validateInstalledApplicationFeatureRuntimeModules
 import mihon.feature.runtime.createFeatureRuntimeComposition
-import mihon.feature.runtime.productionApplicationFeatureRuntimeComponents
-import mihon.feature.runtime.productionApplicationFeatureRuntimeModules
 import mihon.telemetry.TelemetryConfig
 import nl.adaptivity.xmlutil.XmlDeclMode
 import nl.adaptivity.xmlutil.core.XmlVersion
@@ -114,7 +109,7 @@ import java.lang.ref.WeakReference
 
 private val lock = Any()
 
-class AppModule(val app: Application) : InjektModule {
+class AppModule(val app: Application, private val graph: AppGraph) : InjektModule {
 
     private var sqlDriverRef: WeakReference<SqlDriver>? = null
 
@@ -304,37 +299,19 @@ class AppModule(val app: Application) : InjektModule {
                 trackingHost = trackingHost,
             ),
         )
-        val applicationFeatureRuntimeInstallation = installApplicationFeatureRuntimeModules(
-            registrar = this,
-            modules = productionApplicationFeatureRuntimeModules(),
-            context = ApplicationFeatureRuntimeInstallationContext(
-                application = app,
-                dependencies = ApplicationFeatureRuntimeDependencies(
-                    profilePreferenceOwners = ProfilePreferenceOwnerInstaller(get()) {
-                        get<ProfileStore>().profileStore()
-                    },
-                ),
-                components = productionApplicationFeatureRuntimeComponents(),
-            ),
-        )
-        addSingletonFactory { applicationFeatureRuntimeInstallation }
+        addApplicationFeatures(graph)
         addSingletonFactory<FeatureRuntimeComposition> {
             createFeatureRuntimeComposition(
                 listOf(
                     entryRuntimeInstallation.featureRuntimeInputs,
-                    applicationFeatureRuntimeInstallation.featureRuntimeInputs,
+                    graph.applicationFeatureRuntime.featureRuntimeInputs,
                 ),
             )
         }
         addSingletonFactory {
             FeatureRuntimeWarmup {
-                validateInstalledApplicationFeatureRuntimeModules(applicationFeatureRuntimeInstallation)
-                validateInstalledApplicationFeatureRuntimeGraph(
-                    applicationFeatureRuntimeInstallation,
-                    get<FeatureRuntimeComposition>().evaluation,
-                )
+                graph.applicationFeatureRuntime.validate(get<FeatureRuntimeComposition>().evaluation)
                 entryRuntimeInstallation.warmups.forEach { it() }
-                applicationFeatureRuntimeInstallation.warmups.forEach { it() }
             }
         }
 

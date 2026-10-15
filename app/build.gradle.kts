@@ -6,7 +6,6 @@ import mihon.gradle.getCurrentTime
 import mihon.gradle.getLatestCommitCount
 import mihon.gradle.getLatestCommitSha
 import mihon.gradle.getLatestCommitTime
-import mihon.gradle.tasks.GenerateApplicationFeatureTopologyTask
 import mihon.gradle.tasks.ReplaceShortcutsPlaceholderTask
 import org.gradle.api.tasks.testing.Test
 import java.io.FileInputStream
@@ -22,6 +21,7 @@ plugins {
     alias(libs.plugins.androidx.baselineProfile)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.apollo)
+    alias(libs.plugins.metro)
 }
 
 if (Config.includeTelemetry) {
@@ -236,7 +236,7 @@ dependencies {
     implementation(dependencies.project(mapOf("path" to projects.modelArtifacts.ui.path)))
     implementation(dependencies.project(mapOf("path" to projects.textRecognition.runtime.path)))
     implementation(dependencies.project(mapOf("path" to projects.textRecognition.providers.onnx.path)))
-    // ML Kit needs Google Play services, so FOSS builds only list it; see its runtime component descriptors.
+    // ML Kit needs Google Play services, so FOSS builds only list it.
     "fossImplementation"(dependencies.project(mapOf("path" to projects.textRecognition.providers.mlkit.catalog.path)))
     listOf("debug", "release", "preview", "benchmark").forEach { buildType ->
         "${buildType}Implementation"(
@@ -474,20 +474,6 @@ fun ApplicationVariant.buildConfigField(type: String, name: String, value: Provi
     buildConfigFields?.put(name, value.map { BuildConfigField(type, it, null) })
 }
 
-/**
- * Descriptor files of every module in the checkout. Hidden top-level directories are skipped because
- * agent worktrees and workspaces (`.claude/`, `.agents-workspaces/`) hold whole nested checkouts whose
- * copies would otherwise collide with the real descriptors' ids.
- */
-fun repositoryDescriptors(fileSuffix: String, variantName: String): ConfigurableFileTree =
-    fileTree(layout.settingsDirectory) {
-        include("**/src/main/**/*$fileSuffix")
-        include("**/src/$variantName/**/*$fileSuffix")
-        exclude(".*/**")
-        exclude("**/build/**")
-        exclude("translation-workspace/**")
-    }
-
 androidComponents {
     onVariants { variant ->
         if (variant.buildType !in releasedBuildTypes) return@onVariants
@@ -514,22 +500,6 @@ androidComponents {
                 val versionName = output.versionName.get()
                 output.versionName.set(latestCommitCount.map { "$versionName-$it" })
             }
-        }
-
-        val javaSources = variant.sources.java
-        if (javaSources != null) {
-            val variantName = variant.name.replaceFirstChar { it.uppercase() }
-            val generateApplicationFeatureTopology = tasks.register<GenerateApplicationFeatureTopologyTask>(
-                "generate${variantName}ApplicationFeatureTopology",
-            ) {
-                this.variantName.set(variant.name)
-                moduleDescriptors.from(repositoryDescriptors(".application-feature-module", variant.name))
-                componentDescriptors.from(repositoryDescriptors(".application-feature-runtime-component", variant.name))
-                outputDirectory.set(
-                    layout.buildDirectory.dir("generated/source/application-feature-topology/${variant.name}"),
-                )
-            }
-            javaSources.addGeneratedSourceDirectory(generateApplicationFeatureTopology) { it.outputDirectory }
         }
 
         if (Config.includeTelemetry) {

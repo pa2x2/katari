@@ -1,6 +1,8 @@
 plugins {
     alias(mihonx.plugins.android.library)
     alias(mihonx.plugins.spotless)
+
+    alias(libs.plugins.metro)
 }
 
 android {
@@ -21,7 +23,6 @@ dependencies {
     implementation(projects.translation.spi)
     implementation(libs.androidx.appCompat)
     implementation(libs.diskLruCache)
-    implementation(libs.injekt)
 
     testImplementation(projects.featureValidation)
     testImplementation(libs.bundles.test)
