@@ -24,46 +24,22 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import mihon.entry.interactions.manga.page.MangaPageStore
 import mihon.entry.interactions.manga.page.acquisition.MangaPageAcquirer
-import mihon.entry.interactions.manga.page.acquisition.MangaPageAcquisitionCoordinator
 import mihon.entry.interactions.manga.page.acquisition.MangaPageAcquisitionIntent
 import mihon.entry.interactions.manga.page.acquisition.PreemptedMangaPagePreload
-import mihon.entry.interactions.manga.page.acquisition.StoredMangaPageAcquirer
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.domain.entry.adapter.toSEntryChapter
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 import kotlin.math.min
 
 /**
  * Loader used to load chapters from an online source.
  */
-internal class EntryPageLoader private constructor(
+internal class EntryPageLoader(
     private val chapter: ReaderChapter,
     private val source: UnifiedSource,
     private val chapterCache: MangaPageStore,
     private val pageAcquirer: MangaPageAcquirer,
+    private val appScope: CoroutineScope,
 ) : PageLoader() {
-
-    internal constructor(
-        chapter: ReaderChapter,
-        source: UnifiedSource,
-    ) : this(
-        chapter = chapter,
-        source = source,
-        chapterCache = Injekt.get(),
-        pageAcquirer = Injekt.get<MangaPageAcquisitionCoordinator>(),
-    )
-
-    internal constructor(
-        chapter: ReaderChapter,
-        source: UnifiedSource,
-        chapterCache: MangaPageStore,
-    ) : this(
-        chapter = chapter,
-        source = source,
-        chapterCache = chapterCache,
-        pageAcquirer = StoredMangaPageAcquirer(chapterCache),
-    )
 
     private val imageSource = source as EntryImageSource
 
@@ -211,7 +187,7 @@ internal class EntryPageLoader private constructor(
         // Cache current page list progress for online chapters to allow a faster reopen. The loader's own scope is
         // cancelled by now.
         chapter.pages?.let { pages ->
-            Injekt.get<CoroutineScope>().launch {
+            appScope.launch {
                 try {
                     // Convert to pages without reader information
                     val pagesToSave = pages.map { Page(it.index, it.url, it.imageUrl) }

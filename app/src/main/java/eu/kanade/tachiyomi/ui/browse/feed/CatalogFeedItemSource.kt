@@ -1,6 +1,9 @@
 package eu.kanade.tachiyomi.ui.browse.feed
 
 import androidx.paging.PagingSource
+import dev.zacsweers.metro.Assisted
+import dev.zacsweers.metro.AssistedFactory
+import dev.zacsweers.metro.AssistedInject
 import eu.kanade.domain.source.model.FeedItemRef
 import eu.kanade.domain.source.model.applySnapshot
 import eu.kanade.domain.source.model.catalogueListing
@@ -13,16 +16,24 @@ import mihon.entry.interactions.catalogue.EntryCatalogueFeature
 import mihon.entry.interactions.catalogue.EntryCatalogueSourceResolution
 import tachiyomi.domain.entry.interactor.GetEntry
 import tachiyomi.domain.source.model.CatalogListItem
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
+@AssistedInject
 class CatalogFeedItemSource(
-    private val sourceId: Long,
-    private val listingQuery: String?,
-    private val initialFilterSnapshot: List<eu.kanade.domain.source.model.FilterStateNode>,
-    private val getEntry: GetEntry = Injekt.get(),
-    private val catalogueFeature: EntryCatalogueFeature = Injekt.get(),
+    @Assisted private val sourceId: Long,
+    @Assisted private val listingQuery: String?,
+    @Assisted private val initialFilterSnapshot: List<eu.kanade.domain.source.model.FilterStateNode>,
+    private val getEntry: GetEntry,
+    private val catalogueFeature: EntryCatalogueFeature,
 ) : FeedItemSource<CatalogListItem> {
+
+    @AssistedFactory
+    fun interface Factory {
+        fun create(
+            sourceId: Long,
+            listingQuery: String?,
+            initialFilterSnapshot: List<eu.kanade.domain.source.model.FilterStateNode>,
+        ): CatalogFeedItemSource
+    }
 
     private val filterLoader = CatalogFilterLoader(catalogueFeature)
 

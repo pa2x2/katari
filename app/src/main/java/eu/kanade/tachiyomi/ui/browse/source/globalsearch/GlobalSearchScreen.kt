@@ -8,16 +8,16 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 import eu.kanade.core.util.ifCatalogSourcesLoaded
 import eu.kanade.presentation.browse.GlobalSearchScreen
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.ui.browse.catalog.CatalogScreen
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
 import kotlinx.coroutines.launch
-import tachiyomi.presentation.core.screens.LoadingScreen
+import mihon.presentation.kit.feedback.LoadingScreen
 
 class GlobalSearchScreen(
     val searchQuery: String = "",
@@ -34,11 +34,8 @@ class GlobalSearchScreen(
         val navigator = LocalNavigator.currentOrThrow
         val scope = rememberCoroutineScope()
 
-        val viewModel = viewModel {
-            GlobalSearchViewModel(
-                initialQuery = searchQuery,
-                initialExtensionFilter = extensionFilter,
-            )
+        val viewModel = assistedMetroViewModel<GlobalSearchViewModel, GlobalSearchViewModel.Factory> {
+            create(initialQuery = searchQuery, initialExtensionFilter = extensionFilter)
         }
         val state by viewModel.state.collectAsState()
         var showSingleLoadingScreen by remember {

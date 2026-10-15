@@ -4,39 +4,32 @@ import eu.kanade.tachiyomi.source.entry.EntryType
 import mihon.entry.interactions.download.host.EntryDownloadSourceAccessResolver
 import mihon.entry.interactions.download.runtime.EntryDownloadActionTarget
 import mihon.entry.interactions.download.runtime.EntryDownloadSourceAccess
-import mihon.feature.graph.FeatureGraphEvaluation
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.service.sortedForReading
 
 internal class DefaultEntryDownloadActionFeature(
-    private val evaluation: FeatureGraphEvaluation,
+    private val types: EntryDownloadActionTypes,
     private val interaction: EntryDownloadInteraction,
     private val sourceAccessResolver: EntryDownloadSourceAccessResolver,
 ) : EntryDownloadActionFeature {
-    private val individualTypes = evaluation.downloadIndividualTypes()
-    private val bulkTypes = evaluation.downloadBulkTypes()
-    private val bookmarkedBulkTypes = evaluation.downloadBookmarkedBulkTypes()
+    private val individualTypes = types.individual
 
     override fun individualAvailability(request: EntryDownloadActionRequest): EntryDownloadActionAvailability {
-        return availability(listOf(request), individualTypes, evaluation::requireDownloadIndividualContext)
+        return availability(listOf(request), individualTypes)
     }
 
     override fun individualSelectionAvailability(
         requests: List<EntryDownloadActionRequest>,
     ): EntryDownloadActionAvailability {
-        return availability(requests, individualTypes, evaluation::requireDownloadIndividualContext)
+        return availability(requests, individualTypes)
     }
 
     override fun bulkAvailability(
         requests: List<EntryDownloadActionRequest>,
         action: EntryBulkDownloadAction,
     ): EntryDownloadActionAvailability {
-        val bookmarked = action.type == EntryBulkDownloadActionType.BOOKMARKED
-        val applicableTypes = if (bookmarked) bookmarkedBulkTypes else bulkTypes
-        return availability(requests, applicableTypes) { target ->
-            evaluation.requireDownloadBulkContext(target, bookmarked)
-        }
+        return availability(requests, bulkTypes(action))
     }
 
     override fun notificationAvailability(
@@ -47,13 +40,6 @@ internal class DefaultEntryDownloadActionFeature(
         if (target.type !in individualTypes) {
             return EntryDownloadActionAvailability.Inapplicable(setOf(target.type))
         }
-        val selectionState = when {
-            childCount <= 0 -> EntryDownloadSelectionState.EMPTY
-            childCount > NOTIFICATION_DOWNLOAD_SELECTION_LIMIT ->
-                EntryDownloadSelectionState.NOTIFICATION_LIMIT_EXCEEDED
-            else -> EntryDownloadSelectionState.ACTIONABLE
-        }
-        evaluation.requireDownloadNotificationContext(target, selectionState)
         return when {
             target.sourceAccess == EntryDownloadSourceAccess.LOCAL_OR_STUB ->
                 blockedBy(EntryDownloadActionBlocker.LOCAL_OR_STUB)
@@ -102,11 +88,7 @@ internal class DefaultEntryDownloadActionFeature(
     ): EntryDownloadCancellationResult {
         val target = resolveTarget(request)
         return when (
-            val availability = availabilityResolved(
-                listOf(target),
-                individualTypes,
-                evaluation::requireDownloadIndividualContext,
-            )
+            val availability = availabilityResolved(listOf(target), individualTypes)
         ) {
             EntryDownloadActionAvailability.Available -> interaction.cancelQueuedDownload(target.type, chapterId)
                 ?.let(EntryDownloadCancellationResult::Cancelled)
@@ -159,16 +141,10 @@ internal class DefaultEntryDownloadActionFeature(
         if (target.type !in individualTypes) {
             return EntryDownloadActionAvailability.Inapplicable(setOf(target.type))
         }
-        val selectionState = if (chapters.isEmpty()) {
-            EntryDownloadSelectionState.EMPTY
-        } else {
-            EntryDownloadSelectionState.ACTIONABLE
-        }
-        evaluation.requireDownloadIndividualOperationContext(target, selectionState)
         return when {
             target.sourceAccess == EntryDownloadSourceAccess.LOCAL_OR_STUB ->
                 blockedBy(EntryDownloadActionBlocker.LOCAL_OR_STUB)
-            selectionState == EntryDownloadSelectionState.EMPTY ->
+            chapters.isEmpty() ->
                 blockedBy(EntryDownloadActionBlocker.EMPTY_SELECTION)
             else -> EntryDownloadActionAvailability.Available
         }
@@ -177,26 +153,24 @@ internal class DefaultEntryDownloadActionFeature(
     private fun availability(
         requests: List<EntryDownloadActionRequest>,
         applicableTypes: Set<EntryType>,
-        requireContext: (EntryDownloadActionTarget) -> Unit,
     ): EntryDownloadActionAvailability {
-        return availabilityResolved(requests.map(::resolveTarget), applicableTypes, requireContext)
+        return availabilityResolved(requests.map(::resolveTarget), applicableTypes)
     }
 
     private fun bulkAvailabilityResolved(
         targets: List<EntryDownloadActionTarget>,
         action: EntryBulkDownloadAction,
     ): EntryDownloadActionAvailability {
-        val bookmarked = action.type == EntryBulkDownloadActionType.BOOKMARKED
-        val applicableTypes = if (bookmarked) bookmarkedBulkTypes else bulkTypes
-        return availabilityResolved(targets, applicableTypes) { target ->
-            evaluation.requireDownloadBulkContext(target, bookmarked)
-        }
+        return availabilityResolved(targets, bulkTypes(action))
+    }
+
+    private fun bulkTypes(action: EntryBulkDownloadAction): Set<EntryType> {
+        return if (action.type == EntryBulkDownloadActionType.BOOKMARKED) types.bookmarkedBulk else types.bulk
     }
 
     private fun availabilityResolved(
         targets: List<EntryDownloadActionTarget>,
         applicableTypes: Set<EntryType>,
-        requireContext: (EntryDownloadActionTarget) -> Unit,
     ): EntryDownloadActionAvailability {
         if (targets.isEmpty()) return blockedBy(EntryDownloadActionBlocker.EMPTY_SELECTION)
 
@@ -207,7 +181,6 @@ internal class DefaultEntryDownloadActionFeature(
             return EntryDownloadActionAvailability.Inapplicable(inapplicableTypes)
         }
 
-        targets.forEach(requireContext)
         return if (targets.any { it.sourceAccess == EntryDownloadSourceAccess.LOCAL_OR_STUB }) {
             blockedBy(EntryDownloadActionBlocker.LOCAL_OR_STUB)
         } else {
@@ -223,6 +196,13 @@ internal class DefaultEntryDownloadActionFeature(
         return EntryDownloadActionTarget(request.type, sourceAccessResolver.resolveLoaded(request.sourceIds))
     }
 }
+
+/** The types each action applies to, read from the providers the type modules contribute. */
+internal class EntryDownloadActionTypes(
+    val individual: Set<EntryType>,
+    val bulk: Set<EntryType>,
+    val bookmarkedBulk: Set<EntryType>,
+)
 
 private const val NOTIFICATION_DOWNLOAD_SELECTION_LIMIT = 15
 

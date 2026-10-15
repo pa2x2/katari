@@ -2,7 +2,6 @@ package mihon.entry.viewer.settings.ui
 
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -12,22 +11,24 @@ import mihon.entry.viewer.settings.ViewerSettingBinding
 import mihon.entry.viewer.settings.shared.ReaderCapabilityId
 import mihon.entry.viewer.settings.shared.ReaderSharedSettingId
 import mihon.entry.viewer.settings.shared.ReaderSharedSettingsRegistry
+import mihon.presentation.kit.feedback.SnackbarHostState
+import mihon.presentation.kit.menu.DropdownMenuItem
+import mihon.presentation.kit.sheet.TabbedSheet
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.ViewerSettingsTabbedDialog
 import tachiyomi.presentation.core.i18n.stringResource
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
 /**
- * Common in-reader settings host.
+ * Common in-reader settings host. Reset is part of this host so a reader cannot add a settings surface without also
+ * defining how it returns to its defaults.
  *
- * Applicable shared settings are projected from [ReaderSharedSettingsRegistry] so a reader cannot omit them,
+ * Applicable shared settings are projected from [sharedSettingsRegistry] so a reader cannot omit them,
  * while processor-owned pages are contributed by the caller in [content]. [sharedSettingDetails] adds what the open
  * entry shows with a shared setting, and [snackbarHostState] shows messages about changes made while the dialog covers
  * the reader. Reset clears processor and shared entry overrides so an in-reader reset only drops this entry's overrides.
  */
 @Composable
 fun ReaderSettingsDialogHost(
+    sharedSettingsRegistry: ReaderSharedSettingsRegistry,
     settingsSurfaceId: String,
     capabilities: Set<ReaderCapabilityId>,
     sharedSettingBindings: Map<ReaderSharedSettingId, ViewerSettingBinding<Boolean>>,
@@ -41,9 +42,8 @@ fun ReaderSettingsDialogHost(
     snackbarHostState: SnackbarHostState? = null,
     content: @Composable ColumnScope.(processorPage: Int) -> Unit,
 ) {
-    val registry = remember { Injekt.get<ReaderSharedSettingsRegistry>() }
-    val sharedSettings = remember(registry, capabilities, settingsSurfaceId) {
-        registry.settingsFor(capabilities, settingsSurfaceId)
+    val sharedSettings = remember(sharedSettingsRegistry, capabilities, settingsSurfaceId) {
+        sharedSettingsRegistry.settingsFor(capabilities, settingsSurfaceId)
     }
     val processorTabOffset = if (sharedSettings.isEmpty()) 0 else 1
     val tabTitles = if (processorTabOffset == 0) {
@@ -60,20 +60,31 @@ fun ReaderSettingsDialogHost(
         }
     }
 
-    ViewerSettingsTabbedDialog(
+    TabbedSheet(
         onDismissRequest = onDismissRequest,
-        onResetSettings = {
-            scope.launch {
-                onResetProcessorSettings()
-                sharedSettings.forEach { setting ->
-                    sharedSettingBindings.getValue(setting.id).clearEntryOverride()
-                }
-            }
-        },
         tabTitles = tabTitles,
         pagerState = pagerState,
-        onOpenDefaultSettings = onOpenDefaultSettings,
-        openDefaultSettingsLabel = stringResource(MR.strings.action_open_default_reader_settings),
+        menu = { close ->
+            DropdownMenuItem(
+                label = stringResource(MR.strings.action_open_default_reader_settings),
+                onClick = {
+                    close()
+                    onOpenDefaultSettings()
+                },
+            )
+            DropdownMenuItem(
+                label = stringResource(MR.strings.action_reset),
+                onClick = {
+                    close()
+                    scope.launch {
+                        onResetProcessorSettings()
+                        sharedSettings.forEach { setting ->
+                            sharedSettingBindings.getValue(setting.id).clearEntryOverride()
+                        }
+                    }
+                },
+            )
+        },
         snackbarHostState = snackbarHostState,
     ) { page ->
         if (page < processorTabOffset) {

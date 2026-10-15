@@ -3,6 +3,10 @@ package eu.kanade.tachiyomi.ui.browse.source
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.ContributesIntoMap
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metrox.viewmodel.ViewModelKey
 import eu.kanade.domain.source.interactor.GetEnabledCatalogSources
 import eu.kanade.domain.source.interactor.GetLanguagesWithCatalogSources
 import eu.kanade.domain.source.interactor.SourceListState
@@ -28,22 +32,23 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import logcat.LogPriority
+import mihon.app.di.AppUiScope
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.source.model.Source
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 import java.util.SortedMap
 import kotlin.time.Duration.Companion.seconds
 
+@Inject
+@ViewModelKey
+@ContributesIntoMap(AppUiScope::class)
 class SourcesViewModel(
-    private val getEnabledCatalogSources: GetEnabledCatalogSources = Injekt.get(),
-    private val getLanguagesWithCatalogSources: GetLanguagesWithCatalogSources = Injekt.get(),
-    private val toggleSource: ToggleSource = Injekt.get(),
-    private val toggleSourcePin: ToggleSourcePin = Injekt.get(),
-    private val toggleLanguage: ToggleLanguage = Injekt.get(),
-    private val preferences: SourcePreferences = Injekt.get(),
-    private val contentTypeFilterController: BrowseContentTypeFilterController =
-        BrowseContentTypeFilterController(preferences),
+    private val getEnabledCatalogSources: GetEnabledCatalogSources,
+    private val getLanguagesWithCatalogSources: GetLanguagesWithCatalogSources,
+    private val toggleSource: ToggleSource,
+    private val toggleSourcePin: ToggleSourcePin,
+    private val toggleLanguage: ToggleLanguage,
+    private val preferences: SourcePreferences,
+    private val contentTypeFilterController: BrowseContentTypeFilterController,
 ) : ViewModel() {
 
     private val _events = Channel<Event>(Int.MAX_VALUE)

@@ -1,31 +1,29 @@
 package eu.kanade.presentation.more.settings.screen.debug
 
-import android.content.Context
+import android.app.Application
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.work.WorkInfo
 import androidx.work.WorkQuery
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.ContributesIntoMap
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metrox.viewmodel.ViewModelKey
+import dev.zacsweers.metrox.viewmodel.metroViewModel
 import eu.kanade.domain.ui.UiPreferences
-import eu.kanade.presentation.components.AppBar
-import eu.kanade.presentation.components.AppBarActions
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.util.lang.toDateTimestampString
 import eu.kanade.tachiyomi.util.system.copyToClipboard
@@ -37,14 +35,18 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.plus
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
+import mihon.app.di.AppUiScope
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.ContentCopy
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.navigation.AppBar
+import mihon.presentation.kit.navigation.AppBarActions
+import mihon.presentation.kit.navigation.Scaffold
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.plus
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 import kotlin.time.Instant
 
 class WorkerInfoScreen : Screen() {
@@ -58,7 +60,7 @@ class WorkerInfoScreen : Screen() {
         val context = LocalContext.current
         val navigator = LocalNavigator.currentOrThrow
 
-        val viewModel = viewModel { Model(context) }
+        val viewModel = metroViewModel<Model>()
         val enqueued by viewModel.enqueued.collectAsState()
         val finished by viewModel.finished.collectAsState()
         val running by viewModel.running.collectAsState()
@@ -86,7 +88,7 @@ class WorkerInfoScreen : Screen() {
             },
         ) { contentPadding ->
             LazyColumn(
-                contentPadding = contentPadding + PaddingValues(horizontal = 16.dp),
+                contentPadding = contentPadding + PaddingValues(horizontal = KatariTheme.spacing.l),
                 modifier = Modifier.horizontalScroll(rememberScrollState()),
             ) {
                 item { SectionTitle(title = "Enqueued") }
@@ -105,8 +107,8 @@ class WorkerInfoScreen : Screen() {
     private fun SectionTitle(title: String) {
         Text(
             text = title,
-            style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.padding(vertical = 8.dp),
+            modifier = Modifier.padding(vertical = KatariTheme.spacing.s),
+            role = TextRole.SectionTitle,
         )
     }
 
@@ -114,13 +116,19 @@ class WorkerInfoScreen : Screen() {
     private fun SectionText(text: String) {
         Text(
             text = text,
+            role = TextRole.Code,
             softWrap = false,
-            fontFamily = FontFamily.Monospace,
         )
     }
 
-    private class Model(context: Context) : ViewModel() {
-        private val workManager = context.workManager
+    @Inject
+    @ViewModelKey
+    @ContributesIntoMap(AppUiScope::class)
+    internal class Model(
+        application: Application,
+        private val uiPreferences: UiPreferences,
+    ) : ViewModel() {
+        private val workManager = application.workManager
 
         val finished = workManager
             .getWorkInfosFlow(
@@ -155,7 +163,7 @@ class WorkerInfoScreen : Screen() {
                             .toLocalDateTime(TimeZone.currentSystemDefault())
                             .toDateTimestampString(
                                 UiPreferences.dateFormat(
-                                    Injekt.get<UiPreferences>().dateFormat.get(),
+                                    uiPreferences.dateFormat.get(),
                                 ),
                             )
                         appendLine("Next scheduled run: $timestamp")

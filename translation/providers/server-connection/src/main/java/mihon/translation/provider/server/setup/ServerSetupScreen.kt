@@ -5,16 +5,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.foundation.text.input.TextObfuscationMode
 import androidx.compose.foundation.text.input.rememberTextFieldState
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedSecureTextField
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -31,17 +23,21 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
-import androidx.compose.ui.unit.dp
-import eu.kanade.presentation.theme.TachiyomiPreviewTheme
 import kotlinx.coroutines.launch
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Visibility
 import mihon.icons.materialsymbols.rounded.VisibilityOff
+import mihon.presentation.kit.button.Button
+import mihon.presentation.kit.button.IconButton
+import mihon.presentation.kit.chip.FilterChip
+import mihon.presentation.kit.field.SecureTextField
+import mihon.presentation.kit.field.TextField
+import mihon.presentation.kit.theme.KatariPreviewTheme
+import mihon.presentation.kit.theme.KatariTheme
 import mihon.translation.provider.server.R
 import mihon.translation.provider.server.ServerEndpointPolicy
 import mihon.translation.provider.server.setup.components.ProviderInformationCard
 import mihon.translation.provider.server.setup.components.ProviderSetupHeader
-import mihon.translation.provider.server.setup.components.ProviderSetupPrimaryButton
 import mihon.translation.provider.server.setup.components.ProviderSetupScaffold
 import mihon.translation.provider.server.setup.components.ProviderSetupStatus
 import mihon.translation.provider.server.setup.components.ProviderSetupStatusPanel
@@ -140,11 +136,7 @@ private fun ServerSetupScreen(
     onDone: () -> Unit,
 ) {
     var apiKeyVisible by rememberSaveable { mutableStateOf(false) }
-    ProviderSetupScaffold(
-        title = texts.title,
-        backContentDescription = stringResource(R.string.translation_provider_back),
-        onBack = onBack,
-    ) {
+    ProviderSetupScaffold(title = texts.title, onBack = onBack) {
         ProviderSetupHeader(
             artworkResourceId = artworkResourceId,
             title = texts.title,
@@ -154,65 +146,51 @@ private fun ServerSetupScreen(
             title = stringResource(R.string.server_connection_security_title),
             lines = listOf(stringResource(R.string.server_connection_security_description)),
         )
-        OutlinedTextField(
+        TextField(
             state = rememberSyncedTextFieldState(endpoint, onEndpointChange),
             modifier = Modifier.fillMaxWidth(),
             enabled = !testing,
-            label = { Text(stringResource(R.string.server_connection_endpoint)) },
-            supportingText = if (endpointInvalid) {
-                {
-                    Text(stringResource(R.string.server_connection_invalid_endpoint))
-                }
-            } else {
-                null
-            },
+            label = stringResource(R.string.server_connection_endpoint),
+            supportingText = stringResource(R.string.server_connection_invalid_endpoint).takeIf { endpointInvalid },
             isError = endpointInvalid,
-            lineLimits = TextFieldLineLimits.SingleLine,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
         )
         if (endpointSuggestions.isNotEmpty()) {
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s)) {
                 endpointSuggestions.forEach { suggestion ->
                     FilterChip(
+                        label = suggestion.label,
                         selected = ServerEndpointPolicy.validate(endpoint)?.toString() == suggestion.endpoint,
                         onClick = { onEndpointChange(suggestion.endpoint) },
-                        label = { Text(suggestion.label) },
                         enabled = !testing,
                     )
                 }
             }
         }
-        OutlinedSecureTextField(
+        SecureTextField(
             state = rememberSyncedTextFieldState(apiKey, onApiKeyChange),
             modifier = Modifier.fillMaxWidth(),
             enabled = !testing,
-            label = { Text(texts.apiKeyLabel) },
+            label = texts.apiKeyLabel,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-            textObfuscationMode = if (apiKeyVisible) {
-                TextObfuscationMode.Visible
-            } else {
-                TextObfuscationMode.Hidden
-            },
+            revealed = apiKeyVisible,
             trailingIcon = {
                 IconButton(
+                    icon = if (apiKeyVisible) {
+                        MaterialSymbols.Rounded.VisibilityOff
+                    } else {
+                        MaterialSymbols.Rounded.Visibility
+                    },
+                    contentDescription = stringResource(
+                        if (apiKeyVisible) {
+                            R.string.translation_provider_hide_api_key
+                        } else {
+                            R.string.translation_provider_show_api_key
+                        },
+                    ),
                     onClick = { apiKeyVisible = !apiKeyVisible },
                     enabled = !testing,
-                ) {
-                    Icon(
-                        imageVector = if (apiKeyVisible) {
-                            MaterialSymbols.Rounded.VisibilityOff
-                        } else {
-                            MaterialSymbols.Rounded.Visibility
-                        },
-                        contentDescription = stringResource(
-                            if (apiKeyVisible) {
-                                R.string.translation_provider_hide_api_key
-                            } else {
-                                R.string.translation_provider_show_api_key
-                            },
-                        ),
-                    )
-                }
+                )
             },
         )
         status?.let {
@@ -224,16 +202,17 @@ private fun ServerSetupScreen(
             )
         }
         if (status is ProviderSetupStatus.Success) {
-            ProviderSetupPrimaryButton(
+            Button(
                 label = stringResource(R.string.translation_provider_done),
-                enabled = true,
                 onClick = onDone,
+                modifier = Modifier.fillMaxWidth(),
             )
         } else {
-            ProviderSetupPrimaryButton(
+            Button(
                 label = stringResource(R.string.server_connection_save_and_test),
-                enabled = !testing,
                 onClick = onTest,
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !testing,
             )
         }
     }
@@ -266,7 +245,7 @@ private fun rememberSyncedTextFieldState(
 private fun ServerSetupPreview(
     @PreviewParameter(ServerSetupPreviewStateProvider::class) status: ProviderSetupStatus?,
 ) {
-    TachiyomiPreviewTheme {
+    KatariPreviewTheme {
         ServerSetupScreen(
             texts = ServerSetupTexts(
                 title = "Translation server setup",

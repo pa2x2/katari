@@ -31,7 +31,6 @@ class EntryInteractionBoundaryCheckTaskTest {
                     implementation(projects.entryInteractions.manga)
                     implementation(projects.entryInteractions.api)
                     implementation(projects.entryInteractions.spi)
-                    implementation(projects.featureGraph)
                 }
             """.trimIndent(),
         )
@@ -41,7 +40,6 @@ class EntryInteractionBoundaryCheckTaskTest {
         error.message shouldContain "projects.entryInteractions.manga"
         error.message shouldContain "projects.entryInteractions.api"
         error.message shouldContain "projects.entryInteractions.spi"
-        error.message shouldContain "projects.featureGraph"
     }
 
     @Test
@@ -84,9 +82,9 @@ class EntryInteractionBoundaryCheckTaskTest {
     fun `application composition cannot authorize type-specific interaction behavior`() {
         createBaseFixture(
             additionalFiles = mapOf(
-                "app/src/main/java/eu/kanade/tachiyomi/di/AppModule.kt" to
+                "app/src/main/java/mihon/app/di/AppBindings.kt" to
                     """
-                        package eu.kanade.tachiyomi.di
+                        package mihon.app.di
 
                         import eu.kanade.tachiyomi.source.entry.EntryType
                         import mihon.entry.interactions.manga.MangaOpenProcessor
@@ -204,7 +202,7 @@ class EntryInteractionBoundaryCheckTaskTest {
         additionalFiles: Map<String, String> = emptyMap(),
     ) {
         write(
-            "entry-interactions/spi/src/main/java/mihon/entry/interactions/runtime/EntryInteractionPlugin.kt",
+            "entry-interactions/spi/src/main/java/mihon/entry/interactions/runtime/EntryInteractions.kt",
             """
                 package mihon.entry.interactions
 
@@ -212,11 +210,7 @@ class EntryInteractionBoundaryCheckTaskTest {
 
                 interface EntryOpenInteraction
 
-                interface EntryInteractionPlugin
-
                 interface EntryInteractionRegistry
-
-                fun createEntryInteractions() = Unit
             """.trimIndent(),
         )
         write(

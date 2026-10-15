@@ -4,20 +4,19 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import androidx.compose.ui.unit.dp
-import eu.kanade.presentation.theme.TachiyomiPreviewTheme
+import mihon.presentation.kit.button.Button
+import mihon.presentation.kit.button.ButtonStyle
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.surface.HorizontalDivider
+import mihon.presentation.kit.theme.KatariPreviewTheme
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.core.common.Constants
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
 
 internal class GuidesStep(
@@ -34,43 +33,38 @@ internal class GuidesStep(
         val handler = LocalUriHandler.current
 
         Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
+            modifier = Modifier.padding(KatariTheme.spacing.l),
+            verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
         ) {
             Text(stringResource(MR.strings.onboarding_guides_new_user, stringResource(MR.strings.app_name)))
             Button(
-                modifier = Modifier.fillMaxWidth(),
+                label = stringResource(MR.strings.getting_started_guide),
                 onClick = { handler.openUri(GETTING_STARTED_URL) },
-            ) {
-                Text(stringResource(MR.strings.getting_started_guide))
-            }
-
-            HorizontalDivider(
-                modifier = Modifier.padding(vertical = 8.dp),
-                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                modifier = Modifier.fillMaxWidth(),
             )
+
+            HorizontalDivider(modifier = Modifier.padding(vertical = KatariTheme.spacing.s))
 
             if (showMihonMigration) {
                 Text(
                     text = stringResource(MR.strings.onboarding_mihon_migration_title),
-                    style = MaterialTheme.typography.titleMedium,
+                    role = TextRole.SectionTitle,
                 )
                 Text(stringResource(MR.strings.onboarding_mihon_migration_description))
-                OutlinedButton(
-                    modifier = Modifier.fillMaxWidth(),
-                    onClick = onOpenMihon,
-                ) {
-                    Text(stringResource(MR.strings.onboarding_mihon_migration_open))
-                }
                 Button(
+                    label = stringResource(MR.strings.onboarding_mihon_migration_open),
+                    onClick = onOpenMihon,
                     modifier = Modifier.fillMaxWidth(),
+                    style = ButtonStyle.Outlined,
+                )
+                Button(
+                    label = stringResource(MR.strings.onboarding_mihon_migration_choose_backup),
                     onClick = onMigrateFromMihon,
-                ) {
-                    Text(stringResource(MR.strings.onboarding_mihon_migration_choose_backup))
-                }
+                    modifier = Modifier.fillMaxWidth(),
+                )
                 Text(
                     text = stringResource(MR.strings.onboarding_mihon_migration_note),
-                    style = MaterialTheme.typography.bodySmall,
+                    role = TextRole.Supporting,
                 )
             } else {
                 Text(
@@ -80,11 +74,10 @@ internal class GuidesStep(
                     ),
                 )
                 Button(
-                    modifier = Modifier.fillMaxWidth(),
+                    label = stringResource(MR.strings.pref_restore_backup),
                     onClick = onRestoreBackup,
-                ) {
-                    Text(stringResource(MR.strings.pref_restore_backup))
-                }
+                    modifier = Modifier.fillMaxWidth(),
+                )
             }
         }
     }
@@ -95,7 +88,7 @@ const val GETTING_STARTED_URL = "${Constants.URL_GUIDE}first-steps/"
 @PreviewLightDark
 @Composable
 private fun GuidesStepPreview() {
-    TachiyomiPreviewTheme {
+    KatariPreviewTheme {
         GuidesStep(
             onRestoreBackup = {},
             showMihonMigration = true,

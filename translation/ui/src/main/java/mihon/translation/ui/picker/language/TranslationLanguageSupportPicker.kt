@@ -5,18 +5,19 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import mihon.language.api.tag.LanguageTag
+import mihon.presentation.kit.button.Button
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.progress.LoadingIndicator
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import mihon.translation.api.engine.TranslationEngineId
 import mihon.translation.ui.session.TranslationLanguageSupportState
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.LoadingIndicator
 import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable
@@ -93,7 +94,7 @@ private fun TranslationLanguageSupportLoading(modifier: Modifier) {
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .padding(24.dp),
+            .padding(KatariTheme.spacing.xl),
         contentAlignment = Alignment.Center,
     ) {
         LoadingIndicator()
@@ -109,15 +110,13 @@ private fun TranslationLanguageSupportUnavailable(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(24.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
+            .padding(KatariTheme.spacing.xl),
+        verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.l, Alignment.CenterVertically),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text(reason ?: stringResource(MR.strings.translation_languages_unavailable))
+        Text(reason ?: stringResource(MR.strings.translation_languages_unavailable), role = TextRole.Body)
         onRetry?.let {
-            Button(onClick = it) {
-                Text(stringResource(MR.strings.action_retry))
-            }
+            Button(label = stringResource(MR.strings.action_retry), onClick = it)
         }
     }
 }

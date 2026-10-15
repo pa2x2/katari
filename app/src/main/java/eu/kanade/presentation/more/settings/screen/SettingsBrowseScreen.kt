@@ -14,10 +14,9 @@ import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.screen.browse.ExtensionStoresScreen
 import eu.kanade.tachiyomi.ui.security.BiometricAuthentication.authenticate
 import kotlinx.collections.immutable.toImmutableMap
+import mihon.app.di.appGraph
 import mihon.core.common.CustomPreferences
-import mihon.domain.extension.interactor.GetExtensionStoreCountAsFlow
 import mihon.domain.extension.model.ContentWarning
-import mihon.entry.interactions.media.EntryPreviewFeature
 import mihon.entry.interactions.media.EntryPreviewSettings
 import mihon.entry.interactions.media.EntryPreviewSize
 import mihon.entry.interactions.media.EntryPreviewSourceRequirement
@@ -27,8 +26,6 @@ import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 import androidx.compose.runtime.collectAsState as collectFlowAsState
 
 object SettingsBrowseScreen : SearchableSettings {
@@ -39,12 +36,13 @@ object SettingsBrowseScreen : SearchableSettings {
 
     @Composable
     override fun getPreferences(): List<Preference> {
+        val context = LocalContext.current
         val navigator = LocalNavigator.currentOrThrow
 
-        val sourcePreferences = remember { Injekt.get<SourcePreferences>() }
-        val customPreferences = remember { Injekt.get<CustomPreferences>() }
-        val entryPreviewFeature = remember { Injekt.get<EntryPreviewFeature>() }
-        val getExtensionStoreCountAsFlow = remember { Injekt.get<GetExtensionStoreCountAsFlow>() }
+        val sourcePreferences = remember { context.appGraph.sourcePreferences }
+        val customPreferences = remember { context.appGraph.customPreferences }
+        val entryPreviewFeature = remember { context.appGraph.entryPreviewFeature }
+        val getExtensionStoreCountAsFlow = remember { context.appGraph.getExtensionStoreCountAsFlow }
 
         val reposCount by getExtensionStoreCountAsFlow().collectFlowAsState(0)
 

@@ -1,2 +1,0 @@
-id=entry.update-eligibility
-module=mihon.entry.interactions.state.EntryUpdateEligibilityFeatureRuntimeModule

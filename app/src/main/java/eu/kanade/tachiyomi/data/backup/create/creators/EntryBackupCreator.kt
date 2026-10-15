@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.data.backup.create.creators
 
+import dev.zacsweers.metro.Inject
 import eu.kanade.tachiyomi.data.backup.create.BackupOptions
 import eu.kanade.tachiyomi.data.backup.models.BackupActivityCompletion
 import eu.kanade.tachiyomi.data.backup.models.BackupActivitySegment
@@ -21,17 +22,16 @@ import tachiyomi.domain.history.model.History
 import tachiyomi.domain.history.repository.HistoryActivityBackupRepository
 import tachiyomi.domain.library.update.model.EntryUpdateMode
 import tachiyomi.domain.library.update.repository.LibraryUpdateRulesRepository
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
+@Inject
 class EntryBackupCreator(
-    private val handler: DatabaseHandler = Injekt.get(),
-    private val profileProvider: ActiveProfileProvider = Injekt.get(),
-    private val entryBackupFeature: EntryBackupFeature = Injekt.get(),
-    private val entryChapterRepository: EntryChapterRepository = Injekt.get(),
-    private val activityBackupRepository: HistoryActivityBackupRepository = Injekt.get(),
-    private val updateRulesRepository: LibraryUpdateRulesRepository = Injekt.get(),
-    private val mergedMemberExpansionRepository: MergedMemberExpansionRepository = Injekt.get(),
+    private val handler: DatabaseHandler,
+    private val profileProvider: ActiveProfileProvider,
+    private val entryBackupFeature: EntryBackupFeature,
+    private val entryChapterRepository: EntryChapterRepository,
+    private val activityBackupRepository: HistoryActivityBackupRepository,
+    private val updateRulesRepository: LibraryUpdateRulesRepository,
+    private val mergedMemberExpansionRepository: MergedMemberExpansionRepository,
 ) {
 
     suspend operator fun invoke(

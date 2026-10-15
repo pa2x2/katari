@@ -1,6 +1,5 @@
 package eu.kanade.tachiyomi.data.track
 
-import android.app.Application
 import androidx.annotation.CallSuper
 import eu.kanade.domain.track.interactor.AddTracks
 import eu.kanade.domain.track.model.toDomainTrack
@@ -10,6 +9,7 @@ import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.serialization.json.Json
 import logcat.LogPriority
 import okhttp3.OkHttpClient
 import tachiyomi.core.common.util.lang.withIOContext
@@ -17,19 +17,19 @@ import tachiyomi.core.common.util.lang.withUIContext
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.track.interactor.InsertTrack
 import tachiyomi.domain.track.model.EntryTrack
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
-import uy.kohesive.injekt.injectLazy
 
 abstract class BaseTracker(
     override val id: Long,
     override val name: String,
+    dependencies: TrackerDependencies,
 ) : Tracker {
 
-    val trackPreferences: TrackPreferences by injectLazy()
-    val networkService: NetworkHelper by injectLazy()
-    private val addTracks: AddTracks by injectLazy()
-    private val insertTrack: InsertTrack by injectLazy()
+    private val application = dependencies.application
+    protected val json: Json = dependencies.json
+    val trackPreferences: TrackPreferences by dependencies.trackPreferences
+    val networkService: NetworkHelper by dependencies.networkHelper
+    private val addTracks: AddTracks by dependencies.addTracks
+    private val insertTrack: InsertTrack by dependencies.insertTrack
 
     override val client: OkHttpClient
         get() = networkService.client
@@ -92,7 +92,7 @@ abstract class BaseTracker(
         try {
             addTracks.bind(this, item, entryId)
         } catch (e: Throwable) {
-            withUIContext { Injekt.get<Application>().toast(e.message) }
+            withUIContext { application.toast(e.message) }
         }
     }
 
@@ -148,7 +148,7 @@ abstract class BaseTracker(
             }
         } catch (e: Exception) {
             logcat(LogPriority.ERROR, e) { "Failed to update remote track data id=$id" }
-            withUIContext { Injekt.get<Application>().toast(e.message) }
+            withUIContext { application.toast(e.message) }
         }
     }
 }

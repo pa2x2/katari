@@ -2,10 +2,11 @@ package app.katari.showcase.capture
 
 import android.content.Intent
 import android.os.SystemClock
+import android.view.InputDevice
+import android.view.MotionEvent
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.BySelector
-import androidx.test.uiautomator.Direction
 import androidx.test.uiautomator.SearchCondition
 import androidx.test.uiautomator.StaleObjectException
 import androidx.test.uiautomator.UiDevice
@@ -49,30 +50,69 @@ internal object ShowcaseDevice {
         device.wait(Until.findObject(selector), timeoutMs) ?: fail("Nothing on screen matches $selector")
 
     /**
-     * Scrolls the screen's list down until [selector] is on screen. The list is looked up again for every step, since
-     * a list that reorders while it loads replaces the view a step began with.
+     * Scrolls the screen down until [selector] is on screen, by dragging through the middle of the screen as a reader
+     * would. Whatever scrollable comes first in the tree may be a row of results that scrolls sideways, or the page may
+     * not scroll yet while it loads, and a drag in the middle never starts where the system takes swipes as its own.
      */
-    fun scrollTo(selector: BySelector, timeoutMs: Long = TIMEOUT_MS): UiObject2 {
+    fun scrollTo(selector: BySelector, timeoutMs: Long = TIMEOUT_MS) {
         val deadline = SystemClock.uptimeMillis() + timeoutMs
+        val x = device.displayWidth / 2
         while (SystemClock.uptimeMillis() < deadline) {
-            device.findObject(selector)?.let { return it }
-            try {
-                device.findObject(By.scrollable(true))?.scroll(Direction.DOWN, 0.5f)
-            } catch (_: StaleObjectException) {
-                // Replaced between finding and scrolling it; the next step finds the new one.
-            }
+            if (device.hasObject(selector)) return
+            device.swipe(
+                x,
+                (device.displayHeight * SCROLL_FROM).toInt(),
+                x,
+                (device.displayHeight * SCROLL_TO).toInt(),
+                SCROLL_STEPS,
+            )
             settle(extraMs = 300)
         }
         fail("Scrolling never reached $selector")
     }
 
+    /**
+     * The scrollable matching [selector], with its gestures kept out of the bands along the top and bottom edges where
+     * the system takes a swipe as its own: one starting at the bottom edge opens recents in place of scrolling.
+     * Elsewhere they keep UiAutomator's default margin of a tenth of the size, so scrolls go as far as they always did.
+     */
+    fun list(selector: BySelector = By.scrollable(true)): UiObject2 {
+        val list = find(selector)
+        val bounds = list.visibleBounds
+        val density = instrumentation.context.resources.displayMetrics.density
+        val safeTop = (TOP_SYSTEM_GESTURES_DP * density).toInt()
+        val safeBottom = device.displayHeight - (BOTTOM_SYSTEM_GESTURES_DP * density).toInt()
+        val horizontal = (bounds.width() * DEFAULT_GESTURE_MARGIN).toInt()
+        val vertical = (bounds.height() * DEFAULT_GESTURE_MARGIN).toInt()
+        val top = maxOf(vertical, safeTop - bounds.top)
+        val bottom = maxOf(vertical, bounds.bottom - safeBottom)
+        if (bounds.height() - top - bottom < MIN_GESTURE_HEIGHT_PX) fail("$selector has no room for a gesture")
+        list.setGestureMargins(horizontal, top, horizontal, bottom)
+        return list
+    }
+
     fun tap(selector: BySelector, timeoutMs: Long = TIMEOUT_MS) {
         try {
-            find(selector, timeoutMs).click()
+            tap(find(selector, timeoutMs))
         } catch (_: StaleObjectException) {
-            // Redrawn between finding and tapping it, as controls that follow playback are.
-            find(selector, timeoutMs).click()
+            // Redrawn between finding and tapping it, as controls that follow playback and screens still sliding in
+            // are.
+            tap(find(selector, timeoutMs))
         }
+    }
+
+    /** Taps the last view matching [selector], such as a dialog's button named like the one that opened the dialog. */
+    fun tapLast(selector: BySelector) {
+        try {
+            tap(lastOf(selector))
+        } catch (_: StaleObjectException) {
+            tap(lastOf(selector))
+        }
+    }
+
+    private fun lastOf(selector: BySelector): UiObject2 {
+        find(selector)
+        return device.findObjects(selector).lastOrNull() ?: fail("Nothing on screen matches $selector")
     }
 
     /**
@@ -83,7 +123,7 @@ internal object ShowcaseDevice {
         val deadline = SystemClock.uptimeMillis() + timeoutMs
         while (true) {
             try {
-                device.findObject(selector)?.click()
+                device.findObject(selector)?.let(::tap)
             } catch (_: StaleObjectException) {
                 // Redrawn between finding and tapping it; the next attempt finds it again.
             }
@@ -100,7 +140,57 @@ internal object ShowcaseDevice {
 
     /** Taps the point at the given fractions of the screen's width and height. */
     fun tapAt(x: Float, y: Float) {
-        device.click((device.displayWidth * x).toInt(), (device.displayHeight * y).toInt())
+        tapPoint(device.displayWidth * x, device.displayHeight * y)
+    }
+
+    private fun tap(view: UiObject2) {
+        val center = view.visibleCenter
+        tapPoint(center.x.toFloat(), center.y.toFloat())
+    }
+
+    /**
+     * Taps with the finger's press and release sent together. UiAutomator's taps wait for the app to handle the press
+     * before releasing, and an app whose main thread stalls on a frame in between, as one drawing in software does for
+     * half a second and more, finds the finger held past its long-press timeout and turns nothing. Sent together, both
+     * wait in the app's input channel, and the app reads them in one go.
+     */
+    private fun tapPoint(x: Float, y: Float) {
+        val downTime = SystemClock.uptimeMillis()
+        touch(MotionEvent.ACTION_DOWN, downTime, x, y, sync = false)
+        touch(MotionEvent.ACTION_UP, downTime, x, y, sync = true)
+    }
+
+    /** Injects one touch event; [sync] waits until the app has handled it. */
+    fun touch(action: Int, downTime: Long, x: Float, y: Float, sync: Boolean = true) {
+        val event = MotionEvent.obtain(downTime, SystemClock.uptimeMillis(), action, x, y, 0)
+        event.source = InputDevice.SOURCE_TOUCHSCREEN
+        try {
+            if (!instrumentation.uiAutomation.injectInputEvent(event, sync)) fail("The touch could not be injected")
+        } finally {
+            event.recycle()
+        }
+    }
+
+    /**
+     * Taps the point at the given fractions of the screen until [shown] is on screen, as for a reader's or player's
+     * bars, which a tap shows and hides in turn. A busy device can draw them before it reports them, and a tap then
+     * hides them again, so each tap waits to see whether the last one took.
+     */
+    fun tapToShow(x: Float, y: Float, shown: BySelector) {
+        val deadline = SystemClock.uptimeMillis() + TIMEOUT_MS
+        while (!device.wait(Until.hasObject(shown), TOGGLE_WAIT_MS)) {
+            if (SystemClock.uptimeMillis() > deadline) fail("Tapping never showed $shown")
+            tapAt(x, y)
+        }
+    }
+
+    /** As [tapToShow], until [shown] is gone. */
+    fun tapToHide(x: Float, y: Float, shown: BySelector) {
+        val deadline = SystemClock.uptimeMillis() + TIMEOUT_MS
+        while (!device.wait(Until.gone(shown), TOGGLE_WAIT_MS)) {
+            if (SystemClock.uptimeMillis() > deadline) fail("Tapping never hid $shown")
+            tapAt(x, y)
+        }
     }
 
     fun awaitGone(selector: BySelector, timeoutMs: Long = TIMEOUT_MS) {
@@ -110,7 +200,9 @@ internal object ShowcaseDevice {
     fun fail(message: String): Nothing {
         // Kept apart from the captures so a failed run never publishes it.
         shell("mkdir -p $FAILURE_DIRECTORY")
-        shell("screencap -p $FAILURE_DIRECTORY/${System.currentTimeMillis()}.png")
+        val name = System.currentTimeMillis().toString()
+        shell("screencap -p $FAILURE_DIRECTORY/$name.png")
+        saveFailureReport(name)
         error(message)
     }
 
@@ -151,7 +243,21 @@ internal object ShowcaseDevice {
     }
 
     private const val TIMEOUT_MS = 30_000L
+
+    // Fractions of the screen's height a scroll drags between, and the 5 ms steps it takes, as fast as a scroll by
+    // UiAutomator's default speed.
+    private const val SCROLL_FROM = 0.7f
+    private const val SCROLL_TO = 0.3f
+    private const val SCROLL_STEPS = 50
+
+    // The status bar's band, whose swipes pull the notification shade, and gesture navigation's 32 dp band with room
+    // for the slop the system allows a swipe.
+    private const val TOP_SYSTEM_GESTURES_DP = 72
+    private const val BOTTOM_SYSTEM_GESTURES_DP = 48
+    private const val DEFAULT_GESTURE_MARGIN = 0.1f
+    private const val MIN_GESTURE_HEIGHT_PX = 100
     private const val TAP_ATTEMPT_MS = 2_000L
+    private const val TOGGLE_WAIT_MS = 2_000L
     private const val RECORDER_START_MS = 1_000L
     private const val STILL_ATTEMPTS = 20
     private const val STILL_INTERVAL_MS = 500L

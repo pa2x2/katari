@@ -3,6 +3,13 @@ package eu.kanade.tachiyomi.ui.browse.extension.details
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.Assisted
+import dev.zacsweers.metro.AssistedFactory
+import dev.zacsweers.metro.AssistedInject
+import dev.zacsweers.metro.ContributesIntoMap
+import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
+import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
 import eu.kanade.domain.extension.interactor.GetExtensionSources
 import eu.kanade.domain.source.interactor.ToggleIncognito
 import eu.kanade.domain.source.interactor.ToggleSource
@@ -26,6 +33,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import logcat.LogPriority
+import mihon.app.di.AppUiScope
 import mihon.entry.interactions.catalogue.EntryCatalogueFeature
 import mihon.entry.interactions.catalogue.EntryCatalogueSourceResolution
 import mihon.entry.interactions.source.EntrySourceHomeFeature
@@ -34,23 +42,29 @@ import mihon.entry.interactions.source.EntrySourceSettingsFeature
 import mihon.entry.interactions.source.EntrySourceSettingsResolution
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import tachiyomi.core.common.util.system.logcat
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 import kotlin.time.Duration.Companion.seconds
 
+@AssistedInject
 class ExtensionDetailsViewModel(
-    pkgName: String,
-    private val context: Context,
-    private val network: NetworkHelper = Injekt.get(),
-    private val extensionManager: ExtensionManager = Injekt.get(),
-    private val getExtensionSources: GetExtensionSources = Injekt.get(),
-    private val toggleSource: ToggleSource = Injekt.get(),
-    private val toggleIncognito: ToggleIncognito = Injekt.get(),
-    private val preferences: SourcePreferences = Injekt.get(),
-    private val catalogueFeature: EntryCatalogueFeature = Injekt.get(),
-    private val sourceHomeFeature: EntrySourceHomeFeature = Injekt.get(),
-    private val sourceSettingsFeature: EntrySourceSettingsFeature = Injekt.get(),
+    @Assisted pkgName: String,
+    @Assisted private val context: Context,
+    private val network: NetworkHelper,
+    private val extensionManager: ExtensionManager,
+    private val getExtensionSources: GetExtensionSources,
+    private val toggleSource: ToggleSource,
+    private val toggleIncognito: ToggleIncognito,
+    private val preferences: SourcePreferences,
+    private val catalogueFeature: EntryCatalogueFeature,
+    private val sourceHomeFeature: EntrySourceHomeFeature,
+    private val sourceSettingsFeature: EntrySourceSettingsFeature,
 ) : ViewModel() {
+
+    @AssistedFactory
+    @ManualViewModelAssistedFactoryKey
+    @ContributesIntoMap(AppUiScope::class)
+    interface Factory : ManualViewModelAssistedFactory {
+        fun create(pkgName: String, context: Context): ExtensionDetailsViewModel
+    }
 
     val state: StateFlow<ExtensionDetailsState> = extensionManager.loadedExtensionsFlow
         .map { extensions -> extensions.firstOrNull { extension -> extension.pkgName == pkgName } }

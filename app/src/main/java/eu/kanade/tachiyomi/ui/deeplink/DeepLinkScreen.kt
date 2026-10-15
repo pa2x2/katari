@@ -5,24 +5,19 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import eu.kanade.presentation.components.AppBar
+import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchScreen
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
-import mihon.entry.interactions.navigation.EntryOpenFeature
-import tachiyomi.domain.entry.repository.EntryChapterRepository
+import mihon.presentation.kit.feedback.LoadingScreen
+import mihon.presentation.kit.navigation.AppBar
+import mihon.presentation.kit.navigation.Scaffold
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.screens.LoadingScreen
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
 class DeepLinkScreen(
     val query: String = "",
@@ -32,10 +27,8 @@ class DeepLinkScreen(
     override fun Content() {
         val context = LocalContext.current
         val navigator = LocalNavigator.currentOrThrow
-        val entryOpenFeature = remember { Injekt.get<EntryOpenFeature>() }
-
-        val viewModel = viewModel {
-            DeepLinkViewModel(query = query)
+        val viewModel = assistedMetroViewModel<DeepLinkViewModel, DeepLinkViewModel.Factory> {
+            create(query = query)
         }
         val state by viewModel.state.collectAsState()
         Scaffold(
@@ -64,14 +57,14 @@ class DeepLinkScreen(
                                 fromSource = true,
                             ),
                         )
-                    } else if (!entryOpenFeature.isApplicable(entry.type)) {
+                    } else if (!viewModel.canOpen(entry)) {
                         navigator.replace(EntryScreen(entryId = entry.id, fromSource = true))
                     } else {
                         LaunchedEffect(resultState.chapterId) {
-                            val chapter = Injekt.get<EntryChapterRepository>().getChapterById(resultState.chapterId)
+                            val chapter = viewModel.getChapter(resultState.chapterId)
                             navigator.pop()
                             if (chapter != null) {
-                                entryOpenFeature.open(context, entry, chapter)
+                                viewModel.open(context, entry, chapter)
                             }
                         }
                     }

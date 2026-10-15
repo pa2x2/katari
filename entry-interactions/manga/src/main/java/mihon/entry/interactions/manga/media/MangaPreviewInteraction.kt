@@ -29,11 +29,11 @@ import tachiyomi.domain.entry.model.EntryChapter
 
 internal class MangaPreviewInteraction(
     private val entryInteractionPreferences: EntryInteractionPreferences,
+    private val pageSessionLoader: Lazy<ReaderPageSessionLoader>,
 ) : EntryPreviewProcessor, EntryPreviewConfigurationProvider {
-    override val type: EntryType = EntryType.MANGA
     override val loadMode = EntryPreviewLoadMode.FIRST_READING_CHILD
     override val settings = EntryPreviewSettings(
-        type = type,
+        type = EntryType.MANGA,
         enabled = entryInteractionPreferences.enableMangaPreview,
         pageCount = entryInteractionPreferences.mangaPreviewPageCount,
         size = entryInteractionPreferences.mangaPreviewSize,
@@ -71,7 +71,7 @@ internal class MangaPreviewInteraction(
     ): EntryPreviewHandle {
         entry.requireManga()
         requireNotNull(chapter) { "Manga previews require a chapter" }
-        val readerChapter = ReaderPageSessionLoader(context).load(entry, chapter)
+        val readerChapter = pageSessionLoader.value.load(context, entry, chapter)
 
         return EntryPreviewHandle(
             entryType = EntryType.MANGA,

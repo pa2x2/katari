@@ -15,6 +15,7 @@ import androidx.compose.ui.graphics.Color
 import kotlinx.coroutines.delay
 import mihon.entry.interactions.reader.settings.MangaReaderSettings
 import mihon.entry.viewer.settings.ViewerSettingBinding
+import mihon.presentation.kit.theme.PageOverlayColors
 import kotlin.time.Duration.Companion.milliseconds
 
 @Stable
@@ -63,13 +64,13 @@ internal fun DisplayRefreshHost(
 
         val refreshDurationHalf = refreshDuration.effectiveValue.milliseconds / 2
         currentColor = if (flashMode.effectiveValue == MangaReaderSettings.FlashColor.BLACK) {
-            Color.Black
+            PageOverlayColors.flashDark
         } else {
-            Color.White
+            PageOverlayColors.flashLight
         }
         delay(refreshDurationHalf)
         if (flashMode.effectiveValue == MangaReaderSettings.FlashColor.WHITE_BLACK) {
-            currentColor = Color.Black
+            currentColor = PageOverlayColors.flashDark
         }
         delay(refreshDurationHalf)
         hostState.currentDisplayRefresh = false

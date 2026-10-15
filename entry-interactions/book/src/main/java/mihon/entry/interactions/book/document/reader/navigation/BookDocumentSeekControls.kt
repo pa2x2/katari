@@ -1,11 +1,7 @@
 package mihon.entry.interactions.book.document.reader.navigation
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -13,18 +9,22 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import mihon.book.api.BookLocator
 import mihon.entry.interactions.book.R
 import mihon.entry.interactions.book.document.reader.BookDocumentReaderState
 import mihon.entry.interactions.reader.settings.BookDocumentReadingMode
+import mihon.entry.viewer.chrome.ui.ReaderPageNavigatorType
+import mihon.entry.viewer.chrome.ui.ReaderPositionNavigator
+import mihon.entry.viewer.chrome.ui.ReaderReturnPositionBar
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.surface.Pill
+import mihon.presentation.kit.surface.Surface
+import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.reader.ReaderPageNavigatorType
-import tachiyomi.presentation.core.components.reader.ReaderPositionNavigator
-import tachiyomi.presentation.core.components.reader.ReaderReturnPositionBar
 import kotlin.math.roundToInt
 import tachiyomi.presentation.core.i18n.stringResource as sharedStringResource
 
@@ -61,31 +61,31 @@ internal fun BookDocumentSeekControls(
         inputVisible = false
         onNavigate(snapshot.targetAt(value))
     }
-    Column(Modifier.padding(bottom = 8.dp)) {
+    Column(Modifier.padding(bottom = KatariTheme.spacing.s)) {
         if (jumpHistory.returnTarget != null) {
             ReaderReturnPositionBar(onReturn = onReturn, onDismiss = jumpHistory::dismiss)
         }
         draft?.let { value ->
             Surface(
-                modifier = Modifier.padding(horizontal = 24.dp, vertical = 4.dp),
-                shape = MaterialTheme.shapes.medium,
-                tonalElevation = 3.dp,
+                modifier = Modifier.padding(horizontal = KatariTheme.spacing.xl, vertical = KatariTheme.spacing.xs),
+                container = SurfaceContainer.Chrome,
+                shape = KatariTheme.shapes.medium,
             ) {
                 Text(
                     text = snapshot.previewAt(value),
-                    maxLines = 2,
+                    modifier = Modifier.padding(KatariTheme.spacing.m),
+                    role = TextRole.Body,
                     overflow = TextOverflow.Ellipsis,
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(12.dp),
+                    maxLines = 2,
                 )
             }
         }
-        Text(
+        Pill(
             text = sectionTitle,
-            style = MaterialTheme.typography.labelMedium,
-            modifier = Modifier.align(Alignment.CenterHorizontally).padding(bottom = 4.dp)
-                .clip(MaterialTheme.shapes.small).background(MaterialTheme.colorScheme.surface)
-                .padding(horizontal = 8.dp, vertical = 4.dp),
+            modifier = Modifier
+                .align(Alignment.CenterHorizontally)
+                .padding(bottom = KatariTheme.spacing.xs),
+            container = SurfaceContainer.Chrome,
         )
         ReaderPositionNavigator(
             type = if (mode == BookDocumentReadingMode.PAGED_RTL) {

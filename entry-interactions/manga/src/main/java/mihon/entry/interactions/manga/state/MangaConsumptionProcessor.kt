@@ -1,6 +1,5 @@
 package mihon.entry.interactions.manga.state
 
-import eu.kanade.tachiyomi.source.entry.EntryType
 import mihon.entry.interactions.manga.runtime.requireManga
 import mihon.entry.interactions.state.EntryBookmarkProcessor
 import mihon.entry.interactions.state.EntryConsumptionProcessor
@@ -17,7 +16,6 @@ internal class MangaConsumptionProcessor(
     private val entryChapterRepository: EntryChapterRepository,
     private val entryProgressRepository: EntryProgressRepository,
 ) : EntryConsumptionProcessor, EntryBookmarkProcessor {
-    override val type: EntryType = EntryType.MANGA
 
     override suspend fun setConsumed(
         entry: Entry,

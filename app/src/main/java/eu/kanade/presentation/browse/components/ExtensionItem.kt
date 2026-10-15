@@ -1,0 +1,167 @@
+package eu.kanade.presentation.browse.components
+
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextOverflow
+import dev.icerock.moko.resources.StringResource
+import eu.kanade.tachiyomi.extension.model.Extension
+import eu.kanade.tachiyomi.extension.model.InstallStep
+import eu.kanade.tachiyomi.ui.browse.extension.ExtensionUiModel
+import eu.kanade.tachiyomi.util.system.LocaleHelper
+import mihon.presentation.kit.content.BrowseMetrics
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.list.SettingsRow
+import mihon.presentation.kit.progress.LoadingIndicator
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
+import tachiyomi.i18n.*
+import tachiyomi.presentation.core.i18n.stringResource
+
+@Composable
+internal fun ExtensionItem(
+    item: ExtensionUiModel.Item,
+    onClickItem: (Extension) -> Unit,
+    onLongClickItem: (Extension) -> Unit,
+    onClickItemCancel: (Extension) -> Unit,
+    onClickItemError: (InstallStep.Error) -> Unit,
+    onClickItemAction: (Extension) -> Unit,
+    onClickItemSecondaryAction: (Extension) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val (extension, installStep) = item
+    val store = when (extension) {
+        is Extension.Available -> extension.store
+        is Extension.Installed -> extension.store
+    }
+    SettingsRow(
+        title = extension.name,
+        modifier = modifier,
+        subtitle = store?.name,
+        subtitleMaxLines = 1,
+        leading = { ExtensionItemIcon(extension = extension, installStep = installStep) },
+        trailing = {
+            ExtensionItemActions(
+                extension = extension,
+                installStep = installStep,
+                onClickItemCancel = onClickItemCancel,
+                onClickItemError = onClickItemError,
+                onClickItemAction = onClickItemAction,
+                onClickItemSecondaryAction = onClickItemSecondaryAction,
+            )
+        },
+        onClick = { onClickItem(extension) },
+        onLongClick = { onLongClickItem(extension) },
+        below = { ExtensionItemDetails(extension = extension, installStep = installStep) },
+    )
+}
+
+/** The extension's icon, shrunk inside a spinner while it is being installed. */
+@Composable
+private fun ExtensionItemIcon(
+    extension: Extension,
+    installStep: InstallStep,
+) {
+    Box(
+        modifier = Modifier.size(BrowseMetrics.sourceIcon),
+        contentAlignment = Alignment.Center,
+    ) {
+        val idle = installStep.isCompleted()
+        if (!idle) {
+            LoadingIndicator(modifier = Modifier.size(BrowseMetrics.sourceIcon))
+        }
+
+        val padding by animateDpAsState(
+            targetValue = if (idle) KatariTheme.sizes.none else KatariTheme.spacing.s,
+            label = "iconPadding",
+        )
+        ExtensionIcon(
+            extension = extension,
+            modifier = Modifier
+                .matchParentSize()
+                .padding(padding),
+        )
+    }
+}
+
+/** Language, version, warnings and install progress, separated by dots. */
+@Composable
+private fun ExtensionItemDetails(
+    extension: Extension,
+    installStep: InstallStep,
+) {
+    val details = buildList {
+        if (extension is Extension.Loaded && extension.lang.isNotEmpty()) {
+            add(LocaleHelper.getSourceDisplayName(extension.lang, LocalContext.current) to ContentTone.Secondary)
+        }
+        if (extension.versionName.isNotEmpty()) {
+            add(extension.versionName to ContentTone.Secondary)
+        }
+        listOfNotNull(
+            (installStep as? InstallStep.Error)?.let { MR.strings.ext_install_error to ContentTone.Error },
+            when {
+                extension is Extension.NotLoaded -> extension.reason.labelRes?.let { it to ContentTone.Error }
+                extension is Extension.Loaded && extension.isObsolete -> MR.strings.ext_obsolete to ContentTone.Error
+                else -> null
+            },
+            extension.contentWarning.label?.let { it.title to it.tone },
+        ).forEach { (label, tone) ->
+            add(stringResource(label).uppercase() to tone)
+        }
+        if (extension is Extension.Loaded && !extension.isShared) {
+            add(stringResource(MR.strings.ext_installer_private) to ContentTone.Secondary)
+        }
+        when {
+            !installStep.isCompleted() -> {
+                val progress = when (installStep) {
+                    InstallStep.Pending -> MR.strings.ext_pending
+                    InstallStep.Downloading -> MR.strings.ext_downloading
+                    InstallStep.Installing -> MR.strings.ext_installing
+                    else -> error("Must not show non-install process text")
+                }
+                add(stringResource(progress) to ContentTone.Secondary)
+            }
+            installStep == InstallStep.RequiresUserAction -> {
+                add(stringResource(MR.strings.ext_requires_user_action) to ContentTone.Secondary)
+            }
+        }
+    }
+    // Won't look good but it's not like we can ellipsize overflowing content
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xs)) {
+        details.forEachIndexed { index, (text, tone) ->
+            if (index > 0) Text(text = "•", role = TextRole.Supporting)
+            Text(
+                text = text,
+                role = TextRole.Supporting,
+                tone = tone,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+    }
+}
+
+/**
+ * Only the reasons the user can act on are worth naming in the row; the rest all mean "broken" to
+ * them and are spelled out in [ExtensionNotLoadedDialog] instead.
+ */
+private val Extension.NotLoaded.Reason.labelRes: StringResource?
+    get() = when (this) {
+        is Extension.NotLoaded.Reason.Untrusted -> MR.strings.ext_untrusted
+        Extension.NotLoaded.Reason.Filtered -> MR.strings.ext_filtered
+        // The section header already says these aren't loaded; the dialog says why
+        Extension.NotLoaded.Reason.Unsigned,
+        Extension.NotLoaded.Reason.UnsupportedLibVersion,
+        Extension.NotLoaded.Reason.Malformed,
+        is Extension.NotLoaded.Reason.Failed,
+        -> null
+    }

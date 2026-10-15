@@ -19,9 +19,8 @@ import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import mihon.app.di.appGraph
 import mihon.entry.interactions.download.EntryDownloadActionFeature
-import mihon.entry.interactions.download.EntryDownloadRuntimeFeature
-import mihon.entry.interactions.merge.EntryMergeNavigationFeature
 import mihon.entry.interactions.navigation.EntryOpenFeature
 import mihon.entry.interactions.navigation.EntryOpenOptions
 import mihon.entry.interactions.state.EntryConsumptionFeature
@@ -31,9 +30,6 @@ import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.i18n.*
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
-import uy.kohesive.injekt.injectLazy
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
 import eu.kanade.tachiyomi.BuildConfig.APPLICATION_ID as ID
@@ -45,25 +41,23 @@ import eu.kanade.tachiyomi.BuildConfig.APPLICATION_ID as ID
  */
 class NotificationReceiver : BroadcastReceiver() {
 
-    private val entryMergeNavigationFeature: EntryMergeNavigationFeature by injectLazy()
-    private val entryRepository: EntryRepository by injectLazy()
-    private val entryChapterRepository: EntryChapterRepository by injectLazy()
-    private val entryConsumptionFeature: EntryConsumptionFeature by injectLazy()
-    private val downloadRuntime: EntryDownloadRuntimeFeature by injectLazy()
-    private val entryDownloadActionFeature: EntryDownloadActionFeature by injectLazy()
-    private val entryOpenFeature: EntryOpenFeature by injectLazy()
-    private val scope: CoroutineScope by injectLazy()
+    private lateinit var graph: NotificationReceiverGraph
+
+    private val entryMergeNavigationFeature by lazy { graph.entryMergeNavigationFeature }
+    private val downloadRuntime by lazy { graph.entryDownloadRuntimeFeature }
+    private val scope by lazy { graph.appScope }
     private val entryActionHandler by lazy {
         NotificationEntryActionHandler(
-            entryRepository = entryRepository,
-            entryChapterRepository = entryChapterRepository,
-            entryConsumptionFeature = entryConsumptionFeature,
-            entryDownloadActionFeature = entryDownloadActionFeature,
-            entryOpenFeature = entryOpenFeature,
+            entryRepository = graph.entryRepository,
+            entryChapterRepository = graph.entryChapterRepository,
+            entryConsumptionFeature = graph.entryConsumptionFeature,
+            entryDownloadActionFeature = graph.entryDownloadActionFeature,
+            entryOpenFeature = graph.entryOpenFeature,
         )
     }
 
     override fun onReceive(context: Context, intent: Intent) {
+        graph = context.appGraph
         when (intent.action) {
             // Dismiss notification
             ACTION_DISMISS_NOTIFICATION -> dismissNotification(context, intent.getIntExtra(EXTRA_NOTIFICATION_ID, -1))
@@ -548,7 +542,7 @@ class NotificationReceiver : BroadcastReceiver() {
             ownerEntry: Entry,
             chapter: EntryChapter,
         ): PendingIntent? {
-            if (!Injekt.get<EntryOpenFeature>().isApplicable(visibleEntry.type)) return null
+            if (!context.appGraph.entryOpenFeature.isApplicable(visibleEntry.type)) return null
             require(visibleEntry.profileId == ownerEntry.profileId) {
                 "Notification child destination and owner must belong to the same profile"
             }

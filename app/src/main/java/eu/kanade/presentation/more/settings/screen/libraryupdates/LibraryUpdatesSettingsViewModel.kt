@@ -4,6 +4,10 @@ import android.app.Application
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.ContributesIntoMap
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metrox.viewmodel.ViewModelKey
 import eu.kanade.tachiyomi.data.library.LibraryUpdateJob
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.visualName
@@ -15,6 +19,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import mihon.app.di.AppUiScope
 import mihon.entry.interactions.state.EntryUpdateEligibilityFeature
 import mihon.feature.library.update.pause.LibrarySourcePauses
 import mihon.feature.library.update.planning.LibraryUpdatePlanner
@@ -36,21 +41,22 @@ import tachiyomi.domain.library.update.model.CategoryUpdateRules
 import tachiyomi.domain.library.update.repository.LibraryUpdateReportRepository
 import tachiyomi.domain.library.update.repository.LibraryUpdateRulesRepository
 import tachiyomi.domain.source.service.SourceManager
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 import kotlin.time.Clock
 
 @OptIn(ExperimentalCoroutinesApi::class)
+@Inject
+@ViewModelKey
+@ContributesIntoMap(AppUiScope::class)
 class LibraryUpdatesSettingsViewModel(
-    private val application: Application = Injekt.get(),
-    private val libraryPreferences: LibraryPreferences = Injekt.get(),
-    private val getLibraryEntries: GetLibraryEntries = Injekt.get(),
-    private val getCategories: GetCategories = Injekt.get(),
-    private val rulesRepository: LibraryUpdateRulesRepository = Injekt.get(),
-    reportRepository: LibraryUpdateReportRepository = Injekt.get(),
-    private val sourceManager: SourceManager = Injekt.get(),
-    fetchInterval: FetchInterval = Injekt.get(),
-    eligibility: EntryUpdateEligibilityFeature = Injekt.get(),
+    private val application: Application,
+    private val libraryPreferences: LibraryPreferences,
+    private val getLibraryEntries: GetLibraryEntries,
+    private val getCategories: GetCategories,
+    private val rulesRepository: LibraryUpdateRulesRepository,
+    reportRepository: LibraryUpdateReportRepository,
+    private val sourceManager: SourceManager,
+    fetchInterval: FetchInterval,
+    eligibility: EntryUpdateEligibilityFeature,
 ) : ViewModel() {
 
     val state: StateFlow<LibraryUpdatesSettingsViewModel.State>

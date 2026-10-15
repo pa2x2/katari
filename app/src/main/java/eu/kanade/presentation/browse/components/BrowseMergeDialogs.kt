@@ -5,23 +5,23 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import eu.kanade.presentation.components.AdaptiveSheet
 import eu.kanade.presentation.entry.components.EntryActionIcons
 import eu.kanade.presentation.entry.components.MergeEditorDialog
 import eu.kanade.presentation.entry.components.MergeEditorEntry
 import eu.kanade.presentation.entry.components.MergeTarget
 import eu.kanade.presentation.entry.components.MergeTargetPickerSheet
 import kotlinx.collections.immutable.toPersistentList
+import mihon.presentation.kit.button.Button
+import mihon.presentation.kit.button.ButtonStyle
+import mihon.presentation.kit.button.StackedActionButton
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.sheet.Sheet
+import mihon.presentation.kit.surface.HorizontalDivider
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.ActionButton
-import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable
@@ -32,48 +32,47 @@ fun BrowseLibraryActionDialog(
     onLibraryAction: () -> Unit,
     onMergeIntoLibrary: () -> Unit,
 ) {
-    AdaptiveSheet(onDismissRequest = onDismissRequest) {
+    val spacing = KatariTheme.spacing
+    Sheet(onDismissRequest = onDismissRequest) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = MaterialTheme.padding.medium),
-            verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.medium),
+                .padding(vertical = spacing.l),
+            verticalArrangement = Arrangement.spacedBy(spacing.l),
         ) {
             Text(
                 text = mangaTitle,
-                style = MaterialTheme.typography.headlineMedium,
-                modifier = Modifier.padding(horizontal = 24.dp),
+                modifier = Modifier.padding(horizontal = spacing.rowInset),
+                role = TextRole.SheetTitle,
             )
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 24.dp),
-                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
+                    .padding(horizontal = spacing.rowInset),
+                horizontalArrangement = Arrangement.spacedBy(spacing.s),
             ) {
-                ActionButton(
-                    modifier = Modifier.weight(1f),
-                    title = stringResource(if (favorite) MR.strings.in_library else MR.strings.add_to_library),
+                StackedActionButton(
+                    label = stringResource(if (favorite) MR.strings.in_library else MR.strings.add_to_library),
                     icon = EntryActionIcons.library(favorite),
-                    onClick = {
-                        onLibraryAction()
-                    },
-                )
-                ActionButton(
+                    onClick = onLibraryAction,
                     modifier = Modifier.weight(1f),
-                    title = stringResource(MR.strings.action_merge_into_library),
+                )
+                StackedActionButton(
+                    label = stringResource(MR.strings.action_merge_into_library),
                     icon = EntryActionIcons.merge,
                     onClick = onMergeIntoLibrary,
+                    modifier = Modifier.weight(1f),
                 )
             }
             HorizontalDivider()
-            TextButton(
+            Button(
+                label = stringResource(MR.strings.action_cancel),
                 onClick = onDismissRequest,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 24.dp),
-            ) {
-                Text(text = stringResource(MR.strings.action_cancel))
-            }
+                    .padding(horizontal = spacing.rowInset),
+                style = ButtonStyle.Text,
+            )
         }
     }
 }

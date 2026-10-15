@@ -7,10 +7,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.window.DialogWindowProvider
 import eu.kanade.tachiyomi.ui.reader.setting.ReaderSettingsScreenModel
+import mihon.core.metro.metroGraph
 import mihon.entry.interactions.reader.settings.MangaReaderSettings
+import mihon.entry.interactions.runtime.EntryInteractionActivityGraph
 import mihon.entry.viewer.settings.ui.ReaderSettingsDialogHost
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -31,8 +34,13 @@ internal fun ReaderSettingsDialog(
         stringResource(MR.strings.custom_filter),
     )
     var dialogWindow by remember { mutableStateOf<Window?>(null) }
+    val context = LocalContext.current
+    val sharedSettingsRegistry = remember {
+        context.metroGraph<EntryInteractionActivityGraph>().readerSharedSettingsRegistry
+    }
 
     ReaderSettingsDialogHost(
+        sharedSettingsRegistry = sharedSettingsRegistry,
         settingsSurfaceId = MangaReaderSettings.PROVIDER_ID,
         capabilities = MangaReaderSettings.READER_CAPABILITIES,
         sharedSettingBindings = screenModel.settings.sharedSettings,

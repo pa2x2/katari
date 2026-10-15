@@ -3,7 +3,6 @@ package mihon.entry.interactions.manga.media
 import android.content.Context
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
-import eu.kanade.tachiyomi.ui.reader.loader.ReaderPageSessionLoader
 import eu.kanade.tachiyomi.ui.reader.model.ReaderChapter
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -24,12 +23,9 @@ import tachiyomi.domain.entry.repository.EntryProgressRepository
 internal class MangaImmersiveProcessor(
     private val entryProgressRepository: EntryProgressRepository? = null,
     private val mediaSession: EntryMediaSessionProcessor,
-    private val loadPageSession: suspend (Context, Entry, EntryChapter) -> ReaderChapter = { context, entry, chapter ->
-        ReaderPageSessionLoader(context).load(entry, chapter)
-    },
+    private val loadPageSession: suspend (Context, Entry, EntryChapter) -> ReaderChapter,
     private val now: () -> Long = System::currentTimeMillis,
 ) : EntryImmersiveProcessor {
-    override val type: EntryType = EntryType.MANGA
     override val loadMode = EntryImmersiveLoadMode.FIRST_READING_CHILD
     override val preloadRadius: Int = 1
     private val persistMutex = Mutex()
@@ -46,7 +42,7 @@ internal class MangaImmersiveProcessor(
             val pages = requireNotNull(readerChapter.pages)
             val progress = entryProgressRepository?.get(chapter.entryId, "", chapter.progressResourceKey)
             return EntryImmersiveHandle.ImagePages(
-                entryType = type,
+                entryType = EntryType.MANGA,
                 chapterId = chapter.id,
                 delegate = MangaImmersiveMedia(
                     readerChapter = readerChapter,

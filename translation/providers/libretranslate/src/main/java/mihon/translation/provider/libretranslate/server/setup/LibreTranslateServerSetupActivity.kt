@@ -5,8 +5,8 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.ui.res.stringResource
-import eu.kanade.presentation.theme.TachiyomiTheme
 import eu.kanade.tachiyomi.network.localnetwork.guardingLocalNetworkAccess
+import mihon.presentation.kit.theme.KatariTheme
 import mihon.translation.provider.libretranslate.R
 import mihon.translation.provider.libretranslate.protocol.LibreTranslateHttpClient
 import mihon.translation.provider.libretranslate.server.LibreTranslateServerNetwork
@@ -32,7 +32,7 @@ internal class LibreTranslateServerSetupActivity : AppCompatActivity() {
             saveConfiguration = configuration::save,
         )
         setContent {
-            TachiyomiTheme {
+            KatariTheme {
                 ServerSetupRoute(
                     initialEndpoint = configuration.endpoint?.toString().orEmpty(),
                     initialApiKey = configuration.apiKey.orEmpty(),

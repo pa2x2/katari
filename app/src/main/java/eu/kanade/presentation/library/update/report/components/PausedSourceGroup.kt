@@ -2,10 +2,6 @@ package eu.kanade.presentation.library.update.report.components
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -18,10 +14,12 @@ import mihon.feature.library.update.report.LibraryUpdateReport
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.KeyboardArrowDown
 import mihon.icons.materialsymbols.rounded.KeyboardArrowUp
+import mihon.presentation.kit.chip.AssistChip
+import mihon.presentation.kit.content.Icon
+import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.domain.library.update.model.EntryUpdateOutcome
 import tachiyomi.domain.library.update.model.SourceUpdatePause
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -78,7 +76,7 @@ internal fun PausedSourceGroup(
                     entry = item.entry,
                     title = item.entry.title,
                     subtitle = checkResult(item),
-                    modifier = Modifier.padding(start = MaterialTheme.padding.medium),
+                    modifier = Modifier.padding(start = KatariTheme.spacing.l),
                     isError = item.status.outcome == EntryUpdateOutcome.FAILED,
                     onClick = { actions.onClickEntry(item.entry) },
                 )
@@ -95,8 +93,8 @@ internal fun PausedSourceGroup(
                 )
             }
             AssistChip(
+                label = stringResource(MR.strings.library_update_report_check_now),
                 onClick = { actions.onRetry(source.items.map { it.entry }) },
-                label = { Text(stringResource(MR.strings.library_update_report_check_now)) },
             )
         }
     }

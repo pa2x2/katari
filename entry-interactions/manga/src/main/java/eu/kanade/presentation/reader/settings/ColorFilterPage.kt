@@ -1,9 +1,6 @@
 package eu.kanade.presentation.reader.settings
 
 import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -16,9 +13,10 @@ import eu.kanade.tachiyomi.ui.reader.setting.ReaderSettingsScreenModel
 import kotlinx.coroutines.launch
 import mihon.entry.interactions.reader.settings.MangaReaderSettings.Companion.ColorFilterMode
 import mihon.entry.viewer.settings.updateEntry
+import mihon.presentation.kit.chip.FilterChip
+import mihon.presentation.kit.list.ChipsRow
+import mihon.presentation.kit.list.SliderRow
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.SettingsChipRow
-import tachiyomi.presentation.core.components.SliderItem
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
 
@@ -28,7 +26,7 @@ internal fun ColumnScope.ColorFilterPage(screenModel: ReaderSettingsScreenModel)
     val scope = rememberCoroutineScope()
 
     val customBrightness by settings.customBrightness.state.collectAsState()
-    BindingCheckboxItem(
+    BindingToggleRow(
         label = stringResource(MR.strings.pref_custom_brightness),
         binding = settings.customBrightness,
     )
@@ -41,85 +39,80 @@ internal fun ColumnScope.ColorFilterPage(screenModel: ReaderSettingsScreenModel)
      */
     if (customBrightness.effectiveValue) {
         val customBrightnessValue by settings.customBrightnessValue.state.collectAsState()
-        SliderItem(
+        SliderRow(
             value = customBrightnessValue.effectiveValue,
             valueRange = -75..100,
             steps = 0,
-            label = stringResource(MR.strings.pref_custom_brightness),
-            onChange = { value -> scope.launch { settings.customBrightnessValue.updateEntry(value) } },
-            pillColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+            title = stringResource(MR.strings.pref_custom_brightness),
+            onValueChange = { value -> scope.launch { settings.customBrightnessValue.updateEntry(value) } },
         )
     }
 
     val colorFilter by settings.colorFilter.state.collectAsState()
-    BindingCheckboxItem(
+    BindingToggleRow(
         label = stringResource(MR.strings.pref_custom_color_filter),
         binding = settings.colorFilter,
     )
     if (colorFilter.effectiveValue) {
         val colorFilterValue by settings.colorFilterValue.state.collectAsState()
-        SliderItem(
+        SliderRow(
             value = colorFilterValue.effectiveValue.red,
             valueRange = 0..255,
             steps = 0,
-            label = stringResource(MR.strings.color_filter_r_value),
-            onChange = { newRValue ->
+            title = stringResource(MR.strings.color_filter_r_value),
+            onValueChange = { newRValue ->
                 val newValue = getColorValue(colorFilterValue.effectiveValue, newRValue, RED_MASK, 16)
                 scope.launch { settings.colorFilterValue.updateEntry(newValue) }
             },
-            pillColor = MaterialTheme.colorScheme.surfaceContainerHighest,
         )
-        SliderItem(
+        SliderRow(
             value = colorFilterValue.effectiveValue.green,
             valueRange = 0..255,
             steps = 0,
-            label = stringResource(MR.strings.color_filter_g_value),
-            onChange = { newGValue ->
+            title = stringResource(MR.strings.color_filter_g_value),
+            onValueChange = { newGValue ->
                 val newValue = getColorValue(colorFilterValue.effectiveValue, newGValue, GREEN_MASK, 8)
                 scope.launch { settings.colorFilterValue.updateEntry(newValue) }
             },
-            pillColor = MaterialTheme.colorScheme.surfaceContainerHighest,
         )
-        SliderItem(
+        SliderRow(
             value = colorFilterValue.effectiveValue.blue,
             valueRange = 0..255,
             steps = 0,
-            label = stringResource(MR.strings.color_filter_b_value),
-            onChange = { newBValue ->
+            title = stringResource(MR.strings.color_filter_b_value),
+            onValueChange = { newBValue ->
                 val newValue = getColorValue(colorFilterValue.effectiveValue, newBValue, BLUE_MASK, 0)
                 scope.launch { settings.colorFilterValue.updateEntry(newValue) }
             },
-            pillColor = MaterialTheme.colorScheme.surfaceContainerHighest,
         )
-        SliderItem(
+        SliderRow(
             value = colorFilterValue.effectiveValue.alpha,
             valueRange = 0..255,
             steps = 0,
-            label = stringResource(MR.strings.color_filter_a_value),
-            onChange = { newAValue ->
+            title = stringResource(MR.strings.color_filter_a_value),
+            onValueChange = { newAValue ->
                 val newValue = getColorValue(colorFilterValue.effectiveValue, newAValue, ALPHA_MASK, 24)
                 scope.launch { settings.colorFilterValue.updateEntry(newValue) }
             },
-            pillColor = MaterialTheme.colorScheme.surfaceContainerHighest,
         )
 
         val colorFilterMode by settings.colorFilterMode.state.collectAsState()
-        SettingsChipRow(MR.strings.pref_color_filter_mode) {
+        ChipsRow(title = stringResource(MR.strings.pref_color_filter_mode)) {
             ColorFilterMode.mapIndexed { index, it ->
                 FilterChip(
                     selected = colorFilterMode.effectiveValue == index,
                     onClick = { scope.launch { settings.colorFilterMode.updateEntry(index) } },
-                    label = { Text(stringResource(it.first)) },
+                    label = stringResource(it.first),
                 )
             }
         }
     }
 
-    BindingCheckboxItem(
+    BindingToggleRow(
         label = stringResource(MR.strings.pref_grayscale),
         binding = settings.grayscale,
     )
-    BindingCheckboxItem(
+    BindingToggleRow(
         label = stringResource(MR.strings.pref_inverted_colors),
         binding = settings.invertedColors,
     )

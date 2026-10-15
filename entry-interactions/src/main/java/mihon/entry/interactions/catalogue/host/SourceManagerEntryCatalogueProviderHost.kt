@@ -16,7 +16,6 @@ import eu.kanade.tachiyomi.source.entry.entryItemOrientation
 import eu.kanade.tachiyomi.source.entry.filter.requireValidFilters
 import eu.kanade.tachiyomi.source.entry.supportedEntryTypes
 import eu.kanade.tachiyomi.source.filter.EntryFilterBinding
-import eu.kanade.tachiyomi.source.filter.detachedCopy
 import eu.kanade.tachiyomi.source.filter.withSourceFilterValues
 import mihon.entry.interactions.catalogue.EntryCatalogueListing
 import mihon.entry.interactions.catalogue.EntryCatalogueUnavailableException

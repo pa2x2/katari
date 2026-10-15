@@ -6,7 +6,6 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.Pager
@@ -15,6 +14,13 @@ import androidx.paging.PagingSource
 import androidx.paging.cachedIn
 import androidx.paging.filter
 import androidx.paging.map
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.Assisted
+import dev.zacsweers.metro.AssistedFactory
+import dev.zacsweers.metro.AssistedInject
+import dev.zacsweers.metro.ContributesIntoMap
+import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
+import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
 import eu.kanade.core.preference.asState
 import eu.kanade.domain.source.interactor.GetIncognitoState
 import eu.kanade.domain.source.model.CATALOGUE_LATEST_QUERY
@@ -65,6 +71,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.flow.updateAndGet
 import kotlinx.coroutines.plus
 import logcat.LogPriority
+import mihon.app.di.AppUiScope
 import mihon.core.common.CustomPreferences
 import mihon.core.common.browseLongPressActionPriorityForSource
 import mihon.core.common.sanitizeBrowseLongPressActionPriority
@@ -102,6 +109,7 @@ import mihon.entry.interactions.source.EntrySourceHomeFeature
 import mihon.entry.interactions.source.EntrySourceHomeResolution
 import mihon.entry.interactions.source.EntrySourceSettingsFeature
 import mihon.entry.interactions.source.EntrySourceSettingsResolution
+import mihon.presentation.kit.content.BrowseMetrics
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.preference.CheckboxState
 import tachiyomi.core.common.preference.mapAsCheckboxState
@@ -118,42 +126,62 @@ import tachiyomi.domain.library.service.DuplicatePreferences
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.source.model.CatalogListItem
 import tachiyomi.domain.source.model.SourceDisplayInfo
+import tachiyomi.domain.source.service.SourceInfoNames
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.i18n.*
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 import java.util.UUID
 import eu.kanade.tachiyomi.source.entry.EntryFilter as SourceModelFilter
 
 private val CatalogListItem.entry: Entry
     get() = (this as CatalogListItem.EntryItem).entry
 
+@AssistedInject
 class CatalogViewModel(
-    private val sourceId: Long,
-    listingQuery: String?,
-    private val migrationEntryType: EntryType? = null,
-    private val initialFilterSnapshot: List<FilterStateNode> = emptyList(),
-    private val initialPresetId: String? = null,
-    openFilterSheetOnStart: Boolean = false,
-    private val sourceManager: SourceManager = Injekt.get(),
-    sourcePreferences: SourcePreferences = Injekt.get(),
-    customPreferences: CustomPreferences = Injekt.get(),
-    private val browseFeedService: BrowseFeedService = Injekt.get(),
-    private val libraryPreferences: LibraryPreferences = Injekt.get(),
-    private val getEntry: GetEntry = Injekt.get(),
-    private val entryLibraryMembershipFeature: EntryLibraryMembershipFeature = Injekt.get(),
-    private val entryMergeFeature: EntryMergeFeature = Injekt.get(),
-    private val categoryRepository: CategoryRepository = Injekt.get(),
-    private val getLibraryEntries: GetLibraryEntries = Injekt.get(),
-    private val duplicatePreferences: DuplicatePreferences = Injekt.get(),
-    private val entryPreviewFeature: EntryPreviewFeature = Injekt.get(),
-    private val entryImmersiveFeature: EntryImmersiveFeature = Injekt.get(),
-    private val entryCatalogueFeature: EntryCatalogueFeature = Injekt.get(),
-    private val entrySourceHomeFeature: EntrySourceHomeFeature = Injekt.get(),
-    private val entrySourceSettingsFeature: EntrySourceSettingsFeature = Injekt.get(),
-    private val getIncognitoState: GetIncognitoState = Injekt.get(),
-    private val application: Application = Injekt.get(),
+    @Assisted private val sourceId: Long,
+    @Assisted listingQuery: String?,
+    @Assisted private val migrationEntryType: EntryType?,
+    @Assisted private val initialFilterSnapshot: List<FilterStateNode>,
+    @Assisted private val initialPresetId: String?,
+    @Assisted openFilterSheetOnStart: Boolean,
+    @Assisted feedProfileId: Long?,
+    private val sourceManager: SourceManager,
+    sourcePreferences: SourcePreferences,
+    customPreferences: CustomPreferences,
+    activeBrowseFeedService: BrowseFeedService,
+    private val libraryPreferences: LibraryPreferences,
+    private val getEntry: GetEntry,
+    private val entryLibraryMembershipFeature: EntryLibraryMembershipFeature,
+    private val entryMergeFeature: EntryMergeFeature,
+    private val categoryRepository: CategoryRepository,
+    private val getLibraryEntries: GetLibraryEntries,
+    private val duplicatePreferences: DuplicatePreferences,
+    private val entryPreviewFeature: EntryPreviewFeature,
+    private val entryImmersiveFeature: EntryImmersiveFeature,
+    private val entryCatalogueFeature: EntryCatalogueFeature,
+    private val entrySourceHomeFeature: EntrySourceHomeFeature,
+    private val entrySourceSettingsFeature: EntrySourceSettingsFeature,
+    private val getIncognitoState: GetIncognitoState,
+    private val application: Application,
+    private val sourceNames: SourceInfoNames,
 ) : ViewModel() {
+
+    @AssistedFactory
+    @ManualViewModelAssistedFactoryKey
+    @ContributesIntoMap(AppUiScope::class)
+    interface Factory : ManualViewModelAssistedFactory {
+        fun create(
+            sourceId: Long,
+            listingQuery: String?,
+            migrationEntryType: EntryType?,
+            initialFilterSnapshot: List<FilterStateNode>,
+            initialPresetId: String?,
+            openFilterSheetOnStart: Boolean,
+            feedProfileId: Long?,
+        ): CatalogViewModel
+    }
+
+    private val browseFeedService =
+        feedProfileId?.let(activeBrowseFeedService::forProfile) ?: activeBrowseFeedService
 
     val state: StateFlow<CatalogViewModel.State>
         field = MutableStateFlow<CatalogViewModel.State>(initialCatalogState(listingQuery))
@@ -278,7 +306,9 @@ class CatalogViewModel(
         }.get()
         val isHorizontal = sourceItemOrientation == EntryItemOrientation.HORIZONTAL
         return if (columns == 0) {
-            GridCells.Adaptive(if (isHorizontal) 180.dp else 128.dp)
+            GridCells.Adaptive(
+                if (isHorizontal) BrowseMetrics.wideCoverGridMinCellWidth else BrowseMetrics.coverGridMinCellWidth,
+            )
         } else {
             GridCells.Fixed(if (isHorizontal) (columns - 1).coerceAtLeast(1) else columns)
         }
@@ -683,7 +713,7 @@ class CatalogViewModel(
         viewModelScope.launchIO {
             val targets = buildMergeTargets(
                 libraryItems = getLibraryEntries.await(),
-                sourceNames = Injekt.get(),
+                sourceNames = sourceNames,
                 entryType = entry.type,
             )
             if (targets.isEmpty()) return@launchIO

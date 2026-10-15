@@ -9,8 +9,6 @@ import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryRepository
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
 /** Persists the ordered BOOK queue across process and worker restarts. */
 internal class BookDownloadStore(
@@ -21,9 +19,9 @@ internal class BookDownloadStore(
 ) {
     constructor(
         context: Context,
-        json: Json = Injekt.get(),
-        entryRepository: EntryRepository = Injekt.get(),
-        entryChapterRepository: EntryChapterRepository = Injekt.get(),
+        json: Json,
+        entryRepository: EntryRepository,
+        entryChapterRepository: EntryChapterRepository,
     ) : this(
         backend = BookDownloadQueueFileBackend(
             snapshotFile = context.durableBookDownloadQueueDirectory().resolve(QUEUE_FILE_NAME),

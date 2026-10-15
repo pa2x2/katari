@@ -3,6 +3,13 @@ package eu.kanade.tachiyomi.ui.stats.earlier
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.Assisted
+import dev.zacsweers.metro.AssistedFactory
+import dev.zacsweers.metro.AssistedInject
+import dev.zacsweers.metro.ContributesIntoMap
+import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
+import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
 import eu.kanade.presentation.more.stats.data.StatsType
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.ui.stats.buildStatisticsTypes
@@ -11,6 +18,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import logcat.LogPriority
+import mihon.app.di.AppUiScope
 import mihon.entry.interactions.presentation.EntryTypePresentationFeature
 import mihon.entry.interactions.statistics.EntryStatisticsFeature
 import tachiyomi.core.common.util.lang.launchIO
@@ -18,16 +26,22 @@ import tachiyomi.core.common.util.system.logcat
 import tachiyomi.data.ActiveProfileProvider
 import tachiyomi.domain.statistics.model.StatisticsEarlierActivityDetails
 import tachiyomi.domain.statistics.repository.StatisticsRepository
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
+@AssistedInject
 class StatisticsEarlierActivityViewModel(
-    typeName: String?,
-    private val activeProfileProvider: ActiveProfileProvider = Injekt.get(),
-    private val statisticsRepository: StatisticsRepository = Injekt.get(),
-    statisticsFeature: EntryStatisticsFeature = Injekt.get(),
-    presentationFeature: EntryTypePresentationFeature = Injekt.get(),
+    @Assisted typeName: String?,
+    private val activeProfileProvider: ActiveProfileProvider,
+    private val statisticsRepository: StatisticsRepository,
+    statisticsFeature: EntryStatisticsFeature,
+    presentationFeature: EntryTypePresentationFeature,
 ) : ViewModel() {
+
+    @AssistedFactory
+    @ManualViewModelAssistedFactoryKey
+    @ContributesIntoMap(AppUiScope::class)
+    interface Factory : ManualViewModelAssistedFactory {
+        fun create(typeName: String?): StatisticsEarlierActivityViewModel
+    }
 
     val state: StateFlow<StatisticsEarlierActivityViewModel.State>
         field = MutableStateFlow<StatisticsEarlierActivityViewModel.State>(State.Loading)

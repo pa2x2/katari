@@ -1,6 +1,5 @@
 package mihon.entry.interactions.anime.child
 
-import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.ui.video.player.formatPlaybackTimestamp
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
@@ -22,7 +21,6 @@ import tachiyomi.i18n.*
 internal class AnimeChildListProcessor(
     private val entryProgressRepository: EntryProgressRepository,
 ) : EntryChildListProcessor, EntryChildProgressProcessor {
-    override val type: EntryType = EntryType.ANIME
 
     override fun sortedForReading(
         entry: Entry,

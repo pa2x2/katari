@@ -1,3 +1,0 @@
-id=text-recognition.mlkit
-component=mihon.text.recognition.provider.mlkit.catalog.mlKitCatalogTextRecognitionRuntimeComponent
-variants=foss

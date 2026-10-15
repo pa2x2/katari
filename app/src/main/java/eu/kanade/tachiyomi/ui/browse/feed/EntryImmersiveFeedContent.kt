@@ -5,10 +5,6 @@ import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsIgnoringVisibility
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SnackbarDuration
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -18,7 +14,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.unit.dp
 import eu.kanade.domain.source.model.FeedItemRef
 import eu.kanade.presentation.browse.components.SourceIcon
 import eu.kanade.presentation.browse.immersive.rememberEntryImmersivePositionState
@@ -29,14 +24,18 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.launch
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Refresh
+import mihon.presentation.kit.feedback.EmptyScreen
+import mihon.presentation.kit.feedback.EmptyScreenAction
+import mihon.presentation.kit.feedback.LoadingScreen
+import mihon.presentation.kit.feedback.SnackbarDuration
+import mihon.presentation.kit.feedback.SnackbarHostState
+import mihon.presentation.kit.feedback.SnackbarResult
+import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.source.model.CatalogListItem
 import tachiyomi.domain.source.model.Source
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.screens.EmptyScreen
-import tachiyomi.presentation.core.screens.EmptyScreenAction
-import tachiyomi.presentation.core.screens.LoadingScreen
 
 @Composable
 internal fun EntryImmersiveFeedContent(
@@ -109,8 +108,8 @@ internal fun EntryImmersiveFeedContent(
             SourceIcon(
                 source = activeSource,
                 modifier = Modifier
-                    .size(20.dp)
-                    .clip(MaterialTheme.shapes.extraSmall),
+                    .size(KatariTheme.sizes.iconSmall)
+                    .clip(KatariTheme.shapes.extraSmall),
             )
         },
         onContextClick = onShowFeedPicker,
@@ -153,7 +152,7 @@ internal fun EntryImmersiveFeedContent(
                 .padding(
                     top = WindowInsets.statusBarsIgnoringVisibility
                         .asPaddingValues()
-                        .calculateTopPadding() + 16.dp,
+                        .calculateTopPadding() + KatariTheme.spacing.l,
                 ),
         )
     }

@@ -1,31 +1,19 @@
 package eu.kanade.presentation.browse.components
 
 import android.content.Context
-import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -36,36 +24,35 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
-import eu.kanade.presentation.components.AdaptiveSheet
-import eu.kanade.presentation.components.AppBar
-import eu.kanade.presentation.components.AppSnackbarHost
-import eu.kanade.presentation.entry.components.EntryActionIcons
-import eu.kanade.presentation.entry.components.PreviewContent
-import eu.kanade.presentation.entry.components.PreviewSizeUi
+import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
+import eu.kanade.presentation.entry.components.preview.PreviewContent
+import eu.kanade.presentation.entry.components.preview.PreviewSizeUi
 import eu.kanade.tachiyomi.ui.entry.EntryViewModel
 import eu.kanade.tachiyomi.util.system.copyToClipboard
 import kotlinx.coroutines.launch
+import mihon.app.di.appGraph
 import mihon.entry.interactions.media.EntryPreviewOpenTargetResult
 import mihon.entry.interactions.media.EntryPreviewSize
 import mihon.entry.interactions.navigation.EntryOpenFeature
 import mihon.entry.interactions.navigation.EntryOpenOptions
-import mihon.feature.profiles.core.ProfileManager
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.feedback.SnackbarHost
+import mihon.presentation.kit.feedback.SnackbarHostState
+import mihon.presentation.kit.navigation.AppBar
+import mihon.presentation.kit.navigation.Scaffold
+import mihon.presentation.kit.progress.LoadingIndicator
+import mihon.presentation.kit.sheet.Sheet
+import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.LoadingIndicator
-import tachiyomi.presentation.core.components.material.Scaffold
-import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.clickableNoIndication
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
 @Composable
 fun BrowseEntryPreviewSheet(
@@ -77,17 +64,15 @@ fun BrowseEntryPreviewSheet(
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val profileManager = remember { Injekt.get<ProfileManager>() }
-    val entryOpenFeature = remember { Injekt.get<EntryOpenFeature>() }
+    val profileManager = remember { context.appGraph.profileManager }
+    val entryOpenFeature = remember { context.appGraph.entryOpenFeature }
     val activeProfile by profileManager.activeProfile.collectAsStateWithLifecycle()
     var previousProfileId by remember(entryId) { mutableStateOf(activeProfile?.id) }
     var hasRequestedPreview by rememberSaveable(entryId) { mutableStateOf(false) }
-    val viewModel = viewModel(key = "browse-entry-preview-$entryId") {
-        EntryViewModel(
-            context = context,
-            entryId = entryId,
-            isFromSource = true,
-        )
+    val viewModel = assistedMetroViewModel<EntryViewModel, EntryViewModel.Factory>(
+        key = "browse-entry-preview-$entryId",
+    ) {
+        create(context = context, entryId = entryId, isFromSource = true, bypassMerge = false)
     }
 
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -112,7 +97,7 @@ fun BrowseEntryPreviewSheet(
         }
     }
 
-    AdaptiveSheet(
+    Sheet(
         onDismissRequest = onDismissRequest,
         modifier = Modifier.fillMaxSize(),
         enableImplicitDismiss = false,
@@ -195,10 +180,9 @@ private fun BrowseEntryPreviewDialogContent(
     }
 
     Scaffold(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.surfaceContainerHigh),
-        snackbarHost = { AppSnackbarHost(hostState = snackbarHostState) },
+        modifier = Modifier.fillMaxSize(),
+        container = SurfaceContainer.High,
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             AppBar(
                 titleContent = {
@@ -221,7 +205,7 @@ private fun BrowseEntryPreviewDialogContent(
                 .fillMaxSize()
                 .padding(contentPadding)
                 .systemBarsPadding()
-                .padding(horizontal = MaterialTheme.padding.medium, vertical = MaterialTheme.padding.small),
+                .padding(horizontal = KatariTheme.spacing.contentInset, vertical = KatariTheme.spacing.s),
         ) {
             PreviewContent(
                 state = displayedPreviewState,
@@ -247,12 +231,12 @@ private fun BoxScope.PreviewLoadingContent() {
     Column(
         modifier = Modifier.align(Alignment.Center),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
+        verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
     ) {
         LoadingIndicator()
         Text(
             text = stringResource(MR.strings.transition_pages_loading),
-            style = MaterialTheme.typography.bodyMedium,
+            role = TextRole.Body,
         )
     }
 }
@@ -277,118 +261,6 @@ private fun BrowseEntryPreviewTitle(title: String) {
                 repeatDelayMillis = 2_000,
             ),
     )
-}
-
-@Composable
-private fun BrowseEntryPreviewBottomBar(
-    favorite: Boolean,
-    onOpenEntry: () -> Unit,
-    onLibraryAction: () -> Unit,
-    onMergeAction: () -> Unit,
-) {
-    val spacing = MaterialTheme.padding.small
-    val openLabel = stringResource(MR.strings.action_open)
-    val libraryLabel = stringResource(if (favorite) MR.strings.remove_from_library else MR.strings.add_to_library)
-    val mergeLabel = stringResource(MR.strings.action_add_to_merge)
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surfaceContainerHigh),
-    ) {
-        HorizontalDivider()
-        BoxWithConstraints(
-            modifier = Modifier
-                .fillMaxWidth()
-                .navigationBarsPadding()
-                .padding(horizontal = MaterialTheme.padding.medium, vertical = MaterialTheme.padding.small),
-        ) {
-            val useCompactLayout = maxWidth < 480.dp
-
-            if (useCompactLayout) {
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(spacing),
-                ) {
-                    FilledTonalButton(
-                        onClick = onOpenEntry,
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
-                        PreviewBottomBarActionContent(
-                            icon = EntryActionIcons.openFullEntry,
-                            label = openLabel,
-                        )
-                    }
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(spacing),
-                    ) {
-                        Button(
-                            onClick = onLibraryAction,
-                            modifier = Modifier.weight(1f),
-                        ) {
-                            PreviewBottomBarActionContent(
-                                icon = EntryActionIcons.library(favorite),
-                                label = libraryLabel,
-                            )
-                        }
-                        FilledTonalButton(
-                            onClick = onMergeAction,
-                            modifier = Modifier.weight(1f),
-                        ) {
-                            PreviewBottomBarActionContent(
-                                icon = EntryActionIcons.merge,
-                                label = mergeLabel,
-                            )
-                        }
-                    }
-                }
-            } else {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(spacing),
-                ) {
-                    FilledTonalButton(
-                        onClick = onOpenEntry,
-                        modifier = Modifier.weight(1f),
-                    ) {
-                        PreviewBottomBarActionContent(
-                            icon = EntryActionIcons.openFullEntry,
-                            label = openLabel,
-                        )
-                    }
-                    Button(
-                        onClick = onLibraryAction,
-                        modifier = Modifier.weight(1f),
-                    ) {
-                        PreviewBottomBarActionContent(
-                            icon = EntryActionIcons.library(favorite),
-                            label = libraryLabel,
-                        )
-                    }
-                    FilledTonalButton(
-                        onClick = onMergeAction,
-                        modifier = Modifier.weight(1f),
-                    ) {
-                        PreviewBottomBarActionContent(
-                            icon = EntryActionIcons.merge,
-                            label = mergeLabel,
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun PreviewBottomBarActionContent(icon: ImageVector, label: String) {
-    Icon(
-        imageVector = icon,
-        contentDescription = null,
-    )
-    Spacer(modifier = Modifier.width(MaterialTheme.padding.small))
-    Text(text = label)
 }
 
 private suspend fun openChapter(

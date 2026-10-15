@@ -1,46 +1,33 @@
 package eu.kanade.presentation.track
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.systemBars
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.RadioButton
-import androidx.compose.material3.SelectableDates
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.minimumInteractiveComponentSize
-import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import androidx.compose.ui.unit.dp
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.presentation.entry.entryTypePresentation
-import eu.kanade.presentation.theme.TachiyomiPreviewTheme
 import eu.kanade.tachiyomi.source.entry.EntryType
+import mihon.presentation.kit.dialog.DialogAction
+import mihon.presentation.kit.field.DatePicker
+import mihon.presentation.kit.field.SelectableDates
+import mihon.presentation.kit.field.rememberDatePickerState
+import mihon.presentation.kit.list.ChoiceRow
+import mihon.presentation.kit.sheet.SheetActions
+import mihon.presentation.kit.sheet.SheetHeader
+import mihon.presentation.kit.surface.HorizontalDivider
+import mihon.presentation.kit.surface.Surface
+import mihon.presentation.kit.theme.KatariPreviewTheme
+import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.ScrollbarLazyColumn
 import tachiyomi.presentation.core.components.WheelNumberPicker
 import tachiyomi.presentation.core.components.WheelTextPicker
-import tachiyomi.presentation.core.components.material.AlertDialogContent
-import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable
@@ -57,29 +44,12 @@ fun TrackStatusSelector(
             val state = rememberLazyListState()
             ScrollbarLazyColumn(state = state) {
                 selections.forEach { (key, value) ->
-                    val isSelected = selection == key
                     item {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(8.dp))
-                                .selectable(
-                                    selected = isSelected,
-                                    onClick = { onSelectionChange(key) },
-                                )
-                                .fillMaxWidth()
-                                .minimumInteractiveComponentSize(),
-                        ) {
-                            RadioButton(
-                                selected = isSelected,
-                                onClick = null,
-                            )
-                            Text(
-                                text = value?.let { stringResource(it) } ?: "",
-                                style = MaterialTheme.typography.bodyLarge.merge(),
-                                modifier = Modifier.padding(start = 24.dp),
-                            )
-                        }
+                        ChoiceRow(
+                            title = value?.let { stringResource(it) } ?: "",
+                            selected = selection == key,
+                            onClick = { onSelectionChange(key) },
+                        )
                     }
                 }
             }
@@ -151,83 +121,48 @@ fun TrackDateSelector(
         initialSelectedDateMillis = initialSelectedDateMillis,
         selectableDates = selectableDates,
     )
-    AlertDialogContent(
-        modifier = Modifier.windowInsetsPadding(WindowInsets.systemBars),
-        title = { Text(text = title) },
-        content = {
-            Column {
-                DatePicker(
-                    state = pickerState,
-                    title = null,
-                    headline = null,
-                    showModeToggle = false,
-                )
-
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 12.dp, top = 8.dp, end = 12.dp, bottom = 24.dp),
-                    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small, Alignment.End),
-                ) {
-                    if (onRemove != null) {
-                        TextButton(onClick = onRemove) {
-                            Text(text = stringResource(MR.strings.action_remove))
-                        }
-                        Spacer(modifier = Modifier.weight(1f))
-                    }
-                    TextButton(onClick = onDismissRequest) {
-                        Text(text = stringResource(MR.strings.action_cancel))
-                    }
-                    TextButton(onClick = { onConfirm(pickerState.selectedDateMillis!!) }) {
-                        Text(text = stringResource(MR.strings.action_ok))
-                    }
-                }
-            }
-        },
-    )
+    Column {
+        SheetHeader(title = title)
+        DatePicker(state = pickerState)
+        SheetActions(
+            confirm = DialogAction(
+                label = stringResource(MR.strings.action_ok),
+                onClick = { onConfirm(pickerState.selectedDateMillis!!) },
+            ),
+            dismiss = DialogAction(stringResource(MR.strings.action_cancel), onDismissRequest),
+            neutral = onRemove?.let { DialogAction(stringResource(MR.strings.action_remove), it) },
+        )
+    }
 }
 
+/** A tracking value picker shown as a page of the tracking sheet: the picker between a title and OK and Cancel. */
 @Composable
 private fun BaseSelector(
     title: String,
     content: @Composable BoxScope.() -> Unit,
     onConfirm: () -> Unit,
     onDismissRequest: () -> Unit,
-    thirdButton: @Composable (RowScope.() -> Unit)? = null,
 ) {
-    AlertDialogContent(
-        modifier = Modifier.windowInsetsPadding(WindowInsets.systemBars),
-        title = { Text(text = title) },
-        text = {
-            Box(
-                modifier = Modifier.fillMaxWidth(),
-                content = content,
-            )
-        },
-        buttons = {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small, Alignment.End),
-            ) {
-                if (thirdButton != null) {
-                    thirdButton()
-                    Spacer(modifier = Modifier.weight(1f))
-                }
-                TextButton(onClick = onDismissRequest) {
-                    Text(text = stringResource(MR.strings.action_cancel))
-                }
-                TextButton(onClick = onConfirm) {
-                    Text(text = stringResource(MR.strings.action_ok))
-                }
-            }
-        },
-    )
+    Column {
+        SheetHeader(title = title)
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f, fill = false)
+                .padding(vertical = KatariTheme.spacing.s),
+            content = content,
+        )
+        SheetActions(
+            confirm = DialogAction(stringResource(MR.strings.action_ok), onConfirm),
+            dismiss = DialogAction(stringResource(MR.strings.action_cancel), onDismissRequest),
+        )
+    }
 }
 
 @PreviewLightDark
 @Composable
 private fun TrackStatusSelectorPreviews() {
-    TachiyomiPreviewTheme {
+    KatariPreviewTheme {
         Surface {
             TrackStatusSelector(
                 selection = 1,

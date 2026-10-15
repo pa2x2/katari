@@ -26,17 +26,15 @@ import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.entry.repository.PlaybackPreferencesRepository
 import tachiyomi.domain.source.service.SourceManager
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 import kotlin.time.Duration.Companion.milliseconds
 
 internal class ResolveVideoStream(
-    private val videoRepository: EntryRepository = Injekt.get(),
-    private val entryChapterRepository: EntryChapterRepository = Injekt.get(),
-    private val playbackPreferencesRepository: PlaybackPreferencesRepository = Injekt.get(),
-    private val videoSourceManager: SourceManager = Injekt.get(),
-    private val animeDownloadProvider: AnimeDownloadProvider = Injekt.get(),
-    private val context: Application = Injekt.get(),
+    private val videoRepository: EntryRepository,
+    private val entryChapterRepository: EntryChapterRepository,
+    private val playbackPreferencesRepository: PlaybackPreferencesRepository,
+    private val videoSourceManager: SourceManager,
+    private val animeDownloadProvider: AnimeDownloadProvider,
+    private val context: Application,
     private val isOnline: () -> Boolean = context::isOnline,
     private val sourceInitTimeoutMs: Long = SOURCE_INIT_TIMEOUT_MS,
     private val streamFetchTimeoutMs: Long = STREAM_FETCH_TIMEOUT_MS,

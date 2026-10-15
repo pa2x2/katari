@@ -5,7 +5,6 @@ import androidx.compose.animation.graphics.res.animatedVectorResource
 import androidx.compose.animation.graphics.res.rememberAnimatedVectorPainter
 import androidx.compose.animation.graphics.vector.AnimatedImageVector
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -18,29 +17,28 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
 import cafe.adriel.voyager.navigator.tab.TabOptions
+import dev.zacsweers.metrox.viewmodel.metroViewModel
 import eu.kanade.presentation.category.components.ChangeCategoryDialog
-import eu.kanade.presentation.components.AppSnackbarHost
 import eu.kanade.presentation.entry.DownloadAction
-import eu.kanade.presentation.entry.components.LibraryBottomActionMenu
 import eu.kanade.presentation.entry.components.MergeEditorDialog
 import eu.kanade.presentation.entry.components.MergeEditorEntry
 import eu.kanade.presentation.entry.selectionEntryTypePresentation
 import eu.kanade.presentation.library.DeleteLibraryEntriesDialog
 import eu.kanade.presentation.library.EmptyLibraryScreen
-import eu.kanade.presentation.library.LibrarySettingsDialog
 import eu.kanade.presentation.library.MoveEntriesCategoryDialog
 import eu.kanade.presentation.library.MoveEntriesConflictDialog
 import eu.kanade.presentation.library.MoveEntriesProfileDialog
+import eu.kanade.presentation.library.components.LibraryBottomActionMenu
 import eu.kanade.presentation.library.components.LibraryContent
 import eu.kanade.presentation.library.components.LibraryScrollToTopTarget
 import eu.kanade.presentation.library.components.LibraryToolbar
 import eu.kanade.presentation.library.components.LibraryUpdateModeDialog
+import eu.kanade.presentation.library.settings.LibrarySettingsDialog
 import eu.kanade.presentation.library.update.rememberReportingLibraryUpdateStarter
 import eu.kanade.presentation.more.onboarding.GETTING_STARTED_URL
 import eu.kanade.presentation.more.settings.screen.data.rememberRestoreBackupLauncher
@@ -61,18 +59,17 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
-import mihon.entry.interactions.navigation.EntryContinueFeature
+import mihon.app.di.appGraph
 import mihon.feature.migration.config.MigrationConfigScreen
-import mihon.feature.profiles.core.ProfileManager
+import mihon.presentation.kit.feedback.LoadingScreen
+import mihon.presentation.kit.feedback.SnackbarHost
+import mihon.presentation.kit.feedback.SnackbarHostState
+import mihon.presentation.kit.navigation.Scaffold
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.domain.library.model.LibraryItem
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.screens.LoadingScreen
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 import androidx.compose.runtime.collectAsState as collectFlowAsState
 
 data object LibraryTab : Tab {
@@ -99,14 +96,12 @@ data object LibraryTab : Tab {
         val context = LocalContext.current
         val scope = rememberCoroutineScope()
         val haptic = LocalHapticFeedback.current
-        val profileManager = remember { Injekt.get<ProfileManager>() }
+        val profileManager = remember { context.appGraph.profileManager }
         val activeProfile by profileManager.activeProfile.collectFlowAsState()
         val visibleProfiles by profileManager.visibleProfiles.collectFlowAsState()
-        val entryContinueFeature = remember { Injekt.get<EntryContinueFeature>() }
 
-        val viewModel = viewModel { LibraryViewModel(context.applicationContext) }
-        val settingsViewModel =
-            viewModel(key = activeProfile?.id?.toString()) { LibrarySettingsViewModel() }
+        val viewModel = metroViewModel<LibraryViewModel>()
+        val settingsViewModel = metroViewModel<LibrarySettingsViewModel>(key = activeProfile?.id?.toString())
         val state by viewModel.state.collectAsStateWithLifecycle()
         val updateProgress by viewModel.updateProgress.collectAsStateWithLifecycle()
 
@@ -207,7 +202,7 @@ data object LibraryTab : Tab {
                     onUpdateModeClicked = viewModel::openUpdateModeDialog,
                 )
             },
-            snackbarHost = { AppSnackbarHost(hostState = snackbarHostState) },
+            snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         ) { contentPadding ->
             when {
                 state.isLoading -> {
@@ -247,12 +242,12 @@ data object LibraryTab : Tab {
                         },
                         onContinueReadingClicked = { item: LibraryItem ->
                             scope.launchIO {
-                                entryContinueFeature.continueEntry(context, item.entry)
+                                viewModel.continueEntry(context, item.entry)
                             }
                             Unit
                         }.takeIf { state.showContinueButton },
                         isContinueReadingAvailable = { item ->
-                            entryContinueFeature.isApplicable(item.entry.type)
+                            viewModel.canContinue(item.entry.type)
                         },
                         onToggleSelection = viewModel::toggleSelection,
                         onToggleRangeSelection = { page, item ->

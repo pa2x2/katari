@@ -15,21 +15,18 @@ import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.ContextThemeWrapper
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.ComposeView
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.net.toUri
 import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.domain.ui.model.ThemeMode
+import eu.kanade.tachiyomi.core.security.SecurityPreferences
 import eu.kanade.tachiyomi.util.system.toast
+import mihon.entry.interactions.reader.settings.ReaderBasePreferences
 import mihon.entry.interactions.runtime.registerEntryInteractionSecureScreen
 import mihon.entry.interactions.runtime.setEntryInteractionContent
 import tachiyomi.core.common.i18n.stringResource
-import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.i18n.*
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 import com.google.android.material.R as MaterialR
 
 private const val MAIN_ACTIVITY_CLASS_NAME = "eu.kanade.tachiyomi.ui.main.MainActivity"
@@ -39,13 +36,11 @@ private const val WEB_VIEW_URL_KEY = "url_key"
 private const val WEB_VIEW_SOURCE_KEY = "source_key"
 private const val WEB_VIEW_TITLE_KEY = "title_key"
 
-@Composable
-fun ifSourcesLoaded(): Boolean {
-    return remember { Injekt.get<SourceManager>().isInitialized }.collectAsState().value
-}
-
-fun AppCompatActivity.registerReaderSecureScreen() {
-    registerEntryInteractionSecureScreen()
+fun AppCompatActivity.registerReaderSecureScreen(
+    readerPreferences: ReaderBasePreferences,
+    securityPreferences: SecurityPreferences,
+) {
+    registerEntryInteractionSecureScreen(readerPreferences, securityPreferences)
 }
 
 fun Context.mangaEntryIntent(entryId: Long): Intent {
@@ -173,9 +168,8 @@ fun View?.isVisibleOnScreen(): Boolean {
     return actualPosition.intersect(screen)
 }
 
-fun Context.createReaderThemeContext(readerTheme: Int): Context {
-    val preferences = Injekt.get<UiPreferences>()
-    val themeMode = preferences.themeMode.get()
+fun Context.createReaderThemeContext(readerTheme: Int, uiPreferences: UiPreferences): Context {
+    val themeMode = uiPreferences.themeMode.get()
     val isDarkBackground = when (readerTheme) {
         1, 2 -> true
         3 -> when (themeMode) {

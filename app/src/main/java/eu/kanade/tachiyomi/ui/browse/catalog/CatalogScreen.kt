@@ -1,22 +1,9 @@
 package eu.kanade.tachiyomi.ui.browse.catalog
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.background
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -30,10 +17,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.paging.LoadState
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
+import dev.zacsweers.metrox.viewmodel.metroViewModel
 import eu.kanade.core.util.ifSourcesLoaded
 import eu.kanade.domain.source.model.snapshot
 import eu.kanade.presentation.browse.CatalogContent
@@ -48,13 +36,6 @@ import eu.kanade.presentation.browse.components.MergeTargetPickerDialog
 import eu.kanade.presentation.browse.components.RemoveMangaDialog
 import eu.kanade.presentation.browse.immersive.rememberEntryImmersivePositionState
 import eu.kanade.presentation.category.components.ChangeCategoryDialog
-import eu.kanade.presentation.components.AppBar
-import eu.kanade.presentation.components.AppBarActions
-import eu.kanade.presentation.components.AppBarTitle
-import eu.kanade.presentation.components.AppSnackbarHost
-import eu.kanade.presentation.components.DropdownMenu
-import eu.kanade.presentation.components.RadioMenuItem
-import eu.kanade.presentation.components.SearchToolbar
 import eu.kanade.presentation.entry.components.DuplicateEntryDialog
 import eu.kanade.presentation.more.settings.screen.BrowseLongPressActionsScreen
 import eu.kanade.presentation.util.AssistContentScreen
@@ -75,22 +56,20 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import mihon.feature.migration.dialog.MigrateEntryDialog
 import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.automirroredroundedfilled.ViewList
-import mihon.icons.materialsymbols.rounded.Fullscreen
-import mihon.icons.materialsymbols.rounded.Verified
-import mihon.icons.materialsymbols.roundedfilled.Favorite
-import mihon.icons.materialsymbols.roundedfilled.ViewCompact
-import mihon.icons.materialsymbols.roundedfilled.ViewModule
 import mihon.presentation.core.util.collectAsLazyPagingItems
+import mihon.presentation.kit.feedback.LoadingScreen
+import mihon.presentation.kit.feedback.SnackbarHost
+import mihon.presentation.kit.feedback.SnackbarHostState
+import mihon.presentation.kit.navigation.Scaffold
+import mihon.presentation.kit.progress.PullRefresh
+import mihon.presentation.kit.surface.HorizontalDivider
+import mihon.presentation.kit.surface.Surface
+import mihon.presentation.kit.surface.SurfaceContainer
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.domain.source.model.CatalogListItem
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.material.PullRefresh
-import tachiyomi.presentation.core.components.material.Scaffold
-import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.screens.LoadingScreen
 
 data class CatalogScreen(
     val sourceId: Long,
@@ -110,8 +89,17 @@ data class CatalogScreen(
             return
         }
 
-        val viewModel =
-            viewModel { CatalogViewModel(sourceId, listingQuery, openFilterSheetOnStart = openFilters) }
+        val viewModel = assistedMetroViewModel<CatalogViewModel, CatalogViewModel.Factory> {
+            create(
+                sourceId = sourceId,
+                listingQuery = listingQuery,
+                migrationEntryType = null,
+                initialFilterSnapshot = emptyList(),
+                initialPresetId = null,
+                openFilterSheetOnStart = openFilters,
+                feedProfileId = null,
+            )
+        }
         val state by viewModel.state.collectAsState()
         val feedsEnabled = viewModel.feedsEnabled
 
@@ -143,9 +131,7 @@ data class CatalogScreen(
         var immersiveMode by rememberSaveable(sourceId) { mutableStateOf(false) }
         val immersivePositionState = rememberEntryImmersivePositionState(resetKey = state.listing)
         val immersiveAvailable = viewModel.isImmersiveSourceAvailable
-        val immersiveModel = viewModel(key = "catalog-immersive-$sourceId") {
-            EntryImmersiveViewModel()
-        }
+        val immersiveModel = metroViewModel<EntryImmersiveViewModel>(key = "catalog-immersive-$sourceId")
 
         BackHandler(enabled = immersiveMode) { immersiveMode = false }
 
@@ -209,84 +195,52 @@ data class CatalogScreen(
         } else {
             Scaffold(
                 topBar = {
-                    Column(
-                        modifier = Modifier.background(MaterialTheme.colorScheme.surface),
-                    ) {
-                        CatalogToolbar(
-                            title = viewModel.sourceName,
-                            searchQuery = state.toolbarQuery,
-                            onSearchQueryChange = viewModel::setToolbarQuery,
-                            displayMode = viewModel.displayMode,
-                            onDisplayModeChange = { viewModel.displayMode = it },
-                            navigateUp = navigateUp,
-                            onWebViewClick = onWebViewClick,
-                            onSettingsClick = onSettingsClick,
-                            onLongPressActionsClick = {
-                                navigator.push(BrowseLongPressActionsScreen(sourceId))
-                            },
-                            onSearch = viewModel::search,
-                            onEnterImmersive = if (immersiveAvailable) {
-                                { immersiveMode = true }
-                            } else {
-                                null
-                            },
-                        )
-
-                        Row(
-                            modifier = Modifier
-                                .horizontalScroll(rememberScrollState())
-                                .padding(horizontal = MaterialTheme.padding.small),
-                            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
-                        ) {
-                            FilterChip(
-                                selected = state.listing == CatalogViewModel.Listing.Popular,
-                                onClick = { viewModel.setListing(CatalogViewModel.Listing.Popular) },
-                                leadingIcon = {
-                                    Icon(
-                                        imageVector = MaterialSymbols.RoundedFilled.Favorite,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(FilterChipDefaults.IconSize),
-                                    )
+                    Surface(container = SurfaceContainer.Surface) {
+                        Column {
+                            CatalogToolbar(
+                                title = viewModel.sourceName,
+                                searchQuery = state.toolbarQuery,
+                                onSearchQueryChange = viewModel::setToolbarQuery,
+                                displayMode = viewModel.displayMode,
+                                onDisplayModeChange = { viewModel.displayMode = it },
+                                navigateUp = navigateUp,
+                                onWebViewClick = onWebViewClick,
+                                onSettingsClick = onSettingsClick,
+                                onLongPressActionsClick = {
+                                    navigator.push(BrowseLongPressActionsScreen(sourceId))
                                 },
-                                label = { Text(text = stringResource(MR.strings.popular)) },
+                                onSearch = viewModel::search,
+                                onEnterImmersive = if (immersiveAvailable) {
+                                    { immersiveMode = true }
+                                } else {
+                                    null
+                                },
                             )
-                            if (viewModel.supportsLatest) {
-                                FilterChip(
-                                    selected = state.listing == CatalogViewModel.Listing.Latest,
-                                    onClick = { viewModel.setListing(CatalogViewModel.Listing.Latest) },
-                                    leadingIcon = {
-                                        Icon(
-                                            imageVector = MaterialSymbols.Rounded.Verified,
-                                            contentDescription = null,
-                                            modifier = Modifier.size(FilterChipDefaults.IconSize),
-                                        )
+
+                            CatalogListingChips(
+                                listing = state.listing,
+                                supportsLatest = viewModel.supportsLatest,
+                                showFilterChip = state.filters.isNotEmpty() || viewModel.hasFilterCapability,
+                                changedFilterCount = appliedFilterChanges.total.changed,
+                                onListingChange = viewModel::setListing,
+                                onFilterChipClick = viewModel::onFilterChipClick,
+                            )
+                            if (state.listing is CatalogViewModel.Listing.Search && appliedFilterLabels.isNotEmpty()) {
+                                CatalogAppliedFilterChips(
+                                    labels = appliedFilterLabels,
+                                    onOpenFilters = {
+                                        filterFocusPath = it.path
+                                        viewModel.openFilterSheet()
                                     },
-                                    label = { Text(text = stringResource(MR.strings.latest)) },
+                                    onRemove = { viewModel.removeAppliedFilter(it.path) },
                                 )
                             }
-                            if (state.filters.isNotEmpty() || viewModel.hasFilterCapability) {
-                                CatalogFilterChip(
-                                    selected = state.listing is CatalogViewModel.Listing.Search,
-                                    changedCount = appliedFilterChanges.total.changed,
-                                    onClick = viewModel::onFilterChipClick,
-                                )
-                            }
-                        }
-                        if (state.listing is CatalogViewModel.Listing.Search && appliedFilterLabels.isNotEmpty()) {
-                            CatalogAppliedFilterChips(
-                                labels = appliedFilterLabels,
-                                onOpenFilters = {
-                                    filterFocusPath = it.path
-                                    viewModel.openFilterSheet()
-                                },
-                                onRemove = { viewModel.removeAppliedFilter(it.path) },
-                            )
-                        }
 
-                        HorizontalDivider()
+                            HorizontalDivider()
+                        }
                     }
                 },
-                snackbarHost = { AppSnackbarHost(hostState = snackbarHostState) },
+                snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
             ) { paddingValues ->
                 PullRefresh(
                     refreshing = catalogList.itemCount > 0 && catalogList.loadState.refresh is LoadState.Loading,
@@ -541,121 +495,4 @@ data class CatalogScreen(
         class Text(txt: String) : SearchType(txt)
         class Genre(txt: String) : SearchType(txt)
     }
-}
-
-@Composable
-private fun CatalogToolbar(
-    title: String,
-    searchQuery: String?,
-    onSearchQueryChange: (String?) -> Unit,
-    displayMode: LibraryDisplayMode,
-    onDisplayModeChange: (LibraryDisplayMode) -> Unit,
-    navigateUp: () -> Unit,
-    onWebViewClick: (() -> Unit)?,
-    onSettingsClick: (() -> Unit)?,
-    onLongPressActionsClick: () -> Unit,
-    onSearch: (String) -> Unit,
-    onEnterImmersive: (() -> Unit)?,
-) {
-    var selectingDisplayMode by remember { mutableStateOf(false) }
-
-    SearchToolbar(
-        navigateUp = navigateUp,
-        titleContent = { AppBarTitle(title) },
-        searchQuery = searchQuery,
-        onChangeSearchQuery = onSearchQueryChange,
-        onSearch = onSearch,
-        onClickCloseSearch = navigateUp,
-        actions = {
-            AppBarActions(
-                actions = buildList {
-                    onEnterImmersive?.let {
-                        add(
-                            AppBar.Action(
-                                title = stringResource(MR.strings.browse_enter_immersive),
-                                icon = MaterialSymbols.Rounded.Fullscreen,
-                                onClick = it,
-                            ),
-                        )
-                    }
-                    add(
-                        AppBar.Action(
-                            title = stringResource(MR.strings.action_display_mode),
-                            icon = when (displayMode) {
-                                LibraryDisplayMode.List,
-                                LibraryDisplayMode.ComfortableList,
-                                -> MaterialSymbols.AutoMirroredRoundedFilled.ViewList
-                                LibraryDisplayMode.ComfortableGrid -> MaterialSymbols.RoundedFilled.ViewModule
-                                LibraryDisplayMode.CompactGrid,
-                                LibraryDisplayMode.CoverOnlyGrid,
-                                -> MaterialSymbols.RoundedFilled.ViewCompact
-                            },
-                            onClick = { selectingDisplayMode = true },
-                            menu = {
-                                DropdownMenu(
-                                    expanded = selectingDisplayMode,
-                                    onDismissRequest = { selectingDisplayMode = false },
-                                ) {
-                                    RadioMenuItem(
-                                        text = {
-                                            Text(text = stringResource(MR.strings.action_display_comfortable_grid))
-                                        },
-                                        isChecked = displayMode == LibraryDisplayMode.ComfortableGrid,
-                                    ) {
-                                        selectingDisplayMode = false
-                                        onDisplayModeChange(LibraryDisplayMode.ComfortableGrid)
-                                    }
-                                    RadioMenuItem(
-                                        text = {
-                                            Text(text = stringResource(MR.strings.action_display_comfortable_list))
-                                        },
-                                        isChecked = displayMode == LibraryDisplayMode.ComfortableList,
-                                    ) {
-                                        selectingDisplayMode = false
-                                        onDisplayModeChange(LibraryDisplayMode.ComfortableList)
-                                    }
-                                    RadioMenuItem(
-                                        text = { Text(text = stringResource(MR.strings.action_display_grid)) },
-                                        isChecked = displayMode == LibraryDisplayMode.CompactGrid,
-                                    ) {
-                                        selectingDisplayMode = false
-                                        onDisplayModeChange(LibraryDisplayMode.CompactGrid)
-                                    }
-                                    RadioMenuItem(
-                                        text = { Text(text = stringResource(MR.strings.action_display_list)) },
-                                        isChecked = displayMode == LibraryDisplayMode.List,
-                                    ) {
-                                        selectingDisplayMode = false
-                                        onDisplayModeChange(LibraryDisplayMode.List)
-                                    }
-                                }
-                            },
-                        ),
-                    )
-                    onWebViewClick?.let {
-                        add(
-                            AppBar.OverflowAction(
-                                title = stringResource(MR.strings.action_open_in_web_view),
-                                onClick = it,
-                            ),
-                        )
-                    }
-                    onSettingsClick?.let {
-                        add(
-                            AppBar.OverflowAction(
-                                title = stringResource(MR.strings.action_settings),
-                                onClick = it,
-                            ),
-                        )
-                    }
-                    add(
-                        AppBar.OverflowAction(
-                            title = stringResource(MR.strings.pref_browse_long_press_action_open_settings),
-                            onClick = onLongPressActionsClick,
-                        ),
-                    )
-                },
-            )
-        },
-    )
 }

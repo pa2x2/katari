@@ -11,9 +11,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentWidth
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -32,21 +29,21 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
+import dev.zacsweers.metrox.viewmodel.metroViewModel
 import eu.kanade.domain.source.model.FeedItemRef
 import eu.kanade.domain.source.model.SourceFeedContentMode
 import eu.kanade.domain.source.model.toListing
-import eu.kanade.domain.source.service.ProfileSourcePreferences
 import eu.kanade.presentation.browse.components.SourceIcon
-import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.TabContent
 import eu.kanade.presentation.more.settings.screen.BrowseLongPressActionsScreen
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
@@ -64,37 +61,35 @@ import eu.kanade.tachiyomi.ui.entry.EntryScreen
 import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.tachiyomi.ui.webview.WebViewScreen
 import kotlinx.coroutines.launch
-import mihon.entry.interactions.catalogue.EntryCatalogueFeature
-import mihon.entry.interactions.catalogue.EntryCatalogueSourceResolution
-import mihon.entry.interactions.media.EntryImmersiveFeature
+import mihon.app.di.appGraph
 import mihon.entry.interactions.media.EntryImmersiveSourceAvailability
-import mihon.entry.interactions.source.EntrySourceHomeFeature
-import mihon.entry.interactions.source.EntrySourceHomeResolution
-import mihon.feature.profiles.core.ProfileManager
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Add
+import mihon.presentation.kit.content.BrowseMetrics
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.feedback.EmptyScreen
+import mihon.presentation.kit.feedback.EmptyScreenAction
+import mihon.presentation.kit.feedback.LoadingScreen
+import mihon.presentation.kit.feedback.SnackbarHostState
+import mihon.presentation.kit.navigation.AppBar
+import mihon.presentation.kit.progress.PullRefresh
+import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.core.common.Constants
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.domain.source.model.CatalogListItem
 import tachiyomi.domain.source.model.Source
-import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.material.PullRefresh
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.screens.EmptyScreen
-import tachiyomi.presentation.core.screens.EmptyScreenAction
-import tachiyomi.presentation.core.screens.LoadingScreen
 import tachiyomi.source.local.LocalSource
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
 @Composable
 fun Screen.feedsTab(contentMode: SourceFeedContentMode = SourceFeedContentMode.Browse): TabContent {
     val navigator = LocalNavigator.currentOrThrow
-    val profileManager = remember { Injekt.get<ProfileManager>() }
+    val context = LocalContext.current
+    val profileManager = remember { context.appGraph.profileManager }
     val activeProfile by profileManager.activeProfile.collectAsState()
     val activeProfileId = activeProfile?.id ?: profileManager.activeProfileId
-    val viewModel = viewModel { FeedsViewModel(contentMode) }
+    val viewModel = assistedMetroViewModel<FeedsViewModel, FeedsViewModel.Factory> { create(contentMode) }
     val state by viewModel.state.collectAsState()
     val singleEnabledFeed = state.enabledFeeds.singleOrNull()
     val singleEnabledFeedSource = singleEnabledFeed?.let { viewModel.sourceFor(it.sourceId) }
@@ -172,20 +167,19 @@ private fun SingleFeedTabLabel(
     Row(
         modifier = Modifier.wrapContentWidth(),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
     ) {
         SourceIcon(
             source = source,
             modifier = Modifier
-                .size(18.dp)
-                .clip(MaterialTheme.shapes.extraSmall),
+                .size(KatariTheme.sizes.iconSmall)
+                .clip(KatariTheme.shapes.extraSmall),
         )
         // A fixed-width tab has no room for the subtitle; the feed bar below shows the full label.
         Text(
             text = label.title,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            style = MaterialTheme.typography.labelLarge,
         )
     }
 }
@@ -211,8 +205,10 @@ private fun Screen.FeedsTabContent(
     val activeSource = activeFeed?.let { viewModel.sourceFor(it.sourceId) }
     val activePreset = activeFeed?.let(viewModel::presetFor)
     var renamingFeedId by rememberSaveable { mutableStateOf<String?>(null) }
-    val sourceManager = remember { Injekt.get<SourceManager>() }
-    val immersiveFeature = remember { Injekt.get<EntryImmersiveFeature>() }
+    val context = LocalContext.current
+    val graph = remember { context.appGraph }
+    val sourceManager = remember { graph.sourceManager }
+    val immersiveFeature = remember { graph.entryImmersiveFeature }
     val immersiveAvailable = immersiveFeature.sourceAvailability(
         activeSource?.let { sourceManager.get(it.id) },
     ) is EntryImmersiveSourceAvailability.Available
@@ -274,17 +270,19 @@ private fun Screen.FeedsTabContent(
             modifier = Modifier.pointerInput(Unit) {},
         ) {
             key(activeProfileId, activeFeed.id, activePreset) {
-                val actionModel =
-                    viewModel(key = "feed-actions-$activeProfileId-${activeFeed.id}-${activePreset.hashCode()}") {
-                        CatalogViewModel(
-                            sourceId = activeSource.id,
-                            listingQuery = activePreset.toListing().requestQuery,
-                            initialFilterSnapshot = activePreset.filters,
-                            initialPresetId = activePreset.id,
-                            browseFeedService = Injekt.get<eu.kanade.domain.source.service.BrowseFeedService>()
-                                .forProfile(activeProfileId),
-                        )
-                    }
+                val actionModel = assistedMetroViewModel<CatalogViewModel, CatalogViewModel.Factory>(
+                    key = "feed-actions-$activeProfileId-${activeFeed.id}-${activePreset.hashCode()}",
+                ) {
+                    create(
+                        sourceId = activeSource.id,
+                        listingQuery = activePreset.toListing().requestQuery,
+                        migrationEntryType = null,
+                        initialFilterSnapshot = activePreset.filters,
+                        initialPresetId = activePreset.id,
+                        openFilterSheetOnStart = false,
+                        feedProfileId = activeProfileId,
+                    )
+                }
                 val actionState by actionModel.state.collectAsState()
                 val timelineModel =
                     viewModel(key = "feed-timeline-$activeProfileId-${activeFeed.id}-${activePreset.hashCode()}") {
@@ -292,11 +290,10 @@ private fun Screen.FeedsTabContent(
                             feedId = activeFeed.id,
                             initialFilterSnapshot = activePreset.filters,
                             chronological = activePreset.chronological,
-                            browseFeedService = Injekt.get<eu.kanade.domain.source.service.BrowseFeedService>()
-                                .forProfile(activeProfileId),
-                            hideInLibraryItems = Injekt.get<ProfileSourcePreferences>()
+                            browseFeedService = graph.browseFeedService.forProfile(activeProfileId),
+                            hideInLibraryItems = graph.profileSourcePreferences
                                 .forProfile(activeProfileId).hideInLibraryItems.get(),
-                            source = CatalogFeedItemSource(
+                            source = graph.catalogFeedItemSourceFactory.create(
                                 sourceId = activeSource.id,
                                 listingQuery = activePreset.toListing().requestQuery,
                                 initialFilterSnapshot = activePreset.filters,
@@ -304,13 +301,10 @@ private fun Screen.FeedsTabContent(
                         )
                     }
                 val timelineState by timelineModel.state.collectAsState()
-                val immersiveModel = viewModel(key = "feed-immersive-$activeProfileId-${activeFeed.id}") {
-                    EntryImmersiveViewModel()
-                }
-                val catalogueFeature = remember { Injekt.get<EntryCatalogueFeature>() }
-                val catalogSource = remember(activeSource.id) {
-                    (catalogueFeature.source(activeSource.id) as? EntryCatalogueSourceResolution.Available)?.source
-                }
+                val immersiveModel = metroViewModel<EntryImmersiveViewModel>(
+                    key = "feed-immersive-$activeProfileId-${activeFeed.id}",
+                )
+                val catalogSource = actionModel.catalogSource
                 val sourceItemOrientation = catalogSource?.itemOrientation
                     ?: EntryItemOrientation.VERTICAL
                 val columns = remember(configuration.orientation, sourceItemOrientation) {
@@ -321,7 +315,11 @@ private fun Screen.FeedsTabContent(
                     val columns = if (isLandscape) landscapeColumns else portraitColumns
                     if (columns == 0) {
                         androidx.compose.foundation.lazy.grid.GridCells.Adaptive(
-                            if (sourceItemOrientation == EntryItemOrientation.HORIZONTAL) 180.dp else 128.dp,
+                            if (sourceItemOrientation == EntryItemOrientation.HORIZONTAL) {
+                                BrowseMetrics.wideCoverGridMinCellWidth
+                            } else {
+                                BrowseMetrics.coverGridMinCellWidth
+                            },
                         )
                     } else {
                         androidx.compose.foundation.lazy.grid.GridCells.Fixed(
@@ -378,12 +376,11 @@ private fun Screen.FeedsTabContent(
                                 ),
                                 onWebViewClick = {
                                     val source = catalogSource
-                                    val home = source?.let { Injekt.get<EntrySourceHomeFeature>().resolve(it.id) }
-                                        as? EntrySourceHomeResolution.Available
-                                    if (source != null && home != null) {
+                                    val homeUrl = actionModel.homeUrl
+                                    if (source != null && homeUrl != null) {
                                         navigator.push(
                                             WebViewScreen(
-                                                url = home.url,
+                                                url = homeUrl,
                                                 initialTitle = source.name,
                                                 sourceId = source.id,
                                             ),

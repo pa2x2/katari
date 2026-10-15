@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The benchmark build, which the showcase captures with, turns this on; see VideoPlayerPausedStart.kt. -->
+    <bool name="video_player_accepts_paused_start">false</bool>
+</resources>

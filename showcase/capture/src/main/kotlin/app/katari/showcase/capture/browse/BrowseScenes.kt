@@ -6,6 +6,7 @@ import androidx.test.uiautomator.Direction
 import app.katari.showcase.capture.ShowcaseDevice.capture
 import app.katari.showcase.capture.ShowcaseDevice.device
 import app.katari.showcase.capture.ShowcaseDevice.find
+import app.katari.showcase.capture.ShowcaseDevice.list
 import app.katari.showcase.capture.ShowcaseDevice.scrollTo
 import app.katari.showcase.capture.ShowcaseDevice.settle
 import app.katari.showcase.capture.ShowcaseDevice.tap
@@ -30,7 +31,7 @@ class BrowseScenes {
         find(By.text("Sintel"))
         scrollTo(By.textStartsWith("The War of the Worlds"))
         settle()
-        repeat(2) { find(By.scrollable(true)).fling(Direction.UP) }
+        repeat(2) { list().fling(Direction.UP) }
         capture("global-search")
     }
 

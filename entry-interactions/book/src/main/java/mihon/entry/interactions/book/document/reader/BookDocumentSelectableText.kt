@@ -3,7 +3,7 @@ package mihon.entry.interactions.book.document.reader
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Text
+import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
@@ -20,8 +20,13 @@ import mihon.book.api.document.BookDocumentLinkTarget
 import mihon.entry.interactions.book.document.reader.position.BookDocumentViewportText
 import mihon.entry.interactions.book.document.reader.position.LocalBookDocumentViewportGeometry
 import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentReaderPalette
+import mihon.presentation.kit.content.ReadingMetrics
+import mihon.presentation.kit.theme.KatariTheme
 
-/** Compose text leaf that keeps document semantics available to the chapter selection owner. */
+/**
+ * Compose text leaf that keeps document semantics available to the chapter selection owner. [standIn] marks text that
+ * replaces missing content, such as an unsupported element's notice, and draws it in the page's stand-in colour.
+ */
 @Composable
 internal fun BookDocumentSelectableText(
     text: String,
@@ -35,7 +40,7 @@ internal fun BookDocumentSelectableText(
     leadingSelectionText: String = "",
     preserveTerminalSpacing: Boolean = true,
     baseFontSizeSp: Float = BOOK_DOCUMENT_BASE_TEXT_SIZE_SP,
-    contentAlpha: Float = 1f,
+    standIn: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
     val fonts = rememberBookDocumentFonts(block.style.fontFamily, inlineStyles)
@@ -124,17 +129,17 @@ internal fun BookDocumentSelectableText(
     val quoteModifier = if (block.role.kind == BookDocumentBlockKind.QUOTE) {
         val quoteColor = palette.outline
         Modifier
-            .drawBehind { drawRect(quoteColor, size = size.copy(width = 3.dp.toPx())) }
-            .padding(start = 12.dp)
+            .drawBehind { drawRect(quoteColor, size = size.copy(width = ReadingMetrics.quoteRuleWidth.toPx())) }
+            .padding(start = KatariTheme.spacing.m)
     } else {
         Modifier
     }
 
     Box(modifier = modifier) {
-        Text(
+        BasicText(
             text = annotatedText,
-            color = palette.foreground.copy(alpha = contentAlpha),
-            style = bookDocumentTextStyle(block, fontSize, fonts),
+            style = bookDocumentTextStyle(block, fontSize, fonts)
+                .copy(color = if (standIn) palette.foregroundVariant else palette.foreground),
             onTextLayout = { result ->
                 selection?.updateTextLayout(token, result)
                 viewportText?.layout = result

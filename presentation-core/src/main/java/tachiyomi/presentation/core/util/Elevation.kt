@@ -47,7 +47,7 @@ import androidx.compose.ui.unit.Dp
  * when this component is being pressed. `null` if this component is moving back to its default
  * state.
  */
-suspend fun Animatable<Dp, *>.animateElevation(
+internal suspend fun Animatable<Dp, *>.animateElevation(
     target: Dp,
     from: Interaction? = null,
     to: Interaction? = null,

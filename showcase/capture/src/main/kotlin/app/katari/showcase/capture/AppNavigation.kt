@@ -1,6 +1,7 @@
 package app.katari.showcase.capture
 
 import androidx.test.uiautomator.By
+import app.katari.showcase.capture.ShowcaseDevice.awaitGone
 import app.katari.showcase.capture.ShowcaseDevice.find
 import app.katari.showcase.capture.ShowcaseDevice.restart
 import app.katari.showcase.capture.ShowcaseDevice.scrollTo
@@ -26,6 +27,9 @@ internal fun openEntry(title: String) {
 internal fun openSettings(section: String) {
     tap(By.text("More"))
     tap(By.text("Settings"))
-    scrollTo(By.text(section)).click()
+    // More lists some sections too, such as Data and storage, and stays on screen while Settings slides in over it.
+    awaitGone(By.text("Download queue"))
+    scrollTo(By.text(section))
+    tap(By.text(section))
     settle()
 }

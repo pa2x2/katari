@@ -4,26 +4,22 @@ import android.text.format.Formatter
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
 import eu.kanade.tachiyomi.util.storage.DiskUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.progress.LinearProgressIndicator
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.theme.header
-import tachiyomi.presentation.core.util.secondaryItemAlpha
 import java.io.File
 
 @Composable
@@ -37,7 +33,7 @@ fun StorageInfo(
 
     Column(
         modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
+        verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
     ) {
         storages.forEach {
             StorageInfo(it)
@@ -61,25 +57,22 @@ private fun StorageInfo(
     val totalText = remember(total) { Formatter.formatFileSize(context, total) }
 
     Column(
-        verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.extraSmall),
+        verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xs),
     ) {
         Text(
             text = file.absolutePath,
-            style = MaterialTheme.typography.header,
+            role = TextRole.Body,
+            tone = ContentTone.Secondary,
         )
 
         LinearProgressIndicator(
-            modifier = Modifier
-                .clip(MaterialTheme.shapes.small)
-                .fillMaxWidth()
-                .height(12.dp),
+            modifier = Modifier.fillMaxWidth(),
             progress = { if (total > 0) 1 - (available / total.toFloat()) else 0f },
         )
 
         Text(
             text = stringResource(MR.strings.available_disk_space_info, availableText, totalText),
-            modifier = Modifier.secondaryItemAlpha(),
-            style = MaterialTheme.typography.bodySmall,
+            role = TextRole.Supporting,
         )
     }
 }

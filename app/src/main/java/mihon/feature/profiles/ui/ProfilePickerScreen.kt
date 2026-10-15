@@ -2,15 +2,11 @@ package mihon.feature.profiles.ui
 
 import android.app.Activity
 import android.content.res.Configuration
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -18,15 +14,8 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
@@ -35,39 +24,31 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.selected
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowInsetsControllerCompat
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.R
 import kotlinx.coroutines.launch
+import mihon.app.di.appGraph
 import mihon.feature.profiles.core.Profile
-import mihon.feature.profiles.core.ProfileManager
+import mihon.feature.profiles.ui.components.ProfilePickerTile
 import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.Lock
 import mihon.icons.materialsymbols.rounded.Settings
+import mihon.presentation.kit.button.IconButton
+import mihon.presentation.kit.content.Icon
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.surface.Surface
+import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
 class ProfilePickerScreen : Screen() {
 
@@ -76,8 +57,8 @@ class ProfilePickerScreen : Screen() {
         val context = LocalContext.current
         val navigator = LocalNavigator.currentOrThrow
         val scope = rememberCoroutineScope()
-        val profileManager = remember { Injekt.get<ProfileManager>() }
-        val uiPreferences = remember { Injekt.get<UiPreferences>() }
+        val profileManager = remember { context.appGraph.profileManager }
+        val uiPreferences = remember { context.appGraph.uiPreferences }
 
         val profiles by profileManager.visibleProfiles.collectAsState()
         val activeProfile by profileManager.activeProfile.collectAsState()
@@ -114,15 +95,15 @@ fun ProfilePickerScene(
     val configuration = LocalConfiguration.current
     val context = LocalContext.current
     val view = LocalView.current
+    val spacing = KatariTheme.spacing
     val compactLayout = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-    val contentVerticalPadding = if (compactLayout) 12.dp else 20.dp
+    val contentVerticalPadding = if (compactLayout) spacing.m else spacing.l
     val titleTopPadding = when {
-        !compactLayout -> 44.dp
-        onOpenManagement == null -> 0.dp
-        else -> 12.dp
+        !compactLayout -> spacing.xxl
+        onOpenManagement == null -> KatariTheme.sizes.none
+        else -> spacing.m
     }
-    val titleBottomPadding = if (compactLayout) 20.dp else 28.dp
-    val sectionSpacing = if (compactLayout) 20.dp else 28.dp
+    val looseSpacing = if (compactLayout) spacing.l else spacing.xl
 
     DisposableEffect(context, view) {
         val activity = context as? Activity
@@ -142,219 +123,65 @@ fun ProfilePickerScene(
         }
     }
 
-    Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.surface),
-    ) {
+    Surface(modifier = modifier.fillMaxSize(), container = SurfaceContainer.Surface) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .statusBarsPadding()
                 .navigationBarsPadding()
-                .padding(horizontal = 24.dp, vertical = contentVerticalPadding),
+                .padding(horizontal = spacing.xl, vertical = contentVerticalPadding),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             if (!compactLayout || onOpenManagement != null) {
-                ProfilePickerHeader(
-                    onOpenManagement = onOpenManagement,
-                    compactLayout = compactLayout,
-                )
+                ProfilePickerHeader(onOpenManagement = onOpenManagement)
             }
             if (!compactLayout) {
                 Icon(
                     painter = painterResource(R.drawable.ic_katari),
                     contentDescription = stringResource(MR.strings.app_name),
-                    tint = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.size(56.dp),
+                    modifier = Modifier.size(KatariTheme.sizes.artwork),
                 )
             }
             Text(
                 text = stringResource(MR.strings.profiles_choose_profile),
-                color = MaterialTheme.colorScheme.onSurface,
-                style = if (compactLayout) {
-                    MaterialTheme.typography.titleLarge
-                } else {
-                    MaterialTheme.typography.headlineSmall
-                },
+                modifier = Modifier.padding(top = titleTopPadding, bottom = looseSpacing),
+                role = if (compactLayout) TextRole.ScreenTitle else TextRole.SheetTitle,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.padding(top = titleTopPadding, bottom = titleBottomPadding),
             )
 
-            Column(
+            FlowRow(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()
                     .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(sectionSpacing),
+                horizontalArrangement = Arrangement.spacedBy(looseSpacing, Alignment.CenterHorizontally),
+                verticalArrangement = Arrangement.spacedBy(looseSpacing),
+                maxItemsInEachRow = if (compactLayout) 4 else 3,
             ) {
-                FlowRow(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(
-                        space = if (compactLayout) 16.dp else 20.dp,
-                        alignment = Alignment.CenterHorizontally,
-                    ),
-                    verticalArrangement = Arrangement.spacedBy(if (compactLayout) 20.dp else 28.dp),
-                    maxItemsInEachRow = if (compactLayout) 4 else 3,
-                ) {
-                    profiles.forEach { profile ->
-                        ProfilePickerTile(
-                            profile = profile,
-                            isActive = profile.id == activeProfileId,
-                            onClick = { onProfileSelected(profile) },
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun ProfilePickerHeader(
-    onOpenManagement: (() -> Unit)?,
-    compactLayout: Boolean,
-) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(if (compactLayout) 32.dp else 40.dp),
-    ) {
-        if (onOpenManagement != null) {
-            Box(
-                modifier = Modifier
-                    .align(Alignment.CenterEnd)
-                    .clip(CircleShape)
-                    .clickable(onClick = onOpenManagement)
-                    .padding(if (compactLayout) 4.dp else 8.dp),
-            ) {
-                Icon(
-                    imageVector = MaterialSymbols.Rounded.Settings,
-                    contentDescription = stringResource(MR.strings.profiles_manage_title),
-                    tint = MaterialTheme.colorScheme.onSurface,
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun ProfilePickerTile(
-    profile: Profile,
-    isActive: Boolean,
-    onClick: () -> Unit,
-) {
-    val faceColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.92f)
-    val lockedLabel = stringResource(MR.strings.profiles_locked)
-    val activeLabel = stringResource(MR.strings.profiles_active)
-    val semanticsLabel = remember(profile.name, isActive, profile.requiresAuth, activeLabel, lockedLabel) {
-        buildString {
-            append(profile.name)
-            if (isActive) {
-                append(", ")
-                append(activeLabel)
-            }
-            if (profile.requiresAuth) {
-                append(", ")
-                append(lockedLabel)
-            }
-        }
-    }
-
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(10.dp),
-        modifier = Modifier.width(ProfileTileSize),
-    ) {
-        Box(
-            modifier = Modifier
-                .size(ProfileTileSize)
-                .clip(RoundedCornerShape(12.dp))
-                .background(profileTileBrush(profile.colorSeed))
-                .border(
-                    width = if (isActive) 2.dp else 1.dp,
-                    color = if (isActive) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        MaterialTheme.colorScheme.outlineVariant
-                    },
-                    shape = RoundedCornerShape(12.dp),
-                )
-                .clickable(role = Role.Button, onClick = onClick)
-                .semantics(mergeDescendants = true) {
-                    selected = isActive
-                    contentDescription = semanticsLabel
-                },
-        ) {
-            Box(
-                modifier = Modifier
-                    .matchParentSize()
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(
-                                MaterialTheme.colorScheme.surface.copy(alpha = 0.06f),
-                                Color.Transparent,
-                                Color.Black.copy(alpha = 0.16f),
-                            ),
-                        ),
-                    ),
-            ) {
-                Canvas(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(18.dp),
-                ) {
-                    val eyeRadius = size.minDimension * 0.05f
-                    drawCircle(faceColor, eyeRadius, Offset(size.width * 0.34f, size.height * 0.34f))
-                    drawCircle(faceColor, eyeRadius, Offset(size.width * 0.66f, size.height * 0.34f))
-                    drawArc(
-                        color = faceColor,
-                        startAngle = 18f,
-                        sweepAngle = 144f,
-                        useCenter = false,
-                        topLeft = Offset(size.width * 0.28f, size.height * 0.38f),
-                        size = Size(size.width * 0.44f, size.height * 0.28f),
-                        style = Stroke(width = size.minDimension * 0.045f, cap = StrokeCap.Round),
+                profiles.forEach { profile ->
+                    ProfilePickerTile(
+                        profile = profile,
+                        isActive = profile.id == activeProfileId,
+                        onClick = { onProfileSelected(profile) },
                     )
                 }
-
-                if (profile.requiresAuth) {
-                    Surface(
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .padding(8.dp),
-                        shape = CircleShape,
-                        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.18f),
-                        contentColor = MaterialTheme.colorScheme.onSurface,
-                    ) {
-                        Icon(
-                            imageVector = MaterialSymbols.Rounded.Lock,
-                            contentDescription = null,
-                            modifier = Modifier.padding(6.dp).size(14.dp),
-                        )
-                    }
-                }
             }
         }
+    }
+}
 
-        Text(
-            text = profile.name,
-            color = if (isActive) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
-            style = MaterialTheme.typography.bodyMedium,
-            maxLines = 1,
-            textAlign = TextAlign.Center,
+/** The row above the picker: the way into profile management when there is one, or the room it would take. */
+@Composable
+private fun ProfilePickerHeader(onOpenManagement: (() -> Unit)?) {
+    if (onOpenManagement == null) {
+        Spacer(modifier = Modifier.height(KatariTheme.sizes.touchTarget))
+        return
+    }
+    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+        IconButton(
+            icon = MaterialSymbols.Rounded.Settings,
+            contentDescription = stringResource(MR.strings.profiles_manage_title),
+            onClick = onOpenManagement,
         )
     }
 }
-
-private fun profileTileBrush(seed: Long): Brush {
-    val hue = ((seed % 360L) + 360L) % 360L
-    return Brush.linearGradient(
-        colors = listOf(
-            Color.hsv(hue.toFloat(), 0.54f, 0.88f),
-            Color.hsv(((hue + 42L) % 360L).toFloat(), 0.6f, 0.72f),
-        ),
-    )
-}
-
-private val ProfileTileSize = 118.dp

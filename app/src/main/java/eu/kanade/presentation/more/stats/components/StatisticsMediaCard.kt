@@ -1,31 +1,31 @@
 package eu.kanade.presentation.more.stats.components
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.more.stats.data.StatsProgress
 import eu.kanade.presentation.more.stats.data.StatsType
 import eu.kanade.tachiyomi.source.entry.EntryType
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.ChevronRight
+import mihon.presentation.kit.content.Icon
+import mihon.presentation.kit.content.LegendSwatch
+import mihon.presentation.kit.content.StatisticsMetrics
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.surface.HorizontalDivider
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -47,28 +47,33 @@ internal fun StatisticsMediaCard(
                     .fillMaxWidth()
                     .clickable { onTypeClick(type.type) }
                     .semantics { contentDescription = "$label, $count" }
-                    .padding(vertical = 10.dp),
+                    .padding(vertical = KatariTheme.spacing.m),
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Surface(modifier = Modifier.size(10.dp), color = color, shape = CircleShape, content = {})
-                    Spacer(Modifier.width(10.dp))
-                    Text(label, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
-                    Text(count.toString(), style = MaterialTheme.typography.labelLarge)
-                    Spacer(Modifier.width(6.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
+                ) {
+                    LegendSwatch(color)
+                    Text(label, modifier = Modifier.weight(1f), role = TextRole.Body)
+                    Text(count.toString(), role = TextRole.Label)
                     Icon(
                         imageVector = MaterialSymbols.Rounded.ChevronRight,
                         contentDescription = null,
-                        modifier = Modifier.size(20.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(KatariTheme.sizes.iconSmall),
+                        tone = ContentTone.Secondary,
                     )
                 }
                 progressByType[type.type]?.let { progress ->
                     StatisticsProgressBar(
                         progress = progress,
                         color = color,
-                        height = 6.dp,
+                        height = StatisticsMetrics.stageBarCompact,
                         modifier = Modifier
-                            .padding(start = 20.dp, top = 8.dp, end = 26.dp)
+                            .padding(
+                                start = KatariTheme.spacing.l,
+                                top = KatariTheme.spacing.s,
+                                end = KatariTheme.spacing.xl,
+                            )
                             .clearAndSetSemantics {},
                     )
                 }

@@ -6,7 +6,6 @@ import mihon.gradle.getCurrentTime
 import mihon.gradle.getLatestCommitCount
 import mihon.gradle.getLatestCommitSha
 import mihon.gradle.getLatestCommitTime
-import mihon.gradle.tasks.GenerateApplicationFeatureTopologyTask
 import mihon.gradle.tasks.ReplaceShortcutsPlaceholderTask
 import org.gradle.api.tasks.testing.Test
 import java.io.FileInputStream
@@ -22,6 +21,7 @@ plugins {
     alias(libs.plugins.androidx.baselineProfile)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.apollo)
+    alias(libs.plugins.metro)
 }
 
 if (Config.includeTelemetry) {
@@ -46,8 +46,8 @@ android {
     defaultConfig {
         applicationId = "app.katari"
 
-        versionCode = 77
-        versionName = "1.15.1"
+        versionCode = 78
+        versionName = "1.16.0"
 
         buildConfigField("boolean", "TELEMETRY_INCLUDED", "${Config.includeTelemetry}")
         buildConfigField("boolean", "UPDATER_ENABLED", "${Config.enableUpdater}")
@@ -190,8 +190,6 @@ kotlin {
             "-opt-in=androidx.compose.animation.graphics.ExperimentalAnimationGraphicsApi",
             "-opt-in=androidx.compose.foundation.ExperimentalFoundationApi",
             "-opt-in=androidx.compose.foundation.layout.ExperimentalLayoutApi",
-            "-opt-in=androidx.compose.material3.ExperimentalMaterial3Api",
-            "-opt-in=androidx.compose.material3.ExperimentalMaterial3ExpressiveApi",
             "-opt-in=androidx.compose.ui.ExperimentalComposeUiApi",
             "-opt-in=coil3.annotation.ExperimentalCoilApi",
             "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi",
@@ -218,10 +216,10 @@ dependencies {
     implementation(dependencies.project(mapOf("path" to projects.i18n.path)))
     implementation(dependencies.project(mapOf("path" to projects.core.archive.path)))
     implementation(dependencies.project(mapOf("path" to projects.core.common.path)))
+    implementation(dependencies.project(mapOf("path" to projects.core.metro.path)))
     implementation(dependencies.project(mapOf("path" to projects.coreMetadata.path)))
     implementation(dependencies.project(mapOf("path" to projects.entryInteractions.path)))
     implementation(dependencies.project(mapOf("path" to projects.entrySourceApi.path)))
-    implementation(dependencies.project(mapOf("path" to projects.featureRuntime.path)))
     implementation(dependencies.project(mapOf("path" to projects.sourceApi.path)))
     implementation(dependencies.project(mapOf("path" to projects.sourceCompat.path)))
     implementation(dependencies.project(mapOf("path" to projects.sourceLocal.path)))
@@ -230,6 +228,7 @@ dependencies {
     implementation(dependencies.project(mapOf("path" to projects.icons.customMaterialSymbols.path)))
     implementation(dependencies.project(mapOf("path" to projects.icons.materialSymbols.path)))
     implementation(dependencies.project(mapOf("path" to projects.icons.simpleIcons.path)))
+    implementation(dependencies.project(mapOf("path" to projects.entryViewerChromeUi.path)))
     implementation(dependencies.project(mapOf("path" to projects.presentationCore.path)))
     implementation(dependencies.project(mapOf("path" to projects.presentationWidget.path)))
     implementation(dependencies.project(mapOf("path" to projects.telemetry.path)))
@@ -237,7 +236,7 @@ dependencies {
     implementation(dependencies.project(mapOf("path" to projects.modelArtifacts.ui.path)))
     implementation(dependencies.project(mapOf("path" to projects.textRecognition.runtime.path)))
     implementation(dependencies.project(mapOf("path" to projects.textRecognition.providers.onnx.path)))
-    // ML Kit needs Google Play services, so FOSS builds only list it; see its runtime component descriptors.
+    // ML Kit needs Google Play services, so FOSS builds only list it.
     "fossImplementation"(dependencies.project(mapOf("path" to projects.textRecognition.providers.mlkit.catalog.path)))
     listOf("debug", "release", "preview", "benchmark").forEach { buildType ->
         "${buildType}Implementation"(
@@ -256,7 +255,6 @@ dependencies {
     // Compose
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.foundation)
-    implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.animation)
     implementation(libs.androidx.compose.animationGraphics)
     debugImplementation(libs.androidx.compose.uiTooling)
@@ -294,6 +292,8 @@ dependencies {
     implementation(libs.androidx.profileInstaller)
 
     implementation(libs.bundles.androidx.lifecycle)
+    implementation(libs.metrox.viewmodel)
+    implementation(libs.metrox.viewmodel.compose)
 
     // Job scheduling
     implementation(libs.androidx.work)
@@ -361,9 +361,6 @@ dependencies {
 
     // Tests
     testImplementation(libs.bundles.test)
-    testImplementation(projects.featureValidation)
-    testImplementation(testFixtures(projects.entryInteractions))
-    testImplementation(testFixtures(projects.translation.runtime))
     testRuntimeOnly(libs.junit.platform.launcher)
 
     // For detecting memory leaks; see https://square.github.io/leakcanary/
@@ -371,31 +368,6 @@ dependencies {
     implementation(libs.leakCanary.plumber)
 
     testImplementation(libs.kotlinx.coroutines.test)
-}
-
-val featureReportFile = layout.buildDirectory.file("reports/features/developer-report.txt")
-
-val generateFeatureReport = tasks.register<Test>("generateFeatureReport") {
-    group = "reporting"
-    description = "Renders the evaluated application and Entry Feature graph for developers"
-
-    testClassesDirs = files(
-        providers.provider { tasks.named<Test>("testFossUnitTest").get().testClassesDirs },
-    )
-    classpath = files(
-        providers.provider { tasks.named<Test>("testFossUnitTest").get().classpath },
-    )
-    filter {
-        includeTestsMatching(
-            "eu.kanade.tachiyomi.validation.ProductionFeatureDeveloperReportTest",
-        )
-    }
-    systemProperty(
-        "mihon.feature.report.output",
-        featureReportFile.get().asFile.absolutePath,
-    )
-    outputs.file(featureReportFile)
-    testLogging.showStandardStreams = true
 }
 
 apollo {
@@ -476,20 +448,6 @@ fun ApplicationVariant.buildConfigField(type: String, name: String, value: Provi
     buildConfigFields?.put(name, value.map { BuildConfigField(type, it, null) })
 }
 
-/**
- * Descriptor files of every module in the checkout. Hidden top-level directories are skipped because
- * agent worktrees and workspaces (`.claude/`, `.agents-workspaces/`) hold whole nested checkouts whose
- * copies would otherwise collide with the real descriptors' ids.
- */
-fun repositoryDescriptors(fileSuffix: String, variantName: String): ConfigurableFileTree =
-    fileTree(layout.settingsDirectory) {
-        include("**/src/main/**/*$fileSuffix")
-        include("**/src/$variantName/**/*$fileSuffix")
-        exclude(".*/**")
-        exclude("**/build/**")
-        exclude("translation-workspace/**")
-    }
-
 androidComponents {
     onVariants { variant ->
         if (variant.buildType !in releasedBuildTypes) return@onVariants
@@ -516,22 +474,6 @@ androidComponents {
                 val versionName = output.versionName.get()
                 output.versionName.set(latestCommitCount.map { "$versionName-$it" })
             }
-        }
-
-        val javaSources = variant.sources.java
-        if (javaSources != null) {
-            val variantName = variant.name.replaceFirstChar { it.uppercase() }
-            val generateApplicationFeatureTopology = tasks.register<GenerateApplicationFeatureTopologyTask>(
-                "generate${variantName}ApplicationFeatureTopology",
-            ) {
-                this.variantName.set(variant.name)
-                moduleDescriptors.from(repositoryDescriptors(".application-feature-module", variant.name))
-                componentDescriptors.from(repositoryDescriptors(".application-feature-runtime-component", variant.name))
-                outputDirectory.set(
-                    layout.buildDirectory.dir("generated/source/application-feature-topology/${variant.name}"),
-                )
-            }
-            javaSources.addGeneratedSourceDirectory(generateApplicationFeatureTopology) { it.outputDirectory }
         }
 
         if (Config.includeTelemetry) {

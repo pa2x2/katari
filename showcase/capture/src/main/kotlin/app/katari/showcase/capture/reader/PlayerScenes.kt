@@ -3,24 +3,27 @@ package app.katari.showcase.capture.reader
 import android.os.SystemClock
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.uiautomator.By
+import androidx.test.uiautomator.BySelector
+import androidx.test.uiautomator.Until
+import app.katari.showcase.capture.ShowcaseDevice.appId
 import app.katari.showcase.capture.ShowcaseDevice.capture
 import app.katari.showcase.capture.ShowcaseDevice.device
+import app.katari.showcase.capture.ShowcaseDevice.fail
 import app.katari.showcase.capture.ShowcaseDevice.find
 import app.katari.showcase.capture.ShowcaseDevice.settle
+import app.katari.showcase.capture.ShowcaseDevice.shell
 import app.katari.showcase.capture.ShowcaseDevice.tap
-import app.katari.showcase.capture.ShowcaseDevice.tapAt
+import app.katari.showcase.capture.ShowcaseDevice.tapToShow
 import app.katari.showcase.capture.openEntry
 import app.katari.showcase.capture.openProfile
 import org.junit.Test
 import org.junit.runner.RunWith
-import java.util.regex.Pattern
 
 @RunWith(AndroidJUnit4::class)
 class PlayerScenes {
     /**
-     * Sintel paused on the cliff at sunset. A tap on the timeline can only aim within a second or so, and a pause lands
-     * wherever playback has got to, so the shot is aimed only once the film is paused: from then on a tap seeks exactly
-     * where it lands and the player stays there, so every run taps the same spots and shows the same frame.
+     * Sintel paused on the cliff at sunset. Neither a tap on the timeline nor a pause lands on the same frame twice, so
+     * the open player is sent the benchmark build's paused-start extra, which seeks it there exactly and pauses it.
      */
     @Test
     fun player() {
@@ -32,75 +35,42 @@ class PlayerScenes {
         device.setOrientationLandscape()
         try {
             settle()
-            // The seed finished the film, so it opens on its last frame, where a seek starts it playing a moment
-            // later; it can still show Play when the first pause looks, so every tap checks it stayed paused.
-            tapTimeline()
-            var attempts = 0
-            while (true) {
-                check(attempts++ < SEEK_ATTEMPTS) { "The player never stopped at $TARGET_SECONDS seconds" }
-                pause()
-                tapTimeline()
-                settle(extraMs = 3_000)
-                if (!device.hasObject(By.desc("Play"))) continue
-                val shown = shownSeconds()
-                if (shown == TARGET_SECONDS) break
-                tapX += (TARGET_SECONDS - shown) * (TIMELINE_END - TIMELINE_START) / DURATION_SECONDS
-            }
-            showControls()
+            // The player is not exported, which the pipeline's root shell may start anyway; it is open already, so it
+            // takes the intent as a new one.
+            val started = shell("am start -n $appId/$PLAYER --el paused_start_position_ms $SHOT_MS")
+            if ("Error" in started) fail(started)
+            // The finished film shows Play too, until the seek moves the label and buffers, which shows a spinner in
+            // its place; a CI runner's emulator takes over half a minute to.
+            awaitWithControls(By.text(SHOT_LABEL))
+            awaitWithControls(By.desc("Play"))
             capture("player")
         } finally {
             device.setOrientationNatural()
         }
     }
 
-    // Aimed at the middle of the second, which leaves the most room for where the tap lands.
-    private var tapX = TIMELINE_START + (TIMELINE_END - TIMELINE_START) * (TARGET_SECONDS + 0.5f) / DURATION_SECONDS
-
-    /** Taps the timeline, which runs along the bottom of the landscape screen. */
-    private fun tapTimeline() {
-        showControls()
-        tapAt(tapX, TIMELINE_Y)
-        settle()
-    }
-
-    private fun shownSeconds(): Int {
-        showControls()
-        val (minutes, seconds) = find(By.text(TIME_LABEL)).text.substringBefore(" ").split(":")
-        return minutes.toInt() * 60 + seconds.toInt()
-    }
-
-    /** Playing, the controls hide after a moment, so a tap can find them gone and only bring them back. */
-    private fun pause() {
-        val deadline = SystemClock.uptimeMillis() + 15_000
-        while (!device.hasObject(By.desc("Play"))) {
-            check(SystemClock.uptimeMillis() < deadline) { "The player never paused" }
-            val pause = device.findObject(By.desc("Pause"))
-            if (pause != null) {
-                runCatching { pause.click() }
-            } else {
-                tapAt(0.5f, 0.5f)
-            }
-            SystemClock.sleep(500)
+    /** Waits for [selector] among the controls, which hide by themselves while the player buffers. */
+    private fun awaitWithControls(selector: BySelector) {
+        val deadline = SystemClock.uptimeMillis() + BUFFERING_TIMEOUT_MS
+        while (true) {
+            showControls()
+            if (device.wait(Until.hasObject(selector), CONTROLS_WAIT_MS)) return
+            if (SystemClock.uptimeMillis() > deadline) fail("The player never showed $selector")
         }
     }
 
-    private fun showControls() {
-        if (!device.hasObject(By.desc("Lock controls"))) {
-            tapAt(0.5f, 0.5f)
-            find(By.desc("Lock controls"))
-        }
-    }
+    /** With a tap where none of the controls is: the middle of the screen is the play button. */
+    private fun showControls() = tapToShow(EMPTY_SPOT_X, EMPTY_SPOT_Y, By.desc("Lock controls"))
 
     private companion object {
-        const val SEEK_ATTEMPTS = 6
-        const val TARGET_SECONDS = 691
-        const val DURATION_SECONDS = 888f
+        const val PLAYER = "eu.kanade.tachiyomi.ui.video.player.VideoPlayerActivity"
+        const val SHOT_MS = 691_169L
+        const val SHOT_LABEL = "11:31 / 14:48"
+        const val BUFFERING_TIMEOUT_MS = 2 * 60_000L
+        const val CONTROLS_WAIT_MS = 2_000L
 
-        // Where the timeline's track starts, ends, and runs, as fractions of the landscape screen.
-        const val TIMELINE_START = 0.0825f
-        const val TIMELINE_END = 0.918f
-        const val TIMELINE_Y = 0.854f
-
-        val TIME_LABEL: Pattern = Pattern.compile("""\d+:\d\d / 14:48""")
+        // Between the title bar and the playback buttons of the landscape screen.
+        const val EMPTY_SPOT_X = 0.25f
+        const val EMPTY_SPOT_Y = 0.3f
     }
 }

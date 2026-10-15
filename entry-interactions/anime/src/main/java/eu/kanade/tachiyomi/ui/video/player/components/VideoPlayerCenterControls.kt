@@ -1,30 +1,28 @@
 package eu.kanade.tachiyomi.ui.video.player.components
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.Dp
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.SkipNext
 import mihon.icons.materialsymbols.rounded.SkipPrevious
 import mihon.icons.materialsymbols.roundedfilled.Pause
 import mihon.icons.materialsymbols.roundedfilled.PlayArrow
+import mihon.presentation.kit.content.Icon
+import mihon.presentation.kit.progress.LoadingIndicator
+import mihon.presentation.kit.surface.Surface
+import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.LoadingIndicator
 import tachiyomi.presentation.core.i18n.stringResource
-
-private val youtubeLikeControlButtonSize = 60.dp
 
 @Composable
 internal fun VideoPlayerCenterControls(
@@ -39,88 +37,82 @@ internal fun VideoPlayerCenterControls(
     onNextEpisode: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val sizes = KatariTheme.sizes
     Row(
         modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(30.dp, Alignment.CenterHorizontally),
+        horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xxl, Alignment.CenterHorizontally),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         VideoPlayerTransportButton(
-            icon = {
-                Icon(
-                    imageVector = MaterialSymbols.Rounded.SkipPrevious,
-                    modifier = Modifier.size(24.dp),
-                    contentDescription = stringResource(MR.strings.action_previous_chapter),
-                    tint = Color.White,
-                )
-            },
-            enabled = hasPreviousEpisode,
             onClick = onPreviousEpisode,
-        )
+            enabled = hasPreviousEpisode,
+            contentSize = sizes.icon,
+        ) { tone ->
+            Icon(
+                imageVector = MaterialSymbols.Rounded.SkipPrevious,
+                contentDescription = stringResource(MR.strings.action_previous_chapter),
+                modifier = Modifier.fillMaxSize(),
+                tone = tone,
+            )
+        }
         VideoPlayerTransportButton(
-            icon = {
-                if (isLoading) {
-                    LoadingIndicator(
-                        modifier = Modifier.size(30.dp),
-                        color = Color.White,
-                    )
-                } else {
-                    Icon(
-                        imageVector = if (isPlaying) {
-                            MaterialSymbols.RoundedFilled.Pause
-                        } else {
-                            MaterialSymbols.RoundedFilled.PlayArrow
-                        },
-                        modifier = Modifier.size(30.dp),
-                        contentDescription = if (isPlaying) stringResource(MR.strings.action_pause) else "Play",
-                        tint = Color.White,
-                    )
-                }
-            },
-            enabled = !isLoading,
             onClick = onTogglePlayback,
-        )
-        VideoPlayerTransportButton(
-            icon = {
+            enabled = !isLoading,
+            contentSize = sizes.iconLarge,
+        ) { tone ->
+            if (isLoading) {
+                LoadingIndicator(modifier = Modifier.fillMaxSize(), color = KatariTheme.colors.onMedia)
+            } else {
                 Icon(
-                    imageVector = MaterialSymbols.Rounded.SkipNext,
-                    modifier = Modifier.size(24.dp),
-                    contentDescription = stringResource(MR.strings.action_next_chapter),
-                    tint = Color.White,
+                    imageVector = if (isPlaying) {
+                        MaterialSymbols.RoundedFilled.Pause
+                    } else {
+                        MaterialSymbols.RoundedFilled.PlayArrow
+                    },
+                    contentDescription = stringResource(
+                        if (isPlaying) MR.strings.action_pause else MR.strings.action_play,
+                    ),
+                    modifier = Modifier.fillMaxSize(),
+                    tone = tone,
                 )
-            },
-            enabled = hasNextEpisode,
+            }
+        }
+        VideoPlayerTransportButton(
             onClick = onNextEpisode,
-        )
+            enabled = hasNextEpisode,
+            contentSize = sizes.icon,
+        ) { tone ->
+            Icon(
+                imageVector = MaterialSymbols.Rounded.SkipNext,
+                contentDescription = stringResource(MR.strings.action_next_chapter),
+                modifier = Modifier.fillMaxSize(),
+                tone = tone,
+            )
+        }
     }
 }
 
+/** A round button on the media shade; [content] fills [contentSize] in the tone for its enabled state. */
 @Composable
-internal fun VideoPlayerTransportButton(
-    icon: @Composable () -> Unit,
+private fun VideoPlayerTransportButton(
     onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    enabled: Boolean = true,
+    enabled: Boolean,
+    contentSize: Dp,
+    content: @Composable (tone: ContentTone) -> Unit,
 ) {
-    Box(
-        modifier = modifier
-            .size(youtubeLikeControlButtonSize)
-            .clip(CircleShape)
-            .border(
-                width = 1.dp,
-                color = if (enabled) Color.White.copy(alpha = 0.16f) else Color.White.copy(alpha = 0.08f),
-                shape = CircleShape,
-            )
-            .background(
-                if (enabled) Color.Black.copy(alpha = 0.24f) else Color.Black.copy(alpha = 0.1f),
-            ),
-        contentAlignment = Alignment.Center,
+    Surface(
+        onClick = onClick,
+        container = SurfaceContainer.MediaScrim,
+        shape = KatariTheme.shapes.full,
+        enabled = enabled,
     ) {
-        IconButton(
-            modifier = Modifier.size(youtubeLikeControlButtonSize),
-            enabled = enabled,
-            onClick = onClick,
+        Box(
+            modifier = Modifier
+                .padding(KatariTheme.spacing.l)
+                .size(contentSize),
+            contentAlignment = Alignment.Center,
         ) {
-            icon()
+            content(if (enabled) ContentTone.OnMedia else ContentTone.OnMediaVariant)
         }
     }
 }

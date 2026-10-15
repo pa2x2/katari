@@ -26,8 +26,7 @@ import eu.kanade.tachiyomi.ui.category.CategoryScreen
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.coroutines.launch
-import tachiyomi.domain.category.interactor.GetCategories
-import tachiyomi.domain.category.interactor.ResetCategoryFlags
+import mihon.app.di.appGraph
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.domain.library.model.LibrarySort
@@ -46,8 +45,6 @@ import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
 internal enum class LibrarySettingsSection {
     Categories,
@@ -73,9 +70,10 @@ object SettingsLibraryScreen : SearchableSettings {
 
     @Composable
     override fun getPreferences(): List<Preference> {
-        val getCategories = remember { Injekt.get<GetCategories>() }
-        val libraryPreferences = remember { Injekt.get<LibraryPreferences>() }
-        val globalLibraryPreferences = remember { Injekt.get<GlobalLibraryPreferences>() }
+        val context = LocalContext.current
+        val getCategories = remember { context.appGraph.getCategories }
+        val libraryPreferences = remember { context.appGraph.libraryPreferences }
+        val globalLibraryPreferences = remember { context.appGraph.globalLibraryPreferences }
         val allCategories by getCategories.subscribe().collectAsState(initial = emptyList())
         val navigator = LocalNavigator.currentOrThrow
         val visibleSections = remember {
@@ -112,6 +110,7 @@ object SettingsLibraryScreen : SearchableSettings {
         allCategories: List<Category>,
         libraryPreferences: LibraryPreferences,
     ): Preference.PreferenceGroup {
+        val context = LocalContext.current
         val scope = rememberCoroutineScope()
         val userCategoriesCount = allCategories.filterNot(Category::isSystemCategory).size
 
@@ -144,7 +143,7 @@ object SettingsLibraryScreen : SearchableSettings {
                     onValueChanged = {
                         if (!it) {
                             scope.launch {
-                                Injekt.get<ResetCategoryFlags>().await()
+                                context.appGraph.resetCategoryFlags.await()
                             }
                         }
                         true

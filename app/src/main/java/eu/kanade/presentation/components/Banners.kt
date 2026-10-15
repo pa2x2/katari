@@ -3,7 +3,6 @@ package eu.kanade.presentation.components
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -14,8 +13,6 @@ import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -30,32 +27,39 @@ import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.util.fastMap
 import androidx.compose.ui.util.fastMaxBy
 import dev.icerock.moko.resources.StringResource
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.progress.LoadingIndicator
+import mihon.presentation.kit.surface.Surface
+import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.LocalContentColor
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.LoadingIndicator
 import tachiyomi.presentation.core.i18n.stringResource
 
+// The status bar takes the colour of the topmost banner, so its icons are chosen against these fills.
 val DownloadedOnlyBannerBackgroundColor
-    @Composable get() = MaterialTheme.colorScheme.tertiary
+    @Composable get() = KatariTheme.colors.tertiary
 val IncognitoModeBannerBackgroundColor
-    @Composable get() = MaterialTheme.colorScheme.primary
+    @Composable get() = KatariTheme.colors.primary
 val IndexingBannerBackgroundColor
-    @Composable get() = MaterialTheme.colorScheme.secondary
+    @Composable get() = KatariTheme.colors.secondary
 
 @Composable
 fun WarningBanner(
     textRes: StringResource,
     modifier: Modifier = Modifier,
 ) {
-    Text(
-        text = stringResource(textRes),
-        modifier = modifier
-            .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.error)
-            .padding(16.dp),
-        color = MaterialTheme.colorScheme.onError,
-        style = MaterialTheme.typography.bodyMedium,
-        textAlign = TextAlign.Center,
-    )
+    Surface(modifier = modifier.fillMaxWidth(), container = SurfaceContainer.WarningContainer) {
+        Text(
+            text = stringResource(textRes),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(KatariTheme.spacing.l),
+            role = TextRole.Body,
+            textAlign = TextAlign.Center,
+        )
+    }
 }
 
 @Composable
@@ -126,61 +130,64 @@ fun AppStateBanners(
 
 @Composable
 private fun DownloadedOnlyModeBanner(modifier: Modifier = Modifier) {
-    Text(
+    ModeBanner(
         text = stringResource(MR.strings.label_downloaded_only),
-        modifier = Modifier
-            .background(DownloadedOnlyBannerBackgroundColor)
-            .fillMaxWidth()
-            .padding(4.dp)
-            .then(modifier),
-        color = MaterialTheme.colorScheme.onTertiary,
-        textAlign = TextAlign.Center,
-        style = MaterialTheme.typography.labelMedium,
+        container = SurfaceContainer.Tertiary,
+        modifier = modifier,
     )
 }
 
 @Composable
 private fun IncognitoModeBanner(modifier: Modifier = Modifier) {
-    Text(
+    ModeBanner(
         text = stringResource(MR.strings.pref_incognito_mode),
-        modifier = Modifier
-            .background(IncognitoModeBannerBackgroundColor)
-            .fillMaxWidth()
-            .padding(4.dp)
-            .then(modifier),
-        color = MaterialTheme.colorScheme.onPrimary,
-        textAlign = TextAlign.Center,
-        style = MaterialTheme.typography.labelMedium,
+        container = SurfaceContainer.Primary,
+        modifier = modifier,
     )
+}
+
+@Composable
+private fun ModeBanner(text: String, container: SurfaceContainer, modifier: Modifier) {
+    Surface(modifier = Modifier.fillMaxWidth(), container = container) {
+        Text(
+            text = text,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(KatariTheme.spacing.xs)
+                .then(modifier),
+            role = TextRole.Caption,
+            textAlign = TextAlign.Center,
+        )
+    }
 }
 
 @Composable
 private fun IndexingDownloadBanner(modifier: Modifier = Modifier) {
     val density = LocalDensity.current
-    Row(
-        modifier = Modifier
-            .background(color = IndexingBannerBackgroundColor)
-            .fillMaxWidth()
-            .padding(8.dp)
-            .then(modifier),
-        horizontalArrangement = Arrangement.Center,
-    ) {
-        var textHeight by remember { mutableStateOf(0.dp) }
-        LoadingIndicator(
-            modifier = Modifier.requiredSize(textHeight),
-            color = MaterialTheme.colorScheme.onSecondary,
-        )
-        Spacer(modifier = Modifier.width(8.dp))
-        Text(
-            text = stringResource(MR.strings.download_notifier_cache_renewal),
-            color = MaterialTheme.colorScheme.onSecondary,
-            textAlign = TextAlign.Center,
-            style = MaterialTheme.typography.labelMedium,
-            onTextLayout = {
-                with(density) {
-                    textHeight = it.size.height.toDp()
-                }
-            },
-        )
+    Surface(modifier = Modifier.fillMaxWidth(), container = SurfaceContainer.Secondary) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(KatariTheme.spacing.s)
+                .then(modifier),
+            horizontalArrangement = Arrangement.Center,
+        ) {
+            var textHeight by remember { mutableStateOf(0.dp) }
+            LoadingIndicator(
+                modifier = Modifier.requiredSize(textHeight),
+                color = LocalContentColor.current,
+            )
+            Spacer(modifier = Modifier.width(KatariTheme.spacing.s))
+            Text(
+                text = stringResource(MR.strings.download_notifier_cache_renewal),
+                role = TextRole.Caption,
+                textAlign = TextAlign.Center,
+                onTextLayout = {
+                    with(density) {
+                        textHeight = it.size.height.toDp()
+                    }
+                },
+            )
+        }
     }
 }

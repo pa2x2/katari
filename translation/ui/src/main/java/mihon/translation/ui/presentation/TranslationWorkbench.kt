@@ -10,16 +10,8 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -27,14 +19,24 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.unit.dp
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Close
 import mihon.icons.materialsymbols.rounded.ContentCopy
 import mihon.icons.materialsymbols.rounded.Share
 import mihon.language.api.tag.LanguageTag
+import mihon.presentation.kit.button.IconButton
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.content.lineHeight
+import mihon.presentation.kit.field.PlainTextField
+import mihon.presentation.kit.progress.LinearProgressIndicator
+import mihon.presentation.kit.surface.HorizontalDivider
+import mihon.presentation.kit.surface.Surface
+import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import mihon.translation.api.engine.TranslationEngineSelection
+import mihon.translation.ui.presentation.content.TranslationSessionContent
 import mihon.translation.ui.session.TranslationSessionState
 import mihon.translation.ui.session.displayedResult
 import mihon.translation.ui.session.isTranslationInProgress
@@ -71,9 +73,8 @@ fun TranslationWorkbench(
     }
     Surface(
         modifier = modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.extraLarge,
-        color = MaterialTheme.colorScheme.surfaceContainerHigh,
-        tonalElevation = 1.dp,
+        container = SurfaceContainer.High,
+        shape = KatariTheme.shapes.extraLarge,
     ) {
         Column {
             TranslationSourcePane(
@@ -123,12 +124,8 @@ private fun TranslationSourcePane(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(
-                min = WORKBENCH_PANE_MINIMUM_HEIGHT,
-                max = WORKBENCH_PANE_MAXIMUM_HEIGHT,
-            )
-            .padding(WORKBENCH_PADDING),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+            .padding(KatariTheme.spacing.l),
+        verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
     ) {
         val state = rememberTextFieldState(text)
         val currentText by rememberUpdatedState(text)
@@ -143,27 +140,13 @@ private fun TranslationSourcePane(
                 if (it != currentText) currentOnTextChange(it)
             }
         }
-        BasicTextField(
+        PlainTextField(
             state = state,
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f),
-            textStyle = MaterialTheme.typography.headlineSmall.copy(
-                color = MaterialTheme.colorScheme.onSurface,
-            ),
-            cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
-            decorator = { innerTextField ->
-                Box {
-                    if (text.isEmpty()) {
-                        Text(
-                            text = placeholder,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            style = MaterialTheme.typography.headlineSmall,
-                        )
-                    }
-                    innerTextField()
-                }
-            },
+            placeholder = placeholder,
+            modifier = Modifier.fillMaxWidth(),
+            role = WORKBENCH_TEXT_ROLE,
+            minLines = WORKBENCH_PANE_MINIMUM_LINES,
+            maxLines = WORKBENCH_PANE_MAXIMUM_LINES,
         )
         TranslationWorkbenchActions(
             speechTarget = speechTarget,
@@ -171,12 +154,11 @@ private fun TranslationSourcePane(
             onSpeechToggle = onSpeechToggle,
         ) {
             if (text.isNotEmpty()) {
-                IconButton(onClick = onClear) {
-                    Icon(
-                        imageVector = MaterialSymbols.Rounded.Close,
-                        contentDescription = stringResource(MR.strings.translator_clear_input),
-                    )
-                }
+                IconButton(
+                    icon = MaterialSymbols.Rounded.Close,
+                    contentDescription = stringResource(MR.strings.translator_clear_input),
+                    onClick = onClear,
+                )
             }
         }
     }
@@ -198,29 +180,26 @@ private fun TranslationOutputPane(
     onSelectEngine: (TranslationEngineSelection) -> Unit,
     onExternalAction: (TranslationSessionExternalAction) -> Unit,
 ) {
+    val lineHeight = WORKBENCH_TEXT_ROLE.lineHeight
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(
-                min = WORKBENCH_PANE_MINIMUM_HEIGHT,
-                max = WORKBENCH_PANE_MAXIMUM_HEIGHT,
-            )
-            .padding(WORKBENCH_PADDING),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+            .padding(KatariTheme.spacing.l),
+        verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
     ) {
+        // Sized in lines of the source pane's text, so both panes line up at any font scale.
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(1f)
+                .heightIn(
+                    min = lineHeight * WORKBENCH_PANE_MINIMUM_LINES,
+                    max = lineHeight * WORKBENCH_PANE_MAXIMUM_LINES,
+                )
                 .verticalScroll(rememberScrollState()),
         ) {
             val active = session as? TranslationSessionState.Active
             if (active == null) {
-                Text(
-                    text = placeholder,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.headlineSmall,
-                )
+                Text(text = placeholder, role = WORKBENCH_TEXT_ROLE, tone = ContentTone.Secondary)
             } else {
                 TranslationSessionContent(
                     state = active,
@@ -251,20 +230,18 @@ private fun TranslationOutputPane(
             onSpeechToggle = onSpeechToggle,
         ) {
             if (resultText != null && onCopy != null) {
-                IconButton(onClick = { onCopy(resultText) }) {
-                    Icon(
-                        imageVector = MaterialSymbols.Rounded.ContentCopy,
-                        contentDescription = stringResource(MR.strings.copy),
-                    )
-                }
+                IconButton(
+                    icon = MaterialSymbols.Rounded.ContentCopy,
+                    contentDescription = stringResource(MR.strings.copy),
+                    onClick = { onCopy(resultText) },
+                )
             }
             if (resultText != null && onShare != null) {
-                IconButton(onClick = { onShare(resultText) }) {
-                    Icon(
-                        imageVector = MaterialSymbols.Rounded.Share,
-                        contentDescription = stringResource(MR.strings.action_share),
-                    )
-                }
+                IconButton(
+                    icon = MaterialSymbols.Rounded.Share,
+                    contentDescription = stringResource(MR.strings.action_share),
+                    onClick = { onShare(resultText) },
+                )
             }
         }
     }
@@ -288,13 +265,14 @@ private fun TranslationWorkbenchActions(
                 onSpeechToggle = onSpeechToggle,
             )
         } else {
-            Spacer(modifier = Modifier.size(48.dp))
+            Spacer(modifier = Modifier.size(KatariTheme.sizes.touchTarget))
         }
         Spacer(modifier = Modifier.weight(1f))
         trailingContent()
     }
 }
 
-private val WORKBENCH_PANE_MINIMUM_HEIGHT = 184.dp
-private val WORKBENCH_PANE_MAXIMUM_HEIGHT = 280.dp
-private val WORKBENCH_PADDING = 20.dp
+// Text being translated is set large, at the size of a sheet title.
+private val WORKBENCH_TEXT_ROLE = TextRole.SheetTitle
+private const val WORKBENCH_PANE_MINIMUM_LINES = 3
+private const val WORKBENCH_PANE_MAXIMUM_LINES = 6

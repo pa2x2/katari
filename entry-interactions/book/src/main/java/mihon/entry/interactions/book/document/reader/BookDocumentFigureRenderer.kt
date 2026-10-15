@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.text.selection.DisableSelection
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
@@ -23,7 +22,6 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import mihon.book.api.document.BookDocumentBlock
@@ -33,6 +31,9 @@ import mihon.entry.interactions.book.R
 import mihon.entry.interactions.book.document.resource.PROSE_IMAGE_RESOURCE_REQUIREMENT
 import mihon.entry.interactions.book.document.resource.decodeValidatedProseImage
 import mihon.entry.interactions.book.preparation.BookPublicationResourceLoader
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 
 /** Bounded, composition-scoped figure resource renderer. */
 @Composable
@@ -101,7 +102,7 @@ internal fun BookDocumentFigureRenderer(
                     },
             )
             bitmapResult == null -> DisableSelection {
-                Text(stringResource(R.string.book_document_image_loading))
+                Text(stringResource(R.string.book_document_image_loading), role = TextRole.ItemTitle)
             }
             else -> {
                 val fallback = content.image.alternativeText
@@ -115,7 +116,7 @@ internal fun BookDocumentFigureRenderer(
                     separatorAfter = if (content.caption == null) "\n\n" else "\n",
                     onAnchorClick = onAnchorClick,
                     onExternalLinkClick = onExternalLinkClick,
-                    contentAlpha = 0.72f,
+                    standIn = true,
                     modifier = Modifier.clickable {
                         selection?.handleReaderTap { retryGeneration++ } ?: run { retryGeneration++ }
                     },
@@ -131,7 +132,7 @@ internal fun BookDocumentFigureRenderer(
             onAnchorClick = onAnchorClick,
             onExternalLinkClick = onExternalLinkClick,
             separatorAfter = "\n\n",
-            modifier = Modifier.padding(top = 8.dp),
+            modifier = Modifier.padding(top = KatariTheme.spacing.s),
         )
     }
 }

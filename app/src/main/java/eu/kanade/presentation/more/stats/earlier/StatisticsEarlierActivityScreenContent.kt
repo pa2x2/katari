@@ -1,41 +1,37 @@
 package eu.kanade.presentation.more.stats.earlier
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedCard
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.more.stats.components.StatisticsSectionCard
+import eu.kanade.presentation.more.stats.components.StatisticsShareBar
 import eu.kanade.presentation.more.stats.components.StatisticsTopTitleRow
 import eu.kanade.presentation.more.stats.components.color
 import eu.kanade.presentation.more.stats.components.rememberStatisticsDurationFormatter
 import eu.kanade.presentation.more.stats.data.StatsType
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.ui.stats.earlier.StatisticsEarlierActivityViewModel
+import mihon.presentation.kit.content.StatisticsMetrics
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.feedback.EmptyScreen
+import mihon.presentation.kit.feedback.LoadingScreen
+import mihon.presentation.kit.surface.Card
+import mihon.presentation.kit.surface.CardStyle
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.screens.LoadingScreen
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -51,19 +47,16 @@ fun StatisticsEarlierActivityScreenContent(
 ) {
     when (state) {
         StatisticsEarlierActivityViewModel.State.Loading -> LoadingScreen(Modifier.padding(paddingValues))
-        StatisticsEarlierActivityViewModel.State.Failed -> CenteredMessage(
-            paddingValues = paddingValues,
-            message = stringResource(MR.strings.statistics_could_not_load_activity),
+        StatisticsEarlierActivityViewModel.State.Failed -> EmptyScreen(
+            stringRes = MR.strings.statistics_could_not_load_activity,
+            modifier = Modifier.padding(paddingValues),
         )
         is StatisticsEarlierActivityViewModel.State.Success -> {
             val formatDuration = rememberStatisticsDurationFormatter()
             val details = state.details
             val totalDuration = details.totals.sumOf { it.durationMillis }
             if (totalDuration <= 0L) {
-                CenteredMessage(
-                    paddingValues = paddingValues,
-                    message = stringResource(MR.strings.statistics_no_activity),
-                )
+                EmptyScreen(stringRes = MR.strings.statistics_no_activity, modifier = Modifier.padding(paddingValues))
                 return
             }
             val typesById = types.associateBy(StatsType::type)
@@ -78,28 +71,24 @@ fun StatisticsEarlierActivityScreenContent(
             }
             LazyColumn(
                 contentPadding = PaddingValues(
-                    start = 16.dp,
-                    top = paddingValues.calculateTopPadding() + 12.dp,
-                    end = 16.dp,
-                    bottom = paddingValues.calculateBottomPadding() + 20.dp,
+                    start = KatariTheme.spacing.contentInset,
+                    top = paddingValues.calculateTopPadding() + KatariTheme.spacing.m,
+                    end = KatariTheme.spacing.contentInset,
+                    bottom = paddingValues.calculateBottomPadding() + KatariTheme.spacing.xl,
                 ),
-                verticalArrangement = Arrangement.spacedBy(14.dp),
+                verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.m),
             ) {
                 item {
-                    OutlinedCard(Modifier.fillMaxWidth()) {
-                        Column(Modifier.padding(20.dp)) {
-                            Text(
-                                text = formatDuration(totalDuration),
-                                style = MaterialTheme.typography.headlineMedium,
-                                fontWeight = FontWeight.SemiBold,
-                            )
-                            Spacer(Modifier.height(8.dp))
+                    Card(Modifier.fillMaxWidth(), style = CardStyle.Outlined) {
+                        Column(Modifier.padding(KatariTheme.spacing.contentInset)) {
+                            Text(text = formatDuration(totalDuration), role = TextRole.Metric)
+                            Spacer(Modifier.height(KatariTheme.spacing.s))
                             Text(
                                 text = trackingStartDate?.let {
                                     stringResource(MR.strings.statistics_earlier_explanation, it)
                                 } ?: stringResource(MR.strings.statistics_earlier_explanation_untracked),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                role = TextRole.Body,
+                                tone = ContentTone.Secondary,
                             )
                         }
                     }
@@ -116,22 +105,15 @@ fun StatisticsEarlierActivityScreenContent(
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                 ) {
                                     Text(label)
-                                    Text(
-                                        formatDuration(total.durationMillis),
-                                        style = MaterialTheme.typography.labelLarge,
-                                    )
+                                    Text(formatDuration(total.durationMillis), role = TextRole.Label)
                                 }
-                                Spacer(Modifier.height(6.dp))
-                                LinearProgressIndicator(
-                                    progress = { total.durationMillis.toFloat() / maximum.toFloat() },
-                                    modifier = Modifier.fillMaxWidth().height(8.dp),
-                                    color = type?.accent?.color() ?: MaterialTheme.colorScheme.primary,
-                                    trackColor = MaterialTheme.colorScheme.surfaceVariant,
-                                    strokeCap = StrokeCap.Round,
-                                    gapSize = 0.dp,
-                                    drawStopIndicator = {},
+                                Spacer(Modifier.height(KatariTheme.spacing.s))
+                                StatisticsShareBar(
+                                    fraction = total.durationMillis.toFloat() / maximum.toFloat(),
+                                    color = type?.accent?.color() ?: KatariTheme.colors.primary,
+                                    height = StatisticsMetrics.shareBarThick,
                                 )
-                                Spacer(Modifier.height(14.dp))
+                                Spacer(Modifier.height(KatariTheme.spacing.m))
                             }
                         }
                     }
@@ -140,7 +122,7 @@ fun StatisticsEarlierActivityScreenContent(
                     item {
                         StatisticsSectionCard(
                             title = stringResource(MR.strings.statistics_top_titles),
-                            contentSpacing = 8.dp,
+                            contentSpacing = KatariTheme.spacing.s,
                         ) {
                             details.topEntries.forEachIndexed { index, entry ->
                                 val type = typesById[entry.type]
@@ -155,7 +137,7 @@ fun StatisticsEarlierActivityScreenContent(
                                     completionCount = 0L,
                                     durationMillis = entry.durationMillis,
                                     shareOf = totalDuration,
-                                    color = type?.accent?.color() ?: MaterialTheme.colorScheme.primary,
+                                    color = type?.accent?.color() ?: KatariTheme.colors.primary,
                                     formatDuration = formatDuration,
                                     onClick = { onEntryClick(entry.entryId) },
                                 )
@@ -165,15 +147,5 @@ fun StatisticsEarlierActivityScreenContent(
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun CenteredMessage(paddingValues: PaddingValues, message: String) {
-    Box(
-        modifier = Modifier.fillMaxSize().padding(paddingValues),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(text = message, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }

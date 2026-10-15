@@ -1,41 +1,25 @@
 package eu.kanade.presentation.more.settings.widget
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.defaultMinSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.LocalContentColor
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.unit.dp
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.CheckBoxOutlineBlank
-import mihon.icons.materialsymbols.roundedfilled.CheckBox
-import mihon.icons.materialsymbols.roundedfilled.DisabledByDefault
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.dialog.Dialog
+import mihon.presentation.kit.dialog.DialogAction
+import mihon.presentation.kit.list.TriStateRow
+import mihon.presentation.kit.surface.HorizontalDivider
+import mihon.presentation.kit.theme.KatariTheme
+import tachiyomi.core.common.preference.TriState
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
-
-private enum class State {
-    CHECKED,
-    INVERSED,
-    UNCHECKED,
-}
 
 @Composable
 fun <T> TriStateListDialog(
@@ -52,93 +36,49 @@ fun <T> TriStateListDialog(
         items
             .map {
                 when (it) {
-                    in initialChecked -> State.CHECKED
-                    in initialInversed -> State.INVERSED
-                    else -> State.UNCHECKED
+                    in initialChecked -> TriState.ENABLED_IS
+                    in initialInversed -> TriState.ENABLED_NOT
+                    else -> TriState.DISABLED
                 }
             }
             .toMutableStateList()
     }
-    AlertDialog(
+    Dialog(
         onDismissRequest = onDismissRequest,
-        title = { Text(text = title) },
-        text = {
-            Column {
-                if (message != null) {
-                    Text(
-                        text = message,
-                        modifier = Modifier.padding(bottom = 8.dp),
-                    )
+        title = title,
+        confirm = DialogAction(
+            label = stringResource(MR.strings.action_ok),
+            onClick = {
+                val included = items.filterIndexed { index, _ -> selected[index] == TriState.ENABLED_IS }
+                val excluded = items.filterIndexed { index, _ -> selected[index] == TriState.ENABLED_NOT }
+                onValueChanged(included, excluded)
+            },
+        ),
+        dismiss = DialogAction(stringResource(MR.strings.action_cancel), onClick = onDismissRequest),
+    ) {
+        Column {
+            if (message != null) {
+                Text(
+                    text = message,
+                    modifier = Modifier.padding(bottom = KatariTheme.spacing.s),
+                )
+            }
+
+            Box {
+                val listState = rememberLazyListState()
+                LazyColumn(state = listState) {
+                    itemsIndexed(items = items) { index, item ->
+                        TriStateRow(
+                            title = itemLabel(item),
+                            state = selected[index],
+                            onStateChange = { selected[index] = it },
+                        )
+                    }
                 }
 
-                Box {
-                    val listState = rememberLazyListState()
-                    LazyColumn(state = listState) {
-                        itemsIndexed(items = items) { index, item ->
-                            val state = selected[index]
-                            Row(
-                                modifier = Modifier
-                                    .clip(MaterialTheme.shapes.small)
-                                    .clickable {
-                                        selected[index] = when (state) {
-                                            State.UNCHECKED -> State.CHECKED
-                                            State.CHECKED -> State.INVERSED
-                                            State.INVERSED -> State.UNCHECKED
-                                        }
-                                    }
-                                    .defaultMinSize(minHeight = 48.dp)
-                                    .fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                Icon(
-                                    modifier = Modifier.padding(end = 20.dp),
-                                    imageVector = when (state) {
-                                        State.UNCHECKED -> MaterialSymbols.Rounded.CheckBoxOutlineBlank
-                                        State.CHECKED -> MaterialSymbols.RoundedFilled.CheckBox
-                                        State.INVERSED -> MaterialSymbols.RoundedFilled.DisabledByDefault
-                                    },
-                                    tint = if (state == State.UNCHECKED) {
-                                        LocalContentColor.current
-                                    } else {
-                                        MaterialTheme.colorScheme.primary
-                                    },
-                                    contentDescription = stringResource(
-                                        when (state) {
-                                            State.UNCHECKED -> MR.strings.not_selected
-                                            State.CHECKED -> MR.strings.selected
-                                            State.INVERSED -> MR.strings.disabled
-                                        },
-                                    ),
-                                )
-                                Text(text = itemLabel(item))
-                            }
-                        }
-                    }
-
-                    if (listState.canScrollBackward) HorizontalDivider(modifier = Modifier.align(Alignment.TopCenter))
-                    if (listState.canScrollForward) HorizontalDivider(modifier = Modifier.align(Alignment.BottomCenter))
-                }
+                if (listState.canScrollBackward) HorizontalDivider(modifier = Modifier.align(Alignment.TopCenter))
+                if (listState.canScrollForward) HorizontalDivider(modifier = Modifier.align(Alignment.BottomCenter))
             }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismissRequest) {
-                Text(text = stringResource(MR.strings.action_cancel))
-            }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    val included = items.mapIndexedNotNull { index, category ->
-                        if (selected[index] == State.CHECKED) category else null
-                    }
-                    val excluded = items.mapIndexedNotNull { index, category ->
-                        if (selected[index] == State.INVERSED) category else null
-                    }
-                    onValueChanged(included, excluded)
-                },
-            ) {
-                Text(text = stringResource(MR.strings.action_ok))
-            }
-        },
-    )
+        }
+    }
 }

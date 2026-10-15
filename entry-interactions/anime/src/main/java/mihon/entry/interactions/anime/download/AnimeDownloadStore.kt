@@ -12,8 +12,6 @@ import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.VideoDownloadQualityMode
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryRepository
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
 /** Persists queued anime downloads across process restarts. */
 internal class AnimeDownloadStore(
@@ -25,9 +23,9 @@ internal class AnimeDownloadStore(
 
     constructor(
         context: Context,
-        json: Json = Injekt.get(),
-        entryRepository: EntryRepository = Injekt.get(),
-        entryChapterRepository: EntryChapterRepository = Injekt.get(),
+        json: Json,
+        entryRepository: EntryRepository,
+        entryChapterRepository: EntryChapterRepository,
     ) : this(
         backend = SharedPreferencesAnimeDownloadStoreBackend(
             context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE),

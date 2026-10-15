@@ -12,10 +12,6 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -30,6 +26,10 @@ import kotlinx.datetime.yearMonth
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.automirroredrounded.KeyboardArrowLeft
 import mihon.icons.materialsymbols.automirroredrounded.KeyboardArrowRight
+import mihon.presentation.kit.button.IconButton
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.theme.KatariPreviewTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import java.time.format.DateTimeFormatter
@@ -52,24 +52,19 @@ fun CalenderHeader(
             transitionSpec = { getAnimation() },
             label = "Change Month",
         ) { monthYear ->
-            Text(
-                text = getTitleText(monthYear),
-                style = MaterialTheme.typography.titleLarge,
-            )
+            Text(text = getTitleText(monthYear), role = TextRole.ScreenTitle)
         }
         Row {
-            IconButton(onClick = onPreviousClick) {
-                Icon(
-                    MaterialSymbols.AutoMirroredRounded.KeyboardArrowLeft,
-                    stringResource(MR.strings.upcoming_calendar_prev),
-                )
-            }
-            IconButton(onClick = onNextClick) {
-                Icon(
-                    MaterialSymbols.AutoMirroredRounded.KeyboardArrowRight,
-                    stringResource(MR.strings.upcoming_calendar_next),
-                )
-            }
+            IconButton(
+                icon = MaterialSymbols.AutoMirroredRounded.KeyboardArrowLeft,
+                contentDescription = stringResource(MR.strings.upcoming_calendar_prev),
+                onClick = onPreviousClick,
+            )
+            IconButton(
+                icon = MaterialSymbols.AutoMirroredRounded.KeyboardArrowRight,
+                contentDescription = stringResource(MR.strings.upcoming_calendar_next),
+                onClick = onNextClick,
+            )
         }
     }
 }
@@ -103,9 +98,11 @@ private fun getTitleText(monthYear: YearMonth): String {
 @Preview
 @Composable
 private fun CalenderHeaderPreview() {
-    CalenderHeader(
-        yearMonth = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date.yearMonth,
-        onNextClick = {},
-        onPreviousClick = {},
-    )
+    KatariPreviewTheme {
+        CalenderHeader(
+            yearMonth = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date.yearMonth,
+            onNextClick = {},
+            onPreviousClick = {},
+        )
+    }
 }

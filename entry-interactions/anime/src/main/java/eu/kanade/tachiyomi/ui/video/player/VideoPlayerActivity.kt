@@ -32,18 +32,8 @@ import androidx.activity.viewModels
 import androidx.annotation.OptIn
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -55,9 +45,8 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.core.view.WindowCompat
@@ -75,6 +64,7 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaSession
 import androidx.media3.ui.PlayerView
+import dev.zacsweers.metrox.viewmodel.ViewModelGraph
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerErrorOverlay
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerLoadingOverlay
@@ -90,20 +80,19 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import logcat.LogPriority
+import mihon.core.metro.metroGraph
 import mihon.entry.interactions.anime.R
+import mihon.entry.interactions.runtime.EntryInteractionActivityGraph
 import mihon.entry.interactions.settings.AnimePlayerPreferences
 import mihon.entry.interactions.source.EntryChildWebViewAction
 import mihon.entry.interactions.source.EntryChildWebViewResolution
 import mihon.entry.interactions.source.launchEntryChildWebViewAction
 import mihon.entry.viewer.settings.ViewerSettingBinder
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.automirroredrounded.ArrowBack
+import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.i18n.*
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 import java.util.IdentityHashMap
 import kotlin.math.abs
 import kotlin.math.pow
@@ -167,11 +156,12 @@ private fun Throwable.formatForPlaybackError(prefix: String = "Cause"): String {
 
 class VideoPlayerActivity : AppCompatActivity() {
 
-    private val viewModel by viewModels<VideoPlayerViewModel>()
-    private val networkHelper: NetworkHelper by lazy { Injekt.get() }
-    private val mediaCache: VideoPlayerMediaCache by lazy { Injekt.get() }
-    private val animePlayerPreferences: AnimePlayerPreferences by lazy { Injekt.get() }
-    private val viewerSettingBinder: ViewerSettingBinder by lazy { Injekt.get() }
+    private val viewModel by viewModels<VideoPlayerViewModel> { metroGraph<ViewModelGraph>().metroViewModelFactory }
+    private val dependencies by lazy { metroGraph<AnimePlayerGraph>().animePlayerDependencies }
+    private val networkHelper: NetworkHelper by lazy { dependencies.networkHelper }
+    private val mediaCache: VideoPlayerMediaCache by lazy { dependencies.mediaCache }
+    private val animePlayerPreferences: AnimePlayerPreferences by lazy { dependencies.animePlayerPreferences }
+    private val viewerSettingBinder: ViewerSettingBinder by lazy { dependencies.viewerSettingBinder }
     private val pictureInPictureSetting by lazy {
         viewerSettingBinder.bind(animePlayerPreferences.pictureInPictureSetting)
     }
@@ -197,6 +187,9 @@ class VideoPlayerActivity : AppCompatActivity() {
     private var playbackVolumeLevel by mutableStateOf(0)
     private var playbackVolumeMaxLevel by mutableStateOf(1)
     private var controlsLocked by mutableStateOf(false)
+
+    // Applied once the player exists, as an intent can arrive before the stream has been resolved.
+    private var pendingPausedStartMs by mutableStateOf<Long?>(null)
     private var pictureInPictureActionReceiverRegistered = false
     private var brightnessObserverRegistered = false
     private val brightnessObserver = object : ContentObserver(Handler(Looper.getMainLooper())) {
@@ -216,7 +209,8 @@ class VideoPlayerActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        registerAnimePlayerSecureScreen()
+        val activityGraph = metroGraph<EntryInteractionActivityGraph>()
+        registerAnimePlayerSecureScreen(activityGraph.readerBasePreferences, activityGraph.securityPreferences)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             overrideActivityTransition(
                 Activity.OVERRIDE_TRANSITION_OPEN,
@@ -238,7 +232,6 @@ class VideoPlayerActivity : AppCompatActivity() {
             }
         }
         WindowCompat.setDecorFitsSystemWindows(window, false)
-        window.decorView.setBackgroundColor(android.graphics.Color.BLACK)
         windowInsetsController.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         hideSystemUi()
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
@@ -275,6 +268,11 @@ class VideoPlayerActivity : AppCompatActivity() {
                 networkHelper = networkHelper,
             )
         }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        pausedStartPositionMs(intent)?.let { pendingPausedStartMs = it }
     }
 
     override fun finish() {
@@ -741,6 +739,14 @@ class VideoPlayerActivity : AppCompatActivity() {
                     updatePictureInPictureParams(playbackSnapshot)
                 }
 
+                // After the effect above, which starts every new player playing.
+                LaunchedEffect(currentPlayer, pendingPausedStartMs) {
+                    val positionMs = pendingPausedStartMs ?: return@LaunchedEffect
+                    pendingPausedStartMs = null
+                    currentPlayer.playWhenReady = false
+                    currentPlayer.seekTo(positionMs)
+                }
+
                 LaunchedEffect(current.playback.currentAdaptiveQuality, currentPlayer) {
                     currentPlayer.applyAdaptiveQuality(current.playback.currentAdaptiveQuality)
                 }
@@ -1024,23 +1030,24 @@ class VideoPlayerActivity : AppCompatActivity() {
                         onNextEpisode()
                     }
                 }
+                val mediaColor = KatariTheme.colors.media
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(Color.Black),
+                        .background(mediaColor),
                 ) {
                     AndroidView(
                         modifier = Modifier
                             .fillMaxSize()
-                            .background(Color.Black),
+                            .background(mediaColor),
                         factory = { androidContext ->
                             PlayerView(androidContext).apply {
                                 player = controllerPlayer
                                 setKeepContentOnPlayerReset(true)
                                 useController = false
                                 setEnableComposeSurfaceSyncWorkaround(true)
-                                setShutterBackgroundColor(android.graphics.Color.BLACK)
-                                setBackgroundColor(android.graphics.Color.BLACK)
+                                setShutterBackgroundColor(mediaColor.toArgb())
+                                setBackgroundColor(mediaColor.toArgb())
                                 layoutParams = ViewGroup.LayoutParams(
                                     ViewGroup.LayoutParams.MATCH_PARENT,
                                     ViewGroup.LayoutParams.MATCH_PARENT,
@@ -1476,6 +1483,7 @@ class VideoPlayerActivity : AppCompatActivity() {
 
                     if (playerErrorMessage != null && !isInPictureInPictureMode && !subtitleEditorVisible) {
                         VideoPlayerErrorOverlay(
+                            title = stringResource(MR.strings.anime_playback_error),
                             message = playerErrorMessage!!,
                             onBack = ::finish,
                             onRetry = {
@@ -1566,53 +1574,14 @@ class VideoPlayerActivity : AppCompatActivity() {
                 }
             }
             is VideoPlayerViewModel.State.Error -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color.Black),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.padding(24.dp),
-                    ) {
-                        Text(
-                            text = "Unable to open video",
-                            color = Color.White,
-                            style = MaterialTheme.typography.headlineSmall,
-                        )
-                        Text(
-                            text = current.message,
-                            color = Color.White.copy(alpha = 0.84f),
-                            modifier = Modifier.padding(top = 12.dp),
-                            style = MaterialTheme.typography.bodyMedium,
-                        )
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
-                            modifier = Modifier.padding(top = 24.dp),
-                        ) {
-                            TextButton(onClick = ::finish) {
-                                Text(
-                                    text = stringResource(MR.strings.action_cancel),
-                                    color = Color.White,
-                                )
-                            }
-                            Button(onClick = viewModel::retry) {
-                                Text(text = stringResource(MR.strings.action_retry))
-                            }
-                        }
-                        IconButton(
-                            onClick = ::finish,
-                            modifier = Modifier.padding(top = 16.dp),
-                        ) {
-                            Icon(
-                                imageVector = MaterialSymbols.AutoMirroredRounded.ArrowBack,
-                                contentDescription = "Back",
-                                tint = Color.White,
-                            )
-                        }
-                    }
-                }
+                VideoPlayerErrorOverlay(
+                    title = stringResource(MR.strings.anime_playback_open_failed),
+                    message = current.message,
+                    onBack = ::finish,
+                    onRetry = viewModel::retry,
+                    onCancel = ::finish,
+                    modifier = Modifier.fillMaxSize(),
+                )
             }
         }
     }

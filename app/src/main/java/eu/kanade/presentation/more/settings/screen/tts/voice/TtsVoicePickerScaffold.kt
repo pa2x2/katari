@@ -1,24 +1,18 @@
 package eu.kanade.presentation.more.settings.screen.tts.voice
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import eu.kanade.presentation.components.AppBar
+import mihon.presentation.kit.button.Button
+import mihon.presentation.kit.feedback.EmptyScreen
+import mihon.presentation.kit.feedback.LoadingScreen
+import mihon.presentation.kit.navigation.AppBar
+import mihon.presentation.kit.navigation.Scaffold
+import mihon.presentation.kit.theme.KatariTheme
 import mihon.tts.ui.settings.TtsVoiceCatalogState
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.screens.LoadingScreen
 
 @Composable
 internal fun TtsVoicePickerScaffold(
@@ -77,25 +71,7 @@ private fun TtsVoiceCatalogMessage(
     onAction: () -> Unit,
     contentPadding: PaddingValues,
 ) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(contentPadding)
-            .padding(24.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            Text(
-                text = message,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Button(onClick = onAction) {
-                Text(action)
-            }
-        }
+    EmptyScreen(message = message, modifier = Modifier.padding(contentPadding)) {
+        Button(label = action, onClick = onAction, modifier = Modifier.padding(top = KatariTheme.spacing.xl))
     }
 }

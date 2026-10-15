@@ -2,12 +2,20 @@ package mihon.feature.migration.review
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.Assisted
+import dev.zacsweers.metro.AssistedFactory
+import dev.zacsweers.metro.AssistedInject
+import dev.zacsweers.metro.ContributesIntoMap
+import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
+import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
+import mihon.app.di.AppUiScope
 import mihon.feature.migration.session.SourceMigrationSessionStore
 import mihon.feature.migration.session.model.SourceMigrationCandidate
 import mihon.feature.migration.session.model.SourceMigrationDiscoveryDepth
@@ -15,18 +23,24 @@ import mihon.feature.migration.session.model.SourceMigrationSessionId
 import mihon.feature.migration.work.SourceMigrationWorkScheduler
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.domain.source.service.SourceManager
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
+@AssistedInject
 internal class SourceMigrationCandidateSheetViewModel(
-    private val sessionId: SourceMigrationSessionId,
-    private val sourceEntryId: Long,
-    private val sessionStore: SourceMigrationSessionStore = Injekt.get(),
-    private val targetSelector: SourceMigrationTargetSelector = Injekt.get(),
-    private val candidateEntryResolver: SourceMigrationCandidateEntryResolver = Injekt.get(),
-    private val workScheduler: SourceMigrationWorkScheduler = Injekt.get(),
-    private val sourceManager: SourceManager = Injekt.get(),
+    @Assisted private val sessionId: SourceMigrationSessionId,
+    @Assisted private val sourceEntryId: Long,
+    private val sessionStore: SourceMigrationSessionStore,
+    private val targetSelector: SourceMigrationTargetSelector,
+    private val candidateEntryResolver: SourceMigrationCandidateEntryResolver,
+    private val workScheduler: SourceMigrationWorkScheduler,
+    private val sourceManager: SourceManager,
 ) : ViewModel() {
+
+    @AssistedFactory
+    @ManualViewModelAssistedFactoryKey
+    @ContributesIntoMap(AppUiScope::class)
+    interface Factory : ManualViewModelAssistedFactory {
+        fun create(sessionId: SourceMigrationSessionId, sourceEntryId: Long): SourceMigrationCandidateSheetViewModel
+    }
 
     val state: StateFlow<SourceMigrationCandidateSheetState>
         field = MutableStateFlow<SourceMigrationCandidateSheetState>(SourceMigrationCandidateSheetState())

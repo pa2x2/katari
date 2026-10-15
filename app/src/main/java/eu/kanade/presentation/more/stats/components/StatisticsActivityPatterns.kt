@@ -9,15 +9,16 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.more.stats.data.StatsActivity
+import mihon.presentation.kit.content.StatisticsMetrics
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import java.text.NumberFormat
@@ -37,7 +38,7 @@ internal fun StatisticsActivityPatternsCard(
     val hasSessions = activity != null && activity.sessionCount > 0L
     val dash = "—"
     StatisticsSectionCard(title = stringResource(MR.strings.statistics_activity_patterns)) {
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s)) {
             PatternTileRow(
                 first = activity?.sessionCount?.let(NumberFormat.getIntegerInstance()::format) ?: dash,
                 firstLabel = stringResource(MR.strings.statistics_sessions),
@@ -59,7 +60,10 @@ internal fun StatisticsActivityPatternsCard(
 
 @Composable
 private fun PatternTileRow(first: String, firstLabel: String, second: String, secondLabel: String) {
-    Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    Row(
+        Modifier.fillMaxWidth().height(IntrinsicSize.Min),
+        horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
+    ) {
         StatisticsInsightTile(first, firstLabel, Modifier.weight(1f).fillMaxHeight())
         StatisticsInsightTile(second, secondLabel, Modifier.weight(1f).fillMaxHeight())
     }
@@ -94,8 +98,8 @@ private fun ActivityRhythm(
 
     Text(
         text = headline,
-        modifier = Modifier.padding(top = 20.dp, bottom = 10.dp),
-        style = MaterialTheme.typography.titleSmall,
+        modifier = Modifier.padding(top = KatariTheme.spacing.xl, bottom = KatariTheme.spacing.m),
+        role = TextRole.Label,
     )
     StatisticsRhythmBars(
         values = hourly,
@@ -103,13 +107,13 @@ private fun ActivityRhythm(
         highlightIndex = peak,
         color = color,
         description = headline,
-        barAreaHeight = 64.dp,
+        barAreaHeight = StatisticsMetrics.rhythmHeight,
     )
     busiestDay?.let {
         Text(
             text = it,
-            modifier = Modifier.padding(top = 16.dp, bottom = 10.dp),
-            style = MaterialTheme.typography.titleSmall,
+            modifier = Modifier.padding(top = KatariTheme.spacing.l, bottom = KatariTheme.spacing.m),
+            role = TextRole.Label,
         )
         StatisticsRhythmBars(
             values = dayValues,
@@ -117,7 +121,7 @@ private fun ActivityRhythm(
             highlightIndex = busiestIndex,
             color = color,
             description = it,
-            barAreaHeight = 48.dp,
+            barAreaHeight = StatisticsMetrics.rhythmCompactHeight,
         )
     }
 }

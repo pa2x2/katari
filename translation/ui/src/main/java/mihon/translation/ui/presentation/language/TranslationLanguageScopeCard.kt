@@ -2,18 +2,19 @@ package mihon.translation.ui.presentation.language
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import mihon.language.api.tag.LanguageTag
+import mihon.presentation.kit.button.Button
+import mihon.presentation.kit.button.ButtonStyle
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.surface.Surface
+import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import mihon.translation.ui.picker.language.displayName
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -22,7 +23,6 @@ import tachiyomi.presentation.core.i18n.stringResource
  * Tells the reader that the content keeps its own [kept] target, with ways to follow the [defaultTarget] again or
  * to make [kept] the default for everything.
  */
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun TranslationLanguageScopeCard(
     kept: LanguageTag,
@@ -31,25 +31,31 @@ internal fun TranslationLanguageScopeCard(
     onUseForAll: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val spacing = KatariTheme.spacing
     Surface(
         modifier = modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.medium,
-        color = MaterialTheme.colorScheme.secondaryContainer,
+        container = SurfaceContainer.SecondaryContainer,
+        shape = KatariTheme.shapes.medium,
     ) {
-        Column(modifier = Modifier.padding(start = 16.dp, top = 12.dp, end = 8.dp, bottom = 4.dp)) {
+        // The text buttons carry their own inset, so the end and bottom padding is smaller.
+        Column(modifier = Modifier.padding(start = spacing.l, top = spacing.m, end = spacing.s, bottom = spacing.xs)) {
             Text(
                 text = stringResource(MR.strings.translation_language_series_scope, kept.displayName()),
-                style = MaterialTheme.typography.bodyMedium,
+                role = TextRole.Body,
             )
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(spacing.xs)) {
                 defaultTarget?.let { target ->
-                    TextButton(onClick = onUseDefault) {
-                        Text(stringResource(MR.strings.translation_language_use_default, target.displayName()))
-                    }
+                    Button(
+                        label = stringResource(MR.strings.translation_language_use_default, target.displayName()),
+                        onClick = onUseDefault,
+                        style = ButtonStyle.Text,
+                    )
                 }
-                TextButton(onClick = onUseForAll) {
-                    Text(stringResource(MR.strings.translation_language_use_for_all_series))
-                }
+                Button(
+                    label = stringResource(MR.strings.translation_language_use_for_all_series),
+                    onClick = onUseForAll,
+                    style = ButtonStyle.Text,
+                )
             }
         }
     }

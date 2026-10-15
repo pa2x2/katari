@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -32,20 +33,17 @@ import androidx.preference.getOnBindEditTextListener
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.core.util.ifSourcesLoaded
-import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.data.preference.SharedPreferencesDataStore
 import eu.kanade.tachiyomi.widget.TachiyomiTextInputEditText.Companion.setIncognito
 import logcat.LogPriority
-import mihon.entry.interactions.source.EntrySourceSettingsFeature
+import mihon.app.di.appGraph
 import mihon.entry.interactions.source.EntrySourceSettingsPopulateResult
 import mihon.entry.interactions.source.EntrySourceSettingsResolution
+import mihon.presentation.kit.feedback.LoadingScreen
+import mihon.presentation.kit.navigation.AppBar
+import mihon.presentation.kit.navigation.Scaffold
 import tachiyomi.core.common.util.system.logcat
-import tachiyomi.domain.source.service.SourceManager
-import tachiyomi.presentation.core.components.material.Scaffold
-import tachiyomi.presentation.core.screens.LoadingScreen
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
 class SourcePreferencesScreen(val sourceId: Long) : Screen() {
 
@@ -58,11 +56,12 @@ class SourcePreferencesScreen(val sourceId: Long) : Screen() {
 
         val context = LocalContext.current
         val navigator = LocalNavigator.currentOrThrow
+        val sourceManager = remember { context.appGraph.sourceManager }
 
         Scaffold(
             topBar = {
                 AppBar(
-                    title = Injekt.get<SourceManager>().getOrStub(sourceId).toString(),
+                    title = sourceManager.getOrStub(sourceId).toString(),
                     navigateUp = navigator::pop,
                     scrollBehavior = it,
                 )
@@ -136,7 +135,7 @@ class SourcePreferencesFragment : PreferenceFragmentCompat() {
     private fun populateScreen(): PreferenceScreen {
         val sourceId = requireArguments().getLong(SOURCE_ID)
         val sourceScreen = preferenceManager.createPreferenceScreen(requireContext())
-        val settings = Injekt.get<EntrySourceSettingsFeature>().resolve(sourceId)
+        val settings = requireContext().appGraph.entrySourceSettingsFeature.resolve(sourceId)
 
         if (settings is EntrySourceSettingsResolution.Available) {
             val dataStore = SharedPreferencesDataStore(settings.preferences)

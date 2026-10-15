@@ -12,25 +12,23 @@ import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.domain.source.service.awaitInitialized
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
 /**
  * This class is used to persist active downloads across application restarts.
  */
 internal class DownloadStore(
     private val backend: MangaDownloadStoreBackend,
-    private val sourceManager: SourceManager = Injekt.get(),
-    private val json: Json = Injekt.get(),
-    private val entryRepository: EntryRepository = Injekt.get(),
-    private val entryChapterRepository: EntryChapterRepository = Injekt.get(),
+    private val sourceManager: SourceManager,
+    private val json: Json,
+    private val entryRepository: EntryRepository,
+    private val entryChapterRepository: EntryChapterRepository,
 ) {
     constructor(
         context: Context,
-        sourceManager: SourceManager = Injekt.get(),
-        json: Json = Injekt.get(),
-        entryRepository: EntryRepository = Injekt.get(),
-        entryChapterRepository: EntryChapterRepository = Injekt.get(),
+        sourceManager: SourceManager,
+        json: Json,
+        entryRepository: EntryRepository,
+        entryChapterRepository: EntryChapterRepository,
     ) : this(
         backend = SharedPreferencesMangaDownloadStoreBackend(
             context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE),

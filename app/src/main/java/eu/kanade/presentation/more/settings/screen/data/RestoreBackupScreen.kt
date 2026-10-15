@@ -7,25 +7,24 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.text.selection.SelectionContainer
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.withStyle
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import eu.kanade.presentation.components.AppBar
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.Assisted
+import dev.zacsweers.metro.AssistedFactory
+import dev.zacsweers.metro.AssistedInject
+import dev.zacsweers.metro.ContributesIntoMap
+import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
+import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
+import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 import eu.kanade.presentation.components.WarningBanner
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.data.backup.BackupFileValidator
@@ -35,13 +34,16 @@ import eu.kanade.tachiyomi.util.system.DeviceUtil
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
+import mihon.app.di.AppUiScope
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.list.CheckRow
+import mihon.presentation.kit.navigation.AppBar
+import mihon.presentation.kit.navigation.Scaffold
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.LabeledCheckbox
 import tachiyomi.presentation.core.components.LazyColumnWithAction
-import tachiyomi.presentation.core.components.SectionCard
-import tachiyomi.presentation.core.components.material.Scaffold
-import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
 
 class RestoreBackupScreen(
@@ -50,9 +52,8 @@ class RestoreBackupScreen(
 
     @Composable
     override fun Content() {
-        val context = LocalContext.current
         val navigator = LocalNavigator.currentOrThrow
-        val model = viewModel { RestoreBackupViewModel(context, uri) }
+        val model = assistedMetroViewModel<RestoreBackupViewModel, RestoreBackupViewModel.Factory> { create(uri) }
         val state by model.state.collectAsState()
 
         Scaffold(
@@ -81,10 +82,10 @@ class RestoreBackupScreen(
 
                 if (state.canRestore) {
                     item {
-                        SectionCard {
+                        BackupSectionCard {
                             RestoreOptions.options.forEach { option ->
-                                LabeledCheckbox(
-                                    label = stringResource(option.label),
+                                CheckRow(
+                                    title = stringResource(option.label),
                                     checked = option.getter(state.options),
                                     onCheckedChange = {
                                         model.toggle(option.setter, it)
@@ -106,72 +107,70 @@ class RestoreBackupScreen(
         error: Any?,
     ) {
         item {
-            SectionCard {
-                Column(
-                    modifier = Modifier.padding(horizontal = MaterialTheme.padding.medium),
-                    verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
-                ) {
-                    val msg = buildAnnotatedString {
+            BackupSectionCard {
+                SelectionContainer {
+                    Column(
+                        modifier = Modifier.padding(horizontal = KatariTheme.spacing.l),
+                        verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
+                    ) {
                         when (error) {
                             is MissingRestoreComponents -> {
-                                appendLine(stringResource(MR.strings.backup_restore_content_full))
+                                Text(stringResource(MR.strings.backup_restore_content_full))
                                 if (error.sources.isNotEmpty()) {
-                                    appendLine()
-                                    withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
-                                        appendLine(stringResource(MR.strings.backup_restore_missing_sources))
-                                    }
-                                    error.sources.joinTo(
-                                        this,
-                                        separator = "\n- ",
-                                        prefix = "- ",
+                                    RestoreErrorSection(
+                                        title = stringResource(MR.strings.backup_restore_missing_sources),
+                                        body = error.sources.joinToString(separator = "\n- ", prefix = "- "),
                                     )
                                 }
                                 if (error.trackers.isNotEmpty()) {
-                                    appendLine()
-                                    withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
-                                        appendLine(stringResource(MR.strings.backup_restore_missing_trackers))
-                                    }
-                                    error.trackers.joinTo(
-                                        this,
-                                        separator = "\n- ",
-                                        prefix = "- ",
+                                    RestoreErrorSection(
+                                        title = stringResource(MR.strings.backup_restore_missing_trackers),
+                                        body = error.trackers.joinToString(separator = "\n- ", prefix = "- "),
                                     )
                                 }
                             }
 
                             is InvalidRestore -> {
-                                withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
-                                    appendLine(stringResource(MR.strings.invalid_backup_file))
-                                }
-                                appendLine(error.uri.toString())
-
-                                appendLine()
-
-                                withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
-                                    appendLine(stringResource(MR.strings.invalid_backup_file_error))
-                                }
-                                appendLine(error.message)
+                                RestoreErrorSection(
+                                    title = stringResource(MR.strings.invalid_backup_file),
+                                    body = error.uri.toString(),
+                                )
+                                RestoreErrorSection(
+                                    title = stringResource(MR.strings.invalid_backup_file_error),
+                                    body = error.message,
+                                )
                             }
 
-                            else -> {
-                                appendLine(error.toString())
-                            }
+                            else -> Text(error.toString())
                         }
-                    }
-
-                    SelectionContainer {
-                        Text(text = msg)
                     }
                 }
             }
         }
     }
+
+    @Composable
+    private fun RestoreErrorSection(title: String, body: String) {
+        Column {
+            Text(title, role = TextRole.SectionTitle)
+            Text(body, role = TextRole.Body)
+        }
+    }
 }
 
-private class RestoreBackupViewModel(
+@AssistedInject
+internal class RestoreBackupViewModel(
+    @Assisted private val uri: String,
     private val context: Context,
-    private val uri: String,
+    private val backupFileValidator: BackupFileValidator,
 ) : ViewModel() {
+
+    @AssistedFactory
+    @ManualViewModelAssistedFactoryKey
+    @ContributesIntoMap(AppUiScope::class)
+    interface Factory : ManualViewModelAssistedFactory {
+        fun create(uri: String): RestoreBackupViewModel
+    }
 
     val state: StateFlow<RestoreBackupViewModel.State>
         field = MutableStateFlow<RestoreBackupViewModel.State>(State())
@@ -200,7 +199,7 @@ private class RestoreBackupViewModel(
 
     private suspend fun validate(uri: Uri) {
         val results = try {
-            BackupFileValidator(context).validate(uri)
+            backupFileValidator.validate(uri)
         } catch (e: Exception) {
             setError(
                 error = InvalidRestore(uri, e.message.toString()),

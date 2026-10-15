@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The showcase opens the video player paused on the frame it captures. -->
+    <bool name="video_player_accepts_paused_start">true</bool>
+</resources>

@@ -8,21 +8,19 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalContext
 import eu.kanade.presentation.more.settings.widget.ListPreferenceWidget
 import eu.kanade.presentation.more.settings.widget.SwitchPreferenceWidget
 import eu.kanade.presentation.more.settings.widget.TextPreferenceWidget
+import mihon.app.di.appGraph
 import mihon.feature.appupdate.AppUpdateBuild
-import mihon.feature.appupdate.AppUpdateController
-import mihon.feature.appupdate.AppUpdatePreferences
 import mihon.feature.appupdate.AppUpdateStatus
 import mihon.feature.appupdate.check.AppUpdateChannel
+import mihon.presentation.kit.progress.LoadingIndicator
+import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.LoadingIndicator
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
 /** About's update rows: the check with the update's state, and the two settings that shape it. */
 fun LazyListScope.appUpdateAboutItems() {
@@ -34,8 +32,9 @@ fun LazyListScope.appUpdateAboutItems() {
 
 @Composable
 private fun CheckForUpdatesItem() {
-    val controller = remember { Injekt.get<AppUpdateController>() }
-    val preferences = remember { Injekt.get<AppUpdatePreferences>() }
+    val context = LocalContext.current
+    val controller = remember { context.appGraph.appUpdateServices.controller }
+    val preferences = remember { context.appGraph.appUpdateServices.preferences }
     val state by controller.state.collectAsState()
     val lastCheckedAt by preferences.lastCheckedAt.collectAsState()
     val checking = state.status == AppUpdateStatus.Checking
@@ -45,7 +44,7 @@ private fun CheckForUpdatesItem() {
         subtitle = state.status.subtitle(state.update, lastCheckedAt),
         widget = {
             AnimatedVisibility(visible = checking) {
-                LoadingIndicator(modifier = Modifier.size(28.dp))
+                LoadingIndicator(modifier = Modifier.size(KatariTheme.sizes.icon))
             }
         },
         onPreferenceClick = {
@@ -60,7 +59,8 @@ private fun CheckForUpdatesItem() {
 
 @Composable
 private fun CheckOnLaunchItem() {
-    val preferences = remember { Injekt.get<AppUpdatePreferences>() }
+    val context = LocalContext.current
+    val preferences = remember { context.appGraph.appUpdateServices.preferences }
     val checkOnLaunch by preferences.checkOnLaunch.collectAsState()
     SwitchPreferenceWidget(
         title = stringResource(MR.strings.app_update_check_on_launch),
@@ -72,8 +72,9 @@ private fun CheckOnLaunchItem() {
 
 @Composable
 private fun UpdateChannelItem() {
-    val controller = remember { Injekt.get<AppUpdateController>() }
-    val preferences = remember { Injekt.get<AppUpdatePreferences>() }
+    val context = LocalContext.current
+    val controller = remember { context.appGraph.appUpdateServices.controller }
+    val preferences = remember { context.appGraph.appUpdateServices.preferences }
     val channel by preferences.channel.collectAsState()
     val entries = mapOf(
         AppUpdateChannel.STABLE to stringResource(MR.strings.app_update_channel_stable),

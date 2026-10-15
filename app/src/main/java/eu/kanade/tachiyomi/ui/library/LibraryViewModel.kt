@@ -3,7 +3,13 @@ package eu.kanade.tachiyomi.ui.library
 import android.content.Context
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.util.fastMap
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.ContributesIntoMap
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.binding
+import dev.zacsweers.metrox.viewmodel.ViewModelKey
 import eu.kanade.core.preference.PreferenceMutableState
 import eu.kanade.core.preference.asState
 import eu.kanade.presentation.entry.DownloadAction
@@ -14,7 +20,6 @@ import eu.kanade.tachiyomi.data.library.LibraryUpdateJob
 import eu.kanade.tachiyomi.data.library.LibraryUpdateProgress
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import eu.kanade.tachiyomi.source.entry.EntryType
-import eu.kanade.tachiyomi.source.getDisplayNameForEntryInfo
 import eu.kanade.tachiyomi.ui.base.viewmodel.GatedStateViewModel
 import eu.kanade.tachiyomi.ui.library.grouping.resolveLibraryPages
 import eu.kanade.tachiyomi.util.system.isReleaseBuildType
@@ -41,6 +46,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.flow.updateAndGet
+import mihon.app.di.AppUiScope
 import mihon.core.common.utils.mutate
 import mihon.entry.interactions.catalogue.EntryCatalogueFeature
 import mihon.entry.interactions.download.EntryBulkDownloadAction
@@ -73,6 +79,8 @@ import mihon.entry.interactions.merge.EntryMergePrepareIntent
 import mihon.entry.interactions.migration.EntryMigrationFeature
 import mihon.entry.interactions.migration.EntryMigrationSelectionResult
 import mihon.entry.interactions.migration.EntryMigrationSubject
+import mihon.entry.interactions.navigation.EntryContinueFeature
+import mihon.entry.interactions.presentation.EntryTypePresentationFeature
 import mihon.entry.interactions.state.EntryConsumptionFeature
 import mihon.entry.interactions.tracking.EntryTrackingAccount
 import mihon.entry.interactions.tracking.EntryTrackingCollectionTrack
@@ -111,38 +119,43 @@ import tachiyomi.domain.library.service.LibrarySortKey
 import tachiyomi.domain.library.service.librarySortComparator
 import tachiyomi.domain.library.update.model.EntryUpdateMode
 import tachiyomi.domain.library.update.repository.LibraryUpdateRulesRepository
+import tachiyomi.domain.source.service.SourceInfoNames
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.i18n.*
 import tachiyomi.source.local.LocalSource
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 import kotlin.random.Random
 import kotlin.time.Duration.Companion.seconds
 
+@Inject
+@ViewModelKey
+@ContributesIntoMap(AppUiScope::class, binding = binding<ViewModel>())
 class LibraryViewModel(
     private val context: Context,
-    private val getLibraryEntries: GetLibraryEntries = Injekt.get(),
-    private val getCategories: GetCategories = Injekt.get(),
-    private val getEntry: GetEntry = Injekt.get(),
-    private val setLibraryPinned: SetLibraryPinned = Injekt.get(),
-    private val setEntryCategories: SetEntryCategories = Injekt.get(),
-    private val entryChapterRepository: EntryChapterRepository = Injekt.get(),
-    private val libraryPreferences: LibraryPreferences = Injekt.get(),
-    private val updateRulesRepository: LibraryUpdateRulesRepository = Injekt.get(),
-    private val sourceManager: SourceManager = Injekt.get(),
-    private val downloadRuntime: EntryDownloadRuntimeFeature = Injekt.get(),
-    private val entryDownloadActionFeature: EntryDownloadActionFeature = Injekt.get(),
-    private val entryMigrationFeature: EntryMigrationFeature = Injekt.get(),
-    private val entryMergeFeature: EntryMergeFeature = Injekt.get(),
-    private val entryLibraryMembershipFeature: EntryLibraryMembershipFeature = Injekt.get(),
-    private val entryConsumptionFeature: EntryConsumptionFeature = Injekt.get(),
-    private val entryLibraryFilterFeature: EntryLibraryFilterFeature = Injekt.get(),
-    private val entryCatalogueFeature: EntryCatalogueFeature = Injekt.get(),
-    private val trackingFeature: EntryTrackingFeature = Injekt.get(),
-    private val profileStore: ProfileAwareStore = Injekt.get(),
-    private val profileDatabase: ProfileDatabase = Injekt.get(),
-    private val profileManager: ProfileManager = Injekt.get(),
-    private val entryProfileMoveFeature: EntryProfileMoveFeature = Injekt.get(),
+    private val getLibraryEntries: GetLibraryEntries,
+    private val getCategories: GetCategories,
+    private val getEntry: GetEntry,
+    private val setLibraryPinned: SetLibraryPinned,
+    private val setEntryCategories: SetEntryCategories,
+    private val entryChapterRepository: EntryChapterRepository,
+    private val libraryPreferences: LibraryPreferences,
+    private val updateRulesRepository: LibraryUpdateRulesRepository,
+    private val sourceManager: SourceManager,
+    private val sourceNames: SourceInfoNames,
+    private val entryTypePresentationFeature: EntryTypePresentationFeature,
+    private val downloadRuntime: EntryDownloadRuntimeFeature,
+    private val entryDownloadActionFeature: EntryDownloadActionFeature,
+    private val entryMigrationFeature: EntryMigrationFeature,
+    private val entryMergeFeature: EntryMergeFeature,
+    private val entryLibraryMembershipFeature: EntryLibraryMembershipFeature,
+    private val entryConsumptionFeature: EntryConsumptionFeature,
+    private val entryLibraryFilterFeature: EntryLibraryFilterFeature,
+    private val entryCatalogueFeature: EntryCatalogueFeature,
+    private val trackingFeature: EntryTrackingFeature,
+    private val profileStore: ProfileAwareStore,
+    private val profileDatabase: ProfileDatabase,
+    private val profileManager: ProfileManager,
+    private val entryProfileMoveFeature: EntryProfileMoveFeature,
+    private val entryContinueFeature: EntryContinueFeature,
 ) : GatedStateViewModel<LibraryViewModel.State>(State()) {
 
     val moveEvents = Channel<MoveEvent>(Channel.BUFFERED)
@@ -156,6 +169,12 @@ class LibraryViewModel(
     /** The running library update, whichever screen or schedule started it. */
     val updateProgress: StateFlow<LibraryUpdateProgress?> = LibraryUpdateJob.progressFlow(context)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5.seconds), null)
+
+    fun canContinue(type: EntryType): Boolean = entryContinueFeature.isApplicable(type)
+
+    suspend fun continueEntry(context: Context, entry: Entry) {
+        entryContinueFeature.continueEntry(context, entry)
+    }
 
     fun cancelUpdate() {
         viewModelScope.launchIO { LibraryUpdateJob.stop(context) }
@@ -288,7 +307,9 @@ class LibraryViewModel(
                                 grouping = grouping,
                                 libraryTitle = context.stringResource(MR.strings.label_library),
                                 entryTypeTitle = { entryType ->
-                                    context.stringResource(entryType.entryTypePresentation().displayNameLabel)
+                                    context.stringResource(
+                                        entryType.entryTypePresentation(entryTypePresentationFeature).displayNameLabel,
+                                    )
                                 },
                             )
                         },
@@ -647,7 +668,7 @@ class LibraryViewModel(
     }
 
     fun getSourceDisplayName(sourceId: Long): String {
-        return sourceManager.getDisplayInfo(sourceId).getDisplayNameForEntryInfo()
+        return sourceNames.of(sourceId)
     }
 
     fun showSettingsDialog() {
@@ -939,6 +960,7 @@ class LibraryViewModel(
                         id = item.entry.id,
                         reference = item.reference,
                         entry = item.entry,
+                        sourceName = getSourceDisplayName(item.entry.source),
                         isFromExistingMerge = item.removable,
                     )
                 }.toImmutableList(),
@@ -1053,6 +1075,7 @@ class LibraryViewModel(
         val id: Long,
         val reference: EntryMergeEditorEntryReference,
         val entry: Entry,
+        val sourceName: String,
         val isFromExistingMerge: Boolean,
     ) {
         val title: String
@@ -1060,9 +1083,6 @@ class LibraryViewModel(
 
         val subtitle: String
             get() = buildString {
-                val sourceName = Injekt.get<SourceManager>().getDisplayInfo(
-                    entry.source,
-                ).getDisplayNameForEntryInfo()
                 val creator = entry.author?.takeIf { it.isNotBlank() }
                     ?: entry.artist?.takeIf { it.isNotBlank() }
                 append(sourceName)

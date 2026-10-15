@@ -5,10 +5,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -21,10 +17,12 @@ import eu.kanade.domain.source.model.SourceFeedPreset
 import eu.kanade.tachiyomi.ui.browse.feed.FeedViewMode
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Fullscreen
+import mihon.presentation.kit.button.IconButton
+import mihon.presentation.kit.surface.HorizontalDivider
+import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.domain.source.model.Source
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
 
 /**
@@ -50,17 +48,17 @@ internal fun FeedNavigationBar(
 
     Column(
         modifier = modifier
-            .background(MaterialTheme.colorScheme.surface)
-            .padding(bottom = MaterialTheme.padding.small),
+            .background(KatariTheme.colors.surface)
+            .padding(bottom = KatariTheme.spacing.s),
     ) {
         HorizontalDivider()
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(
-                    start = MaterialTheme.padding.small,
-                    end = MaterialTheme.padding.small,
-                    top = MaterialTheme.padding.small,
+                    start = KatariTheme.spacing.s,
+                    end = KatariTheme.spacing.s,
+                    top = KatariTheme.spacing.s,
                 ),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -87,14 +85,11 @@ internal fun FeedNavigationBar(
                 modifier = Modifier.weight(1f),
             )
             IconButton(
+                icon = MaterialSymbols.Rounded.Fullscreen,
+                contentDescription = stringResource(MR.strings.browse_feed_enter_immersive),
                 onClick = { onFeedViewModeChange(FeedViewMode.Immersive) },
                 enabled = immersiveAvailable,
-            ) {
-                Icon(
-                    imageVector = MaterialSymbols.Rounded.Fullscreen,
-                    contentDescription = stringResource(MR.strings.browse_feed_enter_immersive),
-                )
-            }
+            )
             FeedDisplayModeButton(
                 displayMode = selectedDisplayMode,
                 onDisplayModeChange = onDisplayModeChange,

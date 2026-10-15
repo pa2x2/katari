@@ -1,28 +1,54 @@
 package eu.kanade.tachiyomi.ui.browse.migration.search
 
 import androidx.lifecycle.viewModelScope
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.Assisted
+import dev.zacsweers.metro.AssistedFactory
+import dev.zacsweers.metro.AssistedInject
+import dev.zacsweers.metro.ContributesIntoMap
+import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
+import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
 import eu.kanade.domain.source.service.SourcePreferences
+import eu.kanade.tachiyomi.extension.ExtensionManager
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.SearchItemResult
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.SearchViewModel
 import kotlinx.coroutines.launch
+import mihon.app.di.AppUiScope
 import mihon.entry.interactions.catalogue.EntryCatalogueFeature
 import mihon.entry.interactions.catalogue.EntryCatalogueSourceInfo
 import mihon.entry.interactions.migration.EntryMigrationFeature
 import mihon.entry.interactions.migration.EntryMigrationPreparationResult
 import mihon.entry.interactions.migration.EntryMigrationPrepareIntent
 import mihon.entry.interactions.migration.EntryMigrationSubject
+import tachiyomi.domain.entry.interactor.GetEntry
+import tachiyomi.domain.entry.interactor.NetworkToLocalEntry
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.repository.EntryRepository
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
+@AssistedInject
 class MigrateSearchViewModel(
-    val subject: EntryMigrationSubject,
-    private val entryRepository: EntryRepository = Injekt.get(),
-    private val sourcePreferences: SourcePreferences = Injekt.get(),
-    private val migration: EntryMigrationFeature = Injekt.get(),
-    private val catalogueFeature: EntryCatalogueFeature = Injekt.get(),
-) : SearchViewModel() {
+    @Assisted val subject: EntryMigrationSubject,
+    private val entryRepository: EntryRepository,
+    private val sourcePreferences: SourcePreferences,
+    private val migration: EntryMigrationFeature,
+    private val catalogueFeature: EntryCatalogueFeature,
+    extensionManager: ExtensionManager,
+    networkToLocalEntry: NetworkToLocalEntry,
+    getEntry: GetEntry,
+) : SearchViewModel(
+    extensionManager = extensionManager,
+    networkToLocalEntry = networkToLocalEntry,
+    getEntry = getEntry,
+    preferences = sourcePreferences,
+    catalogueFeature = catalogueFeature,
+) {
+
+    @AssistedFactory
+    @ManualViewModelAssistedFactoryKey
+    @ContributesIntoMap(AppUiScope::class)
+    interface Factory : ManualViewModelAssistedFactory {
+        fun create(subject: EntryMigrationSubject): MigrateSearchViewModel
+    }
 
     private val migrationSources by lazy { sourcePreferences.migrationSources.get() }
     private var entryType: eu.kanade.tachiyomi.source.entry.EntryType? = null

@@ -2,12 +2,17 @@ package eu.kanade.presentation.more.settings.screen.translation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.ContributesIntoMap
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metrox.viewmodel.ViewModelKey
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import mihon.app.di.AppUiScope
 import mihon.language.api.tag.LanguageTag
 import mihon.translation.api.TranslationFeature
 import mihon.translation.api.engine.TranslationEngineId
@@ -28,13 +33,14 @@ import mihon.translation.ui.session.TranslationSessionController
 import mihon.translation.ui.session.TranslationSessionEnvironmentController
 import mihon.translation.ui.session.TranslationSessionExecutionMode
 import mihon.translation.ui.session.TranslationSessionInput
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 import java.util.Locale
 
+@Inject
+@ViewModelKey
+@ContributesIntoMap(AppUiScope::class)
 internal class TranslationSettingsViewModel(
-    feature: TranslationFeature = Injekt.get(),
-    private val hostActions: TranslationHostActions = Injekt.get(),
+    feature: TranslationFeature,
+    private val hostActions: TranslationHostActions,
 ) : ViewModel() {
     private val environment = TranslationSessionEnvironmentController(hostActions, viewModelScope)
     val engines = environment.engineStates

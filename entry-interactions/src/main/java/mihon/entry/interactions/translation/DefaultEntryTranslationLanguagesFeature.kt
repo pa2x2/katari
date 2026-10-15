@@ -5,40 +5,17 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
-import mihon.entry.interactions.runtime.applicableProviderTypes
-import mihon.entry.interactions.state.EntryTranslationLanguagesProvider
-import mihon.feature.graph.FeatureGraphEvaluation
 import mihon.language.api.tag.LanguageTag
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryTranslationLanguages
 import tachiyomi.domain.entry.repository.EntryTranslationLanguagesRepository
 
 internal class DefaultEntryTranslationLanguagesFeature(
-    evaluation: FeatureGraphEvaluation,
+    private val applicableTypes: Set<EntryType>,
+    private val migrationTypes: Set<EntryType>,
     private val repository: EntryTranslationLanguagesRepository,
     private val clock: () -> Long = System::currentTimeMillis,
 ) : EntryTranslationLanguagesFeature {
-    private val applicableTypes = EntryTranslationLanguagesBehavior.entries
-        .map { behavior ->
-            evaluation.applicableProviderTypes<EntryTranslationLanguagesProvider>(
-                feature = ENTRY_TRANSLATION_LANGUAGES_FEATURE_ID,
-                integration = ENTRY_TRANSLATION_LANGUAGES_INTEGRATION_ID,
-                behaviorProjection = behavior.id,
-            )
-        }
-        .also { selected ->
-            check(selected.distinct().size <= 1) {
-                "Translation-language behaviors selected different provider sets: $selected"
-            }
-        }
-        .firstOrNull()
-        .orEmpty()
-    private val migrationTypes = evaluation.applicableProviderTypes<EntryTranslationLanguagesProvider>(
-        feature = ENTRY_TRANSLATION_LANGUAGES_FEATURE_ID,
-        integration = ENTRY_TRANSLATION_LANGUAGES_MIGRATION_INTEGRATION_ID,
-        behaviorProjection = EntryTranslationLanguagesMigrationBehavior.id,
-    )
-
     override fun isApplicable(type: EntryType): Boolean = type in applicableTypes
 
     override fun observe(entry: Entry): Flow<EntryTranslationLanguageChoices> {

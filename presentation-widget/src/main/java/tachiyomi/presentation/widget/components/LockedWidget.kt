@@ -2,8 +2,6 @@ package tachiyomi.presentation.widget.components
 
 import android.content.Intent
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceModifier
 import androidx.glance.LocalContext
 import androidx.glance.action.clickable
@@ -12,9 +10,9 @@ import androidx.glance.layout.Alignment
 import androidx.glance.layout.Box
 import androidx.glance.layout.padding
 import androidx.glance.text.Text
-import androidx.glance.text.TextAlign
-import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
+import mihon.presentation.kit.widget.WidgetMetrics
+import mihon.presentation.kit.widget.widgetNoteStyle
 import tachiyomi.core.common.Constants
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.*
@@ -31,16 +29,12 @@ fun LockedWidget(
     Box(
         modifier = modifier
             .clickable(actionStartActivity(intent))
-            .padding(8.dp),
+            .padding(WidgetMetrics.messageInset),
         contentAlignment = Alignment.Center,
     ) {
         Text(
             text = context.stringResource(MR.strings.appwidget_unavailable_locked),
-            style = TextStyle(
-                color = foreground,
-                fontSize = 12.sp,
-                textAlign = TextAlign.Center,
-            ),
+            style = widgetNoteStyle(foreground),
         )
     }
 }

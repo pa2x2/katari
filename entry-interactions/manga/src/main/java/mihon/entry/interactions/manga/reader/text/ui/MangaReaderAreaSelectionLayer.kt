@@ -10,11 +10,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -24,12 +19,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInWindow
-import androidx.compose.ui.unit.dp
+import mihon.presentation.kit.button.Button
+import mihon.presentation.kit.button.ButtonStyle
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.surface.Surface
+import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -46,7 +46,8 @@ internal fun MangaReaderAreaSelectionLayer(
     var origin by remember { mutableStateOf(Offset.Zero) }
     var start by remember { mutableStateOf<Offset?>(null) }
     var end by remember { mutableStateOf<Offset?>(null) }
-    val color = MaterialTheme.colorScheme.primary
+    val colors = KatariTheme.colors
+    val outlineWidth = KatariTheme.sizes.selectedBorder
 
     Box(
         modifier = modifier
@@ -85,28 +86,40 @@ internal fun MangaReaderAreaSelectionLayer(
             },
     ) {
         Canvas(modifier = Modifier.fillMaxSize()) {
-            drawRect(Color.Black.copy(alpha = 0.2f))
+            drawRect(colors.scrim)
             outline(start, end)?.let { rect ->
-                drawRect(color.copy(alpha = 0.2f), topLeft = rect.topLeft, size = rect.size)
-                drawRect(color, topLeft = rect.topLeft, size = rect.size, style = Stroke(width = 2.dp.toPx()))
+                drawRect(colors.selectionFill, topLeft = rect.topLeft, size = rect.size)
+                drawRect(
+                    colors.primary,
+                    topLeft = rect.topLeft,
+                    size = rect.size,
+                    style = Stroke(width = outlineWidth.toPx()),
+                )
             }
         }
         Surface(
             modifier = Modifier
                 .align(Alignment.TopCenter)
                 .safeDrawingPadding()
-                .padding(top = 16.dp),
-            shape = RoundedCornerShape(16.dp),
-            tonalElevation = 6.dp,
+                .padding(top = KatariTheme.spacing.l),
+            container = SurfaceContainer.Chrome,
+            shape = KatariTheme.shapes.large,
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = stringResource(MR.strings.reader_text_select_area_hint),
-                    modifier = Modifier.padding(start = 16.dp, top = 8.dp, bottom = 8.dp),
+                    modifier = Modifier.padding(
+                        start = KatariTheme.spacing.l,
+                        top = KatariTheme.spacing.s,
+                        bottom = KatariTheme.spacing.s,
+                    ),
+                    role = TextRole.ItemTitle,
                 )
-                TextButton(onClick = onCancel) {
-                    Text(stringResource(MR.strings.action_cancel))
-                }
+                Button(
+                    label = stringResource(MR.strings.action_cancel),
+                    onClick = onCancel,
+                    style = ButtonStyle.Text,
+                )
             }
         }
     }

@@ -6,21 +6,19 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
-import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.domain.ui.UiPreferences
-import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.more.LogoHeader
 import eu.kanade.presentation.more.settings.widget.TextPreferenceWidget
 import eu.kanade.presentation.util.LocalBackPress
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.BuildConfig
-import eu.kanade.tachiyomi.util.CrashLogUtil
 import eu.kanade.tachiyomi.util.lang.toDateTimestampString
 import eu.kanade.tachiyomi.util.system.copyToClipboard
 import eu.kanade.tachiyomi.util.system.isPreviewBuildType
@@ -29,18 +27,20 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
+import mihon.app.di.appGraph
 import mihon.feature.appupdate.AppUpdateBuild
 import mihon.feature.appupdate.ui.appUpdateAboutItems
 import mihon.icons.simpleicons.Github
 import mihon.icons.simpleicons.SimpleIcons
+import mihon.presentation.kit.navigation.AppBar
+import mihon.presentation.kit.navigation.Scaffold
+import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.core.common.Constants
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.LinkIcon
 import tachiyomi.presentation.core.components.ScrollbarLazyColumn
-import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
+import java.time.format.DateTimeFormatter
 import kotlin.time.Instant
 
 object AboutScreen : Screen() {
@@ -52,6 +52,7 @@ object AboutScreen : Screen() {
         val handleBack = LocalBackPress.current
         val navigator = LocalNavigator.currentOrThrow
         val scope = rememberCoroutineScope()
+        val uiPreferences = remember { context.appGraph.uiPreferences }
 
         Scaffold(
             topBar = { scrollBehavior ->
@@ -67,18 +68,21 @@ object AboutScreen : Screen() {
             ) {
                 item {
                     LogoHeader(
-                        iconPadding = PaddingValues(vertical = 56.dp),
+                        iconPadding = PaddingValues(vertical = KatariTheme.spacing.xxl + KatariTheme.spacing.xl),
                     )
                 }
 
                 item {
                     TextPreferenceWidget(
                         title = stringResource(MR.strings.version),
-                        subtitle = getVersionName(withBuildDate = true),
+                        subtitle = getVersionName(UiPreferences.dateFormat(uiPreferences.dateFormat.get())),
                         onPreferenceClick = {
                             scope.launch {
                                 // Loads the WebView package's label through the package manager
-                                val deviceInfo = withContext(Dispatchers.IO) { CrashLogUtil(context).getDebugInfo() }
+                                val deviceInfo =
+                                    withContext(Dispatchers.IO) {
+                                        context.appGraph.crashLogUtilFactory.create(context).getDebugInfo()
+                                    }
                                 context.copyToClipboard("Debug information", deviceInfo)
                             }
                         },
@@ -107,7 +111,7 @@ object AboutScreen : Screen() {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 8.dp),
+                            .padding(vertical = KatariTheme.spacing.s),
                         horizontalArrangement = Arrangement.Center,
                     ) {
                         LinkIcon(
@@ -121,12 +125,13 @@ object AboutScreen : Screen() {
         }
     }
 
-    fun getVersionName(withBuildDate: Boolean): String {
+    /** @param buildDateFormat appends the build date in this format, or null to leave it out. */
+    fun getVersionName(buildDateFormat: DateTimeFormatter? = null): String {
         return when {
             BuildConfig.DEBUG -> {
                 "Debug ${BuildConfig.COMMIT_SHA}".let {
-                    if (withBuildDate) {
-                        "$it (${getFormattedBuildTime()})"
+                    if (buildDateFormat != null) {
+                        "$it (${getFormattedBuildTime(buildDateFormat)})"
                     } else {
                         it
                     }
@@ -134,8 +139,8 @@ object AboutScreen : Screen() {
             }
             isPreviewBuildType -> {
                 "Beta r${BuildConfig.COMMIT_COUNT}".let {
-                    if (withBuildDate) {
-                        "$it (${BuildConfig.COMMIT_SHA}, ${getFormattedBuildTime()})"
+                    if (buildDateFormat != null) {
+                        "$it (${BuildConfig.COMMIT_SHA}, ${getFormattedBuildTime(buildDateFormat)})"
                     } else {
                         "$it (${BuildConfig.COMMIT_SHA})"
                     }
@@ -143,8 +148,8 @@ object AboutScreen : Screen() {
             }
             else -> {
                 "Stable ${BuildConfig.VERSION_NAME}".let {
-                    if (withBuildDate) {
-                        "$it (${getFormattedBuildTime()})"
+                    if (buildDateFormat != null) {
+                        "$it (${getFormattedBuildTime(buildDateFormat)})"
                     } else {
                         it
                     }
@@ -153,15 +158,11 @@ object AboutScreen : Screen() {
         }
     }
 
-    internal fun getFormattedBuildTime(): String {
+    internal fun getFormattedBuildTime(dateFormat: DateTimeFormatter): String {
         return try {
             Instant.parse(BuildConfig.BUILD_TIME)
                 .toLocalDateTime(TimeZone.currentSystemDefault())
-                .toDateTimestampString(
-                    UiPreferences.dateFormat(
-                        Injekt.get<UiPreferences>().dateFormat.get(),
-                    ),
-                )
+                .toDateTimestampString(dateFormat)
         } catch (_: Exception) {
             BuildConfig.BUILD_TIME
         }

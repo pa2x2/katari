@@ -1,128 +1,28 @@
 package eu.kanade.presentation.updates
 
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.sizeIn
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Icon
-import androidx.compose.material3.LocalContentColor
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.components.relativeDateText
 import eu.kanade.presentation.entry.InlineEntryTypeIndicator
 import eu.kanade.presentation.entry.components.ChapterDownloadAction
 import eu.kanade.presentation.entry.components.EntryChapterDownloadIndicator
-import eu.kanade.presentation.entry.components.EntryCover
 import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.presentation.entry.partialProgressLabel
 import eu.kanade.presentation.entry.translation.ChapterTranslateAction
-import eu.kanade.presentation.util.relativeTimeSpanString
 import eu.kanade.tachiyomi.ui.updates.UpdatesItem
 import mihon.entry.interactions.translate.EntryTranslateStatus
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.roundedfilled.Bookmark
-import mihon.icons.materialsymbols.roundedfilled.Circle
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.list.ChapterMarks
+import mihon.presentation.kit.list.SectionHeader
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.domain.updates.model.UpdateItem
-import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.DotSeparatorText
-import tachiyomi.presentation.core.components.ListGroupHeader
-import tachiyomi.presentation.core.components.material.DISABLED_ALPHA
-import tachiyomi.presentation.core.components.material.padding
-import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.util.selectedBackground
-import tachiyomi.domain.entry.model.EntryCover as EntryCoverData
-
-internal fun LazyListScope.updatesLastUpdatedItem(
-    lastUpdated: Long,
-    failed: Int,
-    pausedSources: List<String>,
-    onClick: (() -> Unit)?,
-) {
-    item(key = "updates-lastUpdated") {
-        UpdatesLastUpdatedHeader(
-            lastUpdated = lastUpdated,
-            failed = failed,
-            pausedSources = pausedSources,
-            onClick = onClick,
-            modifier = Modifier.animateItem(fadeInSpec = null, fadeOutSpec = null),
-        )
-    }
-}
-
-/**
- * @param failed entries the latest update failed to check, named so a failure is noticed without opening the report.
- * @param pausedSources the sources library updates leave out, named so a pause isn't forgotten.
- * @param onClick opens the latest update's report; null while there is none.
- */
-@Composable
-internal fun UpdatesLastUpdatedHeader(
-    lastUpdated: Long,
-    failed: Int,
-    pausedSources: List<String>,
-    onClick: (() -> Unit)?,
-    modifier: Modifier = Modifier,
-) {
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
-            .padding(horizontal = MaterialTheme.padding.medium, vertical = MaterialTheme.padding.small),
-    ) {
-        Row {
-            Text(
-                text = stringResource(MR.strings.updates_last_update_info, relativeTimeSpanString(lastUpdated)),
-                fontStyle = FontStyle.Italic,
-            )
-            if (failed > 0) {
-                Text(
-                    text = " · " + pluralStringResource(MR.plurals.library_updates_failed, failed, failed),
-                    fontStyle = FontStyle.Italic,
-                    color = MaterialTheme.colorScheme.error,
-                )
-            }
-        }
-        if (pausedSources.isNotEmpty()) {
-            Text(
-                text = pausedSourcesText(pausedSources),
-                fontStyle = FontStyle.Italic,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-    }
-}
-
-@Composable
-private fun pausedSourcesText(names: List<String>): String {
-    return when (names.size) {
-        1 -> stringResource(MR.strings.updates_paused_source, names[0])
-        2 -> stringResource(MR.strings.updates_paused_two_sources, names[0], names[1])
-        else -> pluralStringResource(MR.plurals.updates_paused_sources, names.size, names.size)
-    }
-}
 
 internal fun LazyListScope.unifiedUpdatesUiItems(
     uiModels: List<UpdatesUiModel<UpdatesItem>>,
@@ -157,9 +57,9 @@ internal fun LazyListScope.unifiedUpdatesUiItems(
     ) { model ->
         when (model) {
             is UpdatesUiModel.Header -> {
-                ListGroupHeader(
-                    modifier = Modifier.animateItem(),
+                SectionHeader(
                     text = relativeDateText(model.date),
+                    modifier = Modifier.animateItem(),
                 )
             }
             is UpdatesUiModel.Item -> UnifiedUpdatesUiItem(
@@ -185,77 +85,6 @@ internal fun LazyListScope.unifiedUpdatesUiItems(
                 onDownloadChapter = onDownloadChapter,
             )
         }
-    }
-}
-
-@Composable
-fun UpdatesBaseUiItem(
-    title: String,
-    memberTitle: String?,
-    coverData: EntryCoverData,
-    selected: Boolean,
-    read: Boolean,
-    onClick: () -> Unit,
-    onLongClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    onClickCover: (() -> Unit)? = null,
-    subtitle: @Composable RowScope.(Float) -> Unit,
-    trailing: (@Composable () -> Unit)? = null,
-) {
-    val haptic = LocalHapticFeedback.current
-    val textAlpha = if (read) DISABLED_ALPHA else 1f
-
-    Row(
-        modifier = modifier
-            .selectedBackground(selected)
-            .combinedClickable(
-                onClick = onClick,
-                onLongClick = {
-                    onLongClick()
-                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                },
-            )
-            .height(if (memberTitle != null) 72.dp else 56.dp)
-            .padding(horizontal = MaterialTheme.padding.medium),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        EntryCover.Square(
-            modifier = Modifier
-                .padding(vertical = 6.dp)
-                .fillMaxHeight(),
-            data = coverData,
-            onClick = onClickCover,
-        )
-
-        Column(
-            modifier = Modifier
-                .padding(horizontal = MaterialTheme.padding.medium)
-                .weight(1f),
-        ) {
-            Text(
-                text = title,
-                maxLines = 1,
-                style = MaterialTheme.typography.bodyMedium,
-                color = LocalContentColor.current.copy(alpha = textAlpha),
-                overflow = TextOverflow.Ellipsis,
-            )
-
-            memberTitle?.let {
-                Text(
-                    text = it,
-                    maxLines = 1,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = LocalContentColor.current.copy(alpha = textAlpha),
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
-
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                subtitle(textAlpha)
-            }
-        }
-
-        trailing?.invoke()
     }
 }
 
@@ -291,60 +120,35 @@ internal fun UnifiedUpdatesUiItem(
         },
         modifier = modifier,
         onClickCover = { onClickCover(item) }.takeIf { !selectionMode },
-        subtitle = { textAlpha ->
-            var textHeight by remember { mutableIntStateOf(0) }
-
-            update.entryType.InlineEntryTypeIndicator(
-                modifier = Modifier
-                    .padding(end = 4.dp),
+        subtitle = { tone ->
+            update.entryType.InlineEntryTypeIndicator()
+            ChapterMarks(
+                unread = !update.consumed,
+                bookmark = update is UpdateItem.EntryUpdate && update.update.bookmark,
+                unreadLabel = stringResource(update.entryType.entryTypePresentation().unconsumedIndicatorLabel),
+                role = TextRole.Supporting,
             )
-
-            if (!update.consumed) {
-                Icon(
-                    imageVector = MaterialSymbols.RoundedFilled.Circle,
-                    contentDescription = stringResource(
-                        update.entryType.entryTypePresentation().unconsumedIndicatorLabel,
-                    ),
-                    modifier = Modifier
-                        .height(8.dp)
-                        .padding(end = 4.dp),
-                    tint = MaterialTheme.colorScheme.primary,
-                )
-            }
-
-            if (update is UpdateItem.EntryUpdate && update.update.bookmark) {
-                Icon(
-                    imageVector = MaterialSymbols.RoundedFilled.Bookmark,
-                    contentDescription = stringResource(MR.strings.action_filter_bookmarked),
-                    modifier = Modifier
-                        .sizeIn(maxHeight = with(LocalDensity.current) { textHeight.toDp() - 2.dp }),
-                    tint = MaterialTheme.colorScheme.primary,
-                )
-                Spacer(modifier = Modifier.width(2.dp))
-            }
-
             val subtitleText = when (update) {
                 is UpdateItem.EntryUpdate -> update.update.chapterName
             }
             Text(
                 text = subtitleText,
-                maxLines = 1,
-                style = MaterialTheme.typography.bodySmall,
-                color = LocalContentColor.current.copy(alpha = textAlpha),
-                overflow = TextOverflow.Ellipsis,
-                onTextLayout = { textHeight = it.size.height },
                 modifier = Modifier.weight(weight = 1f, fill = false),
+                role = TextRole.Supporting,
+                tone = tone,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
 
             val readProgress = update.update.progressPosition
                 .takeIf { !update.update.read }
                 ?.let { update.entryType.partialProgressLabel(it) }
             if (readProgress != null) {
-                DotSeparatorText()
                 Text(
-                    text = readProgress,
+                    text = "• $readProgress",
+                    role = TextRole.Supporting,
+                    tone = ContentTone.Disabled,
                     maxLines = 1,
-                    color = LocalContentColor.current.copy(alpha = DISABLED_ALPHA),
                     overflow = TextOverflow.Ellipsis,
                 )
             }
@@ -353,7 +157,7 @@ internal fun UnifiedUpdatesUiItem(
             {
                 EntryChapterDownloadIndicator(
                     enabled = true,
-                    modifier = Modifier.padding(start = 4.dp),
+                    modifier = Modifier.padding(start = KatariTheme.spacing.xs),
                     downloadStateProvider = item.downloadStateProvider,
                     downloadProgressProvider = item.downloadProgressProvider,
                     onClick = { onDownloadChapter(listOf(item), it) },

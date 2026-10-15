@@ -1,5 +1,6 @@
 package tachiyomi.domain.entry.interactor
 
+import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
@@ -11,6 +12,7 @@ import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.service.EntryChildOwnershipResolutionPort
 import tachiyomi.domain.entry.service.mergedForDisplay
 
+@Inject
 class GetEntryWithChapters(
     private val entryChapterRepository: EntryChapterRepository,
     private val childOwnership: EntryChildOwnershipResolutionPort,

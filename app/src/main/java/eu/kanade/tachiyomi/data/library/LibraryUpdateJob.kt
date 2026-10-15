@@ -19,6 +19,7 @@ import androidx.work.WorkInfo
 import androidx.work.WorkQuery
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
+import dev.zacsweers.metro.Inject
 import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.tachiyomi.data.notification.Notifications
 import eu.kanade.tachiyomi.source.entry.EntryType
@@ -41,10 +42,13 @@ import kotlinx.coroutines.sync.withPermit
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import logcat.LogPriority
+import mihon.app.di.appGraph
 import mihon.entry.interactions.library.EntryLibraryUpdateRefreshFeature
 import mihon.entry.interactions.library.EntryLibraryUpdateRefreshRequest
 import mihon.entry.interactions.library.EntryLibraryUpdateRefreshResult
 import mihon.entry.interactions.merge.EntryMergeMetadataRefreshFeature
+import mihon.entry.interactions.presentation.EntryTypePresentationFeature
+import mihon.entry.interactions.state.EntryUpdateEligibilityFeature
 import mihon.feature.library.update.pause.LibrarySourcePauses
 import mihon.feature.library.update.planning.LibraryUpdateDecision
 import mihon.feature.library.update.planning.LibraryUpdatePlanner
@@ -75,8 +79,6 @@ import tachiyomi.domain.library.update.repository.LibraryUpdateReportRepository
 import tachiyomi.domain.library.update.repository.LibraryUpdateRulesRepository
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.i18n.*
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.TimeUnit
 import kotlin.concurrent.atomics.AtomicInt
@@ -88,23 +90,57 @@ import kotlin.time.Clock
 class LibraryUpdateJob(private val context: Context, workerParams: WorkerParameters) :
     CoroutineWorker(context, workerParams) {
 
-    private val sourceManager: SourceManager = Injekt.get()
-    private val libraryPreferences: LibraryPreferences = Injekt.get()
+    @Inject
+    private lateinit var sourceManager: SourceManager
+
+    @Inject
+    private lateinit var libraryPreferences: LibraryPreferences
+
+    @Inject
+    private lateinit var rulesRepository: LibraryUpdateRulesRepository
+
+    @Inject
+    private lateinit var eligibility: EntryUpdateEligibilityFeature
+
+    @Inject
+    private lateinit var reportRepository: LibraryUpdateReportRepository
+
+    @Inject
+    private lateinit var getLibraryEntries: GetLibraryEntries
+
+    @Inject
+    private lateinit var categoryRepository: CategoryRepository
+
+    @Inject
+    private lateinit var entryRepository: EntryRepository
+
+    @Inject
+    private lateinit var fetchInterval: FetchInterval
+
+    @Inject
+    private lateinit var entryLibraryUpdateRefreshFeature: EntryLibraryUpdateRefreshFeature
+
+    @Inject
+    private lateinit var mergeMetadataRefreshFeature: EntryMergeMetadataRefreshFeature
+
+    @Inject
+    private lateinit var notifier: LibraryUpdateNotifier
+
+    @Inject
+    private lateinit var activeProfileProvider: ActiveProfileProvider
+
+    @Inject
+    private lateinit var entryTypePresentationFeature: EntryTypePresentationFeature
+
+    init {
+        context.appGraph.inject(this)
+    }
 
     // Sources update concurrently, and getAndSet is a separate read and write
     private val newUpdatesCountLock = Any()
-    private val settingsReader = LibraryUpdateSettings.Reader(Injekt.get(), Injekt.get())
+    private val settingsReader = LibraryUpdateSettings.Reader(libraryPreferences, rulesRepository)
     private val sourcePauses = LibrarySourcePauses(libraryPreferences)
-    private val planner = LibraryUpdatePlanner(Injekt.get())
-    private val reportRepository: LibraryUpdateReportRepository = Injekt.get()
-    private val getLibraryEntries: GetLibraryEntries = Injekt.get()
-    private val categoryRepository: CategoryRepository = Injekt.get()
-    private val entryRepository: EntryRepository = Injekt.get()
-    private val fetchInterval: FetchInterval = Injekt.get()
-    private val entryLibraryUpdateRefreshFeature: EntryLibraryUpdateRefreshFeature = Injekt.get()
-    private val mergeMetadataRefreshFeature: EntryMergeMetadataRefreshFeature = Injekt.get()
-
-    private val notifier = LibraryUpdateNotifier(context)
+    private val planner = LibraryUpdatePlanner(eligibility)
 
     private val selectionFile = LibraryUpdateSelectionFile(context)
 
@@ -120,7 +156,7 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
     private var startedAt = 0L
 
     /** The profile this update runs for, so its failure notification opens that profile's report. */
-    private val profileId = Injekt.get<ActiveProfileProvider>().activeProfileId
+    private val profileId = activeProfileProvider.activeProfileId
 
     override suspend fun doWork(): Result {
         val automatic = tags.contains(WORK_NAME_AUTO)
@@ -128,8 +164,7 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
 
         if (automatic) {
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
-                val preferences = Injekt.get<LibraryPreferences>()
-                val restrictions = preferences.autoUpdateDeviceRestrictions.get()
+                val restrictions = libraryPreferences.autoUpdateDeviceRestrictions.get()
                 if ((DEVICE_ONLY_ON_WIFI in restrictions) && !context.isConnectedToWifi()) {
                     logcat(LogPriority.INFO) { "Skipping automatic library update because device is not on Wi-Fi" }
                     return Result.retry()
@@ -196,7 +231,9 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
                 ?.let { categoryRepository.get(it) }
                 ?.let { if (it.isSystemCategory) context.stringResource(MR.strings.label_default) else it.name },
             request.sourceId?.let { sourceManager.getDisplayInfo(it).visualName() },
-            request.entryType?.let { context.stringResource(it.entryTypePresentation().displayNameLabel) },
+            request.entryType?.let {
+                context.stringResource(it.entryTypePresentation(entryTypePresentationFeature).displayNameLabel)
+            },
         )
             .takeIf { it.isNotEmpty() }
             ?.joinToString(" · ")
@@ -223,7 +260,6 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
     }
 
     override suspend fun getForegroundInfo(): ForegroundInfo {
-        val notifier = LibraryUpdateNotifier(context)
         return ForegroundInfo(
             Notifications.ID_LIBRARY_PROGRESS,
             notifier.progressNotificationBuilder.build(),
@@ -574,10 +610,11 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
             context: Context,
             prefInterval: Int? = null,
         ) {
-            val preferences = Injekt.get<LibraryPreferences>()
+            val graph = context.appGraph
+            val preferences = graph.libraryPreferences
             val interval = LibraryUpdateSettings.schedulePeriodHours(
                 intervalHours = prefInterval ?: preferences.autoUpdateInterval.get(),
-                categoryRules = Injekt.get<LibraryUpdateRulesRepository>().getCategoryRules().values,
+                categoryRules = graph.libraryUpdateRulesRepository.getCategoryRules().values,
             )
             if (interval != null) {
                 val restrictions = preferences.autoUpdateDeviceRestrictions.get()

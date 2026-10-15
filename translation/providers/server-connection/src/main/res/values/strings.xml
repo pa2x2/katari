@@ -11,7 +11,6 @@
     <string name="translation_provider_status_testing">Testing connection</string>
     <string name="translation_provider_status_success">Connection successful</string>
     <string name="translation_provider_status_failure">Action required</string>
-    <string name="translation_provider_back">Back</string>
     <string name="translation_provider_show_api_key">Show API key</string>
     <string name="translation_provider_hide_api_key">Hide API key</string>
 </resources>

@@ -15,7 +15,6 @@ import mihon.entry.interactions.media.EntryPreviewHandle
 import mihon.entry.interactions.media.EntryPreviewSettings
 import mihon.entry.interactions.media.EntryPreviewSourceRequirement
 import mihon.entry.interactions.presentation.EntryTypePresentation
-import mihon.feature.graph.CapabilityId
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 
@@ -24,7 +23,7 @@ enum class EntryImmersiveLoadMode {
     FIRST_READING_CHILD,
 }
 
-interface EntryImmersiveProcessor : EntryInteractionProvider {
+interface EntryImmersiveProcessor {
     val loadMode: EntryImmersiveLoadMode
     val preloadRadius: Int
 
@@ -42,58 +41,33 @@ interface EntryImmersiveProcessor : EntryInteractionProvider {
     fun release(handle: EntryImmersiveHandle)
 }
 
-val EntryImmersiveCapability = entryInteractionCapability<EntryImmersiveProcessor>(
-    id = CapabilityId("entry.immersive"),
-)
-
-interface EntryChildListProcessor : EntryInteractionProvider {
+interface EntryChildListProcessor {
     fun sortedForReading(entry: Entry, chapters: List<EntryChapter>, memberIds: List<Long>): List<EntryChapter>
     fun sortedForDisplay(entry: Entry, chapters: List<EntryChapter>, memberIds: List<Long>): List<EntryChapter>
 }
 
-val EntryChildListCapability = entryInteractionCapability<EntryChildListProcessor>(
-    id = CapabilityId("entry.child-list"),
-)
-
-interface EntryChildProgressProcessor : EntryInteractionProvider {
+interface EntryChildProgressProcessor {
     fun progressLabels(request: EntryChildProgressRequest): Flow<Map<Long, EntryChildProgressLabel>>
 }
 
-val EntryChildProgressCapability = entryInteractionCapability<EntryChildProgressProcessor>(
-    id = CapabilityId("entry.child-progress-labels"),
-)
-
 /** Owns missing-child gap rows and counts when that media has meaningful sequential numbering. */
-interface EntryMissingChildGapProcessor : EntryInteractionProvider {
+interface EntryMissingChildGapProcessor {
     fun buildDisplayList(request: EntryChildListRequest): EntryChildListDisplay
 }
 
-val EntryMissingChildGapCapability = entryInteractionCapability<EntryMissingChildGapProcessor>(
-    id = CapabilityId("entry.missing-child-gaps"),
-)
-
-interface EntryChildGroupFilterProcessor : EntryInteractionProvider {
+interface EntryChildGroupFilterProcessor {
     fun groupFor(entry: Entry, chapter: EntryChapter): String?
     fun normalizeGroup(entry: Entry, group: String): String?
 }
 
-val EntryChildGroupFilterCapability = entryInteractionCapability<EntryChildGroupFilterProcessor>(
-    id = CapabilityId("entry.child-group-filter"),
-)
-
-interface EntryOutsideReleasePeriodFilterProvider : EntryInteractionProvider
-
-val EntryOutsideReleasePeriodFilterCapability =
-    entryInteractionCapability<EntryOutsideReleasePeriodFilterProvider>(
-        id = CapabilityId("entry.outside-release-period-filter"),
-    )
+interface EntryOutsideReleasePeriodFilterProvider
 
 enum class EntryPreviewLoadMode {
     ENTRY,
     FIRST_READING_CHILD,
 }
 
-interface EntryPreviewProcessor : EntryInteractionProvider {
+interface EntryPreviewProcessor {
     val loadMode: EntryPreviewLoadMode
     val sourceRequirement: EntryPreviewSourceRequirement
         get() = EntryPreviewSourceRequirement.NONE
@@ -110,25 +84,12 @@ interface EntryPreviewProcessor : EntryInteractionProvider {
     fun release(handle: EntryPreviewHandle)
 }
 
-val EntryPreviewCapability = entryInteractionCapability<EntryPreviewProcessor>(
-    id = CapabilityId("entry.preview"),
-)
-
-interface EntryPreviewConfigurationProvider : EntryInteractionProvider {
+interface EntryPreviewConfigurationProvider {
     val settings: EntryPreviewSettings
     fun config(): EntryPreviewConfig
     fun configChanges(): Flow<EntryPreviewConfig>
 }
 
-val EntryPreviewConfigurationCapability =
-    entryInteractionCapability<EntryPreviewConfigurationProvider>(
-        id = CapabilityId("entry.preview.configuration"),
-    )
-
-interface EntryTypePresentationProvider : EntryInteractionProvider {
+interface EntryTypePresentationProvider {
     val presentation: EntryTypePresentation
 }
-
-val EntryTypePresentationCapability = entryInteractionCapability<EntryTypePresentationProvider>(
-    id = CapabilityId("entry.type-presentation"),
-)

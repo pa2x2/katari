@@ -22,12 +22,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -43,12 +37,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastAll
 import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.util.fastMap
-import eu.kanade.presentation.components.AppSnackbarHost
-import eu.kanade.presentation.components.MissingChapterCountListItem
 import eu.kanade.presentation.components.relativeDateText
 import eu.kanade.presentation.entry.activity.EntryActivityLine
 import eu.kanade.presentation.entry.components.ChapterDownloadAction
@@ -60,7 +51,10 @@ import eu.kanade.presentation.entry.components.EntryContinueActions
 import eu.kanade.presentation.entry.components.EntryInfoBox
 import eu.kanade.presentation.entry.components.EntryToolbar
 import eu.kanade.presentation.entry.components.ExpandableEntryDescription
+import eu.kanade.presentation.entry.components.MergeNotice
 import eu.kanade.presentation.entry.components.MergedMemberHeader
+import eu.kanade.presentation.entry.components.MissingChapterCountListItem
+import eu.kanade.presentation.entry.components.preview.PreviewSizeUi
 import eu.kanade.presentation.entry.translation.ChapterTranslateAction
 import eu.kanade.presentation.entry.translation.EntryChapterTranslationUi
 import eu.kanade.presentation.entry.updates.EntryUpdatesLabel
@@ -71,17 +65,20 @@ import eu.kanade.tachiyomi.ui.entry.EntryViewModel
 import eu.kanade.tachiyomi.ui.entry.activity.EntryActivityViewModel
 import eu.kanade.tachiyomi.ui.entry.entrySelectionActionLabels
 import eu.kanade.tachiyomi.util.system.copyToClipboard
+import mihon.app.di.appGraph
 import mihon.entry.interactions.child.EntryChildProgressLabel
 import mihon.entry.interactions.download.EntryDownloadState
 import mihon.entry.interactions.translate.EntryTranslateStatus
+import mihon.presentation.kit.feedback.SnackbarHost
+import mihon.presentation.kit.feedback.SnackbarHostState
+import mihon.presentation.kit.navigation.Scaffold
+import mihon.presentation.kit.progress.PullRefresh
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.TwoPanelBox
 import tachiyomi.presentation.core.components.VerticalFastScroller
-import tachiyomi.presentation.core.components.material.PullRefresh
-import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
 import kotlin.time.Instant
 
@@ -146,7 +143,7 @@ fun EntryScreen(
     onAllChapterSelected: (Boolean) -> Unit,
     onInvertSelection: () -> Unit,
     entryPreviewEnabled: Boolean,
-    entryPreviewSize: eu.kanade.presentation.entry.components.PreviewSizeUi,
+    entryPreviewSize: PreviewSizeUi,
     entryPreviewState: EntryViewModel.EntryPreviewState,
     onPreviewExpandedChange: (Boolean) -> Unit,
     onPreviewRetry: () -> Unit,
@@ -334,7 +331,7 @@ private fun EntryScreenSmallImpl(
     onAllChapterSelected: (Boolean) -> Unit,
     onInvertSelection: () -> Unit,
     entryPreviewEnabled: Boolean,
-    entryPreviewSize: eu.kanade.presentation.entry.components.PreviewSizeUi,
+    entryPreviewSize: PreviewSizeUi,
     entryPreviewState: EntryViewModel.EntryPreviewState,
     onPreviewExpandedChange: (Boolean) -> Unit,
     onPreviewRetry: () -> Unit,
@@ -413,7 +410,7 @@ private fun EntryScreenSmallImpl(
                 fillFraction = 1f,
             )
         },
-        snackbarHost = { AppSnackbarHost(hostState = snackbarHostState) },
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         floatingActionButton = {
             onContinueReading?.let { continueAction ->
                 // Shown once progress is known, so it doesn't offer to start what is already being read.
@@ -636,7 +633,7 @@ fun EntryScreenLargeImpl(
     onAllChapterSelected: (Boolean) -> Unit,
     onInvertSelection: () -> Unit,
     entryPreviewEnabled: Boolean,
-    entryPreviewSize: eu.kanade.presentation.entry.components.PreviewSizeUi,
+    entryPreviewSize: PreviewSizeUi,
     entryPreviewState: EntryViewModel.EntryPreviewState,
     onPreviewExpandedChange: (Boolean) -> Unit,
     onPreviewRetry: () -> Unit,
@@ -711,7 +708,7 @@ fun EntryScreenLargeImpl(
                     .wrapContentWidth(Alignment.End),
             )
         },
-        snackbarHost = { AppSnackbarHost(hostState = snackbarHostState) },
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         floatingActionButton = {
             onContinueReading?.let { continueAction ->
                 // Shown once progress is known, so it doesn't offer to start what is already being read.
@@ -863,45 +860,6 @@ fun EntryScreenLargeImpl(
 }
 
 @Composable
-private fun MergeNotice(
-    onOpenMergedEntry: (() -> Unit)?,
-    onManageMerge: (() -> Unit)?,
-    modifier: Modifier = Modifier,
-) {
-    ElevatedCard(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            Text(
-                text = stringResource(MR.strings.merge_member_notice),
-                style = MaterialTheme.typography.bodyMedium,
-            )
-            onOpenMergedEntry?.let {
-                FilledTonalButton(
-                    onClick = it,
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Text(text = stringResource(MR.strings.action_open_merged_entry))
-                }
-            }
-            onManageMerge?.let {
-                OutlinedButton(
-                    onClick = it,
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Text(text = stringResource(MR.strings.action_manage_merge))
-                }
-            }
-        }
-    }
-}
-
-@Composable
 private fun SharedEntryBottomActionMenu(
     selected: List<EntryChapterList.Item>,
     childProgressLabels: Map<Long, EntryChildProgressLabel>,
@@ -914,9 +872,14 @@ private fun SharedEntryBottomActionMenu(
     fillFraction: Float,
     modifier: Modifier = Modifier,
 ) {
+    val presentationFeature = LocalContext.current.appGraph.entryTypePresentationFeature
     val selectionTypes = remember(selected) { selected.fastMap { it.entry.type } }
-    val selectionPresentation = remember(selectionTypes) { selectionTypes.selectionEntryTypePresentation() }
-    val selectionActionLabels = remember(selectionTypes) { selectionTypes.entrySelectionActionLabels() }
+    val selectionPresentation = remember(selectionTypes) {
+        selectionTypes.selectionEntryTypePresentation(presentationFeature)
+    }
+    val selectionActionLabels = remember(selectionTypes) {
+        selectionTypes.entrySelectionActionLabels(presentationFeature)
+    }
     EntryBottomActionMenu(
         visible = selected.isNotEmpty(),
         modifier = modifier.fillMaxWidth(fillFraction),

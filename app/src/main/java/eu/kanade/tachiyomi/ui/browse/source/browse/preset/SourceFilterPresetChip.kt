@@ -2,26 +2,11 @@ package eu.kanade.tachiyomi.ui.browse.source.browse.preset
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.AssistChipDefaults
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.ArrowDropDown
 import mihon.icons.materialsymbols.rounded.Bookmark
@@ -30,6 +15,11 @@ import mihon.icons.materialsymbols.rounded.Check
 import mihon.icons.materialsymbols.rounded.Delete
 import mihon.icons.materialsymbols.rounded.Edit
 import mihon.icons.materialsymbols.rounded.Save
+import mihon.presentation.kit.button.IconButton
+import mihon.presentation.kit.chip.AssistChip
+import mihon.presentation.kit.menu.DropdownMenu
+import mihon.presentation.kit.menu.DropdownMenuItem
+import mihon.presentation.kit.surface.HorizontalDivider
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -42,35 +32,17 @@ internal fun SourceFilterPresetChip(actions: SourceFilterPresetActions, canSave:
     var expanded by remember { mutableStateOf(false) }
     Box {
         AssistChip(
+            label = actions.currentPresetName ?: stringResource(MR.strings.filter_no_preset),
             onClick = { expanded = true },
+            icon = MaterialSymbols.Rounded.Bookmark,
+            trailingIcon = MaterialSymbols.Rounded.ArrowDropDown,
             enabled = actions.hasMenu,
-            label = {
-                Text(
-                    text = actions.currentPresetName ?: stringResource(MR.strings.filter_no_preset),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.widthIn(max = 160.dp),
-                )
-            },
-            leadingIcon = {
-                Icon(
-                    MaterialSymbols.Rounded.Bookmark,
-                    contentDescription = null,
-                    modifier = Modifier.size(AssistChipDefaults.IconSize),
-                )
-            },
-            trailingIcon = {
-                Icon(
-                    MaterialSymbols.Rounded.ArrowDropDown,
-                    contentDescription = stringResource(MR.strings.browse_filter_presets),
-                    modifier = Modifier.size(AssistChipDefaults.IconSize),
-                )
-            },
+            onClickLabel = stringResource(MR.strings.browse_filter_presets),
         )
         DropdownMenu(
-            modifier = Modifier.widthIn(min = 280.dp, max = 360.dp),
             expanded = expanded,
             onDismissRequest = { expanded = false },
+            wide = true,
         ) {
             fun closeThen(action: () -> Unit) {
                 expanded = false
@@ -78,33 +50,31 @@ internal fun SourceFilterPresetChip(actions: SourceFilterPresetActions, canSave:
             }
             actions.presets.forEach { preset ->
                 DropdownMenuItem(
-                    text = { Text(text = preset.displayName(), maxLines = 2, overflow = TextOverflow.Ellipsis) },
-                    leadingIcon = {
-                        if (preset.id == actions.currentPresetId) {
-                            Icon(MaterialSymbols.Rounded.Check, contentDescription = null)
-                        } else {
-                            Spacer(Modifier.width(24.dp))
-                        }
+                    label = preset.displayName(),
+                    onClick = { closeThen { actions.onApply(preset.id) } },
+                    icon = if (preset.id == actions.currentPresetId) {
+                        MaterialSymbols.Rounded.Check
+                    } else {
+                        MaterialSymbols.Rounded.Bookmark
                     },
-                    trailingIcon = {
-                        if (actions.canDelete(preset.id)) {
+                    trailing = if (actions.canDelete(preset.id)) {
+                        {
                             Row {
-                                IconButton(onClick = { closeThen { actions.onEdit(preset.id) } }) {
-                                    Icon(
-                                        MaterialSymbols.Rounded.Edit,
-                                        contentDescription = stringResource(MR.strings.action_edit),
-                                    )
-                                }
-                                IconButton(onClick = { closeThen { actions.onDelete(preset.id) } }) {
-                                    Icon(
-                                        MaterialSymbols.Rounded.Delete,
-                                        contentDescription = stringResource(MR.strings.action_delete),
-                                    )
-                                }
+                                IconButton(
+                                    icon = MaterialSymbols.Rounded.Edit,
+                                    contentDescription = stringResource(MR.strings.action_edit),
+                                    onClick = { closeThen { actions.onEdit(preset.id) } },
+                                )
+                                IconButton(
+                                    icon = MaterialSymbols.Rounded.Delete,
+                                    contentDescription = stringResource(MR.strings.action_delete),
+                                    onClick = { closeThen { actions.onDelete(preset.id) } },
+                                )
                             }
                         }
+                    } else {
+                        null
                     },
-                    onClick = { closeThen { actions.onApply(preset.id) } },
                 )
             }
             val onUpdateCurrent = actions.onUpdateCurrent
@@ -115,18 +85,18 @@ internal fun SourceFilterPresetChip(actions: SourceFilterPresetActions, canSave:
             }
             if (onUpdateCurrent != null && currentName != null) {
                 DropdownMenuItem(
-                    text = { Text(stringResource(MR.strings.browse_feed_update_current_preset, currentName)) },
-                    leadingIcon = { Icon(MaterialSymbols.Rounded.Save, contentDescription = null) },
-                    enabled = canSave,
+                    label = stringResource(MR.strings.browse_feed_update_current_preset, currentName),
                     onClick = { closeThen { onUpdateCurrent() } },
+                    icon = MaterialSymbols.Rounded.Save,
+                    enabled = canSave,
                 )
             }
             if (onSaveAsNew != null) {
                 DropdownMenuItem(
-                    text = { Text(stringResource(MR.strings.browse_feed_save_as_new_preset)) },
-                    leadingIcon = { Icon(MaterialSymbols.Rounded.BookmarkAdd, contentDescription = null) },
-                    enabled = canSave,
+                    label = stringResource(MR.strings.browse_feed_save_as_new_preset),
                     onClick = { closeThen { onSaveAsNew() } },
+                    icon = MaterialSymbols.Rounded.BookmarkAdd,
+                    enabled = canSave,
                 )
             }
         }

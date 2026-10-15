@@ -1,15 +1,20 @@
 package eu.kanade.tachiyomi.ui.entry
 
 import android.content.Context
-import androidx.compose.material3.SnackbarDuration
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.ui.util.fastAny
 import androidx.lifecycle.viewModelScope
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.Assisted
+import dev.zacsweers.metro.AssistedFactory
+import dev.zacsweers.metro.AssistedInject
+import dev.zacsweers.metro.ContributesIntoMap
+import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
+import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
 import eu.kanade.core.util.addOrRemove
 import eu.kanade.domain.entry.model.chaptersFiltered
+import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.domain.track.model.AutoTrackState
 import eu.kanade.domain.track.service.TrackPreferences
 import eu.kanade.presentation.entry.DownloadAction
@@ -53,6 +58,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import logcat.LogPriority
+import mihon.app.di.AppUiScope
 import mihon.entry.interactions.child.EntryChildGroupFilterFeature
 import mihon.entry.interactions.child.EntryChildGroupFilterObservationResult
 import mihon.entry.interactions.child.EntryChildGroupFilterResult
@@ -121,6 +127,7 @@ import mihon.entry.interactions.migration.EntryMigrationSelectionResult
 import mihon.entry.interactions.migration.EntryMigrationSubject
 import mihon.entry.interactions.navigation.EntryContinueFeature
 import mihon.entry.interactions.navigation.EntryContinueTargetResult
+import mihon.entry.interactions.presentation.EntryTypePresentationFeature
 import mihon.entry.interactions.source.EntrySourceRefreshFailure
 import mihon.entry.interactions.source.EntrySourceRefreshFeature
 import mihon.entry.interactions.source.EntrySourceRefreshRequest
@@ -133,7 +140,15 @@ import mihon.entry.interactions.tracking.EntryTrackingProgressInspection
 import mihon.entry.interactions.tracking.EntryTrackingProgressSynchronizationResult
 import mihon.entry.interactions.tracking.EntryTrackingRefreshResult
 import mihon.entry.interactions.tracking.EntryTrackingSession
+import mihon.entry.interactions.translate.EntryTranslateFeature
+import mihon.entry.interactions.translation.EntryTranslationLanguagesFeature
 import mihon.feature.library.search.librarySearchQuery
+import mihon.model.artifacts.api.ModelArtifactStore
+import mihon.presentation.kit.feedback.SnackbarDuration
+import mihon.presentation.kit.feedback.SnackbarHostState
+import mihon.presentation.kit.feedback.SnackbarResult
+import mihon.text.recognition.api.host.TextRecognitionHostActions
+import mihon.translation.api.host.TranslationHostActions
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.preference.CheckboxState
 import tachiyomi.core.common.preference.TriState
@@ -161,53 +176,69 @@ import tachiyomi.domain.entry.service.MergedMemberExpansion
 import tachiyomi.domain.entry.service.MergedMemberExpansionSession
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.source.model.SourceDisplayInfo
+import tachiyomi.domain.source.service.SourceInfoNames
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.domain.util.applyFilter
 import tachiyomi.i18n.*
 import tachiyomi.source.local.LocalSource
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 import kotlin.time.Duration.Companion.milliseconds
 
+@AssistedInject
 class EntryViewModel(
-    private val context: Context,
-    private val entryId: Long,
-    private val isFromSource: Boolean,
-    private val bypassMerge: Boolean = false,
-    private val libraryPreferences: LibraryPreferences = Injekt.get(),
-    private val duplicatePreferences: tachiyomi.domain.library.service.DuplicatePreferences = Injekt.get(),
-    trackPreferences: TrackPreferences = Injekt.get(),
-    private val downloadRuntime: EntryDownloadRuntimeFeature = Injekt.get(),
-    private val entryDownloadActionFeature: EntryDownloadActionFeature = Injekt.get(),
-    private val entryDownloadOptionsFeature: EntryDownloadOptionsFeature = Injekt.get(),
-    private val downloadMaintenance: EntryDownloadMaintenanceFeature = Injekt.get(),
-    private val entryMigrationFeature: EntryMigrationFeature = Injekt.get(),
-    private val entryConsumptionFeature: EntryConsumptionFeature = Injekt.get(),
-    private val entryBookmarkFeature: EntryBookmarkFeature = Injekt.get(),
-    private val entryContinueFeature: EntryContinueFeature = Injekt.get(),
-    private val entryPreviewFeature: EntryPreviewFeature = Injekt.get(),
-    private val entryChildListFeature: EntryChildListFeature = Injekt.get(),
-    private val entryChildGroupFilterFeature: EntryChildGroupFilterFeature = Injekt.get(),
-    private val entryMergeFeature: EntryMergeFeature = Injekt.get(),
-    private val entryMergeCandidateFeature: EntryMergeCandidateFeature = Injekt.get(),
-    private val entryMergeNavigationFeature: EntryMergeNavigationFeature = Injekt.get(),
-    private val entryMergeMetadataRefreshFeature: EntryMergeMetadataRefreshFeature = Injekt.get(),
-    private val entryLibraryMembershipFeature: EntryLibraryMembershipFeature = Injekt.get(),
-    private val getEntry: GetEntry = Injekt.get(),
-    private val getEntryWithChapters: GetEntryWithChapters = Injekt.get(),
-    private val getLibraryEntries: GetLibraryEntries = Injekt.get(),
-    private val setEntryChapterFlags: SetEntryChapterFlags = Injekt.get(),
-    private val setEntryCategories: SetEntryCategories = Injekt.get(),
-    private val updateEntry: UpdateEntry = Injekt.get(),
-    private val entryChapterRepository: EntryChapterRepository = Injekt.get(),
-    private val entryRepository: EntryRepository = Injekt.get(),
-    private val mergedMemberExpansionRepository: MergedMemberExpansionRepository = Injekt.get(),
-    private val categoryRepository: CategoryRepository = Injekt.get(),
-    private val sourceRefreshFeature: EntrySourceRefreshFeature = Injekt.get(),
-    private val entryTrackingFeature: EntryTrackingFeature = Injekt.get(),
-    private val sourceManager: SourceManager = Injekt.get(),
-    val snackbarHostState: SnackbarHostState = SnackbarHostState(),
+    @Assisted private val context: Context,
+    @Assisted private val entryId: Long,
+    @Assisted private val isFromSource: Boolean,
+    @Assisted private val bypassMerge: Boolean,
+    private val libraryPreferences: LibraryPreferences,
+    private val duplicatePreferences: tachiyomi.domain.library.service.DuplicatePreferences,
+    trackPreferences: TrackPreferences,
+    private val downloadRuntime: EntryDownloadRuntimeFeature,
+    private val entryDownloadActionFeature: EntryDownloadActionFeature,
+    private val entryDownloadOptionsFeature: EntryDownloadOptionsFeature,
+    private val downloadMaintenance: EntryDownloadMaintenanceFeature,
+    private val entryMigrationFeature: EntryMigrationFeature,
+    private val entryConsumptionFeature: EntryConsumptionFeature,
+    private val entryBookmarkFeature: EntryBookmarkFeature,
+    private val entryContinueFeature: EntryContinueFeature,
+    private val entryPreviewFeature: EntryPreviewFeature,
+    private val entryChildListFeature: EntryChildListFeature,
+    private val entryChildGroupFilterFeature: EntryChildGroupFilterFeature,
+    private val entryMergeFeature: EntryMergeFeature,
+    private val entryMergeCandidateFeature: EntryMergeCandidateFeature,
+    private val entryMergeNavigationFeature: EntryMergeNavigationFeature,
+    private val entryMergeMetadataRefreshFeature: EntryMergeMetadataRefreshFeature,
+    private val entryLibraryMembershipFeature: EntryLibraryMembershipFeature,
+    private val getEntry: GetEntry,
+    private val getEntryWithChapters: GetEntryWithChapters,
+    private val getLibraryEntries: GetLibraryEntries,
+    private val setEntryChapterFlags: SetEntryChapterFlags,
+    private val setEntryCategories: SetEntryCategories,
+    private val updateEntry: UpdateEntry,
+    private val entryChapterRepository: EntryChapterRepository,
+    private val entryRepository: EntryRepository,
+    private val mergedMemberExpansionRepository: MergedMemberExpansionRepository,
+    private val categoryRepository: CategoryRepository,
+    private val sourceRefreshFeature: EntrySourceRefreshFeature,
+    private val entryTrackingFeature: EntryTrackingFeature,
+    private val sourceManager: SourceManager,
+    private val sourceNames: SourceInfoNames,
+    private val sourcePreferences: SourcePreferences,
+    private val entryTypePresentationFeature: EntryTypePresentationFeature,
+    translateFeature: EntryTranslateFeature,
+    translationLanguages: EntryTranslationLanguagesFeature,
+    recognitionHost: TextRecognitionHostActions,
+    translationHost: TranslationHostActions,
+    modelStore: ModelArtifactStore,
 ) : GatedStateViewModel<EntryViewModel.State>(State.Loading) {
+
+    @AssistedFactory
+    @ManualViewModelAssistedFactoryKey
+    @ContributesIntoMap(AppUiScope::class)
+    interface Factory : ManualViewModelAssistedFactory {
+        fun create(context: Context, entryId: Long, isFromSource: Boolean, bypassMerge: Boolean): EntryViewModel
+    }
+
+    val snackbarHostState = SnackbarHostState()
 
     private val mergeTargetSearchController = MergeTargetSearchController<MergeTarget>(viewModelScope)
 
@@ -220,11 +251,11 @@ class EntryViewModel(
             val ids = chapters.mapTo(HashSet()) { it.id }
             startDownload(successState?.chapters.orEmpty().filter { it.id in ids }, startNow = false)
         },
-        feature = Injekt.get(),
-        languages = Injekt.get(),
-        recognitionHost = Injekt.get(),
-        translationHost = Injekt.get(),
-        modelStore = Injekt.get(),
+        feature = translateFeature,
+        languages = translationLanguages,
+        recognitionHost = recognitionHost,
+        translationHost = translationHost,
+        modelStore = modelStore,
     )
 
     private val successState: State.Success?
@@ -456,6 +487,7 @@ class EntryViewModel(
                     isRefreshingData = needRefreshInfo || needRefreshChapter,
                     dialog = null,
                     hideMissingChapters = libraryPreferences.hideMissingChapters.get(),
+                    downloadedOnly = libraryPreferences.downloadedOnly.get(),
                 )
             }
 
@@ -675,7 +707,7 @@ class EntryViewModel(
                     is EntryPreviewLoadResult.Disabled -> error("Preview was disabled before loading")
                     is EntryPreviewLoadResult.Inapplicable -> error("Preview is not supported for ${result.type}")
                     is EntryPreviewLoadResult.ContextuallyUnavailable -> error(
-                        context.stringResource(latestEntry.type.entryTypePresentation().noChildrenFoundLabel),
+                        context.stringResource(latestEntry.type.presentation().noChildrenFoundLabel),
                     )
                 }
             }.onSuccess { handle ->
@@ -839,7 +871,7 @@ class EntryViewModel(
                         EntrySourceRefreshFailure.NoChildren -> {
                             val entryType = successState?.entry?.type
                             showRefreshFailure(
-                                context.stringResource(entryType.entryTypePresentation().noChildrenFoundLabel),
+                                context.stringResource(entryType.presentation().noChildrenFoundLabel),
                             )
                             return
                         }
@@ -1564,7 +1596,7 @@ class EntryViewModel(
                 }
             }
             snackbarHostState.showSnackbar(
-                message = context.stringResource(entry.type.entryTypePresentation().settingsUpdatedLabel),
+                message = context.stringResource(entry.type.presentation().settingsUpdatedLabel),
             )
         }
     }
@@ -1796,7 +1828,7 @@ class EntryViewModel(
             val excludedIds = state.mergeGroupMemberIds.toSet()
             val targets = buildMergeTargets(
                 libraryItems = getLibraryEntries.await(),
-                sourceNames = Injekt.get(),
+                sourceNames = sourceNames,
                 entryType = state.entry.type,
                 excludedEntryIds = excludedIds,
             )
@@ -2180,6 +2212,8 @@ class EntryViewModel(
         }
     }
 
+    private fun EntryType?.presentation() = entryTypePresentation(entryTypePresentationFeature)
+
     private suspend fun getMergePresentation(entry: Entry): MergePresentation {
         val editor = getExistingMergeEditor(entry)
         val mergeGroupMemberIds = editor?.entries?.map { it.entry.id }.orEmpty()
@@ -2196,7 +2230,7 @@ class EntryViewModel(
             .map(Entry::source)
             .distinct()
             .map(sourceManager::getDisplayInfo)
-        val sourceNameById = sources.associate { it.id to it.getDisplayNameForEntryInfo() }
+        val sourceNameById = sources.associate { it.id to it.getDisplayNameForEntryInfo(sourcePreferences) }
         val sourceName = mergedSourceNames(sourceNameById.values.toList())
         return MergePresentation(
             sourceName = sourceName,
@@ -2404,6 +2438,7 @@ class EntryViewModel(
             val dialog: Dialog? = null,
             val hasPromptedToAddBefore: Boolean = false,
             val hideMissingChapters: Boolean = false,
+            val downloadedOnly: Boolean = false,
             val memberExpansion: MergedMemberExpansion = MergedMemberExpansion(),
             private val chapterPresentation: EntryChapterPresentation = buildChapterPresentation(
                 entry = entry,
@@ -2525,7 +2560,7 @@ class EntryViewModel(
                 get() = childGroupFilterState is EntryChildGroupFilterStateResult.Available
 
             val filterActive: Boolean
-                get() = scanlatorFilterActive || entry.chaptersFiltered()
+                get() = scanlatorFilterActive || entry.chaptersFiltered(downloadedOnly)
 
             val isPartOfMerge: Boolean
                 get() = mergeGroupMemberIds.size > 1

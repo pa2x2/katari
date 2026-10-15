@@ -2,19 +2,16 @@ package mihon.entry.interactions.book.document.reader.settings
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import mihon.entry.viewer.settings.ViewerSettingBinding
+import mihon.presentation.kit.list.ChoiceRow
+import mihon.presentation.kit.list.SectionHeader
+import mihon.presentation.kit.list.ToggleRow
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.CheckboxItem
-import tachiyomi.presentation.core.components.RadioItem
 import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable
@@ -29,12 +26,11 @@ internal fun BookDocumentReaderProgressSettings(
     val showProgressProfileDefault = showProgressSetting.profileValue ?: showProgressSetting.processorDefault
     val styleProfileDefault = styleSetting.profileValue ?: styleSetting.processorDefault
 
-    CheckboxItem(
-        label = stringResource(MR.strings.pref_book_document_reader_show_reading_progress),
+    ToggleRow(
+        title = stringResource(MR.strings.pref_book_document_reader_show_reading_progress),
         checked = showProgressSetting.effectiveValue,
-        onClick = {
+        onCheckedChange = { target ->
             scope.launch {
-                val target = !showProgressSetting.effectiveValue
                 if (target == showProgressProfileDefault) {
                     showProgressBinding.clearEntryOverride()
                 } else {
@@ -45,13 +41,10 @@ internal fun BookDocumentReaderProgressSettings(
     )
     AnimatedVisibility(visible = showProgressSetting.effectiveValue && showStyleOptions) {
         Column {
-            Text(
-                text = stringResource(MR.strings.pref_book_document_reader_reading_progress_style),
-                modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
-            )
+            SectionHeader(text = stringResource(MR.strings.pref_book_document_reader_reading_progress_style))
             BookDocumentReaderProgressStyle.entries.forEach { style ->
-                RadioItem(
-                    label = style.label(),
+                ChoiceRow(
+                    title = style.label(),
                     selected = styleSetting.effectiveValue == style,
                     onClick = {
                         scope.launch {

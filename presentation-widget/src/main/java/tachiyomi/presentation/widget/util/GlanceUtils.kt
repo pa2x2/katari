@@ -4,6 +4,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.glance.GlanceModifier
 import androidx.glance.appwidget.cornerRadius
+import mihon.presentation.kit.widget.WidgetMetrics
 import tachiyomi.presentation.widget.R
 
 fun GlanceModifier.appWidgetBackgroundRadius(): GlanceModifier {
@@ -34,7 +35,9 @@ fun DpSize.calculateRowAndColumnCount(
     // Hack: Size provided by Glance manager is not reliable so take at least 1 row and 1 column
     // Set max to 10 children each direction because of Glance limitation
     val height = this.height - topPadding - bottomPadding
-    val rowCount = (height.value / 95).toInt().coerceIn(1, 10)
-    val columnCount = (width.value / 64).toInt().coerceIn(1, 10)
+    val rowHeight = WidgetMetrics.coverHeight + WidgetMetrics.rowGap * 2
+    val columnWidth = WidgetMetrics.coverWidth + WidgetMetrics.coverGap * 2
+    val rowCount = (height / rowHeight).toInt().coerceIn(1, 10)
+    val columnCount = (width / columnWidth).toInt().coerceIn(1, 10)
     return Pair(rowCount, columnCount)
 }

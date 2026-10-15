@@ -1,5 +1,6 @@
 package mihon.entry.interactions.lifecycle.metadata
 
+import mihon.entry.interactions.lifecycle.EntryLifecycleConsequenceFailure
 import tachiyomi.domain.entry.model.Entry
 
 interface EntryMetadataLifecycleFeature {
@@ -9,11 +10,6 @@ interface EntryMetadataLifecycleFeature {
     ): EntryMetadataChangeResult
 }
 
-data class EntryMetadataChangedEvent(
-    val previous: Entry,
-    val current: Entry,
-)
-
 sealed interface EntryMetadataChangeResult {
     data object NoChange : EntryMetadataChangeResult
 
@@ -21,9 +17,3 @@ sealed interface EntryMetadataChangeResult {
         val failures: List<EntryLifecycleConsequenceFailure>,
     ) : EntryMetadataChangeResult
 }
-
-data class EntryLifecycleConsequenceFailure(
-    val participantId: String,
-    val ownerId: String,
-    val cause: Throwable,
-)

@@ -1,39 +1,23 @@
 package eu.kanade.presentation.library.update.report
 
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.unit.dp
-import dev.icerock.moko.resources.StringResource
-import eu.kanade.presentation.library.update.labelRes
 import eu.kanade.presentation.library.update.report.components.ActionChips
+import eu.kanade.presentation.library.update.report.components.CollapsibleReportSection
 import eu.kanade.presentation.library.update.report.components.FailingSourceGroup
 import eu.kanade.presentation.library.update.report.components.PauseChip
 import eu.kanade.presentation.library.update.report.components.PausedSourceGroup
 import eu.kanade.presentation.library.update.report.components.ReportRow
+import eu.kanade.presentation.library.update.report.components.ReportSectionHeader
+import eu.kanade.presentation.library.update.report.components.reasonGroups
+import eu.kanade.presentation.library.update.report.components.reasonSection
 import eu.kanade.presentation.util.relativeTimeSpanString
 import eu.kanade.tachiyomi.ui.library.update.report.LibraryUpdateReportViewModel
 import mihon.entry.interactions.migration.EntryMigrationSubject
@@ -43,17 +27,23 @@ import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.CheckCircle
 import mihon.icons.materialsymbols.rounded.Error
 import mihon.icons.materialsymbols.rounded.FiberNew
-import mihon.icons.materialsymbols.rounded.KeyboardArrowDown
-import mihon.icons.materialsymbols.rounded.KeyboardArrowUp
 import mihon.icons.materialsymbols.rounded.PauseCircle
 import mihon.icons.materialsymbols.rounded.Refresh
 import mihon.icons.materialsymbols.rounded.SkipNext
 import mihon.icons.materialsymbols.rounded.Warning
+import mihon.presentation.kit.button.Button
+import mihon.presentation.kit.button.ButtonStyle
+import mihon.presentation.kit.button.IconButton
+import mihon.presentation.kit.chip.AssistChip
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.progress.LinearProgressIndicator
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.library.update.model.EntryUpdateDecisionReason
 import tachiyomi.domain.library.update.model.LibraryUpdateTrigger
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -94,9 +84,12 @@ fun LibraryUpdateReportContent(
                     ),
                 )
                     .joinToString(" · "),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = MaterialTheme.padding.medium, vertical = 8.dp),
+                modifier = Modifier.padding(
+                    horizontal = KatariTheme.spacing.contentInset,
+                    vertical = KatariTheme.spacing.s,
+                ),
+                role = TextRole.Body,
+                tone = ContentTone.Secondary,
             )
         }
 
@@ -104,7 +97,7 @@ fun LibraryUpdateReportContent(
         val failingCount = repeatedSources.sumOf { it.items.size } + report.failingRepeatedly.size
         if (failingCount > 0) {
             item(key = "header-failing") {
-                SectionHeader(
+                ReportSectionHeader(
                     icon = MaterialSymbols.Rounded.Warning,
                     title = MR.strings.library_update_report_failing,
                     count = failingCount,
@@ -133,14 +126,14 @@ fun LibraryUpdateReportContent(
                     ActionChips {
                         if (migration != null) {
                             AssistChip(
+                                label = stringResource(MR.strings.action_migrate),
                                 onClick = { actions.onMigrate(listOf(migration)) },
-                                label = { Text(stringResource(MR.strings.action_migrate)) },
                             )
                         }
                         if (webView != null) {
                             AssistChip(
+                                label = stringResource(MR.strings.library_update_report_webview),
                                 onClick = { actions.onWebView(item.entry, webView) },
-                                label = { Text(stringResource(MR.strings.library_update_report_webview)) },
                             )
                         }
                         PauseChip(
@@ -156,7 +149,7 @@ fun LibraryUpdateReportContent(
         val failedCount = failedSources.sumOf { it.items.size } + report.failed.size
         if (failedCount > 0) {
             item(key = "header-failed") {
-                SectionHeader(
+                ReportSectionHeader(
                     icon = MaterialSymbols.Rounded.Error,
                     title = MR.strings.library_update_report_failed,
                     count = failedCount,
@@ -174,12 +167,11 @@ fun LibraryUpdateReportContent(
                     isError = true,
                     onClick = { actions.onClickEntry(item.entry) },
                     trailing = {
-                        IconButton(onClick = { actions.onRetry(listOf(item.entry)) }) {
-                            Icon(
-                                imageVector = MaterialSymbols.Rounded.Refresh,
-                                contentDescription = stringResource(MR.strings.library_update_report_retry),
-                            )
-                        }
+                        IconButton(
+                            icon = MaterialSymbols.Rounded.Refresh,
+                            contentDescription = stringResource(MR.strings.library_update_report_retry),
+                            onClick = { actions.onRetry(listOf(item.entry)) },
+                        )
                     },
                 )
             }
@@ -187,7 +179,7 @@ fun LibraryUpdateReportContent(
 
         if (report.newChapters.isNotEmpty()) {
             item(key = "header-new") {
-                SectionHeader(
+                ReportSectionHeader(
                     icon = MaterialSymbols.Rounded.FiberNew,
                     title = MR.strings.library_update_report_new,
                     count = report.newChapters.size,
@@ -211,7 +203,7 @@ fun LibraryUpdateReportContent(
 
         if (report.noChanges.isNotEmpty()) {
             item(key = "no-changes") {
-                CollapsibleSection(
+                CollapsibleReportSection(
                     icon = MaterialSymbols.Rounded.CheckCircle,
                     title = MR.strings.library_update_report_no_changes,
                     items = report.noChanges,
@@ -229,30 +221,27 @@ fun LibraryUpdateReportContent(
         )
         if (report.skippedCount > 0) {
             item(key = "check-skipped") {
-                FilledTonalButton(
+                Button(
+                    label = pluralStringResource(
+                        MR.plurals.library_update_report_check_skipped,
+                        report.skippedCount,
+                        report.skippedCount,
+                    ),
                     onClick = actions.onCheckSkipped,
-                    modifier = Modifier.padding(horizontal = MaterialTheme.padding.medium, vertical = 8.dp),
-                ) {
-                    Icon(
-                        imageVector = MaterialSymbols.Rounded.Refresh,
-                        contentDescription = null,
-                        modifier = Modifier.padding(end = 8.dp),
-                    )
-                    Text(
-                        pluralStringResource(
-                            MR.plurals.library_update_report_check_skipped,
-                            report.skippedCount,
-                            report.skippedCount,
-                        ),
-                    )
-                }
+                    modifier = Modifier.padding(
+                        horizontal = KatariTheme.spacing.contentInset,
+                        vertical = KatariTheme.spacing.s,
+                    ),
+                    style = ButtonStyle.Tonal,
+                    icon = MaterialSymbols.Rounded.Refresh,
+                )
             }
         }
 
         val notCheckedCount = report.pausedSources.sumOf { it.items.size } + report.notChecked.values.sumOf { it.size }
         if (notCheckedCount > 0) {
             item(key = "header-not-checked") {
-                SectionHeader(
+                ReportSectionHeader(
                     icon = MaterialSymbols.Rounded.PauseCircle,
                     title = MR.strings.library_update_report_not_checked,
                     count = notCheckedCount,
@@ -275,15 +264,15 @@ fun LibraryUpdateReportContent(
             itemTrailing = { item ->
                 if (item.status.reason == EntryUpdateDecisionReason.ENTRY_NEVER) {
                     val paused = item.entry.id in state.pausedEntryIds
-                    TextButton(onClick = { actions.onSetPaused(item.entry, !paused) }) {
-                        Text(
-                            if (paused) {
-                                stringResource(MR.strings.library_update_report_resume)
-                            } else {
-                                stringResource(MR.strings.library_update_report_pause)
-                            },
-                        )
-                    }
+                    Button(
+                        label = if (paused) {
+                            stringResource(MR.strings.library_update_report_resume)
+                        } else {
+                            stringResource(MR.strings.library_update_report_pause)
+                        },
+                        onClick = { actions.onSetPaused(item.entry, !paused) },
+                        style = ButtonStyle.Text,
+                    )
                 }
             },
         )
@@ -312,168 +301,9 @@ private fun LibraryUpdateReport.Item.withRecheck(subtitle: String): String {
     return if (isRechecked) stringResource(MR.strings.library_update_report_with_rechecked, subtitle) else subtitle
 }
 
-@Composable
-private fun FoldedItems(
-    items: List<LibraryUpdateReport.Item>,
-    onClickEntry: (Entry) -> Unit,
-    itemTrailing: (@Composable (LibraryUpdateReport.Item) -> Unit)? = null,
-) {
-    items.forEach { item ->
-        ReportRow(
-            entry = item.entry,
-            title = item.entry.title,
-            subtitle = if (item.isRechecked) stringResource(MR.strings.library_update_report_rechecked) else null,
-            onClick = { onClickEntry(item.entry) },
-            trailing = itemTrailing?.let { { it(item) } },
-        )
-    }
-}
-
 private val LibraryUpdateTrigger.labelRes
     get() = when (this) {
         LibraryUpdateTrigger.AUTOMATIC -> MR.strings.library_update_trigger_automatic
         LibraryUpdateTrigger.MANUAL -> MR.strings.library_update_trigger_manual
         LibraryUpdateTrigger.SELECTION -> MR.strings.library_update_trigger_selection
     }
-
-@Composable
-private fun SectionHeader(
-    icon: ImageVector,
-    title: StringResource,
-    count: Int,
-    modifier: Modifier = Modifier,
-    isError: Boolean = false,
-    trailing: (@Composable () -> Unit)? = null,
-) {
-    val color = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
-    Row(
-        modifier = modifier.padding(
-            start = MaterialTheme.padding.medium,
-            end = MaterialTheme.padding.medium,
-            top = 16.dp,
-            bottom = 4.dp,
-        ),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        Icon(imageVector = icon, contentDescription = null, tint = color)
-        Text(
-            text = stringResource(title),
-            style = MaterialTheme.typography.titleSmall,
-            color = color,
-            modifier = Modifier.weight(1f),
-        )
-        Text(
-            text = count.toString(),
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        trailing?.invoke()
-    }
-}
-
-/** A section whose entries need no action, so they stay folded under its header until asked for. */
-@Composable
-private fun CollapsibleSection(
-    icon: ImageVector,
-    title: StringResource,
-    items: List<LibraryUpdateReport.Item>,
-    onClickEntry: (Entry) -> Unit,
-) {
-    var expanded by rememberSaveable { mutableStateOf(false) }
-    Column {
-        SectionHeader(
-            icon = icon,
-            title = title,
-            count = items.size,
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { expanded = !expanded },
-            trailing = {
-                Icon(
-                    imageVector = if (expanded) {
-                        MaterialSymbols.Rounded.KeyboardArrowUp
-                    } else {
-                        MaterialSymbols.Rounded.KeyboardArrowDown
-                    },
-                    contentDescription = null,
-                )
-            },
-        )
-        if (expanded) {
-            FoldedItems(items = items, onClickEntry = onClickEntry)
-        }
-    }
-}
-
-private fun LazyListScope.reasonSection(
-    key: String,
-    icon: ImageVector,
-    title: StringResource,
-    groups: Map<EntryUpdateDecisionReason, List<LibraryUpdateReport.Item>>,
-    onClickEntry: (Entry) -> Unit,
-) {
-    if (groups.isEmpty()) return
-    item(key = "header-$key") {
-        SectionHeader(icon = icon, title = title, count = groups.values.sumOf { it.size })
-    }
-    reasonGroups(key = key, groups = groups, onClickEntry = onClickEntry)
-}
-
-/** @param itemTrailing shown at the end of each entry's row once a group is unfolded. */
-private fun LazyListScope.reasonGroups(
-    key: String,
-    groups: Map<EntryUpdateDecisionReason, List<LibraryUpdateReport.Item>>,
-    onClickEntry: (Entry) -> Unit,
-    itemTrailing: (@Composable (LibraryUpdateReport.Item) -> Unit)? = null,
-) {
-    groups.forEach { (reason, items) ->
-        item(key = "$key-${reason.name}") {
-            CollapsibleGroup(
-                title = stringResource(reason.labelRes),
-                items = items,
-                onClickEntry = onClickEntry,
-                itemTrailing = itemTrailing,
-            )
-        }
-    }
-}
-
-@Composable
-private fun CollapsibleGroup(
-    title: String,
-    items: List<LibraryUpdateReport.Item>,
-    onClickEntry: (Entry) -> Unit,
-    itemTrailing: (@Composable (LibraryUpdateReport.Item) -> Unit)?,
-) {
-    var expanded by rememberSaveable { mutableStateOf(false) }
-    Column {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { expanded = !expanded }
-                .padding(horizontal = MaterialTheme.padding.medium, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(text = title, style = MaterialTheme.typography.bodyLarge)
-                Text(
-                    text = pluralStringResource(MR.plurals.library_updates_entries, items.size, items.size),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-            Icon(
-                imageVector = if (expanded) {
-                    MaterialSymbols.Rounded.KeyboardArrowUp
-                } else {
-                    MaterialSymbols.Rounded.KeyboardArrowDown
-                },
-                contentDescription = null,
-            )
-        }
-        if (expanded) {
-            FoldedItems(items = items, onClickEntry = onClickEntry, itemTrailing = itemTrailing)
-        }
-    }
-}

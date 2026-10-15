@@ -16,6 +16,9 @@ const DEVICE_PROFILE = "pixel_9a";
 export const SHOWCASE_SERIAL = "emulator-5554";
 const BOOT_TIMEOUT_MS = 10 * 60_000;
 const SHUTDOWN_TIMEOUT_MS = 60_000;
+const ROOT_TIMEOUT_MS = 2 * 60_000;
+// Well inside the 5 s an app has to answer input, so the setting is written before the launcher can miss its deadline.
+const SETTINGS_POLL_MS = 500;
 const BOOT_FAILURE_OUTPUT_LINES = 40;
 // Passed to avdmanager and the emulator alike, so both use the folder this script checks. Without it, avdmanager
 // prefers $XDG_CONFIG_HOME/.android when that exists, as it does on GitHub's runners, and the emulator never looks there.
@@ -45,8 +48,11 @@ export async function bootShowcaseEmulator(): Promise<Device> {
       "-no-window", "-no-audio", "-no-boot-anim", "-no-snapshot", "-wipe-data",
       // System services keep the time zone they boot with.
       "-timezone", "Etc/UTC",
-      // Host GPU rendering crashes the emulator's render thread on some drivers.
-      "-gpu", "swiftshader_indirect",
+      // Software rendering, as runners have no GPU. The other software modes break apps: the legacy GLES translator
+      // (swiftshader_indirect, lavapipe) crashes the emulator on the recap's drifting gradients, and apps drawing through
+      // the guest's Vulkan driver instead hang now and then in a frame that never finishes, which leaves their window
+      // without an accessibility tree. ANGLE over SwiftShader draws both.
+      "-gpu", "swangle",
     ],
     { detached: true, env: AVD_ENV, stdio: ["ignore", output, output] },
   );
@@ -55,9 +61,9 @@ export async function bootShowcaseEmulator(): Promise<Device> {
 
   const device = new Device(SHOWCASE_SERIAL);
   try {
+    await hideErrorDialogs(device, emulator);
     await awaitBoot(device, emulator);
-    device.adb("root");
-    await awaitBoot(device, emulator);
+    await restartAdbdAsRoot(device, emulator);
   } catch (error) {
     // Left running, it would stop every later run from starting.
     emulator.kill();
@@ -66,9 +72,6 @@ export async function bootShowcaseEmulator(): Promise<Device> {
   }
   // Downloads that wait for an unmetered network treat Wi-Fi as unmetered and mobile data as metered.
   device.shell("svc wifi enable; svc data disable");
-  // The emulator's software GLES translator crashes the whole emulator on the recap's drifting gradients; apps started
-  // from here on draw through Vulkan instead.
-  device.shell("setprop debug.hwui.renderer skiavk");
   // A fresh device explains full-screen mode over the first app that hides the system bars.
   device.shell("settings put secure immersive_mode_confirmations confirmed");
   return device;
@@ -82,6 +85,54 @@ export async function shutDown(device: Device): Promise<void> {
     if (Date.now() > deadline) throw new Error(`${AVD} did not shut down`);
     await sleep(1_000);
   }
+}
+
+/**
+ * `adb root` only asks adbd to restart, and a device that has just booted can drop the request, the emulator still
+ * configuring it over adb: CI saw "unable to connect for root: closed". The old adbd may also answer for a moment after a
+ * request it took. So it asks until a shell runs as root, rather than trusting the command's exit status.
+ */
+async function restartAdbdAsRoot(device: Device, emulator: ChildProcess): Promise<void> {
+  const deadline = Date.now() + ROOT_TIMEOUT_MS;
+  let refusal: unknown;
+  while (Date.now() < deadline) {
+    try {
+      device.adb("root");
+    } catch (error) {
+      refusal = error;
+    }
+    await awaitBoot(device, emulator);
+    try {
+      if (device.shell("id -u").trim() === "0") return;
+    } catch {
+      // adbd went offline to restart after answering for boot_completed.
+    }
+    await sleep(2_000);
+  }
+  throw new Error(`adbd did not restart as root within ${ROOT_TIMEOUT_MS / 60_000} minutes. ${refusal ?? ""}`);
+}
+
+/**
+ * A device drawing in software is busy enough for the launcher to miss its input deadline while it starts, and the
+ * system's "isn't responding" dialog would stay over the app; without dialogs, the system restarts the launcher instead.
+ * A dialog raised before the setting stays up, and CI saw the launcher's raised before boot completed, so the setting is
+ * written as soon as the settings service takes it: system_server installs its providers before it starts the launcher.
+ */
+async function hideErrorDialogs(device: Device, emulator: ChildProcess): Promise<void> {
+  const deadline = Date.now() + BOOT_TIMEOUT_MS;
+  while (Date.now() < deadline) {
+    if (emulator.exitCode !== null || emulator.signalCode !== null) {
+      throw new Error(`${AVD} exited with ${emulator.exitCode ?? emulator.signalCode} before it booted`);
+    }
+    try {
+      device.shell("settings put global hide_error_dialogs 1");
+      if (device.shell("settings get global hide_error_dialogs").trim() === "1") return;
+    } catch {
+      // adb reports the emulator as offline until it accepts connections, and the settings service starts later still.
+    }
+    await sleep(SETTINGS_POLL_MS);
+  }
+  throw new Error(`${AVD} never took the setting that hides error dialogs`);
 }
 
 async function awaitBoot(device: Device, emulator: ChildProcess): Promise<void> {

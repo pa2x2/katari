@@ -38,6 +38,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.presentation.core.util.animateElevation
 import androidx.compose.material3.ButtonDefaults as M3ButtonDefaults
 
@@ -47,7 +48,7 @@ import androidx.compose.material3.ButtonDefaults as M3ButtonDefaults
  * @see androidx.compose.material3.TextButton
  */
 @Composable
-fun TextButton(
+internal fun TextButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     onLongClick: (() -> Unit)? = null,
@@ -60,7 +61,7 @@ fun TextButton(
         containerColor = Color.Transparent,
         contentColor = MaterialTheme.colorScheme.primary,
         disabledContainerColor = Color.Transparent,
-        disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = DISABLED_ALPHA),
+        disabledContentColor = KatariTheme.colors.disabledContent,
     ),
     contentPadding: PaddingValues = M3ButtonDefaults.TextButtonContentPadding,
     content: @Composable RowScope.() -> Unit,
@@ -84,7 +85,7 @@ fun TextButton(
  * @see androidx.compose.material3.TextButton
  */
 @Composable
-fun Button(
+internal fun Button(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     onLongClick: (() -> Unit)? = null,
@@ -130,7 +131,7 @@ fun Button(
     }
 }
 
-object ButtonDefaults {
+internal object ButtonDefaults {
     /**
      * Creates a [ButtonColors] that represents the default container and content colors used in a
      * [Button].
@@ -145,7 +146,7 @@ object ButtonDefaults {
         containerColor: Color = MaterialTheme.colorScheme.primary,
         contentColor: Color = MaterialTheme.colorScheme.onPrimary,
         disabledContainerColor: Color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
-        disabledContentColor: Color = MaterialTheme.colorScheme.onSurface.copy(alpha = DISABLED_ALPHA),
+        disabledContentColor: Color = KatariTheme.colors.disabledContent,
     ): ButtonColors = ButtonColors(
         containerColor = containerColor,
         contentColor = contentColor,
@@ -188,7 +189,7 @@ object ButtonDefaults {
  * [ElevatedButton].
  */
 @Stable
-class ButtonElevation internal constructor(
+internal class ButtonElevation internal constructor(
     private val defaultElevation: Dp,
     private val pressedElevation: Dp,
     private val focusedElevation: Dp,
@@ -335,7 +336,7 @@ class ButtonElevation internal constructor(
  * - See [M3ButtonDefaults.textButtonColors] for the default colors used in a [TextButton].
  */
 @Immutable
-class ButtonColors internal constructor(
+internal class ButtonColors internal constructor(
     private val containerColor: Color,
     private val contentColor: Color,
     private val disabledContainerColor: Color,

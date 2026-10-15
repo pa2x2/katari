@@ -1,7 +1,6 @@
 package mihon.entry.interactions.lifecycle.profile
 
-import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.entry.interactions.lifecycle.metadata.EntryLifecycleConsequenceFailure
+import mihon.entry.interactions.lifecycle.EntryLifecycleConsequenceFailure
 import tachiyomi.domain.entry.model.Entry
 
 interface EntryProfileMoveFeature {
@@ -51,11 +50,5 @@ data class EntryProfileMoveResult(
     val consequenceFailures: List<EntryLifecycleConsequenceFailure> = emptyList(),
 )
 
-interface EntryProfileMoveParticipantReference
-
-interface EntryProfileMoveReference {
-    fun participantReference(
-        participantId: String,
-        type: EntryType,
-    ): EntryProfileMoveParticipantReference?
-}
+/** Opaque state a preview carries into [EntryProfileMoveFeature.execute]. */
+interface EntryProfileMoveReference

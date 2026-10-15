@@ -8,18 +8,19 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.unit.dp
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Lightbulb
+import mihon.presentation.kit.chip.AssistChip
+import mihon.presentation.kit.content.Icon
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.surface.Surface
+import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -35,44 +36,43 @@ internal fun LibrarySearchTips(
 ) {
     Surface(
         modifier = modifier,
-        shape = MaterialTheme.shapes.large,
-        color = MaterialTheme.colorScheme.surfaceContainerHigh,
-        shadowElevation = 3.dp,
+        container = SurfaceContainer.High,
+        shape = KatariTheme.shapes.large,
+        shadow = true,
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+                .padding(KatariTheme.spacing.l),
+            verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
             ) {
                 Icon(
                     imageVector = MaterialSymbols.Rounded.Lightbulb,
                     contentDescription = null,
-                    modifier = Modifier.size(18.dp),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(KatariTheme.sizes.iconSmall),
+                    tone = ContentTone.Secondary,
                 )
                 Text(
                     text = stringResource(MR.strings.library_search_tips_title),
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    role = TextRole.Label,
+                    tone = ContentTone.Secondary,
                 )
             }
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s)) {
                 SearchTokens.forEach { token ->
                     AssistChip(
                         onClick = { onInsertToken(token) },
-                        label = { Text(token, fontFamily = FontFamily.Monospace) },
+                        label = { Text(token, role = TextRole.Code) },
                     )
                 }
             }
             Text(
                 text = stringResource(MR.strings.library_search_tips_examples),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                role = TextRole.Supporting,
             )
         }
     }

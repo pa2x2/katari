@@ -7,11 +7,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -23,8 +18,14 @@ import mihon.icons.materialsymbols.rounded.Delete
 import mihon.icons.materialsymbols.rounded.OpenInBrowser
 import mihon.icons.simpleicons.Discord
 import mihon.icons.simpleicons.SimpleIcons
+import mihon.presentation.kit.button.IconButton
+import mihon.presentation.kit.content.Icon
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.surface.Card
+import mihon.presentation.kit.surface.CardStyle
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable
@@ -41,7 +42,7 @@ fun ExtensionStoresContent(
     LazyColumn(
         state = lazyListState,
         contentPadding = paddingValues,
-        verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
+        verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
         modifier = modifier,
     ) {
         repos.forEach {
@@ -68,60 +69,44 @@ private fun ExtensionStoresListItem(
     onDelete: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    ElevatedCard(
-        modifier = modifier,
-    ) {
+    Card(modifier = modifier, style = CardStyle.Elevated) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(
-                    start = MaterialTheme.padding.medium,
-                    top = MaterialTheme.padding.medium,
-                    end = MaterialTheme.padding.medium,
-                ),
+                .padding(start = KatariTheme.spacing.l, top = KatariTheme.spacing.l, end = KatariTheme.spacing.l),
+            horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.l),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(imageVector = MaterialSymbols.AutoMirroredRounded.Label, contentDescription = null)
-            Text(
-                text = store.name,
-                modifier = Modifier.padding(start = MaterialTheme.padding.medium),
-                style = MaterialTheme.typography.titleMedium,
-            )
+            Text(text = store.name, role = TextRole.SectionTitle)
         }
 
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.End,
         ) {
-            IconButton(onClick = onOpenWebsite) {
-                Icon(
-                    imageVector = MaterialSymbols.Rounded.OpenInBrowser,
-                    contentDescription = stringResource(MR.strings.action_open_in_browser),
-                )
-            }
-
+            IconButton(
+                icon = MaterialSymbols.Rounded.OpenInBrowser,
+                contentDescription = stringResource(MR.strings.action_open_in_browser),
+                onClick = onOpenWebsite,
+            )
             if (store.contact.discord != null) {
-                IconButton(onClick = onOpenDiscord) {
-                    Icon(
-                        imageVector = SimpleIcons.Discord,
-                        contentDescription = stringResource(MR.strings.action_open_discord),
-                    )
-                }
-            }
-
-            IconButton(onClick = onCopy) {
-                Icon(
-                    imageVector = MaterialSymbols.Rounded.ContentCopy,
-                    contentDescription = stringResource(MR.strings.action_copy_to_clipboard),
+                IconButton(
+                    icon = SimpleIcons.Discord,
+                    contentDescription = stringResource(MR.strings.action_open_discord),
+                    onClick = onOpenDiscord,
                 )
             }
-
-            IconButton(onClick = onDelete) {
-                Icon(
-                    imageVector = MaterialSymbols.Rounded.Delete,
-                    contentDescription = stringResource(MR.strings.action_delete),
-                )
-            }
+            IconButton(
+                icon = MaterialSymbols.Rounded.ContentCopy,
+                contentDescription = stringResource(MR.strings.action_copy_to_clipboard),
+                onClick = onCopy,
+            )
+            IconButton(
+                icon = MaterialSymbols.Rounded.Delete,
+                contentDescription = stringResource(MR.strings.action_delete),
+                onClick = onDelete,
+            )
         }
     }
 }

@@ -10,19 +10,16 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.more.stats.recap.components.LocalRecapPalette
 import eu.kanade.presentation.more.stats.recap.components.RecapBars
 import eu.kanade.presentation.more.stats.recap.components.RecapCover
 import eu.kanade.presentation.more.stats.recap.components.RecapHourClock
 import eu.kanade.presentation.more.stats.recap.components.RecapKicker
 import eu.kanade.presentation.more.stats.recap.components.RecapText
-import eu.kanade.presentation.more.stats.recap.components.RecapTypography
 import eu.kanade.presentation.more.stats.recap.components.calendar.RecapRunCalendar
 import eu.kanade.presentation.more.stats.recap.components.recapDurationText
 import eu.kanade.presentation.more.stats.recap.components.rememberRecapFormats
@@ -30,6 +27,10 @@ import eu.kanade.presentation.more.stats.recap.motion.RecapCountUp
 import eu.kanade.presentation.more.stats.recap.motion.recapReveal
 import eu.kanade.tachiyomi.ui.stats.days
 import eu.kanade.tachiyomi.ui.stats.recap.story.StatisticsRecapPage
+import mihon.presentation.kit.content.StoryMetrics
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.core.common.i18n.pluralStringResource
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.pluralStringResource
@@ -41,23 +42,26 @@ internal fun ColumnScope.RecapMonthTitlesPage(page: StatisticsRecapPage.MonthTit
     val formats = rememberRecapFormats()
     val palette = LocalRecapPalette.current
     RecapKicker(stringResource(MR.strings.statistics_recap_months_kicker))
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.m)) {
         page.months.chunked(MONTH_COLUMNS).forEachIndexed { row, months ->
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.recapReveal(row + 1)) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.m),
+                modifier = Modifier.recapReveal(row + 1),
+            ) {
                 months.forEach { (month, title) ->
-                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                        RecapText(formats.shortMonth(month), RecapTypography.Tiny, color = palette.muted)
+                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xxs)) {
+                        RecapText(formats.shortMonth(month), TextRole.Badge, tone = ContentTone.Secondary)
                         if (title != null) {
-                            RecapCover(title, width = 64.dp)
+                            RecapCover(title, width = StoryMetrics.coverMonth)
                         } else {
                             Box(
                                 Modifier
-                                    .width(64.dp)
+                                    .width(StoryMetrics.coverMonth)
                                     .aspectRatio(2f / 3f)
-                                    .background(palette.faint, RoundedCornerShape(4.dp)),
+                                    .background(palette.faint, StoryMetrics.coverShape(StoryMetrics.coverMonth)),
                             )
                         }
-                        RecapText(title?.title.orEmpty(), RecapTypography.Tiny, maxLines = 1)
+                        RecapText(title?.title.orEmpty(), TextRole.Badge, maxLines = 1)
                     }
                 }
                 repeat(MONTH_COLUMNS - months.size) { Spacer(Modifier.weight(1f)) }
@@ -73,7 +77,7 @@ internal fun ColumnScope.RecapMonthTitlesPage(page: StatisticsRecapPage.MonthTit
                 formats.month(hold.from),
                 formats.month(hold.to),
             ),
-            style = RecapTypography.Body,
+            role = TextRole.Body,
             order = 4,
         )
     }
@@ -88,13 +92,13 @@ internal fun ColumnScope.RecapMonthTimePage(page: StatisticsRecapPage.MonthTime)
         values = page.months.map { it.second },
         labels = page.months.map { formats.narrowMonth(it.first) },
         highlight = page.months.indexOfFirst { it.first == page.biggest },
-        height = 240.dp,
+        height = StoryMetrics.monthBarsHeight,
         order = 1,
     )
     Spacer(Modifier.weight(1f))
     RecapText(
         text = stringResource(MR.strings.statistics_recap_biggest_month, formats.month(page.biggest)),
-        style = RecapTypography.Headline,
+        role = TextRole.Metric,
         order = 2,
     )
     val duration = recapDurationText(page.biggestDurationMillis)
@@ -102,7 +106,7 @@ internal fun ColumnScope.RecapMonthTimePage(page: StatisticsRecapPage.MonthTime)
         text = page.biggestTitle
             ?.let { stringResource(MR.strings.statistics_recap_biggest_month_text, duration, it.title) }
             ?: "$duration.",
-        style = RecapTypography.Body,
+        role = TextRole.Body,
         order = 3,
     )
 }
@@ -116,7 +120,7 @@ internal fun ColumnScope.RecapLongestRunPage(page: StatisticsRecapPage.LongestRu
     RecapCountUp(
         value = days.toLong(),
         format = { context.pluralStringResource(MR.plurals.day, it.toInt(), it.toInt()) },
-        style = RecapTypography.Display,
+        role = TextRole.Display,
         order = 1,
         modifier = Modifier.recapReveal(1),
     )
@@ -130,7 +134,7 @@ internal fun ColumnScope.RecapLongestRunPage(page: StatisticsRecapPage.LongestRu
             page.activeDates.size,
             page.activeDates.size,
         ),
-        style = RecapTypography.Body,
+        role = TextRole.Body,
         order = 2,
     )
     RecapRunCalendar(
@@ -154,12 +158,12 @@ internal fun ColumnScope.RecapHoursPage(page: StatisticsRecapPage.Hours) {
         topHour = page.topHour,
         centerLabel = topHourText,
         hourLabel = formats::hour,
-        size = 260.dp,
+        size = StoryMetrics.hourClockSize,
         order = 1,
         modifier = Modifier.align(Alignment.CenterHorizontally).recapReveal(1),
     )
     Spacer(Modifier.weight(1f))
-    RecapText(stringResource(MR.strings.statistics_recap_your_hour, topHourText), RecapTypography.Headline, order = 2)
+    RecapText(stringResource(MR.strings.statistics_recap_your_hour, topHourText), TextRole.Metric, order = 2)
     RecapText(
         text = stringResource(
             MR.strings.statistics_recap_hour_window,
@@ -167,7 +171,7 @@ internal fun ColumnScope.RecapHoursPage(page: StatisticsRecapPage.Hours) {
             formats.hour(page.windowStartHour),
             formats.hour((page.windowStartHour + WINDOW_HOURS) % HOURS_IN_DAY),
         ) + " " + stringResource(MR.strings.statistics_recap_busiest_weekday, formats.weekday(page.busiestWeekday)),
-        style = RecapTypography.Body,
+        role = TextRole.Body,
         order = 3,
         modifier = Modifier.fillMaxWidth(),
     )

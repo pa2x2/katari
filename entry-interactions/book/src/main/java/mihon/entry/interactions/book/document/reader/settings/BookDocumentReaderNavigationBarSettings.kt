@@ -8,7 +8,7 @@ import androidx.compose.ui.res.stringResource
 import kotlinx.coroutines.launch
 import mihon.entry.interactions.book.R
 import mihon.entry.viewer.settings.ViewerSettingBinding
-import tachiyomi.presentation.core.components.CheckboxItem
+import mihon.presentation.kit.list.ToggleRow
 
 @Composable
 internal fun BookDocumentReaderNavigationBarSettings(
@@ -17,12 +17,11 @@ internal fun BookDocumentReaderNavigationBarSettings(
     val setting by binding.state.collectAsState()
     val scope = rememberCoroutineScope()
     val profileDefault = setting.profileValue ?: setting.processorDefault
-    CheckboxItem(
-        label = stringResource(R.string.book_document_reader_show_navigation_bar),
+    ToggleRow(
+        title = stringResource(R.string.book_document_reader_show_navigation_bar),
         checked = setting.effectiveValue,
-        onClick = {
+        onCheckedChange = { target ->
             scope.launch {
-                val target = !setting.effectiveValue
                 if (target == profileDefault) {
                     binding.clearEntryOverride()
                 } else {

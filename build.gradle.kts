@@ -41,6 +41,7 @@ plugins {
     alias(libs.plugins.google.services) apply false
     alias(libs.plugins.kotlin.compose.compiler) apply false
     alias(libs.plugins.kotlin.serialization) apply false
+    alias(libs.plugins.metro) apply false
     alias(libs.plugins.moko.resources) apply false
     alias(libs.plugins.sqldelight) apply false
 
@@ -253,28 +254,6 @@ tasks.register("publishEntrySdkToMavenLocal") {
         ":book-api:publishToMavenLocal",
         ":entry-source-api:publishToMavenLocal",
     )
-}
-
-val verifyFeatureArchitecture = tasks.register("verifyFeatureArchitecture") {
-    group = "verification"
-    description = "Verifies application and Entry Feature boundaries, contracts, and reporting"
-    dependsOn(
-        "checkFeatureArchitectureBoundaries",
-        ":feature-graph:testReleaseUnitTest",
-        ":feature-runtime:testReleaseUnitTest",
-        ":feature-validation:testReleaseUnitTest",
-        ":translation:api:testReleaseUnitTest",
-        ":translation:runtime:testReleaseUnitTest",
-        ":entry-interactions:testReleaseUnitTest",
-        ":book-api:testAndroidHostTest",
-        ":app:generateFeatureReport",
-    )
-}
-
-tasks.register("verifyEntryFeatureArchitecture") {
-    group = "verification"
-    description = "Compatibility alias for verifyFeatureArchitecture"
-    dependsOn(verifyFeatureArchitecture)
 }
 
 tasks.register(VERIFY_TESTS_TASK_NAME) {

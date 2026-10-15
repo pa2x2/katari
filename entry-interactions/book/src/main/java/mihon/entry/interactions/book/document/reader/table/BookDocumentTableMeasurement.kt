@@ -7,11 +7,11 @@ import androidx.compose.ui.platform.LocalFontFamilyResolver
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalLocaleList
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import mihon.book.api.document.BookDocumentBlock
 import mihon.book.api.document.BookDocumentTableLayout
 import mihon.entry.interactions.book.document.reader.LocalBookDocumentTextScale
 import mihon.entry.interactions.book.document.reader.rememberBookDocumentFonts
+import mihon.presentation.kit.theme.KatariTheme
 
 /** Resolves cell typography and invalidates geometry when reading width or fonts change. */
 @Composable
@@ -41,7 +41,7 @@ internal fun rememberBookDocumentTableGeometry(
                 texts,
                 BookDocumentTableTextMeasurer(density, layoutDirection, localeList, fontFamilyResolver),
                 width,
-                8.dp.roundToPx(),
+                KatariTheme.spacing.s.roundToPx(),
             )
         }
     }

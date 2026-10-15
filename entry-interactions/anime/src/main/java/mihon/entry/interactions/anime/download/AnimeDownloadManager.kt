@@ -1,5 +1,4 @@
 package mihon.entry.interactions.anime.download
-import android.content.Context
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import kotlinx.coroutines.CancellationException
@@ -37,18 +36,15 @@ import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.i18n.*
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
 internal class AnimeDownloadManager(
-    context: Context,
-    private val cache: AnimeDownloadCache = AnimeDownloadCache(context),
-    private val provider: AnimeDownloadProvider = AnimeDownloadProvider(context),
-    private val downloader: AnimeDownloader = Injekt.get(),
-    private val sourceManager: SourceManager = Injekt.get(),
-    private val store: AnimeDownloadStore = AnimeDownloadStore(context),
-    private val workController: EntryDownloadWorkController = Injekt.get(),
-    private val scope: CoroutineScope = Injekt.get(),
+    private val cache: AnimeDownloadCache,
+    private val provider: AnimeDownloadProvider,
+    private val downloader: AnimeDownloader,
+    private val sourceManager: SourceManager,
+    private val store: AnimeDownloadStore,
+    private val workController: EntryDownloadWorkController,
+    private val scope: CoroutineScope,
 ) {
 
     private val _queueState = MutableStateFlow<List<AnimeDownload>>(emptyList())

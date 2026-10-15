@@ -8,15 +8,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -25,26 +16,36 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import dev.icerock.moko.resources.StringResource
-import eu.kanade.presentation.components.AppBar
+import dev.zacsweers.metrox.viewmodel.metroViewModel
 import eu.kanade.presentation.util.Screen
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Delete
 import mihon.model.artifacts.api.state.StoredModelArtifact
 import mihon.model.artifacts.ui.state.formatModelArtifactSize
+import mihon.presentation.kit.button.Button
+import mihon.presentation.kit.button.ButtonStyle
+import mihon.presentation.kit.button.IconButton
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.dialog.ConfirmDialog
+import mihon.presentation.kit.feedback.EmptyScreen
+import mihon.presentation.kit.feedback.LoadingScreen
+import mihon.presentation.kit.list.SectionHeader
+import mihon.presentation.kit.list.SettingsRow
+import mihon.presentation.kit.navigation.AppBar
+import mihon.presentation.kit.navigation.Scaffold
+import mihon.presentation.kit.surface.Card
+import mihon.presentation.kit.surface.CardStyle
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import mihon.text.recognition.ui.language.shortDisplayNames
 import mihon.text.recognition.ui.models.TextRecognitionStoredModels
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.HeadingItem
-import tachiyomi.presentation.core.components.material.Scaffold
-import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.screens.EmptyScreen
-import tachiyomi.presentation.core.screens.LoadingScreen
 
 /**
  * Lists every stored model revision, complete or partial, by what the profile reads with it, and lets the user
@@ -55,7 +56,7 @@ internal class ModelArtifactStorageScreen : Screen() {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val model = viewModel { ModelArtifactStorageViewModel() }
+        val model = metroViewModel<ModelArtifactStorageViewModel>()
         val stored by model.stored.collectAsState()
         var confirming by remember { mutableStateOf<TextRecognitionStoredModels.InUse?>(null) }
 
@@ -95,45 +96,28 @@ internal class ModelArtifactStorageScreen : Screen() {
             }
         }
         confirming?.let { use ->
-            AlertDialog(
+            val size = formatModelArtifactSize(use.artifact.descriptor.sizeBytes)
+            ConfirmDialog(
+                title = stringResource(
+                    MR.strings.text_recognition_models_delete_title,
+                    use.artifact.descriptor.displayName,
+                ),
+                text = if (use.everyLanguage) {
+                    stringResource(MR.strings.text_recognition_models_delete_message_every_language, size)
+                } else {
+                    stringResource(
+                        MR.strings.text_recognition_models_delete_message,
+                        use.languages.shortDisplayNames(),
+                        size,
+                    )
+                },
+                confirmLabel = stringResource(MR.strings.action_delete),
+                onConfirm = {
+                    confirming = null
+                    model.delete(use.artifact.descriptor.id)
+                },
                 onDismissRequest = { confirming = null },
-                title = {
-                    Text(
-                        stringResource(
-                            MR.strings.text_recognition_models_delete_title,
-                            use.artifact.descriptor.displayName,
-                        ),
-                    )
-                },
-                text = {
-                    val size = formatModelArtifactSize(use.artifact.descriptor.sizeBytes)
-                    Text(
-                        if (use.everyLanguage) {
-                            stringResource(MR.strings.text_recognition_models_delete_message_every_language, size)
-                        } else {
-                            stringResource(
-                                MR.strings.text_recognition_models_delete_message,
-                                use.languages.shortDisplayNames(),
-                                size,
-                            )
-                        },
-                    )
-                },
-                confirmButton = {
-                    TextButton(
-                        onClick = {
-                            confirming = null
-                            model.delete(use.artifact.descriptor.id)
-                        },
-                    ) {
-                        Text(stringResource(MR.strings.action_delete))
-                    }
-                },
-                dismissButton = {
-                    TextButton(onClick = { confirming = null }) {
-                        Text(stringResource(MR.strings.action_cancel))
-                    }
-                },
+                destructive = true,
             )
         }
     }
@@ -145,36 +129,41 @@ private fun LazyListScope.section(
     row: @Composable (StoredModelArtifact) -> Unit,
 ) {
     if (artifacts.isEmpty()) return
-    item(key = "heading-${title.resourceId}") { HeadingItem(title) }
+    item(key = "heading-${title.resourceId}") { SectionHeader(stringResource(title)) }
     items(artifacts, key = { "${it.descriptor.id.value}@${it.descriptor.revision}" }) { row(it) }
 }
 
 @Composable
 private fun StorageSummary(models: TextRecognitionStoredModels, onFree: () -> Unit) {
     val count = models.inUse.size + models.unused.size + models.obsolete.size
-    ElevatedCard(
+    Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = MaterialTheme.padding.medium, vertical = MaterialTheme.padding.small),
-        shape = MaterialTheme.shapes.extraLarge,
+            .padding(horizontal = KatariTheme.spacing.contentInset, vertical = KatariTheme.spacing.s),
+        style = CardStyle.Elevated,
     ) {
         Row(
-            modifier = Modifier.padding(MaterialTheme.padding.large),
-            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.medium),
+            modifier = Modifier.padding(KatariTheme.spacing.xl),
+            horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.l),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(formatModelArtifactSize(models.totalBytes), style = MaterialTheme.typography.headlineSmall)
+                Text(formatModelArtifactSize(models.totalBytes), role = TextRole.Metric)
                 Text(
                     text = pluralStringResource(MR.plurals.model_artifacts_count, count, count),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    role = TextRole.Body,
+                    tone = ContentTone.Secondary,
                 )
             }
             if (models.obsolete.isNotEmpty()) {
-                FilledTonalButton(onClick = onFree) {
-                    Text(stringResource(MR.strings.model_artifacts_free, formatModelArtifactSize(models.obsoleteBytes)))
-                }
+                Button(
+                    label = stringResource(
+                        MR.strings.model_artifacts_free,
+                        formatModelArtifactSize(models.obsoleteBytes),
+                    ),
+                    onClick = onFree,
+                    style = ButtonStyle.Tonal,
+                )
             }
         }
     }
@@ -188,16 +177,17 @@ private fun StoredModelRow(artifact: StoredModelArtifact, usage: String?, onDele
     } else {
         stringResource(MR.strings.model_artifacts_state_partial, size)
     }
-    ListItem(
-        supportingContent = { Text(listOfNotNull(state, usage).joinToString(" · ")) },
-        trailingContent = {
-            IconButton(onClick = onDelete) {
-                Icon(MaterialSymbols.Rounded.Delete, contentDescription = stringResource(MR.strings.action_delete))
-            }
+    SettingsRow(
+        title = artifact.descriptor.displayName,
+        subtitle = listOfNotNull(state, usage).joinToString(" · "),
+        trailing = {
+            IconButton(
+                icon = MaterialSymbols.Rounded.Delete,
+                contentDescription = stringResource(MR.strings.action_delete),
+                onClick = onDelete,
+            )
         },
-    ) {
-        Text(artifact.descriptor.displayName)
-    }
+    )
 }
 
 @Composable

@@ -29,19 +29,16 @@ import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.domain.entry.interactor.GetEntry
 import tachiyomi.domain.entry.interactor.NetworkToLocalEntry
 import tachiyomi.domain.entry.model.Entry
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicLong
 
 abstract class SearchViewModel(
+    private val extensionManager: ExtensionManager,
+    private val networkToLocalEntry: NetworkToLocalEntry,
+    private val getEntry: GetEntry,
+    private val preferences: SourcePreferences,
+    private val catalogueFeature: EntryCatalogueFeature,
     initialState: State = State(),
-    sourcePreferences: SourcePreferences = Injekt.get(),
-    private val extensionManager: ExtensionManager = Injekt.get(),
-    private val networkToLocalEntry: NetworkToLocalEntry = Injekt.get(),
-    private val getEntry: GetEntry = Injekt.get(),
-    private val preferences: SourcePreferences = Injekt.get(),
-    private val catalogueFeature: EntryCatalogueFeature = Injekt.get(),
 ) : ViewModel() {
 
     val state: StateFlow<State>
@@ -66,9 +63,9 @@ abstract class SearchViewModel(
         observeItems = getEntry::subscribe,
     )
 
-    private val enabledLanguages = sourcePreferences.enabledLanguages.get()
-    private val disabledSources = sourcePreferences.disabledSources.get()
-    protected val pinnedSources = sourcePreferences.pinnedSources.get()
+    private val enabledLanguages = preferences.enabledLanguages.get()
+    private val disabledSources = preferences.disabledSources.get()
+    protected val pinnedSources = preferences.pinnedSources.get()
 
     private var lastQuery: String? = null
     private var lastSourceFilter: SourceFilter? = null

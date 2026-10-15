@@ -1,46 +1,35 @@
 package eu.kanade.presentation.entry
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.Icon
-import androidx.compose.material3.LocalContentColor
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import eu.kanade.presentation.components.TabbedDialog
-import eu.kanade.presentation.components.TabbedDialogPaddings
+import androidx.compose.ui.platform.LocalContext
+import mihon.app.di.appGraph
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Group
+import mihon.presentation.kit.content.Icon
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.dialog.Dialog
+import mihon.presentation.kit.dialog.DialogAction
+import mihon.presentation.kit.list.CheckRow
+import mihon.presentation.kit.list.ChoiceRow
+import mihon.presentation.kit.list.SettingsRow
+import mihon.presentation.kit.list.SortRow
+import mihon.presentation.kit.list.TriStateRow
+import mihon.presentation.kit.menu.DropdownMenuItem
+import mihon.presentation.kit.sheet.TabbedSheet
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.core.common.preference.TriState
 import tachiyomi.domain.entry.model.Entry
-import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.LabeledCheckbox
-import tachiyomi.presentation.core.components.RadioItem
-import tachiyomi.presentation.core.components.SortItem
-import tachiyomi.presentation.core.components.TriStateItem
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.theme.active
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
 @Composable
 fun EntryChapterSettingsDialog(
@@ -57,6 +46,7 @@ fun EntryChapterSettingsDialog(
     onSetAsDefault: (applyToExisting: Boolean) -> Unit,
     onResetToDefault: () -> Unit,
 ) {
+    val context = LocalContext.current
     val presentation = entry?.type.entryTypePresentation()
     var showSetAsDefaultDialog by rememberSaveable { mutableStateOf(false) }
     if (showSetAsDefaultDialog) {
@@ -67,25 +57,25 @@ fun EntryChapterSettingsDialog(
         )
     }
 
-    val downloadedOnly = remember { Injekt.get<LibraryPreferences>().downloadedOnly.get() }
+    val downloadedOnly = remember { context.appGraph.libraryPreferences.downloadedOnly.get() }
 
-    TabbedDialog(
+    TabbedSheet(
         onDismissRequest = onDismissRequest,
         tabTitles = listOf(
             stringResource(MR.strings.action_filter),
             stringResource(MR.strings.action_sort),
             stringResource(MR.strings.action_display),
         ),
-        tabOverflowMenuContent = { closeMenu ->
+        menu = { closeMenu ->
             DropdownMenuItem(
-                text = { Text(stringResource(presentation.setSettingsAsDefaultLabel)) },
+                label = stringResource(presentation.setSettingsAsDefaultLabel),
                 onClick = {
                     showSetAsDefaultDialog = true
                     closeMenu()
                 },
             )
             DropdownMenuItem(
-                text = { Text(stringResource(MR.strings.action_reset)) },
+                label = stringResource(MR.strings.action_reset),
                 onClick = {
                     onResetToDefault()
                     closeMenu()
@@ -93,41 +83,35 @@ fun EntryChapterSettingsDialog(
             )
         },
     ) { page ->
-        Column(
-            modifier = Modifier
-                .padding(vertical = TabbedDialogPaddings.Vertical)
-                .verticalScroll(rememberScrollState()),
-        ) {
-            when (page) {
-                0 -> {
-                    FilterPage(
-                        downloadFilter = entry?.downloadedFilter ?: TriState.DISABLED,
-                        onDownloadFilterChanged = onDownloadFilterChanged
-                            .takeUnless { downloadedOnly },
-                        unreadFilter = entry?.unreadFilter ?: TriState.DISABLED,
-                        onUnreadFilterChanged = onUnreadFilterChanged,
-                        bookmarkedFilter = entry?.bookmarkedFilter ?: TriState.DISABLED,
-                        onBookmarkedFilterChanged = onBookmarkedFilterChanged,
-                        scanlatorFilterActive = scanlatorFilterActive,
-                        onScanlatorFilterClicked = onScanlatorFilterClicked,
-                        unconsumedFilterLabel = presentation.filterUnconsumedLabel,
-                    )
-                }
-                1 -> {
-                    SortPage(
-                        presentation = presentation,
-                        sortingMode = entry?.sorting ?: 0,
-                        sortDescending = entry?.sortDescending() ?: false,
-                        onItemSelected = onSortModeChanged,
-                    )
-                }
-                2 -> {
-                    DisplayPage(
-                        presentation = presentation,
-                        displayMode = entry?.displayMode ?: 0,
-                        onItemSelected = onDisplayModeChanged,
-                    )
-                }
+        when (page) {
+            0 -> {
+                FilterPage(
+                    downloadFilter = entry?.downloadedFilter ?: TriState.DISABLED,
+                    onDownloadFilterChanged = onDownloadFilterChanged
+                        .takeUnless { downloadedOnly },
+                    unreadFilter = entry?.unreadFilter ?: TriState.DISABLED,
+                    onUnreadFilterChanged = onUnreadFilterChanged,
+                    bookmarkedFilter = entry?.bookmarkedFilter ?: TriState.DISABLED,
+                    onBookmarkedFilterChanged = onBookmarkedFilterChanged,
+                    scanlatorFilterActive = scanlatorFilterActive,
+                    onScanlatorFilterClicked = onScanlatorFilterClicked,
+                    unconsumedFilterLabel = presentation.filterUnconsumedLabel,
+                )
+            }
+            1 -> {
+                SortPage(
+                    presentation = presentation,
+                    sortingMode = entry?.sorting ?: 0,
+                    sortDescending = entry?.sortDescending() ?: false,
+                    onItemSelected = onSortModeChanged,
+                )
+            }
+            2 -> {
+                DisplayPage(
+                    presentation = presentation,
+                    displayMode = entry?.displayMode ?: 0,
+                    onItemSelected = onDisplayModeChanged,
+                )
             }
         }
     }
@@ -145,20 +129,20 @@ private fun ColumnScope.FilterPage(
     onScanlatorFilterClicked: (() -> Unit)?,
     unconsumedFilterLabel: dev.icerock.moko.resources.StringResource,
 ) {
-    TriStateItem(
-        label = stringResource(MR.strings.label_downloaded),
+    TriStateRow(
+        title = stringResource(MR.strings.label_downloaded),
         state = downloadFilter,
-        onClick = onDownloadFilterChanged,
+        onStateChange = onDownloadFilterChanged,
     )
-    TriStateItem(
-        label = stringResource(unconsumedFilterLabel),
+    TriStateRow(
+        title = stringResource(unconsumedFilterLabel),
         state = unreadFilter,
-        onClick = onUnreadFilterChanged,
+        onStateChange = onUnreadFilterChanged,
     )
-    TriStateItem(
-        label = stringResource(MR.strings.action_filter_bookmarked),
+    TriStateRow(
+        title = stringResource(MR.strings.action_filter_bookmarked),
         state = bookmarkedFilter,
-        onClick = onBookmarkedFilterChanged,
+        onStateChange = onBookmarkedFilterChanged,
     )
     if (onScanlatorFilterClicked != null) {
         ScanlatorFilterItem(
@@ -169,32 +153,21 @@ private fun ColumnScope.FilterPage(
 }
 
 @Composable
-fun ScanlatorFilterItem(
+private fun ScanlatorFilterItem(
     active: Boolean,
     onClick: () -> Unit,
 ) {
-    Row(
-        modifier = Modifier
-            .clickable(onClick = onClick)
-            .fillMaxWidth()
-            .padding(horizontal = TabbedDialogPaddings.Horizontal, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(24.dp),
-    ) {
-        Icon(
-            imageVector = MaterialSymbols.Rounded.Group,
-            contentDescription = null,
-            tint = if (active) {
-                MaterialTheme.colorScheme.active
-            } else {
-                LocalContentColor.current
-            },
-        )
-        Text(
-            text = stringResource(MR.strings.scanlator),
-            style = MaterialTheme.typography.bodyMedium,
-        )
-    }
+    SettingsRow(
+        title = stringResource(MR.strings.scanlator),
+        leading = {
+            Icon(
+                imageVector = MaterialSymbols.Rounded.Group,
+                contentDescription = null,
+                tone = if (active) ContentTone.Active else ContentTone.Inherit,
+            )
+        },
+        onClick = onClick,
+    )
 }
 
 @Composable
@@ -210,9 +183,9 @@ private fun ColumnScope.SortPage(
         MR.strings.sort_by_upload_date to Entry.CHAPTER_SORTING_UPLOAD_DATE,
         MR.strings.action_sort_alpha to Entry.CHAPTER_SORTING_ALPHABET,
     ).map { (titleRes, mode) ->
-        SortItem(
-            label = stringResource(titleRes),
-            sortDescending = sortDescending.takeIf { sortingMode == mode },
+        SortRow(
+            title = stringResource(titleRes),
+            descending = sortDescending.takeIf { sortingMode == mode },
             onClick = { onItemSelected(mode) },
         )
     }
@@ -228,8 +201,8 @@ private fun ColumnScope.DisplayPage(
         MR.strings.show_title to Entry.CHAPTER_DISPLAY_NAME,
         presentation.childNumberSettingLabel to Entry.CHAPTER_DISPLAY_NUMBER,
     ).map { (titleRes, mode) ->
-        RadioItem(
-            label = stringResource(titleRes),
+        ChoiceRow(
+            title = stringResource(titleRes),
             selected = displayMode == mode,
             onClick = { onItemSelected(mode) },
         )
@@ -244,36 +217,22 @@ private fun SetAsDefaultDialog(
 ) {
     var optionalChecked by rememberSaveable { mutableStateOf(false) }
 
-    AlertDialog(
+    Dialog(
         onDismissRequest = onDismissRequest,
-        title = { Text(text = stringResource(presentation.settingsTitle)) },
-        text = {
-            Column(
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                Text(text = stringResource(presentation.confirmSetSettingsAsDefaultLabel))
-
-                LabeledCheckbox(
-                    label = stringResource(presentation.alsoSetSettingsForLibraryLabel),
-                    checked = optionalChecked,
-                    onCheckedChange = { optionalChecked = it },
-                )
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismissRequest) {
-                Text(text = stringResource(MR.strings.action_cancel))
-            }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    onConfirmed(optionalChecked)
-                    onDismissRequest()
-                },
-            ) {
-                Text(text = stringResource(MR.strings.action_ok))
-            }
-        },
-    )
+        title = stringResource(presentation.settingsTitle),
+        confirm = DialogAction(stringResource(MR.strings.action_ok), onClick = {
+            onConfirmed(optionalChecked)
+            onDismissRequest()
+        }),
+        dismiss = DialogAction(stringResource(MR.strings.action_cancel), onDismissRequest),
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.m)) {
+            Text(text = stringResource(presentation.confirmSetSettingsAsDefaultLabel))
+            CheckRow(
+                title = stringResource(presentation.alsoSetSettingsForLibraryLabel),
+                checked = optionalChecked,
+                onCheckedChange = { optionalChecked = it },
+            )
+        }
+    }
 }

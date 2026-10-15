@@ -16,8 +16,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -27,18 +25,22 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Shadow
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.graphicsLayer
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerSeekDirection
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerSeekFeedbackState
 import kotlinx.coroutines.delay
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.surface.Surface
+import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
 private const val SEEK_FEEDBACK_VISIBLE_DURATION_MS = 700L
+
+/** How much of a chevron fades out over one sweep. */
+private const val CHEVRON_FADE = 0.78f
 
 @Composable
 internal fun VideoPlayerSeekFeedback(
@@ -86,7 +88,7 @@ internal fun VideoPlayerSeekFeedback(
             visible = visible,
             modifier = Modifier
                 .align(alignment)
-                .padding(horizontal = 88.dp),
+                .padding(horizontal = KatariTheme.spacing.xxl * 2),
             enter = fadeIn(animationSpec = tween(90)),
             exit = fadeOut(animationSpec = tween(120)),
         ) {
@@ -104,25 +106,20 @@ private fun VideoPlayerSeekIndicator(
     totalSeconds: Int,
     modifier: Modifier = Modifier,
 ) {
-    Column(
+    val spacing = KatariTheme.spacing
+    Surface(
         modifier = modifier,
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(6.dp),
+        container = SurfaceContainer.MediaScrim,
+        shape = KatariTheme.shapes.large,
     ) {
-        VideoPlayerSeekChevrons(direction = direction)
-        Text(
-            text = stringResource(MR.strings.seconds_short, totalSeconds),
-            color = Color.White,
-            style = MaterialTheme.typography.titleMedium.merge(
-                TextStyle(
-                    shadow = Shadow(
-                        color = Color.Black.copy(alpha = 0.45f),
-                        blurRadius = 12f,
-                    ),
-                ),
-            ),
-            fontWeight = FontWeight.SemiBold,
-        )
+        Column(
+            modifier = Modifier.padding(horizontal = spacing.l, vertical = spacing.s),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(spacing.xs),
+        ) {
+            VideoPlayerSeekChevrons(direction = direction)
+            Text(text = stringResource(MR.strings.seconds_short, totalSeconds), role = TextRole.SectionTitle)
+        }
     }
 }
 
@@ -141,34 +138,28 @@ private fun VideoPlayerSeekChevrons(
         ),
         label = "seekFeedbackChevronProgress",
     )
+    val drift = KatariTheme.spacing.s
 
     Row(
         modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(2.dp),
+        horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xxs),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        // Each chevron fades and drifts a little behind the one before it, so they sweep in the seek direction.
         repeat(3) { index ->
             val phase = ((progress - index * 0.18f) + 1f) % 1f
-            val alpha = 0.22f + ((1f - phase) * 0.78f)
             val offsetX = if (direction == VideoPlayerSeekDirection.Backward) {
-                ((phase - 0.5f) * 6f).dp
+                drift * (phase - 0.5f)
             } else {
-                ((0.5f - phase) * 6f).dp
+                drift * (0.5f - phase)
             }
 
             Text(
                 text = if (direction == VideoPlayerSeekDirection.Backward) "<" else ">",
-                modifier = Modifier.offset(x = offsetX),
-                color = Color.White.copy(alpha = alpha),
-                style = MaterialTheme.typography.titleLarge.merge(
-                    TextStyle(
-                        shadow = Shadow(
-                            color = Color.Black.copy(alpha = 0.4f),
-                            blurRadius = 10f,
-                        ),
-                    ),
-                ),
-                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier
+                    .offset(x = offsetX)
+                    .graphicsLayer { alpha = 1f - phase * CHEVRON_FADE },
+                role = TextRole.ScreenTitle,
             )
         }
     }

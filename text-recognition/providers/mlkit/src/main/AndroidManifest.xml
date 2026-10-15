@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <application>
-        <!-- ML Kit would start at every app launch; MlKitScriptRecognizers starts it on first use instead. -->
+        <!-- ML Kit would start at every app launch; MlKitScriptRecognizers starts it on first use instead.
+             Disabled rather than removed: this manifest is processed on its own before ML Kit's is merged in,
+             so a remove marker would have nothing to remove at that stage. -->
         <provider
             android:name="com.google.mlkit.common.internal.MlKitInitProvider"
             android:authorities="${applicationId}.mlkitinitprovider"
-            tools:node="remove" />
+            android:enabled="false" />
     </application>
 </manifest>

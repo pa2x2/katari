@@ -9,6 +9,7 @@ import androidx.compose.animation.graphics.res.rememberAnimatedVectorPainter
 import androidx.compose.animation.graphics.vector.AnimatedImageVector
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Row
@@ -16,15 +17,6 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.material3.Badge
-import androidx.compose.material3.BadgedBox
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationRailItem
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -33,9 +25,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.util.fastForEach
 import eu.kanade.tachiyomi.R
 import mihon.core.common.HomeScreenTabs
@@ -45,9 +36,19 @@ import mihon.icons.materialsymbols.rounded.Menu
 import mihon.icons.materialsymbols.rounded.QueryStats
 import mihon.icons.materialsymbols.rounded.Translate
 import mihon.icons.materialsymbols.roundedfilled.Home
+import mihon.presentation.kit.content.Badge
+import mihon.presentation.kit.content.BadgeTone
+import mihon.presentation.kit.content.BadgedBox
+import mihon.presentation.kit.content.Icon
+import mihon.presentation.kit.content.NotificationBadge
+import mihon.presentation.kit.menu.DropdownMenu
+import mihon.presentation.kit.menu.DropdownMenuItem
+import mihon.presentation.kit.navigation.NavigationBar
+import mihon.presentation.kit.navigation.NavigationBarItem
+import mihon.presentation.kit.navigation.NavigationRail
+import mihon.presentation.kit.navigation.NavigationRailItem
+import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.material.NavigationBar
-import tachiyomi.presentation.core.components.material.NavigationRail
 import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable
@@ -107,26 +108,18 @@ private fun RowScope.HomeNavigationOverflowBarItem(
         this@HomeNavigationOverflowBarItem.NavigationBarItem(
             selected = selectedOverflowTab != null,
             onClick = { onOverflowClick?.invoke() ?: onExpandedChange(true) },
+            label = stringResource(MR.strings.home_navigation_menu),
             icon = {
                 if (rememberAnyHomeTabBadged(tabs)) {
-                    BadgedBox(badge = { Badge() }) { HomeNavigationMenuIcon(selectedOverflowTab) }
+                    BadgedBox(badge = { NotificationBadge() }) { HomeNavigationMenuIcon(selectedOverflowTab) }
                 } else {
                     HomeNavigationMenuIcon(selectedOverflowTab)
                 }
             },
-            label = {
-                Text(
-                    text = stringResource(MR.strings.home_navigation_menu),
-                    style = MaterialTheme.typography.labelLarge,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            },
             modifier = Modifier.fillMaxWidth(),
-            alwaysShowLabel = true,
         )
         if (onOverflowClick == null) {
-            HomeNavigationOverflowMenu(
+            DropdownMenu(
                 expanded = expanded,
                 onDismissRequest = { onExpandedChange(false) },
             ) {
@@ -156,16 +149,8 @@ fun HomeNavigationRail(
                 NavigationRailItem(
                     selected = tab == selectedTab,
                     onClick = { onClick(tab) },
+                    label = homeNavigationTitle(tab),
                     icon = { HomeNavigationIcon(tab) },
-                    label = {
-                        Text(
-                            text = homeNavigationTitle(tab),
-                            style = MaterialTheme.typography.labelLarge,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                    },
-                    alwaysShowLabel = true,
                 )
             }
         }
@@ -184,24 +169,19 @@ fun HomeNavigationOverflowItems(
         key(tab) {
             val selected = tab == selectedTab
             DropdownMenuItem(
-                text = {
-                    Text(
-                        text = homeNavigationTitle(tab),
-                        style = MaterialTheme.typography.bodyLarge,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                },
+                label = homeNavigationTitle(tab),
                 onClick = { onClick(tab) },
-                leadingIcon = { HomeNavigationIcon(tab) },
-                trailingIcon = trailingContent?.let { content ->
+                modifier = itemModifier(tab).then(
+                    if (selected) {
+                        Modifier.background(KatariTheme.colors.selected, KatariTheme.shapes.medium)
+                    } else {
+                        Modifier
+                    },
+                ),
+                leading = { HomeNavigationIcon(tab) },
+                trailing = trailingContent?.let { content ->
                     { Box { content(tab) } }
                 },
-                modifier = itemModifier(tab)
-                    .background(
-                        color = if (selected) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent,
-                        shape = HomeNavigationOverflowShape,
-                    ),
             )
         }
     }
@@ -249,35 +229,23 @@ private fun RowScope.HomeNavigationBarItem(
     NavigationBarItem(
         selected = selected,
         onClick = onClick,
+        label = homeNavigationTitle(tab),
         icon = {
             Box {
                 HomeNavigationIcon(tab)
                 if (isStartup) {
+                    val startupDescription = stringResource(MR.strings.home_navigation_startup)
                     Badge(
-                        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                        icon = MaterialSymbols.RoundedFilled.Home,
                         modifier = Modifier
                             .align(Alignment.TopStart)
-                            .offset(x = (-7).dp, y = (-5).dp),
-                    ) {
-                        Icon(
-                            imageVector = MaterialSymbols.RoundedFilled.Home,
-                            contentDescription = stringResource(MR.strings.home_navigation_startup),
-                            modifier = Modifier.size(10.dp),
-                        )
-                    }
+                            .offset(x = -KatariTheme.spacing.s, y = -KatariTheme.spacing.xs)
+                            .semantics { contentDescription = startupDescription },
+                        tone = BadgeTone.Tertiary,
+                    )
                 }
             }
         },
-        label = {
-            Text(
-                text = homeNavigationTitle(tab),
-                style = MaterialTheme.typography.labelLarge,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-        },
-        alwaysShowLabel = true,
         modifier = modifier,
     )
 }
@@ -297,18 +265,18 @@ private fun HomeNavigationMenuIcon(selectedOverflowTab: HomeScreenTabs?) {
             )
         } else {
             Row(
-                modifier = Modifier.width(40.dp),
+                horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xs),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 HomeNavigationIcon(
                     tab = activeTab,
-                    modifier = Modifier.size(20.dp),
+                    modifier = Modifier.size(KatariTheme.sizes.iconSmall),
                     showBadge = false,
                 )
                 Icon(
                     imageVector = MaterialSymbols.Rounded.Menu,
                     contentDescription = stringResource(MR.strings.home_navigation_menu),
-                    modifier = Modifier.size(20.dp),
+                    modifier = Modifier.size(KatariTheme.sizes.iconSmall),
                 )
             }
         }

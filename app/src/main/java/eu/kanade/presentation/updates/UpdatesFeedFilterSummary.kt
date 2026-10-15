@@ -6,10 +6,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -18,15 +14,22 @@ import eu.kanade.presentation.category.visualName
 import eu.kanade.presentation.entry.entryTypePresentation
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.FilterListOff
+import mihon.presentation.kit.button.Button
+import mihon.presentation.kit.button.ButtonStyle
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.feedback.EmptyScreen
+import mihon.presentation.kit.feedback.EmptyScreenAction
+import mihon.presentation.kit.surface.Surface
+import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.core.common.preference.TriState
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.updates.model.UpdatesFeedFilter
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.screens.EmptyScreen
-import tachiyomi.presentation.core.screens.EmptyScreenAction
 
 /**
  * "Unseen · Manga · not Dropped": every filter in use, named the way the filter sheet names it.
@@ -82,15 +85,15 @@ fun UpdatesFilterSummaryBar(
     modifier: Modifier = Modifier,
 ) {
     Surface(
+        onClick = onClick,
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = MaterialTheme.padding.medium, vertical = MaterialTheme.padding.extraSmall),
-        shape = MaterialTheme.shapes.medium,
-        color = MaterialTheme.colorScheme.secondaryContainer,
-        onClick = onClick,
+            .padding(horizontal = KatariTheme.spacing.contentInset, vertical = KatariTheme.spacing.xs),
+        container = SurfaceContainer.SecondaryContainer,
+        shape = KatariTheme.shapes.medium,
     ) {
         Row(
-            modifier = Modifier.padding(start = MaterialTheme.padding.medium),
+            modifier = Modifier.padding(start = KatariTheme.spacing.l),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
@@ -99,13 +102,15 @@ fun UpdatesFilterSummaryBar(
                     pluralStringResource(MR.plurals.updates_hidden, hiddenByFilters, hiddenByFilters),
                 ).joinToString(" — "),
                 modifier = Modifier.weight(1f),
-                style = MaterialTheme.typography.labelLarge,
+                role = TextRole.Label,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
-            TextButton(onClick = onClear) {
-                Text(stringResource(MR.strings.action_clear))
-            }
+            Button(
+                label = stringResource(MR.strings.action_clear),
+                onClick = onClear,
+                style = ButtonStyle.Text,
+            )
         }
     }
 }
@@ -124,10 +129,8 @@ internal fun LazyListScope.updatesFeedFooterItem(
             modifier = Modifier
                 .animateItem(fadeInSpec = null, fadeOutSpec = null)
                 .fillMaxWidth()
-                .padding(horizontal = MaterialTheme.padding.medium, vertical = MaterialTheme.padding.small),
+                .padding(horizontal = KatariTheme.spacing.contentInset, vertical = KatariTheme.spacing.s),
         ) {
-            val textStyle = MaterialTheme.typography.bodySmall
-            val textColor = MaterialTheme.colorScheme.onSurfaceVariant
             if (hiddenByFilters > 0) {
                 Text(
                     text = listOf(
@@ -136,9 +139,9 @@ internal fun LazyListScope.updatesFeedFooterItem(
                     ).joinToString(" · "),
                     modifier = Modifier
                         .clickable(onClick = onClearFilters)
-                        .padding(vertical = MaterialTheme.padding.extraSmall),
-                    style = textStyle,
-                    color = MaterialTheme.colorScheme.primary,
+                        .padding(vertical = KatariTheme.spacing.xs),
+                    role = TextRole.Supporting,
+                    tone = ContentTone.Primary,
                 )
             }
             if (fromHiddenSources > 0) {
@@ -148,16 +151,14 @@ internal fun LazyListScope.updatesFeedFooterItem(
                         fromHiddenSources,
                         fromHiddenSources,
                     ),
-                    modifier = Modifier.padding(vertical = MaterialTheme.padding.extraSmall),
-                    style = textStyle,
-                    color = textColor,
+                    modifier = Modifier.padding(vertical = KatariTheme.spacing.xs),
+                    role = TextRole.Supporting,
                 )
             }
             Text(
                 text = stringResource(MR.strings.updates_window),
-                modifier = Modifier.padding(vertical = MaterialTheme.padding.extraSmall),
-                style = textStyle,
-                color = textColor,
+                modifier = Modifier.padding(vertical = KatariTheme.spacing.xs),
+                role = TextRole.Supporting,
             )
         }
     }

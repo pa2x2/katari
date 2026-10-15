@@ -2,20 +2,20 @@ package eu.kanade.presentation.history.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import eu.kanade.presentation.theme.TachiyomiPreviewTheme
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.dialog.ConfirmDialog
+import mihon.presentation.kit.dialog.Dialog
+import mihon.presentation.kit.dialog.DialogAction
+import mihon.presentation.kit.list.CheckRow
+import mihon.presentation.kit.theme.KatariPreviewTheme
+import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.LabeledCheckbox
-import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable
@@ -25,38 +25,28 @@ fun HistoryDeleteDialog(
 ) {
     var removeEverything by remember { mutableStateOf(false) }
 
-    AlertDialog(
-        title = {
-            Text(text = stringResource(MR.strings.action_remove))
-        },
-        text = {
-            Column(
-                verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
-            ) {
-                Text(text = stringResource(MR.strings.dialog_with_checkbox_remove_description))
-
-                LabeledCheckbox(
-                    label = stringResource(MR.strings.dialog_with_checkbox_reset),
-                    checked = removeEverything,
-                    onCheckedChange = { removeEverything = it },
-                )
-            }
-        },
+    Dialog(
         onDismissRequest = onDismissRequest,
-        confirmButton = {
-            TextButton(onClick = {
+        title = stringResource(MR.strings.action_remove),
+        confirm = DialogAction(
+            label = stringResource(MR.strings.action_remove),
+            onClick = {
                 onDelete(removeEverything)
                 onDismissRequest()
-            }) {
-                Text(text = stringResource(MR.strings.action_remove))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismissRequest) {
-                Text(text = stringResource(MR.strings.action_cancel))
-            }
-        },
-    )
+            },
+            destructive = true,
+        ),
+        dismiss = DialogAction(stringResource(MR.strings.action_cancel), onDismissRequest),
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s)) {
+            Text(text = stringResource(MR.strings.dialog_with_checkbox_remove_description))
+            CheckRow(
+                title = stringResource(MR.strings.dialog_with_checkbox_reset),
+                checked = removeEverything,
+                onCheckedChange = { removeEverything = it },
+            )
+        }
+    }
 }
 
 @Composable
@@ -64,34 +54,23 @@ fun HistoryDeleteAllDialog(
     onDismissRequest: () -> Unit,
     onDelete: () -> Unit,
 ) {
-    AlertDialog(
-        title = {
-            Text(text = stringResource(MR.strings.action_remove_everything))
-        },
-        text = {
-            Text(text = stringResource(MR.strings.clear_history_confirmation))
+    ConfirmDialog(
+        title = stringResource(MR.strings.action_remove_everything),
+        text = stringResource(MR.strings.clear_history_confirmation),
+        confirmLabel = stringResource(MR.strings.action_ok),
+        onConfirm = {
+            onDelete()
+            onDismissRequest()
         },
         onDismissRequest = onDismissRequest,
-        confirmButton = {
-            TextButton(onClick = {
-                onDelete()
-                onDismissRequest()
-            }) {
-                Text(text = stringResource(MR.strings.action_ok))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismissRequest) {
-                Text(text = stringResource(MR.strings.action_cancel))
-            }
-        },
+        destructive = true,
     )
 }
 
 @PreviewLightDark
 @Composable
 private fun HistoryDeleteDialogPreview() {
-    TachiyomiPreviewTheme {
+    KatariPreviewTheme {
         HistoryDeleteDialog(
             onDismissRequest = {},
             onDelete = {},

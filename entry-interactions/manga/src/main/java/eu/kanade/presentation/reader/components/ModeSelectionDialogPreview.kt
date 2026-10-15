@@ -1,17 +1,17 @@
 package eu.kanade.presentation.reader.components
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import eu.kanade.presentation.theme.TachiyomiPreviewTheme
-import tachiyomi.presentation.core.components.reader.ModeSelectionDialog
+import mihon.entry.viewer.chrome.ui.ModeSelectionDialog
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.surface.Surface
+import mihon.presentation.kit.theme.KatariPreviewTheme
 
 @PreviewLightDark
 @Composable
 private fun Preview() {
-    TachiyomiPreviewTheme {
+    KatariPreviewTheme {
         Surface {
             Column {
                 ModeSelectionDialog(

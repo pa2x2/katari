@@ -1,35 +1,33 @@
 package eu.kanade.presentation.history.components
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LocalContentColor
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewParameter
-import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.entry.InlineEntryTypeIndicator
 import eu.kanade.presentation.entry.components.EntryCover
 import eu.kanade.presentation.entry.historySubtitle
 import eu.kanade.presentation.history.HistoryUiItem
-import eu.kanade.presentation.theme.TachiyomiPreviewTheme
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Delete
+import mihon.presentation.kit.button.IconButton
+import mihon.presentation.kit.content.LibraryMetrics
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.surface.Surface
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariPreviewTheme
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.material.DISABLED_ALPHA
-import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable
@@ -51,8 +49,8 @@ fun HistoryListItem(
                     Modifier
                 },
             )
-            .height(if (item.memberTitle != null) 72.dp else 56.dp)
-            .padding(horizontal = MaterialTheme.padding.medium, vertical = MaterialTheme.padding.small),
+            .height(if (item.memberTitle != null) LibraryMetrics.listRowTallHeight else LibraryMetrics.listRowHeight)
+            .padding(horizontal = KatariTheme.spacing.contentInset, vertical = KatariTheme.spacing.s),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         EntryCover.Square(
@@ -64,32 +62,29 @@ fun HistoryListItem(
         Column(
             modifier = Modifier
                 .weight(1f)
-                .padding(horizontal = MaterialTheme.padding.medium),
+                .padding(horizontal = KatariTheme.spacing.l),
         ) {
             Text(
                 text = item.visibleTitle,
-                fontWeight = FontWeight.SemiBold,
+                role = TextRole.Body,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                style = MaterialTheme.typography.bodyMedium,
             )
 
             item.memberTitle?.let { memberTitle ->
                 Text(
                     text = memberTitle,
+                    role = TextRole.Supporting,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    style = MaterialTheme.typography.bodySmall,
                 )
             }
 
             Row(
+                horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xs),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                historyItem.entryType.InlineEntryTypeIndicator(
-                    modifier = Modifier
-                        .padding(end = 4.dp),
-                )
+                historyItem.entryType.InlineEntryTypeIndicator()
 
                 Text(
                     text = historyItem.entryType.historySubtitle(
@@ -98,22 +93,20 @@ fun HistoryListItem(
                         consumedAt = historyItem.history.readAt,
                         consumedDuration = historyItem.history.readDuration,
                     ),
+                    modifier = Modifier.weight(weight = 1f, fill = false),
+                    role = TextRole.Supporting,
+                    tone = ContentTone.Disabled,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = LocalContentColor.current.copy(alpha = DISABLED_ALPHA),
-                    modifier = Modifier.weight(weight = 1f, fill = false),
                 )
             }
         }
 
-        IconButton(onClick = onClickDelete) {
-            Icon(
-                imageVector = MaterialSymbols.Rounded.Delete,
-                contentDescription = stringResource(MR.strings.action_delete),
-                tint = MaterialTheme.colorScheme.onSurface,
-            )
-        }
+        IconButton(
+            icon = MaterialSymbols.Rounded.Delete,
+            contentDescription = stringResource(MR.strings.action_delete),
+            onClick = onClickDelete,
+        )
     }
 }
 
@@ -123,7 +116,7 @@ private fun HistoryListItemPreviews(
     @PreviewParameter(HistoryItemProvider::class)
     item: HistoryUiItem,
 ) {
-    TachiyomiPreviewTheme {
+    KatariPreviewTheme {
         Surface {
             HistoryListItem(
                 item = item,

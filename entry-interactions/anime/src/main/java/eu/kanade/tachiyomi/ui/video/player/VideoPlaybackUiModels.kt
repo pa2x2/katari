@@ -377,4 +377,22 @@ internal const val MAX_SUBTITLE_OFFSET_Y = 0.25f
 internal const val DEFAULT_SUBTITLE_TEXT_COLOR = Color.WHITE
 internal const val DEFAULT_SUBTITLE_BACKGROUND_COLOR = Color.BLACK
 
+/** The colours the subtitle editor offers for subtitle text, as ARGB integers. */
+internal val SUBTITLE_TEXT_COLOR_PRESETS = listOf(
+    DEFAULT_SUBTITLE_TEXT_COLOR,
+    0xFFFFFF99.toInt(),
+    0xFFFFC857.toInt(),
+    0xFF8BE9FD.toInt(),
+    0xFFFF79C6.toInt(),
+)
+
+/** The colours the subtitle editor offers for the box behind subtitle text, as ARGB integers. */
+internal val SUBTITLE_BACKGROUND_COLOR_PRESETS = listOf(
+    DEFAULT_SUBTITLE_BACKGROUND_COLOR,
+    0xFF1F2937.toInt(),
+    0xFF374151.toInt(),
+    0xFF7F1D1D.toInt(),
+    0xFF0F766E.toInt(),
+)
+
 private const val EXTERNAL_SUBTITLE_PREFERENCE_PREFIX = "external:"

@@ -17,6 +17,12 @@
 - Avoid catch-all directories such as `common`, `misc`, or `utils`. Name structural groups after concrete ownership, and place narrowly shared helpers with the feature that owns their semantics.
 - Before finishing a change, inspect every touched source file and directory. If responsibilities or ownership are not clear from the tree alone, reorganize that area before committing rather than leaving cleanup for a follow-up.
 
+## UI kit
+- `presentation-core` is the UI kit: `mihon.presentation.kit` owns colour, typography, spacing, sizes, shape and every component. Build screens from kit components and `KatariTheme` tokens only.
+- Outside `presentation-core`, Compose Material, raw `Dialog`/`Popup`, numeric dp/sp, `Color(…)`, text styles, font weights, corner shapes and literal alphas are rejected by `checkUiKitBoundaries`, which runs with `spotlessCheck`. No other module may depend on or opt into Material.
+- Pick text by its job (`Text(role = TextRole.…)`), colour by role (`tone = ContentTone.…`, `SurfaceContainer.…`), and emphasis by colour role or `enabled`, never alpha. Rows come from the kit `list` package and pick their control from `LocalRowDensity`; sheets, dialogs, menus, app bars and empty states have one kit component each.
+- When a screen needs something the kit lacks, add it to the matching kit package as a semantic component, parameter or token (enums such as `ButtonStyle` or `StatusTone`, never colour, shape or text-style parameters). Values that come from data, such as user-picked or document colours, go through the narrow content APIs in `kit/content` and `kit/theme`.
+
 ## Comments
 A comment earns its place by telling the reader something the code can't: why it's done this way, a constraint or platform quirk it works around, a bug it prevents, or what a non-obvious value means. If deleting the comment loses nothing a careful reader couldn't get from the code, delete it.
 
@@ -35,7 +41,7 @@ Write a test only when all three hold:
 
 1. **The bug would go unnoticed.** Compilation, the boundary checks, and using the feature once on the device wouldn't catch it. Think races and cancellation, what survives process death or an app restart, database migrations and backup restore, profile isolation, parsers fed real-world documents, source and extension compatibility, and error paths you can't easily trigger by hand.
 2. **The bug is likely.** Either it has happened before, or the logic is subtle enough that a reasonable edit would break it. "What if someone deletes this line" doesn't count.
-3. **Nothing else catches it.** No existing test, type, boundary check, or feature contract verifier already covers it.
+3. **Nothing else catches it.** No existing test, type, or boundary check already covers it.
 
 Name the bug before you write the test. "Checks that library filtering works" is not a bug. "Filtering one profile's library hides entries in another profile" is. If you can only describe what the code does, not how it would go wrong, don't write the test.
 
@@ -58,17 +64,16 @@ Every one of these has been written here before and deleted.
 - **UI render tests.** Compose and Robolectric tests need harnesses, break on every layout change, and miss what actually goes wrong on a device. If a composable has logic worth testing (enabled rules, filtering, which option is selected), move it into a plain function beside it and test that. Check the UI itself on the device. Device tests are for behaviour that needs real Android text measurement, rendering, or storage and can't be moved to a plain function.
 - **Lint rules written as tests.** A test that scans sources, manifests, or the dependency graph for a banned pattern belongs in the build-logic boundary check tasks. Test the checker once per rule, not every path through it.
 - **Implementation snapshots.** Tests that pin intermediate state, private control flow, or exact strings and serialized layouts that nothing depends on. Pin a format only when it is a compatibility requirement: backups, database migrations, the extension API, or data read back after an update.
-- **Duplicates.** If a mapping is covered by a unit test, one wiring test at the next layer is enough. Don't re-test every branch there, and don't repeat a contract verifier's check in a unit test.
+- **Duplicates.** If a mapping is covered by a unit test, one wiring test at the next layer is enough. Don't re-test every branch there.
 
 ## Toolchain
 - Android SDK/NDK and Java compatibility come from `gradle/mihon.versions.toml` plus build logic; do not hardcode them per module.
-- Do not use `--quiet` for compilation, tests, lint, or assembly because it suppresses warnings. Run Gradle with `--console=plain --warning-mode=all`, redirect the complete output to a unique file under `/tmp`, preserve the Gradle exit code, and inspect only diagnostic matches and nearby context (`w:`, `warning`, `e:`, `error`, `FAILURE`, `What went wrong`, and `Caused by`). If the build fails, inspect additional portions of the saved log selectively instead of printing the complete log. Use `--quiet` only for tasks whose diagnostic output is irrelevant.
+- Do not use `--quiet` for compilation, tests, lint, or assembly because it suppresses warnings. Run Gradle with `--console=plain --warning-mode=all`, redirect the complete output to a unique file under `/tmp`, preserve the Gradle exit code, and inspect only diagnostic matches and nearby context (`w:`, `warning`, `e:`, `error`, `deprecated`, `FAILURE`, `What went wrong`, and `Caused by`). Match case-insensitively: the manifest merger and other tools print `Warning:`, and Gradle deprecations only say `has been deprecated`. If the build fails, inspect additional portions of the saved log selectively instead of printing the complete log. Use `--quiet` only for tasks whose diagnostic output is irrelevant.
 
 ## Validation
 - Run `./gradlew spotlessApply` from the repo root.
 - App unit tests run on the `foss` buildType (`testBuildType = "foss"`); library modules run theirs on `release` (the variant the app consumes, so tests reuse its compilation) and multiplatform modules through `allTests`. Focused example: `./gradlew :app:testFossUnitTest --tests '...'`.
 - `./gradlew verifyTests --console=plain --warning-mode=all` runs every module's host tests and build-logic tests and compiles every device test. Every change that touches production or test code must pass it; `testFossUnitTest` and other module-specific test tasks cover a single module and leave failures elsewhere unnoticed. Modules join `verifyTests` through the convention plugins, so do not add per-module test tasks to aggregate verification lists.
-- Changes to application or Entry Feature runtime modules, production runtime components, platform-service factories used during module installation, the production validation environment, or the Android minimum SDK must pass `./gradlew verifyEntryFeatureArchitecture verifyTests --console=plain --warning-mode=all`. Focused module tests and compilation do not exercise the complete production composition and are insufficient for these changes. Do not report the work complete until this command passes.
 - FOSS compilation can be verified with `:app:compileFossKotlin`; telemetry-enabled release compilation uses `:app:compileReleaseKotlin -Pinclude-telemetry`.
 - Never combine FOSS/unit/architecture tasks with `-Pinclude-telemetry` in the same Gradle invocation. The property applies Google services to every configured variant and makes `processFossGoogleServices` reject the `app.katari.foss` application ID. Run FOSS checks without it, let that invocation finish, then run telemetry-enabled release compilation or assembly in a separate invocation. `-Penable-updater` only sets `BuildConfig.UPDATER_ENABLED` and is safe with FOSS tasks.
 - Do not infer the installable variant for emulator/device validation from the `foss` unit-test buildType. Before installing, identify the package that is actually running and use the matching Gradle variant: `installDebug` installs `app.katari.dev`, while `installFoss` installs the separate `app.katari.foss` application. After installation, verify that the intended package was launched and that its process changed or restarted; installing a different application ID does not update the app under test.

@@ -1,24 +1,24 @@
 package mihon.entry.interactions.book.reader
 
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Error
+import mihon.presentation.kit.feedback.InfoScreen
+import mihon.presentation.kit.feedback.LoadingScreen
+import mihon.presentation.kit.surface.Surface
+import mihon.presentation.kit.surface.SurfaceContainer
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.screens.InfoScreen
-import tachiyomi.presentation.core.screens.LoadingScreen
 
 @Composable
 internal fun BookReaderLoadingScreen(contentDescription: String) {
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background,
+        container = SurfaceContainer.Background,
     ) {
         LoadingScreen(
             modifier = Modifier.semantics {
@@ -38,7 +38,7 @@ internal fun BookReaderErrorScreen(
 ) {
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background,
+        container = SurfaceContainer.Background,
     ) {
         InfoScreen(
             icon = MaterialSymbols.Rounded.Error,
@@ -57,6 +57,6 @@ internal fun BookReaderErrorScreen(
 internal fun BookReaderDialogBackground() {
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background,
+        container = SurfaceContainer.Background,
     ) {}
 }

@@ -1,25 +1,15 @@
 package mihon.entry.interactions.download.configuration.backup
 
-import mihon.entry.interactions.download.ENTRY_DOWNLOAD_CONFIGURATION_FEATURE_ID
-import mihon.entry.interactions.download.ENTRY_DOWNLOAD_OPTIONS_BEHAVIOR_ID
-import mihon.entry.interactions.download.ENTRY_DOWNLOAD_OPTIONS_INTEGRATION_ID
-import mihon.entry.interactions.download.EntryDownloadOptionsProcessor
-import mihon.entry.interactions.runtime.applicableProviderTypes
-import mihon.feature.graph.FeatureGraphEvaluation
+import eu.kanade.tachiyomi.source.entry.EntryType
 import tachiyomi.domain.entry.model.DownloadPreferences
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.VideoDownloadQualityMode
 import tachiyomi.domain.entry.repository.DownloadPreferencesRepository
 
 internal class DefaultEntryDownloadConfigurationBackupFeature(
-    evaluation: FeatureGraphEvaluation,
+    private val applicableTypes: Set<EntryType>,
     private val repository: DownloadPreferencesRepository,
 ) : EntryDownloadConfigurationBackupFeature {
-    private val applicableTypes = evaluation.applicableProviderTypes<EntryDownloadOptionsProcessor>(
-        feature = ENTRY_DOWNLOAD_CONFIGURATION_FEATURE_ID,
-        integration = ENTRY_DOWNLOAD_OPTIONS_INTEGRATION_ID,
-        behaviorProjection = ENTRY_DOWNLOAD_OPTIONS_BEHAVIOR_ID,
-    )
 
     override suspend fun snapshot(entry: Entry): EntryDownloadConfigurationBackupState? {
         if (entry.type !in applicableTypes) return null

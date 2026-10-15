@@ -3,6 +3,7 @@ plugins {
     alias(mihonx.plugins.spotless)
 
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.metro)
     alias(libs.plugins.sqldelight)
 }
 
@@ -38,8 +39,6 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.serialization.jsonOkio)
     implementation(libs.kotlinx.serialization.protobuf)
-
-    implementation(libs.injekt)
 
     implementation(libs.kotlinx.datetime)
 

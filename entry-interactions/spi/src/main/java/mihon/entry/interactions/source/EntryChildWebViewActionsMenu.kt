@@ -1,19 +1,16 @@
 package mihon.entry.interactions.source
 
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LocalContentColor
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.graphics.Color
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.MoreVert
+import mihon.presentation.kit.button.IconButton
+import mihon.presentation.kit.menu.DropdownMenu
+import mihon.presentation.kit.menu.DropdownMenuItem
+import mihon.presentation.kit.theme.ContentTone
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -33,19 +30,18 @@ enum class EntryChildWebViewAction {
 fun EntryChildWebViewActionsMenu(
     resolution: EntryChildWebViewResolution.Available?,
     onAction: (EntryChildWebViewAction, EntryChildWebViewResolution.Available) -> Unit,
-    contentColor: Color = LocalContentColor.current,
+    tone: ContentTone = ContentTone.Inherit,
 ) {
     if (resolution == null) return
 
     var expanded by remember(resolution) { mutableStateOf(false) }
 
-    IconButton(onClick = { expanded = true }) {
-        Icon(
-            imageVector = MaterialSymbols.Rounded.MoreVert,
-            contentDescription = stringResource(MR.strings.label_more),
-            tint = contentColor,
-        )
-    }
+    IconButton(
+        icon = MaterialSymbols.Rounded.MoreVert,
+        contentDescription = stringResource(MR.strings.label_more),
+        onClick = { expanded = true },
+        tone = tone,
+    )
 
     DropdownMenu(
         expanded = expanded,
@@ -53,17 +49,13 @@ fun EntryChildWebViewActionsMenu(
     ) {
         EntryChildWebViewAction.entries.forEach { action ->
             DropdownMenuItem(
-                text = {
-                    Text(
-                        stringResource(
-                            when (action) {
-                                EntryChildWebViewAction.OPEN_IN_WEB_VIEW -> MR.strings.action_open_in_web_view
-                                EntryChildWebViewAction.OPEN_IN_BROWSER -> MR.strings.action_open_in_browser
-                                EntryChildWebViewAction.SHARE -> MR.strings.action_share
-                            },
-                        ),
-                    )
-                },
+                label = stringResource(
+                    when (action) {
+                        EntryChildWebViewAction.OPEN_IN_WEB_VIEW -> MR.strings.action_open_in_web_view
+                        EntryChildWebViewAction.OPEN_IN_BROWSER -> MR.strings.action_open_in_browser
+                        EntryChildWebViewAction.SHARE -> MR.strings.action_share
+                    },
+                ),
                 onClick = {
                     expanded = false
                     onAction(action, resolution)

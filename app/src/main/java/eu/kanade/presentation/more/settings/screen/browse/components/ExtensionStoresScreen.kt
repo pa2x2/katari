@@ -3,23 +3,20 @@ package eu.kanade.presentation.more.settings.screen.browse.components
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import eu.kanade.presentation.category.components.CategoryFloatingActionButton
-import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.more.settings.screen.browse.ExtensionStoreScreenState
 import mihon.domain.extension.model.ExtensionStore
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Refresh
+import mihon.presentation.kit.button.IconButton
+import mihon.presentation.kit.feedback.EmptyScreen
+import mihon.presentation.kit.navigation.AppBar
+import mihon.presentation.kit.navigation.Scaffold
+import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.material.Scaffold
-import tachiyomi.presentation.core.components.material.padding
-import tachiyomi.presentation.core.components.material.topSmallPaddingValues
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.screens.EmptyScreen
 import tachiyomi.presentation.core.util.plus
 
 @Composable
@@ -41,12 +38,11 @@ fun ExtensionStoresScreen(
                 title = stringResource(MR.strings.extensionStores),
                 scrollBehavior = scrollBehavior,
                 actions = {
-                    IconButton(onClick = onClickRefresh) {
-                        Icon(
-                            imageVector = MaterialSymbols.Rounded.Refresh,
-                            contentDescription = stringResource(resource = MR.strings.action_webview_refresh),
-                        )
-                    }
+                    IconButton(
+                        icon = MaterialSymbols.Rounded.Refresh,
+                        contentDescription = stringResource(resource = MR.strings.action_webview_refresh),
+                        onClick = onClickRefresh,
+                    )
                 },
             )
         },
@@ -68,8 +64,11 @@ fun ExtensionStoresScreen(
         ExtensionStoresContent(
             repos = state.stores,
             lazyListState = lazyListState,
-            paddingValues = paddingValues + topSmallPaddingValues +
-                PaddingValues(horizontal = MaterialTheme.padding.medium),
+            paddingValues = paddingValues + PaddingValues(
+                start = KatariTheme.spacing.contentInset,
+                top = KatariTheme.spacing.s,
+                end = KatariTheme.spacing.contentInset,
+            ),
             onCopy = onCopy,
             onOpenWebsite = onOpenWebsite,
             onOpenDiscord = onOpenDiscord,

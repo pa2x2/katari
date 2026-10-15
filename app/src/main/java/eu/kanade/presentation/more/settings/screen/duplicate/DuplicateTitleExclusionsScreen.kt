@@ -2,63 +2,43 @@ package eu.kanade.presentation.more.settings.screen.duplicate
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalContext
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import dev.icerock.moko.resources.StringResource
 import eu.kanade.presentation.category.components.CategoryFloatingActionButton
-import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.WarningBanner
 import eu.kanade.presentation.util.Screen
-import kotlinx.coroutines.delay
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.Delete
-import mihon.icons.materialsymbols.rounded.Edit
-import mihon.icons.materialsymbols.rounded.KeyboardArrowDown
-import mihon.icons.materialsymbols.rounded.KeyboardArrowUp
-import tachiyomi.domain.library.service.DuplicatePreferences
+import mihon.app.di.appGraph
+import mihon.presentation.kit.button.Button
+import mihon.presentation.kit.button.ButtonStyle
+import mihon.presentation.kit.dialog.ConfirmDialog
+import mihon.presentation.kit.feedback.EmptyScreen
+import mihon.presentation.kit.navigation.AppBar
+import mihon.presentation.kit.navigation.Scaffold
+import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.domain.library.service.DuplicateTitleExclusions
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.material.Scaffold
-import tachiyomi.presentation.core.components.material.padding
-import tachiyomi.presentation.core.components.material.topSmallPaddingValues
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.screens.EmptyScreen
 import tachiyomi.presentation.core.util.collectAsState
 import tachiyomi.presentation.core.util.plus
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
-import kotlin.time.Duration.Companion.seconds
 
 class DuplicateTitleExclusionsScreen : Screen() {
 
     @Composable
     override fun Content() {
+        val context = LocalContext.current
         val navigator = LocalNavigator.currentOrThrow
-        val duplicatePreferences = remember { Injekt.get<DuplicatePreferences>() }
+        val duplicatePreferences = remember { context.appGraph.duplicatePreferences }
         val patterns by duplicatePreferences.titleExclusionPatterns.collectAsState()
         val lazyListState = rememberLazyListState()
         var dialog by remember { mutableStateOf<DuplicateTitleExclusionDialog?>(null) }
@@ -71,16 +51,16 @@ class DuplicateTitleExclusionsScreen : Screen() {
                     navigateUp = navigator::pop,
                     scrollBehavior = scrollBehavior,
                     actions = {
-                        TextButton(
-                            enabled = patterns != DuplicateTitleExclusions.defaultPatterns,
+                        Button(
+                            label = stringResource(MR.strings.action_restore),
                             onClick = {
                                 duplicatePreferences.titleExclusionPatterns.set(
                                     DuplicateTitleExclusions.defaultPatterns,
                                 )
                             },
-                        ) {
-                            Text(stringResource(MR.strings.action_restore))
-                        }
+                            style = ButtonStyle.Text,
+                            enabled = patterns != DuplicateTitleExclusions.defaultPatterns,
+                        )
                     },
                 )
             },
@@ -93,14 +73,17 @@ class DuplicateTitleExclusionsScreen : Screen() {
         ) { paddingValues ->
             LazyColumn(
                 state = lazyListState,
-                contentPadding = paddingValues + topSmallPaddingValues +
-                    PaddingValues(horizontal = MaterialTheme.padding.medium),
-                verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
+                contentPadding = paddingValues + PaddingValues(
+                    start = KatariTheme.spacing.contentInset,
+                    top = KatariTheme.spacing.s,
+                    end = KatariTheme.spacing.contentInset,
+                ),
+                verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
             ) {
                 item {
                     WarningBanner(
                         textRes = MR.strings.pref_duplicate_detection_title_exclusions_help,
-                        modifier = Modifier.padding(bottom = MaterialTheme.padding.small),
+                        modifier = Modifier.padding(bottom = KatariTheme.spacing.s),
                     )
                 }
                 if (patterns.isEmpty()) {
@@ -162,166 +145,24 @@ class DuplicateTitleExclusionsScreen : Screen() {
                 )
             }
             is DuplicateTitleExclusionDialog.Delete -> {
-                AlertDialog(
-                    onDismissRequest = { dialog = null },
-                    title = { Text(stringResource(MR.strings.pref_duplicate_detection_title_exclusions_delete)) },
-                    text = {
-                        Text(
-                            stringResource(
-                                MR.strings.pref_duplicate_detection_title_exclusions_delete_confirmation,
-                                currentDialog.pattern,
-                            ),
+                ConfirmDialog(
+                    title = stringResource(MR.strings.pref_duplicate_detection_title_exclusions_delete),
+                    text = stringResource(
+                        MR.strings.pref_duplicate_detection_title_exclusions_delete_confirmation,
+                        currentDialog.pattern,
+                    ),
+                    confirmLabel = stringResource(MR.strings.action_delete),
+                    onConfirm = {
+                        duplicatePreferences.titleExclusionPatterns.set(
+                            patterns.filterIndexed { index, _ -> index != currentDialog.index },
                         )
+                        dialog = null
                     },
-                    confirmButton = {
-                        TextButton(
-                            onClick = {
-                                duplicatePreferences.titleExclusionPatterns.set(
-                                    patterns.filterIndexed { index, _ -> index != currentDialog.index },
-                                )
-                                dialog = null
-                            },
-                        ) {
-                            Text(stringResource(MR.strings.action_delete))
-                        }
-                    },
-                    dismissButton = {
-                        TextButton(onClick = { dialog = null }) {
-                            Text(stringResource(MR.strings.action_cancel))
-                        }
-                    },
+                    onDismissRequest = { dialog = null },
+                    destructive = true,
                 )
             }
         }
-    }
-}
-
-@Composable
-private fun DuplicateTitleExclusionItem(
-    pattern: String,
-    canMoveUp: Boolean,
-    canMoveDown: Boolean,
-    onMoveUp: () -> Unit,
-    onMoveDown: () -> Unit,
-    onEdit: () -> Unit,
-    onDelete: () -> Unit,
-) {
-    ElevatedCard {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(MaterialTheme.padding.medium),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                text = pattern,
-                modifier = Modifier.weight(1f),
-                style = MaterialTheme.typography.titleMedium,
-            )
-            IconButton(enabled = canMoveUp, onClick = onMoveUp) {
-                Icon(
-                    imageVector = MaterialSymbols.Rounded.KeyboardArrowUp,
-                    contentDescription = stringResource(MR.strings.action_move_to_top),
-                )
-            }
-            IconButton(enabled = canMoveDown, onClick = onMoveDown) {
-                Icon(
-                    imageVector = MaterialSymbols.Rounded.KeyboardArrowDown,
-                    contentDescription = stringResource(MR.strings.action_move_to_bottom),
-                )
-            }
-            IconButton(onClick = onEdit) {
-                Icon(
-                    imageVector = MaterialSymbols.Rounded.Edit,
-                    contentDescription = stringResource(MR.strings.action_edit),
-                )
-            }
-            IconButton(onClick = onDelete) {
-                Icon(
-                    imageVector = MaterialSymbols.Rounded.Delete,
-                    contentDescription = stringResource(MR.strings.action_delete),
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun DuplicateTitleExclusionEditorDialog(
-    title: String,
-    confirmLabel: String,
-    initialValue: String,
-    existingPatterns: List<String>,
-    onDismissRequest: () -> Unit,
-    onConfirm: (String) -> Unit,
-) {
-    var pattern by remember { mutableStateOf(initialValue) }
-    val focusRequester = remember { FocusRequester() }
-    val validation = remember(pattern, existingPatterns) {
-        validatePattern(pattern, existingPatterns)
-    }
-    val normalizedPattern = remember(pattern) { DuplicateTitleExclusions.normalizePattern(pattern) }
-    val normalizedInitialValue = remember(initialValue) { DuplicateTitleExclusions.normalizePattern(initialValue) }
-
-    AlertDialog(
-        onDismissRequest = onDismissRequest,
-        title = { Text(title) },
-        text = {
-            OutlinedTextField(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .focusRequester(focusRequester),
-                value = pattern,
-                onValueChange = { pattern = it },
-                label = { Text(stringResource(MR.strings.pref_duplicate_detection_title_exclusions_pattern)) },
-                supportingText = {
-                    Text(
-                        if (validation.message != null) {
-                            stringResource(validation.message)
-                        } else {
-                            stringResource(MR.strings.pref_duplicate_detection_title_exclusions_pattern_help)
-                        },
-                    )
-                },
-                isError = !validation.isValid,
-                singleLine = true,
-            )
-        },
-        confirmButton = {
-            TextButton(
-                enabled = validation.isValid && normalizedPattern != normalizedInitialValue,
-                onClick = {
-                    onConfirm(normalizedPattern)
-                },
-            ) {
-                Text(confirmLabel)
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismissRequest) {
-                Text(stringResource(MR.strings.action_cancel))
-            }
-        },
-    )
-
-    LaunchedEffect(focusRequester) {
-        delay(0.1.seconds)
-        focusRequester.requestFocus()
-    }
-}
-
-private fun validatePattern(pattern: String, existingPatterns: List<String>): PatternValidation {
-    val normalized = DuplicateTitleExclusions.normalizePattern(pattern)
-    return when {
-        normalized.isBlank() -> PatternValidation(
-            false,
-            MR.strings.pref_duplicate_detection_title_exclusions_error_blank,
-        )
-        DuplicateTitleExclusions.isCatchAllPattern(normalized) ->
-            PatternValidation(false, MR.strings.pref_duplicate_detection_title_exclusions_error_catch_all)
-        existingPatterns.any { it.equals(normalized, ignoreCase = true) } ->
-            PatternValidation(false, MR.strings.pref_duplicate_detection_title_exclusions_error_exists)
-        else -> PatternValidation(true, null)
     }
 }
 
@@ -332,11 +173,6 @@ private fun List<String>.swap(firstIndex: Int, secondIndex: Int): List<String> {
         this[secondIndex] = value
     }
 }
-
-private data class PatternValidation(
-    val isValid: Boolean,
-    val message: StringResource?,
-)
 
 private sealed class DuplicateTitleExclusionDialog {
     data object Create : DuplicateTitleExclusionDialog()

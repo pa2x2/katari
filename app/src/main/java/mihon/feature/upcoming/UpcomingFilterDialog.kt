@@ -1,55 +1,37 @@
 package mihon.feature.upcoming
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEachIndexed
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import eu.kanade.presentation.category.visualName
-import eu.kanade.presentation.components.TabbedDialog
-import eu.kanade.presentation.components.TabbedDialogPaddings
+import mihon.presentation.kit.feedback.LoadingScreen
+import mihon.presentation.kit.list.InfoRow
+import mihon.presentation.kit.list.TriStateRow
+import mihon.presentation.kit.sheet.TabbedSheet
+import mihon.presentation.kit.surface.HorizontalDivider
+import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.core.common.preference.TriState
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.SettingsItemsPaddings
-import tachiyomi.presentation.core.components.TriStateItem
-import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.screens.LoadingScreen
 import tachiyomi.presentation.core.util.collectAsState
 import androidx.compose.runtime.collectAsState as collectFlowAsState
 
 @Composable
-private fun ColumnScope.CategoryFilterSheet(
+private fun CategoryFilterSheet(
     viewModel: UpcomingViewModel,
 ) {
-    Text(
-        stringResource(MR.strings.pref_filter_upcoming_categories_details),
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(
-                horizontal = SettingsItemsPaddings.Horizontal,
-                vertical = SettingsItemsPaddings.Vertical,
-            ),
-    )
-
-    HorizontalDivider(modifier = Modifier.padding(MaterialTheme.padding.extraSmall))
+    InfoRow(text = stringResource(MR.strings.pref_filter_upcoming_categories_details), showIcon = false)
+    HorizontalDivider()
 
     val screenState by viewModel.state.collectAsStateWithLifecycle()
     val profileId = screenState.profileId
     if (profileId == null) {
-        LoadingScreen(modifier = Modifier.padding(16.dp))
+        LoadingScreen(modifier = Modifier.padding(KatariTheme.spacing.l))
         return
     }
     val allCategories by viewModel.getCategories
@@ -57,7 +39,7 @@ private fun ColumnScope.CategoryFilterSheet(
         .collectFlowAsState(initial = emptyList())
 
     if (allCategories.isEmpty()) {
-        LoadingScreen(modifier = Modifier.padding(16.dp))
+        LoadingScreen(modifier = Modifier.padding(KatariTheme.spacing.l))
         return
     }
 
@@ -73,18 +55,16 @@ private fun ColumnScope.CategoryFilterSheet(
         }.toMutableStateList()
     }
 
-    Column {
-        allCategories.fastForEachIndexed { index, category ->
-            val state = selected[index]
-            TriStateItem(
-                label = category.visualName,
-                state = state,
-                onClick = {
-                    selected[index] = state.next()
-                    viewModel.cycleCategory(category)
-                },
-            )
-        }
+    allCategories.fastForEachIndexed { index, category ->
+        val state = selected[index]
+        TriStateRow(
+            title = category.visualName,
+            state = state,
+            onStateChange = {
+                selected[index] = state.next()
+                viewModel.cycleCategory(category)
+            },
+        )
     }
 }
 
@@ -92,16 +72,10 @@ private fun ColumnScope.CategoryFilterSheet(
 fun UpcomingFilterDialog(
     viewModel: UpcomingViewModel,
 ) {
-    TabbedDialog(
+    TabbedSheet(
         onDismissRequest = viewModel::resetDialog,
         tabTitles = listOf(stringResource(MR.strings.categories)),
     ) {
-        Column(
-            modifier = Modifier
-                .padding(vertical = TabbedDialogPaddings.Vertical)
-                .verticalScroll(rememberScrollState()),
-        ) {
-            CategoryFilterSheet(viewModel = viewModel)
-        }
+        CategoryFilterSheet(viewModel = viewModel)
     }
 }

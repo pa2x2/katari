@@ -1,5 +1,8 @@
 package tachiyomi.data.statistics.entry
 
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
@@ -12,6 +15,8 @@ import tachiyomi.domain.statistics.entry.EntryChapterDuration
 import tachiyomi.domain.statistics.entry.EntryChapterPace
 import tachiyomi.domain.statistics.service.StatisticsActivityPolicy
 
+@Inject
+@SingleIn(AppScope::class)
 class EntryActivityRepositoryImpl(
     private val handler: DatabaseHandler,
 ) : EntryActivityRepository {

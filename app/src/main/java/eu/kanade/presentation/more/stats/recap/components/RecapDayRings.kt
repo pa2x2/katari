@@ -17,9 +17,10 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.more.stats.components.rememberStatisticsDurationFormatter
 import eu.kanade.presentation.more.stats.recap.motion.rememberRecapCount
+import mihon.presentation.kit.content.StoryMetrics
+import mihon.presentation.kit.theme.TextRole
 import kotlin.math.ceil
 
 /**
@@ -44,7 +45,7 @@ internal fun RecapDayRings(durationMillis: Long, order: Int, modifier: Modifier 
                     row.forEach { (index, ringHours) ->
                         Box(Modifier.size(size), contentAlignment = Alignment.Center) {
                             Canvas(Modifier.fillMaxSize()) {
-                                val stroke = (size * STROKE_SHARE).coerceAtLeast(2.dp).toPx()
+                                val stroke = (size * STROKE_SHARE).coerceAtLeast(StoryMetrics.dayRingMinStroke).toPx()
                                 val arcSize = Size(this.size.width - stroke, this.size.height - stroke)
                                 val topLeft = Offset(stroke / 2f, stroke / 2f)
                                 drawArc(palette.faint, 0f, 360f, false, topLeft, arcSize, style = Stroke(stroke))
@@ -63,7 +64,7 @@ internal fun RecapDayRings(durationMillis: Long, order: Int, modifier: Modifier 
                                 }
                             }
                             if (size >= LABELLED_SIZE) {
-                                RecapText(formatDuration(ringHours * HOUR_MILLIS), RecapTypography.RowTitle)
+                                RecapText(formatDuration(ringHours * HOUR_MILLIS), TextRole.SectionTitle)
                             }
                         }
                     }
@@ -79,7 +80,7 @@ private fun ringSize(count: Int, width: Dp): Dp {
     while (size > MIN_SIZE) {
         val rows = ceil(count / columnsFor(size, width).toFloat())
         if ((size + size / 5) * rows - size / 5 <= MAX_HEIGHT) return size
-        size -= 2.dp
+        size -= StoryMetrics.dayRingStep
     }
     return MIN_SIZE
 }
@@ -88,7 +89,7 @@ private fun columnsFor(size: Dp, width: Dp): Int = ((width + size / 5) / (size +
 
 private const val HOURS_IN_DAY = 24
 private const val STROKE_SHARE = 0.12f
-private val MAX_SIZE = 76.dp
-private val MIN_SIZE = 10.dp
-private val MAX_HEIGHT = 190.dp
-private val LABELLED_SIZE = 56.dp
+private val MAX_SIZE = StoryMetrics.dayRingMax
+private val MIN_SIZE = StoryMetrics.dayRingMin
+private val MAX_HEIGHT = StoryMetrics.dayRingsMaxHeight
+private val LABELLED_SIZE = StoryMetrics.dayRingLabelled

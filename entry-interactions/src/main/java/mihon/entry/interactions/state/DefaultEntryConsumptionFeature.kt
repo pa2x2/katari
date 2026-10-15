@@ -4,18 +4,15 @@ import eu.kanade.tachiyomi.source.entry.EntryType
 import mihon.entry.interactions.download.EntryDownloadLifecycleEvent
 import mihon.entry.interactions.download.EntryDownloadLifecycleEventSink
 import mihon.entry.interactions.history.EntryHistoryFeature
-import mihon.feature.graph.FeatureGraphEvaluation
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 
 internal class DefaultEntryConsumptionFeature(
-    private val evaluation: FeatureGraphEvaluation,
+    private val applicableTypes: Set<EntryType>,
     private val interaction: EntryConsumptionInteraction,
     private val downloadLifecycle: EntryDownloadLifecycleEventSink,
     private val history: EntryHistoryFeature,
 ) : EntryConsumptionFeature {
-    private val applicableTypes = evaluation.consumptionTypes()
-
     override fun isApplicable(type: EntryType): Boolean = type in applicableTypes
 
     override fun canSetConsumed(
@@ -25,7 +22,6 @@ internal class DefaultEntryConsumptionFeature(
     ): Boolean {
         if (!isApplicable(type)) return false
         val canChange = shouldChangeConsumption(status, consumed)
-        evaluation.requireConsumptionEligibilityContext(type, canChange)
         return canChange
     }
 
@@ -37,8 +33,6 @@ internal class DefaultEntryConsumptionFeature(
         if (!isApplicable(entry.type)) return EntryConsumptionResult.Inapplicable(entry.type)
 
         val changed = interaction.setConsumed(entry, children, consumed)
-        evaluation.requireConsumptionMutationContext(entry.type, changed.isNotEmpty())
-        evaluation.requireConsumptionLifecycleContext(entry.type, changed.isNotEmpty(), consumed)
         if (changed.isEmpty()) return EntryConsumptionResult.NoChange
 
         if (consumed) {

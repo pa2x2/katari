@@ -6,6 +6,7 @@ import eu.kanade.tachiyomi.data.database.models.Track
 import eu.kanade.tachiyomi.data.track.BaseTracker
 import eu.kanade.tachiyomi.data.track.EnhancedTracker
 import eu.kanade.tachiyomi.data.track.EntryTrackingSource
+import eu.kanade.tachiyomi.data.track.TrackerDependencies
 import eu.kanade.tachiyomi.data.track.model.TrackSearch
 import okhttp3.Dns
 import okhttp3.OkHttpClient
@@ -13,7 +14,10 @@ import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.track.model.EntryTrack
 import tachiyomi.i18n.*
 
-class Komga(id: Long) : BaseTracker(id, "Komga"), EnhancedTracker {
+class Komga(
+    id: Long,
+    dependencies: TrackerDependencies,
+) : BaseTracker(id, "Komga", dependencies), EnhancedTracker {
 
     companion object {
         const val UNREAD = 1L
@@ -26,7 +30,7 @@ class Komga(id: Long) : BaseTracker(id, "Komga"), EnhancedTracker {
             .dns(Dns.SYSTEM) // don't use DNS over HTTPS as it breaks IP addressing
             .build()
 
-    val api by lazy { KomgaApi(id, client) }
+    val api by lazy { KomgaApi(id, client, json) }
 
     override fun getLogo() = R.drawable.brand_komga
 

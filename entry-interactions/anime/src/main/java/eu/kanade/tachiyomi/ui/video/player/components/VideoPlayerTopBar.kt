@@ -5,17 +5,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import mihon.entry.interactions.source.EntryChildWebViewAction
 import mihon.entry.interactions.source.EntryChildWebViewActionsMenu
 import mihon.entry.interactions.source.EntryChildWebViewResolution
@@ -24,6 +17,11 @@ import mihon.icons.materialsymbols.automirroredrounded.ArrowBack
 import mihon.icons.materialsymbols.rounded.Lock
 import mihon.icons.materialsymbols.rounded.PictureInPictureAlt
 import mihon.icons.materialsymbols.rounded.Settings
+import mihon.presentation.kit.button.IconButton
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -40,86 +38,67 @@ internal fun VideoPlayerTopBar(
     onChildWebViewAction: (EntryChildWebViewAction, EntryChildWebViewResolution.Available) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val spacing = KatariTheme.spacing
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(Color.Black.copy(alpha = 0.76f), Color.Transparent),
-                ),
-            )
+            .background(videoPlayerTopShade())
             .videoPlayerSafeContentPadding(includeTop = true)
-            .padding(horizontal = 10.dp, vertical = 10.dp),
+            .padding(spacing.s),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        IconButton(onClick = onBack) {
-            Icon(
-                imageVector = MaterialSymbols.AutoMirroredRounded.ArrowBack,
-                contentDescription = "Back",
-                tint = Color.White,
-            )
-        }
+        IconButton(
+            icon = MaterialSymbols.AutoMirroredRounded.ArrowBack,
+            contentDescription = stringResource(MR.strings.action_back),
+            onClick = onBack,
+            tone = ContentTone.OnMedia,
+        )
         Column(
             modifier = Modifier
                 .weight(1f)
-                .padding(start = 6.dp, end = 12.dp),
+                .padding(start = spacing.s, end = spacing.m),
         ) {
             Text(
                 text = videoTitle,
-                color = Color.White,
-                style = MaterialTheme.typography.titleSmall,
+                role = TextRole.SectionTitle,
+                tone = ContentTone.OnMedia,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
             Text(
                 text = episodeName,
-                color = Color.White.copy(alpha = 0.74f),
-                style = MaterialTheme.typography.bodySmall,
+                role = TextRole.Supporting,
+                tone = ContentTone.OnMediaVariant,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
         }
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            VideoPlayerUtilityButton(onClick = onToggleLock) {
-                Icon(
-                    imageVector = MaterialSymbols.Rounded.Lock,
-                    contentDescription = stringResource(MR.strings.anime_playback_lock_controls),
-                    tint = Color.White,
-                )
-            }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            IconButton(
+                icon = MaterialSymbols.Rounded.Lock,
+                contentDescription = stringResource(MR.strings.anime_playback_lock_controls),
+                onClick = onToggleLock,
+                tone = ContentTone.OnMedia,
+            )
             if (showPictureInPictureButton) {
-                VideoPlayerUtilityButton(onClick = onEnterPictureInPicture) {
-                    Icon(
-                        imageVector = MaterialSymbols.Rounded.PictureInPictureAlt,
-                        contentDescription = stringResource(MR.strings.pref_enable_anime_picture_in_picture),
-                        tint = Color.White,
-                    )
-                }
-            }
-            VideoPlayerUtilityButton(onClick = onOpenSettings) {
-                Icon(
-                    imageVector = MaterialSymbols.Rounded.Settings,
-                    contentDescription = stringResource(MR.strings.label_settings),
-                    tint = Color.White,
+                IconButton(
+                    icon = MaterialSymbols.Rounded.PictureInPictureAlt,
+                    contentDescription = stringResource(MR.strings.pref_enable_anime_picture_in_picture),
+                    onClick = onEnterPictureInPicture,
+                    tone = ContentTone.OnMedia,
                 )
             }
+            IconButton(
+                icon = MaterialSymbols.Rounded.Settings,
+                contentDescription = stringResource(MR.strings.label_settings),
+                onClick = onOpenSettings,
+                tone = ContentTone.OnMedia,
+            )
             EntryChildWebViewActionsMenu(
                 resolution = childWebView,
                 onAction = onChildWebViewAction,
-                contentColor = Color.White,
+                tone = ContentTone.OnMedia,
             )
         }
-    }
-}
-
-@Composable
-internal fun VideoPlayerUtilityButton(
-    onClick: () -> Unit,
-    content: @Composable () -> Unit,
-) {
-    IconButton(onClick = onClick) {
-        content()
     }
 }

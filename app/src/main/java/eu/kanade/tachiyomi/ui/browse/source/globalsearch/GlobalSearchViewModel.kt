@@ -4,6 +4,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.Assisted
+import dev.zacsweers.metro.AssistedFactory
+import dev.zacsweers.metro.AssistedInject
+import dev.zacsweers.metro.ContributesIntoMap
+import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
+import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.tachiyomi.extension.ExtensionManager
 import eu.kanade.tachiyomi.ui.base.observation.ObservedItemStore
@@ -21,6 +28,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
 import kotlinx.coroutines.withContext
+import mihon.app.di.AppUiScope
 import mihon.entry.interactions.catalogue.EntryCatalogueFeature
 import mihon.entry.interactions.catalogue.EntryCatalogueSearchRequest
 import mihon.entry.interactions.catalogue.EntryCatalogueSearchResult
@@ -29,21 +37,26 @@ import tachiyomi.core.common.preference.toggle
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.domain.entry.interactor.GetEntry
 import tachiyomi.domain.entry.interactor.NetworkToLocalEntry
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicLong
 
+@AssistedInject
 class GlobalSearchViewModel(
-    initialQuery: String = "",
-    initialExtensionFilter: String? = null,
-    sourcePreferences: SourcePreferences = Injekt.get(),
-    private val extensionManager: ExtensionManager = Injekt.get(),
-    private val networkToLocalEntry: NetworkToLocalEntry = Injekt.get(),
-    private val getEntry: GetEntry = Injekt.get(),
-    private val preferences: SourcePreferences = Injekt.get(),
-    private val catalogueFeature: EntryCatalogueFeature = Injekt.get(),
+    @Assisted initialQuery: String,
+    @Assisted initialExtensionFilter: String?,
+    private val extensionManager: ExtensionManager,
+    private val networkToLocalEntry: NetworkToLocalEntry,
+    private val getEntry: GetEntry,
+    private val preferences: SourcePreferences,
+    private val catalogueFeature: EntryCatalogueFeature,
 ) : ViewModel() {
+
+    @AssistedFactory
+    @ManualViewModelAssistedFactoryKey
+    @ContributesIntoMap(AppUiScope::class)
+    interface Factory : ManualViewModelAssistedFactory {
+        fun create(initialQuery: String, initialExtensionFilter: String?): GlobalSearchViewModel
+    }
 
     val state: StateFlow<GlobalSearchViewModel.State>
         field = MutableStateFlow<GlobalSearchViewModel.State>(State(searchQuery = initialQuery))
@@ -62,9 +75,9 @@ class GlobalSearchViewModel(
         getEntry.subscribe(entryIds).map { entries -> entries.map(::GlobalSearchItem) }
     }
 
-    private val enabledLanguages = sourcePreferences.enabledLanguages.get()
-    private val disabledSources = sourcePreferences.disabledSources.get()
-    private val pinnedSources = sourcePreferences.pinnedSources.get()
+    private val enabledLanguages = preferences.enabledLanguages.get()
+    private val disabledSources = preferences.disabledSources.get()
+    private val pinnedSources = preferences.pinnedSources.get()
 
     private var lastQuery: String? = null
     private var lastSourceFilter: SourceFilter? = null

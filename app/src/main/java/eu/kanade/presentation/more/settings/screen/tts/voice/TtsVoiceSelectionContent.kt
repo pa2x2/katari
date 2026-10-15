@@ -5,10 +5,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -16,9 +12,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.more.settings.screen.tts.presentation.TtsPreviewStatus
 import mihon.language.api.tag.LanguageTag
+import mihon.presentation.kit.button.Button
+import mihon.presentation.kit.dialog.ConfirmDialog
+import mihon.presentation.kit.theme.KatariTheme
 import mihon.tts.api.provider.TtsProviderDisclosure
 import mihon.tts.api.provider.TtsVoiceProcessing
 import mihon.tts.api.voice.TtsDefaultVoiceSelection
@@ -87,6 +85,7 @@ internal fun TtsVoiceSelectionContent(
             onRetry = { candidate?.voice?.let(onAudition) },
         )
         Button(
+            label = stringResource(MR.strings.tts_settings_use_voice),
             onClick = {
                 candidate?.let { selected ->
                     if (selected.voice.processing == TtsVoiceProcessing.NetworkRequired && !networkConfirmed) {
@@ -99,37 +98,25 @@ internal fun TtsVoiceSelectionContent(
                     }
                 }
             },
-            enabled = candidate != null,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-        ) {
-            Text(stringResource(MR.strings.tts_settings_use_voice))
-        }
+                .padding(horizontal = KatariTheme.spacing.l, vertical = KatariTheme.spacing.m),
+            enabled = candidate != null,
+        )
     }
 
     pendingNetworkCandidate?.let { pending ->
-        AlertDialog(
+        ConfirmDialog(
+            title = stringResource(MR.strings.tts_settings_network_voice_title),
+            text = stringResource(MR.strings.tts_settings_network_voice_message),
+            confirmLabel = stringResource(MR.strings.tts_settings_network_voice_confirm),
+            onConfirm = {
+                networkConfirmed = true
+                candidate = pending
+                pendingNetworkCandidate = null
+                onAudition(pending.voice)
+            },
             onDismissRequest = { pendingNetworkCandidate = null },
-            title = { Text(stringResource(MR.strings.tts_settings_network_voice_title)) },
-            text = { Text(stringResource(MR.strings.tts_settings_network_voice_message)) },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        networkConfirmed = true
-                        candidate = pending
-                        pendingNetworkCandidate = null
-                        onAudition(pending.voice)
-                    },
-                ) {
-                    Text(stringResource(MR.strings.tts_settings_network_voice_confirm))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { pendingNetworkCandidate = null }) {
-                    Text(stringResource(MR.strings.action_cancel))
-                }
-            },
         )
     }
 }

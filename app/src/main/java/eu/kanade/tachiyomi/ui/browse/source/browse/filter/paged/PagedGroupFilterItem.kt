@@ -6,19 +6,16 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import eu.kanade.tachiyomi.source.entry.EntryFilter
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.change.FilterChangeBadges
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.change.FilterChanges
-import eu.kanade.tachiyomi.ui.browse.source.browse.filter.control.FilterSheetInsets
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.automirroredrounded.KeyboardArrowRight
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -26,29 +23,25 @@ import tachiyomi.presentation.core.i18n.stringResource
 @Composable
 internal fun PagedGroupSummaryItem(filter: EntryFilter.PagedGroup<*>, changes: FilterChanges, onClick: () -> Unit) {
     val selected = filter.currentSelectedItemCount()
+    val spacing = KatariTheme.spacing
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(start = FilterSheetInsets.Horizontal, end = 12.dp, top = 12.dp, bottom = 12.dp),
+            .padding(start = spacing.rowInset, end = spacing.m, top = spacing.m, bottom = spacing.m),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(spacing.s),
     ) {
         Column(Modifier.weight(1f)) {
-            Text(filter.name, style = MaterialTheme.typography.titleSmall)
+            Text(filter.name, role = TextRole.Label)
             if (selected > 0) {
                 Text(
-                    stringResource(MR.strings.browse_filter_selected_count, selected),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.primary,
+                    text = stringResource(MR.strings.browse_filter_selected_count, selected),
+                    role = TextRole.Supporting,
+                    tone = ContentTone.Primary,
                 )
             }
         }
         FilterChangeBadges(changes[filter], hasIssues = false)
-        Icon(
-            imageVector = MaterialSymbols.AutoMirroredRounded.KeyboardArrowRight,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
     }
 }

@@ -1,6 +1,5 @@
 package mihon.entry.interactions.anime.presentation
 
-import eu.kanade.tachiyomi.source.entry.EntryType
 import mihon.entry.interactions.presentation.EntryHistorySubtitlePresentation
 import mihon.entry.interactions.presentation.EntryNotificationChildNumberPolicy
 import mihon.entry.interactions.presentation.EntryPartialProgressPresentation
@@ -12,7 +11,6 @@ import mihon.icons.materialsymbols.roundedfilled.PlayArrow
 import tachiyomi.i18n.*
 
 internal object AnimeEntryTypePresentationProvider : EntryTypePresentationProvider {
-    override val type = EntryType.ANIME
     override val presentation = EntryTypePresentation(
         displayNameLabel = MR.strings.entry_type_anime,
         badgeIcon = MaterialSymbols.RoundedFilled.PlayArrow,

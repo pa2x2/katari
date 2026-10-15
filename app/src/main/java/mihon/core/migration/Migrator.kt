@@ -15,10 +15,11 @@ object Migrator {
         old: Int,
         new: Int,
         migrations: List<Migration>,
+        graph: MigrationGraph,
         dryrun: Boolean = false,
         onMigrationComplete: () -> Unit,
     ) {
-        val migrationContext = MigrationContext(dryrun, old)
+        val migrationContext = MigrationContext(dryrun, old, graph)
         val migrationJobFactory = MigrationJobFactory(migrationContext, scope)
         val migrationStrategyFactory = MigrationStrategyFactory(migrationJobFactory, onMigrationComplete)
         val strategy = migrationStrategyFactory.create(old, new)

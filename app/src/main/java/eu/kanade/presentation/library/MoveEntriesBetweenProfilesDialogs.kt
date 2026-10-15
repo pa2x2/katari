@@ -1,30 +1,27 @@
 package eu.kanade.presentation.library
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Icon
-import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import mihon.entry.interactions.lifecycle.profile.EntryProfileMoveConflict
 import mihon.entry.interactions.lifecycle.profile.EntryProfileMoveConflictResolution
 import mihon.feature.profiles.core.Profile
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Lock
+import mihon.presentation.kit.content.Icon
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.dialog.Dialog
+import mihon.presentation.kit.dialog.DialogAction
+import mihon.presentation.kit.list.ChoiceRow
+import mihon.presentation.kit.list.SettingsRow
+import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.domain.category.model.Category
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -35,37 +32,31 @@ fun MoveEntriesProfileDialog(
     onDismissRequest: () -> Unit,
     onProfileSelected: (Profile) -> Unit,
 ) {
-    AlertDialog(
+    Dialog(
         onDismissRequest = onDismissRequest,
-        title = { Text(stringResource(MR.strings.move_entries_select_profile)) },
-        text = {
-            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-                profiles.forEach { profile ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onProfileSelected(profile) }
-                            .padding(vertical = 12.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text(profile.name, modifier = Modifier.weight(1f))
-                        if (profile.requiresAuth) {
+        title = stringResource(MR.strings.move_entries_select_profile),
+        confirm = null,
+        dismiss = DialogAction(stringResource(MR.strings.action_cancel), onDismissRequest),
+    ) {
+        Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+            profiles.forEach { profile ->
+                SettingsRow(
+                    title = profile.name,
+                    trailing = if (profile.requiresAuth) {
+                        {
                             Icon(
                                 MaterialSymbols.Rounded.Lock,
                                 contentDescription = stringResource(MR.strings.profiles_locked),
                             )
                         }
-                    }
-                }
+                    } else {
+                        null
+                    },
+                    onClick = { onProfileSelected(profile) },
+                )
             }
-        },
-        confirmButton = {},
-        dismissButton = {
-            TextButton(onClick = onDismissRequest) {
-                Text(stringResource(MR.strings.action_cancel))
-            }
-        },
-    )
+        }
+    }
 }
 
 @Composable
@@ -75,53 +66,29 @@ fun MoveEntriesCategoryDialog(
     onCategorySelected: (Long?) -> Unit,
 ) {
     var selectedCategoryId by remember { mutableLongStateOf(Category.UNCATEGORIZED_ID) }
-    AlertDialog(
+    Dialog(
         onDismissRequest = onDismissRequest,
-        title = { Text(stringResource(MR.strings.move_entries_select_category)) },
-        text = {
-            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-                CategoryChoiceRow(
-                    name = stringResource(MR.strings.move_entries_uncategorized),
-                    selected = selectedCategoryId == Category.UNCATEGORIZED_ID,
-                    onClick = { selectedCategoryId = Category.UNCATEGORIZED_ID },
-                )
-                categories.forEach { category ->
-                    CategoryChoiceRow(
-                        name = category.name,
-                        selected = selectedCategoryId == category.id,
-                        onClick = { selectedCategoryId = category.id },
-                    )
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    onCategorySelected(selectedCategoryId.takeUnless { it == Category.UNCATEGORIZED_ID })
-                },
-            ) {
-                Text(stringResource(MR.strings.move_entries_confirm))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismissRequest) {
-                Text(stringResource(MR.strings.action_cancel))
-            }
-        },
-    )
-}
-
-@Composable
-private fun CategoryChoiceRow(name: String, selected: Boolean, onClick: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
+        title = stringResource(MR.strings.move_entries_select_category),
+        confirm = DialogAction(
+            label = stringResource(MR.strings.move_entries_confirm),
+            onClick = { onCategorySelected(selectedCategoryId.takeUnless { it == Category.UNCATEGORIZED_ID }) },
+        ),
+        dismiss = DialogAction(stringResource(MR.strings.action_cancel), onDismissRequest),
     ) {
-        RadioButton(selected = selected, onClick = onClick)
-        Text(name)
+        Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+            ChoiceRow(
+                title = stringResource(MR.strings.move_entries_uncategorized),
+                selected = selectedCategoryId == Category.UNCATEGORIZED_ID,
+                onClick = { selectedCategoryId = Category.UNCATEGORIZED_ID },
+            )
+            categories.forEach { category ->
+                ChoiceRow(
+                    title = category.name,
+                    selected = selectedCategoryId == category.id,
+                    onClick = { selectedCategoryId = category.id },
+                )
+            }
+        }
     }
 }
 
@@ -135,41 +102,33 @@ fun MoveEntriesConflictDialog(
     onDismissRequest: () -> Unit,
     onResolve: (EntryProfileMoveConflictResolution) -> Unit,
 ) {
-    AlertDialog(
+    Dialog(
         onDismissRequest = onDismissRequest,
-        title = {
-            Text(stringResource(MR.strings.move_entries_duplicate_title, conflictNumber, conflictCount))
-        },
-        text = {
-            Column {
-                Text(conflict.sourceEntry.displayTitle)
-                Text(sourceName)
-                Text(conflict.sourceEntry.type.name.lowercase().replaceFirstChar(Char::titlecase))
-                Text(destinationProfileName, modifier = Modifier.padding(top = 8.dp))
-                if (conflict.destinationMergeAffected) {
-                    Text(
-                        text = stringResource(MR.strings.move_entries_merge_warning),
-                        modifier = Modifier.padding(top = 12.dp),
-                    )
-                }
+        title = stringResource(MR.strings.move_entries_duplicate_title, conflictNumber, conflictCount),
+        confirm = DialogAction(
+            label = stringResource(MR.strings.move_entries_overwrite),
+            onClick = { onResolve(EntryProfileMoveConflictResolution.OVERWRITE_DESTINATION) },
+        ),
+        neutral = DialogAction(
+            label = stringResource(MR.strings.move_entries_remove_current),
+            onClick = { onResolve(EntryProfileMoveConflictResolution.KEEP_DESTINATION_REMOVE_SOURCE) },
+        ),
+        dismiss = DialogAction(
+            label = stringResource(MR.strings.move_entries_keep_source),
+            onClick = { onResolve(EntryProfileMoveConflictResolution.KEEP_SOURCE) },
+        ),
+    ) {
+        Column {
+            Text(conflict.sourceEntry.displayTitle)
+            Text(sourceName)
+            Text(conflict.sourceEntry.type.name.lowercase().replaceFirstChar(Char::titlecase))
+            Text(destinationProfileName, modifier = Modifier.padding(top = KatariTheme.spacing.s))
+            if (conflict.destinationMergeAffected) {
+                Text(
+                    text = stringResource(MR.strings.move_entries_merge_warning),
+                    modifier = Modifier.padding(top = KatariTheme.spacing.m),
+                )
             }
-        },
-        confirmButton = {
-            Column(horizontalAlignment = Alignment.End) {
-                TextButton(onClick = { onResolve(EntryProfileMoveConflictResolution.OVERWRITE_DESTINATION) }) {
-                    Text(stringResource(MR.strings.move_entries_overwrite))
-                }
-                TextButton(onClick = {
-                    onResolve(EntryProfileMoveConflictResolution.KEEP_DESTINATION_REMOVE_SOURCE)
-                }) {
-                    Text(stringResource(MR.strings.move_entries_remove_current))
-                }
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = { onResolve(EntryProfileMoveConflictResolution.KEEP_SOURCE) }) {
-                Text(stringResource(MR.strings.move_entries_keep_source))
-            }
-        },
-    )
+        }
+    }
 }

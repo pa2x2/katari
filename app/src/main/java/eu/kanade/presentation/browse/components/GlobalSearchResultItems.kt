@@ -1,31 +1,28 @@
 package eu.kanade.presentation.browse.components
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.automirroredrounded.ArrowForward
 import mihon.icons.materialsymbols.roundedfilled.Error
+import mihon.presentation.kit.content.Icon
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.list.SettingsRow
+import mihon.presentation.kit.progress.LoadingIndicator
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.LoadingIndicator
-import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
 
+/** One source's part of a search: a row that opens the source, then [content] with what it found. */
 @Composable
 fun GlobalSearchResultItem(
     title: String,
@@ -35,30 +32,7 @@ fun GlobalSearchResultItem(
     content: @Composable () -> Unit,
 ) {
     Column(modifier = modifier) {
-        Row(
-            modifier = Modifier
-                .padding(
-                    start = MaterialTheme.padding.medium,
-                    end = MaterialTheme.padding.extraSmall,
-                )
-                .fillMaxWidth()
-                .clickable(onClick = onClick),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Column {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleMedium,
-                )
-                Text(text = subtitle)
-            }
-            Icon(
-                imageVector = MaterialSymbols.AutoMirroredRounded.ArrowForward,
-                contentDescription = null,
-                modifier = Modifier.padding(MaterialTheme.padding.small),
-            )
-        }
+        SettingsRow(title = title, subtitle = subtitle, onClick = onClick)
         content()
     }
 }
@@ -68,11 +42,11 @@ fun GlobalSearchLoadingResultItem() {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = MaterialTheme.padding.medium),
+            .padding(vertical = KatariTheme.spacing.l),
     ) {
         LoadingIndicator(
             modifier = Modifier
-                .size(16.dp)
+                .size(KatariTheme.sizes.iconSmall)
                 .align(Alignment.Center),
         )
     }
@@ -82,19 +56,26 @@ fun GlobalSearchLoadingResultItem() {
 fun GlobalSearchErrorResultItem(message: String?) {
     Column(
         modifier = Modifier
-            .padding(
-                horizontal = MaterialTheme.padding.medium,
-                vertical = MaterialTheme.padding.small,
-            )
+            .padding(horizontal = KatariTheme.spacing.rowInset, vertical = KatariTheme.spacing.s)
             .fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
+        verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xs, Alignment.CenterVertically),
     ) {
         Icon(imageVector = MaterialSymbols.RoundedFilled.Error, contentDescription = null)
-        Spacer(Modifier.height(4.dp))
         Text(
             text = message ?: stringResource(MR.strings.unknown_error),
+            role = TextRole.Body,
             textAlign = TextAlign.Center,
         )
     }
+}
+
+@Composable
+internal fun GlobalSearchEmptyResultItem() {
+    Text(
+        text = stringResource(MR.strings.no_results_found),
+        modifier = Modifier.padding(horizontal = KatariTheme.spacing.rowInset, vertical = KatariTheme.spacing.s),
+        role = TextRole.Body,
+        tone = ContentTone.Secondary,
+    )
 }

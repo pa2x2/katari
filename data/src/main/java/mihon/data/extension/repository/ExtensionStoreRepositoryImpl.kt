@@ -2,6 +2,9 @@ package mihon.data.extension.repository
 
 import app.cash.sqldelight.async.coroutines.awaitAsList
 import app.cash.sqldelight.async.coroutines.awaitAsOne
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import eu.kanade.tachiyomi.extension.model.Extension
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -26,6 +29,8 @@ import tachiyomi.data.subscribeToOne
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
+@Inject
+@SingleIn(AppScope::class)
 class ExtensionStoreRepositoryImpl(
     private val service: ExtensionStoreService,
     private val database: Database,

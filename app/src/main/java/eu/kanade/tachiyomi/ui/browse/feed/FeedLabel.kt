@@ -1,21 +1,19 @@
 package eu.kanade.tachiyomi.ui.browse.feed
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.material3.LocalContentColor
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import eu.kanade.domain.source.model.SourceFeed
 import eu.kanade.domain.source.model.SourceFeedPreset
 import eu.kanade.tachiyomi.ui.browse.source.browse.preset.displayName
 import eu.kanade.tachiyomi.util.system.LocaleHelper
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.domain.source.model.Source
 
 /**
@@ -57,25 +55,28 @@ internal fun rememberFeedLabel(feed: SourceFeed, source: Source, preset: SourceF
     }
 }
 
+/**
+ * A null [titleRole] takes the enclosing component's text style, such as a menu item's. [subtitleTone] lets a label on
+ * a coloured container keep the container's content colour.
+ */
 @Composable
 internal fun FeedLabelText(
     label: FeedLabel,
     modifier: Modifier = Modifier,
-    titleStyle: TextStyle = MaterialTheme.typography.bodyLarge,
-    subtitleColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
+    titleRole: TextRole? = TextRole.ItemTitle,
+    subtitleTone: ContentTone = ContentTone.Secondary,
 ) {
     Column(modifier = modifier) {
         Text(
             text = label.title,
-            style = titleStyle,
-            color = LocalContentColor.current,
+            role = titleRole,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
         Text(
             text = label.subtitle,
-            style = MaterialTheme.typography.bodySmall,
-            color = subtitleColor,
+            role = TextRole.Supporting,
+            tone = subtitleTone,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )

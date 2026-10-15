@@ -13,27 +13,29 @@ import androidx.activity.compose.setContent
 import androidx.annotation.MenuRes
 import androidx.appcompat.R
 import androidx.appcompat.widget.PopupMenu
-import androidx.compose.material3.LocalContentColor
-import androidx.compose.material3.LocalTextStyle
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionContext
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
-import eu.kanade.presentation.theme.TachiyomiTheme
+import dev.zacsweers.metrox.viewmodel.LocalMetroViewModelFactory
+import mihon.app.di.appGraph
+import mihon.presentation.kit.content.ProvideTextRole
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.LocalContentColor
+import mihon.presentation.kit.theme.TextRole
 
 inline fun ComponentActivity.setComposeContent(
     parent: CompositionContext? = null,
     crossinline content: @Composable () -> Unit,
 ) {
     setContent(parent) {
-        TachiyomiTheme {
+        KatariTheme {
             CompositionLocalProvider(
-                LocalTextStyle provides MaterialTheme.typography.bodySmall,
-                LocalContentColor provides MaterialTheme.colorScheme.onBackground,
+                LocalContentColor provides KatariTheme.colors.onBackground,
+                LocalMetroViewModelFactory provides appGraph.viewModelFactory,
             ) {
-                content()
+                ProvideTextRole(TextRole.Supporting) { content() }
             }
         }
     }
@@ -44,12 +46,12 @@ fun ComposeView.setComposeContent(
 ) {
     setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
     setContent {
-        TachiyomiTheme {
+        KatariTheme {
             CompositionLocalProvider(
-                LocalTextStyle provides MaterialTheme.typography.bodySmall,
-                LocalContentColor provides MaterialTheme.colorScheme.onBackground,
+                LocalContentColor provides KatariTheme.colors.onBackground,
+                LocalMetroViewModelFactory provides context.appGraph.viewModelFactory,
             ) {
-                content()
+                ProvideTextRole(TextRole.Supporting) { content() }
             }
         }
     }

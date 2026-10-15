@@ -1,16 +1,15 @@
 package eu.kanade.tachiyomi.ui.browse.feed.manage
 
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import mihon.presentation.kit.dialog.Dialog
+import mihon.presentation.kit.dialog.DialogAction
+import mihon.presentation.kit.field.TextField
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -23,29 +22,19 @@ internal fun RenameFeedDialog(
     onConfirm: (String) -> Unit,
 ) {
     var value by rememberSaveable { mutableStateOf(currentTitle.orEmpty()) }
-    AlertDialog(
+    Dialog(
         onDismissRequest = onDismissRequest,
-        title = { Text(text = stringResource(MR.strings.browse_feed_rename_title)) },
-        text = {
-            OutlinedTextField(
-                value = value,
-                onValueChange = { value = it },
-                modifier = Modifier.fillMaxWidth(),
-                label = { Text(text = stringResource(MR.strings.name)) },
-                placeholder = { Text(text = presetName) },
-                supportingText = { Text(text = stringResource(MR.strings.browse_feed_rename_hint, presetName)) },
-                singleLine = true,
-            )
-        },
-        confirmButton = {
-            TextButton(onClick = { onConfirm(value) }) {
-                Text(text = stringResource(MR.strings.action_save))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismissRequest) {
-                Text(text = stringResource(MR.strings.action_cancel))
-            }
-        },
-    )
+        title = stringResource(MR.strings.browse_feed_rename_title),
+        confirm = DialogAction(stringResource(MR.strings.action_save), onClick = { onConfirm(value) }),
+        dismiss = DialogAction(stringResource(MR.strings.action_cancel), onClick = onDismissRequest),
+    ) {
+        TextField(
+            value = value,
+            onValueChange = { value = it },
+            modifier = Modifier.fillMaxWidth(),
+            label = stringResource(MR.strings.name),
+            placeholder = presetName,
+            supportingText = stringResource(MR.strings.browse_feed_rename_hint, presetName),
+        )
+    }
 }

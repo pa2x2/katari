@@ -2,6 +2,7 @@ plugins {
     alias(mihonx.plugins.android.library)
     alias(mihonx.plugins.compose)
     alias(mihonx.plugins.spotless)
+    alias(libs.plugins.metro)
 }
 
 android {
@@ -10,16 +11,13 @@ android {
 
 dependencies {
     api(projects.entryInteractions.api)
-    api(projects.featureGraph)
-    api(projects.featureRuntime)
     api(libs.androidx.appCompat)
     api(libs.coil.core)
 
+    implementation(projects.core.metro)
     implementation(projects.icons.materialSymbols)
     implementation(projects.presentationCore)
     implementation(libs.androidx.activity.compose)
-    implementation(libs.androidx.compose.material3)
-    implementation(libs.injekt)
 
     testImplementation(libs.bundles.test)
     testImplementation(libs.kotlinx.coroutines.test)

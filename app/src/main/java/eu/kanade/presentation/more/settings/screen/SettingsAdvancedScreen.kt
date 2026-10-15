@@ -8,9 +8,6 @@ import android.webkit.WebStorage
 import android.webkit.WebView
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.collectAsState
@@ -26,12 +23,10 @@ import androidx.core.net.toUri
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.domain.base.BasePreferences
-import eu.kanade.domain.extension.interactor.TrustExtension
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.screen.advanced.ClearDatabaseScreen
 import eu.kanade.presentation.more.settings.screen.debug.DebugInfoScreen
 import eu.kanade.tachiyomi.data.library.MetadataUpdateJob
-import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.network.NetworkPreferences
 import eu.kanade.tachiyomi.network.PREF_DOH_360
 import eu.kanade.tachiyomi.network.PREF_DOH_ADGUARD
@@ -46,7 +41,6 @@ import eu.kanade.tachiyomi.network.PREF_DOH_QUAD101
 import eu.kanade.tachiyomi.network.PREF_DOH_QUAD9
 import eu.kanade.tachiyomi.network.PREF_DOH_SHECAN
 import eu.kanade.tachiyomi.ui.more.OnboardingScreen
-import eu.kanade.tachiyomi.util.CrashLogUtil
 import eu.kanade.tachiyomi.util.system.GLUtil
 import eu.kanade.tachiyomi.util.system.isReleaseBuildType
 import eu.kanade.tachiyomi.util.system.isShizukuInstalled
@@ -55,27 +49,23 @@ import eu.kanade.tachiyomi.util.system.setDefaultSettings
 import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.launch
 import logcat.LogPriority
+import mihon.app.di.appGraph
 import mihon.core.common.GlobalCustomPreferences
 import mihon.core.common.image.progressive.ProgressiveImageEngine
 import mihon.core.common.image.progressive.ProgressiveImagePreferences
-import mihon.entry.interactions.download.EntryDownloadMaintenanceFeature
-import mihon.entry.interactions.media.EntryViewerSettingsFeature
 import mihon.entry.interactions.media.EntryViewerSettingsResetResult
 import mihon.entry.interactions.merge.EntryMergeConsequenceStatus
-import mihon.entry.interactions.merge.EntryMergeConsequenceStatusFeature
+import mihon.presentation.kit.dialog.ConfirmDialog
 import okhttp3.Headers
 import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.core.common.util.lang.withUIContext
 import tachiyomi.core.common.util.system.ImageUtil
 import tachiyomi.core.common.util.system.logcat
-import tachiyomi.data.ActiveProfileProvider
 import tachiyomi.domain.library.service.GlobalLibraryPreferences
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 import java.io.File
 
 object SettingsAdvancedScreen : SearchableSettings {
@@ -90,13 +80,13 @@ object SettingsAdvancedScreen : SearchableSettings {
         val context = LocalContext.current
         val navigator = LocalNavigator.currentOrThrow
 
-        val basePreferences = remember { Injekt.get<BasePreferences>() }
-        val networkPreferences = remember { Injekt.get<NetworkPreferences>() }
-        val libraryPreferences = remember { Injekt.get<LibraryPreferences>() }
-        val globalLibraryPreferences = remember { Injekt.get<GlobalLibraryPreferences>() }
-        val globalCustomPreferences = remember { Injekt.get<GlobalCustomPreferences>() }
-        val progressiveImagePreferences = remember { Injekt.get<ProgressiveImagePreferences>() }
-        val progressiveImageEngine = remember { Injekt.get<ProgressiveImageEngine>() }
+        val basePreferences = remember { context.appGraph.basePreferences }
+        val networkPreferences = remember { context.appGraph.networkPreferences }
+        val libraryPreferences = remember { context.appGraph.libraryPreferences }
+        val globalLibraryPreferences = remember { context.appGraph.globalLibraryPreferences }
+        val globalCustomPreferences = remember { context.appGraph.globalCustomPreferences }
+        val progressiveImagePreferences = remember { context.appGraph.progressiveImagePreferences }
+        val progressiveImageEngine = remember { context.appGraph.progressiveImageEngine }
 
         return listOf(
             Preference.PreferenceItem.TextPreference(
@@ -104,7 +94,7 @@ object SettingsAdvancedScreen : SearchableSettings {
                 subtitle = stringResource(MR.strings.pref_dump_crash_logs_summary),
                 onClick = {
                     scope.launch {
-                        CrashLogUtil(context).dumpLogs()
+                        context.appGraph.crashLogUtilFactory.create(context).dumpLogs()
                     }
                 },
             ),
@@ -197,7 +187,7 @@ object SettingsAdvancedScreen : SearchableSettings {
         val context = LocalContext.current
         val navigator = LocalNavigator.currentOrThrow
         val scope = rememberCoroutineScope()
-        val mergeStatusFeature = remember { Injekt.get<EntryMergeConsequenceStatusFeature>() }
+        val mergeStatusFeature = remember { context.appGraph.entryMergeConsequenceStatusFeature }
         val mergeStatusFlow = remember(mergeStatusFeature) { mergeStatusFeature.observeStatus() }
         val mergeStatus by mergeStatusFlow.collectAsState(
             initial = EntryMergeConsequenceStatus(0, 0, null),
@@ -210,7 +200,7 @@ object SettingsAdvancedScreen : SearchableSettings {
                     title = stringResource(MR.strings.pref_invalidate_download_cache),
                     subtitle = stringResource(MR.strings.pref_invalidate_download_cache_summary),
                     onClick = {
-                        Injekt.get<EntryDownloadMaintenanceFeature>()
+                        context.appGraph.entryDownloadMaintenanceFeature
                             .invalidateCaches()
                         context.toast(MR.strings.download_cache_invalidated)
                     },
@@ -253,7 +243,7 @@ object SettingsAdvancedScreen : SearchableSettings {
     ): Preference.PreferenceGroup {
         val context = LocalContext.current
         val scope = rememberCoroutineScope()
-        val networkHelper = remember { Injekt.get<NetworkHelper>() }
+        val networkHelper = remember { context.appGraph.networkHelper }
 
         val userAgentPref = networkPreferences.defaultUserAgent
         val userAgent by userAgentPref.collectAsState()
@@ -361,9 +351,9 @@ object SettingsAdvancedScreen : SearchableSettings {
                     onClick = {
                         scope.launchNonCancellable {
                             val success = runCatching {
-                                val profileId = Injekt.get<ActiveProfileProvider>().activeProfileId
+                                val profileId = context.appGraph.activeProfileProvider.activeProfileId
                                 check(
-                                    Injekt.get<EntryViewerSettingsFeature>().resetProfileOverrides(profileId) ==
+                                    context.appGraph.entryViewerSettingsFeature.resetProfileOverrides(profileId) ==
                                         EntryViewerSettingsResetResult.Reset,
                                 )
                             }.isSuccess
@@ -469,29 +459,19 @@ object SettingsAdvancedScreen : SearchableSettings {
         val uriHandler = LocalUriHandler.current
         val extensionInstallerPref = basePreferences.extensionInstaller
         var shizukuMissing by rememberSaveable { mutableStateOf(false) }
-        val trustExtension = remember { Injekt.get<TrustExtension>() }
+        val trustExtension = remember { context.appGraph.trustExtension }
 
         if (shizukuMissing) {
             val dismiss = { shizukuMissing = false }
-            AlertDialog(
+            ConfirmDialog(
+                title = stringResource(MR.strings.ext_installer_shizuku),
+                text = stringResource(MR.strings.ext_installer_shizuku_unavailable_dialog),
+                confirmLabel = stringResource(MR.strings.action_ok),
+                onConfirm = {
+                    dismiss()
+                    uriHandler.openUri("https://shizuku.rikka.app/download")
+                },
                 onDismissRequest = dismiss,
-                title = { Text(text = stringResource(MR.strings.ext_installer_shizuku)) },
-                text = { Text(text = stringResource(MR.strings.ext_installer_shizuku_unavailable_dialog)) },
-                dismissButton = {
-                    TextButton(onClick = dismiss) {
-                        Text(text = stringResource(MR.strings.action_cancel))
-                    }
-                },
-                confirmButton = {
-                    TextButton(
-                        onClick = {
-                            dismiss()
-                            uriHandler.openUri("https://shizuku.rikka.app/download")
-                        },
-                    ) {
-                        Text(text = stringResource(MR.strings.action_ok))
-                    }
-                },
             )
         }
         return Preference.PreferenceGroup(

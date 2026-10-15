@@ -6,21 +6,18 @@ import tachiyomi.domain.source.model.SourceDisplayInfo
 import tachiyomi.domain.source.model.StubSource
 import tachiyomi.domain.source.model.UnifiedStubSource
 import tachiyomi.source.local.LocalSource
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
-fun Source.getDisplayNameForEntryInfo(): String {
+fun Source.getDisplayNameForEntryInfo(preferences: SourcePreferences): String {
     return SourceDisplayInfo(
         id = id,
         name = name,
         lang = lang,
         isMissing = this is StubSource,
         hasKnownName = name.isNotBlank(),
-    ).getDisplayNameForEntryInfo()
+    ).getDisplayNameForEntryInfo(preferences)
 }
 
-fun SourceDisplayInfo.getDisplayNameForEntryInfo(): String {
-    val preferences = Injekt.get<SourcePreferences>()
+fun SourceDisplayInfo.getDisplayNameForEntryInfo(preferences: SourcePreferences): String {
     val enabledLanguages = preferences.enabledLanguages.get()
         .filterNot { it in listOf("all", "other") }
     val hasOneActiveLanguages = enabledLanguages.size == 1

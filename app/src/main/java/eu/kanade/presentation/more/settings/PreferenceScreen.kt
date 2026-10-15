@@ -9,11 +9,11 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEachIndexed
 import eu.kanade.presentation.more.settings.screen.SearchableSettings
 import eu.kanade.presentation.more.settings.widget.PreferenceGroupHeader
 import kotlinx.coroutines.delay
+import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.presentation.core.components.ScrollbarLazyColumn
 import kotlin.time.Duration.Companion.seconds
 
@@ -26,7 +26,7 @@ import kotlin.time.Duration.Companion.seconds
 fun PreferenceScreen(
     items: List<Preference>,
     modifier: Modifier = Modifier,
-    contentPadding: PaddingValues = PaddingValues(0.dp),
+    contentPadding: PaddingValues = PaddingValues(),
 ) {
     val state = rememberLazyListState()
     val highlightKey = SearchableSettings.highlightKey
@@ -77,7 +77,7 @@ fun PreferenceScreen(
                     }
                     item {
                         if (i < items.lastIndex) {
-                            Spacer(modifier = Modifier.height(12.dp))
+                            Spacer(modifier = Modifier.height(KatariTheme.spacing.m))
                         }
                     }
                 }

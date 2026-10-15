@@ -3,6 +3,7 @@ plugins {
     alias(mihonx.plugins.compose)
     alias(mihonx.plugins.spotless)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.metro)
 }
 
 android {
@@ -14,8 +15,6 @@ kotlin {
         freeCompilerArgs.addAll(
             "-opt-in=androidx.compose.foundation.ExperimentalFoundationApi",
             "-opt-in=androidx.compose.foundation.layout.ExperimentalLayoutApi",
-            "-opt-in=androidx.compose.material3.ExperimentalMaterial3Api",
-            "-opt-in=androidx.compose.material3.ExperimentalMaterial3ExpressiveApi",
             "-opt-in=androidx.compose.ui.ExperimentalComposeUiApi",
             "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi",
             "-opt-in=kotlinx.coroutines.FlowPreview",
@@ -29,8 +28,10 @@ dependencies {
     api(libs.kotlinx.coroutines.core)
 
     implementation(projects.core.common)
+    implementation(projects.core.metro)
     implementation(projects.i18n)
     implementation(projects.icons.materialSymbols)
+    implementation(projects.entryViewerChromeUi)
     implementation(projects.presentationCore)
     implementation(projects.sourceApi)
 
@@ -39,7 +40,6 @@ dependencies {
     implementation(libs.androidx.appCompat)
     implementation(libs.androidx.compose.animation)
     implementation(libs.androidx.compose.foundation)
-    implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.uiToolingPreview)
     implementation(libs.androidx.core)
     implementation(libs.androidx.media3.datasourceOkhttp)
@@ -49,7 +49,7 @@ dependencies {
     implementation(libs.androidx.media3.ui)
     implementation(libs.bundles.androidx.lifecycle)
     implementation(libs.bundles.serialization)
-    implementation(libs.injekt)
+    api(libs.metrox.viewmodel)
     implementation(libs.unifile)
 
     testImplementation(projects.entryInteractions)

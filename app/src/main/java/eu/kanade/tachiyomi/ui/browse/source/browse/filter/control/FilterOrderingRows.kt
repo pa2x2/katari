@@ -5,19 +5,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -26,18 +15,22 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import eu.kanade.tachiyomi.source.entry.EntryFilter
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.automirroredrounded.Sort
 import mihon.icons.materialsymbols.rounded.ArrowDownward
 import mihon.icons.materialsymbols.rounded.ArrowDropDown
 import mihon.icons.materialsymbols.rounded.ArrowUpward
-import mihon.icons.materialsymbols.rounded.Check
 import mihon.icons.materialsymbols.rounded.Tune
+import mihon.presentation.kit.content.Icon
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.control.SegmentedButtons
+import mihon.presentation.kit.menu.DropdownMenu
+import mihon.presentation.kit.menu.RadioMenuItem
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -92,11 +85,12 @@ private fun FilterMenuRow(
     onSelect: (Int) -> Unit,
     trailing: (@Composable () -> Unit)? = null,
 ) {
+    val spacing = KatariTheme.spacing
     var expanded by remember { mutableStateOf(false) }
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(end = FilterSheetInsets.Horizontal),
+            .padding(end = spacing.rowInset),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(Modifier.weight(1f)) {
@@ -104,24 +98,20 @@ private fun FilterMenuRow(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable { expanded = true }
-                    .padding(start = FilterSheetInsets.Horizontal, top = 8.dp, bottom = 8.dp, end = 8.dp),
+                    .padding(start = spacing.rowInset, top = spacing.s, bottom = spacing.s, end = spacing.s),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(spacing.l),
             ) {
-                Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                Icon(icon, contentDescription = null, tone = ContentTone.Secondary)
                 Column {
-                    Text(
-                        text = label,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
+                    Text(text = label, role = TextRole.Supporting)
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
                             text = value,
-                            style = MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier.weight(1f, fill = false),
+                            role = TextRole.ItemTitle,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.weight(1f, fill = false),
                         )
                         Icon(MaterialSymbols.Rounded.ArrowDropDown, contentDescription = null)
                     }
@@ -129,15 +119,9 @@ private fun FilterMenuRow(
             }
             DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
                 options.forEachIndexed { index, option ->
-                    DropdownMenuItem(
-                        text = { Text(option) },
-                        leadingIcon = {
-                            if (index == selectedIndex) {
-                                Icon(MaterialSymbols.Rounded.Check, contentDescription = null)
-                            } else {
-                                Spacer(Modifier.width(24.dp))
-                            }
-                        },
+                    RadioMenuItem(
+                        label = option,
+                        selected = index == selectedIndex,
                         onClick = {
                             expanded = false
                             onSelect(index)
@@ -152,28 +136,16 @@ private fun FilterMenuRow(
 
 @Composable
 private fun FilterSortDirection(ascending: Boolean?, enabled: Boolean, onChange: (Boolean) -> Unit) {
-    val descendingDescription = stringResource(MR.strings.filter_sort_descending)
-    val ascendingDescription = stringResource(MR.strings.filter_sort_ascending)
-    SingleChoiceSegmentedButtonRow {
-        SegmentedButton(
-            selected = ascending == false,
-            onClick = { onChange(false) },
-            enabled = enabled,
-            shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
-            icon = { Icon(MaterialSymbols.Rounded.ArrowDownward, contentDescription = null, Modifier.size(18.dp)) },
-            modifier = Modifier.semantics { contentDescription = descendingDescription },
-        ) {
-            Text(stringResource(MR.strings.filter_sort_desc))
-        }
-        SegmentedButton(
-            selected = ascending == true,
-            onClick = { onChange(true) },
-            enabled = enabled,
-            shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
-            icon = { Icon(MaterialSymbols.Rounded.ArrowUpward, contentDescription = null, Modifier.size(18.dp)) },
-            modifier = Modifier.semantics { contentDescription = ascendingDescription },
-        ) {
-            Text(stringResource(MR.strings.filter_sort_asc))
-        }
-    }
+    // Null while the filter has no sort, so neither direction shows as selected.
+    SegmentedButtons<Boolean?>(
+        options = listOf(false, true),
+        selected = ascending,
+        onSelect = { it?.let(onChange) },
+        label = { stringResource(if (it == true) MR.strings.filter_sort_asc else MR.strings.filter_sort_desc) },
+        enabled = enabled,
+        icon = { if (it == true) MaterialSymbols.Rounded.ArrowUpward else MaterialSymbols.Rounded.ArrowDownward },
+        description = {
+            stringResource(if (it == true) MR.strings.filter_sort_ascending else MR.strings.filter_sort_descending)
+        },
+    )
 }

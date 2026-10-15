@@ -1,9 +1,6 @@
 package eu.kanade.presentation.more.settings.screen.navigation
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -11,23 +8,24 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.util.HandlesOwnBackPress
 import eu.kanade.presentation.util.Screen
-import mihon.core.common.CustomPreferences
+import mihon.app.di.appGraph
 import mihon.core.common.toHomeScreenTabPreferenceValue
+import mihon.presentation.kit.dialog.ConfirmDialog
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
 class HomeNavigationEditorScreen : Screen(), HandlesOwnBackPress {
 
     @Composable
     override fun Content() {
+        val context = LocalContext.current
         val navigator = LocalNavigator.currentOrThrow
-        val preferences = remember { Injekt.get<CustomPreferences>() }
+        val preferences = remember { context.appGraph.customPreferences }
         val committedDraft = remember(preferences) { preferences.readCommittedNavigationDraft() }
         val restoredDraft = remember(preferences) {
             preferences.homeScreenNavigationDraft.get().toNavigationDraftOrNull()
@@ -89,25 +87,17 @@ class HomeNavigationEditorScreen : Screen(), HandlesOwnBackPress {
         )
 
         if (showDiscardConfirmation) {
-            AlertDialog(
+            ConfirmDialog(
+                title = stringResource(MR.strings.home_navigation_discard_title),
+                text = stringResource(MR.strings.home_navigation_discard_message),
+                confirmLabel = stringResource(MR.strings.action_discard),
+                onConfirm = {
+                    preferences.homeScreenNavigationDraft.delete()
+                    navigator.pop()
+                },
                 onDismissRequest = { showDiscardConfirmation = false },
-                title = { Text(stringResource(MR.strings.home_navigation_discard_title)) },
-                text = { Text(stringResource(MR.strings.home_navigation_discard_message)) },
-                confirmButton = {
-                    TextButton(
-                        onClick = {
-                            preferences.homeScreenNavigationDraft.delete()
-                            navigator.pop()
-                        },
-                    ) {
-                        Text(stringResource(MR.strings.action_discard))
-                    }
-                },
-                dismissButton = {
-                    TextButton(onClick = { showDiscardConfirmation = false }) {
-                        Text(stringResource(MR.strings.home_navigation_keep_editing))
-                    }
-                },
+                destructive = true,
+                dismissLabel = stringResource(MR.strings.home_navigation_keep_editing),
             )
         }
     }

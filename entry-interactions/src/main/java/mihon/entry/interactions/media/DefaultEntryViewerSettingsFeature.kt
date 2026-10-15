@@ -1,7 +1,6 @@
 package mihon.entry.interactions.media
 
 import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.entry.interactions.runtime.applicableProviderTypes
 import mihon.entry.viewer.settings.ViewerSettingCodec
 import mihon.entry.viewer.settings.ViewerSettingDefinition
 import mihon.entry.viewer.settings.ViewerSettingId
@@ -9,7 +8,6 @@ import mihon.entry.viewer.settings.ViewerSettingOverride
 import mihon.entry.viewer.settings.ViewerSettingOverrideRepository
 import mihon.entry.viewer.settings.ViewerSettingScope
 import mihon.entry.viewer.settings.ViewerSettingsProvider
-import mihon.feature.graph.FeatureGraphEvaluation
 import tachiyomi.domain.entry.model.Entry
 
 internal fun interface EntryLegacyMangaViewerFlagsReset {
@@ -21,41 +19,21 @@ internal fun interface EntryViewerFlagsMigrationStore {
 }
 
 internal class DefaultEntryViewerSettingsFeature(
-    evaluation: FeatureGraphEvaluation,
+    private val applicableTypes: Set<EntryType>,
+    private val migrationTypes: Set<EntryType>,
     interaction: EntryViewerSettingsInteraction,
     projectionResolver: EntryViewerSettingsScreenProjectionResolver,
     private val overrideRepository: ViewerSettingOverrideRepository,
     private val legacyMangaViewerFlagsReset: EntryLegacyMangaViewerFlagsReset,
     private val migrationStore: EntryViewerFlagsMigrationStore,
 ) : EntryViewerSettingsFeature {
-    private val applicableTypes = EntryViewerSettingsBehavior.entries
-        .map { behavior ->
-            evaluation.applicableProviderTypes<EntryViewerSettingsProvider>(
-                feature = ENTRY_VIEWER_SETTINGS_FEATURE_ID,
-                integration = ENTRY_VIEWER_SETTINGS_PROVIDER_INTEGRATION_ID,
-                behaviorProjection = behavior.id,
-            )
-        }
-        .also { selected ->
-            check(selected.distinct().size <= 1) {
-                "Viewer Settings behaviors selected different provider sets: $selected"
-            }
-        }
-        .firstOrNull()
-        .orEmpty()
-    private val migrationTypes = evaluation.applicableProviderTypes<EntryViewerSettingsProvider>(
-        feature = ENTRY_VIEWER_SETTINGS_FEATURE_ID,
-        integration = ENTRY_VIEWER_SETTINGS_MIGRATION_INTEGRATION_ID,
-        behaviorProjection = EntryViewerSettingsMigrationBehavior.id,
-    )
-
     private val providersByType = applicableTypes.associateWith { type ->
         requireNotNull(interaction.provider(type)) {
-            "Viewer Settings graph selected $type without an operational provider"
+            "Viewer Settings type $type has no operational provider"
         }
     }
-    private val surfacesById = providersByType.values
-        .flatMap { provider -> provider.surfaces.map { surface -> provider.type to surface } }
+    private val surfacesById = providersByType
+        .flatMap { (type, provider) -> provider.surfaces.map { surface -> type to surface } }
         .also { surfaces ->
             val duplicateIds = surfaces.groupingBy { it.second.id }.eachCount().filterValues { it > 1 }.keys
             check(duplicateIds.isEmpty()) { "Duplicate Viewer Settings surface IDs: $duplicateIds" }

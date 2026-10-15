@@ -13,6 +13,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -26,11 +27,9 @@ import eu.kanade.presentation.util.DefaultNavigatorScreenTransition
 import eu.kanade.presentation.util.LocalBackPress
 import eu.kanade.presentation.util.Screen
 import eu.kanade.presentation.util.isTabletUi
-import mihon.entry.interactions.media.EntryViewerSettingsFeature
+import mihon.app.di.appGraph
 import mihon.entry.viewer.settings.ViewerSettingsCategory
 import tachiyomi.presentation.core.components.TwoPanelBox
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 import cafe.adriel.voyager.core.screen.Screen as VoyagerScreen
 
 class SettingsScreen(
@@ -46,6 +45,7 @@ class SettingsScreen(
     override fun Content() {
         val parentNavigator = LocalNavigator.currentOrThrow
         val activity = LocalActivity.current
+        val context = LocalContext.current
         val close: () -> Unit = {
             if (!parentNavigator.pop()) {
                 activity?.finish()
@@ -56,7 +56,7 @@ class SettingsScreen(
             if (destination != Destination.Readers.id || viewerSettingsSurfaceId == null) {
                 null
             } else {
-                Injekt.get<EntryViewerSettingsFeature>()
+                context.appGraph.entryViewerSettingsFeature
                     .destinations
                     .firstOrNull {
                         it.category == ViewerSettingsCategory.READER &&

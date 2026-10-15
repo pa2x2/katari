@@ -3,6 +3,13 @@ package eu.kanade.tachiyomi.ui.history.activity
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.Assisted
+import dev.zacsweers.metro.AssistedFactory
+import dev.zacsweers.metro.AssistedInject
+import dev.zacsweers.metro.ContributesIntoMap
+import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
+import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
 import eu.kanade.presentation.more.stats.data.StatsType
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.ui.stats.buildStatisticsTypes
@@ -19,6 +26,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import logcat.LogPriority
+import mihon.app.di.AppUiScope
 import mihon.entry.interactions.presentation.EntryTypePresentationFeature
 import mihon.entry.interactions.statistics.EntryStatisticsFeature
 import tachiyomi.core.common.util.lang.launchIO
@@ -28,22 +36,33 @@ import tachiyomi.domain.history.model.activity.HistoryActivityScope
 import tachiyomi.domain.history.model.activity.HistoryActivitySessionDetail
 import tachiyomi.domain.history.repository.HistoryActivityRepository
 import tachiyomi.domain.statistics.repository.StatisticsRepository
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 import java.time.LocalDate
 
 /** @param entryIds when set, only sessions of these entries: one title, or every member of a merged title. */
+@AssistedInject
 class HistoryActivityViewModel(
-    private val startLocalDate: String,
-    private val endLocalDate: String,
-    typeName: String?,
-    entryIds: List<Long>?,
-    private val activeProfileProvider: ActiveProfileProvider = Injekt.get(),
-    private val activityRepository: HistoryActivityRepository = Injekt.get(),
-    statisticsRepository: StatisticsRepository = Injekt.get(),
-    statisticsFeature: EntryStatisticsFeature = Injekt.get(),
-    presentationFeature: EntryTypePresentationFeature = Injekt.get(),
+    @Assisted private val startLocalDate: String,
+    @Assisted private val endLocalDate: String,
+    @Assisted typeName: String?,
+    @Assisted entryIds: List<Long>?,
+    private val activeProfileProvider: ActiveProfileProvider,
+    private val activityRepository: HistoryActivityRepository,
+    statisticsRepository: StatisticsRepository,
+    statisticsFeature: EntryStatisticsFeature,
+    presentationFeature: EntryTypePresentationFeature,
 ) : ViewModel() {
+
+    @AssistedFactory
+    @ManualViewModelAssistedFactoryKey
+    @ContributesIntoMap(AppUiScope::class)
+    interface Factory : ManualViewModelAssistedFactory {
+        fun create(
+            startLocalDate: String,
+            endLocalDate: String,
+            typeName: String?,
+            entryIds: List<Long>?,
+        ): HistoryActivityViewModel
+    }
 
     val state: StateFlow<HistoryActivityViewModel.State>
         field = MutableStateFlow<HistoryActivityViewModel.State>(State.Loading)

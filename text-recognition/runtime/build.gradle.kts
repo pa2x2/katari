@@ -2,6 +2,7 @@ plugins {
     alias(mihonx.plugins.android.library)
     alias(mihonx.plugins.spotless)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.metro)
 }
 
 android {
@@ -12,11 +13,8 @@ dependencies {
     api(projects.textRecognition.api)
 
     implementation(projects.core.common)
-    implementation(projects.featureGraph)
-    implementation(projects.featureRuntime)
     implementation(projects.textRecognition.spi)
     implementation(libs.diskLruCache)
-    implementation(libs.injekt)
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.serialization.json)
 

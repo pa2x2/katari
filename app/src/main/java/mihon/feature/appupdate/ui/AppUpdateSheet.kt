@@ -3,49 +3,43 @@ package mihon.feature.appupdate.ui
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import androidx.compose.ui.unit.dp
-import eu.kanade.presentation.components.AdaptiveSheet
 import eu.kanade.presentation.components.MarkdownRender
-import eu.kanade.presentation.theme.TachiyomiPreviewTheme
 import mihon.feature.appupdate.AppUpdateStatus
 import mihon.feature.appupdate.check.AvailableUpdate
 import mihon.feature.appupdate.check.UpdateApk
 import mihon.feature.appupdate.check.VersionNotes
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.automirroredrounded.OpenInNew
+import mihon.presentation.kit.button.Button
+import mihon.presentation.kit.button.ButtonStyle
+import mihon.presentation.kit.button.IconButton
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.progress.LinearProgressIndicator
+import mihon.presentation.kit.sheet.Sheet
+import mihon.presentation.kit.surface.HorizontalDivider
+import mihon.presentation.kit.surface.Surface
+import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariPreviewTheme
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import org.intellij.markdown.flavours.gfm.GFMFlavourDescriptor
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.LoadingIndicator
-import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
 
 /**
  * The update prompt: what the new version brings, then download and install progress, over whatever screen is open.
- * Swiping it away is "Not now".
+ * Swiping it away is "Not now". Long notes scroll inside their card, which takes what the capped sheet leaves after
+ * the title and actions.
  */
 @Composable
 internal fun AppUpdateSheet(
@@ -58,43 +52,42 @@ internal fun AppUpdateSheet(
     onOpenReleasePage: () -> Unit,
     onDismiss: () -> Unit,
 ) {
-    AdaptiveSheet(onDismissRequest = onDismiss) {
-        Column(
-            modifier = Modifier.padding(
-                start = MaterialTheme.padding.large,
-                end = MaterialTheme.padding.small,
-                top = MaterialTheme.padding.large,
-                bottom = MaterialTheme.padding.medium,
-            ),
-        ) {
-            Row(verticalAlignment = Alignment.Top) {
+    Sheet(onDismissRequest = onDismiss, capHeight = true) {
+        Column(modifier = Modifier.padding(top = KatariTheme.spacing.l, bottom = KatariTheme.spacing.m)) {
+            Row(
+                modifier = Modifier.padding(start = KatariTheme.spacing.rowInset, end = KatariTheme.spacing.xs),
+                verticalAlignment = Alignment.Top,
+            ) {
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = stringResource(MR.strings.app_update_available),
-                        style = MaterialTheme.typography.headlineSmall,
-                    )
-                    Text(
-                        text = update.summary(),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
+                    Text(text = stringResource(MR.strings.app_update_available), role = TextRole.SheetTitle)
+                    Text(text = update.summary(), role = TextRole.Body, tone = ContentTone.Secondary)
                 }
-                IconButton(onClick = onOpenReleasePage) {
-                    Icon(
-                        imageVector = MaterialSymbols.AutoMirroredRounded.OpenInNew,
-                        contentDescription = stringResource(MR.strings.update_check_open),
-                    )
-                }
+                IconButton(
+                    icon = MaterialSymbols.AutoMirroredRounded.OpenInNew,
+                    contentDescription = stringResource(MR.strings.update_check_open),
+                    onClick = onOpenReleasePage,
+                )
             }
 
-            Column(modifier = Modifier.padding(end = MaterialTheme.padding.small)) {
-                if (update.notes.isNotEmpty()) {
-                    ReleaseNotesCard(
-                        notes = update.notes,
-                        modifier = Modifier.padding(top = MaterialTheme.padding.medium),
-                    )
-                }
-                Spacer(modifier = Modifier.height(MaterialTheme.padding.medium))
+            if (update.notes.isNotEmpty()) {
+                ReleaseNotesCard(
+                    notes = update.notes,
+                    modifier = Modifier
+                        .weight(1f, fill = false)
+                        .padding(
+                            start = KatariTheme.spacing.rowInset,
+                            end = KatariTheme.spacing.rowInset,
+                            top = KatariTheme.spacing.m,
+                        ),
+                )
+            }
+            Column(
+                modifier = Modifier.padding(
+                    start = KatariTheme.spacing.rowInset,
+                    end = KatariTheme.spacing.rowInset,
+                    top = KatariTheme.spacing.m,
+                ),
+            ) {
                 StatusDetail(status)
                 Actions(
                     status = status,
@@ -110,39 +103,34 @@ internal fun AppUpdateSheet(
     }
 }
 
-/** Each version's notes under its own heading, newest first, scrolling inside the sheet. */
+/** Each version's notes under its own heading, newest first. */
 @Composable
 private fun ReleaseNotesCard(notes: List<VersionNotes>, modifier: Modifier = Modifier) {
     val flavour = remember { GFMFlavourDescriptor() }
     Surface(
         modifier = modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.large,
-        color = MaterialTheme.colorScheme.surfaceContainerHighest,
+        container = SurfaceContainer.Highest,
+        shape = KatariTheme.shapes.large,
     ) {
         Column(
             modifier = Modifier
-                .heightIn(max = 320.dp)
                 .verticalScroll(rememberScrollState())
-                .padding(MaterialTheme.padding.medium),
-            verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.medium),
+                .padding(KatariTheme.spacing.m),
+            verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.m),
         ) {
             notes.forEachIndexed { index, versionNotes ->
                 // One version's notes speak for themselves; several need telling apart. The label matches the notes'
                 // own ### headings in size, so its colour and the divider set it above them.
                 if (notes.size > 1) {
                     if (index > 0) HorizontalDivider()
-                    Text(
-                        text = versionNotes.version,
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.primary,
-                    )
+                    Text(text = versionNotes.version, role = TextRole.ScreenTitle, tone = ContentTone.Primary)
                 }
                 MarkdownRender(
                     content = versionNotes.notes,
                     flavour = flavour,
-                    listBlockSpacing = MaterialTheme.padding.extraSmall,
-                    listItemSpacing = MaterialTheme.padding.extraSmall,
-                    listSectionSpacing = MaterialTheme.padding.small,
+                    listBlockSpacing = KatariTheme.spacing.xs,
+                    listItemSpacing = KatariTheme.spacing.xs,
+                    listSectionSpacing = KatariTheme.spacing.s,
                 )
             }
         }
@@ -153,11 +141,10 @@ private fun ReleaseNotesCard(notes: List<VersionNotes>, modifier: Modifier = Mod
 private fun StatusDetail(status: AppUpdateStatus) {
     val text = when (status) {
         is AppUpdateStatus.Downloading -> {
-            if (status.progress != null) {
-                LinearProgressIndicator(progress = { status.progress }, modifier = Modifier.fillMaxWidth())
-            } else {
-                LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-            }
+            LinearProgressIndicator(
+                progress = status.progress?.let { progress -> { progress } },
+                modifier = Modifier.fillMaxWidth(),
+            )
             downloadingText(status.progress)
         }
         AppUpdateStatus.NeedsPermission -> stringResource(MR.strings.app_update_permission_note)
@@ -167,13 +154,9 @@ private fun StatusDetail(status: AppUpdateStatus) {
     } ?: return
     Text(
         text = text,
-        style = MaterialTheme.typography.bodyMedium,
-        color = if (status is AppUpdateStatus.Failed) {
-            MaterialTheme.colorScheme.error
-        } else {
-            MaterialTheme.colorScheme.onSurfaceVariant
-        },
-        modifier = Modifier.padding(top = MaterialTheme.padding.small, bottom = MaterialTheme.padding.medium),
+        role = TextRole.Body,
+        tone = if (status is AppUpdateStatus.Failed) ContentTone.Error else ContentTone.Secondary,
+        modifier = Modifier.padding(top = KatariTheme.spacing.s, bottom = KatariTheme.spacing.m),
     )
 }
 
@@ -189,45 +172,61 @@ private fun Actions(
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.extraSmall),
+        verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xs),
     ) {
         val fullWidth = Modifier.fillMaxWidth()
         when (status) {
-            is AppUpdateStatus.Downloading -> FilledTonalButton(onClick = onCancelDownload, modifier = fullWidth) {
-                Text(text = stringResource(MR.strings.app_update_cancel_download))
-            }
-            AppUpdateStatus.Installing -> Button(onClick = {}, enabled = false, modifier = fullWidth) {
-                LoadingIndicator(modifier = Modifier.size(16.dp))
-                Spacer(modifier = Modifier.width(MaterialTheme.padding.small))
-                Text(text = stringResource(MR.strings.app_update_installing))
-            }
-            AppUpdateStatus.NeedsPermission -> Button(onClick = onAllowInstalls, modifier = fullWidth) {
-                Text(text = stringResource(MR.strings.app_update_allow_installs))
-            }
-            is AppUpdateStatus.Failed -> Button(onClick = onUpdate, modifier = fullWidth) {
-                Text(text = stringResource(MR.strings.action_retry))
-            }
-            else -> Button(onClick = onUpdate, modifier = fullWidth) {
-                Text(text = stringResource(MR.strings.app_update_now))
-            }
+            is AppUpdateStatus.Downloading -> Button(
+                label = stringResource(MR.strings.app_update_cancel_download),
+                onClick = onCancelDownload,
+                modifier = fullWidth,
+                style = ButtonStyle.Tonal,
+            )
+            AppUpdateStatus.Installing -> Button(
+                label = stringResource(MR.strings.app_update_installing),
+                onClick = {},
+                modifier = fullWidth,
+                enabled = false,
+                loading = true,
+            )
+            AppUpdateStatus.NeedsPermission -> Button(
+                label = stringResource(MR.strings.app_update_allow_installs),
+                onClick = onAllowInstalls,
+                modifier = fullWidth,
+            )
+            is AppUpdateStatus.Failed -> Button(
+                label = stringResource(MR.strings.action_retry),
+                onClick = onUpdate,
+                modifier = fullWidth,
+            )
+            else -> Button(label = stringResource(MR.strings.app_update_now), onClick = onUpdate, modifier = fullWidth)
         }
         if (status is AppUpdateStatus.Failed) {
-            TextButton(onClick = onOpenReleasePage, modifier = fullWidth) {
-                Text(text = stringResource(MR.strings.update_check_open))
-            }
+            Button(
+                label = stringResource(MR.strings.update_check_open),
+                onClick = onOpenReleasePage,
+                modifier = fullWidth,
+                style = ButtonStyle.Text,
+            )
         }
         if (status == AppUpdateStatus.Available) {
-            TextButton(onClick = onSkipVersion, modifier = fullWidth) {
-                Text(text = stringResource(MR.strings.app_update_skip_version))
-            }
+            Button(
+                label = stringResource(MR.strings.app_update_skip_version),
+                onClick = onSkipVersion,
+                modifier = fullWidth,
+                style = ButtonStyle.Text,
+            )
         }
         if (status == AppUpdateStatus.Available ||
             status == AppUpdateStatus.NeedsPermission ||
             status is AppUpdateStatus.Failed
         ) {
-            TextButton(onClick = onDismiss, modifier = fullWidth) {
-                Text(text = stringResource(MR.strings.action_not_now))
-            }
+            Button(
+                label = stringResource(MR.strings.action_not_now),
+                onClick = onDismiss,
+                modifier = fullWidth,
+                style = ButtonStyle.Text,
+            )
         }
     }
 }
@@ -235,7 +234,7 @@ private fun Actions(
 @PreviewLightDark
 @Composable
 private fun AppUpdateSheetPreview() {
-    TachiyomiPreviewTheme {
+    KatariPreviewTheme {
         AppUpdateSheet(
             update = AvailableUpdate(
                 version = "1.13.0",

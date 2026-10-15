@@ -2,10 +2,10 @@ package eu.kanade.tachiyomi.ui.translator
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import cafe.adriel.voyager.navigator.tab.TabOptions
+import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 import eu.kanade.presentation.util.Tab
 import eu.kanade.tachiyomi.ui.setting.SettingsScreen
 import eu.kanade.tachiyomi.ui.translator.session.TranslatorViewModel
@@ -26,7 +26,9 @@ data object TranslatorTab : Tab {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val viewModel = viewModel { TranslatorViewModel() }
+        val viewModel = assistedMetroViewModel<TranslatorViewModel, TranslatorViewModel.Factory> {
+            create(initialText = "")
+        }
         TranslatorRoute(
             viewModel = viewModel,
             onNavigateUp = null,

@@ -1,14 +1,13 @@
 package eu.kanade.presentation.more.stats.recap.components
 
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.entry.components.EntryCover
 import eu.kanade.tachiyomi.ui.stats.recap.story.StatisticsRecapTitle
+import mihon.presentation.kit.content.StoryMetrics
 
 /** A title's cover as recap pages show it: lifted off the page, and holdable to hide the title. */
 @Composable
@@ -17,7 +16,7 @@ internal fun RecapCover(
     width: Dp,
     modifier: Modifier = Modifier,
 ) {
-    val shape = RoundedCornerShape(width / 18)
+    val shape = StoryMetrics.coverShape(width)
     EntryCover.Book(
         data = title.cover,
         shape = shape,
@@ -25,6 +24,6 @@ internal fun RecapCover(
         modifier = modifier
             .recapTitleTarget(title.entryId)
             .width(width)
-            .shadow(elevation = (width / 14).coerceAtMost(12.dp), shape = shape),
+            .shadow(elevation = StoryMetrics.coverShadow(width), shape = shape),
     )
 }

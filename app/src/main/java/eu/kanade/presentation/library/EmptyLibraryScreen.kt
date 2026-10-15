@@ -2,30 +2,25 @@ package eu.kanade.presentation.library
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.automirroredrounded.Help
 import mihon.icons.materialsymbols.rounded.Explore
 import mihon.icons.materialsymbols.rounded.SettingsBackupRestore
+import mihon.presentation.kit.button.Button
+import mihon.presentation.kit.button.ButtonStyle
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.feedback.EmptyScreen
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.screens.EmptyScreen
-import tachiyomi.presentation.core.util.secondaryItemAlpha
 
 /** A library with nothing in it yet: the two ways to fill it, adding from a source or restoring a backup. */
 @Composable
@@ -41,41 +36,37 @@ fun EmptyLibraryScreen(
     ) {
         Text(
             text = stringResource(MR.strings.information_empty_library_hint),
-            modifier = Modifier
-                .padding(top = 8.dp)
-                .secondaryItemAlpha(),
-            style = MaterialTheme.typography.bodySmall,
+            modifier = Modifier.padding(top = KatariTheme.spacing.s),
+            role = TextRole.Supporting,
             textAlign = TextAlign.Center,
         )
+        // Both ways to fill the library share the width of the longer label.
         Column(
             modifier = Modifier
-                .padding(top = 24.dp)
-                .widthIn(max = 280.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+                .padding(top = KatariTheme.spacing.xl)
+                .width(IntrinsicSize.Max),
+            verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
         ) {
-            Button(onClick = onBrowseSources, modifier = Modifier.fillMaxWidth()) {
-                ButtonIcon(MaterialSymbols.Rounded.Explore)
-                Text(stringResource(MR.strings.action_browse_sources))
-            }
-            OutlinedButton(onClick = onRestoreBackup, modifier = Modifier.fillMaxWidth()) {
-                ButtonIcon(MaterialSymbols.Rounded.SettingsBackupRestore)
-                Text(stringResource(MR.strings.pref_restore_backup))
-            }
+            Button(
+                label = stringResource(MR.strings.action_browse_sources),
+                onClick = onBrowseSources,
+                modifier = Modifier.fillMaxWidth(),
+                icon = MaterialSymbols.Rounded.Explore,
+            )
+            Button(
+                label = stringResource(MR.strings.pref_restore_backup),
+                onClick = onRestoreBackup,
+                modifier = Modifier.fillMaxWidth(),
+                style = ButtonStyle.Outlined,
+                icon = MaterialSymbols.Rounded.SettingsBackupRestore,
+            )
         }
-        TextButton(onClick = onOpenGuide, modifier = Modifier.padding(top = 8.dp)) {
-            ButtonIcon(MaterialSymbols.AutoMirroredRounded.Help)
-            Text(stringResource(MR.strings.getting_started_guide))
-        }
+        Button(
+            label = stringResource(MR.strings.getting_started_guide),
+            onClick = onOpenGuide,
+            modifier = Modifier.padding(top = KatariTheme.spacing.s),
+            style = ButtonStyle.Text,
+            icon = MaterialSymbols.AutoMirroredRounded.Help,
+        )
     }
-}
-
-@Composable
-private fun ButtonIcon(icon: ImageVector) {
-    Icon(
-        imageVector = icon,
-        contentDescription = null,
-        modifier = Modifier
-            .padding(end = ButtonDefaults.IconSpacing)
-            .size(ButtonDefaults.IconSize),
-    )
 }

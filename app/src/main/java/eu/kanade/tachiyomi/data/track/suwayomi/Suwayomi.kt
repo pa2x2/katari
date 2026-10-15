@@ -6,14 +6,20 @@ import eu.kanade.tachiyomi.data.database.models.Track
 import eu.kanade.tachiyomi.data.track.BaseTracker
 import eu.kanade.tachiyomi.data.track.EnhancedTracker
 import eu.kanade.tachiyomi.data.track.EntryTrackingSource
+import eu.kanade.tachiyomi.data.track.TrackerDependencies
 import eu.kanade.tachiyomi.data.track.model.TrackSearch
+import mihon.entry.interactions.source.EntryTrackerSourceAdapterFeature
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.track.model.EntryTrack
 import tachiyomi.i18n.*
 
-class Suwayomi(id: Long) : BaseTracker(id, "Suwayomi"), EnhancedTracker {
+class Suwayomi(
+    id: Long,
+    dependencies: TrackerDependencies,
+    sourceAdapterFeature: Lazy<EntryTrackerSourceAdapterFeature>,
+) : BaseTracker(id, "Suwayomi", dependencies), EnhancedTracker {
 
-    val api by lazy { SuwayomiApi(id) }
+    val api by lazy { SuwayomiApi(id, sourceAdapterFeature) }
 
     override fun getLogo() = R.drawable.brand_suwayomi
 

@@ -2,7 +2,6 @@ package eu.kanade.presentation.entry.components
 
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -10,26 +9,15 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.DpOffset
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import androidx.core.graphics.drawable.toDrawable
 import androidx.core.view.updatePadding
 import coil3.asDrawable
@@ -38,18 +26,25 @@ import coil3.request.CachePolicy
 import coil3.request.ImageRequest
 import coil3.size.Size
 import com.github.chrisbanes.photoview.PhotoView
-import eu.kanade.presentation.components.AppBar
-import eu.kanade.presentation.components.AppBarActions
-import eu.kanade.presentation.components.AppSnackbarHost
-import eu.kanade.presentation.components.DropdownMenu
 import eu.kanade.presentation.entry.EditCoverAction
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Close
 import mihon.icons.materialsymbols.rounded.Edit
 import mihon.icons.materialsymbols.rounded.Save
 import mihon.icons.materialsymbols.rounded.Share
+import mihon.presentation.kit.button.IconButton
+import mihon.presentation.kit.dialog.FullScreenDialog
+import mihon.presentation.kit.feedback.SnackbarHost
+import mihon.presentation.kit.feedback.SnackbarHostState
+import mihon.presentation.kit.menu.DropdownMenu
+import mihon.presentation.kit.menu.DropdownMenuItem
+import mihon.presentation.kit.navigation.AppBar
+import mihon.presentation.kit.navigation.AppBarActions
+import mihon.presentation.kit.navigation.Scaffold
+import mihon.presentation.kit.surface.Surface
+import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.clickableNoIndication
 
@@ -65,30 +60,23 @@ fun EntryCoverDialog(
     onEditClick: ((EditCoverAction) -> Unit)?,
     onDismissRequest: () -> Unit,
 ) {
-    Dialog(
-        onDismissRequest = onDismissRequest,
-        properties = DialogProperties(
-            usePlatformDefaultWidth = false,
-            decorFitsSystemWindows = false,
-        ),
-    ) {
+    FullScreenDialog(onDismissRequest = onDismissRequest) {
         Scaffold(
-            snackbarHost = { AppSnackbarHost(hostState = snackbarHostState) },
-            containerColor = Color.Transparent,
+            snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+            container = SurfaceContainer.None,
             bottomBar = {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(4.dp)
+                        .padding(KatariTheme.spacing.xs)
                         .navigationBarsPadding(),
                 ) {
                     ActionsPill {
-                        IconButton(onClick = onDismissRequest) {
-                            Icon(
-                                imageVector = MaterialSymbols.Rounded.Close,
-                                contentDescription = stringResource(MR.strings.action_close),
-                            )
-                        }
+                        IconButton(
+                            icon = MaterialSymbols.Rounded.Close,
+                            contentDescription = stringResource(MR.strings.action_close),
+                            onClick = onDismissRequest,
+                        )
                     }
                     Spacer(modifier = Modifier.weight(1f))
                     ActionsPill {
@@ -110,6 +98,8 @@ fun EntryCoverDialog(
                             Box {
                                 var expanded by remember { mutableStateOf(false) }
                                 IconButton(
+                                    icon = MaterialSymbols.Rounded.Edit,
+                                    contentDescription = stringResource(MR.strings.action_edit_cover),
                                     onClick = {
                                         when {
                                             !isCoverEditable -> onEditClick(EditCoverAction.ADD_TO_LIBRARY)
@@ -117,26 +107,21 @@ fun EntryCoverDialog(
                                             else -> onEditClick(EditCoverAction.EDIT)
                                         }
                                     },
-                                ) {
-                                    Icon(
-                                        imageVector = MaterialSymbols.Rounded.Edit,
-                                        contentDescription = stringResource(MR.strings.action_edit_cover),
-                                    )
-                                }
+                                )
                                 DropdownMenu(
                                     expanded = expanded,
                                     onDismissRequest = { expanded = false },
-                                    offset = DpOffset(8.dp, 0.dp),
+                                    offset = DpOffset(KatariTheme.spacing.s, KatariTheme.sizes.none),
                                 ) {
                                     DropdownMenuItem(
-                                        text = { Text(text = stringResource(MR.strings.action_edit)) },
+                                        label = stringResource(MR.strings.action_edit),
                                         onClick = {
                                             onEditClick(EditCoverAction.EDIT)
                                             expanded = false
                                         },
                                     )
                                     DropdownMenuItem(
-                                        text = { Text(text = stringResource(MR.strings.action_delete)) },
+                                        label = stringResource(MR.strings.action_delete),
                                         onClick = {
                                             onEditClick(EditCoverAction.DELETE)
                                             expanded = false
@@ -197,11 +182,7 @@ fun EntryCoverDialog(
 
 @Composable
 private fun ActionsPill(content: @Composable () -> Unit) {
-    Row(
-        modifier = Modifier
-            .clip(MaterialTheme.shapes.extraLarge)
-            .background(MaterialTheme.colorScheme.background.copy(alpha = 0.95f)),
-    ) {
-        content()
+    Surface(container = SurfaceContainer.Chrome, shape = KatariTheme.shapes.extraLarge) {
+        Row { content() }
     }
 }

@@ -4,8 +4,6 @@ import mihon.core.migration.Migration
 import mihon.core.migration.MigrationContext
 import mihon.entry.interactions.reader.settings.MangaReaderSettings
 import mihon.entry.interactions.reader.settings.ReadingMode
-import mihon.feature.profiles.core.ProfileDatabase
-import mihon.feature.profiles.core.ProfileStore
 import tachiyomi.core.common.preference.getEnumSet
 import tachiyomi.core.common.util.lang.withIOContext
 
@@ -13,8 +11,8 @@ class VerticalNavigatorMigration : Migration {
     override val version: Float = 91f
 
     override suspend fun invoke(migrationContext: MigrationContext): Boolean = withIOContext {
-        val profileStore = migrationContext.get<ProfileStore>() ?: return@withIOContext false
-        val profileDatabase = migrationContext.get<ProfileDatabase>() ?: return@withIOContext false
+        val profileStore = migrationContext.profileStore
+        val profileDatabase = migrationContext.profileDatabase
         val profileIds = profileDatabase.getProfiles(includeArchived = true).map { it.id }
 
         profileIds.forEach { profileId ->

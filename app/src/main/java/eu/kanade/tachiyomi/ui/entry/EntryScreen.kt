@@ -18,12 +18,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 import eu.kanade.core.util.ifSourcesLoaded
-import eu.kanade.domain.entry.model.hasCustomCover
 import eu.kanade.presentation.browse.components.BrowseMergeEditorDialog
 import eu.kanade.presentation.browse.components.MergeTargetPickerDialog
 import eu.kanade.presentation.browse.components.RemoveMangaDialog
@@ -39,9 +38,9 @@ import eu.kanade.presentation.entry.components.EditDisplayNameDialog
 import eu.kanade.presentation.entry.components.EntryCoverDialog
 import eu.kanade.presentation.entry.components.EntryDownloadSettingsDialog
 import eu.kanade.presentation.entry.components.ManageMergeDialog
-import eu.kanade.presentation.entry.components.PreviewSizeUi
 import eu.kanade.presentation.entry.components.ScanlatorFilterDialog
 import eu.kanade.presentation.entry.components.SetIntervalDialog
+import eu.kanade.presentation.entry.components.preview.PreviewSizeUi
 import eu.kanade.presentation.entry.translation.EntryChapterTranslationUi
 import eu.kanade.presentation.entry.translation.EntryTranslateSetupSheet
 import eu.kanade.presentation.entry.translation.TranslatableChapter
@@ -72,34 +71,28 @@ import eu.kanade.tachiyomi.util.system.toShareIntent
 import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.launch
 import logcat.LogPriority
+import mihon.app.di.appGraph
 import mihon.entry.interactions.catalogue.EntryCatalogueFeature
 import mihon.entry.interactions.child.EntryChildGroupFilterStateResult
 import mihon.entry.interactions.child.EntryRelatedEntriesAvailability
 import mihon.entry.interactions.child.EntryRelatedEntriesContext
-import mihon.entry.interactions.child.EntryRelatedEntriesFeature
 import mihon.entry.interactions.download.EntryBulkDownloadAction
 import mihon.entry.interactions.download.EntryDownloadActionAvailability
-import mihon.entry.interactions.download.EntryDownloadActionFeature
 import mihon.entry.interactions.download.EntryDownloadActionRequest
 import mihon.entry.interactions.media.EntryPreviewOpenTargetResult
 import mihon.entry.interactions.media.EntryPreviewSize
 import mihon.entry.interactions.navigation.EntryOpenFeature
 import mihon.entry.interactions.navigation.EntryOpenOptions
-import mihon.entry.interactions.source.EntryWebViewFeature
 import mihon.entry.interactions.source.EntryWebViewResolution
-import mihon.entry.interactions.state.EntryBookmarkFeature
-import mihon.entry.interactions.state.EntryConsumptionFeature
 import mihon.feature.migration.config.MigrationConfigScreen
 import mihon.feature.migration.dialog.MigrateEntryDialog
+import mihon.presentation.kit.feedback.LoadingScreen
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.screens.LoadingScreen
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 import java.time.LocalDate
 
 class EntryScreen(
@@ -123,22 +116,26 @@ class EntryScreen(
         val context = LocalContext.current
         val haptic = LocalHapticFeedback.current
         val scope = rememberCoroutineScope()
-        val entryOpenFeature = remember { Injekt.get<EntryOpenFeature>() }
-        val entryConsumptionFeature = remember { Injekt.get<EntryConsumptionFeature>() }
-        val entryDownloadActionFeature = remember { Injekt.get<EntryDownloadActionFeature>() }
-        val entryBookmarkFeature = remember { Injekt.get<EntryBookmarkFeature>() }
-        val entryRelatedEntriesFeature = remember { Injekt.get<EntryRelatedEntriesFeature>() }
-        val entryWebViewFeature = remember { Injekt.get<EntryWebViewFeature>() }
-        val viewModel = viewModel {
-            EntryViewModel(
+        val graph = remember { context.appGraph }
+        val entryOpenFeature = remember { graph.entryOpenFeature }
+        val entryConsumptionFeature = remember { graph.entryConsumptionFeature }
+        val entryDownloadActionFeature = remember { graph.entryDownloadActionFeature }
+        val entryBookmarkFeature = remember { graph.entryBookmarkFeature }
+        val entryRelatedEntriesFeature = remember { graph.entryRelatedEntriesFeature }
+        val entryWebViewFeature = remember { graph.entryWebViewFeature }
+        val entryCatalogueFeature = remember { graph.entryCatalogueFeature }
+        val viewModel = assistedMetroViewModel<EntryViewModel, EntryViewModel.Factory> {
+            create(
                 context = context,
                 entryId = entryId,
                 isFromSource = fromSource,
                 bypassMerge = bypassMerge ?: false,
             )
         }
-        val relatedEntriesViewModel = viewModel(key = "related-entries-$entryId") {
-            RelatedEntriesViewModel(entryId, entryRelatedEntriesFeature)
+        val relatedEntriesViewModel = assistedMetroViewModel<RelatedEntriesViewModel, RelatedEntriesViewModel.Factory>(
+            key = "related-entries-$entryId",
+        ) {
+            create(entryId)
         }
 
         val state by viewModel.state.collectAsStateWithLifecycle()
@@ -209,8 +206,10 @@ class EntryScreen(
         val openApplicable = entryOpenFeature.isApplicable(successState.entry.type)
         val consumptionApplicable = entryConsumptionFeature.isApplicable(successState.entry.type)
 
-        val updatesViewModel = viewModel(key = "updates-${successState.entry.id}") {
-            EntryUpdatesViewModel(successState.entry.id, successState.memberIds)
+        val updatesViewModel = assistedMetroViewModel<EntryUpdatesViewModel, EntryUpdatesViewModel.Factory>(
+            key = "updates-${successState.entry.id}",
+        ) {
+            create(successState.entry.id, successState.memberIds)
         }
         val updatesState by updatesViewModel.state.collectAsStateWithLifecycle()
         var showUpdatesSheet by rememberSaveable(successState.entry.id) { mutableStateOf(false) }
@@ -245,10 +244,10 @@ class EntryScreen(
             )
         }
 
-        val activityViewModel = viewModel(
+        val activityViewModel = assistedMetroViewModel<EntryActivityViewModel, EntryActivityViewModel.Factory>(
             key = "activity-${successState.entry.id}-${successState.memberIds.joinToString(",")}",
         ) {
-            EntryActivityViewModel(successState.entry.profileId, successState.entry.type, successState.memberIds)
+            create(successState.entry.profileId, successState.entry.type, successState.memberIds)
         }
         val activityState by activityViewModel.state.collectAsStateWithLifecycle()
         var showActivitySheet by rememberSaveable(successState.entry.id) { mutableStateOf(false) }
@@ -336,7 +335,9 @@ class EntryScreen(
                     successState.entry.initialized &&
                     successState.duplicateCandidates.isNotEmpty()
             },
-            onTagSearch = { scope.launch { performGenreSearch(navigator, it, viewModel.source) } },
+            onTagSearch = {
+                scope.launch { performGenreSearch(navigator, entryCatalogueFeature, it, viewModel.source) }
+            },
             onFilterButtonClicked = viewModel::showSettingsDialog,
             onRefresh = viewModel::fetchAllFromSource,
             onContinueReading = {
@@ -575,7 +576,9 @@ class EntryScreen(
                 )
             }
             EntryViewModel.Dialog.FullCover -> {
-                val sm = viewModel { EntryCoverViewModel(successState.entry.id) }
+                val sm = assistedMetroViewModel<EntryCoverViewModel, EntryCoverViewModel.Factory> {
+                    create(successState.entry.id)
+                }
                 val entry by sm.state.collectAsStateWithLifecycle()
                 if (entry != null) {
                     val getContent = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) {
@@ -585,7 +588,7 @@ class EntryScreen(
                     EntryCoverDialog(
                         coverData = entry!!,
                         snackbarHostState = sm.snackbarHostState,
-                        isCustomCover = remember(entry) { entry!!.hasCustomCover() },
+                        isCustomCover = remember(entry) { sm.hasCustomCover(entry!!) },
                         isCoverEditable = entry!!.favorite || entry!!.isLocal(),
                         onShareClick = { sm.shareCover(context) },
                         onSaveClick = { sm.saveCover(context) },
@@ -698,14 +701,19 @@ class EntryScreen(
     /**
      * Performs a genre search using the provided genre name.
      */
-    private suspend fun performGenreSearch(navigator: Navigator, genreName: String, source: UnifiedSource?) {
+    private suspend fun performGenreSearch(
+        navigator: Navigator,
+        catalogueFeature: EntryCatalogueFeature,
+        genreName: String,
+        source: UnifiedSource?,
+    ) {
         if (navigator.size < 2) {
             return
         }
 
         val previousController = navigator.items[navigator.size - 2]
         val hasCatalogue = source?.let {
-            Injekt.get<EntryCatalogueFeature>().description(it.id).catalogue != null
+            catalogueFeature.description(it.id).catalogue != null
         } == true
         if (previousController is CatalogScreen && hasCatalogue) {
             navigator.pop()

@@ -2,18 +2,18 @@ package eu.kanade.tachiyomi.ui.browse.source.browse
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import eu.kanade.domain.source.model.FilterRestoreIssue
 import eu.kanade.tachiyomi.source.entry.EntryFilter
 import eu.kanade.tachiyomi.source.entry.EntryFilterList
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.FilterPresetRepairItem
-import eu.kanade.tachiyomi.ui.browse.source.browse.filter.control.FilterSheetInsets
+import mihon.presentation.kit.button.Button
+import mihon.presentation.kit.button.ButtonStyle
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.surface.HorizontalDivider
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -31,31 +31,38 @@ internal fun SourceFilterRowContent(
     groupBody: @Composable (SourceFilterRow.GroupBody) -> Unit,
     repairFilterItem: @Composable (EntryFilter<*>) -> Unit,
 ) {
-    val blockModifier = Modifier.padding(FilterSheetInsets.Horizontal)
+    val blockModifier = Modifier.padding(horizontal = KatariTheme.spacing.rowInset, vertical = KatariTheme.spacing.l)
     when (row) {
-        SourceFilterRow.Loading -> Text(stringResource(MR.strings.loading), modifier = blockModifier)
+        SourceFilterRow.Loading -> Text(
+            stringResource(MR.strings.loading),
+            modifier = blockModifier,
+            role = TextRole.Body,
+        )
         is SourceFilterRow.LoadError -> Column(blockModifier) {
-            Text(row.message)
+            Text(row.message, role = TextRole.Body)
             onRetry?.let {
-                TextButton(onClick = it) { Text(stringResource(MR.strings.action_retry)) }
+                Button(label = stringResource(MR.strings.action_retry), onClick = it, style = ButtonStyle.Text)
             }
         }
         is SourceFilterRow.RepairIntro -> Column(blockModifier) {
-            Text(stringResource(MR.strings.filter_repair_title), style = MaterialTheme.typography.titleMedium)
-            Text(stringResource(MR.strings.filter_repair_help), style = MaterialTheme.typography.bodyMedium)
+            Text(stringResource(MR.strings.filter_repair_title), role = TextRole.SectionTitle)
+            Text(stringResource(MR.strings.filter_repair_help), role = TextRole.Body)
             if (row.showSave) {
-                TextButton(enabled = row.saveEnabled, onClick = onSaveRepair) {
-                    Text(stringResource(MR.strings.filter_save_repair))
-                }
+                Button(
+                    label = stringResource(MR.strings.filter_save_repair),
+                    onClick = onSaveRepair,
+                    style = ButtonStyle.Text,
+                    enabled = row.saveEnabled,
+                )
             }
         }
         is SourceFilterRow.RepairIssue -> FilterPresetRepairItem(row.issue, filters, onResolveIssue, repairFilterItem)
         SourceFilterRow.NoChanges -> Column(blockModifier) {
-            Text(stringResource(MR.strings.filter_no_changes))
-            TextButton(onClick = onShowAll) { Text(stringResource(MR.strings.filter_show_all)) }
+            Text(stringResource(MR.strings.filter_no_changes), role = TextRole.Body)
+            Button(label = stringResource(MR.strings.filter_show_all), onClick = onShowAll, style = ButtonStyle.Text)
         }
         SourceFilterRow.OrderingDivider -> HorizontalDivider(
-            Modifier.padding(horizontal = FilterSheetInsets.Horizontal, vertical = 4.dp),
+            Modifier.padding(horizontal = KatariTheme.spacing.rowInset, vertical = KatariTheme.spacing.xs),
         )
         is SourceFilterRow.Filter -> filterItem(row)
         is SourceFilterRow.GroupTools -> groupTools(row)

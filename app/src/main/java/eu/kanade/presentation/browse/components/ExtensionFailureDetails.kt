@@ -1,14 +1,13 @@
 package eu.kanade.presentation.browse.components
 
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.unit.dp
 import eu.kanade.tachiyomi.util.system.copyToClipboard
+import mihon.presentation.kit.button.Button
+import mihon.presentation.kit.button.ButtonStyle
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -24,23 +23,21 @@ internal fun ExtensionFailureDetails(
 ) {
     Text(
         text = message,
-        style = MaterialTheme.typography.bodySmall,
-        fontFamily = FontFamily.Monospace,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        role = TextRole.Code,
+        tone = ContentTone.Secondary,
     )
 
     if (stackTrace != null) {
         val context = LocalContext.current
-        TextButton(
+        Button(
+            label = stringResource(MR.strings.ext_copy_stacktrace),
             onClick = {
                 context.copyToClipboard(
                     label = context.stringResource(MR.strings.ext_copy_stacktrace),
                     content = stackTrace,
                 )
             },
-            contentPadding = PaddingValues(0.dp),
-        ) {
-            Text(text = stringResource(MR.strings.ext_copy_stacktrace))
-        }
+            style = ButtonStyle.Text,
+        )
     }
 }

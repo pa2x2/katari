@@ -3,11 +3,6 @@ package eu.kanade.presentation.more.stats.components
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -17,6 +12,11 @@ import eu.kanade.presentation.more.stats.data.StatsRange
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.ChevronLeft
 import mihon.icons.materialsymbols.rounded.ChevronRight
+import mihon.presentation.kit.button.Button
+import mihon.presentation.kit.button.ButtonStyle
+import mihon.presentation.kit.button.IconButton
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -36,44 +36,26 @@ internal fun StatisticsWindowNavigation(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (finite) {
-            IconButton(enabled = olderEnabled, onClick = onOlder) {
-                Icon(MaterialSymbols.Rounded.ChevronLeft, stringResource(MR.strings.statistics_older_activity))
-            }
+            IconButton(
+                icon = MaterialSymbols.Rounded.ChevronLeft,
+                contentDescription = stringResource(MR.strings.statistics_older_activity),
+                onClick = onOlder,
+                enabled = olderEnabled,
+            )
         }
         Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(
-                text = formatStatisticsWindow(window),
-                style = MaterialTheme.typography.titleSmall,
-                textAlign = TextAlign.Center,
-            )
+            Text(text = formatStatisticsWindow(window), role = TextRole.Label, textAlign = TextAlign.Center)
             if (finite && !window.isLatest) {
-                TextButton(onClick = onToday) { Text(stringResource(MR.strings.statistics_today)) }
+                Button(label = stringResource(MR.strings.statistics_today), onClick = onToday, style = ButtonStyle.Text)
             }
         }
         if (finite) {
-            IconButton(enabled = newerEnabled, onClick = onNewer) {
-                Icon(MaterialSymbols.Rounded.ChevronRight, stringResource(MR.strings.statistics_newer_activity))
-            }
-        }
-    }
-}
-
-/** Period label used when the activity chart is hidden, keeping a way back to the latest window. */
-@Composable
-internal fun StatisticsPeriodRow(
-    period: String,
-    showToday: Boolean,
-    onToday: () -> Unit,
-) {
-    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        Text(
-            text = period,
-            modifier = Modifier.weight(1f),
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        if (showToday) {
-            TextButton(onClick = onToday) { Text(stringResource(MR.strings.statistics_today)) }
+            IconButton(
+                icon = MaterialSymbols.Rounded.ChevronRight,
+                contentDescription = stringResource(MR.strings.statistics_newer_activity),
+                onClick = onNewer,
+                enabled = newerEnabled,
+            )
         }
     }
 }

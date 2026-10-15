@@ -3,7 +3,6 @@ package eu.kanade.tachiyomi.ui.history
 import androidx.compose.animation.graphics.res.animatedVectorResource
 import androidx.compose.animation.graphics.res.rememberAnimatedVectorPainter
 import androidx.compose.animation.graphics.vector.AnimatedImageVector
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -11,12 +10,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
 import cafe.adriel.voyager.navigator.tab.TabOptions
+import dev.zacsweers.metrox.viewmodel.metroViewModel
 import eu.kanade.presentation.category.components.ChangeCategoryDialog
 import eu.kanade.presentation.entry.components.DuplicateEntryDialog
 import eu.kanade.presentation.entry.entryTypePresentation
@@ -33,14 +32,13 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
-import mihon.entry.interactions.navigation.EntryContinueFeature
+import mihon.app.di.appGraph
 import mihon.entry.interactions.navigation.EntryContinueResult
 import mihon.feature.migration.dialog.MigrateEntryDialog
+import mihon.presentation.kit.feedback.SnackbarHostState
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
 data object HistoryTab : Tab {
 
@@ -68,9 +66,9 @@ data object HistoryTab : Tab {
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
         val context = LocalContext.current
+        val entryTypePresentationFeature = remember { context.appGraph.entryTypePresentationFeature }
         val scope = rememberCoroutineScope()
-        val entryContinueFeature = remember { Injekt.get<EntryContinueFeature>() }
-        val viewModel = viewModel { HistoryViewModel() }
+        val viewModel = metroViewModel<HistoryViewModel>()
         val state by viewModel.state.collectAsStateWithLifecycle()
         val dayDurations by viewModel.dayDurations.collectAsStateWithLifecycle()
 
@@ -87,11 +85,11 @@ data object HistoryTab : Tab {
                     navigator.push(EntryScreen(viewModel.getVisibleEntryId(item.historyItem.entryId)))
                 }
             },
-            canResume = { item -> entryContinueFeature.isApplicable(item.historyItem.entryType) },
+            canResume = { item -> viewModel.canContinue(item.historyItem.entryType) },
             onClickResume = { item ->
                 scope.launch {
                     val entry = viewModel.getEntryById(item.historyItem.entryId) ?: return@launch
-                    entryContinueFeature.continueEntry(context, entry)
+                    viewModel.continueEntry(context, entry)
                 }
             },
             onClickDelete = { history -> viewModel.setDialog(HistoryViewModel.Dialog.Delete(history)) },
@@ -180,18 +178,22 @@ data object HistoryTab : Tab {
                 val entry = viewModel.getEntryById(history.entryId)
                 if (entry == null) {
                     snackbarHostState.showSnackbar(
-                        context.stringResource(history.entryType.entryTypePresentation().noNextChildLabel),
+                        context.stringResource(
+                            history.entryType.entryTypePresentation(entryTypePresentationFeature).noNextChildLabel,
+                        ),
                     )
                     return@collectLatest
                 }
 
-                when (entryContinueFeature.continueEntry(context, entry)) {
+                when (viewModel.continueEntry(context, entry)) {
                     EntryContinueResult.Inapplicable -> {
                         snackbarHostState.showSnackbar(context.stringResource(MR.strings.no_next_item))
                     }
                     EntryContinueResult.NoNext -> {
                         snackbarHostState.showSnackbar(
-                            context.stringResource(entry.type.entryTypePresentation().noNextChildLabel),
+                            context.stringResource(
+                                entry.type.entryTypePresentation(entryTypePresentationFeature).noNextChildLabel,
+                            ),
                         )
                     }
                     is EntryContinueResult.Opened -> Unit

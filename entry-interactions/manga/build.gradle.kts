@@ -3,6 +3,7 @@ plugins {
     alias(mihonx.plugins.compose)
     alias(mihonx.plugins.spotless)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.metro)
 }
 
 android {
@@ -18,8 +19,6 @@ kotlin {
         freeCompilerArgs.addAll(
             "-opt-in=androidx.compose.foundation.ExperimentalFoundationApi",
             "-opt-in=androidx.compose.foundation.layout.ExperimentalLayoutApi",
-            "-opt-in=androidx.compose.material3.ExperimentalMaterial3Api",
-            "-opt-in=androidx.compose.material3.ExperimentalMaterial3ExpressiveApi",
             "-opt-in=androidx.compose.ui.ExperimentalComposeUiApi",
             "-opt-in=coil3.annotation.ExperimentalCoilApi",
             "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi",
@@ -35,6 +34,7 @@ dependencies {
 
     implementation(projects.core.archive)
     implementation(projects.core.common)
+    implementation(projects.core.metro)
     implementation(projects.coreMetadata)
     implementation(projects.entryViewerSettingsUi)
     implementation(projects.i18n)
@@ -48,6 +48,7 @@ dependencies {
     implementation(projects.translation.ui)
     implementation(projects.tts.api)
     implementation(projects.tts.ui)
+    implementation(projects.entryViewerChromeUi)
     implementation(projects.presentationCore)
     implementation(projects.sourceApi)
     implementation(projects.sourceCompat)
@@ -57,7 +58,6 @@ dependencies {
     implementation(libs.androidx.annotation)
     implementation(libs.androidx.appCompat)
     implementation(libs.androidx.compose.foundation)
-    implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.animation)
     implementation(libs.androidx.compose.animationGraphics)
     implementation(libs.androidx.compose.uiToolingPreview)
@@ -71,8 +71,8 @@ dependencies {
     implementation(libs.bundles.serialization)
     implementation(libs.diskLruCache)
     implementation(libs.image.decoder)
-    implementation(libs.injekt)
     implementation(libs.material)
+    api(libs.metrox.viewmodel)
     implementation(libs.photoView)
     implementation(libs.directionalViewPager) {
         exclude(group = "androidx.viewpager", module = "viewpager")

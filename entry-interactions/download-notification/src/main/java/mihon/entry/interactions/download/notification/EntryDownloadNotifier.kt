@@ -8,14 +8,11 @@ import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.PermissionChecker
-import eu.kanade.tachiyomi.core.security.SecurityPreferences
 import mihon.entry.interactions.download.EntryDownloadEntryIdentity
 import mihon.entry.interactions.download.EntryDownloadNotificationActions
 import mihon.entry.interactions.download.EntryDownloadNotifications
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.*
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
 data class EntryDownloadProgressNotification(
     val destination: EntryDownloadEntryIdentity,
@@ -63,10 +60,8 @@ interface EntryDownloadNotificationPresenter {
 
 class AndroidEntryDownloadNotifier(
     private val context: Context,
-    private val actions: EntryDownloadNotificationActions = Injekt.get(),
-    private val hideNotificationContent: () -> Boolean = {
-        Injekt.get<SecurityPreferences>().hideNotificationContent.get()
-    },
+    private val actions: EntryDownloadNotificationActions,
+    private val hideNotificationContent: () -> Boolean,
     private val labels: EntryDownloadNotificationLabels = context.entryDownloadNotificationLabels(),
     private val publisher: EntryDownloadNotificationPublisher = AndroidEntryDownloadNotificationPublisher(context),
 ) : EntryDownloadNotificationPresenter {

@@ -2,6 +2,7 @@ plugins {
     alias(mihonx.plugins.android.library)
     alias(mihonx.plugins.spotless)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.metro)
 }
 
 android {
@@ -12,9 +13,6 @@ dependencies {
     api(projects.modelArtifacts.api)
 
     implementation(projects.core.common)
-    implementation(projects.featureGraph)
-    implementation(projects.featureRuntime)
-    implementation(libs.injekt)
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.okhttp.core)

@@ -1,9 +1,8 @@
-import mihon.gradle.tasks.GenerateEntryInteractionTopologyTask
-
 plugins {
     alias(mihonx.plugins.android.library)
     alias(mihonx.plugins.spotless)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.metro)
 }
 
 android {
@@ -14,51 +13,23 @@ android {
     }
 }
 
-androidComponents {
-    onVariants { variant ->
-        val javaSources = variant.sources.java ?: return@onVariants
-        val variantName = variant.name.replaceFirstChar { it.uppercase() }
-        val generatedTopology = tasks.register<GenerateEntryInteractionTopologyTask>(
-            "generate${variantName}EntryInteractionTopology",
-        ) {
-            this.variantName.set(variant.name)
-            featureModuleDescriptors.from(
-                fileTree(layout.projectDirectory.dir("src/main")) {
-                    include("**/*.entry-feature-module")
-                },
-                fileTree(layout.projectDirectory.dir("src/${variant.name}")) {
-                    include("**/*.entry-feature-module")
-                },
-            )
-            typeModuleDescriptors.from(
-                fileTree(layout.projectDirectory) {
-                    include("*/src/main/**/*.entry-type-module")
-                    include("*/src/${variant.name}/**/*.entry-type-module")
-                },
-            )
-            outputDirectory.set(
-                layout.buildDirectory.dir("generated/source/entry-interaction-topology/${variant.name}"),
-            )
-        }
-        javaSources.addGeneratedSourceDirectory(generatedTopology) { it.outputDirectory }
-    }
-}
-
 dependencies {
     api(projects.entryInteractions.api)
     api(projects.entryViewerSettingsApi)
+    // Metro aggregates contributions from the app graph's compile classpath, so the type modules have to reach it.
+    // The boundary check still keeps application sources from importing them.
+    api(projects.entryInteractions.manga)
+    api(projects.entryInteractions.anime)
+    api(projects.entryInteractions.book)
 
     implementation(projects.core.common)
+    implementation(projects.core.metro)
     implementation(projects.entryInteractions.spi)
     implementation(projects.entryInteractions.downloadNotification)
-    implementation(projects.entryInteractions.manga)
-    implementation(projects.entryInteractions.anime)
-    implementation(projects.entryInteractions.book)
     implementation(projects.sourceCompat)
     implementation(projects.sourceLocal)
     implementation(libs.androidx.core)
     implementation(libs.androidx.work)
-    implementation(libs.injekt)
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.bundles.serialization)
     implementation(libs.bundles.coil)
@@ -70,7 +41,7 @@ dependencies {
     testImplementation(libs.androidx.work.testing)
     testImplementation(libs.junit4)
     testImplementation(libs.robolectric)
-    testImplementation(projects.featureValidation)
+    testImplementation(projects.tts.api)
     testRuntimeOnly(libs.junit.platform.launcher)
     testRuntimeOnly(libs.junit.vintage)
 
@@ -78,19 +49,8 @@ dependencies {
     testFixturesImplementation(libs.bundles.serialization)
     testFixturesImplementation(libs.kotlinx.coroutines.test)
     testFixturesImplementation(libs.unifile)
-    testFixturesImplementation(projects.featureValidation)
+    testFixturesImplementation(projects.core.metro)
+    testFixturesImplementation(projects.sourceLocal)
     testFixturesImplementation(platform(libs.androidx.compose.bom))
     testFixturesApi(projects.entryInteractions.spi)
-}
-
-val generateFeatureReport = tasks.register("generateFeatureReport") {
-    group = "reporting"
-    description = "Compatibility alias for :app:generateFeatureReport"
-    dependsOn(":app:generateFeatureReport")
-}
-
-tasks.register("generateEntryFeatureReport") {
-    group = "reporting"
-    description = "Compatibility alias for generateFeatureReport"
-    dependsOn(generateFeatureReport)
 }

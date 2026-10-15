@@ -4,7 +4,6 @@ import android.content.Intent
 import android.graphics.Bitmap
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import androidx.glance.GlanceModifier
 import androidx.glance.LocalContext
 import androidx.glance.LocalSize
@@ -19,8 +18,9 @@ import androidx.glance.layout.fillMaxHeight
 import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.padding
 import androidx.glance.text.Text
-import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
+import mihon.presentation.kit.widget.WidgetMetrics
+import mihon.presentation.kit.widget.widgetMessageStyle
 import tachiyomi.core.common.Constants
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.*
@@ -44,7 +44,7 @@ fun UpdatesWidget(
         } else if (data.isEmpty()) {
             Text(
                 text = context.stringResource(MR.strings.information_no_recent),
-                style = TextStyle(color = contentColor),
+                style = widgetMessageStyle(contentColor),
             )
         } else {
             val (rowCount, columnCount) = LocalSize.current.calculateRowAndColumnCount(topPadding, bottomPadding)
@@ -60,7 +60,7 @@ fun UpdatesWidget(
                     if (coverRow.isNotEmpty()) {
                         Row(
                             modifier = GlanceModifier
-                                .padding(vertical = 4.dp)
+                                .padding(vertical = WidgetMetrics.rowGap)
                                 .fillMaxWidth(),
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalAlignment = Alignment.CenterVertically,
@@ -68,7 +68,7 @@ fun UpdatesWidget(
                             coverRow.forEach { (mangaId, cover) ->
                                 Box(
                                     modifier = GlanceModifier
-                                        .padding(horizontal = 3.dp),
+                                        .padding(horizontal = WidgetMetrics.coverGap),
                                     contentAlignment = Alignment.Center,
                                 ) {
                                     val intent = Intent(

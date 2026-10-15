@@ -4,12 +4,8 @@ import mihon.core.migration.Migration
 import mihon.core.migration.MigrationContext
 import mihon.feature.library.update.legacy.LegacyUpdateCategoriesConversion
 import mihon.feature.profiles.core.ProfileConstants
-import mihon.feature.profiles.core.ProfileDatabase
-import mihon.feature.profiles.core.ProfileStore
 import tachiyomi.core.common.util.lang.withIOContext
-import tachiyomi.domain.category.repository.CategoryRepository
 import tachiyomi.domain.library.service.LibraryPreferences
-import tachiyomi.domain.library.update.repository.LibraryUpdateRulesRepository
 
 /**
  * Moves library update filtering to update rules without changing what existing profiles check.
@@ -22,10 +18,10 @@ class LibraryUpdateRulesMigration : Migration {
     override val version: Float = 69f
 
     override suspend fun invoke(migrationContext: MigrationContext): Boolean = withIOContext {
-        val profileStore = migrationContext.get<ProfileStore>() ?: return@withIOContext false
-        val profileDatabase = migrationContext.get<ProfileDatabase>() ?: return@withIOContext false
-        val categoryRepository = migrationContext.get<CategoryRepository>() ?: return@withIOContext false
-        val rulesRepository = migrationContext.get<LibraryUpdateRulesRepository>() ?: return@withIOContext false
+        val profileStore = migrationContext.profileStore
+        val profileDatabase = migrationContext.profileDatabase
+        val categoryRepository = migrationContext.categoryRepository
+        val rulesRepository = migrationContext.libraryUpdateRulesRepository
         val categoriesConversion = LegacyUpdateCategoriesConversion(categoryRepository, rulesRepository)
         val profileIds = profileDatabase.getProfiles(includeArchived = true).map { it.id }
             .ifEmpty { listOf(ProfileConstants.DEFAULT_PROFILE_ID) }

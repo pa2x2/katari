@@ -1,33 +1,18 @@
 package mihon.entry.interactions.manga.reader.text.ui.controls
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LocalContentColor
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.Flow
 import mihon.entry.interactions.manga.reader.text.session.MangaReaderTextBlocker
 import mihon.entry.interactions.manga.reader.text.session.MangaReaderTextProgress
@@ -36,7 +21,6 @@ import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.ArrowDropDown
 import mihon.icons.materialsymbols.rounded.Close
 import mihon.icons.materialsymbols.rounded.InkSelection
-import mihon.icons.materialsymbols.rounded.MoreVert
 import mihon.icons.materialsymbols.rounded.Subtitles
 import mihon.icons.materialsymbols.rounded.Visibility
 import mihon.icons.materialsymbols.rounded.VisibilityOff
@@ -45,10 +29,21 @@ import mihon.model.artifacts.api.descriptor.ModelArtifactDescriptor
 import mihon.model.artifacts.api.state.ModelArtifactState
 import mihon.model.artifacts.ui.state.formatModelArtifactSize
 import mihon.model.artifacts.ui.state.modelArtifactFailureLabel
+import mihon.presentation.kit.button.Button
+import mihon.presentation.kit.button.ButtonStyle
+import mihon.presentation.kit.button.IconButton
+import mihon.presentation.kit.chip.AssistChip
+import mihon.presentation.kit.menu.DropdownMenuItem
+import mihon.presentation.kit.menu.OverflowMenu
+import mihon.presentation.kit.progress.LoadingIndicator
+import mihon.presentation.kit.surface.Surface
+import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import mihon.translation.ui.picker.language.displayName
 import mihon.translation.ui.presentation.language.TranslationDirectionText
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.LoadingIndicator
 import tachiyomi.presentation.core.i18n.stringResource
 
 /**
@@ -80,19 +75,18 @@ internal fun MangaReaderTextToolbar(
     modifier: Modifier = Modifier,
 ) {
     Surface(
-        modifier = modifier.widthIn(max = 560.dp),
-        shape = RoundedCornerShape(24.dp),
-        tonalElevation = 6.dp,
-        shadowElevation = 6.dp,
+        modifier = modifier.widthIn(max = KatariTheme.sizes.readableWidth),
+        container = SurfaceContainer.Chrome,
+        shape = KatariTheme.shapes.extraLarge,
     ) {
         Column {
             Row(
-                modifier = Modifier.padding(start = 16.dp, end = 4.dp),
+                modifier = Modifier.padding(start = KatariTheme.spacing.l, end = KatariTheme.spacing.xs),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
             ) {
                 if (progress.isWorking) {
-                    LoadingIndicator(modifier = Modifier.size(16.dp))
+                    LoadingIndicator(modifier = Modifier.size(KatariTheme.sizes.iconSmall))
                 }
                 // Once pages are ready the languages say everything the hint would; page translation problems get a row
                 // of their own below.
@@ -101,101 +95,91 @@ internal fun MangaReaderTextToolbar(
                 if (showsProgress) {
                     TranslationDirectionText(
                         text = progressText(progress, observeModels),
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.weight(1f, fill = false).padding(vertical = 12.dp),
+                        role = TextRole.Body,
+                        modifier = Modifier.weight(1f, fill = false).padding(vertical = KatariTheme.spacing.m),
                     )
                 }
                 if (languages != null) {
                     AssistChip(
                         onClick = onOpenLanguages,
-                        label = { TranslationDirectionText(languages, maxLines = 1, overflow = TextOverflow.Ellipsis) },
                         modifier = Modifier.weight(1f, fill = false),
-                        trailingIcon = { Icon(MaterialSymbols.Rounded.ArrowDropDown, contentDescription = null) },
-                    )
+                        trailingIcon = MaterialSymbols.Rounded.ArrowDropDown,
+                    ) {
+                        TranslationDirectionText(languages, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    }
                 }
                 when (val blocker = (progress as? MangaReaderTextProgress.Blocked)?.blocker) {
-                    is MangaReaderTextBlocker.ModelsRequired -> TextButton(
+                    is MangaReaderTextBlocker.ModelsRequired -> Button(
+                        label = stringResource(MR.strings.action_download),
                         onClick = { onDownloadModels(blocker.models) },
-                    ) {
-                        Text(stringResource(MR.strings.action_download))
-                    }
+                        style = ButtonStyle.Text,
+                    )
                     is MangaReaderTextBlocker.PlatformModelsRequired -> if (!blocker.installing) {
-                        TextButton(onClick = { onDownloadPlatformModels(blocker) }) {
-                            Text(stringResource(MR.strings.action_download))
-                        }
-                    }
-                    is MangaReaderTextBlocker.PipelineChoiceRequired -> TextButton(
-                        onClick = { onChoosePipeline(blocker.language) },
-                    ) {
-                        Text(stringResource(MR.strings.reader_text_choose_pipeline))
-                    }
-                    is MangaReaderTextBlocker.LanguageRequired -> TextButton(onClick = onChooseLanguage) {
-                        Text(stringResource(MR.strings.reader_text_choose_language))
-                    }
-                    else -> IconButton(onClick = onSelectArea) {
-                        Icon(
-                            MaterialSymbols.Rounded.InkSelection,
-                            contentDescription = stringResource(MR.strings.reader_text_select_area),
+                        Button(
+                            label = stringResource(MR.strings.action_download),
+                            onClick = { onDownloadPlatformModels(blocker) },
+                            style = ButtonStyle.Text,
                         )
                     }
-                }
-                IconButton(onClick = onToggleOverlay) {
-                    Icon(
-                        imageVector = MaterialSymbols.Rounded.Subtitles,
-                        contentDescription = stringResource(MR.strings.pref_page_text_translation_overlay),
-                        tint = if (overlay) MaterialTheme.colorScheme.primary else LocalContentColor.current,
+                    is MangaReaderTextBlocker.PipelineChoiceRequired -> Button(
+                        label = stringResource(MR.strings.reader_text_choose_pipeline),
+                        onClick = { onChoosePipeline(blocker.language) },
+                        style = ButtonStyle.Text,
+                    )
+                    is MangaReaderTextBlocker.LanguageRequired -> Button(
+                        label = stringResource(MR.strings.reader_text_choose_language),
+                        onClick = onChooseLanguage,
+                        style = ButtonStyle.Text,
+                    )
+                    else -> IconButton(
+                        icon = MaterialSymbols.Rounded.InkSelection,
+                        contentDescription = stringResource(MR.strings.reader_text_select_area),
+                        onClick = onSelectArea,
                     )
                 }
+                IconButton(
+                    icon = MaterialSymbols.Rounded.Subtitles,
+                    contentDescription = stringResource(MR.strings.pref_page_text_translation_overlay),
+                    onClick = onToggleOverlay,
+                    tone = if (overlay) ContentTone.Primary else ContentTone.Inherit,
+                )
                 if (overlay) {
-                    IconButton(onClick = onToggleOriginal) {
-                        Icon(
-                            imageVector = if (showOriginal) {
-                                MaterialSymbols.Rounded.Visibility
+                    IconButton(
+                        icon = if (showOriginal) {
+                            MaterialSymbols.Rounded.Visibility
+                        } else {
+                            MaterialSymbols.Rounded.VisibilityOff
+                        },
+                        contentDescription = stringResource(
+                            if (showOriginal) {
+                                MR.strings.reader_text_show_translations
                             } else {
-                                MaterialSymbols.Rounded.VisibilityOff
+                                MR.strings.reader_text_show_original
                             },
-                            contentDescription = stringResource(
-                                if (showOriginal) {
-                                    MR.strings.reader_text_show_translations
-                                } else {
-                                    MR.strings.reader_text_show_original
-                                },
-                            ),
+                        ),
+                        onClick = onToggleOriginal,
+                    )
+                }
+                if (stored) {
+                    OverflowMenu { close ->
+                        DropdownMenuItem(
+                            label = stringResource(MR.strings.action_delete_translation),
+                            onClick = {
+                                close()
+                                onDeleteStoredTranslation()
+                            },
                         )
                     }
                 }
-                if (stored) {
-                    StoredTranslationMenu(onDelete = onDeleteStoredTranslation)
-                }
-                IconButton(onClick = onClose) {
-                    Icon(MaterialSymbols.Rounded.Close, contentDescription = stringResource(MR.strings.action_close))
-                }
+                IconButton(
+                    icon = MaterialSymbols.Rounded.Close,
+                    contentDescription = stringResource(MR.strings.action_close),
+                    onClick = onClose,
+                )
             }
             (progress as? MangaReaderTextProgress.TranslationUnavailable)?.let {
                 MangaPageTranslationIssueRow(issue = it.issue, onFix = onFixTranslationIssue)
             }
-        }
-    }
-}
-
-@Composable
-private fun StoredTranslationMenu(onDelete: () -> Unit) {
-    var expanded by remember { mutableStateOf(false) }
-    Box {
-        IconButton(onClick = { expanded = true }) {
-            Icon(
-                MaterialSymbols.Rounded.MoreVert,
-                contentDescription = stringResource(MR.strings.action_menu_overflow_description),
-            )
-        }
-        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-            DropdownMenuItem(
-                text = { Text(stringResource(MR.strings.action_delete_translation)) },
-                onClick = {
-                    expanded = false
-                    onDelete()
-                },
-            )
         }
     }
 }

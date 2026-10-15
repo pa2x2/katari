@@ -1,8 +1,9 @@
 package eu.kanade.presentation.more.settings.screen.translation.series
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import mihon.presentation.kit.list.SettingsRow
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.NavigationItem
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -11,9 +12,11 @@ import tachiyomi.presentation.core.i18n.stringResource
 internal fun SeriesTranslationLanguagesEntry(
     count: Int?,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
-    NavigationItem(
-        label = stringResource(MR.strings.translation_series_languages),
+    SettingsRow(
+        title = stringResource(MR.strings.translation_series_languages),
+        modifier = modifier,
         subtitle = when (count) {
             null -> null
             0 -> stringResource(MR.strings.translation_series_languages_none)

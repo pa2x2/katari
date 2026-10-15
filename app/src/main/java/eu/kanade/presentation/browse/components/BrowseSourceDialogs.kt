@@ -4,16 +4,16 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.dialog.ConfirmDialog
+import mihon.presentation.kit.dialog.Dialog
+import mihon.presentation.kit.progress.LoadingIndicator
+import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.LoadingIndicator
 import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable
@@ -22,51 +22,35 @@ fun RemoveMangaDialog(
     onConfirm: () -> Unit,
     mangaToRemove: Entry,
 ) {
-    AlertDialog(
+    ConfirmDialog(
+        title = stringResource(MR.strings.are_you_sure),
+        text = stringResource(MR.strings.remove_manga, mangaToRemove.title),
+        confirmLabel = stringResource(MR.strings.action_remove),
+        onConfirm = {
+            onDismissRequest()
+            onConfirm()
+        },
         onDismissRequest = onDismissRequest,
-        dismissButton = {
-            TextButton(onClick = onDismissRequest) {
-                Text(text = stringResource(MR.strings.action_cancel))
-            }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    onDismissRequest()
-                    onConfirm()
-                },
-            ) {
-                Text(text = stringResource(MR.strings.action_remove))
-            }
-        },
-        title = {
-            Text(text = stringResource(MR.strings.are_you_sure))
-        },
-        text = {
-            Text(text = stringResource(MR.strings.remove_manga, mangaToRemove.title))
-        },
+        destructive = true,
     )
 }
 
 @Composable
 fun DuplicateDetectionLoadingDialog() {
-    AlertDialog(
+    Dialog(
         onDismissRequest = {},
-        confirmButton = {},
-        title = {
-            Text(text = stringResource(MR.strings.pref_duplicate_detection))
-        },
-        text = {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                LoadingIndicator()
-                Text(text = stringResource(MR.strings.loading))
-            }
-        },
-    )
+        title = stringResource(MR.strings.pref_duplicate_detection),
+        confirm = null,
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = KatariTheme.spacing.s),
+            horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.l),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            LoadingIndicator()
+            Text(text = stringResource(MR.strings.loading))
+        }
+    }
 }

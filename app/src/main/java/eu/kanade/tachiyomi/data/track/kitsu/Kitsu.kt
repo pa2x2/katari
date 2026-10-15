@@ -6,18 +6,20 @@ import eu.kanade.tachiyomi.data.database.models.Track
 import eu.kanade.tachiyomi.data.track.BaseTracker
 import eu.kanade.tachiyomi.data.track.DeletableTracker
 import eu.kanade.tachiyomi.data.track.TrackerCredentialIdentity
+import eu.kanade.tachiyomi.data.track.TrackerDependencies
 import eu.kanade.tachiyomi.data.track.TrackerLogin
 import eu.kanade.tachiyomi.data.track.kitsu.dto.KitsuOAuth
 import eu.kanade.tachiyomi.data.track.model.TrackSearch
-import kotlinx.serialization.json.Json
 import logcat.LogPriority
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.i18n.*
-import uy.kohesive.injekt.injectLazy
 import java.text.DecimalFormat
 import tachiyomi.domain.track.model.EntryTrack as DomainTrack
 
-class Kitsu(id: Long) : BaseTracker(id, "Kitsu"), DeletableTracker {
+class Kitsu(
+    id: Long,
+    dependencies: TrackerDependencies,
+) : BaseTracker(id, "Kitsu", dependencies), DeletableTracker {
 
     override val accountOrder = 3
 
@@ -70,11 +72,9 @@ class Kitsu(id: Long) : BaseTracker(id, "Kitsu"), DeletableTracker {
 
     override val accountLogin = TrackerLogin.Credentials(TrackerCredentialIdentity.EMAIL)
 
-    private val json: Json by injectLazy()
+    private val interceptor by lazy { KitsuInterceptor(this, json) }
 
-    private val interceptor by lazy { KitsuInterceptor(this) }
-
-    private val api by lazy { KitsuApi(id, client, interceptor) }
+    private val api by lazy { KitsuApi(id, client, interceptor, json) }
 
     private val scorePreference by lazy { trackPreferences.kitsuScoreType }
 

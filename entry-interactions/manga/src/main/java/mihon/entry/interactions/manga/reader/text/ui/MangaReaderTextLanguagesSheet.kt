@@ -1,29 +1,18 @@
 package mihon.entry.interactions.manga.reader.text.ui
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.selection.toggleable
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.ListItemDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Switch
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.unit.dp
-import eu.kanade.presentation.reader.components.AdaptiveSheet
 import mihon.entry.interactions.manga.reader.text.session.MangaReaderTextState
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.Close
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.list.SettingsRow
+import mihon.presentation.kit.list.ToggleRow
+import mihon.presentation.kit.sheet.Sheet
+import mihon.presentation.kit.sheet.SheetHeader
+import mihon.presentation.kit.surface.HorizontalDivider
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import mihon.translation.ui.picker.language.displayName
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -42,73 +31,38 @@ internal fun MangaReaderTextLanguagesSheet(
     onTranslateDownloadsChange: (Boolean) -> Unit,
     onDismiss: () -> Unit,
 ) {
-    AdaptiveSheet(
-        onDismissRequest = onDismiss,
-        modifier = Modifier.fillMaxWidth(),
-    ) {
-        Column(modifier = Modifier.padding(bottom = 16.dp)) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 20.dp, end = 8.dp, top = 8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = stringResource(MR.strings.reader_text_languages),
-                    modifier = Modifier.weight(1f),
-                    style = MaterialTheme.typography.titleMedium,
-                )
-                IconButton(onClick = onDismiss) {
-                    Icon(MaterialSymbols.Rounded.Close, contentDescription = stringResource(MR.strings.action_close))
-                }
-            }
-            HorizontalDivider()
-            LanguageRow(
-                label = stringResource(MR.strings.reader_text_page_language),
-                value = pageLanguage,
+    Sheet(onDismissRequest = onDismiss) {
+        Column(modifier = Modifier.padding(bottom = KatariTheme.spacing.l)) {
+            SheetHeader(stringResource(MR.strings.reader_text_languages))
+            SettingsRow(
+                title = stringResource(MR.strings.reader_text_page_language),
+                subtitle = pageLanguage,
                 onClick = onChoosePageLanguage,
             )
-            LanguageRow(
-                label = stringResource(MR.strings.translation_translate_to),
-                value = target ?: stringResource(MR.strings.translation_choose_target_language),
+            SettingsRow(
+                title = stringResource(MR.strings.translation_translate_to),
+                subtitle = target ?: stringResource(MR.strings.translation_choose_target_language),
                 onClick = onChooseTarget,
             )
             Text(
                 text = stringResource(MR.strings.reader_text_page_language_rereads),
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.padding(
+                    horizontal = KatariTheme.spacing.rowInset,
+                    vertical = KatariTheme.spacing.s,
+                ),
+                role = TextRole.Supporting,
             )
             if (translateDownloads != null) {
                 HorizontalDivider()
-                ListItem(
-                    supportingContent = { Text(stringResource(MR.strings.reader_text_translate_downloads_summary)) },
-                    trailingContent = { Switch(checked = translateDownloads, onCheckedChange = null) },
-                    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                    modifier = Modifier.toggleable(
-                        value = translateDownloads,
-                        role = Role.Switch,
-                        onValueChange = onTranslateDownloadsChange,
-                    ),
-                    content = { Text(stringResource(MR.strings.reader_text_translate_downloads)) },
+                ToggleRow(
+                    title = stringResource(MR.strings.reader_text_translate_downloads),
+                    subtitle = stringResource(MR.strings.reader_text_translate_downloads_summary),
+                    checked = translateDownloads,
+                    onCheckedChange = onTranslateDownloadsChange,
                 )
             }
         }
     }
-}
-
-@Composable
-private fun LanguageRow(
-    label: String,
-    value: String,
-    onClick: () -> Unit,
-) {
-    ListItem(
-        supportingContent = { Text(value) },
-        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-        modifier = Modifier.clickable(onClick = onClick),
-        content = { Text(label) },
-    )
 }
 
 /** The language pages are read in, with where it comes from when that is not obvious. */

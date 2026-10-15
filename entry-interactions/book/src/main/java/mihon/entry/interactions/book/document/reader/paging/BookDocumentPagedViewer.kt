@@ -17,9 +17,9 @@ import mihon.entry.interactions.book.document.reader.BookDocumentSection
 import mihon.entry.interactions.book.document.reader.BookDocumentViewerLocation
 import mihon.entry.interactions.book.reader.BookReaderProgress
 import mihon.entry.interactions.reader.settings.BookDocumentReadingMode
+import mihon.entry.viewer.chrome.ui.navigation.ReaderTapAction
+import mihon.entry.viewer.chrome.ui.navigation.readerTapAction
 import tachiyomi.domain.entry.model.EntryChapter
-import tachiyomi.presentation.core.components.reader.navigation.ReaderTapAction
-import tachiyomi.presentation.core.components.reader.navigation.readerTapAction
 
 /** Composes page content, selection and gestures using the paged navigation owner. */
 @Composable

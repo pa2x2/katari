@@ -1,44 +1,44 @@
 package eu.kanade.tachiyomi.ui.video.player.components
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerEpisodeListEntry
 import mihon.entry.interactions.anime.state.durationMs
 import mihon.entry.interactions.anime.state.positionMs
+import mihon.entry.viewer.chrome.ui.OverlayListDrawer
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.automirroredroundedfilled.ViewList
 import mihon.icons.materialsymbols.rounded.KeyboardArrowDown
 import mihon.icons.materialsymbols.rounded.KeyboardArrowUp
 import mihon.icons.materialsymbols.roundedfilled.PlayArrow
+import mihon.presentation.kit.content.Icon
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.progress.LinearProgressIndicator
+import mihon.presentation.kit.surface.HorizontalDivider
+import mihon.presentation.kit.surface.Surface
+import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.EntryProgressState
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.OverlayActionButton
-import tachiyomi.presentation.core.components.reader.OverlayListDrawer
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -97,7 +97,7 @@ internal fun VideoPlayerEpisodesDrawer(
     }
 }
 
-private fun androidx.compose.foundation.lazy.LazyListScope.videoPlayerEpisodeItems(
+private fun LazyListScope.videoPlayerEpisodeItems(
     anime: Entry,
     episodeListItems: List<VideoPlayerEpisodeListEntry>,
     expandedMemberIds: Set<Long>,
@@ -111,9 +111,12 @@ private fun androidx.compose.foundation.lazy.LazyListScope.videoPlayerEpisodeIte
         item {
             Text(
                 text = stringResource(MR.strings.anime_no_episodes),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                modifier = Modifier.padding(
+                    horizontal = KatariTheme.spacing.contentInset,
+                    vertical = KatariTheme.spacing.s,
+                ),
+                role = TextRole.Body,
+                tone = ContentTone.Secondary,
             )
         }
         return
@@ -171,27 +174,23 @@ private fun VideoPlayerEpisodeMemberHeader(
             )
         },
     ).joinToString(" · ")
+    val spacing = KatariTheme.spacing
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(start = 16.dp, top = 10.dp, end = 12.dp, bottom = 10.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+            .padding(start = spacing.contentInset, top = spacing.s, end = spacing.m, bottom = spacing.s),
+        horizontalArrangement = Arrangement.spacedBy(spacing.s),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = header.title,
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.primary,
+                role = TextRole.GroupLabel,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
-            Text(
-                text = summary,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            Text(text = summary, role = TextRole.Supporting)
         }
         Icon(
             imageVector = if (expanded) {
@@ -200,7 +199,7 @@ private fun VideoPlayerEpisodeMemberHeader(
                 MaterialSymbols.Rounded.KeyboardArrowDown
             },
             contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            tone = ContentTone.Secondary,
         )
     }
 }
@@ -233,63 +232,52 @@ private fun VideoPlayerEpisodeRow(
 ) {
     val progress = playbackState.progressFraction()
     val completed = episode.read || playbackState?.completed == true
-    val contentColor = when {
-        selected -> MaterialTheme.colorScheme.onSecondaryContainer
-        completed -> MaterialTheme.colorScheme.onSurfaceVariant
-        else -> MaterialTheme.colorScheme.onSurface
-    }
+    val titleTone = if (completed && !selected) ContentTone.Secondary else ContentTone.Inherit
+    val spacing = KatariTheme.spacing
 
     Column {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(
-                    if (selected) {
-                        MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.7f)
-                    } else {
-                        Color.Transparent
-                    },
-                )
-                .clickable(enabled = enabled, onClick = onClick)
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.CenterVertically,
+        Surface(
+            onClick = onClick,
+            container = if (selected) SurfaceContainer.Selected else SurfaceContainer.None,
+            enabled = enabled,
         ) {
-            if (selected) {
-                Icon(
-                    imageVector = MaterialSymbols.RoundedFilled.PlayArrow,
-                    contentDescription = null,
-                    tint = contentColor,
-                )
-            }
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(4.dp),
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = spacing.contentInset, vertical = spacing.m),
+                horizontalArrangement = Arrangement.spacedBy(spacing.m),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(
-                    text = episode.name.ifBlank { episode.url },
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = contentColor,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                if (showsEntryTitle) {
+                if (selected) {
+                    Icon(imageVector = MaterialSymbols.RoundedFilled.PlayArrow, contentDescription = null)
+                }
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(spacing.xs),
+                ) {
                     Text(
-                        text = anime.displayTitle,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = contentColor.copy(alpha = 0.72f),
-                        maxLines = 1,
+                        text = episode.name.ifBlank { episode.url },
+                        role = TextRole.Body,
+                        tone = titleTone,
+                        maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
                     )
-                }
-                if (progress != null) {
-                    Box(
-                        modifier = Modifier
-                            .padding(top = 2.dp)
-                            .fillMaxWidth(progress)
-                            .height(3.dp)
-                            .background(MaterialTheme.colorScheme.primary),
-                    )
+                    if (showsEntryTitle) {
+                        Text(
+                            text = anime.displayTitle,
+                            role = TextRole.Supporting,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+                    if (progress != null) {
+                        LinearProgressIndicator(
+                            progress = { progress },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = spacing.xxs),
+                        )
+                    }
                 }
             }
         }
@@ -300,26 +288,4 @@ private fun VideoPlayerEpisodeRow(
 private fun EntryProgressState?.progressFraction(): Float? {
     if (this == null || durationMs <= 0L || positionMs <= 0L || completed) return null
     return (positionMs.toFloat() / durationMs.toFloat()).coerceIn(0f, 1f)
-}
-
-@Composable
-internal fun VideoPlayerTimelineToolbar(
-    onOpenEpisodes: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(top = 0.dp),
-        horizontalArrangement = Arrangement.End,
-    ) {
-        OverlayActionButton(
-            title = stringResource(MR.strings.episodes),
-            icon = MaterialSymbols.AutoMirroredRoundedFilled.ViewList,
-            onClick = onOpenEpisodes,
-            contentDescription = stringResource(MR.strings.action_view_episodes),
-            containerColor = Color.Transparent,
-            contentColor = Color.White.copy(alpha = 0.88f),
-        )
-    }
 }

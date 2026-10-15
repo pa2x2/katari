@@ -1,10 +1,9 @@
 package eu.kanade.presentation.library.components
 
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.zIndex
+import mihon.presentation.kit.button.Button
+import mihon.presentation.kit.button.ButtonStyle
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -14,13 +13,10 @@ internal fun GlobalSearchItem(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    TextButton(
-        modifier = modifier,
+    Button(
+        label = stringResource(MR.strings.action_global_search_query, searchQuery),
         onClick = onClick,
-    ) {
-        Text(
-            text = stringResource(MR.strings.action_global_search_query, searchQuery),
-            modifier = Modifier.zIndex(99f),
-        )
-    }
+        modifier = modifier,
+        style = ButtonStyle.Text,
+    )
 }

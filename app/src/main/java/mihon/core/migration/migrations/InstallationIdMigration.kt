@@ -1,6 +1,5 @@
 package mihon.core.migration.migrations
 
-import eu.kanade.domain.base.BasePreferences
 import mihon.core.common.FeatureFlags
 import mihon.core.migration.Migration
 import mihon.core.migration.MigrationContext
@@ -11,7 +10,7 @@ class InstallationIdMigration : Migration {
 
     @OptIn(ExperimentalUuidApi::class)
     override suspend fun invoke(migrationContext: MigrationContext): Boolean {
-        val installationId = migrationContext.get<BasePreferences>()?.installationId ?: return false
+        val installationId = migrationContext.basePreferences.installationId
         if (!installationId.isSet()) installationId.set(FeatureFlags.newInstallationId())
         return true
     }

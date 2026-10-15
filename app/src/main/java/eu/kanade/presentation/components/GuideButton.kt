@@ -1,12 +1,11 @@
 package eu.kanade.presentation.components
 
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.automirroredrounded.Help
+import mihon.presentation.kit.button.IconButton
 import tachiyomi.core.common.Constants
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -18,10 +17,10 @@ fun GuideButton(
     modifier: Modifier = Modifier,
 ) {
     val uriHandler = LocalUriHandler.current
-    IconButton(onClick = { uriHandler.openUri(Constants.URL_GUIDE + page) }, modifier = modifier) {
-        Icon(
-            imageVector = MaterialSymbols.AutoMirroredRounded.Help,
-            contentDescription = stringResource(MR.strings.label_help),
-        )
-    }
+    IconButton(
+        icon = MaterialSymbols.AutoMirroredRounded.Help,
+        contentDescription = stringResource(MR.strings.label_help),
+        onClick = { uriHandler.openUri(Constants.URL_GUIDE + page) },
+        modifier = modifier,
+    )
 }

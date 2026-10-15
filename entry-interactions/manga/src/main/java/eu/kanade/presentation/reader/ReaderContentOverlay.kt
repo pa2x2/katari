@@ -8,8 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.BlendMode
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
+import mihon.presentation.kit.theme.PageOverlayColors
 import kotlin.math.abs
 
 @Composable
@@ -24,14 +23,8 @@ fun ReaderContentOverlay(
             abs(brightness) / 100f
         }
 
-        Canvas(
-            modifier = modifier
-                .fillMaxSize()
-                .graphicsLayer {
-                    alpha = brightnessAlpha
-                },
-        ) {
-            drawRect(Color.Black)
+        Canvas(modifier = modifier.fillMaxSize()) {
+            drawRect(PageOverlayColors.dim(brightnessAlpha))
         }
     }
 
@@ -41,7 +34,7 @@ fun ReaderContentOverlay(
                 .fillMaxSize(),
         ) {
             drawRect(
-                color = Color(color),
+                color = PageOverlayColors.filter(color),
                 blendMode = colorBlendMode ?: BlendMode.SrcOver,
             )
         }

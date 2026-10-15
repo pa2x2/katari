@@ -1,31 +1,32 @@
 package mihon.tts.ui.picker.engine
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toBitmap
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import mihon.presentation.kit.surface.Surface
+import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.theme.KatariTheme
 import mihon.tts.api.engine.TtsEngineArtwork
 
+/**
+ * An engine's logo on a rounded tile: the installed application's icon when there is one, otherwise the bundled
+ * glyph. A glyph gets a wider inset than an application icon, which already carries its own padding.
+ */
 @Composable
 internal fun TtsEngineArtwork(
     artwork: TtsEngineArtwork,
@@ -58,25 +59,19 @@ internal fun TtsEngineArtwork(
             }
         }
     }
-    val artworkPadding = when (artwork) {
-        is TtsEngineArtwork.Bundled -> 10.dp
-        is TtsEngineArtwork.InstalledApplication -> if (installedIcon == null) 10.dp else 6.dp
-    }
+    val inset = if (installedIcon == null) KatariTheme.spacing.m else KatariTheme.spacing.s
 
-    Box(
-        modifier = modifier
-            .size(size)
-            .background(
-                color = MaterialTheme.colorScheme.surfaceContainerHighest,
-                shape = RoundedCornerShape(size / 3),
-            )
-            .padding(artworkPadding),
-        contentAlignment = Alignment.Center,
+    Surface(
+        modifier = modifier.size(size),
+        container = SurfaceContainer.Highest,
+        shape = KatariTheme.shapes.large,
     ) {
         Image(
             bitmap = installedIcon ?: fallbackIcon,
             contentDescription = null,
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(inset),
         )
     }
 }

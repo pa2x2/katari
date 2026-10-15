@@ -1,9 +1,6 @@
 package eu.kanade.tachiyomi.ui.entry.translation
 
 import android.content.Context
-import androidx.compose.material3.SnackbarDuration
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SnackbarResult
 import eu.kanade.presentation.entry.translation.ChapterTranslateAction
 import eu.kanade.presentation.entry.translation.EntryTranslateSetupActions
 import eu.kanade.presentation.entry.translation.EntryTranslateSetupState
@@ -31,6 +28,9 @@ import mihon.language.api.tag.LanguageTag
 import mihon.model.artifacts.api.ModelArtifactStore
 import mihon.model.artifacts.api.download.ModelArtifactDownloadApproval
 import mihon.model.artifacts.api.state.ModelArtifactState
+import mihon.presentation.kit.feedback.SnackbarDuration
+import mihon.presentation.kit.feedback.SnackbarHostState
+import mihon.presentation.kit.feedback.SnackbarResult
 import mihon.text.recognition.api.component.TextRecognitionComponentId
 import mihon.text.recognition.api.host.TextRecognitionHostActions
 import mihon.translation.api.engine.TranslationEngineId

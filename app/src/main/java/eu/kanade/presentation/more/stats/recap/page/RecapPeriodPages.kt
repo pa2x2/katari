@@ -5,11 +5,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.more.stats.components.rememberStatisticsDurationFormatter
 import eu.kanade.presentation.more.stats.recap.components.HOUR_MILLIS
 import eu.kanade.presentation.more.stats.recap.components.MINUTE_MILLIS
@@ -18,13 +16,15 @@ import eu.kanade.presentation.more.stats.recap.components.RecapDayRings
 import eu.kanade.presentation.more.stats.recap.components.RecapKicker
 import eu.kanade.presentation.more.stats.recap.components.RecapText
 import eu.kanade.presentation.more.stats.recap.components.RecapTotal
-import eu.kanade.presentation.more.stats.recap.components.RecapTypography
 import eu.kanade.presentation.more.stats.recap.components.recapComparedPeriodText
 import eu.kanade.presentation.more.stats.recap.components.rememberRecapFormats
 import eu.kanade.presentation.more.stats.recap.motion.RecapCountUp
 import eu.kanade.presentation.more.stats.recap.motion.recapFloat
 import eu.kanade.presentation.more.stats.recap.motion.recapReveal
 import eu.kanade.tachiyomi.ui.stats.recap.story.StatisticsRecapPage
+import mihon.presentation.kit.content.StoryMetrics
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
@@ -49,7 +49,7 @@ internal fun ColumnScope.RecapTotalTimePage(page: StatisticsRecapPage.TotalTime,
             } else {
                 pluralStringResource(MR.plurals.statistics_recap_full_days, days, days)
             },
-            style = RecapTypography.Body,
+            role = TextRole.Body,
             order = 2,
         )
     }
@@ -74,18 +74,18 @@ internal fun ColumnScope.RecapMonthTotalPage(page: StatisticsRecapPage.MonthTota
             else -> stringResource(MR.strings.statistics_recap_month_less, amount, previousMonth)
         }
     }
-    change?.let { RecapText(text = it, style = RecapTypography.Body, order = 2) }
+    change?.let { RecapText(text = it, role = TextRole.Body, order = 2) }
     Spacer(Modifier.weight(1f))
     page.topTitle?.let { top ->
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.l),
             modifier = Modifier.recapReveal(3),
         ) {
-            RecapCover(top, width = 72.dp, modifier = Modifier.recapFloat())
+            RecapCover(top, width = StoryMetrics.coverMedium, modifier = Modifier.recapFloat())
             RecapText(
                 text = stringResource(MR.strings.statistics_recap_most_of_it, top.title),
-                style = RecapTypography.Body,
+                role = TextRole.Body,
                 modifier = Modifier.weight(1f),
             )
         }
@@ -96,13 +96,13 @@ internal fun ColumnScope.RecapMonthTotalPage(page: StatisticsRecapPage.MonthTota
 internal fun ColumnScope.RecapMonthHighlightsPage(page: StatisticsRecapPage.MonthHighlights) {
     val formats = rememberRecapFormats()
     RecapKicker(stringResource(MR.strings.statistics_recap_month_kicker))
-    Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.m)) {
         page.titles.forEachIndexed { index, title -> RecapRankRow(rank = index + 1, title = title, order = index + 1) }
     }
     Spacer(Modifier.weight(1f))
     RecapKicker(stringResource(MR.strings.statistics_recap_biggest_day_kicker), order = 4)
-    RecapText(formats.weekdayDayMonth(page.biggestDay.date), RecapTypography.Headline, order = 4)
-    RecapText(biggestDayText(page.biggestDay, formats), RecapTypography.Body, order = 5)
+    RecapText(formats.weekdayDayMonth(page.biggestDay.date), TextRole.Metric, order = 4)
+    RecapText(biggestDayText(page.biggestDay, formats), TextRole.Body, order = 5)
 }
 
 @Composable
@@ -118,7 +118,7 @@ internal fun ColumnScope.RecapComparisonPage(page: StatisticsRecapPage.Compariso
     } else {
         ""
     }
-    RecapText("$sign${page.changePercent.absoluteValue}%", RecapTypography.Huge, order = 1)
+    RecapText("$sign${page.changePercent.absoluteValue}%", TextRole.Hero, order = 1)
     RecapText(
         text = stringResource(
             when {
@@ -128,20 +128,20 @@ internal fun ColumnScope.RecapComparisonPage(page: StatisticsRecapPage.Compariso
             },
             previous,
         ),
-        style = RecapTypography.Body,
+        role = TextRole.Body,
         order = 2,
     )
     Spacer(Modifier.weight(1f))
     page.sameTopTitle?.let { top ->
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.l),
             modifier = Modifier.recapReveal(3),
         ) {
-            RecapCover(top, width = 72.dp)
+            RecapCover(top, width = StoryMetrics.coverMedium)
             RecapText(
                 text = stringResource(MR.strings.statistics_recap_same_top, top.title),
-                style = RecapTypography.Body,
+                role = TextRole.Body,
                 modifier = Modifier.weight(1f),
             )
         }
@@ -168,31 +168,28 @@ internal fun RecapTotalCountUp(durationMillis: Long, order: Int, compact: Boolea
     )
     if (compact) {
         Row(
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.m),
             modifier = Modifier.recapReveal(order),
         ) {
             RecapCountUp(
                 value = value,
                 format = format,
-                style = RecapTypography.Display,
+                role = TextRole.Display,
                 order = order,
                 modifier = Modifier.alignByBaseline(),
             )
-            RecapText(unit, RecapTypography.Title, modifier = Modifier.alignByBaseline())
+            RecapText(unit, TextRole.SheetTitle, modifier = Modifier.alignByBaseline())
         }
     } else {
         Column(Modifier.recapReveal(order)) {
             RecapCountUp(
                 value = value,
                 format = format,
-                style = RecapTypography.Huge,
+                role = TextRole.Hero,
                 order = order,
-                autoSize = TextAutoSize.StepBased(
-                    minFontSize = RecapTypography.Display.fontSize,
-                    maxFontSize = RecapTypography.Huge.fontSize,
-                ),
+                shrinkTo = TextRole.Display,
             )
-            RecapText(unit, RecapTypography.Headline)
+            RecapText(unit, TextRole.Metric)
         }
     }
 }

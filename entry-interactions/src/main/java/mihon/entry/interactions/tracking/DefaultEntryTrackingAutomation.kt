@@ -5,12 +5,10 @@ import kotlinx.coroutines.flow.first
 import mihon.entry.interactions.tracking.host.EntryTrackingHost
 import mihon.entry.interactions.tracking.host.EntryTrackingHostBindingOutcome
 import mihon.entry.interactions.tracking.host.EntryTrackingHostEntryService
-import mihon.feature.graph.FeatureGraphEvaluation
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.track.model.EntryTrack
 
 internal class DefaultEntryTrackingAutomation(
-    private val evaluation: FeatureGraphEvaluation,
     private val host: EntryTrackingHost,
 ) : EntryTrackingAutomation {
 
@@ -21,12 +19,6 @@ internal class DefaultEntryTrackingAutomation(
         val automatic = authenticated.filter {
             it.acceptsSource && it.service.capabilities.supportsAutomaticBinding
         }
-        evaluation.requireTrackingAutomaticBinding(
-            entryType = entry.type,
-            registered = supported.isNotEmpty(),
-            authenticated = authenticated.isNotEmpty(),
-            sourceAccepted = automatic.isNotEmpty(),
-        )
         automaticUnavailable(supported, authenticated, automatic)?.let {
             return EntryTrackingAutomaticBindingResult.Unavailable(it)
         }
@@ -112,24 +104,12 @@ internal class DefaultEntryTrackingAutomation(
         val supported = services.filter { entry.type in it.service.supportedEntryTypes }
         val authenticated = supported.filter { it.isLoggedIn }
         val tracked = authenticated.filter { it.track != null }
-        evaluation.requireTrackingSynchronization(
-            entryType = entry.type,
-            registered = supported.isNotEmpty(),
-            authenticated = authenticated.isNotEmpty(),
-            existingTrack = tracked.isNotEmpty(),
-        )
         return synchronizationUnavailable(supported, authenticated, tracked)?.let {
             SynchronizationServices.Unavailable(it)
         } ?: SynchronizationServices.Available(tracked)
     }
 
     internal suspend fun reconcileRemoteProgress(entry: Entry, serviceId: Long, track: EntryTrack) {
-        evaluation.requireTrackingSynchronization(
-            entryType = entry.type,
-            registered = true,
-            authenticated = true,
-            existingTrack = true,
-        )
         host.automation.reconcileRemoteProgress(entry, serviceId, track)
     }
 }

@@ -1,31 +1,25 @@
 package mihon.feature.upcoming.components.calendar
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.layout
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
-import tachiyomi.presentation.core.components.material.DISABLED_ALPHA
+import mihon.presentation.kit.content.EventDots
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import kotlin.time.Clock
-
-private const val MAX_EVENTS = 3
 
 @Composable
 fun CalendarDay(
@@ -35,48 +29,29 @@ fun CalendarDay(
     modifier: Modifier = Modifier,
 ) {
     val today = remember { Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date }
+    val shape = KatariTheme.shapes.full
 
     Box(
         modifier = modifier
             .then(
                 if (today == date) {
-                    Modifier.border(
-                        border = BorderStroke(
-                            width = 1.dp,
-                            color = MaterialTheme.colorScheme.onBackground,
-                        ),
-                        shape = CircleShape,
-                    )
+                    Modifier.border(KatariTheme.sizes.border, KatariTheme.colors.onBackground, shape)
                 } else {
                     Modifier
                 },
             )
-            .clip(shape = CircleShape)
+            .clip(shape)
             .clickable(onClick = onDayClick)
             .circleLayout(),
         contentAlignment = Alignment.Center,
     ) {
         Text(
             text = date.day.toString(),
+            role = TextRole.SectionTitle,
+            tone = if (date < today) ContentTone.Disabled else ContentTone.Inherit,
             textAlign = TextAlign.Center,
-            fontSize = 16.sp,
-            color = if (date < today) {
-                MaterialTheme.colorScheme.onBackground.copy(alpha = DISABLED_ALPHA)
-            } else {
-                MaterialTheme.colorScheme.onBackground
-            },
-            fontWeight = FontWeight.SemiBold,
         )
-        Row(Modifier.offset(y = 12.dp)) {
-            val size = events.coerceAtMost(MAX_EVENTS)
-            for (index in 0 until size) {
-                CalendarIndicator(
-                    index = index,
-                    size = 56.dp,
-                    color = MaterialTheme.colorScheme.primary,
-                )
-            }
-        }
+        EventDots(count = events, modifier = Modifier.offset(y = KatariTheme.spacing.m))
     }
 }
 

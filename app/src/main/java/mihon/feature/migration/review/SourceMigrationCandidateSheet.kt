@@ -4,48 +4,44 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import eu.kanade.presentation.components.AdaptiveSheet
+import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
 import mihon.feature.migration.review.components.SourceMigrationEntryDetailsButton
 import mihon.feature.migration.review.components.SourceMigrationEntryListItem
-import mihon.feature.migration.session.model.SourceMigrationMatchKind
+import mihon.feature.migration.review.components.sourceMigrationMatchKindLabel
 import mihon.feature.migration.session.model.SourceMigrationSessionId
 import mihon.feature.migration.session.model.SourceMigrationSessionItem
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Check
 import mihon.icons.materialsymbols.rounded.Search
+import mihon.presentation.kit.button.Button
+import mihon.presentation.kit.button.ButtonStyle
+import mihon.presentation.kit.content.Badge
+import mihon.presentation.kit.content.BadgeGroup
+import mihon.presentation.kit.content.Icon
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.progress.LoadingIndicator
+import mihon.presentation.kit.sheet.Sheet
+import mihon.presentation.kit.sheet.SheetHeader
+import mihon.presentation.kit.surface.HorizontalDivider
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.Badge
-import tachiyomi.presentation.core.components.BadgeGroup
-import tachiyomi.presentation.core.components.LoadingIndicator
-import tachiyomi.presentation.core.components.material.Button
-import tachiyomi.presentation.core.components.material.TextButton
-import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.theme.header
 
 @Composable
 internal fun Screen.SourceMigrationCandidateSheet(
@@ -54,8 +50,10 @@ internal fun Screen.SourceMigrationCandidateSheet(
     onDismissRequest: () -> Unit,
 ) {
     val navigator = LocalNavigator.currentOrThrow
-    val viewModel = viewModel(key = item.sourceEntryId.toString()) {
-        SourceMigrationCandidateSheetViewModel(sessionId, item.sourceEntryId)
+    val viewModel = assistedMetroViewModel<_, SourceMigrationCandidateSheetViewModel.Factory>(
+        key = item.sourceEntryId.toString(),
+    ) {
+        create(sessionId, item.sourceEntryId)
     }
     val state by viewModel.state.collectAsState()
 
@@ -72,23 +70,15 @@ internal fun Screen.SourceMigrationCandidateSheet(
         }
     }
 
-    AdaptiveSheet(onDismissRequest = onDismissRequest) {
+    Sheet(onDismissRequest = onDismissRequest) {
         Column(modifier = Modifier.fillMaxWidth()) {
-            Text(
-                text = stringResource(MR.strings.sourceMigrationReview_chooseReplacement),
-                style = MaterialTheme.typography.header,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = MaterialTheme.padding.medium)
-                    .padding(horizontal = MaterialTheme.padding.medium),
-            )
-            Spacer(modifier = Modifier.height(MaterialTheme.padding.extraSmall))
+            SheetHeader(title = stringResource(MR.strings.sourceMigrationReview_chooseReplacement))
             when {
                 !state.isLoaded -> {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(MaterialTheme.padding.large),
+                            .padding(KatariTheme.spacing.l),
                         contentAlignment = Alignment.Center,
                     ) {
                         LoadingIndicator()
@@ -118,43 +108,35 @@ internal fun Screen.SourceMigrationCandidateSheet(
             if (state.failed) {
                 Text(
                     text = stringResource(MR.strings.sourceMigrationReview_replacementRejected),
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.padding(horizontal = MaterialTheme.padding.medium),
-                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(horizontal = KatariTheme.spacing.rowInset),
+                    role = TextRole.Supporting,
+                    tone = ContentTone.Error,
                 )
             }
             HorizontalDivider()
-            if (item.selectedTargetEntryId != null) {
-                TextButton(
-                    onClick = viewModel::clearSelection,
-                    enabled = !state.isWorking,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = MaterialTheme.padding.medium),
-                ) {
-                    Text(text = stringResource(MR.strings.sourceMigrationReview_clearReplacement))
-                }
-            }
-            Button(
-                onClick = viewModel::searchAgain,
-                enabled = !state.isWorking,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(
-                        horizontal = MaterialTheme.padding.medium,
-                        vertical = MaterialTheme.padding.small,
-                    ),
+            Column(
+                modifier = Modifier.padding(
+                    horizontal = KatariTheme.spacing.rowInset,
+                    vertical = KatariTheme.spacing.s,
+                ),
+                verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xs),
             ) {
-                if (state.isWorking) {
-                    LoadingIndicator(
-                        modifier = Modifier.size(20.dp),
+                if (item.selectedTargetEntryId != null) {
+                    Button(
+                        label = stringResource(MR.strings.sourceMigrationReview_clearReplacement),
+                        onClick = viewModel::clearSelection,
+                        modifier = Modifier.fillMaxWidth(),
+                        style = ButtonStyle.Text,
+                        enabled = !state.isWorking,
                     )
-                } else {
-                    Icon(imageVector = MaterialSymbols.Rounded.Search, contentDescription = null)
                 }
-                Text(
-                    text = stringResource(MR.strings.sourceMigrationReview_searchAgain),
-                    modifier = Modifier.padding(start = MaterialTheme.padding.small),
+                Button(
+                    label = stringResource(MR.strings.sourceMigrationReview_searchAgain),
+                    onClick = viewModel::searchAgain,
+                    modifier = Modifier.fillMaxWidth(),
+                    icon = MaterialSymbols.Rounded.Search,
+                    enabled = !state.isWorking,
+                    loading = state.isWorking,
                 )
             }
         }
@@ -174,28 +156,10 @@ private fun SourceMigrationCandidateRow(
         thumbnailUrl = item.candidate.targetThumbnailUrl,
         onClick = onClick,
         enabled = enabled,
-        supportingContent = {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = item.sourceName,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f),
-                )
-                BadgeGroup {
-                    Badge(
-                        text = stringResource(
-                            when (item.candidate.matchKind) {
-                                SourceMigrationMatchKind.EXACT -> MR.strings.sourceMigrationReview_exactMatch
-                                SourceMigrationMatchKind.SIMILAR -> MR.strings.sourceMigrationReview_similarMatch
-                                SourceMigrationMatchKind.MANUAL -> MR.strings.sourceMigrationReview_manualMatch
-                            },
-                        ),
-                    )
-                }
+        supportingText = item.sourceName,
+        supportingTrailing = {
+            BadgeGroup {
+                Badge(text = sourceMigrationMatchKindLabel(item.candidate.matchKind))
             }
         },
         trailingContent = {
@@ -204,7 +168,7 @@ private fun SourceMigrationCandidateRow(
                     Icon(
                         imageVector = MaterialSymbols.Rounded.Check,
                         contentDescription = stringResource(MR.strings.selected),
-                        tint = MaterialTheme.colorScheme.primary,
+                        tone = ContentTone.Primary,
                     )
                 }
                 SourceMigrationEntryDetailsButton(

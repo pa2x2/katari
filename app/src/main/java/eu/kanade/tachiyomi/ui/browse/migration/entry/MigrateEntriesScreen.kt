@@ -6,27 +6,17 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SmallExtendedFloatingActionButton
-import androidx.compose.material3.Text
-import androidx.compose.material3.animateFloatingActionButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import eu.kanade.presentation.components.AppBar
-import eu.kanade.presentation.components.AppBarActions
-import eu.kanade.presentation.components.AppBarTitle
-import eu.kanade.presentation.components.SearchToolbar
+import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.ui.browse.migration.entry.components.MigrateEntrySelectionGroup
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
@@ -37,13 +27,18 @@ import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.automirroredrounded.ArrowForward
 import mihon.icons.materialsymbols.rounded.Deselect
 import mihon.icons.materialsymbols.rounded.SelectAll
+import mihon.presentation.kit.button.FloatingActionButton
+import mihon.presentation.kit.feedback.EmptyScreen
+import mihon.presentation.kit.feedback.LoadingScreen
+import mihon.presentation.kit.navigation.AppBar
+import mihon.presentation.kit.navigation.AppBarActions
+import mihon.presentation.kit.navigation.AppBarTitle
+import mihon.presentation.kit.navigation.Scaffold
+import mihon.presentation.kit.navigation.SearchToolbar
+import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.FastScrollLazyColumn
-import tachiyomi.presentation.core.components.material.Scaffold
-import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.screens.EmptyScreen
-import tachiyomi.presentation.core.screens.LoadingScreen
 import tachiyomi.presentation.core.util.plus
 import tachiyomi.presentation.core.util.shouldExpandFAB
 
@@ -56,7 +51,9 @@ data class MigrateEntriesScreen(
         val context = LocalContext.current
         val haptic = LocalHapticFeedback.current
         val navigator = LocalNavigator.currentOrThrow
-        val viewModel = viewModel { MigrateEntriesViewModel(sourceId) }
+        val viewModel = assistedMetroViewModel<MigrateEntriesViewModel, MigrateEntriesViewModel.Factory> {
+            create(sourceId)
+        }
 
         val state by viewModel.state.collectAsStateWithLifecycle()
 
@@ -130,11 +127,9 @@ data class MigrateEntriesScreen(
                 )
             },
             floatingActionButton = {
-                SmallExtendedFloatingActionButton(
-                    text = { Text(text = stringResource(MR.strings.migrationConfigScreen_continueButtonText)) },
-                    icon = {
-                        Icon(imageVector = MaterialSymbols.AutoMirroredRounded.ArrowForward, contentDescription = null)
-                    },
+                FloatingActionButton(
+                    label = stringResource(MR.strings.migrationConfigScreen_continueButtonText),
+                    icon = MaterialSymbols.AutoMirroredRounded.ArrowForward,
                     onClick = {
                         val groups = viewModel.migrationGroups()
                         if (groups.isNotEmpty()) {
@@ -142,10 +137,7 @@ data class MigrateEntriesScreen(
                         }
                     },
                     expanded = lazyListState.shouldExpandFAB(),
-                    modifier = Modifier.animateFloatingActionButton(
-                        visible = state.selectionMode,
-                        alignment = Alignment.BottomEnd,
-                    ),
+                    visible = state.selectionMode,
                 )
             },
         ) { contentPadding ->
@@ -209,7 +201,7 @@ private fun MigrateEntriesContent(
 ) {
     FastScrollLazyColumn(
         state = lazyListState,
-        contentPadding = contentPadding + PaddingValues(vertical = MaterialTheme.padding.small),
+        contentPadding = contentPadding + PaddingValues(vertical = KatariTheme.spacing.s),
     ) {
         items(
             items = state.visibleGroups,
@@ -225,8 +217,8 @@ private fun MigrateEntriesContent(
                 onLongClickItem = onLongClickItem,
                 onInspect = onInspect,
                 modifier = Modifier.padding(
-                    horizontal = MaterialTheme.padding.small,
-                    vertical = MaterialTheme.padding.extraSmall,
+                    horizontal = KatariTheme.spacing.s,
+                    vertical = KatariTheme.spacing.xs,
                 ),
             )
         }

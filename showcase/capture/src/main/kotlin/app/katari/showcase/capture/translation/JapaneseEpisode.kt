@@ -1,12 +1,13 @@
 package app.katari.showcase.capture.translation
 
 import androidx.test.uiautomator.By
-import app.katari.showcase.capture.ShowcaseDevice.device
 import app.katari.showcase.capture.ShowcaseDevice.find
 import app.katari.showcase.capture.ShowcaseDevice.scrollTo
 import app.katari.showcase.capture.ShowcaseDevice.settle
 import app.katari.showcase.capture.ShowcaseDevice.tap
-import app.katari.showcase.capture.ShowcaseDevice.tapAt
+import app.katari.showcase.capture.ShowcaseDevice.tapLast
+import app.katari.showcase.capture.ShowcaseDevice.tapToHide
+import app.katari.showcase.capture.ShowcaseDevice.tapToShow
 import app.katari.showcase.capture.openEntry
 
 /**
@@ -23,20 +24,28 @@ internal fun openJapaneseEpisode() {
 
 /** Shows the reader's bars and its translation controls. */
 internal fun openTranslationBar() {
-    toggleReaderBars()
-    tap(By.desc("Translate text"))
+    showReaderBars()
+    tap(READER_BARS)
 }
 
 /** Closes the translation controls and the reader's bars, leaving only the page. */
 internal fun closeTranslationBar() {
     // The reader's own Close, which leaves the chapter, comes first.
-    device.findObjects(By.desc("Close")).last().click()
+    tapLast(By.desc("Close"))
     settle()
-    if (device.hasObject(By.desc("Translate text"))) toggleReaderBars()
+    hideReaderBars()
 }
 
+internal fun showReaderBars() = tapToShow(PAGE_SPOT_X, PAGE_SPOT_Y, READER_BARS)
+
+internal fun hideReaderBars() = tapToHide(PAGE_SPOT_X, PAGE_SPOT_Y, READER_BARS)
+
+// The reader's translate button, on screen only while its bars are.
+private val READER_BARS = By.desc("Translate text")
+
 // A spot in the middle column of the second page that no speech bubble covers, so the tap reaches the reader.
-internal fun toggleReaderBars() = tapAt(0.5f, 0.3f)
+private const val PAGE_SPOT_X = 0.5f
+private const val PAGE_SPOT_Y = 0.3f
 
 /**
  * How long the page's text may take to be recognized and translated. On a GitHub runner that takes 90 to 130 seconds,

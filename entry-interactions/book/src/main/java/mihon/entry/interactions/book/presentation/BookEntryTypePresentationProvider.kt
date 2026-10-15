@@ -1,6 +1,5 @@
 package mihon.entry.interactions.book.presentation
 
-import eu.kanade.tachiyomi.source.entry.EntryType
 import mihon.entry.interactions.presentation.EntryHistorySubtitlePresentation
 import mihon.entry.interactions.presentation.EntryNotificationChildNumberPolicy
 import mihon.entry.interactions.presentation.EntryPartialProgressPresentation
@@ -12,7 +11,6 @@ import mihon.icons.materialsymbols.rounded.Book
 import tachiyomi.i18n.*
 
 internal object BookEntryTypePresentationProvider : EntryTypePresentationProvider {
-    override val type = EntryType.BOOK
     override val presentation = EntryTypePresentation(
         displayNameLabel = MR.strings.entry_type_book,
         badgeIcon = MaterialSymbols.Rounded.Book,

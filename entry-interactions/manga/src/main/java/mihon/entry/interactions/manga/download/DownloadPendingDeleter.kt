@@ -5,8 +5,6 @@ import androidx.core.content.edit
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import tachiyomi.domain.entry.model.EntryChapter
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
 /**
  * Class used to keep a list of chapters for future deletion.
@@ -15,7 +13,7 @@ import uy.kohesive.injekt.api.get
  */
 internal class DownloadPendingDeleter(
     context: Context,
-    private val json: Json = Injekt.get(),
+    private val json: Json,
 ) {
 
     /**

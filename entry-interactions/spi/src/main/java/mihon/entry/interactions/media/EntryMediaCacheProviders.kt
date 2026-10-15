@@ -2,9 +2,6 @@ package mihon.entry.interactions.media
 
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.entry.interactions.runtime.EntryInteractionProvider
-import mihon.entry.interactions.runtime.entryInteractionCapability
-import mihon.feature.graph.CapabilityId
 
 data class EntryMediaCacheAutoClearPreference(
     val key: String,
@@ -26,15 +23,10 @@ interface EntryMediaCacheArtifact {
     fun clear(): Int
 }
 
-interface EntryMediaCacheProvider : EntryInteractionProvider {
+interface EntryMediaCacheProvider {
     /** A supporting provider must expose genuine cache artifacts; absence is represented by no provider binding. */
     val artifacts: List<EntryMediaCacheArtifact>
 }
-
-val EntryMediaCacheCapability =
-    entryInteractionCapability<EntryMediaCacheProvider>(
-        id = CapabilityId("entry.media-cache"),
-    )
 
 interface EntryMediaCacheInteraction {
     fun provider(type: EntryType): EntryMediaCacheProvider?

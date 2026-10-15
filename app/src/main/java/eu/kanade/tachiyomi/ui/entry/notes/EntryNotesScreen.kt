@@ -3,9 +3,9 @@ package eu.kanade.tachiyomi.ui.entry.notes
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 import eu.kanade.presentation.entry.EntryNotesScreen
 import eu.kanade.presentation.util.Screen
 import tachiyomi.domain.entry.model.Entry
@@ -17,7 +17,7 @@ class EntryNotesScreen(
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
 
-        val viewModel = viewModel { EntryNotesViewModel(entry) }
+        val viewModel = assistedMetroViewModel<EntryNotesViewModel, EntryNotesViewModel.Factory> { create(entry) }
         val state by viewModel.state.collectAsState()
 
         EntryNotesScreen(

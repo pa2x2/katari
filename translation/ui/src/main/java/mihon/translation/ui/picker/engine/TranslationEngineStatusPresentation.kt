@@ -1,5 +1,6 @@
 package mihon.translation.ui.picker.engine
 
+import mihon.presentation.kit.surface.StatusTone
 import mihon.translation.api.engine.TranslationEngineAction
 import mihon.translation.api.engine.TranslationEngineBuildAvailability
 import mihon.translation.api.engine.TranslationEngineId
@@ -17,13 +18,6 @@ internal enum class TranslationEngineStatusLabel {
     ModelDownloadRequired,
     SystemSetupRequired,
     SetupInProgress,
-    Unavailable,
-}
-
-internal enum class TranslationEngineStatusTone {
-    Ready,
-    Checking,
-    ActionRequired,
     Unavailable,
 }
 
@@ -50,7 +44,7 @@ internal sealed interface TranslationEngineStatusExplanation {
 
 internal data class TranslationEngineStatusPresentation(
     val label: TranslationEngineStatusLabel,
-    val tone: TranslationEngineStatusTone,
+    val tone: StatusTone,
     val explanation: TranslationEngineStatusExplanation?,
 )
 
@@ -99,47 +93,47 @@ private fun TranslationEngineStatus.toPresentation(
     return when (this) {
         TranslationEngineStatus.Checking -> TranslationEngineStatusPresentation(
             label = TranslationEngineStatusLabel.Checking,
-            tone = TranslationEngineStatusTone.Checking,
+            tone = StatusTone.Checking,
             explanation = null,
         )
         TranslationEngineStatus.Ready -> TranslationEngineStatusPresentation(
             label = TranslationEngineStatusLabel.Ready,
-            tone = TranslationEngineStatusTone.Ready,
+            tone = StatusTone.Ready,
             explanation = null,
         )
         TranslationEngineStatus.NotInstalled -> TranslationEngineStatusPresentation(
             label = TranslationEngineStatusLabel.NotInstalled,
-            tone = TranslationEngineStatusTone.ActionRequired,
+            tone = StatusTone.ActionRequired,
             explanation = TranslationEngineStatusExplanation.InstallProvider,
         )
         is TranslationEngineStatus.ConfigurationRequired -> TranslationEngineStatusPresentation(
             label = TranslationEngineStatusLabel.ConfigurationRequired,
-            tone = TranslationEngineStatusTone.ActionRequired,
+            tone = StatusTone.ActionRequired,
             explanation = TranslationEngineStatusExplanation.ProviderText(reason),
         )
         is TranslationEngineStatus.ProviderDisclosureRequired -> TranslationEngineStatusPresentation(
             label = TranslationEngineStatusLabel.ProviderDisclosureRequired,
-            tone = TranslationEngineStatusTone.ActionRequired,
+            tone = StatusTone.ActionRequired,
             explanation = TranslationEngineStatusExplanation.ProviderDisclosure,
         )
         is TranslationEngineStatus.ModelDownloadRequired -> TranslationEngineStatusPresentation(
             label = TranslationEngineStatusLabel.ModelDownloadRequired,
-            tone = TranslationEngineStatusTone.ActionRequired,
+            tone = StatusTone.ActionRequired,
             explanation = TranslationEngineStatusExplanation.LanguageData,
         )
         is TranslationEngineStatus.SystemSetupRequired -> TranslationEngineStatusPresentation(
             label = TranslationEngineStatusLabel.SystemSetupRequired,
-            tone = TranslationEngineStatusTone.ActionRequired,
+            tone = StatusTone.ActionRequired,
             explanation = TranslationEngineStatusExplanation.SystemSetup(reason),
         )
         is TranslationEngineStatus.SetupInProgress -> TranslationEngineStatusPresentation(
             label = TranslationEngineStatusLabel.SetupInProgress,
-            tone = TranslationEngineStatusTone.Checking,
+            tone = StatusTone.Checking,
             explanation = null,
         )
         is TranslationEngineStatus.Unavailable -> TranslationEngineStatusPresentation(
             label = TranslationEngineStatusLabel.Unavailable,
-            tone = TranslationEngineStatusTone.Unavailable,
+            tone = StatusTone.Unavailable,
             explanation = TranslationEngineStatusExplanation.Unavailable(
                 reason = reason,
                 buildReason = (buildAvailability as? TranslationEngineBuildAvailability.NotIncluded)?.reason,

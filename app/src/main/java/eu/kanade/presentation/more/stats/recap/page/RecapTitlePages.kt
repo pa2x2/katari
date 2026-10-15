@@ -11,15 +11,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.more.stats.components.rememberStatisticsDurationFormatter
-import eu.kanade.presentation.more.stats.recap.components.LocalRecapPalette
 import eu.kanade.presentation.more.stats.recap.components.RecapCover
 import eu.kanade.presentation.more.stats.recap.components.RecapKicker
 import eu.kanade.presentation.more.stats.recap.components.RecapText
-import eu.kanade.presentation.more.stats.recap.components.RecapTypography
 import eu.kanade.presentation.more.stats.recap.components.recapTitleTarget
 import eu.kanade.presentation.more.stats.recap.components.recapTypeName
 import eu.kanade.presentation.more.stats.recap.components.rememberRecapFormats
@@ -29,6 +25,10 @@ import eu.kanade.presentation.more.stats.recap.motion.recapReveal
 import eu.kanade.tachiyomi.ui.stats.recap.story.StatisticsRecapPage
 import eu.kanade.tachiyomi.ui.stats.recap.story.StatisticsRecapTitle
 import eu.kanade.tachiyomi.ui.stats.recap.story.TopTitleMoment
+import mihon.presentation.kit.content.StoryMetrics
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
@@ -39,10 +39,10 @@ import java.time.LocalDate
 internal fun ColumnScope.RecapOpeningPage(page: StatisticsRecapPage.Opening) {
     Spacer(Modifier.weight(1f))
     RecapKicker(stringResource(MR.strings.statistics_recap_year_title), order = 1)
-    RecapText(page.year.toString(), RecapTypography.Huge, order = 2)
+    RecapText(page.year.toString(), TextRole.Hero, order = 2)
     RecapText(
         text = stringResource(MR.strings.statistics_recap_tap_to_start),
-        style = RecapTypography.Body,
+        role = TextRole.Body,
         order = 3,
         modifier = Modifier.recapPulse(),
     )
@@ -52,38 +52,36 @@ internal fun ColumnScope.RecapOpeningPage(page: StatisticsRecapPage.Opening) {
 internal fun ColumnScope.RecapTopTitlePage(page: StatisticsRecapPage.TopTitle) {
     val formatDuration = rememberStatisticsDurationFormatter()
     val formats = rememberRecapFormats()
-    val muted = LocalRecapPalette.current.muted
     RecapKicker(stringResource(MR.strings.statistics_recap_top_kicker))
     Spacer(Modifier.weight(1f))
     RecapCover(
         title = page.title,
-        width = 156.dp,
+        width = StoryMetrics.coverFeature,
         modifier = Modifier.align(Alignment.CenterHorizontally).recapReveal(1).recapFloat(),
     )
     RecapText(
         text = page.title.title,
-        style = RecapTypography.Headline,
+        role = TextRole.Metric,
         textAlign = TextAlign.Center,
         maxLines = 2,
         order = 2,
         modifier = Modifier.fillMaxWidth(),
     )
     Row(
-        horizontalArrangement = Arrangement.spacedBy(32.dp, Alignment.CenterHorizontally),
+        horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xxl, Alignment.CenterHorizontally),
         modifier = Modifier.fillMaxWidth().recapReveal(3),
     ) {
         RecapFigure(
             formatDuration(page.title.durationMillis),
             stringResource(MR.strings.statistics_time_spent).lowercase(),
-            muted,
         )
         page.consumed?.let {
-            RecapFigure(formats.number(it.count), stringResource(it.unitLabel).lowercase(), muted)
+            RecapFigure(formats.number(it.count), stringResource(it.unitLabel).lowercase())
         }
     }
     RecapText(
         text = topTitleMomentText(page.moment, formats::dayMonth),
-        style = RecapTypography.Body,
+        role = TextRole.Body,
         textAlign = TextAlign.Center,
         order = 4,
         modifier = Modifier.fillMaxWidth(),
@@ -95,8 +93,8 @@ internal fun ColumnScope.RecapTopTitlePage(page: StatisticsRecapPage.TopTitle) {
 internal fun ColumnScope.RecapTopFivePage(page: StatisticsRecapPage.TopFive) {
     RecapKicker(stringResource(MR.strings.statistics_recap_top_five_kicker))
     Column(
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-        modifier = Modifier.padding(top = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.l),
+        modifier = Modifier.padding(top = KatariTheme.spacing.s),
     ) {
         page.titles.forEachIndexed { index, title ->
             RecapRankRow(rank = index + 2, title = title, order = index + 1)
@@ -105,45 +103,44 @@ internal fun ColumnScope.RecapTopFivePage(page: StatisticsRecapPage.TopFive) {
     Spacer(Modifier.weight(1f))
     RecapText(
         text = stringResource(MR.strings.statistics_recap_top_five_share, page.sharePercent),
-        style = RecapTypography.Body,
+        role = TextRole.Body,
         order = 5,
     )
 }
 
 /** One ranked title: its place, cover, name and time with its type. */
 @Composable
-internal fun RecapRankRow(rank: Int, title: StatisticsRecapTitle, order: Int, coverWidth: Int = 46) {
+internal fun RecapRankRow(rank: Int, title: StatisticsRecapTitle, order: Int) {
     val formatDuration = rememberStatisticsDurationFormatter()
-    val palette = LocalRecapPalette.current
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(14.dp),
+        horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.m),
         modifier = Modifier.recapReveal(order).recapTitleTarget(title.entryId),
     ) {
         RecapText(
             text = rank.toString(),
-            style = RecapTypography.Rank,
-            color = palette.accent,
+            role = TextRole.Metric,
+            tone = ContentTone.Primary,
             textAlign = TextAlign.End,
-            modifier = Modifier.width(30.dp),
+            modifier = Modifier.width(StoryMetrics.rankWidth),
         )
-        RecapCover(title, width = coverWidth.dp)
+        RecapCover(title, width = StoryMetrics.coverRow)
         Column(Modifier.weight(1f)) {
-            RecapText(title.title, RecapTypography.RowTitle, maxLines = 2)
+            RecapText(title.title, TextRole.SectionTitle, maxLines = 2)
             RecapText(
                 text = "${formatDuration(title.durationMillis)} · ${recapTypeName(title.type)}",
-                style = RecapTypography.Small,
-                color = palette.muted,
+                role = TextRole.Supporting,
+                tone = ContentTone.Secondary,
             )
         }
     }
 }
 
 @Composable
-private fun RecapFigure(value: String, label: String, labelColor: Color) {
+private fun RecapFigure(value: String, label: String) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        RecapText(value, RecapTypography.Title)
-        RecapText(label, RecapTypography.Small, color = labelColor)
+        RecapText(value, TextRole.SheetTitle)
+        RecapText(label, TextRole.Supporting)
     }
 }
 

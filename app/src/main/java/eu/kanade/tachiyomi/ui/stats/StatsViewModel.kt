@@ -4,6 +4,10 @@ import android.app.Application
 import androidx.compose.ui.util.fastDistinctBy
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.ContributesIntoMap
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metrox.viewmodel.ViewModelKey
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.presentation.more.stats.ActivityState
 import eu.kanade.presentation.more.stats.StatsScreenState
@@ -17,7 +21,7 @@ import eu.kanade.presentation.more.stats.data.StatsType
 import eu.kanade.presentation.more.stats.layout.statisticsLayoutTab
 import eu.kanade.tachiyomi.data.statistics.StatisticsRecapNotificationJob
 import eu.kanade.tachiyomi.source.entry.EntryType
-import eu.kanade.tachiyomi.ui.stats.recap.delivery.subscribeUnopenedYearRecap
+import eu.kanade.tachiyomi.ui.stats.recap.delivery.StatisticsUnopenedYearRecap
 import eu.kanade.tachiyomi.ui.stats.recap.period.StatisticsRecapPeriod
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -39,6 +43,7 @@ import kotlinx.coroutines.flow.runningFold
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import logcat.LogPriority
+import mihon.app.di.AppUiScope
 import mihon.entry.interactions.presentation.EntryTypePresentationFeature
 import mihon.entry.interactions.statistics.EntryStatisticsFeature
 import mihon.feature.profiles.core.ProfileScopedStateEvent
@@ -52,23 +57,25 @@ import tachiyomi.domain.statistics.model.StatisticsActivityTimeline
 import tachiyomi.domain.statistics.model.StatisticsCardLayout
 import tachiyomi.domain.statistics.repository.StatisticsRepository
 import tachiyomi.domain.statistics.service.StatisticsPreferences
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 import java.time.Duration
 import java.time.LocalDate
 import java.time.ZonedDateTime
 import java.util.Locale
 
+@Inject
+@ViewModelKey
+@ContributesIntoMap(AppUiScope::class)
 class StatsViewModel(
-    private val activeProfileProvider: ActiveProfileProvider = Injekt.get(),
-    private val getLibraryEntries: GetLibraryEntries = Injekt.get(),
-    private val presentationFeature: EntryTypePresentationFeature = Injekt.get(),
-    private val statisticsFeature: EntryStatisticsFeature = Injekt.get(),
-    private val statisticsRepository: StatisticsRepository = Injekt.get(),
-    private val statisticsPreferences: StatisticsPreferences = Injekt.get(),
-    private val profileStore: ProfileStore = Injekt.get(),
-    private val basePreferences: BasePreferences = Injekt.get(),
-    private val application: Application = Injekt.get(),
+    private val activeProfileProvider: ActiveProfileProvider,
+    private val getLibraryEntries: GetLibraryEntries,
+    private val presentationFeature: EntryTypePresentationFeature,
+    private val statisticsFeature: EntryStatisticsFeature,
+    private val statisticsRepository: StatisticsRepository,
+    private val statisticsPreferences: StatisticsPreferences,
+    private val profileStore: ProfileStore,
+    private val basePreferences: BasePreferences,
+    private val application: Application,
+    unopenedYearRecap: StatisticsUnopenedYearRecap,
 ) : ViewModel() {
 
     val state: StateFlow<StatsScreenState>
@@ -245,7 +252,7 @@ class StatsViewModel(
             }
 
     /** The year recap that's new and unopened, shown as a banner until it's opened. */
-    val newYearRecap: StateFlow<StatisticsRecapPeriod.Year?> = subscribeUnopenedYearRecap()
+    val newYearRecap: StateFlow<StatisticsRecapPeriod.Year?> = unopenedYearRecap.subscribe()
         .catch { error ->
             logcat(LogPriority.ERROR, error)
             emit(null)

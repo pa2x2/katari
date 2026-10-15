@@ -2,14 +2,13 @@ package eu.kanade.tachiyomi.ui.browse.source.browse.filter.change
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
-import androidx.compose.material3.Badge
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.unit.dp
+import mihon.presentation.kit.content.Badge
+import mihon.presentation.kit.content.BadgeTone
+import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -20,32 +19,18 @@ internal fun FilterChangeBadges(change: FilterChange, hasIssues: Boolean) {
     val description = stringResource(MR.strings.filter_changes_description, change.included, change.excluded)
     Row(
         modifier = Modifier.clearAndSetSemantics { contentDescription = description },
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xs),
     ) {
         if (change.excluded == 0) {
             Badge(
-                containerColor = if (hasIssues) {
-                    MaterialTheme.colorScheme.errorContainer
-                } else {
-                    MaterialTheme.colorScheme.primaryContainer
-                },
-                contentColor = if (hasIssues) {
-                    MaterialTheme.colorScheme.onErrorContainer
-                } else {
-                    MaterialTheme.colorScheme.onPrimaryContainer
-                },
-            ) { Text(change.changed.toString()) }
+                text = change.changed.toString(),
+                tone = if (hasIssues) BadgeTone.Error else BadgeTone.Primary,
+            )
         } else {
             if (change.included > 0) {
-                Badge(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                ) { Text("+${change.included}") }
+                Badge(text = "+${change.included}", tone = BadgeTone.Primary)
             }
-            Badge(
-                containerColor = MaterialTheme.colorScheme.errorContainer,
-                contentColor = MaterialTheme.colorScheme.onErrorContainer,
-            ) { Text("−${change.excluded}") }
+            Badge(text = "−${change.excluded}", tone = BadgeTone.Error)
         }
     }
 }

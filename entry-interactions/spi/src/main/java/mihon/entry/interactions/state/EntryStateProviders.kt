@@ -1,20 +1,12 @@
 package mihon.entry.interactions.state
 
 import mihon.entry.interactions.media.EntryPlaybackPreferencesSnapshot
-import mihon.entry.interactions.runtime.EntryInteractionProvider
-import mihon.entry.interactions.runtime.entryInteractionCapability
-import mihon.feature.graph.CapabilityId
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 
-interface EntryMigrationProvider : EntryInteractionProvider
+interface EntryMigrationProvider
 
-val EntryMigrationCapability =
-    entryInteractionCapability<EntryMigrationProvider>(
-        id = CapabilityId("entry.migration"),
-    )
-
-interface EntryConsumptionProcessor : EntryInteractionProvider {
+interface EntryConsumptionProcessor {
     /** Returns exactly the children whose persisted consumed state changed. */
     suspend fun setConsumed(entry: Entry, chapters: List<EntryChapter>, consumed: Boolean): List<EntryChapter>
 }
@@ -30,21 +22,11 @@ fun shouldChangeConsumption(status: EntryConsumptionStatus, consumed: Boolean): 
     }
 }
 
-val EntryConsumptionCapability =
-    entryInteractionCapability<EntryConsumptionProcessor>(
-        id = CapabilityId("entry.consumption"),
-    )
-
-interface EntryBookmarkProcessor : EntryInteractionProvider {
+interface EntryBookmarkProcessor {
     suspend fun setBookmarked(entry: Entry, chapters: List<EntryChapter>, bookmarked: Boolean)
 }
 
-val EntryBookmarkCapability =
-    entryInteractionCapability<EntryBookmarkProcessor>(
-        id = CapabilityId("entry.bookmarking"),
-    )
-
-interface EntryProgressProcessor : EntryInteractionProvider {
+interface EntryProgressProcessor {
     suspend fun snapshot(entry: Entry): EntryProgressSnapshot
     suspend fun restore(entry: Entry, snapshot: EntryProgressSnapshot)
     suspend fun copy(
@@ -77,12 +59,7 @@ interface EntryProgressProcessor : EntryInteractionProvider {
     }
 }
 
-val EntryProgressCapability =
-    entryInteractionCapability<EntryProgressProcessor>(
-        id = CapabilityId("entry.progress-transfer"),
-    )
-
-interface EntryPlaybackPreferencesProcessor : EntryInteractionProvider {
+interface EntryPlaybackPreferencesProcessor {
     suspend fun snapshot(entry: Entry): EntryPlaybackPreferencesSnapshot?
     suspend fun restore(entry: Entry, snapshot: EntryPlaybackPreferencesSnapshot)
 
@@ -90,15 +67,5 @@ interface EntryPlaybackPreferencesProcessor : EntryInteractionProvider {
     suspend fun copy(sourceEntry: Entry, targetEntry: Entry): Boolean
 }
 
-val EntryPlaybackPreferencesCapability =
-    entryInteractionCapability<EntryPlaybackPreferencesProcessor>(
-        id = CapabilityId("entry.playback-preferences-transfer"),
-    )
-
 /** Declares that an Entry type's readers translate text, so each series can keep its own translation languages. */
-interface EntryTranslationLanguagesProvider : EntryInteractionProvider
-
-val EntryTranslationLanguagesCapability =
-    entryInteractionCapability<EntryTranslationLanguagesProvider>(
-        id = CapabilityId("entry.translation-languages"),
-    )
+interface EntryTranslationLanguagesProvider

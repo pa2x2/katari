@@ -1,45 +1,32 @@
 package eu.kanade.tachiyomi.ui.entry.track
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.systemBars
-import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextAlign
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.Assisted
+import dev.zacsweers.metro.AssistedFactory
+import dev.zacsweers.metro.AssistedInject
+import dev.zacsweers.metro.ContributesIntoMap
+import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
+import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
+import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
+import eu.kanade.presentation.track.TrackRemovalConfirmation
 import eu.kanade.presentation.util.Screen
+import mihon.app.di.AppUiScope
 import mihon.entry.interactions.tracking.EntryTrackingFeature
 import mihon.entry.interactions.tracking.EntryTrackingServiceDescriptor
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.Delete
+import mihon.presentation.kit.list.CheckRow
 import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.LabeledCheckbox
-import tachiyomi.presentation.core.components.material.AlertDialogContent
-import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
 internal data class TrackerRemoveScreen(
     private val entry: Entry,
@@ -49,59 +36,44 @@ internal data class TrackerRemoveScreen(
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val viewModel = viewModel { Model(entry, service) }
+        val viewModel = assistedMetroViewModel<Model, Model.Factory> { create(entry, service) }
         var removeRemoteTrack by remember { mutableStateOf(false) }
-        AlertDialogContent(
-            modifier = Modifier.windowInsetsPadding(WindowInsets.systemBars),
-            icon = { Icon(MaterialSymbols.Rounded.Delete, contentDescription = null) },
-            title = {
-                Text(
-                    text = stringResource(MR.strings.track_delete_title, service.name),
-                    textAlign = TextAlign.Center,
-                )
+        TrackRemovalConfirmation(
+            title = stringResource(MR.strings.track_delete_title, service.name),
+            text = stringResource(MR.strings.track_delete_text, service.name),
+            confirmLabel = stringResource(MR.strings.action_remove),
+            onConfirm = {
+                viewModel.remove(removeRemoteTrack)
+                navigator.pop()
             },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small)) {
-                    Text(text = stringResource(MR.strings.track_delete_text, service.name))
-                    if (service.capabilities.supportsRemoteDeletion) {
-                        LabeledCheckbox(
-                            label = stringResource(MR.strings.track_delete_remote_text, service.name),
-                            checked = removeRemoteTrack,
-                            onCheckedChange = { removeRemoteTrack = it },
-                        )
-                    }
+            onDismissRequest = navigator::pop,
+            options = if (service.capabilities.supportsRemoteDeletion) {
+                {
+                    CheckRow(
+                        title = stringResource(MR.strings.track_delete_remote_text, service.name),
+                        checked = removeRemoteTrack,
+                        onCheckedChange = { removeRemoteTrack = it },
+                    )
                 }
-            },
-            buttons = {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small, Alignment.End),
-                ) {
-                    TextButton(onClick = navigator::pop) {
-                        Text(text = stringResource(MR.strings.action_cancel))
-                    }
-                    FilledTonalButton(
-                        onClick = {
-                            viewModel.remove(removeRemoteTrack)
-                            navigator.pop()
-                        },
-                        colors = ButtonDefaults.filledTonalButtonColors(
-                            containerColor = MaterialTheme.colorScheme.errorContainer,
-                            contentColor = MaterialTheme.colorScheme.onErrorContainer,
-                        ),
-                    ) {
-                        Text(text = stringResource(MR.strings.action_ok))
-                    }
-                }
+            } else {
+                null
             },
         )
     }
 
-    private class Model(
-        private val entry: Entry,
-        private val service: EntryTrackingServiceDescriptor,
-        private val trackingFeature: EntryTrackingFeature = Injekt.get(),
+    @AssistedInject
+    class Model(
+        @Assisted private val entry: Entry,
+        @Assisted private val service: EntryTrackingServiceDescriptor,
+        private val trackingFeature: EntryTrackingFeature,
     ) : ViewModel() {
+
+        @AssistedFactory
+        @ManualViewModelAssistedFactoryKey
+        @ContributesIntoMap(AppUiScope::class)
+        interface Factory : ManualViewModelAssistedFactory {
+            fun create(entry: Entry, service: EntryTrackingServiceDescriptor): Model
+        }
 
         fun remove(removeRemote: Boolean) {
             viewModelScope.launchNonCancellable {

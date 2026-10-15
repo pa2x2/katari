@@ -3,6 +3,8 @@ plugins {
     alias(mihonx.plugins.compose)
     alias(mihonx.plugins.spotless)
     alias(libs.plugins.kotlin.serialization)
+
+    alias(libs.plugins.metro)
 }
 
 android {
@@ -20,20 +22,20 @@ dependencies {
     implementation(projects.tts.ui)
 
     implementation(projects.core.common)
+    implementation(projects.core.metro)
     implementation(projects.entryViewerSettingsUi)
     implementation(projects.i18n)
     implementation(projects.icons.materialSymbols)
+    implementation(projects.entryViewerChromeUi)
     implementation(projects.presentationCore)
     implementation(projects.translation.ui)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.core)
     implementation(libs.androidx.compose.foundation)
-    implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.fragment)
     implementation(libs.androidsvg)
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.bundles.serialization)
-    implementation(libs.injekt)
     implementation(libs.jsoup)
     implementation(libs.unifile)
 

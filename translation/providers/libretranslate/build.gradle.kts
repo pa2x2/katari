@@ -2,6 +2,8 @@ plugins {
     alias(mihonx.plugins.android.library)
     alias(mihonx.plugins.compose)
     alias(mihonx.plugins.spotless)
+
+    alias(libs.plugins.metro)
     alias(libs.plugins.kotlin.serialization)
 }
 
@@ -10,16 +12,13 @@ android {
 }
 
 dependencies {
-    implementation(projects.featureRuntime)
     implementation(projects.presentationCore)
     implementation(projects.translation.api)
-    implementation(projects.translation.runtime)
     implementation(projects.translation.spi)
     implementation(projects.translation.providers.serverConnection)
     implementation(libs.androidx.appCompat)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.foundation)
-    implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.uiToolingPreview)
     implementation(libs.androidx.lifecycle.runtime)
     implementation(libs.kotlinx.serialization.json)

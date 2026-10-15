@@ -1,11 +1,18 @@
 package eu.kanade.tachiyomi.ui.history
 
-import androidx.compose.material3.SnackbarHostState
+import android.content.Context
 import androidx.compose.runtime.Immutable
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.ContributesIntoMap
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.binding
+import dev.zacsweers.metrox.viewmodel.ViewModelKey
 import eu.kanade.core.util.insertSeparators
 import eu.kanade.presentation.history.HistoryUiItem
 import eu.kanade.presentation.history.HistoryUiModel
+import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.ui.base.viewmodel.GatedStateViewModel
 import eu.kanade.tachiyomi.ui.collapseByVisibleEntry
 import kotlinx.coroutines.Dispatchers
@@ -27,6 +34,7 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import logcat.LogPriority
+import mihon.app.di.AppUiScope
 import mihon.entry.interactions.library.membership.EntryLibraryAddRequest
 import mihon.entry.interactions.library.membership.EntryLibraryAddResult
 import mihon.entry.interactions.library.membership.EntryLibraryCategorySelection
@@ -34,6 +42,8 @@ import mihon.entry.interactions.library.membership.EntryLibraryDuplicatePolicy
 import mihon.entry.interactions.library.membership.EntryLibraryMembershipFeature
 import mihon.entry.interactions.merge.EntryMergeNavigationFeature
 import mihon.entry.interactions.merge.EntryMergeSubject
+import mihon.entry.interactions.navigation.EntryContinueFeature
+import mihon.entry.interactions.navigation.EntryContinueResult
 import mihon.feature.profiles.core.ProfileScopedStateEvent
 import mihon.feature.profiles.core.observeProfileScopedState
 import tachiyomi.core.common.preference.CheckboxState
@@ -54,19 +64,20 @@ import tachiyomi.domain.history.model.HistoryWithRelations
 import tachiyomi.domain.history.model.toHistoryItem
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.domain.statistics.repository.StatisticsRepository
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
+@Inject
+@ViewModelKey
+@ContributesIntoMap(AppUiScope::class, binding = binding<ViewModel>())
 class HistoryViewModel(
-    private val entryLibraryMembershipFeature: EntryLibraryMembershipFeature = Injekt.get(),
-    private val entryMergeNavigationFeature: EntryMergeNavigationFeature = Injekt.get(),
-    private val getEntry: GetEntry = Injekt.get(),
-    private val getHistory: GetHistory = Injekt.get(),
-    private val removeHistory: RemoveHistory = Injekt.get(),
-    private val sourceManager: SourceManager = Injekt.get(),
-    private val activeProfileProvider: ActiveProfileProvider = Injekt.get(),
-    statisticsRepository: StatisticsRepository = Injekt.get(),
-    val snackbarHostState: SnackbarHostState = SnackbarHostState(),
+    private val entryLibraryMembershipFeature: EntryLibraryMembershipFeature,
+    private val entryMergeNavigationFeature: EntryMergeNavigationFeature,
+    private val entryContinueFeature: EntryContinueFeature,
+    private val getEntry: GetEntry,
+    private val getHistory: GetHistory,
+    private val removeHistory: RemoveHistory,
+    private val sourceManager: SourceManager,
+    private val activeProfileProvider: ActiveProfileProvider,
+    statisticsRepository: StatisticsRepository,
 ) : GatedStateViewModel<HistoryViewModel.State>(State()) {
 
     private val _events: Channel<Event> = Channel(Channel.UNLIMITED)
@@ -175,6 +186,11 @@ class HistoryViewModel(
                 ?.item
         }
     }
+
+    fun canContinue(type: EntryType): Boolean = entryContinueFeature.isApplicable(type)
+
+    suspend fun continueEntry(context: Context, entry: Entry): EntryContinueResult =
+        entryContinueFeature.continueEntry(context, entry)
 
     suspend fun getEntryById(entryId: Long): Entry? {
         return withIOContext { getEntry.await(entryId) }

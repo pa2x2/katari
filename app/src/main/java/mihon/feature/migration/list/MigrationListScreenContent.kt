@@ -1,68 +1,39 @@
 package mihon.feature.migration.list
 
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
-import eu.kanade.presentation.components.AppBar
-import eu.kanade.presentation.components.AppBarActions
-import eu.kanade.presentation.entry.components.EntryCover
-import eu.kanade.presentation.util.formatChapterNumber
-import eu.kanade.presentation.util.rememberResourceBitmapPainter
-import eu.kanade.tachiyomi.R
+import mihon.feature.migration.list.components.MigrationListItem
+import mihon.feature.migration.list.components.MigrationListItemAction
+import mihon.feature.migration.list.components.MigrationListItemResult
+import mihon.feature.migration.list.components.MigrationProposalGroupHeader
 import mihon.feature.migration.list.models.MigratingEntry
 import mihon.feature.migration.list.models.MigrationMergeContext
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.automirroredrounded.ArrowForward
 import mihon.icons.materialsymbols.rounded.Check
-import mihon.icons.materialsymbols.rounded.Close
 import mihon.icons.materialsymbols.rounded.ContentCopy
 import mihon.icons.materialsymbols.rounded.CopyAll
 import mihon.icons.materialsymbols.rounded.DoneAll
-import mihon.icons.materialsymbols.rounded.MoreVert
+import mihon.presentation.kit.content.Icon
+import mihon.presentation.kit.navigation.AppBar
+import mihon.presentation.kit.navigation.AppBarActions
+import mihon.presentation.kit.navigation.Scaffold
+import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.Badge
-import tachiyomi.presentation.core.components.BadgeGroup
 import tachiyomi.presentation.core.components.FastScrollLazyColumn
-import tachiyomi.presentation.core.components.LoadingIndicator
-import tachiyomi.presentation.core.components.material.Scaffold
-import tachiyomi.presentation.core.components.material.padding
-import tachiyomi.presentation.core.components.material.topSmallPaddingValues
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.plus
 
@@ -116,7 +87,7 @@ fun MigrationListScreenContent(
             )
         },
     ) { contentPadding ->
-        FastScrollLazyColumn(contentPadding = contentPadding + topSmallPaddingValues) {
+        FastScrollLazyColumn(contentPadding = contentPadding + PaddingValues(top = KatariTheme.spacing.s)) {
             val groupedItems = items.groupBy { item ->
                 item.mergeContext?.rootEntryId ?: -item.entry.id
             }
@@ -132,8 +103,8 @@ fun MigrationListScreenContent(
                             .fillMaxWidth()
                             .animateItem()
                             .padding(
-                                start = MaterialTheme.padding.medium,
-                                end = MaterialTheme.padding.small,
+                                start = KatariTheme.spacing.l,
+                                end = KatariTheme.spacing.s,
                             )
                             .height(IntrinsicSize.Min),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -175,258 +146,6 @@ fun MigrationListScreenContent(
                             onSkip = { onSkip(item.entry.id) },
                             onMigrate = { onMigrate(item.entry.id) },
                             onCopy = { onCopy(item.entry.id) },
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun MigrationListItem(
-    modifier: Modifier,
-    entry: Entry,
-    source: String,
-    chapterCount: Int,
-    latestChapter: Double?,
-    mergeContext: MigrationMergeContext?,
-    onClick: () -> Unit,
-) {
-    Column(
-        modifier = modifier
-            .widthIn(max = 150.dp)
-            .fillMaxWidth()
-            .clip(MaterialTheme.shapes.small)
-            .clickable(onClick = onClick)
-            .padding(4.dp),
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(EntryCover.Book.ratio),
-        ) {
-            EntryCover.Book(
-                modifier = Modifier.fillMaxWidth(),
-                data = entry,
-            )
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(bottomStart = 4.dp, bottomEnd = 4.dp))
-                    .background(
-                        Brush.verticalGradient(
-                            0f to Color.Transparent,
-                            1f to MaterialTheme.colorScheme.background,
-                        ),
-                    )
-                    .fillMaxHeight(0.4f)
-                    .fillMaxWidth()
-                    .align(Alignment.BottomCenter),
-            )
-            Text(
-                modifier = Modifier
-                    .padding(8.dp)
-                    .align(Alignment.BottomStart),
-                text = entry.title,
-                overflow = TextOverflow.Ellipsis,
-                maxLines = 2,
-                style = MaterialTheme.typography.labelMedium,
-            )
-            BadgeGroup(modifier = Modifier.padding(4.dp)) {
-                Badge(text = "$chapterCount")
-            }
-        }
-
-        Column(
-            modifier = Modifier
-                .padding(MaterialTheme.padding.extraSmall),
-            verticalArrangement = Arrangement.spacedBy(2.dp),
-        ) {
-            Text(
-                text = source,
-                overflow = TextOverflow.Ellipsis,
-                maxLines = 1,
-                style = MaterialTheme.typography.titleSmall,
-            )
-            mergeContext?.let {
-                Text(
-                    text = migrationMergeContextLabel(it),
-                    color = MaterialTheme.colorScheme.primary,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                    style = MaterialTheme.typography.labelSmall,
-                )
-            }
-            val formattedLatestChapters = remember(latestChapter) {
-                latestChapter?.let(::formatChapterNumber)
-            }
-            Text(
-                text = stringResource(
-                    MR.strings.migrationListScreen_latestChapterLabel,
-                    formattedLatestChapters ?: stringResource(MR.strings.migrationListScreen_unknownLatestChapter),
-                ),
-                overflow = TextOverflow.Ellipsis,
-                maxLines = 1,
-                style = MaterialTheme.typography.bodyMedium,
-            )
-        }
-    }
-}
-
-@Composable
-fun MigrationListItemResult(
-    modifier: Modifier,
-    result: MigratingEntry.SearchResult,
-    onItemClick: (Entry, MigrationMergeContext?) -> Unit,
-) {
-    Box(modifier.height(IntrinsicSize.Min)) {
-        when (result) {
-            MigratingEntry.SearchResult.Searching -> {
-                Box(
-                    modifier = Modifier
-                        .widthIn(max = 150.dp)
-                        .fillMaxSize()
-                        .aspectRatio(EntryCover.Book.ratio),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    LoadingIndicator()
-                }
-            }
-            MigratingEntry.SearchResult.NotFound -> {
-                Column(
-                    Modifier
-                        .widthIn(max = 150.dp)
-                        .fillMaxSize()
-                        .padding(4.dp),
-                ) {
-                    Image(
-                        painter = rememberResourceBitmapPainter(id = R.drawable.cover_error),
-                        contentDescription = stringResource(MR.strings.label_more),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .aspectRatio(EntryCover.Book.ratio)
-                            .clip(MaterialTheme.shapes.extraSmall),
-                        contentScale = ContentScale.Crop,
-                    )
-                    Text(
-                        text = stringResource(MR.strings.migrationListScreen_noMatchFoundText),
-                        modifier = Modifier.padding(MaterialTheme.padding.extraSmall),
-                        style = MaterialTheme.typography.titleSmall,
-                    )
-                }
-            }
-            is MigratingEntry.SearchResult.Success -> {
-                MigrationListItem(
-                    modifier = Modifier.fillMaxSize(),
-                    entry = result.entry,
-                    source = result.source,
-                    chapterCount = result.chapterCount,
-                    latestChapter = result.latestChapter,
-                    mergeContext = result.mergeContext,
-                    onClick = { onItemClick(result.entry, result.mergeContext) },
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun MigrationProposalGroupHeader(context: MigrationMergeContext) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(
-                horizontal = MaterialTheme.padding.medium,
-                vertical = MaterialTheme.padding.small,
-            ),
-        verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.extraSmall),
-    ) {
-        Text(
-            text = context.rootTitle,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-            style = MaterialTheme.typography.titleMedium,
-        )
-        Text(
-            text = stringResource(
-                MR.strings.merge_members_count,
-                context.memberCount,
-            ),
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            style = MaterialTheme.typography.bodySmall,
-        )
-    }
-}
-
-@Composable
-private fun migrationMergeContextLabel(context: MigrationMergeContext): String {
-    return if (context.isRoot) {
-        stringResource(MR.strings.migrationListScreen_mergeRootLabel)
-    } else {
-        stringResource(MR.strings.migrationListScreen_mergeMemberLabel, context.rootTitle)
-    }
-}
-
-@Composable
-private fun MigrationListItemAction(
-    modifier: Modifier,
-    result: MigratingEntry.SearchResult,
-    onSearchManually: () -> Unit,
-    onSkip: () -> Unit,
-    onMigrate: () -> Unit,
-    onCopy: () -> Unit,
-) {
-    var menuExpanded by rememberSaveable { mutableStateOf(false) }
-    val closeMenu = { menuExpanded = false }
-    Box(modifier) {
-        when (result) {
-            MigratingEntry.SearchResult.Searching -> {
-                IconButton(onClick = onSkip) {
-                    Icon(
-                        imageVector = MaterialSymbols.Rounded.Close,
-                        contentDescription = stringResource(MR.strings.migrationListScreen_skipActionLabel),
-                    )
-                }
-            }
-            MigratingEntry.SearchResult.NotFound, is MigratingEntry.SearchResult.Success -> {
-                IconButton(onClick = { menuExpanded = true }) {
-                    Icon(
-                        imageVector = MaterialSymbols.Rounded.MoreVert,
-                        contentDescription = stringResource(MR.strings.label_more),
-                    )
-                }
-                DropdownMenu(
-                    expanded = menuExpanded,
-                    onDismissRequest = closeMenu,
-                ) {
-                    DropdownMenuItem(
-                        text = { Text(stringResource(MR.strings.migrationListScreen_searchManuallyActionLabel)) },
-                        onClick = {
-                            closeMenu()
-                            onSearchManually()
-                        },
-                    )
-                    DropdownMenuItem(
-                        text = { Text(stringResource(MR.strings.migrationListScreen_skipActionLabel)) },
-                        onClick = {
-                            closeMenu()
-                            onSkip()
-                        },
-                    )
-                    if (result is MigratingEntry.SearchResult.Success) {
-                        DropdownMenuItem(
-                            text = { Text(stringResource(MR.strings.migrationListScreen_migrateNowActionLabel)) },
-                            onClick = {
-                                closeMenu()
-                                onMigrate()
-                            },
-                        )
-                        DropdownMenuItem(
-                            text = { Text(stringResource(MR.strings.migrationListScreen_copyNowActionLabel)) },
-                            onClick = {
-                                closeMenu()
-                                onCopy()
-                            },
                         )
                     }
                 }

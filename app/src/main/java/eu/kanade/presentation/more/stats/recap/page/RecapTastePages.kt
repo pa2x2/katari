@@ -10,25 +10,26 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.more.stats.components.rememberStatisticsDurationFormatter
 import eu.kanade.presentation.more.stats.recap.components.LocalRecapPalette
 import eu.kanade.presentation.more.stats.recap.components.RecapKicker
 import eu.kanade.presentation.more.stats.recap.components.RecapText
-import eu.kanade.presentation.more.stats.recap.components.RecapTypography
 import eu.kanade.presentation.more.stats.recap.components.recapTypeName
 import eu.kanade.presentation.more.stats.recap.components.rememberRecapFormats
 import eu.kanade.presentation.more.stats.recap.motion.RECAP_GROW_MILLIS
 import eu.kanade.presentation.more.stats.recap.motion.recapReveal
 import eu.kanade.presentation.more.stats.recap.motion.rememberRecapEntrance
 import eu.kanade.tachiyomi.ui.stats.recap.story.StatisticsRecapPage
+import mihon.presentation.kit.content.LegendSwatch
+import mihon.presentation.kit.content.StoryMetrics
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -38,36 +39,43 @@ internal fun ColumnScope.RecapTypesPage(page: StatisticsRecapPage.Types) {
     val formats = rememberRecapFormats()
     val formatDuration = rememberStatisticsDurationFormatter()
     val palette = LocalRecapPalette.current
-    val colors = listOf(palette.accent, palette.ink.copy(alpha = 0.75f), palette.muted.copy(alpha = 0.5f))
+    val colors = palette.series
     val top = page.shares.first()
     RecapKicker(stringResource(MR.strings.statistics_recap_types_kicker))
     Spacer(Modifier.weight(1f))
     RecapText(
         text = stringResource(MR.strings.statistics_recap_type_percent, top.percent, recapTypeName(top.type)),
-        style = RecapTypography.Display,
+        role = TextRole.Display,
         order = 1,
     )
     Row(
-        horizontalArrangement = Arrangement.spacedBy(3.dp),
-        modifier = Modifier.fillMaxWidth().height(22.dp).clip(RoundedCornerShape(11.dp)).recapReveal(2),
+        horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xxs),
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(StoryMetrics.splitBarHeight)
+            .clip(KatariTheme.shapes.full)
+            .recapReveal(2),
     ) {
         page.shares.forEachIndexed { index, share ->
             Box(
                 Modifier
                     .weight(share.durationMillis.toFloat().coerceAtLeast(1f))
-                    .height(22.dp)
+                    .height(StoryMetrics.splitBarHeight)
                     .background(colors[index % colors.size]),
             )
         }
     }
-    Column(verticalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.recapReveal(3)) {
+    Column(verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s), modifier = Modifier.recapReveal(3)) {
         page.shares.forEachIndexed { index, share ->
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Box(Modifier.size(10.dp).background(colors[index % colors.size], RoundedCornerShape(3.dp)))
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
+            ) {
+                LegendSwatch(colors[index % colors.size])
                 RecapText(
                     text = "${recapTypeName(share.type)} · ${formatDuration(share.durationMillis)}",
-                    style = RecapTypography.Small,
-                    color = palette.muted,
+                    role = TextRole.Supporting,
+                    tone = ContentTone.Secondary,
                 )
             }
         }
@@ -80,7 +88,7 @@ internal fun ColumnScope.RecapTypesPage(page: StatisticsRecapPage.Types) {
                 recapTypeName(type),
                 months.joinToString(", ") { formats.month(it) },
             ),
-            style = RecapTypography.Body,
+            role = TextRole.Body,
             order = 4,
         )
     }
@@ -91,20 +99,26 @@ internal fun ColumnScope.RecapGenresPage(page: StatisticsRecapPage.Genres) {
     val palette = LocalRecapPalette.current
     val topPercent = page.genres.first().percent.coerceAtLeast(1)
     RecapKicker(stringResource(MR.strings.statistics_recap_genres_kicker))
-    Column(verticalArrangement = Arrangement.spacedBy(14.dp), modifier = Modifier.padding(top = 12.dp)) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.m),
+        modifier = Modifier.padding(top = KatariTheme.spacing.m),
+    ) {
         page.genres.forEachIndexed { index, genre ->
             val grow by rememberRecapEntrance(index + 1, RECAP_GROW_MILLIS)
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.recapReveal(index + 1)) {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xs),
+                modifier = Modifier.recapReveal(index + 1),
+            ) {
                 RecapText(
                     text = genre.name,
-                    style = if (index == 0) RecapTypography.Headline else RecapTypography.Title,
+                    role = if (index == 0) TextRole.Metric else TextRole.SheetTitle,
                     maxLines = 1,
                 )
                 Box(
                     Modifier
                         .fillMaxWidth(genre.percent.toFloat() / topPercent * grow.coerceAtLeast(0.01f))
-                        .height(6.dp)
-                        .background(if (index == 0) palette.accent else palette.accent.copy(alpha = 0.5f), BarShape),
+                        .height(StoryMetrics.rankBarHeight)
+                        .background(if (index == 0) palette.accent else palette.accentMuted, KatariTheme.shapes.full),
                 )
             }
         }
@@ -117,9 +131,7 @@ internal fun ColumnScope.RecapGenresPage(page: StatisticsRecapPage.Genres) {
             page.topGenreTitles,
             page.topTitleCount,
         ),
-        style = RecapTypography.Body,
+        role = TextRole.Body,
         order = 5,
     )
 }
-
-private val BarShape = RoundedCornerShape(3.dp)

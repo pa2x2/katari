@@ -24,12 +24,12 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import mihon.core.common.image.progressive.ProgressiveImageVisual
+import mihon.entry.viewer.chrome.ui.ReaderMediaLoadOverlay
+import mihon.entry.viewer.chrome.ui.ReaderMediaLoadState
 import okio.Buffer
 import okio.BufferedSource
 import tachiyomi.core.common.util.system.ImageUtil
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.reader.ReaderMediaLoadOverlay
-import tachiyomi.presentation.core.components.reader.ReaderMediaLoadState
 import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable

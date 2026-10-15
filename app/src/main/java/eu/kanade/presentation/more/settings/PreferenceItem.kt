@@ -5,8 +5,6 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
@@ -15,24 +13,21 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.structuralEqualityPolicy
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.more.settings.widget.EditTextPreferenceWidget
 import eu.kanade.presentation.more.settings.widget.InfoWidget
 import eu.kanade.presentation.more.settings.widget.ListPreferenceWidget
 import eu.kanade.presentation.more.settings.widget.MultiSelectListPreferenceWidget
-import eu.kanade.presentation.more.settings.widget.PrefsHorizontalPadding
-import eu.kanade.presentation.more.settings.widget.PrefsVerticalPadding
 import eu.kanade.presentation.more.settings.widget.SwitchPreferenceWidget
 import eu.kanade.presentation.more.settings.widget.TextPreferenceWidget
-import eu.kanade.presentation.more.settings.widget.TitleFontSize
 import eu.kanade.presentation.more.settings.widget.TrackingPreferenceWidget
+import eu.kanade.presentation.more.settings.widget.preferenceHighlight
 import kotlinx.coroutines.launch
-import tachiyomi.presentation.core.components.BaseSliderItem
-import tachiyomi.presentation.core.components.SettingsStepper
+import mihon.presentation.kit.control.Stepper
+import mihon.presentation.kit.list.SliderRow
 import tachiyomi.presentation.core.util.collectAsState
 
+/** Whether the preference being composed is the one settings search opened its screen for. */
 val LocalPreferenceHighlighted = compositionLocalOf(structuralEqualityPolicy()) { false }
-val LocalPreferenceMinHeight = compositionLocalOf(structuralEqualityPolicy()) { 56.dp }
 
 @Composable
 fun StatusWrapper(
@@ -88,25 +83,21 @@ internal fun PreferenceItem(
             }
             is Preference.PreferenceItem.SliderPreference -> {
                 val value by item.preference.collectAsState()
-                BaseSliderItem(
+                SliderRow(
+                    title = item.title,
                     value = value,
                     valueRange = item.valueRange,
-                    steps = item.steps,
-                    title = item.title,
-                    subtitle = item.subtitle,
-                    valueString = item.valueText(value),
-                    onChange = { newValue ->
+                    onValueChange = { newValue ->
                         scope.launch {
                             if (item.onValueChanged(newValue)) {
                                 item.preference.set(newValue)
                             }
                         }
                     },
-                    titleStyle = MaterialTheme.typography.titleLarge.copy(fontSize = TitleFontSize),
-                    modifier = Modifier.padding(
-                        horizontal = PrefsHorizontalPadding,
-                        vertical = PrefsVerticalPadding,
-                    ),
+                    modifier = Modifier.preferenceHighlight(),
+                    subtitle = item.subtitle,
+                    valueText = item.valueText(value),
+                    steps = item.steps,
                 )
             }
             is Preference.PreferenceItem.StepperPreference -> {
@@ -116,7 +107,7 @@ internal fun PreferenceItem(
                     subtitle = item.subtitle,
                     isProfileSpecific = showProfileChip && item.isProfileSpecific,
                     widget = {
-                        SettingsStepper(
+                        Stepper(
                             value = value,
                             valueRange = item.valueRange,
                             step = item.step,

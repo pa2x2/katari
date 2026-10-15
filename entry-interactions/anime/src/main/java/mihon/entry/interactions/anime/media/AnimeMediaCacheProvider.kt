@@ -1,6 +1,5 @@
 package mihon.entry.interactions.anime.media
 
-import eu.kanade.tachiyomi.source.entry.EntryType
 import mihon.entry.interactions.media.EntryMediaCacheArtifact
 import mihon.entry.interactions.media.EntryMediaCacheAutoClearPreference
 import mihon.entry.interactions.media.EntryMediaCacheId
@@ -11,7 +10,6 @@ import tachiyomi.i18n.*
 internal class AnimeMediaCacheProvider(
     playerCache: () -> EntryPlayerCache,
 ) : EntryMediaCacheProvider {
-    override val type = EntryType.ANIME
     override val artifacts: List<EntryMediaCacheArtifact> = listOf(AnimePlaybackCacheArtifact(playerCache))
 }
 

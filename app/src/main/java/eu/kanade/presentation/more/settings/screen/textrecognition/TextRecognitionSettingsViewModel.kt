@@ -6,6 +6,10 @@ import android.graphics.ImageDecoder
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.ContributesIntoMap
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metrox.viewmodel.ViewModelKey
 import eu.kanade.presentation.more.settings.screen.textrecognition.language.librarySeriesLanguages
 import eu.kanade.presentation.more.settings.screen.textrecognition.language.textRecognitionSuggestedLanguages
 import kotlinx.coroutines.flow.SharingStarted
@@ -13,6 +17,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import mihon.app.di.AppUiScope
 import mihon.entry.interactions.catalogue.EntryCatalogueFeature
 import mihon.language.api.tag.LanguageTag
 import mihon.model.artifacts.api.ModelArtifactStore
@@ -27,18 +32,19 @@ import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.domain.entry.repository.EntryRepository
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 import java.util.Locale
 
+@Inject
+@ViewModelKey
+@ContributesIntoMap(AppUiScope::class)
 internal class TextRecognitionSettingsViewModel(
-    feature: TextRecognitionFeature = Injekt.get(),
-    val hostActions: TextRecognitionHostActions = Injekt.get(),
-    modelStore: ModelArtifactStore = Injekt.get(),
-    private val application: Application = Injekt.get(),
-    preferenceStore: PreferenceStore = Injekt.get(),
-    entryRepository: EntryRepository = Injekt.get(),
-    catalogue: EntryCatalogueFeature = Injekt.get(),
+    feature: TextRecognitionFeature,
+    val hostActions: TextRecognitionHostActions,
+    modelStore: ModelArtifactStore,
+    private val application: Application,
+    preferenceStore: PreferenceStore,
+    entryRepository: EntryRepository,
+    catalogue: EntryCatalogueFeature,
 ) : ViewModel() {
     /** The playground language last chosen, so trying another image does not start from the device language. */
     private val playgroundLanguage = preferenceStore.getString(Preference.appStateKey(PLAYGROUND_LANGUAGE_KEY), "")

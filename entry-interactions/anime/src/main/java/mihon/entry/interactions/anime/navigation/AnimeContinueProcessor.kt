@@ -1,7 +1,6 @@
 package mihon.entry.interactions.anime.navigation
 
 import android.content.Context
-import eu.kanade.tachiyomi.source.entry.EntryType
 import mihon.entry.interactions.anime.runtime.requireAnime
 import mihon.entry.interactions.anime.state.positionMs
 import mihon.entry.interactions.navigation.EntryContinueProcessor
@@ -18,7 +17,6 @@ internal class AnimeContinueProcessor(
     private val entryProgressRepository: EntryProgressRepository,
     private val openProcessor: AnimeOpenProcessor,
 ) : EntryContinueProcessor {
-    override val type: EntryType = EntryType.ANIME
 
     override suspend fun findNext(entry: Entry): EntryChapter? {
         entry.requireAnime()

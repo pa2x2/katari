@@ -1,11 +1,9 @@
 package eu.kanade.presentation.more.settings.screen
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -15,12 +13,12 @@ import eu.kanade.presentation.more.settings.screen.tts.TtsSettingsViewModel
 import eu.kanade.presentation.more.settings.screen.tts.engine.TtsEnginePickerScreen
 import eu.kanade.presentation.more.settings.screen.tts.presentTtsHostActionResult
 import eu.kanade.presentation.more.settings.screen.tts.presentation.TtsSettingsContent
+import eu.kanade.presentation.more.settings.screen.tts.presentation.ttsSettingsPreferences
 import eu.kanade.presentation.more.settings.screen.tts.voice.TtsDefaultVoicePickerScreen
 import eu.kanade.presentation.more.settings.screen.tts.voice.TtsVoiceOverridesScreen
 import eu.kanade.presentation.util.LocalBackPress
 import eu.kanade.tachiyomi.ui.base.viewmodel.rememberScreenViewModel
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.i18n.stringResource
 
 object SettingsTtsScreen : SearchableSettings {
 
@@ -29,33 +27,7 @@ object SettingsTtsScreen : SearchableSettings {
     override fun getTitleRes() = MR.strings.tts_title
 
     @Composable
-    override fun getPreferences(): List<Preference> = listOf(
-        Preference.PreferenceGroup(
-            title = stringResource(MR.strings.tts_settings_playground),
-            preferenceItems = listOf(
-                Preference.PreferenceItem.TextPreference(
-                    title = stringResource(MR.strings.tts_settings_engine),
-                    isProfileSpecific = true,
-                ),
-                Preference.PreferenceItem.TextPreference(
-                    title = stringResource(MR.strings.tts_settings_default_voice),
-                    isProfileSpecific = true,
-                ),
-                Preference.PreferenceItem.TextPreference(
-                    title = stringResource(MR.strings.tts_settings_language_overrides),
-                    isProfileSpecific = true,
-                ),
-                Preference.PreferenceItem.TextPreference(
-                    title = stringResource(MR.strings.tts_settings_pitch),
-                    isProfileSpecific = true,
-                ),
-                Preference.PreferenceItem.TextPreference(
-                    title = stringResource(MR.strings.tts_settings_playground),
-                    subtitle = stringResource(MR.strings.tts_settings_playground_summary),
-                ),
-            ),
-        ),
-    )
+    override fun getPreferences(): List<Preference> = ttsSettingsPreferences()
 
     @Composable
     override fun Content() {
@@ -64,24 +36,10 @@ object SettingsTtsScreen : SearchableSettings {
         val backPress = LocalBackPress.current
         val model = rememberTtsSettingsViewModel()
         val state by model.state.collectAsState()
-        val searchHighlightKey = remember { SearchableSettings.highlightKey }
 
         RefreshTtsSettingsOnResume(model)
-        DisposableEffect(searchHighlightKey) {
-            onDispose {
-                if (SearchableSettings.highlightKey == searchHighlightKey) {
-                    SearchableSettings.highlightKey = null
-                }
-            }
-        }
         TtsSettingsContent(
             state = state,
-            searchHighlightKey = searchHighlightKey,
-            onSearchHighlightConsumed = { key ->
-                if (SearchableSettings.highlightKey == key) {
-                    SearchableSettings.highlightKey = null
-                }
-            },
             onBack = backPress?.let { { it.invoke() } },
             onChooseEngine = { navigator.push(TtsEnginePickerScreen()) },
             onChooseDefaultVoice = { navigator.push(TtsDefaultVoicePickerScreen()) },
@@ -111,4 +69,4 @@ object SettingsTtsScreen : SearchableSettings {
 
 @Composable
 internal fun rememberTtsSettingsViewModel(): TtsSettingsViewModel =
-    SettingsTtsScreen.rememberScreenViewModel { TtsSettingsViewModel() }
+    SettingsTtsScreen.rememberScreenViewModel<TtsSettingsViewModel>()

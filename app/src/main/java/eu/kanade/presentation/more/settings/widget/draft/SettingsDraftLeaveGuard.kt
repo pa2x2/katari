@@ -1,15 +1,15 @@
 package eu.kanade.presentation.more.settings.widget.draft
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.dialog.Dialog
+import mihon.presentation.kit.dialog.DialogAction
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -33,37 +33,33 @@ fun rememberSettingsDraftLeaveGuard(
     BackHandler(enabled = hasUnsavedChanges) { confirming = true }
 
     if (confirming) {
-        AlertDialog(
+        Dialog(
             onDismissRequest = { confirming = false },
-            title = { Text(stringResource(MR.strings.settings_draft_leave_title)) },
-            text = { Text(stringResource(MR.strings.settings_draft_leave_message)) },
-            confirmButton = {
-                TextButton(
-                    enabled = saveEnabled,
-                    onClick = {
-                        confirming = false
-                        onSave()
-                        leave?.invoke()
-                    },
-                ) {
-                    Text(stringResource(MR.strings.action_save))
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = {
-                        confirming = false
-                        onDiscard()
-                        leave?.invoke()
-                    },
-                ) {
-                    Text(stringResource(MR.strings.action_discard))
-                }
-                TextButton(onClick = { confirming = false }) {
-                    Text(stringResource(MR.strings.settings_draft_keep_editing))
-                }
-            },
-        )
+            title = stringResource(MR.strings.settings_draft_leave_title),
+            confirm = DialogAction(
+                label = stringResource(MR.strings.action_save),
+                enabled = saveEnabled,
+                onClick = {
+                    confirming = false
+                    onSave()
+                    leave?.invoke()
+                },
+            ),
+            neutral = DialogAction(
+                label = stringResource(MR.strings.action_discard),
+                onClick = {
+                    confirming = false
+                    onDiscard()
+                    leave?.invoke()
+                },
+            ),
+            dismiss = DialogAction(
+                label = stringResource(MR.strings.settings_draft_keep_editing),
+                onClick = { confirming = false },
+            ),
+        ) {
+            Text(stringResource(MR.strings.settings_draft_leave_message))
+        }
     }
 
     return { if (unsaved) confirming = true else leave?.invoke() }

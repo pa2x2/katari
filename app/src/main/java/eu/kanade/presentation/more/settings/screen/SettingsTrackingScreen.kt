@@ -1,24 +1,6 @@
 package eu.kanade.presentation.more.settings.screen
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.text.input.TextFieldLineLimits
-import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.foundation.text.input.TextObfuscationMode
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedSecureTextField
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.collectAsState
@@ -27,44 +9,31 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
-import androidx.compose.ui.semantics.contentType
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import eu.kanade.domain.track.model.AutoTrackState
-import eu.kanade.domain.track.service.TrackPreferences
 import eu.kanade.presentation.more.settings.Preference
+import eu.kanade.presentation.more.settings.screen.tracking.TrackingLoginDialog
+import eu.kanade.presentation.more.settings.screen.tracking.TrackingLogoutDialog
 import eu.kanade.tachiyomi.util.system.openInBrowser
 import eu.kanade.tachiyomi.util.system.toast
 import logcat.LogPriority
+import mihon.app.di.appGraph
 import mihon.entry.interactions.tracking.EntryTrackingAccount
 import mihon.entry.interactions.tracking.EntryTrackingAccountOperationResult
 import mihon.entry.interactions.tracking.EntryTrackingCredentialIdentity
-import mihon.entry.interactions.tracking.EntryTrackingFeature
 import mihon.entry.interactions.tracking.EntryTrackingLoginMethod
 import mihon.entry.interactions.tracking.EntryTrackingServiceId
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.automirroredrounded.Help
-import mihon.icons.materialsymbols.rounded.Close
-import mihon.icons.materialsymbols.rounded.Visibility
-import mihon.icons.materialsymbols.rounded.VisibilityOff
+import mihon.presentation.kit.button.IconButton
 import tachiyomi.core.common.Constants
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.withUIContext
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
 object SettingsTrackingScreen : SearchableSettings {
 
@@ -75,19 +44,18 @@ object SettingsTrackingScreen : SearchableSettings {
     @Composable
     override fun RowScope.AppBarAction() {
         val uriHandler = LocalUriHandler.current
-        IconButton(onClick = { uriHandler.openUri("${Constants.URL_GUIDE}tracking/") }) {
-            Icon(
-                imageVector = MaterialSymbols.AutoMirroredRounded.Help,
-                contentDescription = stringResource(MR.strings.tracking_guide),
-            )
-        }
+        IconButton(
+            icon = MaterialSymbols.AutoMirroredRounded.Help,
+            contentDescription = stringResource(MR.strings.tracking_guide),
+            onClick = { uriHandler.openUri("${Constants.URL_GUIDE}tracking/") },
+        )
     }
 
     @Composable
     override fun getPreferences(): List<Preference> {
         val context = LocalContext.current
-        val trackPreferences = remember { Injekt.get<TrackPreferences>() }
-        val trackingFeature = remember { Injekt.get<EntryTrackingFeature>() }
+        val trackPreferences = remember { context.appGraph.trackPreferences }
+        val trackingFeature = remember { context.appGraph.entryTrackingFeature }
         val scope = rememberCoroutineScope()
         val accountSnapshot by trackingFeature.observeAccounts().collectAsState(trackingFeature.currentAccounts())
 
@@ -221,188 +189,6 @@ object SettingsTrackingScreen : SearchableSettings {
                         } + listOf(Preference.PreferenceItem.InfoPreference(enhancedTrackerInfo))
                     ),
             ),
-        )
-    }
-
-    @Composable
-    private fun TrackingLoginDialog(
-        account: EntryTrackingAccount,
-        storedUsername: String,
-        storedPassword: String,
-        trackingFeature: EntryTrackingFeature,
-        onDismissRequest: () -> Unit,
-    ) {
-        val context = LocalContext.current
-        val scope = rememberCoroutineScope()
-
-        val username = remember(storedUsername) { TextFieldState(storedUsername) }
-        val password = remember(storedPassword) { TextFieldState(storedPassword) }
-        var processing by remember { mutableStateOf(false) }
-        var inputError by remember { mutableStateOf(false) }
-
-        AlertDialog(
-            onDismissRequest = onDismissRequest,
-            title = {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = stringResource(MR.strings.login_title, account.service.name),
-                        modifier = Modifier.weight(1f),
-                    )
-                    IconButton(onClick = onDismissRequest) {
-                        Icon(
-                            imageVector = MaterialSymbols.Rounded.Close,
-                            contentDescription = stringResource(MR.strings.action_close),
-                        )
-                    }
-                }
-            },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    OutlinedTextField(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .semantics { contentType = ContentType.Username + ContentType.EmailAddress },
-                        state = username,
-                        label = {
-                            val label = when (
-                                (account.loginMethod as EntryTrackingLoginMethod.Credentials).identity
-                            ) {
-                                EntryTrackingCredentialIdentity.USERNAME -> MR.strings.username
-                                EntryTrackingCredentialIdentity.EMAIL -> MR.strings.email
-                            }
-                            Text(text = stringResource(label))
-                        },
-                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-                        lineLimits = TextFieldLineLimits.SingleLine,
-                        isError = inputError && !processing,
-                    )
-
-                    var hidePassword by remember { mutableStateOf(true) }
-                    OutlinedSecureTextField(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .semantics { contentType = ContentType.Password },
-                        state = password,
-                        label = { Text(text = stringResource(MR.strings.password)) },
-                        trailingIcon = {
-                            IconButton(onClick = { hidePassword = !hidePassword }) {
-                                Icon(
-                                    imageVector = if (hidePassword) {
-                                        MaterialSymbols.Rounded.Visibility
-                                    } else {
-                                        MaterialSymbols.Rounded.VisibilityOff
-                                    },
-                                    contentDescription = stringResource(
-                                        if (hidePassword) {
-                                            MR.strings.action_show_password
-                                        } else {
-                                            MR.strings.action_hide_password
-                                        },
-                                    ),
-                                )
-                            }
-                        },
-                        textObfuscationMode = if (hidePassword) {
-                            TextObfuscationMode.Hidden
-                        } else {
-                            TextObfuscationMode.Visible
-                        },
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Password,
-                            imeAction = ImeAction.Done,
-                        ),
-                        isError = inputError && !processing,
-                    )
-                }
-            },
-            confirmButton = {
-                Button(
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = !processing && username.text.isNotBlank() && password.text.isNotBlank(),
-                    onClick = {
-                        scope.launchIO {
-                            processing = true
-                            val result = trackingFeature.loginWithCredentials(
-                                serviceId = account.service.id,
-                                username = username.text.toString(),
-                                password = password.text.toString(),
-                            )
-                            inputError = result !is EntryTrackingAccountOperationResult.Completed
-                            when (result) {
-                                EntryTrackingAccountOperationResult.Completed -> withUIContext {
-                                    context.toast(MR.strings.login_success)
-                                    onDismissRequest()
-                                }
-                                is EntryTrackingAccountOperationResult.Failed -> withUIContext {
-                                    context.toast(result.cause.message.toString())
-                                }
-                                is EntryTrackingAccountOperationResult.ExternalAuthorization,
-                                is EntryTrackingAccountOperationResult.Unavailable,
-                                -> Unit
-                            }
-                            processing = false
-                        }
-                    },
-                ) {
-                    val id = if (processing) MR.strings.logging_in else MR.strings.login
-                    Text(text = stringResource(id))
-                }
-            },
-        )
-    }
-
-    @Composable
-    private fun TrackingLogoutDialog(
-        account: EntryTrackingAccount,
-        trackingFeature: EntryTrackingFeature,
-        onDismissRequest: () -> Unit,
-    ) {
-        val context = LocalContext.current
-        val scope = rememberCoroutineScope()
-        AlertDialog(
-            onDismissRequest = onDismissRequest,
-            title = {
-                Text(
-                    text = stringResource(MR.strings.logout_title, account.service.name),
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            },
-            confirmButton = {
-                Row(horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.extraSmall)) {
-                    OutlinedButton(
-                        modifier = Modifier.weight(1f),
-                        onClick = onDismissRequest,
-                    ) {
-                        Text(text = stringResource(MR.strings.action_cancel))
-                    }
-                    Button(
-                        modifier = Modifier.weight(1f),
-                        onClick = {
-                            scope.launchIO {
-                                when (val result = trackingFeature.logout(account.service.id)) {
-                                    EntryTrackingAccountOperationResult.Completed -> withUIContext {
-                                        onDismissRequest()
-                                        context.toast(MR.strings.logout_success)
-                                    }
-                                    is EntryTrackingAccountOperationResult.Failed -> withUIContext {
-                                        context.toast(result.cause.message.toString())
-                                    }
-                                    is EntryTrackingAccountOperationResult.ExternalAuthorization,
-                                    is EntryTrackingAccountOperationResult.Unavailable,
-                                    -> Unit
-                                }
-                            }
-                        },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.error,
-                            contentColor = MaterialTheme.colorScheme.onError,
-                        ),
-                    ) {
-                        Text(text = stringResource(MR.strings.logout))
-                    }
-                }
-            },
         )
     }
 }

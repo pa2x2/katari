@@ -4,12 +4,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.tachiyomi.source.entry.EntryType
-import tachiyomi.presentation.core.components.Badge
+import mihon.presentation.kit.content.Badge
 
 @Composable
 fun CatalogTypeBadge(entryType: EntryType, modifier: Modifier = Modifier) {
     Badge(
-        imageVector = entryType.entryTypePresentation().badgeIcon,
+        icon = entryType.entryTypePresentation().badgeIcon,
         modifier = modifier,
     )
 }

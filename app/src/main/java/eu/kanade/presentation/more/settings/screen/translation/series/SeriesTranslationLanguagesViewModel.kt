@@ -2,6 +2,10 @@ package eu.kanade.presentation.more.settings.screen.translation.series
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.ContributesIntoMap
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metrox.viewmodel.ViewModelKey
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
@@ -10,21 +14,23 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import mihon.app.di.AppUiScope
 import mihon.language.api.tag.LanguageTag
 import tachiyomi.data.ActiveProfileProvider
 import tachiyomi.domain.entry.model.EntryCover
 import tachiyomi.domain.entry.model.asEntryCover
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.entry.repository.EntryTranslationLanguagesRepository
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
 /** The series of the active profile that use their own translation languages, and clearing them. */
 @OptIn(ExperimentalCoroutinesApi::class)
+@Inject
+@ViewModelKey
+@ContributesIntoMap(AppUiScope::class)
 internal class SeriesTranslationLanguagesViewModel(
-    private val repository: EntryTranslationLanguagesRepository = Injekt.get(),
-    private val entryRepository: EntryRepository = Injekt.get(),
-    private val activeProfile: ActiveProfileProvider = Injekt.get(),
+    private val repository: EntryTranslationLanguagesRepository,
+    private val entryRepository: EntryRepository,
+    private val activeProfile: ActiveProfileProvider,
 ) : ViewModel() {
     /** Ordered by series title; null until first loaded. */
     val series: StateFlow<List<SeriesTranslationLanguages>?> = activeProfile.activeProfileIdFlow

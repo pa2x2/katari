@@ -4,18 +4,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.screen.duplicate.DuplicateTitleExclusionsScreen
 import kotlinx.collections.immutable.persistentListOf
+import mihon.app.di.appGraph
 import tachiyomi.domain.library.service.DuplicatePreferences
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
 object DuplicateDetectionSettingsScreen : SearchableSettings {
     private fun readResolve(): Any = DuplicateDetectionSettingsScreen
@@ -26,8 +26,9 @@ object DuplicateDetectionSettingsScreen : SearchableSettings {
 
     @Composable
     override fun getPreferences(): List<Preference> {
+        val context = LocalContext.current
         val navigator = LocalNavigator.currentOrThrow
-        val duplicatePreferences = remember { Injekt.get<DuplicatePreferences>() }
+        val duplicatePreferences = remember { context.appGraph.duplicatePreferences }
 
         val extendedEnabled by duplicatePreferences.extendedDuplicateDetectionEnabled.collectAsState()
         val descriptionWeight by duplicatePreferences.descriptionWeight.collectAsState()

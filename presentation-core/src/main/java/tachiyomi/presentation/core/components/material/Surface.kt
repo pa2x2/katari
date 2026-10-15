@@ -37,7 +37,7 @@ import kotlin.math.ln
  */
 @Composable
 @NonRestartableComposable
-fun Surface(
+internal fun Surface(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     onLongClick: (() -> Unit)? = null,

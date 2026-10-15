@@ -1,5 +1,6 @@
 package mihon.entry.interactions.library.membership
 
+import mihon.entry.interactions.lifecycle.EntryLifecycleConsequenceFailure
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.entry.model.DuplicateEntryCandidate
 import tachiyomi.domain.entry.model.Entry
@@ -33,7 +34,7 @@ sealed interface EntryLibraryCategorySelection {
 sealed interface EntryLibraryAddResult {
     data class Added(
         val entry: Entry,
-        val consequenceFailures: List<EntryLibraryConsequenceFailure>,
+        val consequenceFailures: List<EntryLifecycleConsequenceFailure>,
     ) : EntryLibraryAddResult
 
     data class AlreadyInLibrary(
@@ -63,7 +64,7 @@ sealed interface EntryLibraryRemovalResult {
     data class Removed(
         val entries: List<Entry>,
         val downloadDecisionEntries: List<Entry>,
-        val consequenceFailures: List<EntryLibraryConsequenceFailure>,
+        val consequenceFailures: List<EntryLifecycleConsequenceFailure>,
     ) : EntryLibraryRemovalResult
 
     data class Failed(
@@ -71,9 +72,3 @@ sealed interface EntryLibraryRemovalResult {
         val cause: Throwable,
     ) : EntryLibraryRemovalResult
 }
-
-data class EntryLibraryConsequenceFailure(
-    val participantId: String,
-    val ownerId: String,
-    val cause: Throwable,
-)

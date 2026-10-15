@@ -1,27 +1,18 @@
 package mihon.translation.ui.presentation.language
 
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.automirroredrounded.ArrowForward
 import mihon.icons.materialsymbols.rounded.ArrowDropDown
+import mihon.presentation.kit.chip.AssistChip
+import mihon.presentation.kit.content.Icon
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -55,7 +46,7 @@ internal fun TranslationTargetLanguageChip(
     )
 }
 
-/** Both languages of a translation, each opening its own picker. */
+/** Both languages of a translation, each opening its own picker; long names shorten to keep both in view. */
 @Composable
 internal fun TranslationLanguageChipPair(
     sourceLanguage: String,
@@ -68,9 +59,9 @@ internal fun TranslationLanguageChipPair(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        TranslationSourceLanguageChip(sourceLanguage, onChooseSource)
+        TranslationSourceLanguageChip(sourceLanguage, onChooseSource, Modifier.weight(1f, fill = false))
         TranslationLanguageArrow()
-        TranslationTargetLanguageChip(targetLanguage, onChooseTarget)
+        TranslationTargetLanguageChip(targetLanguage, onChooseTarget, Modifier.weight(1f, fill = false))
     }
 }
 
@@ -81,9 +72,9 @@ internal fun TranslationLanguageArrow() {
         imageVector = MaterialSymbols.AutoMirroredRounded.ArrowForward,
         contentDescription = null,
         modifier = Modifier
-            .padding(horizontal = 4.dp)
-            .size(16.dp),
-        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            .padding(horizontal = KatariTheme.spacing.xs)
+            .size(KatariTheme.sizes.iconSmall),
+        tone = ContentTone.Secondary,
     )
 }
 
@@ -94,35 +85,11 @@ private fun TranslationLanguageChip(
     onClick: () -> Unit,
     modifier: Modifier,
 ) {
-    Surface(
-        modifier = modifier.minimumInteractiveComponentSize(),
-        shape = MaterialTheme.shapes.small,
-        color = Color.Transparent,
-        contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-    ) {
-        Row(
-            modifier = Modifier
-                .clickable(onClickLabel = onClickLabel, role = Role.Button, onClick = onClick)
-                .heightIn(min = CHIP_HEIGHT)
-                .padding(start = 8.dp, end = 2.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                text = language,
-                modifier = Modifier.widthIn(max = CHIP_LABEL_MAXIMUM_WIDTH),
-                style = MaterialTheme.typography.labelLarge,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            Icon(
-                imageVector = MaterialSymbols.Rounded.ArrowDropDown,
-                contentDescription = null,
-                modifier = Modifier.size(18.dp),
-            )
-        }
-    }
+    AssistChip(
+        label = language,
+        onClick = onClick,
+        modifier = modifier,
+        trailingIcon = MaterialSymbols.Rounded.ArrowDropDown,
+        onClickLabel = onClickLabel,
+    )
 }
-
-private val CHIP_HEIGHT = 32.dp
-private val CHIP_LABEL_MAXIMUM_WIDTH = 112.dp

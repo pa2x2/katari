@@ -9,7 +9,6 @@ import android.widget.Toast
 import androidx.core.net.toUri
 import eu.kanade.presentation.webview.WebViewScreenContent
 import eu.kanade.tachiyomi.R
-import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.ui.base.activity.BaseActivity
 import eu.kanade.tachiyomi.util.system.WebViewUtil
 import eu.kanade.tachiyomi.util.system.openInBrowser
@@ -17,17 +16,16 @@ import eu.kanade.tachiyomi.util.system.toShareIntent
 import eu.kanade.tachiyomi.util.system.toast
 import eu.kanade.tachiyomi.util.view.setComposeContent
 import logcat.LogPriority
-import mihon.entry.interactions.source.EntryWebViewFeature
+import mihon.app.di.appGraph
 import mihon.entry.interactions.source.EntryWebViewHeadersResolution
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.i18n.*
-import uy.kohesive.injekt.injectLazy
 
 class WebViewActivity : BaseActivity() {
 
-    private val webViewFeature: EntryWebViewFeature by injectLazy()
-    private val network: NetworkHelper by injectLazy()
+    private val webViewFeature by lazy { appGraph.entryWebViewFeature }
+    private val network by lazy { appGraph.networkHelper }
 
     private var assistUrl: String? = null
 

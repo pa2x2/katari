@@ -5,20 +5,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.SheetValue
-import androidx.compose.material3.rememberBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import mihon.book.api.document.BookDocumentLinkTarget
+import mihon.presentation.kit.sheet.Sheet
+import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.domain.entry.model.EntryChapter
 
 /** A separate viewport/selection lifetime using the same semantic blocks and position restoration as the reader. */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun BookDocumentReferenceSheet(
     section: BookDocumentSection<EntryChapter>,
@@ -26,13 +22,7 @@ internal fun BookDocumentReferenceSheet(
     onLink: (BookDocumentSection<EntryChapter>, BookDocumentLinkTarget) -> Unit,
     onExternalLink: (String) -> Unit,
 ) {
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = rememberBottomSheetState(
-            initialValue = SheetValue.Hidden,
-            enabledValues = setOf(SheetValue.Hidden, SheetValue.Expanded),
-        ),
-    ) {
+    Sheet(onDismissRequest = onDismiss, capHeight = true) {
         key(section.key) {
             val listState = rememberLazyListState()
             LaunchedEffect(section.initialPosition, LocalBookDocumentTextScale.current) {
@@ -46,7 +36,10 @@ internal fun BookDocumentReferenceSheet(
                 chapterId = section.owner.id,
                 ownerIdentity = "book-document-reference:${section.key}",
             ) {
-                LazyColumn(state = listState, modifier = Modifier.fillMaxSize().padding(bottom = 24.dp)) {
+                LazyColumn(
+                    state = listState,
+                    modifier = Modifier.fillMaxSize().padding(bottom = KatariTheme.spacing.xl),
+                ) {
                     items(section.viewerBlocks, key = { it.key }) { item ->
                         BookDocumentViewerBlock(item, onLink, onExternalLink, onReaderTap = {})
                     }

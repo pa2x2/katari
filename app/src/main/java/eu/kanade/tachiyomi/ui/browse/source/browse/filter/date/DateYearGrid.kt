@@ -8,12 +8,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -28,12 +22,18 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.unit.dp
 import eu.kanade.tachiyomi.source.entry.filter.EntryDateFilter
 import eu.kanade.tachiyomi.source.entry.filter.EntryPartialDate
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.automirroredrounded.KeyboardArrowLeft
 import mihon.icons.materialsymbols.automirroredrounded.KeyboardArrowRight
+import mihon.presentation.kit.button.Button
+import mihon.presentation.kit.button.ButtonStyle
+import mihon.presentation.kit.button.IconButton
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.field.TextField
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -53,7 +53,7 @@ internal fun DateYearGrid(
         keyboard?.hide()
         jumping = false
     }
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s)) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Text(
                 stringResource(
@@ -62,48 +62,53 @@ internal fun DateYearGrid(
                     (state.yearPageStart + 11).coerceAtMost(9999),
                 ),
                 modifier = Modifier.weight(1f),
-                style = MaterialTheme.typography.titleSmall,
+                role = TextRole.Label,
             )
             IconButton(
-                enabled = state.yearPageStart > (filter.minimum?.year ?: 1),
+                icon = MaterialSymbols.AutoMirroredRounded.KeyboardArrowLeft,
+                contentDescription = stringResource(MR.strings.filter_previous_years),
                 onClick = { onChange(state.browseYears(-12)) },
-            ) {
-                Icon(
-                    MaterialSymbols.AutoMirroredRounded.KeyboardArrowLeft,
-                    stringResource(MR.strings.filter_previous_years),
-                )
-            }
+                enabled = state.yearPageStart > (filter.minimum?.year ?: 1),
+            )
             IconButton(
-                enabled = state.yearPageStart + 12 <= (filter.maximum?.year ?: 9999),
+                icon = MaterialSymbols.AutoMirroredRounded.KeyboardArrowRight,
+                contentDescription = stringResource(MR.strings.filter_next_years),
                 onClick = { onChange(state.browseYears(12)) },
-            ) {
-                Icon(
-                    MaterialSymbols.AutoMirroredRounded.KeyboardArrowRight,
-                    stringResource(MR.strings.filter_next_years),
-                )
-            }
+                enabled = state.yearPageStart + 12 <= (filter.maximum?.year ?: 9999),
+            )
         }
-        TextButton(onClick = { jumping = !jumping }) { Text(stringResource(MR.strings.filter_jump_year)) }
+        Button(
+            label = stringResource(MR.strings.filter_jump_year),
+            onClick = { jumping = !jumping },
+            style = ButtonStyle.Text,
+        )
         if (jumping) {
             LaunchedEffect(Unit) { focusRequester.requestFocus() }
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
+            ) {
+                TextField(
                     value = input,
                     onValueChange = { input = it },
-                    label = { Text(stringResource(MR.strings.filter_precision_year)) },
-                    singleLine = true,
-                    modifier = Modifier.weight(1f).focusRequester(focusRequester),
+                    modifier = Modifier
+                        .weight(1f)
+                        .focusRequester(focusRequester),
+                    label = stringResource(MR.strings.filter_precision_year),
+                    isError = input.isNotBlank() && jumpYear == null,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Go),
                     keyboardActions = KeyboardActions(onGo = { if (jumpYear != null) jump() }),
-                    isError = input.isNotBlank() && jumpYear == null,
                 )
-                TextButton(enabled = jumpYear != null, onClick = jump) {
-                    Text(stringResource(MR.strings.filter_jump_go))
-                }
+                Button(
+                    label = stringResource(MR.strings.filter_jump_go),
+                    onClick = jump,
+                    style = ButtonStyle.Text,
+                    enabled = jumpYear != null,
+                )
             }
         }
         (state.yearPageStart..(state.yearPageStart + 11).coerceAtMost(9999)).toList().chunked(3).forEach { row ->
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s)) {
                 row.forEach { year ->
                     DatePickerCell(
                         label = year.toString(),

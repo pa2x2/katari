@@ -1,5 +1,6 @@
 package tachiyomi.domain.entry.interactor
 
+import dev.zacsweers.metro.Inject
 import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
@@ -8,6 +9,7 @@ import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.repository.EntryRepository
 
+@Inject
 class GetEntry(
     private val entryRepository: EntryRepository,
 ) {

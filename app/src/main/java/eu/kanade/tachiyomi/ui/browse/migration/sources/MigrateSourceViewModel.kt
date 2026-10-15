@@ -3,6 +3,10 @@ package eu.kanade.tachiyomi.ui.browse.migration.sources
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.ContributesIntoMap
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metrox.viewmodel.ViewModelKey
 import eu.kanade.domain.source.interactor.GetSourcesWithFavoriteCount
 import eu.kanade.domain.source.interactor.SetMigrateSorting
 import eu.kanade.domain.source.service.SourcePreferences
@@ -20,6 +24,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import logcat.LogPriority
+import mihon.app.di.AppUiScope
 import mihon.entry.interactions.migration.EntryMigrationAvailability
 import mihon.entry.interactions.migration.EntryMigrationFeature
 import mihon.feature.migration.session.SourceMigrationSessionStore
@@ -31,18 +36,19 @@ import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.source.model.Source
 import tachiyomi.domain.source.service.SourceManager
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 import kotlin.time.Duration.Companion.seconds
 
+@Inject
+@ViewModelKey
+@ContributesIntoMap(AppUiScope::class)
 class MigrateSourceViewModel(
-    private val preferences: SourcePreferences = Injekt.get(),
-    private val getSourcesWithFavoriteCount: GetSourcesWithFavoriteCount = Injekt.get(),
-    private val entryRepository: EntryRepository = Injekt.get(),
-    private val migration: EntryMigrationFeature = Injekt.get(),
-    private val sessionStore: SourceMigrationSessionStore = Injekt.get(),
-    private val profileManager: ProfileManager = Injekt.get(),
-    private val sourceManager: SourceManager = Injekt.get(),
+    private val preferences: SourcePreferences,
+    private val getSourcesWithFavoriteCount: GetSourcesWithFavoriteCount,
+    private val entryRepository: EntryRepository,
+    private val migration: EntryMigrationFeature,
+    private val sessionStore: SourceMigrationSessionStore,
+    private val profileManager: ProfileManager,
+    private val sourceManager: SourceManager,
 ) : ViewModel() {
 
     private val _channel = Channel<Event>(Int.MAX_VALUE)

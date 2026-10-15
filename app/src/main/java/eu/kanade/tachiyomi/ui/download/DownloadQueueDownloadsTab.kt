@@ -6,10 +6,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.Icon
-import androidx.compose.material3.SmallExtendedFloatingActionButton
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -19,24 +15,26 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.view.ViewCompat
 import androidx.core.view.updatePadding
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
-import eu.kanade.presentation.components.AppBar
-import eu.kanade.presentation.components.DropdownMenu
-import eu.kanade.presentation.components.NestedMenuItem
 import eu.kanade.presentation.components.TabContent
 import eu.kanade.tachiyomi.databinding.DownloadListBinding
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.automirroredrounded.Sort
 import mihon.icons.materialsymbols.roundedfilled.Pause
 import mihon.icons.materialsymbols.roundedfilled.PlayArrow
+import mihon.presentation.kit.button.FloatingActionButton
+import mihon.presentation.kit.feedback.EmptyScreen
+import mihon.presentation.kit.menu.DropdownMenu
+import mihon.presentation.kit.menu.DropdownMenuItem
+import mihon.presentation.kit.menu.NestedMenuItem
+import mihon.presentation.kit.navigation.AppBar
+import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.screens.EmptyScreen
 import kotlin.math.roundToInt
 
 /** The download queue as a tab of the queue screen, with its sorting, Cancel all and Pause. */
@@ -81,7 +79,7 @@ internal fun downloadQueueDownloadsTab(viewModel: DownloadQueueViewModel): TabCo
                         modifier = Modifier
                             .align(Alignment.BottomEnd)
                             .padding(contentPadding)
-                            .padding(16.dp),
+                            .padding(KatariTheme.spacing.l),
                     )
                 }
             }
@@ -129,17 +127,17 @@ private fun SortMenu(
 ) {
     DropdownMenu(expanded = expanded, onDismissRequest = onDismissRequest) {
         NestedMenuItem(
-            text = { Text(text = stringResource(MR.strings.action_order_by_upload_date)) },
+            label = stringResource(MR.strings.action_order_by_upload_date),
             children = { closeMenu ->
                 DropdownMenuItem(
-                    text = { Text(text = stringResource(MR.strings.action_newest)) },
+                    label = stringResource(MR.strings.action_newest),
                     onClick = {
                         viewModel.reorderQueue({ item -> item.payloadAsDownloadQueueItem().dateUpload }, true)
                         closeMenu()
                     },
                 )
                 DropdownMenuItem(
-                    text = { Text(text = stringResource(MR.strings.action_oldest)) },
+                    label = stringResource(MR.strings.action_oldest),
                     onClick = {
                         viewModel.reorderQueue({ item -> item.payloadAsDownloadQueueItem().dateUpload }, false)
                         closeMenu()
@@ -148,17 +146,17 @@ private fun SortMenu(
             },
         )
         NestedMenuItem(
-            text = { Text(text = stringResource(MR.strings.action_order_by_item_number)) },
+            label = stringResource(MR.strings.action_order_by_item_number),
             children = { closeMenu ->
                 DropdownMenuItem(
-                    text = { Text(text = stringResource(MR.strings.action_asc)) },
+                    label = stringResource(MR.strings.action_asc),
                     onClick = {
                         viewModel.reorderQueue({ item -> item.payloadAsDownloadQueueItem().chapterNumber }, false)
                         closeMenu()
                     },
                 )
                 DropdownMenuItem(
-                    text = { Text(text = stringResource(MR.strings.action_desc)) },
+                    label = stringResource(MR.strings.action_desc),
                     onClick = {
                         viewModel.reorderQueue({ item -> item.payloadAsDownloadQueueItem().chapterNumber }, true)
                         closeMenu()
@@ -172,18 +170,9 @@ private fun SortMenu(
 @Composable
 private fun PauseButton(viewModel: DownloadQueueViewModel, modifier: Modifier) {
     val isRunning by viewModel.isDownloaderRunning.collectAsStateWithLifecycle()
-    SmallExtendedFloatingActionButton(
-        text = { Text(text = stringResource(if (isRunning) MR.strings.action_pause else MR.strings.action_resume)) },
-        icon = {
-            Icon(
-                imageVector = if (isRunning) {
-                    MaterialSymbols.RoundedFilled.Pause
-                } else {
-                    MaterialSymbols.RoundedFilled.PlayArrow
-                },
-                contentDescription = null,
-            )
-        },
+    FloatingActionButton(
+        label = stringResource(if (isRunning) MR.strings.action_pause else MR.strings.action_resume),
+        icon = if (isRunning) MaterialSymbols.RoundedFilled.Pause else MaterialSymbols.RoundedFilled.PlayArrow,
         onClick = { if (isRunning) viewModel.pauseDownloads() else viewModel.startDownloads() },
         modifier = modifier,
     )

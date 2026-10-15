@@ -1,11 +1,15 @@
 package eu.kanade.tachiyomi.ui.download.translation
 
 import android.app.Application
-import androidx.compose.material3.SnackbarHostState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.ContributesIntoMap
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metrox.viewmodel.ViewModelKey
 import eu.kanade.presentation.entry.translation.ChapterTranslateAction
 import eu.kanade.presentation.entry.translation.TranslatableChapter
+import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.ui.entry.translation.ChapterTranslationModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.SharingStarted
@@ -13,30 +17,44 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import mihon.app.di.AppUiScope
 import mihon.entry.interactions.download.EntryDownloadActionFeature
 import mihon.entry.interactions.download.EntryDownloadRuntimeFeature
 import mihon.entry.interactions.download.EntryDownloadState
 import mihon.entry.interactions.translate.EntryTranslateFeature
 import mihon.entry.interactions.translate.EntryTranslateQueueItem
 import mihon.entry.interactions.translate.EntryTranslateWaiting
+import mihon.entry.interactions.translation.EntryTranslationLanguagesFeature
+import mihon.model.artifacts.api.ModelArtifactStore
+import mihon.presentation.kit.feedback.SnackbarHostState
+import mihon.text.recognition.api.host.TextRecognitionHostActions
+import mihon.translation.api.host.TranslationHostActions
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryRepository
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
 /** The translation queue as the queue screen lists it, with pausing, cancelling and retrying its chapters. */
 @OptIn(ExperimentalCoroutinesApi::class)
+@Inject
+@ViewModelKey
+@ContributesIntoMap(AppUiScope::class)
 class TranslationQueueViewModel(
-    application: Application = Injekt.get(),
-    private val feature: EntryTranslateFeature = Injekt.get(),
-    private val entries: EntryRepository = Injekt.get(),
-    private val chapters: EntryChapterRepository = Injekt.get(),
-    private val downloads: EntryDownloadRuntimeFeature = Injekt.get(),
-    private val downloadAction: EntryDownloadActionFeature = Injekt.get(),
+    application: Application,
+    private val feature: EntryTranslateFeature,
+    private val entries: EntryRepository,
+    private val chapters: EntryChapterRepository,
+    private val downloads: EntryDownloadRuntimeFeature,
+    private val downloadAction: EntryDownloadActionFeature,
+    languages: EntryTranslationLanguagesFeature,
+    recognitionHost: TextRecognitionHostActions,
+    translationHost: TranslationHostActions,
+    modelStore: ModelArtifactStore,
 ) : ViewModel() {
     val snackbarHostState = SnackbarHostState()
+
+    /** Whether any Entry type translates in the background, so the queue screen shows a translation tab at all. */
+    val isAvailable: Boolean = EntryType.entries.any(feature::isApplicable)
 
     /** Settles what blocks chapters that failed for want of setup before they are queued again. */
     val translation = ChapterTranslationModel(
@@ -51,10 +69,10 @@ class TranslationQueueViewModel(
             }
         },
         feature = feature,
-        languages = Injekt.get(),
-        recognitionHost = Injekt.get(),
-        translationHost = Injekt.get(),
-        modelStore = Injekt.get(),
+        languages = languages,
+        recognitionHost = recognitionHost,
+        translationHost = translationHost,
+        modelStore = modelStore,
     )
 
     /** The queue in processing order; null until first loaded. */

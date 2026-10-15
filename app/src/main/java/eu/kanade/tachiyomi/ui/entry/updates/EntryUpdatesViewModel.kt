@@ -3,6 +3,13 @@ package eu.kanade.tachiyomi.ui.entry.updates
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.Assisted
+import dev.zacsweers.metro.AssistedFactory
+import dev.zacsweers.metro.AssistedInject
+import dev.zacsweers.metro.ContributesIntoMap
+import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
+import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
 import eu.kanade.tachiyomi.source.visualName
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -11,6 +18,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import mihon.app.di.AppUiScope
 import mihon.feature.library.update.pause.LibrarySourcePauses
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.category.repository.CategoryRepository
@@ -21,24 +29,30 @@ import tachiyomi.domain.library.update.model.EntryUpdateStatus
 import tachiyomi.domain.library.update.repository.LibraryUpdateReportRepository
 import tachiyomi.domain.library.update.repository.LibraryUpdateRulesRepository
 import tachiyomi.domain.source.service.SourceManager
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
 /**
  * How library updates treat one entry, and what the latest update that considered it decided.
  *
  * @param memberIds the entry's merged members, or the entry alone, whose sources may be paused.
  */
+@AssistedInject
 class EntryUpdatesViewModel(
-    private val entryId: Long,
-    memberIds: List<Long>,
-    private val rulesRepository: LibraryUpdateRulesRepository = Injekt.get(),
-    reportRepository: LibraryUpdateReportRepository = Injekt.get(),
-    categoryRepository: CategoryRepository = Injekt.get(),
-    entryRepository: EntryRepository = Injekt.get(),
-    libraryPreferences: LibraryPreferences = Injekt.get(),
-    sourceManager: SourceManager = Injekt.get(),
+    @Assisted private val entryId: Long,
+    @Assisted memberIds: List<Long>,
+    private val rulesRepository: LibraryUpdateRulesRepository,
+    reportRepository: LibraryUpdateReportRepository,
+    categoryRepository: CategoryRepository,
+    entryRepository: EntryRepository,
+    libraryPreferences: LibraryPreferences,
+    sourceManager: SourceManager,
 ) : ViewModel() {
+
+    @AssistedFactory
+    @ManualViewModelAssistedFactoryKey
+    @ContributesIntoMap(AppUiScope::class)
+    interface Factory : ManualViewModelAssistedFactory {
+        fun create(entryId: Long, memberIds: List<Long>): EntryUpdatesViewModel
+    }
 
     val state: StateFlow<EntryUpdatesViewModel.State>
         field = MutableStateFlow<EntryUpdatesViewModel.State>(State())

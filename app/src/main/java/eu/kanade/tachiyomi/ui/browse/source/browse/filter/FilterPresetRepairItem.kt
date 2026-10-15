@@ -5,24 +5,26 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Card
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import eu.kanade.domain.source.model.FilterRestoreIssue
 import eu.kanade.domain.source.model.FilterStateNode
 import eu.kanade.tachiyomi.source.entry.EntryFilter
 import eu.kanade.tachiyomi.source.entry.EntryFilterList
 import eu.kanade.tachiyomi.source.entry.filter.validationIssues
+import mihon.presentation.kit.button.Button
+import mihon.presentation.kit.button.ButtonStyle
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.list.SelectRow
+import mihon.presentation.kit.surface.Card
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.SelectItem
 import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable
@@ -37,36 +39,38 @@ internal fun FilterPresetRepairItem(
     }
     val candidates = leaves(filters).filter { it.accepts(issue.saved) }
     var selected by remember(issue) { mutableStateOf(issue.target) }
-    Card(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
-        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(issue.saved.name, style = MaterialTheme.typography.titleSmall)
-            Text(
-                issue.saved.savedValueLabel(),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+    val spacing = KatariTheme.spacing
+    Card(
+        Modifier
+            .fillMaxWidth()
+            .padding(horizontal = spacing.contentInset, vertical = spacing.s),
+    ) {
+        Column(Modifier.padding(spacing.m), verticalArrangement = Arrangement.spacedBy(spacing.s)) {
+            Text(issue.saved.name, role = TextRole.SectionTitle)
+            Text(issue.saved.savedValueLabel(), role = TextRole.Body, tone = ContentTone.Secondary)
             if (issue.target == null && candidates.isNotEmpty()) {
-                SelectItem(
-                    stringResource(MR.strings.filter_replacement),
-                    arrayOf(stringResource(MR.strings.filter_choose_replacement)) + candidates.map {
-                        it.name
+                SelectRow(
+                    label = stringResource(MR.strings.filter_replacement),
+                    options = listOf(stringResource(MR.strings.filter_choose_replacement)) + candidates.map { it.name },
+                    selectedIndex = (candidates.indexOf(selected) + 1).coerceAtLeast(0),
+                    onSelect = {
+                        selected = candidates.getOrNull(it - 1)
                     },
-                    (
-                        candidates.indexOf(selected) +
-                            1
-                        ).coerceAtLeast(0),
-                ) {
-                    selected = candidates.getOrNull(it - 1)
-                }
+                )
             }
             selected?.let { item(it) }
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                TextButton(enabled = selected != null && selected!!.validationIssues().isEmpty(), onClick = {
-                    onResolve(issue, false)
-                }) { Text(stringResource(MR.strings.filter_use_value)) }
-                TextButton(onClick = {
-                    onResolve(issue, true)
-                }) { Text(stringResource(MR.strings.filter_remove_value)) }
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(spacing.s)) {
+                Button(
+                    label = stringResource(MR.strings.filter_use_value),
+                    onClick = { onResolve(issue, false) },
+                    style = ButtonStyle.Text,
+                    enabled = selected?.validationIssues()?.isEmpty() == true,
+                )
+                Button(
+                    label = stringResource(MR.strings.filter_remove_value),
+                    onClick = { onResolve(issue, true) },
+                    style = ButtonStyle.Text,
+                )
             }
         }
     }

@@ -6,17 +6,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.fastForEach
 import com.cheonjaeung.compose.grid.SimpleGridCells
 import com.cheonjaeung.compose.grid.VerticalGrid
@@ -25,14 +20,16 @@ import kotlinx.datetime.YearMonth
 import kotlinx.datetime.minusMonth
 import kotlinx.datetime.plusMonth
 import kotlinx.datetime.toJavaDayOfWeek
-import mihon.core.designsystem.utils.isExpandedWidthWindow
-import mihon.core.designsystem.utils.isMediumWidthWindow
-import tachiyomi.presentation.core.components.material.padding
+import mihon.presentation.kit.content.CalendarMetrics
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
+import mihon.presentation.kit.theme.WindowWidth
+import mihon.presentation.kit.theme.currentWindowWidth
 import java.time.DayOfWeek
 import java.time.format.TextStyle
 import java.time.temporal.WeekFields
 
-private val FontSize = 16.sp
 private const val DAYS_OF_WEEK = 7
 
 @Composable
@@ -46,7 +43,7 @@ fun Calendar(
     Column(
         modifier = modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(4.dp),
+        verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xs),
     ) {
         CalenderHeader(
             yearMonth = selectedYearMonth,
@@ -54,8 +51,8 @@ fun Calendar(
             onNextClick = { setSelectedYearMonth(selectedYearMonth.plusMonth()) },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = MaterialTheme.padding.small)
-                .padding(start = MaterialTheme.padding.medium),
+                .padding(vertical = KatariTheme.spacing.s)
+                .padding(start = KatariTheme.spacing.l),
         )
         CalendarGrid(
             selectedYearMonth = selectedYearMonth,
@@ -83,8 +80,8 @@ private fun CalendarGrid(
 
     VerticalGrid(
         columns = SimpleGridCells.Fixed(DAYS_OF_WEEK),
-        modifier = if (isMediumWidthWindow() && !isExpandedWidthWindow()) {
-            Modifier.widthIn(max = 360.dp)
+        modifier = if (currentWindowWidth() == WindowWidth.Medium) {
+            Modifier.widthIn(max = CalendarMetrics.gridMaxWidth)
         } else {
             Modifier
         },
@@ -95,9 +92,8 @@ private fun CalendarGrid(
                     TextStyle.NARROW,
                     locale,
                 ),
+                role = TextRole.SectionTitle,
                 textAlign = TextAlign.Center,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = FontSize,
             )
         }
         repeat(emptyFieldCount) { Box { } }

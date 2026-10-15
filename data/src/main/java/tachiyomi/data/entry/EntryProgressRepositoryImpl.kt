@@ -1,6 +1,9 @@
 package tachiyomi.data.entry
 
 import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.flow.Flow
 import tachiyomi.data.Database
 import tachiyomi.data.DatabaseHandler
@@ -8,6 +11,8 @@ import tachiyomi.data.query.chunkedForSqlQuery
 import tachiyomi.domain.entry.model.EntryProgressState
 import tachiyomi.domain.entry.repository.EntryProgressRepository
 
+@Inject
+@SingleIn(AppScope::class)
 class EntryProgressRepositoryImpl(
     private val handler: DatabaseHandler,
 ) : EntryProgressRepository {

@@ -25,8 +25,8 @@ import eu.kanade.presentation.util.LocalBackPress
 import eu.kanade.tachiyomi.ui.base.viewmodel.rememberScreenViewModel
 import eu.kanade.tachiyomi.util.system.openInBrowser
 import eu.kanade.tachiyomi.util.system.toast
+import mihon.app.di.appGraph
 import mihon.translation.api.host.TranslationHostActionResult
-import mihon.translation.api.host.TranslationHostActions
 import mihon.translation.api.host.TranslationSetupDestination
 import mihon.translation.api.request.TranslationTargetLanguageSelection
 import mihon.translation.ui.picker.language.displayName
@@ -34,8 +34,6 @@ import mihon.translation.ui.presentation.TranslationSessionExternalAction
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 import tachiyomi.presentation.core.util.collectAsState as collectPreferenceAsState
 
 object SettingsTranslationScreen : SearchableSettings {
@@ -46,7 +44,8 @@ object SettingsTranslationScreen : SearchableSettings {
 
     @Composable
     override fun getPreferences(): List<Preference> {
-        val hostActions = remember { Injekt.get<TranslationHostActions>() }
+        val context = LocalContext.current
+        val hostActions = remember { context.appGraph.translationHostActions }
         val engines = remember(hostActions) { hostActions.knownEngines }
         val engine by hostActions.selectedEngine.collectPreferenceAsState()
         val target by hostActions.defaultTargetLanguage.collectPreferenceAsState()
@@ -217,7 +216,7 @@ object SettingsTranslationScreen : SearchableSettings {
 
 @Composable
 internal fun rememberTranslationSettingsViewModel(): TranslationSettingsViewModel =
-    SettingsTranslationScreen.rememberScreenViewModel { TranslationSettingsViewModel() }
+    SettingsTranslationScreen.rememberScreenViewModel<TranslationSettingsViewModel>()
 
 @Composable
 internal fun RefreshTranslationSettingsOnResume(model: TranslationSettingsViewModel) {

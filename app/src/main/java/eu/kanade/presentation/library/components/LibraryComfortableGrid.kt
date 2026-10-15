@@ -5,13 +5,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import eu.kanade.presentation.entry.components.toLibraryGridCoverType
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
+import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.domain.entry.model.asEntryCover
 import tachiyomi.domain.library.model.LibraryItem
 import tachiyomi.domain.library.model.LibraryItemKey
@@ -117,7 +117,7 @@ internal fun LibraryComfortableGridEntry(
         coverType = libraryItem.sourceItemOrientation.toLibraryGridCoverType(),
         coverContentScale = if (useFitCover) ContentScale.Fit else ContentScale.Crop,
         coverBackgroundColor = if (useFitCover) {
-            MaterialTheme.colorScheme.surfaceContainerHigh
+            KatariTheme.colors.surfaceContainerHigh
         } else {
             Color.Transparent
         },

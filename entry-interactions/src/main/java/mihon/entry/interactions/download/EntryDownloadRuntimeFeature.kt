@@ -7,8 +7,6 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.shareIn
-import mihon.entry.interactions.runtime.applicableProviderTypes
-import mihon.feature.graph.FeatureGraphEvaluation
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 
@@ -21,26 +19,10 @@ internal interface EntryDownloadRuntimeCoordinator : EntryDownloadRuntimeFeature
 }
 
 internal class DefaultEntryDownloadRuntimeFeature(
-    evaluation: FeatureGraphEvaluation,
+    private val applicableTypes: Set<EntryType>,
     private val interaction: EntryDownloadInteraction,
     private val scope: CoroutineScope,
 ) : EntryDownloadRuntimeCoordinator {
-    private val applicableTypes = EntryDownloadRuntimeBehavior.entries
-        .map { behavior ->
-            evaluation.applicableProviderTypes<EntryDownloadProcessor>(
-                feature = ENTRY_DOWNLOAD_RUNTIME_FEATURE_ID,
-                integration = ENTRY_DOWNLOAD_RUNTIME_INTEGRATION_ID,
-                behaviorProjection = behavior.id,
-            )
-        }
-        .also { selectedTypes ->
-            check(selectedTypes.distinct().size <= 1) {
-                "Download runtime behaviors selected different provider sets: $selectedTypes"
-            }
-        }
-        .firstOrNull()
-        .orEmpty()
-
     override val changes: Flow<Unit> = interaction.changes
 
     override val state: Flow<EntryDownloadRuntimeState> = combine(

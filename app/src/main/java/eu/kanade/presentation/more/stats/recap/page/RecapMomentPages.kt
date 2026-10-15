@@ -7,19 +7,20 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.more.stats.components.rememberStatisticsDurationFormatter
 import eu.kanade.presentation.more.stats.recap.components.RecapCover
 import eu.kanade.presentation.more.stats.recap.components.RecapFormats
 import eu.kanade.presentation.more.stats.recap.components.RecapKicker
 import eu.kanade.presentation.more.stats.recap.components.RecapText
-import eu.kanade.presentation.more.stats.recap.components.RecapTypography
 import eu.kanade.presentation.more.stats.recap.components.recapItemsText
 import eu.kanade.presentation.more.stats.recap.components.rememberRecapFormats
 import eu.kanade.presentation.more.stats.recap.motion.RecapCountUp
 import eu.kanade.presentation.more.stats.recap.motion.recapFloat
 import eu.kanade.presentation.more.stats.recap.motion.recapReveal
 import eu.kanade.tachiyomi.ui.stats.recap.story.StatisticsRecapPage
+import mihon.presentation.kit.content.StoryMetrics
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -30,21 +31,21 @@ internal fun ColumnScope.RecapBookendPage(page: StatisticsRecapPage.Bookend) {
     val time = formats.time(page.at.toLocalTime())
     RecapKicker(formats.weekdayDayMonth(page.at))
     Spacer(Modifier.weight(0.4f))
-    RecapCover(page.title, width = 176.dp, modifier = Modifier.recapReveal(1).recapFloat())
+    RecapCover(page.title, width = StoryMetrics.coverHero, modifier = Modifier.recapReveal(1).recapFloat())
     Spacer(Modifier.weight(1f))
     RecapText(
         text = stringResource(
             if (page.isFirst) MR.strings.statistics_recap_first_title else MR.strings.statistics_recap_last_title,
             page.title.title,
         ),
-        style = RecapTypography.Headline,
+        role = TextRole.Metric,
         maxLines = 3,
         order = 2,
     )
     RecapText(
         text = page.item?.let { stringResource(MR.strings.statistics_recap_item_at, recapItemsText(it), time) }
             ?: stringResource(MR.strings.statistics_recap_at, time),
-        style = RecapTypography.Body,
+        role = TextRole.Body,
         order = 3,
     )
 }
@@ -54,23 +55,23 @@ internal fun ColumnScope.RecapBiggestDayPage(page: StatisticsRecapPage.BiggestDa
     val formats = rememberRecapFormats()
     val formatDuration = rememberStatisticsDurationFormatter()
     RecapKicker(stringResource(MR.strings.statistics_recap_biggest_day_kicker))
-    RecapText(formats.weekdayDayMonth(page.date), RecapTypography.Headline, order = 1)
+    RecapText(formats.weekdayDayMonth(page.date), TextRole.Metric, order = 1)
     Spacer(Modifier.weight(1f))
     RecapCountUp(
         value = page.durationMillis,
         format = formatDuration,
-        style = RecapTypography.Display,
+        role = TextRole.Display,
         order = 2,
         modifier = Modifier.recapReveal(2),
     )
     Spacer(Modifier.weight(1f))
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.l),
         modifier = Modifier.recapReveal(3),
     ) {
-        page.title?.let { RecapCover(it, width = 72.dp, modifier = Modifier.recapFloat()) }
-        RecapText(biggestDayText(page, formats), RecapTypography.Body, modifier = Modifier.weight(1f))
+        page.title?.let { RecapCover(it, width = StoryMetrics.coverMedium, modifier = Modifier.recapFloat()) }
+        RecapText(biggestDayText(page, formats), TextRole.Body, modifier = Modifier.weight(1f))
     }
 }
 

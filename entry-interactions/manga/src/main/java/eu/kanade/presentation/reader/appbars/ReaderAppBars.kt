@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
@@ -29,9 +28,9 @@ import mihon.entry.interactions.reader.settings.ReaderOrientation
 import mihon.entry.interactions.reader.settings.ReadingMode
 import mihon.entry.interactions.source.EntryChildWebViewAction
 import mihon.entry.interactions.source.EntryChildWebViewResolution
-import tachiyomi.presentation.core.components.material.padding
-import tachiyomi.presentation.core.components.reader.ReaderChrome
-import tachiyomi.presentation.core.components.reader.ReaderReturnPositionBar
+import mihon.entry.viewer.chrome.ui.ReaderChrome
+import mihon.entry.viewer.chrome.ui.ReaderReturnPositionBar
+import mihon.presentation.kit.theme.KatariTheme
 
 private val readerBarsSlideAnimationSpec = tween<IntOffset>(200)
 private val readerBarsFadeAnimationSpec = tween<Float>(150)
@@ -76,13 +75,17 @@ internal fun ReaderAppBars(
     textTranslationActive: Boolean,
     onClickTextTranslation: () -> Unit,
     onClickSettings: () -> Unit,
+    menuBounds: ReaderMenuBounds,
 ) {
     ReaderChrome(
         visible = visible,
         topBar = {
             ReaderTopBar(
-                modifier = Modifier
-                    .clickable(onClick = onClickTopAppBar),
+                modifier = with(menuBounds) {
+                    Modifier
+                        .measuresTopMenu()
+                        .clickable(onClick = onClickTopAppBar)
+                },
                 mangaTitle = mangaTitle,
                 chapterTitle = chapterTitle,
                 navigateUp = navigateUp,
@@ -109,7 +112,7 @@ internal fun ReaderAppBars(
                             } + fadeOut(readerBarsFadeAnimationSpec),
                         ) {
                             Row {
-                                Spacer(modifier = Modifier.width(MaterialTheme.padding.small))
+                                Spacer(modifier = Modifier.width(KatariTheme.spacing.s))
                                 Box(
                                     modifier = Modifier.fillMaxHeight(),
                                     contentAlignment = Alignment.BottomCenter,
@@ -135,7 +138,10 @@ internal fun ReaderAppBars(
             }
         },
         bottomBar = {
-            Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small)) {
+            Column(
+                modifier = with(menuBounds) { Modifier.measuresBottomMenu() },
+                verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
+            ) {
                 if (returnPositionAvailable) {
                     ReaderReturnPositionBar(
                         onReturn = onReturnToPreviousPosition,

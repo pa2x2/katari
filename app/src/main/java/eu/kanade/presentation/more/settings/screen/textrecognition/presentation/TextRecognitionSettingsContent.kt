@@ -1,7 +1,6 @@
 package eu.kanade.presentation.more.settings.screen.textrecognition.presentation
 
 import androidx.compose.runtime.Composable
-import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.GuideButton
 import eu.kanade.presentation.more.settings.PreferenceScreen
 import eu.kanade.presentation.more.settings.widget.draft.SettingsDraftSaveBar
@@ -11,12 +10,13 @@ import mihon.model.artifacts.api.descriptor.ModelArtifactDescriptor
 import mihon.model.artifacts.api.download.ModelArtifactDownloadApproval
 import mihon.model.artifacts.api.state.ModelArtifactState
 import mihon.model.artifacts.ui.state.formatModelArtifactSize
+import mihon.presentation.kit.navigation.AppBar
+import mihon.presentation.kit.navigation.Scaffold
 import mihon.text.recognition.api.host.TextRecognitionHostActions
 import mihon.text.recognition.ui.models.TextRecognitionStoredModels
 import mihon.text.recognition.ui.settings.TextRecognitionPlaygroundState
 import mihon.text.recognition.ui.settings.TextRecognitionSettingsState
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 

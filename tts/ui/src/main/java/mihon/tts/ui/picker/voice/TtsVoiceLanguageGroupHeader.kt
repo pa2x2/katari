@@ -1,22 +1,12 @@
 package mihon.tts.ui.picker.voice
 
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.KeyboardArrowDown
 import mihon.icons.materialsymbols.rounded.KeyboardArrowUp
 import mihon.language.api.tag.LanguageTag
+import mihon.presentation.kit.content.Icon
+import mihon.presentation.kit.list.SettingsRow
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.pluralStringResource
 
@@ -29,35 +19,21 @@ internal fun TtsVoiceLanguageGroupHeader(
     collapsible: Boolean,
     onToggle: () -> Unit,
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(enabled = collapsible, onClick = onToggle)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(displayName, style = MaterialTheme.typography.titleSmall)
-            Text(
-                text = "${language.value} · ${
-                    pluralStringResource(
-                        MR.plurals.tts_settings_voice_count,
-                        voiceCount,
-                        voiceCount,
-                    )
-                }",
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                style = MaterialTheme.typography.bodySmall,
+    SettingsRow(
+        title = displayName,
+        subtitle = "${language.value} · ${
+            pluralStringResource(MR.plurals.tts_settings_voice_count, voiceCount, voiceCount)
+        }",
+        trailing = {
+            Icon(
+                imageVector = if (expanded) {
+                    MaterialSymbols.Rounded.KeyboardArrowUp
+                } else {
+                    MaterialSymbols.Rounded.KeyboardArrowDown
+                },
+                contentDescription = null,
             )
-        }
-        Icon(
-            imageVector = if (expanded) {
-                MaterialSymbols.Rounded.KeyboardArrowUp
-            } else {
-                MaterialSymbols.Rounded.KeyboardArrowDown
-            },
-            contentDescription = null,
-        )
-    }
+        },
+        onClick = if (collapsible) onToggle else null,
+    )
 }

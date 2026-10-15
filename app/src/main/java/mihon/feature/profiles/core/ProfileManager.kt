@@ -34,8 +34,6 @@ import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.library.service.DuplicatePreferences
 import tachiyomi.domain.library.service.DuplicateTitleExclusions
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 import java.io.File
 import kotlin.random.Random
 import kotlin.uuid.ExperimentalUuidApi
@@ -43,14 +41,14 @@ import kotlin.uuid.Uuid
 
 class ProfileManager(
     private val application: Application,
-    private val profileDatabase: ProfileDatabase = Injekt.get(),
-    private val profileStore: ProfileStoreImpl = Injekt.get(),
-    private val profilesPreferences: ProfilesPreferences = Injekt.get(),
-    private val extensionManager: ExtensionManager = Injekt.get(),
+    private val profileDatabase: ProfileDatabase,
+    private val profileStore: ProfileStoreImpl,
+    private val profilesPreferences: ProfilesPreferences,
+    private val extensionManager: ExtensionManager,
     private val preferenceOwnership: ProfilePreferenceOwnership,
-    private val entryRepository: EntryRepository = Injekt.get(),
-    private val destructiveRemoval: EntryDestructiveRemovalFeature = Injekt.get(),
-    appScope: CoroutineScope = Injekt.get(),
+    private val entryRepository: EntryRepository,
+    private val destructiveRemoval: EntryDestructiveRemovalFeature,
+    appScope: CoroutineScope,
 ) {
     private val scope = appScope + Dispatchers.Default
     private val switchRequests = MutableStateFlow(profilesPreferences.activeProfileId.get())
@@ -179,7 +177,7 @@ class ProfileManager(
             is EntryDestructiveRemovalResult.Removed -> {
                 result.failures.forEach { failure ->
                     logcat(LogPriority.ERROR, failure.cause) {
-                        "Profile deletion consequence ${failure.participantId} failed"
+                        "Profile deletion consequence ${failure.consequence} failed"
                     }
                 }
             }

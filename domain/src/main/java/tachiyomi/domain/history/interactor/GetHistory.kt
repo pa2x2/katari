@@ -1,5 +1,6 @@
 package tachiyomi.domain.history.interactor
 
+import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import tachiyomi.domain.history.model.History
@@ -7,6 +8,7 @@ import tachiyomi.domain.history.model.HistoryWithRelations
 import tachiyomi.domain.history.repository.HistoryRepository
 import tachiyomi.domain.source.service.HiddenSourceIds
 
+@Inject
 class GetHistory(
     private val repository: HistoryRepository,
     private val hiddenSourceIds: HiddenSourceIds,

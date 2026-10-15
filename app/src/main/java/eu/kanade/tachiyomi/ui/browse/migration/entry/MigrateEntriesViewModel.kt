@@ -3,6 +3,13 @@ package eu.kanade.tachiyomi.ui.browse.migration.entry
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.Assisted
+import dev.zacsweers.metro.AssistedFactory
+import dev.zacsweers.metro.AssistedInject
+import dev.zacsweers.metro.ContributesIntoMap
+import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
+import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import eu.kanade.tachiyomi.ui.browse.migration.entry.models.MigrationEntrySelectionAvailability
@@ -27,6 +34,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import logcat.LogPriority
+import mihon.app.di.AppUiScope
 import mihon.core.common.utils.mutate
 import mihon.entry.interactions.catalogue.EntryCatalogueFeature
 import mihon.entry.interactions.merge.EntryMergeLibraryGroup
@@ -41,19 +49,25 @@ import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.source.service.SourceManager
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 import kotlin.time.Duration.Companion.seconds
 
+@AssistedInject
 class MigrateEntriesViewModel(
-    private val sourceId: Long,
-    private val sourceManager: SourceManager = Injekt.get(),
-    private val entryRepository: EntryRepository = Injekt.get(),
-    private val entryChapterRepository: EntryChapterRepository = Injekt.get(),
-    private val catalogue: EntryCatalogueFeature = Injekt.get(),
-    private val migration: EntryMigrationFeature = Injekt.get(),
-    private val mergeGrouping: EntryMergeLibraryGroupingFeature = Injekt.get(),
+    @Assisted private val sourceId: Long,
+    private val sourceManager: SourceManager,
+    private val entryRepository: EntryRepository,
+    private val entryChapterRepository: EntryChapterRepository,
+    private val catalogue: EntryCatalogueFeature,
+    private val migration: EntryMigrationFeature,
+    private val mergeGrouping: EntryMergeLibraryGroupingFeature,
 ) : ViewModel() {
+
+    @AssistedFactory
+    @ManualViewModelAssistedFactoryKey
+    @ContributesIntoMap(AppUiScope::class)
+    interface Factory : ManualViewModelAssistedFactory {
+        fun create(sourceId: Long): MigrateEntriesViewModel
+    }
 
     private val _events: Channel<MigrationEntriesEvent> = Channel()
     val events: Flow<MigrationEntriesEvent> = _events.receiveAsFlow()

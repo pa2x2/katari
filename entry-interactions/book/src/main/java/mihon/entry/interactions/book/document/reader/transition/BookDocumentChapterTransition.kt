@@ -11,14 +11,14 @@ import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentRead
 import mihon.entry.interactions.reader.settings.ChapterTransitionMode
 import mihon.entry.interactions.viewer.EntryChildDirection
 import mihon.entry.interactions.viewer.EntryChildTransition
+import mihon.entry.viewer.chrome.ui.ReaderEntryChildTransition
+import mihon.entry.viewer.chrome.ui.ReaderEntryChildTransitionDestinationSlot
+import mihon.entry.viewer.chrome.ui.ReaderEntryChildTransitionItem
+import mihon.entry.viewer.chrome.ui.ReaderEntryChildTransitionLoadState
+import mihon.entry.viewer.chrome.ui.ReaderEntryChildTransitionLoadingIndicator
+import mihon.entry.viewer.chrome.ui.ReaderEntryChildTransitionUiModel
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.reader.ReaderEntryChildTransition
-import tachiyomi.presentation.core.components.reader.ReaderEntryChildTransitionDestinationSlot
-import tachiyomi.presentation.core.components.reader.ReaderEntryChildTransitionItem
-import tachiyomi.presentation.core.components.reader.ReaderEntryChildTransitionLoadState
-import tachiyomi.presentation.core.components.reader.ReaderEntryChildTransitionLoadingIndicator
-import tachiyomi.presentation.core.components.reader.ReaderEntryChildTransitionUiModel
 import tachiyomi.presentation.core.i18n.stringResource
 
 /**
@@ -119,6 +119,7 @@ internal fun BookDocumentChapterTransition(
         onRetry = onRetry,
         modifier = modifier,
         contentColor = palette.foreground,
+        secondaryContentColor = palette.foreground,
         accentColor = palette.accent,
         warningColor = palette.warning,
         outlineColor = palette.outline,

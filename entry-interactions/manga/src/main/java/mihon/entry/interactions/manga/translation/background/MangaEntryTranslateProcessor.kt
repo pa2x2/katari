@@ -1,7 +1,6 @@
 package mihon.entry.interactions.manga.translation.background
 
 import eu.kanade.tachiyomi.source.entry.EntryCatalogueSource
-import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
@@ -31,7 +30,6 @@ internal class MangaEntryTranslateProcessor(
     private val translator: () -> MangaChapterTranslator,
     private val preparer: () -> MangaChapterTranslationPreparer,
 ) : EntryTranslateProcessor {
-    override val type = EntryType.MANGA
 
     override val changes: Flow<Unit> = flow { emitAll(store().changes) }
 

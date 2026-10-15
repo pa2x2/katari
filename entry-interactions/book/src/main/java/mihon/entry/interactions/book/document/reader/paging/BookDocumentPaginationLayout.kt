@@ -13,8 +13,8 @@ import androidx.compose.ui.unit.Constraints
 import mihon.book.api.document.BookDocumentBlockContent
 import mihon.entry.interactions.book.document.reader.BookDocumentViewerItem
 import mihon.entry.interactions.book.document.reader.LocalBookDocumentChapterSelection
+import mihon.presentation.kit.progress.LoadingIndicator
 import tachiyomi.domain.entry.model.EntryChapter
-import tachiyomi.presentation.core.components.LoadingIndicator
 
 /** Measures rich rows on the UI thread; prose shaping and page assembly run in background preparation. */
 @Composable

@@ -29,8 +29,6 @@ import logcat.LogPriority
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import tachiyomi.core.common.util.system.logcat
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 import java.io.File
 import java.util.concurrent.ConcurrentHashMap
 
@@ -42,6 +40,8 @@ import java.util.concurrent.ConcurrentHashMap
 internal class ExtensionInstaller(
     private val context: Context,
     private val scope: CoroutineScope,
+    basePreferences: BasePreferences,
+    private val networkHelper: Lazy<NetworkHelper>,
 ) {
 
     enum class UserActionBehavior {
@@ -58,9 +58,9 @@ internal class ExtensionInstaller(
     private val activeSteps = ConcurrentHashMap<Long, MutableStateFlow<InstallStep>>()
     private val downloadPackageNames = ConcurrentHashMap<Long, String>()
     private val packageInstallSteps = MutableStateFlow<Map<String, InstallStep>>(emptyMap())
-    private val extensionInstaller = Injekt.get<BasePreferences>().extensionInstaller
+    private val extensionInstaller = basePreferences.extensionInstaller
 
-    private val httpClient: OkHttpClient by lazy { Injekt.get<NetworkHelper>().client }
+    private val httpClient: OkHttpClient by lazy { networkHelper.value.client }
 
     val installSteps = packageInstallSteps.asStateFlow()
 

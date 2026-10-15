@@ -22,8 +22,6 @@ import tachiyomi.domain.library.service.GlobalLibraryPreferences
 import tachiyomi.domain.source.model.UnifiedStubSource
 import tachiyomi.domain.storage.service.StorageManager
 import tachiyomi.i18n.*
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 import java.io.IOException
 
 /**
@@ -34,8 +32,8 @@ import java.io.IOException
  */
 internal class DownloadProvider(
     private val context: Context,
-    private val storageManager: StorageManager = Injekt.get(),
-    private val libraryPreferences: GlobalLibraryPreferences = Injekt.get(),
+    private val storageManager: StorageManager,
+    private val libraryPreferences: GlobalLibraryPreferences,
 ) {
 
     private val downloadsDir: UniFile?

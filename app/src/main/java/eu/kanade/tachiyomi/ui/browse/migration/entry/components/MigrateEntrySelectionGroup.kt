@@ -9,8 +9,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -22,13 +20,15 @@ import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import eu.kanade.tachiyomi.ui.browse.migration.entry.models.MigrationEntrySelectionAvailability
 import eu.kanade.tachiyomi.ui.browse.migration.entry.models.MigrationEntrySelectionGroup
+import mihon.presentation.kit.content.BrowseMetrics
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -87,11 +87,8 @@ fun MigrateEntrySelectionGroup(
             rootSummary,
         )
     }
-    val connectorColor = MaterialTheme.colorScheme.outlineVariant
-    val rootCoverHalfHeight = when (itemOrientation) {
-        EntryItemOrientation.VERTICAL -> 40.dp
-        EntryItemOrientation.HORIZONTAL -> 20.dp
-    }
+    val connectorColor = KatariTheme.colors.outlineVariant
+    val rootCoverHalfHeight = migrationCoverHeight(itemOrientation) / 2
 
     Column(modifier = modifier) {
         MigrateEntrySelectionItem(
@@ -110,12 +107,12 @@ fun MigrateEntrySelectionGroup(
             modifier = if (expanded) {
                 Modifier.drawWithContent {
                     drawContent()
-                    val connectorX = 52.dp.toPx()
+                    val connectorX = TreeConnectorX.toPx()
                     drawLine(
                         color = connectorColor,
                         start = Offset(connectorX, size.height / 2 + rootCoverHalfHeight.toPx()),
                         end = Offset(connectorX, size.height),
-                        strokeWidth = 1.dp.toPx(),
+                        strokeWidth = KatariTheme.sizes.border.toPx(),
                     )
                 }
             } else {
@@ -169,16 +166,16 @@ private fun MigrationEntryTreeChild(
     isLast: Boolean,
     content: @Composable (Modifier) -> Unit,
 ) {
-    val connectorColor = MaterialTheme.colorScheme.outlineVariant
+    val connectorColor = KatariTheme.colors.outlineVariant
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .drawWithContent {
                 drawContent()
-                val branchX = 52.dp.toPx()
-                val branchEndX = 68.dp.toPx()
+                val branchX = TreeConnectorX.toPx()
+                val branchEndX = (TreeConnectorX + KatariTheme.spacing.l).toPx()
                 val branchY = size.height / 2
-                val strokeWidth = 1.dp.toPx()
+                val strokeWidth = KatariTheme.sizes.border.toPx()
                 drawLine(
                     color = connectorColor,
                     start = Offset(branchX, 0f),
@@ -193,7 +190,7 @@ private fun MigrationEntryTreeChild(
                 )
             },
     ) {
-        content(Modifier.padding(start = 52.dp))
+        content(Modifier.padding(start = TreeConnectorX))
     }
 }
 
@@ -210,10 +207,10 @@ private fun MigrationEntryMergeContextItem(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .heightIn(min = 96.dp)
+            .heightIn(min = BrowseMetrics.listCoverRowMinHeight)
             .clickable(onClick = onInspect)
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
+            .padding(horizontal = KatariTheme.spacing.contentInset, vertical = KatariTheme.spacing.s),
+        horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.l),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         MigrateEntrySelectionCover(
@@ -223,13 +220,13 @@ private fun MigrationEntryMergeContextItem(
         )
         Column(
             modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.extraSmall),
+            verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xs),
         ) {
             Text(
                 text = entry.displayTitle,
+                role = TextRole.Body,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
-                style = MaterialTheme.typography.bodyMedium,
             )
             Text(
                 text = stringResource(
@@ -241,11 +238,13 @@ private fun MigrationEntryMergeContextItem(
                     sourceName,
                     mergeRole,
                 ),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                role = TextRole.Supporting,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                style = MaterialTheme.typography.bodySmall,
             )
         }
     }
 }
+
+// The vertical line linking a merged group's members runs under the middle of the root's cover slot.
+private val TreeConnectorX = KatariTheme.spacing.contentInset + BrowseMetrics.listCoverSlotWidth / 2

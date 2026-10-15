@@ -31,8 +31,6 @@ import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.VideoDownloadQualityMode
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.domain.source.service.awaitInitialized
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 import java.io.File
 import java.io.IOException
 import java.util.concurrent.TimeUnit
@@ -41,12 +39,12 @@ import kotlin.math.abs
 private val HEIGHT_REGEX = Regex("""(\d{3,4})p?""", RegexOption.IGNORE_CASE)
 
 internal class AnimeDownloader(
-    private val application: Application = Injekt.get(),
-    private val provider: AnimeDownloadProvider = Injekt.get(),
-    private val cache: AnimeDownloadCache = Injekt.get(),
-    private val sourceManager: SourceManager = Injekt.get(),
-    private val networkHelper: NetworkHelper = Injekt.get(),
-    private val json: Json = Injekt.get(),
+    private val application: Application,
+    private val provider: AnimeDownloadProvider,
+    private val cache: AnimeDownloadCache,
+    private val sourceManager: SourceManager,
+    private val networkHelper: NetworkHelper,
+    private val json: Json,
 ) {
 
     private val fileTransferClient = createFileTransferClient(networkHelper.client)

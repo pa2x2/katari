@@ -1,23 +1,12 @@
 package eu.kanade.tachiyomi.ui.download.translation
 
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SmallExtendedFloatingActionButton
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -26,10 +15,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import eu.kanade.presentation.components.AppBar
-import eu.kanade.presentation.components.DropdownMenu
 import eu.kanade.presentation.components.TabContent
 import eu.kanade.presentation.entry.translation.EntryTranslateSetupSheet
 import eu.kanade.presentation.entry.translation.entryTranslateStatusText
@@ -40,9 +26,22 @@ import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.MoreVert
 import mihon.icons.materialsymbols.roundedfilled.Pause
 import mihon.icons.materialsymbols.roundedfilled.PlayArrow
+import mihon.presentation.kit.button.Button
+import mihon.presentation.kit.button.ButtonStyle
+import mihon.presentation.kit.button.FloatingActionButton
+import mihon.presentation.kit.button.IconButton
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.feedback.EmptyScreen
+import mihon.presentation.kit.list.SettingsRow
+import mihon.presentation.kit.menu.DropdownMenu
+import mihon.presentation.kit.menu.DropdownMenuItem
+import mihon.presentation.kit.navigation.AppBar
+import mihon.presentation.kit.progress.LinearProgressIndicator
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.screens.EmptyScreen
 
 /** The translation queue as a tab of the queue screen, with its own Pause and Cancel all. */
 @Composable
@@ -74,7 +73,12 @@ internal fun translationQueueTab(model: TranslationQueueViewModel): TabContent {
                     )
                 } else {
                     LazyColumn(
-                        contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding() + 88.dp),
+                        // Room for the Pause button over the end of the list.
+                        contentPadding = PaddingValues(
+                            bottom = contentPadding.calculateBottomPadding() +
+                                KatariTheme.sizes.touchTarget +
+                                KatariTheme.spacing.xxl,
+                        ),
                     ) {
                         items(queue, key = { it.chapter.id }) { row ->
                             QueueRow(
@@ -91,25 +95,18 @@ internal fun translationQueueTab(model: TranslationQueueViewModel): TabContent {
                     }
                 }
                 if (queue.isNotEmpty()) {
-                    SmallExtendedFloatingActionButton(
-                        text = {
-                            Text(stringResource(if (paused) MR.strings.action_resume else MR.strings.action_pause))
-                        },
-                        icon = {
-                            Icon(
-                                imageVector = if (paused) {
-                                    MaterialSymbols.RoundedFilled.PlayArrow
-                                } else {
-                                    MaterialSymbols.RoundedFilled.Pause
-                                },
-                                contentDescription = null,
-                            )
+                    FloatingActionButton(
+                        label = stringResource(if (paused) MR.strings.action_resume else MR.strings.action_pause),
+                        icon = if (paused) {
+                            MaterialSymbols.RoundedFilled.PlayArrow
+                        } else {
+                            MaterialSymbols.RoundedFilled.Pause
                         },
                         onClick = { if (paused) model.resume() else model.pause() },
                         modifier = Modifier
                             .align(Alignment.BottomEnd)
                             .padding(contentPadding)
-                            .padding(16.dp),
+                            .padding(KatariTheme.spacing.l),
                     )
                 }
             }
@@ -131,39 +128,33 @@ private fun QueueRow(
     onCancel: () -> Unit,
 ) {
     val status = row.status
-    Column {
-        ListItem(
-            supportingContent = {
-                val statusText = held.takeIf { status == EntryTranslateStatus.Queued }
-                    ?: entryTranslateStatusText(status)
-                Text(
-                    text = "${row.chapter.name} · $statusText",
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                    color = if (status is EntryTranslateStatus.Failed) {
-                        MaterialTheme.colorScheme.error
+    val statusText = held.takeIf { status == EntryTranslateStatus.Queued } ?: entryTranslateStatusText(status)
+    SettingsRow(
+        title = row.entry.title,
+        trailing = {
+            RowActions(status = status, onStartNow = onStartNow, onRetry = onRetry, onCancel = onCancel)
+        },
+        below = {
+            Text(
+                text = "${row.chapter.name} · $statusText",
+                role = TextRole.Supporting,
+                tone = if (status is EntryTranslateStatus.Failed) ContentTone.Error else ContentTone.Inherit,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+            if (status is EntryTranslateStatus.Translating) {
+                val progress = status.progress
+                LinearProgressIndicator(
+                    modifier = Modifier.padding(top = KatariTheme.spacing.s),
+                    progress = if (progress.total > 0) {
+                        { progress.done.toFloat() / progress.total }
                     } else {
-                        MaterialTheme.colorScheme.onSurfaceVariant
+                        null
                     },
                 )
-            },
-            trailingContent = {
-                RowActions(status = status, onStartNow = onStartNow, onRetry = onRetry, onCancel = onCancel)
-            },
-            content = { Text(row.entry.title, maxLines = 1, overflow = TextOverflow.Ellipsis) },
-        )
-        if (status is EntryTranslateStatus.Translating) {
-            val progress = status.progress
-            if (progress.total > 0) {
-                LinearProgressIndicator(
-                    progress = { progress.done.toFloat() / progress.total },
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                )
-            } else {
-                LinearProgressIndicator(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp))
             }
-        }
-    }
+        },
+    )
 }
 
 @Composable
@@ -177,21 +168,22 @@ private fun RowActions(
     Row(verticalAlignment = Alignment.CenterVertically) {
         if (status is EntryTranslateStatus.Failed) {
             val setupRequired = status.failure == EntryTranslateFailure.SetupRequired
-            TextButton(onClick = onRetry) {
-                Text(stringResource(if (setupRequired) MR.strings.action_fix else MR.strings.action_retry))
-            }
+            Button(
+                label = stringResource(if (setupRequired) MR.strings.action_fix else MR.strings.action_retry),
+                onClick = onRetry,
+                style = ButtonStyle.Text,
+            )
         }
         Box {
-            IconButton(onClick = { expanded = true }) {
-                Icon(
-                    imageVector = MaterialSymbols.Rounded.MoreVert,
-                    contentDescription = stringResource(MR.strings.action_menu_overflow_description),
-                )
-            }
+            IconButton(
+                icon = MaterialSymbols.Rounded.MoreVert,
+                contentDescription = stringResource(MR.strings.action_menu_overflow_description),
+                onClick = { expanded = true },
+            )
             DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
                 if (status == EntryTranslateStatus.Queued) {
                     DropdownMenuItem(
-                        text = { Text(stringResource(MR.strings.action_start_now)) },
+                        label = stringResource(MR.strings.action_start_now),
                         onClick = {
                             expanded = false
                             onStartNow()
@@ -199,7 +191,7 @@ private fun RowActions(
                     )
                 }
                 DropdownMenuItem(
-                    text = { Text(stringResource(MR.strings.action_cancel_translation)) },
+                    label = stringResource(MR.strings.action_cancel_translation),
                     onClick = {
                         expanded = false
                         onCancel()

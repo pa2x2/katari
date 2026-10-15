@@ -5,10 +5,10 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import dev.icerock.moko.resources.StringResource
-import eu.kanade.presentation.theme.TachiyomiPreviewTheme
 import eu.kanade.tachiyomi.ui.reader.setting.ReaderSettingsScreenModel
 import mihon.entry.interactions.reader.settings.ReadingMode
-import tachiyomi.presentation.core.components.reader.ReaderReadingModeDialog
+import mihon.entry.viewer.chrome.ui.ReaderReadingModeDialog
+import mihon.presentation.kit.theme.KatariPreviewTheme
 
 private val ReadingModesWithoutDefault = ReadingMode.entries - ReadingMode.DEFAULT
 
@@ -38,7 +38,7 @@ internal fun ReadingModeSelectDialog(
 @PreviewLightDark
 @Composable
 private fun ReadingModeDialogPreview() {
-    TachiyomiPreviewTheme {
+    KatariPreviewTheme {
         ReaderReadingModeDialog(
             modes = ReadingModesWithoutDefault,
             currentMode = ReadingMode.LEFT_TO_RIGHT,

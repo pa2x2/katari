@@ -3,6 +3,10 @@ package eu.kanade.tachiyomi.ui.download
 import android.view.MenuItem
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.ContributesIntoMap
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metrox.viewmodel.ViewModelKey
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.databinding.DownloadListBinding
 import kotlinx.coroutines.flow.SharingStarted
@@ -12,14 +16,16 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.stateIn
+import mihon.app.di.AppUiScope
 import mihon.entry.interactions.download.EntryDownloadQueueItem
 import mihon.entry.interactions.download.EntryDownloadRuntimeFeature
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 import kotlin.time.Duration.Companion.seconds
 
+@Inject
+@ViewModelKey
+@ContributesIntoMap(AppUiScope::class)
 class DownloadQueueViewModel(
-    private val downloadRuntime: EntryDownloadRuntimeFeature = Injekt.get(),
+    private val downloadRuntime: EntryDownloadRuntimeFeature,
 ) : ViewModel() {
 
     // The rows last handed to the adapter; transfer ticks update them in place instead of emitting a new list

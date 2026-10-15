@@ -18,10 +18,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
+import eu.kanade.presentation.more.stats.recap.components.LocalRecapPalette
 import eu.kanade.presentation.more.stats.recap.components.RecapCover
 import eu.kanade.presentation.more.stats.recap.motion.LocalRecapClock
 import eu.kanade.presentation.more.stats.recap.motion.recapReveal
 import eu.kanade.tachiyomi.ui.stats.recap.story.StatisticsRecapTitle
+import mihon.presentation.kit.content.StoryMetrics
+import mihon.presentation.kit.theme.KatariTheme
 import kotlin.math.ceil
 
 /**
@@ -33,6 +36,16 @@ import kotlin.math.ceil
 internal fun RecapCoverWall(covers: List<StatisticsRecapTitle>, modifier: Modifier = Modifier) {
     val clock = LocalRecapClock.current
     val rows = remember(covers) { wallRows(covers) }
+    // Only the mask's alpha matters to the blend, so any opaque colour serves for the solid middle.
+    val opaque = LocalRecapPalette.current.background
+    val fadeMask = remember(opaque) {
+        Brush.verticalGradient(
+            0f to Color.Transparent,
+            FADE_IN_END to opaque,
+            FADE_OUT_START to opaque,
+            1f to Color.Transparent,
+        )
+    }
     Box(
         modifier
             .graphicsLayer {
@@ -42,7 +55,7 @@ internal fun RecapCoverWall(covers: List<StatisticsRecapTitle>, modifier: Modifi
             }
             .drawWithContent {
                 drawContent()
-                drawRect(FadeMask, blendMode = BlendMode.DstIn)
+                drawRect(fadeMask, blendMode = BlendMode.DstIn)
             },
     ) {
         Column(
@@ -58,7 +71,7 @@ internal fun RecapCoverWall(covers: List<StatisticsRecapTitle>, modifier: Modifi
                         .wrapContentWidth(Alignment.Start, unbounded = true)
                         .recapReveal(row)
                         .graphicsLayer {
-                            val travelled = ROW_STARTS[row].value + clock.storyMillis * ROW_SPEEDS[row] / 1000f
+                            val travelled = ROW_STARTS[row] + clock.storyMillis * ROW_SPEEDS[row] / 1000f
                             translationX = -(travelled % loop.value).dp.toPx()
                         },
                 ) {
@@ -83,17 +96,14 @@ private const val ROWS = 3
 private const val MIN_ROW_COVERS = 4
 private const val WALL_ALPHA = 0.6f
 private const val WALL_TILT = -8f
-private val WALL_WIDTH = 470.dp
-private val COVER_WIDTH = 84.dp
-private val GAP = 10.dp
+private val WALL_WIDTH = StoryMetrics.coverWallWidth
+private val COVER_WIDTH = StoryMetrics.coverWall
+private val GAP = KatariTheme.spacing.m
 
-/** Where each row starts and how fast it drifts, in dp per second, so the rows move apart rather than as one. */
-private val ROW_STARTS = listOf(0.dp, 36.dp, 18.dp)
+/** Where each row starts, in dp, and how fast it drifts, in dp per second, so the rows move apart rather than as one. */
+private val ROW_STARTS = listOf(0f, 36f, 18f)
 private val ROW_SPEEDS = listOf(12f, 17f, 9f)
 
-private val FadeMask = Brush.verticalGradient(
-    0f to Color.Transparent,
-    0.16f to Color.Black,
-    0.72f to Color.Black,
-    1f to Color.Transparent,
-)
+/** Where the wall has faded in from its top and starts fading out towards its foot, as fractions of its height. */
+private const val FADE_IN_END = 0.16f
+private const val FADE_OUT_START = 0.72f

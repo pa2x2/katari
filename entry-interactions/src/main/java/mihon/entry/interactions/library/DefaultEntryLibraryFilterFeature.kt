@@ -1,44 +1,18 @@
 package mihon.entry.interactions.library
 
 import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.entry.interactions.runtime.toContentTypeId
-import mihon.feature.graph.FeatureGraphEvaluation
 import tachiyomi.core.common.preference.TriState
 
 internal class DefaultEntryLibraryFilterFeature(
-    private val evaluation: FeatureGraphEvaluation,
+    private val types: EntryLibraryFilterTypes,
 ) : EntryLibraryFilterFeature {
-    private val selection = evaluation.libraryFilterSelection()
-
     override fun filter(request: EntryLibraryFilterRequest): EntryLibraryFilterResult {
         val currentTypes = request.targets.mapTo(mutableSetOf(), EntryLibraryFilterTarget::type)
-        val uncomposedTypes = currentTypes.filterTo(mutableSetOf()) {
-            it.toContentTypeId() !in selection.participatingContentTypes
-        }
-        check(uncomposedTypes.isEmpty()) {
-            "Entry types $uncomposedTypes were not contributed to the Library filtering feature graph"
-        }
-
-        evaluation.requireLibraryFilterContext(
-            types = currentTypes,
-            policy = request.policy,
-            state = EntryLibraryFilterStateContext(
-                targetCount = request.targets.size,
-                hasUnknownProgress = request.targets.any { it.hasUnconsumed == null || it.hasStarted == null },
-                hasUnknownBookmarks = request.targets.any { it.hasBookmarks == null },
-                hasDownloadedOrLocal = request.targets.any { it.isDownloadedOrLocal },
-                hasOutsideReleasePeriod = request.targets.any { it.isOutsideReleasePeriod },
-            ),
-            tracking = EntryLibraryTrackingFilterContext(
-                configuredTrackerIds = request.policy.tracking.keys,
-                targetTrackerIds = request.targets.flatMapTo(mutableSetOf()) { it.trackerIds },
-            ),
-        )
 
         val availability = EntryLibraryFilterAvailability(
-            progressSummary = currentTypes.controlAvailability(selection.progressTypes),
-            bookmarking = currentTypes.controlAvailability(selection.bookmarkTypes),
-            outsideReleasePeriod = currentTypes.controlAvailability(selection.releasePeriodTypes),
+            progressSummary = currentTypes.controlAvailability(types.progress),
+            bookmarking = currentTypes.controlAvailability(types.bookmark),
+            outsideReleasePeriod = currentTypes.controlAvailability(types.releasePeriod),
         )
         val policy = request.policy
         val effectiveDownloaded = if (policy.downloadedOnly) TriState.ENABLED_IS else policy.downloaded
@@ -61,7 +35,7 @@ internal class DefaultEntryLibraryFilterFeature(
                     notStartedFilter.matches(target.hasStarted?.not()) &&
                     bookmarkFilter.matches(target.hasBookmarks) &&
                     policy.completed.matches(target.isCompleted) &&
-                    releasePeriodFilter.matchesReleasePeriod(target, selection.releasePeriodTypes) &&
+                    releasePeriodFilter.matchesReleasePeriod(target, types.releasePeriod) &&
                     activeTracking.matches(target.trackerIds)
             }
         }
@@ -81,6 +55,13 @@ internal class DefaultEntryLibraryFilterFeature(
         )
     }
 }
+
+/** The types each Library filter control applies to, read from the providers the type modules contribute. */
+internal class EntryLibraryFilterTypes(
+    val progress: Set<EntryType>,
+    val bookmark: Set<EntryType>,
+    val releasePeriod: Set<EntryType>,
+)
 
 private fun Set<EntryType>.controlAvailability(
     supportedTypes: Set<EntryType>,

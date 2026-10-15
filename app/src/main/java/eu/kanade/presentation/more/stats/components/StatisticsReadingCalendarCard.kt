@@ -15,9 +15,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -31,9 +28,13 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.more.stats.data.StatsReadingCalendar
 import eu.kanade.tachiyomi.source.entry.EntryType
+import mihon.presentation.kit.content.StatisticsMetrics
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
@@ -69,26 +70,28 @@ internal fun StatisticsReadingCalendarCard(
     val activeDays = durations.values.count { it > 0L }
     val dayFormatter = remember(locale) { DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(locale) }
     val monthFormatter = remember(locale) { DateTimeFormatter.ofPattern("LLL", locale) }
-    val emptyColor = MaterialTheme.colorScheme.surfaceVariant
-    val hatchColor = MaterialTheme.colorScheme.outlineVariant
+    val emptyColor = KatariTheme.colors.surfaceVariant
+    val hatchColor = KatariTheme.colors.outlineVariant
+    val hatchStroke = KatariTheme.sizes.border
+    val cellShape = KatariTheme.shapes.extraSmall
     val scrollState = rememberScrollState()
     LaunchedEffect(scrollState.maxValue) { scrollState.scrollTo(scrollState.maxValue) }
 
     StatisticsSectionCard(
         title = stringResource(MR.strings.statistics_reading_calendar),
         trailingText = stringResource(MR.strings.statistics_last_12_months),
-        contentSpacing = 12.dp,
+        contentSpacing = KatariTheme.spacing.m,
     ) {
         Row {
-            Column(Modifier.padding(top = MONTH_LABEL_HEIGHT, end = 6.dp)) {
+            Column(Modifier.padding(top = MONTH_LABEL_HEIGHT, end = KatariTheme.spacing.s)) {
                 (0L until 7L).forEach { offset ->
                     Box(Modifier.height(CELL_SIZE + CELL_GAP), contentAlignment = Alignment.CenterStart) {
                         // Every other weekday keeps the column narrow while still anchoring the rows.
                         if (offset % 2L == 0L) {
                             Text(
                                 text = firstDayOfWeek.plus(offset).getDisplayName(TextStyle.SHORT, locale),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                role = TextRole.Badge,
+                                tone = ContentTone.Secondary,
                             )
                         }
                     }
@@ -108,8 +111,8 @@ internal fun StatisticsReadingCalendarCard(
                                 Text(
                                     text = month.format(monthFormatter),
                                     modifier = Modifier.wrapContentWidth(Alignment.Start, unbounded = true),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    role = TextRole.Badge,
+                                    tone = ContentTone.Secondary,
                                     maxLines = 1,
                                 )
                             }
@@ -125,12 +128,19 @@ internal fun StatisticsReadingCalendarCard(
                             Box(
                                 Modifier
                                     .size(CELL_SIZE)
-                                    .clip(CELL_SHAPE)
+                                    .clip(cellShape)
                                     .background(intensityColor(duration, maxDuration, color, emptyColor))
                                     .then(
                                         if (isUntracked && duration == 0L) {
                                             Modifier.drawBehind {
-                                                drawUntrackedHatch(0f, size.width, 0f, size.height, hatchColor)
+                                                drawUntrackedHatch(
+                                                    0f,
+                                                    size.width,
+                                                    0f,
+                                                    size.height,
+                                                    hatchColor,
+                                                    hatchStroke,
+                                                )
                                             }
                                         } else {
                                             Modifier
@@ -151,15 +161,14 @@ internal fun StatisticsReadingCalendarCard(
             }
         }
         Row(
-            modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
+            modifier = Modifier.fillMaxWidth().padding(top = KatariTheme.spacing.m),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
                 text = pluralStringResource(MR.plurals.statistics_active_day_count, activeDays, activeDays) +
                     " · " + formatDuration(durations.values.sum()),
                 modifier = Modifier.weight(1f),
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                role = TextRole.Supporting,
             )
             CalendarLegend(color, emptyColor)
         }
@@ -168,26 +177,26 @@ internal fun StatisticsReadingCalendarCard(
 
 @Composable
 private fun CalendarLegend(color: Color, emptyColor: Color) {
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(CELL_GAP)) {
         Text(
             text = stringResource(MR.strings.statistics_less),
-            modifier = Modifier.padding(end = 3.dp),
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(end = CELL_GAP),
+            role = TextRole.Badge,
+            tone = ContentTone.Secondary,
         )
         (0..INTENSITY_LEVELS).forEach { level ->
             Box(
                 Modifier
                     .size(LEGEND_CELL_SIZE)
-                    .clip(CELL_SHAPE)
+                    .clip(KatariTheme.shapes.extraSmall)
                     .background(levelColor(level, color, emptyColor)),
             )
         }
         Text(
             text = stringResource(MR.strings.statistics_more),
-            modifier = Modifier.padding(start = 3.dp),
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(start = CELL_GAP),
+            role = TextRole.Badge,
+            tone = ContentTone.Secondary,
         )
     }
 }
@@ -205,8 +214,7 @@ private fun levelColor(level: Int, color: Color, emptyColor: Color): Color =
 
 private const val INTENSITY_LEVELS = 4
 private val LEVEL_FRACTIONS = floatArrayOf(0.35f, 0.55f, 0.78f, 1f)
-private val CELL_SIZE = 14.dp
-private val CELL_GAP = 3.dp
-private val LEGEND_CELL_SIZE = 10.dp
-private val MONTH_LABEL_HEIGHT = 18.dp
-private val CELL_SHAPE = RoundedCornerShape(3.dp)
+private val CELL_SIZE = StatisticsMetrics.calendarCell
+private val CELL_GAP = StatisticsMetrics.calendarCellGap
+private val LEGEND_CELL_SIZE = StatisticsMetrics.calendarLegendCell
+private val MONTH_LABEL_HEIGHT = StatisticsMetrics.calendarMonthLabelHeight

@@ -1,16 +1,16 @@
 package eu.kanade.tachiyomi.ui.browse
 
+import dev.zacsweers.metro.Inject
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import tachiyomi.core.common.preference.getAndSet
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
+@Inject
 class BrowseContentTypeFilterController(
-    private val preferences: SourcePreferences = Injekt.get(),
+    private val preferences: SourcePreferences,
 ) {
     fun changes(): Flow<ContentTypeFilter> {
         return preferences.browseContentTypeFilter.changes()

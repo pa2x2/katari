@@ -1,6 +1,9 @@
 package tachiyomi.data.history.activity
 
 import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import tachiyomi.data.DatabaseHandler
 import tachiyomi.domain.history.model.activity.HistoryActivitySegmentSnapshot
 import tachiyomi.domain.history.model.activity.HistoryActivitySessionSnapshot
@@ -9,6 +12,8 @@ import tachiyomi.domain.history.model.activity.HistoryCompletionCause
 import tachiyomi.domain.history.model.activity.HistoryCompletionSnapshot
 import tachiyomi.domain.history.repository.HistoryActivityBackupRepository
 
+@Inject
+@SingleIn(AppScope::class)
 class HistoryActivityBackupRepositoryImpl(
     private val handler: DatabaseHandler,
 ) : HistoryActivityBackupRepository {

@@ -13,13 +13,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import mihon.book.api.document.BookDocumentBlock
 import mihon.book.api.document.BookDocumentBlockContent
 import mihon.book.api.document.BookDocumentLinkTarget
 import mihon.book.api.document.layoutBookDocumentTable
 import mihon.entry.interactions.book.document.reader.BookDocumentRichTextRenderer
 import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentReaderPalette
+import mihon.presentation.kit.theme.KatariTheme
 
 /** Selectable native-text projection of a bounded semantic table. */
 @Composable
@@ -70,7 +70,7 @@ private fun TableContent(
         val cells = remember(content.rows) {
             content.rows.flatMapIndexed { rowIndex, row -> row.cells.indices.map { rowIndex to it } }
         }
-        BookDocumentTableGrid(grid, block, viewportWidth, Modifier.background(palette.surfaceVariant)) { index ->
+        BookDocumentTableGrid(grid, block, viewportWidth, Modifier.background(palette.fill)) { index ->
             val (rowIndex, cellIndex) = cells[index]
             val row = content.rows[rowIndex]
             val cell = row.cells[cellIndex]
@@ -85,7 +85,7 @@ private fun TableContent(
                     rowIndex < content.rows.lastIndex -> "\n"
                     else -> "\n\n"
                 },
-                modifier = Modifier.padding(8.dp),
+                modifier = Modifier.padding(KatariTheme.spacing.s),
             )
         }
     }

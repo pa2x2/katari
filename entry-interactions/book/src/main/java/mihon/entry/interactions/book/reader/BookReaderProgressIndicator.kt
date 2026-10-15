@@ -11,10 +11,11 @@ import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.progressBarRangeInfo
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.LayoutDirection
-import androidx.compose.ui.unit.dp
 import mihon.entry.interactions.reader.settings.BookDocumentReaderProgressStyle
-import tachiyomi.presentation.core.components.reader.ReaderPageIndicator
-import tachiyomi.presentation.core.components.reader.ReaderProgressIndicator
+import mihon.entry.viewer.chrome.ui.ReaderPageIndicator
+import mihon.entry.viewer.chrome.ui.ReaderProgressIndicator
+import mihon.presentation.kit.content.ReadingMetrics
+import mihon.presentation.kit.theme.KatariTheme
 import kotlin.math.roundToInt
 
 internal sealed interface BookReaderProgress {
@@ -83,7 +84,7 @@ internal fun BookReaderAmbientProgressIndicator(
             progressBarRangeInfo = ProgressBarRangeInfo(value, 0f..1f)
         },
     ) {
-        val edgeInset = 2.dp.toPx()
+        val edgeInset = KatariTheme.spacing.xxs.toPx()
         val trailingEdgeX = if (layoutDirection == LayoutDirection.Ltr) {
             size.width - edgeInset
         } else {
@@ -98,7 +99,7 @@ internal fun BookReaderAmbientProgressIndicator(
                     color = progress.trackColor,
                     start = Offset(trailingEdgeX, trackTop),
                     end = Offset(trailingEdgeX, trackBottom),
-                    strokeWidth = 1.dp.toPx(),
+                    strokeWidth = KatariTheme.sizes.border.toPx(),
                     cap = StrokeCap.Round,
                 )
                 if (value > 0f) {
@@ -106,7 +107,7 @@ internal fun BookReaderAmbientProgressIndicator(
                         color = progress.activeColor,
                         start = Offset(trailingEdgeX, trackTop),
                         end = Offset(trailingEdgeX, trackTop + verticalTrackHeight * value),
-                        strokeWidth = 2.dp.toPx(),
+                        strokeWidth = ReadingMetrics.progressFillWidth.toPx(),
                         cap = StrokeCap.Round,
                     )
                 }
@@ -116,21 +117,21 @@ internal fun BookReaderAmbientProgressIndicator(
                     color = progress.trackColor,
                     start = Offset(trailingEdgeX, trackTop),
                     end = Offset(trailingEdgeX, trackBottom),
-                    strokeWidth = 1.dp.toPx(),
+                    strokeWidth = KatariTheme.sizes.border.toPx(),
                     cap = StrokeCap.Round,
                 )
-                val markerHeight = 32.dp.toPx().coerceAtMost(verticalTrackHeight)
+                val markerHeight = ReadingMetrics.progressMarkerLength.toPx().coerceAtMost(verticalTrackHeight)
                 val markerTop = trackTop + (verticalTrackHeight - markerHeight).coerceAtLeast(0f) * value
                 drawLine(
                     color = progress.activeColor,
                     start = Offset(trailingEdgeX, markerTop),
                     end = Offset(trailingEdgeX, markerTop + markerHeight),
-                    strokeWidth = 4.dp.toPx(),
+                    strokeWidth = ReadingMetrics.progressMarkerWidth.toPx(),
                     cap = StrokeCap.Round,
                 )
             }
             BookDocumentReaderProgressStyle.BOTTOM_HAIRLINE -> {
-                val y = size.height - 1.dp.toPx()
+                val y = size.height - KatariTheme.sizes.border.toPx()
                 val trackStartX = roundedCornerInsets.left.toFloat().coerceIn(0f, size.width)
                 val trackEndX = (size.width - roundedCornerInsets.right).coerceIn(trackStartX, size.width)
                 val trackWidth = trackEndX - trackStartX
@@ -138,7 +139,7 @@ internal fun BookReaderAmbientProgressIndicator(
                     color = progress.trackColor,
                     start = Offset(trackStartX, y),
                     end = Offset(trackEndX, y),
-                    strokeWidth = 1.dp.toPx(),
+                    strokeWidth = KatariTheme.sizes.border.toPx(),
                     cap = StrokeCap.Round,
                 )
                 if (value > 0f) {
@@ -152,7 +153,7 @@ internal fun BookReaderAmbientProgressIndicator(
                         color = progress.activeColor,
                         start = Offset(startX, y),
                         end = Offset(endX, y),
-                        strokeWidth = 2.dp.toPx(),
+                        strokeWidth = ReadingMetrics.progressFillWidth.toPx(),
                         cap = StrokeCap.Round,
                     )
                 }

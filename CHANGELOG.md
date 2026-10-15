@@ -1,5 +1,31 @@
 # Changelog
 
+## [1.16.0] - 2026-10-15
+
+This is a technical release. Metro replaces Injekt for dependency injection, the Feature graph is gone, and every screen now uses one UI kit.
+
+### 🔄 Changed
+
+- Settings rows, section headers and sheet content use the same side margin on every screen.
+- Confirming a delete or discard shows a red button next to Cancel.
+- Bottom sheets lost their drag handle, and details sheets lost their Close button.
+- Navigation rows no longer end in an arrow.
+- Text-to-speech, translation and text recognition settings are ordinary settings lists, each with the same engine card.
+- Success, warning and chart colours are tinted toward the theme's primary colour.
+
+### 🧩 Other
+
+- A missing or conflicting dependency binding now fails the build instead of crashing the app.
+- Extensions still look up their services through Injekt, which now reads them from the Metro graph and is read-only.
+- Manga, anime and book register their features in keyed Metro maps instead of the Feature graph.
+- Removing, migrating, merging and backing up entries call their follow-up steps directly, and so do media-session changes.
+- `presentation-core` is now a strict UI kit. A build check rejects Material, raw colours, text styles and dp values in every other module.
+- Reader chrome moved from `presentation-core` to its own module, `entry-viewer-chrome-ui`.
+
+### ⚡️ Performance
+
+- R8 can now merge app classes, and the baseline and startup profiles match the new code.
+
 ## [1.15.1] - 2026-10-14
 
 ### ✨ Added
@@ -742,7 +768,8 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v1.15.1...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/v1.16.0...HEAD
+[1.16.0]: https://github.com/pa2x2/katari/releases/tag/v1.16.0
 [1.15.1]: https://github.com/pa2x2/katari/releases/tag/v1.15.1
 [1.15.0]: https://github.com/pa2x2/katari/releases/tag/v1.15.0
 [1.14.2]: https://github.com/pa2x2/katari/releases/tag/v1.14.2

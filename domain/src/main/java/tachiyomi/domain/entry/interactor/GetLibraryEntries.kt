@@ -1,5 +1,6 @@
 package tachiyomi.domain.entry.interactor
 
+import dev.zacsweers.metro.Inject
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.delay
@@ -42,6 +43,7 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 @OptIn(FlowPreview::class)
+@Inject
 class GetLibraryEntries(
     private val entryRepository: EntryRepository,
     private val entryChapterRepository: EntryChapterRepository,

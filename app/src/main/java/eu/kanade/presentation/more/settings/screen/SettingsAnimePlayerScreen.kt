@@ -3,14 +3,13 @@ package eu.kanade.presentation.more.settings.screen
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
 import eu.kanade.presentation.more.settings.Preference
+import mihon.app.di.appGraph
 import mihon.entry.interactions.settings.AnimePlayerPreferences
-import mihon.entry.viewer.settings.ViewerSettingBinder
 import mihon.entry.viewer.settings.asProfilePreference
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
 object SettingsAnimePlayerScreen : AppEntryViewerSettingsScreenProjection() {
 
@@ -22,8 +21,9 @@ object SettingsAnimePlayerScreen : AppEntryViewerSettingsScreenProjection() {
 
     @Composable
     override fun getSurfacePreferences(): List<Preference> {
-        val animePlayerPreferences = remember { Injekt.get<AnimePlayerPreferences>() }
-        val settingBinder = remember { Injekt.get<ViewerSettingBinder>() }
+        val context = LocalContext.current
+        val animePlayerPreferences = remember { context.appGraph.animePlayerPreferences }
+        val settingBinder = remember { context.appGraph.viewerSettingBinder }
         val pictureInPicture = remember(animePlayerPreferences, settingBinder) {
             settingBinder.bind(animePlayerPreferences.pictureInPictureSetting).asProfilePreference()
         }

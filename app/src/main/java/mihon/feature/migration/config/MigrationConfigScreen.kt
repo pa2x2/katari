@@ -1,22 +1,8 @@
 package mihon.feature.migration.config
 
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyItemScope
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.ListItemDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SmallExtendedFloatingActionButton
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -26,59 +12,36 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEachIndexed
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import eu.kanade.domain.source.service.SourcePreferences
-import eu.kanade.presentation.browse.components.SourceIcon
-import eu.kanade.presentation.components.AppBar
-import eu.kanade.presentation.components.AppBarActions
+import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.ui.browse.migration.search.MigrateSearchScreen
-import eu.kanade.tachiyomi.util.system.LocaleHelper
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.update
-import mihon.entry.interactions.catalogue.EntryCatalogueFeature
 import mihon.entry.interactions.migration.EntryMigrationOption
 import mihon.entry.interactions.migration.EntryMigrationSubject
+import mihon.feature.migration.config.MigrationConfigViewModel.SelectionConfig
+import mihon.feature.migration.config.components.MigrationConfigSourceRow
 import mihon.feature.migration.list.MigrationListScreen
 import mihon.feature.migration.review.SourceMigrationReviewScreen
-import mihon.feature.migration.session.SourceMigrationSessionStore
 import mihon.feature.migration.session.model.SourceMigrationDiscoveryDepth
-import mihon.feature.migration.session.model.SourceMigrationSessionDraft
 import mihon.feature.migration.session.model.SourceMigrationSessionGroupDraft
-import mihon.feature.migration.session.model.SourceMigrationSessionId
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.automirroredrounded.ArrowForward
 import mihon.icons.materialsymbols.rounded.Deselect
-import mihon.icons.materialsymbols.rounded.DragHandle
 import mihon.icons.materialsymbols.rounded.SelectAll
-import sh.calvin.reorderable.ReorderableCollectionItemScope
-import sh.calvin.reorderable.ReorderableItem
-import sh.calvin.reorderable.ReorderableLazyListState
+import mihon.presentation.kit.button.FloatingActionButton
+import mihon.presentation.kit.feedback.LoadingScreen
+import mihon.presentation.kit.list.SectionHeader
+import mihon.presentation.kit.navigation.AppBar
+import mihon.presentation.kit.navigation.AppBarActions
+import mihon.presentation.kit.navigation.Scaffold
 import sh.calvin.reorderable.rememberReorderableLazyListState
-import tachiyomi.core.common.util.lang.launchIO
-import tachiyomi.domain.source.model.Source
-import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.FastScrollLazyColumn
-import tachiyomi.presentation.core.components.Pill
-import tachiyomi.presentation.core.components.material.Scaffold
-import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.screens.LoadingScreen
 import tachiyomi.presentation.core.util.shouldExpandFAB
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
 class MigrationConfigScreen private constructor(
     private val subjects: Collection<EntryMigrationSubject>,
@@ -98,8 +61,8 @@ class MigrationConfigScreen private constructor(
         val navigator = LocalNavigator.currentOrThrow
 
         val isSourceSession = sessionGroups != null && originSourceId != null
-        val viewModel = viewModel {
-            Model(
+        val viewModel = assistedMetroViewModel<MigrationConfigViewModel, MigrationConfigViewModel.Factory> {
+            create(
                 requiredEntryTypes = sessionGroups.orEmpty()
                     .flatMap(SourceMigrationSessionGroupDraft::members)
                     .filter { entry -> sessionGroups.orEmpty().any { entry.id in it.selectedEntryIds } }
@@ -176,20 +139,20 @@ class MigrationConfigScreen private constructor(
                                 AppBar.Action(
                                     title = stringResource(MR.strings.migrationConfigScreen_selectAllLabel),
                                     icon = MaterialSymbols.Rounded.SelectAll,
-                                    onClick = { viewModel.toggleSelection(Model.SelectionConfig.All) },
+                                    onClick = { viewModel.toggleSelection(SelectionConfig.All) },
                                 ),
                                 AppBar.Action(
                                     title = stringResource(MR.strings.migrationConfigScreen_selectNoneLabel),
                                     icon = MaterialSymbols.Rounded.Deselect,
-                                    onClick = { viewModel.toggleSelection(Model.SelectionConfig.None) },
+                                    onClick = { viewModel.toggleSelection(SelectionConfig.None) },
                                 ),
                                 AppBar.OverflowAction(
                                     title = stringResource(MR.strings.migrationConfigScreen_selectEnabledLabel),
-                                    onClick = { viewModel.toggleSelection(Model.SelectionConfig.Enabled) },
+                                    onClick = { viewModel.toggleSelection(SelectionConfig.Enabled) },
                                 ),
                                 AppBar.OverflowAction(
                                     title = stringResource(MR.strings.migrationConfigScreen_selectPinnedLabel),
-                                    onClick = { viewModel.toggleSelection(Model.SelectionConfig.Pinned) },
+                                    onClick = { viewModel.toggleSelection(SelectionConfig.Pinned) },
                                 ),
                             ),
                         )
@@ -197,11 +160,9 @@ class MigrationConfigScreen private constructor(
                 )
             },
             floatingActionButton = {
-                SmallExtendedFloatingActionButton(
-                    text = { Text(text = stringResource(MR.strings.migrationConfigScreen_continueButtonText)) },
-                    icon = {
-                        Icon(imageVector = MaterialSymbols.AutoMirroredRounded.ArrowForward, contentDescription = null)
-                    },
+                FloatingActionButton(
+                    label = stringResource(MR.strings.migrationConfigScreen_continueButtonText),
+                    icon = MaterialSymbols.AutoMirroredRounded.ArrowForward,
                     onClick = {
                         if (state.selectedSourceIds.isNotEmpty()) {
                             viewModel.saveSources()
@@ -229,7 +190,7 @@ class MigrationConfigScreen private constructor(
                     if (sources.isNotEmpty()) {
                         val headerPrefix = if (selectedSourceList) "selected" else "available"
                         item("$headerPrefix-header") {
-                            Text(
+                            SectionHeader(
                                 text = stringResource(
                                     resource = if (selectedSourceList) {
                                         MR.strings.migrationConfigScreen_selectedHeader
@@ -237,25 +198,20 @@ class MigrationConfigScreen private constructor(
                                         MR.strings.migrationConfigScreen_availableHeader
                                     },
                                 ),
-                                style = MaterialTheme.typography.bodyMedium,
-                                modifier = Modifier
-                                    .padding(MaterialTheme.padding.medium)
-                                    .animateItem(),
+                                modifier = Modifier.animateItem(),
                             )
                         }
                     }
-                    itemsIndexed(
+                    items(
                         items = sources,
-                        key = { _, item -> item.id },
-                    ) { index, item ->
-                        SourceItemContainer(
-                            firstItem = index == 0,
-                            lastItem = index == (sources.size - 1),
+                        key = { item -> item.id },
+                    ) { item ->
+                        MigrationConfigSourceRow(
                             source = item,
                             showLanguage = showLanguage,
                             dragEnabled = selectedSourceList && sources.size > 1,
                             state = reorderableState,
-                            key = { if (selectedSourceList) it.id else "available-${it.id}" },
+                            key = if (selectedSourceList) item.id else "available-${item.id}",
                             onClick = { viewModel.toggleSelection(item.id) },
                         )
                     }
@@ -280,271 +236,5 @@ class MigrationConfigScreen private constructor(
                 },
             )
         }
-    }
-
-    @Composable
-    private fun LazyItemScope.SourceItemContainer(
-        firstItem: Boolean,
-        lastItem: Boolean,
-        source: MigrationSource,
-        showLanguage: Boolean,
-        dragEnabled: Boolean,
-        state: ReorderableLazyListState,
-        key: (MigrationSource) -> Any,
-        onClick: () -> Unit,
-    ) {
-        val shape = remember(firstItem, lastItem) {
-            val top = if (firstItem) 12.dp else 0.dp
-            val bottom = if (lastItem) 12.dp else 0.dp
-            RoundedCornerShape(top, top, bottom, bottom)
-        }
-
-        ReorderableItem(
-            state = state,
-            key = key(source),
-            enabled = dragEnabled,
-        ) { _ ->
-            ElevatedCard(
-                shape = shape,
-                modifier = Modifier
-                    .padding(horizontal = MaterialTheme.padding.medium)
-                    .animateItem(),
-            ) {
-                SourceItem(
-                    source = source,
-                    showLanguage = showLanguage,
-                    dragEnabled = dragEnabled,
-                    scope = this@ReorderableItem,
-                    onClick = onClick,
-                )
-            }
-        }
-
-        if (!lastItem) {
-            HorizontalDivider(modifier = Modifier.padding(horizontal = MaterialTheme.padding.medium))
-        }
-    }
-
-    @Composable
-    private fun SourceItem(
-        source: MigrationSource,
-        showLanguage: Boolean,
-        dragEnabled: Boolean,
-        scope: ReorderableCollectionItemScope,
-        onClick: () -> Unit,
-    ) {
-        ListItem(
-            modifier = Modifier.clickable(onClick = onClick),
-            trailingContent = if (dragEnabled) {
-                {
-                    Icon(
-                        imageVector = MaterialSymbols.Rounded.DragHandle,
-                        contentDescription = null,
-                        modifier = with(scope) {
-                            Modifier.draggableHandle()
-                        },
-                    )
-                }
-            } else {
-                null
-            },
-            colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-        ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                SourceIcon(source = source.source)
-                Text(
-                    text = source.name,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.weight(1f),
-                )
-                if (showLanguage) {
-                    Pill(
-                        text = LocaleHelper.getShortDisplayName(source.shortLanguage, uppercase = true),
-                        style = MaterialTheme.typography.bodySmall,
-                    )
-                }
-            }
-        }
-    }
-
-    private class Model(
-        private val requiredEntryTypes: Set<eu.kanade.tachiyomi.source.entry.EntryType>,
-        private val excludedSourceId: Long?,
-        private val persistSourceSelection: Boolean,
-        val sourcePreferences: SourcePreferences = Injekt.get(),
-        private val sourceManager: SourceManager = Injekt.get(),
-        private val catalogueFeature: EntryCatalogueFeature = Injekt.get(),
-        private val sessionStore: SourceMigrationSessionStore = Injekt.get(),
-    ) : ViewModel() {
-
-        val state: StateFlow<Model.State>
-            field = MutableStateFlow<Model.State>(State())
-
-        private val sourcesComparator = { includedSources: List<Long> ->
-            compareBy<MigrationSource>(
-                { !it.isSelected },
-                { includedSources.indexOf(it.id) },
-                { with(it) { "$name ($shortLanguage)" } },
-            )
-        }
-
-        init {
-            viewModelScope.launchIO {
-                initSources()
-                state.update { it.copy(isLoading = false) }
-            }
-        }
-
-        private fun updateSources(action: (List<MigrationSource>) -> List<MigrationSource>) {
-            state.update { state ->
-                val updatedSources = action(state.sources)
-                val includedSources = updatedSources.mapNotNull { if (!it.isSelected) null else it.id }
-                state.copy(sources = updatedSources.sortedWith(sourcesComparator(includedSources)))
-            }
-            if (persistSourceSelection) saveSources()
-        }
-
-        private fun initSources() {
-            val languages = sourcePreferences.enabledLanguages.get()
-            val pinnedSources = sourcePreferences.pinnedSources.get().mapNotNull { it.toLongOrNull() }
-            val includedSources = sourcePreferences.migrationSources.get()
-            val disabledSources = sourcePreferences.disabledSources.get()
-                .mapNotNull { it.toLongOrNull() }
-            val sources = catalogueFeature.sources()
-                .asSequence()
-                .mapNotNull {
-                    if (it.language !in languages) return@mapNotNull null
-                    if (it.id == excludedSourceId) return@mapNotNull null
-                    val supportedEntryTypes = it.supportedEntryTypes
-                    if (supportedEntryTypes != null && !supportedEntryTypes.containsAll(requiredEntryTypes)) {
-                        return@mapNotNull null
-                    }
-                    val source = Source(
-                        id = it.id,
-                        lang = it.language,
-                        name = it.name,
-                        catalogue = tachiyomi.domain.source.model.EntryCatalogueDescription(it.supportsLatest),
-                        isStub = false,
-                    )
-                    MigrationSource(
-                        source = source,
-                        isSelected = when {
-                            includedSources.isNotEmpty() -> source.id in includedSources
-                            pinnedSources.isNotEmpty() -> source.id in pinnedSources
-                            else -> source.id !in disabledSources
-                        },
-                    )
-                }
-                .toList()
-
-            state.update { state ->
-                state.copy(sources = sources.sortedWith(sourcesComparator(includedSources)))
-            }
-        }
-
-        fun toggleSelection(id: Long) {
-            updateSources { sources ->
-                sources.map { source ->
-                    source.copy(isSelected = if (source.source.id == id) !source.isSelected else source.isSelected)
-                }
-            }
-        }
-
-        fun toggleSelection(config: SelectionConfig) {
-            val pinnedSources = sourcePreferences.pinnedSources.get().mapNotNull { it.toLongOrNull() }
-            val disabledSources = sourcePreferences.disabledSources.get().mapNotNull { it.toLongOrNull() }
-            val isSelected: (Long) -> Boolean = {
-                when (config) {
-                    SelectionConfig.All -> true
-                    SelectionConfig.None -> false
-                    SelectionConfig.Pinned -> it in pinnedSources
-                    SelectionConfig.Enabled -> it !in disabledSources
-                }
-            }
-            updateSources { sources ->
-                sources.map { source ->
-                    source.copy(isSelected = isSelected(source.source.id))
-                }
-            }
-        }
-
-        fun orderSource(from: Int, to: Int) {
-            updateSources {
-                it.toMutableList()
-                    .apply {
-                        add(to, removeAt(from))
-                    }
-                    .toList()
-            }
-        }
-
-        fun saveSources() {
-            if (!persistSourceSelection) return
-            state.value.sources
-                .filter { source -> source.isSelected }
-                .map { source -> source.source.id }
-                .let { sources -> sourcePreferences.migrationSources.set(sources) }
-        }
-
-        fun startSession(
-            groups: List<SourceMigrationSessionGroupDraft>,
-            originSourceId: Long,
-            selectedOptions: Set<EntryMigrationOption>,
-            initialDiscoveryDepth: SourceMigrationDiscoveryDepth,
-        ) {
-            if (state.value.isStarting) return
-            val profileId = groups.first().members.first().profileId
-            val targetSourceIds = state.value.selectedSourceIds
-            if (targetSourceIds.isEmpty()) return
-            state.update { it.copy(isStarting = true) }
-            viewModelScope.launchIO {
-                val sessionId = sessionStore.create(
-                    SourceMigrationSessionDraft(
-                        profileId = profileId,
-                        originSourceId = originSourceId,
-                        groups = groups,
-                        targetSourceIds = targetSourceIds,
-                        selectedOptions = selectedOptions,
-                        initialDiscoveryDepth = initialDiscoveryDepth,
-                    ),
-                )
-                state.update { it.copy(createdSessionId = sessionId) }
-            }
-        }
-
-        data class State(
-            val isLoading: Boolean = true,
-            val sources: List<MigrationSource> = emptyList(),
-            val isStarting: Boolean = false,
-            val createdSessionId: SourceMigrationSessionId? = null,
-        ) {
-            val selectedSourceIds: List<Long>
-                get() = sources.filter(MigrationSource::isSelected).map(MigrationSource::id)
-        }
-
-        enum class SelectionConfig {
-            All,
-            None,
-            Pinned,
-            Enabled,
-        }
-    }
-
-    data class MigrationSource(
-        val source: Source,
-        val isSelected: Boolean,
-    ) {
-        val id: Long
-            inline get() = source.id
-
-        val name: String
-            inline get() = source.name
-
-        val shortLanguage: String = LocaleHelper.getShortDisplayName(source.lang)
     }
 }

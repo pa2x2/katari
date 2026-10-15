@@ -1,52 +1,46 @@
 package mihon.feature.migration.config
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.ListItemDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Switch
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.util.fastForEach
 import eu.kanade.core.util.fastFilterNot
 import eu.kanade.domain.source.service.SourcePreferences
-import eu.kanade.presentation.components.AdaptiveSheet
 import mihon.domain.migration.models.MigrationFlag
 import mihon.entry.interactions.migration.EntryMigrationOption
 import mihon.feature.migration.options.getLabel
 import mihon.feature.migration.options.toEntryMigrationOptions
 import mihon.feature.migration.session.model.SourceMigrationDiscoveryDepth
 import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.Check
 import mihon.icons.materialsymbols.roundedfilled.Warning
+import mihon.presentation.kit.button.Button
+import mihon.presentation.kit.chip.FilterChip
+import mihon.presentation.kit.content.Icon
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.field.TextField
+import mihon.presentation.kit.list.ChipsRow
+import mihon.presentation.kit.list.ToggleRow
+import mihon.presentation.kit.sheet.Sheet
+import mihon.presentation.kit.surface.HorizontalDivider
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.getAndSet
 import tachiyomi.core.common.preference.toggle
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.material.Button
-import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.theme.active
-import tachiyomi.presentation.core.theme.header
 import tachiyomi.presentation.core.util.collectAsState
 
 @Composable
@@ -64,37 +58,21 @@ fun MigrationConfigScreenSheet(
     var extraSearchQuery by rememberSaveable { mutableStateOf("") }
     var initialAdvancedSearch by rememberSaveable { mutableStateOf(false) }
     val migrationFlags by preferences.migrationFlags.collectAsState()
-    AdaptiveSheet(onDismissRequest = onDismissRequest) {
+    Sheet(onDismissRequest = onDismissRequest) {
         Column(modifier = Modifier.fillMaxWidth()) {
             Column(
                 modifier = Modifier
                     .weight(1f, fill = false)
                     .fillMaxWidth()
-                    .verticalScroll(rememberScrollState())
-                    .padding(top = MaterialTheme.padding.medium),
+                    .verticalScroll(rememberScrollState()),
             ) {
-                Text(
-                    text = stringResource(MR.strings.migrationConfigScreen_dataToMigrateHeader),
-                    style = MaterialTheme.typography.header,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = MaterialTheme.padding.extraSmall)
-                        .padding(horizontal = MaterialTheme.padding.medium),
-                )
-                Spacer(modifier = Modifier.height(MaterialTheme.padding.extraSmall))
-                FlowRow(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = MaterialTheme.padding.medium)
-                        .padding(bottom = MaterialTheme.padding.extraSmall),
-                    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
-                ) {
+                ChipsRow(title = stringResource(MR.strings.migrationConfigScreen_dataToMigrateHeader)) {
                     MigrationFlag.entries
                         .fastFilterNot { it == MigrationFlag.REMOVE_DOWNLOAD }
                         .fastForEach { flag ->
-                            val selected = flag in migrationFlags
                             FilterChip(
-                                selected = selected,
+                                label = stringResource(flag.getLabel()),
+                                selected = flag in migrationFlags,
                                 onClick = {
                                     preferences.migrationFlags.getAndSet { currentFlags ->
                                         if (flag in currentFlags) {
@@ -104,77 +82,59 @@ fun MigrationConfigScreenSheet(
                                         }
                                     }
                                 },
-                                label = { Text(stringResource(flag.getLabel())) },
-                                leadingIcon = {
-                                    if (selected) {
-                                        Icon(
-                                            imageVector = MaterialSymbols.Rounded.Check,
-                                            contentDescription = null,
-                                        )
-                                    }
-                                },
                             )
                         }
                 }
                 val removeDownloads = MigrationFlag.REMOVE_DOWNLOAD in migrationFlags
-                MigrationSheetSwitchItem(
+                ToggleRow(
                     title = stringResource(MR.strings.migrationConfigScreen_removeDownloadsTitle),
-                    subtitle = null,
                     checked = removeDownloads,
-                    onClick = {
+                    onCheckedChange = { remove ->
                         preferences.migrationFlags.getAndSet {
-                            if (removeDownloads) {
-                                it - MigrationFlag.REMOVE_DOWNLOAD
-                            } else {
-                                it + MigrationFlag.REMOVE_DOWNLOAD
-                            }
+                            if (remove) it + MigrationFlag.REMOVE_DOWNLOAD else it - MigrationFlag.REMOVE_DOWNLOAD
                         }
                     },
                 )
                 if (showInitialAdvancedSearchOption) {
-                    MigrationSheetDividerItem()
-                    MigrationSheetSwitchItem(
+                    HorizontalDivider()
+                    ToggleRow(
                         title = stringResource(MR.strings.migrationConfigScreen_deepSearchModeTitle),
                         subtitle = stringResource(MR.strings.migrationConfigScreen_deepSearchModeSubtitle),
                         checked = initialAdvancedSearch,
-                        onClick = { initialAdvancedSearch = !initialAdvancedSearch },
+                        onCheckedChange = { initialAdvancedSearch = it },
                     )
                 }
                 if (showSearchOptions) {
-                    MigrationSheetDividerItem()
-                    OutlinedTextField(
+                    HorizontalDivider()
+                    TextField(
                         value = extraSearchQuery,
                         onValueChange = { extraSearchQuery = it },
-                        label = { Text(stringResource(MR.strings.migrationConfigScreen_additionalSearchQueryLabel)) },
-                        supportingText = {
-                            Text(stringResource(MR.strings.migrationConfigScreen_additionalSearchQuerySupportingText))
-                        },
-                        singleLine = true,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(
-                                horizontal = MaterialTheme.padding.medium,
-                                vertical = MaterialTheme.padding.extraSmall,
-                            ),
+                            .padding(horizontal = KatariTheme.spacing.rowInset, vertical = KatariTheme.spacing.s),
+                        label = stringResource(MR.strings.migrationConfigScreen_additionalSearchQueryLabel),
+                        supportingText = stringResource(
+                            MR.strings.migrationConfigScreen_additionalSearchQuerySupportingText,
+                        ),
                     )
-                    MigrationSheetSwitchItem(
+                    PreferenceToggleRow(
                         title = stringResource(MR.strings.migrationConfigScreen_hideUnmatchedTitle),
                         subtitle = null,
                         preference = preferences.migrationHideUnmatched,
                     )
-                    MigrationSheetSwitchItem(
+                    PreferenceToggleRow(
                         title = stringResource(MR.strings.migrationConfigScreen_hideWithoutUpdatesTitle),
                         subtitle = stringResource(MR.strings.migrationConfigScreen_hideWithoutUpdatesSubtitle),
                         preference = preferences.migrationHideWithoutUpdates,
                     )
-                    MigrationSheetDividerItem()
-                    MigrationSheetWarningItem(stringResource(MR.strings.migrationConfigScreen_enhancedOptionsWarning))
-                    MigrationSheetSwitchItem(
+                    HorizontalDivider()
+                    EnhancedOptionsWarning(stringResource(MR.strings.migrationConfigScreen_enhancedOptionsWarning))
+                    PreferenceToggleRow(
                         title = stringResource(MR.strings.migrationConfigScreen_deepSearchModeTitle),
                         subtitle = stringResource(MR.strings.migrationConfigScreen_deepSearchModeSubtitle),
                         preference = preferences.migrationDeepSearchMode,
                     )
-                    MigrationSheetSwitchItem(
+                    PreferenceToggleRow(
                         title = stringResource(MR.strings.migrationConfigScreen_prioritizeByChaptersTitle),
                         subtitle = stringResource(MR.strings.migrationConfigScreen_prioritizeByChaptersSubtitle),
                         preference = preferences.migrationPrioritizeByChapters,
@@ -183,6 +143,7 @@ fun MigrationConfigScreenSheet(
             }
             HorizontalDivider()
             Button(
+                label = stringResource(MR.strings.migrationConfigScreen_continueButtonText),
                 onClick = {
                     val cleanedExtraSearchQuery = extraSearchQuery.trim().ifBlank { null }
                     onStartMigration(
@@ -197,75 +158,36 @@ fun MigrationConfigScreenSheet(
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(
-                        horizontal = MaterialTheme.padding.medium,
-                        vertical = MaterialTheme.padding.small,
-                    ),
-            ) {
-                Text(text = stringResource(MR.strings.migrationConfigScreen_continueButtonText))
-            }
+                    .padding(horizontal = KatariTheme.spacing.rowInset, vertical = KatariTheme.spacing.s),
+            )
         }
     }
 }
 
 @Composable
-private fun MigrationSheetSwitchItem(
+private fun PreferenceToggleRow(
     title: String,
     subtitle: String?,
     preference: Preference<Boolean>,
 ) {
-    MigrationSheetSwitchItem(
+    ToggleRow(
         title = title,
         subtitle = subtitle,
         checked = preference.collectAsState().value,
-        onClick = { preference.toggle() },
+        onCheckedChange = { preference.toggle() },
     )
 }
 
 @Composable
-private fun MigrationSheetSwitchItem(
-    title: String,
-    subtitle: String?,
-    checked: Boolean,
-    onClick: () -> Unit,
-) {
-    ListItem(
-        modifier = Modifier.clickable(onClick = onClick),
-        trailingContent = {
-            Switch(
-                checked = checked,
-                onCheckedChange = null,
-            )
-        },
-        supportingContent = subtitle?.let { { Text(text = subtitle) } },
-        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-        content = { Text(text = title) },
-    )
-}
-
-@Composable
-private fun MigrationSheetDividerItem() {
-    HorizontalDivider(modifier = Modifier.padding(vertical = MaterialTheme.padding.extraSmall))
-}
-
-@Composable
-private fun MigrationSheetWarningItem(
-    text: String,
-) {
-    ListItem(
-        leadingContent = {
-            Icon(
-                imageVector = MaterialSymbols.RoundedFilled.Warning,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.active,
-            )
-        },
-        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+private fun EnhancedOptionsWarning(text: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = KatariTheme.spacing.rowInset, vertical = KatariTheme.spacing.m),
+        horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.l),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(
-            text = text,
-            color = MaterialTheme.colorScheme.error,
-            modifier = Modifier,
-        )
+        Icon(imageVector = MaterialSymbols.RoundedFilled.Warning, contentDescription = null, tone = ContentTone.Active)
+        Text(text = text, role = TextRole.Body, tone = ContentTone.Error)
     }
 }

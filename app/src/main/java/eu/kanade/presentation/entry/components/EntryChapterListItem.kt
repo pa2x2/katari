@@ -1,16 +1,12 @@
 package eu.kanade.presentation.entry.components
 
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.unit.dp
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.presentation.entry.translation.ChapterTranslateAction
 import me.saket.swipe.SwipeableActionsBox
@@ -24,11 +20,15 @@ import mihon.icons.materialsymbols.rounded.Delete
 import mihon.icons.materialsymbols.rounded.Download
 import mihon.icons.materialsymbols.rounded.FileDownloadOff
 import mihon.icons.materialsymbols.rounded.RemoveDone
+import mihon.presentation.kit.content.EntryMetrics
+import mihon.presentation.kit.content.Icon
+import mihon.presentation.kit.list.ChapterRow
+import mihon.presentation.kit.surface.pulsingHighlight
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.LocalContentColor
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.EntryChildListItemContent
-import tachiyomi.presentation.core.components.pulsingHighlightBackground
-import tachiyomi.presentation.core.util.selectedBackground
+import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable
 fun EntryChapterListItem(
@@ -60,7 +60,7 @@ fun EntryChapterListItem(
         read = read,
         bookmark = bookmark,
         downloadState = downloadStateProvider(),
-        background = MaterialTheme.colorScheme.primaryContainer,
+        background = KatariTheme.colors.primaryContainer,
         onSwipe = { onChapterSwipe(chapterSwipeStartAction) },
     )
     val end = getSwipeAction(
@@ -68,7 +68,7 @@ fun EntryChapterListItem(
         read = read,
         bookmark = bookmark,
         downloadState = downloadStateProvider(),
-        background = MaterialTheme.colorScheme.primaryContainer,
+        background = KatariTheme.colors.primaryContainer,
         onSwipe = { onChapterSwipe(chapterSwipeEndAction) },
     )
 
@@ -76,35 +76,30 @@ fun EntryChapterListItem(
         modifier = Modifier.clipToBounds(),
         startActions = listOfNotNull(start),
         endActions = listOfNotNull(end),
-        swipeThreshold = swipeActionThreshold,
-        backgroundUntilSwipeThreshold = MaterialTheme.colorScheme.surfaceContainerLowest,
+        swipeThreshold = EntryMetrics.chapterSwipeThreshold,
+        backgroundUntilSwipeThreshold = KatariTheme.colors.surfaceContainerLowest,
     ) {
-        EntryChildListItemContent(
+        ChapterRow(
             title = title,
-            date = date,
-            readProgress = readProgress,
-            scanlator = scanlator,
-            duration = duration,
             read = read,
             bookmark = bookmark,
-            unconsumedIndicatorLabel = unconsumedIndicatorLabel,
-            modifier = modifier
-                .selectedBackground(selected)
-                .pulsingHighlightBackground(
-                    trigger = highlightTrigger,
-                    visible = !selected,
-                    iterations = 2,
-                    highlightDurationMillis = 1_400L,
-                )
-                .combinedClickable(
-                    onClick = onClick,
-                    onLongClick = onLongClick,
-                )
-                .padding(start = 16.dp, top = 12.dp, end = 8.dp, bottom = 12.dp),
-            trailingContent = {
+            onClick = onClick,
+            modifier = modifier.pulsingHighlight(
+                trigger = highlightTrigger,
+                visible = !selected,
+                iterations = 2,
+                highlightDurationMillis = 1_400L,
+            ),
+            date = date,
+            duration = duration,
+            progress = readProgress,
+            scanlator = scanlator,
+            unreadLabel = stringResource(unconsumedIndicatorLabel),
+            selected = selected,
+            onLongClick = onLongClick,
+            trailing = {
                 EntryChapterDownloadIndicator(
                     enabled = downloadIndicatorEnabled,
-                    modifier = Modifier.padding(start = 4.dp),
                     downloadStateProvider = downloadStateProvider,
                     downloadProgressProvider = downloadProgressProvider,
                     onClick = onDownloadClick,
@@ -158,17 +153,16 @@ private fun swipeAction(
 ): me.saket.swipe.SwipeAction {
     return me.saket.swipe.SwipeAction(
         icon = {
-            Icon(
-                modifier = Modifier.padding(16.dp),
-                imageVector = icon,
-                tint = contentColorFor(background),
-                contentDescription = null,
-            )
+            CompositionLocalProvider(LocalContentColor provides KatariTheme.colors.onPrimaryContainer) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    modifier = Modifier.padding(KatariTheme.spacing.l),
+                )
+            }
         },
         background = background,
         onSwipe = onSwipe,
         isUndo = isUndo,
     )
 }
-
-private val swipeActionThreshold = 56.dp

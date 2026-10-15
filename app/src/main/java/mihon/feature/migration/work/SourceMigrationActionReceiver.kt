@@ -4,11 +4,9 @@ import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import mihon.app.di.appGraph
 import mihon.feature.migration.session.model.SourceMigrationSessionId
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 
 class SourceMigrationActionReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
@@ -19,9 +17,10 @@ class SourceMigrationActionReceiver : BroadcastReceiver() {
         if (intent.action != ACTION_PAUSE_DISCOVERY && intent.action != ACTION_PAUSE_EXECUTION) return
 
         val pendingResult = goAsync()
-        Injekt.get<CoroutineScope>().launch {
+        val graph = context.appGraph
+        graph.appScope.launch {
             try {
-                val scheduler = Injekt.get<SourceMigrationWorkScheduler>()
+                val scheduler = graph.sourceMigrationWorkScheduler
                 when (intent.action) {
                     ACTION_PAUSE_DISCOVERY -> scheduler.pauseDiscovery(sessionId)
                     ACTION_PAUSE_EXECUTION -> scheduler.pauseExecution(sessionId)

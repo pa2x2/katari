@@ -3,17 +3,6 @@ package eu.kanade.presentation.entry.components
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.PlainTooltip
-import androidx.compose.material3.SmallExtendedFloatingActionButton
-import androidx.compose.material3.SmallFloatingActionButton
-import androidx.compose.material3.Text
-import androidx.compose.material3.TooltipAnchorPosition
-import androidx.compose.material3.TooltipBox
-import androidx.compose.material3.TooltipDefaults.rememberTooltipPositionProvider
-import androidx.compose.material3.animateFloatingActionButton
-import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -26,8 +15,11 @@ import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.KeyboardArrowDown
 import mihon.icons.materialsymbols.rounded.KeyboardArrowUp
 import mihon.icons.materialsymbols.roundedfilled.PlayArrow
+import mihon.presentation.kit.button.FloatingActionButton
+import mihon.presentation.kit.button.SmallFloatingActionButton
+import mihon.presentation.kit.feedback.Tooltip
+import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.shouldExpandFAB
 
@@ -71,17 +63,17 @@ fun EntryContinueActions(
 
     Column(
         horizontalAlignment = Alignment.End,
-        verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
+        verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
     ) {
         continueTargetListIndex?.let { targetIndex ->
             val label = stringResource(MR.strings.action_go_to_current_chapter)
-            TooltipBox(
-                positionProvider = rememberTooltipPositionProvider(TooltipAnchorPosition.Above),
-                tooltip = { PlainTooltip { Text(label) } },
-                state = rememberTooltipState(),
-                focusable = false,
-            ) {
+            Tooltip(text = label) {
                 SmallFloatingActionButton(
+                    icon = when (targetPosition) {
+                        EntryContinueTargetPosition.Above -> MaterialSymbols.Rounded.KeyboardArrowUp
+                        EntryContinueTargetPosition.Below, null -> MaterialSymbols.Rounded.KeyboardArrowDown
+                    },
+                    contentDescription = label,
                     onClick = {
                         scope.launch {
                             val layoutInfo = listState.layoutInfo
@@ -92,33 +84,17 @@ fun EntryContinueActions(
                             onTargetReached()
                         }
                     },
-                    modifier = Modifier.animateFloatingActionButton(
-                        visible = visible && targetPosition != null,
-                        alignment = Alignment.BottomEnd,
-                    ),
-                ) {
-                    Icon(
-                        imageVector = when (targetPosition) {
-                            EntryContinueTargetPosition.Above -> MaterialSymbols.Rounded.KeyboardArrowUp
-                            EntryContinueTargetPosition.Below, null -> MaterialSymbols.Rounded.KeyboardArrowDown
-                        },
-                        contentDescription = label,
-                    )
-                }
+                    visible = visible && targetPosition != null,
+                )
             }
         }
 
-        SmallExtendedFloatingActionButton(
-            text = {
-                Text(stringResource(if (isReading) MR.strings.action_resume else MR.strings.action_start))
-            },
-            icon = { Icon(imageVector = MaterialSymbols.RoundedFilled.PlayArrow, contentDescription = null) },
+        FloatingActionButton(
+            label = stringResource(if (isReading) MR.strings.action_resume else MR.strings.action_start),
+            icon = MaterialSymbols.RoundedFilled.PlayArrow,
             onClick = onContinueReading,
             expanded = listState.shouldExpandFAB(),
-            modifier = Modifier.animateFloatingActionButton(
-                visible = visible,
-                alignment = Alignment.BottomEnd,
-            ),
+            visible = visible,
         )
     }
 }

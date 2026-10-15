@@ -1,52 +1,38 @@
 package mihon.feature.migration.review.components
 
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.entry.components.EntryCover
 import mihon.feature.migration.review.SourceMigrationReviewGroup
 import mihon.feature.migration.review.SourceMigrationReviewMapping
 import mihon.feature.migration.review.SourceMigrationReviewMember
 import mihon.feature.migration.session.model.SourceMigrationItemState
-import mihon.feature.migration.session.model.SourceMigrationMatchKind
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.ArrowDownward
+import mihon.presentation.kit.content.Badge
+import mihon.presentation.kit.content.BadgeGroup
+import mihon.presentation.kit.content.BadgeTone
+import mihon.presentation.kit.content.Icon
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.list.SectionHeader
+import mihon.presentation.kit.surface.Card
+import mihon.presentation.kit.surface.CardStyle
+import mihon.presentation.kit.surface.HorizontalDivider
+import mihon.presentation.kit.surface.Surface
+import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.Badge
-import tachiyomi.presentation.core.components.BadgeGroup
-import tachiyomi.presentation.core.components.ListGroupHeader
-import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable
@@ -57,50 +43,43 @@ internal fun SourceMigrationDiscoveryGroupCard(
     onTargetClick: (sourceEntryId: Long) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    ElevatedCard(modifier = modifier.fillMaxWidth()) {
-        Column {
-            SourceMigrationDiscoveryGroupHeader(group)
+    Card(modifier = modifier.fillMaxWidth(), style = CardStyle.Elevated) {
+        SourceMigrationDiscoveryGroupHeader(group)
 
-            if (group.memberCount > 1) {
-                ListGroupHeader(
-                    text = stringResource(MR.strings.sourceMigrationReview_included, group.mappings.size),
-                )
-            }
+        if (group.memberCount > 1) {
+            SectionHeader(text = stringResource(MR.strings.sourceMigrationReview_included, group.mappings.size))
+        }
 
-            group.mappings.forEachIndexed { index, mapping ->
-                if (index > 0) HorizontalDivider()
-                SourceMigrationDiscoveryMapping(
-                    mapping = mapping,
-                    sourceRole = when {
-                        group.memberCount == 1 -> stringResource(MR.strings.sourceMigrationReview_current)
-                        mapping.item.sourceEntryId == group.visibleEntryId -> {
-                            stringResource(MR.strings.sourceMigrationReview_primary)
-                        }
-                        else -> stringResource(MR.strings.label_member)
-                    },
-                    targetRole = if (
-                        group.memberCount > 1 && mapping.item.sourceEntryId == group.visibleEntryId
-                    ) {
-                        stringResource(MR.strings.sourceMigrationReview_newPrimary)
-                    } else {
-                        null
-                    },
-                    onSourceDetailsClick = onSourceDetailsClick,
-                    onTargetDetailsClick = onTargetDetailsClick,
-                    onTargetClick = onTargetClick,
-                )
-            }
+        group.mappings.forEachIndexed { index, mapping ->
+            if (index > 0) HorizontalDivider()
+            SourceMigrationDiscoveryMapping(
+                mapping = mapping,
+                sourceRole = when {
+                    group.memberCount == 1 -> stringResource(MR.strings.sourceMigrationReview_current)
+                    mapping.item.sourceEntryId == group.visibleEntryId -> {
+                        stringResource(MR.strings.sourceMigrationReview_primary)
+                    }
+                    else -> stringResource(MR.strings.label_member)
+                },
+                targetRole = if (
+                    group.memberCount > 1 && mapping.item.sourceEntryId == group.visibleEntryId
+                ) {
+                    stringResource(MR.strings.sourceMigrationReview_newPrimary)
+                } else {
+                    null
+                },
+                onSourceDetailsClick = onSourceDetailsClick,
+                onTargetDetailsClick = onTargetDetailsClick,
+                onTargetClick = onTargetClick,
+            )
+        }
 
-            if (group.notSelectedMembers.isNotEmpty()) {
-                ListGroupHeader(
-                    text = stringResource(
-                        MR.strings.sourceMigrationReview_notSelected,
-                        group.notSelectedMembers.size,
-                    ),
-                )
-                group.notSelectedMembers.forEach { member ->
-                    SourceMigrationDiscoveryNotSelectedMember(member, onSourceDetailsClick)
-                }
+        if (group.notSelectedMembers.isNotEmpty()) {
+            SectionHeader(
+                text = stringResource(MR.strings.sourceMigrationReview_notSelected, group.notSelectedMembers.size),
+            )
+            group.notSelectedMembers.forEach { member ->
+                SourceMigrationDiscoveryNotSelectedMember(member, onSourceDetailsClick)
             }
         }
     }
@@ -115,13 +94,18 @@ private fun SourceMigrationDiscoveryGroupHeader(group: SourceMigrationReviewGrou
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(MaterialTheme.padding.medium),
-        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
+            .padding(
+                start = KatariTheme.spacing.rowInset,
+                end = KatariTheme.spacing.l,
+                top = KatariTheme.spacing.l,
+                bottom = KatariTheme.spacing.s,
+            ),
+        horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
         verticalAlignment = Alignment.Top,
     ) {
         Column(
             modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.extraSmall),
+            verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xs),
         ) {
             Text(
                 text = if (group.memberCount == 1) {
@@ -129,22 +113,19 @@ private fun SourceMigrationDiscoveryGroupHeader(group: SourceMigrationReviewGrou
                 } else {
                     stringResource(MR.strings.sourceMigrationReview_mergedEntry, group.memberCount)
                 },
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                style = MaterialTheme.typography.labelMedium,
+                role = TextRole.Caption,
+                tone = ContentTone.Secondary,
             )
             if (group.memberCount > 1) {
                 Text(
                     text = group.title,
+                    role = TextRole.SectionTitle,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
-                    style = MaterialTheme.typography.titleMedium,
                 )
                 Text(
                     text = if (group.notSelectedMembers.isEmpty()) {
-                        stringResource(
-                            MR.strings.sourceMigrationReview_groupReplacements,
-                            group.mappings.size,
-                        )
+                        stringResource(MR.strings.sourceMigrationReview_groupReplacements, group.mappings.size)
                     } else {
                         stringResource(
                             MR.strings.sourceMigrationReview_groupReplacementsNotSelected,
@@ -152,15 +133,11 @@ private fun SourceMigrationDiscoveryGroupHeader(group: SourceMigrationReviewGrou
                             group.notSelectedMembers.size,
                         )
                     },
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.bodySmall,
+                    role = TextRole.Supporting,
                 )
             }
         }
-        SourceMigrationDiscoveryStatusBadge(
-            searching = searching,
-            noMatchCount = noMatchCount,
-        )
+        SourceMigrationGroupStatusPill(searching = searching, noMatchCount = noMatchCount)
     }
 }
 
@@ -174,21 +151,15 @@ private fun SourceMigrationDiscoveryMapping(
     onTargetClick: (sourceEntryId: Long) -> Unit,
 ) {
     val item = mapping.item
+    val targetModifier = Modifier.padding(horizontal = KatariTheme.spacing.l)
     Column(
-        modifier = Modifier.padding(vertical = MaterialTheme.padding.extraSmall),
-        verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.extraSmall),
+        modifier = Modifier.padding(vertical = KatariTheme.spacing.xs),
+        verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xs),
     ) {
         SourceMigrationEntryListItem(
             title = item.sourceTitle,
             thumbnailUrl = item.sourceThumbnailUrl,
-            supportingContent = {
-                Text(
-                    text = mapping.sourceName,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            },
+            supportingText = mapping.sourceName,
             trailingContent = {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     SourceMigrationRoleBadge(sourceRole)
@@ -204,27 +175,19 @@ private fun SourceMigrationDiscoveryMapping(
         when {
             item.targetTitle != null -> {
                 Surface(
-                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                    shape = MaterialTheme.shapes.medium,
-                    modifier = Modifier
-                        .padding(horizontal = MaterialTheme.padding.small)
-                        .fillMaxWidth(),
+                    modifier = targetModifier.fillMaxWidth(),
+                    container = SurfaceContainer.High,
+                    shape = KatariTheme.shapes.medium,
                 ) {
                     SourceMigrationEntryListItem(
                         title = item.targetTitle,
                         thumbnailUrl = item.targetThumbnailUrl,
+                        inset = KatariTheme.spacing.s,
                         onClick = { onTargetClick(item.sourceEntryId) },
-                        supportingContent = {
-                            Text(
-                                text = listOfNotNull(
-                                    mapping.targetSourceName,
-                                    item.matchKind?.let { matchKind -> matchKindLabel(matchKind) },
-                                ).joinToString(separator = " · "),
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                            )
-                        },
+                        supportingText = listOfNotNull(
+                            mapping.targetSourceName,
+                            item.matchKind?.let { matchKind -> sourceMigrationMatchKindLabel(matchKind) },
+                        ).joinToString(separator = " · "),
                         trailingContent = item.selectedTargetEntryId?.let { targetEntryId ->
                             {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -238,9 +201,10 @@ private fun SourceMigrationDiscoveryMapping(
                     )
                 }
             }
-            item.state in SEARCHING_STATES -> SourceMigrationTargetPlaceholder(item.state)
+            item.state in SEARCHING_STATES -> SourceMigrationTargetPlaceholder(item.state, targetModifier)
             else -> SourceMigrationMissingTarget(
                 onClick = { onTargetClick(item.sourceEntryId) },
+                modifier = targetModifier,
             )
         }
     }
@@ -249,141 +213,26 @@ private fun SourceMigrationDiscoveryMapping(
 @Composable
 private fun SourceMigrationReplacementConnector() {
     Row(
-        modifier = Modifier.padding(horizontal = MaterialTheme.padding.medium),
-        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
+        modifier = Modifier.padding(horizontal = KatariTheme.spacing.rowInset),
+        horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Surface(
-            color = MaterialTheme.colorScheme.secondaryContainer,
-            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-            shape = CircleShape,
-            modifier = Modifier.size(24.dp),
+            modifier = Modifier.size(KatariTheme.sizes.icon),
+            container = SurfaceContainer.SecondaryContainer,
+            shape = KatariTheme.shapes.full,
         ) {
             Icon(
                 imageVector = MaterialSymbols.Rounded.ArrowDownward,
                 contentDescription = null,
-                modifier = Modifier.padding(4.dp),
+                modifier = Modifier.padding(KatariTheme.spacing.xs),
             )
         }
         Text(
             text = stringResource(MR.strings.sourceMigrationReview_willBeReplacedBy),
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            style = MaterialTheme.typography.labelMedium,
+            role = TextRole.Caption,
+            tone = ContentTone.Secondary,
         )
-    }
-}
-
-@Composable
-private fun SourceMigrationTargetPlaceholder(state: SourceMigrationItemState) {
-    val transition = rememberInfiniteTransition(label = "sourceMigrationSkeleton")
-    val skeletonAlpha by transition.animateFloat(
-        initialValue = 0.35f,
-        targetValue = 0.85f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 700),
-            repeatMode = RepeatMode.Reverse,
-        ),
-        label = "sourceMigrationSkeletonAlpha",
-    )
-    val skeletonColor = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = skeletonAlpha)
-
-    Surface(
-        color = MaterialTheme.colorScheme.surfaceContainerHigh,
-        shape = MaterialTheme.shapes.medium,
-        modifier = Modifier
-            .padding(horizontal = MaterialTheme.padding.small)
-            .fillMaxWidth(),
-    ) {
-        Row(
-            modifier = Modifier.padding(MaterialTheme.padding.small),
-            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.medium),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            SourceMigrationSkeleton(
-                modifier = Modifier
-                    .width(44.dp)
-                    .aspectRatio(EntryCover.Book.ratio),
-                color = skeletonColor,
-            )
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
-            ) {
-                SourceMigrationSkeleton(
-                    modifier = Modifier
-                        .fillMaxWidth(0.8f)
-                        .height(14.dp),
-                    color = skeletonColor,
-                )
-                SourceMigrationSkeleton(
-                    modifier = Modifier
-                        .fillMaxWidth(0.55f)
-                        .height(12.dp),
-                    color = skeletonColor,
-                )
-            }
-            SourceMigrationDiscoveryItemStatusBadge(state)
-        }
-    }
-}
-
-@Composable
-private fun SourceMigrationDiscoveryItemStatusBadge(state: SourceMigrationItemState) {
-    val active = state == SourceMigrationItemState.DISCOVERING
-    val containerColor = if (active) {
-        MaterialTheme.colorScheme.secondary
-    } else {
-        MaterialTheme.colorScheme.surfaceContainerHighest
-    }
-    BadgeGroup {
-        Badge(
-            text = stringResource(
-                if (active) {
-                    MR.strings.sourceMigrationReview_searchingNow
-                } else {
-                    MR.strings.sourceMigrationReview_queued
-                },
-            ),
-            color = containerColor,
-            textColor = contentColorFor(containerColor),
-        )
-    }
-}
-
-@Composable
-private fun SourceMigrationMissingTarget(onClick: () -> Unit) {
-    Surface(
-        color = MaterialTheme.colorScheme.surfaceContainerHigh,
-        shape = MaterialTheme.shapes.medium,
-        modifier = Modifier
-            .padding(horizontal = MaterialTheme.padding.small)
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-    ) {
-        Row(
-            modifier = Modifier.padding(MaterialTheme.padding.medium),
-            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Box(
-                modifier = Modifier
-                    .width(44.dp)
-                    .aspectRatio(EntryCover.Book.ratio)
-                    .clip(MaterialTheme.shapes.extraSmall)
-                    .background(MaterialTheme.colorScheme.surfaceContainerHighest),
-            )
-            Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.extraSmall)) {
-                Text(
-                    text = stringResource(MR.strings.sourceMigrationReview_chooseReplacement),
-                    style = MaterialTheme.typography.bodyLarge,
-                )
-                Text(
-                    text = stringResource(MR.strings.sourceMigrationReview_noAutomaticMatch),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.bodySmall,
-                )
-            }
-        }
     }
 }
 
@@ -395,24 +244,26 @@ private fun SourceMigrationDiscoveryNotSelectedMember(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .alpha(0.7f)
             .padding(
-                horizontal = MaterialTheme.padding.medium,
-                vertical = MaterialTheme.padding.small,
+                start = KatariTheme.spacing.rowInset,
+                end = KatariTheme.spacing.l,
+                top = KatariTheme.spacing.s,
+                bottom = KatariTheme.spacing.s,
             ),
-        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
+        horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         EntryCover.Book(
             data = member.member.thumbnailUrl,
-            modifier = Modifier.width(24.dp),
+            modifier = Modifier.width(KatariTheme.sizes.icon),
         )
         Text(
             text = member.member.title,
             modifier = Modifier.weight(1f),
+            role = TextRole.Body,
+            tone = ContentTone.Secondary,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            style = MaterialTheme.typography.bodyMedium,
         )
         SourceMigrationRoleBadge(stringResource(MR.strings.label_member))
         SourceMigrationEntryDetailsButton {
@@ -421,56 +272,12 @@ private fun SourceMigrationDiscoveryNotSelectedMember(
     }
 }
 
-@Composable
-private fun SourceMigrationDiscoveryStatusBadge(searching: Boolean, noMatchCount: Int) {
-    val containerColor = when {
-        searching -> MaterialTheme.colorScheme.secondary
-        noMatchCount > 0 -> MaterialTheme.colorScheme.error
-        else -> MaterialTheme.colorScheme.primary
-    }
-    val label = when {
-        searching -> stringResource(MR.strings.sourceMigrationReview_searching)
-        noMatchCount > 0 -> stringResource(MR.strings.sourceMigrationReview_noMatch, noMatchCount)
-        else -> stringResource(MR.strings.sourceMigrationReview_ready)
-    }
-    BadgeGroup {
-        Badge(
-            text = label,
-            color = containerColor,
-            textColor = contentColorFor(containerColor),
-        )
-    }
-}
-
+/** What an entry is within its merged group, such as its primary or a member. */
 @Composable
 private fun SourceMigrationRoleBadge(label: String) {
     BadgeGroup {
-        Badge(
-            text = label,
-            color = MaterialTheme.colorScheme.surfaceContainerHighest,
-            textColor = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+        Badge(text = label, tone = BadgeTone.Neutral)
     }
-}
-
-@Composable
-private fun SourceMigrationSkeleton(modifier: Modifier, color: Color) {
-    Box(
-        modifier = modifier
-            .clip(MaterialTheme.shapes.extraSmall)
-            .background(color),
-    )
-}
-
-@Composable
-private fun matchKindLabel(matchKind: SourceMigrationMatchKind): String {
-    return stringResource(
-        when (matchKind) {
-            SourceMigrationMatchKind.EXACT -> MR.strings.sourceMigrationReview_exactMatch
-            SourceMigrationMatchKind.SIMILAR -> MR.strings.sourceMigrationReview_similarMatch
-            SourceMigrationMatchKind.MANUAL -> MR.strings.sourceMigrationReview_manualMatch
-        },
-    )
 }
 
 private val SEARCHING_STATES = setOf(

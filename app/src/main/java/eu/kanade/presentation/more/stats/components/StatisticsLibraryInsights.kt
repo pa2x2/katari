@@ -4,30 +4,28 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.entry.components.presentation
 import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.presentation.more.stats.data.StatsLabelCount
 import eu.kanade.presentation.more.stats.data.StatsLibraryInsights
 import eu.kanade.tachiyomi.source.entry.EntryType
+import mihon.presentation.kit.content.StatisticsMetrics
+import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
@@ -47,7 +45,10 @@ internal fun StatisticsLibraryInsightsCard(
     val numbers = NumberFormat.getIntegerInstance()
     val typePresentation = type.entryTypePresentation()
     StatisticsSectionCard(title = stringResource(MR.strings.statistics_library_insights)) {
-        Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(
+            Modifier.fillMaxWidth().height(IntrinsicSize.Min),
+            horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
+        ) {
             StatisticsInsightTile(
                 value = numbers.format(insights.unconsumedCount),
                 label = stringResource(typePresentation.unconsumedIndicatorLabel),
@@ -95,9 +96,8 @@ internal fun StatisticsLibraryInsightsCard(
                         insights.otherSourcesTitleCount,
                         insights.otherSourcesTitleCount,
                     ),
-                    modifier = Modifier.padding(top = 4.dp),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = KatariTheme.spacing.xs),
+                    role = TextRole.Supporting,
                 )
             }
         }
@@ -117,8 +117,8 @@ private fun AddedByMonth(insights: StatsLibraryInsights, color: Color) {
         )
         Text(
             text = pluralStringResource(MR.plurals.statistics_added_this_month, addedThisMonth, addedThisMonth),
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            role = TextRole.Badge,
+            tone = ContentTone.Secondary,
         )
     }
     // Twelve slots keep bar widths stable through the year; months still ahead stay empty.
@@ -131,7 +131,7 @@ private fun AddedByMonth(insights: StatsLibraryInsights, color: Color) {
         description = values.take(thisMonth + 1).withIndex().joinToString { (index, count) ->
             "${Month.entries[index].getDisplayName(TextStyle.FULL, locale)} $count"
         },
-        barAreaHeight = 48.dp,
+        barAreaHeight = StatisticsMetrics.rhythmCompactHeight,
     )
 }
 
@@ -139,36 +139,36 @@ private fun AddedByMonth(insights: StatsLibraryInsights, color: Color) {
 private fun InsightHeading(text: String, modifier: Modifier = Modifier) {
     Text(
         text = text,
-        modifier = modifier.padding(top = 20.dp, bottom = 8.dp).semantics { heading() },
-        style = MaterialTheme.typography.titleSmall,
+        modifier = modifier.padding(top = KatariTheme.spacing.xl, bottom = KatariTheme.spacing.s).semantics {
+            heading()
+        },
+        role = TextRole.Label,
     )
 }
 
 /** Label, count and a bar scaled to the share of [total] titles. */
 @Composable
 private fun LabelCountBars(items: List<StatsLabelCount>, total: Int, color: Color) {
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.m)) {
         items.forEach { item ->
             Column {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.m),
+                ) {
                     Text(
                         text = item.label,
                         modifier = Modifier.weight(1f),
-                        style = MaterialTheme.typography.bodyMedium,
+                        role = TextRole.Body,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
-                    Spacer(Modifier.width(12.dp))
-                    Text(item.count.toString(), style = MaterialTheme.typography.labelLarge)
+                    Text(item.count.toString(), role = TextRole.Label)
                 }
-                LinearProgressIndicator(
-                    progress = { if (total > 0) (item.count.toFloat() / total).coerceIn(0f, 1f) else 0f },
-                    modifier = Modifier.fillMaxWidth().padding(top = 4.dp).height(4.dp),
+                StatisticsShareBar(
+                    fraction = if (total > 0) item.count.toFloat() / total else 0f,
                     color = color,
-                    trackColor = MaterialTheme.colorScheme.surfaceVariant,
-                    strokeCap = StrokeCap.Round,
-                    gapSize = 0.dp,
-                    drawStopIndicator = {},
+                    modifier = Modifier.padding(top = KatariTheme.spacing.xs),
                 )
             }
         }

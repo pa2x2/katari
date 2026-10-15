@@ -4,12 +4,8 @@ import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import mihon.entry.interactions.translate.EntryTranslateFeature
-import mihon.entry.interactions.translate.EntryTranslateRuntimeAvailability
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
+import mihon.core.metro.metroGraph
 
 /** Pauses, resumes or cancels the translation queue from the buttons of its notifications. */
 class EntryTranslateNotificationReceiver : BroadcastReceiver() {
@@ -17,10 +13,10 @@ class EntryTranslateNotificationReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val action = Action.entries.firstOrNull { it.intentAction == intent.action } ?: return
         val result = goAsync()
-        Injekt.get<CoroutineScope>().launch {
+        val graph = context.metroGraph<EntryTranslateNotificationGraph>()
+        graph.appScope.launch {
             try {
-                EntryTranslateRuntimeAvailability.awaitInstalled()
-                val feature = Injekt.get<EntryTranslateFeature>()
+                val feature = graph.entryTranslateFeature
                 when (action) {
                     Action.Pause -> feature.pause()
                     Action.Resume -> feature.resume()
