@@ -39,7 +39,7 @@ internal fun BookDocumentPagedViewer(
     onLocation: (BookDocumentViewerLocation<EntryChapter>) -> Unit,
     onChapterBoundaryReached: (EntryChapter) -> Unit,
     onTransitionRetry: (EntryChapter) -> Unit,
-    onChapterEndObservation: (EntryChapter, Boolean, Boolean, Boolean) -> Unit,
+    onChapterEndObservation: (EntryChapter, Boolean, Boolean) -> Unit,
     onAnchorClick: (BookDocumentSection<EntryChapter>, BookDocumentLinkTarget) -> Unit,
     onExternalLinkClick: (String) -> Unit,
     onScrollStarted: () -> Unit,

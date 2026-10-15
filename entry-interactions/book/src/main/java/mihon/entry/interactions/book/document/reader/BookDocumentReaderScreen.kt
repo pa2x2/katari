@@ -97,7 +97,7 @@ internal fun BookDocumentReaderScreen(
     onReturn: () -> Unit,
     onChapterBoundaryReached: (EntryChapter) -> Unit,
     onTransitionRetry: (EntryChapter) -> Unit,
-    onChapterEndObservation: (EntryChapter, Boolean, Boolean, Boolean) -> Unit,
+    onChapterEndObservation: (EntryChapter, Boolean, Boolean) -> Unit,
     onNavigationSelected: (BookDocumentNavigationTarget) -> Unit,
     onChromeToggle: () -> Unit,
     onChromeHide: () -> Unit,

@@ -37,7 +37,7 @@ internal fun BookDocumentModeViewport(
     onLocation: (BookDocumentViewerLocation<EntryChapter>) -> Unit,
     onChapterBoundaryReached: (EntryChapter) -> Unit,
     onTransitionRetry: (EntryChapter) -> Unit,
-    onChapterEndObservation: (EntryChapter, Boolean, Boolean, Boolean) -> Unit,
+    onChapterEndObservation: (EntryChapter, Boolean, Boolean) -> Unit,
     onAnchorMissing: (String) -> Unit,
     onInternalLinkClick: (BookDocumentSection<EntryChapter>, BookDocumentLinkTarget) -> Unit,
     onExternalLinkClick: (String) -> Unit,
@@ -62,7 +62,7 @@ internal fun BookDocumentModeViewport(
         anchor.location = it
         onViewportLocation(it)
     }
-    // Chapter-completion evidence: content end of the terminal chapter. Computed here so both
+    // Chapter-completion evidence: content end of the current chapter. Computed here so both
     // reading modes observe the same content, never the chapter-transition row.
     val chapterEnd = remember(window, loadedSections) {
         bookDocumentChapterEnd(window, loadedSections)

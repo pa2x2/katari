@@ -43,7 +43,7 @@ internal fun BookDocumentEndlessViewer(
     onLocation: (BookDocumentViewerLocation<EntryChapter>) -> Unit,
     onChapterBoundaryReached: (EntryChapter) -> Unit,
     onTransitionRetry: (EntryChapter) -> Unit,
-    onChapterEndObservation: (EntryChapter, Boolean, Boolean, Boolean) -> Unit,
+    onChapterEndObservation: (EntryChapter, Boolean, Boolean) -> Unit,
     onAnchorMissing: (String) -> Unit,
     onInternalLinkClick: (BookDocumentSection<EntryChapter>, BookDocumentLinkTarget) -> Unit,
     onExternalLinkClick: (String) -> Unit,
@@ -313,12 +313,15 @@ internal fun BookDocumentEndlessViewer(
     LaunchedEffect(listState, currentChapterId) {
         snapshotFlow {
             val info = listState.layoutInfo
-            // Completion evidence is stream geometry: the terminal chapter at the hard scroll
-            // end. The chapter-transition row's size and visibility play no part in it.
+            // Completion evidence is stream geometry: the bottom of the chapter's final block on
+            // screen. The chapter-transition row's size and visibility play no part in it.
             ChapterEndLayoutObservation(
                 currentChapterId,
-                currentChapterEnd != null && !listState.canScrollForward,
-                listState.canScrollForward,
+                currentChapterEnd?.isVisibleIn(
+                    currentItems,
+                    info.visibleBookDocumentLayouts(),
+                    info.viewportEndOffset,
+                ) == true,
                 listState.isScrollInProgress,
             )
         }.distinctUntilChanged().collect { observation ->
@@ -326,12 +329,11 @@ internal fun BookDocumentEndlessViewer(
             currentOnChapterEndObservation(
                 currentChapter,
                 observation.chapterEndReached,
-                observation.canScrollForward,
                 observation.scrollInProgress,
             )
             if (observation.chapterEndReached && !observation.scrollInProgress) {
                 withFrameNanos { }
-                currentOnChapterEndObservation(currentChapter, true, false, false)
+                currentOnChapterEndObservation(currentChapter, true, false)
             }
         }
     }
@@ -367,7 +369,6 @@ private fun <T> List<BookDocumentViewerItem<T>>.resolve(index: Int, key: Any): B
 private data class ChapterEndLayoutObservation(
     val chapterId: Long,
     val chapterEndReached: Boolean,
-    val canScrollForward: Boolean,
     val scrollInProgress: Boolean,
 )
 

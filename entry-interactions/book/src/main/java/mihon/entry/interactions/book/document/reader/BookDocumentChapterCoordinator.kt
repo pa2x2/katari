@@ -292,22 +292,13 @@ internal class BookDocumentChapterCoordinator(
 
     /**
      * Consumes content-derived chapter-end observations from the viewers. Completion evidence
-     * reaches here through reading-mode layouts (settled end of the terminal chapter), never
-     * through the chapter-transition row's visibility.
+     * reaches here through reading-mode layouts (settled end of the current chapter's content),
+     * never through the chapter-transition row's visibility.
      */
-    fun onChapterEndObservation(
-        chapter: EntryChapter,
-        chapterEndVisible: Boolean,
-        canScrollForward: Boolean,
-        scrollInProgress: Boolean,
-    ) {
+    fun onChapterEndObservation(chapter: EntryChapter, chapterEndVisible: Boolean, scrollInProgress: Boolean) {
         if (chapter.id != retainedSessions.currentChapterId) return
-        completionTracker.onTerminalObservation(
-            chapter.id,
-            chapterEndVisible,
-            canScrollForward,
-            scrollInProgress,
-        )?.let(::completeChapter)
+        completionTracker.onChapterEndObservation(chapter.id, chapterEndVisible, scrollInProgress)
+            ?.let(::completeChapter)
     }
 
     fun prepareNextChapterIfNeeded(progression: Double) {

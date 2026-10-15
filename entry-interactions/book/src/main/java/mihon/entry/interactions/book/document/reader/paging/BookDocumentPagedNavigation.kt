@@ -46,7 +46,7 @@ internal fun rememberBookDocumentPagedNavigation(
     chapterEnd: BookDocumentChapterEnd?,
     onLocation: (BookDocumentViewerLocation<EntryChapter>) -> Unit,
     onChapterBoundaryReached: (EntryChapter) -> Unit,
-    onChapterEndObservation: (EntryChapter, Boolean, Boolean, Boolean) -> Unit,
+    onChapterEndObservation: (EntryChapter, Boolean, Boolean) -> Unit,
     onScrollStarted: () -> Unit,
     onUserScrollStarted: () -> Unit,
     onViewportLocation: (BookDocumentViewerLocation<EntryChapter>) -> Unit,
@@ -74,20 +74,15 @@ internal fun rememberBookDocumentPagedNavigation(
     }
 
     // Chapter completion evidence is stream-relative: the settled page renders the tail of the
-    // terminal chapter's final content block. The chapter-transition row and the transient
+    // current chapter's final content block. The chapter-transition row and the transient
     // pagination window play no part in it. Pages away from the end still report their owning
     // chapter so a stale candidate resets.
-    suspend fun observeChapterEnd(index: Int, page: BookDocumentPage) {
+    suspend fun observeChapterEnd(page: BookDocumentPage) {
         val chapterEndReached = currentChapterEnd?.let(page::endsChapterContent) == true
-        currentOnChapterEndObservation(
-            page.ownerChapter,
-            chapterEndReached,
-            !chapterEndReached && index < pages.lastIndex,
-            false,
-        )
+        currentOnChapterEndObservation(page.ownerChapter, chapterEndReached, false)
         if (chapterEndReached) {
             withFrameNanos { }
-            currentOnChapterEndObservation(page.ownerChapter, true, false, false)
+            currentOnChapterEndObservation(page.ownerChapter, true, false)
         }
     }
 
@@ -170,7 +165,7 @@ internal fun rememberBookDocumentPagedNavigation(
                 currentOnLocation(location)
                 currentOnViewportLocation(location)
             }
-            observeChapterEnd(index, page)
+            observeChapterEnd(page)
         }
     }
     LaunchedEffect(pager) {
