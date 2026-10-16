@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.16.2] - 2026-10-16
+
+### 🐛 Fixed
+
+- The book reader marks a chapter read once you reach its end, not only when the next chapter opens.
+- A book chapter opened from the contents shows a loading screen, and a Retry dialog if it fails to load.
+- After Android closes Katari in the background, the book reader reopens the chapter you were on instead of the one you started from.
+- Links and contents entries in the scrolled book reader put their target at the top of the screen.
+- The book contents list keeps untitled pages, such as the cover, in reading order and drops the quotes around their titles.
+- Jumping to the spot already on screen no longer adds a return point in the book reader.
+- Copy, Listen and Translate come first in the book reader's text selection toolbar instead of landing in its overflow menu.
+- Tapping a book image follows the paged reader's tap zones instead of always showing or hiding the menu.
+
 ## [1.16.1] - 2026-10-15
 
 ### 🐛 Fixed
@@ -775,7 +788,8 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v1.16.1...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/v1.16.2...HEAD
+[1.16.2]: https://github.com/pa2x2/katari/releases/tag/v1.16.2
 [1.16.1]: https://github.com/pa2x2/katari/releases/tag/v1.16.1
 [1.16.0]: https://github.com/pa2x2/katari/releases/tag/v1.16.0
 [1.15.1]: https://github.com/pa2x2/katari/releases/tag/v1.15.1
