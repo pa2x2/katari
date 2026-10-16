@@ -404,7 +404,7 @@ internal fun <T> bookDocumentViewerTransitionAtAnchor(
         ?.transition
 }
 
-private fun <T> BookDocumentVisibleItemLayout.resolveViewerItem(
+internal fun <T> BookDocumentVisibleItemLayout.resolveViewerItem(
     items: List<BookDocumentViewerItem<T>>,
 ): BookDocumentViewerItem<T>? =
     items.getOrNull(index)?.takeIf { it.key == key }

@@ -1,5 +1,6 @@
 package mihon.entry.interactions.book.document.reader
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -9,15 +10,26 @@ import mihon.entry.interactions.book.document.reader.navigation.BookDocumentJump
 import mihon.entry.interactions.book.reader.OpenedBookReaderSession
 import tachiyomi.domain.entry.model.Entry
 
-/** Retains the bounded document-reader session window across configuration changes. */
-internal class BookDocumentReaderSessionViewModel : ViewModel() {
+/**
+ * Retains the bounded document-reader session window across configuration changes. Only the
+ * current chapter outlives process death: sessions reopen from persisted progress, but the
+ * reader must reopen the chapter it had moved on to, not the one it was launched with.
+ */
+internal class BookDocumentReaderSessionViewModel(private val savedState: SavedStateHandle) : ViewModel() {
     val jumpHistory = BookDocumentJumpHistory()
 
     private val sessions = linkedMapOf<Long, OpenedBookReaderSession>()
     private val locators = mutableMapOf<Long, BookLocator>()
 
     var currentChapterId: Long? = null
-        private set
+        private set(value) {
+            field = value
+            savedState[CURRENT_CHAPTER_ID_KEY] = value
+        }
+
+    /** The chapter that was current before the process died; null in a fresh reader. */
+    val restoredChapterId: Long?
+        get() = savedState[CURRENT_CHAPTER_ID_KEY]
 
     private val mutableCurrentOwner = MutableStateFlow<Entry?>(null)
 
@@ -75,4 +87,8 @@ internal class BookDocumentReaderSessionViewModel : ViewModel() {
     }
 
     override fun onCleared() = release()
+
+    private companion object {
+        const val CURRENT_CHAPTER_ID_KEY = "current_chapter_id"
+    }
 }

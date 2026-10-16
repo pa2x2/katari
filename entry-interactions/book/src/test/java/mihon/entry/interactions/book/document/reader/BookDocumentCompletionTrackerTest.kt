@@ -6,18 +6,18 @@ import kotlin.test.assertNull
 
 internal class BookDocumentCompletionTrackerTest {
     @Test
-    fun `a chapter completes once, by forward activation or by consecutive settled terminal observations`() {
+    fun `a chapter completes once, by forward activation or by consecutive settled chapter-end observations`() {
         val tracker = BookDocumentCompletionTracker<Long>()
 
-        assertNull(tracker.onTerminalObservation(1L, true, canScrollForward = false, scrollInProgress = true))
-        assertNull(tracker.onTerminalObservation(1L, true, canScrollForward = false, scrollInProgress = false))
-        assertNull(tracker.onTerminalObservation(1L, false, canScrollForward = false, scrollInProgress = false))
-        assertNull(tracker.onTerminalObservation(1L, true, canScrollForward = false, scrollInProgress = false))
-        assertEquals(1L, tracker.onTerminalObservation(1L, true, canScrollForward = false, scrollInProgress = false))
-        assertNull(tracker.onTerminalObservation(1L, true, canScrollForward = false, scrollInProgress = false))
+        assertNull(tracker.onChapterEndObservation(1L, true, scrollInProgress = true))
+        assertNull(tracker.onChapterEndObservation(1L, true, scrollInProgress = false))
+        assertNull(tracker.onChapterEndObservation(1L, false, scrollInProgress = false))
+        assertNull(tracker.onChapterEndObservation(1L, true, scrollInProgress = false))
+        assertEquals(1L, tracker.onChapterEndObservation(1L, true, scrollInProgress = false))
+        assertNull(tracker.onChapterEndObservation(1L, true, scrollInProgress = false))
         assertNull(tracker.onForwardChapterActivated(1L))
         assertEquals(2L, tracker.onForwardChapterActivated(2L))
-        assertNull(tracker.onTerminalObservation(2L, true, canScrollForward = false, scrollInProgress = false))
-        assertNull(tracker.onTerminalObservation(2L, true, canScrollForward = false, scrollInProgress = false))
+        assertNull(tracker.onChapterEndObservation(2L, true, scrollInProgress = false))
+        assertNull(tracker.onChapterEndObservation(2L, true, scrollInProgress = false))
     }
 }

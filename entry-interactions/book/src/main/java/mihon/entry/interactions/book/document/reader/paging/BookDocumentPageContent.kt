@@ -26,7 +26,6 @@ internal fun BookDocumentPageContent(
     loadStates: Map<Long, BookDocumentChapterLoadState>,
     onAnchorClick: (BookDocumentSection<EntryChapter>, BookDocumentLinkTarget) -> Unit,
     onExternalLinkClick: (String) -> Unit,
-    onReaderTap: () -> Unit,
     onTransitionRetry: (EntryChapter) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -45,7 +44,6 @@ internal fun BookDocumentPageContent(
                     loadStates,
                     onAnchorClick,
                     onExternalLinkClick,
-                    onReaderTap,
                     onTransitionRetry,
                 )
             }
@@ -59,7 +57,6 @@ internal fun BookDocumentPageFragmentContent(
     loadStates: Map<Long, BookDocumentChapterLoadState>,
     onAnchorClick: (BookDocumentSection<EntryChapter>, BookDocumentLinkTarget) -> Unit,
     onExternalLinkClick: (String) -> Unit,
-    onReaderTap: () -> Unit,
     onTransitionRetry: (EntryChapter) -> Unit,
 ) {
     val item = fragment.item
@@ -77,7 +74,6 @@ internal fun BookDocumentPageFragmentContent(
         loadState = transition?.to?.id?.let(loadStates::get),
         onAnchorClick = onAnchorClick,
         onExternalLinkClick = onExternalLinkClick,
-        onReaderTap = onReaderTap,
         onTransitionRetry = onTransitionRetry,
         transitionVerticalPadding = 0.dp,
         preserveTerminalSpacing = !fragment.lastOnPage,

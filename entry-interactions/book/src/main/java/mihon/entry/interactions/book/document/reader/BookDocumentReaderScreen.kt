@@ -97,7 +97,7 @@ internal fun BookDocumentReaderScreen(
     onReturn: () -> Unit,
     onChapterBoundaryReached: (EntryChapter) -> Unit,
     onTransitionRetry: (EntryChapter) -> Unit,
-    onChapterEndObservation: (EntryChapter, Boolean, Boolean, Boolean) -> Unit,
+    onChapterEndObservation: (EntryChapter, Boolean, Boolean) -> Unit,
     onNavigationSelected: (BookDocumentNavigationTarget) -> Unit,
     onChromeToggle: () -> Unit,
     onChromeHide: () -> Unit,
@@ -111,6 +111,8 @@ internal fun BookDocumentReaderScreen(
     onInternalLinkClick: (BookDocumentSection<EntryChapter>, mihon.book.api.document.BookDocumentLinkTarget) -> Unit,
     onExternalLinkClick: (String) -> Unit,
     onAuxiliaryDismiss: () -> Unit,
+    onChapterSelectionRetry: () -> Unit,
+    onChapterSelectionDismiss: () -> Unit,
     onTranslationPopupBoundsChanged: (Rect?) -> Unit,
     onClose: () -> Unit,
 ) {
@@ -279,6 +281,13 @@ internal fun BookDocumentReaderScreen(
                                 ),
                             ),
                     )
+                    state.chapterSelection?.let { selection ->
+                        BookDocumentChapterSelectionFeedback(
+                            selection = selection,
+                            onRetry = onChapterSelectionRetry,
+                            onDismiss = onChapterSelectionDismiss,
+                        )
+                    }
                 },
                 overlay = { progressIndicator ->
                     ReaderChrome(

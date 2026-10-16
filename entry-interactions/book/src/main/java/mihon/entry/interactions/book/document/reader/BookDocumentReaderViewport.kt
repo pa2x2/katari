@@ -23,7 +23,7 @@ internal fun BookDocumentReaderViewport(
     onLocation: (BookDocumentViewerLocation<EntryChapter>) -> Unit,
     onChapterBoundaryReached: (EntryChapter) -> Unit,
     onTransitionRetry: (EntryChapter) -> Unit,
-    onChapterEndObservation: (EntryChapter, Boolean, Boolean, Boolean) -> Unit,
+    onChapterEndObservation: (EntryChapter, Boolean, Boolean) -> Unit,
     onAnchorMissing: (String) -> Unit,
     onInternalLinkClick: (BookDocumentSection<EntryChapter>, BookDocumentLinkTarget) -> Unit,
     onExternalLinkClick: (String) -> Unit,

@@ -47,7 +47,6 @@ internal fun BookDocumentPaginationLayout(
                                     { _, _ -> },
                                     {},
                                     {},
-                                    {},
                                 )
                             }
                         }

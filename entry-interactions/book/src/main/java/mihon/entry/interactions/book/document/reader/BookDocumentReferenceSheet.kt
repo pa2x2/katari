@@ -41,7 +41,7 @@ internal fun BookDocumentReferenceSheet(
                     modifier = Modifier.fillMaxSize().padding(bottom = KatariTheme.spacing.xl),
                 ) {
                     items(section.viewerBlocks, key = { it.key }) { item ->
-                        BookDocumentViewerBlock(item, onLink, onExternalLink, onReaderTap = {})
+                        BookDocumentViewerBlock(item, onLink, onExternalLink)
                     }
                 }
             }

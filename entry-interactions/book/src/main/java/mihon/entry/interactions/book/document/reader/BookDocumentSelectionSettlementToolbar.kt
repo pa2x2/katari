@@ -38,7 +38,7 @@ private class BookDocumentSelectionSettlementToolbar(
         selection.setSelectionSettled(true)
         try {
             if (selection.interaction.showTextSelectionMenu) {
-                platformToolbar.showTextContextMenu(dataProvider)
+                platformToolbar.showTextContextMenu(dataProvider.withReaderItemsFirst())
             }
             // Closing or disabling the menu does not start another selection gesture. Keep
             // observing until Compose cancels this request on drag, clear, or disposal.

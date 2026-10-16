@@ -93,7 +93,7 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
     private val startupRequest by lazy {
         BookReaderRequest(
             entryId = intent.getLongExtra(EXTRA_ENTRY_ID, -1L),
-            chapterId = intent.getLongExtra(EXTRA_CHAPTER_ID, -1L),
+            chapterId = retainedSessions.restoredChapterId ?: intent.getLongExtra(EXTRA_CHAPTER_ID, -1L),
         )
     }
 
@@ -191,6 +191,8 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
                         onInternalLinkClick = chapterCoordinator::navigateLink,
                         onExternalLinkClick = ::confirmExternalLink,
                         onAuxiliaryDismiss = chapterCoordinator::dismissAuxiliarySection,
+                        onChapterSelectionRetry = chapterCoordinator::retryChapterSelection,
+                        onChapterSelectionDismiss = chapterCoordinator::dismissChapterSelection,
                         onTranslationPopupBoundsChanged = selectionActionModeAvoidance::updateBounds,
                         onClose = ::finish,
                     )
