@@ -3,7 +3,6 @@ package mihon.entry.interactions.book.document.reader
 import android.graphics.Bitmap
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -44,7 +43,6 @@ internal fun BookDocumentFigureRenderer(
     resourceLoader: BookPublicationResourceLoader?,
     onAnchorClick: (BookDocumentLinkTarget) -> Unit,
     onExternalLinkClick: (String) -> Unit,
-    onReaderTap: () -> Unit,
 ) {
     val selection = LocalBookDocumentChapterSelection.current
     val resourceGeneration = resourceLoader?.generation?.collectAsState()?.value ?: 0
@@ -96,10 +94,7 @@ internal fun BookDocumentFigureRenderer(
                 contentScale = ContentScale.Fit,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .sizeIn(maxHeight = maxWidth * 2)
-                    .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {
-                        selection?.handleReaderTap(onReaderTap) ?: onReaderTap()
-                    },
+                    .sizeIn(maxHeight = maxWidth * 2),
             )
             bitmapResult == null -> DisableSelection {
                 Text(stringResource(R.string.book_document_image_loading), role = TextRole.ItemTitle)

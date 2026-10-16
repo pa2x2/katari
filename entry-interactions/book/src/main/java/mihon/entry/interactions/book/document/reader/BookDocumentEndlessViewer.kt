@@ -1,6 +1,5 @@
 package mihon.entry.interactions.book.document.reader
 
-import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.interaction.DragInteraction
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -43,7 +42,7 @@ internal fun BookDocumentEndlessViewer(
     onLocation: (BookDocumentViewerLocation<EntryChapter>) -> Unit,
     onChapterBoundaryReached: (EntryChapter) -> Unit,
     onTransitionRetry: (EntryChapter) -> Unit,
-    onChapterEndObservation: (EntryChapter, Boolean, Boolean, Boolean) -> Unit,
+    onChapterEndObservation: (EntryChapter, Boolean, Boolean) -> Unit,
     onAnchorMissing: (String) -> Unit,
     onInternalLinkClick: (BookDocumentSection<EntryChapter>, BookDocumentLinkTarget) -> Unit,
     onExternalLinkClick: (String) -> Unit,
@@ -159,18 +158,12 @@ internal fun BookDocumentEndlessViewer(
     LaunchedEffect(items) {
         if (!initialPositionRestored) {
             if (initialLocation != null) {
-                val index = items.indexOfPosition(initialLocation.section.key, initialLocation.position)
-                if (index >= 0) {
-                    listState.scrollToItem(index)
-                    if ((items[index] as? BookDocumentViewerItem.Block)?.content?.content is
-                            mihon.book.api.document.BookDocumentBlockContent.Text
-                    ) {
-                        val top = snapshotFlow {
-                            viewportGeometry.lineTop(initialLocation.section, initialLocation.position)
-                        }.filterNotNull().first()
-                        listState.scrollBy(top)
-                    }
-                }
+                listState.scrollToBookDocumentLine(
+                    initialLocation.section,
+                    initialLocation.position,
+                    items.indexOfPosition(initialLocation.section.key, initialLocation.position),
+                    viewportGeometry,
+                )
             } else {
                 currentSection?.let { scrollToSectionPosition(it) }
             }
@@ -212,7 +205,12 @@ internal fun BookDocumentEndlessViewer(
         if (request.alignToPassage) {
             listState.scrollToBookDocumentPassage(section, request.position, items, viewportGeometry)
         } else {
-            scrollToSectionPosition(section, request.position)
+            listState.scrollToBookDocumentLine(
+                section,
+                request.position,
+                items.indexOfPosition(section.key, request.position),
+                viewportGeometry,
+            )
         }
         // Publish the settled viewport before acknowledging the request, so seek controls can
         // replace their optimistic value with measured progress without exposing the old position.
@@ -236,6 +234,16 @@ internal fun BookDocumentEndlessViewer(
                 restoredNavigationId = request.id,
             ),
         )
+        // The target now starts the viewport, but a saved reading position is restored to the
+        // viewport centre. Persist what is at the centre so reopening shows this same view.
+        withFrameNanos { }
+        val info = listState.layoutInfo
+        bookDocumentViewerLocation(
+            currentItems,
+            info.visibleBookDocumentLayouts(),
+            info.viewportStartOffset,
+            info.viewportEndOffset,
+        )?.let(currentOnLocation)
     }
 
     LaunchedEffect(listState, items) {
@@ -313,12 +321,15 @@ internal fun BookDocumentEndlessViewer(
     LaunchedEffect(listState, currentChapterId) {
         snapshotFlow {
             val info = listState.layoutInfo
-            // Completion evidence is stream geometry: the terminal chapter at the hard scroll
-            // end. The chapter-transition row's size and visibility play no part in it.
+            // Completion evidence is stream geometry: the bottom of the chapter's final block on
+            // screen. The chapter-transition row's size and visibility play no part in it.
             ChapterEndLayoutObservation(
                 currentChapterId,
-                currentChapterEnd != null && !listState.canScrollForward,
-                listState.canScrollForward,
+                currentChapterEnd?.isVisibleIn(
+                    currentItems,
+                    info.visibleBookDocumentLayouts(),
+                    info.viewportEndOffset,
+                ) == true,
                 listState.isScrollInProgress,
             )
         }.distinctUntilChanged().collect { observation ->
@@ -326,12 +337,11 @@ internal fun BookDocumentEndlessViewer(
             currentOnChapterEndObservation(
                 currentChapter,
                 observation.chapterEndReached,
-                observation.canScrollForward,
                 observation.scrollInProgress,
             )
             if (observation.chapterEndReached && !observation.scrollInProgress) {
                 withFrameNanos { }
-                currentOnChapterEndObservation(currentChapter, true, false, false)
+                currentOnChapterEndObservation(currentChapter, true, false)
             }
         }
     }
@@ -367,7 +377,6 @@ private fun <T> List<BookDocumentViewerItem<T>>.resolve(index: Int, key: Any): B
 private data class ChapterEndLayoutObservation(
     val chapterId: Long,
     val chapterEndReached: Boolean,
-    val canScrollForward: Boolean,
     val scrollInProgress: Boolean,
 )
 

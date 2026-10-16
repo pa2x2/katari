@@ -3,6 +3,7 @@ package mihon.entry.interactions.book.document.reader.navigation
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import mihon.book.api.document.BookDocumentPosition
 import mihon.book.api.document.locatorAt
 import mihon.entry.interactions.book.document.reader.BookDocumentViewerLocation
 import tachiyomi.domain.entry.model.EntryChapter
@@ -19,6 +20,17 @@ internal class BookDocumentJumpHistory {
 
     fun rememberOrigin() {
         val location = location ?: return
+        remember(location)
+    }
+
+    /** A jump to the position already on screen moves nowhere, so it leaves no return point. */
+    fun rememberOrigin(destinationSectionKey: String, destination: BookDocumentPosition) {
+        val location = location ?: return
+        if (location.section.key == destinationSectionKey && location.position == destination) return
+        remember(location)
+    }
+
+    private fun remember(location: BookDocumentViewerLocation<EntryChapter>) {
         returnTarget = BookDocumentNavigationTarget(
             chapter = location.section.owner,
             locator = location.section.document.document.locatorAt(location.position),

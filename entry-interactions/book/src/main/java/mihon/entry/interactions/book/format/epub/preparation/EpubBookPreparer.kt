@@ -153,7 +153,7 @@ internal class EpubBookPreparer(
             require(preparedDocuments.any { it.hasReadableContent && it.document.resourceId in readingOrderIds }) {
                 "The EPUB contains no readable linear documents"
             }
-            val titles = preparedDocuments.associate { it.document.resourceId to it.title }
+            val titles = preparedDocuments.associate { it.document.resourceId to it.title?.withoutEnclosingQuotes() }
             val publication = BookPublication(
                 id = content.publicationId,
                 revision = contentDigest,
@@ -223,6 +223,19 @@ private fun List<BookNavigationItem>.withDocumentTitles(titles: Map<String, Stri
             children = item.children.withDocumentTitles(titles),
         )
     }
+
+/**
+ * A document `<title>` is metadata, not prose, yet generators such as Project Gutenberg's
+ * Ebookmaker write it quoted (`"Cover"`). Shown as a navigation label, the quotes are noise.
+ */
+private fun String.withoutEnclosingQuotes(): String {
+    val inner = when {
+        length > 2 && startsWith('"') && endsWith('"') -> substring(1, lastIndex)
+        length > 2 && startsWith('“') && endsWith('”') -> substring(1, lastIndex)
+        else -> return this
+    }
+    return inner.takeUnless { it.any { char -> char == '"' || char == '“' || char == '”' } }?.trim() ?: this
+}
 
 private fun File.sha256(): String {
     val digest = MessageDigest.getInstance("SHA-256")

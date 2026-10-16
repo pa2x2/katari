@@ -1,7 +1,6 @@
 package mihon.entry.interactions.book.document.reader
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -34,14 +33,12 @@ internal fun BookDocumentBlockRenderer(
     resourceLoader: BookPublicationResourceLoader?,
     onAnchorClick: (BookDocumentLinkTarget) -> Unit,
     onExternalLinkClick: (String) -> Unit,
-    onReaderTap: () -> Unit,
     selectionIdentity: String = block.id.value,
     preserveTerminalSpacing: Boolean = true,
     modifier: Modifier = Modifier,
 ) {
     val palette = LocalBookDocumentReaderPalette.current
     val textScale = LocalBookDocumentTextScale.current
-    val selection = LocalBookDocumentChapterSelection.current
     val blockText = remember(block, owningContent.text) {
         owningContent.text.substring(block.logicalStart, block.logicalEndExclusive)
     }
@@ -102,7 +99,6 @@ internal fun BookDocumentBlockRenderer(
                 resourceLoader = resourceLoader,
                 onAnchorClick = onAnchorClick,
                 onExternalLinkClick = onExternalLinkClick,
-                onReaderTap = onReaderTap,
             )
             is BookDocumentBlockContent.Table -> BookDocumentTableRenderer(
                 content = content,
@@ -119,15 +115,11 @@ internal fun BookDocumentBlockRenderer(
                 resourceLoader = resourceLoader,
                 onAnchorClick = onAnchorClick,
                 onExternalLinkClick = onExternalLinkClick,
-                onReaderTap = onReaderTap,
                 preserveTerminalSpacing = preserveTerminalSpacing,
             )
             BookDocumentBlockContent.ThematicBreak -> Spacer(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable {
-                        selection?.handleReaderTap(onReaderTap) ?: onReaderTap()
-                    }
                     .height(KatariTheme.sizes.border)
                     .background(palette.outline),
             )

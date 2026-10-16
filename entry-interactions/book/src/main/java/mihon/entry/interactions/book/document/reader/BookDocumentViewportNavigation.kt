@@ -6,6 +6,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.withFrameNanos
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
+import mihon.book.api.document.BookDocumentBlockContent
 import mihon.book.api.document.BookDocumentPosition
 import mihon.entry.interactions.book.document.reader.position.BookDocumentViewportGeometry
 import mihon.entry.interactions.book.document.render.PreparedBookDocument
@@ -29,6 +30,24 @@ internal suspend fun LazyListState.scrollToBookDocumentPosition(
         index,
         bookDocumentScrollOffset(document, position, layout.first, layout.second, layout.third),
     )
+}
+
+/**
+ * Puts the line holding [position] at the top of the viewport. Reading progress is measured at the
+ * viewport centre, but a target the reader asked for (a link, a contents entry, an in-session
+ * anchor) is where reading continues, so it starts the viewport.
+ */
+internal suspend fun LazyListState.scrollToBookDocumentLine(
+    section: BookDocumentSection<EntryChapter>,
+    position: BookDocumentPosition,
+    index: Int,
+    geometry: BookDocumentViewportGeometry,
+) {
+    if (index < 0) return
+    scrollToItem(index)
+    if (section.document.block(position.blockId)?.content is BookDocumentBlockContent.Text) {
+        scrollBy(snapshotFlow { geometry.lineTop(section, position) }.filterNotNull().first())
+    }
 }
 
 /** Align a seek/return passage using measured text, clamped to the current section's scroll range. */

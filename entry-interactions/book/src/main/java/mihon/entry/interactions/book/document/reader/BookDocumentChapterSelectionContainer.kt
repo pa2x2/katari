@@ -100,7 +100,7 @@ internal fun BookDocumentChapterSelectionContainer(
                     }
                     .appendTextContextMenuComponents {
                         projection ?: return@appendTextContextMenuComponents
-                        item(BookDocumentCopySelectionKey, copyLabel) {
+                        item(BookDocumentSelectionMenuKey.Copy, copyLabel) {
                             coroutineScope.launch {
                                 clipboard.setClipEntry(
                                     ClipData.newPlainText(copyLabel, projection.text).toClipEntry(),
@@ -111,13 +111,13 @@ internal fun BookDocumentChapterSelectionContainer(
                         }
                         val actions = interaction.selectionActions
                         if (interaction.observeSelections && BookDocumentSelectionAction.Listen in actions) {
-                            item(BookDocumentListenSelectionKey, listenLabel) {
+                            item(BookDocumentSelectionMenuKey.Listen, listenLabel) {
                                 session.performAction(BookDocumentSelectionAction.Listen)
                                 close()
                             }
                         }
                         if (interaction.observeSelections && BookDocumentSelectionAction.Translate in actions) {
-                            item(BookDocumentTranslateSelectionKey, translateLabel) {
+                            item(BookDocumentSelectionMenuKey.Translate, translateLabel) {
                                 session.performAction(BookDocumentSelectionAction.Translate)
                                 close()
                             }
@@ -143,7 +143,3 @@ private fun Modifier.captureSelectionAtPointerDown(
         } while (event.changes.any { it.pressed })
     }
 }
-
-private data object BookDocumentCopySelectionKey
-private data object BookDocumentListenSelectionKey
-private data object BookDocumentTranslateSelectionKey

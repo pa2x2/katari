@@ -39,7 +39,7 @@ internal fun BookDocumentPagedViewer(
     onLocation: (BookDocumentViewerLocation<EntryChapter>) -> Unit,
     onChapterBoundaryReached: (EntryChapter) -> Unit,
     onTransitionRetry: (EntryChapter) -> Unit,
-    onChapterEndObservation: (EntryChapter, Boolean, Boolean, Boolean) -> Unit,
+    onChapterEndObservation: (EntryChapter, Boolean, Boolean) -> Unit,
     onAnchorClick: (BookDocumentSection<EntryChapter>, BookDocumentLinkTarget) -> Unit,
     onExternalLinkClick: (String) -> Unit,
     onScrollStarted: () -> Unit,
@@ -77,7 +77,6 @@ internal fun BookDocumentPagedViewer(
                 loadStates,
                 onAnchorClick,
                 onExternalLinkClick,
-                onReaderTap,
                 onTransitionRetry,
                 modifier = Modifier.pointerInput(page.key, tapZones, tapInversion, vertical, rtl, animatePages) {
                     detectTapGestures { offset ->

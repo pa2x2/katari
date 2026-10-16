@@ -3,6 +3,7 @@ package mihon.entry.interactions.book.format.epub.navigation
 import mihon.entry.interactions.book.format.epub.archive.EpubArchive
 import mihon.entry.interactions.book.format.epub.archive.epubArchiveBytesFile
 import mihon.entry.interactions.book.format.epub.archive.epubArchiveFile
+import mihon.entry.interactions.book.format.epub.packageinfo.EpubManifestItem
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 
@@ -60,6 +61,40 @@ class EpubNavigationParserTest {
                 assertEquals("Été", item.title)
                 assertEquals("chapter.xhtml", item.target.resourceId)
                 assertEquals(listOf("first"), item.target.fragments)
+            }
+        } finally {
+            file.delete()
+        }
+    }
+
+    @Test
+    fun `a cover page left out of the navigation keeps its reading-order place before the contents`() {
+        val file = epubArchiveFile(
+            mapOf(
+                "nav.xhtml" to """
+                    <html><body><nav epub:type="toc"><ol>
+                      <li><a href="chapter.xhtml#first">First</a></li>
+                      <li><a href="chapter.xhtml#second">Second</a></li>
+                    </ol></nav></body></html>
+                """.trimIndent(),
+            ),
+        )
+        val cover = EpubManifestItem("cover", "cover.xhtml", "application/xhtml+xml", setOf("svg"))
+        val afterword = EpubManifestItem("afterword", "afterword.xhtml", "application/xhtml+xml", emptySet())
+        val base = navigationPackage(legacy = false)
+        val chapter = base.readingOrder.single()
+        val packageInfo = base.copy(
+            manifest = base.manifest + (cover.id to cover) + (afterword.id to afterword),
+            documents = listOf(cover, chapter, afterword),
+            readingOrder = listOf(cover, chapter, afterword),
+        )
+        try {
+            EpubArchive(file).use { archive ->
+                val items = EpubNavigationParser(archive).parse(packageInfo)
+                assertEquals(
+                    listOf("cover.xhtml", "chapter.xhtml", "chapter.xhtml", "afterword.xhtml"),
+                    items.map { it.target.resourceId },
+                )
             }
         } finally {
             file.delete()
