@@ -25,10 +25,6 @@ internal class DefaultEntryLibraryUpdateNotificationFeature(
         require(queueWarningThreshold >= 0) { "Library-update queue warning threshold must be non-negative" }
     }
 
-    override fun routes(): List<EntryLibraryUpdateNotificationRoute> = listOf(
-        sharedLibraryUpdateNotificationRoute,
-    )
-
     override suspend fun queueWarning(entries: List<Entry>): EntryLibraryUpdateQueueWarning {
         // Sources that haven't loaded yet would all count as metered
         sourceManager.awaitInitialized()
@@ -60,13 +56,23 @@ internal class DefaultEntryLibraryUpdateNotificationFeature(
                 )
             }
         }
-        val items = participatingUpdates.map { buildNotificationItem(it) }
+        // Only the type tells such entries apart in the shade, as a book and a manga of one series.
+        val sharedTitles = participatingUpdates.groupBy { it.entry.displayTitle }
+            .filterValues { sameTitle -> sameTitle.distinctBy { it.entry.type }.size > 1 }
+            .keys
+        val items = participatingUpdates.map {
+            buildNotificationItem(
+                it,
+                labelType =
+                it.entry.displayTitle in sharedTitles,
+            )
+        }
         val groups = if (items.isEmpty()) {
             emptyList()
         } else {
             listOf(
                 EntryLibraryUpdateNotificationGroup(
-                    route = sharedLibraryUpdateNotificationRoute,
+                    summary = sharedLibraryUpdateNotificationSummary,
                     updates = items,
                 ),
             )
@@ -76,6 +82,7 @@ internal class DefaultEntryLibraryUpdateNotificationFeature(
 
     private suspend fun buildNotificationItem(
         update: EntryLibraryUpdateNotificationInput,
+        labelType: Boolean,
     ): EntryLibraryUpdateNotificationItem {
         val visibleEntry = resolveVisibleEntry(update.entry)
         check(visibleEntry.type == update.entry.type) {
@@ -109,6 +116,7 @@ internal class DefaultEntryLibraryUpdateNotificationFeature(
             visibleEntry = visibleEntry,
             children = update.children,
             description = vocabulary.describeLibraryUpdate(update.children),
+            typeLabel = presentation.displayNameLabel.takeIf { labelType },
             destination = destination,
             actions = actions,
             markConsumedLabel = presentation.markAsConsumedLabel,

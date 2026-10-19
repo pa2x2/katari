@@ -8,6 +8,7 @@ import android.net.Uri
 import androidx.core.net.toUri
 import eu.kanade.tachiyomi.data.backup.restore.BackupRestoreJob
 import eu.kanade.tachiyomi.data.library.LibraryUpdateQueue
+import eu.kanade.tachiyomi.data.library.MetadataUpdateJob
 import eu.kanade.tachiyomi.ui.main.MainActivity
 import eu.kanade.tachiyomi.util.system.cancelNotification
 import eu.kanade.tachiyomi.util.system.getParcelableExtraCompat
@@ -87,8 +88,8 @@ class NotificationReceiver : BroadcastReceiver() {
                     "application/x-protobuf+gzip",
                 )
             ACTION_CANCEL_RESTORE -> cancelRestore(context)
-            // Cancel library update and dismiss notification
-            ACTION_CANCEL_LIBRARY_UPDATE -> cancelLibraryUpdate(context)
+            ACTION_CANCEL_LIBRARY_UPDATE -> cancelLibraryUpdate(context, intent.getLongExtra(EXTRA_PROFILE_ID, -1L))
+            ACTION_CANCEL_METADATA_UPDATE -> cancelMetadataUpdate(context)
             ACTION_OPEN_EPISODE -> {
                 openLegacyChild(context, intent.legacyEpisodeOpenChildPayload())
             }
@@ -209,14 +210,17 @@ class NotificationReceiver : BroadcastReceiver() {
         BackupRestoreJob.stop(context)
     }
 
-    /**
-     * Method called when user wants to stop a library update
-     *
-     * @param context context of application
-     */
-    private fun cancelLibraryUpdate(context: Context) {
+    /** Stops only [profileId]'s update; the next one in the queue goes ahead. */
+    private fun cancelLibraryUpdate(context: Context, profileId: Long) {
+        if (profileId < 0) return
         async(scope, Dispatchers.IO) {
-            LibraryUpdateQueue.stopRunning(context)
+            LibraryUpdateQueue.stop(context, profileId)
+        }
+    }
+
+    private fun cancelMetadataUpdate(context: Context) {
+        async(scope, Dispatchers.IO) {
+            MetadataUpdateJob.stop(context)
         }
     }
 
@@ -411,6 +415,7 @@ class NotificationReceiver : BroadcastReceiver() {
         private const val ACTION_CANCEL_RESTORE = "$ID.$NAME.CANCEL_RESTORE"
 
         private const val ACTION_CANCEL_LIBRARY_UPDATE = "$ID.$NAME.CANCEL_LIBRARY_UPDATE"
+        private const val ACTION_CANCEL_METADATA_UPDATE = "$ID.$NAME.CANCEL_METADATA_UPDATE"
 
         private const val ACTION_OPEN_EPISODE = "$ID.$NAME.ACTION_OPEN_EPISODE"
         private const val ACTION_OPEN_CHILD = "$ID.$NAME.ACTION_OPEN_CHILD"
@@ -605,44 +610,66 @@ class NotificationReceiver : BroadcastReceiver() {
             }
         }
 
-        internal fun markConsumedPendingBroadcast(
+        /**
+         * Marks [children] consumed. With [throughApp] the app opens in the entry's profile first, which asks for the
+         * profile's unlock; otherwise it happens in the background, whichever profile is active.
+         */
+        internal fun markConsumedPendingIntent(
             context: Context,
             entry: Entry,
             children: Array<EntryChapter>,
             groupId: Int,
-        ): PendingIntent {
-            val newIntent = profileNotificationIntent(context, entry.profileId, ACTION_MARK_CONSUMED).apply {
-                putExtra(EXTRA_ENTRY_ID, entry.id)
-                putExtra(EXTRA_CHILD_IDS, children.map { it.id }.toLongArray())
-                putExtra(EXTRA_NOTIFICATION_ID, entry.id.hashCode())
-                putExtra(EXTRA_GROUP_ID, groupId)
-            }
-            return PendingIntent.getActivity(
-                context,
-                entry.id.hashCode(),
-                newIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
-            )
-        }
+            throughApp: Boolean,
+        ): PendingIntent = childrenActionPendingIntent(
+            context,
+            ACTION_MARK_CONSUMED,
+            entry,
+            children,
+            groupId,
+            throughApp,
+        )
 
-        internal fun downloadChildrenPendingBroadcast(
+        /** Downloads [children], through the app like [markConsumedPendingIntent] when [throughApp]. */
+        internal fun downloadChildrenPendingIntent(
             context: Context,
             entry: Entry,
             children: Array<EntryChapter>,
             groupId: Int,
+            throughApp: Boolean,
+        ): PendingIntent = childrenActionPendingIntent(
+            context,
+            ACTION_DOWNLOAD_CHILDREN,
+            entry,
+            children,
+            groupId,
+            throughApp,
+        )
+
+        private fun childrenActionPendingIntent(
+            context: Context,
+            action: String,
+            entry: Entry,
+            children: Array<EntryChapter>,
+            groupId: Int,
+            throughApp: Boolean,
         ): PendingIntent {
-            val newIntent = profileNotificationIntent(context, entry.profileId, ACTION_DOWNLOAD_CHILDREN).apply {
-                putExtra(EXTRA_ENTRY_ID, entry.id)
-                putExtra(EXTRA_CHILD_IDS, children.map { it.id }.toLongArray())
-                putExtra(EXTRA_NOTIFICATION_ID, entry.id.hashCode())
-                putExtra(EXTRA_GROUP_ID, groupId)
+            val intent = if (throughApp) {
+                profileNotificationIntent(context, entry.profileId, action)
+            } else {
+                Intent(context, NotificationReceiver::class.java)
+                    .setAction(action)
+                    .putExtra(EXTRA_PROFILE_ID, entry.profileId)
             }
-            return PendingIntent.getActivity(
-                context,
-                entry.id.hashCode(),
-                newIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
-            )
+            intent.putExtra(EXTRA_ENTRY_ID, entry.id)
+                .putExtra(EXTRA_CHILD_IDS, children.map { it.id }.toLongArray())
+                .putExtra(EXTRA_NOTIFICATION_ID, entry.id.hashCode())
+                .putExtra(EXTRA_GROUP_ID, groupId)
+            val flags = PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            return if (throughApp) {
+                PendingIntent.getActivity(context, entry.id.hashCode(), intent, flags)
+            } else {
+                PendingIntent.getBroadcast(context, entry.id.hashCode(), intent, flags)
+            }
         }
 
         /**
@@ -672,15 +699,22 @@ class NotificationReceiver : BroadcastReceiver() {
             )
         }
 
-        /**
-         * Returns [PendingIntent] that starts a service which stops the library update
-         *
-         * @param context context of application
-         * @return [PendingIntent]
-         */
-        internal fun cancelLibraryUpdatePendingBroadcast(context: Context): PendingIntent {
+        internal fun cancelLibraryUpdatePendingBroadcast(context: Context, profileId: Long): PendingIntent {
             val intent = Intent(context, NotificationReceiver::class.java).apply {
                 action = ACTION_CANCEL_LIBRARY_UPDATE
+                putExtra(EXTRA_PROFILE_ID, profileId)
+            }
+            return PendingIntent.getBroadcast(
+                context,
+                0,
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+            )
+        }
+
+        internal fun cancelMetadataUpdatePendingBroadcast(context: Context): PendingIntent {
+            val intent = Intent(context, NotificationReceiver::class.java).apply {
+                action = ACTION_CANCEL_METADATA_UPDATE
             }
             return PendingIntent.getBroadcast(
                 context,

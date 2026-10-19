@@ -10,6 +10,9 @@ import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import dev.zacsweers.metro.Inject
 import eu.kanade.presentation.entry.entryTypePresentation
+import eu.kanade.tachiyomi.data.library.notification.LibraryUpdateNotificationProfile
+import eu.kanade.tachiyomi.data.library.notification.LibraryUpdateNotificationProfiles
+import eu.kanade.tachiyomi.data.library.notification.LibraryUpdateNotifier
 import eu.kanade.tachiyomi.data.notification.Notifications
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.visualName
@@ -21,6 +24,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import kotlinx.datetime.TimeZone
@@ -106,6 +110,9 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
     private lateinit var notifier: LibraryUpdateNotifier
 
     @Inject
+    private lateinit var notificationProfiles: LibraryUpdateNotificationProfiles
+
+    @Inject
     private lateinit var activeProfileProvider: ActiveProfileProvider
 
     @Inject
@@ -146,6 +153,12 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
 
     /** Start of this update, which also identifies it in the update report. */
     private var startedAt = 0L
+
+    private var notificationProfile: LibraryUpdateNotificationProfile? = null
+
+    private suspend fun notificationProfile(): LibraryUpdateNotificationProfile {
+        return notificationProfile ?: notificationProfiles.resolve(profileId).also { notificationProfile = it }
+    }
 
     override suspend fun doWork(): Result = coroutineScope {
         val update = async(start = CoroutineStart.LAZY) { update() }
@@ -193,6 +206,12 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
         libraryPreferences.lastUpdatedTimestamp.set(startedAt)
 
         return withIOContext {
+            val profile = notificationProfile()
+            val nextInQueue = launch {
+                LibraryUpdateQueue.nextProfileFlow(context, id).collect { next ->
+                    notifier.showNextInQueue(profile, next?.let { notificationProfiles.name(it) })
+                }
+            }
             try {
                 planQueue(request)
                 publishProgress(completed = 0)
@@ -205,6 +224,7 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
                 // A failure would fail every update queued behind this one in the chain.
                 Result.success()
             } finally {
+                nextInQueue.cancel()
                 withNonCancellableContext {
                     reportRepository.finishRun(profileId, startedAt, Clock.System.now().toEpochMilliseconds())
                 }
@@ -252,7 +272,7 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
     override suspend fun getForegroundInfo(): ForegroundInfo {
         return ForegroundInfo(
             Notifications.ID_LIBRARY_PROGRESS,
-            notifier.progressNotificationBuilder.build(),
+            notifier.libraryUpdateProgressNotification(notificationProfile()),
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
             } else {
@@ -287,7 +307,7 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
         val left = decisions.filterIsInstance<LibraryUpdateDecision.Leave>()
         skippedCount = left.count { it.reason.outcome == EntryUpdateOutcome.SKIPPED }
 
-        notifier.showQueueSizeWarningNotificationIfNeeded(checks.map { it.item }, profileId)
+        notifier.showQueueSizeWarningNotificationIfNeeded(notificationProfile(), checks.map { it.item }, profileId)
 
         entriesToUpdate = checks.expandToMemberEntries()
             .sortedBy { it.title }
@@ -446,7 +466,7 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
         notifier.cancelProgressNotification()
 
         if (newUpdates.isNotEmpty()) {
-            notifier.showUpdateNotifications(profileId, newUpdates)
+            notifier.showUpdateNotifications(notificationProfile(), newUpdates)
         }
         refreshSession.complete()
 
@@ -455,7 +475,7 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
         }
 
         if (failedUpdates.isNotEmpty()) {
-            notifier.showUpdateErrorNotification(failedUpdates.size, profileId)
+            notifier.showUpdateErrorNotification(notificationProfile(), failedUpdates.size)
         }
     }
 
@@ -488,12 +508,7 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
         ensureActive()
 
         updatingEntry.add(entry)
-        notifier.showProgressNotification(
-            profileId,
-            updatingEntry,
-            completed.load(),
-            entriesToUpdate.size,
-        )
+        notifier.showProgressNotification(notificationProfile(), updatingEntry, progress(completed.load()))
 
         block()
 
@@ -501,16 +516,19 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
 
         updatingEntry.remove(entry)
         val completedCount = completed.incrementAndFetch()
-        notifier.showProgressNotification(
-            profileId,
-            updatingEntry,
-            completedCount,
-            entriesToUpdate.size,
-        )
+        notifier.showProgressNotification(notificationProfile(), updatingEntry, progress(completedCount))
         publishProgress(completedCount)
     }
 
-    /** Makes the progress readable outside the notification; see [progressFlow]. */
+    private fun progress(completed: Int) = LibraryUpdateProgress(
+        scope = updateScope,
+        scopeName = updateScopeName,
+        completed = completed,
+        total = entriesToUpdate.size,
+        skipped = skippedCount,
+    )
+
+    /** Makes the progress readable outside the notification; see [LibraryUpdateQueue.progressFlow]. */
     private suspend fun publishProgress(completed: Int) {
         setProgress(
             workDataOf(

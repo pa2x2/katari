@@ -11,7 +11,7 @@ import eu.kanade.tachiyomi.network.NetworkPreferences
 import kotlinx.coroutines.CoroutineScope
 import mihon.core.metro.AppCoroutineScope
 import mihon.core.metro.StartupWarmup
-import mihon.entry.interactions.library.EntryLibraryUpdateNotificationFeature
+import mihon.feature.profiles.core.ProfileDatabase
 import tachiyomi.core.common.preference.InstalledProfilePreferenceOwner
 import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.data.Database
@@ -32,7 +32,7 @@ interface AppStartupGraph {
     val networkHelper: NetworkHelper
     val extensionManager: ExtensionManager
     val getUpdates: GetUpdates
-    val libraryUpdateNotificationFeature: EntryLibraryUpdateNotificationFeature
+    val profileDatabase: ProfileDatabase
     val sourceManager: SourceManager
     val database: Database
     val startupWarmups: Set<StartupWarmup>

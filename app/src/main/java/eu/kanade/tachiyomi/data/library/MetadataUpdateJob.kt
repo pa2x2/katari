@@ -11,6 +11,9 @@ import androidx.work.WorkQuery
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import dev.zacsweers.metro.Inject
+import eu.kanade.tachiyomi.data.library.notification.LibraryUpdateNotificationProfile
+import eu.kanade.tachiyomi.data.library.notification.LibraryUpdateNotificationProfiles
+import eu.kanade.tachiyomi.data.library.notification.LibraryUpdateNotifier
 import eu.kanade.tachiyomi.data.notification.Notifications
 import eu.kanade.tachiyomi.util.system.isRunning
 import eu.kanade.tachiyomi.util.system.setForegroundSafely
@@ -60,6 +63,9 @@ class MetadataUpdateJob(private val context: Context, workerParams: WorkerParame
     @Inject
     private lateinit var notifier: LibraryUpdateNotifier
 
+    @Inject
+    private lateinit var notificationProfiles: LibraryUpdateNotificationProfiles
+
     init {
         context.appGraph.inject(this)
     }
@@ -70,6 +76,12 @@ class MetadataUpdateJob(private val context: Context, workerParams: WorkerParame
         ?: context.appGraph.activeProfileProvider.activeProfileId
 
     private var entriesToUpdate: List<Entry> = mutableListOf()
+
+    private var notificationProfile: LibraryUpdateNotificationProfile? = null
+
+    private suspend fun notificationProfile(): LibraryUpdateNotificationProfile {
+        return notificationProfile ?: notificationProfiles.resolve(profileId).also { notificationProfile = it }
+    }
 
     override suspend fun doWork(): Result {
         setForegroundSafely()
@@ -97,7 +109,7 @@ class MetadataUpdateJob(private val context: Context, workerParams: WorkerParame
     override suspend fun getForegroundInfo(): ForegroundInfo {
         return ForegroundInfo(
             Notifications.ID_LIBRARY_PROGRESS,
-            notifier.progressNotificationBuilder.build(),
+            notifier.metadataProgressNotification(notificationProfile()),
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
             } else {
@@ -111,7 +123,7 @@ class MetadataUpdateJob(private val context: Context, workerParams: WorkerParame
      */
     private suspend fun addEntriesToQueue() {
         val libraryItems = getLibraryEntries.await(profileId)
-        notifier.showQueueSizeWarningNotificationIfNeeded(libraryItems, rulesProfileId = null)
+        notifier.showQueueSizeWarningNotificationIfNeeded(notificationProfile(), libraryItems, rulesProfileId = null)
         entriesToUpdate = libraryItems.expandToMemberEntries()
     }
 
@@ -191,8 +203,8 @@ class MetadataUpdateJob(private val context: Context, workerParams: WorkerParame
         ensureActive()
 
         updatingEntries.add(entry)
-        notifier.showProgressNotification(
-            profileId,
+        notifier.showMetadataProgressNotification(
+            notificationProfile(),
             updatingEntries,
             completed.load(),
             entriesToUpdate.size,
@@ -204,8 +216,8 @@ class MetadataUpdateJob(private val context: Context, workerParams: WorkerParame
 
         updatingEntries.remove(entry)
         completed.fetchAndIncrement()
-        notifier.showProgressNotification(
-            profileId,
+        notifier.showMetadataProgressNotification(
+            notificationProfile(),
             updatingEntries,
             completed.load(),
             entriesToUpdate.size,

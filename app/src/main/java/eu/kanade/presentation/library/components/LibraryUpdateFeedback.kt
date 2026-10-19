@@ -17,9 +17,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import eu.kanade.tachiyomi.data.library.LibraryUpdateProgress
-import eu.kanade.tachiyomi.data.library.LibraryUpdateScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withTimeoutOrNull
 import mihon.icons.materialsymbols.MaterialSymbols
@@ -32,7 +32,6 @@ import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 import kotlin.time.Duration.Companion.seconds
 
@@ -80,19 +79,8 @@ private fun LibraryUpdateStripContent(
     onCancel: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val scopeLabel = progress.scopeName?.let { stringResource(MR.strings.updating_named, it) } ?: stringResource(
-        when (progress.scope) {
-            LibraryUpdateScope.Library -> MR.strings.updating_library
-            LibraryUpdateScope.Category -> MR.strings.updating_category
-            LibraryUpdateScope.Source -> MR.strings.updating_extension
-            LibraryUpdateScope.Type -> MR.strings.updating_type
-            LibraryUpdateScope.Group -> MR.strings.updating_group
-            LibraryUpdateScope.Selection -> MR.strings.updating_selection
-        },
-    )
-    val skippedLabel = progress.skipped.takeIf { it > 0 }?.let {
-        pluralStringResource(MR.plurals.library_update_skipped_by_rules, it, it)
-    }
+    val context = LocalContext.current
+    val label = remember(progress, context) { progress.label(context) }
     Surface(
         modifier = modifier.fillMaxWidth(),
         container = SurfaceContainer.Default,
@@ -106,20 +94,7 @@ private fun LibraryUpdateStripContent(
                 verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
             ) {
                 Text(
-                    text = listOfNotNull(
-                        if (progress.total > 0) {
-                            stringResource(
-                                MR.strings.library_update_progress,
-                                scopeLabel,
-                                progress.completed,
-                                progress.total,
-                            )
-                        } else {
-                            scopeLabel
-                        },
-                        skippedLabel,
-                    )
-                        .joinToString(" · "),
+                    text = label,
                     role = TextRole.Supporting,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,

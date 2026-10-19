@@ -44,8 +44,10 @@ import eu.kanade.tachiyomi.util.system.animatorDurationScale
 import eu.kanade.tachiyomi.util.system.cancelNotification
 import eu.kanade.tachiyomi.util.system.notify
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import logcat.AndroidLogcatLogger
 import logcat.LogPriority
 import logcat.LogcatLogger
@@ -268,12 +270,22 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
 
     private fun setupNotificationChannels() {
         try {
-            Notifications.createChannels(
-                context = this,
-                libraryUpdateRoutes = graph.libraryUpdateNotificationFeature.routes(),
-            )
+            Notifications.createChannels(this)
         } catch (e: Exception) {
             logcat(LogPriority.ERROR, e) { "Failed to modify notification channels" }
+        }
+        // Follows profiles as they are created, renamed, archived and deleted. Off the main thread, as opening the
+        // database would slow the cold start.
+        graph.appScope.launch(Dispatchers.IO) {
+            graph.profileDatabase.subscribeProfiles(includeArchived = false)
+                .distinctUntilChangedBy { profiles -> profiles.map { it.id to it.name } }
+                .collect { profiles ->
+                    try {
+                        Notifications.syncLibraryUpdateChannels(this@App, profiles)
+                    } catch (e: Exception) {
+                        logcat(LogPriority.ERROR, e) { "Failed to update library update notification channels" }
+                    }
+                }
         }
     }
 

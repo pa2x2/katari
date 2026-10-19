@@ -1,17 +1,20 @@
 package eu.kanade.tachiyomi.data.library
 
 import android.content.Context
+import android.content.SharedPreferences
 import androidx.core.content.edit
 import androidx.work.Data
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkInfo
-import androidx.work.WorkManager
 import androidx.work.workDataOf
 import eu.kanade.tachiyomi.data.library.LibraryUpdateJob.Companion.toLibraryUpdateProgress
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.util.system.workManager
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.guava.await
@@ -36,6 +39,9 @@ object LibraryUpdateQueue {
     /** Marks updates the automatic schedule queued. */
     internal const val TAG_AUTOMATIC = "LibraryUpdate-auto"
     private const val PROFILE_TAG_PREFIX = "LibraryUpdate-profile-"
+
+    /** Followed by when the update was queued, as WorkInfo doesn't tell the order of a chain. */
+    private const val QUEUED_AT_TAG_PREFIX = "LibraryUpdate-queued-"
 
     private const val SKIPPED_FILE = "library_update_queue"
     private const val SKIPPED_KEY = "skipped"
@@ -63,7 +69,7 @@ object LibraryUpdateQueue {
     /** Checks the picked entries whatever the rules say, leaving out only entries set to Never. */
     suspend fun startSelection(context: Context, entryIds: Collection<Long>): Boolean {
         val profileId = context.activeProfileId
-        if (hasUpdate(context.workManager, profileId)) return false
+        if (hasUpdate(context, profileId)) return false
         val selectionName = LibraryUpdateSelectionFile(context).write(entryIds)
         return enqueue(context, profileId, workDataOf(LibraryUpdateJob.KEY_SELECTION to selectionName))
             .also { queued -> if (!queued) LibraryUpdateSelectionFile(context).delete(selectionName) }
@@ -85,13 +91,6 @@ object LibraryUpdateQueue {
     /** Stops the update of the active profile, running or waiting; the next one in the queue goes ahead. */
     suspend fun stop(context: Context) {
         stop(context, context.activeProfileId)
-    }
-
-    /** Stops whichever update is running, as the progress notification shows it; the next one goes ahead. */
-    suspend fun stopRunning(context: Context) {
-        context.workManager.getWorkInfosForUniqueWork(UNIQUE_NAME).await()
-            .filter { it.state == WorkInfo.State.RUNNING }
-            .forEach { info -> if (!LibraryUpdateJob.stopRunning(info.id)) markSkipped(context, info.id) }
     }
 
     /** Stops the update of [profileId], running or waiting; the next one in the queue goes ahead. */
@@ -119,10 +118,24 @@ object LibraryUpdateQueue {
             .distinctUntilChanged()
     }
 
+    /** Profile of the update that starts after [running], or null when none waits. */
+    fun nextProfileFlow(context: Context, running: UUID): Flow<Long?> {
+        return combine(context.workManager.getWorkInfosForUniqueWorkFlow(UNIQUE_NAME), skippedFlow(context)) {
+                infos,
+                skipped,
+            ->
+            infos
+                .filter { it.id != running && !it.state.isFinished && it.id.toString() !in skipped }
+                .minByOrNull(::queuedAtOf)
+                ?.let(::profileIdOf)
+        }
+            .distinctUntilChanged()
+    }
+
     /** True once for an update [stop] took out of the queue, which then ends without running. */
     @Synchronized
     internal fun consumeSkip(context: Context, id: UUID): Boolean {
-        val preferences = context.getSharedPreferences(SKIPPED_FILE, Context.MODE_PRIVATE)
+        val preferences = context.skippedPreferences
         val skipped = preferences.getStringSet(SKIPPED_KEY, emptySet()).orEmpty()
         if (id.toString() !in skipped) return false
         preferences.edit { putStringSet(SKIPPED_KEY, skipped - id.toString()) }
@@ -135,26 +148,38 @@ object LibraryUpdateQueue {
         input: Data,
         automatic: Boolean = false,
     ): Boolean = enqueueLock.withLock {
-        val workManager = context.workManager
-        if (hasUpdate(workManager, profileId)) return false
+        if (hasUpdate(context, profileId)) return false
         val request = OneTimeWorkRequestBuilder<LibraryUpdateJob>()
             .addTag(TAG)
             .addTag("$PROFILE_TAG_PREFIX$profileId")
+            .addTag("$QUEUED_AT_TAG_PREFIX${System.currentTimeMillis()}")
             .apply { if (automatic) addTag(TAG_AUTOMATIC) }
             .setInputData(Data.Builder().putAll(input).putLong(LibraryUpdateJob.KEY_PROFILE, profileId).build())
             .build()
-        workManager.enqueueUniqueWork(UNIQUE_NAME, ExistingWorkPolicy.APPEND_OR_REPLACE, request).result.await()
+        context.workManager.enqueueUniqueWork(UNIQUE_NAME, ExistingWorkPolicy.APPEND_OR_REPLACE, request).result.await()
         true
     }
 
-    private suspend fun hasUpdate(workManager: WorkManager, profileId: Long): Boolean {
-        return workManager.getWorkInfosForUniqueWork(UNIQUE_NAME).await()
-            .any { !it.state.isFinished && profileIdOf(it) == profileId }
+    /** Whether [profileId] has an update running or waiting; one taken out of the queue only waits to end. */
+    private suspend fun hasUpdate(context: Context, profileId: Long): Boolean {
+        val skipped = context.skippedPreferences.getStringSet(SKIPPED_KEY, emptySet()).orEmpty()
+        return context.workManager.getWorkInfosForUniqueWork(UNIQUE_NAME).await()
+            .any { !it.state.isFinished && it.id.toString() !in skipped && profileIdOf(it) == profileId }
+    }
+
+    private fun skippedFlow(context: Context): Flow<Set<String>> = callbackFlow {
+        val preferences = context.skippedPreferences
+        val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+            if (key == SKIPPED_KEY) trySend(preferences.getStringSet(SKIPPED_KEY, emptySet()).orEmpty())
+        }
+        preferences.registerOnSharedPreferenceChangeListener(listener)
+        send(preferences.getStringSet(SKIPPED_KEY, emptySet()).orEmpty())
+        awaitClose { preferences.unregisterOnSharedPreferenceChangeListener(listener) }
     }
 
     @Synchronized
     private fun markSkipped(context: Context, id: UUID) {
-        val preferences = context.getSharedPreferences(SKIPPED_FILE, Context.MODE_PRIVATE)
+        val preferences = context.skippedPreferences
         val skipped = preferences.getStringSet(SKIPPED_KEY, emptySet()).orEmpty()
         preferences.edit { putStringSet(SKIPPED_KEY, skipped + id.toString()) }
     }
@@ -163,6 +188,15 @@ object LibraryUpdateQueue {
         return info.tags.firstNotNullOfOrNull { tag -> tag.removePrefix(PROFILE_TAG_PREFIX).takeIf { it != tag } }
             ?.toLongOrNull()
     }
+
+    private fun queuedAtOf(info: WorkInfo): Long {
+        return info.tags.firstNotNullOfOrNull { tag -> tag.removePrefix(QUEUED_AT_TAG_PREFIX).takeIf { it != tag } }
+            ?.toLongOrNull()
+            ?: Long.MAX_VALUE
+    }
+
+    private val Context.skippedPreferences: SharedPreferences
+        get() = getSharedPreferences(SKIPPED_FILE, Context.MODE_PRIVATE)
 
     private val Context.activeProfileId: Long
         get() = appGraph.activeProfileProvider.activeProfileId
