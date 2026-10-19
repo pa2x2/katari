@@ -1,5 +1,11 @@
 blank_issues_enabled: false
 contact_links:
+  - name: 📖 Katari guide
+    url: https://pa2x2.github.io/katari/guide/
+    about: Setup, features, and answers to common questions
+  - name: 🛠️ Troubleshooting
+    url: https://pa2x2.github.io/katari/guide/troubleshooting/
+    about: Fixes for common problems, including source and extension errors
   - name: ⬇️ Katari releases
     url: https://github.com/pa2x2/katari/releases/latest
     about: Download the latest standard or FOSS release before reporting an issue
