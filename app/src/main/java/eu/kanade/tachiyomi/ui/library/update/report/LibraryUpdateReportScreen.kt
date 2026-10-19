@@ -5,10 +5,10 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.platform.LocalContext
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import dev.zacsweers.metrox.viewmodel.metroViewModel
+import eu.kanade.presentation.library.update.rememberLibraryUpdateStarter
 import eu.kanade.presentation.library.update.report.LibraryUpdateReportActions
 import eu.kanade.presentation.library.update.report.LibraryUpdateReportContent
 import eu.kanade.presentation.util.Screen
@@ -22,7 +22,6 @@ import mihon.presentation.kit.feedback.SnackbarHost
 import mihon.presentation.kit.feedback.SnackbarHostState
 import mihon.presentation.kit.navigation.AppBar
 import mihon.presentation.kit.navigation.Scaffold
-import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -32,19 +31,13 @@ class LibraryUpdateReportScreen : Screen() {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val context = LocalContext.current
         val scope = rememberCoroutineScope()
         val viewModel = metroViewModel<LibraryUpdateReportViewModel>()
         val state by viewModel.state.collectAsState()
         val snackbarHostState = remember { SnackbarHostState() }
 
-        // A started recheck shows up in this report as it runs, so only a refused start needs a message.
-        fun reportStart(started: Boolean) {
-            if (started) return
-            scope.launch {
-                snackbarHostState.showSnackbar(context.stringResource(MR.strings.update_already_running))
-            }
-        }
+        // A started recheck shows up in this report as it runs, so only a queued or refused start needs a message.
+        val updateStarter = rememberLibraryUpdateStarter(snackbarHostState)
 
         Scaffold(
             topBar = {
@@ -80,8 +73,8 @@ class LibraryUpdateReportScreen : Screen() {
                         onSetPaused = viewModel::setEntryPaused,
                         onPauseSource = viewModel::pauseSource,
                         onResumeSource = viewModel::resumeSource,
-                        onRetry = { entries -> scope.launch { reportStart(viewModel.retry(entries)) } },
-                        onCheckSkipped = { scope.launch { reportStart(viewModel.checkSkipped()) } },
+                        onRetry = { entries -> scope.launch { updateStarter.start { viewModel.retry(entries) } } },
+                        onCheckSkipped = { scope.launch { updateStarter.start(viewModel::checkSkipped) } },
                     ),
                 )
             }

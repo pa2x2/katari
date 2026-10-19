@@ -25,7 +25,7 @@ class LibraryAutoUpdateTrigger(private val context: Context, workerParams: Worke
                 return Result.retry()
             }
         }
-        if (!LibraryUpdateQueue.startAutomatic(context, profileId)) {
+        if (LibraryUpdateQueue.startAutomatic(context, profileId) == LibraryUpdateStart.AlreadyQueued) {
             logcat(LogPriority.INFO) {
                 "Skipping automatic library update of profile $profileId, one is already queued"
             }

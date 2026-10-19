@@ -9,6 +9,8 @@ import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metrox.viewmodel.ViewModelKey
 import eu.kanade.tachiyomi.data.library.LibraryUpdateQueue
+import eu.kanade.tachiyomi.data.library.LibraryUpdateStart
+import eu.kanade.tachiyomi.data.library.LibraryUpdateState
 import eu.kanade.tachiyomi.source.visualName
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,6 +18,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.launch
@@ -27,6 +30,7 @@ import mihon.entry.interactions.source.EntryWebViewFeature
 import mihon.entry.interactions.source.EntryWebViewResolution
 import mihon.feature.library.update.pause.LibrarySourcePauses
 import mihon.feature.library.update.report.LibraryUpdateReport
+import tachiyomi.data.ActiveProfileProvider
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.library.service.LibraryPreferences
@@ -49,6 +53,7 @@ class LibraryUpdateReportViewModel(
     private val sourceManager: SourceManager,
     private val migrationFeature: EntryMigrationFeature,
     private val webViewFeature: EntryWebViewFeature,
+    private val activeProfileProvider: ActiveProfileProvider,
 ) : ViewModel() {
 
     val state: StateFlow<LibraryUpdateReportViewModel.State>
@@ -73,7 +78,9 @@ class LibraryUpdateReportViewModel(
         val pausedEntryIds = rulesRepository.subscribeEntryModes()
             .map { modes -> modes.filterValues { it == EntryUpdateMode.NEVER }.keys }
         // Rechecks started from the report fold into it without starting a run of their own.
-        val isUpdating = LibraryUpdateQueue.progressFlow(application).map { it != null }
+        val isUpdating = activeProfileProvider.activeProfileIdFlow
+            .flatMapLatest { LibraryUpdateQueue.stateFlow(application, it) }
+            .map { it is LibraryUpdateState.Running }
         viewModelScope.launch {
             combine(reports, pauses, pausedEntryIds, isUpdating) { latest, sourcePausesNow, entryIds, updating ->
                 latest?.copy(sourcePauses = sourcePausesNow, pausedEntryIds = entryIds, isUpdating = updating)
@@ -130,12 +137,11 @@ class LibraryUpdateReportViewModel(
         sourcePauses.resume(listOf(sourceId))
     }
 
-    /** @return false when another update is already running. */
-    suspend fun retry(entries: List<Entry>): Boolean {
+    suspend fun retry(entries: List<Entry>): LibraryUpdateStart {
         return LibraryUpdateQueue.startSelection(application, entries.map { it.id })
     }
 
-    suspend fun checkSkipped(): Boolean = LibraryUpdateQueue.startSkippedOfLatest(application)
+    suspend fun checkSkipped(): LibraryUpdateStart = LibraryUpdateQueue.startSkippedOfLatest(application)
 
     sealed interface State {
         data object Loading : State

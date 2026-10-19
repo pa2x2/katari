@@ -528,7 +528,7 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
         skipped = skippedCount,
     )
 
-    /** Makes the progress readable outside the notification; see [LibraryUpdateQueue.progressFlow]. */
+    /** Makes the progress readable outside the notification; see [LibraryUpdateQueue.stateFlow]. */
     private suspend fun publishProgress(completed: Int) {
         setProgress(
             workDataOf(

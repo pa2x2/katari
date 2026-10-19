@@ -20,7 +20,7 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import eu.kanade.core.preference.PreferenceMutableState
 import eu.kanade.presentation.library.search.LibrarySearchResults
 import eu.kanade.presentation.library.search.LibrarySearchTips
-import eu.kanade.tachiyomi.data.library.LibraryUpdateProgress
+import eu.kanade.tachiyomi.data.library.LibraryUpdateState
 import eu.kanade.tachiyomi.ui.library.LibraryPage
 import eu.kanade.tachiyomi.ui.library.LibraryPageTab
 import kotlinx.coroutines.launch
@@ -41,7 +41,7 @@ fun SharedLibraryContent(
     showItemCounts: Boolean,
     onChangeCurrentPage: (Int) -> Unit,
     onRefresh: suspend () -> Boolean,
-    updateProgress: LibraryUpdateProgress?,
+    updateState: LibraryUpdateState?,
     onCancelUpdate: () -> Unit,
     scrollToTopTarget: LibraryScrollToTopTarget,
     pageContent: @Composable (pagerState: PagerState, page: Int, libraryPage: LibraryPage?) -> Unit,
@@ -56,7 +56,7 @@ fun SharedLibraryContent(
         val pagerState = rememberPagerState(currentPage) { pages.size }
 
         val scope = rememberCoroutineScope()
-        var awaitingUpdate by rememberAwaitingUpdateState(updateProgress)
+        var awaitingUpdate by rememberAwaitingUpdateState(updateState)
 
         val primaryTabs = remember(pages) {
             pages.map(LibraryPage::primaryTab).distinctBy(LibraryPageTab::id)
@@ -111,7 +111,7 @@ fun SharedLibraryContent(
             }
         }
 
-        LibraryUpdateStrip(progress = updateProgress, onCancel = onCancelUpdate)
+        LibraryUpdateStrip(state = updateState, onCancel = onCancelUpdate)
 
         PullRefresh(
             refreshing = awaitingUpdate,
@@ -222,7 +222,7 @@ fun LibraryContent(
     onToggleSelection: (LibraryPage, LibraryItem) -> Unit,
     onToggleRangeSelection: (LibraryPage, LibraryItem) -> Unit,
     onRefresh: suspend () -> Boolean,
-    updateProgress: LibraryUpdateProgress?,
+    updateState: LibraryUpdateState?,
     onCancelUpdate: () -> Unit,
     onGlobalSearchClicked: () -> Unit,
     getDisplayMode: (Int) -> PreferenceMutableState<LibraryDisplayMode>,
@@ -281,7 +281,7 @@ fun LibraryContent(
             showItemCounts = showItemCounts,
             onChangeCurrentPage = onChangeCurrentPage,
             onRefresh = onRefresh,
-            updateProgress = updateProgress,
+            updateState = updateState,
             onCancelUpdate = onCancelUpdate,
             scrollToTopTarget = scrollToTopTarget,
         ) { pagerState, _, _ ->

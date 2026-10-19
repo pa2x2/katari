@@ -103,7 +103,7 @@ data object LibraryTab : Tab {
         val viewModel = metroViewModel<LibraryViewModel>()
         val settingsViewModel = metroViewModel<LibrarySettingsViewModel>(key = activeProfile?.id?.toString())
         val state by viewModel.state.collectAsStateWithLifecycle()
-        val updateProgress by viewModel.updateProgress.collectAsStateWithLifecycle()
+        val updateState by viewModel.updateState.collectAsStateWithLifecycle()
 
         val snackbarHostState = remember { SnackbarHostState() }
         val scrollToTopTarget = remember { LibraryScrollToTopTarget() }
@@ -255,7 +255,7 @@ data object LibraryTab : Tab {
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         },
                         onRefresh = { onClickRefresh(state) },
-                        updateProgress = updateProgress,
+                        updateState = updateState,
                         onCancelUpdate = viewModel::cancelUpdate,
                         onGlobalSearchClicked = {
                             navigator.push(GlobalSearchScreen(viewModel.state.value.searchQuery ?: ""))

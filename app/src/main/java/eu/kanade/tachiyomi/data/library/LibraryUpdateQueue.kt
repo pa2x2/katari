@@ -54,7 +54,7 @@ object LibraryUpdateQueue {
         category: Category? = null,
         sourceId: Long? = null,
         entryType: EntryType? = null,
-    ): Boolean {
+    ): LibraryUpdateStart {
         return enqueue(
             context = context,
             profileId = context.activeProfileId,
@@ -67,15 +67,17 @@ object LibraryUpdateQueue {
     }
 
     /** Checks the picked entries whatever the rules say, leaving out only entries set to Never. */
-    suspend fun startSelection(context: Context, entryIds: Collection<Long>): Boolean {
+    suspend fun startSelection(context: Context, entryIds: Collection<Long>): LibraryUpdateStart {
         val profileId = context.activeProfileId
-        if (hasUpdate(context, profileId)) return false
+        if (pendingUpdates(context).any { profileIdOf(it) == profileId }) return LibraryUpdateStart.AlreadyQueued
         val selectionName = LibraryUpdateSelectionFile(context).write(entryIds)
         return enqueue(context, profileId, workDataOf(LibraryUpdateJob.KEY_SELECTION to selectionName))
-            .also { queued -> if (!queued) LibraryUpdateSelectionFile(context).delete(selectionName) }
+            .also { start ->
+                if (start == LibraryUpdateStart.AlreadyQueued) LibraryUpdateSelectionFile(context).delete(selectionName)
+            }
     }
 
-    suspend fun startSkippedOfLatest(context: Context): Boolean {
+    suspend fun startSkippedOfLatest(context: Context): LibraryUpdateStart {
         return enqueue(
             context,
             context.activeProfileId,
@@ -84,7 +86,7 @@ object LibraryUpdateQueue {
     }
 
     /** Queues the automatic update of [profileId], unless that profile already has an update running or waiting. */
-    internal suspend fun startAutomatic(context: Context, profileId: Long): Boolean {
+    internal suspend fun startAutomatic(context: Context, profileId: Long): LibraryUpdateStart {
         return enqueue(context, profileId, Data.EMPTY, automatic = true)
     }
 
@@ -105,30 +107,29 @@ object LibraryUpdateQueue {
     }
 
     /**
-     * Progress of the running library update, or null when none runs. An update shows up once it has decided to go
-     * ahead.
+     * The update of [profileId], or null when it has none. A running update shows up once it has decided to go ahead,
+     * and a waiting one only while another profile's update runs.
      */
-    fun progressFlow(context: Context): Flow<LibraryUpdateProgress?> {
-        return context.workManager.getWorkInfosByTagFlow(TAG)
-            .map { workInfos ->
-                workInfos
-                    .filter { it.state == WorkInfo.State.RUNNING }
-                    .firstNotNullOfOrNull { it.progress.toLibraryUpdateProgress() }
+    fun stateFlow(context: Context, profileId: Long): Flow<LibraryUpdateState?> {
+        return pendingUpdatesFlow(context)
+            .map { pending ->
+                val own = pending.firstOrNull { profileIdOf(it) == profileId } ?: return@map null
+                if (own.state == WorkInfo.State.RUNNING) {
+                    own.progress.toLibraryUpdateProgress()?.let(LibraryUpdateState::Running)
+                } else {
+                    pending.firstOrNull { it.state == WorkInfo.State.RUNNING }
+                        ?.let(::profileIdOf)
+                        ?.let { profileName(context, it) }
+                        ?.let(LibraryUpdateState::Waiting)
+                }
             }
             .distinctUntilChanged()
     }
 
     /** Profile of the update that starts after [running], or null when none waits. */
     fun nextProfileFlow(context: Context, running: UUID): Flow<Long?> {
-        return combine(context.workManager.getWorkInfosForUniqueWorkFlow(UNIQUE_NAME), skippedFlow(context)) {
-                infos,
-                skipped,
-            ->
-            infos
-                .filter { it.id != running && !it.state.isFinished && it.id.toString() !in skipped }
-                .minByOrNull(::queuedAtOf)
-                ?.let(::profileIdOf)
-        }
+        return pendingUpdatesFlow(context)
+            .map { pending -> pending.filter { it.id != running }.minByOrNull(::queuedAtOf)?.let(::profileIdOf) }
             .distinctUntilChanged()
     }
 
@@ -147,8 +148,9 @@ object LibraryUpdateQueue {
         profileId: Long,
         input: Data,
         automatic: Boolean = false,
-    ): Boolean = enqueueLock.withLock {
-        if (hasUpdate(context, profileId)) return false
+    ): LibraryUpdateStart = enqueueLock.withLock {
+        val pending = pendingUpdates(context)
+        if (pending.any { profileIdOf(it) == profileId }) return LibraryUpdateStart.AlreadyQueued
         val request = OneTimeWorkRequestBuilder<LibraryUpdateJob>()
             .addTag(TAG)
             .addTag("$PROFILE_TAG_PREFIX$profileId")
@@ -157,14 +159,31 @@ object LibraryUpdateQueue {
             .setInputData(Data.Builder().putAll(input).putLong(LibraryUpdateJob.KEY_PROFILE, profileId).build())
             .build()
         context.workManager.enqueueUniqueWork(UNIQUE_NAME, ExistingWorkPolicy.APPEND_OR_REPLACE, request).result.await()
-        true
+        pending.maxByOrNull(::queuedAtOf)
+            ?.let(::profileIdOf)
+            ?.let { profileName(context, it) }
+            ?.let(LibraryUpdateStart::Queued)
+            ?: LibraryUpdateStart.Started
     }
 
-    /** Whether [profileId] has an update running or waiting; one taken out of the queue only waits to end. */
-    private suspend fun hasUpdate(context: Context, profileId: Long): Boolean {
+    /** Updates running or waiting; one taken out of the queue only waits to end, so it isn't one of them. */
+    private suspend fun pendingUpdates(context: Context): List<WorkInfo> {
         val skipped = context.skippedPreferences.getStringSet(SKIPPED_KEY, emptySet()).orEmpty()
         return context.workManager.getWorkInfosForUniqueWork(UNIQUE_NAME).await()
-            .any { !it.state.isFinished && it.id.toString() !in skipped && profileIdOf(it) == profileId }
+            .filter { !it.state.isFinished && it.id.toString() !in skipped }
+    }
+
+    private fun pendingUpdatesFlow(context: Context): Flow<List<WorkInfo>> {
+        return combine(context.workManager.getWorkInfosForUniqueWorkFlow(UNIQUE_NAME), skippedFlow(context)) {
+                infos,
+                skipped,
+            ->
+            infos.filter { !it.state.isFinished && it.id.toString() !in skipped }
+        }
+    }
+
+    private suspend fun profileName(context: Context, profileId: Long): String? {
+        return context.appGraph.profileDatabase.getProfileById(profileId)?.name
     }
 
     private fun skippedFlow(context: Context): Flow<Set<String>> = callbackFlow {
@@ -200,4 +219,15 @@ object LibraryUpdateQueue {
 
     private val Context.activeProfileId: Long
         get() = appGraph.activeProfileProvider.activeProfileId
+}
+
+/** What asking for a library update did. */
+sealed interface LibraryUpdateStart {
+    data object Started : LibraryUpdateStart
+
+    /** Starts once the update of the profile named [aheadProfileName], the last one queued before it, finishes. */
+    data class Queued(val aheadProfileName: String) : LibraryUpdateStart
+
+    /** The profile already has an update running or waiting, so nothing was queued. */
+    data object AlreadyQueued : LibraryUpdateStart
 }

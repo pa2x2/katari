@@ -16,8 +16,8 @@ import eu.kanade.presentation.entry.DownloadAction
 import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.presentation.library.components.LibraryDisplaySettings
 import eu.kanade.presentation.library.components.LibraryToolbarTitle
-import eu.kanade.tachiyomi.data.library.LibraryUpdateProgress
 import eu.kanade.tachiyomi.data.library.LibraryUpdateQueue
+import eu.kanade.tachiyomi.data.library.LibraryUpdateState
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.ui.base.viewmodel.GatedStateViewModel
@@ -26,6 +26,7 @@ import eu.kanade.tachiyomi.util.system.isReleaseBuildType
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
@@ -98,6 +99,7 @@ import tachiyomi.core.common.preference.TriState
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.core.common.util.lang.pausedWhileUnsubscribed
+import tachiyomi.data.ActiveProfileProvider
 import tachiyomi.domain.category.interactor.GetCategories
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.entry.interactor.GetEntry
@@ -154,6 +156,7 @@ class LibraryViewModel(
     private val profileStore: ProfileAwareStore,
     private val profileDatabase: ProfileDatabase,
     private val profileManager: ProfileManager,
+    private val activeProfileProvider: ActiveProfileProvider,
     private val entryProfileMoveFeature: EntryProfileMoveFeature,
     private val entryContinueFeature: EntryContinueFeature,
 ) : GatedStateViewModel<LibraryViewModel.State>(State()) {
@@ -166,8 +169,10 @@ class LibraryViewModel(
     private val portraitColumnsState = libraryPreferences.portraitColumns.asState(viewModelScope)
     private val landscapeColumnsState = libraryPreferences.landscapeColumns.asState(viewModelScope)
 
-    /** The running library update, whichever screen or schedule started it. */
-    val updateProgress: StateFlow<LibraryUpdateProgress?> = LibraryUpdateQueue.progressFlow(context)
+    /** This profile's library update, whichever screen or schedule started it. */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val updateState: StateFlow<LibraryUpdateState?> = activeProfileProvider.activeProfileIdFlow
+        .flatMapLatest { LibraryUpdateQueue.stateFlow(context, it) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5.seconds), null)
 
     fun canContinue(type: EntryType): Boolean = entryContinueFeature.isApplicable(type)

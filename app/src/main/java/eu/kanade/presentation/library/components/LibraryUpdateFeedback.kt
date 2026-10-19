@@ -19,7 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
-import eu.kanade.tachiyomi.data.library.LibraryUpdateProgress
+import eu.kanade.tachiyomi.data.library.LibraryUpdateState
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withTimeoutOrNull
 import mihon.icons.materialsymbols.MaterialSymbols
@@ -36,17 +36,17 @@ import tachiyomi.presentation.core.i18n.stringResource
 import kotlin.time.Duration.Companion.seconds
 
 /**
- * Pull-to-refresh state for starting a library update: set it once the update is started, and it clears when the
- * update's progress appears, handing over to [LibraryUpdateStrip], or when the update never shows up.
+ * Pull-to-refresh state for starting a library update: set it once the update is started or queued, and it clears
+ * when the update shows up, handing over to [LibraryUpdateStrip], or when the update never shows up.
  */
 @Composable
-internal fun rememberAwaitingUpdateState(updateProgress: LibraryUpdateProgress?): MutableState<Boolean> {
+internal fun rememberAwaitingUpdateState(updateState: LibraryUpdateState?): MutableState<Boolean> {
     val awaitingUpdate = remember { mutableStateOf(false) }
-    val currentUpdateProgress by rememberUpdatedState(updateProgress)
+    val currentUpdateState by rememberUpdatedState(updateState)
     LaunchedEffect(awaitingUpdate.value) {
         if (!awaitingUpdate.value) return@LaunchedEffect
         withTimeoutOrNull(UpdateStartTimeout) {
-            snapshotFlow { currentUpdateProgress }.first { it != null }
+            snapshotFlow { currentUpdateState }.first { it != null }
         }
         awaitingUpdate.value = false
     }
@@ -55,32 +55,40 @@ internal fun rememberAwaitingUpdateState(updateProgress: LibraryUpdateProgress?)
 
 private val UpdateStartTimeout = 10.seconds
 
-/** Shows a running library update while there is one, keeping its last progress while it animates out. */
+/**
+ * Shows this profile's library update while there is one, keeping its last state while it animates out.
+ *
+ * @param onCancel stops the update, or takes a waiting one out of the queue.
+ */
 @Composable
 internal fun LibraryUpdateStrip(
-    progress: LibraryUpdateProgress?,
+    state: LibraryUpdateState?,
     onCancel: () -> Unit,
 ) {
-    var lastProgress by remember { mutableStateOf(progress) }
-    LaunchedEffect(progress) {
-        if (progress != null) lastProgress = progress
+    var lastState by remember { mutableStateOf(state) }
+    LaunchedEffect(state) {
+        if (state != null) lastState = state
     }
-    AnimatedVisibility(visible = progress != null) {
-        (progress ?: lastProgress)?.let {
-            LibraryUpdateStripContent(progress = it, onCancel = onCancel)
+    AnimatedVisibility(visible = state != null) {
+        (state ?: lastState)?.let {
+            LibraryUpdateStripContent(state = it, onCancel = onCancel)
         }
     }
 }
 
-/** A running library update: what it covers, how far it got, and a way to stop it. */
+/** What a running update covers and how far it got, or whose update a waiting one waits for. */
 @Composable
 private fun LibraryUpdateStripContent(
-    progress: LibraryUpdateProgress,
+    state: LibraryUpdateState,
     onCancel: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
-    val label = remember(progress, context) { progress.label(context) }
+    val progress = (state as? LibraryUpdateState.Running)?.progress
+    val label = when (state) {
+        is LibraryUpdateState.Running -> remember(state.progress, context) { state.progress.label(context) }
+        is LibraryUpdateState.Waiting -> stringResource(MR.strings.library_update_waiting, state.runningProfileName)
+    }
     Surface(
         modifier = modifier.fillMaxWidth(),
         container = SurfaceContainer.Default,
@@ -99,7 +107,7 @@ private fun LibraryUpdateStripContent(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
-                if (progress.total > 0) {
+                if (progress != null && progress.total > 0) {
                     LinearProgressIndicator(
                         progress = { progress.completed.toFloat() / progress.total },
                         modifier = Modifier.fillMaxWidth(),

@@ -43,6 +43,14 @@ data class LibraryUpdateProgress(
     }
 }
 
+/** One profile's library update, running or waiting its turn. */
+sealed interface LibraryUpdateState {
+    data class Running(val progress: LibraryUpdateProgress) : LibraryUpdateState
+
+    /** Waits for the update of the profile named [runningProfileName], which runs now. */
+    data class Waiting(val runningProfileName: String) : LibraryUpdateState
+}
+
 /** Which part of the library an update was asked to cover. */
 enum class LibraryUpdateScope {
     Library,
