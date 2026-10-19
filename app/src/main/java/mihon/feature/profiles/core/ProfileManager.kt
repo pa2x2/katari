@@ -7,7 +7,8 @@ import androidx.core.content.edit
 import androidx.preference.PreferenceManager
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.tachiyomi.core.security.SecurityPreferences
-import eu.kanade.tachiyomi.data.library.LibraryUpdateJob
+import eu.kanade.tachiyomi.data.library.LibraryUpdateQueue
+import eu.kanade.tachiyomi.data.library.LibraryUpdateSchedule
 import eu.kanade.tachiyomi.data.statistics.StatisticsRecapNotificationJob
 import eu.kanade.tachiyomi.extension.ExtensionManager
 import kotlinx.coroutines.CoroutineScope
@@ -106,7 +107,6 @@ class ProfileManager(
         val profile = profileDatabase.getProfileById(profileId) ?: return
         activateProfile(profile)
         if (rescheduleJobs) {
-            LibraryUpdateJob.setupTask(application)
             StatisticsRecapNotificationJob.setupTask(application)
         }
     }
@@ -145,6 +145,7 @@ class ProfileManager(
         customPreferences.homeScreenTabs.set(defaultHomeScreenTabs())
         customPreferences.homeScreenStartupTab.set(HomeScreenTabs.Library)
         seedDuplicateTitleExclusions(profileId = id)
+        LibraryUpdateSchedule.schedule(application, id)
         return requireNotNull(profileDatabase.getProfileById(id))
     }
 
@@ -160,6 +161,9 @@ class ProfileManager(
         if (profileId == ProfileConstants.DEFAULT_PROFILE_ID && archived) return
         if (archived && activeProfileId == profileId) return
         profileDatabase.updateProfile(id = profileId, isArchived = archived)
+        // An archived profile's library isn't updated until the profile comes back.
+        if (archived) LibraryUpdateQueue.stop(application, profileId)
+        LibraryUpdateSchedule.schedule(application, profileId)
     }
 
     suspend fun permanentlyDeleteProfile(profileId: Long) {
@@ -182,6 +186,8 @@ class ProfileManager(
                 }
             }
         }
+        LibraryUpdateQueue.stop(application, profileId)
+        LibraryUpdateSchedule.cancel(application, profileId)
         profileDatabase.deleteProfile(profileId)
         profileStore.deleteProfileState(profileId)
     }

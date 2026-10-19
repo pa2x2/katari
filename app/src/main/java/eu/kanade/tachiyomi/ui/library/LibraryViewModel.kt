@@ -16,8 +16,8 @@ import eu.kanade.presentation.entry.DownloadAction
 import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.presentation.library.components.LibraryDisplaySettings
 import eu.kanade.presentation.library.components.LibraryToolbarTitle
-import eu.kanade.tachiyomi.data.library.LibraryUpdateJob
 import eu.kanade.tachiyomi.data.library.LibraryUpdateProgress
+import eu.kanade.tachiyomi.data.library.LibraryUpdateQueue
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.ui.base.viewmodel.GatedStateViewModel
@@ -167,7 +167,7 @@ class LibraryViewModel(
     private val landscapeColumnsState = libraryPreferences.landscapeColumns.asState(viewModelScope)
 
     /** The running library update, whichever screen or schedule started it. */
-    val updateProgress: StateFlow<LibraryUpdateProgress?> = LibraryUpdateJob.progressFlow(context)
+    val updateProgress: StateFlow<LibraryUpdateProgress?> = LibraryUpdateQueue.progressFlow(context)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5.seconds), null)
 
     fun canContinue(type: EntryType): Boolean = entryContinueFeature.isApplicable(type)
@@ -177,7 +177,7 @@ class LibraryViewModel(
     }
 
     fun cancelUpdate() {
-        viewModelScope.launchIO { LibraryUpdateJob.stop(context) }
+        viewModelScope.launchIO { LibraryUpdateQueue.stop(context) }
     }
 
     init {

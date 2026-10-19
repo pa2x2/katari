@@ -2,21 +2,10 @@ package eu.kanade.tachiyomi.data.library
 
 import android.content.Context
 import android.content.pm.ServiceInfo
-import android.net.NetworkCapabilities
-import android.net.NetworkRequest
 import android.os.Build
-import androidx.work.BackoffPolicy
-import androidx.work.Constraints
 import androidx.work.CoroutineWorker
 import androidx.work.Data
-import androidx.work.ExistingPeriodicWorkPolicy
-import androidx.work.ExistingWorkPolicy
 import androidx.work.ForegroundInfo
-import androidx.work.NetworkType
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.PeriodicWorkRequestBuilder
-import androidx.work.WorkInfo
-import androidx.work.WorkQuery
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import dev.zacsweers.metro.Inject
@@ -24,19 +13,14 @@ import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.tachiyomi.data.notification.Notifications
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.visualName
-import eu.kanade.tachiyomi.util.system.isConnectedToWifi
-import eu.kanade.tachiyomi.util.system.isRunning
 import eu.kanade.tachiyomi.util.system.setForegroundSafely
-import eu.kanade.tachiyomi.util.system.workManager
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.ensureActive
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.guava.await
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import kotlinx.datetime.TimeZone
@@ -62,7 +46,6 @@ import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.core.common.util.lang.withNonCancellableContext
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.data.ActiveProfileProvider
-import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.category.repository.CategoryRepository
 import tachiyomi.domain.entry.interactor.GetLibraryEntries
 import tachiyomi.domain.entry.model.Entry
@@ -70,9 +53,6 @@ import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.entry.service.nextupdate.FetchInterval
 import tachiyomi.domain.library.service.LibraryPreferences
-import tachiyomi.domain.library.service.LibraryPreferences.Companion.DEVICE_CHARGING
-import tachiyomi.domain.library.service.LibraryPreferences.Companion.DEVICE_NETWORK_NOT_METERED
-import tachiyomi.domain.library.service.LibraryPreferences.Companion.DEVICE_ONLY_ON_WIFI
 import tachiyomi.domain.library.update.model.EntryUpdateOutcome
 import tachiyomi.domain.library.update.model.EntryUpdateStatus
 import tachiyomi.domain.library.update.model.LibraryUpdateTrigger
@@ -80,8 +60,9 @@ import tachiyomi.domain.library.update.repository.LibraryUpdateReportRepository
 import tachiyomi.domain.library.update.repository.LibraryUpdateRulesRepository
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.i18n.*
+import java.util.UUID
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
-import java.util.concurrent.TimeUnit
 import kotlin.concurrent.atomics.AtomicInt
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.concurrent.atomics.incrementAndFetch
@@ -143,6 +124,7 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
      */
     private val profileId = inputData.getLong(KEY_PROFILE, -1L)
         .takeIf { it >= 0L }
+        // Requests queued by an older version carry no profile.
         ?: activeProfileProvider.activeProfileId
     private val libraryPreferences = LibraryPreferences(profileStore.profileStore(profileId))
 
@@ -165,27 +147,32 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
     /** Start of this update, which also identifies it in the update report. */
     private var startedAt = 0L
 
-    override suspend fun doWork(): Result {
-        val automatic = tags.contains(WORK_NAME_AUTO)
-        logcat(LogPriority.INFO) { "Starting library update (auto=$automatic, input=${inputData.keyValueMap})" }
-
-        if (automatic) {
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
-                val restrictions = libraryPreferences.autoUpdateDeviceRestrictions.get()
-                if ((DEVICE_ONLY_ON_WIFI in restrictions) && !context.isConnectedToWifi()) {
-                    logcat(LogPriority.INFO) { "Skipping automatic library update because device is not on Wi-Fi" }
-                    return Result.retry()
-                }
+    override suspend fun doWork(): Result = coroutineScope {
+        val update = async(start = CoroutineStart.LAZY) { update() }
+        // Registered before the skip check, so a stop either finds the update running or marks it skipped first.
+        running[id] = update
+        try {
+            if (LibraryUpdateQueue.consumeSkip(context, id)) {
+                logcat(LogPriority.INFO) { "Skipping library update that was taken out of the queue" }
+                // Never started, it would keep the scope from completing.
+                update.cancel()
+                inputData.getString(KEY_SELECTION)?.let(selectionFile::delete)
+                Result.success()
+            } else {
+                update.await()
             }
-
-            // Find a running manual worker. If exists, try again later
-            if (context.workManager.isRunning(WORK_NAME_MANUAL)) {
-                logcat(LogPriority.INFO) {
-                    "Retrying automatic library update because a manual update is already running"
-                }
-                return Result.retry()
-            }
+        } catch (_: CancellationException) {
+            // Stopped by the user, or by WorkManager; either way the updates queued behind it go ahead.
+            logcat(LogPriority.INFO) { "Library update cancelled" }
+            Result.success()
+        } finally {
+            running.remove(id)
         }
+    }
+
+    private suspend fun update(): Result {
+        val automatic = tags.contains(LibraryUpdateQueue.TAG_AUTOMATIC)
+        logcat(LogPriority.INFO) { "Starting library update (auto=$automatic, input=${inputData.keyValueMap})" }
 
         val selectionName = inputData.getString(KEY_SELECTION)
         val request = readRequest(automatic, selectionName)
@@ -213,14 +200,10 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
                 logcat(LogPriority.INFO) { "Library update completed" }
                 Result.success()
             } catch (e: Exception) {
-                if (e is CancellationException) {
-                    // Assume success although cancelled
-                    logcat(LogPriority.INFO) { "Library update cancelled" }
-                    Result.success()
-                } else {
-                    logcat(LogPriority.ERROR, e) { "Library update failed" }
-                    Result.failure()
-                }
+                if (e is CancellationException) throw e
+                logcat(LogPriority.ERROR, e) { "Library update failed" }
+                // A failure would fail every update queued behind this one in the chain.
+                Result.success()
             } finally {
                 withNonCancellableContext {
                     reportRepository.finishRun(profileId, startedAt, Clock.System.now().toEpochMilliseconds())
@@ -541,24 +524,14 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
     }
 
     companion object {
-        private const val TAG = "LibraryUpdate"
-        private const val WORK_NAME_AUTO = "LibraryUpdate-auto"
-        private const val WORK_NAME_MANUAL = "LibraryUpdate-manual"
+        /** Key for category to update. */
+        internal const val KEY_CATEGORY = "category"
 
-        /**
-         * Key for category to update.
-         */
-        private const val KEY_CATEGORY = "category"
+        /** Key for source to update. */
+        internal const val KEY_SOURCE = "source"
 
-        /**
-         * Key for source to update.
-         */
-        private const val KEY_SOURCE = "source"
-
-        /**
-         * Key for entry type to update.
-         */
-        private const val KEY_ENTRY_TYPE = "entry_type"
+        /** Key for entry type to update. */
+        internal const val KEY_ENTRY_TYPE = "entry_type"
 
         private const val KEY_PROGRESS_SCOPE = "progress_scope"
         private const val KEY_PROGRESS_SCOPE_NAME = "progress_scope_name"
@@ -567,41 +540,25 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
         private const val KEY_PROGRESS_SKIPPED = "progress_skipped"
 
         /** Name of the [LibraryUpdateSelectionFile] listing the entries to check. */
-        private const val KEY_SELECTION = "selection"
+        internal const val KEY_SELECTION = "selection"
 
         /** Checks the entries the latest update skipped by rules. */
-        private const val KEY_SKIPPED_OF_LATEST = "skipped_of_latest"
+        internal const val KEY_SKIPPED_OF_LATEST = "skipped_of_latest"
 
         /** Id of the profile the update runs for. */
-        private const val KEY_PROFILE = "profile"
+        internal const val KEY_PROFILE = "profile"
 
-        /**
-         * Progress of the running library update, or null when none runs. An update shows up once it has decided
-         * to go ahead, so an automatic run that is only going to be retried later never appears.
-         */
-        fun progressFlow(context: Context): Flow<LibraryUpdateProgress?> {
-            return context.workManager.getWorkInfosByTagFlow(TAG)
-                .map { workInfos ->
-                    workInfos
-                        .filter { it.state == WorkInfo.State.RUNNING }
-                        .firstNotNullOfOrNull { it.progress.toLibraryUpdateProgress() }
-                }
-                .distinctUntilChanged()
+        /** Updates running in this process, by work id, so a stop can end one without cancelling the queue. */
+        private val running = ConcurrentHashMap<UUID, Job>()
+
+        /** Ends the running update [id] as finished; false when it doesn't run in this process. */
+        internal fun stopRunning(id: UUID): Boolean {
+            val update = running[id] ?: return false
+            update.cancel()
+            return true
         }
 
-        /** When the next automatic update is due to start, or null when none is scheduled. */
-        fun nextAutomaticRunFlow(context: Context): Flow<Long?> {
-            return context.workManager.getWorkInfosForUniqueWorkFlow(WORK_NAME_AUTO)
-                .map { workInfos ->
-                    workInfos
-                        .firstOrNull { !it.state.isFinished }
-                        ?.nextScheduleTimeMillis
-                        ?.takeIf { it != Long.MAX_VALUE }
-                }
-                .distinctUntilChanged()
-        }
-
-        private fun Data.toLibraryUpdateProgress(): LibraryUpdateProgress? {
+        internal fun Data.toLibraryUpdateProgress(): LibraryUpdateProgress? {
             val scope = getString(KEY_PROGRESS_SCOPE)
                 ?.let { name -> LibraryUpdateScope.entries.find { it.name == name } }
                 ?: return null
@@ -612,134 +569,6 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
                 total = getInt(KEY_PROGRESS_TOTAL, 0),
                 skipped = getInt(KEY_PROGRESS_SKIPPED, 0),
             )
-        }
-
-        /**
-         * Schedules automatic updates at the shortest interval the library or any category asks for.
-         *
-         * @param prefInterval the library interval when its preference is about to change and doesn't hold it yet.
-         */
-        suspend fun setupTask(
-            context: Context,
-            prefInterval: Int? = null,
-        ) {
-            val graph = context.appGraph
-            val preferences = graph.libraryPreferences
-            val interval = LibraryUpdateSettings.schedulePeriodHours(
-                intervalHours = prefInterval ?: preferences.autoUpdateInterval.get(),
-                categoryRules = graph.libraryUpdateRulesRepository.getCategoryRules().values,
-            )
-            if (interval != null) {
-                val restrictions = preferences.autoUpdateDeviceRestrictions.get()
-                val networkType = if (DEVICE_NETWORK_NOT_METERED in restrictions) {
-                    NetworkType.UNMETERED
-                } else {
-                    NetworkType.CONNECTED
-                }
-                val networkRequest = NetworkRequest.Builder().apply {
-                    removeCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN)
-                    if (DEVICE_ONLY_ON_WIFI in restrictions) {
-                        addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
-                    }
-                    if (DEVICE_NETWORK_NOT_METERED in restrictions) {
-                        addCapability(NetworkCapabilities.NET_CAPABILITY_NOT_METERED)
-                    }
-                }
-                    .build()
-                val constraints = Constraints.Builder()
-                    // 'networkRequest' only applies to Android 9+, otherwise 'networkType' is used
-                    .setRequiredNetworkRequest(networkRequest, networkType)
-                    .setRequiresCharging(DEVICE_CHARGING in restrictions)
-                    .setRequiresBatteryNotLow(true)
-                    .build()
-
-                val request = PeriodicWorkRequestBuilder<LibraryUpdateJob>(
-                    interval.toLong(),
-                    TimeUnit.HOURS,
-                    10,
-                    TimeUnit.MINUTES,
-                )
-                    .addTag(TAG)
-                    .addTag(WORK_NAME_AUTO)
-                    .setConstraints(constraints)
-                    .setBackoffCriteria(BackoffPolicy.LINEAR, 10, TimeUnit.MINUTES)
-                    .build()
-
-                context.workManager.enqueueUniquePeriodicWork(
-                    WORK_NAME_AUTO,
-                    ExistingPeriodicWorkPolicy.UPDATE,
-                    request,
-                )
-            } else {
-                context.workManager.cancelUniqueWork(WORK_NAME_AUTO)
-            }
-        }
-
-        /** Checks what the update rules allow, limited to one page of the library when a scope is given. */
-        suspend fun startNow(
-            context: Context,
-            category: Category? = null,
-            sourceId: Long? = null,
-            entryType: EntryType? = null,
-        ): Boolean {
-            return enqueueManual(
-                context,
-                workDataOf(
-                    KEY_CATEGORY to category?.id,
-                    KEY_SOURCE to sourceId,
-                    KEY_ENTRY_TYPE to entryType?.name,
-                ),
-            )
-        }
-
-        /** Checks the picked entries whatever the rules say, leaving out only entries set to Never. */
-        suspend fun startSelection(context: Context, entryIds: Collection<Long>): Boolean {
-            if (context.workManager.isRunning(TAG)) return false
-            val selectionName = LibraryUpdateSelectionFile(context).write(entryIds)
-            return enqueueManual(context, workDataOf(KEY_SELECTION to selectionName))
-        }
-
-        suspend fun startSkippedOfLatest(context: Context): Boolean {
-            return enqueueManual(context, workDataOf(KEY_SKIPPED_OF_LATEST to true))
-        }
-
-        private suspend fun enqueueManual(context: Context, inputData: Data): Boolean {
-            val wm = context.workManager
-            if (wm.isRunning(TAG)) {
-                // Already running either as a scheduled or manual job
-                return false
-            }
-
-            val request = OneTimeWorkRequestBuilder<LibraryUpdateJob>()
-                .addTag(TAG)
-                .addTag(WORK_NAME_MANUAL)
-                .setInputData(
-                    Data.Builder()
-                        .putAll(inputData)
-                        .putLong(KEY_PROFILE, context.appGraph.activeProfileProvider.activeProfileId)
-                        .build(),
-                )
-                .build()
-            wm.enqueueUniqueWork(WORK_NAME_MANUAL, ExistingWorkPolicy.KEEP, request)
-
-            return true
-        }
-
-        suspend fun stop(context: Context) {
-            val wm = context.workManager
-            val workQuery = WorkQuery.Builder.fromTags(listOf(TAG))
-                .addStates(listOf(WorkInfo.State.RUNNING))
-                .build()
-            wm.getWorkInfos(workQuery).await()
-                // Should only return one work but just in case
-                .forEach {
-                    wm.cancelWorkById(it.id)
-
-                    // Re-enqueue cancelled scheduled work
-                    if (it.tags.contains(WORK_NAME_AUTO)) {
-                        setupTask(context)
-                    }
-                }
         }
     }
 }

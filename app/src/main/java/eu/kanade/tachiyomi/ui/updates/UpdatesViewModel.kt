@@ -20,7 +20,7 @@ import eu.kanade.presentation.entry.translation.TranslatableChapter
 import eu.kanade.presentation.updates.UpdatesSelectionState
 import eu.kanade.presentation.updates.UpdatesUiModel
 import eu.kanade.presentation.updates.toUpdatesUiModels
-import eu.kanade.tachiyomi.data.library.LibraryUpdateJob
+import eu.kanade.tachiyomi.data.library.LibraryUpdateQueue
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.visualName
 import eu.kanade.tachiyomi.ui.base.viewmodel.GatedStateViewModel
@@ -340,7 +340,7 @@ class UpdatesViewModel(
         ) ?: EntryDownloadStatus(update.entryType, update.chapterId, EntryDownloadState.NOT_DOWNLOADED)
     }
 
-    suspend fun updateLibrary(): Boolean = LibraryUpdateJob.startNow(application)
+    suspend fun updateLibrary(): Boolean = LibraryUpdateQueue.startNow(application)
 
     /**
      * Update status of downloads.

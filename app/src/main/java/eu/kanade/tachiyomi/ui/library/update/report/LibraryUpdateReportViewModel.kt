@@ -8,7 +8,7 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metrox.viewmodel.ViewModelKey
-import eu.kanade.tachiyomi.data.library.LibraryUpdateJob
+import eu.kanade.tachiyomi.data.library.LibraryUpdateQueue
 import eu.kanade.tachiyomi.source.visualName
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -73,7 +73,7 @@ class LibraryUpdateReportViewModel(
         val pausedEntryIds = rulesRepository.subscribeEntryModes()
             .map { modes -> modes.filterValues { it == EntryUpdateMode.NEVER }.keys }
         // Rechecks started from the report fold into it without starting a run of their own.
-        val isUpdating = LibraryUpdateJob.progressFlow(application).map { it != null }
+        val isUpdating = LibraryUpdateQueue.progressFlow(application).map { it != null }
         viewModelScope.launch {
             combine(reports, pauses, pausedEntryIds, isUpdating) { latest, sourcePausesNow, entryIds, updating ->
                 latest?.copy(sourcePauses = sourcePausesNow, pausedEntryIds = entryIds, isUpdating = updating)
@@ -132,10 +132,10 @@ class LibraryUpdateReportViewModel(
 
     /** @return false when another update is already running. */
     suspend fun retry(entries: List<Entry>): Boolean {
-        return LibraryUpdateJob.startSelection(application, entries.map { it.id })
+        return LibraryUpdateQueue.startSelection(application, entries.map { it.id })
     }
 
-    suspend fun checkSkipped(): Boolean = LibraryUpdateJob.startSkippedOfLatest(application)
+    suspend fun checkSkipped(): Boolean = LibraryUpdateQueue.startSkippedOfLatest(application)
 
     sealed interface State {
         data object Loading : State

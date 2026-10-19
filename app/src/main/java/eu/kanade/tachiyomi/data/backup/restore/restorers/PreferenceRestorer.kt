@@ -14,7 +14,7 @@ import eu.kanade.tachiyomi.data.backup.models.IntPreferenceValue
 import eu.kanade.tachiyomi.data.backup.models.LongPreferenceValue
 import eu.kanade.tachiyomi.data.backup.models.StringPreferenceValue
 import eu.kanade.tachiyomi.data.backup.models.StringSetPreferenceValue
-import eu.kanade.tachiyomi.data.library.LibraryUpdateJob
+import eu.kanade.tachiyomi.data.library.LibraryUpdateSchedule
 import eu.kanade.tachiyomi.source.sourcePreferences
 import mihon.feature.library.update.legacy.LegacyExcludedSourcesConversion
 import mihon.feature.library.update.legacy.LegacyUpdateCategoriesConversion
@@ -66,7 +66,7 @@ class PreferenceRestorer(
         )
 
         if (scheduleJobs) {
-            LibraryUpdateJob.setupTask(context)
+            LibraryUpdateSchedule.scheduleAll(context)
             BackupCreateJob.setupTask(context)
         }
     }
@@ -97,7 +97,7 @@ class PreferenceRestorer(
         }
 
         if (scheduleJobs) {
-            LibraryUpdateJob.setupTask(context)
+            LibraryUpdateSchedule.schedule(context, profileId)
             BackupCreateJob.setupTask(context)
         }
     }
