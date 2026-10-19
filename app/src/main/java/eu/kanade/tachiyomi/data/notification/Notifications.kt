@@ -8,8 +8,8 @@ import androidx.core.app.NotificationManagerCompat.IMPORTANCE_LOW
 import eu.kanade.tachiyomi.util.system.buildNotificationChannel
 import eu.kanade.tachiyomi.util.system.buildNotificationChannelGroup
 import mihon.entry.interactions.download.EntryDownloadNotifications
-import mihon.entry.interactions.library.EntryLibraryUpdateNotificationRoute
 import mihon.entry.interactions.translate.EntryTranslateNotifications
+import mihon.feature.profiles.core.Profile
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.*
 
@@ -32,7 +32,26 @@ object Notifications {
     const val ID_LIBRARY_PROGRESS = -101
     const val ID_LIBRARY_SIZE_WARNING = -103
     const val CHANNEL_LIBRARY_ERROR = "library_errors_channel"
-    const val ID_LIBRARY_ERROR = -102
+
+    /**
+     * New items get a channel, group and summary per profile, so one profile's alerts can be silenced alone and its
+     * summary opens its own Updates. Failures get a notice per profile. Profile ids stay far below the gap between
+     * the bases.
+     */
+    private const val CHANNEL_LIBRARY_UPDATES_PREFIX = "library_updates_channel_"
+    private const val ID_LIBRARY_UPDATES_BASE = -10_000
+    private const val ID_LIBRARY_ERROR_BASE = -20_000
+
+    fun channelLibraryUpdates(profileId: Long) = "$CHANNEL_LIBRARY_UPDATES_PREFIX$profileId"
+
+    fun groupLibraryUpdates(profileId: Long) = "mihon.entry.library_updates.$profileId"
+
+    fun idLibraryUpdates(profileId: Long) = ID_LIBRARY_UPDATES_BASE - profileId.toInt()
+
+    fun idLibraryError(profileId: Long) = ID_LIBRARY_ERROR_BASE - profileId.toInt()
+
+    /** The channel all profiles shared, whose importance the per-profile channels start from. */
+    private const val LEGACY_CHANNEL_LIBRARY_UPDATES = "library_updates_channel"
 
     /** Notification channels used by durable source migration work. */
     private const val GROUP_SOURCE_MIGRATION = "group_source_migration"
@@ -113,10 +132,7 @@ object Notifications {
      *
      * @param context The application context.
      */
-    fun createChannels(
-        context: Context,
-        libraryUpdateRoutes: List<EntryLibraryUpdateNotificationRoute>,
-    ) {
+    fun createChannels(context: Context) {
         val notificationManager = NotificationManagerCompat.from(context)
 
         // Delete old notification channels
@@ -222,11 +238,38 @@ object Notifications {
                     setGroup(GROUP_APK_UPDATES)
                     setName(context.stringResource(MR.strings.channel_ext_updates))
                 },
-            ) + libraryUpdateRoutes.map { route ->
-                buildNotificationChannel(route.channelId, IMPORTANCE_DEFAULT) {
-                    setName(context.stringResource(route.channelLabel))
-                }
-            },
+            ),
         )
+    }
+
+    /**
+     * Gives every visible profile its new-items channel, named after the profile once there is more than one, and
+     * deletes the channels of profiles that were archived or deleted. Android restores a deleted channel's settings
+     * when it is created again, so unarchiving brings back how the user had set it up.
+     */
+    fun syncLibraryUpdateChannels(context: Context, visibleProfiles: List<Profile>) {
+        if (visibleProfiles.isEmpty()) return
+        val notificationManager = NotificationManagerCompat.from(context)
+        val legacy = notificationManager.getNotificationChannelCompat(LEGACY_CHANNEL_LIBRARY_UPDATES)
+        val channels = visibleProfiles.map { profile ->
+            // Only takes effect for channels that don't exist yet; Android keeps the user's choice otherwise.
+            buildNotificationChannel(channelLibraryUpdates(profile.id), legacy?.importance ?: IMPORTANCE_DEFAULT) {
+                setName(
+                    if (visibleProfiles.size > 1) {
+                        context.stringResource(MR.strings.channel_library_updates_profile, profile.name)
+                    } else {
+                        context.stringResource(MR.strings.channel_library_updates)
+                    },
+                )
+                setGroup(GROUP_LIBRARY)
+            }
+        }
+        notificationManager.createNotificationChannelsCompat(channels)
+        if (legacy != null) notificationManager.deleteNotificationChannel(LEGACY_CHANNEL_LIBRARY_UPDATES)
+        val kept = channels.mapTo(HashSet()) { it.id }
+        notificationManager.notificationChannels
+            .map { it.id }
+            .filter { it.startsWith(CHANNEL_LIBRARY_UPDATES_PREFIX) && it !in kept }
+            .forEach(notificationManager::deleteNotificationChannel)
     }
 }

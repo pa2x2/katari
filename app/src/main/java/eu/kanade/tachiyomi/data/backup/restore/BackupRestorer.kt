@@ -23,7 +23,7 @@ import eu.kanade.tachiyomi.data.backup.restore.restorers.EntryRestorer
 import eu.kanade.tachiyomi.data.backup.restore.restorers.ExtensionStoreRestorer
 import eu.kanade.tachiyomi.data.backup.restore.restorers.PreferenceRestorer
 import eu.kanade.tachiyomi.data.backup.restore.restorers.SourceNamesRestorer
-import eu.kanade.tachiyomi.data.library.LibraryUpdateJob
+import eu.kanade.tachiyomi.data.library.LibraryUpdateSchedule
 import eu.kanade.tachiyomi.util.system.createFileInCacheDir
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -311,7 +311,7 @@ class BackupRestorer(
         }
 
         if (options.appSettings) {
-            LibraryUpdateJob.setupTask(context)
+            LibraryUpdateSchedule.scheduleAll(context)
             BackupCreateJob.setupTask(context)
         }
     }

@@ -9,12 +9,17 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkInfo
 import androidx.work.WorkQuery
 import androidx.work.WorkerParameters
+import androidx.work.workDataOf
 import dev.zacsweers.metro.Inject
+import eu.kanade.tachiyomi.data.library.notification.LibraryUpdateNotificationProfile
+import eu.kanade.tachiyomi.data.library.notification.LibraryUpdateNotificationProfiles
+import eu.kanade.tachiyomi.data.library.notification.LibraryUpdateNotifier
 import eu.kanade.tachiyomi.data.notification.Notifications
 import eu.kanade.tachiyomi.util.system.isRunning
 import eu.kanade.tachiyomi.util.system.setForegroundSafely
 import eu.kanade.tachiyomi.util.system.workManager
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -22,6 +27,7 @@ import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.guava.await
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
+import kotlinx.coroutines.withContext
 import logcat.LogPriority
 import mihon.app.di.appGraph
 import mihon.entry.interactions.merge.EntryMergeMetadataRefreshFeature
@@ -29,7 +35,7 @@ import mihon.entry.interactions.source.EntrySourceRefreshFailure
 import mihon.entry.interactions.source.EntrySourceRefreshFeature
 import mihon.entry.interactions.source.EntrySourceRefreshRequest
 import mihon.entry.interactions.source.EntrySourceRefreshResult
-import tachiyomi.core.common.util.lang.withIOContext
+import tachiyomi.core.common.preference.SourcePreferenceProfile
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.interactor.GetLibraryEntries
 import tachiyomi.domain.entry.model.Entry
@@ -59,18 +65,33 @@ class MetadataUpdateJob(private val context: Context, workerParams: WorkerParame
     @Inject
     private lateinit var notifier: LibraryUpdateNotifier
 
+    @Inject
+    private lateinit var notificationProfiles: LibraryUpdateNotificationProfiles
+
     init {
         context.appGraph.inject(this)
     }
 
+    /** The profile whose library is refreshed, kept when another profile is opened while it runs. */
+    private val profileId = inputData.getLong(KEY_PROFILE, -1L)
+        .takeIf { it >= 0L }
+        ?: context.appGraph.activeProfileProvider.activeProfileId
+
     private var entriesToUpdate: List<Entry> = mutableListOf()
+
+    private var notificationProfile: LibraryUpdateNotificationProfile? = null
+
+    private suspend fun notificationProfile(): LibraryUpdateNotificationProfile {
+        return notificationProfile ?: notificationProfiles.resolve(profileId).also { notificationProfile = it }
+    }
 
     override suspend fun doWork(): Result {
         setForegroundSafely()
 
         addEntriesToQueue()
 
-        return withIOContext {
+        // Extensions read logins and API keys from this profile's source preferences, not the active profile's.
+        return withContext(Dispatchers.IO + SourcePreferenceProfile.of(profileId)) {
             try {
                 updateMetadata()
                 Result.success()
@@ -91,7 +112,7 @@ class MetadataUpdateJob(private val context: Context, workerParams: WorkerParame
     override suspend fun getForegroundInfo(): ForegroundInfo {
         return ForegroundInfo(
             Notifications.ID_LIBRARY_PROGRESS,
-            notifier.progressNotificationBuilder.build(),
+            notifier.metadataProgressNotification(notificationProfile()),
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
             } else {
@@ -104,8 +125,8 @@ class MetadataUpdateJob(private val context: Context, workerParams: WorkerParame
      * Adds list of entries to be updated.
      */
     private suspend fun addEntriesToQueue() {
-        val libraryItems = getLibraryEntries.await()
-        notifier.showQueueSizeWarningNotificationIfNeeded(libraryItems, rulesProfileId = null)
+        val libraryItems = getLibraryEntries.await(profileId)
+        notifier.showQueueSizeWarningNotificationIfNeeded(notificationProfile(), libraryItems, rulesProfileId = null)
         entriesToUpdate = libraryItems.expandToMemberEntries()
     }
 
@@ -135,7 +156,7 @@ class MetadataUpdateJob(private val context: Context, workerParams: WorkerParame
                                     progressCount,
                                     entry,
                                 ) {
-                                    val freshEntry = entryRepository.getEntryById(entry.id)
+                                    val freshEntry = entryRepository.getEntryById(entry.id, profileId)
                                     if (freshEntry?.favorite != true) {
                                         return@withUpdateNotification
                                     }
@@ -185,7 +206,8 @@ class MetadataUpdateJob(private val context: Context, workerParams: WorkerParame
         ensureActive()
 
         updatingEntries.add(entry)
-        notifier.showProgressNotification(
+        notifier.showMetadataProgressNotification(
+            notificationProfile(),
             updatingEntries,
             completed.load(),
             entriesToUpdate.size,
@@ -197,7 +219,8 @@ class MetadataUpdateJob(private val context: Context, workerParams: WorkerParame
 
         updatingEntries.remove(entry)
         completed.fetchAndIncrement()
-        notifier.showProgressNotification(
+        notifier.showMetadataProgressNotification(
+            notificationProfile(),
             updatingEntries,
             completed.load(),
             entriesToUpdate.size,
@@ -207,6 +230,7 @@ class MetadataUpdateJob(private val context: Context, workerParams: WorkerParame
     companion object {
         private const val TAG = "MetadataUpdate"
         private const val WORK_NAME_MANUAL = "MetadataUpdate"
+        private const val KEY_PROFILE = "profile"
 
         suspend fun startNow(context: Context): Boolean {
             val wm = context.workManager
@@ -217,6 +241,7 @@ class MetadataUpdateJob(private val context: Context, workerParams: WorkerParame
             val request = OneTimeWorkRequestBuilder<MetadataUpdateJob>()
                 .addTag(TAG)
                 .addTag(WORK_NAME_MANUAL)
+                .setInputData(workDataOf(KEY_PROFILE to context.appGraph.activeProfileProvider.activeProfileId))
                 .build()
             wm.enqueueUniqueWork(WORK_NAME_MANUAL, ExistingWorkPolicy.KEEP, request)
 

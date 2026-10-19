@@ -55,8 +55,11 @@ class GetLibraryEntries(
     private val sourceDescription: EntrySourceDescriptionResolutionPort,
 ) {
 
-    suspend fun await(): List<LibraryItem> {
-        val favorites = entryRepository.getLibraryEntries()
+    suspend fun await(): List<LibraryItem> = build(entryRepository.getLibraryEntries())
+
+    suspend fun await(profileId: Long): List<LibraryItem> = build(entryRepository.getFavoritesByProfile(profileId))
+
+    private suspend fun build(favorites: List<Entry>): List<LibraryItem> {
         if (favorites.isEmpty()) return emptyList()
         val profileId = favorites.first().profileId
         return buildItems(

@@ -168,7 +168,8 @@ internal class DefaultEntryDownloadLifecycleFeature(
             .mapNotNull(String::toLongOrNull)
             .toSet()
         if (excluded.isEmpty()) return false
-        val categories = getCategories.await(entry.id).map { it.id }.ifEmpty { listOf(DEFAULT_CATEGORY_ID) }
+        val categories = getCategories.await(entry.id, entry.profileId).map { it.id }
+            .ifEmpty { listOf(DEFAULT_CATEGORY_ID) }
         return categories.any { it in excluded }
     }
 

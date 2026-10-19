@@ -18,10 +18,10 @@ class EntryDownloadOwnerResolver(
             val owner = if (ownerId == visibleEntry.id) {
                 visibleEntry
             } else {
-                entryRepository.getEntryById(ownerId)
+                entryRepository.getEntryById(ownerId, visibleEntry.profileId)
             }
             owner
-                ?.takeIf { it.profileId == visibleEntry.profileId && it.type == visibleEntry.type }
+                ?.takeIf { it.type == visibleEntry.type }
                 ?.let { EntryDownloadOwner(it, ownerChildren) }
         }
     }

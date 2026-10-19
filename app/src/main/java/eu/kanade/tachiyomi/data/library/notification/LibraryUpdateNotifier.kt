@@ -1,4 +1,4 @@
-package eu.kanade.tachiyomi.data.library
+package eu.kanade.tachiyomi.data.library.notification
 
 import android.app.Notification
 import android.app.PendingIntent
@@ -6,7 +6,6 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.net.Uri
 import android.os.SystemClock
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
@@ -17,7 +16,7 @@ import coil3.request.transformations
 import coil3.transform.CircleCropTransformation
 import dev.zacsweers.metro.Inject
 import eu.kanade.tachiyomi.R
-import eu.kanade.tachiyomi.core.security.SecurityPreferences
+import eu.kanade.tachiyomi.data.library.LibraryUpdateProgress
 import eu.kanade.tachiyomi.data.notification.NotificationHandler
 import eu.kanade.tachiyomi.data.notification.NotificationReceiver
 import eu.kanade.tachiyomi.data.notification.Notifications
@@ -35,7 +34,6 @@ import mihon.entry.interactions.library.EntryLibraryUpdateNotificationFeature
 import mihon.entry.interactions.library.EntryLibraryUpdateNotificationGroup
 import mihon.entry.interactions.library.EntryLibraryUpdateNotificationInput
 import mihon.entry.interactions.library.EntryLibraryUpdateNotificationItem
-import mihon.entry.interactions.library.EntryLibraryUpdateNotificationRoute
 import mihon.entry.interactions.library.EntryLibraryUpdateNotificationText
 import mihon.entry.interactions.library.EntryLibraryUpdateQueueWarning
 import tachiyomi.core.common.Constants
@@ -53,7 +51,6 @@ import mihon.icons.materialsymbols.R as MaterialSymbolsR
 @Inject
 class LibraryUpdateNotifier(
     private val context: Context,
-    private val securityPreferences: SecurityPreferences,
     private val notificationFeature: EntryLibraryUpdateNotificationFeature,
 ) {
 
@@ -63,74 +60,140 @@ class LibraryUpdateNotifier(
     }
 
     /**
-     * Pending intent of action that cancels the library update
-     */
-    private val cancelIntent by lazy {
-        NotificationReceiver.cancelLibraryUpdatePendingBroadcast(context)
-    }
-
-    /**
      * Bitmap of the app for notifications.
      */
     private val notificationBitmap by lazy {
         BitmapFactory.decodeResource(context.resources, R.mipmap.ic_launcher)
     }
 
-    /**
-     * Cached progress notification to avoid creating a lot.
-     */
-    val progressNotificationBuilder by lazy {
-        context.notificationBuilder(Notifications.CHANNEL_LIBRARY_PROGRESS) {
-            setContentTitle(context.stringResource(MR.strings.app_name))
+    /** One per notifier, which serves one job and so one profile. */
+    private var progressNotificationBuilder: NotificationCompat.Builder? = null
+
+    private var lastProgressNotificationTime = 0L
+
+    /** What the library update progress last showed, to show it again when the queue behind it changes. */
+    private var lastProgress: Pair<List<Entry>, LibraryUpdateProgress>? = null
+
+    /** Name of the profile whose update runs after this one. */
+    private var nextInQueue: String? = null
+
+    private fun newProgressNotificationBuilder(
+        profile: LibraryUpdateNotificationProfile,
+        cancelIntent: PendingIntent,
+        contentIntent: PendingIntent?,
+    ): NotificationCompat.Builder {
+        return context.notificationBuilder(Notifications.CHANNEL_LIBRARY_PROGRESS) {
+            setContentTitle(context.stringResource(MR.strings.updating_library))
+            setSubText(profile.label)
             setSmallIcon(MaterialSymbolsR.drawable.rounded_refresh)
             setLargeIcon(notificationBitmap)
             setOngoing(true)
             setOnlyAlertOnce(true)
+            contentIntent?.let(::setContentIntent)
             addAction(
                 MaterialSymbolsR.drawable.rounded_close,
                 context.stringResource(MR.strings.action_cancel),
                 cancelIntent,
             )
         }
+            .also { progressNotificationBuilder = it }
     }
 
-    private var lastProgressNotificationTime = 0L
+    /** The notification a library update starts in the foreground with. */
+    fun libraryUpdateProgressNotification(profile: LibraryUpdateNotificationProfile): Notification {
+        return libraryUpdateProgressBuilder(profile).build()
+    }
+
+    /** The notification a metadata refresh starts in the foreground with. */
+    fun metadataProgressNotification(profile: LibraryUpdateNotificationProfile): Notification {
+        return metadataProgressBuilder(profile).build()
+    }
+
+    private fun libraryUpdateProgressBuilder(profile: LibraryUpdateNotificationProfile) = progressNotificationBuilder
+        ?: newProgressNotificationBuilder(
+            profile,
+            cancelIntent = NotificationReceiver.cancelLibraryUpdatePendingBroadcast(context, profile.id),
+            contentIntent = openLibraryIntent(profile.id),
+        )
+
+    private fun metadataProgressBuilder(profile: LibraryUpdateNotificationProfile) = progressNotificationBuilder
+        ?: newProgressNotificationBuilder(
+            profile,
+            cancelIntent = NotificationReceiver.cancelMetadataUpdatePendingBroadcast(context),
+            contentIntent = null,
+        )
 
     /**
-     * Shows the notification containing the currently updating entries and the progress.
+     * Shows how far the library update got, the entries it is checking and whose update comes next.
      *
      * Called from several update coroutines at once, so it shares the builder under a lock and skips updates that
      * come faster than the system would show them anyway.
-     *
-     * @param entries the entries that are being updated.
-     * @param current the current progress.
-     * @param total the total progress.
      */
     @Synchronized
-    fun showProgressNotification(entries: List<Entry>, current: Int, total: Int) {
+    fun showProgressNotification(
+        profile: LibraryUpdateNotificationProfile,
+        entries: List<Entry>,
+        progress: LibraryUpdateProgress,
+    ) {
+        lastProgress = entries.toList() to progress
+        val now = SystemClock.elapsedRealtime()
+        if (progress.completed < progress.total && now - lastProgressNotificationTime < NOTIF_PROGRESS_INTERVAL_MS) {
+            return
+        }
+        lastProgressNotificationTime = now
+
+        val next = nextInQueue?.let { context.stringResource(MR.strings.notification_library_update_next, it) }
+        val updating = entries.takeUnless { profile.hidesContent }?.joinToString("\n") { it.title.chop(40) }
+        val builder = libraryUpdateProgressBuilder(profile)
+            .setContentTitle(progress.label(context))
+            .setContentText(next)
+            .setStyle(
+                listOfNotNull(updating?.takeIf { it.isNotEmpty() }, next)
+                    .takeIf { it.isNotEmpty() }
+                    ?.let { NotificationCompat.BigTextStyle().bigText(it.joinToString("\n\n")) },
+            )
+        if (progress.total > 0) {
+            builder.setProgress(progress.total, progress.completed, false)
+        } else {
+            builder.setProgress(0, 0, true)
+        }
+        context.notify(Notifications.ID_LIBRARY_PROGRESS, builder.build())
+    }
+
+    /** Names the profile whose update starts after this one, or null when none waits. */
+    @Synchronized
+    fun showNextInQueue(profile: LibraryUpdateNotificationProfile, profileName: String?) {
+        if (nextInQueue == profileName) return
+        nextInQueue = profileName
+        val (entries, progress) = lastProgress ?: return
+        lastProgressNotificationTime = 0L
+        showProgressNotification(profile, entries, progress)
+    }
+
+    /** Shows how far a metadata refresh got and the entries it is refreshing. */
+    @Synchronized
+    fun showMetadataProgressNotification(
+        profile: LibraryUpdateNotificationProfile,
+        entries: List<Entry>,
+        current: Int,
+        total: Int,
+    ) {
         val now = SystemClock.elapsedRealtime()
         if (current < total && now - lastProgressNotificationTime < NOTIF_PROGRESS_INTERVAL_MS) return
         lastProgressNotificationTime = now
 
-        progressNotificationBuilder
+        val builder = metadataProgressBuilder(profile)
             .setContentTitle(
                 context.stringResource(
                     MR.strings.notification_updating_progress,
                     percentFormatter.format(current.toFloat() / total),
                 ),
             )
-
-        if (!securityPreferences.hideNotificationContent.get()) {
+        if (!profile.hidesContent) {
             val updatingText = entries.joinToString("\n") { it.title.chop(40) }
-            progressNotificationBuilder.setStyle(NotificationCompat.BigTextStyle().bigText(updatingText))
+            builder.setStyle(NotificationCompat.BigTextStyle().bigText(updatingText))
         }
-
-        context.notify(
-            Notifications.ID_LIBRARY_PROGRESS,
-            progressNotificationBuilder
-                .setProgress(total, current, false)
-                .build(),
-        )
+        context.notify(Notifications.ID_LIBRARY_PROGRESS, builder.setProgress(total, current, false).build())
     }
 
     /**
@@ -139,7 +202,11 @@ class LibraryUpdateNotifier(
      * @param rulesProfileId the profile whose library update rules decided what is checked, so tapping the warning
      * opens them; null for updates the rules don't shape, whose warning links to the explanation instead.
      */
-    suspend fun showQueueSizeWarningNotificationIfNeeded(entriesToUpdate: List<LibraryItem>, rulesProfileId: Long?) {
+    suspend fun showQueueSizeWarningNotificationIfNeeded(
+        profile: LibraryUpdateNotificationProfile,
+        entriesToUpdate: List<LibraryItem>,
+        rulesProfileId: Long?,
+    ) {
         if (
             notificationFeature.queueWarning(entriesToUpdate.map(LibraryItem::entry)) ==
             EntryLibraryUpdateQueueWarning.NotRequired
@@ -153,6 +220,7 @@ class LibraryUpdateNotifier(
             Notifications.CHANNEL_LIBRARY_PROGRESS,
         ) {
             setContentTitle(context.stringResource(MR.strings.label_warning))
+            setSubText(profile.label)
             setSmallIcon(MaterialSymbolsR.drawable.rounded_filled_warning)
             setTimeoutAfter(WARNING_NOTIF_TIMEOUT_MS)
             if (rulesProfileId != null) {
@@ -185,25 +253,26 @@ class LibraryUpdateNotifier(
     }
 
     /**
-     * Shows notification containing update entries that failed with action to open full log.
+     * Tells how many entries failed to update, opening the profile's update report.
      *
      * @param failed Number of entries that failed to update.
-     * @param uri Uri for error log file containing all titles that failed.
      */
-    fun showUpdateErrorNotification(failed: Int, profileId: Long) {
+    fun showUpdateErrorNotification(profile: LibraryUpdateNotificationProfile, failed: Int) {
         if (failed == 0) {
             return
         }
 
         context.notify(
-            Notifications.ID_LIBRARY_ERROR,
+            Notifications.idLibraryError(profile.id),
             Notifications.CHANNEL_LIBRARY_ERROR,
         ) {
             setContentTitle(context.pluralStringResource(MR.plurals.notification_update_error, failed, failed))
             setContentText(context.stringResource(MR.strings.action_show_errors))
+            setSubText(profile.label)
             setSmallIcon(R.drawable.ic_katari)
 
-            setContentIntent(LibraryUpdateReportNavigation.pendingIntent(context, profileId))
+            setContentIntent(LibraryUpdateReportNavigation.pendingIntent(context, profile.id))
+            setAutoCancel(true)
         }
     }
 
@@ -212,7 +281,10 @@ class LibraryUpdateNotifier(
      *
      * @param updates a list of entries with new updates.
      */
-    suspend fun showUpdateNotifications(updates: List<Pair<Entry, Array<EntryChapter>>>) {
+    suspend fun showUpdateNotifications(
+        profile: LibraryUpdateNotificationProfile,
+        updates: List<Pair<Entry, Array<EntryChapter>>>,
+    ) {
         val projection = notificationFeature.project(
             updates.map { (entry, children) ->
                 EntryLibraryUpdateNotificationInput(
@@ -227,28 +299,28 @@ class LibraryUpdateNotifier(
                     omission.reason
             }
         }
-        projection.groups.forEach { showUpdateNotifications(it) }
+        projection.groups.forEach { showUpdateNotifications(profile, it) }
     }
 
     private suspend fun showUpdateNotifications(
+        profile: LibraryUpdateNotificationProfile,
         group: EntryLibraryUpdateNotificationGroup,
     ) {
-        val route = group.route
+        val channelId = Notifications.channelLibraryUpdates(profile.id)
+        val groupKey = Notifications.groupLibraryUpdates(profile.id)
+        val summaryId = Notifications.idLibraryUpdates(profile.id)
         val childUpdates = group.updates
+        val title = context.stringResource(group.summary.title)
+        val count = context.pluralStringResource(group.summary.text, childUpdates.size, childUpdates.size)
         // Parent group notification
-        context.notify(
-            route.summaryNotificationId,
-            route.channelId,
-        ) {
-            setContentTitle(context.stringResource(group.route.summaryTitle))
-            if (childUpdates.size == 1 && !securityPreferences.hideNotificationContent.get()) {
+        context.notify(summaryId, channelId) {
+            setContentTitle(title)
+            if (childUpdates.size == 1 && !profile.hidesContent) {
                 setContentText(childUpdates.first().originEntry.displayTitle.chop(NOTIF_TITLE_MAX_LEN))
             } else {
-                setContentText(
-                    context.pluralStringResource(group.route.summaryText, childUpdates.size, childUpdates.size),
-                )
+                setContentText(count)
 
-                if (!securityPreferences.hideNotificationContent.get()) {
+                if (!profile.hidesContent) {
                     setStyle(
                         NotificationCompat.BigTextStyle().bigText(
                             childUpdates.joinToString("\n") {
@@ -258,29 +330,37 @@ class LibraryUpdateNotifier(
                     )
                 }
             }
+            setSubText(profile.label)
 
             setSmallIcon(R.drawable.ic_katari)
             setLargeIcon(notificationBitmap)
 
-            setGroup(route.groupKey)
+            // What a lock screen that hides sensitive content shows instead of "Contents hidden".
+            setPublicVersion(
+                context.notificationBuilder(channelId) {
+                    setContentTitle(title)
+                    setContentText(count)
+                    setSubText(profile.label)
+                    setSmallIcon(R.drawable.ic_katari)
+                }.build(),
+            )
+
+            setGroup(groupKey)
             setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_SUMMARY)
             setGroupSummary(true)
             priority = NotificationCompat.PRIORITY_HIGH
 
-            setContentIntent(getNotificationIntent())
+            setContentIntent(openUpdatesIntent(profile.id))
             setAutoCancel(true)
         }
 
         // Per-entry notification
-        if (!securityPreferences.hideNotificationContent.get()) {
+        if (!profile.hidesContent) {
             context.notify(
                 childUpdates.map { update ->
                     NotificationManagerCompat.NotificationWithIdAndTag(
                         update.originEntry.id.hashCode(),
-                        createNewEntryNotification(
-                            update = update,
-                            route = route,
-                        ),
+                        createNewEntryNotification(profile, update, channelId, groupKey, summaryId),
                     )
                 },
             )
@@ -288,16 +368,24 @@ class LibraryUpdateNotifier(
     }
 
     private suspend fun createNewEntryNotification(
+        profile: LibraryUpdateNotificationProfile,
         update: EntryLibraryUpdateNotificationItem,
-        route: EntryLibraryUpdateNotificationRoute,
+        channelId: String,
+        groupKey: String,
+        summaryId: Int,
     ): Notification {
         val icon = getEntryIcon(update.originEntry)
-        return context.notificationBuilder(route.channelId) {
+        return context.notificationBuilder(channelId) {
             setContentTitle(update.originEntry.displayTitle)
 
-            val description = context.render(update.description)
+            val description = listOfNotNull(
+                update.typeLabel?.let { context.stringResource(it) },
+                context.render(update.description),
+            )
+                .joinToString(" · ")
             setContentText(description)
             setStyle(NotificationCompat.BigTextStyle().bigText(description))
+            setSubText(profile.label)
 
             setSmallIcon(R.drawable.ic_katari)
 
@@ -305,32 +393,44 @@ class LibraryUpdateNotifier(
                 setLargeIcon(icon)
             }
 
-            setGroup(route.groupKey)
+            setGroup(groupKey)
             setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_SUMMARY)
             priority = NotificationCompat.PRIORITY_HIGH
 
-            setContentIntent(update.destinationIntent(context, route.summaryNotificationId))
+            setContentIntent(update.destinationIntent(context, summaryId))
             setAutoCancel(true)
 
             if (EntryLibraryUpdateNotificationAction.MARK_CONSUMED in update.actions) {
                 addAction(
                     MaterialSymbolsR.drawable.rounded_check,
                     context.stringResource(update.markConsumedLabel),
-                    update.markConsumedIntent(context, route.summaryNotificationId),
+                    NotificationReceiver.markConsumedPendingIntent(
+                        context,
+                        update.originEntry,
+                        update.children.toTypedArray(),
+                        summaryId,
+                        throughApp = profile.requiresUnlock,
+                    ),
                 )
             }
             if (EntryLibraryUpdateNotificationAction.VIEW_ENTRY in update.actions) {
                 addAction(
                     MaterialSymbolsR.drawable.rounded_book,
                     context.stringResource(update.viewChildrenLabel),
-                    update.viewEntryIntent(context, route.summaryNotificationId),
+                    update.viewEntryIntent(context, summaryId),
                 )
             }
             if (EntryLibraryUpdateNotificationAction.DOWNLOAD in update.actions) {
                 addAction(
                     android.R.drawable.stat_sys_download_done,
                     context.stringResource(MR.strings.action_download),
-                    update.downloadChildrenIntent(context, route.summaryNotificationId),
+                    NotificationReceiver.downloadChildrenPendingIntent(
+                        context,
+                        update.originEntry,
+                        update.children.toTypedArray(),
+                        summaryId,
+                        throughApp = profile.requiresUnlock,
+                    ),
                 )
             }
         }.build()
@@ -353,21 +453,26 @@ class LibraryUpdateNotifier(
         return drawable?.getBitmapOrNull()
     }
 
-    /**
-     * Returns an intent to open the main activity.
-     */
-    private fun getNotificationIntent(): PendingIntent {
+    /** Opens [action] in the profile, switching to it and asking for its unlock first when needed. */
+    private fun openInProfileIntent(action: String, profileId: Long, requestCode: Int): PendingIntent {
         val intent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-            action = Constants.SHORTCUT_UPDATES
+            this.action = action
+            putExtra(Constants.PROFILE_EXTRA, profileId)
         }
         return PendingIntent.getActivity(
             context,
-            0,
+            requestCode,
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
     }
+
+    private fun openUpdatesIntent(profileId: Long) =
+        openInProfileIntent(Constants.SHORTCUT_UPDATES, profileId, Notifications.idLibraryUpdates(profileId))
+
+    private fun openLibraryIntent(profileId: Long) =
+        openInProfileIntent(Constants.SHORTCUT_LIBRARY, profileId, Notifications.ID_LIBRARY_PROGRESS)
 
     companion object {
         const val HELP_WARNING_URL = "${Constants.URL_GUIDE}library-updates/#large-updates"
@@ -401,16 +506,6 @@ private fun EntryLibraryUpdateNotificationItem.destinationIntent(
     )
 }
 
-private fun EntryLibraryUpdateNotificationItem.markConsumedIntent(
-    context: Context,
-    summaryNotificationId: Int,
-): PendingIntent = NotificationReceiver.markConsumedPendingBroadcast(
-    context,
-    originEntry,
-    children.toTypedArray(),
-    summaryNotificationId,
-)
-
 private fun EntryLibraryUpdateNotificationItem.viewEntryIntent(
     context: Context,
     summaryNotificationId: Int,
@@ -418,16 +513,6 @@ private fun EntryLibraryUpdateNotificationItem.viewEntryIntent(
     context,
     visibleEntry.profileId,
     visibleEntry.id,
-    summaryNotificationId,
-)
-
-private fun EntryLibraryUpdateNotificationItem.downloadChildrenIntent(
-    context: Context,
-    summaryNotificationId: Int,
-): PendingIntent = NotificationReceiver.downloadChildrenPendingBroadcast(
-    context,
-    originEntry,
-    children.toTypedArray(),
     summaryNotificationId,
 )
 

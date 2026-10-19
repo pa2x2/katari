@@ -59,7 +59,7 @@ import eu.kanade.presentation.more.settings.screen.browse.ExtensionStoresScreen
 import eu.kanade.presentation.more.settings.screen.data.RestoreBackupScreen
 import eu.kanade.presentation.util.AssistContentScreen
 import eu.kanade.presentation.util.DefaultNavigatorScreenTransition
-import eu.kanade.tachiyomi.data.library.LibraryUpdateJob
+import eu.kanade.tachiyomi.data.library.LibraryUpdateSchedule
 import eu.kanade.tachiyomi.data.notification.NotificationReceiver
 import eu.kanade.tachiyomi.ui.base.activity.BaseActivity
 import eu.kanade.tachiyomi.ui.base.delegate.SecureActivityDelegate
@@ -347,7 +347,9 @@ class MainActivity : BaseActivity() {
                     key = "MainNavigator:$activeProfileId",
                     disposeBehavior = NavigatorDisposeBehavior(disposeNestedNavigators = false, disposeSteps = true),
                 ) { navigator ->
-                    LaunchedEffect(navigator, startupGateState) {
+                    // Voyager keeps the navigator across a key change, so a profile switch restarts this to carry out the
+                    // intent that asked for the switch.
+                    LaunchedEffect(navigator, startupGateState, activeProfileId) {
                         this@MainActivity.navigator = navigator
                         completeStartup(startupRestorationDecision.shouldResumeStartup, navigator)
                     }
@@ -764,7 +766,7 @@ class MainActivity : BaseActivity() {
                 }
             }
 
-            LibraryUpdateJob.setupTask(context = this)
+            LibraryUpdateSchedule.scheduleAll(context = this)
         }
 
         ready = true

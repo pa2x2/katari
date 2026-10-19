@@ -18,9 +18,10 @@ class EntryDownloadOwnerResolverTest {
             val member = entry(id = 2L, profileId = 7L, sourceId = 20L)
             val otherProfile = entry(id = 3L, profileId = 8L)
             val otherType = entry(id = 4L, profileId = 7L, type = EntryType.BOOK)
+            val stored = listOf(member, otherProfile, otherType)
             val repository = mockk<EntryRepository> {
-                listOf(member, otherProfile, otherType).forEach { owner ->
-                    coEvery { getEntryById(owner.id) } returns owner
+                coEvery { getEntryById(any(), any()) } answers {
+                    stored.find { it.id == firstArg<Long>() && it.profileId == secondArg<Long>() }
                 }
             }
 

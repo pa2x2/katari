@@ -34,8 +34,12 @@ class LibraryUpdateRulesRepositoryImpl(
     }
 
     override suspend fun getEntryModes(): Map<Long, EntryUpdateMode> {
+        return getEntryModes(profileProvider.activeProfileId)
+    }
+
+    override suspend fun getEntryModes(profileId: Long): Map<Long, EntryUpdateMode> {
         return handler.awaitList {
-            entry_update_modesQueries.getByProfile(profileProvider.activeProfileId) { entryId, mode ->
+            entry_update_modesQueries.getByProfile(profileId) { entryId, mode ->
                 entryId to mode.toEntryUpdateMode()
             }
         }

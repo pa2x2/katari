@@ -44,7 +44,7 @@ import eu.kanade.presentation.more.onboarding.GETTING_STARTED_URL
 import eu.kanade.presentation.more.settings.screen.data.rememberRestoreBackupLauncher
 import eu.kanade.presentation.util.Tab
 import eu.kanade.tachiyomi.R
-import eu.kanade.tachiyomi.data.library.LibraryUpdateJob
+import eu.kanade.tachiyomi.data.library.LibraryUpdateQueue
 import eu.kanade.tachiyomi.ui.browse.BrowseTab
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchScreen
 import eu.kanade.tachiyomi.ui.category.CategoryScreen
@@ -103,20 +103,20 @@ data object LibraryTab : Tab {
         val viewModel = metroViewModel<LibraryViewModel>()
         val settingsViewModel = metroViewModel<LibrarySettingsViewModel>(key = activeProfile?.id?.toString())
         val state by viewModel.state.collectAsStateWithLifecycle()
-        val updateProgress by viewModel.updateProgress.collectAsStateWithLifecycle()
+        val updateState by viewModel.updateState.collectAsStateWithLifecycle()
 
         val snackbarHostState = remember { SnackbarHostState() }
         val scrollToTopTarget = remember { LibraryScrollToTopTarget() }
 
         // A started update also reports its progress on the library's progress strip.
         val updateStarter = rememberReportingLibraryUpdateStarter(snackbarHostState) {
-            LibraryUpdateJob.startSkippedOfLatest(context)
+            LibraryUpdateQueue.startSkippedOfLatest(context)
         }
 
         val onClickRefresh: suspend (LibraryViewModel.State) -> Boolean = { state ->
             val activePage = state.activePage
             updateStarter.start {
-                LibraryUpdateJob.startNow(
+                LibraryUpdateQueue.startNow(
                     context = context,
                     category = activePage?.category,
                     sourceId = activePage?.sourceId,
@@ -126,7 +126,7 @@ data object LibraryTab : Tab {
         }
 
         val onClickGlobalUpdate: suspend () -> Boolean = {
-            updateStarter.start { LibraryUpdateJob.startNow(context) }
+            updateStarter.start { LibraryUpdateQueue.startNow(context) }
         }
 
         Scaffold(
@@ -197,7 +197,7 @@ data object LibraryTab : Tab {
                         .takeIf { visibleProfiles.any { it.id != activeProfile?.id } },
                     onCheckForUpdatesClicked = {
                         val entryIds = viewModel.takeSelectionForUpdate()
-                        scope.launch { updateStarter.start { LibraryUpdateJob.startSelection(context, entryIds) } }
+                        scope.launch { updateStarter.start { LibraryUpdateQueue.startSelection(context, entryIds) } }
                     },
                     onUpdateModeClicked = viewModel::openUpdateModeDialog,
                 )
@@ -255,7 +255,7 @@ data object LibraryTab : Tab {
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         },
                         onRefresh = { onClickRefresh(state) },
-                        updateProgress = updateProgress,
+                        updateState = updateState,
                         onCancelUpdate = viewModel::cancelUpdate,
                         onGlobalSearchClicked = {
                             navigator.push(GlobalSearchScreen(viewModel.state.value.searchQuery ?: ""))
