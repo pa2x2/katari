@@ -45,6 +45,7 @@ import mihon.feature.library.update.planning.LibraryUpdateRequest
 import mihon.feature.library.update.planning.LibraryUpdateSettings
 import mihon.feature.profiles.core.ProfileStore
 import tachiyomi.core.common.i18n.stringResource
+import tachiyomi.core.common.preference.SourcePreferenceProfile
 import tachiyomi.core.common.preference.getAndSet
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.core.common.util.lang.withNonCancellableContext
@@ -161,7 +162,8 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
     }
 
     override suspend fun doWork(): Result = coroutineScope {
-        val update = async(start = CoroutineStart.LAZY) { update() }
+        // Extensions read logins and API keys from this profile's source preferences, not the active profile's.
+        val update = async(SourcePreferenceProfile.of(profileId), start = CoroutineStart.LAZY) { update() }
         // Registered before the skip check, so a stop either finds the update running or marks it skipped first.
         running[id] = update
         try {

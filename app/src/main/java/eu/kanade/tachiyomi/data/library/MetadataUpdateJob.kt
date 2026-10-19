@@ -19,6 +19,7 @@ import eu.kanade.tachiyomi.util.system.isRunning
 import eu.kanade.tachiyomi.util.system.setForegroundSafely
 import eu.kanade.tachiyomi.util.system.workManager
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -26,6 +27,7 @@ import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.guava.await
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
+import kotlinx.coroutines.withContext
 import logcat.LogPriority
 import mihon.app.di.appGraph
 import mihon.entry.interactions.merge.EntryMergeMetadataRefreshFeature
@@ -33,7 +35,7 @@ import mihon.entry.interactions.source.EntrySourceRefreshFailure
 import mihon.entry.interactions.source.EntrySourceRefreshFeature
 import mihon.entry.interactions.source.EntrySourceRefreshRequest
 import mihon.entry.interactions.source.EntrySourceRefreshResult
-import tachiyomi.core.common.util.lang.withIOContext
+import tachiyomi.core.common.preference.SourcePreferenceProfile
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.interactor.GetLibraryEntries
 import tachiyomi.domain.entry.model.Entry
@@ -88,7 +90,8 @@ class MetadataUpdateJob(private val context: Context, workerParams: WorkerParame
 
         addEntriesToQueue()
 
-        return withIOContext {
+        // Extensions read logins and API keys from this profile's source preferences, not the active profile's.
+        return withContext(Dispatchers.IO + SourcePreferenceProfile.of(profileId)) {
             try {
                 updateMetadata()
                 Result.success()
