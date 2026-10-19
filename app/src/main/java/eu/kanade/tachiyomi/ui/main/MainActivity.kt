@@ -347,7 +347,9 @@ class MainActivity : BaseActivity() {
                     key = "MainNavigator:$activeProfileId",
                     disposeBehavior = NavigatorDisposeBehavior(disposeNestedNavigators = false, disposeSteps = true),
                 ) { navigator ->
-                    LaunchedEffect(navigator, startupGateState) {
+                    // Voyager keeps the navigator across a key change, so a profile switch restarts this to carry out the
+                    // intent that asked for the switch.
+                    LaunchedEffect(navigator, startupGateState, activeProfileId) {
                         this@MainActivity.navigator = navigator
                         completeStartup(startupRestorationDecision.shouldResumeStartup, navigator)
                     }
