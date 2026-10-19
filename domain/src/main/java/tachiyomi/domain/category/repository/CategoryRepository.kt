@@ -8,6 +8,8 @@ interface CategoryRepository {
 
     suspend fun get(id: Long): Category?
 
+    suspend fun get(id: Long, profileId: Long): Category?
+
     suspend fun getAll(): List<Category>
 
     fun getAllAsFlow(): Flow<List<Category>>
@@ -15,6 +17,8 @@ interface CategoryRepository {
     fun getAllAsFlow(profileId: Long): Flow<List<Category>>
 
     suspend fun getCategoriesByEntryId(entryId: Long): List<Category>
+
+    suspend fun getCategoriesByEntryId(entryId: Long, profileId: Long): List<Category>
 
     fun getCategoriesByEntryIdAsFlow(entryId: Long): Flow<List<Category>>
 

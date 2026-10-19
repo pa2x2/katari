@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.data.library
 
+import tachiyomi.data.ActiveProfileProvider
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.library.update.repository.LibraryUpdateRulesRepository
 
@@ -12,4 +13,6 @@ interface LibraryUpdateGraph {
     val libraryPreferences: LibraryPreferences
 
     val libraryUpdateRulesRepository: LibraryUpdateRulesRepository
+
+    val activeProfileProvider: ActiveProfileProvider
 }

@@ -9,6 +9,8 @@ interface TrackRepository {
 
     suspend fun getTracksByEntryId(entryId: Long): List<EntryTrack>
 
+    suspend fun getTracksByEntryId(entryId: Long, profileId: Long): List<EntryTrack>
+
     fun getTracksAsFlow(): Flow<List<EntryTrack>>
 
     fun getTracksByEntryIdAsFlow(entryId: Long): Flow<List<EntryTrack>>

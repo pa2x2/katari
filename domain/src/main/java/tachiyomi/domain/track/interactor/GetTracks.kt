@@ -30,6 +30,15 @@ class GetTracks(
         }
     }
 
+    suspend fun await(entryId: Long, profileId: Long): List<EntryTrack> {
+        return try {
+            trackRepository.getTracksByEntryId(entryId, profileId)
+        } catch (e: Exception) {
+            logcat(LogPriority.ERROR, e)
+            emptyList()
+        }
+    }
+
     fun subscribe(entryId: Long): Flow<List<EntryTrack>> {
         return trackRepository.getTracksByEntryIdAsFlow(entryId)
     }

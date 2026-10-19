@@ -38,6 +38,7 @@ import mihon.entry.interactions.library.EntryLibraryUpdateNotificationItem
 import mihon.entry.interactions.library.EntryLibraryUpdateNotificationRoute
 import mihon.entry.interactions.library.EntryLibraryUpdateNotificationText
 import mihon.entry.interactions.library.EntryLibraryUpdateQueueWarning
+import mihon.feature.profiles.core.ProfileStore
 import tachiyomi.core.common.Constants
 import tachiyomi.core.common.i18n.pluralStringResource
 import tachiyomi.core.common.i18n.stringResource
@@ -53,9 +54,13 @@ import mihon.icons.materialsymbols.R as MaterialSymbolsR
 @Inject
 class LibraryUpdateNotifier(
     private val context: Context,
-    private val securityPreferences: SecurityPreferences,
+    private val profileStore: ProfileStore,
     private val notificationFeature: EntryLibraryUpdateNotificationFeature,
 ) {
+
+    /** Each update follows the privacy setting of the profile it ran for, which needn't be the active one. */
+    private fun hidesContent(profileId: Long): Boolean =
+        SecurityPreferences(profileStore.profileStore(profileId)).hideNotificationContent.get()
 
     private val percentFormatter = NumberFormat.getPercentInstance().apply {
         roundingMode = RoundingMode.DOWN
@@ -107,7 +112,7 @@ class LibraryUpdateNotifier(
      * @param total the total progress.
      */
     @Synchronized
-    fun showProgressNotification(entries: List<Entry>, current: Int, total: Int) {
+    fun showProgressNotification(profileId: Long, entries: List<Entry>, current: Int, total: Int) {
         val now = SystemClock.elapsedRealtime()
         if (current < total && now - lastProgressNotificationTime < NOTIF_PROGRESS_INTERVAL_MS) return
         lastProgressNotificationTime = now
@@ -120,7 +125,7 @@ class LibraryUpdateNotifier(
                 ),
             )
 
-        if (!securityPreferences.hideNotificationContent.get()) {
+        if (!hidesContent(profileId)) {
             val updatingText = entries.joinToString("\n") { it.title.chop(40) }
             progressNotificationBuilder.setStyle(NotificationCompat.BigTextStyle().bigText(updatingText))
         }
@@ -212,7 +217,7 @@ class LibraryUpdateNotifier(
      *
      * @param updates a list of entries with new updates.
      */
-    suspend fun showUpdateNotifications(updates: List<Pair<Entry, Array<EntryChapter>>>) {
+    suspend fun showUpdateNotifications(profileId: Long, updates: List<Pair<Entry, Array<EntryChapter>>>) {
         val projection = notificationFeature.project(
             updates.map { (entry, children) ->
                 EntryLibraryUpdateNotificationInput(
@@ -227,11 +232,13 @@ class LibraryUpdateNotifier(
                     omission.reason
             }
         }
-        projection.groups.forEach { showUpdateNotifications(it) }
+        val hideContent = hidesContent(profileId)
+        projection.groups.forEach { showUpdateNotifications(it, hideContent) }
     }
 
     private suspend fun showUpdateNotifications(
         group: EntryLibraryUpdateNotificationGroup,
+        hideContent: Boolean,
     ) {
         val route = group.route
         val childUpdates = group.updates
@@ -241,14 +248,14 @@ class LibraryUpdateNotifier(
             route.channelId,
         ) {
             setContentTitle(context.stringResource(group.route.summaryTitle))
-            if (childUpdates.size == 1 && !securityPreferences.hideNotificationContent.get()) {
+            if (childUpdates.size == 1 && !hideContent) {
                 setContentText(childUpdates.first().originEntry.displayTitle.chop(NOTIF_TITLE_MAX_LEN))
             } else {
                 setContentText(
                     context.pluralStringResource(group.route.summaryText, childUpdates.size, childUpdates.size),
                 )
 
-                if (!securityPreferences.hideNotificationContent.get()) {
+                if (!hideContent) {
                     setStyle(
                         NotificationCompat.BigTextStyle().bigText(
                             childUpdates.joinToString("\n") {
@@ -272,7 +279,7 @@ class LibraryUpdateNotifier(
         }
 
         // Per-entry notification
-        if (!securityPreferences.hideNotificationContent.get()) {
+        if (!hideContent) {
             context.notify(
                 childUpdates.map { update ->
                     NotificationManagerCompat.NotificationWithIdAndTag(

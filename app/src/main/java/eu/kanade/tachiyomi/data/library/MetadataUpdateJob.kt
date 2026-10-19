@@ -9,6 +9,7 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkInfo
 import androidx.work.WorkQuery
 import androidx.work.WorkerParameters
+import androidx.work.workDataOf
 import dev.zacsweers.metro.Inject
 import eu.kanade.tachiyomi.data.notification.Notifications
 import eu.kanade.tachiyomi.util.system.isRunning
@@ -63,6 +64,11 @@ class MetadataUpdateJob(private val context: Context, workerParams: WorkerParame
         context.appGraph.inject(this)
     }
 
+    /** The profile whose library is refreshed, kept when another profile is opened while it runs. */
+    private val profileId = inputData.getLong(KEY_PROFILE, -1L)
+        .takeIf { it >= 0L }
+        ?: context.appGraph.activeProfileProvider.activeProfileId
+
     private var entriesToUpdate: List<Entry> = mutableListOf()
 
     override suspend fun doWork(): Result {
@@ -104,7 +110,7 @@ class MetadataUpdateJob(private val context: Context, workerParams: WorkerParame
      * Adds list of entries to be updated.
      */
     private suspend fun addEntriesToQueue() {
-        val libraryItems = getLibraryEntries.await()
+        val libraryItems = getLibraryEntries.await(profileId)
         notifier.showQueueSizeWarningNotificationIfNeeded(libraryItems, rulesProfileId = null)
         entriesToUpdate = libraryItems.expandToMemberEntries()
     }
@@ -135,7 +141,7 @@ class MetadataUpdateJob(private val context: Context, workerParams: WorkerParame
                                     progressCount,
                                     entry,
                                 ) {
-                                    val freshEntry = entryRepository.getEntryById(entry.id)
+                                    val freshEntry = entryRepository.getEntryById(entry.id, profileId)
                                     if (freshEntry?.favorite != true) {
                                         return@withUpdateNotification
                                     }
@@ -186,6 +192,7 @@ class MetadataUpdateJob(private val context: Context, workerParams: WorkerParame
 
         updatingEntries.add(entry)
         notifier.showProgressNotification(
+            profileId,
             updatingEntries,
             completed.load(),
             entriesToUpdate.size,
@@ -198,6 +205,7 @@ class MetadataUpdateJob(private val context: Context, workerParams: WorkerParame
         updatingEntries.remove(entry)
         completed.fetchAndIncrement()
         notifier.showProgressNotification(
+            profileId,
             updatingEntries,
             completed.load(),
             entriesToUpdate.size,
@@ -207,6 +215,7 @@ class MetadataUpdateJob(private val context: Context, workerParams: WorkerParame
     companion object {
         private const val TAG = "MetadataUpdate"
         private const val WORK_NAME_MANUAL = "MetadataUpdate"
+        private const val KEY_PROFILE = "profile"
 
         suspend fun startNow(context: Context): Boolean {
             val wm = context.workManager
@@ -217,6 +226,7 @@ class MetadataUpdateJob(private val context: Context, workerParams: WorkerParame
             val request = OneTimeWorkRequestBuilder<MetadataUpdateJob>()
                 .addTag(TAG)
                 .addTag(WORK_NAME_MANUAL)
+                .setInputData(workDataOf(KEY_PROFILE to context.appGraph.activeProfileProvider.activeProfileId))
                 .build()
             wm.enqueueUniqueWork(WORK_NAME_MANUAL, ExistingWorkPolicy.KEEP, request)
 

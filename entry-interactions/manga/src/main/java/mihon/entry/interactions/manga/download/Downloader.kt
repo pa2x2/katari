@@ -851,8 +851,10 @@ internal class Downloader(
         chapter: EntryChapter,
         source: UnifiedSource,
     ) {
-        val categories = getCategories.await(entry.id).map { it.name.trim() }.takeUnless { it.isEmpty() }
-        val urls = getTracks.await(entry.id)
+        val categories = getCategories.await(entry.id, entry.profileId)
+            .map { it.name.trim() }
+            .takeUnless { it.isEmpty() }
+        val urls = getTracks.await(entry.id, entry.profileId)
             .mapNotNull { track ->
                 track.remoteUrl.takeUnless { url -> url.isBlank() }?.trim()
             }

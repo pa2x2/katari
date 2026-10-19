@@ -55,6 +55,7 @@ import mihon.feature.library.update.planning.LibraryUpdatePlanner
 import mihon.feature.library.update.planning.LibraryUpdatePlanningContext
 import mihon.feature.library.update.planning.LibraryUpdateRequest
 import mihon.feature.library.update.planning.LibraryUpdateSettings
+import mihon.feature.profiles.core.ProfileStore
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.preference.getAndSet
 import tachiyomi.core.common.util.lang.withIOContext
@@ -94,9 +95,6 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
     private lateinit var sourceManager: SourceManager
 
     @Inject
-    private lateinit var libraryPreferences: LibraryPreferences
-
-    @Inject
     private lateinit var rulesRepository: LibraryUpdateRulesRepository
 
     @Inject
@@ -130,11 +128,23 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
     private lateinit var activeProfileProvider: ActiveProfileProvider
 
     @Inject
+    private lateinit var profileStore: ProfileStore
+
+    @Inject
     private lateinit var entryTypePresentationFeature: EntryTypePresentationFeature
 
     init {
         context.appGraph.inject(this)
     }
+
+    /**
+     * The profile this update runs for. Everything it reads and writes goes to this profile explicitly, so switching
+     * profiles while it runs leaves it working on the library it started with.
+     */
+    private val profileId = inputData.getLong(KEY_PROFILE, -1L)
+        .takeIf { it >= 0L }
+        ?: activeProfileProvider.activeProfileId
+    private val libraryPreferences = LibraryPreferences(profileStore.profileStore(profileId))
 
     // Sources update concurrently, and getAndSet is a separate read and write
     private val newUpdatesCountLock = Any()
@@ -154,9 +164,6 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
 
     /** Start of this update, which also identifies it in the update report. */
     private var startedAt = 0L
-
-    /** The profile this update runs for, so its failure notification opens that profile's report. */
-    private val profileId = activeProfileProvider.activeProfileId
 
     override suspend fun doWork(): Result {
         val automatic = tags.contains(WORK_NAME_AUTO)
@@ -216,7 +223,7 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
                 }
             } finally {
                 withNonCancellableContext {
-                    reportRepository.finishRun(startedAt, Clock.System.now().toEpochMilliseconds())
+                    reportRepository.finishRun(profileId, startedAt, Clock.System.now().toEpochMilliseconds())
                 }
                 selectionName?.let(selectionFile::delete)
                 notifier.cancelProgressNotification()
@@ -228,7 +235,7 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
     private suspend fun scopeName(request: LibraryUpdateRequest.FollowRules): String? {
         return listOfNotNull(
             request.categoryId
-                ?.let { categoryRepository.get(it) }
+                ?.let { categoryRepository.get(it, profileId) }
                 ?.let { if (it.isSystemCategory) context.stringResource(MR.strings.label_default) else it.name },
             request.sourceId?.let { sourceManager.getDisplayInfo(it).visualName() },
             request.entryType?.let {
@@ -244,8 +251,8 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
             return LibraryUpdateRequest.Selection(selectionFile.read(selectionName))
         }
         if (inputData.getBoolean(KEY_SKIPPED_OF_LATEST, false)) {
-            val reportStart = reportRepository.getLatestRun()?.startedAt ?: Long.MAX_VALUE
-            val skipped = reportRepository.getStatuses().values
+            val reportStart = reportRepository.getLatestRun(profileId)?.startedAt ?: Long.MAX_VALUE
+            val skipped = reportRepository.getStatuses(profileId).values
                 .filter { it.decidedAt >= reportStart && it.outcome == EntryUpdateOutcome.SKIPPED }
                 .mapTo(mutableSetOf(), EntryUpdateStatus::entryId)
             return LibraryUpdateRequest.Selection(skipped)
@@ -274,18 +281,18 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
     private suspend fun planQueue(request: LibraryUpdateRequest) {
         // Ended pauses already don't count; dropping them lets the screens that list paused sources catch up.
         sourcePauses.dropEnded(startedAt)
-        val settings = settingsReader.read(startedAt)
+        val settings = settingsReader.read(startedAt, profileId)
         val timeZone = TimeZone.currentSystemDefault()
         currentFetchWindow = fetchInterval.getWindow(
             Clock.System.now().toLocalDateTime(timeZone).date,
             timeZone,
         )
-        val lastCheckedAt = reportRepository.getStatuses().values
+        val lastCheckedAt = reportRepository.getStatuses(profileId).values
             .mapNotNull { status -> status.lastCheckedAt?.let { status.entryId to it } }
             .toMap()
         val decisions = planner.plan(
             request = request,
-            items = getLibraryEntries.await(),
+            items = getLibraryEntries.await(profileId),
             settings = settings,
             context = LibraryUpdatePlanningContext(
                 now = startedAt,
@@ -303,8 +310,9 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
             .sortedBy { it.title }
 
         // Keeping the report of the last full update lets a retry from it recheck one entry without losing the rest.
-        if (request.coversLibrary || reportRepository.getLatestRun() == null) {
+        if (request.coversLibrary || reportRepository.getLatestRun(profileId) == null) {
             reportRepository.startRun(
+                profileId = profileId,
                 startedAt = startedAt,
                 trigger = when {
                     request is LibraryUpdateRequest.Selection -> LibraryUpdateTrigger.SELECTION
@@ -373,7 +381,7 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
                             entriesInSource.forEach { queuedEntry ->
                                 ensureActive()
 
-                                val entry = entryRepository.getEntryById(queuedEntry.id)
+                                val entry = entryRepository.getEntryById(queuedEntry.id, profileId)
                                 // Don't continue to update if entry is not in library
                                 if (entry?.favorite != true) {
                                     return@forEach
@@ -455,7 +463,7 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
         notifier.cancelProgressNotification()
 
         if (newUpdates.isNotEmpty()) {
-            notifier.showUpdateNotifications(newUpdates)
+            notifier.showUpdateNotifications(profileId, newUpdates)
         }
         refreshSession.complete()
 
@@ -498,6 +506,7 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
 
         updatingEntry.add(entry)
         notifier.showProgressNotification(
+            profileId,
             updatingEntry,
             completed.load(),
             entriesToUpdate.size,
@@ -510,6 +519,7 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
         updatingEntry.remove(entry)
         val completedCount = completed.incrementAndFetch()
         notifier.showProgressNotification(
+            profileId,
             updatingEntry,
             completedCount,
             entriesToUpdate.size,
@@ -561,6 +571,9 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
 
         /** Checks the entries the latest update skipped by rules. */
         private const val KEY_SKIPPED_OF_LATEST = "skipped_of_latest"
+
+        /** Id of the profile the update runs for. */
+        private const val KEY_PROFILE = "profile"
 
         /**
          * Progress of the running library update, or null when none runs. An update shows up once it has decided
@@ -700,7 +713,12 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
             val request = OneTimeWorkRequestBuilder<LibraryUpdateJob>()
                 .addTag(TAG)
                 .addTag(WORK_NAME_MANUAL)
-                .setInputData(inputData)
+                .setInputData(
+                    Data.Builder()
+                        .putAll(inputData)
+                        .putLong(KEY_PROFILE, context.appGraph.activeProfileProvider.activeProfileId)
+                        .build(),
+                )
                 .build()
             wm.enqueueUniqueWork(WORK_NAME_MANUAL, ExistingWorkPolicy.KEEP, request)
 

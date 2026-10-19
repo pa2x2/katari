@@ -27,8 +27,12 @@ class CategoryRepositoryImpl(
 ) : CategoryRepository, LibraryCategoryMappingObserver {
 
     override suspend fun get(id: Long): Category? {
+        return get(id, profileProvider.activeProfileId)
+    }
+
+    override suspend fun get(id: Long, profileId: Long): Category? {
         return handler.awaitOneOrNull {
-            categoriesQueries.getCategory(id, profileProvider.activeProfileId, ::mapCategory)
+            categoriesQueries.getCategory(id, profileId, ::mapCategory)
         }
     }
 
@@ -49,9 +53,13 @@ class CategoryRepositoryImpl(
     }
 
     override suspend fun getCategoriesByEntryId(entryId: Long): List<Category> {
+        return getCategoriesByEntryId(entryId, profileProvider.activeProfileId)
+    }
+
+    override suspend fun getCategoriesByEntryId(entryId: Long, profileId: Long): List<Category> {
         return handler.awaitList {
             categoriesQueries.getCategoriesByEntryId(
-                profileProvider.activeProfileId,
+                profileId,
                 entryId,
                 ::mapCategory,
             )
