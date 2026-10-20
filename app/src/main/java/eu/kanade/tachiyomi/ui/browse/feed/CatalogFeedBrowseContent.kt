@@ -1,9 +1,7 @@
 package eu.kanade.tachiyomi.ui.browse.feed
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
@@ -19,6 +17,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import eu.kanade.presentation.browse.components.BrowseSourceLoadingItem
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
@@ -31,21 +30,15 @@ import kotlinx.coroutines.launch
 import mihon.entry.interactions.catalogue.EntryCatalogueSourceInfo
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.automirroredrounded.Help
-import mihon.icons.materialsymbols.rounded.KeyboardArrowUp
 import mihon.icons.materialsymbols.rounded.OpenInBrowser
 import mihon.icons.materialsymbols.rounded.Refresh
-import mihon.presentation.kit.content.Icon
-import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.feedback.EmptyScreen
 import mihon.presentation.kit.feedback.EmptyScreenAction
 import mihon.presentation.kit.feedback.LoadingScreen
 import mihon.presentation.kit.feedback.SnackbarDuration
 import mihon.presentation.kit.feedback.SnackbarHostState
 import mihon.presentation.kit.feedback.SnackbarResult
-import mihon.presentation.kit.surface.Surface
-import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.KatariTheme
-import mihon.presentation.kit.theme.TextRole
 import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.domain.source.model.CatalogListItem
 import tachiyomi.i18n.*
@@ -239,7 +232,16 @@ fun CatalogFeedBrowseContent(
         }
     }
 
-    Box {
+    val backToTop = rememberFeedBackToTopState(
+        viewportHeight = {
+            when (displayMode) {
+                LibraryDisplayMode.List -> listState.layoutInfo.viewportSize.height
+                else -> gridState.layoutInfo.viewportSize.height
+            }
+        },
+    )
+
+    Box(modifier = Modifier.nestedScroll(backToTop)) {
         when (displayMode) {
             LibraryDisplayMode.List -> FeedLazyList(
                 rows = rows,
@@ -299,17 +301,20 @@ fun CatalogFeedBrowseContent(
             )
         }
 
-        val showBackToTop by remember(displayMode, listState, gridState) {
+        // Within the first screen of rows the top is one flick away, so the button would only add noise there.
+        val isPastFirstScreen by remember(displayMode, listState, gridState) {
             derivedStateOf {
                 when (displayMode) {
-                    LibraryDisplayMode.List -> listState.firstVisibleItemIndex > 0 && listState.lastScrolledBackward
-                    else -> gridState.firstVisibleItemIndex > 0 && gridState.lastScrolledBackward
+                    LibraryDisplayMode.List ->
+                        listState.firstVisibleItemIndex >= listState.layoutInfo.visibleItemsInfo.size
+                    else -> gridState.firstVisibleItemIndex >= gridState.layoutInfo.visibleItemsInfo.size
                 }
             }
         }
-        if (showBackToTop) {
+        if (backToTop.isRevealed && isPastFirstScreen) {
             FeedBackToTopButton(
                 onClick = {
+                    backToTop.hide()
                     scope.launch {
                         when (displayMode) {
                             LibraryDisplayMode.List -> listState.animateScrollToItem(0)
@@ -359,35 +364,6 @@ fun CatalogFeedBrowseContent(
                 .padding(top = KatariTheme.spacing.l)
                 .align(androidx.compose.ui.Alignment.TopCenter),
         )
-    }
-}
-
-@Composable
-private fun FeedBackToTopButton(
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Surface(
-        onClick = onClick,
-        modifier = modifier,
-        container = SurfaceContainer.SecondaryContainer,
-        shape = KatariTheme.shapes.extraLarge,
-        shadow = true,
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = KatariTheme.spacing.m, vertical = KatariTheme.spacing.s),
-            horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
-            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
-        ) {
-            Icon(
-                imageVector = MaterialSymbols.Rounded.KeyboardArrowUp,
-                contentDescription = null,
-            )
-            Text(
-                role = TextRole.Label,
-                text = stringResource(MR.strings.action_move_to_top),
-            )
-        }
     }
 }
 
