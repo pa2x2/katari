@@ -33,6 +33,7 @@ import mihon.icons.materialsymbols.rounded.Public
 import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.button.IconButton
+import mihon.presentation.kit.button.IconButtonSize
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.surface.Surface
@@ -111,6 +112,7 @@ internal fun VideoPlayerErrorOverlay(
                 .align(Alignment.TopStart)
                 .videoPlayerSafeContentPadding(includeTop = true)
                 .padding(spacing.s),
+            size = IconButtonSize.Large,
             tone = ContentTone.OnMedia,
         )
     }

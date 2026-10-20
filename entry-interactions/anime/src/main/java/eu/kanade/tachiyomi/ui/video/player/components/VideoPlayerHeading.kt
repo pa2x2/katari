@@ -10,6 +10,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.automirroredrounded.ArrowBack
 import mihon.presentation.kit.button.IconButton
+import mihon.presentation.kit.button.IconButtonSize
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
@@ -31,6 +32,7 @@ internal fun VideoPlayerHeading(
             icon = MaterialSymbols.AutoMirroredRounded.ArrowBack,
             contentDescription = stringResource(MR.strings.action_back),
             onClick = onBack,
+            size = IconButtonSize.Large,
             tone = ContentTone.OnMedia,
         )
         Column(

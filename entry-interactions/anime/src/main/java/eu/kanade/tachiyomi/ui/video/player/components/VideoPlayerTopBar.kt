@@ -17,6 +17,7 @@ import mihon.icons.materialsymbols.rounded.LockOpen
 import mihon.icons.materialsymbols.rounded.PictureInPictureAlt
 import mihon.icons.materialsymbols.rounded.Settings
 import mihon.presentation.kit.button.IconButton
+import mihon.presentation.kit.button.IconButtonSize
 import mihon.presentation.kit.surface.MediaScrim
 import mihon.presentation.kit.surface.MediaScrimEdge
 import mihon.presentation.kit.surface.MediaScrimWeight
@@ -91,6 +92,7 @@ internal fun VideoPlayerTopBarActions(
                 icon = MaterialSymbols.Rounded.LockOpen,
                 contentDescription = stringResource(MR.strings.anime_playback_unlock_controls),
                 onClick = onToggleLock,
+                size = IconButtonSize.Large,
                 tone = ContentTone.OnMedia,
             )
         } else {
@@ -98,6 +100,7 @@ internal fun VideoPlayerTopBarActions(
                 icon = MaterialSymbols.Rounded.Lock,
                 contentDescription = stringResource(MR.strings.anime_playback_lock_controls),
                 onClick = onToggleLock,
+                size = IconButtonSize.Large,
                 tone = ContentTone.OnMedia,
             )
         }
@@ -109,6 +112,7 @@ internal fun VideoPlayerTopBarActions(
                     icon = MaterialSymbols.Rounded.PictureInPictureAlt,
                     contentDescription = stringResource(MR.strings.pref_enable_anime_picture_in_picture),
                     onClick = onEnterPictureInPicture,
+                    size = IconButtonSize.Large,
                     tone = ContentTone.OnMedia,
                 )
             }
@@ -120,6 +124,7 @@ internal fun VideoPlayerTopBarActions(
                 icon = MaterialSymbols.Rounded.Settings,
                 contentDescription = stringResource(MR.strings.label_settings),
                 onClick = onOpenSettings,
+                size = IconButtonSize.Large,
                 tone = ContentTone.OnMedia,
             )
         }
@@ -130,6 +135,7 @@ internal fun VideoPlayerTopBarActions(
                 EntryChildWebViewActionsMenu(
                     resolution = childWebView,
                     onAction = onChildWebViewAction,
+                    size = IconButtonSize.Large,
                     tone = ContentTone.OnMedia,
                 )
             }
@@ -139,5 +145,5 @@ internal fun VideoPlayerTopBarActions(
 
 @Composable
 private fun EmptyActionSlot() {
-    Box(modifier = Modifier.size(KatariTheme.sizes.touchTarget))
+    Box(modifier = Modifier.size(KatariTheme.sizes.touchTargetLarge))
 }

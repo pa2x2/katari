@@ -8,6 +8,7 @@ import androidx.compose.runtime.setValue
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.MoreVert
 import mihon.presentation.kit.button.IconButton
+import mihon.presentation.kit.button.IconButtonSize
 import mihon.presentation.kit.menu.DropdownMenu
 import mihon.presentation.kit.menu.DropdownMenuItem
 import mihon.presentation.kit.theme.ContentTone
@@ -31,6 +32,7 @@ fun EntryChildWebViewActionsMenu(
     resolution: EntryChildWebViewResolution.Available?,
     onAction: (EntryChildWebViewAction, EntryChildWebViewResolution.Available) -> Unit,
     tone: ContentTone = ContentTone.Inherit,
+    size: IconButtonSize = IconButtonSize.Standard,
 ) {
     if (resolution == null) return
 
@@ -40,6 +42,7 @@ fun EntryChildWebViewActionsMenu(
         icon = MaterialSymbols.Rounded.MoreVert,
         contentDescription = stringResource(MR.strings.label_more),
         onClick = { expanded = true },
+        size = size,
         tone = tone,
     )
 

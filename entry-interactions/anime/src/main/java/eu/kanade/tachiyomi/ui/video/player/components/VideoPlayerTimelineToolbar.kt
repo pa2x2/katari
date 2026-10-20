@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -18,6 +19,7 @@ import mihon.icons.materialsymbols.rounded.Subtitles
 import mihon.icons.materialsymbols.roundedfilled.SkipNext
 import mihon.icons.materialsymbols.roundedfilled.SkipPrevious
 import mihon.presentation.kit.button.IconButton
+import mihon.presentation.kit.button.IconButtonSize
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.surface.Surface
@@ -57,6 +59,7 @@ internal fun VideoPlayerTimelineToolbar(
                 icon = MaterialSymbols.RoundedFilled.SkipPrevious,
                 contentDescription = stringResource(MR.strings.anime_playback_previous_episode),
                 onClick = onPreviousEpisode,
+                size = IconButtonSize.Large,
                 tone = ContentTone.OnMedia,
             )
         }
@@ -65,6 +68,7 @@ internal fun VideoPlayerTimelineToolbar(
                 icon = MaterialSymbols.RoundedFilled.SkipNext,
                 contentDescription = stringResource(MR.strings.anime_playback_next_episode),
                 onClick = onNextEpisode,
+                size = IconButtonSize.Large,
                 tone = ContentTone.OnMedia,
             )
         }
@@ -79,6 +83,7 @@ internal fun VideoPlayerTimelineToolbar(
                 icon = MaterialSymbols.Rounded.Subtitles,
                 contentDescription = stringResource(MR.strings.anime_playback_subtitles),
                 onClick = onOpenSubtitles,
+                size = IconButtonSize.Large,
                 tone = ContentTone.OnMedia,
             )
         }
@@ -86,6 +91,7 @@ internal fun VideoPlayerTimelineToolbar(
             icon = MaterialSymbols.Rounded.MobileRotate,
             contentDescription = stringResource(MR.strings.anime_playback_rotate),
             onClick = onRotate,
+            size = IconButtonSize.Large,
             tone = ContentTone.OnMedia,
         )
         Spacer(modifier = Modifier.weight(1f))
@@ -108,11 +114,12 @@ private fun ToolbarLabelButton(
     val spacing = KatariTheme.spacing
     Surface(
         onClick = onClick,
+        modifier = Modifier.heightIn(min = KatariTheme.sizes.touchTargetLarge),
         container = SurfaceContainer.None,
         shape = KatariTheme.shapes.large,
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = spacing.m, vertical = spacing.s),
+            modifier = Modifier.padding(horizontal = spacing.m),
             horizontalArrangement = Arrangement.spacedBy(spacing.s),
             verticalAlignment = Alignment.CenterVertically,
         ) {

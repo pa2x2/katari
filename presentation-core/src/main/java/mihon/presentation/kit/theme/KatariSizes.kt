@@ -18,6 +18,9 @@ object KatariSizes {
     /** Smallest touch target an interactive element may have. */
     val touchTarget: Dp = 48.dp
 
+    /** Touch target of controls laid over full-screen media, which are reached for mid-gesture or at arm's length. */
+    val touchTargetLarge: Dp = 56.dp
+
     /** Hairline borders and dividers. */
     val border: Dp = 1.dp
 

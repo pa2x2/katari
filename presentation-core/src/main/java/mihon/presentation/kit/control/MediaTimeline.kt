@@ -61,7 +61,8 @@ fun MediaTimeline(
     val thumb = if (compact) geometry.thumb(scrubbing) else animatedThumb
     val halo = if (compact) geometry.halo(scrubbing) else animatedHalo
     val thumbExtent = maxOf(thumb, halo)
-    val height = if (compact) CompactHeight else thumbExtent + FullVerticalClearance
+    // The full bar's height is its touch target, so it stays put and stays easy to grab whatever size the thumb is.
+    val height = if (compact) CompactHeight else KatariTheme.sizes.touchTarget
 
     val playedFraction = played.coerceIn(0f, 1f)
     val bufferedFraction = buffered.coerceIn(playedFraction, 1f)
@@ -171,9 +172,6 @@ private val CompactGeometry = TimelineGeometry(
     scrubbingThumb = 12.dp,
     scrubbingHalo = 0.dp,
 )
-
-/** Room above and below the full bar's thumb, so the bar is easy to grab. */
-private val FullVerticalClearance = 8.dp
 
 private val CompactHeight = 28.dp
 
