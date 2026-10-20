@@ -30,6 +30,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.util.fastForEach
 import eu.kanade.tachiyomi.R
 import mihon.core.common.HomeScreenTabs
+import mihon.feature.profiles.ui.components.ProfileAvatar
+import mihon.feature.profiles.ui.switcher.LocalProfileSwitcher
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.AccountCircle
 import mihon.icons.materialsymbols.rounded.Menu
@@ -47,6 +49,7 @@ import mihon.presentation.kit.navigation.NavigationBar
 import mihon.presentation.kit.navigation.NavigationBarItem
 import mihon.presentation.kit.navigation.NavigationRail
 import mihon.presentation.kit.navigation.NavigationRailItem
+import mihon.presentation.kit.surface.AvatarSize
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -212,7 +215,9 @@ fun homeNavigationTitle(tab: HomeScreenTabs): String {
         HomeScreenTabs.History -> stringResource(MR.strings.history)
         HomeScreenTabs.Browse -> stringResource(MR.strings.browse)
         HomeScreenTabs.More -> stringResource(MR.strings.label_more)
-        HomeScreenTabs.Profiles -> stringResource(MR.strings.action_switch)
+        HomeScreenTabs.Profiles ->
+            LocalProfileSwitcher.current?.activeProfile?.name
+                ?: stringResource(MR.strings.action_switch)
         HomeScreenTabs.Translator -> stringResource(MR.strings.translator_title)
         HomeScreenTabs.Statistics -> stringResource(MR.strings.label_stats)
     }
@@ -290,7 +295,14 @@ private fun HomeNavigationBaseIcon(
     modifier: Modifier = Modifier,
 ) {
     key(tab) {
-        if (tab == HomeScreenTabs.Profiles) {
+        val profileSwitcher = LocalProfileSwitcher.current
+        if (tab == HomeScreenTabs.Profiles && profileSwitcher != null) {
+            ProfileAvatar(
+                profile = profileSwitcher.activeProfile,
+                size = AvatarSize.Icon,
+                modifier = modifier,
+            )
+        } else if (tab == HomeScreenTabs.Profiles) {
             Icon(
                 imageVector = MaterialSymbols.Rounded.AccountCircle,
                 contentDescription = stringResource(MR.strings.profiles_switch_summary),

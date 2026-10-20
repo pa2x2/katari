@@ -18,6 +18,7 @@ import eu.kanade.presentation.entry.components.EntryBottomActionMenu
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import mihon.feature.profiles.ui.switcher.ActiveProfileButton
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.CalendarMonth
 import mihon.icons.materialsymbols.rounded.Deselect
@@ -199,6 +200,7 @@ private fun UpdatesAppBar(
             }
 
             AppBarActions(actions = actions.toPersistentList())
+            ActiveProfileButton()
         },
         actionModeCounter = actionModeCounter,
         onCancelActionMode = onCancelActionMode,

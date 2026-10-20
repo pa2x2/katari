@@ -8,6 +8,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import kotlinx.collections.immutable.toPersistentList
+import mihon.feature.profiles.ui.switcher.ActiveProfileButton
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Deselect
 import mihon.icons.materialsymbols.rounded.FilterList
@@ -140,6 +141,7 @@ private fun LibraryRegularToolbar(
                     )
                 }.toPersistentList(),
             )
+            ActiveProfileButton()
         },
         scrollBehavior = scrollBehavior,
     )

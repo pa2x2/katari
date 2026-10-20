@@ -32,8 +32,11 @@ enum class AvatarSize(internal val side: Dp) {
     /** Inside a line of text or a chip. */
     Inline(16.dp),
 
-    /** An app bar action or a navigation item's icon. */
-    Bar(28.dp),
+    /** In place of an icon, such as a navigation item's, so labels stay aligned with their neighbours. */
+    Icon(24.dp),
+
+    /** An app bar action. */
+    Bar(30.dp),
 
     /** The leading slot of a list row or card. */
     Row(40.dp),
@@ -83,7 +86,7 @@ fun AvatarTile(
 }
 
 /**
- * The compact form of [AvatarTile] for bars, rows and chips: the same seeded gradient, round in text and bars and a
+ * The compact form of [AvatarTile] for bars, rows and chips: the same seeded gradient, round in text, icons and bars and a
  * rounded square in rows. [badge] marks a state over its corner, such as a lock. It is not clickable itself; its
  * container handles taps.
  */

@@ -20,6 +20,7 @@ import androidx.compose.ui.platform.toClipEntry
 import eu.kanade.tachiyomi.ui.translator.session.TranslatorPicker
 import eu.kanade.tachiyomi.ui.translator.session.TranslatorState
 import kotlinx.coroutines.launch
+import mihon.feature.profiles.ui.switcher.ActiveProfileButton
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Settings
 import mihon.language.api.tag.LanguageTag
@@ -105,6 +106,7 @@ internal fun TranslatorScreenContent(
                             ),
                         ),
                     )
+                    ActiveProfileButton()
                 },
                 scrollBehavior = scrollBehavior,
             )

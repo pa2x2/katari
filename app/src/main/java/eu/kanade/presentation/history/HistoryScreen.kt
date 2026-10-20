@@ -13,6 +13,7 @@ import eu.kanade.presentation.history.components.HistoryListItem
 import eu.kanade.presentation.more.stats.components.rememberStatisticsDurationFormatter
 import eu.kanade.tachiyomi.ui.history.HistoryViewModel
 import kotlinx.datetime.LocalDate
+import mihon.feature.profiles.ui.switcher.ActiveProfileButton
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.DeleteSweep
 import mihon.presentation.kit.feedback.EmptyScreen
@@ -64,6 +65,7 @@ fun HistoryScreen(
                             ),
                         ),
                     )
+                    ActiveProfileButton()
                 },
                 scrollBehavior = scrollBehavior,
             )
