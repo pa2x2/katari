@@ -1340,9 +1340,6 @@
     <string name="profiles_choose_profile">Select profile</string>
     <string name="profiles_locked">Locked</string>
     <string name="profiles_name_exists">A profile with this name already exists</string>
-    <string name="profiles_type_title">Profile type</string>
-    <string name="profiles_type_manga">Manga</string>
-    <string name="profiles_type_anime">Anime</string>
     <string name="profiles_archive_profile_confirmation">Archive %1$s?</string>
     <string name="profiles_delete_profile_confirmation">Delete %1$s permanently?</string>
     <string name="move_entries_action">Move to profile</string>
