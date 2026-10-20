@@ -1600,6 +1600,7 @@
     <string name="browse_feed_gap_progress">Page %1$d of %2$d</string>
     <string name="browse_feed_gap_failed">Couldn\'t load newer items</string>
     <string name="browse_feed_gap_load">Load more</string>
+    <string name="browse_feed_seen_before">Seen before</string>
     <string name="browse_feed_preset_exists">A preset with this name already exists</string>
     <string name="browse_filter_presets">Filter presets</string>
     <string name="browse_filter_available">Available</string>

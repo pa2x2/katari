@@ -7,6 +7,7 @@ import androidx.paging.PagingSource
 import eu.kanade.domain.source.model.FeedItemRef
 import eu.kanade.domain.source.model.SourceFeedAnchor
 import eu.kanade.domain.source.model.SourceFeedGap
+import eu.kanade.domain.source.model.SourceFeedNewItems
 import eu.kanade.domain.source.model.SourceFeedTimeline
 import eu.kanade.domain.source.model.snapshot
 import eu.kanade.domain.source.service.BrowseFeedService
@@ -16,6 +17,7 @@ import eu.kanade.tachiyomi.ui.base.observation.ObservedItemStore
 import eu.kanade.tachiyomi.ui.browse.feed.timeline.TimelineUpdate
 import eu.kanade.tachiyomi.ui.browse.feed.timeline.retainingItems
 import eu.kanade.tachiyomi.ui.browse.feed.timeline.withGapPage
+import eu.kanade.tachiyomi.ui.browse.feed.timeline.withNewItemsViewed
 import eu.kanade.tachiyomi.ui.browse.feed.timeline.withRefreshPage
 import eu.kanade.tachiyomi.ui.browse.feed.timeline.withoutGap
 import kotlinx.coroutines.CancellationException
@@ -116,6 +118,12 @@ class FeedViewModel<T : Any>(
         state.update {
             if (it.newItemsAvailableCount == 0) it else it.copy(newItemsAvailableCount = 0)
         }
+    }
+
+    /** The reader has scrolled up to the newest item; the next refresh that brings items starts a new batch. */
+    fun markNewItemsViewed() {
+        if (state.value.newItems?.viewed != false) return
+        editTimeline({ TimelineUpdate(it.withNewItemsViewed(), addedCount = 0, gap = null) })
     }
 
     fun itemState(ref: FeedItemRef): StateFlow<T?> {
@@ -390,6 +398,7 @@ class FeedViewModel<T : Any>(
         val itemRefs: List<FeedItemRef> = emptyList(),
         val nextPageKey: Long? = null,
         val gaps: List<SourceFeedGap> = emptyList(),
+        val newItems: SourceFeedNewItems? = null,
         val savedAnchor: SourceFeedAnchor = SourceFeedAnchor(),
         val isRefreshing: Boolean = false,
         val isAppending: Boolean = false,
@@ -437,7 +446,7 @@ class FeedViewModel<T : Any>(
 }
 
 private fun FeedViewModel.State.timeline(): SourceFeedTimeline {
-    return SourceFeedTimeline.fromItems(itemRefs, nextPageKey, gaps)
+    return SourceFeedTimeline.fromItems(itemRefs, nextPageKey, gaps, newItems)
 }
 
 private fun FeedViewModel.State.withTimeline(timeline: SourceFeedTimeline): FeedViewModel.State {
@@ -445,6 +454,7 @@ private fun FeedViewModel.State.withTimeline(timeline: SourceFeedTimeline): Feed
         itemRefs = timeline.resolvedItems(),
         nextPageKey = timeline.nextPageKey,
         gaps = timeline.gaps,
+        newItems = timeline.newItems,
     )
 }
 

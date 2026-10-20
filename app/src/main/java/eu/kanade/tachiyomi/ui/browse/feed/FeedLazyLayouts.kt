@@ -39,7 +39,10 @@ internal fun FeedLazyList(
     }
 }
 
-/** A feed's rows in a grid. Gap rows take a whole line, so the line before one ends early. */
+/**
+ * A feed's rows in a grid. Gap and divider rows take a whole line, so the line before one ends early: a seen item
+ * never shares a line with new ones.
+ */
 @Composable
 internal fun FeedLazyGrid(
     rows: List<FeedRow>,
@@ -75,6 +78,7 @@ private fun FeedRow.contentType(): Int {
     return when (this) {
         is FeedRow.Item -> 0
         is FeedRow.Gap -> 1
+        FeedRow.SeenDivider -> 2
     }
 }
 

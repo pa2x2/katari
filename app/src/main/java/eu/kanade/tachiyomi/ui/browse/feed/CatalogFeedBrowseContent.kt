@@ -72,8 +72,8 @@ fun CatalogFeedBrowseContent(
     val listState = rememberLazyListState()
     val gridState = rememberLazyGridState()
     val scope = rememberCoroutineScope()
-    val rows = remember(state.itemRefs, state.gaps) {
-        feedRows(state.itemRefs, state.gaps)
+    val rows = remember(state.itemRefs, state.gaps, state.newItems) {
+        feedRows(state.itemRefs, state.gaps, state.newItems)
     }
     // This content leaves composition while immersive mode is shown. Keep this guard
     // composition-local so returning to the regular feed restores its latest anchor.
@@ -235,6 +235,7 @@ fun CatalogFeedBrowseContent(
                 onLoad = { viewModel.loadGap(row.gap) },
                 modifier = boundaryModifier,
             )
+            FeedRow.SeenDivider -> FeedSeenDivider(modifier = boundaryModifier)
         }
     }
 

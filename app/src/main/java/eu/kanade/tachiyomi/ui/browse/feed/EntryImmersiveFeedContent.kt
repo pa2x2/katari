@@ -35,6 +35,7 @@ import mihon.presentation.kit.feedback.LoadingScreen
 import mihon.presentation.kit.feedback.SnackbarDuration
 import mihon.presentation.kit.feedback.SnackbarHostState
 import mihon.presentation.kit.feedback.SnackbarResult
+import mihon.presentation.kit.surface.Pill
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.source.model.CatalogListItem
@@ -94,9 +95,13 @@ internal fun EntryImmersiveFeedContent(
     }
 
     val context = LocalContext.current
-    val pages = remember(timelineState.itemRefs, timelineState.gaps) {
-        feedRows(timelineState.itemRefs, timelineState.gaps)
+    // Every row but the divider is a page; the first seen entry carries the marker instead.
+    val pages = remember(timelineState.itemRefs, timelineState.gaps, timelineState.newItems) {
+        feedRows(timelineState.itemRefs, timelineState.gaps, timelineState.newItems)
+            .filterNot { it is FeedRow.SeenDivider }
     }
+    val firstSeenPage = pages.indexOfFirst { it is FeedRow.Item && it.ref == timelineState.newItems?.firstSeen }
+        .takeIf { it > 0 && pages[it - 1] !is FeedRow.Gap }
     val initialSavedItem = remember(timelineModel) { timelineModel.savedAnchorSnapshot().resolvedItem() }
     val initialPage = pages.indexOfFirst { it is FeedRow.Item && it.ref == initialSavedItem }.coerceAtLeast(0)
     val positionState = rememberEntryImmersivePositionState(
@@ -160,6 +165,14 @@ internal fun EntryImmersiveFeedContent(
             firstVisibleItem = { isItem -> pagerState.currentPage.takeIf(isItem)?.let { it to 0 } },
             requestScrollToItem = { index, _ -> pagerState.requestScrollToPage(index) },
         )
+        if (firstSeenPage != null && pagerState.currentPage == firstSeenPage) {
+            Pill(
+                text = stringResource(MR.strings.browse_feed_seen_before),
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(top = statusBarTop + KatariTheme.spacing.l, start = KatariTheme.spacing.l),
+            )
+        }
         FeedNewItemsIndicator(
             state = timelineState,
             viewModel = timelineModel,

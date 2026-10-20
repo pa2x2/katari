@@ -15,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.KeyboardArrowUp
 import mihon.presentation.kit.content.Icon
@@ -28,9 +29,9 @@ import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.pluralStringResource
 
 /**
- * The chip that jumps to items a refresh added above the reader, cleared once the reader reaches the newest item.
- * [rowCount] is the number of rows the viewport lays out for the current state; until it does, the viewport still
- * describes the previous rows.
+ * The chip that jumps to items a refresh added above the reader, and the reader reaching the newest item: that
+ * clears the chip and marks the feed's new items as viewed. [rowCount] is the number of rows the viewport lays out
+ * for the current state; until it does, the viewport still describes the previous rows.
  */
 @Composable
 internal fun FeedNewItemsIndicator(
@@ -52,6 +53,14 @@ internal fun FeedNewItemsIndicator(
                     viewModel.consumeNewItemsIndicator()
                 }
             }
+    }
+
+    LaunchedEffect(viewportKey, state.newItems, rowCount) {
+        if (state.newItems?.viewed != false) return@LaunchedEffect
+
+        snapshotFlow(viewport)
+            .first { it.totalItemsCount >= rowCount && !it.canScrollBackward }
+        viewModel.markNewItemsViewed()
     }
 
     // Reading the viewport directly would recompose on every scrolled frame through layout info.

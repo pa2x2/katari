@@ -17,6 +17,7 @@ import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.progress.LoadingIndicator
+import mihon.presentation.kit.surface.HorizontalDivider
 import mihon.presentation.kit.surface.Surface
 import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.ContentTone
@@ -112,6 +113,26 @@ internal fun FeedGapRow(
                 )
             }
         }
+    }
+}
+
+/** The line above the newest item the reader had already seen, spanning the feed's width. */
+@Composable
+internal fun FeedSeenDivider(modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = KatariTheme.spacing.xs),
+        horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.m),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        HorizontalDivider(modifier = Modifier.weight(1f))
+        Text(
+            text = stringResource(MR.strings.browse_feed_seen_before),
+            role = TextRole.Supporting,
+            tone = ContentTone.Secondary,
+        )
+        HorizontalDivider(modifier = Modifier.weight(1f))
     }
 }
 

@@ -2,6 +2,7 @@ package eu.kanade.tachiyomi.ui.browse.feed.timeline
 
 import eu.kanade.domain.source.model.FeedItemRef
 import eu.kanade.domain.source.model.SourceFeedGap
+import eu.kanade.domain.source.model.SourceFeedNewItems
 import eu.kanade.domain.source.model.SourceFeedTimeline
 
 /*
@@ -41,6 +42,7 @@ internal fun SourceFeedTimeline.withRefreshPage(pageRefs: List<FeedItemRef>, nex
         items = newRefs + existing,
         legacyMangaIds = emptyList(),
         gaps = listOfNotNull(gap) + gaps,
+        newItems = newItems.afterArrivalAbove(existing.first()),
     )
     return TimelineUpdate(updated, addedCount = newRefs.size, gap = gap)
 }
@@ -82,9 +84,14 @@ internal fun SourceFeedTimeline.withoutGap(gap: SourceFeedGap): SourceFeedTimeli
     return copy(gaps = gaps - gap)
 }
 
+internal fun SourceFeedTimeline.withNewItemsViewed(): SourceFeedTimeline {
+    val newItems = newItems?.takeUnless { it.viewed } ?: return this
+    return copy(newItems = newItems.copy(viewed = true))
+}
+
 /**
  * The timeline with only [kept] of its items, in their order. A gap whose item is dropped moves up to the nearest
- * remaining item above it.
+ * remaining item above it, and the new-items boundary moves down to the nearest remaining item below it.
  */
 internal fun SourceFeedTimeline.retainingItems(kept: List<FeedItemRef>): SourceFeedTimeline {
     val existing = resolvedItems()
@@ -96,5 +103,14 @@ internal fun SourceFeedTimeline.retainingItems(kept: List<FeedItemRef>): SourceF
             existing.subList(0, index + 1).lastOrNull { it in keptSet }?.let { gap.copy(after = it) }
         }
         .distinctBy { it.after }
-    return copy(items = kept, legacyMangaIds = emptyList(), gaps = gaps)
+    val newItems = newItems?.let { marker ->
+        val index = existing.indexOf(marker.firstSeen)
+        if (index < 0) return@let null
+        existing.drop(index).firstOrNull { it in keptSet }?.let { marker.copy(firstSeen = it) }
+    }
+    return copy(items = kept, legacyMangaIds = emptyList(), gaps = gaps, newItems = newItems)
+}
+
+private fun SourceFeedNewItems?.afterArrivalAbove(previousTop: FeedItemRef): SourceFeedNewItems {
+    return if (this == null || viewed) SourceFeedNewItems(firstSeen = previousTop) else this
 }
