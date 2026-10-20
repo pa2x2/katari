@@ -77,6 +77,7 @@ import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerOverlay
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSettings
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSettingsContent
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSettingsSection
+import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSpeedBoostPill
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSwitchingOverlay
 import eu.kanade.tachiyomi.ui.video.player.components.VideoSubtitleEditorOverlay
 import eu.kanade.tachiyomi.ui.video.player.components.videoPlayerSafeContentPadding
@@ -1530,6 +1531,12 @@ class VideoPlayerActivity : AppCompatActivity() {
                             stringResource(MR.strings.anime_playback_loading_episode, episodeChange.episodeName)
                         current.isSourceSwitching -> stringResource(MR.strings.anime_playback_switching_source)
                         else -> null
+                    }
+                    if (temporarySpeedBoostActive && !isInPictureInPictureMode) {
+                        VideoPlayerSpeedBoostPill(
+                            speedLabel = videoPlaybackSpeedLabel(TEMPORARY_SPEED_BOOST),
+                            modifier = Modifier.align(Alignment.TopCenter),
+                        )
                     }
                     if (switchingLabel != null && !isInPictureInPictureMode && !subtitleEditorVisible) {
                         VideoPlayerSwitchingOverlay(

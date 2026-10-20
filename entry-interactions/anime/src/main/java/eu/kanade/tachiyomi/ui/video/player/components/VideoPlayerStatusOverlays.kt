@@ -9,6 +9,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.roundedfilled.FastForward
+import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.progress.LoadingIndicator
 import mihon.presentation.kit.surface.MediaBackdrop
@@ -50,6 +53,35 @@ internal fun VideoPlayerSwitchingOverlay(
     label: String,
     modifier: Modifier = Modifier,
 ) {
+    VideoPlayerStatusPill(label = label, modifier = modifier) {
+        LoadingIndicator(
+            modifier = Modifier.size(KatariTheme.sizes.iconSmall),
+            color = KatariTheme.colors.onMedia,
+        )
+    }
+}
+
+/** The speed playing while the screen is held, which nothing else on screen shows. */
+@Composable
+internal fun VideoPlayerSpeedBoostPill(
+    speedLabel: String,
+    modifier: Modifier = Modifier,
+) {
+    VideoPlayerStatusPill(label = speedLabel, modifier = modifier) {
+        Icon(
+            imageVector = MaterialSymbols.RoundedFilled.FastForward,
+            contentDescription = null,
+            modifier = Modifier.size(KatariTheme.sizes.iconSmall),
+        )
+    }
+}
+
+@Composable
+private fun VideoPlayerStatusPill(
+    label: String,
+    modifier: Modifier = Modifier,
+    leading: @Composable () -> Unit,
+) {
     val spacing = KatariTheme.spacing
     Surface(
         modifier = modifier
@@ -63,10 +95,7 @@ internal fun VideoPlayerSwitchingOverlay(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(spacing.m),
         ) {
-            LoadingIndicator(
-                modifier = Modifier.size(KatariTheme.sizes.iconSmall),
-                color = KatariTheme.colors.onMedia,
-            )
+            leading()
             Text(text = label, role = TextRole.Body)
         }
     }
