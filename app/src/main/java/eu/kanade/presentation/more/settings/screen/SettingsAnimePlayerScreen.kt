@@ -26,7 +26,7 @@ object SettingsAnimePlayerScreen : AppEntryViewerSettingsScreenProjection() {
         val animePlayerPreferences = remember { context.appGraph.animePlayerPreferences }
         val settingBinder = remember { context.appGraph.viewerSettingBinder }
         val pictureInPicture = remember(animePlayerPreferences, settingBinder) {
-            settingBinder.bind(animePlayerPreferences.pictureInPictureSetting).asProfilePreference()
+            settingBinder.bind(animePlayerPreferences.autoEnterPictureInPictureSetting).asProfilePreference()
         }
         val seekPreview = remember(animePlayerPreferences, settingBinder) {
             settingBinder.bind(animePlayerPreferences.seekPreviewSetting).asProfilePreference()
@@ -60,8 +60,7 @@ object SettingsAnimePlayerScreen : AppEntryViewerSettingsScreenProjection() {
             ),
             Preference.PreferenceItem.SwitchPreference(
                 preference = pictureInPicture,
-                title = stringResource(MR.strings.pref_enable_anime_picture_in_picture),
-                subtitle = stringResource(MR.strings.pref_enable_anime_picture_in_picture_summary),
+                title = stringResource(MR.strings.pref_anime_auto_enter_picture_in_picture),
             ),
             Preference.PreferenceItem.SwitchPreference(
                 preference = seekPreview,

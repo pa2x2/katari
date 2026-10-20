@@ -19,7 +19,9 @@ class AnimePlayerPreferences(
 
     companion object {
         const val PROVIDER_ID = "builtin.anime.player"
-        const val ENABLE_ANIME_PICTURE_IN_PICTURE_KEY = "enable_anime_picture_in_picture"
+
+        // Named for the switch that also showed the PiP button; kept so saved choices carry over.
+        const val AUTO_ENTER_PICTURE_IN_PICTURE_KEY = "enable_anime_picture_in_picture"
         const val ENABLE_ANIME_SEEK_PREVIEW_KEY = "enable_anime_seek_preview"
         const val SEEK_STEP_SECONDS_KEY = "anime_seek_step_seconds"
         const val ORIENTATION_KEY = "anime_player_orientation"
@@ -30,8 +32,8 @@ class AnimePlayerPreferences(
         val SEEK_STEP_SECONDS_OPTIONS = listOf(5, 10, 30)
     }
 
-    val enableAnimePictureInPicture: Preference<Boolean> = preferenceStore.getBoolean(
-        ENABLE_ANIME_PICTURE_IN_PICTURE_KEY,
+    val autoEnterPictureInPicture: Preference<Boolean> = preferenceStore.getBoolean(
+        AUTO_ENTER_PICTURE_IN_PICTURE_KEY,
         false,
     )
 
@@ -51,11 +53,11 @@ class AnimePlayerPreferences(
         AnimePlayerOrientation.FOLLOW_VIDEO,
     )
 
-    val pictureInPictureSetting = ViewerSettingDefinition(
-        id = ViewerSettingId(PROVIDER_ID, ENABLE_ANIME_PICTURE_IN_PICTURE_KEY),
+    val autoEnterPictureInPictureSetting = ViewerSettingDefinition(
+        id = ViewerSettingId(PROVIDER_ID, AUTO_ENTER_PICTURE_IN_PICTURE_KEY),
         scope = ViewerSettingScope.PROFILE_ONLY,
         processorDefault = false,
-        profilePreference = enableAnimePictureInPicture,
+        profilePreference = autoEnterPictureInPicture,
         codec = ViewerSettingCodecs.Boolean,
     )
 
@@ -96,7 +98,7 @@ class AnimePlayerPreferences(
     )
 
     override val settings: List<ViewerSettingDefinition<*>> = listOf(
-        pictureInPictureSetting,
+        autoEnterPictureInPictureSetting,
         seekPreviewSetting,
         seekStepSetting,
         orientationSetting,

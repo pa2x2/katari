@@ -1527,7 +1527,7 @@
     <string name="pref_category_players">Players</string>
     <string name="pref_anime_player">Anime player</string>
     <string name="pref_enable_anime_picture_in_picture">Picture-in-Picture</string>
-    <string name="pref_enable_anime_picture_in_picture_summary">Automatically keep anime playback in a floating window when leaving the app</string>
+    <string name="pref_anime_auto_enter_picture_in_picture">Enter picture-in-picture when leaving the app</string>
     <string name="pref_enable_anime_seek_preview">Seek preview</string>
     <string name="pref_enable_anime_seek_preview_summary">Show timeline preview images while seeking. This may use extra media requests.</string>
     <string name="pref_anime_seek_step">Seek step</string>

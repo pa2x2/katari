@@ -143,8 +143,8 @@ class VideoPlayerActivity : AppCompatActivity() {
     private val mediaCache: VideoPlayerMediaCache by lazy { dependencies.mediaCache }
     private val animePlayerPreferences: AnimePlayerPreferences by lazy { dependencies.animePlayerPreferences }
     private val viewerSettingBinder: ViewerSettingBinder by lazy { dependencies.viewerSettingBinder }
-    private val pictureInPictureSetting by lazy {
-        viewerSettingBinder.bind(animePlayerPreferences.pictureInPictureSetting)
+    private val autoEnterPictureInPictureSetting by lazy {
+        viewerSettingBinder.bind(animePlayerPreferences.autoEnterPictureInPictureSetting)
     }
     private val seekPreviewSetting by lazy {
         viewerSettingBinder.bind(animePlayerPreferences.seekPreviewSetting)
@@ -167,7 +167,7 @@ class VideoPlayerActivity : AppCompatActivity() {
     private var progressSaveJob: Job? = null
     private val playbackClocks = IdentityHashMap<ExoPlayer, VideoActivePlaybackClock>()
     private var supportsPictureInPicture = false
-    private var pictureInPictureEnabled by mutableStateOf(false)
+    private var autoEnterPictureInPicture by mutableStateOf(false)
     private var isInPictureInPictureModeState by mutableStateOf(false)
     private var pendingPictureInPictureOnPause = false
     private var suppressAutomaticPictureInPicture = false
@@ -238,7 +238,7 @@ class VideoPlayerActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         supportsPictureInPicture = packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)
-        pictureInPictureEnabled = pictureInPictureSetting.resolveProfile().effectiveValue
+        autoEnterPictureInPicture = autoEnterPictureInPictureSetting.resolveProfile().effectiveValue
         gestureGuideVisible = !animePlayerPreferences.gestureGuideShown.get()
         isInPictureInPictureModeState = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             isInPictureInPictureMode
@@ -292,7 +292,7 @@ class VideoPlayerActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         suppressAutomaticPictureInPicture = false
-        pictureInPictureEnabled = pictureInPictureSetting.resolveProfile().effectiveValue
+        autoEnterPictureInPicture = autoEnterPictureInPictureSetting.resolveProfile().effectiveValue
         pendingPictureInPictureOnPause = false
         updatePictureInPictureParams(latestPlaybackSnapshot)
         syncPlaybackBrightnessState()
@@ -478,7 +478,7 @@ class VideoPlayerActivity : AppCompatActivity() {
                     !settingsVisible &&
                     !episodesDrawerVisible
                 val showPictureInPictureButton =
-                    pictureInPictureEnabled && supportsPictureInPicture &&
+                    supportsPictureInPicture &&
                         Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
                 val effectivePlaybackSpeed = if (temporarySpeedBoostActive) {
                     TEMPORARY_SPEED_BOOST
@@ -1951,7 +1951,7 @@ class VideoPlayerActivity : AppCompatActivity() {
         if (
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
             supportsPictureInPicture &&
-            pictureInPictureEnabled
+            autoEnterPictureInPicture
         ) {
             setPictureInPictureParams(
                 buildPictureInPictureParams(
@@ -1977,6 +1977,7 @@ class VideoPlayerActivity : AppCompatActivity() {
 
     private fun canAutoEnterPictureInPicture(): Boolean {
         return canUsePictureInPicture() &&
+            autoEnterPictureInPicture &&
             latestPlaybackSnapshot.isPlaying &&
             !latestPlaybackSnapshot.isLoading
     }
@@ -1984,12 +1985,11 @@ class VideoPlayerActivity : AppCompatActivity() {
     private fun canUsePictureInPicture(): Boolean {
         return Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
             supportsPictureInPicture &&
-            pictureInPictureEnabled &&
             !isInPictureInPictureModeState
     }
 
     private fun updatePictureInPictureParams(snapshot: VideoPlayerPlaybackSnapshot) {
-        if (!supportsPictureInPicture || !pictureInPictureEnabled) return
+        if (!supportsPictureInPicture) return
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
 
         setPictureInPictureParams(buildPictureInPictureParams(snapshot))
@@ -2004,7 +2004,9 @@ class VideoPlayerActivity : AppCompatActivity() {
             .setActions(buildPictureInPictureActions(snapshot))
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            paramsBuilder.setAutoEnterEnabled(allowAutoEnter && snapshot.isPlaying && !snapshot.isLoading)
+            paramsBuilder.setAutoEnterEnabled(
+                allowAutoEnter && autoEnterPictureInPicture && snapshot.isPlaying && !snapshot.isLoading,
+            )
         }
 
         return paramsBuilder.build()
