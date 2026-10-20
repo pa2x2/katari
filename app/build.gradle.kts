@@ -46,8 +46,8 @@ android {
     defaultConfig {
         applicationId = "app.katari"
 
-        versionCode = 81
-        versionName = "1.16.3"
+        versionCode = 82
+        versionName = "1.16.4"
 
         buildConfigField("boolean", "TELEMETRY_INCLUDED", "${Config.includeTelemetry}")
         buildConfigField("boolean", "UPDATER_ENABLED", "${Config.enableUpdater}")
