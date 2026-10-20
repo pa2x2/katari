@@ -4,7 +4,6 @@ import android.content.Context
 import eu.kanade.tachiyomi.source.entry.EntryMedia
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.PlaybackSelection
-import eu.kanade.tachiyomi.source.entry.SEntryChapter
 import eu.kanade.tachiyomi.source.entry.SubtitleSource
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import kotlinx.coroutines.flow.Flow
@@ -26,6 +25,7 @@ import mihon.entry.interactions.download.EntryDownloadState
 import mihon.entry.interactions.download.EntryDownloadStatus
 import mihon.entry.interactions.download.observeEntryDownloadQueue
 import tachiyomi.core.common.i18n.stringResource
+import tachiyomi.domain.entry.adapter.toSEntryChapter
 import tachiyomi.domain.entry.model.DownloadPreferences
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
@@ -409,13 +409,6 @@ private const val OPTION_SUBTITLE = "subtitle"
 
 private fun Map<String, String?>.selectedValueOr(key: String, fallback: String?): String? {
     return if (containsKey(key)) get(key) else fallback
-}
-
-private fun EntryChapter.toSEntryChapter(): SEntryChapter = SEntryChapter.create().also {
-    it.url = url
-    it.name = name
-    it.dateUpload = dateUpload
-    it.chapterNumber = chapterNumber
 }
 
 private fun createDefaultVideoDownloadPreferences(entryId: Long): DownloadPreferences {

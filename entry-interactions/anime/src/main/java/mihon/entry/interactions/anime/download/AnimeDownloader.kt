@@ -6,7 +6,6 @@ import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.network.awaitSuccess
 import eu.kanade.tachiyomi.source.entry.EntryMedia
 import eu.kanade.tachiyomi.source.entry.PlaybackSelection
-import eu.kanade.tachiyomi.source.entry.SEntryChapter
 import eu.kanade.tachiyomi.source.entry.SubtitleSource
 import eu.kanade.tachiyomi.source.entry.VideoPlaybackOption
 import eu.kanade.tachiyomi.source.entry.VideoRequest
@@ -29,6 +28,7 @@ import okhttp3.Request
 import okio.buffer
 import okio.sink
 import tachiyomi.core.common.preference.SourcePreferenceProfile
+import tachiyomi.domain.entry.adapter.toSEntryChapter
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.VideoDownloadQualityMode
 import tachiyomi.domain.source.service.SourceManager
@@ -773,11 +773,4 @@ internal fun createFileTransferClient(client: OkHttpClient): OkHttpClient {
     return client.newBuilder()
         .callTimeout(0, TimeUnit.MILLISECONDS)
         .build()
-}
-
-private fun EntryChapter.toSEntryChapter(): SEntryChapter = SEntryChapter.create().also {
-    it.url = url
-    it.name = name
-    it.dateUpload = dateUpload
-    it.chapterNumber = chapterNumber
 }

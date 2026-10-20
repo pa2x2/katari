@@ -19,6 +19,7 @@ import logcat.LogPriority
 import mihon.entry.interactions.anime.download.AnimeDownloadProvider
 import mihon.entry.interactions.anime.download.model.AnimeDownloadManifest
 import tachiyomi.core.common.util.system.logcat
+import tachiyomi.domain.entry.adapter.toSEntryChapter
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.PlaybackPreferences
@@ -414,11 +415,4 @@ private inline fun <T> runCatchingCancellable(block: () -> T): Result<T> {
     } catch (e: Throwable) {
         Result.failure(e)
     }
-}
-
-private fun EntryChapter.toSEntryChapter(): SEntryChapter = SEntryChapter.create().also {
-    it.url = url
-    it.name = name
-    it.dateUpload = dateUpload
-    it.chapterNumber = chapterNumber
 }
