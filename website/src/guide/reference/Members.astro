@@ -1,0 +1,44 @@
+---
+interface Props {
+  /** Names a list nested in a member, such as "Fields" for the fields of the class a property holds. */
+  label?: string;
+}
+
+const { label } = Astro.props;
+---
+
+<div class="members">
+  {label && <p class="label">{label}</p>}
+  <dl><slot /></dl>
+</div>
+
+<style>
+  /* A list of an API's members, each its declaration over what it means. Unlike a table's term column, a declaration
+     on its own line never competes with its explanation for width, so it reads the same on a phone. */
+  .members {
+    margin: 0 0 1.5rem;
+  }
+
+  dl {
+    margin: 0;
+    border-top: 1px solid var(--border);
+  }
+
+  /* A nested list, such as a property's fields, hangs off its member by a line rather than a box. */
+  :global(.member) .members {
+    margin: 0.75rem 0 0;
+    padding-left: 1rem;
+    border-left: 2px solid var(--border);
+  }
+
+  :global(.member) .members dl {
+    border-top: none;
+  }
+
+  .label {
+    margin: 0 0 0.25rem;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+</style>

@@ -21,15 +21,15 @@ import Task from "../../guide/Task.astro";
       At the top of <Path>Settings › Translation</Path>, tap the engine's name to pick another under <strong>Translation engine</strong>, and
       the language on the right to choose the one to translate into. Tap <strong>Save</strong> to keep them.
     </p>
-    <table>
+    <table class="terms">
       <thead>
         <tr><th>Engine</th> <th>Runs</th> <th>What it needs</th></tr>
       </thead>
       <tbody>
-        <tr><td><strong>Android System Translation</strong></td> <td>On the phone</td> <td>Android 12 or newer</td></tr>
-        <tr><td><strong>Offline Translator</strong></td> <td>On the phone</td> <td>The Offline Translator app, set up as below</td></tr>
-        <tr><td><strong>DeepL-compatible server</strong></td> <td>Over the network</td> <td>For DeepL, an API key, with <strong>DeepL API Free</strong> or <strong>DeepL API Pro</strong> picked as the server; for a server of your own, its URL</td></tr>
-        <tr><td><strong>LibreTranslate Server</strong></td> <td>Over the network</td> <td>A server URL, and an API key if the server asks</td></tr>
+        <tr><td><strong>Android System Translation</strong></td> <td data-label="Runs">On the phone</td> <td data-label="Needs">Android 12 or newer</td></tr>
+        <tr><td><strong>Offline Translator</strong></td> <td data-label="Runs">On the phone</td> <td data-label="Needs">The Offline Translator app, set up as below</td></tr>
+        <tr><td><strong>DeepL-compatible server</strong></td> <td data-label="Runs">Over the network</td> <td data-label="Needs">For DeepL, an API key, with <strong>DeepL API Free</strong> or <strong>DeepL API Pro</strong> picked as the server; for a server of your own, its URL</td></tr>
+        <tr><td><strong>LibreTranslate Server</strong></td> <td data-label="Runs">Over the network</td> <td data-label="Needs">A server URL, and an API key if the server asks</td></tr>
       </tbody>
     </table>
     <p>To try the engine, type in the box under its name.</p>

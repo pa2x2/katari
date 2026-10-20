@@ -1,0 +1,112 @@
+---
+import { Code } from "astro:components";
+import type { CodeLanguage } from "astro";
+
+interface Props {
+  code: string;
+  lang: CodeLanguage;
+  /** The file the code belongs in, such as `build.gradle.kts`, shown above it instead of the language. */
+  file?: string;
+}
+
+const { code, lang, file } = Astro.props;
+// Plain text, such as what a command prints, has no language worth naming and nothing worth copying, so it has no header.
+const LANGUAGE_NAMES: Partial<Record<string, string>> = {
+  json: "JSON",
+  kotlin: "Kotlin",
+  properties: "Properties",
+  shell: "Shell",
+  xml: "XML",
+};
+const label = file ?? LANGUAGE_NAMES[lang];
+---
+
+<figure class="snippet">
+  {
+    label && (
+      <figcaption data-pagefind-ignore>
+        <span class:list={{ file: file !== undefined }}>{label}</span>
+        {/* Copying needs the script below, so without it the button stays hidden rather than doing nothing. */}
+        <button class="copy" type="button" hidden>Copy</button>
+      </figcaption>
+    )
+  }
+  {/* Both themes' colours are written into every token, and the CSS below picks one, so the code follows the page's
+      theme switch without a second copy. */}
+  <Code code={code.trim()} lang={lang} themes={{ light: "github-light", dark: "github-dark" }} defaultColor={false} />
+</figure>
+
+<script>
+  for (const button of document.querySelectorAll<HTMLButtonElement>(".snippet .copy")) {
+    const code = button.closest(".snippet")!.querySelector("pre")!;
+    let reset: ReturnType<typeof setTimeout> | undefined;
+    button.hidden = false;
+    button.addEventListener("click", async () => {
+      await navigator.clipboard.writeText(code.innerText);
+      button.textContent = "Copied";
+      clearTimeout(reset);
+      reset = setTimeout(() => (button.textContent = "Copy"), 1500);
+    });
+  }
+</script>
+
+<style>
+  .snippet {
+    margin: 0 0 1.25rem;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    background: var(--code-bg);
+  }
+
+  /* Inside a list item the block sits between lines of the item's own text, so it keeps the same space from both, and
+     at the item's end the item's own padding is enough. */
+  :global(li) > .snippet {
+    margin: 0.75rem 0;
+  }
+
+  :global(li) > .snippet:last-child {
+    margin-bottom: 0;
+  }
+
+  figcaption {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    min-height: 2.4rem;
+    padding: 0.3rem 0.4rem 0.3rem 1.1rem;
+    border-bottom: 1px solid var(--rule);
+    color: var(--text-muted);
+    font-size: 0.8rem;
+  }
+
+  .file {
+    font-family: var(--mono);
+  }
+
+  .copy {
+    margin-left: auto;
+    padding: 0.2rem 0.6rem;
+    border: 1px solid var(--border);
+    border-radius: 0.3rem;
+    background: transparent;
+    color: var(--text-muted);
+    font: inherit;
+    cursor: pointer;
+  }
+
+  .copy:hover {
+    color: var(--text-strong);
+  }
+
+  .snippet :global(pre) {
+    margin: 0;
+    border: none;
+    border-radius: 0;
+  }
+
+  .snippet :global(pre span) {
+    color: light-dark(var(--shiki-light), var(--shiki-dark));
+  }
+</style>

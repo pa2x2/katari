@@ -1,0 +1,169 @@
+---
+import Callout from "../../../guide/Callout.astro";
+import { sdk } from "../../../guide/extensions/sdk.ts";
+import GuidePage from "../../../guide/GuidePage.astro";
+import Path from "../../../guide/Path.astro";
+import Snippet from "../../../guide/Snippet.astro";
+import Task from "../../../guide/Task.astro";
+import { sitePath } from "../../../site/links.ts";
+
+const key = `
+keytool -genkeypair -keystore extensions.jks -alias extensions -keyalg RSA -keysize 4096 -validity 36500
+`;
+
+const sign = `
+./gradlew assembleRelease
+zipalign -f 4 build/outputs/apk/release/example-comics-release-unsigned.apk example-comics.apk
+apksigner sign --ks extensions.jks --ks-key-alias extensions --v4-signing-enabled false example-comics.apk
+apksigner verify --print-certs example-comics.apk
+`;
+
+const fingerprint = `
+Signer #1 certificate SHA-256 digest: 0ea9de3d5a682608a15b101000c032d5aaae7e12902fc6bf8bb551de1aa00124
+`;
+
+const index = `
+{
+  "name": "Example Extensions",
+  "badgeLabel": "Example",
+  "signingKey": "0ea9de3d5a682608a15b101000c032d5aaae7e12902fc6bf8bb551de1aa00124",
+  "contact": { "website": "https://example.org" },
+  "extensionList": {
+    "extensions": [
+      {
+        "name": "Example Comics",
+        "packageName": "org.example.katari.examplecomics",
+        "resources": {
+          "apkUrl": "https://example.org/katari/apk/example-comics.apk",
+          "iconUrl": "https://example.org/katari/icon/example-comics.png"
+        },
+        "extensionLib": "${sdk.family}",
+        "versionCode": 1,
+        "versionName": "${sdk.family}.0",
+        "contentWarning": "SAFE",
+        "sources": [
+          {
+            "id": 4316702938517726312,
+            "name": "Example Comics",
+            "language": "en",
+            "homeUrl": "https://comics.example",
+            "supportedEntryTypes": ["MANGA"]
+          }
+        ]
+      }
+    ]
+  }
+}
+`;
+---
+
+<GuidePage
+  slug="extensions/store"
+  lead="An extension store is one JSON file, and the APKs and icons it points to, on any web server. Users add its address once and get every update from it."
+>
+  <Task id="sign" title="Sign every release with one key">
+    <p>Make a key once, and keep it somewhere safe:</p>
+    <Snippet lang="shell" code={key} />
+    <p>Then build each release, align it, sign it, and read the key's fingerprint:</p>
+    <Snippet lang="shell" code={sign} />
+    <p>
+      <code>zipalign</code> and <code>apksigner</code> are in the Android SDK's <code>build-tools</code>. Of what the last command prints,
+      the store needs the SHA-256 digest, in the same form: 64 lowercase hexadecimal digits without colons. <code>keytool</code> prints
+      it in capitals with colons, which matches nothing.
+    </p>
+    <Snippet lang="text" code={fingerprint} />
+    <p>
+      Katari installs an extension from a store only if the APK is signed with the store's key, and trusts it without asking for the same
+      reason.
+    </p>
+    <Callout label="Keep the key" tone="warning">
+      <p>
+        Android installs an update only when it is signed with the same key as the installed app. If the key is lost, no extension it signed
+        can be updated again. You would have to uninstall each one and install it again from a store with the new key.
+      </p>
+    </Callout>
+  </Task>
+
+  <Task id="index" title="The index">
+    <p>The index describes the store and lists its extensions:</p>
+    <Snippet file="index.json" lang="json" code={index} />
+    <table class="terms">
+      <thead>
+        <tr><th>Field</th> <th>What it holds</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>name</code>, <code>badgeLabel</code></td> <td>Required. The store's name, and the short label shown on each of its extensions.</td></tr>
+        <tr><td><code>signingKey</code></td> <td>Required. The SHA-256 digest of the signing certificate, as <code>apksigner</code> prints it.</td></tr>
+        <tr>
+          <td><code>contact.website</code>, <code>contact.discord</code></td>
+          <td>Where users find out about the store. The website is required, the Discord invite optional.</td>
+        </tr>
+        <tr>
+          <td><code>extensionList.extensions</code></td>
+          <td>The extensions. Leave <code>extensionList</code> out and give <code>extensionListUrl</code> instead to keep the list in a file of its own.</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>Every field of an extension is required:</p>
+    <table class="terms">
+      <thead>
+        <tr><th>Field</th> <th>What it holds</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>name</code>, <code>packageName</code></td> <td>The extension's name and its <code>applicationId</code>.</td></tr>
+        <tr><td><code>resources.apkUrl</code>, <code>resources.iconUrl</code></td> <td>Full addresses of the APK and its icon, which is a square PNG.</td></tr>
+        <tr>
+          <td><code>extensionLib</code></td>
+          <td>
+            The SDK the extension is built with, the first two parts of its <code>versionName</code>, such as
+            <code>"{sdk.family}"</code>. Katari hides extensions built with an SDK it doesn't load, and a value that isn't numbers, such
+            as <code>"2.x"</code>, fails the whole store's list.
+          </td>
+        </tr>
+        <tr>
+          <td><code>versionCode</code>, <code>versionName</code></td>
+          <td>The same as in the APK. Katari offers an update when <code>versionCode</code> grows, or the SDK in <code>versionName</code> is newer.</td>
+        </tr>
+        <tr><td><code>contentWarning</code></td> <td><code>SAFE</code>, <code>MIXED</code> or <code>NSFW</code>, matching the manifest.</td></tr>
+        <tr>
+          <td><code>sources</code></td>
+          <td>
+            Each source's <code>id</code>, <code>name</code> and <code>language</code>, required, and <code>homeUrl</code>, optional, as
+            the source itself has them. Katari lists each source on its own before the extension is installed, in the languages the user
+            turned on, and uses them to name a source a backup refers to and offer its extension.
+          </td>
+        </tr>
+        <tr>
+          <td><code>supportedEntryTypes</code></td>
+          <td>
+            Optional, on each source: <code>MANGA</code>, <code>ANIME</code> or <code>BOOK</code>, for the type badges and the
+            <strong>Content types</strong> filter. Leave it out and the source shows only when that filter includes unspecified sources.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <p>
+      The index and a separate extension list can be served gzipped. Katari reads Tachiyomi's <code>index.min.json</code> stores as
+      well, but new stores should use this format.
+    </p>
+  </Task>
+
+  <Task id="host" title="Put it online">
+    <ol>
+      <li>Upload <code>index.json</code>, the APKs and the icons to any server that serves files over HTTPS, such as GitHub Pages.</li>
+      <li>
+        Tell users the address of <code>index.json</code>. They paste it under <Path>Browse › Extensions › ⋮ › Extension stores</Path>,
+        as in <a href={sitePath("guide/first-steps/#extension-store")}>First steps</a>.
+      </li>
+      <li>
+        For a one-tap button on a web page, link to <code>katari://extension-store?url=</code> followed by the index's address, encoded as
+        a URL parameter. Katari opens and asks the user to confirm.
+      </li>
+    </ol>
+    <p>
+      To release an update, upload the new APK, raise its <code>versionCode</code> and <code>versionName</code> in the index, and Katari
+      offers it the next time it checks the store. An installed extension the index no longer lists keeps working, marked
+      <strong>Orphaned</strong>.
+    </p>
+  </Task>
+</GuidePage>

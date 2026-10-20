@@ -1,0 +1,134 @@
+---
+import Callout from "../../../guide/Callout.astro";
+import { sdk, sdkTree } from "../../../guide/extensions/sdk.ts";
+import GuidePage from "../../../guide/GuidePage.astro";
+import Member from "../../../guide/reference/Member.astro";
+import Members from "../../../guide/reference/Members.astro";
+import Path from "../../../guide/Path.astro";
+import Task from "../../../guide/Task.astro";
+import { leavesSite, REPOSITORY, sitePath } from "../../../site/links.ts";
+---
+
+<GuidePage
+  slug="extensions"
+  lead="These pages show how to write one with the Katari SDK and offer it in an extension store of your own."
+>
+  <Task id="what-an-extension-is" title="What an extension is">
+    <p>
+      An extension is an Android app with no screens. Katari finds it among the installed apps, loads its code, and asks it for
+      <strong>sources</strong>. A source is one site, usually in one language, and Katari calls these methods on it:
+    </p>
+    <Members>
+      <Member signature="suspend fun getPopularContent(page: Int): EntryPageResult<SEntry>">
+        For the source's <strong>Popular</strong> list, one page at a time.
+      </Member>
+      <Member signature="suspend fun getLatestUpdates(page: Int): EntryPageResult<SEntry>">
+        For the source's <strong>Latest</strong> list, one page at a time.
+      </Member>
+      <Member signature="suspend fun getSearchContent(page: Int, query: String, filters: EntryFilterList): EntryPageResult<SEntry>">
+        For a search in the source, with the user's <a href={sitePath("guide/extensions/filters/")}>filters</a>.
+      </Member>
+      <Member signature="suspend fun getContentDetails(entry: SEntry): SEntry">When a title's page opens or its details are refreshed.</Member>
+      <Member signature="suspend fun getChapterList(entry: SEntry): List<SEntryChapter>">
+        When a title's page opens, and when library updates look for new chapters.
+      </Member>
+      <Member signature="suspend fun getMedia(chapter: SEntryChapter, selection: PlaybackSelection = PlaybackSelection()): EntryMedia">
+        When a chapter or episode opens or is downloaded.
+      </Member>
+    </Members>
+    <p>
+      <a href={sitePath("guide/extensions/source/")}>Write a source</a> covers each of them. One source can serve comics, video and
+      books, even mixed in one list, since every title it returns says which kind it is.
+    </p>
+  </Task>
+
+  <Task id="sdk" title="The SDK">
+    <p>
+      Extensions are written in Kotlin against the Katari SDK. Latest published version is {sdk.version}. It is published on JitPack from the
+      <a href={sdkTree("")} {...leavesSite()}><code>{sdk.tag}</code> tag</a> of Katari's repository:
+    </p>
+    <ul>
+      <li><a href={sdkTree("entry-source-api")} {...leavesSite()}><code>entry-source-api</code></a> holds the source interfaces and models.</li>
+      <li><a href={sdkTree("book-api")} {...leavesSite()}><code>book-api</code></a> describes books and their files.</li>
+      <li>
+        <a href={sdkTree("core/common")} {...leavesSite()}><code>core-common</code></a> holds the network client and what a source sends
+        requests with, as <a href={sitePath("guide/extensions/source/#network")}>Requests</a> lists.
+      </li>
+    </ul>
+    <p>
+      The <a href={`${REPOSITORY}/blob/main/SDK-CHANGELOG.md`} {...leavesSite()}>SDK changelog</a> lists what each release added, and every interface
+      and field is also documented where the SDK declares it.
+    </p>
+  </Task>
+
+  <Task id="versions" title="Which Katari loads it">
+    <p>
+      An extension's <code>versionName</code> is the SDK's major and minor version, a dot, and the extension's own release number:
+      <code>{sdk.family}.4</code> is the fourth release of an extension built with SDK {sdk.family}. Katari reads everything before the
+      last dot as the SDK, so a <code>versionName</code> of <code>{sdk.family}</code> alone reads as SDK {sdk.family.split(".")[0]} and
+      isn't loaded.
+    </p>
+    <p>
+      Katari loads extensions built with any SDK from 2.0 up to the newest it knows, whatever their patch version, and Tachiyomi
+      extensions built with extensions-lib 1.4 or 1.6. One built with a newer SDK is listed under <strong>Not loaded</strong>, and its
+      store doesn't offer it, until the user updates Katari.
+    </p>
+    <p>
+      Building with the SDK that has what you need, and no newer, keeps the extension working on the most copies of Katari.
+    </p>
+  </Task>
+
+  <Task id="trust" title="What users see before it runs">
+    <p>
+      An extension runs inside Katari with all of its access, so Katari checks every one before loading it. It is trusted straight away
+      when one of the keys its APK is signed with is the key of an extension store the user added. Otherwise the user has to trust it,
+      and Katari remembers that for this package, version code and key only, so each update asks again.
+    </p>
+    <p>
+      Under <Path>Browse › Extensions</Path>, an extension that fails a check is listed under <strong>Not loaded</strong>. Katari checks
+      in this order and stops at the first that fails:
+    </p>
+    <table class="terms">
+      <thead>
+        <tr><th>Reason</th> <th>Cause</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Missing information</td>
+          <td>The APK has no meta-data, no <code>versionName</code>, or no <code>tachiyomi.extension.class</code>.</td>
+        </tr>
+        <tr>
+          <td>Unsupported SDK</td>
+          <td>The SDK read from the <code>versionName</code> isn't one this Katari loads, as <a href="#versions">above</a>.</td>
+        </tr>
+        <tr><td>Unsigned</td> <td>The APK has no signature.</td></tr>
+        <tr>
+          <td><strong>Untrusted</strong></td>
+          <td>No store's key signs it and the user hasn't trusted this version. The user taps the shield and <strong>Trust</strong>.</td>
+        </tr>
+        <tr>
+          <td><strong>Filtered</strong></td>
+          <td>
+            Its content warning isn't among <strong>Allowed content warnings</strong> under <Path>Settings › Browse</Path>. All are
+            allowed at first, and installed extensions are filtered only while <strong>Also apply to installed extensions</strong> is on.
+          </td>
+        </tr>
+        <tr>
+          <td>Failed</td>
+          <td>
+            Creating one of its classes or sources threw. The extension's info button shows the error and its stack trace, which also go
+            to <code>adb logcat</code>.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <p>
+      Only <strong>Untrusted</strong> and <strong>Filtered</strong> are labelled in the list; the info button explains the others.
+      <a href={sitePath("guide/extensions/store/")}>Publish an extension store</a> shows how to sign extensions so that users of your store
+      never see <strong>Untrusted</strong>.
+    </p>
+    <Callout label="No secrets in code">
+      <p>An APK can be unpacked by anyone who installs it. Don't put API keys or passwords in an extension; let users enter their own in its settings.</p>
+    </Callout>
+  </Task>
+</GuidePage>

@@ -73,27 +73,102 @@
   font-weight: 650;
 }
 
-/* Pagefind runs adjacent cells' text together in its excerpts, so pages keep a space between one cell's tags and the next. */
+/* Pagefind runs adjacent cells' text together in its excerpts, so pages keep a space between one cell's tags and the next.
+   A table sits in a frame with its header on a band, so its columns read as one block apart from the text around it;
+   separate borders let the frame take rounded corners. */
 :where(.guide main) table {
   width: 100%;
-  margin: 0 0 1.25rem;
-  border-collapse: collapse;
+  margin: 0 0 1.5rem;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  border-collapse: separate;
+  border-spacing: 0;
   font-size: 0.9em;
 }
 
 :where(.guide main) th {
-  padding: 0.5rem 0.75rem 0.5rem 0;
+  padding: 0.6rem 0.9rem;
   border-bottom: 1px solid var(--border);
-  color: var(--text);
+  background: var(--surface);
+  color: var(--text-strong);
+  font-size: 0.9em;
   font-weight: 650;
   text-align: left;
 }
 
 :where(.guide main) td {
-  padding: 0.5rem 0.75rem 0.5rem 0;
+  padding: 0.7rem 0.9rem;
   border-bottom: 1px solid var(--rule);
   color: var(--text);
   vertical-align: top;
+}
+
+:where(.guide main) tr:last-child > td {
+  border-bottom: none;
+}
+
+/* A name in the first column is what the row is looked up by, so it stays whole and its column takes its width. */
+:where(.guide main) td:first-child > code {
+  white-space: nowrap;
+}
+
+/* Code in running text sits on a raised background in its own colour, so a command or a name stands apart from the
+   words around it. A class name or a Gradle property is one long word, which on a phone would widen its line past the
+   page, so it may break; break-word breaks it only when it doesn't fit a line of its own, where anywhere would also let a
+   table squeeze its column below the name's width. A piece that wraps keeps its background and padding on both lines. */
+:where(.guide main) :not(pre) > code {
+  padding: 0.125em 0.3em;
+  border-radius: 0.25rem;
+  background: var(--inline-code-bg);
+  color: var(--inline-code-text);
+  font-size: 0.875em;
+  overflow-wrap: break-word;
+  box-decoration-break: clone;
+}
+
+/* A linked name keeps the link's colour, so it still reads as something to click. */
+:where(.guide main) a > code {
+  color: inherit;
+}
+
+/* A table of terms, such as manifest keys or interfaces, and what each means. On a phone the term column would break
+   every name into fragments, so each row becomes the term with its meaning under it. A table with more than one column
+   after the term names them in each cell's data-label, since the stacked cells lose the header that told them apart. */
+@media (width < 36rem) {
+  :where(.guide main) table.terms thead {
+    display: none;
+  }
+
+  /* The table and its body stack too: a table sizes itself to its longest unbroken word, which would widen the page. */
+  :where(.guide main) table.terms,
+  :where(.guide main) table.terms :is(tbody, tr, td) {
+    display: block;
+  }
+
+  /* The rule falls between rows, not between the cells stacked within one. */
+  :where(.guide main) table.terms td {
+    padding-block: 0.2rem;
+    border-bottom: none;
+  }
+
+  :where(.guide main) table.terms tr {
+    padding-block: 0.5rem;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  :where(.guide main) table.terms tr:last-child {
+    border-bottom: none;
+  }
+
+  :where(.guide main) table.terms td:first-child {
+    font-weight: 650;
+  }
+
+  :where(.guide main) table.terms td[data-label]::before {
+    content: attr(data-label) ": ";
+    color: var(--text-muted);
+  }
 }
 
 :where(.guide main) pre {
@@ -104,11 +179,12 @@
   border-radius: 0.5rem;
   background: var(--code-bg);
   color: var(--text-muted);
-  font-size: 0.88rem;
+  font-size: 0.9375rem;
   line-height: 1.6;
 }
 
+/* Ligatures would draw Kotlin's -> and != as single glyphs that a reader can't type back. */
 :where(.guide main) code {
-  font-family: ui-monospace, monospace;
-  font-size: 0.9em;
+  font-family: var(--mono);
+  font-variant-ligatures: none;
 }
