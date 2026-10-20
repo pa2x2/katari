@@ -133,7 +133,8 @@ private suspend fun search(url: String): SearchResponse {
       <li>
         <code>lang</code> is a language code such as <code>en</code>, <code>pt-BR</code> or <code>zh-Hans</code>; <code>all</code> for a
         source in several languages, or <code>other</code> for one in none. Users see sources in English, in the phone's language and
-        under <code>all</code> at first, and turn other languages on themselves.
+        under <code>all</code> at first, matched by the bare language code, so a <code>pt-BR</code> source starts hidden even on a phone in
+        Brazilian Portuguese, and turn other languages on themselves.
       </li>
       <li>
         <code>supportedEntryTypes</code> comes from the optional <code>SourceMetadata</code> and tells Katari which kinds of title to expect
@@ -194,7 +195,11 @@ private suspend fun search(url: String): SearchResponse {
     <ul>
       <li>
         Pages are numbered from 1. Return the page's titles as <code>EntryPageResult(items, hasNextPage)</code>, and Katari asks for the
-        next page as the user scrolls while <code>hasNextPage</code> is true.
+        next page as the user scrolls while <code>hasNextPage</code> is true. A page with no titles ends the list.
+      </li>
+      <li>
+        Feeds in <Path>Browse › Feeds</Path> also load pages by themselves: refreshing a chronological feed, such as Latest, keeps
+        loading until it reaches titles it already has, up to 10 pages. List Latest newest first and keep its pages stable.
       </li>
       <li>
         Set <code>type</code> on every title: <code>MANGA</code>, <code>ANIME</code> or <code>BOOK</code>. It is <code>MANGA</code> unless
@@ -357,7 +362,7 @@ private suspend fun search(url: String): SearchResponse {
       </Member>
       <Member signature="sealed class Json">
         kotlinx.serialization's JSON with <code>ignoreUnknownKeys = true</code>, so fields the site adds later don't break decoding, and
-        <code>explicitNulls = false</code>, so a missing field reads as its default.
+        <code>explicitNulls = false</code>, so a missing nullable field reads as null.
       </Member>
       <Member signature="sealed class ProtoBuf">kotlinx.serialization's default <code>ProtoBuf</code>.</Member>
       <Member signature="class JavaScriptEngine">

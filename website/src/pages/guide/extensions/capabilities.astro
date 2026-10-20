@@ -89,7 +89,7 @@ override suspend fun getChapter(uri: String): SEntryChapter? =
       <Member signature="interface SubtitleSource : UnifiedSource">
         Subtitle files for video, played and downloaded, as in <a href={sitePath("guide/extensions/media/#subtitles")}>Subtitles</a>.
         <Members label="Implement">
-          <Member signature="suspend fun getSubtitles(chapter: SEntryChapter, selection: PlaybackSelection): List<VideoSubtitle>" />
+          <Member signature="suspend fun getSubtitles(chapter: SEntryChapter, selection: PlaybackSelection = PlaybackSelection()): List<VideoSubtitle>" />
         </Members>
       </Member>
       <Member signature="interface EntryPreviewSource : UnifiedSource">
@@ -103,6 +103,7 @@ override suspend fun getChapter(uri: String): SEntryChapter? =
       <Member signature="interface ChapterWebViewSource : WebViewSource">
         <strong>WebView</strong> for a single chapter. <code>EntryImageHttpSource</code> already has it.
         <Members label="Implement">
+          <Member signature="fun getContentUrl(entry: SEntry): String" />
           <Member signature="fun getChapterUrl(chapter: SEntryChapter): String" />
         </Members>
       </Member>

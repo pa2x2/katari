@@ -244,8 +244,9 @@ adb install build/outputs/apk/debug/example-comics-debug.apk
       <li>Its sources appear under <Path>Browse › Sources</Path>.</li>
     </ol>
     <p>
-      When Katari installed the extension from a store as well, it uses the copy with the higher <code>versionCode</code>, and yours on a
-      tie. If it lands under <strong>Not loaded</strong> instead, tap the info button for the reason, as
+      If the extension is already installed from a store, Android refuses a copy signed with another key, so uninstall that one first.
+      With <strong>Private</strong> picked as the installer, Katari keeps both copies and uses the one with the higher
+      <code>versionCode</code>, and yours on a tie. If it lands under <strong>Not loaded</strong> instead, tap the info button for the reason, as
       <a href={sitePath("guide/extensions/#trust")}>What users see before it runs</a> lists. An exception a source throws shows as an
       error where the user was, such as on the source's list or the title's page, and Katari logs most of them with their stack trace to
       <code>adb logcat</code>.

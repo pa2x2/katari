@@ -18,7 +18,7 @@ import Task from "../../guide/Task.astro";
 >
   <Task id="engine" title="Pick a translation engine" shot={{ image: translationEngines, alt: "The translation engines, each saying whether it is ready", caption: "Translation engine" }}>
     <p>
-      At the top of <Path>Settings › Translation</Path>, tap the engine's name to pick another under <strong>Translation engine</strong>, and
+      Under <strong>Playground</strong> in <Path>Settings › Translation</Path>, tap the engine's name to pick another under <strong>Translation engine</strong>, and
       the language on the right to choose the one to translate into. Tap <strong>Save</strong> to keep them.
     </p>
     <table class="terms">
@@ -50,7 +50,7 @@ import Task from "../../guide/Task.astro";
         The first time, the bar asks what it needs: <strong>Which language is the text in?</strong>, how to read that language, and the
         models to download. Answer each with its button.
       </li>
-      <li>Once the bar says <strong>Tap a speech bubble to translate it</strong>, tap one.</li>
+      <li>Once the bar shows the page's languages, such as Japanese → English, tap a speech bubble.</li>
     </ol>
     <p>
       The subtitles button in the bar draws every bubble's translation over the page. The selection button beside it translates text
@@ -64,7 +64,7 @@ import Task from "../../guide/Task.astro";
       text-to-speech voices.
     </p>
     <p>
-      Pick the voice and its pitch under <Path>Settings › Text to speech</Path>, and try them in its <strong>Speech playground</strong>. A voice
+      Pick the speech engine, the voice and its pitch under <Path>Settings › Text to speech</Path>, and hear them with <strong>Play preview</strong>. A voice
       that runs over the network asks first, with <strong>Use network voice?</strong>
     </p>
   </Task>
@@ -96,7 +96,11 @@ import Task from "../../guide/Task.astro";
     <p>
       Tap the language chip in the translation bar to open <strong>Languages for this series</strong>. <strong>Page language</strong> and
       <strong>Translate to</strong> stay with the series. After you change the page language, Katari reads its pages again. <strong>Translate downloads</strong>
-      translates the series' chapters in the background once they're downloaded.
+      translates the series' chapters in the background once they're downloaded. In a merged entry, each member keeps its own languages.
+    </p>
+    <p>
+      <Path>Settings › Translation › Series languages</Path> lists every series with its own languages, where you can return one or all of
+      them to the defaults.
     </p>
   </Task>
 
@@ -114,7 +118,7 @@ import Task from "../../guide/Task.astro";
       <li>
         <strong>Translate ahead while viewing</strong>, off at first, translates the next 2 to 10 unread chapters once they're downloaded.
       </li>
-      <li><strong>Only on Wi-Fi</strong> is on from the start; <strong>Only while charging</strong> is off.</li>
+      <li><strong>Only on Wi-Fi</strong>, on from the start, holds back engines that work over the network; <strong>Only while charging</strong> is off.</li>
     </ul>
   </Task>
 
@@ -123,7 +127,7 @@ import Task from "../../guide/Task.astro";
       The <strong>Translator</strong> tab translates anything you type or paste, with <strong>Detect language</strong> for text you can't
       place. It is hidden at first; add it under <Path>Settings › Appearance › Home screen tabs</Path>.
     </p>
-    <p>In books, select text to get <strong>Listen</strong> and <strong>Translate</strong> for that passage.</p>
+    <p>In books, select text to get <strong>Copy</strong>, <strong>Listen</strong> and <strong>Translate</strong> for that passage.</p>
   </Task>
 
   <Task id="backups" title="What carries over to another phone">

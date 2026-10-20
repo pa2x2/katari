@@ -172,7 +172,7 @@ override suspend fun getMedia(chapter: SEntryChapter, selection: PlaybackSelecti
     <p>
       Comic sources extend <code>EntryImageHttpSource</code>, since the reader and the downloader load images through it. When each image
       sits on a page of its own, give the page's address as <code>url</code> instead, and find the image in <code>getImageUrl</code>.
-      Katari calls it only for pages without an <code>imageUrl</code>, when the user reaches them. Override <code>imageRequest</code>
+      Katari calls it only for pages without an <code>imageUrl</code>, when the reader nears them or the chapter is downloaded. Override <code>imageRequest</code>
       when the image host wants other headers:
     </p>
     <Snippet lang="kotlin" code={lazyPages} />
@@ -300,7 +300,7 @@ override suspend fun getMedia(chapter: SEntryChapter, selection: PlaybackSelecti
       <li>
         For pictures, give each <code>&lt;img&gt;</code> a resource's ID as its <code>src</code>, and add that resource to the catalog
         with its <code>mediaType</code> and a <code>RemoteRequest</code> to the image. Images can be JPEG, PNG, WebP, GIF or SVG, up to
-        12 MiB each.
+        12 MiB each and 1 MiB for SVG, and at most 32,768 pixels on a side and 64 Mi pixels in all.
       </li>
     </ul>
     <p>A downloadable book is one EPUB file, fetched and opened by Katari:</p>
@@ -359,10 +359,11 @@ override suspend fun getMedia(chapter: SEntryChapter, selection: PlaybackSelecti
       </thead>
       <tbody>
         <tr><td>Size of the HTML</td> <td>4 MiB</td></tr>
-        <tr><td>Elements and text nodes</td> <td>100,000</td></tr>
+        <tr><td>Elements</td> <td>100,000</td></tr>
+        <tr><td>Text</td> <td>2,000,000 characters</td></tr>
         <tr><td>Nesting depth</td> <td>32 levels, with lists 8 inside one another</td></tr>
         <tr><td>Blocks, such as paragraphs and headings</td> <td>20,000</td></tr>
-        <tr><td>Table columns</td> <td>24</td></tr>
+        <tr><td>Table columns, and a cell's <code>colspan</code> or <code>rowspan</code></td> <td>24</td></tr>
         <tr><td>CSS rules</td> <td>256, with 64 declarations each</td></tr>
       </tbody>
     </table>
