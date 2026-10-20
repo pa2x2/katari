@@ -1481,6 +1481,9 @@
     <string name="anime_playback_brightness">Brightness</string>
     <string name="anime_playback_volume">Volume</string>
     <string name="anime_playback_next_episode">Next episode</string>
+    <string name="anime_playback_up_next">Up next</string>
+    <string name="anime_playback_up_next_in">Up next in %d</string>
+    <string name="anime_playback_play_now">Play now</string>
     <string name="anime_playback_previous_episode">Previous episode</string>
     <string name="anime_playback_rotate">Rotate</string>
     <string name="anime_playback_seek_backward">Back %d seconds</string>
@@ -1501,6 +1504,7 @@
     <string name="pref_anime_seek_step">Seek step</string>
     <string name="pref_anime_seek_step_summary">%s · seek buttons and double tap</string>
     <string name="pref_anime_orientation">Orientation</string>
+    <string name="pref_anime_auto_play_next">Auto-play next episode</string>
     <string name="anime_orientation_follow_video">Follow the video\'s shape</string>
     <string name="anime_orientation_system">Follow the device</string>
     <string name="anime_no_global_search_results">No anime sources returned results</string>

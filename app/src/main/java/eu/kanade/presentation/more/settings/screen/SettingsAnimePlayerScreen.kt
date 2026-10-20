@@ -34,6 +34,9 @@ object SettingsAnimePlayerScreen : AppEntryViewerSettingsScreenProjection() {
         val orientation = remember(animePlayerPreferences, settingBinder) {
             settingBinder.bind(animePlayerPreferences.orientationSetting).asProfilePreference()
         }
+        val autoPlayNext = remember(animePlayerPreferences, settingBinder) {
+            settingBinder.bind(animePlayerPreferences.autoPlayNextSetting).asProfilePreference()
+        }
         val seekStep = remember(animePlayerPreferences, settingBinder) {
             settingBinder.bind(animePlayerPreferences.seekStepSetting).asProfilePreference()
         }
@@ -50,6 +53,10 @@ object SettingsAnimePlayerScreen : AppEntryViewerSettingsScreenProjection() {
                     }
                 },
                 title = stringResource(MR.strings.pref_anime_orientation),
+            ),
+            Preference.PreferenceItem.SwitchPreference(
+                preference = autoPlayNext,
+                title = stringResource(MR.strings.pref_anime_auto_play_next),
             ),
             Preference.PreferenceItem.SwitchPreference(
                 preference = pictureInPicture,

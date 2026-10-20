@@ -66,9 +66,9 @@ import androidx.media3.session.MediaSession
 import androidx.media3.ui.PlayerView
 import dev.zacsweers.metrox.viewmodel.ViewModelGraph
 import eu.kanade.tachiyomi.network.NetworkHelper
+import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerEndScreen
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerErrorOverlay
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerLoadingOverlay
-import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerNextEpisodeOverlay
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerOverlay
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSettings
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSettingsContent
@@ -98,6 +98,7 @@ import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.i18n.*
 import java.util.IdentityHashMap
 import kotlin.math.abs
+import kotlin.math.ceil
 import kotlin.math.pow
 import kotlin.math.roundToInt
 import mihon.icons.materialsymbols.R as MaterialSymbolsR
@@ -113,7 +114,7 @@ private const val DEFAULT_SYSTEM_BRIGHTNESS = 127
 private const val SYSTEM_BRIGHTNESS_MAX = 255
 private const val MIN_POSITIVE_BRIGHTNESS = 0.01f
 private const val BRIGHTNESS_RESPONSE_GAMMA = 2.2f
-private const val NEXT_EPISODE_COUNTDOWN_VISIBLE_BEFORE_END_MS = 5_000L
+private const val NEXT_EPISODE_PRELOAD_BEFORE_END_MS = 5_000L
 private const val NEXT_EPISODE_COUNTDOWN_DURATION_MS = 8_000L
 private const val NEXT_EPISODE_COUNTDOWN_TICK_MS = 33L
 private const val TEMPORARY_SPEED_BOOST = 2f
@@ -173,6 +174,9 @@ class VideoPlayerActivity : AppCompatActivity() {
     }
     private val seekStepSetting by lazy {
         viewerSettingBinder.bind(animePlayerPreferences.seekStepSetting)
+    }
+    private val autoPlayNextSetting by lazy {
+        viewerSettingBinder.bind(animePlayerPreferences.autoPlayNextSetting)
     }
     private val orientationSetting by lazy {
         viewerSettingBinder.bind(animePlayerPreferences.orientationSetting)
@@ -358,6 +362,8 @@ class VideoPlayerActivity : AppCompatActivity() {
                 val seekPreviewEnabled = resolvedSeekPreview.effectiveValue
                 val resolvedSeekStep by seekStepSetting.state.collectAsState()
                 val seekStepSeconds = resolvedSeekStep.effectiveValue
+                val resolvedAutoPlayNext by autoPlayNextSetting.state.collectAsState()
+                val autoPlayNext = resolvedAutoPlayNext.effectiveValue
 
                 val subtitlePayloadKey = remember(current.playback.subtitles) {
                     current.playback.subtitles.joinToString(separator = "||") { subtitleChoiceKey(it) }
@@ -463,8 +469,10 @@ class VideoPlayerActivity : AppCompatActivity() {
                 var lastSeekPreviewPositionMs by remember(current.chapterId, current.streamUrl, subtitlePayloadKey) {
                     mutableStateOf<Long?>(null)
                 }
-                var nextEpisodeCountdownProgress by remember { mutableStateOf(0f) }
-                var nextEpisodeCountdownStartedAtMs by remember { mutableStateOf<Long?>(null) }
+                // Time the end screen's countdown has run; it only runs while nothing else is open over the video.
+                var nextEpisodeCountdownElapsedMs by remember(current.chapterId) { mutableStateOf(0L) }
+                // Cancel or Close on the end screen hides it until the episode ends again.
+                var endScreenDismissed by remember(current.chapterId) { mutableStateOf(false) }
                 var nextEpisodeAdvanceInFlight by remember { mutableStateOf(false) }
                 var temporarySpeedBoostActive by remember { mutableStateOf(false) }
                 val isInPictureInPictureMode = isInPictureInPictureModeState
@@ -472,15 +480,18 @@ class VideoPlayerActivity : AppCompatActivity() {
                 val hidePlayerChrome = shouldHideChromeForSeekFeedback || isInPictureInPictureMode
                 val nextEpisodeAvailable = current.nextChapterId != null
                 val playbackRemainingMs = (playbackSnapshot.durationMs - playbackSnapshot.positionMs).coerceAtLeast(0L)
-                val shouldShowNextEpisodeCountdown =
-                    playbackSnapshot.durationMs > 0L &&
-                        playbackRemainingMs <= NEXT_EPISODE_COUNTDOWN_VISIBLE_BEFORE_END_MS
-                val showNextEpisodeCta = nextEpisodeCountdownStartedAtMs != null &&
+                val nearEpisodeEnd = playbackSnapshot.durationMs > 0L &&
+                    playbackRemainingMs <= NEXT_EPISODE_PRELOAD_BEFORE_END_MS
+                val endScreenVisible = playbackSnapshot.playbackEnded &&
                     nextEpisodeAvailable &&
+                    !endScreenDismissed &&
                     !nextEpisodeAdvanceInFlight &&
-                    !controlsVisible &&
                     !isInPictureInPictureMode &&
                     !subtitleEditorVisible
+                val nextEpisodeCountdownRunning = endScreenVisible &&
+                    autoPlayNext &&
+                    !settingsVisible &&
+                    !episodesDrawerVisible
                 val showPictureInPictureButton =
                     pictureInPictureEnabled && supportsPictureInPicture &&
                         Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
@@ -496,9 +507,7 @@ class VideoPlayerActivity : AppCompatActivity() {
                     episodesDrawerVisible = false
                     subtitleEditorVisible = false
                     isScrubbing = false
-                    nextEpisodeCountdownStartedAtMs = null
                     nextEpisodeAdvanceInFlight = true
-                    nextEpisodeCountdownProgress = 0f
                     controllerInteractionSequence += 1L
                     flushPlaybackState()
                     viewModel.playPreviousEpisode()
@@ -506,9 +515,7 @@ class VideoPlayerActivity : AppCompatActivity() {
                 val onNextEpisode = {
                     if (!nextEpisodeAdvanceInFlight && nextEpisodeAvailable) {
                         temporarySpeedBoostActive = false
-                        nextEpisodeCountdownStartedAtMs = null
                         nextEpisodeAdvanceInFlight = true
-                        nextEpisodeCountdownProgress = 0f
                         controlsVisible = !controlsLocked
                         settingsVisible = false
                         episodesDrawerVisible = false
@@ -745,8 +752,8 @@ class VideoPlayerActivity : AppCompatActivity() {
                     subtitleEditorDraft = current.playback.subtitleAppearance
                     resumePlaybackAfterSubtitleEditor = false
                     temporarySpeedBoostActive = false
-                    nextEpisodeCountdownStartedAtMs = null
-                    nextEpisodeCountdownProgress = 0f
+                    nextEpisodeCountdownElapsedMs = 0L
+                    endScreenDismissed = false
                     nextEpisodeAdvanceInFlight = false
                     controlsVisible = !isInPictureInPictureMode && !controlsLocked
                     isScrubbing = false
@@ -1005,57 +1012,27 @@ class VideoPlayerActivity : AppCompatActivity() {
                         hideSystemUi()
                     }
                 }
-                LaunchedEffect(
-                    shouldShowNextEpisodeCountdown,
-                    nextEpisodeAvailable,
-                    playbackSnapshot.playbackEnded,
-                    playbackRemainingMs,
-                    subtitleEditorVisible,
-                    isInPictureInPictureMode,
-                    nextEpisodeAdvanceInFlight,
-                ) {
-                    if (!nextEpisodeAvailable || nextEpisodeAdvanceInFlight || subtitleEditorVisible) {
-                        nextEpisodeCountdownStartedAtMs = null
-                        nextEpisodeCountdownProgress = 0f
-                        return@LaunchedEffect
-                    }
-
-                    if (
-                        nextEpisodeCountdownStartedAtMs != null &&
-                        !playbackSnapshot.playbackEnded &&
-                        playbackRemainingMs > NEXT_EPISODE_COUNTDOWN_VISIBLE_BEFORE_END_MS
-                    ) {
-                        nextEpisodeCountdownStartedAtMs = null
-                        nextEpisodeCountdownProgress = 0f
-                        return@LaunchedEffect
-                    }
-
-                    if (
-                        nextEpisodeCountdownStartedAtMs == null &&
-                        shouldShowNextEpisodeCountdown &&
-                        !isInPictureInPictureMode
-                    ) {
-                        nextEpisodeCountdownStartedAtMs = SystemClock.elapsedRealtime()
-                        viewModel.preloadNextEpisode()
+                LaunchedEffect(nearEpisodeEnd, nextEpisodeAvailable) {
+                    if (nearEpisodeEnd && nextEpisodeAvailable) viewModel.preloadNextEpisode()
+                }
+                LaunchedEffect(playbackSnapshot.playbackEnded) {
+                    if (!playbackSnapshot.playbackEnded) {
+                        nextEpisodeCountdownElapsedMs = 0L
+                        endScreenDismissed = false
                     }
                 }
-
-                LaunchedEffect(nextEpisodeCountdownStartedAtMs, current.nextChapterId) {
-                    val startedAt = nextEpisodeCountdownStartedAtMs ?: run {
-                        nextEpisodeCountdownProgress = 0f
-                        return@LaunchedEffect
-                    }
-
-                    nextEpisodeCountdownProgress = 0f
-                    while (isActive && !nextEpisodeAdvanceInFlight && nextEpisodeCountdownStartedAtMs == startedAt) {
-                        val elapsed = SystemClock.elapsedRealtime() - startedAt
-                        val progress = (elapsed / NEXT_EPISODE_COUNTDOWN_DURATION_MS.toFloat()).coerceIn(0f, 1f)
-                        nextEpisodeCountdownProgress = progress
-                        if (progress >= 1f) {
+                LaunchedEffect(nextEpisodeCountdownRunning) {
+                    if (!nextEpisodeCountdownRunning) return@LaunchedEffect
+                    var lastTickAtMs = SystemClock.elapsedRealtime()
+                    while (isActive) {
+                        delay(NEXT_EPISODE_COUNTDOWN_TICK_MS)
+                        val nowMs = SystemClock.elapsedRealtime()
+                        nextEpisodeCountdownElapsedMs += nowMs - lastTickAtMs
+                        lastTickAtMs = nowMs
+                        if (nextEpisodeCountdownElapsedMs >= NEXT_EPISODE_COUNTDOWN_DURATION_MS) {
                             onNextEpisode()
                             break
                         }
-                        delay(NEXT_EPISODE_COUNTDOWN_TICK_MS)
                     }
                 }
                 LaunchedEffect(
@@ -1067,6 +1044,7 @@ class VideoPlayerActivity : AppCompatActivity() {
                     if (
                         playbackSnapshot.playbackEnded &&
                         current.nextChapterId != null &&
+                        autoPlayNext &&
                         isInPictureInPictureMode &&
                         !subtitleEditorVisible &&
                         !nextEpisodeAdvanceInFlight
@@ -1362,9 +1340,31 @@ class VideoPlayerActivity : AppCompatActivity() {
                         modifier = Modifier.fillMaxSize(),
                     )
 
+                    VideoPlayerEndScreen(
+                        visible = endScreenVisible,
+                        nextEpisodeName = current.childWindow.next?.name.orEmpty(),
+                        countdown = if (autoPlayNext) {
+                            nextEpisodeCountdownElapsedMs / NEXT_EPISODE_COUNTDOWN_DURATION_MS.toFloat()
+                        } else {
+                            null
+                        },
+                        secondsLeft = if (autoPlayNext) {
+                            ceil(
+                                (NEXT_EPISODE_COUNTDOWN_DURATION_MS - nextEpisodeCountdownElapsedMs)
+                                    .coerceAtLeast(0L) / 1_000.0,
+                            ).toInt()
+                        } else {
+                            null
+                        },
+                        onPlayNext = onNextEpisode,
+                        onDismiss = { endScreenDismissed = true },
+                        modifier = Modifier.fillMaxSize(),
+                    )
+
                     if (!isInPictureInPictureMode && !subtitleEditorVisible && !startupOverlayVisible) {
                         VideoPlayerOverlay(
                             visible = controlsVisible,
+                            endScreenVisible = endScreenVisible,
                             locked = controlsLocked,
                             videoTitle = current.chapterTitle,
                             episodeName = current.chapterName,
@@ -1513,13 +1513,6 @@ class VideoPlayerActivity : AppCompatActivity() {
                             modifier = Modifier.fillMaxSize(),
                         )
                     }
-
-                    VideoPlayerNextEpisodeOverlay(
-                        visible = showNextEpisodeCta,
-                        progress = nextEpisodeCountdownProgress,
-                        onClick = onNextEpisode,
-                        modifier = Modifier.fillMaxSize(),
-                    )
 
                     if (startupOverlayVisible && !isInPictureInPictureMode && !subtitleEditorVisible) {
                         VideoPlayerLoadingOverlay(modifier = Modifier.fillMaxSize())

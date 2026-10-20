@@ -42,6 +42,7 @@ private val overlayCenterFadeAnimationSpec = tween<Float>(110)
 @Composable
 internal fun VideoPlayerOverlay(
     visible: Boolean,
+    endScreenVisible: Boolean,
     locked: Boolean,
     videoTitle: String,
     episodeName: String,
@@ -93,6 +94,9 @@ internal fun VideoPlayerOverlay(
     modifier: Modifier = Modifier,
 ) {
     val chromeVisible = visible && !hideChromeForSeekFeedback && !locked
+    // The end screen keeps the top bar for leaving or opening settings; its own Play replaces the transport controls.
+    val topBarVisible = chromeVisible || (endScreenVisible && !locked)
+    val transportVisible = chromeVisible && !endScreenVisible
     val lockedChromeVisible = visible && !hideChromeForSeekFeedback && locked
 
     Box(modifier = modifier.fillMaxSize()) {
@@ -102,7 +106,7 @@ internal fun VideoPlayerOverlay(
                 .zIndex(2f),
         ) {
             AnimatedVisibility(
-                visible = chromeVisible,
+                visible = topBarVisible,
                 enter = slideInVertically(
                     initialOffsetY = { -it },
                     animationSpec = overlayBarsSlideAnimationSpec,
@@ -132,7 +136,7 @@ internal fun VideoPlayerOverlay(
             Spacer(modifier = Modifier.weight(1f))
 
             AnimatedVisibility(
-                visible = chromeVisible,
+                visible = transportVisible,
                 enter = slideInVertically(
                     initialOffsetY = { it },
                     animationSpec = overlayBarsSlideAnimationSpec,
@@ -176,7 +180,7 @@ internal fun VideoPlayerOverlay(
         }
 
         AnimatedVisibility(
-            visible = chromeVisible,
+            visible = transportVisible,
             modifier = Modifier
                 .align(Alignment.Center)
                 .zIndex(1f),
