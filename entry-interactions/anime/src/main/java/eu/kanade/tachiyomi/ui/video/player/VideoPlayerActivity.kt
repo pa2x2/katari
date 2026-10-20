@@ -187,6 +187,7 @@ class VideoPlayerActivity : AppCompatActivity() {
 
     // Shown once per profile, until any tap on it.
     private var gestureGuideVisible by mutableStateOf(false)
+    private var showsRemainingTime by mutableStateOf(false)
 
     // The last known shape, kept while the next episode loads so the screen doesn't turn back and forth.
     private var videoAspectRatio by mutableStateOf<Float?>(null)
@@ -244,6 +245,7 @@ class VideoPlayerActivity : AppCompatActivity() {
         supportsPictureInPicture = packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)
         autoEnterPictureInPicture = autoEnterPictureInPictureSetting.resolveProfile().effectiveValue
         gestureGuideVisible = !animePlayerPreferences.gestureGuideShown.get()
+        showsRemainingTime = animePlayerPreferences.showsRemainingTime.get()
         isInPictureInPictureModeState = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             isInPictureInPictureMode
         } else {
@@ -1512,6 +1514,12 @@ class VideoPlayerActivity : AppCompatActivity() {
                                 playbackSnapshot = playbackSnapshot.copy(positionMs = targetPositionMs)
                                 latestPlaybackSnapshot = playbackSnapshot
                                 currentPlayer.seekTo(targetPositionMs)
+                                registerControllerInteraction(true)
+                            },
+                            showsRemainingTime = showsRemainingTime,
+                            onToggleRemainingTime = {
+                                showsRemainingTime = !showsRemainingTime
+                                animePlayerPreferences.showsRemainingTime.set(showsRemainingTime)
                                 registerControllerInteraction(true)
                             },
                             modifier = Modifier.fillMaxSize(),

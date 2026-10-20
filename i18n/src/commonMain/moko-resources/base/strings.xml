@@ -1486,6 +1486,8 @@
     <string name="anime_playback_play_now">Play now</string>
     <string name="anime_playback_previous_episode">Previous episode</string>
     <string name="anime_playback_position_of_duration">%1$s of %2$s</string>
+    <string name="anime_playback_show_remaining_time">Show time remaining</string>
+    <string name="anime_playback_show_elapsed_time">Show time played</string>
     <string name="media_timeline_label">Playback position</string>
     <string name="anime_playback_rotate">Rotate</string>
     <string name="anime_playback_seek_backward">Back %d seconds</string>

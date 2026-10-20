@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.ui.video.player.components
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -11,6 +12,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.Role
 import androidx.media3.exoplayer.ExoPlayer
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerSeekPreviewState
 import eu.kanade.tachiyomi.ui.video.player.coerceToPlaybackDuration
@@ -41,6 +43,8 @@ internal fun VideoPlayerTimeline(
     onScrubStarted: () -> Unit,
     onScrubPositionChange: (Long) -> Unit,
     onScrubFinished: () -> Unit,
+    showsRemainingTime: Boolean,
+    onToggleRemainingTime: () -> Unit,
     footerContent: (@Composable () -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
@@ -49,7 +53,11 @@ internal fun VideoPlayerTimeline(
     val clampedBufferedPositionMs = bufferedPositionMs.coerceToPlaybackDuration(effectiveDurationMs)
     val playedFraction = clampedPositionMs.fractionOf(effectiveDurationMs)
     val durationLabel = if (effectiveDurationMs > 0L) formatPlaybackTimestamp(effectiveDurationMs) else "--:--"
-    val timeLabel = "${formatPlaybackTimestamp(clampedPositionMs)} / $durationLabel"
+    val timeLabel = if (showsRemainingTime && effectiveDurationMs > 0L) {
+        "\u2212${formatPlaybackTimestamp(effectiveDurationMs - clampedPositionMs)}"
+    } else {
+        "${formatPlaybackTimestamp(clampedPositionMs)} / $durationLabel"
+    }
     val spacing = KatariTheme.spacing
 
     MediaScrim(
@@ -80,7 +88,22 @@ internal fun VideoPlayerTimeline(
                     .fillMaxWidth()
                     .padding(top = if (isScrubbing) spacing.s else KatariTheme.sizes.none),
             ) {
-                Box(modifier = Modifier.padding(bottom = spacing.s)) {
+                Box(
+                    modifier = Modifier
+                        .clickable(
+                            onClickLabel = stringResource(
+                                if (showsRemainingTime) {
+                                    MR.strings.anime_playback_show_elapsed_time
+                                } else {
+                                    MR.strings.anime_playback_show_remaining_time
+                                },
+                            ),
+                            role = Role.Button,
+                            onClick = onToggleRemainingTime,
+                        )
+                        // Vertical room makes the label easier to hit without moving the timeline below it.
+                        .padding(vertical = spacing.s),
+                ) {
                     Text(text = timeLabel, role = TextRole.Body, tone = ContentTone.OnMedia, maxLines = 1)
                 }
 

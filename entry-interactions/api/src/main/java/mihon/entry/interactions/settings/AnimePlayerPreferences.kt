@@ -27,6 +27,7 @@ class AnimePlayerPreferences(
         const val ORIENTATION_KEY = "anime_player_orientation"
         const val AUTO_PLAY_NEXT_KEY = "anime_auto_play_next"
         const val GESTURE_GUIDE_SHOWN_KEY = "anime_gesture_guide_shown"
+        const val SHOWS_REMAINING_TIME_KEY = "anime_shows_remaining_time"
         const val PREFERRED_QUALITY_HEIGHT_KEY = "anime_preferred_quality_height"
         const val DEFAULT_PLAYBACK_SPEED_PERCENT_KEY = "anime_default_playback_speed_percent"
 
@@ -58,6 +59,8 @@ class AnimePlayerPreferences(
     val defaultPlaybackSpeedPercent: Preference<Int> = preferenceStore.getInt(DEFAULT_PLAYBACK_SPEED_PERCENT_KEY, 100)
 
     val gestureGuideShown: Preference<Boolean> = preferenceStore.getBoolean(GESTURE_GUIDE_SHOWN_KEY, false)
+
+    val showsRemainingTime: Preference<Boolean> = preferenceStore.getBoolean(SHOWS_REMAINING_TIME_KEY, false)
 
     val orientation: Preference<AnimePlayerOrientation> = preferenceStore.getEnum(
         ORIENTATION_KEY,

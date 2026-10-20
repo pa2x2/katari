@@ -89,6 +89,8 @@ internal fun VideoPlayerOverlay(
     onScrubStarted: () -> Unit,
     onScrubPositionChange: (Long) -> Unit,
     onScrubFinished: () -> Unit,
+    showsRemainingTime: Boolean,
+    onToggleRemainingTime: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val chromeVisible = visible && !hideChromeForSeekFeedback && !locked
@@ -158,6 +160,8 @@ internal fun VideoPlayerOverlay(
                         onScrubStarted = onScrubStarted,
                         onScrubPositionChange = onScrubPositionChange,
                         onScrubFinished = onScrubFinished,
+                        showsRemainingTime = showsRemainingTime,
+                        onToggleRemainingTime = onToggleRemainingTime,
                         footerContent = {
                             VideoPlayerTimelineToolbar(
                                 hasPreviousEpisode = hasPreviousEpisode,
