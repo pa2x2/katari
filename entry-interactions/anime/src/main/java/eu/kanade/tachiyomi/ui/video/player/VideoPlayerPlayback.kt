@@ -5,9 +5,11 @@ import android.graphics.Color
 import android.net.Uri
 import android.provider.DocumentsContract
 import androidx.annotation.OptIn
+import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.Format
 import androidx.media3.common.MediaItem
+import androidx.media3.common.MediaMetadata
 import androidx.media3.common.MimeTypes
 import androidx.media3.common.Player
 import androidx.media3.common.TrackSelectionOverride
@@ -66,16 +68,41 @@ internal fun buildVideoPlayer(
     mediaCache: VideoPlayerMediaCache,
     stream: VideoStream,
     subtitles: List<VideoSubtitle>,
+    watched: WatchedPlayerOptions? = null,
 ): ExoPlayer {
-    return ExoPlayer.Builder(
+    val builder = ExoPlayer.Builder(
         context,
         buildVideoMediaSourceFactory(context, networkHelper, mediaCache, stream, subtitles),
     )
-        .build()
-        .apply {
-            setMediaItem(stream.toMediaItem(subtitles))
-        }
+    if (watched != null) {
+        builder
+            // The second argument hands audio focus to the player, so calls and other apps' audio pause it.
+            .setAudioAttributes(
+                AudioAttributes.Builder()
+                    .setUsage(C.USAGE_MEDIA)
+                    .setContentType(C.AUDIO_CONTENT_TYPE_MOVIE)
+                    .build(),
+                true,
+            )
+            .setHandleAudioBecomingNoisy(true)
+            // Keeps the CPU and Wi-Fi up while it plays with the screen off.
+            .setWakeMode(C.WAKE_MODE_NETWORK)
+            .setSeekBackIncrementMs(watched.seekStepMs)
+            .setSeekForwardIncrementMs(watched.seekStepMs)
+    }
+    return builder.build().apply {
+        setMediaItem(stream.toMediaItem(subtitles, watched?.metadata ?: MediaMetadata.EMPTY))
+    }
 }
+
+/**
+ * What the player the viewer watches needs beyond the stream. A seek preview player goes without, so it never takes
+ * audio focus or shows in the media notification. [metadata] is what the notification shows.
+ */
+internal class WatchedPlayerOptions(
+    val metadata: MediaMetadata,
+    val seekStepMs: Long,
+)
 
 @OptIn(markerClass = [UnstableApi::class])
 private fun buildVideoMediaSourceFactory(
@@ -123,9 +150,13 @@ private fun buildVideoMediaSourceFactory(
     return DefaultMediaSourceFactory(dataSourceFactory)
 }
 
-internal fun VideoStream.toMediaItem(subtitles: List<VideoSubtitle>): MediaItem {
+internal fun VideoStream.toMediaItem(
+    subtitles: List<VideoSubtitle>,
+    metadata: MediaMetadata = MediaMetadata.EMPTY,
+): MediaItem {
     return MediaItem.Builder()
         .setUri(request.url)
+        .setMediaMetadata(metadata)
         .setMimeType(mimeType ?: type.toMimeType())
         .setSubtitleConfigurations(subtitles.map(VideoSubtitle::toMediaItemSubtitle))
         .build()

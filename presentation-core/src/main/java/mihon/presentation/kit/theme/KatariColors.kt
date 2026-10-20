@@ -81,6 +81,9 @@ class KatariColors internal constructor(scheme: ColorScheme, isDark: Boolean) {
     /** Shade laid over video or page images behind controls. */
     val mediaScrim: Color = MEDIA_DARK.copy(alpha = MEDIA_SCRIM_ALPHA)
 
+    /** The darkest part of a controls shade, right at the image edge. */
+    val mediaScrimEdge: Color = MEDIA_DARK.copy(alpha = MEDIA_SCRIM_EDGE_ALPHA)
+
     /**
      * Reader bars and controls laid over pages: the raised surface, slightly see-through so the page stays in view.
      * Content on it uses the normal surface colours.
@@ -153,6 +156,7 @@ private const val DISABLED_CONTENT_ALPHA = 0.38f
 private const val DISABLED_CONTAINER_ALPHA = 0.12f
 private const val MEDIA_VARIANT_ALPHA = 0.7f
 private const val MEDIA_SCRIM_ALPHA = 0.6f
+private const val MEDIA_SCRIM_EDGE_ALPHA = 0.8f
 private const val CHROME_DARK_ALPHA = 0.9f
 private const val CHROME_LIGHT_ALPHA = 0.95f
 

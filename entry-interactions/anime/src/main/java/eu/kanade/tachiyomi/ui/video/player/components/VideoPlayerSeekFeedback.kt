@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -29,6 +30,10 @@ import androidx.compose.ui.graphics.graphicsLayer
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerSeekDirection
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerSeekFeedbackState
 import kotlinx.coroutines.delay
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.ChevronLeft
+import mihon.icons.materialsymbols.rounded.ChevronRight
+import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.surface.Surface
 import mihon.presentation.kit.surface.SurfaceContainer
@@ -142,7 +147,8 @@ private fun VideoPlayerSeekChevrons(
 
     Row(
         modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xxs),
+        // The chevron glyph fills only the middle of its icon box, so the boxes overlap to keep the arrows close.
+        horizontalArrangement = Arrangement.spacedBy(-KatariTheme.spacing.m),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         // Each chevron fades and drifts a little behind the one before it, so they sweep in the seek direction.
@@ -154,12 +160,17 @@ private fun VideoPlayerSeekChevrons(
                 drift * (0.5f - phase)
             }
 
-            Text(
-                text = if (direction == VideoPlayerSeekDirection.Backward) "<" else ">",
+            Icon(
+                imageVector = if (direction == VideoPlayerSeekDirection.Backward) {
+                    MaterialSymbols.Rounded.ChevronLeft
+                } else {
+                    MaterialSymbols.Rounded.ChevronRight
+                },
+                contentDescription = null,
                 modifier = Modifier
+                    .size(KatariTheme.sizes.iconLarge)
                     .offset(x = offsetX)
                     .graphicsLayer { alpha = 1f - phase * CHEVRON_FADE },
-                role = TextRole.ScreenTitle,
             )
         }
     }

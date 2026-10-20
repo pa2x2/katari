@@ -1,6 +1,6 @@
 package eu.kanade.tachiyomi.ui.video.player.components
 
-import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -12,14 +12,23 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.Role
 import androidx.media3.exoplayer.ExoPlayer
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerSeekPreviewState
 import eu.kanade.tachiyomi.ui.video.player.coerceToPlaybackDuration
 import eu.kanade.tachiyomi.ui.video.player.formatPlaybackTimestamp
+import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.control.MediaTimeline
+import mihon.presentation.kit.surface.MediaScrim
+import mihon.presentation.kit.surface.MediaScrimEdge
+import mihon.presentation.kit.surface.MediaScrimWeight
 import mihon.presentation.kit.surface.Pill
 import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
+import tachiyomi.i18n.*
+import tachiyomi.presentation.core.i18n.stringResource
 import kotlin.math.roundToLong
 
 @Composable
@@ -34,6 +43,8 @@ internal fun VideoPlayerTimeline(
     onScrubStarted: () -> Unit,
     onScrubPositionChange: (Long) -> Unit,
     onScrubFinished: () -> Unit,
+    showsRemainingTime: Boolean,
+    onToggleRemainingTime: () -> Unit,
     footerContent: (@Composable () -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
@@ -41,58 +52,84 @@ internal fun VideoPlayerTimeline(
     val clampedPositionMs = positionMs.coerceToPlaybackDuration(effectiveDurationMs)
     val clampedBufferedPositionMs = bufferedPositionMs.coerceToPlaybackDuration(effectiveDurationMs)
     val playedFraction = clampedPositionMs.fractionOf(effectiveDurationMs)
-    val timeLabel = buildString {
-        append(formatPlaybackTimestamp(clampedPositionMs))
-        append(" / ")
-        append(if (effectiveDurationMs > 0L) formatPlaybackTimestamp(effectiveDurationMs) else "--:--")
+    val durationLabel = if (effectiveDurationMs > 0L) formatPlaybackTimestamp(effectiveDurationMs) else "--:--"
+    val timeLabel = if (showsRemainingTime && effectiveDurationMs > 0L) {
+        "\u2212${formatPlaybackTimestamp(effectiveDurationMs - clampedPositionMs)}"
+    } else {
+        "${formatPlaybackTimestamp(clampedPositionMs)} / $durationLabel"
     }
     val spacing = KatariTheme.spacing
 
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(videoPlayerBottomShade())
-            .videoPlayerSafeContentPadding(includeBottom = true)
-            .padding(horizontal = spacing.l)
-            .padding(top = spacing.s, bottom = spacing.m),
-        horizontalAlignment = Alignment.CenterHorizontally,
+    MediaScrim(
+        edge = MediaScrimEdge.Bottom,
+        modifier = modifier.fillMaxWidth(),
+        weight = MediaScrimWeight.Controls,
     ) {
-        if (isScrubbing && seekPreviewState?.visible == true) {
-            VideoPlayerSeekPreview(
-                positionMs = clampedPositionMs,
-                previewFraction = playedFraction,
-                previewState = seekPreviewState,
-                previewPlayer = seekPreviewPlayer,
-                previewAspectRatio = seekPreviewAspectRatio,
-            )
-        }
-
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = if (isScrubbing) spacing.s else KatariTheme.sizes.none),
+                .videoPlayerSafeContentPadding(includeBottom = true)
+                .padding(horizontal = spacing.l)
+                .padding(top = spacing.s, bottom = spacing.m),
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Box(modifier = Modifier.padding(bottom = spacing.s)) {
-                Pill(text = timeLabel, container = SurfaceContainer.MediaScrim)
+            if (isScrubbing && seekPreviewState?.visible == true) {
+                VideoPlayerSeekPreview(
+                    positionMs = clampedPositionMs,
+                    previewFraction = playedFraction,
+                    previewState = seekPreviewState,
+                    previewPlayer = seekPreviewPlayer,
+                    previewAspectRatio = seekPreviewAspectRatio,
+                )
             }
 
-            MediaTimeline(
-                played = playedFraction,
-                buffered = clampedBufferedPositionMs.fractionOf(effectiveDurationMs),
-                scrubbing = isScrubbing,
-                onScrubStart = onScrubStarted,
-                onScrub = { onScrubPositionChange(playbackPositionAt(it, effectiveDurationMs)) },
-                onScrubEnd = onScrubFinished,
-                enabled = effectiveDurationMs > 0L,
-            )
-
-            if (footerContent != null) {
-                Column(
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = if (isScrubbing) spacing.s else KatariTheme.sizes.none),
+            ) {
+                Box(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = spacing.xs),
+                        .clickable(
+                            onClickLabel = stringResource(
+                                if (showsRemainingTime) {
+                                    MR.strings.anime_playback_show_elapsed_time
+                                } else {
+                                    MR.strings.anime_playback_show_remaining_time
+                                },
+                            ),
+                            role = Role.Button,
+                            onClick = onToggleRemainingTime,
+                        )
+                        // Vertical room makes the label easier to hit without moving the timeline below it.
+                        .padding(vertical = spacing.s),
                 ) {
-                    footerContent()
+                    Text(text = timeLabel, role = TextRole.Body, tone = ContentTone.OnMedia, maxLines = 1)
+                }
+
+                MediaTimeline(
+                    played = playedFraction,
+                    buffered = clampedBufferedPositionMs.fractionOf(effectiveDurationMs),
+                    scrubbing = isScrubbing,
+                    onScrubStart = onScrubStarted,
+                    onScrub = { onScrubPositionChange(playbackPositionAt(it, effectiveDurationMs)) },
+                    onScrubEnd = onScrubFinished,
+                    positionDescription = stringResource(
+                        MR.strings.anime_playback_position_of_duration,
+                        formatPlaybackTimestamp(clampedPositionMs),
+                        durationLabel,
+                    ),
+                    enabled = effectiveDurationMs > 0L,
+                )
+
+                if (footerContent != null) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = spacing.xs),
+                    ) {
+                        footerContent()
+                    }
                 }
             }
         }
@@ -134,6 +171,11 @@ internal fun VideoPlayerCompactTimeline(
                 onSeek(scrubPositionMs)
                 isScrubbing = false
             },
+            positionDescription = stringResource(
+                MR.strings.anime_playback_position_of_duration,
+                formatPlaybackTimestamp(displayedPositionMs),
+                formatPlaybackTimestamp(effectiveDurationMs),
+            ),
             enabled = effectiveDurationMs > 0L,
             compact = true,
         )

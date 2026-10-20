@@ -21,6 +21,7 @@ import eu.kanade.tachiyomi.ui.video.player.VideoStreamResolver
 import mihon.entry.interactions.anime.download.AnimeDownloadProvider
 import mihon.entry.interactions.anime.media.session.AnimeMediaSessionProcessor
 import mihon.entry.interactions.runtime.EntryPlayerCache
+import mihon.entry.interactions.settings.AnimePlayerPreferences
 import mihon.entry.interactions.source.EntryWebViewFeature
 import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.domain.entry.interactor.GetEntryWithChapters
@@ -48,6 +49,7 @@ object AnimePlayerBindings {
         sourceManager: SourceManager,
         animeDownloadProvider: AnimeDownloadProvider,
         application: Application,
+        animePlayerPreferences: AnimePlayerPreferences,
     ): ResolveVideoStream = ResolveVideoStream(
         videoRepository = videoRepository,
         entryChapterRepository = entryChapterRepository,
@@ -55,6 +57,7 @@ object AnimePlayerBindings {
         videoSourceManager = sourceManager,
         animeDownloadProvider = animeDownloadProvider,
         context = application,
+        preferredSourceQualityHeight = { animePlayerPreferences.preferredQualityHeight.get() },
     )
 
     @Provides

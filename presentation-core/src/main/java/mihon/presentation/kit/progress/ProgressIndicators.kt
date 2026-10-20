@@ -7,14 +7,26 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import mihon.presentation.kit.theme.KatariTheme
 
-/** A progress bar; without [progress] it runs indeterminately. [progress] is 0..1. */
+/**
+ * A progress bar; without [progress] it runs indeterminately. [progress] is 0..1. [onContainer] marks a bar on a
+ * filled container, as for [CircularProgressIndicator].
+ */
 @Composable
 fun LinearProgressIndicator(
     modifier: Modifier = Modifier,
     progress: (() -> Float)? = null,
+    onContainer: Boolean = false,
 ) {
     if (progress == null) {
         androidx.compose.material3.LinearProgressIndicator(modifier)
+    } else if (onContainer) {
+        androidx.compose.material3.LinearProgressIndicator(
+            progress = progress,
+            modifier = modifier,
+            trackColor = KatariTheme.colors.primary.copy(alpha = ON_CONTAINER_TRACK_ALPHA),
+            gapSize = KatariTheme.sizes.none,
+            drawStopIndicator = {},
+        )
     } else {
         androidx.compose.material3.LinearProgressIndicator(progress = progress, modifier = modifier)
     }

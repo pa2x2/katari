@@ -31,7 +31,6 @@ import mihon.entry.interactions.source.EntryChildWebViewAction
 import mihon.entry.interactions.source.EntryChildWebViewResolution
 import mihon.presentation.kit.progress.LoadingIndicator
 import mihon.presentation.kit.theme.KatariTheme
-import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.EntryProgressState
 
@@ -42,6 +41,7 @@ private val overlayCenterFadeAnimationSpec = tween<Float>(110)
 @Composable
 internal fun VideoPlayerOverlay(
     visible: Boolean,
+    endScreenVisible: Boolean,
     locked: Boolean,
     videoTitle: String,
     episodeName: String,
@@ -49,7 +49,6 @@ internal fun VideoPlayerOverlay(
     displayedPositionMs: Long,
     isScrubbing: Boolean,
     episodesDrawerVisible: Boolean,
-    anime: Entry,
     currentEpisodeId: Long,
     episodeListItems: List<VideoPlayerEpisodeListEntry>,
     expandedMemberIds: Set<Long>,
@@ -57,6 +56,9 @@ internal fun VideoPlayerOverlay(
     sourceAvailable: Boolean,
     hasPreviousEpisode: Boolean,
     hasNextEpisode: Boolean,
+    seekStepSeconds: Int,
+    playbackSpeedLabel: String,
+    showSubtitles: Boolean,
     seekFeedbackState: VideoPlayerSeekFeedbackState?,
     seekPreviewState: VideoPlayerSeekPreviewState?,
     seekPreviewPlayer: ExoPlayer?,
@@ -70,6 +72,9 @@ internal fun VideoPlayerOverlay(
     onEnterPictureInPicture: () -> Unit,
     onToggleLock: () -> Unit,
     onOpenSettings: () -> Unit,
+    onOpenSpeed: () -> Unit,
+    onOpenSubtitles: () -> Unit,
+    onRotate: () -> Unit,
     childWebView: EntryChildWebViewResolution.Available?,
     onChildWebViewAction: (EntryChildWebViewAction, EntryChildWebViewResolution.Available) -> Unit,
     onOpenEpisodes: () -> Unit,
@@ -84,9 +89,14 @@ internal fun VideoPlayerOverlay(
     onScrubStarted: () -> Unit,
     onScrubPositionChange: (Long) -> Unit,
     onScrubFinished: () -> Unit,
+    showsRemainingTime: Boolean,
+    onToggleRemainingTime: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val chromeVisible = visible && !hideChromeForSeekFeedback && !locked
+    // The end screen keeps the top bar for leaving or opening settings; its own Play replaces the transport controls.
+    val topBarVisible = chromeVisible || (endScreenVisible && !locked)
+    val transportVisible = chromeVisible && !endScreenVisible
     val lockedChromeVisible = visible && !hideChromeForSeekFeedback && locked
 
     Box(modifier = modifier.fillMaxSize()) {
@@ -96,7 +106,7 @@ internal fun VideoPlayerOverlay(
                 .zIndex(2f),
         ) {
             AnimatedVisibility(
-                visible = chromeVisible,
+                visible = topBarVisible,
                 enter = slideInVertically(
                     initialOffsetY = { -it },
                     animationSpec = overlayBarsSlideAnimationSpec,
@@ -126,7 +136,7 @@ internal fun VideoPlayerOverlay(
             Spacer(modifier = Modifier.weight(1f))
 
             AnimatedVisibility(
-                visible = chromeVisible,
+                visible = transportVisible,
                 enter = slideInVertically(
                     initialOffsetY = { it },
                     animationSpec = overlayBarsSlideAnimationSpec,
@@ -150,8 +160,21 @@ internal fun VideoPlayerOverlay(
                         onScrubStarted = onScrubStarted,
                         onScrubPositionChange = onScrubPositionChange,
                         onScrubFinished = onScrubFinished,
+                        showsRemainingTime = showsRemainingTime,
+                        onToggleRemainingTime = onToggleRemainingTime,
                         footerContent = {
-                            VideoPlayerTimelineToolbar(onOpenEpisodes = onOpenEpisodes)
+                            VideoPlayerTimelineToolbar(
+                                hasPreviousEpisode = hasPreviousEpisode,
+                                hasNextEpisode = hasNextEpisode,
+                                playbackSpeedLabel = playbackSpeedLabel,
+                                showSubtitles = showSubtitles,
+                                onPreviousEpisode = onPreviousEpisode,
+                                onNextEpisode = onNextEpisode,
+                                onOpenSpeed = onOpenSpeed,
+                                onOpenSubtitles = onOpenSubtitles,
+                                onRotate = onRotate,
+                                onOpenEpisodes = onOpenEpisodes,
+                            )
                         },
                     )
                 }
@@ -159,7 +182,7 @@ internal fun VideoPlayerOverlay(
         }
 
         AnimatedVisibility(
-            visible = chromeVisible,
+            visible = transportVisible,
             modifier = Modifier
                 .align(Alignment.Center)
                 .zIndex(1f),
@@ -181,13 +204,10 @@ internal fun VideoPlayerOverlay(
                 VideoPlayerCenterControls(
                     isPlaying = playbackSnapshot.isPlaying,
                     isLoading = playbackSnapshot.isLoading,
-                    hasPreviousEpisode = hasPreviousEpisode,
-                    hasNextEpisode = hasNextEpisode,
-                    onPreviousEpisode = onPreviousEpisode,
+                    seekStepSeconds = seekStepSeconds,
                     onSeekBackward = onSeekBackward,
                     onTogglePlayback = onTogglePlayback,
                     onSeekForward = onSeekForward,
-                    onNextEpisode = onNextEpisode,
                 )
             }
         }
@@ -212,6 +232,7 @@ internal fun VideoPlayerOverlay(
                 VideoPlayerLockedOverlay(
                     onUnlock = onToggleLock,
                     showPictureInPictureButton = showPictureInPictureButton,
+                    childWebView = childWebView,
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
@@ -244,7 +265,6 @@ internal fun VideoPlayerOverlay(
         if (!locked) {
             VideoPlayerEpisodesDrawer(
                 visible = episodesDrawerVisible,
-                anime = anime,
                 episodeListItems = episodeListItems,
                 expandedMemberIds = expandedMemberIds,
                 currentEpisodeId = currentEpisodeId,

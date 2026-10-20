@@ -8,6 +8,7 @@ import androidx.core.app.NotificationManagerCompat.IMPORTANCE_LOW
 import eu.kanade.tachiyomi.util.system.buildNotificationChannel
 import eu.kanade.tachiyomi.util.system.buildNotificationChannelGroup
 import mihon.entry.interactions.download.EntryDownloadNotifications
+import mihon.entry.interactions.media.playback.VideoPlaybackNotifications
 import mihon.entry.interactions.translate.EntryTranslateNotifications
 import mihon.feature.profiles.core.Profile
 import tachiyomi.core.common.i18n.stringResource
@@ -230,6 +231,10 @@ object Notifications {
                 buildNotificationChannel(CHANNEL_MONTH_RECAP, IMPORTANCE_DEFAULT) {
                     setName(context.stringResource(MR.strings.statistics_monthly_recap))
                     setGroup(GROUP_RECAPS)
+                },
+                buildNotificationChannel(VideoPlaybackNotifications.CHANNEL, IMPORTANCE_LOW) {
+                    setName(context.stringResource(MR.strings.channel_video_playback))
+                    setShowBadge(false)
                 },
                 buildNotificationChannel(CHANNEL_INCOGNITO_MODE, IMPORTANCE_LOW) {
                     setName(context.stringResource(MR.strings.pref_incognito_mode))

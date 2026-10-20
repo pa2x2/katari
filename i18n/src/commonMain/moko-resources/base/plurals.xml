@@ -443,4 +443,9 @@
         <item quantity="one">%d from hidden sources</item>
         <item quantity="other">%d from hidden sources</item>
     </plurals>
+
+    <plurals name="anime_episode_minutes_left">
+        <item quantity="one">%d min left</item>
+        <item quantity="other">%d min left</item>
+    </plurals>
 </resources>
